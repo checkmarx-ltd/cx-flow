@@ -9,11 +9,9 @@ machina:
   filter-category:
   filter-cwe:
   filter-status:
+    - Confirmed
+    - Urgent
   mitre-url: https://cwe.mitre.org/data/definitions/%s.html
-  wiki-url: https://custodela.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
-  codebash-url: https://cxa.codebashing.com/courses/
-  mail:
-    enabled: false
 
 checkmarx:
   username: xxxx
