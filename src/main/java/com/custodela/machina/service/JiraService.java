@@ -610,30 +610,34 @@ public class JiraService {
         else{
             body.append(String.format(ScanUtils.JIRA_ISSUE_BODY_2, issue.getVulnerability(), issue.getFilename())).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
         }
-        if(!ScanUtils.empty(issue.getDescription())) {
+        /*if(!ScanUtils.empty(issue.getDescription())) {
             body.append("_").append(issue.getDescription().trim()).append("_").append(ScanUtils.CRLF).append(ScanUtils.CRLF);
+        }*/
+        if(!ScanUtils.empty(issue.getDescription())) {
+            body.append(issue.getDescription().trim()).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
         }
 
         if(!ScanUtils.empty(request.getNamespace())) {
             body.append("*Namespace:* ").append(request.getNamespace()).append(ScanUtils.CRLF);
         }
-
         if(!ScanUtils.empty(request.getApplication())) {
             body.append("*Application:* ").append(request.getApplication()).append(ScanUtils.CRLF);
         }
-
+        if(!ScanUtils.empty(request.getProject())) {
+            body.append("*Cx-Project:* ").append(request.getProject()).append(ScanUtils.CRLF);
+        }
+        if(!ScanUtils.empty(request.getTeam())) {
+            body.append("*Cx-Team:* ").append(request.getTeam()).append(ScanUtils.CRLF);
+        }
         if(!ScanUtils.empty(request.getRepoUrl())) {
             body.append("*Repository:* ").append(request.getRepoUrl()).append(ScanUtils.CRLF);
         }
-
         if(!ScanUtils.empty(request.getBranch())) {
             body.append("*Branch:* ").append(request.getBranch()).append(ScanUtils.CRLF);
         }
-
         if(!ScanUtils.empty(issue.getSeverity())) {
             body.append("*Severity:* ").append(issue.getSeverity()).append(ScanUtils.CRLF);
         }
-
         if(!ScanUtils.empty(issue.getCwe())) {
             body.append("*CWE:* ").append(issue.getCwe()).append(ScanUtils.CRLF);
         }
@@ -660,7 +664,7 @@ public class JiraService {
                     }
                 } else {
                     if (entry.getKey() != null) {
-                        body.append(entry.getKey());
+                        body.append(entry.getKey()).append(" ");
                     }
                 }
             }
