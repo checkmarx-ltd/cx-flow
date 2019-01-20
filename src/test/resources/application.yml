@@ -1,0 +1,136 @@
+server:
+  port: ${PORT:8080}
+
+logging:
+  file: machina.log
+
+spring:
+  application:
+    name: machina
+  jackson:
+    serialization.indent_output: true
+
+machina:
+  contact: machina@custodela.com
+  token: xxx
+  bug-tracker: JIRA
+  branches:
+  filter-severity:
+    - Critical
+    - High
+  mitre-url: https://cwe.mitre.org/data/definitions/%s.html
+  wiki-url: https://custodela.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
+  codebash-url: https://cxa.codebashing.com/courses/
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: xxx
+    password: xxx
+    enabled: true
+
+checkmarx:
+  username: xxx
+  password: xxx
+  client-secret: xxx
+  base-url: https://cx.aws.custodela.com
+  url: ${checkmarx.base-url}/cxrestapi
+  multi-tenant: true
+  scan-preset: Checkmarx Default
+  configuration: Default Configuration
+  team: \CxServer\SP\Machina
+  scan-timeout: 120
+#WSDL Config
+  portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
+  sdk-url: ${checkmarx.base-url}/cxwebinterface/SDK/CxSDKWebService.asmx
+  portal-wsdl: ${checkmarx.base-url}/Portal/CxWebService.asmx?wsdl
+  sdk-wsdl: ${checkmarx.base-url}/SDK/CxSDKWebService.asmx?wsdl
+  portal-package: checkmarx.wsdl.portal
+  sdk-package: checkmarx.wsdl.sdk
+  html-strip: "<style>.cxtaghighlight{color: rgb(101, 170, 235);font-weight:bold;}</style>"
+
+github:
+  webhook-token: 1234
+  token: xxx
+  url: https://github.com
+  api-url: https://api.github.com/repos/
+  false-positive-label: false-positive
+
+
+gitlab:
+  webhook-token: 1234
+  token: xxx
+  url: https://gitlab.com
+  api-url: https://gitlab.com/api/v4/
+  false-positive-label: false-positive
+
+
+bitbucket:
+  webhook-token:
+  token: xxx
+  url: https://api.bitbucket.org
+  api-path: /2.0
+  false-positive-label: false-positive
+  ip-addresses:
+    - 104.192.136.0/21
+    - 34.198.203.127
+    - 34.198.178.64
+    - 34.198.32.85
+
+jira:
+  url: https://custodela.atlassian.net
+  username: xxx
+  token: xxx
+  results-per-page: 100
+  project: APPSEC
+  issue-type: Bug
+  owner-label-prefix: owner
+  repo-label-prefix: repo
+  branch-label-prefix: branch
+  false-positive-label: false-positive
+  priority:
+    critical: Highest
+    high: High
+    medium: Medium
+    low: Low
+    informational: Lowest
+  open-transition: "Reopen Issue"
+  close-transition: "Close Issue"
+  open-status:
+    - Open
+    - In Progress
+    - Reopened
+  closed-status:
+    - Closed
+    - Resolved
+  advanced-enabled: true
+  advanced: #custom field mappings
+    project: APPSEC
+    issue-type: Application Security Bug
+    open-transition: "Reopen Issue"
+    close-transition: "Close Issue"
+    open-status:
+      - Open
+      - In Progress
+      - Reopened
+    closed-status:
+      - Closed
+      - Resolved
+    fields:
+      application: Application
+      impact: Impact
+      difficulty: Ease of Exploit
+      repo: Source Code Repository
+      branch: Branch/Tag Details
+      severity: Severity
+      identified-by: Identified By
+      details: Details
+      recommendation: Recommendations
+      cwe: CWEs
+      cve: CVEs
+      owasp: OWASP
+      linenumbers: Line Numbers
+      category: Category
+      kingdom: Kingdom
+      issueurl: Issue URL
+      siteurl: Site
+

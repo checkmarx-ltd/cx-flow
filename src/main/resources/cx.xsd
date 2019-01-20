@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="CxXMLResults" type="CxXMLResultsType"/>
+  <xs:complexType name="SnippetType">
+    <xs:sequence>
+      <xs:element type="LineType" name="Line"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="PathType">
+    <xs:sequence>
+      <xs:element type="PathNodeType" name="PathNode" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="ResultId" use="optional"/>
+    <xs:attribute type="xs:string" name="PathId" use="optional"/>
+    <xs:attribute type="xs:string" name="SimilarityId" use="optional"/>
+  </xs:complexType>
+  <xs:complexType name="CxXMLResultsType">
+    <xs:sequence>
+      <xs:element type="QueryType" name="Query" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="InitiatorName"/>
+    <xs:attribute type="xs:string" name="Owner"/>
+    <xs:attribute type="xs:string" name="ScanId"/>
+    <xs:attribute type="xs:string" name="ProjectId"/>
+    <xs:attribute type="xs:string" name="ProjectName"/>
+    <xs:attribute type="xs:string" name="TeamFullPathOnReportDate"/>
+    <xs:attribute type="xs:string" name="DeepLink"/>
+    <xs:attribute type="xs:string" name="ScanStart"/>
+    <xs:attribute type="xs:string" name="Preset"/>
+    <xs:attribute type="xs:string" name="ScanTime"/>
+    <xs:attribute type="xs:string" name="LinesOfCodeScanned"/>
+    <xs:attribute type="xs:string" name="FilesScanned"/>
+    <xs:attribute type="xs:string" name="ReportCreationTime"/>
+    <xs:attribute type="xs:string" name="Team"/>
+    <xs:attribute type="xs:string" name="CheckmarxVersion"/>
+    <xs:attribute type="xs:string" name="ScanComments"/>
+    <xs:attribute type="xs:string" name="ScanType"/>
+    <xs:attribute type="xs:string" name="SourceOrigin"/>
+    <xs:attribute type="xs:string" name="Visibility"/>
+  </xs:complexType>
+  <xs:complexType name="PathNodeType">
+    <xs:sequence>
+      <xs:element type="xs:string" name="FileName"/>
+      <xs:element type="xs:string" name="Line"/>
+      <xs:element type="xs:string" name="Column"/>
+      <xs:element type="xs:string" name="NodeId"/>
+      <xs:element type="xs:string" name="Name"/>
+      <xs:element type="xs:string" name="Type"/>
+      <xs:element type="xs:string" name="Length"/>
+      <xs:element type="SnippetType" name="Snippet"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="ResultType">
+    <xs:sequence>
+      <xs:element type="PathType" name="Path"/>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="NodeId" use="optional"/>
+    <xs:attribute type="xs:string" name="FileName" use="optional"/>
+    <xs:attribute type="xs:string" name="Status" use="optional"/>
+    <xs:attribute type="xs:string" name="Line" use="optional"/>
+    <xs:attribute type="xs:string" name="Column" use="optional"/>
+    <xs:attribute type="xs:string" name="FalsePositive" use="optional"/>
+    <xs:attribute type="xs:string" name="Severity" use="optional"/>
+    <xs:attribute type="xs:string" name="AssignToUser" use="optional"/>
+    <xs:attribute type="xs:string" name="state" use="optional"/>
+    <xs:attribute type="xs:string" name="Remark" use="optional"/>
+    <xs:attribute type="xs:string" name="DeepLink" use="optional"/>
+    <xs:attribute type="xs:string" name="SeverityIndex" use="optional"/>
+  </xs:complexType>
+  <xs:complexType name="LineType">
+    <xs:sequence>
+      <xs:element type="xs:string" name="Number"/>
+      <xs:element type="xs:string" name="Code"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="QueryType">
+    <xs:sequence>
+      <xs:element type="ResultType" name="Result" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id" use="optional"/>
+    <xs:attribute type="xs:string" name="categories" use="optional"/>
+    <xs:attribute type="xs:string" name="cweId" use="optional"/>
+    <xs:attribute type="xs:string" name="name" use="optional"/>
+    <xs:attribute type="xs:string" name="group" use="optional"/>
+    <xs:attribute type="xs:string" name="Severity" use="optional"/>
+    <xs:attribute type="xs:string" name="Language" use="optional"/>
+    <xs:attribute type="xs:string" name="LanguageHash" use="optional"/>
+    <xs:attribute type="xs:string" name="LanguageChangeDate" use="optional"/>
+    <xs:attribute type="xs:string" name="SeverityIndex" use="optional"/>
+    <xs:attribute type="xs:string" name="QueryPath" use="optional"/>
+    <xs:attribute type="xs:string" name="QueryVersionCode" use="optional"/>
+  </xs:complexType>
+</xs:schema>

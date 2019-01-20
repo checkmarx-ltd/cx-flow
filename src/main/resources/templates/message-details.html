@@ -1,0 +1,46 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <title></title>
+
+  <style type="text/css">
+  </style>
+</head>
+<body style="margin:0; padding:0; background-color:#000000;">
+  <center>
+  <img data-type="image" src="https://s3.amazonaws.com/custodela-machina/assets/img/icon-light-2.png" width="125" height="125"/><strong><font face="Courier New" color="white" size="25">&nbsp;&nbsp;[[${heading}]]&nbsp;&nbsp;</font></strong><img data-type="image" src="https://s3.amazonaws.com/custodela-machina/assets/img/cx.png" width="125" height="125"/>
+</center>
+  <center>
+    <hr/><br/>
+    <font color="white" size="6">&nbsp;&nbsp;[[${message}]]&nbsp;&nbsp;</font>
+    <font color="white" size="3">
+      <table width="60%" cellpadding="0" cellspacing="0" border="1">
+        <thead>
+        <tr>
+          <th> Link </th>
+          <th> Severity </th>
+          <th> Category </th>
+          <th> Location </th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:if="${issues.empty}">
+          <td colspan="2"> No Issues Found </td>
+        </tr>
+        <tr th:each="issue : ${issues}">
+            <td><a th:href="${issue.link}">Link</a></td>
+            <td><span th:text="${issue.severity}"></span></td>
+            <td><span th:text="${issue.vulnerability}"></span></td>
+            <td><span th:text="${issue.filename}"></span></td>
+        </tr>
+        </tbody>
+      </table>
+    </font>
+    <br/><hr/>
+  </center>
+</body>
+</html>

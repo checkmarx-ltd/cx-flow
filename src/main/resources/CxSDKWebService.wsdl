@@ -1,0 +1,2349 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://Checkmarx.com/v7" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" targetNamespace="http://Checkmarx.com/v7" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:types>
+    <s:schema elementFormDefault="qualified" targetNamespace="http://Checkmarx.com/v7">
+      <s:element name="Scan">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="sessionId" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="args" type="tns:CliScanArgs" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="CliScanArgs">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="PrjSettings" type="tns:ProjectSettings" />
+          <s:element minOccurs="0" maxOccurs="1" name="SrcCodeSettings" type="tns:SourceCodeSettings" />
+          <s:element minOccurs="1" maxOccurs="1" name="IsPrivateScan" type="s:boolean" />
+          <s:element minOccurs="1" maxOccurs="1" name="IsIncremental" type="s:boolean" />
+          <s:element minOccurs="0" maxOccurs="1" name="Comment" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="IgnoreScanWithUnchangedCode" type="s:boolean" />
+          <s:element minOccurs="1" maxOccurs="1" name="ClientOrigin" type="tns:CxClientType" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ProjectSettings">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="projectID" type="s:long" />
+          <s:element minOccurs="0" maxOccurs="1" name="ProjectName" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="PresetID" type="s:long" />
+          <s:element minOccurs="0" maxOccurs="1" name="AssociatedGroupID" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="ScanConfigurationID" type="s:long" />
+          <s:element minOccurs="0" maxOccurs="1" name="Description" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Owner" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="IsPublic" type="s:boolean" />
+          <s:element minOccurs="0" maxOccurs="1" name="OpenSourceSettings" type="tns:ProjectSharedLocation" />
+          <s:element minOccurs="1" maxOccurs="1" name="OpenSourceAnalysisOrigin" type="tns:ProjectOrigin" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ProjectSharedLocation">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Path" type="tns:ArrayOfString" />
+          <s:element minOccurs="0" maxOccurs="1" name="Credentials" type="tns:Credentials" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfString">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="string" nillable="true" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="Credentials">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="User" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Pass" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:simpleType name="ProjectOrigin">
+        <s:restriction base="s:string">
+          <s:enumeration value="LocalPath" />
+          <s:enumeration value="SharedPath" />
+          <s:enumeration value="TFS" />
+          <s:enumeration value="External" />
+          <s:enumeration value="SVN" />
+          <s:enumeration value="CVS" />
+          <s:enumeration value="GIT" />
+          <s:enumeration value="Perforce" />
+        </s:restriction>
+      </s:simpleType>
+      <s:complexType name="SourceCodeSettings">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="SourceOrigin" type="tns:SourceLocationType" />
+          <s:element minOccurs="0" maxOccurs="1" name="UserCredentials" type="tns:Credentials" />
+          <s:element minOccurs="0" maxOccurs="1" name="PathList" type="tns:ArrayOfScanPath" />
+          <s:element minOccurs="0" maxOccurs="1" name="SourceControlSetting" type="tns:SourceControlSettings" />
+          <s:element minOccurs="0" maxOccurs="1" name="PackagedCode" type="tns:LocalCodeContainer" />
+          <s:element minOccurs="0" maxOccurs="1" name="SourcePullingAction" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="SourceFilterLists" type="tns:SourceFilterPatterns" />
+        </s:sequence>
+      </s:complexType>
+      <s:simpleType name="SourceLocationType">
+        <s:restriction base="s:string">
+          <s:enumeration value="Local" />
+          <s:enumeration value="Shared" />
+          <s:enumeration value="SourceControl" />
+          <s:enumeration value="SourcePulling" />
+        </s:restriction>
+      </s:simpleType>
+      <s:complexType name="ArrayOfScanPath">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="ScanPath" nillable="true" type="tns:ScanPath" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ScanPath">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Path" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="IncludeSubTree" type="s:boolean" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="SourceControlSettings">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="Port" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="UseSSL" type="s:boolean" />
+          <s:element minOccurs="1" maxOccurs="1" name="UseSSH" type="s:boolean" />
+          <s:element minOccurs="0" maxOccurs="1" name="ServerName" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="Repository" type="tns:RepositoryType" />
+          <s:element minOccurs="0" maxOccurs="1" name="UserCredentials" type="tns:Credentials" />
+          <s:element minOccurs="1" maxOccurs="1" name="Protocol" type="tns:SourceControlProtocolType" />
+          <s:element minOccurs="0" maxOccurs="1" name="RepositoryName" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="ProtocolParameters" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="GITBranch" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="GitLsViewType" type="tns:GitLsRemoteViewType" />
+          <s:element minOccurs="0" maxOccurs="1" name="SSHPublicKey" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="SSHPrivateKey" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="GitHubSettings" type="tns:GitHubIntegrationSettings" />
+          <s:element minOccurs="1" maxOccurs="1" name="PerforceBrowsingMode" type="tns:CxWSPerforceBrowsingMode" />
+        </s:sequence>
+      </s:complexType>
+      <s:simpleType name="RepositoryType">
+        <s:restriction base="s:string">
+          <s:enumeration value="TFS" />
+          <s:enumeration value="SVN" />
+          <s:enumeration value="CVS" />
+          <s:enumeration value="GIT" />
+          <s:enumeration value="Perforce" />
+          <s:enumeration value="NONE" />
+        </s:restriction>
+      </s:simpleType>
+      <s:simpleType name="SourceControlProtocolType">
+        <s:restriction base="s:string">
+          <s:enumeration value="WindowsAuthentication" />
+          <s:enumeration value="SSL" />
+          <s:enumeration value="SSH" />
+          <s:enumeration value="PasswordServer" />
+        </s:restriction>
+      </s:simpleType>
+      <s:simpleType name="GitLsRemoteViewType">
+        <s:restriction base="s:string">
+          <s:enumeration value="TAGS" />
+          <s:enumeration value="HEADS" />
+          <s:enumeration value="TAGS_AND_HEADS" />
+          <s:enumeration value="ALL" />
+        </s:restriction>
+      </s:simpleType>
+      <s:complexType name="GitHubIntegrationSettings">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="ContributorCredentials" type="tns:Credentials" />
+          <s:element minOccurs="0" maxOccurs="1" name="OwnerCredentials" type="tns:Credentials" />
+          <s:element minOccurs="1" maxOccurs="1" name="EventsThreshold" type="s:int" />
+        </s:sequence>
+      </s:complexType>
+      <s:simpleType name="CxWSPerforceBrowsingMode">
+        <s:restriction base="s:string">
+          <s:enumeration value="None" />
+          <s:enumeration value="Depot" />
+          <s:enumeration value="Workspace" />
+        </s:restriction>
+      </s:simpleType>
+      <s:complexType name="LocalCodeContainer">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="ZippedFile" type="s:base64Binary" />
+          <s:element minOccurs="0" maxOccurs="1" name="FileName" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="SourceFilterPatterns">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="ExcludeFilesPatterns" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="ExcludeFoldersPatterns" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:simpleType name="CxClientType">
+        <s:restriction base="s:string">
+          <s:enumeration value="None" />
+          <s:enumeration value="WebPortal" />
+          <s:enumeration value="CLI" />
+          <s:enumeration value="Eclipse" />
+          <s:enumeration value="VS" />
+          <s:enumeration value="InteliJ" />
+          <s:enumeration value="Audit" />
+          <s:enumeration value="SDK" />
+          <s:enumeration value="Jenkins" />
+          <s:enumeration value="TFSBuild" />
+          <s:enumeration value="Importer" />
+          <s:enumeration value="Other" />
+          <s:enumeration value="Sonar" />
+        </s:restriction>
+      </s:simpleType>
+      <s:element name="ScanResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ScanResult" type="tns:CxWSResponseRunID" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="CxWSResponseRunID">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:CxWSBasicRepsonse">
+            <s:sequence>
+              <s:element minOccurs="1" maxOccurs="1" name="ProjectID" type="s:long" />
+              <s:element minOccurs="0" maxOccurs="1" name="RunId" type="s:string" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="CxWSBasicRepsonse">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="IsSuccesfull" type="s:boolean" />
+          <s:element minOccurs="0" maxOccurs="1" name="ErrorMessage" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="BranchProjectById">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="sessionId" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="originProjectId" type="s:long" />
+            <s:element minOccurs="0" maxOccurs="1" name="newBranchProjectName" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="BranchProjectByIdResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="BranchProjectByIdResult" type="tns:CxWSResponseRunID" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ScanWithOriginName">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="sessionId" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="args" type="tns:CliScanArgs" />
+            <s:element minOccurs="0" maxOccurs="1" name="origName" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ScanWithOriginNameResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ScanWithOriginNameResult" type="tns:CxWSResponseRunID" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="CancelScan">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="sessionID" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="RunId" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="CancelScanResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="CancelScanResult" type="tns:CxWSBasicRepsonse" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="DeleteProjects">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="sessionID" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="projectIDs" type="tns:ArrayOfLong" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ArrayOfLong">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="long" type="s:long" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="DeleteProjectsResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="DeleteProjectsResult" type="tns:CxWSBasicRepsonse" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="DeleteScans">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="sessionID" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="scanIDs" type="tns:ArrayOfLong" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="DeleteScansResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="DeleteScansResult" type="tns:CxWSBasicRepsonse" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ScanWithScheduling">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="sessionId" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="args" type="tns:CliScanArgs" />
+            <s:element minOccurs="0" maxOccurs="1" name="schedulingData" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ScanWithSchedulingResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ScanWithSchedulingResult" type="tns:CxWSResponseRunID" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ScanWithSchedulingWithCron">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="sessionId" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="args" type="tns:CliScanArgs" />
+            <s:element minOccurs="0" maxOccurs="1" name="cronString" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="utcEpochStartTime" type="s:long" />
+            <s:element minOccurs="1" maxOccurs="1" name="utcEpochEndTime" type="s:long" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ScanWithSchedulingWithCronResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ScanWithSchedulingWithCronResult" type="tns:CxWSResponseRunID" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="UpdateScanComment">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="sessionID" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="ScanID" type="s:long" />
+            <s:element minOccurs="0" maxOccurs="1" name="Comment" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="UpdateScanCommentResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="UpdateScanCommentResult" type="tns:CxWSBasicRepsonse" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetPresetList">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionID" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetPresetListResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="GetPresetListResult" type="tns:CxWSResponsePresetList" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="CxWSResponsePresetList">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:CxWSBasicRepsonse">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="PresetList" type="tns:ArrayOfPreset" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="ArrayOfPreset">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="Preset" nillable="true" type="tns:Preset" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="Preset">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="PresetName" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="ID" type="s:long" />
+          <s:element minOccurs="0" maxOccurs="1" name="owningUser" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="isUserAllowToUpdate" type="s:boolean" />
+          <s:element minOccurs="1" maxOccurs="1" name="isUserAllowToDelete" type="s:boolean" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="GetConfigurationSetList">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionID" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetConfigurationSetListResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="GetConfigurationSetListResult" type="tns:CxWSResponseConfigSetList" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="CxWSResponseConfigSetList">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:CxWSBasicRepsonse">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="ConfigSetList" type="tns:ArrayOfConfigurationSet" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="ArrayOfConfigurationSet">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="ConfigurationSet" nillable="true" type="tns:ConfigurationSet" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ConfigurationSet">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="ConfigSetName" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="ID" type="s:long" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="GetProjectsDisplayData">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="sessionID" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetProjectsDisplayDataResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="GetProjectsDisplayDataResult" type="tns:CxWSResponseProjectsDisplayData" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="CxWSResponseProjectsDisplayData">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:CxWSBasicRepsonse">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="projectList" type="tns:ArrayOfProjectDisplayData" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="ArrayOfProjectDisplayData">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="ProjectDisplayData" nillable="true" type="tns:ProjectDisplayData" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ProjectDisplayData">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Permission" type="tns:UserPermission" />
+          <s:element minOccurs="1" maxOccurs="1" name="projectID" type="s:long" />
+          <s:element minOccurs="0" maxOccurs="1" name="ServiceProvider" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Company" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Owner" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="ProjectName" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Group" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Preset" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="LastScanDate" type="tns:CxDateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="TotalScans" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="IsPublic" type="s:boolean" />
+          <s:element minOccurs="1" maxOccurs="1" name="TotalOsaScans" type="s:int" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="UserPermission">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="IsAllowedToDelete" type="s:boolean" />
+          <s:element minOccurs="1" maxOccurs="1" name="IsAllowedToDuplicate" type="s:boolean" />
+          <s:element minOccurs="1" maxOccurs="1" name="IsAllowedToRun" type="s:boolean" />
+          <s:element minOccurs="1" maxOccurs="1" name="IsAllowedToUpdate" type="s:boolean" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="CxDateTime">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="Hour" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="Minute" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="Second" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="Day" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="Month" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="Year" type="s:int" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="GetProjectScannedDisplayData">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="sessionID" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetProjectScannedDisplayDataResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="GetProjectScannedDisplayDataResult" type="tns:CxWSResponseProjectScannedDisplayData" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="CxWSResponseProjectScannedDisplayData">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:CxWSBasicRepsonse">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="ProjectScannedList" type="tns:ArrayOfProjectScannedDisplayData" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="ArrayOfProjectScannedDisplayData">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="ProjectScannedDisplayData" nillable="true" type="tns:ProjectScannedDisplayData" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ProjectScannedDisplayData">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="ProjectID" type="s:long" />
+          <s:element minOccurs="0" maxOccurs="1" name="ProjectName" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="LastScanID" type="s:long" />
+          <s:element minOccurs="1" maxOccurs="1" name="LastScanDate" type="s:long" />
+          <s:element minOccurs="0" maxOccurs="1" name="TeamName" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="RiskLevelScore" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="LOC" type="s:long" />
+          <s:element minOccurs="1" maxOccurs="1" name="HighVulnerabilities" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="MediumVulnerabilities" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="LowVulnerabilities" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="InfoVulnerabilities" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="TotalVulnerabilities" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="QueueTime" type="s:long" />
+          <s:element minOccurs="1" maxOccurs="1" name="ScanTime" type="s:long" />
+          <s:element minOccurs="0" maxOccurs="1" name="FailedLOC" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="StatisticsCalculationDate" type="s:long" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="GetProjectConfiguration">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="sessionID" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="projectID" type="s:long" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetProjectConfigurationResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="GetProjectConfigurationResult" type="tns:CxWSResponseProjectConfig" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="CxWSResponseProjectConfig">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:CxWSBasicRepsonse">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="ProjectConfig" type="tns:ProjectConfiguration" />
+              <s:element minOccurs="0" maxOccurs="1" name="Permission" type="tns:UserPermission" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="ProjectConfiguration">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="ProjectSettings" type="tns:ProjectSettings" />
+          <s:element minOccurs="0" maxOccurs="1" name="SourceCodeSettings" type="tns:SourceCodeSettings" />
+          <s:element minOccurs="0" maxOccurs="1" name="ScheduleSettings" type="tns:ScheduleSettings" />
+          <s:element minOccurs="0" maxOccurs="1" name="ScanActionSettings" type="tns:ScanActionSettings" />
+          <s:element minOccurs="0" maxOccurs="1" name="ProjectIssueTrackingSettings" type="tns:CxWSProjectIssueTrackingSettings" />
+          <s:element minOccurs="0" maxOccurs="1" name="CustomFields" type="tns:ArrayOfCxWSProjectCustomField" />
+          <s:element minOccurs="0" maxOccurs="1" name="DataRetentionSettings" type="tns:DataRetentionSettings" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ScheduleSettings">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="Schedule" type="tns:ScheduleType" />
+          <s:element minOccurs="0" maxOccurs="1" name="ScheduledDays" type="tns:ArrayOfDayOfWeek" />
+          <s:element minOccurs="0" maxOccurs="1" name="Time" type="tns:CxDateTime" />
+          <s:element minOccurs="0" maxOccurs="1" name="StartSchedulingPeriod" type="tns:CxDateTime" />
+          <s:element minOccurs="0" maxOccurs="1" name="EndSchedulingPeriod" type="tns:CxDateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="SchedulingFrequency" type="s:int" />
+        </s:sequence>
+      </s:complexType>
+      <s:simpleType name="ScheduleType">
+        <s:restriction base="s:string">
+          <s:enumeration value="None" />
+          <s:enumeration value="Now" />
+          <s:enumeration value="Weekly" />
+        </s:restriction>
+      </s:simpleType>
+      <s:complexType name="ArrayOfDayOfWeek">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="DayOfWeek" type="tns:DayOfWeek" />
+        </s:sequence>
+      </s:complexType>
+      <s:simpleType name="DayOfWeek">
+        <s:restriction base="s:string">
+          <s:enumeration value="Sunday" />
+          <s:enumeration value="Monday" />
+          <s:enumeration value="Tuesday" />
+          <s:enumeration value="Wednesday" />
+          <s:enumeration value="Thursday" />
+          <s:enumeration value="Friday" />
+          <s:enumeration value="Saturday" />
+        </s:restriction>
+      </s:simpleType>
+      <s:complexType name="ScanActionSettings">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="ScanActionList" type="tns:ArrayOfScanAction" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfScanAction">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="ScanAction" nillable="true" type="tns:ScanAction" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ScanAction">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Parameters" type="tns:ArrayOfString" />
+          <s:element minOccurs="1" maxOccurs="1" name="Trigger" type="tns:ScanEventType" />
+          <s:element minOccurs="1" maxOccurs="1" name="Action" type="tns:ScanActionType" />
+        </s:sequence>
+      </s:complexType>
+      <s:simpleType name="ScanEventType">
+        <s:restriction base="s:string">
+          <s:enumeration value="BeforeScanStarts" />
+          <s:enumeration value="AfterScanSucceeds" />
+          <s:enumeration value="OnScanFailure" />
+        </s:restriction>
+      </s:simpleType>
+      <s:simpleType name="ScanActionType">
+        <s:restriction base="s:string">
+          <s:enumeration value="EmailNotification" />
+          <s:enumeration value="PostScanAction" />
+        </s:restriction>
+      </s:simpleType>
+      <s:complexType name="CxWSProjectIssueTrackingSettings">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="TrackingSystemID" type="s:long" />
+          <s:element minOccurs="0" maxOccurs="1" name="Params" type="tns:ArrayOfCxWSIssueTrackingParam" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfCxWSIssueTrackingParam">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="CxWSIssueTrackingParam" nillable="true" type="tns:CxWSIssueTrackingParam" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="CxWSIssueTrackingParam">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Name" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Value" />
+          <s:element minOccurs="0" maxOccurs="1" name="Type" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfCxWSProjectCustomField">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="CxWSProjectCustomField" nillable="true" type="tns:CxWSProjectCustomField" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="CxWSProjectCustomField">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="CustomFieldId" type="s:long" />
+          <s:element minOccurs="0" maxOccurs="1" name="Value" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="DataRetentionSettings">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="NumOfScansToKeep" type="s:int" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfAnyType">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="anyType" nillable="true" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="UpdateProjectIncrementalConfiguration">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="sessionID" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="projectID" type="s:long" />
+            <s:element minOccurs="0" maxOccurs="1" name="projectConfiguration" type="tns:ProjectConfiguration" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="UpdateProjectIncrementalConfigurationResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="UpdateProjectIncrementalConfigurationResult" type="tns:CxWSBasicRepsonse" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="Login">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="applicationCredentials" type="tns:Credentials" />
+            <s:element minOccurs="1" maxOccurs="1" name="lcid" type="s:int" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="LoginResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="LoginResult" type="tns:CxWSResponseLoginData" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="CxWSResponseLoginData">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:CxWSResponseSessionID">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="FamilyName" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="FirstName" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="UserName" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="Email" type="s:string" />
+              <s:element minOccurs="1" maxOccurs="1" name="UserID" type="s:long" />
+              <s:element minOccurs="1" maxOccurs="1" name="UserPreferedLanguageLCID" type="s:int" />
+              <s:element minOccurs="1" maxOccurs="1" name="IsAllowedToCreateProject" type="s:boolean" />
+              <s:element minOccurs="1" maxOccurs="1" name="IsAllowedToChangeProject" type="s:boolean" />
+              <s:element minOccurs="1" maxOccurs="1" name="IsAllowedToManageUsers" type="s:boolean" />
+              <s:element minOccurs="1" maxOccurs="1" name="IsAllowedToViewCompanies" type="s:boolean" />
+              <s:element minOccurs="1" maxOccurs="1" name="IsAllowedToManageCompanies" type="s:boolean" />
+              <s:element minOccurs="1" maxOccurs="1" name="IsAllowedToManageServer" type="s:boolean" />
+              <s:element minOccurs="1" maxOccurs="1" name="IsAllowedToViewInstallationData" type="s:boolean" />
+              <s:element minOccurs="1" maxOccurs="1" name="IsAllowedToViewSp" type="s:boolean" />
+              <s:element minOccurs="1" maxOccurs="1" name="IsAllowedToManageSp" type="s:boolean" />
+              <s:element minOccurs="1" maxOccurs="1" name="IsScanner" type="s:boolean" />
+              <s:element minOccurs="1" maxOccurs="1" name="IsAuditor" type="s:boolean" />
+              <s:element minOccurs="1" maxOccurs="1" name="IsAllowedToManagePresets" type="s:boolean" />
+              <s:element minOccurs="1" maxOccurs="1" name="isAllowedToManagePredefinedCommand" type="s:boolean" />
+              <s:element minOccurs="1" maxOccurs="1" name="IsAllowedToManagePostScanAction" type="s:boolean" />
+              <s:element minOccurs="1" maxOccurs="1" name="IsAllowedToModifyResultDetails" type="s:boolean" />
+              <s:element minOccurs="1" maxOccurs="1" name="EnableIncrementalScan" type="s:boolean" />
+              <s:element minOccurs="1" maxOccurs="1" name="ShowSaaSPackageNotificationAndErrors" type="s:boolean" />
+              <s:element minOccurs="1" maxOccurs="1" name="ShowSaaSPackageDetails" type="s:boolean" />
+              <s:element minOccurs="1" maxOccurs="1" name="IsAdviseChangePassword" type="s:boolean" />
+              <s:element minOccurs="1" maxOccurs="1" name="IsAllowedToManageITSServers" type="s:boolean" />
+              <s:element minOccurs="1" maxOccurs="1" name="AllowedToChangeNotExploitable" type="s:boolean" />
+              <s:element minOccurs="1" maxOccurs="1" name="IsAllowedToDeleteScans" type="s:boolean" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="CxWSResponseSessionID">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:CxWSBasicRepsonse">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="SessionId" type="s:string" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:element name="SsoLogin">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="encryptedCredentials" type="tns:Credentials" />
+            <s:element minOccurs="1" maxOccurs="1" name="lcid" type="s:int" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="SsoLoginResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SsoLoginResult" type="tns:CxWSResponseLoginData" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="LoginWithToken">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="token" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="lcid" type="s:int" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="LoginWithTokenResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="LoginWithTokenResult" type="tns:CxWSResponseLoginData" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="Logout">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="sessionID" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="LogoutResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="LogoutResult" type="tns:CxWSBasicRepsonse" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetAssociatedGroupsList">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionID" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="Group">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="GroupName" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="ID" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="Type" type="tns:GroupType" />
+          <s:element minOccurs="0" maxOccurs="1" name="Guid" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="FullPath" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Path" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:simpleType name="GroupType">
+        <s:restriction base="s:string">
+          <s:enumeration value="Team" />
+          <s:enumeration value="Company" />
+          <s:enumeration value="SP" />
+          <s:enumeration value="Server" />
+        </s:restriction>
+      </s:simpleType>
+      <s:complexType name="ArrayOfGroup">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="Group" nillable="true" type="tns:Group" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="GetAssociatedGroupsListResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="GetAssociatedGroupsListResult" type="tns:CxWSResponseGroupList" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="CxWSResponseGroupList">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:CxWSBasicRepsonse">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="GroupList" type="tns:ArrayOfGroup" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:element name="GetStatusOfSingleScan">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="sessionID" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="runId" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetStatusOfSingleScanResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="GetStatusOfSingleScanResult" type="tns:CxWSResponseScanStatus" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="CxWSResponseScanStatus">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:CxWSBasicRepsonse">
+            <s:sequence>
+              <s:element minOccurs="1" maxOccurs="1" name="CurrentStage" type="s:int" />
+              <s:element minOccurs="1" maxOccurs="1" name="QueuePosition" type="s:int" />
+              <s:element minOccurs="1" maxOccurs="1" name="TotalPercent" type="s:int" />
+              <s:element minOccurs="1" maxOccurs="1" name="CurrentStagePercent" type="s:int" />
+              <s:element minOccurs="0" maxOccurs="1" name="Owner" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="StageName" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="StageMessage" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="StepMessage" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="StepDetails" type="s:string" />
+              <s:element minOccurs="1" maxOccurs="1" name="ResultId" type="s:long" />
+              <s:element minOccurs="1" maxOccurs="1" name="ScanId" type="s:long" />
+              <s:element minOccurs="1" maxOccurs="1" name="ProjectId" type="s:long" />
+              <s:element minOccurs="1" maxOccurs="1" name="TaskId" type="s:long" />
+              <s:element minOccurs="0" maxOccurs="1" name="TaskName" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="ProjectName" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="RunId" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="SourceId" type="s:string" />
+              <s:element minOccurs="1" maxOccurs="1" name="LOC" type="s:long" />
+              <s:element minOccurs="0" maxOccurs="1" name="TimeScheduled" type="tns:CxDateTime" />
+              <s:element minOccurs="0" maxOccurs="1" name="ElapsedTime" type="tns:CxDateTime" />
+              <s:element minOccurs="0" maxOccurs="1" name="TimeFinished" type="tns:CxDateTime" />
+              <s:element minOccurs="0" maxOccurs="1" name="TimeBeginWorking" type="tns:CxDateTime" />
+              <s:element minOccurs="1" maxOccurs="1" name="CurrentStatus" type="tns:CurrentStatusEnum" />
+              <s:element minOccurs="0" maxOccurs="1" name="ServerName" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="Origin" type="s:string" />
+              <s:element minOccurs="1" maxOccurs="1" name="IsPublic" type="s:boolean" />
+              <s:element minOccurs="1" maxOccurs="1" name="PartialResults" type="s:boolean" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:simpleType name="CurrentStatusEnum">
+        <s:restriction base="s:string">
+          <s:enumeration value="Queued" />
+          <s:enumeration value="Working" />
+          <s:enumeration value="Finished" />
+          <s:enumeration value="Failed" />
+          <s:enumeration value="Canceled" />
+          <s:enumeration value="Deleted" />
+          <s:enumeration value="Unknown" />
+          <s:enumeration value="Unzipping" />
+          <s:enumeration value="WaitingToProcess" />
+        </s:restriction>
+      </s:simpleType>
+      <s:element name="GetScansDisplayDataForAllProjects">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="sessionID" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ScanDisplayData">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="ScanID" type="s:long" />
+          <s:element minOccurs="1" maxOccurs="1" name="IsAllowedToDelete" type="s:boolean" />
+          <s:element minOccurs="0" maxOccurs="1" name="QueuedDateTime" type="tns:CxDateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="RiskLevelScore" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="FinishedDateTime" type="tns:CxDateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="ProjectId" type="s:long" />
+          <s:element minOccurs="0" maxOccurs="1" name="ProjectName" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="InitiatorName" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="TeamName" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="IsIncremental" type="s:boolean" />
+          <s:element minOccurs="0" maxOccurs="1" name="CxVersion" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="LOC" type="s:long" />
+          <s:element minOccurs="1" maxOccurs="1" name="HighSeverityResults" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="MediumSeverityResults" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="LowSeverityResults" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="Comments" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="ScanDisplayType" type="tns:ScanType" />
+          <s:element minOccurs="0" maxOccurs="1" name="ServerName" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Origin" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="FailedLOC" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="StatisticsCalculationDate" type="tns:CxDateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="IsPublic" type="s:boolean" />
+          <s:element minOccurs="1" maxOccurs="1" name="IsLocked" type="s:boolean" />
+        </s:sequence>
+      </s:complexType>
+      <s:simpleType name="ScanType">
+        <s:restriction base="s:string">
+          <s:enumeration value="UNKNOWN" />
+          <s:enumeration value="ALLSCANS" />
+          <s:enumeration value="REGULAR" />
+          <s:enumeration value="SUBSET" />
+          <s:enumeration value="PARTIAL" />
+          <s:enumeration value="RUNNING" />
+        </s:restriction>
+      </s:simpleType>
+      <s:complexType name="ArrayOfScanDisplayData">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="ScanDisplayData" nillable="true" type="tns:ScanDisplayData" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="GetScansDisplayDataForAllProjectsResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="GetScansDisplayDataForAllProjectsResult" type="tns:CxWSResponseScansDisplayData" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="CxWSResponseScansDisplayData">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:CxWSBasicRepsonse">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="ScanList" type="tns:ArrayOfScanDisplayData" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:element name="GetScanSummary">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionID" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="ScanID" type="s:long" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="CxWSQueryLanguageState">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="LanguageID" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="LanguageName" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="LanguageHash" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="StateCreationDate" type="s:dateTime" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfCxWSQueryLanguageState">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="CxWSQueryLanguageState" nillable="true" type="tns:CxWSQueryLanguageState" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="GetScanSummaryResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="GetScanSummaryResult" type="tns:CxWSResponseScanSummary" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="CxWSResponseScanSummary">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:CxWSBasicRepsonse">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="Started" type="tns:CxDateTime" />
+              <s:element minOccurs="0" maxOccurs="1" name="Finished" type="tns:CxDateTime" />
+              <s:element minOccurs="1" maxOccurs="1" name="ScanRisk" type="s:int" />
+              <s:element minOccurs="0" maxOccurs="1" name="Preset" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="Path" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="Comment" type="s:string" />
+              <s:element minOccurs="1" maxOccurs="1" name="LOC" type="s:long" />
+              <s:element minOccurs="1" maxOccurs="1" name="FilesCount" type="s:long" />
+              <s:element minOccurs="1" maxOccurs="1" name="High" type="s:int" />
+              <s:element minOccurs="1" maxOccurs="1" name="Medium" type="s:int" />
+              <s:element minOccurs="1" maxOccurs="1" name="Low" type="s:int" />
+              <s:element minOccurs="1" maxOccurs="1" name="Info" type="s:int" />
+              <s:element minOccurs="1" maxOccurs="1" name="ScanRiskSeverity" type="s:int" />
+              <s:element minOccurs="1" maxOccurs="1" name="ScanRiskQuantity" type="s:int" />
+              <s:element minOccurs="1" maxOccurs="1" name="IsIncremental" type="s:boolean" />
+              <s:element minOccurs="1" maxOccurs="1" name="ScanType" type="tns:ScanType" />
+              <s:element minOccurs="0" maxOccurs="1" name="ScanLanguageStateCollection" type="tns:ArrayOfCxWSQueryLanguageState" />
+              <s:element minOccurs="0" maxOccurs="1" name="EngineStart" type="tns:CxDateTime" />
+              <s:element minOccurs="0" maxOccurs="1" name="EngineFinish" type="tns:CxDateTime" />
+              <s:element minOccurs="0" maxOccurs="1" name="ScanQueued" type="tns:CxDateTime" />
+              <s:element minOccurs="1" maxOccurs="1" name="TotalScanTime" type="s:long" />
+              <s:element minOccurs="0" maxOccurs="1" name="StatisticsCalculationDate" type="tns:CxDateTime" />
+              <s:element minOccurs="0" maxOccurs="1" name="ProjectName" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="TeamName" type="s:string" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:element name="UpdateProjectConfiguration">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="sessionID" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="projectID" type="s:long" />
+            <s:element minOccurs="0" maxOccurs="1" name="projectConfiguration" type="tns:ProjectConfiguration" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="UpdateProjectConfigurationResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="UpdateProjectConfigurationResult" type="tns:CxWSBasicRepsonse" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="DeleteUser">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="sessionID" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="userID" type="s:int" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="DeleteUserResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="DeleteUserResult" type="tns:CxWSBasicRepsonse" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetAllUsers">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="sessionID" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="CxWSItemAndCRUD">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="Type" type="tns:CxWSItemTypeEnum" />
+          <s:element minOccurs="0" maxOccurs="1" name="CRUDActionList" type="tns:ArrayOfCxWSEnableCRUDAction" />
+        </s:sequence>
+      </s:complexType>
+      <s:simpleType name="CxWSItemTypeEnum">
+        <s:restriction base="s:string">
+          <s:enumeration value="Project" />
+          <s:enumeration value="Task" />
+          <s:enumeration value="Scan" />
+          <s:enumeration value="Preset" />
+          <s:enumeration value="Configuration" />
+          <s:enumeration value="Users" />
+          <s:enumeration value="Roles" />
+          <s:enumeration value="Other" />
+          <s:enumeration value="SystemSettings" />
+          <s:enumeration value="Ignore_Path" />
+          <s:enumeration value="ResultComment" />
+          <s:enumeration value="ResultSeverity" />
+          <s:enumeration value="ResultStatus" />
+          <s:enumeration value="AuditUser" />
+        </s:restriction>
+      </s:simpleType>
+      <s:complexType name="ArrayOfCxWSEnableCRUDAction">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="CxWSEnableCRUDAction" nillable="true" type="tns:CxWSEnableCRUDAction" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="CxWSEnableCRUDAction">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="Type" type="tns:CxWSCrudEnum" />
+          <s:element minOccurs="1" maxOccurs="1" name="Enable" type="s:boolean" />
+        </s:sequence>
+      </s:complexType>
+      <s:simpleType name="CxWSCrudEnum">
+        <s:restriction base="s:string">
+          <s:enumeration value="Create" />
+          <s:enumeration value="Delete" />
+          <s:enumeration value="Update" />
+          <s:enumeration value="View" />
+          <s:enumeration value="Run" />
+          <s:enumeration value="Investigate" />
+        </s:restriction>
+      </s:simpleType>
+      <s:complexType name="Role">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Name" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="ID" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="CxWSRoleWithUserPrivileges">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:Role">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="ItemsCRUD" type="tns:ArrayOfCxWSItemAndCRUD" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="ArrayOfCxWSItemAndCRUD">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="CxWSItemAndCRUD" nillable="true" type="tns:CxWSItemAndCRUD" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="WebClientUser">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="ID" type="s:long" />
+          <s:element minOccurs="0" maxOccurs="1" name="FirstName" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="LastName" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="UserPreferedLanguageLCID" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="Password" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="JobTitle" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Email" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="UserName" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="UPN" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Phone" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CellPhone" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Skype" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CompanyID" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CompanyName" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="willExpireAfterDays" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="country" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="DateCreated" type="s:dateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="AuditUser" type="s:boolean" />
+          <s:element minOccurs="0" maxOccurs="1" name="GroupList" type="tns:ArrayOfGroup" />
+          <s:element minOccurs="1" maxOccurs="1" name="LastLoginDate" type="s:dateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="LimitAccessByIPAddress" type="s:boolean" />
+          <s:element minOccurs="0" maxOccurs="1" name="AllowedIPs" type="tns:ArrayOfString" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="UserData">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:WebClientUser">
+            <s:sequence>
+              <s:element minOccurs="1" maxOccurs="1" name="IsActive" type="s:boolean" />
+              <s:element minOccurs="0" maxOccurs="1" name="RoleData" type="tns:Role" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="ArrayOfUserData">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="UserData" nillable="true" type="tns:UserData" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="GetAllUsersResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="GetAllUsersResult" type="tns:CxWSResponseUserData" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="CxWSResponseUserData">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:CxWSBasicRepsonse">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="UserDataList" type="tns:ArrayOfUserData" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:element name="CreateScanReport">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="sessionID" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="reportRequest" type="tns:CxWSReportRequest" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="CxWSReportRequest">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="Type" type="tns:CxWSReportType" />
+          <s:element minOccurs="1" maxOccurs="1" name="ScanID" type="s:long" />
+        </s:sequence>
+      </s:complexType>
+      <s:simpleType name="CxWSReportType">
+        <s:restriction base="s:string">
+          <s:enumeration value="PDF" />
+          <s:enumeration value="RTF" />
+          <s:enumeration value="CSV" />
+          <s:enumeration value="XML" />
+        </s:restriction>
+      </s:simpleType>
+      <s:element name="CreateScanReportResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="CreateScanReportResult" type="tns:CxWSCreateReportResponse" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="CxWSCreateReportResponse">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:CxWSBasicRepsonse">
+            <s:sequence>
+              <s:element minOccurs="1" maxOccurs="1" name="ID" type="s:long" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:element name="GetScanReportStatus">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionID" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="ReportID" type="s:long" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetScanReportStatusResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="GetScanReportStatusResult" type="tns:CxWSReportStatusResponse" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="CxWSReportStatusResponse">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:CxWSBasicRepsonse">
+            <s:sequence>
+              <s:element minOccurs="1" maxOccurs="1" name="IsReady" type="s:boolean" />
+              <s:element minOccurs="1" maxOccurs="1" name="IsFailed" type="s:boolean" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:element name="GetScanReport">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionID" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="ReportID" type="s:long" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetScanReportResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="GetScanReportResult" type="tns:CxWSResponseScanResults" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="CxWSResponseScanResults">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:CxWSBasicRepsonse">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="ScanResults" type="s:base64Binary" />
+              <s:element minOccurs="1" maxOccurs="1" name="containsAllResults" type="s:boolean" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:element name="ExecuteDataRetention">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionID" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="dataRetentionConfiguration" type="tns:CxDataRetentionConfiguration" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="CxDataRetentionConfiguration">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="DataRetentionType" type="tns:CxDataRetentionType" />
+          <s:element minOccurs="1" maxOccurs="1" name="NumOfScansToPreserve" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="StartDate" type="s:long" />
+          <s:element minOccurs="1" maxOccurs="1" name="EndDate" type="s:long" />
+          <s:element minOccurs="1" maxOccurs="1" name="DurationLimitInHours" nillable="true" type="s:long" />
+        </s:sequence>
+      </s:complexType>
+      <s:simpleType name="CxDataRetentionType">
+        <s:restriction base="s:string">
+          <s:enumeration value="NumOfScansToPreserve" />
+          <s:enumeration value="DatesRange" />
+        </s:restriction>
+      </s:simpleType>
+      <s:element name="ExecuteDataRetentionResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ExecuteDataRetentionResult" type="tns:CxWSBasicRepsonse" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="StopDataRetention">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionID" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="StopDataRetentionResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="StopDataRetentionResult" type="tns:CxWSBasicRepsonse" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetTeamLdapGroupsMapping">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="sessionId" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="teamId" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="CxWSLdapGroupMapping">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="LdapServerId" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="LdapGroup" type="tns:CxWSLdapGroup" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="CxWSLdapGroup">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="DN" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Name" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfCxWSLdapGroupMapping">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="CxWSLdapGroupMapping" nillable="true" type="tns:CxWSLdapGroupMapping" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="GetTeamLdapGroupsMappingResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="GetTeamLdapGroupsMappingResult" type="tns:CxWSResponseTeamLdapGroupMappingData" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="CxWSResponseTeamLdapGroupMappingData">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:CxWSBasicRepsonse">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="TeamId" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" name="LdapGroups" type="tns:ArrayOfCxWSLdapGroupMapping" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:element name="SetTeamLdapGroupsMapping">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="sessionId" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="teamId" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="ldapGroups" type="tns:ArrayOfCxWSLdapGroupMapping" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="SetTeamLdapGroupsMappingResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SetTeamLdapGroupsMappingResult" type="tns:CxWSBasicRepsonse" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="IsValidProjectName">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionID" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="ProjectName" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="GroupId" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="IsValidProjectNameResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="IsValidProjectNameResult" type="tns:CxWSBasicRepsonse" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="ScanSoapIn">
+    <wsdl:part name="parameters" element="tns:Scan" />
+  </wsdl:message>
+  <wsdl:message name="ScanSoapOut">
+    <wsdl:part name="parameters" element="tns:ScanResponse" />
+  </wsdl:message>
+  <wsdl:message name="BranchProjectByIdSoapIn">
+    <wsdl:part name="parameters" element="tns:BranchProjectById" />
+  </wsdl:message>
+  <wsdl:message name="BranchProjectByIdSoapOut">
+    <wsdl:part name="parameters" element="tns:BranchProjectByIdResponse" />
+  </wsdl:message>
+  <wsdl:message name="ScanWithOriginNameSoapIn">
+    <wsdl:part name="parameters" element="tns:ScanWithOriginName" />
+  </wsdl:message>
+  <wsdl:message name="ScanWithOriginNameSoapOut">
+    <wsdl:part name="parameters" element="tns:ScanWithOriginNameResponse" />
+  </wsdl:message>
+  <wsdl:message name="CancelScanSoapIn">
+    <wsdl:part name="parameters" element="tns:CancelScan" />
+  </wsdl:message>
+  <wsdl:message name="CancelScanSoapOut">
+    <wsdl:part name="parameters" element="tns:CancelScanResponse" />
+  </wsdl:message>
+  <wsdl:message name="DeleteProjectsSoapIn">
+    <wsdl:part name="parameters" element="tns:DeleteProjects" />
+  </wsdl:message>
+  <wsdl:message name="DeleteProjectsSoapOut">
+    <wsdl:part name="parameters" element="tns:DeleteProjectsResponse" />
+  </wsdl:message>
+  <wsdl:message name="DeleteScansSoapIn">
+    <wsdl:part name="parameters" element="tns:DeleteScans" />
+  </wsdl:message>
+  <wsdl:message name="DeleteScansSoapOut">
+    <wsdl:part name="parameters" element="tns:DeleteScansResponse" />
+  </wsdl:message>
+  <wsdl:message name="ScanWithSchedulingSoapIn">
+    <wsdl:part name="parameters" element="tns:ScanWithScheduling" />
+  </wsdl:message>
+  <wsdl:message name="ScanWithSchedulingSoapOut">
+    <wsdl:part name="parameters" element="tns:ScanWithSchedulingResponse" />
+  </wsdl:message>
+  <wsdl:message name="ScanWithSchedulingWithCronSoapIn">
+    <wsdl:part name="parameters" element="tns:ScanWithSchedulingWithCron" />
+  </wsdl:message>
+  <wsdl:message name="ScanWithSchedulingWithCronSoapOut">
+    <wsdl:part name="parameters" element="tns:ScanWithSchedulingWithCronResponse" />
+  </wsdl:message>
+  <wsdl:message name="UpdateScanCommentSoapIn">
+    <wsdl:part name="parameters" element="tns:UpdateScanComment" />
+  </wsdl:message>
+  <wsdl:message name="UpdateScanCommentSoapOut">
+    <wsdl:part name="parameters" element="tns:UpdateScanCommentResponse" />
+  </wsdl:message>
+  <wsdl:message name="GetPresetListSoapIn">
+    <wsdl:part name="parameters" element="tns:GetPresetList" />
+  </wsdl:message>
+  <wsdl:message name="GetPresetListSoapOut">
+    <wsdl:part name="parameters" element="tns:GetPresetListResponse" />
+  </wsdl:message>
+  <wsdl:message name="GetConfigurationSetListSoapIn">
+    <wsdl:part name="parameters" element="tns:GetConfigurationSetList" />
+  </wsdl:message>
+  <wsdl:message name="GetConfigurationSetListSoapOut">
+    <wsdl:part name="parameters" element="tns:GetConfigurationSetListResponse" />
+  </wsdl:message>
+  <wsdl:message name="GetProjectsDisplayDataSoapIn">
+    <wsdl:part name="parameters" element="tns:GetProjectsDisplayData" />
+  </wsdl:message>
+  <wsdl:message name="GetProjectsDisplayDataSoapOut">
+    <wsdl:part name="parameters" element="tns:GetProjectsDisplayDataResponse" />
+  </wsdl:message>
+  <wsdl:message name="GetProjectScannedDisplayDataSoapIn">
+    <wsdl:part name="parameters" element="tns:GetProjectScannedDisplayData" />
+  </wsdl:message>
+  <wsdl:message name="GetProjectScannedDisplayDataSoapOut">
+    <wsdl:part name="parameters" element="tns:GetProjectScannedDisplayDataResponse" />
+  </wsdl:message>
+  <wsdl:message name="GetProjectConfigurationSoapIn">
+    <wsdl:part name="parameters" element="tns:GetProjectConfiguration" />
+  </wsdl:message>
+  <wsdl:message name="GetProjectConfigurationSoapOut">
+    <wsdl:part name="parameters" element="tns:GetProjectConfigurationResponse" />
+  </wsdl:message>
+  <wsdl:message name="UpdateProjectIncrementalConfigurationSoapIn">
+    <wsdl:part name="parameters" element="tns:UpdateProjectIncrementalConfiguration" />
+  </wsdl:message>
+  <wsdl:message name="UpdateProjectIncrementalConfigurationSoapOut">
+    <wsdl:part name="parameters" element="tns:UpdateProjectIncrementalConfigurationResponse" />
+  </wsdl:message>
+  <wsdl:message name="LoginSoapIn">
+    <wsdl:part name="parameters" element="tns:Login" />
+  </wsdl:message>
+  <wsdl:message name="LoginSoapOut">
+    <wsdl:part name="parameters" element="tns:LoginResponse" />
+  </wsdl:message>
+  <wsdl:message name="SsoLoginSoapIn">
+    <wsdl:part name="parameters" element="tns:SsoLogin" />
+  </wsdl:message>
+  <wsdl:message name="SsoLoginSoapOut">
+    <wsdl:part name="parameters" element="tns:SsoLoginResponse" />
+  </wsdl:message>
+  <wsdl:message name="LoginWithTokenSoapIn">
+    <wsdl:part name="parameters" element="tns:LoginWithToken" />
+  </wsdl:message>
+  <wsdl:message name="LoginWithTokenSoapOut">
+    <wsdl:part name="parameters" element="tns:LoginWithTokenResponse" />
+  </wsdl:message>
+  <wsdl:message name="LogoutSoapIn">
+    <wsdl:part name="parameters" element="tns:Logout" />
+  </wsdl:message>
+  <wsdl:message name="LogoutSoapOut">
+    <wsdl:part name="parameters" element="tns:LogoutResponse" />
+  </wsdl:message>
+  <wsdl:message name="GetAssociatedGroupsListSoapIn">
+    <wsdl:part name="parameters" element="tns:GetAssociatedGroupsList" />
+  </wsdl:message>
+  <wsdl:message name="GetAssociatedGroupsListSoapOut">
+    <wsdl:part name="parameters" element="tns:GetAssociatedGroupsListResponse" />
+  </wsdl:message>
+  <wsdl:message name="GetStatusOfSingleScanSoapIn">
+    <wsdl:part name="parameters" element="tns:GetStatusOfSingleScan" />
+  </wsdl:message>
+  <wsdl:message name="GetStatusOfSingleScanSoapOut">
+    <wsdl:part name="parameters" element="tns:GetStatusOfSingleScanResponse" />
+  </wsdl:message>
+  <wsdl:message name="GetScansDisplayDataForAllProjectsSoapIn">
+    <wsdl:part name="parameters" element="tns:GetScansDisplayDataForAllProjects" />
+  </wsdl:message>
+  <wsdl:message name="GetScansDisplayDataForAllProjectsSoapOut">
+    <wsdl:part name="parameters" element="tns:GetScansDisplayDataForAllProjectsResponse" />
+  </wsdl:message>
+  <wsdl:message name="GetScanSummarySoapIn">
+    <wsdl:part name="parameters" element="tns:GetScanSummary" />
+  </wsdl:message>
+  <wsdl:message name="GetScanSummarySoapOut">
+    <wsdl:part name="parameters" element="tns:GetScanSummaryResponse" />
+  </wsdl:message>
+  <wsdl:message name="UpdateProjectConfigurationSoapIn">
+    <wsdl:part name="parameters" element="tns:UpdateProjectConfiguration" />
+  </wsdl:message>
+  <wsdl:message name="UpdateProjectConfigurationSoapOut">
+    <wsdl:part name="parameters" element="tns:UpdateProjectConfigurationResponse" />
+  </wsdl:message>
+  <wsdl:message name="DeleteUserSoapIn">
+    <wsdl:part name="parameters" element="tns:DeleteUser" />
+  </wsdl:message>
+  <wsdl:message name="DeleteUserSoapOut">
+    <wsdl:part name="parameters" element="tns:DeleteUserResponse" />
+  </wsdl:message>
+  <wsdl:message name="GetAllUsersSoapIn">
+    <wsdl:part name="parameters" element="tns:GetAllUsers" />
+  </wsdl:message>
+  <wsdl:message name="GetAllUsersSoapOut">
+    <wsdl:part name="parameters" element="tns:GetAllUsersResponse" />
+  </wsdl:message>
+  <wsdl:message name="CreateScanReportSoapIn">
+    <wsdl:part name="parameters" element="tns:CreateScanReport" />
+  </wsdl:message>
+  <wsdl:message name="CreateScanReportSoapOut">
+    <wsdl:part name="parameters" element="tns:CreateScanReportResponse" />
+  </wsdl:message>
+  <wsdl:message name="GetScanReportStatusSoapIn">
+    <wsdl:part name="parameters" element="tns:GetScanReportStatus" />
+  </wsdl:message>
+  <wsdl:message name="GetScanReportStatusSoapOut">
+    <wsdl:part name="parameters" element="tns:GetScanReportStatusResponse" />
+  </wsdl:message>
+  <wsdl:message name="GetScanReportSoapIn">
+    <wsdl:part name="parameters" element="tns:GetScanReport" />
+  </wsdl:message>
+  <wsdl:message name="GetScanReportSoapOut">
+    <wsdl:part name="parameters" element="tns:GetScanReportResponse" />
+  </wsdl:message>
+  <wsdl:message name="ExecuteDataRetentionSoapIn">
+    <wsdl:part name="parameters" element="tns:ExecuteDataRetention" />
+  </wsdl:message>
+  <wsdl:message name="ExecuteDataRetentionSoapOut">
+    <wsdl:part name="parameters" element="tns:ExecuteDataRetentionResponse" />
+  </wsdl:message>
+  <wsdl:message name="StopDataRetentionSoapIn">
+    <wsdl:part name="parameters" element="tns:StopDataRetention" />
+  </wsdl:message>
+  <wsdl:message name="StopDataRetentionSoapOut">
+    <wsdl:part name="parameters" element="tns:StopDataRetentionResponse" />
+  </wsdl:message>
+  <wsdl:message name="GetTeamLdapGroupsMappingSoapIn">
+    <wsdl:part name="parameters" element="tns:GetTeamLdapGroupsMapping" />
+  </wsdl:message>
+  <wsdl:message name="GetTeamLdapGroupsMappingSoapOut">
+    <wsdl:part name="parameters" element="tns:GetTeamLdapGroupsMappingResponse" />
+  </wsdl:message>
+  <wsdl:message name="SetTeamLdapGroupsMappingSoapIn">
+    <wsdl:part name="parameters" element="tns:SetTeamLdapGroupsMapping" />
+  </wsdl:message>
+  <wsdl:message name="SetTeamLdapGroupsMappingSoapOut">
+    <wsdl:part name="parameters" element="tns:SetTeamLdapGroupsMappingResponse" />
+  </wsdl:message>
+  <wsdl:message name="IsValidProjectNameSoapIn">
+    <wsdl:part name="parameters" element="tns:IsValidProjectName" />
+  </wsdl:message>
+  <wsdl:message name="IsValidProjectNameSoapOut">
+    <wsdl:part name="parameters" element="tns:IsValidProjectNameResponse" />
+  </wsdl:message>
+  <wsdl:portType name="CxSDKWebServiceSoap">
+    <wsdl:operation name="Scan">
+      <wsdl:input message="tns:ScanSoapIn" />
+      <wsdl:output message="tns:ScanSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="BranchProjectById">
+      <wsdl:input message="tns:BranchProjectByIdSoapIn" />
+      <wsdl:output message="tns:BranchProjectByIdSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ScanWithOriginName">
+      <wsdl:input message="tns:ScanWithOriginNameSoapIn" />
+      <wsdl:output message="tns:ScanWithOriginNameSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="CancelScan">
+      <wsdl:input message="tns:CancelScanSoapIn" />
+      <wsdl:output message="tns:CancelScanSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="DeleteProjects">
+      <wsdl:input message="tns:DeleteProjectsSoapIn" />
+      <wsdl:output message="tns:DeleteProjectsSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="DeleteScans">
+      <wsdl:input message="tns:DeleteScansSoapIn" />
+      <wsdl:output message="tns:DeleteScansSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ScanWithScheduling">
+      <wsdl:input message="tns:ScanWithSchedulingSoapIn" />
+      <wsdl:output message="tns:ScanWithSchedulingSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ScanWithSchedulingWithCron">
+      <wsdl:input message="tns:ScanWithSchedulingWithCronSoapIn" />
+      <wsdl:output message="tns:ScanWithSchedulingWithCronSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="UpdateScanComment">
+      <wsdl:input message="tns:UpdateScanCommentSoapIn" />
+      <wsdl:output message="tns:UpdateScanCommentSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="GetPresetList">
+      <wsdl:input message="tns:GetPresetListSoapIn" />
+      <wsdl:output message="tns:GetPresetListSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="GetConfigurationSetList">
+      <wsdl:input message="tns:GetConfigurationSetListSoapIn" />
+      <wsdl:output message="tns:GetConfigurationSetListSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="GetProjectsDisplayData">
+      <wsdl:input message="tns:GetProjectsDisplayDataSoapIn" />
+      <wsdl:output message="tns:GetProjectsDisplayDataSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="GetProjectScannedDisplayData">
+      <wsdl:input message="tns:GetProjectScannedDisplayDataSoapIn" />
+      <wsdl:output message="tns:GetProjectScannedDisplayDataSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="GetProjectConfiguration">
+      <wsdl:input message="tns:GetProjectConfigurationSoapIn" />
+      <wsdl:output message="tns:GetProjectConfigurationSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="UpdateProjectIncrementalConfiguration">
+      <wsdl:input message="tns:UpdateProjectIncrementalConfigurationSoapIn" />
+      <wsdl:output message="tns:UpdateProjectIncrementalConfigurationSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="Login">
+      <wsdl:input message="tns:LoginSoapIn" />
+      <wsdl:output message="tns:LoginSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="SsoLogin">
+      <wsdl:input message="tns:SsoLoginSoapIn" />
+      <wsdl:output message="tns:SsoLoginSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="LoginWithToken">
+      <wsdl:input message="tns:LoginWithTokenSoapIn" />
+      <wsdl:output message="tns:LoginWithTokenSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="Logout">
+      <wsdl:input message="tns:LogoutSoapIn" />
+      <wsdl:output message="tns:LogoutSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="GetAssociatedGroupsList">
+      <wsdl:input message="tns:GetAssociatedGroupsListSoapIn" />
+      <wsdl:output message="tns:GetAssociatedGroupsListSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="GetStatusOfSingleScan">
+      <wsdl:input message="tns:GetStatusOfSingleScanSoapIn" />
+      <wsdl:output message="tns:GetStatusOfSingleScanSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="GetScansDisplayDataForAllProjects">
+      <wsdl:input message="tns:GetScansDisplayDataForAllProjectsSoapIn" />
+      <wsdl:output message="tns:GetScansDisplayDataForAllProjectsSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="GetScanSummary">
+      <wsdl:input message="tns:GetScanSummarySoapIn" />
+      <wsdl:output message="tns:GetScanSummarySoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="UpdateProjectConfiguration">
+      <wsdl:input message="tns:UpdateProjectConfigurationSoapIn" />
+      <wsdl:output message="tns:UpdateProjectConfigurationSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="DeleteUser">
+      <wsdl:input message="tns:DeleteUserSoapIn" />
+      <wsdl:output message="tns:DeleteUserSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="GetAllUsers">
+      <wsdl:input message="tns:GetAllUsersSoapIn" />
+      <wsdl:output message="tns:GetAllUsersSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="CreateScanReport">
+      <wsdl:input message="tns:CreateScanReportSoapIn" />
+      <wsdl:output message="tns:CreateScanReportSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="GetScanReportStatus">
+      <wsdl:input message="tns:GetScanReportStatusSoapIn" />
+      <wsdl:output message="tns:GetScanReportStatusSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="GetScanReport">
+      <wsdl:input message="tns:GetScanReportSoapIn" />
+      <wsdl:output message="tns:GetScanReportSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ExecuteDataRetention">
+      <wsdl:input message="tns:ExecuteDataRetentionSoapIn" />
+      <wsdl:output message="tns:ExecuteDataRetentionSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="StopDataRetention">
+      <wsdl:input message="tns:StopDataRetentionSoapIn" />
+      <wsdl:output message="tns:StopDataRetentionSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="GetTeamLdapGroupsMapping">
+      <wsdl:input message="tns:GetTeamLdapGroupsMappingSoapIn" />
+      <wsdl:output message="tns:GetTeamLdapGroupsMappingSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="SetTeamLdapGroupsMapping">
+      <wsdl:input message="tns:SetTeamLdapGroupsMappingSoapIn" />
+      <wsdl:output message="tns:SetTeamLdapGroupsMappingSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="IsValidProjectName">
+      <wsdl:input message="tns:IsValidProjectNameSoapIn" />
+      <wsdl:output message="tns:IsValidProjectNameSoapOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="CxSDKWebServiceSoap" type="tns:CxSDKWebServiceSoap">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="Scan">
+      <soap:operation soapAction="http://Checkmarx.com/v7/Scan" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="BranchProjectById">
+      <soap:operation soapAction="http://Checkmarx.com/v7/BranchProjectById" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ScanWithOriginName">
+      <soap:operation soapAction="http://Checkmarx.com/v7/ScanWithOriginName" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="CancelScan">
+      <soap:operation soapAction="http://Checkmarx.com/v7/CancelScan" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="DeleteProjects">
+      <soap:operation soapAction="http://Checkmarx.com/v7/DeleteProjects" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="DeleteScans">
+      <soap:operation soapAction="http://Checkmarx.com/v7/DeleteScans" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ScanWithScheduling">
+      <soap:operation soapAction="http://Checkmarx.com/v7/ScanWithScheduling" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ScanWithSchedulingWithCron">
+      <soap:operation soapAction="http://Checkmarx.com/v7/ScanWithSchedulingWithCron" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="UpdateScanComment">
+      <soap:operation soapAction="http://Checkmarx.com/v7/UpdateScanComment" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetPresetList">
+      <soap:operation soapAction="http://Checkmarx.com/v7/GetPresetList" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetConfigurationSetList">
+      <soap:operation soapAction="http://Checkmarx.com/v7/GetConfigurationSetList" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetProjectsDisplayData">
+      <soap:operation soapAction="http://Checkmarx.com/v7/GetProjectsDisplayData" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetProjectScannedDisplayData">
+      <soap:operation soapAction="http://Checkmarx.com/v7/GetProjectScannedDisplayData" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetProjectConfiguration">
+      <soap:operation soapAction="http://Checkmarx.com/v7/GetProjectConfiguration" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="UpdateProjectIncrementalConfiguration">
+      <soap:operation soapAction="http://Checkmarx.com/v7/UpdateProjectIncrementalConfiguration" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Login">
+      <soap:operation soapAction="http://Checkmarx.com/v7/Login" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SsoLogin">
+      <soap:operation soapAction="http://Checkmarx.com/v7/SsoLogin" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="LoginWithToken">
+      <soap:operation soapAction="http://Checkmarx.com/v7/LoginWithToken" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Logout">
+      <soap:operation soapAction="http://Checkmarx.com/v7/Logout" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetAssociatedGroupsList">
+      <soap:operation soapAction="http://Checkmarx.com/v7/GetAssociatedGroupsList" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetStatusOfSingleScan">
+      <soap:operation soapAction="http://Checkmarx.com/v7/GetStatusOfSingleScan" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetScansDisplayDataForAllProjects">
+      <soap:operation soapAction="http://Checkmarx.com/v7/GetScansDisplayDataForAllProjects" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetScanSummary">
+      <soap:operation soapAction="http://Checkmarx.com/v7/GetScanSummary" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="UpdateProjectConfiguration">
+      <soap:operation soapAction="http://Checkmarx.com/v7/UpdateProjectConfiguration" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="DeleteUser">
+      <soap:operation soapAction="http://Checkmarx.com/v7/DeleteUser" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetAllUsers">
+      <soap:operation soapAction="http://Checkmarx.com/v7/GetAllUsers" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="CreateScanReport">
+      <soap:operation soapAction="http://Checkmarx.com/v7/CreateScanReport" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetScanReportStatus">
+      <soap:operation soapAction="http://Checkmarx.com/v7/GetScanReportStatus" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetScanReport">
+      <soap:operation soapAction="http://Checkmarx.com/v7/GetScanReport" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ExecuteDataRetention">
+      <soap:operation soapAction="http://Checkmarx.com/v7/ExecuteDataRetention" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="StopDataRetention">
+      <soap:operation soapAction="http://Checkmarx.com/v7/StopDataRetention" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetTeamLdapGroupsMapping">
+      <soap:operation soapAction="http://Checkmarx.com/v7/GetTeamLdapGroupsMapping" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SetTeamLdapGroupsMapping">
+      <soap:operation soapAction="http://Checkmarx.com/v7/SetTeamLdapGroupsMapping" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="IsValidProjectName">
+      <soap:operation soapAction="http://Checkmarx.com/v7/IsValidProjectName" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="CxSDKWebServiceSoap12" type="tns:CxSDKWebServiceSoap">
+    <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="Scan">
+      <soap12:operation soapAction="http://Checkmarx.com/v7/Scan" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="BranchProjectById">
+      <soap12:operation soapAction="http://Checkmarx.com/v7/BranchProjectById" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ScanWithOriginName">
+      <soap12:operation soapAction="http://Checkmarx.com/v7/ScanWithOriginName" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="CancelScan">
+      <soap12:operation soapAction="http://Checkmarx.com/v7/CancelScan" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="DeleteProjects">
+      <soap12:operation soapAction="http://Checkmarx.com/v7/DeleteProjects" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="DeleteScans">
+      <soap12:operation soapAction="http://Checkmarx.com/v7/DeleteScans" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ScanWithScheduling">
+      <soap12:operation soapAction="http://Checkmarx.com/v7/ScanWithScheduling" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ScanWithSchedulingWithCron">
+      <soap12:operation soapAction="http://Checkmarx.com/v7/ScanWithSchedulingWithCron" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="UpdateScanComment">
+      <soap12:operation soapAction="http://Checkmarx.com/v7/UpdateScanComment" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetPresetList">
+      <soap12:operation soapAction="http://Checkmarx.com/v7/GetPresetList" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetConfigurationSetList">
+      <soap12:operation soapAction="http://Checkmarx.com/v7/GetConfigurationSetList" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetProjectsDisplayData">
+      <soap12:operation soapAction="http://Checkmarx.com/v7/GetProjectsDisplayData" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetProjectScannedDisplayData">
+      <soap12:operation soapAction="http://Checkmarx.com/v7/GetProjectScannedDisplayData" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetProjectConfiguration">
+      <soap12:operation soapAction="http://Checkmarx.com/v7/GetProjectConfiguration" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="UpdateProjectIncrementalConfiguration">
+      <soap12:operation soapAction="http://Checkmarx.com/v7/UpdateProjectIncrementalConfiguration" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Login">
+      <soap12:operation soapAction="http://Checkmarx.com/v7/Login" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SsoLogin">
+      <soap12:operation soapAction="http://Checkmarx.com/v7/SsoLogin" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="LoginWithToken">
+      <soap12:operation soapAction="http://Checkmarx.com/v7/LoginWithToken" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Logout">
+      <soap12:operation soapAction="http://Checkmarx.com/v7/Logout" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetAssociatedGroupsList">
+      <soap12:operation soapAction="http://Checkmarx.com/v7/GetAssociatedGroupsList" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetStatusOfSingleScan">
+      <soap12:operation soapAction="http://Checkmarx.com/v7/GetStatusOfSingleScan" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetScansDisplayDataForAllProjects">
+      <soap12:operation soapAction="http://Checkmarx.com/v7/GetScansDisplayDataForAllProjects" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetScanSummary">
+      <soap12:operation soapAction="http://Checkmarx.com/v7/GetScanSummary" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="UpdateProjectConfiguration">
+      <soap12:operation soapAction="http://Checkmarx.com/v7/UpdateProjectConfiguration" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="DeleteUser">
+      <soap12:operation soapAction="http://Checkmarx.com/v7/DeleteUser" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetAllUsers">
+      <soap12:operation soapAction="http://Checkmarx.com/v7/GetAllUsers" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="CreateScanReport">
+      <soap12:operation soapAction="http://Checkmarx.com/v7/CreateScanReport" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetScanReportStatus">
+      <soap12:operation soapAction="http://Checkmarx.com/v7/GetScanReportStatus" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetScanReport">
+      <soap12:operation soapAction="http://Checkmarx.com/v7/GetScanReport" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ExecuteDataRetention">
+      <soap12:operation soapAction="http://Checkmarx.com/v7/ExecuteDataRetention" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="StopDataRetention">
+      <soap12:operation soapAction="http://Checkmarx.com/v7/StopDataRetention" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetTeamLdapGroupsMapping">
+      <soap12:operation soapAction="http://Checkmarx.com/v7/GetTeamLdapGroupsMapping" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SetTeamLdapGroupsMapping">
+      <soap12:operation soapAction="http://Checkmarx.com/v7/SetTeamLdapGroupsMapping" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="IsValidProjectName">
+      <soap12:operation soapAction="http://Checkmarx.com/v7/IsValidProjectName" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="CxSDKWebService">
+    <wsdl:port name="CxSDKWebServiceSoap" binding="tns:CxSDKWebServiceSoap">
+      <soap:address location="https://tettschx001s.hq.target.com:8443/cxwebinterface/SDK/CxSDKWebService.asmx" />
+    </wsdl:port>
+    <wsdl:port name="CxSDKWebServiceSoap12" binding="tns:CxSDKWebServiceSoap12">
+      <soap12:address location="https://tettschx001s.hq.target.com:8443/cxwebinterface/SDK/CxSDKWebService.asmx" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
