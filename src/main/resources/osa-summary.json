@@ -1,0 +1,13 @@
+{
+  "totalLibraries" : 977,
+  "highVulnerabilityLibraries" : 15,
+  "mediumVulnerabilityLibraries" : 12,
+  "lowVulnerabilityLibraries" : 4,
+  "nonVulnerableLibraries" : 946,
+  "vulnerableAndUpdated" : 1,
+  "vulnerableAndOutdated" : 30,
+  "vulnerabilityScore" : "High",
+  "totalHighVulnerabilities" : 15,
+  "totalMediumVulnerabilities" : 20,
+  "totalLowVulnerabilities" : 6
+}

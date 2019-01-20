@@ -1,0 +1,12 @@
+{
+  "application": "Goat",
+  "jira": {
+    "project": "APPSEC",
+    "issue_type": "Bug",
+    "assignee": "admin",
+    "fields": []
+  },
+  "filters" : {
+    "severity": ["High", "Medium"]
+  }
+}

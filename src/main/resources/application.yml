@@ -1,0 +1,111 @@
+server:
+  port: ${PORT:8080}
+
+logging:
+  file: machina.log
+
+machina:
+  contact: xxx@xxx.com
+  token: xxx
+  bug-tracker: JIRA
+  branches:
+    - develop
+    - master
+  filter-severity:
+    - Critical
+    - High
+  mitre-url: https://cwe.mitre.org/data/definitions/%s.html
+  wiki-url: https://company-wiki/guidance
+  codebash-url: https://cxa.codebashing.com/courses/
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: xxx
+    password: xxx
+    enabled: true
+
+checkmarx:
+  username: xxx
+  password: xxx
+  client-secret: xxx
+  base-url: https://xxxx.com
+  url: ${checkmarx.base-url}/cxrestapi
+  multi-tenant: true
+  scan-preset: Checkmarx Default
+  configuration: Default Configuration
+  team: \CxServer\SP\Machina
+  scan-timeout: 120
+  jira-project-field: jira-project
+  jira-issuetype-field: jira-issuetype
+#WSDL Config
+  portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
+  sdk-url: ${checkmarx.base-url}/cxwebinterface/SDK/CxSDKWebService.asmx
+  portal-wsdl: ${checkmarx.base-url}/Portal/CxWebService.asmx?wsdl
+  sdk-wsdl: ${checkmarx.base-url}/SDK/CxSDKWebService.asmx?wsdl
+
+github:
+  webhook-token: 1234
+  token: xxx
+  url: https://github.com
+  api-url: https://api.github.com/repos/
+
+gitlab:
+  webhook-token: 1234
+  token: xxx
+  url: https://gitlab.com
+  api-url: https://gitlab.com/api/v4/
+
+bitbucket:
+  webhook-token: 1234
+  token: xxx
+  url: https://api.bitbucket.org
+  api-path: /2.0
+
+jira:
+  url: https://xxxx.atlassian.net
+  username: xxx
+  token: xxx
+  project: APPSEC
+  issue-type: Application Security Bug
+  label-tracker: labels
+  app-label-prefix: application
+  owner-label-prefix: owner
+  repo-label-prefix: repo
+  branch-label-prefix: branch
+  false-positive-label: false-positive
+  priorities:
+    Critical: Highest
+    High: High
+    Medium: Medium
+    Low: Low
+    informational: Lowest
+  open-transition: "Reopen Issue"
+  close-transition: "Close Issue"
+  open-status:
+    - Open
+    - In Progress
+    - Reopened
+  closed-status:
+    - Closed
+    - Resolved
+  fields:
+    - type: result
+      name: application
+      jira-field-name: Application
+      jira-field-type: label
+    - type: result
+      name: cve
+      jira-field-name: CVEs
+      jira-field-type: label
+    - type: result
+      name: cwe
+      jira-field-name: CWEs
+      jira-field-type: label
+    - type: result
+      name: category
+      jira-field-name: Category
+      jira-field-type: label
+    - type: result
+      name: loc
+      jira-field-name: LOC
+      jira-field-type: label
