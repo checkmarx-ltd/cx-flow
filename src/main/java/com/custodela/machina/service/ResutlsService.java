@@ -1,6 +1,7 @@
 package com.custodela.machina.service;
 
 import com.custodela.machina.config.CxProperties;
+import com.custodela.machina.config.MachinaProperties;
 import com.custodela.machina.dto.*;
 import com.custodela.machina.dto.cx.CxProject;
 import com.custodela.machina.exception.InvalidCredentialsException;
@@ -28,12 +29,14 @@ public class ResutlsService {
     private final BitBucketService bbService;
     private final EmailService emailService;
     private final CxProperties cxProperties;
+    private final MachinaProperties machinaProperties;
     private static final Long SLEEP = 20000L;
     private static final Long TIMEOUT = 300000L;
 
-    @ConstructorProperties({"cxService", "jiraService", "gitService", "gitLabService", "bbService","emailService", "cxProperties"})
+    @ConstructorProperties({"cxService", "jiraService", "gitService", "gitLabService", "bbService","emailService", "cxProperties", "machinaProperties"})
     public ResutlsService(CxService cxService, JiraService jiraService, GitHubService gitService,
-                          GitLabService gitLabService, BitBucketService bbService, EmailService emailService, CxProperties cxProperties) {
+                          GitLabService gitLabService, BitBucketService bbService, EmailService emailService,
+                          CxProperties cxProperties, MachinaProperties machinaProperties) {
         this.cxService = cxService;
         this.jiraService = jiraService;
         this.gitService = gitService;
@@ -41,6 +44,7 @@ public class ResutlsService {
         this.bbService = bbService;
         this.emailService = emailService;
         this.cxProperties = cxProperties;
+        this.machinaProperties = machinaProperties;
     }
 
     @Async("scanRequest")
@@ -50,17 +54,9 @@ public class ResutlsService {
         ScanResults results = getScanResults(scanId, filters);
         Map<String, Object>  emailCtx = new HashMap<>();
         //Send email (if EMAIL was enabled and EMAL was not main feedback option
-        if(!request.getBugTracker().getType().equals(BugTracker.Type.NONE) &&
+        if(machinaProperties.getMail().isEnabled() &&
+                !request.getBugTracker().getType().equals(BugTracker.Type.NONE) &&
                 !request.getBugTracker().getType().equals(BugTracker.Type.EMAIL)) {
-            if(ScanUtils.empty(request.getNamespace())){
-                request.setNamespace("Unknown");
-            }
-            if(ScanUtils.empty(request.getRepoUrl())){
-                request.setRepoUrl("Unknown");
-            }
-            if(ScanUtils.empty(request.getRepoName())){
-                request.setRepoName("Unknown");
-            }
 
             emailCtx.put("message", "Successfully completed processing for "
                     .concat(request.getNamespace()).concat("/").concat(request.getRepoName()).concat(" - ")
@@ -146,21 +142,23 @@ public class ResutlsService {
                 bbService.processMerge(request, results);
                 break;
             case EMAIL:
-                Map<String, Object> emailCtx = new HashMap<>();
-                emailCtx.put("message", "Checkmarx Scan Results "
-                        .concat(request.getNamespace()).concat("/").concat(request.getRepoName()).concat(" - ")
-                        .concat(request.getRepoUrl()));
-                emailCtx.put("heading", "Scan Successfully Completed");
+                if(!machinaProperties.getMail().isEnabled()) {
+                    Map<String, Object> emailCtx = new HashMap<>();
+                    emailCtx.put("message", "Checkmarx Scan Results "
+                            .concat(request.getNamespace()).concat("/").concat(request.getRepoName()).concat(" - ")
+                            .concat(request.getRepoUrl()));
+                    emailCtx.put("heading", "Scan Successfully Completed");
 
-                if (results != null) {
-                    emailCtx.put("issues", results.getXIssues());
+                    if (results != null) {
+                        emailCtx.put("issues", results.getXIssues());
+                    }
+                    if (results != null && !ScanUtils.empty(results.getLink())) {
+                        emailCtx.put("link", results.getLink());
+                    }
+                    emailCtx.put("repo", request.getRepoUrl());
+                    emailCtx.put("repo_fullname", request.getNamespace().concat("/").concat(request.getRepoName()));
+                    emailService.sendmail(request.getEmail(), "Successfully completed processing for ".concat(request.getNamespace()).concat("/").concat(request.getRepoName()), emailCtx, "template-demo.html");
                 }
-                if (results != null && !ScanUtils.empty(results.getLink())) {
-                    emailCtx.put("link", results.getLink());
-                }
-                emailCtx.put("repo", request.getRepoUrl());
-                emailCtx.put("repo_fullname", request.getNamespace().concat("/").concat(request.getRepoName()));
-                emailService.sendmail(request.getEmail(), "Successfully completed processing for ".concat(request.getNamespace()).concat("/").concat(request.getRepoName()), emailCtx, "template-demo.html");
                 break;
             case NONE:
                 log.info("Issue tracking is turned off");
