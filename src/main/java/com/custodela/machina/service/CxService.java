@@ -85,6 +85,10 @@ public class CxService {
     /*report statuses TODO*/
     public static final Integer REPORT_STATUS_CREATED = 2;
     public static final Integer REPORT_STATUS_FINISHED = 7;
+    static final Map<String, Integer> STATUS_MAP = ImmutableMap.of(
+            "CONFIRMED", 2,
+            "URGENT", 3
+    );
 
     @ConstructorProperties({"cxProperties", "cxLegacyService", "restTemplate"})
     public CxService(CxProperties cxProperties, CxLegacyService cxLegacyService, RestTemplate restTemplate) {
@@ -134,7 +138,7 @@ public class CxService {
         try {
             ResponseEntity<String> response = restTemplate.exchange(cxProperties.getUrl().concat(SCAN).concat("?projectId=").concat(projectId.toString().concat("&last=1")), HttpMethod.GET, requestEntity, String.class);
             JSONArray arr = new JSONArray(response.getBody());
-            if(arr.length() > 1){
+            if(arr.length() < 1){
                 return UNKNOWN_INT;
             }
             JSONObject obj = arr.getJSONObject(0);
@@ -551,14 +555,14 @@ public class CxService {
         if(filters == null || filters.isEmpty()){
             return true;
         }
-        List<String> status = new ArrayList<>();
+        List<Integer> status = new ArrayList<>();
 
         for(Filter f: filters){
             if(f.getType().equals(Filter.Type.STATUS)){
-                status.add(f.getValue().toUpperCase());
+                status.add(STATUS_MAP.get(f.getValue().toUpperCase()));
             }
         }
-        return status.isEmpty() || status.contains(r.getStatus().toUpperCase());
+        return status.isEmpty() || status.contains(Integer.parseInt(r.getState()));
     }
 
     private void checkForDuplicateIssue(List<ScanResults.XIssue> cxIssueList, ResultType r, Map<Integer, String> details, ScanResults.XIssue issue) {
