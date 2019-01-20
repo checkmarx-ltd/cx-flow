@@ -204,7 +204,7 @@ public class MachinaService {
 
     public CompletableFuture<ScanResults> cxGetResults(ScanRequest request, @Nullable CxProject cxProject){
         try {
-            CxProject project = null;
+            CxProject project;
 
             if(cxProject == null) {
                 String team = request.getTeam();
@@ -220,10 +220,16 @@ public class MachinaService {
                 project = cxProject;
             }
             Integer scanId = cxService.getLastScanId(project.getId());
-
-            getCxFields(project, request);
-
-            return resutlsService.processScanResultsAsync(request, scanId, request.getFilters());
+            if(scanId.equals(UNKNOWN_INT)){
+                log.info("No Scan Results to process for project {}", project.getName());
+                CompletableFuture<ScanResults> x = new CompletableFuture<>();
+                x.complete(null);
+                return x;
+            }
+            else {
+                getCxFields(project, request);
+                return resutlsService.processScanResultsAsync(request, scanId, request.getFilters());
+            }
         } catch (MachinaException e) {
             log.debug(ExceptionUtils.getStackTrace(e));
             log.error("Error occurred while processing results for {}{}", request.getTeam(), request.getProject());
