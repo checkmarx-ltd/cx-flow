@@ -1,8 +1,8 @@
-#Build
+## Build
 `gradlew clean build`
 
 
-#Parse
+## Parse
 
 _Parse mode will use the Checkmarx Scan XML as input to drive the automation_
 
@@ -30,7 +30,7 @@ java -jar ${AUTOMATION_JAR} \
 --f	| File to be processed.  This the output from Checkmarx CLI, Jenkins/Bamboo Plugin, etc
 --config |	Optional.  Configuration override file (JSON).  See details below.
 
-#Project Results (ad-hoc)
+## Project Results (ad-hoc)
 _Project Results/Ad-hoc mode retrieves the latest results for a given project under a specific team within Checkmarx and publishes issues to the configured bug tracking system._
 
 
@@ -47,7 +47,7 @@ java -jar ${AUTOMATION_JAR} \
 --app=Riches.NET \
 ```
 
-#Batch 
+## Batch 
 
 **By Team**
 ```
@@ -78,7 +78,7 @@ java -jar ${AUTOMATION_JAR} \
 --bug-tracker |	Optional.  Default is whatever is specified in the application.yml properties.  Options are github, gitlab, jira, email, none
 --config |	Optional.  Configuration override file (JSON).  See details below.
 
-#WebHook Web Service
+## WebHook Web Service
 
 **Workflow**
 
@@ -245,7 +245,7 @@ Environment variable GITHUB_TOKEN
 `
 or Command line argument `--github.token=XXXXXXX`
 
-#Jira Configuration
+## Jira Configuration
 **Jira Custom Fields (Command line)**
 **type**
 *static:* Used for static values (specifically requires jira-default-value to be provided)
@@ -282,7 +282,7 @@ When result is provided it must be one of the following:
 *security* (used for issue security levels)
 *jira-default-value*	Static value if no value can be determined for field (Optional)
 
-#Override Files
+## Override Files
 When providing --config override file you can override many elements associated with the bug tracking within Jira.
 
 ```json
@@ -343,7 +343,7 @@ When providing --config override file you can override many elements associated 
 All overrides are optional.  If a value is not provided, the default provided in the application.yml is used.  If a value is provided with an empty attribute, it is overridden as empty.  i.e. if severity is high, medium within the default configuration and an empty filter attribute is provided, it will no long apply any filters ("filters":{})
 
 
-#Source
+## Source
 **Packages**
 |Package|	Description|
 ---------|---------
@@ -375,7 +375,7 @@ GitLabController|	Push, Merge (TBD) event HTTP listeners
 BitbucketController|	Push event HTTP listener
 MachinaController|	Unused, but intended for Call-back implementation
 
-#Build
+## Build
 Executable JAR is compiled using Gradle (tested with version 4.10 and 5.0)
 
 **Java 8 JRE - WebHook Web Service:**
