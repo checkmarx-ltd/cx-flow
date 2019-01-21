@@ -58,8 +58,24 @@ public class BitBucketService {
         }
     }
 
+    void processServerMerge(ScanRequest request,ScanResults results) throws BitBucketClienException {
+        try {
+            String comment = ScanUtils.getMergeCommentMD(request, results, machinaProperties);
+            log.debug("comment: {}", comment);
+            sendServerMergeComment(request, comment);
+        } catch (HttpClientErrorException e){
+            log.error("Error occurred while creating Merge Request comment");
+            throw new BitBucketClienException();
+        }
+    }
+
     void sendMergeComment(ScanRequest request, String comment){
         HttpEntity httpEntity = new HttpEntity<>(getJSONComment(comment).toString(), createAuthHeaders());
+        ResponseEntity<String> response = restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
+    }
+
+    private void sendServerMergeComment(ScanRequest request, String comment){
+        HttpEntity httpEntity = new HttpEntity<>(getServerJSONComment(comment).toString(), createAuthHeaders());
         ResponseEntity<String> response = restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
@@ -81,11 +97,17 @@ public class BitBucketService {
         ResponseEntity<String> response = restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
-    public static JSONObject getJSONComment(String comment) throws JSONException {
+    private static JSONObject getJSONComment(String comment) throws JSONException {
         JSONObject requestBody = new JSONObject();
         JSONObject content = new JSONObject();
         content.put("raw", comment);
         requestBody.put("content", content);
+        return requestBody;
+    }
+
+    private static JSONObject getServerJSONComment(String comment) throws JSONException {
+        JSONObject requestBody = new JSONObject();
+        requestBody.put("text", comment);
         return requestBody;
     }
 

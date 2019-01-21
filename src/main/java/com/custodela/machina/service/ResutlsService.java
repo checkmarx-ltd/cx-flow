@@ -141,6 +141,9 @@ public class ResutlsService {
             case BITBUCKETPULL:
                 bbService.processMerge(request, results);
                 break;
+            case BITBUCKETSERVERPULL:
+                bbService.processServerMerge(request, results);
+                break;
             case EMAIL:
                 if(!machinaProperties.getMail().isEnabled()) {
                     Map<String, Object> emailCtx = new HashMap<>();

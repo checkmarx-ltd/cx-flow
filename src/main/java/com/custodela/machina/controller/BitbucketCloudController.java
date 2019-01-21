@@ -28,12 +28,12 @@ import java.util.List;
 
 @RestController
 @RequestMapping(value = "/" )
-public class BitbucketController {
+public class BitbucketCloudController {
 
     private static final String EVENT = "X-Event-Key";
     private static final String PUSH = EVENT + "=repo:push";
     private static final String MERGE = EVENT + "=pullrequest:created";
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(BitbucketController.class);
+    private static final Logger log = org.slf4j.LoggerFactory.getLogger(BitbucketCloudController.class);
 
     private final MachinaProperties machinaProperties;
     private final BitBucketProperties properties;
@@ -42,7 +42,7 @@ public class BitbucketController {
     private final MachinaService machinaService;
 
     @ConstructorProperties({"machinaProperties", "properties", "cxProperties", "jiraProperties", "machinaService"})
-    public BitbucketController(MachinaProperties machinaProperties, BitBucketProperties properties, CxProperties cxProperties, JiraProperties jiraProperties, MachinaService machinaService) {
+    public BitbucketCloudController(MachinaProperties machinaProperties, BitBucketProperties properties, CxProperties cxProperties, JiraProperties jiraProperties, MachinaService machinaService) {
         this.machinaProperties = machinaProperties;
         this.properties = properties;
         this.cxProperties = cxProperties;

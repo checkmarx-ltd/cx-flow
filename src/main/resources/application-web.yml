@@ -1,6 +1,12 @@
 server:
   port: ${PORT:8080}
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+
 logging:
   file: machina.log
 
@@ -61,8 +67,9 @@ gitlab:
 bitbucket:
   webhook-token: 1234
   token: xxx
-  url: https://api.bitbucket.org
-  api-path: /2.0
+#  url: https://api.bitbucket.org
+  url: http://xxxx
+  api-path: /rest/api/1.0/
   false-positive-label: false-positive
 
 jira:
