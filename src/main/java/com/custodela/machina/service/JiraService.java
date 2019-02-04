@@ -318,7 +318,9 @@ public class JiraService {
                             if (!ScanUtils.empty(machinaProperties.getCodebashUrl())) {
                                 recommendation.append("Training: ").append(machinaProperties.getCodebashUrl()).append(ScanUtils.CRLF);
                             }
-                            recommendation.append("Guidance: ").append(machinaProperties.getWikiUrl()).append(ScanUtils.CRLF);
+                            if (!ScanUtils.empty(machinaProperties.getWikiUrl())) {
+                                recommendation.append("Guidance: ").append(machinaProperties.getWikiUrl()).append(ScanUtils.CRLF);
+                            }
                             value = recommendation.toString();
                             break;
                         case "loc":
