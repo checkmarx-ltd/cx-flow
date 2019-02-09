@@ -8,6 +8,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.HttpClientErrorException;
+
+import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -466,6 +468,32 @@ public class ScanUtils {
             }
         }
         return map;
+    }
+
+    /**
+     *  Parse cx custom field which is csv for custom field mapping in jira:
+     *  type, name, jira-field-name, jira-field-value, jira-field-type (separated by ; for multiple)
+     * @param cxFields
+     * @return List of Fields
+     */
+    public static List<Field> getCustomFieldsFromCx(@NotNull String cxFields){
+        List<Field> fields = new ArrayList<>();
+        String[] entries = cxFields.split(";");
+        for(String e: entries){
+            String[] jira = e.split(",");
+            if(jira.length >= 4) { //must be 4 or 5 values
+                Field field = new Field();
+                field.setType(jira[0].trim());
+                field.setName(jira[1].trim());
+                field.setJiraFieldName(jira[2].trim());
+                field.setJiraFieldType(jira[3].trim());
+                if(jira.length >= 5) {
+                    field.setJiraDefaultValue(jira[4].trim());
+                }
+                fields.add(field);
+            }
+        }
+        return fields;
     }
 
 

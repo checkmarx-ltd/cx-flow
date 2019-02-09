@@ -35,6 +35,7 @@ public class CxProperties {
     private Integer scanTimeout = 120;
     private String jiraProjectField = "jira-project";
     private String jiraIssuetypeField = "jira-issuetype";
+    private String jiraCustomField = "jira-fields";
 
     @NotNull @NotBlank
     private String portalUrl;
@@ -106,10 +107,13 @@ public class CxProperties {
         return this.jiraProjectField;
     }
 
+    public String getJiraCustomField() {
+        return this.jiraCustomField;
+    }
+
     public String getJiraIssuetypeField() {
         return this.jiraIssuetypeField;
     }
-
     public @NotNull
     @NotBlank String getPortalUrl() {
         return this.portalUrl;
@@ -189,6 +193,10 @@ public class CxProperties {
 
     public void setJiraIssuetypeField(String jiraIssuetypeField) {
         this.jiraIssuetypeField = jiraIssuetypeField;
+    }
+
+    public void setJiraCustomField(String jiraCustomField) {
+        this.jiraCustomField = jiraCustomField;
     }
 
     public void setPortalUrl(@NotNull @NotBlank String portalUrl) {
