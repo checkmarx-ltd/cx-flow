@@ -206,7 +206,6 @@ public class MachinaApplicationCmd implements ApplicationRunner {
         request = ScanUtils.overrideMap(request, o);
 
         try {
-
             if(arg.containsOption("parse")){
 
                 File f = new File(file);
@@ -245,6 +244,7 @@ public class MachinaApplicationCmd implements ApplicationRunner {
             }
             else if(arg.containsOption("scan")){
                 log.info("Executing scan process");
+                cxScan(request, file);
             }
         }catch (Exception e){
             log.error("An error occurred while processing request");
@@ -255,7 +255,9 @@ public class MachinaApplicationCmd implements ApplicationRunner {
         exit(0);
     }
 
-    public void checkmarxScan(MachinaOverride override, ScanRequest request){}
+    public void cxScan(ScanRequest request, String path){
+        machinaService.cxFullScan(request, path);
+    }
     private void cxOsaParse(ScanRequest request, File file, File libs){
         machinaService.cxOsaParseResults(request, file, libs);
     }

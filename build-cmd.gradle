@@ -44,6 +44,7 @@ dependencies {
     compile ('org.springframework.boot:spring-boot-starter-web-services')
     compile ('org.springframework.boot:spring-boot-starter-mail')
     compile ('org.springframework.boot:spring-boot-starter-thymeleaf')
+    compile ('com.github.ulisesbocchio:jasypt-spring-boot-starter:2.1.0')
     compile ("com.atlassian.fugue:fugue:${atlassianFugueVersion}")
     compile ("com.atlassian.jira:jira-rest-java-client-core:${atlassianVersion}")
     compile ("com.atlassian.jira:jira-rest-java-client-api:${atlassianVersion}")

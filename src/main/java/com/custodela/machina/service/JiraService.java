@@ -125,7 +125,7 @@ public class JiraService {
         log.debug("Retrieving issuetype object for project {}, type {}", request.getBugTracker().getProjectKey(), request.getBugTracker().getIssueType());
         try{
             IssueType issueType = this.getIssueType(request.getBugTracker().getProjectKey(), request.getBugTracker().getIssueType());
-            IssueInputBuilder issueBuilder = new IssueInputBuilder(jiraProperties.getProject(), issueType.getId());
+            IssueInputBuilder issueBuilder = new IssueInputBuilder(request.getBugTracker().getProjectKey(), issueType.getId());
             String issuePrefix = jiraProperties.getIssuePrefix();
             if(issuePrefix == null){
                 issuePrefix = "";
@@ -744,7 +744,7 @@ public class JiraService {
 
                     /*Ignore any with label indicating false positive*/
                     if (!i.getLabels().contains(jiraProperties.getFalsePositiveLabel())) {  //TODO handle FALSE_POSITIVE status
-                        log.info("Issue still exists.  Updating issue with key {}", xIssue.getKey());
+                        log.debug("Issue still exists.  Updating issue with key {}", xIssue.getKey());
                         Issue updatedIssue = this.updateIssue(i.getKey(), currentIssue, request);
                         if (updatedIssue != null) {
                             log.debug("Update completed for issue #{}", updatedIssue.getKey());
