@@ -1,5 +1,6 @@
 package com.custodela.machina.service;
 
+import checkmarx.wsdl.portal.Scan;
 import com.custodela.machina.config.CxProperties;
 import com.custodela.machina.config.MachinaProperties;
 import com.custodela.machina.dto.*;
@@ -259,6 +260,10 @@ public class MachinaService {
             if (!ScanUtils.empty(jiraIssuetype)) {
                 request.getBugTracker().setIssueType(jiraIssuetype);
             }
+        }
+        if(!ScanUtils.empty(cxProperties.getJiraCustomField()) &&
+                (fields.get(cxProperties.getJiraCustomField()) != null) && !fields.get(cxProperties.getJiraCustomField()).isEmpty()){
+            request.getBugTracker().setFields(ScanUtils.getCustomFieldsFromCx(fields.get(cxProperties.getJiraCustomField())));
         }
         request.setCxFields(fields);
     }
