@@ -170,7 +170,7 @@ public class BitbucketServerController {
                     .mergeNoteUri(mergeEndpoint)
                     .refs(event.getPullRequest().getFromRef().getId())
                     .email(null)
-                    .incremental(false) //todo handle incremental
+                    .incremental(cxProperties.getIcremental())
                     .scanPreset(cxProperties.getScanPreset())
                     .excludeFolders(excludeFolders)
                     .excludeFiles(excludeFiles)
@@ -301,7 +301,7 @@ public class BitbucketServerController {
                     .branch(currentBranch)
                     .refs(event.getChanges().get(0).getRefId())
                     .email(emails)
-                    .incremental(false)
+                    .incremental(cxProperties.getIcremental())
                     .scanPreset(cxProperties.getScanPreset())
                     .excludeFolders(excludeFolders)
                     .excludeFiles(excludeFiles)

@@ -136,7 +136,7 @@ public class GitLabController {
                     .mergeNoteUri(mergeEndpoint)
                     .refs("refs/heads/".concat(currentBranch))
                     .email(null)
-                    .incremental(false) //todo handle incremental
+                    .incremental(cxProperties.getIcremental()) //todo handle incremental
                     .scanPreset(cxProperties.getScanPreset())
                     .excludeFolders(excludeFolders)
                     .excludeFiles(excludeFiles)
@@ -251,7 +251,7 @@ public class GitLabController {
                     .mergeNoteUri(commitEndpoint)
                     .refs(body.getRef())
                     .email(emails)
-                    .incremental(false)
+                    .incremental(cxProperties.getIcremental())
                     .scanPreset(cxProperties.getScanPreset())
                     .excludeFolders(excludeFolders)
                     .excludeFiles(excludeFiles)

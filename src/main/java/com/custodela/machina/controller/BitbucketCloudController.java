@@ -122,7 +122,7 @@ public class BitbucketCloudController {
                     .mergeNoteUri(mergeEndpoint)
                     .refs("refs/heads/".concat(currentBranch))
                     .email(null)
-                    .incremental(false) //todo handle incremental
+                    .incremental(cxProperties.getIcremental())
                     .scanPreset(cxProperties.getScanPreset())
                     .excludeFolders(excludeFolders)
                     .excludeFiles(excludeFiles)
@@ -249,7 +249,7 @@ public class BitbucketCloudController {
                     .branch(currentBranch)
                     .refs("refs/heads/".concat(currentBranch))
                     .email(emails)
-                    .incremental(false)
+                    .incremental(cxProperties.getIcremental())
                     .scanPreset(cxProperties.getScanPreset())
                     .excludeFolders(excludeFolders)
                     .excludeFiles(excludeFiles)
