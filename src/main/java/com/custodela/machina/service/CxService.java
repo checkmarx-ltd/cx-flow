@@ -37,7 +37,9 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
@@ -136,7 +138,10 @@ public class CxService {
 
         log.info("Finding last Scan Id for project Id {}", projectId);
         try {
-            ResponseEntity<String> response = restTemplate.exchange(cxProperties.getUrl().concat(SCAN).concat("?projectId=").concat(projectId.toString().concat("&last=1")), HttpMethod.GET, requestEntity, String.class);
+            ResponseEntity<String> response = restTemplate.exchange(cxProperties.getUrl().concat(SCAN)
+                    .concat("?projectId=").concat(projectId.toString().concat("&scanStatus=").concat(SCAN_STATUS_FINISHED.toString())
+                    .concat("&last=1")), HttpMethod.GET, requestEntity, String.class);
+
             JSONArray arr = new JSONArray(response.getBody());
             if(arr.length() < 1){
                 return UNKNOWN_INT;
@@ -151,6 +156,32 @@ public class CxService {
         }
         return UNKNOWN_INT;
     }
+
+    LocalDateTime getLastScanDate(Integer projectId){
+        HttpEntity requestEntity = new HttpEntity<>(createAuthHeaders());
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
+
+        log.info("Finding last Scan Id for project Id {}", projectId);
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(cxProperties.getUrl().concat(SCAN)
+                    .concat("?projectId=").concat(projectId.toString().concat("&scanStatus=").concat(SCAN_STATUS_FINISHED.toString())
+                            .concat("&last=1")), HttpMethod.GET, requestEntity, String.class);
+
+            JSONArray arr = new JSONArray(response.getBody());
+            if(arr.length() < 1){
+                return null;
+            }
+            JSONObject obj = arr.getJSONObject(0);
+            JSONObject dateAndTime = obj.getJSONObject("dateAndTime");
+            //example: "finishedOn": "2018-06-18T01:09:12.707"
+            return LocalDateTime.parse(dateAndTime.getString("finishedOn"), formatter);
+        }catch (HttpStatusCodeException e){
+            log.error("Error occurred while creating Scan for project {}, http error {}", projectId, e.getStatusCode());
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 
     /**
      * Get the status of a given scanId

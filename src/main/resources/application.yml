@@ -33,6 +33,7 @@ checkmarx:
   multi-tenant: true
   scan-preset: Checkmarx Default
   configuration: Default Configuration
+  incremental: true
   team: \CxServer\SP\Machina
   scan-timeout: 120
   jira-project-field: jira-project
