@@ -122,6 +122,10 @@ public class GitLabController {
             String mergeEndpoint = properties.getApiUrl().concat(GitLabService.MERGE_PATH);
             mergeEndpoint = mergeEndpoint.replace("{id}", body.getProject().getId().toString());
             mergeEndpoint = mergeEndpoint.replace("{iid}", body.getObjectAttributes().getIid().toString());
+            String gitUrl = body.getProject().getGitHttpUrl();
+            log.info("Using url: {}", gitUrl);
+            String gitAuthUrl = gitUrl.replace("https://", "https://oauth2:".concat(properties.getToken()).concat("@"));
+            gitAuthUrl = gitAuthUrl.replace("http://", "http://oauth2".concat(properties.getToken()).concat("@"));
             ScanRequest request = ScanRequest.builder()
                     .id(body.getProject().getId())
                     .application(app)
@@ -129,7 +133,7 @@ public class GitLabController {
                     .namespace(body.getProject().getNamespace().replaceAll(" ","_"))
                     .repoName(body.getProject().getName())
                     .repoUrl(body.getProject().getGitHttpUrl())
-                    .repoUrlWithAuth(body.getProject().getGitHttpUrl().replace("https://", "https://oauth2:".concat(properties.getToken()).concat("@")))
+                    .repoUrlWithAuth(gitAuthUrl)
                     .repoType(ScanRequest.Repository.GITLAB)
                     .branch(currentBranch)
                     .mergeTargetBranch(targetBranch)
@@ -238,6 +242,10 @@ public class GitLabController {
             if(!ScanUtils.empty(body.getUserEmail())) {
                 emails.add(body.getUserEmail());
             }
+            String gitUrl = body.getProject().getGitHttpUrl();
+            log.info("Using url: {}", gitUrl);
+            String gitAuthUrl = gitUrl.replace("https://", "https://oauth2:".concat(properties.getToken()).concat("@"));
+            gitAuthUrl = gitAuthUrl.replace("http://", "http://oauth2".concat(properties.getToken()).concat("@"));
             ScanRequest request = ScanRequest.builder()
                     .id(body.getProjectId())
                     .application(app)
@@ -245,7 +253,7 @@ public class GitLabController {
                     .namespace(body.getProject().getNamespace().replaceAll(" ","_"))
                     .repoName(body.getProject().getName())
                     .repoUrl(body.getProject().getGitHttpUrl())
-                    .repoUrlWithAuth(body.getProject().getGitHttpUrl().replace("https://", "https://oauth2:".concat(properties.getToken()).concat("@")))
+                    .repoUrlWithAuth(gitAuthUrl)
                     .repoType(ScanRequest.Repository.GITLAB)
                     .branch(currentBranch)
                     .mergeNoteUri(commitEndpoint)
