@@ -160,13 +160,17 @@ public class GitHubController {
             }
 
             //build request object
+            String gitUrl = event.getRepository().getCloneUrl();
+            log.info("Using url: {}", gitUrl);
+            String gitAuthUrl = gitUrl.replace("https://", "https://".concat(properties.getToken()).concat("@"));
+            gitAuthUrl = gitAuthUrl.replace("http://", "http://".concat(properties.getToken()).concat("@"));
             ScanRequest request = ScanRequest.builder()
                     .application(app)
                     .product(p)
                     .namespace(event.getRepository().getOwner().getLogin().replaceAll(" ","_"))
                     .repoName(event.getRepository().getName())
                     .repoUrl(event.getRepository().getCloneUrl())
-                    .repoUrlWithAuth(event.getRepository().getCloneUrl().replace("https://", "https://".concat(properties.getToken()).concat("@")))
+                    .repoUrlWithAuth(gitAuthUrl)
                     .repoType(ScanRequest.Repository.GITHUB)
                     .branch(currentBranch)
                     .refs("refs/heads/".concat(currentBranch))
@@ -281,13 +285,17 @@ public class GitHubController {
             emails.add(event.getPusher().getEmail());
 
             //build request object
+            String gitUrl = event.getRepository().getCloneUrl();
+            log.info("Using url: {}", gitUrl);
+            String gitAuthUrl = gitUrl.replace("https://", "https://".concat(properties.getToken()).concat("@"));
+            gitAuthUrl = gitAuthUrl.replace("http://", "http://".concat(properties.getToken()).concat("@"));
             ScanRequest request = ScanRequest.builder()
                     .application(app)
                     .product(p)
                     .namespace(event.getRepository().getOwner().getName().replaceAll(" ","_"))
                     .repoName(event.getRepository().getName())
                     .repoUrl(event.getRepository().getCloneUrl())
-                    .repoUrlWithAuth(event.getRepository().getCloneUrl().replace("https://", "https://".concat(properties.getToken()).concat("@")))
+                    .repoUrlWithAuth(gitAuthUrl)
                     .repoType(ScanRequest.Repository.GITHUB)
                     .branch(currentBranch)
                     .refs(event.getRef())
