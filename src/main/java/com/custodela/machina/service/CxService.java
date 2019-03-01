@@ -25,9 +25,11 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
+import org.xml.sax.SAXParseException;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.UnmarshalException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -251,7 +253,10 @@ public class CxService {
         log.info("Retrieving report contents of report Id {} in XML format", reportId);
         try {
             ResponseEntity<String> resultsXML = restTemplate.exchange(cxProperties.getUrl().concat(REPORT_DOWNLOAD), HttpMethod.GET, httpEntity, String.class, reportId);
+            log.debug(resultsXML.getHeaders().toSingleValueMap().toString());
             log.info("Report downloaded for report Id {}", reportId);
+            log.debug("XML String Output:");
+            log.debug(resultsXML.getBody());
             InputStream xmlStream = new ByteArrayInputStream(Objects.requireNonNull(resultsXML.getBody()).getBytes());
 
             /* protect against XXE */
