@@ -60,12 +60,16 @@ public class MachinaConfig {
     @Bean
     public JavaMailSender getJavaMailSender() {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
-        mailSender.setHost(properties.getMail().getHost());
-        mailSender.setPort(properties.getMail().getPort());
 
+        if(properties.getMail() == null || !properties.getMail().isEnabled()){
+            return mailSender;
+        }
         Properties props = mailSender.getJavaMailProperties();
 
-        if(!ScanUtils.empty(properties.getMail().getUsername()) && !ScanUtils.empty(properties.getMail().getUsername())){
+        if(!ScanUtils.empty(properties.getMail().getUsername()) && !ScanUtils.empty(properties.getMail().getUsername()) &&
+                properties.getMail().getPort() != null && !ScanUtils.empty(properties.getMail().getHost())){
+            mailSender.setHost(properties.getMail().getHost());
+            mailSender.setPort(properties.getMail().getPort());
             mailSender.setUsername(properties.getMail().getUsername());
             mailSender.setPassword(properties.getMail().getPassword());
             props.put("mail.smtp.auth", "true");

@@ -7,6 +7,7 @@ import com.custodela.machina.dto.cx.*;
 import com.custodela.machina.dto.cx.xml.CxXMLResultsType;
 import com.custodela.machina.dto.cx.xml.QueryType;
 import com.custodela.machina.dto.cx.xml.ResultType;
+import com.custodela.machina.dto.github.Base;
 import com.custodela.machina.exception.CheckmarxLegacyException;
 import com.custodela.machina.exception.InvalidCredentialsException;
 import com.custodela.machina.exception.MachinaException;
@@ -25,9 +26,11 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
+import org.xml.sax.SAXParseException;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.UnmarshalException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -251,8 +254,17 @@ public class CxService {
         log.info("Retrieving report contents of report Id {} in XML format", reportId);
         try {
             ResponseEntity<String> resultsXML = restTemplate.exchange(cxProperties.getUrl().concat(REPORT_DOWNLOAD), HttpMethod.GET, httpEntity, String.class, reportId);
+            String xml = resultsXML.getBody();
+            log.debug("Headers:");
+            log.debug(resultsXML.getHeaders().toSingleValueMap().toString());
             log.info("Report downloaded for report Id {}", reportId);
-            InputStream xmlStream = new ByteArrayInputStream(Objects.requireNonNull(resultsXML.getBody()).getBytes());
+            log.debug("XML String Output:");
+            log.debug(xml);
+            log.debug("Base64:");
+            log.debug(Base64.getEncoder().encodeToString(resultsXML.toString().getBytes()));
+            /*Remove any chars before the start xml tag*/
+            xml = xml.trim().replaceFirst("^([\\W]+)<","<");
+            InputStream xmlStream = new ByteArrayInputStream(Objects.requireNonNull(xml.getBytes());
 
             /* protect against XXE */
             JAXBContext jc = JAXBContext.newInstance(CxXMLResultsType.class);
