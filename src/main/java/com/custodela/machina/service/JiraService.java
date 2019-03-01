@@ -69,7 +69,7 @@ public class JiraService {
         String jql;
         /*Namespace/Repo/Branch provided*/
         if(!ScanUtils.empty(request.getNamespace()) && !ScanUtils.empty(request.getRepoName()) && !ScanUtils.empty(request.getBranch())) {
-            jql = String.format("project = %s and issueType = \"%s\" and (%s = \"%s\" and %s = \"%s:%s\" and %s = \"%s:%s\" and %s = \"%s:%s\")",
+            jql = String.format("project = %s and issueType = \"%s\" and (\"%s\" = \"%s\" and \"%s\" = \"%s:%s\" and \"%s\" = \"%s:%s\" and \"%s\" = \"%s:%s\")",
                     request.getBugTracker().getProjectKey(),
                     request.getBugTracker().getIssueType(),
                     jiraProperties.getLabelTracker(),
@@ -83,7 +83,7 @@ public class JiraService {
             );
         }/*Only application provided*/
         else if(!ScanUtils.empty(request.getApplication())){
-            jql = String.format("project = %s and issueType = \"%s\" and (%s = \"%s\" and %s = \"%s:%s\")",
+            jql = String.format("project = %s and issueType = \"%s\" and (\"%s\" = \"%s\" and \"%s\" = \"%s:%s\")",
                     request.getBugTracker().getProjectKey(),
                     request.getBugTracker().getIssueType(),
                     jiraProperties.getLabelTracker(),
@@ -774,7 +774,7 @@ public class JiraService {
                 if (!map.containsKey(jiraIssue.getKey())) {
                     if (request.getBugTracker().getOpenStatus().contains(jiraIssue.getValue().getStatus().getName())) {
                         /*Close the issue*/
-                        log.info("Closing issue #{} with key {}", jiraIssue.getKey(), jiraIssue.getKey());
+                        log.info("Closing issue #{} with key {}", jiraIssue.getValue(), jiraIssue.getKey());
                         this.transitionCloseIssue(jiraIssue.getValue().getKey(),
                                 request.getBugTracker().getCloseTransition(), request.getBugTracker());
                         closedIssues.add(jiraIssue.getValue().getKey());
