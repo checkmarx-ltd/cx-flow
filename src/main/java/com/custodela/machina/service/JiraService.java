@@ -774,7 +774,7 @@ public class JiraService {
                 if (!map.containsKey(jiraIssue.getKey())) {
                     if (request.getBugTracker().getOpenStatus().contains(jiraIssue.getValue().getStatus().getName())) {
                         /*Close the issue*/
-                        log.info("Closing issue #{} with key {}", jiraIssue.getKey(), jiraIssue.getKey());
+                        log.info("Closing issue #{} with key {}", jiraIssue.getValue(), jiraIssue.getKey());
                         this.transitionCloseIssue(jiraIssue.getValue().getKey(),
                                 request.getBugTracker().getCloseTransition(), request.getBugTracker());
                         closedIssues.add(jiraIssue.getValue().getKey());
