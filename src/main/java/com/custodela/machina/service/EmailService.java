@@ -54,7 +54,7 @@ public class EmailService {
             messageHelper.setText(content, true);
         };
         try {
-            if(properties.getMail().isEnabled()) {
+            if(properties.getMail() != null && properties.getMail().isEnabled()) {
                 emailSender.send(messagePreparator);
             }
         } catch (MailException e) {
