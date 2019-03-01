@@ -103,7 +103,7 @@ public class MachinaService {
                 projectId = cxService.createProject(ownerId, projectName);
             }
             if(cxService.scanExists(projectId)){
-                throw new MachinaException("Active Scan already exists for Project");
+                throw new MachinaException("Active Scan already exists for Project:"+projectId);
             }
             cxService.createScanSetting(projectId, presetId, engineId);
             //If a file is provided, it will be uploaded as source
@@ -241,8 +241,14 @@ public class MachinaService {
             }
             else {
                 getCxFields(project, request);
-                return resutlsService.processScanResultsAsync(request, scanId, request.getFilters());
+                CompletableFuture<ScanResults> results = resutlsService.processScanResultsAsync(request, scanId, request.getFilters());
+                /*If cxProject is null, it is a single project request*/
+                if(cxProject == null) {
+                    results.join();
+                }
+                return results;
             }
+
         } catch (MachinaException e) {
             log.debug(ExceptionUtils.getStackTrace(e));
             log.error("Error occurred while processing results for {}{}", request.getTeam(), request.getProject());

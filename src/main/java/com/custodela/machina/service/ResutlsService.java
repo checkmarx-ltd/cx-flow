@@ -54,7 +54,7 @@ public class ResutlsService {
         ScanResults results = getScanResults(scanId, filters);
         Map<String, Object>  emailCtx = new HashMap<>();
         //Send email (if EMAIL was enabled and EMAL was not main feedback option
-        if(machinaProperties.getMail().isEnabled() &&
+        if(machinaProperties.getMail() != null && machinaProperties.getMail().isEnabled() &&
                 !request.getBugTracker().getType().equals(BugTracker.Type.NONE) &&
                 !request.getBugTracker().getType().equals(BugTracker.Type.EMAIL)) {
 
