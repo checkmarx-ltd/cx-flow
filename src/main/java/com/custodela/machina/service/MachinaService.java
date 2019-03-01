@@ -101,7 +101,7 @@ public class MachinaService {
                 projectId = cxService.createProject(ownerId, projectName);
             }
             if(cxService.scanExists(projectId)){
-                throw new MachinaException("Active Scan already exists for Project");
+                throw new MachinaException("Active Scan already exists for Project:"+projectId);
             }
             cxService.createScanSetting(projectId, presetId, engineId);
             //If a file is provided, it will be uploaded as source
