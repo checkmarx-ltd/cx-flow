@@ -264,7 +264,7 @@ public class CxService {
             log.debug(Base64.getEncoder().encodeToString(resultsXML.toString().getBytes()));
             /*Remove any chars before the start xml tag*/
             xml = xml.trim().replaceFirst("^([\\W]+)<","<");
-            InputStream xmlStream = new ByteArrayInputStream(Objects.requireNonNull(xml.getBytes());
+            InputStream xmlStream = new ByteArrayInputStream(Objects.requireNonNull(xml.getBytes()));
 
             /* protect against XXE */
             JAXBContext jc = JAXBContext.newInstance(CxXMLResultsType.class);
