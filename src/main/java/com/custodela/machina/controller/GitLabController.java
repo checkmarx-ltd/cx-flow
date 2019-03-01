@@ -245,7 +245,7 @@ public class GitLabController {
             String gitUrl = body.getProject().getGitHttpUrl();
             log.info("Using url: {}", gitUrl);
             String gitAuthUrl = gitUrl.replace("https://", "https://oauth2:".concat(properties.getToken()).concat("@"));
-            gitAuthUrl = gitAuthUrl.replace("http://", "http://oauth2".concat(properties.getToken()).concat("@"));
+            gitAuthUrl = gitAuthUrl.replace("http://", "http://oauth2:".concat(properties.getToken()).concat("@"));
             ScanRequest request = ScanRequest.builder()
                     .id(body.getProjectId())
                     .application(app)
