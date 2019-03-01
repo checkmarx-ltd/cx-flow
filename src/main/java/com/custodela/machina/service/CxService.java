@@ -770,14 +770,16 @@ public class CxService {
     public boolean scanExists(Integer projectId){
         HttpEntity httpEntity = new HttpEntity<>(createAuthHeaders());
         try {
+            /*
             ResponseEntity<String> scans = restTemplate.exchange(cxProperties.getUrl().concat(PROJECT_SCANS), HttpMethod.GET, httpEntity, String.class, projectId);
             JSONArray jsonArray = new JSONArray(scans.getBody());
             if(jsonArray.length() > 0){
                 return true;
             }
             else{
-                return false;
-            }
+                return false;  TODO fix
+            }*/
+            return false;
 
         }catch (HttpStatusCodeException e){
             log.error("Error occurred while retrieving project with id {}, http error {}", projectId, e.getStatusCode());
