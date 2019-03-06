@@ -94,6 +94,8 @@ public class BitbucketServerController {
             @RequestParam(value = "category", required = false) List<String> category,
             @RequestParam(value = "status", required = false) List<String> status,
             @RequestParam(value = "assignee", required = false) String assignee,
+            @RequestParam(value = "preset", required = false) String preset,
+            @RequestParam(value = "incremental", required = false) Boolean incremental,
             @RequestParam(value = "exclude-files", required = false) List<String> excludeFiles,
             @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders,
             @RequestParam(value = "override", required = false) String override,
@@ -157,6 +159,16 @@ public class BitbucketServerController {
             mergeEndpoint = mergeEndpoint.replace("{project}", event.getPullRequest().getToRef().getRepository().getProject().getKey());
             mergeEndpoint = mergeEndpoint.replace("{repo}", event.getPullRequest().getToRef().getRepository().getSlug());
             mergeEndpoint = mergeEndpoint.replace("{id}", event.getPullRequest().getId().toString());
+
+            String scanPreset = cxProperties.getScanPreset();
+            if(!ScanUtils.empty(preset)){
+                scanPreset = preset;
+            }
+            boolean inc = cxProperties.getIcremental();
+            if(incremental != null){
+                inc = incremental;
+            }
+
             ScanRequest request = ScanRequest.builder()
                     .application(app)
                     .product(p)
@@ -170,8 +182,8 @@ public class BitbucketServerController {
                     .mergeNoteUri(mergeEndpoint)
                     .refs(event.getPullRequest().getFromRef().getId())
                     .email(null)
-                    .incremental(cxProperties.getIcremental())
-                    .scanPreset(cxProperties.getScanPreset())
+                    .incremental(inc)
+                    .scanPreset(scanPreset)
                     .excludeFolders(excludeFolders)
                     .excludeFiles(excludeFiles)
                     .bugTracker(bt)
@@ -216,6 +228,8 @@ public class BitbucketServerController {
             @RequestParam(value = "category", required = false) List<String> category,
             @RequestParam(value = "status", required = false) List<String> status,
             @RequestParam(value = "assignee", required = false) String assignee,
+            @RequestParam(value = "preset", required = false) String preset,
+            @RequestParam(value = "incremental", required = false) Boolean incremental,
             @RequestParam(value = "exclude-files", required = false) List<String> excludeFiles,
             @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders,
             @RequestParam(value = "override", required = false) String override,
@@ -290,6 +304,16 @@ public class BitbucketServerController {
                     .concat(event.getRepository().getSlug()).concat(".git");
             String gitAuthUrl = gitUrl.replace("https://", "https://".concat(properties.getToken()).concat("@"));
             gitAuthUrl = gitAuthUrl.replace("http://", "http://".concat(properties.getToken()).concat("@"));
+
+            String scanPreset = cxProperties.getScanPreset();
+            if(!ScanUtils.empty(preset)){
+                scanPreset = preset;
+            }
+            boolean inc = cxProperties.getIcremental();
+            if(incremental != null){
+                inc = incremental;
+            }
+
             ScanRequest request = ScanRequest.builder()
                     .application(app)
                     .product(p)
@@ -301,8 +325,8 @@ public class BitbucketServerController {
                     .branch(currentBranch)
                     .refs(event.getChanges().get(0).getRefId())
                     .email(emails)
-                    .incremental(cxProperties.getIcremental())
-                    .scanPreset(cxProperties.getScanPreset())
+                    .incremental(inc)
+                    .scanPreset(scanPreset)
                     .excludeFolders(excludeFolders)
                     .excludeFiles(excludeFiles)
                     .bugTracker(bt)
