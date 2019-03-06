@@ -9,6 +9,7 @@ import com.custodela.machina.exception.MachinaException;
 import com.custodela.machina.utils.ScanUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
+import org.springframework.cglib.core.Local;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import javax.annotation.Nullable;
@@ -16,6 +17,7 @@ import java.beans.ConstructorProperties;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import static com.custodela.machina.service.CxService.UNKNOWN;
@@ -98,6 +100,7 @@ public class MachinaService {
             }
             projectId = cxService.getProjectId(ownerId, projectName);
             if (projectId.equals(UNKNOWN_INT)) {
+                log.info("Project does not exist.  Creating new project now for {}", projectName);
                 projectId = cxService.createProject(ownerId, projectName);
             }
             if(cxService.scanExists(projectId)){
@@ -111,10 +114,26 @@ public class MachinaService {
             else {
                 cxService.setProjectRepositoryDetails(projectId, request.getRepoUrlWithAuth(), request.getRefs());
             }
+            /*
+            If incremental scan support is enabled, determine if the last full finished scan (within configurable number of scans) is under
+            a configurable number of days old, if so, an incremental scan is completed - otherwise, full scan is completed
+             */
+            if(request.isIncremental()){
+                LocalDateTime scanDate = cxService.getLastScanDate(projectId);
+                if(scanDate == null || LocalDateTime.now().isAfter(scanDate.plusDays(cxProperties.getIncrementalThreshold()))){
+                    log.debug("Last scanDate: {}", scanDate);
+                    log.info("Last scanDate does not meet the threshold for an incremental scan.");
+                    request.setIncremental(false);
+                }
+                else{
+                    log.info("Scan will be incremental");
+                }
+            }
             cxService.setProjectExcludeDetails(projectId, request.getExcludeFolders(), request.getExcludeFiles());
-            Integer scanId = cxService.createScan(projectId, request.isIncremental(), false, false, "Automated scan");
+            Integer scanId = cxService.createScan(projectId, request.isIncremental(), true, false, "Automated scan");
 
             String SCAN_MESSAGE = "Scan submitted to Checkmarx";
+            //TODO submit WIP for GITLAB and STATUS change for GITHUB
             if(request.getBugTracker().getType().equals(BugTracker.Type.GITLABMERGE)){
                 gitLabService.sendMergeComment(request, SCAN_MESSAGE);
             }

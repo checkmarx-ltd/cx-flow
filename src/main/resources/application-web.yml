@@ -37,6 +37,7 @@ checkmarx:
   base-url: https://cx.aws.custodela.com
   url: ${checkmarx.base-url}/cxrestapi
   multi-tenant: true
+  incremental: true
   scan-preset: Checkmarx Default
   configuration: Default Configuration
   team: \CxServer\SP\Machina
