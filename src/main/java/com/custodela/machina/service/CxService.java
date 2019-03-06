@@ -161,27 +161,32 @@ public class CxService {
         return UNKNOWN_INT;
     }
 
-    LocalDateTime getLastScanDate(Integer projectId){
+    LocalDateTime getLastScanDate(Integer projectId) {
         HttpEntity requestEntity = new HttpEntity<>(createAuthHeaders());
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
 
         log.info("Finding last Scan Id for project Id {}", projectId);
         try {
             ResponseEntity<String> response = restTemplate.exchange(cxProperties.getUrl().concat(SCAN)
-                    .concat("?projectId=").concat(projectId.toString().concat("&scanStatus=").concat(SCAN_STATUS_FINISHED.toString())
-                            .concat("&last=1")), HttpMethod.GET, requestEntity, String.class);
+                            .concat("?projectId=").concat(projectId.toString().concat("&scanStatus=").concat(SCAN_STATUS_FINISHED.toString())
+                                    .concat("&last=").concat(cxProperties.getIncrementalNumScans().toString())),
+                    HttpMethod.GET, requestEntity, String.class);
 
             JSONArray arr = new JSONArray(response.getBody());
-            if(arr.length() < 1){
-                return null;
+            for (int i = 0; i < arr.length(); i++) {
+                JSONObject scan = arr.getJSONObject(i);
+                if (!scan.getBoolean("isIncremental")) {
+                    JSONObject dateAndTime = scan.getJSONObject("dateAndTime");
+                    log.debug("Last full scan was {}", dateAndTime);
+                    //example: "finishedOn": "2018-06-18T01:09:12.707"
+                    return LocalDateTime.parse(dateAndTime.getString("finishedOn"), formatter);
+                }
             }
-            JSONObject obj = arr.getJSONObject(0);
-            JSONObject dateAndTime = obj.getJSONObject("dateAndTime");
-            //example: "finishedOn": "2018-06-18T01:09:12.707"
-            return LocalDateTime.parse(dateAndTime.getString("finishedOn"), formatter);
-        }catch (HttpStatusCodeException e){
+        } catch (HttpStatusCodeException e) {
             log.error("Error occurred while creating Scan for project {}, http error {}", projectId, e.getStatusCode());
             e.printStackTrace();
+        } catch (NullPointerException e){
+            log.error("Error parsing JSON response for dateAndTime status. {}");
         }
         return null;
     }
