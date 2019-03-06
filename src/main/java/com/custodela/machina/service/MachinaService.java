@@ -120,13 +120,16 @@ public class MachinaService {
             if(cxProperties.getIcremental()){
                 LocalDateTime scanDate = cxService.getLastScanDate(projectId);
                 if(scanDate == null || LocalDateTime.now().isAfter(scanDate.plusDays(cxProperties.getIncrementalThreshold()))){
+                    log.debug("Last scanDate: {}", scanDate);
+                    log.info("Last scanDate does not meet the threshold for an incremental scan.");
                     request.setIncremental(false);
                 }
             }
             cxService.setProjectExcludeDetails(projectId, request.getExcludeFolders(), request.getExcludeFiles());
-            Integer scanId = cxService.createScan(projectId, request.isIncremental(), false, false, "Automated scan");
+            Integer scanId = cxService.createScan(projectId, request.isIncremental(), true, false, "Automated scan");
 
             String SCAN_MESSAGE = "Scan submitted to Checkmarx";
+            //TODO submit WIP for GITLAB and STATUS change for GITHUB
             if(request.getBugTracker().getType().equals(BugTracker.Type.GITLABMERGE)){
                 gitLabService.sendMergeComment(request, SCAN_MESSAGE);
             }
