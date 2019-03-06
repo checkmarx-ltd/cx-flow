@@ -1,0 +1,17 @@
+---------------------------------------------------------------------
+Release 1.1
+---------------------------------------------------------------------
+#FEATURES
+* Incremental scan support
+
+FIXES
+* Ensure there is not an existing active scan in the queue before creating a new scan
+
+#NOTES
+* incremental scan support has 2 elements.
+    Number of scans since last previous full scan threshold - default 5
+    Number of days since previous full scan threshold - default 7
+---------------------------------------------------------------------
+Release 1.0
+---------------------------------------------------------------------
+Initial Release

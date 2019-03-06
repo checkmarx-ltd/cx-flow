@@ -101,6 +101,8 @@ public class GitHubController {
             @RequestParam(value = "category", required = false) List<String> category,
             @RequestParam(value = "status", required = false) List<String> status,
             @RequestParam(value = "assignee", required = false) String assignee,
+            @RequestParam(value = "preset", required = false) String preset,
+            @RequestParam(value = "incremental", required = false) Boolean incremental,
             @RequestParam(value = "exclude-files", required = false) List<String> excludeFiles,
             @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders,
             @RequestParam(value = "override", required = false) String override,
@@ -164,6 +166,16 @@ public class GitHubController {
             log.info("Using url: {}", gitUrl);
             String gitAuthUrl = gitUrl.replace("https://", "https://".concat(properties.getToken()).concat("@"));
             gitAuthUrl = gitAuthUrl.replace("http://", "http://".concat(properties.getToken()).concat("@"));
+
+            String scanPreset = cxProperties.getScanPreset();
+            if(!ScanUtils.empty(preset)){
+                scanPreset = preset;
+            }
+            boolean inc = cxProperties.getIcremental();
+            if(incremental != null){
+                inc = incremental;
+            }
+
             ScanRequest request = ScanRequest.builder()
                     .application(app)
                     .product(p)
@@ -177,8 +189,8 @@ public class GitHubController {
                     .mergeNoteUri(event.getPullRequest().getIssueUrl().concat("/comments"))
                     .mergeTargetBranch(targetBranch)
                     .email(null)
-                    .incremental(false)
-                    .scanPreset(cxProperties.getScanPreset())
+                    .incremental(inc)
+                    .scanPreset(scanPreset)
                     .excludeFolders(excludeFolders)
                     .excludeFiles(excludeFiles)
                     .bugTracker(bt)
@@ -225,6 +237,8 @@ public class GitHubController {
             @RequestParam(value = "category", required = false) List<String> category,
             @RequestParam(value = "status", required = false) List<String> status,
             @RequestParam(value = "assignee", required = false) String assignee,
+            @RequestParam(value = "preset", required = false) String preset,
+            @RequestParam(value = "incremental", required = false) Boolean incremental,
             @RequestParam(value = "exclude-files", required = false) List<String> excludeFiles,
             @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders,
             @RequestParam(value = "override", required = false) String override,
@@ -289,6 +303,16 @@ public class GitHubController {
             log.info("Using url: {}", gitUrl);
             String gitAuthUrl = gitUrl.replace("https://", "https://".concat(properties.getToken()).concat("@"));
             gitAuthUrl = gitAuthUrl.replace("http://", "http://".concat(properties.getToken()).concat("@"));
+
+            String scanPreset = cxProperties.getScanPreset();
+            if(!ScanUtils.empty(preset)){
+                scanPreset = preset;
+            }
+            boolean inc = cxProperties.getIcremental();
+            if(incremental != null){
+                inc = incremental;
+            }
+
             ScanRequest request = ScanRequest.builder()
                     .application(app)
                     .product(p)
@@ -300,8 +324,8 @@ public class GitHubController {
                     .branch(currentBranch)
                     .refs(event.getRef())
                     .email(emails)
-                    .incremental(false)
-                    .scanPreset(cxProperties.getScanPreset())
+                    .incremental(inc)
+                    .scanPreset(scanPreset)
                     .excludeFolders(excludeFolders)
                     .excludeFiles(excludeFiles)
                     .bugTracker(bt)

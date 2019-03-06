@@ -64,6 +64,8 @@ public class BitbucketCloudController {
             @RequestParam(value = "category", required = false) List<String> category,
             @RequestParam(value = "status", required = false) List<String> status,
             @RequestParam(value = "assignee", required = false) String assignee,
+            @RequestParam(value = "preset", required = false) String preset,
+            @RequestParam(value = "incremental", required = false) Boolean incremental,
             @RequestParam(value = "exclude-files", required = false) List<String> excludeFiles,
             @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders,
             @RequestParam(value = "override", required = false) String override,
@@ -109,6 +111,16 @@ public class BitbucketCloudController {
 
             String gitUrl = body.getRepository().getLinks().getHtml().getHref().concat(".git");
             String mergeEndpoint = body.getPullrequest().getLinks().getComments().getHref();
+
+            String scanPreset = cxProperties.getScanPreset();
+            if(!ScanUtils.empty(preset)){
+                scanPreset = preset;
+            }
+            boolean inc = cxProperties.getIcremental();
+            if(incremental != null){
+                inc = incremental;
+            }
+
             ScanRequest request = ScanRequest.builder()
                     .application(app)
                     .product(p)
@@ -122,8 +134,8 @@ public class BitbucketCloudController {
                     .mergeNoteUri(mergeEndpoint)
                     .refs("refs/heads/".concat(currentBranch))
                     .email(null)
-                    .incremental(false) //todo handle incremental
-                    .scanPreset(cxProperties.getScanPreset())
+                    .incremental(inc)
+                    .scanPreset(scanPreset)
                     .excludeFolders(excludeFolders)
                     .excludeFiles(excludeFiles)
                     .bugTracker(bt)
@@ -166,6 +178,8 @@ public class BitbucketCloudController {
             @RequestParam(value = "category", required = false) List<String> category,
             @RequestParam(value = "status", required = false) List<String> status,
             @RequestParam(value = "assignee", required = false) String assignee,
+            @RequestParam(value = "preset", required = false) String preset,
+            @RequestParam(value = "incremental", required = false) Boolean incremental,
             @RequestParam(value = "exclude-files", required = false) List<String> excludeFiles,
             @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders,
             @RequestParam(value = "override", required = false) String override,
@@ -238,6 +252,16 @@ public class BitbucketCloudController {
             }
 
             String gitUrl = body.getRepository().getLinks().getHtml().getHref().concat(".git");
+
+            String scanPreset = cxProperties.getScanPreset();
+            if(!ScanUtils.empty(preset)){
+                scanPreset = preset;
+            }
+            boolean inc = cxProperties.getIcremental();
+            if(incremental != null){
+                inc = incremental;
+            }
+
             ScanRequest request = ScanRequest.builder()
                     .application(app)
                     .product(p)
@@ -249,8 +273,8 @@ public class BitbucketCloudController {
                     .branch(currentBranch)
                     .refs("refs/heads/".concat(currentBranch))
                     .email(emails)
-                    .incremental(false)
-                    .scanPreset(cxProperties.getScanPreset())
+                    .incremental(inc)
+                    .scanPreset(scanPreset)
                     .excludeFolders(excludeFolders)
                     .excludeFiles(excludeFiles)
                     .bugTracker(bt)
