@@ -68,7 +68,7 @@ public class CxService {
     private static final String SCAN_CONFIGURATIONS = "/sast/engineConfigurations";
     private static final String SCAN_SETTINGS = "/sast/scanSettings";
     private static final String SCAN = "/sast/scans";
-    private static final String PROJECT_SCANS = "/sast/scans?projectId={pid}&scanStatus=Scanning";//TODO handle all scan statuses (all but failed, finished)
+    private static final String PROJECT_SCANS = "/sast/scans?projectId={pid}";
     private static final String SCAN_STATUS = "/sast/scans/{id}";
     private static final String REPORT = "/reports/sastScan";
     private static final String REPORT_DOWNLOAD = "/reports/sastScan/{id}";
@@ -142,8 +142,9 @@ public class CxService {
         log.info("Finding last Scan Id for project Id {}", projectId);
         try {
             ResponseEntity<String> response = restTemplate.exchange(cxProperties.getUrl().concat(SCAN)
-                    .concat("?projectId=").concat(projectId.toString().concat("&scanStatus=").concat(SCAN_STATUS_FINISHED.toString())
-                    .concat("&last=1")), HttpMethod.GET, requestEntity, String.class);
+                    .concat("?projectId=").concat(projectId.toString().concat("&scanStatus=")
+                                    .concat(SCAN_STATUS_FINISHED.toString()).concat("&last=1")),
+                    HttpMethod.GET, requestEntity, String.class);
 
             JSONArray arr = new JSONArray(response.getBody());
             if(arr.length() < 1){
@@ -801,15 +802,20 @@ public class CxService {
     public boolean scanExists(Integer projectId){
         HttpEntity httpEntity = new HttpEntity<>(createAuthHeaders());
         try {
-            /*
+
             ResponseEntity<String> scans = restTemplate.exchange(cxProperties.getUrl().concat(PROJECT_SCANS), HttpMethod.GET, httpEntity, String.class, projectId);
             JSONArray jsonArray = new JSONArray(scans.getBody());
-            if(jsonArray.length() > 0){
-                return true;
+            for (int i = 0; i < jsonArray.length(); i++) {
+                JSONObject scan = jsonArray.getJSONObject(i);
+                JSONObject status = scan.getJSONObject("status");
+                int statusId = status.getInt("id");
+                if(SCAN_STATUS_QUEUED.equals(statusId) || SCAN_STATUS_NEW.equals(statusId) || SCAN_STATUS_SCANNING.equals(statusId) ||
+                        SCAN_STATUS_PRESCAN.equals(statusId) || SCAN_STATUS_SOURCE_PULLING.equals(statusId)){
+                    log.debug("Scan status is {}", statusId);
+                    return true;
+                }
             }
-            else{
-                return false;  TODO fix
-            }*/
+            log.debug("No scans in the queue that are in progress");
             return false;
 
         }catch (HttpStatusCodeException e){
