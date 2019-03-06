@@ -100,6 +100,7 @@ public class MachinaService {
             }
             projectId = cxService.getProjectId(ownerId, projectName);
             if (projectId.equals(UNKNOWN_INT)) {
+                log.info("Project does not exist.  Creating new project now for {}", projectName);
                 projectId = cxService.createProject(ownerId, projectName);
             }
             if(cxService.scanExists(projectId)){
@@ -117,12 +118,15 @@ public class MachinaService {
             If incremental scan support is enabled, determine if the last full finished scan (within configurable number of scans) is under
             a configurable number of days old, if so, an incremental scan is completed - otherwise, full scan is completed
              */
-            if(cxProperties.getIcremental()){
+            if(request.isIncremental()){
                 LocalDateTime scanDate = cxService.getLastScanDate(projectId);
                 if(scanDate == null || LocalDateTime.now().isAfter(scanDate.plusDays(cxProperties.getIncrementalThreshold()))){
                     log.debug("Last scanDate: {}", scanDate);
                     log.info("Last scanDate does not meet the threshold for an incremental scan.");
                     request.setIncremental(false);
+                }
+                else{
+                    log.info("Scan will be incremental");
                 }
             }
             cxService.setProjectExcludeDetails(projectId, request.getExcludeFolders(), request.getExcludeFiles());
