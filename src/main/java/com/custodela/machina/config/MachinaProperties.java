@@ -16,6 +16,7 @@ public class MachinaProperties {
     private String token;
     @NotNull @NotBlank
     private String bugTracker;
+    private List<BugTracker> bugTrackers;
     private List<String> branches;
     private List<String> filterSeverity;
     private List<String> filterCwe;
@@ -205,6 +206,28 @@ public class MachinaProperties {
 
         public void setEnabled(boolean enabled) {
             this.enabled = enabled;
+        }
+
+    }
+
+    public static class BugTracker {
+        private String className;
+        private String name;
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getClassName() {
+            return className;
+        }
+
+        public void setClassName(String className) {
+            this.className = className;
         }
 
     }
