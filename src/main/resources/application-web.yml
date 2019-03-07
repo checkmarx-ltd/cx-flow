@@ -14,6 +14,9 @@ machina:
   contact: xxx@xxx.com
   token: xxx
   bug-tracker: JIRA
+  bug-trackers:
+    - name: GitLab
+      class-name: com.custodela.machina.custom.GitLabTracker
   branches:
     - develop
     - master

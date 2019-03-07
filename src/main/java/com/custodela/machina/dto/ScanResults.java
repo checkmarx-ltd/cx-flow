@@ -105,11 +105,12 @@ public class ScanResults{
         private String severity;
         private String link;
         private String filename;
+        private String gitUrl;
         private List<OsaDetails> osaDetails;
         private Map<Integer, String>  details;
 
-        @ConstructorProperties({"pathId", "categories", "vulnerability", "cwe", "cve", "description", "language", "severity", "link", "filename", "osaDetails", "details"})
-        XIssue(String vulnerability, String cwe, String cve, String description, String language, String severity, String link, String filename, List<OsaDetails> osaDetails, Map<Integer, String> details) {
+        @ConstructorProperties({"pathId", "categories", "vulnerability", "cwe", "cve", "description", "language", "severity", "link", "filename", "gitUrl", "osaDetails", "details"})
+        XIssue(String vulnerability, String cwe, String cve, String description, String language, String severity, String link, String filename, String gitUrl, List<OsaDetails> osaDetails, Map<Integer, String> details) {
             this.vulnerability = vulnerability;
             this.cwe = cwe;
             this.cve = cve;
@@ -118,6 +119,7 @@ public class ScanResults{
             this.severity = severity;
             this.link = link;
             this.filename = filename;
+            this.gitUrl = gitUrl;
             this.osaDetails = osaDetails;
             this.details = details;
         }
@@ -176,6 +178,10 @@ public class ScanResults{
             return this.filename;
         }
 
+        public String getGitUrl() {
+            return this.gitUrl;
+        }
+
         public List<OsaDetails> getOsaDetails() {
             return this.osaDetails;
         }
@@ -214,6 +220,10 @@ public class ScanResults{
 
         public void setFilename(String filename) {
             this.filename = filename;
+        }
+
+        public void setGitUrl(String gitUrl) {
+            this.gitUrl = gitUrl;
         }
 
         public void setOsaDetails(List<OsaDetails> osaDetails) {
@@ -290,7 +300,7 @@ public class ScanResults{
             }
 
             public XIssue build() {
-                return new XIssue(vulnerability, cwe, cve, description, language, severity, link, file, osaDetails, details);
+                return new XIssue(vulnerability, cwe, cve, description, language, severity, link, file, "", osaDetails, details);
             }
 
             public String toString() {
