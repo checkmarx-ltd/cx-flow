@@ -17,20 +17,13 @@ machina:
     - master
     - security
   filter-severity:
-    - High
+#    - High
   filter-category:
   filter-cwe:
   filter-status:
-  mitre-url: https://cwe.mitre.org/data/definitions/%s.html
-  wiki-url: https://custodela.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
-  codebash-url: https://cxa.codebashing.com/courses/
-
-github:
-  webhook-token: 1234
-  token: xxxxx
-  url: https://github.com
-  api-url: https://api.github.com/repos/
-  false-positive-label: false-positive
+#  mitre-url: https://cwe.mitre.org/data/definitions/%s.html
+#  wiki-url: https://custodela.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
+#  codebash-url: https://cxa.codebashing.com/courses/
 
 checkmarx:
   username: xxxxx
@@ -50,8 +43,6 @@ checkmarx:
   jira-project-field:
   jira-custom-field:
   jira-issuetype-field:
-
-
 
 jira:
   url: https://xxxxx.com
