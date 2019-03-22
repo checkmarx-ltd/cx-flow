@@ -397,7 +397,7 @@ public class ScanUtils {
     }
 
     public static String getFileUrl(ScanRequest request, String filename) {
-        if(request.getProduct().equals(ScanRequest.Product.CXOSA)){
+        if(request.getProduct().equals(ScanRequest.Product.CXOSA) || filename == null || filename.isEmpty()){
             return null;
         }
         if(!ScanUtils.empty(request.getRepoUrl()) && !ScanUtils.empty(request.getBranch())) {

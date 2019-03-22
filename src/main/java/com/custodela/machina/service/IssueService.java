@@ -12,10 +12,11 @@ import org.slf4j.Logger;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import java.util.*;
 
-
+@Service
 public class IssueService implements ApplicationContextAware {
 
     private ApplicationContext context;
@@ -31,10 +32,13 @@ public class IssueService implements ApplicationContextAware {
         this.context = context;
     }
 
+
     /**
-     * Creates a map of GitLab Issues
+     * Create a map of custom issues
      *
+     * @param tracker
      * @param issues
+     * @param request
      * @return
      */
     private Map<String, Issue> getIssueMap(IssueTracker tracker, List<Issue> issues, ScanRequest request) {
@@ -46,6 +50,14 @@ public class IssueService implements ApplicationContextAware {
         return issueMap;
     }
 
+    /**
+     * Create a map of Checkmarx Issues
+     *
+     * @param tracker
+     * @param issues
+     * @param request
+     * @return
+     */
     private Map<String, ScanResults.XIssue> getXIssueMap(IssueTracker tracker, List<ScanResults.XIssue> issues, ScanRequest request) {
         Map<String, ScanResults.XIssue> xMap = new HashMap<>();
         for (ScanResults.XIssue issue : issues) {

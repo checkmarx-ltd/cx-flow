@@ -116,3 +116,4 @@ jira:
       name: loc
       jira-field-name: LOC
       jira-field-type: label
+      jira-default-value: XXXXX
