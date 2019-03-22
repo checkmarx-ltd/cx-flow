@@ -176,7 +176,7 @@ public class BitbucketServerController {
                     .repoName(event.getPullRequest().getFromRef().getRepository().getName())
                     .repoUrl(gitUrl)
                     .repoUrlWithAuth(gitAuthUrl)
-                    .repoType(ScanRequest.Repository.BITBUCKET)
+                    .repoType(ScanRequest.Repository.BITBUCKETSERVER)
                     .branch(currentBranch)
                     .mergeTargetBranch(targetBranch)
                     .mergeNoteUri(mergeEndpoint)
@@ -191,7 +191,11 @@ public class BitbucketServerController {
                     .build();
 
             request = ScanUtils.overrideMap(request, o);
-
+            try {
+                request.putAdditionalMetadata("BITBUCKET_BROWSE", event.getPullRequest().getFromRef().getRepository().getLinks().getSelf().get(0).getHref());
+            }catch (NullPointerException e){
+                log.warn("Not able to determine file url for browsing");
+            }
             if(branches.isEmpty() || branches.contains(targetBranch)) {
                 machinaService.initiateAutomation(request);
             }
@@ -297,7 +301,6 @@ public class BitbucketServerController {
             List<String> emails = new ArrayList<>();
 
             emails.add(event.getActor().getEmailAddress());
-//            http://localhost:7990/scm/cus/dvwa.git
 
             String gitUrl = properties.getUrl().concat("/scm/")
                     .concat(event.getRepository().getProject().getKey().concat("/"))
@@ -321,7 +324,7 @@ public class BitbucketServerController {
                     .repoName(event.getRepository().getName())
                     .repoUrl(gitUrl)
                     .repoUrlWithAuth(gitAuthUrl)
-                    .repoType(ScanRequest.Repository.BITBUCKET)
+                    .repoType(ScanRequest.Repository.BITBUCKETSERVER)
                     .branch(currentBranch)
                     .refs(event.getChanges().get(0).getRefId())
                     .email(emails)
@@ -332,7 +335,11 @@ public class BitbucketServerController {
                     .bugTracker(bt)
                     .filters(filters)
                     .build();
-
+            try {
+                request.putAdditionalMetadata("BITBUCKET_BROWSE", event.getRepository().getLinks().getSelf().get(0).getHref());
+            }catch (NullPointerException e){
+                log.warn("Not able to determine file url for browsing");
+            }
             request = ScanUtils.overrideMap(request, o);
 
             if(branches.isEmpty() || branches.contains(currentBranch)) {
