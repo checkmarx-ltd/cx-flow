@@ -148,6 +148,9 @@ public class MachinaService {
             else if(request.getBugTracker().getType().equals(BugTracker.Type.BITBUCKETPULL)){
                 bbService.sendMergeComment(request, SCAN_MESSAGE);
             }
+            else if(request.getBugTracker().getType().equals(BugTracker.Type.BITBUCKETSERVERPULL)){
+                bbService.sendServerMergeComment(request, SCAN_MESSAGE);
+            }
 
             Integer status = cxService.getScanStatus(scanId);
             if(request.getBugTracker().getType().equals(BugTracker.Type.NONE)){
