@@ -376,6 +376,9 @@ public class ScanUtils {
                         if(request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)){
                             body.append("[").append(entry.getKey()).append("](").append(fileUrl).append("#lines-").append(entry.getKey()).append(") ");
                         }
+                        else if(request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)){
+                            body.append("[").append(entry.getKey()).append("](").append(fileUrl).append("#").append(entry.getKey()).append(") ");
+                        }
                         else{
                             body.append("[").append(entry.getKey()).append("](").append(fileUrl).append("#L").append(entry.getKey()).append(") ");
                         }
@@ -402,12 +405,20 @@ public class ScanUtils {
         }
         if(!ScanUtils.empty(request.getRepoUrl()) && !ScanUtils.empty(request.getBranch())) {
             String repoUrl = request.getRepoUrl().replace(".git", "/");
-            if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)) {
+            if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)) {
+                String url = request.getAdditionalMetadata("BITBUCKET_BROWSE");
+                if(url != null && !url.isEmpty()){
+                    return url.concat("/").concat(filename).concat("?at=").concat(request.getBranch());
+                }
+            }
+            else if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)) {
                 return repoUrl.concat("src/").concat(request.getBranch()).concat("/").concat(filename);
-            } else {
-                return repoUrl.concat("/blob/").concat(request.getBranch()).concat("/").concat(filename);
+            }
+            else {
+                return repoUrl.concat("blob/").concat(request.getBranch()).concat("/").concat(filename);
             }
         }
+
         return null;
     }
 

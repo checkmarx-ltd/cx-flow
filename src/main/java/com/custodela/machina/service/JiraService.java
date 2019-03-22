@@ -662,7 +662,15 @@ public class JiraService {
             for (Map.Entry<Integer, String> entry : issue.getDetails().entrySet()) {
                 if (!ScanUtils.empty(fileUrl)) {
                     if (entry.getKey() != null) {
-                        body.append("[").append(entry.getKey()).append("|").append(fileUrl).append("#L").append(entry.getKey()).append("] ");
+                        if(request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)){
+                            body.append("[").append(entry.getKey()).append("|").append(fileUrl).append("#").append(entry.getKey()).append("] ");
+                        }
+                        else if(request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)){ //BB Cloud
+                            body.append("[").append(entry.getKey()).append("|").append(fileUrl).append("#lines-").append(entry.getKey()).append("] ");
+                        }
+                        else {
+                            body.append("[").append(entry.getKey()).append("|").append(fileUrl).append("#L").append(entry.getKey()).append("] ");
+                        }
                     }
                 } else {
                     if (entry.getKey() != null) {
@@ -676,12 +684,19 @@ public class JiraService {
                 if(entry.getKey() != null && entry.getValue() != null){
                     body.append("----").append(ScanUtils.CRLF);
                     if(!ScanUtils.empty(fileUrl)) {
-                        body.append("[Line #").append(entry.getKey()).append(":|").append(fileUrl).append("#L").append(entry.getKey()).append("]").append(ScanUtils.CRLF);
+                        if(request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)){
+                            body.append("[Line #").append(entry.getKey()).append(":|").append(fileUrl).append("#").append(entry.getKey()).append("]").append(ScanUtils.CRLF);;
+                        }
+                        else if(request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)){ //BB Cloud
+                            body.append("[Line #").append(entry.getKey()).append(":|").append(fileUrl).append("#lines-").append(entry.getKey()).append("]").append(ScanUtils.CRLF);;
+                        }
+                        else {
+                            body.append("[Line #").append(entry.getKey()).append(":|").append(fileUrl).append("#L").append(entry.getKey()).append("]").append(ScanUtils.CRLF);;
+                        }
                     }
                     else {
                         body.append("Line #").append(entry.getKey()).append(ScanUtils.CRLF);
                     }
-                    //todo handle bitbucket differences
                     body.append("{code}").append(ScanUtils.CRLF);
                     body.append(entry.getValue()).append(ScanUtils.CRLF);
                     body.append("{code}").append(ScanUtils.CRLF);

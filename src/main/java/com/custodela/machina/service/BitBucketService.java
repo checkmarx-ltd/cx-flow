@@ -74,7 +74,7 @@ public class BitBucketService {
         ResponseEntity<String> response = restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
-    private void sendServerMergeComment(ScanRequest request, String comment){
+    void sendServerMergeComment(ScanRequest request, String comment){
         HttpEntity httpEntity = new HttpEntity<>(getServerJSONComment(comment).toString(), createAuthHeaders());
         ResponseEntity<String> response = restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
