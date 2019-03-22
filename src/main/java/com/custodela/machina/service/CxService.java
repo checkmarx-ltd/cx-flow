@@ -43,6 +43,7 @@ import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 
 /**
@@ -164,6 +165,7 @@ public class CxService {
     LocalDateTime getLastScanDate(Integer projectId) {
         HttpEntity requestEntity = new HttpEntity<>(createAuthHeaders());
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
+        DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SS");
 
         log.info("Finding last Scan Id for project Id {}", projectId);
         try {
@@ -178,8 +180,24 @@ public class CxService {
                 if (!scan.getBoolean("isIncremental")) {
                     JSONObject dateAndTime = scan.getJSONObject("dateAndTime");
                     log.debug("Last full scan was {}", dateAndTime);
-                    //example: "finishedOn": "2018-06-18T01:09:12.707"
-                    return LocalDateTime.parse(dateAndTime.getString("finishedOn"), formatter);
+                    //example: "finishedOn": "2018-06-18T01:09:12.707",
+                    //example: "finishedOn": "2019-03-22T01:51:18.11",
+                    LocalDateTime d;
+                    try {
+                        d = LocalDateTime.parse(dateAndTime.getString("finishedOn"), formatter);
+                    }catch (DateTimeParseException e){
+                        //log.warn(ExceptionUtils.getStackTrace(e));
+                        log.warn("Error Parsing last finished scan time {}", e.getParsedString());
+                        try{
+                            log.info("Attempting 2nd format 'yyyy-MM-dd'T'HH:mm:ss.SS'");
+                            d = LocalDateTime.parse(dateAndTime.getString("finishedOn"), formatter2);
+                        }catch (DateTimeParseException e2){
+                            log.error(ExceptionUtils.getStackTrace(e2));
+                            log.error(e2.getParsedString());
+                            return null;
+                        }
+                    }
+                    return d;
                 }
             }
         } catch (HttpStatusCodeException e) {
