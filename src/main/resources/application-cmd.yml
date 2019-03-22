@@ -43,12 +43,13 @@ jira:
   token: xxxx
   project: SS
   issue-type: Application Security Bug
+
   priorities:
     Critical: Highest
     High: High
     Medium: Medium
     Low: Low
-    informational: Lowest
+    Informational: Lowest
   open-transition: In Review
   close-transition: Done
   open-status:
@@ -79,3 +80,4 @@ jira:
       jira-field-name: LOC
       jira-field-type: label
       jira-default-value: XXXX
+  label-tracker:

@@ -11,8 +11,6 @@ logging:
   file: machina.log
 
 machina:
-  contact: xxx@xxx.com
-  token: xxx
   bug-tracker: JIRA
   bug-trackers:
     - name: GitLab
@@ -20,9 +18,8 @@ machina:
   branches:
     - develop
     - master
+    - security
   filter-severity:
-    - Critical
-    - High
   mitre-url: https://cwe.mitre.org/data/definitions/%s.html
   wiki-url: https://custodela.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
   codebash-url: https://cxa.codebashing.com/courses/
@@ -47,6 +44,7 @@ checkmarx:
   scan-timeout: 120
   jira-project-field: jira-project
   jira-issuetype-field: jira-issuetype
+  jira-custom-field: jira-customfields
 #WSDL Config
   portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
   sdk-url: ${checkmarx.base-url}/cxwebinterface/SDK/CxSDKWebService.asmx
@@ -54,27 +52,6 @@ checkmarx:
   sdk-wsdl: ${checkmarx.base-url}/SDK/CxSDKWebService.asmx?wsdl
   portal-package: checkmarx.wsdl.portal
 
-github:
-  webhook-token: 1234
-  token: xxx
-  url: https://github.com
-  api-url: https://api.github.com/repos/
-  false-positive-label: false-positive
-
-gitlab:
-  webhook-token: 1234
-  token: xxx
-  url: https://gitlab.com
-  api-url: https://gitlab.com/api/v4/
-  false-positive-label: false-positive
-
-bitbucket:
-  webhook-token: 1234
-  token: xxx
-#  url: https://api.bitbucket.org
-  url: http://xxxx
-  api-path: /rest/api/1.0/
-  false-positive-label: false-positive
 
 jira:
   url: https://xxxx.atlassian.net
@@ -83,11 +60,10 @@ jira:
   project: SS
   issue-type: Application Security Bug
   priorities:
-    Critical: Highest
     High: High
     Medium: Medium
     Low: Low
-    informational: Lowest
+    Informational: Lowest
   open-transition: In Review
   close-transition: Done
   open-status:

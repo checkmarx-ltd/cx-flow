@@ -8,7 +8,6 @@ import org.springframework.validation.annotation.Validated;
 @Component
 @ConfigurationProperties(prefix = "gitlab")
 @PropertySource("classpath://gitlab.yml")
-
 @Validated
 public class GitLabProperties {
     private String token;
