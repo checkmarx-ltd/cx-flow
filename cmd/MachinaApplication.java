@@ -15,7 +15,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableAsync;
-
 import java.beans.ConstructorProperties;
 import java.io.File;
 import java.io.IOException;
@@ -72,7 +71,7 @@ public class MachinaApplication implements ApplicationRunner {
         List<String> status;
         List<String> excludeFiles;
         List<String> excludeFolders;
-        boolean osa = false;
+        boolean osa;
         MachinaOverride o = null;
         ObjectMapper mapper = new ObjectMapper();
 
@@ -113,6 +112,8 @@ public class MachinaApplication implements ApplicationRunner {
         status = arg.getOptionValues("status");
         excludeFiles = arg.getOptionValues("exclude-files");
         excludeFolders = arg.getOptionValues("exclude-folders");
+        boolean bb = arg.containsOption("bb"); //BitBucket Cloud
+        boolean bbs = arg.containsOption("bbs"); //BitBucket Server
 
         if(((ScanUtils.empty(namespace) && ScanUtils.empty(repoName) && ScanUtils.empty(branch)) && ScanUtils.empty(application)) && !arg.containsOption("batch")) {
             log.error("Namespace/Repo/Branch or Application (app) must be provided");
@@ -204,6 +205,20 @@ public class MachinaApplication implements ApplicationRunner {
                 .build();
 
         request = ScanUtils.overrideMap(request, o);
+        /*Determine if BitBucket Cloud/Server is being used - this will determine formatting of URL that links to file/line in repository */
+
+        if(bb){
+            request.setRepoType(ScanRequest.Repository.BITBUCKETSERVER);
+            //TODO create browse code url
+        }
+        else if(bbs){
+            request.setRepoType(ScanRequest.Repository.BITBUCKETSERVER);
+            repoUrl = repoUrl.replaceAll("\\/scm\\/", "/projects/");
+            repoUrl = repoUrl.replaceAll("\\/[\\w-]+.git$", "/repos$0");
+            repoUrl = repoUrl.replaceAll(".git$", "");
+            repoUrl = repoUrl.concat("/browse");
+            request.putAdditionalMetadata("BITBUCKET_BROWSE", repoUrl);
+        }
 
         try {
             if(arg.containsOption("parse")){

@@ -96,6 +96,8 @@ public class MachinaService {
             else {
                 projectName = request.getNamespace().concat("-").concat(request.getRepoName()).concat("-").concat(request.getBranch());
             }
+            //only - is allowed as special character
+            projectName = projectName.replaceAll("[^a-zA-Z0-9-]+","-");
             projectId = cxService.getProjectId(ownerId, projectName);
             if (projectId.equals(UNKNOWN_INT)) {
                 log.info("Project does not exist.  Creating new project now for {}", projectName);
@@ -143,6 +145,9 @@ public class MachinaService {
             }
             else if(request.getBugTracker().getType().equals(BugTracker.Type.BITBUCKETPULL)){
                 bbService.sendMergeComment(request, SCAN_MESSAGE);
+            }
+            else if(request.getBugTracker().getType().equals(BugTracker.Type.BITBUCKETSERVERPULL)){
+                bbService.sendServerMergeComment(request, SCAN_MESSAGE);
             }
 
             Integer status = cxService.getScanStatus(scanId);
