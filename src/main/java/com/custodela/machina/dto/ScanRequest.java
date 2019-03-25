@@ -3,6 +3,7 @@ package com.custodela.machina.dto;
 import com.custodela.machina.utils.ScanUtils;
 
 import java.beans.ConstructorProperties;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -38,8 +39,12 @@ public class ScanRequest {
     private Type type;
     private List<String> activeBranches;
     private List<Filter> filters;
+    private Map<String, String> additionalMetadata;
 
-    @ConstructorProperties({"namespace", "application", "org", "team", "project", "cxFields", "site", "repoUrl", "repoUrlWithAuth", "repoName", "branch", "mergeTargetBranch", "mergeNoteUri", "id", "refs", "email", "incremental", "scanPreset", "excludeFiles", "excludeFolders", "repoType", "product", "bugTracker", "type", "activeBranches", "filters"})
+    @ConstructorProperties({"namespace", "application", "org", "team", "project", "cxFields", "site", "repoUrl",
+            "repoUrlWithAuth", "repoName", "branch", "mergeTargetBranch", "mergeNoteUri", "id", "refs", "email",
+            "incremental", "scanPreset", "excludeFiles", "excludeFolders", "repoType", "product", "bugTracker",
+            "type", "activeBranches", "filters"})
     ScanRequest(String namespace, String application, String org, String team, String project, Map<String, String> cxFields, String site, String repoUrl, String repoUrlWithAuth, String repoName, String branch, String mergeTargetBranch, String mergeNoteUri, Integer id, String refs, List<String> email, boolean incremental, String scanPreset, List<String> excludeFiles, List<String> excludeFolders, Repository repoType, Product product, BugTracker bugTracker, Type type, List<String> activeBranches, List<Filter> filters) {
         this.namespace = namespace;
         this.application = application;
@@ -319,6 +324,20 @@ public class ScanRequest {
         this.filters = filters;
     }
 
+    public void putAdditionalMetadata(String key, String value){
+        if(this.additionalMetadata == null){
+            this.additionalMetadata = new HashMap<>();
+        }
+        this.additionalMetadata.put(key, value);
+    }
+
+    public String getAdditionalMetadata(String key){
+        if (this.additionalMetadata != null) {
+            return this.additionalMetadata.get(key);
+        }
+        return null;
+    }
+
     public String toString() {
         return "ScanRequest(namespace=" + this.getNamespace() + ", application=" + this.getApplication() + ", org=" + this.getOrg() + ", team=" + this.getTeam() + ", project=" + this.getProject() + ", cxFields=" + this.getCxFields() + ", site=" + this.getSite() + ", repoUrl=" + this.getRepoUrl() + ", repoUrlWithAuth=" + this.getRepoUrlWithAuth() + ", repoName=" + this.getRepoName() + ", branch=" + this.getBranch() + ", mergeTargetBranch=" + this.getMergeTargetBranch() + ", mergeNoteUri=" + this.getMergeNoteUri() + ", id=" + this.getId() + ", refs=" + this.getRefs() + ", email=" + this.getEmail() + ", incremental=" + this.isIncremental() + ", scanPreset=" + this.getScanPreset() + ", excludeFiles=" + this.getExcludeFiles() + ", excludeFolders=" + this.getExcludeFolders() + ", repoType=" + this.getRepoType() + ", product=" + this.getProduct() + ", bugTracker=" + this.getBugTracker() + ", type=" + this.getType() + ", activeBranches=" + this.getActiveBranches() + ", filters=" + this.getFilters() + ")";
     }
@@ -359,6 +378,7 @@ public class ScanRequest {
         GITHUB("GITHUB"),
         GITLAB("GITLAB"),
         BITBUCKET("BITBUCKET"),
+        BITBUCKETSERVER("BITBUCKETSERVER"),
         NA("NA");
 
         private String repository;
@@ -401,7 +421,7 @@ public class ScanRequest {
         private List<String> activeBranches;
         private List<Filter> filters;
 
-        ScanRequestBuilder() {
+        ScanRequestBuilder(){
         }
 
         public ScanRequest.ScanRequestBuilder namespace(String namespace) {
