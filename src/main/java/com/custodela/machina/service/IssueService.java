@@ -8,6 +8,7 @@ import com.custodela.machina.dto.Issue;
 import com.custodela.machina.exception.MachinaException;
 import com.custodela.machina.exception.MachinaRuntimeException;
 import com.custodela.machina.utils.ScanUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -145,6 +146,7 @@ public class IssueService implements ApplicationContextAware {
             return issuesMap;
         } catch (BeansException e){
             log.error("Specified bug tracker bean was not found or properly loaded.");
+            log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaRuntimeException();
         } catch (ClassCastException e){
             log.error("Bean must implement the IssueTracker Interface");

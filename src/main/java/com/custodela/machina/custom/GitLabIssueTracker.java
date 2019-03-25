@@ -14,8 +14,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.Collections;
 import java.util.List;
 
-@Service
-@Qualifier("GitLab")
+@Service("GitLab")
 public class GitLabIssueTracker implements IssueTracker {
 
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(GitLabIssueTracker.class);
@@ -31,10 +30,10 @@ public class GitLabIssueTracker implements IssueTracker {
     private static final String PROJECT_FILES = PROJECT_PATH + "/repository/tree?ref=";
     private static final int UNKNOWN_INT = -1;
     private final RestTemplate restTemplate;
-    private final GitLabProperties properties;
+    private final GitLabCustomProperties properties;
     private final MachinaProperties machinaProperties;
 
-    public GitLabIssueTracker(RestTemplate restTemplate, GitLabProperties properties, MachinaProperties machinaProperties) {
+    public GitLabIssueTracker(RestTemplate restTemplate, GitLabCustomProperties properties, MachinaProperties machinaProperties) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.machinaProperties = machinaProperties;
@@ -53,7 +52,7 @@ public class GitLabIssueTracker implements IssueTracker {
 
     @Override
     public String getFalsePositiveLabel() throws MachinaException {
-        return null;
+        return "fp";
     }
 
     @Override

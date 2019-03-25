@@ -15,7 +15,7 @@ public class MachinaProperties {
     private String token;
     @NotNull @NotBlank
     private String bugTracker;
-    private List<String> customBugTrackers;
+    private List<String> bugTrackerImpl;
     private List<String> branches;
     private List<String> filterSeverity;
     private List<String> filterCwe;
@@ -42,6 +42,14 @@ public class MachinaProperties {
     public @NotNull
     @NotBlank String getBugTracker() {
         return this.bugTracker;
+    }
+
+    public List<String> getBugTrackerImpl() {
+        return bugTrackerImpl;
+    }
+
+    public void setBugTrackerImpl(List<String> bugTrackerImpl) {
+        this.bugTrackerImpl = bugTrackerImpl;
     }
 
     public List<String> getBranches() {
