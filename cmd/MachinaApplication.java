@@ -183,15 +183,6 @@ public class MachinaApplication implements ApplicationRunner {
                 log.warn("No supported bug tracking type provided");
         }
 
-        /*Determine if BitBucket Cloud/Server is being used - this will determine formatting of URL that links to file/line in repository */
-        ScanRequest.Repository repository = ScanRequest.Repository.NA;
-        if(bb){
-            repository = ScanRequest.Repository.BITBUCKET;
-        }
-        else if(bbs){
-            repository = ScanRequest.Repository.BITBUCKETSERVER;
-        }
-
         ScanRequest request = ScanRequest.builder()
                 .application(application)
                 .product(p)
@@ -201,7 +192,7 @@ public class MachinaApplication implements ApplicationRunner {
                 .repoName(repoName)
                 .repoUrl(repoUrl)
                 .repoUrlWithAuth(gitUrlAuth)
-                .repoType(repository)
+                .repoType(ScanRequest.Repository.NA)
                 .branch(branch)
                 .refs(null)
                 .email(emails)
@@ -214,6 +205,20 @@ public class MachinaApplication implements ApplicationRunner {
                 .build();
 
         request = ScanUtils.overrideMap(request, o);
+        /*Determine if BitBucket Cloud/Server is being used - this will determine formatting of URL that links to file/line in repository */
+
+        if(bb){
+            request.setRepoType(ScanRequest.Repository.BITBUCKETSERVER);
+            //TODO create browse code url
+        }
+        else if(bbs){
+            request.setRepoType(ScanRequest.Repository.BITBUCKETSERVER);
+            repoUrl = repoUrl.replaceAll("\\/scm\\/", "/projects/");
+            repoUrl = repoUrl.replaceAll("\\/[\\w-]+.git$", "/repos$0");
+            repoUrl = repoUrl.replaceAll(".git$", "");
+            repoUrl = repoUrl.concat("/browse");
+            request.putAdditionalMetadata("BITBUCKET_BROWSE", repoUrl);
+        }
 
         try {
             if(arg.containsOption("parse")){
