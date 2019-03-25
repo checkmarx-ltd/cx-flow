@@ -408,14 +408,24 @@ public class ScanUtils {
             if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)) {
                 String url = request.getAdditionalMetadata("BITBUCKET_BROWSE");
                 if(url != null && !url.isEmpty()){
-                    return url.concat("/").concat(filename).concat("?at=").concat(request.getBranch());
+                    if(!ScanUtils.empty(request.getBranch())) {
+                        return url.concat("/").concat(filename).concat("?at=").concat(request.getBranch());
+                    }
+                    else{
+                        return url.concat("/").concat(filename);
+                    }
                 }
             }
             else if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)) {
                 return repoUrl.concat("src/").concat(request.getBranch()).concat("/").concat(filename);
             }
             else {
-                return repoUrl.concat("blob/").concat(request.getBranch()).concat("/").concat(filename);
+                if(!ScanUtils.empty(request.getBranch())) {
+                    return repoUrl.concat("blob/").concat(request.getBranch()).concat("/").concat(filename);
+                }
+                else{ //default to master branch
+                    return repoUrl.concat("blob/").concat("master/").concat(filename);
+                }
             }
         }
 
