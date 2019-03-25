@@ -1,16 +1,20 @@
 ---------------------------------------------------------------------
-Release 1.1
+Release 1.0.1
 ---------------------------------------------------------------------
 #FEATURES
 * Incremental scan support
 
-FIXES
+#FIXES
 * Ensure there is not an existing active scan in the queue before creating a new scan
+* BitBucket Line URLs are were different between BB Cloud and Server - this is fixed with the exception of BB Cloud references to a branch with forward slash '/'
+
 
 #NOTES
 * incremental scan support has 2 elements.
     Number of scans since last previous full scan threshold - default 5
     Number of days since previous full scan threshold - default 7
+* BitBucket Cloud line URL with branches that have forward slash ('/') do not work - yet.
+
 ---------------------------------------------------------------------
 Release 1.0
 ---------------------------------------------------------------------
