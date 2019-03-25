@@ -11,10 +11,9 @@ logging:
   file: machina.log
 
 machina:
-  bug-tracker: JIRA
-  bug-trackers:
-    - name: GitLab
-      class-name: com.custodela.machina.custom.GitLabTracker
+  bug-tracker: GitLab
+  bug-tracker-impl:
+    - GitLab
   branches:
     - develop
     - master
