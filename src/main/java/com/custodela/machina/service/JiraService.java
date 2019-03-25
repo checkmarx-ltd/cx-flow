@@ -383,6 +383,10 @@ public class JiraService {
                         log.debug("text field");
                         issueBuilder.setFieldValue(customField, value);
                         break;
+                    case "component":
+                        log.debug("component field");
+                        issueBuilder.setComponentsNames(Collections.singletonList(value));
+                        break;
                     case "label": /*csv to array | replace space with _ */
                         log.debug("label field");
                         String[] l = StringUtils.split(value,",");
