@@ -45,7 +45,6 @@ public class GitHubController {
     private static final String HMAC_ALGORITHM = "HmacSHA1";
     private static final Charset CHARSET = StandardCharsets.UTF_8;
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(GitHubController.class);
-
     private final GitHubProperties properties;
     private final MachinaProperties machinaProperties;
     private final CxProperties cxProperties;
@@ -263,12 +262,25 @@ public class GitHubController {
             if(!ScanUtils.empty(application)){
                 app = application;
             }
+
             //set the default bug tracker as per yml
-            BugTracker.Type bugType = BugTracker.Type.valueOf(machinaProperties.getBugTracker().toUpperCase());
-            if(!ScanUtils.empty(bug)){
-                bugType = BugTracker.Type.valueOf(bug.toUpperCase());
+            BugTracker.Type bugType;
+            try {
+                if (ScanUtils.empty(bug)) {
+                    bug =  machinaProperties.getBugTracker();
+                }
+                bugType = BugTracker.Type.valueOf(bug);
+
+            } catch (IllegalArgumentException e){
+                log.debug("Determine if custom bean is being used");
+                if(machinaProperties.getBugTrackerImpl() == null || !machinaProperties.getBugTrackerImpl().contains(bug)){
+                    throw e;
+                }
+                bugType = BugTracker.Type.CUSTOM;
             }
+
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
+
             //determine branch (without refs)
             String currentBranch = event.getRef().split("/")[2];
             List<String> branches = new ArrayList<>();
@@ -280,7 +292,7 @@ public class GitHubController {
                 branches.addAll(machinaProperties.getBranches());
             }
 
-            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties);
+            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
             /*Determine filters, if any*/
             if(!ScanUtils.empty(severity) || !ScanUtils.empty(cwe) || !ScanUtils.empty(category) || !ScanUtils.empty(status)){
                 filters = ScanUtils.getFilters(severity, cwe, category, status);
@@ -300,7 +312,7 @@ public class GitHubController {
 
             //build request object
             String gitUrl = event.getRepository().getCloneUrl();
-            log.info("Using url: {}", gitUrl);
+            log.debug("Using url: {}", gitUrl);
             String gitAuthUrl = gitUrl.replace("https://", "https://".concat(properties.getToken()).concat("@"));
             gitAuthUrl = gitAuthUrl.replace("http://", "http://".concat(properties.getToken()).concat("@"));
 

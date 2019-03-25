@@ -162,7 +162,7 @@ public class MachinaApplicationCmd implements ApplicationRunner {
                         .fields(jiraProperties.getFields())
                         .build();
                 break;
-            case GITLAB:
+            /*case GITLAB:
                 gitUrlAuth = repoUrl.replace("https://", "https://oauth2:".concat(gitLabProperties.getToken()).concat("@"));
                 bt = BugTracker.builder()
                         .type(bugType)
@@ -176,7 +176,7 @@ public class MachinaApplicationCmd implements ApplicationRunner {
                 break;
             case BITBUCKET:
                 log.warn("Bitbucket is not supported at this time");
-                break;
+                break;*/
             case EMAIL:
                 break;
             default:
