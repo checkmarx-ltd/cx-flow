@@ -256,7 +256,7 @@ public class JiraService {
                         log.debug("Checkmarx custom field");
                         value = request.getCxFields().get(f.getName());
                         log.debug("Cx Field value: {}",value);
-                        if(ScanUtils.empty(value) && ScanUtils.empty(f.getJiraDefaultValue())){
+                        if(ScanUtils.empty(value) && !ScanUtils.empty(f.getJiraDefaultValue())){
                             value = f.getJiraDefaultValue();
                             log.debug("JIRA default Value is {}", value);
                         }
