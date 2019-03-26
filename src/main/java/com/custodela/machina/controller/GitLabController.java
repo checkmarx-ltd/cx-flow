@@ -1,5 +1,6 @@
 package com.custodela.machina.controller;
 
+import checkmarx.wsdl.portal.Scan;
 import com.custodela.machina.config.CxProperties;
 import com.custodela.machina.config.GitLabProperties;
 import com.custodela.machina.config.JiraProperties;
@@ -13,6 +14,7 @@ import com.custodela.machina.exception.MachinaRuntimeException;
 import com.custodela.machina.service.GitLabService;
 import com.custodela.machina.service.MachinaService;
 import com.custodela.machina.utils.ScanUtils;
+import org.apache.commons.lang3.EnumUtils;
 import org.slf4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -210,10 +212,14 @@ public class GitLabController {
             if(!ScanUtils.empty(application)){
                 app = application;
             }
-            BugTracker.Type bugType = BugTracker.Type.valueOf(machinaProperties.getBugTracker().toUpperCase());
-            if(!ScanUtils.empty(bug)){
-                bugType = BugTracker.Type.valueOf(bug.toUpperCase());
+
+            //set the default bug tracker as per yml
+            BugTracker.Type bugType;
+            if (ScanUtils.empty(bug)) {
+                bug =  machinaProperties.getBugTracker();
             }
+            bugType = ScanUtils.getBugTypeEnum(bug, machinaProperties.getBugTrackerImpl());
+
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
             //extract branch from ref (refs/heads/master -> master)
             String currentBranch = body.getRef().split("/")[2];
@@ -255,7 +261,7 @@ public class GitLabController {
                 emails.add(body.getUserEmail());
             }
             String gitUrl = body.getProject().getGitHttpUrl();
-            log.info("Using url: {}", gitUrl);
+            log.debug("Using url: {}", gitUrl);
             String gitAuthUrl = gitUrl.replace("https://", "https://oauth2:".concat(properties.getToken()).concat("@"));
             gitAuthUrl = gitAuthUrl.replace("http://", "http://oauth2:".concat(properties.getToken()).concat("@"));
 
@@ -296,7 +302,7 @@ public class GitLabController {
             }
 
         }catch (IllegalArgumentException e){
-            log.error("Error submitting Scan Request. Product option incorrect {}", product);
+            log.error("Error submitting Scan Request. Product option or BugTracker not valid {} | {}", product, bug);
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
