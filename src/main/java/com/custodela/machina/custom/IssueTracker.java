@@ -7,16 +7,15 @@ import com.custodela.machina.exception.MachinaException;
 import java.util.List;
 
 public interface IssueTracker {
-    public void init(ScanRequest request) throws MachinaException;
-    public void complete(ScanRequest request) throws MachinaException;
-    public String getFalsePositiveLabel() throws MachinaException;
-    public List<Issue> getIssues(ScanRequest request) throws MachinaException;
-    public Issue createIssue(ScanResults.XIssue resultIssue, ScanRequest request) throws MachinaException;
-    public void closeIssue(Issue issue, ScanRequest request) throws MachinaException;
-    public Issue updateIssue(Issue issue, ScanResults.XIssue resultIssue) throws MachinaException;
-    public String getIssueKeyFormat();
-    public String getIssueKey(Issue issue, ScanRequest request);
-    public String getXIssueKey(ScanResults.XIssue issue, ScanRequest request);
-    public boolean isIssueClosed(Issue issue);
-    public boolean isIssueOpened(Issue issue);
+    void init(ScanRequest request) throws MachinaException;
+    void complete(ScanRequest request) throws MachinaException;
+    String getFalsePositiveLabel() throws MachinaException;
+    List<Issue> getIssues(ScanRequest request) throws MachinaException;
+    Issue createIssue(ScanResults.XIssue resultIssue, ScanRequest request) throws MachinaException;
+    void closeIssue(Issue issue, ScanRequest request) throws MachinaException;
+    Issue updateIssue(Issue issue, ScanResults.XIssue resultIssue, ScanRequest request) throws MachinaException;
+    String getIssueKey(Issue issue, ScanRequest request);
+    String getXIssueKey(ScanResults.XIssue issue, ScanRequest request);
+    boolean isIssueClosed(Issue issue);
+    boolean isIssueOpened(Issue issue);
 }

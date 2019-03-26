@@ -5,6 +5,7 @@ import com.custodela.machina.config.MachinaProperties;
 import com.custodela.machina.dto.*;
 import com.custodela.machina.exception.MachinaRuntimeException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.EnumUtils;
 import org.slf4j.Logger;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.HttpClientErrorException;
@@ -22,8 +23,9 @@ public class ScanUtils {
 
     public static final String RUNNING = "running";
     public static final String CRLF = "\r\n";
-    private static final String ISSUE_BODY = "**%s** issue exists @ **%s** in branch **%s**";
-    private static final String ISSUE_KEY = "%s %s @ %s [%s]";
+    public static final String ISSUE_BODY = "**%s** issue exists @ **%s** in branch **%s**";
+    public static final String ISSUE_KEY = "%s %s @ %s [%s]";
+    public static final String ISSUE_KEY_2 = "%s %s @ %s";
     public static final String JIRA_ISSUE_KEY = "%s%s @ %s [%s]";
     public static final String JIRA_ISSUE_KEY_2 = "%s%s @ %s";
     public static final String JIRA_ISSUE_BODY = "*%s* issue exists @ *%s* in branch *%s*";
@@ -288,10 +290,15 @@ public class ScanUtils {
                     .fields(jiraProperties.getFields())
                     .build();
         }
-        else {
+        else if(bugType.equals(BugTracker.Type.CUSTOM)){
             bt = BugTracker.builder()
                     .type(bugType)
                     .customBean(bugTracker)
+                    .build();
+        }
+        else {
+            bt = BugTracker.builder()
+                    .type(bugType)
                     .build();
         }
         return bt;
@@ -544,5 +551,21 @@ public class ScanUtils {
         return fields;
     }
 
+    public static BugTracker.Type getBugTypeEnum(String bug, List<String> bugTrackerImpl) throws IllegalArgumentException{
+
+        BugTracker.Type bugType = EnumUtils.getEnum(BugTracker.Type.class, bug);
+        if(bugType == null){ //Try uppercase
+            bugType = EnumUtils.getEnum(BugTracker.Type.class, bug.toUpperCase());
+            if(bugType == null){
+                log.debug("Determine if custom bean is being used");
+                if(bugTrackerImpl == null || !bugTrackerImpl.contains(bug)){
+                    log.debug("bug tracker {} not found within available options {}", bug, bugTrackerImpl);
+                    throw new IllegalArgumentException("Custom bug tracker not found in list of available implementations");
+                }
+                return BugTracker.Type.CUSTOM;
+            }
+        }
+        return bugType;
+    }
 
 }
