@@ -77,8 +77,10 @@ public class IssueService implements ApplicationContextAware {
         if (!request.getBugTracker().getType().equals(BugTracker.Type.CUSTOM) && !ScanUtils.empty(request.getBugTracker().getCustomBean())) {
             throw new MachinaException("Custom  bean must be used here.");
         }
+
         try {
             IssueTracker tracker = (IssueTracker) context.getBean(request.getBugTracker().getCustomBean());
+            tracker.init(request);
             String fpLabel = tracker.getFalsePositiveLabel();
 
             log.info("Processing Issues with custom bean {}", request.getBugTracker().getCustomBean());
@@ -101,7 +103,7 @@ public class IssueService implements ApplicationContextAware {
                             log.info("Issue still exists.  Updating issue with key {}", xIssue.getKey());
                             fileUrl = ScanUtils.getFileUrl(request, currentIssue.getFilename());
                             currentIssue.setGitUrl(fileUrl);
-                            Issue updatedIssue = tracker.updateIssue(i, currentIssue);
+                            Issue updatedIssue = tracker.updateIssue(i, currentIssue, request);
                             if (updatedIssue != null) {
                                 updatedIssues.add(updatedIssue.getId());
                                 log.debug("Update completed for issue #{}", updatedIssue.getId());
@@ -127,11 +129,11 @@ public class IssueService implements ApplicationContextAware {
             for (Map.Entry<String, Issue> issue : iMap.entrySet()) {
                 try {
                     if (!xMap.containsKey(issue.getKey())) {
-                        if (issue.getValue().getState().equals("opened")) {
+                        if (tracker.isIssueOpened(issue.getValue())) {
                             /*Close the issue*/
+                            tracker.closeIssue(issue.getValue(), request);
                             closedIssues.add(issue.getValue().getId());
                             log.info("Closing issue #{} with key {}", issue.getValue().getId(), issue.getKey());
-                            tracker.closeIssue(issue.getValue(), request);
                         }
                     }
                 } catch (HttpClientErrorException e) {
@@ -143,6 +145,9 @@ public class IssueService implements ApplicationContextAware {
             issuesMap.put("new", newIssues);
             issuesMap.put("updated", updatedIssues);
             issuesMap.put("closed", closedIssues);
+
+            tracker.complete(request);
+
             return issuesMap;
         } catch (BeansException e){
             log.error("Specified bug tracker bean was not found or properly loaded.");
