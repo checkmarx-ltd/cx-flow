@@ -255,6 +255,11 @@ public class JiraService {
                     if (request.getCxFields() != null) {
                         log.debug("Checkmarx custom field");
                         value = request.getCxFields().get(f.getName());
+                        log.debug("Cx Field value: {}",value);
+                        if(ScanUtils.empty(value) && !ScanUtils.empty(f.getJiraDefaultValue())){
+                            value = f.getJiraDefaultValue();
+                            log.debug("JIRA default Value is {}", value);
+                        }
                     } else {
                         log.debug("No value found for {}", f.getName());
                         value = "";
@@ -392,8 +397,9 @@ public class JiraService {
                         String[] l = StringUtils.split(value,",");
                         list = new ArrayList<>();
                         for(String x: l){
-                            list.add((x.replaceAll(" ","_")).trim());
+                            list.add(x.replaceAll("[^a-zA-Z0-9-_]+","_"));
                         }
+
                         if(!ScanUtils.empty(list)) {
                             issueBuilder.setFieldValue(customField, list);
                         }
