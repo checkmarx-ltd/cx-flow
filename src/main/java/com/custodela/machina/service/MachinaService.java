@@ -320,8 +320,8 @@ public class MachinaService {
             }
             for(CxProject project: projects){
                 ScanRequest request = new ScanRequest(originalRequest);
-                request.setProject(project.getName());
-                request.setApplication(project.getName());
+                request.setProject(project.getName().replaceAll("[^a-zA-Z0-9-_]+","_"));
+                request.setApplication(project.getName().replaceAll("[^a-zA-Z0-9-_]+","_"));
                 processes.add(cxGetResults(request, project));
             }
             log.info("Waiting for processing to complete");
