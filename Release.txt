@@ -1,4 +1,9 @@
 ---------------------------------------------------------------------
+Release 1.0.2
+---------------------------------------------------------------------
+#FIXES
+* Fix to remove spaces and special characters in batch mode team/project name that is mapped to label in JIRA, which spaces are not supported
+---------------------------------------------------------------------
 Release 1.0.1
 ---------------------------------------------------------------------
 #FEATURES
