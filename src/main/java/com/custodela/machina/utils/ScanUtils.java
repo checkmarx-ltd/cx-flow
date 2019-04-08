@@ -15,6 +15,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -422,7 +424,7 @@ public class ScanUtils {
                 body.append(currentIssue.getSeverity()).append("|");
                 body.append(currentIssue.getVulnerability()).append("|");
                 body.append(currentIssue.getFilename()).append("|");
-                body.append("[link](").append(currentIssue.getLink()).append(")");
+                body.append("[Checkmarx](").append(currentIssue.getLink()).append(")");
                 body.append(CRLF);
             //body.append("```").append(currentIssue.getDescription()).append("```").append(CRLF); Description is too long
             } catch (HttpClientErrorException e) {
@@ -566,6 +568,50 @@ public class ScanUtils {
             }
         }
         return bugType;
+    }
+
+    public static String getFilename(ScanRequest request, String format){
+        String filename;
+        filename = format;
+
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd.HHmmss");
+        String dt = now.format(formatter);
+        filename = filename.replace("[TIME]", dt);
+        log.debug(dt);
+        log.debug(filename);
+
+        if(!empty(request.getTeam())){
+            String team = request.getTeam();
+            team = team.replaceAll("\\\\","_");
+            filename = filename.replace("[TEAM]", team);
+        }
+        if(!empty(request.getApplication())) {
+            filename = filename.replace("[APP]", request.getApplication());
+            log.debug(request.getApplication());
+            log.debug(filename);
+        }
+        if(!empty(request.getProject())) {
+            filename = filename.replace("[PROJECT]", request.getProject());
+            log.debug(request.getProject());
+            log.debug(filename);
+        }
+        if(!empty(request.getNamespace())) {
+            filename = filename.replace("[NAMESPACE]", request.getNamespace());
+            log.debug(request.getNamespace());
+            log.debug(filename);
+        }
+        if(!empty(request.getRepoName())) {
+            filename = filename.replace("[REPO]", request.getRepoName());
+            log.debug(request.getRepoName());
+            log.debug(filename);
+        }
+        if(!empty(request.getBranch())) {
+            filename = filename.replace("[BRANCH]", request.getBranch());
+            log.debug(request.getBranch());
+            log.debug(filename);
+        }
+        return filename;
     }
 
 }

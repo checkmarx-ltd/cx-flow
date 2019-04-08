@@ -80,15 +80,23 @@ public class IssueService implements ApplicationContextAware {
 
         try {
             IssueTracker tracker = (IssueTracker) context.getBean(request.getBugTracker().getCustomBean());
-            tracker.init(request);
+            tracker.init(request, results);
             String fpLabel = tracker.getFalsePositiveLabel();
 
             log.info("Processing Issues with custom bean {}", request.getBugTracker().getCustomBean());
 
             List<Issue> issues = tracker.getIssues(request);
+            if(issues == null){
+                issues = Collections.emptyList();
+            }
             xMap = this.getXIssueMap(tracker, results.getXIssues(), request);
             iMap = this.getIssueMap(tracker, issues, request);
-
+            if(iMap == null){
+                iMap = Collections.emptyMap();
+            }
+            if(xMap == null){
+                xMap = Collections.emptyMap();
+            }
             for (Map.Entry<String, ScanResults.XIssue> xIssue : xMap.entrySet()) {
                 try {
                     String fileUrl;
@@ -117,8 +125,10 @@ public class IssueService implements ApplicationContextAware {
                         xIssue.getValue().setGitUrl(fileUrl);
                         log.info("Creating new issue with key {}", xIssue.getKey());
                         Issue newIssue = tracker.createIssue(xIssue.getValue(), request);
-                        newIssues.add(newIssue.getId());
-                        log.info("New issue created. #{}", newIssue.getId());
+                        if(newIssue != null) {
+                            newIssues.add(newIssue.getId());
+                            log.info("New issue created. #{}", newIssue.getId());
+                        }
                     }
                 } catch (HttpClientErrorException e) {
                     log.error("Error occurred while processing issue with key {} {}", xIssue.getKey(), e);
@@ -146,7 +156,7 @@ public class IssueService implements ApplicationContextAware {
             issuesMap.put("updated", updatedIssues);
             issuesMap.put("closed", closedIssues);
 
-            tracker.complete(request);
+            tracker.complete(request, results);
 
             return issuesMap;
         } catch (BeansException e){

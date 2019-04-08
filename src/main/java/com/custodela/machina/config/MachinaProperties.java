@@ -16,6 +16,7 @@ public class MachinaProperties {
     @NotNull @NotBlank
     private String bugTracker;
     private List<String> bugTrackerImpl;
+    private String dataFolder;
     private List<String> branches;
     private List<String> filterSeverity;
     private List<String> filterCwe;
@@ -50,6 +51,14 @@ public class MachinaProperties {
 
     public void setBugTrackerImpl(List<String> bugTrackerImpl) {
         this.bugTrackerImpl = bugTrackerImpl;
+    }
+
+    public String getDataFolder() {
+        return dataFolder;
+    }
+
+    public void setDataFolder(String dataFolder) {
+        this.dataFolder = dataFolder;
     }
 
     public List<String> getBranches() {

@@ -7,8 +7,8 @@ import com.custodela.machina.exception.MachinaException;
 import java.util.List;
 
 public interface IssueTracker {
-    void init(ScanRequest request) throws MachinaException;
-    void complete(ScanRequest request) throws MachinaException;
+    void init(ScanRequest request, ScanResults results) throws MachinaException;
+    void complete(ScanRequest request, ScanResults results) throws MachinaException;
     String getFalsePositiveLabel() throws MachinaException;
     List<Issue> getIssues(ScanRequest request) throws MachinaException;
     Issue createIssue(ScanResults.XIssue resultIssue, ScanRequest request) throws MachinaException;

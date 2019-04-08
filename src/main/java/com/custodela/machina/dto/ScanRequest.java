@@ -16,6 +16,7 @@ public class ScanRequest {
     private String org;
     private String team;
     private String project;
+    private boolean preserveXml = false;
     private Map<String, String> cxFields;
     private String site;
     private String hash;
@@ -98,6 +99,7 @@ public class ScanRequest {
         this.excludeFolders = other.excludeFolders;
         this.repoType = other.repoType;
         this.product = other.product;
+        this.preserveXml = other.preserveXml;
         this.bugTracker = new BugTracker(other.getBugTracker());
         this.type = other.type;
         this.activeBranches = other.activeBranches;
@@ -126,6 +128,22 @@ public class ScanRequest {
 
     public String getProject() {
         return this.project;
+    }
+
+    public boolean isPreserveXml() {
+        return preserveXml;
+    }
+
+    public void setPreserveXml(boolean preserveXml) {
+        this.preserveXml = preserveXml;
+    }
+
+    public Map<String, String> getAdditionalMetadata() {
+        return additionalMetadata;
+    }
+
+    public void setAdditionalMetadata(Map<String, String> additionalMetadata) {
+        this.additionalMetadata = additionalMetadata;
     }
 
     public Map<String, String> getCxFields() {
@@ -336,6 +354,14 @@ public class ScanRequest {
             return this.additionalMetadata.get(key);
         }
         return null;
+    }
+
+    public String getFilename(){
+        return this.getAdditionalMetadata("filename");
+    }
+
+    public void setFilename(String filename){
+        this.putAdditionalMetadata("filename", filename);
     }
 
     public String toString() {

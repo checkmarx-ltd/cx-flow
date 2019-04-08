@@ -92,9 +92,9 @@ public class MachinaApplication implements ApplicationRunner {
         }
 
         /*Collect command line options (String)*/
-        bugTracker = ((ScanUtils.empty(arg.getOptionValues("bug-tracker")))) ? BugTracker.Type.JIRA.getType() : arg.getOptionValues("bug-tracker").get(0).toUpperCase();
-        file = ((ScanUtils.empty(arg.getOptionValues("f")))) ? BugTracker.Type.JIRA.getType() : arg.getOptionValues("f").get(0);
-        libFile = ((ScanUtils.empty(arg.getOptionValues("lib-file")))) ? BugTracker.Type.JIRA.getType() : arg.getOptionValues("lib-file").get(0);
+        bugTracker = ((ScanUtils.empty(arg.getOptionValues("bug-tracker")))) ? BugTracker.Type.JIRA.getType() : arg.getOptionValues("bug-tracker").get(0);
+        file = ((ScanUtils.empty(arg.getOptionValues("f")))) ? null : arg.getOptionValues("f").get(0);
+        libFile = ((ScanUtils.empty(arg.getOptionValues("lib-file")))) ? null : arg.getOptionValues("lib-file").get(0);
         repoName = ((ScanUtils.empty(arg.getOptionValues("repo-name")))) ? null : arg.getOptionValues("repo-name").get(0);
         repoUrl = ((ScanUtils.empty(arg.getOptionValues("repo-url")))) ? null : arg.getOptionValues("repo-url").get(0);
         branch = ((ScanUtils.empty(arg.getOptionValues("branch")))) ? null : arg.getOptionValues("branch").get(0);
@@ -130,7 +130,22 @@ public class MachinaApplication implements ApplicationRunner {
                     machinaProperties.getFilterCategory(), machinaProperties.getFilterStatus());
         }
 
-        BugTracker.Type bugType = BugTracker.Type.valueOf(bugTracker);
+        //set the default bug tracker as per yml
+        BugTracker.Type bugType;
+        try {
+            if (ScanUtils.empty(bugTracker)) {
+                bugTracker =  machinaProperties.getBugTracker();
+            }
+            bugType = BugTracker.Type.valueOf(bugTracker);
+
+        } catch (IllegalArgumentException e){
+            log.debug("Determine if custom bean is being used {}", bugTracker);
+            if(machinaProperties.getBugTrackerImpl() == null || !machinaProperties.getBugTrackerImpl().contains(bugTracker)){
+                throw e;
+            }
+            bugType = BugTracker.Type.CUSTOM;
+        }
+
         ScanRequest.Product p;
         if(osa){
             if(libFile == null){
@@ -162,7 +177,7 @@ public class MachinaApplication implements ApplicationRunner {
                         .fields(jiraProperties.getFields())
                         .build();
                 break;
-            case GITLAB:
+            /*case GITLAB:
                 gitUrlAuth = repoUrl.replace("https://", "https://oauth2:".concat(gitLabProperties.getToken()).concat("@"));
                 bt = BugTracker.builder()
                         .type(bugType)
@@ -176,8 +191,15 @@ public class MachinaApplication implements ApplicationRunner {
                 break;
             case BITBUCKET:
                 log.warn("Bitbucket is not supported at this time");
-                break;
+                break;*/
             case EMAIL:
+                break;
+            case CUSTOM:
+                log.info("Using custom bean implementation  for bug tracking");
+                bt = BugTracker.builder()
+                        .type(bugType)
+                        .customBean(bugTracker)
+                        .build();
                 break;
             default:
                 log.warn("No supported bug tracking type provided");
@@ -205,6 +227,9 @@ public class MachinaApplication implements ApplicationRunner {
                 .build();
 
         request = ScanUtils.overrideMap(request, o);
+        if(arg.containsOption("xml")){
+            request.setPreserveXml(true);
+        }
         /*Determine if BitBucket Cloud/Server is being used - this will determine formatting of URL that links to file/line in repository */
 
         if(bb){

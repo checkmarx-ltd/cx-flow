@@ -76,7 +76,7 @@ public class CxService {
     private static final String REPORT_STATUS = "/reports/sastScan/{id}/status";
     public static final String UNKNOWN = "-1";
     public static final Integer UNKNOWN_INT = -1;
-    public static final String OSA_VULN = "Vulnerable_Library";
+    private static final String OSA_VULN = "Vulnerable_Library";
 
     public static final Integer SCAN_STATUS_NEW = 1;
     public static final Integer SCAN_STATUS_PRESCAN = 2;
@@ -91,7 +91,7 @@ public class CxService {
     /*report statuses TODO*/
     public static final Integer REPORT_STATUS_CREATED = 2;
     public static final Integer REPORT_STATUS_FINISHED = 7;
-    static final Map<String, Integer> STATUS_MAP = ImmutableMap.of(
+    public static final Map<String, Integer> STATUS_MAP = ImmutableMap.of(
             "CONFIRMED", 2,
             "URGENT", 3
     );
@@ -294,7 +294,7 @@ public class CxService {
      * @return
      * @throws MachinaException
      */
-    ScanResults getReportContent(Integer reportId, List<Filter> filter) throws MachinaException{
+    ScanResults getReportContent(Integer reportId, List<Filter> filter, boolean preserveXml) throws MachinaException{
         HttpHeaders headers = createAuthHeaders();
         headers.setContentType(MediaType.APPLICATION_XML);
         HttpEntity httpEntity = new HttpEntity<>(headers);
@@ -318,6 +318,7 @@ public class CxService {
             log.debug("Base64:");
             log.debug(Base64.getEncoder().encodeToString(resultsXML.toString().getBytes()));
             /*Remove any chars before the start xml tag*/
+
             xml = xml.trim().replaceFirst("^([\\W]+)<","<");
             InputStream xmlStream = new ByteArrayInputStream(Objects.requireNonNull(xml.getBytes()));
 
@@ -334,14 +335,19 @@ public class CxService {
             CxXMLResultsType cxResults = (CxXMLResultsType) unmarshaller.unmarshal(xsr);
             ScanResults.ScanResultsBuilder cxScanBuilder = ScanResults.builder();
             cxScanBuilder.projectId(cxResults.getProjectId());
+            cxScanBuilder.team(cxResults.getTeam());
+            cxScanBuilder.project(cxResults.getProjectName());
             cxScanBuilder.link(cxResults.getDeepLink());
             cxScanBuilder.files(cxResults.getFilesScanned());
             cxScanBuilder.loc(cxResults.getLinesOfCodeScanned());
             cxScanBuilder.scanType(cxResults.getScanType());
             getIssues(filter, session, xIssueList, cxResults);
             cxScanBuilder.xIssues(xIssueList);
-            return cxScanBuilder.build();
-
+            ScanResults results = cxScanBuilder.build();
+            if(preserveXml){
+                results.setOutput(xml);
+            }
+            return results;
         }catch (HttpStatusCodeException e) {
             log.error("HTTP Status Code of {} while getting downloading report contents of report Id {}", e.getStatusCode(), reportId);
             e.printStackTrace();
@@ -351,7 +357,6 @@ public class CxService {
             log.error("Error with XML report");
             e.printStackTrace();
             throw new MachinaException("Error while processing scan results for report Id ".concat(reportId.toString()));
-
         }
         catch (NullPointerException e){
             log.info("Null Error");
@@ -395,6 +400,9 @@ public class CxService {
             List<ScanResults.XIssue> issueList = new ArrayList<>();
             CxXMLResultsType cxResults = (CxXMLResultsType) unmarshaller.unmarshal(file);
             ScanResults.ScanResultsBuilder cxScanBuilder = ScanResults.builder();
+            cxScanBuilder.projectId(cxResults.getProjectId());
+            cxScanBuilder.team(cxResults.getTeam());
+            cxScanBuilder.project(cxResults.getProjectName());
             cxScanBuilder.link(cxResults.getDeepLink());
             cxScanBuilder.files(cxResults.getFilesScanned());
             cxScanBuilder.loc(cxResults.getLinesOfCodeScanned());
@@ -567,6 +575,7 @@ public class CxService {
                             }
                             details.put(Integer.parseInt(r.getPath().getPathNode().get(0).getLine()),
                                     r.getPath().getPathNode().get(0).getSnippet().getLine().getCode());
+                            xIssueBuilder.similarityId(r.getPath().getSimilarityId());
                         } catch (NullPointerException e) {
                             log.warn("Problem grabbing snippet.  Snippet may not exist for finding for Node ID");
                             /*Defaulting to initial line number with no snippet*/
