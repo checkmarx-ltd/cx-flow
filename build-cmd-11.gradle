@@ -41,6 +41,7 @@ dependencies {
     compile ('commons-codec:commons-codec:1.11')
     compile ('commons-io:commons-io:2.6')
     compile ('org.json:json:20171018')
+    compile ('com.fasterxml.jackson.core:jackson-databind:2.9.8')
     compile ('org.springframework.boot:spring-boot-starter-web-services')
     compile ('org.springframework.boot:spring-boot-starter-mail')
     compile ('org.springframework.boot:spring-boot-starter-thymeleaf')

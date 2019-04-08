@@ -1,6 +1,5 @@
 package com.custodela.machina.custom;
 
-
 import com.custodela.machina.config.GitLabProperties;
 import com.custodela.machina.config.MachinaProperties;
 import com.custodela.machina.dto.Issue;
@@ -17,7 +16,6 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -52,7 +50,7 @@ public class GitLabIssueTracker implements IssueTracker {
     }
 
     @Override
-    public void init(ScanRequest request) throws MachinaException {
+    public void init(ScanRequest request, ScanResults results) throws MachinaException {
         log.info("Initializing GitLab processing");
         if(ScanUtils.empty(request.getNamespace()) ||
                 ScanUtils.empty(request.getRepoName()) ||
@@ -355,7 +353,7 @@ public class GitLabIssueTracker implements IssueTracker {
     }
 
     @Override
-    public void complete(ScanRequest request) throws MachinaException {
+    public void complete(ScanRequest request, ScanResults results) throws MachinaException {
         log.info("Finalizing GitLab Processing");
     }
 

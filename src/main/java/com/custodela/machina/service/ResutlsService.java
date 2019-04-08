@@ -52,7 +52,7 @@ public class ResutlsService {
     public CompletableFuture<ScanResults> processScanResultsAsync(ScanRequest request, Integer scanId, List<Filter> filters) throws MachinaException {
 
         CompletableFuture<ScanResults> future = new CompletableFuture<>();
-        ScanResults results = getScanResults(scanId, filters);
+        ScanResults results = getScanResults(scanId, filters, request.isPreserveXml());
         Map<String, Object>  emailCtx = new HashMap<>();
         //Send email (if EMAIL was enabled and EMAL was not main feedback option
         if(machinaProperties.getMail() != null && machinaProperties.getMail().isEnabled() &&
@@ -81,7 +81,7 @@ public class ResutlsService {
         return future;
     }
 
-    private ScanResults getScanResults(Integer scanId, List<Filter> filters) throws MachinaException {
+    private ScanResults getScanResults(Integer scanId, List<Filter> filters, boolean preserveXml) throws MachinaException {
         try {
             Integer reportId = cxService.createScanReport(scanId);
             Thread.sleep(SLEEP);
@@ -95,7 +95,7 @@ public class ResutlsService {
                 }
             }
             Thread.sleep(SLEEP);
-            return cxService.getReportContent(reportId, filters);
+            return cxService.getReportContent(reportId, filters, preserveXml);
         } catch (InterruptedException e) {
             log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaException("Interrupted Exception Occurred");

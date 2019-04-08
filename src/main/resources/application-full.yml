@@ -5,9 +5,11 @@ logging:
   file: machina.log
 
 machina:
-  contact: xxx@xxx.com
-  token: xxx
-  bug-tracker: JIRA
+  bug-tracker: Json
+  bug-tracker-impl:
+    - Xml
+    - Json
+    - GitLab
   branches:
     - develop
     - master
@@ -32,7 +34,7 @@ machina:
     enabled: true
 
 checkmarx:
-  username: xxx
+  username:
   password: xxx
   client-secret: xxx
   base-url: https://cx.aws.custodela.com
@@ -117,3 +119,11 @@ jira:
       jira-field-name: LOC
       jira-field-type: label
       jira-default-value: XXXXX
+
+json:
+  file-name-format: "[NAMESPACE]-[REPO]-[BRANCH]-[TIME].json"
+  data-folder: "C:\\tmp"
+
+cx-xml:
+  file-name-format: "[NAMESPACE]-[REPO]-[BRANCH]-[TIME].xml"
+  data-folder: "C:\\tmp"

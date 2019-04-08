@@ -1,6 +1,0 @@
-gitlab:
-  webhook-token: 1234
-  token: xxxxx
-  url: https://github.com
-  api-url: https://api.github.com/repos/
-  false-positive-label: false-positive

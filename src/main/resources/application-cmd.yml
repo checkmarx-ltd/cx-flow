@@ -11,7 +11,13 @@ logging:
           wire: debug
 
 machina:
-  bug-tracker: JIRA
+  #bug-tracker: Json
+  bug-tracker: CxXml
+  bug-tracker-impl:
+    - Xml
+    - CxXml
+    - Json
+    - GitLab
   filter-severity:
     - High
     - Medium
@@ -80,4 +86,11 @@ jira:
       jira-field-name: LOC
       jira-field-type: label
       jira-default-value: XXXX
-  label-tracker:
+
+json:
+  file-name-format: "[NAMESPACE]-[REPO]-[BRANCH]-[TIME].json"
+  data-folder: "C:\\tmp"
+
+cx-xml:
+  file-name-format: "[NAMESPACE]-[REPO]-[BRANCH]-[TIME].xml"
+  data-folder: "C:\\tmp"

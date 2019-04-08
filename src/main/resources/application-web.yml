@@ -11,8 +11,10 @@ logging:
   file: machina.log
 
 machina:
-  bug-tracker: GitLab
+  bug-tracker: Json
   bug-tracker-impl:
+    - Xml
+    - Json
     - GitLab
   branches:
     - develop
@@ -92,3 +94,12 @@ jira:
       name: loc
       jira-field-name: LOC
       jira-field-type: label
+
+
+json:
+  file-name-format: "[NAMESPACE]-[REPO]-[BRANCH]-[TIME].json"
+  data-folder: "C:\\tmp"
+
+cx-xml:
+  file-name-format: "[NAMESPACE]-[REPO]-[BRANCH]-[TIME].xml"
+  data-folder: "C:\\tmp"
