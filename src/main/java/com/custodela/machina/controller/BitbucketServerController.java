@@ -5,7 +5,6 @@ import com.custodela.machina.config.CxProperties;
 import com.custodela.machina.config.JiraProperties;
 import com.custodela.machina.config.MachinaProperties;
 import com.custodela.machina.dto.*;
-import com.custodela.machina.dto.bitbucketserver.Change;
 import com.custodela.machina.dto.bitbucketserver.PullEvent;
 import com.custodela.machina.dto.bitbucketserver.PushEvent;
 import com.custodela.machina.exception.InvalidTokenException;
@@ -29,7 +28,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 
 
@@ -103,7 +101,7 @@ public class BitbucketServerController {
     ){
         verifyHmacSignature(body, signature);
 
-        MachinaOverride o = null;
+        MachinaOverride o = ScanUtils.getMachinaOverride(override);
         ObjectMapper mapper = new ObjectMapper();
         PullEvent event;
 
@@ -115,17 +113,18 @@ public class BitbucketServerController {
         }
 
         log.info("Processing BitBucket MERGE request");
-        o = ScanUtils.getMachinaOverride(override);
 
         try {
             String app = event.getPullRequest().getFromRef().getRepository().getName();
             if(!ScanUtils.empty(application)){
                 app = application;
             }
+
             BugTracker.Type bugType = BugTracker.Type.BITBUCKETSERVERPULL;
             if(!ScanUtils.empty(bug)){
-                bugType = BugTracker.Type.valueOf(bug.toUpperCase());
+                bugType = ScanUtils.getBugTypeEnum(bug, machinaProperties.getBugTrackerImpl());
             }
+
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
             String currentBranch = event.getPullRequest().getFromRef().getDisplayId();
             String targetBranch = event.getPullRequest().getToRef().getDisplayId();;
@@ -139,7 +138,7 @@ public class BitbucketServerController {
                 branches.addAll(machinaProperties.getBranches());
             }
 
-            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties);
+            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
 
             if(!ScanUtils.empty(severity) || !ScanUtils.empty(cwe) || !ScanUtils.empty(category) || !ScanUtils.empty(status)){
                 filters = ScanUtils.getFilters(severity, cwe, category, status);
@@ -164,7 +163,7 @@ public class BitbucketServerController {
             if(!ScanUtils.empty(preset)){
                 scanPreset = preset;
             }
-            boolean inc = cxProperties.getIcremental();
+            boolean inc = cxProperties.getIncremental();
             if(incremental != null){
                 inc = incremental;
             }
@@ -241,7 +240,7 @@ public class BitbucketServerController {
     ){
         verifyHmacSignature(body, signature);
 
-        MachinaOverride o = null;
+        MachinaOverride o = ScanUtils.getMachinaOverride(override);
         ObjectMapper mapper = new ObjectMapper();
         PushEvent event;
 
@@ -253,30 +252,18 @@ public class BitbucketServerController {
         }
 
         try {
-            //if override is provided, check if chars are more than 20 in length, implying base64 encoded json
-            if(!ScanUtils.empty(override)){
-                if(override.length() > 20){
-                    log.info("Overriding attributes with Base64 encoded String");
-                    String json = new String(Base64.getDecoder().decode(override));
-                    o = mapper.readValue(json, MachinaOverride.class);
-                }
-                else{
-                    //TODO download file
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new MachinaRuntimeException();
-        }
-        try {
             String app = event.getRepository().getName();
             if(!ScanUtils.empty(application)){
                 app = application;
             }
-            BugTracker.Type bugType = BugTracker.Type.valueOf(machinaProperties.getBugTracker().toUpperCase());
-            if(!ScanUtils.empty(bug)){
-                bugType = BugTracker.Type.valueOf(bug.toUpperCase());
+
+            //set the default bug tracker as per yml
+            BugTracker.Type bugType;
+            if (ScanUtils.empty(bug)) {
+                bug =  machinaProperties.getBugTracker();
             }
+            bugType = ScanUtils.getBugTypeEnum(bug, machinaProperties.getBugTrackerImpl());
+
 
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
             String currentBranch = event.getChanges().get(0).getRefId().split("/")[2];
@@ -290,7 +277,7 @@ public class BitbucketServerController {
                 branches.addAll(machinaProperties.getBranches());
             }
 
-            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties);
+            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
             if(!ScanUtils.empty(severity) || !ScanUtils.empty(cwe) || !ScanUtils.empty(category) || !ScanUtils.empty(status)){
                 filters = ScanUtils.getFilters(severity, cwe, category, status);
             }
@@ -312,7 +299,7 @@ public class BitbucketServerController {
             if(!ScanUtils.empty(preset)){
                 scanPreset = preset;
             }
-            boolean inc = cxProperties.getIcremental();
+            boolean inc = cxProperties.getIncremental();
             if(incremental != null){
                 inc = incremental;
             }
