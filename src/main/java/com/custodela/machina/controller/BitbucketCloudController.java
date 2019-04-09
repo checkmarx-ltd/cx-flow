@@ -10,7 +10,6 @@ import com.custodela.machina.dto.bitbucket.Commit;
 import com.custodela.machina.dto.bitbucket.MergeEvent;
 import com.custodela.machina.dto.bitbucket.PushEvent;
 import com.custodela.machina.exception.InvalidTokenException;
-import com.custodela.machina.exception.MachinaRuntimeException;
 import com.custodela.machina.service.MachinaService;
 import com.custodela.machina.utils.ScanUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,9 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.beans.ConstructorProperties;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 
 
@@ -82,10 +79,12 @@ public class BitbucketCloudController {
             if(!ScanUtils.empty(application)){
                 app = application;
             }
+
             BugTracker.Type bugType = BugTracker.Type.BITBUCKETPULL;
             if(!ScanUtils.empty(bug)){
-                bugType = BugTracker.Type.valueOf(bug.toUpperCase());
+                bugType = ScanUtils.getBugTypeEnum(bug, machinaProperties.getBugTrackerImpl());
             }
+
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
             String currentBranch = body.getPullrequest().getSource().getBranch().getName();
             String targetBranch = body.getPullrequest().getDestination().getBranch().getName();
@@ -99,7 +98,7 @@ public class BitbucketCloudController {
                 branches.addAll(machinaProperties.getBranches());
             }
 
-            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties);
+            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
 
             if(!ScanUtils.empty(severity) || !ScanUtils.empty(cwe) || !ScanUtils.empty(category) || !ScanUtils.empty(status)){
                 filters = ScanUtils.getFilters(severity, cwe, category, status);
@@ -116,7 +115,7 @@ public class BitbucketCloudController {
             if(!ScanUtils.empty(preset)){
                 scanPreset = preset;
             }
-            boolean inc = cxProperties.getIcremental();
+            boolean inc = cxProperties.getIncremental();
             if(incremental != null){
                 inc = incremental;
             }
@@ -190,34 +189,21 @@ public class BitbucketCloudController {
 
         validateBitBucketRequest(token);
 
-        MachinaOverride o = null;
+        MachinaOverride o = ScanUtils.getMachinaOverride(override);
         ObjectMapper mapper = new ObjectMapper();
 
-        try {
-            //if override is provided, check if chars are more than 20 in length, implying base64 encoded json
-            if(!ScanUtils.empty(override)){
-                if(override.length() > 20){
-                    log.info("Overriding attributes with Base64 encoded String");
-                    String json = new String(Base64.getDecoder().decode(override));
-                    o = mapper.readValue(json, MachinaOverride.class);
-                }
-                else{
-                    //TODO download file
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new MachinaRuntimeException();
-        }
         try {
             String app = body.getRepository().getName();
             if(!ScanUtils.empty(application)){
                 app = application;
             }
-            BugTracker.Type bugType = BugTracker.Type.valueOf(machinaProperties.getBugTracker().toUpperCase());
-            if(!ScanUtils.empty(bug)){
-                bugType = BugTracker.Type.valueOf(bug.toUpperCase());
+
+            //set the default bug tracker as per yml
+            BugTracker.Type bugType;
+            if (ScanUtils.empty(bug)) {
+                bug =  machinaProperties.getBugTracker();
             }
+            bugType = ScanUtils.getBugTypeEnum(bug, machinaProperties.getBugTrackerImpl());
 
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
             String currentBranch = body.getPush().getChanges().get(0).getNew().getName();
@@ -231,7 +217,7 @@ public class BitbucketCloudController {
                 branches.addAll(machinaProperties.getBranches());
             }
 
-            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties);
+            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
             /*Determine filters, if any*/
             if(!ScanUtils.empty(severity) || !ScanUtils.empty(cwe) || !ScanUtils.empty(category) || !ScanUtils.empty(status)){
                 filters = ScanUtils.getFilters(severity, cwe, category, status);
@@ -257,7 +243,7 @@ public class BitbucketCloudController {
             if(!ScanUtils.empty(preset)){
                 scanPreset = preset;
             }
-            boolean inc = cxProperties.getIcremental();
+            boolean inc = cxProperties.getIncremental();
             if(incremental != null){
                 inc = incremental;
             }

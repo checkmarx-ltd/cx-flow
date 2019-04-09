@@ -315,7 +315,7 @@ public class JiraService {
                         case "recommendation":
                             StringBuilder recommendation = new StringBuilder();
                             if (issue.getLink() != null && !issue.getLink().isEmpty()) {
-                                recommendation.append("Issue Link: ").append(issue.getLink()).append(ScanUtils.CRLF);
+                                recommendation.append("Checkmarx Link: ").append(issue.getLink()).append(ScanUtils.CRLF);
                             }
                             if(!ScanUtils.empty(issue.getCwe())) {
                                 recommendation.append("Mitre Details: ").append(String.format(machinaProperties.getMitreUrl(), issue.getCwe())).append(ScanUtils.CRLF);
@@ -656,7 +656,7 @@ public class JiraService {
 
         body.append(ScanUtils.CRLF).append("*Addition Info*").append(ScanUtils.CRLF).append("----").append(ScanUtils.CRLF);
         if(issue.getLink() != null && !issue.getLink().isEmpty()){
-            body.append("[Link|").append(issue.getLink()).append("]").append(ScanUtils.CRLF);
+            body.append("[Checkmarx|").append(issue.getLink()).append("]").append(ScanUtils.CRLF);
         }
         if(!ScanUtils.empty(issue.getCwe())) {
             body.append("[Mitre Details|").append(String.format(machinaProperties.getMitreUrl(), issue.getCwe())).append("]").append(ScanUtils.CRLF);

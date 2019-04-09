@@ -25,7 +25,7 @@ apply plugin: 'io.spring.dependency-management'
 
 
 group = 'com.custodela'
-version = '1.0.2'
+version = '1.1'
 sourceCompatibility = 1.8
 
 repositories {
@@ -41,6 +41,7 @@ dependencies {
     compile ('commons-codec:commons-codec:1.11')
     compile ('commons-io:commons-io:2.6')
     compile ('org.json:json:20171018')
+    compile ('com.fasterxml.jackson.core:jackson-databind:2.9.8')
     compile ('org.springframework.boot:spring-boot-starter-web-services')
     compile ('org.springframework.boot:spring-boot-starter-mail')
     compile ('org.springframework.boot:spring-boot-starter-thymeleaf')
