@@ -1,4 +1,38 @@
 ---------------------------------------------------------------------
+Release 1.1
+---------------------------------------------------------------------
+#FEATURES
+* Introduce support for Custom Bug Tracker Implementations. You must create a Service bean and implement the com.custodela.machina.custom.IssueTracker interface
+    void init(ScanRequest request, ScanResults results) throws MachinaException;
+    void complete(ScanRequest request, ScanResults results) throws MachinaException;
+    String getFalsePositiveLabel() throws MachinaException;
+    List<Issue> getIssues(ScanRequest request) throws MachinaException;
+    Issue createIssue(ScanResults.XIssue resultIssue, ScanRequest request) throws MachinaException;
+    void closeIssue(Issue issue, ScanRequest request) throws MachinaException;
+    Issue updateIssue(Issue issue, ScanResults.XIssue resultIssue, ScanRequest request) throws MachinaException;
+    String getIssueKey(Issue issue, ScanRequest request);
+    String getXIssueKey(ScanResults.XIssue issue, ScanRequest request);
+    boolean isIssueClosed(Issue issue);
+    boolean isIssueOpened(Issue issue);
+
+
+#NOTES:
+Must include entries for custom bean implementations under the machina yaml block like the following
+machina:
+  bug-tracker: CxXml
+  bug-tracker-impl:
+    - Xml
+    - CxXml
+    - Json
+    - GitLab
+
+bug-tracker-impl are all the available beans.  The beans must match the exact Spring Service bean name exactly.  For example, the following creates a
+bean named GitLab, which you can see is listed in bug-tracker-impl above:
+...
+@Service("GitLab")
+public class GitLabIssueTracker implements IssueTracker {
+...
+---------------------------------------------------------------------
 Release 1.0.2
 ---------------------------------------------------------------------
 #FIXES
