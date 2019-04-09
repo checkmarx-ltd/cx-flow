@@ -36,6 +36,7 @@ public class CxProperties {
 
     private String team;
     private Boolean offline = false;
+    private Boolean preserveXml = false;
     private Integer scanTimeout = 120;
     private String jiraProjectField = "jira-project";
     private String jiraIssuetypeField = "jira-issuetype";
@@ -87,7 +88,7 @@ public class CxProperties {
         return this.multiTenant;
     }
 
-    public @NotNull Boolean getIcremental() {
+    public @NotNull Boolean getIncremental() {
         return this.incremental;
     }
 
@@ -113,6 +114,14 @@ public class CxProperties {
 
     public Boolean getOffline() {
         return this.offline;
+    }
+
+    public Boolean getPreserveXml() {
+        return preserveXml;
+    }
+
+    public void setPreserveXml(Boolean preserveXml) {
+        this.preserveXml = preserveXml;
     }
 
     public Integer getScanTimeout() {

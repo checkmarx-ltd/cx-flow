@@ -294,7 +294,7 @@ public class CxService {
      * @return
      * @throws MachinaException
      */
-    ScanResults getReportContent(Integer reportId, List<Filter> filter, boolean preserveXml) throws MachinaException{
+    ScanResults getReportContent(Integer reportId, List<Filter> filter) throws MachinaException{
         HttpHeaders headers = createAuthHeaders();
         headers.setContentType(MediaType.APPLICATION_XML);
         HttpEntity httpEntity = new HttpEntity<>(headers);
@@ -344,7 +344,7 @@ public class CxService {
             getIssues(filter, session, xIssueList, cxResults);
             cxScanBuilder.xIssues(xIssueList);
             ScanResults results = cxScanBuilder.build();
-            if(preserveXml){
+            if(cxProperties.getPreserveXml()){
                 results.setOutput(xml);
             }
             return results;
