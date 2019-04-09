@@ -98,7 +98,6 @@ public class ScanRequest {
         this.excludeFolders = other.excludeFolders;
         this.repoType = other.repoType;
         this.product = other.product;
-        this.preserveXml = other.preserveXml;
         this.bugTracker = new BugTracker(other.getBugTracker());
         this.type = other.type;
         this.activeBranches = other.activeBranches;

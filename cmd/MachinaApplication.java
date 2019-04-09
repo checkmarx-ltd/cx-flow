@@ -227,9 +227,6 @@ public class MachinaApplication implements ApplicationRunner {
                 .build();
 
         request = ScanUtils.overrideMap(request, o);
-        if(arg.containsOption("xml")){
-            request.setPreserveXml(true);
-        }
         /*Determine if BitBucket Cloud/Server is being used - this will determine formatting of URL that links to file/line in repository */
 
         if(bb){
