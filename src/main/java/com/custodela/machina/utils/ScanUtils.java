@@ -240,39 +240,6 @@ public class ScanUtils {
         return request;
     }
 
-    /**
-     * Build BugTracker object (referenced within ScanRequest)
-     * @param assignee
-     * @param bugType
-     * @param jiraProperties
-     * @return
-     */
-    public static BugTracker getBugTracker(@RequestParam(value = "assignee", required = false) String assignee, BugTracker.Type bugType, JiraProperties jiraProperties) {
-        BugTracker bt;
-        if(bugType.equals(BugTracker.Type.JIRA)) {
-            bt = BugTracker.builder()
-                    .type(bugType)
-                    .projectKey(jiraProperties.getProject())
-                    .issueType(jiraProperties.getIssueType())
-                    .assignee(assignee)
-                    .priorities(jiraProperties.getPriorities())
-                    .closeTransitionField(jiraProperties.getCloseTransitionField())
-                    .closeTransitionValue(jiraProperties.getCloseTransitionValue())
-                    .closedStatus(jiraProperties.getClosedStatus())
-                    .closeTransition(jiraProperties.getCloseTransition())
-                    .openStatus(jiraProperties.getOpenStatus())
-                    .openTransition(jiraProperties.getOpenTransition())
-                    .fields(jiraProperties.getFields())
-                    .build();
-        }
-        else {
-            bt = BugTracker.builder()
-                    .type(bugType)
-                    .build();
-        }
-        return bt;
-    }
-
     public static BugTracker getBugTracker(@RequestParam(value = "assignee", required = false) String assignee,
                                            BugTracker.Type bugType, JiraProperties jiraProperties, String bugTracker) {
         BugTracker bt;
