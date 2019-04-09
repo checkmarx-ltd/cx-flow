@@ -92,7 +92,7 @@ public class MachinaApplicationCmd implements ApplicationRunner {
         }
 
         /*Collect command line options (String)*/
-        bugTracker = ((ScanUtils.empty(arg.getOptionValues("bug-tracker")))) ? BugTracker.Type.JIRA.getType() : arg.getOptionValues("bug-tracker").get(0);
+        bugTracker = ((ScanUtils.empty(arg.getOptionValues("bug-tracker")))) ? null : arg.getOptionValues("bug-tracker").get(0);
         file = ((ScanUtils.empty(arg.getOptionValues("f")))) ? null : arg.getOptionValues("f").get(0);
         libFile = ((ScanUtils.empty(arg.getOptionValues("lib-file")))) ? null : arg.getOptionValues("lib-file").get(0);
         repoName = ((ScanUtils.empty(arg.getOptionValues("repo-name")))) ? null : arg.getOptionValues("repo-name").get(0);
