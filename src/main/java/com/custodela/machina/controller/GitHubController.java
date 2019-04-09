@@ -122,7 +122,8 @@ public class GitHubController {
         verifyHmacSignature(body, signature);
 
         try {
-            if(!event.getAction().equalsIgnoreCase("opened")){
+            if(!event.getAction().equalsIgnoreCase("opened") &&
+                    !event.getAction().equalsIgnoreCase("reopened")){
                 log.info("Pull requested not processed.  Status was not opened ({})", event.getAction());
                 return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
                         .message("No processing occurred for updates to Pull Request")
