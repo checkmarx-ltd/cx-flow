@@ -1,6 +1,5 @@
 package com.custodela.machina.controller;
 
-import checkmarx.wsdl.portal.Scan;
 import com.custodela.machina.config.CxProperties;
 import com.custodela.machina.config.GitLabProperties;
 import com.custodela.machina.config.JiraProperties;
@@ -10,11 +9,9 @@ import com.custodela.machina.dto.gitlab.Commit;
 import com.custodela.machina.dto.gitlab.MergeEvent;
 import com.custodela.machina.dto.gitlab.PushEvent;
 import com.custodela.machina.exception.InvalidTokenException;
-import com.custodela.machina.exception.MachinaRuntimeException;
 import com.custodela.machina.service.GitLabService;
 import com.custodela.machina.service.MachinaService;
 import com.custodela.machina.utils.ScanUtils;
-import org.apache.commons.lang3.EnumUtils;
 import org.slf4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -76,7 +73,6 @@ public class GitLabController {
             @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders,
             @RequestParam(value = "override", required = false) String override,
             @RequestParam(value = "bug", required = false) String bug
-
     ){
 
         log.info("Processing GitLab MERGE request");
@@ -95,10 +91,13 @@ public class GitLabController {
             if(!ScanUtils.empty(application)){
                 app = application;
             }
+
             BugTracker.Type bugType = BugTracker.Type.GITLABMERGE;
             if(!ScanUtils.empty(bug)){
-                bugType = BugTracker.Type.valueOf(bug.toUpperCase());
+                bugType = ScanUtils.getBugTypeEnum(bug, machinaProperties.getBugTrackerImpl());
             }
+
+
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
             String currentBranch = body.getObjectAttributes().getSourceBranch();
             String targetBranch = body.getObjectAttributes().getTargetBranch();
@@ -112,7 +111,7 @@ public class GitLabController {
                 branches.addAll(machinaProperties.getBranches());
             }
 
-            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties);
+            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
 
             /*Determine filters, if any*/
             if(!ScanUtils.empty(severity) || !ScanUtils.empty(cwe) || !ScanUtils.empty(category) || !ScanUtils.empty(status)){
@@ -134,7 +133,7 @@ public class GitLabController {
             if(!ScanUtils.empty(preset)){
                 scanPreset = preset;
             }
-            boolean inc = cxProperties.getIcremental();
+            boolean inc = cxProperties.getIncremental();
             if(incremental != null){
                 inc = incremental;
             }
@@ -233,7 +232,7 @@ public class GitLabController {
                 branches.addAll(machinaProperties.getBranches());
             }
 
-            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties);
+            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
             /*Determine filters, if any*/
             if(!ScanUtils.empty(severity) || !ScanUtils.empty(cwe) || !ScanUtils.empty(category) || !ScanUtils.empty(status)){
                 filters = ScanUtils.getFilters(severity, cwe, category, status);
@@ -269,7 +268,7 @@ public class GitLabController {
             if(!ScanUtils.empty(preset)){
                 scanPreset = preset;
             }
-            boolean inc = cxProperties.getIcremental();
+            boolean inc = cxProperties.getIncremental();
             if(incremental != null){
                 inc = incremental;
             }

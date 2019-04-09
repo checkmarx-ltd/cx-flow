@@ -136,8 +136,9 @@ public class GitHubController {
 
             BugTracker.Type bugType = BugTracker.Type.GITHUBPULL;
             if(!ScanUtils.empty(bug)){
-                bugType = BugTracker.Type.valueOf(bug.toUpperCase());
+                bugType = ScanUtils.getBugTypeEnum(bug, machinaProperties.getBugTrackerImpl());
             }
+
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
             String currentBranch = event.getPullRequest().getHead().getRef();
             String targetBranch = event.getPullRequest().getBase().getRef();
@@ -150,7 +151,7 @@ public class GitHubController {
                 branches.addAll(machinaProperties.getBranches());
             }
 
-            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties);
+            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
             /*Determine filters, if any*/
             if(!ScanUtils.empty(severity) || !ScanUtils.empty(cwe) || !ScanUtils.empty(category) || !ScanUtils.empty(status)){
                 filters = ScanUtils.getFilters(severity, cwe, category, status);
@@ -170,7 +171,7 @@ public class GitHubController {
             if(!ScanUtils.empty(preset)){
                 scanPreset = preset;
             }
-            boolean inc = cxProperties.getIcremental();
+            boolean inc = cxProperties.getIncremental();
             if(incremental != null){
                 inc = incremental;
             }
@@ -265,19 +266,10 @@ public class GitHubController {
 
             //set the default bug tracker as per yml
             BugTracker.Type bugType;
-            try {
-                if (ScanUtils.empty(bug)) {
-                    bug =  machinaProperties.getBugTracker();
-                }
-                bugType = BugTracker.Type.valueOf(bug);
-
-            } catch (IllegalArgumentException e){
-                log.debug("Determine if custom bean is being used");
-                if(machinaProperties.getBugTrackerImpl() == null || !machinaProperties.getBugTrackerImpl().contains(bug)){
-                    throw e;
-                }
-                bugType = BugTracker.Type.CUSTOM;
+            if (ScanUtils.empty(bug)) {
+                bug =  machinaProperties.getBugTracker();
             }
+            bugType = ScanUtils.getBugTypeEnum(bug, machinaProperties.getBugTrackerImpl());
 
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
 
@@ -320,7 +312,7 @@ public class GitHubController {
             if(!ScanUtils.empty(preset)){
                 scanPreset = preset;
             }
-            boolean inc = cxProperties.getIcremental();
+            boolean inc = cxProperties.getIncremental();
             if(incremental != null){
                 inc = incremental;
             }

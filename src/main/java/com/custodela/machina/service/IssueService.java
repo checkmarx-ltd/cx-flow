@@ -75,7 +75,7 @@ public class IssueService implements ApplicationContextAware {
         List<String> updatedIssues = new ArrayList<>();
         List<String> closedIssues = new ArrayList<>();
         if (!request.getBugTracker().getType().equals(BugTracker.Type.CUSTOM) && !ScanUtils.empty(request.getBugTracker().getCustomBean())) {
-            throw new MachinaException("Custom  bean must be used here.");
+            throw new MachinaException("A valid custom bean must be used here.");
         }
 
         try {
