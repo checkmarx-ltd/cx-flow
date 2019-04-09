@@ -1,6 +1,5 @@
 package com.custodela.machina.service;
 
-import checkmarx.wsdl.portal.Scan;
 import com.custodela.machina.config.CxProperties;
 import com.custodela.machina.config.MachinaProperties;
 import com.custodela.machina.dto.*;
@@ -9,7 +8,6 @@ import com.custodela.machina.exception.MachinaException;
 import com.custodela.machina.utils.ScanUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
-import org.springframework.cglib.core.Local;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import javax.annotation.Nullable;

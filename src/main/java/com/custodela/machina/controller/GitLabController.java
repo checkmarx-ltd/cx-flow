@@ -9,7 +9,6 @@ import com.custodela.machina.dto.gitlab.Commit;
 import com.custodela.machina.dto.gitlab.MergeEvent;
 import com.custodela.machina.dto.gitlab.PushEvent;
 import com.custodela.machina.exception.InvalidTokenException;
-import com.custodela.machina.exception.MachinaRuntimeException;
 import com.custodela.machina.service.GitLabService;
 import com.custodela.machina.service.MachinaService;
 import com.custodela.machina.utils.ScanUtils;
@@ -74,7 +73,6 @@ public class GitLabController {
             @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders,
             @RequestParam(value = "override", required = false) String override,
             @RequestParam(value = "bug", required = false) String bug
-
     ){
 
         log.info("Processing GitLab MERGE request");
@@ -93,10 +91,13 @@ public class GitLabController {
             if(!ScanUtils.empty(application)){
                 app = application;
             }
+
             BugTracker.Type bugType = BugTracker.Type.GITLABMERGE;
             if(!ScanUtils.empty(bug)){
-                bugType = BugTracker.Type.valueOf(bug.toUpperCase());
+                bugType = ScanUtils.getBugTypeEnum(bug, machinaProperties.getBugTrackerImpl());
             }
+
+
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
             String currentBranch = body.getObjectAttributes().getSourceBranch();
             String targetBranch = body.getObjectAttributes().getTargetBranch();
@@ -110,7 +111,7 @@ public class GitLabController {
                 branches.addAll(machinaProperties.getBranches());
             }
 
-            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties);
+            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
 
             /*Determine filters, if any*/
             if(!ScanUtils.empty(severity) || !ScanUtils.empty(cwe) || !ScanUtils.empty(category) || !ScanUtils.empty(status)){
@@ -132,7 +133,7 @@ public class GitLabController {
             if(!ScanUtils.empty(preset)){
                 scanPreset = preset;
             }
-            boolean inc = cxProperties.getIcremental();
+            boolean inc = cxProperties.getIncremental();
             if(incremental != null){
                 inc = incremental;
             }
@@ -210,10 +211,14 @@ public class GitLabController {
             if(!ScanUtils.empty(application)){
                 app = application;
             }
-            BugTracker.Type bugType = BugTracker.Type.valueOf(machinaProperties.getBugTracker().toUpperCase());
-            if(!ScanUtils.empty(bug)){
-                bugType = BugTracker.Type.valueOf(bug.toUpperCase());
+
+            //set the default bug tracker as per yml
+            BugTracker.Type bugType;
+            if (ScanUtils.empty(bug)) {
+                bug =  machinaProperties.getBugTracker();
             }
+            bugType = ScanUtils.getBugTypeEnum(bug, machinaProperties.getBugTrackerImpl());
+
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
             //extract branch from ref (refs/heads/master -> master)
             String currentBranch = body.getRef().split("/")[2];
@@ -227,7 +232,7 @@ public class GitLabController {
                 branches.addAll(machinaProperties.getBranches());
             }
 
-            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties);
+            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
             /*Determine filters, if any*/
             if(!ScanUtils.empty(severity) || !ScanUtils.empty(cwe) || !ScanUtils.empty(category) || !ScanUtils.empty(status)){
                 filters = ScanUtils.getFilters(severity, cwe, category, status);
@@ -255,7 +260,7 @@ public class GitLabController {
                 emails.add(body.getUserEmail());
             }
             String gitUrl = body.getProject().getGitHttpUrl();
-            log.info("Using url: {}", gitUrl);
+            log.debug("Using url: {}", gitUrl);
             String gitAuthUrl = gitUrl.replace("https://", "https://oauth2:".concat(properties.getToken()).concat("@"));
             gitAuthUrl = gitAuthUrl.replace("http://", "http://oauth2:".concat(properties.getToken()).concat("@"));
 
@@ -263,7 +268,7 @@ public class GitLabController {
             if(!ScanUtils.empty(preset)){
                 scanPreset = preset;
             }
-            boolean inc = cxProperties.getIcremental();
+            boolean inc = cxProperties.getIncremental();
             if(incremental != null){
                 inc = incremental;
             }
@@ -296,7 +301,7 @@ public class GitLabController {
             }
 
         }catch (IllegalArgumentException e){
-            log.error("Error submitting Scan Request. Product option incorrect {}", product);
+            log.error("Error submitting Scan Request. Product option or BugTracker not valid {} | {}", product, bug);
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()

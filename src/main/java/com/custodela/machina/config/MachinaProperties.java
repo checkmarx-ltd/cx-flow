@@ -3,7 +3,6 @@ package com.custodela.machina.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
-
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.List;
@@ -16,6 +15,8 @@ public class MachinaProperties {
     private String token;
     @NotNull @NotBlank
     private String bugTracker;
+    private List<String> bugTrackerImpl;
+    private String dataFolder;
     private List<String> branches;
     private List<String> filterSeverity;
     private List<String> filterCwe;
@@ -42,6 +43,22 @@ public class MachinaProperties {
     public @NotNull
     @NotBlank String getBugTracker() {
         return this.bugTracker;
+    }
+
+    public List<String> getBugTrackerImpl() {
+        return bugTrackerImpl;
+    }
+
+    public void setBugTrackerImpl(List<String> bugTrackerImpl) {
+        this.bugTrackerImpl = bugTrackerImpl;
+    }
+
+    public String getDataFolder() {
+        return dataFolder;
+    }
+
+    public void setDataFolder(String dataFolder) {
+        this.dataFolder = dataFolder;
     }
 
     public List<String> getBranches() {
@@ -208,5 +225,4 @@ public class MachinaProperties {
         }
 
     }
-
 }

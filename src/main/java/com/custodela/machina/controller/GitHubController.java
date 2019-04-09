@@ -45,7 +45,6 @@ public class GitHubController {
     private static final String HMAC_ALGORITHM = "HmacSHA1";
     private static final Charset CHARSET = StandardCharsets.UTF_8;
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(GitHubController.class);
-
     private final GitHubProperties properties;
     private final MachinaProperties machinaProperties;
     private final CxProperties cxProperties;
@@ -123,7 +122,8 @@ public class GitHubController {
         verifyHmacSignature(body, signature);
 
         try {
-            if(!event.getAction().equalsIgnoreCase("opened")){
+            if(!event.getAction().equalsIgnoreCase("opened") &&
+                    !event.getAction().equalsIgnoreCase("reopened")){
                 log.info("Pull requested not processed.  Status was not opened ({})", event.getAction());
                 return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
                         .message("No processing occurred for updates to Pull Request")
@@ -137,8 +137,9 @@ public class GitHubController {
 
             BugTracker.Type bugType = BugTracker.Type.GITHUBPULL;
             if(!ScanUtils.empty(bug)){
-                bugType = BugTracker.Type.valueOf(bug.toUpperCase());
+                bugType = ScanUtils.getBugTypeEnum(bug, machinaProperties.getBugTrackerImpl());
             }
+
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
             String currentBranch = event.getPullRequest().getHead().getRef();
             String targetBranch = event.getPullRequest().getBase().getRef();
@@ -151,7 +152,7 @@ public class GitHubController {
                 branches.addAll(machinaProperties.getBranches());
             }
 
-            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties);
+            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
             /*Determine filters, if any*/
             if(!ScanUtils.empty(severity) || !ScanUtils.empty(cwe) || !ScanUtils.empty(category) || !ScanUtils.empty(status)){
                 filters = ScanUtils.getFilters(severity, cwe, category, status);
@@ -171,7 +172,7 @@ public class GitHubController {
             if(!ScanUtils.empty(preset)){
                 scanPreset = preset;
             }
-            boolean inc = cxProperties.getIcremental();
+            boolean inc = cxProperties.getIncremental();
             if(incremental != null){
                 inc = incremental;
             }
@@ -263,12 +264,16 @@ public class GitHubController {
             if(!ScanUtils.empty(application)){
                 app = application;
             }
+
             //set the default bug tracker as per yml
-            BugTracker.Type bugType = BugTracker.Type.valueOf(machinaProperties.getBugTracker().toUpperCase());
-            if(!ScanUtils.empty(bug)){
-                bugType = BugTracker.Type.valueOf(bug.toUpperCase());
+            BugTracker.Type bugType;
+            if (ScanUtils.empty(bug)) {
+                bug =  machinaProperties.getBugTracker();
             }
+            bugType = ScanUtils.getBugTypeEnum(bug, machinaProperties.getBugTrackerImpl());
+
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
+
             //determine branch (without refs)
             String currentBranch = event.getRef().split("/")[2];
             List<String> branches = new ArrayList<>();
@@ -280,7 +285,7 @@ public class GitHubController {
                 branches.addAll(machinaProperties.getBranches());
             }
 
-            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties);
+            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
             /*Determine filters, if any*/
             if(!ScanUtils.empty(severity) || !ScanUtils.empty(cwe) || !ScanUtils.empty(category) || !ScanUtils.empty(status)){
                 filters = ScanUtils.getFilters(severity, cwe, category, status);
@@ -300,7 +305,7 @@ public class GitHubController {
 
             //build request object
             String gitUrl = event.getRepository().getCloneUrl();
-            log.info("Using url: {}", gitUrl);
+            log.debug("Using url: {}", gitUrl);
             String gitAuthUrl = gitUrl.replace("https://", "https://".concat(properties.getToken()).concat("@"));
             gitAuthUrl = gitAuthUrl.replace("http://", "http://".concat(properties.getToken()).concat("@"));
 
@@ -308,7 +313,7 @@ public class GitHubController {
             if(!ScanUtils.empty(preset)){
                 scanPreset = preset;
             }
-            boolean inc = cxProperties.getIcremental();
+            boolean inc = cxProperties.getIncremental();
             if(incremental != null){
                 inc = incremental;
             }

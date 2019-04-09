@@ -48,22 +48,6 @@ public class GitLabService {
     }
 
 
-    /**
-     * API call to determine additional project details, specifically the size of the code base
-     *
-     * @param projectId
-     * @return
-     */
-    public String getProjectDetails(Integer projectId){
-        String endpoint = properties.getApiUrl().concat(PROJECT_PATH);
-        HttpEntity httpEntity = new HttpEntity<>(createAuthHeaders());
-        log.info("Calling GitLab for additional Repository/Project information of project Id", projectId);
-        ResponseEntity<String> response = restTemplate.exchange(
-                endpoint, HttpMethod.GET, httpEntity, String.class, projectId);
-
-        return response.getBody();
-    }
-
     Integer getProjectDetails(String namespace, String repoName){
 
         try {

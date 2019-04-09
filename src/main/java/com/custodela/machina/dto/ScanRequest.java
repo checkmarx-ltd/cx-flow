@@ -25,8 +25,8 @@ public class ScanRequest {
     private String branch;
     private String mergeTargetBranch;
     private String mergeNoteUri;
-    //project id used by GitLab
-    private Integer id;
+    //project repoProjectId used by GitLab
+    private Integer repoProjectId;
     private String refs;
     private List<String> email;
     private boolean incremental;
@@ -42,7 +42,7 @@ public class ScanRequest {
     private Map<String, String> additionalMetadata;
 
     @ConstructorProperties({"namespace", "application", "org", "team", "project", "cxFields", "site", "repoUrl",
-            "repoUrlWithAuth", "repoName", "branch", "mergeTargetBranch", "mergeNoteUri", "id", "refs", "email",
+            "repoUrlWithAuth", "repoName", "branch", "mergeTargetBranch", "mergeNoteUri", "repoProjectId", "refs", "email",
             "incremental", "scanPreset", "excludeFiles", "excludeFolders", "repoType", "product", "bugTracker",
             "type", "activeBranches", "filters"})
     ScanRequest(String namespace, String application, String org, String team, String project, Map<String, String> cxFields, String site, String repoUrl, String repoUrlWithAuth, String repoName, String branch, String mergeTargetBranch, String mergeNoteUri, Integer id, String refs, List<String> email, boolean incremental, String scanPreset, List<String> excludeFiles, List<String> excludeFolders, Repository repoType, Product product, BugTracker bugTracker, Type type, List<String> activeBranches, List<Filter> filters) {
@@ -59,7 +59,7 @@ public class ScanRequest {
         this.branch = branch;
         this.mergeTargetBranch = mergeTargetBranch;
         this.mergeNoteUri = mergeNoteUri;
-        this.id = id;
+        this.repoProjectId = id;
         this.refs = refs;
         this.email = email;
         this.incremental = incremental;
@@ -89,7 +89,7 @@ public class ScanRequest {
         this.branch = other.branch;
         this.mergeTargetBranch = other.mergeTargetBranch;
         this.mergeNoteUri = other.mergeNoteUri;
-        this.id = other.id;
+        this.repoProjectId = other.repoProjectId;
         this.refs = other.refs;
         this.email = other.email;
         this.incremental = other.incremental;
@@ -126,6 +126,14 @@ public class ScanRequest {
 
     public String getProject() {
         return this.project;
+    }
+
+    public Map<String, String> getAdditionalMetadata() {
+        return additionalMetadata;
+    }
+
+    public void setAdditionalMetadata(Map<String, String> additionalMetadata) {
+        this.additionalMetadata = additionalMetadata;
     }
 
     public Map<String, String> getCxFields() {
@@ -168,8 +176,8 @@ public class ScanRequest {
         return this.mergeNoteUri;
     }
 
-    public Integer getId() {
-        return this.id;
+    public Integer getRepoProjectId() {
+        return this.repoProjectId;
     }
 
     public String getRefs() {
@@ -272,8 +280,8 @@ public class ScanRequest {
         this.mergeNoteUri = mergeNoteUri;
     }
 
-    public void setId(Integer id) {
-        this.id = id;
+    public void setRepoProjectId(Integer repoProjectId) {
+        this.repoProjectId = repoProjectId;
     }
 
     public void setRefs(String refs) {
@@ -338,8 +346,16 @@ public class ScanRequest {
         return null;
     }
 
+    public String getFilename(){
+        return this.getAdditionalMetadata("filename");
+    }
+
+    public void setFilename(String filename){
+        this.putAdditionalMetadata("filename", filename);
+    }
+
     public String toString() {
-        return "ScanRequest(namespace=" + this.getNamespace() + ", application=" + this.getApplication() + ", org=" + this.getOrg() + ", team=" + this.getTeam() + ", project=" + this.getProject() + ", cxFields=" + this.getCxFields() + ", site=" + this.getSite() + ", repoUrl=" + this.getRepoUrl() + ", repoUrlWithAuth=" + this.getRepoUrlWithAuth() + ", repoName=" + this.getRepoName() + ", branch=" + this.getBranch() + ", mergeTargetBranch=" + this.getMergeTargetBranch() + ", mergeNoteUri=" + this.getMergeNoteUri() + ", id=" + this.getId() + ", refs=" + this.getRefs() + ", email=" + this.getEmail() + ", incremental=" + this.isIncremental() + ", scanPreset=" + this.getScanPreset() + ", excludeFiles=" + this.getExcludeFiles() + ", excludeFolders=" + this.getExcludeFolders() + ", repoType=" + this.getRepoType() + ", product=" + this.getProduct() + ", bugTracker=" + this.getBugTracker() + ", type=" + this.getType() + ", activeBranches=" + this.getActiveBranches() + ", filters=" + this.getFilters() + ")";
+        return "ScanRequest(namespace=" + this.getNamespace() + ", application=" + this.getApplication() + ", org=" + this.getOrg() + ", team=" + this.getTeam() + ", project=" + this.getProject() + ", cxFields=" + this.getCxFields() + ", site=" + this.getSite() + ", repoUrl=" + this.getRepoUrl() + ", repoUrlWithAuth=" + this.getRepoUrlWithAuth() + ", repoName=" + this.getRepoName() + ", branch=" + this.getBranch() + ", mergeTargetBranch=" + this.getMergeTargetBranch() + ", mergeNoteUri=" + this.getMergeNoteUri() + ", repoProjectId=" + this.getRepoProjectId() + ", refs=" + this.getRefs() + ", email=" + this.getEmail() + ", incremental=" + this.isIncremental() + ", scanPreset=" + this.getScanPreset() + ", excludeFiles=" + this.getExcludeFiles() + ", excludeFolders=" + this.getExcludeFolders() + ", repoType=" + this.getRepoType() + ", product=" + this.getProduct() + ", bugTracker=" + this.getBugTracker() + ", type=" + this.getType() + ", activeBranches=" + this.getActiveBranches() + ", filters=" + this.getFilters() + ")";
     }
 
     public enum Product {

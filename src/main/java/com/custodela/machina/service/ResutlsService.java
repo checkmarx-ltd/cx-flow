@@ -17,13 +17,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import static com.custodela.machina.service.CxService.UNKNOWN;
-import static com.custodela.machina.service.CxService.UNKNOWN_INT;
 
 @Service
 public class ResutlsService {
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(ResutlsService.class);
     private final CxService cxService;
     private final JiraService jiraService;
+    private final IssueService issueService;
     private final GitHubService gitService;
     private final GitLabService gitLabService;
     private final BitBucketService bbService;
@@ -33,12 +33,13 @@ public class ResutlsService {
     private static final Long SLEEP = 20000L;
     private static final Long TIMEOUT = 300000L;
 
-    @ConstructorProperties({"cxService", "jiraService", "gitService", "gitLabService", "bbService","emailService", "cxProperties", "machinaProperties"})
-    public ResutlsService(CxService cxService, JiraService jiraService, GitHubService gitService,
+    @ConstructorProperties({"cxService", "jiraService", "issueService", "gitService", "gitLabService", "bbService","emailService", "cxProperties", "machinaProperties"})
+    public ResutlsService(CxService cxService, JiraService jiraService, IssueService issueService, GitHubService gitService,
                           GitLabService gitLabService, BitBucketService bbService, EmailService emailService,
                           CxProperties cxProperties, MachinaProperties machinaProperties) {
         this.cxService = cxService;
         this.jiraService = jiraService;
+        this.issueService = issueService;
         this.gitService = gitService;
         this.gitLabService = gitLabService;
         this.bbService = bbService;
@@ -103,6 +104,9 @@ public class ResutlsService {
 
     void processResults(ScanRequest request, ScanResults results) throws MachinaException {
         switch (request.getBugTracker().getType()) {
+            case NONE:
+                log.info("Issue tracking is turned off");
+                break;
             case JIRA:
                 log.info("Processing results with JIRA issue tracking");
                 if(!cxProperties.getOffline()) {
@@ -110,24 +114,8 @@ public class ResutlsService {
                 }
                 jiraService.process(results, request);
                 break;
-            case GITHUB:
-                log.info("Processing results with Github issue tracking");
-                gitService.process(results, request);
-                break;
             case GITHUBPULL:
                 gitService.processPull(request, results);
-                break;
-            case GITLAB:
-                log.info("Processing results with Gitlab issue tracking");
-                if(ScanUtils.empty(request.getNamespace()) || ScanUtils.empty(request.getRepoName())){
-                    throw new MachinaException("namespace and repo-name must be provided");
-                }
-                Integer projectId = gitLabService.getProjectDetails(request.getNamespace(), request.getRepoName());
-                if(projectId.equals(UNKNOWN_INT)){
-                    throw new MachinaException("Project not found in Gitlab");
-                }
-                request.setId(projectId);
-                gitLabService.process(results, request);
                 break;
             case GITLABCOMMIT:
                 gitLabService.processCommit(request, results);
@@ -163,8 +151,9 @@ public class ResutlsService {
                     emailService.sendmail(request.getEmail(), "Successfully completed processing for ".concat(request.getNamespace()).concat("/").concat(request.getRepoName()), emailCtx, "template-demo.html");
                 }
                 break;
-            case NONE:
-                log.info("Issue tracking is turned off");
+            case CUSTOM:
+                log.info("Issue tracking is custom bean implementation");
+                issueService.process(results, request);
                 break;
             default:
                 log.warn("No valid bug type was provided");

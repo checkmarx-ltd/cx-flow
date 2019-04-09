@@ -11,7 +11,13 @@ logging:
           wire: debug
 
 machina:
-  bug-tracker: JIRA
+  #bug-tracker: Json
+  bug-tracker: CxXml
+  bug-tracker-impl:
+    - Xml
+    - CxXml
+    - Json
+    - GitLab
   filter-severity:
     - High
     - Medium
@@ -33,6 +39,7 @@ checkmarx:
   sdk-url: ${checkmarx.base-url}/cxwebinterface/SDK/CxSDKWebService.asmx
   portal-wsdl: ${checkmarx.base-url}/Portal/CxWebService.asmx?wsdl
   sdk-wsdl: ${checkmarx.base-url}/SDK/CxSDKWebService.asmx?wsdl
+  preserve-xml: true
   jira-project-field:
   jira-custom-field:
   jira-issuetype-field:
@@ -43,12 +50,13 @@ jira:
   token: xxxx
   project: SS
   issue-type: Application Security Bug
+
   priorities:
     Critical: Highest
     High: High
     Medium: Medium
     Low: Low
-    informational: Lowest
+    Informational: Lowest
   open-transition: In Review
   close-transition: Done
   open-status:
@@ -79,3 +87,11 @@ jira:
       jira-field-name: LOC
       jira-field-type: label
       jira-default-value: XXXX
+
+json:
+  file-name-format: "[NAMESPACE]-[REPO]-[BRANCH]-[TIME].json"
+  data-folder: "C:\\tmp"
+
+cx-xml:
+  file-name-format: "[NAMESPACE]-[REPO]-[BRANCH]-[TIME].xml"
+  data-folder: "C:\\tmp"
