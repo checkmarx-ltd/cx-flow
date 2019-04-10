@@ -945,7 +945,7 @@ public class CxService {
         }
     }
 
-    public void setProjectExcludeDetails(Integer projectId, List<String> excludeFolders, List<String> excludeFiles){
+    void setProjectExcludeDetails(Integer projectId, List<String> excludeFolders, List<String> excludeFiles){
         String excludeFilesStr = "";
         String excludeFolderStr = "";
 

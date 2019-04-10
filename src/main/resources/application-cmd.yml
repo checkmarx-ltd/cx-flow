@@ -1,23 +1,11 @@
 logging:
   file: machina.log
-  level:
-    com:
-      custodela:
-        machina:
-          service: info
-    org:
-      apache:
-        http:
-          wire: debug
 
 machina:
-  #bug-tracker: Json
   bug-tracker: CxXml
   bug-tracker-impl:
-    - Xml
     - CxXml
     - Json
-    - GitLab
   filter-severity:
     - High
     - Medium
@@ -34,7 +22,6 @@ checkmarx:
   client-secret: 014DF517-39D1-4453-B7B3-9930C563627C
   base-url: https://xxx/
   url: ${checkmarx.base-url}/cxrestapi
-#WSDL Config
   portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
   sdk-url: ${checkmarx.base-url}/cxwebinterface/SDK/CxSDKWebService.asmx
   portal-wsdl: ${checkmarx.base-url}/Portal/CxWebService.asmx?wsdl
@@ -50,9 +37,7 @@ jira:
   token: xxxx
   project: SS
   issue-type: Application Security Bug
-
   priorities:
-    Critical: Highest
     High: High
     Medium: Medium
     Low: Low
@@ -88,10 +73,17 @@ jira:
       jira-field-type: label
       jira-default-value: XXXX
 
+github:
+  webhook-token: 1234
+  token: xxx
+  url: https://github.com
+  api-url: https://api.github.com/repos/
+  false-positive-label: false-positive
+
 json:
   file-name-format: "[NAMESPACE]-[REPO]-[BRANCH]-[TIME].json"
   data-folder: "C:\\tmp"
 
 cx-xml:
-  file-name-format: "[NAMESPACE]-[REPO]-[BRANCH]-[TIME].xml"
+  file-name-format: "[TEAM]-[PROJECT]-[TIME].xml"
   data-folder: "C:\\tmp"

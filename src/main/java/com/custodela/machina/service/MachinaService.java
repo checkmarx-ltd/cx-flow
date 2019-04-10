@@ -1,5 +1,6 @@
 package com.custodela.machina.service;
 
+import checkmarx.wsdl.portal.Scan;
 import com.custodela.machina.config.CxProperties;
 import com.custodela.machina.config.MachinaProperties;
 import com.custodela.machina.dto.*;
@@ -74,27 +75,38 @@ public class MachinaService {
         }
     }
 
-    private void executeCxScanFlow(ScanRequest request, File cxFile) throws MachinaException {
+    private CompletableFuture<ScanResults> executeCxScanFlow(ScanRequest request, File cxFile) throws MachinaException {
         try {
-            String ownerId = cxService.getTeamId(cxProperties.getTeam());
+            String ownerId;
             Integer presetId = cxService.getPresetId(request.getScanPreset());
             Integer engineId = cxService.getScanConfiguration(cxProperties.getConfiguration());
             String projectName;
             Integer projectId;
-            if(cxProperties.isMultiTenant()){
-                String fullTeamName = cxProperties.getTeam().concat("\\").concat(request.getNamespace());
 
-                String tmpId = cxService.getTeamId(fullTeamName);
-                if(tmpId.equals(UNKNOWN)){
-                    ownerId = cxService.createTeam(ownerId, request.getNamespace());
-                }
-                else{
-                    ownerId = tmpId;
-                }
-                projectName = request.getRepoName().concat("-").concat(request.getBranch());
+            /*Check if the team and project was specified in the request object already implying it was driven with command line as an override*/
+            if(!ScanUtils.empty(request.getTeam()) && !ScanUtils.empty(request.getProject())){
+                log.info("Overriding team and project with {} - {}", request.getTeam(), request.getProject());
+                ownerId = cxService.getTeamId(request.getTeam());
+                projectName = request.getProject();
             }
-            else {
-                projectName = request.getNamespace().concat("-").concat(request.getRepoName()).concat("-").concat(request.getBranch());
+            else{
+                ownerId = cxService.getTeamId(cxProperties.getTeam());
+
+                if(cxProperties.isMultiTenant()){
+                    String fullTeamName = cxProperties.getTeam().concat("\\").concat(request.getNamespace());
+
+                    String tmpId = cxService.getTeamId(fullTeamName);
+                    if(tmpId.equals(UNKNOWN)){
+                        ownerId = cxService.createTeam(ownerId, request.getNamespace());
+                    }
+                    else{
+                        ownerId = tmpId;
+                    }
+                    projectName = request.getRepoName().concat("-").concat(request.getBranch());
+                }
+                else {
+                    projectName = request.getNamespace().concat("-").concat(request.getRepoName()).concat("-").concat(request.getBranch());
+                }
             }
             //only - is allowed as special character
             projectName = projectName.replaceAll("[^a-zA-Z0-9-]+","-");
@@ -153,7 +165,7 @@ public class MachinaService {
             Integer status = cxService.getScanStatus(scanId);
             if(request.getBugTracker().getType().equals(BugTracker.Type.NONE)){
                 log.info("Not waiting for scan completion as Bug Tracker type is NONE");
-                return;
+                return CompletableFuture.completedFuture(null);
             }
             long timer = 0;
             while (!status.equals(CxService.SCAN_STATUS_FINISHED) && !status.equals(CxService.SCAN_STATUS_CANCELED) &&
@@ -169,7 +181,7 @@ public class MachinaService {
             if(status.equals(CxService.SCAN_STATUS_FAILED)){
                 throw new MachinaException("Scan failed");
             }
-             resutlsService.processScanResultsAsync(request, scanId, request.getFilters());
+             return resutlsService.processScanResultsAsync(request, scanId, request.getFilters());
         }catch (InterruptedException e) {
             log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaException("Interrupted Exception Occurred");
@@ -182,8 +194,8 @@ public class MachinaService {
             String cxZipFile = FileSystems.getDefault().getPath("cx.".concat(UUID.randomUUID().toString()).concat(".zip")).toAbsolutePath().toString();
             ScanUtils.zipDirectory(path, cxZipFile);
             File f = new File(cxZipFile);
-            executeCxScanFlow(request, f);
-            log.info("Processing results with JIRA issue tracking");
+            CompletableFuture<ScanResults> future = executeCxScanFlow(request, f);
+            future.join();
         } catch (IOException e) {
             log.error(ExceptionUtils.getStackTrace(e));
             log.error("Error occurred while attempting to zip path {}", path);
