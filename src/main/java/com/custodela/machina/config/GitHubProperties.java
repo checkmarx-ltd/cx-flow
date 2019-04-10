@@ -84,4 +84,11 @@ public class GitHubProperties {
     public void setCloseTransition(String closeTransition) {
         this.closeTransition = closeTransition;
     }
+
+    public String getMergeNoteUri(String namespace, String repo, String mergeId){
+        String format = "%s/%s/%s/issues/%s/comments";
+        return String.format(format, getApiUrl(), namespace, repo, mergeId);
+        //sample: https://api.github.com/repos/octocat/Hello-World/issues/1347/comments
+
+    }
 }
