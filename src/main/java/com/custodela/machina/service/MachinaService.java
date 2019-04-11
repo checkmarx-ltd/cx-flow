@@ -109,7 +109,7 @@ public class MachinaService {
                 }
             }
             //only - is allowed as special character
-            projectName = projectName.replaceAll("[^a-zA-Z0-9-]+","-");
+            projectName = projectName.replaceAll("[^a-zA-Z0-9-_]+","-");
             projectId = cxService.getProjectId(ownerId, projectName);
             if (projectId.equals(UNKNOWN_INT)) {
                 log.info("Project does not exist.  Creating new project now for {}", projectName);
