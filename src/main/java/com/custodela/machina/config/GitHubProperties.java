@@ -19,6 +19,7 @@ public class GitHubProperties {
     private String falsePositiveLabel = "false-positive";
     private String openTransition = "open";
     private String closeTransition = "closed";
+    private boolean blockMerge = false;
 
     public @NotNull
     boolean isEnabled() {
@@ -83,5 +84,20 @@ public class GitHubProperties {
 
     public void setCloseTransition(String closeTransition) {
         this.closeTransition = closeTransition;
+    }
+
+    public boolean isBlockMerge() {
+        return blockMerge;
+    }
+
+    public void setBlockMerge(boolean blockMerge) {
+        this.blockMerge = blockMerge;
+    }
+
+    public String getMergeNoteUri(String namespace, String repo, String mergeId){
+        String format = "%s/%s/%s/issues/%s/comments";
+        return String.format(format, getApiUrl(), namespace, repo, mergeId);
+        //sample: https://api.github.com/repos/octocat/Hello-World/issues/1347/comments
+
     }
 }

@@ -1,5 +1,6 @@
 package com.custodela.machina.service;
 
+import com.custodela.machina.config.GitHubProperties;
 import com.custodela.machina.config.GitLabProperties;
 import com.custodela.machina.config.MachinaProperties;
 import com.custodela.machina.dto.ScanRequest;
@@ -25,10 +26,11 @@ import java.util.*;
 public class GitLabService {
 
     private static final String ISSUES_PER_PAGE = "100";
-    private static final String PROJECT = "projects/{namespace}{x}{repo}";
+    private static final String PROJECT = "/projects/{namespace}{x}{repo}";
     private static final String PROJECT_PATH = "/projects/{id}";
-    public static final String  MERGE_PATH = "/projects/{id}/merge_requests/{iid}/notes";
-    public static final String  COMMIT_PATH = "/projects/{id}/repository/commits/{sha}/comments";
+    public static final String MERGE_NOTE_PATH = "/projects/{id}/merge_requests/{iid}/notes";
+    public static final String MERGE_PATH = "/projects/{id}/merge_requests/{iid}";
+    public static final String COMMIT_PATH = "/projects/{id}/repository/commits/{sha}/comments";
     private static final String ISSUES_PATH = "/projects/{id}/issues?per_page=".concat(ISSUES_PER_PAGE);
     private static final String NEW_ISSUE_PATH = "/projects/{id}/issues";
     private static final String ISSUE_PATH = "/projects/{id}/issues/{iid}";
@@ -47,22 +49,6 @@ public class GitLabService {
         this.machinaProperties = machinaProperties;
     }
 
-
-    /**
-     * API call to determine additional project details, specifically the size of the code base
-     *
-     * @param projectId
-     * @return
-     */
-    public String getProjectDetails(Integer projectId){
-        String endpoint = properties.getApiUrl().concat(PROJECT_PATH);
-        HttpEntity httpEntity = new HttpEntity<>(createAuthHeaders());
-        log.info("Calling GitLab for additional Repository/Project information of project Id", projectId);
-        ResponseEntity<String> response = restTemplate.exchange(
-                endpoint, HttpMethod.GET, httpEntity, String.class, projectId);
-
-        return response.getBody();
-    }
 
     Integer getProjectDetails(String namespace, String repoName){
 
@@ -151,4 +137,49 @@ public class GitLabService {
         ResponseEntity<String> response = restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
+    void startBlockMerge(ScanRequest request){
+        if(properties.isBlockMerge()) {
+            String mergeId = request.getAdditionalMetadata("merge_id");
+            if(ScanUtils.empty(request.getAdditionalMetadata("merge_id")) || ScanUtils.empty(request.getAdditionalMetadata("merge_title"))){
+                log.error("merge_id and merge_title was not provided within the request object, which is required for blocking / unblocking merge requests");
+                return;
+            }
+            String endpoint = properties.getApiUrl().concat(MERGE_PATH);
+            endpoint = endpoint.replace("{id}", request.getRepoProjectId().toString());
+            endpoint = endpoint.replace("{iid}", mergeId);
+
+            HttpEntity httpEntity = new HttpEntity<>(
+                    getJSONMergeTitle("WIP:CX|".concat(request.getAdditionalMetadata("merge_title"))).toString(),
+                    createAuthHeaders()
+            );
+            ResponseEntity<String> response = restTemplate.exchange(endpoint,
+                    HttpMethod.PUT, httpEntity, String.class);
+        }
+    }
+
+    void endBlockMerge(ScanRequest request){
+        if(properties.isBlockMerge()) {
+            String mergeId = request.getAdditionalMetadata("merge_id");
+            if(ScanUtils.empty(request.getAdditionalMetadata("merge_id")) || ScanUtils.empty(request.getAdditionalMetadata("merge_title"))){
+                log.error("merge_id and merge_title was not provided within the request object, which is required for blocking / unblocking merge requests");
+                return;
+            }
+            String endpoint = properties.getApiUrl().concat(MERGE_PATH);
+            endpoint = endpoint.replace("{id}", request.getRepoProjectId().toString());
+            endpoint = endpoint.replace("{iid}", mergeId);
+            HttpEntity httpEntity = new HttpEntity<>(
+                    getJSONMergeTitle(request.getAdditionalMetadata("merge_title")
+                            .replace("WIP:CX|","")).toString(),
+                    createAuthHeaders()
+            );
+            ResponseEntity<String> response = restTemplate.exchange(endpoint,
+                    HttpMethod.PUT, httpEntity, String.class);
+        }
+    }
+
+    private JSONObject getJSONMergeTitle(String title){
+        JSONObject requestBody = new JSONObject();
+        requestBody.put("title", title);
+        return requestBody;
+    }
 }

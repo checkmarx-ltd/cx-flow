@@ -7,6 +7,7 @@ import com.custodela.machina.dto.cx.*;
 import com.custodela.machina.dto.cx.xml.CxXMLResultsType;
 import com.custodela.machina.dto.cx.xml.QueryType;
 import com.custodela.machina.dto.cx.xml.ResultType;
+import com.custodela.machina.dto.github.Base;
 import com.custodela.machina.exception.CheckmarxLegacyException;
 import com.custodela.machina.exception.InvalidCredentialsException;
 import com.custodela.machina.exception.MachinaException;
@@ -25,9 +26,11 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
+import org.xml.sax.SAXParseException;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.UnmarshalException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -37,7 +40,10 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 
 /**
@@ -63,14 +69,14 @@ public class CxService {
     private static final String SCAN_CONFIGURATIONS = "/sast/engineConfigurations";
     private static final String SCAN_SETTINGS = "/sast/scanSettings";
     private static final String SCAN = "/sast/scans";
-    private static final String PROJECT_SCANS = "/sast/scans?projectId={pid}&scanStatus=Scanning";//TODO handle all scan statuses (all but failed, finished)
+    private static final String PROJECT_SCANS = "/sast/scans?projectId={pid}";
     private static final String SCAN_STATUS = "/sast/scans/{id}";
     private static final String REPORT = "/reports/sastScan";
     private static final String REPORT_DOWNLOAD = "/reports/sastScan/{id}";
     private static final String REPORT_STATUS = "/reports/sastScan/{id}/status";
     public static final String UNKNOWN = "-1";
     public static final Integer UNKNOWN_INT = -1;
-    public static final String OSA_VULN = "Vulnerable_Library";
+    private static final String OSA_VULN = "Vulnerable_Library";
 
     public static final Integer SCAN_STATUS_NEW = 1;
     public static final Integer SCAN_STATUS_PRESCAN = 2;
@@ -85,7 +91,7 @@ public class CxService {
     /*report statuses TODO*/
     public static final Integer REPORT_STATUS_CREATED = 2;
     public static final Integer REPORT_STATUS_FINISHED = 7;
-    static final Map<String, Integer> STATUS_MAP = ImmutableMap.of(
+    public static final Map<String, Integer> STATUS_MAP = ImmutableMap.of(
             "CONFIRMED", 2,
             "URGENT", 3
     );
@@ -136,7 +142,11 @@ public class CxService {
 
         log.info("Finding last Scan Id for project Id {}", projectId);
         try {
-            ResponseEntity<String> response = restTemplate.exchange(cxProperties.getUrl().concat(SCAN).concat("?projectId=").concat(projectId.toString().concat("&last=1")), HttpMethod.GET, requestEntity, String.class);
+            ResponseEntity<String> response = restTemplate.exchange(cxProperties.getUrl().concat(SCAN)
+                    .concat("?projectId=").concat(projectId.toString().concat("&scanStatus=")
+                                    .concat(SCAN_STATUS_FINISHED.toString()).concat("&last=1")),
+                    HttpMethod.GET, requestEntity, String.class);
+
             JSONArray arr = new JSONArray(response.getBody());
             if(arr.length() < 1){
                 return UNKNOWN_INT;
@@ -151,6 +161,60 @@ public class CxService {
         }
         return UNKNOWN_INT;
     }
+
+    LocalDateTime getLastScanDate(Integer projectId) {
+        HttpEntity requestEntity = new HttpEntity<>(createAuthHeaders());
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
+        DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SS");
+        DateTimeFormatter formatter3 = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+
+        log.info("Finding last Scan Id for project Id {}", projectId);
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(cxProperties.getUrl().concat(SCAN)
+                            .concat("?projectId=").concat(projectId.toString().concat("&scanStatus=").concat(SCAN_STATUS_FINISHED.toString())
+                                    .concat("&last=").concat(cxProperties.getIncrementalNumScans().toString())),
+                    HttpMethod.GET, requestEntity, String.class);
+
+            JSONArray arr = new JSONArray(response.getBody());
+            for (int i = 0; i < arr.length(); i++) {
+                JSONObject scan = arr.getJSONObject(i);
+                if (!scan.getBoolean("isIncremental")) {
+                    JSONObject dateAndTime = scan.getJSONObject("dateAndTime");
+                    log.debug("Last full scan was {}", dateAndTime);
+                    //example: "finishedOn": "2018-06-18T01:09:12.707",
+                    //example: "finishedOn": "2019-03-22T01:51:18.11",
+                    LocalDateTime d;
+                    try {
+                        d = LocalDateTime.parse(dateAndTime.getString("finishedOn"), formatter);
+                    }catch (DateTimeParseException e){
+                        //log.warn(ExceptionUtils.getStackTrace(e));
+                        log.warn("Error Parsing last finished scan time {}", e.getParsedString());
+                        try{
+                            log.info("Attempting 2nd format 'yyyy-MM-dd'T'HH:mm:ss.SS'");
+                            d = LocalDateTime.parse(dateAndTime.getString("finishedOn"), formatter2);
+                        }catch (DateTimeParseException e2){
+                            log.info("Attempting 3rd format 'yyyy-MM-dd'T'HH:mm:ss'");
+                            try {
+                                d = LocalDateTime.parse(dateAndTime.getString("finishedOn"), formatter3);
+                            }catch (DateTimeParseException e3){
+                                log.error(ExceptionUtils.getStackTrace(e2));
+                                log.error(e2.getParsedString());
+                                return null;
+                            }
+                        }
+                    }
+                    return d;
+                }
+            }
+        } catch (HttpStatusCodeException e) {
+            log.error("Error occurred while creating Scan for project {}, http error {}", projectId, e.getStatusCode());
+            e.printStackTrace();
+        } catch (NullPointerException e){
+            log.error("Error parsing JSON response for dateAndTime status. {}");
+        }
+        return null;
+    }
+
 
     /**
      * Get the status of a given scanId
@@ -251,8 +315,18 @@ public class CxService {
         log.info("Retrieving report contents of report Id {} in XML format", reportId);
         try {
             ResponseEntity<String> resultsXML = restTemplate.exchange(cxProperties.getUrl().concat(REPORT_DOWNLOAD), HttpMethod.GET, httpEntity, String.class, reportId);
+            String xml = resultsXML.getBody();
+            log.debug("Headers:");
+            log.debug(resultsXML.getHeaders().toSingleValueMap().toString());
             log.info("Report downloaded for report Id {}", reportId);
-            InputStream xmlStream = new ByteArrayInputStream(Objects.requireNonNull(resultsXML.getBody()).getBytes());
+            log.debug("XML String Output:");
+            log.debug(xml);
+            log.debug("Base64:");
+            log.debug(Base64.getEncoder().encodeToString(resultsXML.toString().getBytes()));
+            /*Remove any chars before the start xml tag*/
+
+            xml = xml.trim().replaceFirst("^([\\W]+)<","<");
+            InputStream xmlStream = new ByteArrayInputStream(Objects.requireNonNull(xml.getBytes()));
 
             /* protect against XXE */
             JAXBContext jc = JAXBContext.newInstance(CxXMLResultsType.class);
@@ -267,14 +341,19 @@ public class CxService {
             CxXMLResultsType cxResults = (CxXMLResultsType) unmarshaller.unmarshal(xsr);
             ScanResults.ScanResultsBuilder cxScanBuilder = ScanResults.builder();
             cxScanBuilder.projectId(cxResults.getProjectId());
+            cxScanBuilder.team(cxResults.getTeam());
+            cxScanBuilder.project(cxResults.getProjectName());
             cxScanBuilder.link(cxResults.getDeepLink());
             cxScanBuilder.files(cxResults.getFilesScanned());
             cxScanBuilder.loc(cxResults.getLinesOfCodeScanned());
             cxScanBuilder.scanType(cxResults.getScanType());
             getIssues(filter, session, xIssueList, cxResults);
             cxScanBuilder.xIssues(xIssueList);
-            return cxScanBuilder.build();
-
+            ScanResults results = cxScanBuilder.build();
+            if(cxProperties.getPreserveXml()){
+                results.setOutput(xml);
+            }
+            return results;
         }catch (HttpStatusCodeException e) {
             log.error("HTTP Status Code of {} while getting downloading report contents of report Id {}", e.getStatusCode(), reportId);
             e.printStackTrace();
@@ -284,7 +363,6 @@ public class CxService {
             log.error("Error with XML report");
             e.printStackTrace();
             throw new MachinaException("Error while processing scan results for report Id ".concat(reportId.toString()));
-
         }
         catch (NullPointerException e){
             log.info("Null Error");
@@ -328,6 +406,9 @@ public class CxService {
             List<ScanResults.XIssue> issueList = new ArrayList<>();
             CxXMLResultsType cxResults = (CxXMLResultsType) unmarshaller.unmarshal(file);
             ScanResults.ScanResultsBuilder cxScanBuilder = ScanResults.builder();
+            cxScanBuilder.projectId(cxResults.getProjectId());
+            cxScanBuilder.team(cxResults.getTeam());
+            cxScanBuilder.project(cxResults.getProjectName());
             cxScanBuilder.link(cxResults.getDeepLink());
             cxScanBuilder.files(cxResults.getFilesScanned());
             cxScanBuilder.loc(cxResults.getLinesOfCodeScanned());
@@ -500,6 +581,7 @@ public class CxService {
                             }
                             details.put(Integer.parseInt(r.getPath().getPathNode().get(0).getLine()),
                                     r.getPath().getPathNode().get(0).getSnippet().getLine().getCode());
+                            xIssueBuilder.similarityId(r.getPath().getSimilarityId());
                         } catch (NullPointerException e) {
                             log.warn("Problem grabbing snippet.  Snippet may not exist for finding for Node ID");
                             /*Defaulting to initial line number with no snippet*/
@@ -758,14 +840,21 @@ public class CxService {
     public boolean scanExists(Integer projectId){
         HttpEntity httpEntity = new HttpEntity<>(createAuthHeaders());
         try {
+
             ResponseEntity<String> scans = restTemplate.exchange(cxProperties.getUrl().concat(PROJECT_SCANS), HttpMethod.GET, httpEntity, String.class, projectId);
             JSONArray jsonArray = new JSONArray(scans.getBody());
-            if(jsonArray.length() > 0){
-                return true;
+            for (int i = 0; i < jsonArray.length(); i++) {
+                JSONObject scan = jsonArray.getJSONObject(i);
+                JSONObject status = scan.getJSONObject("status");
+                int statusId = status.getInt("id");
+                if(SCAN_STATUS_QUEUED.equals(statusId) || SCAN_STATUS_NEW.equals(statusId) || SCAN_STATUS_SCANNING.equals(statusId) ||
+                        SCAN_STATUS_PRESCAN.equals(statusId) || SCAN_STATUS_SOURCE_PULLING.equals(statusId)){
+                    log.debug("Scan status is {}", statusId);
+                    return true;
+                }
             }
-            else{
-                return false;
-            }
+            log.debug("No scans in the queue that are in progress");
+            return false;
 
         }catch (HttpStatusCodeException e){
             log.error("Error occurred while retrieving project with id {}, http error {}", projectId, e.getStatusCode());
@@ -862,7 +951,7 @@ public class CxService {
         }
     }
 
-    public void setProjectExcludeDetails(Integer projectId, List<String> excludeFolders, List<String> excludeFiles){
+    void setProjectExcludeDetails(Integer projectId, List<String> excludeFolders, List<String> excludeFiles){
         String excludeFilesStr = "";
         String excludeFolderStr = "";
 

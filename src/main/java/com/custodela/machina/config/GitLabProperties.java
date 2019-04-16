@@ -15,6 +15,7 @@ public class GitLabProperties {
     private String falsePositiveLabel = "false-positive";
     private String openTransition = "reopen";
     private String closeTransition = "close";
+    private boolean blockMerge = false;
 
     public String getWebhookToken() {
         return this.webhookToken;
@@ -70,5 +71,13 @@ public class GitLabProperties {
 
     public void setCloseTransition(String closeTransition) {
         this.closeTransition = closeTransition;
+    }
+
+    public boolean isBlockMerge() {
+        return blockMerge;
+    }
+
+    public void setBlockMerge(boolean blockMerge) {
+        this.blockMerge = blockMerge;
     }
 }

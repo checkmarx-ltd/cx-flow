@@ -10,7 +10,6 @@ import com.custodela.machina.dto.bitbucket.Commit;
 import com.custodela.machina.dto.bitbucket.MergeEvent;
 import com.custodela.machina.dto.bitbucket.PushEvent;
 import com.custodela.machina.exception.InvalidTokenException;
-import com.custodela.machina.exception.MachinaRuntimeException;
 import com.custodela.machina.service.MachinaService;
 import com.custodela.machina.utils.ScanUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,9 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.beans.ConstructorProperties;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 
 
@@ -64,6 +61,8 @@ public class BitbucketCloudController {
             @RequestParam(value = "category", required = false) List<String> category,
             @RequestParam(value = "status", required = false) List<String> status,
             @RequestParam(value = "assignee", required = false) String assignee,
+            @RequestParam(value = "preset", required = false) String preset,
+            @RequestParam(value = "incremental", required = false) Boolean incremental,
             @RequestParam(value = "exclude-files", required = false) List<String> excludeFiles,
             @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders,
             @RequestParam(value = "override", required = false) String override,
@@ -80,10 +79,12 @@ public class BitbucketCloudController {
             if(!ScanUtils.empty(application)){
                 app = application;
             }
+
             BugTracker.Type bugType = BugTracker.Type.BITBUCKETPULL;
             if(!ScanUtils.empty(bug)){
-                bugType = BugTracker.Type.valueOf(bug.toUpperCase());
+                bugType = ScanUtils.getBugTypeEnum(bug, machinaProperties.getBugTrackerImpl());
             }
+
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
             String currentBranch = body.getPullrequest().getSource().getBranch().getName();
             String targetBranch = body.getPullrequest().getDestination().getBranch().getName();
@@ -97,7 +98,7 @@ public class BitbucketCloudController {
                 branches.addAll(machinaProperties.getBranches());
             }
 
-            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties);
+            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
 
             if(!ScanUtils.empty(severity) || !ScanUtils.empty(cwe) || !ScanUtils.empty(category) || !ScanUtils.empty(status)){
                 filters = ScanUtils.getFilters(severity, cwe, category, status);
@@ -109,6 +110,16 @@ public class BitbucketCloudController {
 
             String gitUrl = body.getRepository().getLinks().getHtml().getHref().concat(".git");
             String mergeEndpoint = body.getPullrequest().getLinks().getComments().getHref();
+
+            String scanPreset = cxProperties.getScanPreset();
+            if(!ScanUtils.empty(preset)){
+                scanPreset = preset;
+            }
+            boolean inc = cxProperties.getIncremental();
+            if(incremental != null){
+                inc = incremental;
+            }
+
             ScanRequest request = ScanRequest.builder()
                     .application(app)
                     .product(p)
@@ -122,8 +133,8 @@ public class BitbucketCloudController {
                     .mergeNoteUri(mergeEndpoint)
                     .refs("refs/heads/".concat(currentBranch))
                     .email(null)
-                    .incremental(false) //todo handle incremental
-                    .scanPreset(cxProperties.getScanPreset())
+                    .incremental(inc)
+                    .scanPreset(scanPreset)
                     .excludeFolders(excludeFolders)
                     .excludeFiles(excludeFiles)
                     .bugTracker(bt)
@@ -166,6 +177,8 @@ public class BitbucketCloudController {
             @RequestParam(value = "category", required = false) List<String> category,
             @RequestParam(value = "status", required = false) List<String> status,
             @RequestParam(value = "assignee", required = false) String assignee,
+            @RequestParam(value = "preset", required = false) String preset,
+            @RequestParam(value = "incremental", required = false) Boolean incremental,
             @RequestParam(value = "exclude-files", required = false) List<String> excludeFiles,
             @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders,
             @RequestParam(value = "override", required = false) String override,
@@ -176,34 +189,21 @@ public class BitbucketCloudController {
 
         validateBitBucketRequest(token);
 
-        MachinaOverride o = null;
+        MachinaOverride o = ScanUtils.getMachinaOverride(override);
         ObjectMapper mapper = new ObjectMapper();
 
-        try {
-            //if override is provided, check if chars are more than 20 in length, implying base64 encoded json
-            if(!ScanUtils.empty(override)){
-                if(override.length() > 20){
-                    log.info("Overriding attributes with Base64 encoded String");
-                    String json = new String(Base64.getDecoder().decode(override));
-                    o = mapper.readValue(json, MachinaOverride.class);
-                }
-                else{
-                    //TODO download file
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new MachinaRuntimeException();
-        }
         try {
             String app = body.getRepository().getName();
             if(!ScanUtils.empty(application)){
                 app = application;
             }
-            BugTracker.Type bugType = BugTracker.Type.valueOf(machinaProperties.getBugTracker().toUpperCase());
-            if(!ScanUtils.empty(bug)){
-                bugType = BugTracker.Type.valueOf(bug.toUpperCase());
+
+            //set the default bug tracker as per yml
+            BugTracker.Type bugType;
+            if (ScanUtils.empty(bug)) {
+                bug =  machinaProperties.getBugTracker();
             }
+            bugType = ScanUtils.getBugTypeEnum(bug, machinaProperties.getBugTrackerImpl());
 
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
             String currentBranch = body.getPush().getChanges().get(0).getNew().getName();
@@ -217,7 +217,7 @@ public class BitbucketCloudController {
                 branches.addAll(machinaProperties.getBranches());
             }
 
-            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties);
+            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
             /*Determine filters, if any*/
             if(!ScanUtils.empty(severity) || !ScanUtils.empty(cwe) || !ScanUtils.empty(category) || !ScanUtils.empty(status)){
                 filters = ScanUtils.getFilters(severity, cwe, category, status);
@@ -238,6 +238,16 @@ public class BitbucketCloudController {
             }
 
             String gitUrl = body.getRepository().getLinks().getHtml().getHref().concat(".git");
+
+            String scanPreset = cxProperties.getScanPreset();
+            if(!ScanUtils.empty(preset)){
+                scanPreset = preset;
+            }
+            boolean inc = cxProperties.getIncremental();
+            if(incremental != null){
+                inc = incremental;
+            }
+
             ScanRequest request = ScanRequest.builder()
                     .application(app)
                     .product(p)
@@ -249,8 +259,8 @@ public class BitbucketCloudController {
                     .branch(currentBranch)
                     .refs("refs/heads/".concat(currentBranch))
                     .email(emails)
-                    .incremental(false)
-                    .scanPreset(cxProperties.getScanPreset())
+                    .incremental(inc)
+                    .scanPreset(scanPreset)
                     .excludeFolders(excludeFolders)
                     .excludeFiles(excludeFiles)
                     .bugTracker(bt)

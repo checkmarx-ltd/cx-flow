@@ -18,6 +18,7 @@ import java.util.List;
     "repository",
     "object_attributes",
     "labels",
+    "changes"
 })
 public class MergeEvent extends Event {
 
@@ -38,6 +39,9 @@ public class MergeEvent extends Event {
     @JsonProperty("labels")
     @Valid
     private List<Label> labels = null;
+
+    @JsonProperty("changes")
+    private Changes changes;
 
     @JsonProperty("object_kind")
     public String getObjectKind() {
@@ -129,4 +133,18 @@ public class MergeEvent extends Event {
         return this;
     }
 
+    @JsonProperty("changes")
+    public Changes getChanges() {
+        return changes;
+    }
+
+    @JsonProperty("changes")
+    public void setChanges(Changes changes) {
+        this.changes = changes;
+    }
+
+    public MergeEvent withObjectAttributes(Changes changes) {
+        this.changes = changes;
+        return this;
+    }
 }

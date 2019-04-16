@@ -11,16 +11,21 @@ public class ScanResults{
 
     private Boolean osa;
     private String  projectId;
+    private String  team;
+    private String  project;
     private String  link;
     private String  files;
     private String  loc;
     private String  scanType;
     private List<XIssue> xIssues;
+    private String output;
 
-    @ConstructorProperties({"osa", "projectId", "link", "files", "loc", "scanType", "xIssues"})
-    public ScanResults(Boolean osa, String projectId, String link, String files, String loc, String scanType, List<XIssue> xIssues) {
+    @ConstructorProperties({"osa", "projectId", "team", "project", "link", "files", "loc", "scanType", "xIssues"})
+    public ScanResults(Boolean osa, String projectId, String team, String project, String link, String files, String loc, String scanType, List<XIssue> xIssues) {
         this.osa = osa;
         this.projectId = projectId;
+        this.team = team;
+        this.project = project;
         this.link = link;
         this.files = files;
         this.loc = loc;
@@ -42,6 +47,30 @@ public class ScanResults{
 
     public void setProjectId(String projectId){
         this.projectId = projectId;
+    }
+
+    public String getTeam() {
+        return team;
+    }
+
+    public void setTeam(String team) {
+        this.team = team;
+    }
+
+    public String getProject() {
+        return project;
+    }
+
+    public void setProject(String project) {
+        this.project = project;
+    }
+
+    public List<XIssue> getxIssues() {
+        return xIssues;
+    }
+
+    public void setxIssues(List<XIssue> xIssues) {
+        this.xIssues = xIssues;
     }
 
     public Boolean getOsa() {
@@ -92,12 +121,21 @@ public class ScanResults{
         this.xIssues = xIssues;
     }
 
+    public String getOutput() {
+        return output;
+    }
+
+    public void setOutput(String output) {
+        this.output = output;
+    }
+
     public String toString() {
         return "ScanResults(osa=" + this.getOsa()  + ", link=" + this.getLink() + ", files=" + this.getFiles() + ", loc=" + this.getLoc() + ", scanType=" + this.getScanType() + ", xIssues=" + this.getXIssues() + ")";
     }
 
     public static class XIssue{
         private String vulnerability;
+        private String similarityId;
         private String cwe;
         private String cve;
         private String description;
@@ -105,11 +143,14 @@ public class ScanResults{
         private String severity;
         private String link;
         private String filename;
+        private String gitUrl;
         private List<OsaDetails> osaDetails;
         private Map<Integer, String>  details;
 
-        @ConstructorProperties({"pathId", "categories", "vulnerability", "cwe", "cve", "description", "language", "severity", "link", "filename", "osaDetails", "details"})
-        XIssue(String vulnerability, String cwe, String cve, String description, String language, String severity, String link, String filename, List<OsaDetails> osaDetails, Map<Integer, String> details) {
+        @ConstructorProperties({"vulnerability", "cwe", "cve", "description", "language",
+                "severity", "link", "filename", "gitUrl", "osaDetails", "details"})
+        XIssue(String vulnerability, String cwe, String cve, String description, String language,
+               String severity, String link, String filename, String gitUrl, List<OsaDetails> osaDetails, Map<Integer, String> details) {
             this.vulnerability = vulnerability;
             this.cwe = cwe;
             this.cve = cve;
@@ -118,6 +159,7 @@ public class ScanResults{
             this.severity = severity;
             this.link = link;
             this.filename = filename;
+            this.gitUrl = gitUrl;
             this.osaDetails = osaDetails;
             this.details = details;
         }
@@ -142,6 +184,14 @@ public class ScanResults{
             int result = vulnerability.hashCode();
             result = 5225 * result + filename.hashCode();
             return result;
+        }
+
+        public String getSimilarityId() {
+            return similarityId;
+        }
+
+        public void setSimilarityId(String similarityId) {
+            this.similarityId = similarityId;
         }
 
         public String getVulnerability() {
@@ -174,6 +224,10 @@ public class ScanResults{
 
         public String getFilename() {
             return this.filename;
+        }
+
+        public String getGitUrl() {
+            return this.gitUrl;
         }
 
         public List<OsaDetails> getOsaDetails() {
@@ -216,6 +270,10 @@ public class ScanResults{
             this.filename = filename;
         }
 
+        public void setGitUrl(String gitUrl) {
+            this.gitUrl = gitUrl;
+        }
+
         public void setOsaDetails(List<OsaDetails> osaDetails) {
             this.osaDetails = osaDetails;
         }
@@ -226,6 +284,7 @@ public class ScanResults{
 
         public static class XIssueBuilder {
             private String vulnerability;
+            private String similarityId;
             private String cwe;
             private String cve;
             private String description;
@@ -241,6 +300,11 @@ public class ScanResults{
 
             public XIssue.XIssueBuilder vulnerability(String vulnerability) {
                 this.vulnerability = vulnerability;
+                return this;
+            }
+
+            public XIssue.XIssueBuilder similarityId(String similarityId) {
+                this.similarityId = similarityId;
                 return this;
             }
 
@@ -290,11 +354,11 @@ public class ScanResults{
             }
 
             public XIssue build() {
-                return new XIssue(vulnerability, cwe, cve, description, language, severity, link, file, osaDetails, details);
+                return new XIssue(vulnerability, cwe, cve, description, language, severity, link, file, "", osaDetails, details);
             }
 
             public String toString() {
-                return "ScanResults.XIssue.XIssueBuilder(vulnerability=" + this.vulnerability + ", cwe=" + this.cwe + ", cve=" + this.cve + ", description=" + this.description + ", language=" + this.language + ", severity=" + this.severity + ", link=" + this.link + ", filename=" + this.file + ", osaDetails=" + this.osaDetails + ", details=" + this.details + ")";
+                return "ScanResults.XIssue.XIssueBuilder(simiarlityId="+ this.similarityId +",vulnerability=" + this.vulnerability + ", cwe=" + this.cwe + ", cve=" + this.cve + ", description=" + this.description + ", language=" + this.language + ", severity=" + this.severity + ", link=" + this.link + ", filename=" + this.file + ", osaDetails=" + this.osaDetails + ", details=" + this.details + ")";
             }
         }
     }
@@ -423,6 +487,8 @@ public class ScanResults{
     public static class ScanResultsBuilder {
         private Boolean osa;
         private String projectId;
+        private String team;
+        private String project;
         private String link;
         private String files;
         private String loc;
@@ -437,8 +503,19 @@ public class ScanResults{
             return this;
         }
 
+
         public ScanResults.ScanResultsBuilder projectId(String projectId) {
             this.projectId = projectId;
+            return this;
+        }
+
+        public ScanResults.ScanResultsBuilder project(String project) {
+            this.project = project;
+            return this;
+        }
+
+        public ScanResults.ScanResultsBuilder team(String team) {
+            this.team = team;
             return this;
         }
 
@@ -468,7 +545,7 @@ public class ScanResults{
         }
 
         public ScanResults build() {
-            return new ScanResults(osa, projectId, link, files, loc, scanType, xIssues);
+            return new ScanResults(osa, projectId, team, project, link, files, loc, scanType, xIssues);
         }
 
         public String toString() {

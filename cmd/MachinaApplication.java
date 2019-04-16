@@ -8,6 +8,7 @@ import com.custodela.machina.dto.ScanRequest;
 import com.custodela.machina.service.MachinaService;
 import com.custodela.machina.utils.ScanUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -15,7 +16,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableAsync;
-
 import java.beans.ConstructorProperties;
 import java.io.File;
 import java.io.IOException;
@@ -31,11 +31,14 @@ public class MachinaApplication implements ApplicationRunner {
     private final CxProperties cxProperties;
     private final JiraProperties jiraProperties;
     private final GitHubProperties gitHubProperties;
-    private final GitLabProperties gitLabProperties;
+    private final GitHubProperties gitLabProperties;
     private final MachinaService machinaService;
 
-    @ConstructorProperties({"machinaProperties", "cxProperties", "jiraProperties", "gitHubProperties", "gitLabProperties", "machinaService"})
-    public MachinaApplication(MachinaProperties machinaProperties, CxProperties cxProperties, JiraProperties jiraProperties, GitHubProperties gitHubProperties, GitLabProperties gitLabProperties, MachinaService machinaService) {
+    @ConstructorProperties({"machinaProperties", "cxProperties", "jiraProperties", "gitHubProperties",
+            "gitLabProperties", "machinaService"})
+    public MachinaApplication(MachinaProperties machinaProperties, CxProperties cxProperties,
+                              JiraProperties jiraProperties, GitHubProperties gitHubProperties,
+                              GitHubProperties gitLabProperties, MachinaService machinaService) {
         this.machinaProperties = machinaProperties;
         this.cxProperties = cxProperties;
         this.jiraProperties = jiraProperties;
@@ -58,6 +61,8 @@ public class MachinaApplication implements ApplicationRunner {
         String repoName;
         String repoUrl;
         String branch;
+        String mergeId;
+        String mergeNoteUri = null;
         String assignee;
         List<String> emails;
         String file;
@@ -72,10 +77,19 @@ public class MachinaApplication implements ApplicationRunner {
         List<String> status;
         List<String> excludeFiles;
         List<String> excludeFolders;
-        boolean osa = false;
+        ScanRequest.Repository repoType = ScanRequest.Repository.NA;
+        boolean osa;
         MachinaOverride o = null;
         ObjectMapper mapper = new ObjectMapper();
 
+        if(arg.containsOption("branch-create")){
+
+            exit(0);
+        }
+        if(arg.containsOption("branch-delete")){
+
+            exit(0);
+        }
         if(!arg.containsOption("scan") && !arg.containsOption("parse") && !arg.containsOption("batch") && !arg.containsOption("project")){
             log.error("--scan | --parse | --batch | --project option must be specified");
             exit(1);
@@ -93,9 +107,9 @@ public class MachinaApplication implements ApplicationRunner {
         }
 
         /*Collect command line options (String)*/
-        bugTracker = ((ScanUtils.empty(arg.getOptionValues("bug-tracker")))) ? BugTracker.Type.JIRA.getType() : arg.getOptionValues("bug-tracker").get(0).toUpperCase();
-        file = ((ScanUtils.empty(arg.getOptionValues("f")))) ? BugTracker.Type.JIRA.getType() : arg.getOptionValues("f").get(0);
-        libFile = ((ScanUtils.empty(arg.getOptionValues("lib-file")))) ? BugTracker.Type.JIRA.getType() : arg.getOptionValues("lib-file").get(0);
+        bugTracker = ((ScanUtils.empty(arg.getOptionValues("bug-tracker")))) ? null : arg.getOptionValues("bug-tracker").get(0);
+        file = ((ScanUtils.empty(arg.getOptionValues("f")))) ? null : arg.getOptionValues("f").get(0);
+        libFile = ((ScanUtils.empty(arg.getOptionValues("lib-file")))) ? null : arg.getOptionValues("lib-file").get(0);
         repoName = ((ScanUtils.empty(arg.getOptionValues("repo-name")))) ? null : arg.getOptionValues("repo-name").get(0);
         repoUrl = ((ScanUtils.empty(arg.getOptionValues("repo-url")))) ? null : arg.getOptionValues("repo-url").get(0);
         branch = ((ScanUtils.empty(arg.getOptionValues("branch")))) ? null : arg.getOptionValues("branch").get(0);
@@ -104,6 +118,8 @@ public class MachinaApplication implements ApplicationRunner {
         cxProject = ((ScanUtils.empty(arg.getOptionValues("cx-project")))) ? null : arg.getOptionValues("cx-project").get(0);
         application = ((ScanUtils.empty(arg.getOptionValues("app")))) ? null : arg.getOptionValues("app").get(0);
         assignee = ((ScanUtils.empty(arg.getOptionValues("assignee")))) ? null : arg.getOptionValues("assignee").get(0);
+        mergeId = ((ScanUtils.empty(arg.getOptionValues("merge-id")))) ? null : arg.getOptionValues("merge-id").get(0);
+        preset = ((ScanUtils.empty(arg.getOptionValues("preset")))) ? null : arg.getOptionValues("preset").get(0);
         osa = arg.getOptionValues("osa") != null;
         /*Collect command line options (List of Strings)*/
         emails = arg.getOptionValues("emails");
@@ -113,8 +129,11 @@ public class MachinaApplication implements ApplicationRunner {
         status = arg.getOptionValues("status");
         excludeFiles = arg.getOptionValues("exclude-files");
         excludeFolders = arg.getOptionValues("exclude-folders");
+        boolean bb = arg.containsOption("bb"); //BitBucket Cloud
+        boolean bbs = arg.containsOption("bbs"); //BitBucket Server
 
-        if(((ScanUtils.empty(namespace) && ScanUtils.empty(repoName) && ScanUtils.empty(branch)) && ScanUtils.empty(application)) && !arg.containsOption("batch")) {
+        if(((ScanUtils.empty(namespace) && ScanUtils.empty(repoName) && ScanUtils.empty(branch)) &&
+                ScanUtils.empty(application)) && !arg.containsOption("batch")) {
             log.error("Namespace/Repo/Branch or Application (app) must be provided");
             exit(1);
         }
@@ -129,7 +148,17 @@ public class MachinaApplication implements ApplicationRunner {
                     machinaProperties.getFilterCategory(), machinaProperties.getFilterStatus());
         }
 
-        BugTracker.Type bugType = BugTracker.Type.valueOf(bugTracker);
+        //set the default bug tracker as per yml
+        BugTracker.Type bugType = null;
+        if (ScanUtils.empty(bugTracker)) {
+            bugTracker =  machinaProperties.getBugTracker();
+        }
+        try {
+            bugType = ScanUtils.getBugTypeEnum(bugTracker, machinaProperties.getBugTrackerImpl());
+        }catch (IllegalArgumentException e){
+            log.error("No valid bug tracker was provided");
+            exit(1);
+        }
         ScanRequest.Product p;
         if(osa){
             if(libFile == null){
@@ -142,9 +171,16 @@ public class MachinaApplication implements ApplicationRunner {
             p = ScanRequest.Product.CX;
         }
 
+        if(ScanUtils.empty(preset)){
+            preset = cxProperties.getScanPreset();
+        }
+
         BugTracker bt = null;
         String gitUrlAuth = null;
         switch (bugType){
+            case NONE:
+                log.info("No bug tracker will be used");
+                break;
             case JIRA:
                 bt = BugTracker.builder()
                         .type(bugType)
@@ -161,22 +197,38 @@ public class MachinaApplication implements ApplicationRunner {
                         .fields(jiraProperties.getFields())
                         .build();
                 break;
-            case GITLAB:
-                gitUrlAuth = repoUrl.replace("https://", "https://oauth2:".concat(gitLabProperties.getToken()).concat("@"));
+            case GITHUBPULL:
+            case githubpull:
+                bugType = BugTracker.Type.GITHUBPULL;
                 bt = BugTracker.builder()
                         .type(bugType)
                         .build();
+                repoType = ScanRequest.Repository.GITHUB;
+
+                if(ScanUtils.empty(namespace) ||ScanUtils.empty(repoName)||ScanUtils.empty(mergeId)){
+                    log.error("Namespace/Repo/MergeId must be provided for GITHUBPULL bug tracking");
+                    exit(1);
+                }
+                mergeNoteUri = gitHubProperties.getMergeNoteUri(namespace, repoName, mergeId);
                 break;
-            case GITHUB:
-                gitUrlAuth = repoUrl.replace("https://", "https://".concat(gitHubProperties.getToken()).concat("@"));
-                bt = BugTracker.builder()
-                        .type(bugType)
-                        .build();
+            case GITLABMERGE:
+            case gitlabmerge:
+                log.info("GitLab Merge not currently supported from command line");
+                exit(1);
                 break;
-            case BITBUCKET:
-                log.warn("Bitbucket is not supported at this time");
+            case BITBUCKETPULL:
+            case bitbucketserverpull:
+                log.info("BitBucket Pull not currently supported from command line");
+                exit(1);
                 break;
             case EMAIL:
+                break;
+            case CUSTOM:
+                log.info("Using custom bean implementation  for bug tracking");
+                bt = BugTracker.builder()
+                        .type(bugType)
+                        .customBean(bugTracker)
+                        .build();
                 break;
             default:
                 log.warn("No supported bug tracking type provided");
@@ -189,13 +241,14 @@ public class MachinaApplication implements ApplicationRunner {
                 .team(team)
                 .project(cxProject)
                 .repoName(repoName)
+                .mergeNoteUri(mergeNoteUri)
                 .repoUrl(repoUrl)
                 .repoUrlWithAuth(gitUrlAuth)
-                .repoType(ScanRequest.Repository.NA)
+                .repoType(repoType)
                 .branch(branch)
                 .refs(null)
                 .email(emails)
-                .incremental(false)
+                .incremental(cxProperties.getIncremental())
                 .scanPreset(preset)
                 .excludeFolders(excludeFolders)
                 .excludeFiles(excludeFiles)
@@ -204,6 +257,19 @@ public class MachinaApplication implements ApplicationRunner {
                 .build();
 
         request = ScanUtils.overrideMap(request, o);
+        /*Determine if BitBucket Cloud/Server is being used - this will determine formatting of URL that links to file/line in repository */
+        if(bb){
+            request.setRepoType(ScanRequest.Repository.BITBUCKETSERVER);
+            //TODO create browse code url
+        }
+        else if(bbs){
+            request.setRepoType(ScanRequest.Repository.BITBUCKETSERVER);
+            repoUrl = repoUrl.replaceAll("\\/scm\\/", "/projects/");
+            repoUrl = repoUrl.replaceAll("\\/[\\w-]+.git$", "/repos$0");
+            repoUrl = repoUrl.replaceAll(".git$", "");
+            repoUrl = repoUrl.concat("/browse");
+            request.putAdditionalMetadata("BITBUCKET_BROWSE", repoUrl);
+        }
 
         try {
             if(arg.containsOption("parse")){
@@ -248,6 +314,7 @@ public class MachinaApplication implements ApplicationRunner {
             }
         }catch (Exception e){
             log.error("An error occurred while processing request");
+            log.error(ExceptionUtils.getStackTrace(e));
             e.printStackTrace();
             exit(10);
         }
@@ -255,7 +322,7 @@ public class MachinaApplication implements ApplicationRunner {
         exit(0);
     }
 
-    public void cxScan(ScanRequest request, String path){
+    private void cxScan(ScanRequest request, String path){
         machinaService.cxFullScan(request, path);
     }
     private void cxOsaParse(ScanRequest request, File file, File libs){
