@@ -11,16 +11,18 @@ logging:
   file: machina.log
 
 machina:
-  bug-tracker: Json
+  bug-tracker: GitLab
   bug-tracker-impl:
-    - Xml
+    - CxXml
     - Json
     - GitLab
+    - GitHub
   branches:
     - develop
     - master
     - security
   filter-severity:
+    - High
   mitre-url: https://cwe.mitre.org/data/definitions/%s.html
   wiki-url: https://custodela.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
   codebash-url: https://cxa.codebashing.com/courses/
@@ -95,6 +97,21 @@ jira:
       jira-field-name: LOC
       jira-field-type: label
 
+github:
+  webhook-token: 1234
+  token: xxx
+  url: https://github.com
+  api-url: https://api.github.com/repos/
+  false-positive-label: false-positive
+  block-merge: true
+
+gitlab:
+  webhook-token: 1234
+  token: xxx
+  url: https://gitlab.com
+  api-url: https://gitlab.com/api/v4/
+  false-positive-label: false-positive
+  block-merge: true
 
 json:
   file-name-format: "[NAMESPACE]-[REPO]-[BRANCH]-[TIME].json"

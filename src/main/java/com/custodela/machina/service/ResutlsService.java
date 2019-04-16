@@ -116,12 +116,14 @@ public class ResutlsService {
                 break;
             case GITHUBPULL:
                 gitService.processPull(request, results);
+                gitService.endBlockMerge(request, results.getLink());
                 break;
             case GITLABCOMMIT:
                 gitLabService.processCommit(request, results);
                 break;
             case GITLABMERGE:
                 gitLabService.processMerge(request, results);
+                gitLabService.endBlockMerge(request);
                 break;
             case BITBUCKETCOMMIT:
                 bbService.processCommit(request, results);
