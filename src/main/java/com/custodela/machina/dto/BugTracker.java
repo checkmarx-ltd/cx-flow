@@ -170,11 +170,13 @@ public class BugTracker {
         BITBUCKETCOMMIT("BITBUCKETCOMMIT"),
         BITBUCKETPULL("BITBUCKETPULL"),
         BITBUCKETSERVERPULL("BITBUCKETSERVERPULL"),
+        bitbucketserverpull("bitbucketserverpull"),
         GITHUBPULL("GITHUBPULL"),
         githubpull("githubpull"),
         GITHUBCOMMIT("GITHUBCOMMIT"),
         GITLABCOMMIT("GITLABCOMMIT"),
         GITLABMERGE("GITLABMERGE"),
+        gitlabmerge("gitlabmerge"),
         EMAIL("EMAIL"),
         CUSTOM("CUSTOM"),
         NONE("NONE");

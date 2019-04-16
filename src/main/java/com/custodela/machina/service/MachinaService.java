@@ -148,12 +148,14 @@ public class MachinaService {
             //TODO submit WIP for GITLAB and STATUS change for GITHUB
             if(request.getBugTracker().getType().equals(BugTracker.Type.GITLABMERGE)){
                 gitLabService.sendMergeComment(request, SCAN_MESSAGE);
+                gitLabService.startBlockMerge(request);
             }
             else if(request.getBugTracker().getType().equals(BugTracker.Type.GITLABCOMMIT)){
                 gitLabService.sendCommitComment(request, SCAN_MESSAGE);
             }
             else if(request.getBugTracker().getType().equals(BugTracker.Type.GITHUBPULL)){
                 gitService.sendMergeComment(request, SCAN_MESSAGE);
+                gitService.startBlockMerge(request, cxProperties.getUrl());
             }
             else if(request.getBugTracker().getType().equals(BugTracker.Type.BITBUCKETPULL)){
                 bbService.sendMergeComment(request, SCAN_MESSAGE);

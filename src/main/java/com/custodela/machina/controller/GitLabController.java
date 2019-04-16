@@ -1,9 +1,6 @@
 package com.custodela.machina.controller;
 
-import com.custodela.machina.config.CxProperties;
-import com.custodela.machina.config.GitLabProperties;
-import com.custodela.machina.config.JiraProperties;
-import com.custodela.machina.config.MachinaProperties;
+import com.custodela.machina.config.*;
 import com.custodela.machina.dto.*;
 import com.custodela.machina.dto.gitlab.Commit;
 import com.custodela.machina.dto.gitlab.MergeEvent;
@@ -80,8 +77,10 @@ public class GitLabController {
         MachinaOverride o = ScanUtils.getMachinaOverride(override);
 
         try {
-            if(!body.getObjectAttributes().getState().equalsIgnoreCase("opened")){
-                log.info("Merge requested not processed.  Status was not opened ({})", body.getObjectAttributes().getState());
+            if(!body.getObjectAttributes().getState().equalsIgnoreCase("opened") ||
+                    isWIP(body)){
+                log.info("Merge requested not processed.  Status was not opened , or was WIP ({})", body.getObjectAttributes().getState());
+
                 return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
                         .message("No processing occurred for updates to Merge Request")
                         .success(true)
@@ -122,7 +121,7 @@ public class GitLabController {
                         machinaProperties.getFilterCategory(), machinaProperties.getFilterStatus());
             }
 
-            String mergeEndpoint = properties.getApiUrl().concat(GitLabService.MERGE_PATH);
+            String mergeEndpoint = properties.getApiUrl().concat(GitLabService.MERGE_NOTE_PATH);
             mergeEndpoint = mergeEndpoint.replace("{id}", body.getProject().getId().toString());
             mergeEndpoint = mergeEndpoint.replace("{iid}", body.getObjectAttributes().getIid().toString());
             String gitUrl = body.getProject().getGitHttpUrl();
@@ -160,6 +159,8 @@ public class GitLabController {
                     .build();
 
             request = ScanUtils.overrideMap(request, o);
+            request.putAdditionalMetadata("merge_id",body.getObjectAttributes().getIid().toString());
+            request.putAdditionalMetadata("merge_title", body.getObjectAttributes().getTitle());
 
             if(branches.isEmpty() || branches.contains(targetBranch)) {
                 machinaService.initiateAutomation(request);
@@ -327,4 +328,28 @@ public class GitLabController {
         log.info("Validation successful");
     }
 
+    /**
+     * Check if the merge event is being driven by updates to WIP status.
+     * @param event
+     * @return
+     */
+    private boolean isWIP(MergeEvent event){
+        /*Merge has been marked WIP, ignoring*/
+        if(event.getObjectAttributes().getWorkInProgress()){
+            return true;
+        }
+
+        if(!properties.isBlockMerge()){ //skip looking for WIP changes
+            return false;
+        }
+        /*Merge has been changed from WIP to not-WIP, ignoring*/
+        else if(event.getChanges() != null && event.getChanges().getTitle() != null){
+            if(event.getChanges().getTitle().getPrevious().startsWith("WIP:CX|") &&
+                    !event.getChanges().getTitle().getCurrent().startsWith("WIP:")){
+                return true;
+            }
+        }
+        return false;
+    }
 }
+

@@ -2,13 +2,14 @@ logging:
   file: machina.log
 
 machina:
-  bug-tracker: CxXml
+  bug-tracker: JIRA
   bug-tracker-impl:
     - CxXml
     - Json
+    - GitLab
+    - GitHub
   filter-severity:
     - High
-    - Medium
   filter-category:
   filter-cwe:
   filter-status:
@@ -51,10 +52,11 @@ jira:
   closed-status:
     - Done
   fields:
-    - type: result
+    - type: cx
       name: application
       jira-field-name: Application
       jira-field-type: label
+      jira-default-value: xxxx
     - type: result
       name: cve
       jira-field-name: CVEs
@@ -79,9 +81,19 @@ github:
   url: https://github.com
   api-url: https://api.github.com/repos/
   false-positive-label: false-positive
+  block-merge: true
+
+gitlab:
+  webhook-token: 1234
+  token: xxx
+  url: https://gitlab.com
+  api-url: https://gitlab.com/api/v4/
+  false-positive-label: false-positive
+  block-merge: true
+
 
 json:
-  file-name-format: "[NAMESPACE]-[REPO]-[BRANCH]-[TIME].json"
+  file-name-format: "ABC-[PROJECT]-[TIME].json"
   data-folder: "C:\\tmp"
 
 cx-xml:

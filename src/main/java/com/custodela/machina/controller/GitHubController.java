@@ -199,7 +199,7 @@ public class GitHubController {
                     .build();
 
             request = ScanUtils.overrideMap(request, o);
-
+            request.putAdditionalMetadata("statuses_url", event.getPullRequest().getStatusesUrl());
             //only initiate scan/automation if target branch is applicable
             if(branches.isEmpty() || branches.contains(targetBranch)) {
                 machinaService.initiateAutomation(request);
