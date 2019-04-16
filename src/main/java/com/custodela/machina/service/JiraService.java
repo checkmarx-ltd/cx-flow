@@ -93,6 +93,7 @@ public class JiraService {
             );
         }
         else{
+            log.error("Namespace/Repo/Branch or App must be provided in order to properly track ");
             throw new MachinaRuntimeException();
         }
         log.debug(jql);
@@ -224,6 +225,7 @@ public class JiraService {
         try{
             this.issueClient.updateIssue(bugId, issueBuilder.build()).claim();
         }catch (RestClientException e){
+            log.error(ExceptionUtils.getStackTrace(e));
             throw new JiraClientException();
         }
 
@@ -768,7 +770,7 @@ public class JiraService {
                     Issue i = jiraMap.get(xIssue.getKey());
 
                     /*Ignore any with label indicating false positive*/
-                    if (!i.getLabels().contains(jiraProperties.getFalsePositiveLabel())) {  //TODO handle FALSE_POSITIVE status
+                    if (!i.getLabels().contains(jiraProperties.getFalsePositiveLabel())) {
                         log.debug("Issue still exists.  Updating issue with key {}", xIssue.getKey());
                         Issue updatedIssue = this.updateIssue(i.getKey(), currentIssue, request);
                         if (updatedIssue != null) {
@@ -789,6 +791,7 @@ public class JiraService {
                 }
             }catch(RestClientException e){
                 log.error("Error occurred while processing issue with key {}",xIssue.getKey(), e);
+                log.error(ExceptionUtils.getStackTrace(e));
                 throw new JiraClientException();
             }
         }
@@ -799,7 +802,7 @@ public class JiraService {
                 if (!map.containsKey(jiraIssue.getKey())) {
                     if (request.getBugTracker().getOpenStatus().contains(jiraIssue.getValue().getStatus().getName())) {
                         /*Close the issue*/
-                        log.info("Closing issue #{} with key {}", jiraIssue.getValue(), jiraIssue.getKey());
+                        log.info("Closing issue with key {}", jiraIssue.getKey());
                         this.transitionCloseIssue(jiraIssue.getValue().getKey(),
                                 request.getBugTracker().getCloseTransition(), request.getBugTracker());
                         closedIssues.add(jiraIssue.getValue().getKey());
@@ -807,6 +810,7 @@ public class JiraService {
                 }
             }catch(HttpClientErrorException e){
                 log.error("Error occurred while processing issue with key {} {}", jiraIssue.getKey(), e);
+                log.error(ExceptionUtils.getStackTrace(e));
             }
         }
 
