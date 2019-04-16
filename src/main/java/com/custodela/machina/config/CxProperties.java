@@ -30,8 +30,13 @@ public class CxProperties {
     private boolean multiTenant;
     private String scanPreset;
     private String configuration;
+    private Boolean incremental = false;
+    private Integer incrementalThreshold = 7;
+    private Integer incrementalNumScans = 5;
+
     private String team;
     private Boolean offline = false;
+    private Boolean preserveXml = false;
     private Integer scanTimeout = 120;
     private String jiraProjectField = "jira-project";
     private String jiraIssuetypeField = "jira-issuetype";
@@ -83,6 +88,18 @@ public class CxProperties {
         return this.multiTenant;
     }
 
+    public @NotNull Boolean getIncremental() {
+        return this.incremental;
+    }
+
+    public @NotNull Integer getIncrementalThreshold() {
+        return this.incrementalThreshold;
+    }
+
+    public @NotNull Integer getIncrementalNumScans(){
+        return this.incrementalNumScans;
+    }
+
     public String getScanPreset() {
         return this.scanPreset;
     }
@@ -97,6 +114,14 @@ public class CxProperties {
 
     public Boolean getOffline() {
         return this.offline;
+    }
+
+    public Boolean getPreserveXml() {
+        return preserveXml;
+    }
+
+    public void setPreserveXml(Boolean preserveXml) {
+        this.preserveXml = preserveXml;
     }
 
     public Integer getScanTimeout() {
@@ -114,6 +139,7 @@ public class CxProperties {
     public String getJiraIssuetypeField() {
         return this.jiraIssuetypeField;
     }
+
     public @NotNull
     @NotBlank String getPortalUrl() {
         return this.portalUrl;
@@ -165,6 +191,18 @@ public class CxProperties {
 
     public void setMultiTenant(boolean multiTenant) {
         this.multiTenant = multiTenant;
+    }
+
+    public void setIncremental(@NotNull Boolean incremental) {
+        this.incremental = incremental;
+    }
+
+    public void setIncrementalThreshold(@NotNull Integer incrementalThreshold){
+        this.incrementalThreshold = incrementalThreshold;
+    }
+
+    public void setIncrementalNumScans(@NotNull Integer incrementalNumScans){
+        this.incrementalNumScans = incrementalNumScans;
     }
 
     public void setScanPreset(String scanPreset) {

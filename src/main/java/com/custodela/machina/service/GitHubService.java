@@ -7,6 +7,7 @@ import com.custodela.machina.dto.ScanRequest;
 import com.custodela.machina.dto.ScanResults;
 import com.custodela.machina.exception.GitHubClienException;
 import com.custodela.machina.utils.ScanUtils;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -57,4 +58,57 @@ public class GitHubService {
         ResponseEntity<String> response = restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
+    void startBlockMerge(ScanRequest request, String url){
+        if(properties.isBlockMerge()) {
+            HttpEntity httpEntity = new HttpEntity<>(
+                    getJSONStatus("pending", url, "Checkmarx Scan Initiated").toString(),
+                    createAuthHeaders()
+            );
+            if(ScanUtils.empty(request.getAdditionalMetadata("statuses_url"))){
+                log.error("statuses_url was not provided within the request object, which is required for blocking / unblocking pull requests");
+                return;
+            }
+            ResponseEntity<String> response = restTemplate.exchange(request.getAdditionalMetadata("statuses_url"),
+                    HttpMethod.POST, httpEntity, String.class);
+        }
+    }
+
+    void endBlockMerge(ScanRequest request, String url){
+        if(properties.isBlockMerge()) {
+            HttpEntity httpEntity = new HttpEntity<>(
+                    getJSONStatus("success", url, "Checkmarx Scan Completed").toString(),
+                    createAuthHeaders()
+            );
+            if(ScanUtils.empty(request.getAdditionalMetadata("statuses_url"))){
+                log.error("statuses_url was not provided within the request object, which is required for blocking / unblocking pull requests");
+                return;
+            }
+            ResponseEntity<String> response = restTemplate.exchange(request.getAdditionalMetadata("statuses_url"),
+                    HttpMethod.POST, httpEntity, String.class);
+        }
+    }
+
+    void failBlockMerge(ScanRequest request, String url){
+        if(properties.isBlockMerge()) {
+            HttpEntity httpEntity = new HttpEntity<>(
+                    getJSONStatus("failure", url, "Checkmarx Issue Threshold Met").toString(),
+                    createAuthHeaders()
+            );
+            if(ScanUtils.empty(request.getAdditionalMetadata("statuses_url"))){
+                log.error("statuses_url was not provided within the request object, which is required for blocking / unblocking pull requests");
+                return;
+            }
+            ResponseEntity<String> response = restTemplate.exchange(request.getAdditionalMetadata("statuses_url"),
+                    HttpMethod.POST, httpEntity, String.class);
+        }
+    }
+
+    private JSONObject getJSONStatus(String state, String url, String description){
+        JSONObject requestBody = new JSONObject();
+        requestBody.put("state", state);
+        requestBody.put("target_url", url);
+        requestBody.put("description", description);
+        requestBody.put("context", "checkmarx");
+        return requestBody;
+    }
 }

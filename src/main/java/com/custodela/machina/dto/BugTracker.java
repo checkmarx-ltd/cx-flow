@@ -7,6 +7,7 @@ import java.util.Map;
 
 public class BugTracker {
     private Type type;
+    private String customBean;
     private String projectKey;
     private String issueType;
     private String openTransition;
@@ -19,9 +20,10 @@ public class BugTracker {
     private Map<String, String> priorities;
     private List<Field> fields; //Field mappings in JIRA
 
-    @ConstructorProperties({"type", "projectKey", "issueType", "openTransition", "closeTransition", "assignee", "openStatus", "closedStatus", "closeTransitionField", "closeTransitionValue", "priorities", "fields"})
-    BugTracker(Type type, String projectKey, String issueType, String openTransition, String closeTransition, String assignee, List<String> openStatus, List<String> closedStatus, String closeTransitionField, String closeTransitionValue, Map<String, String> priorities, List<Field> fields) {
+    @ConstructorProperties({"type", "customBean", "projectKey", "issueType", "openTransition", "closeTransition", "assignee", "openStatus", "closedStatus", "closeTransitionField", "closeTransitionValue", "priorities", "fields"})
+    BugTracker(Type type, String customBean, String projectKey, String issueType, String openTransition, String closeTransition, String assignee, List<String> openStatus, List<String> closedStatus, String closeTransitionField, String closeTransitionValue, Map<String, String> priorities, List<Field> fields) {
         this.type = type;
+        this.customBean = customBean;
         this.projectKey = projectKey;
         this.issueType = issueType;
         this.openTransition = openTransition;
@@ -37,6 +39,7 @@ public class BugTracker {
 
     public BugTracker(BugTracker other) {
         this.type = other.type;
+        this.customBean = other.customBean;
         this.projectKey = other.projectKey;
         this.issueType = other.issueType;
         this.openTransition = other.openTransition;
@@ -56,6 +59,10 @@ public class BugTracker {
 
     public Type getType() {
         return this.type;
+    }
+
+    public String getCustomBean() {
+        return this.customBean;
     }
 
     public String getProjectKey() {
@@ -104,6 +111,10 @@ public class BugTracker {
 
     public void setType(Type type) {
         this.type = type;
+    }
+
+    public void setCustomBean(String customBean) {
+        this.customBean = customBean;
     }
 
     public void setProjectKey(String projectKey) {
@@ -156,17 +167,18 @@ public class BugTracker {
 
     public enum Type {
         JIRA("JIRA"),
-        BITBUCKET("BITBUCKET"),
         BITBUCKETCOMMIT("BITBUCKETCOMMIT"),
         BITBUCKETPULL("BITBUCKETPULL"),
         BITBUCKETSERVERPULL("BITBUCKETSERVERPULL"),
-        GITHUB("GITHUB"),
+        bitbucketserverpull("bitbucketserverpull"),
         GITHUBPULL("GITHUBPULL"),
+        githubpull("githubpull"),
         GITHUBCOMMIT("GITHUBCOMMIT"),
-        GITLAB("GITLAB"),
         GITLABCOMMIT("GITLABCOMMIT"),
         GITLABMERGE("GITLABMERGE"),
+        gitlabmerge("gitlabmerge"),
         EMAIL("EMAIL"),
+        CUSTOM("CUSTOM"),
         NONE("NONE");
 
         private String type;
@@ -182,6 +194,7 @@ public class BugTracker {
 
     public static class BugTrackerBuilder {
         private Type type;
+        private String customBean;
         private String projectKey;
         private String issueType;
         private String openTransition;
@@ -199,6 +212,11 @@ public class BugTracker {
 
         public BugTracker.BugTrackerBuilder type(Type type) {
             this.type = type;
+            return this;
+        }
+
+        public BugTracker.BugTrackerBuilder customBean(String customBean) {
+            this.customBean = customBean;
             return this;
         }
 
@@ -258,7 +276,7 @@ public class BugTracker {
         }
 
         public BugTracker build() {
-            return new BugTracker(type, projectKey, issueType, openTransition, closeTransition, assignee, openStatus, closedStatus, closeTransitionField, closeTransitionValue, priorities, fields);
+            return new BugTracker(type, customBean, projectKey, issueType, openTransition, closeTransition, assignee, openStatus, closedStatus, closeTransitionField, closeTransitionValue, priorities, fields);
         }
 
         public String toString() {

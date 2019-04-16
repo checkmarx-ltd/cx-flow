@@ -5,6 +5,7 @@ import com.custodela.machina.config.MachinaProperties;
 import com.custodela.machina.dto.*;
 import com.custodela.machina.exception.MachinaRuntimeException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.EnumUtils;
 import org.slf4j.Logger;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.HttpClientErrorException;
@@ -14,6 +15,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -22,8 +25,9 @@ public class ScanUtils {
 
     public static final String RUNNING = "running";
     public static final String CRLF = "\r\n";
-    private static final String ISSUE_BODY = "**%s** issue exists @ **%s** in branch **%s**";
-    private static final String ISSUE_KEY = "%s %s @ %s [%s]";
+    public static final String ISSUE_BODY = "**%s** issue exists @ **%s** in branch **%s**";
+    public static final String ISSUE_KEY = "%s %s @ %s [%s]";
+    public static final String ISSUE_KEY_2 = "%s %s @ %s";
     public static final String JIRA_ISSUE_KEY = "%s%s @ %s [%s]";
     public static final String JIRA_ISSUE_KEY_2 = "%s%s @ %s";
     public static final String JIRA_ISSUE_BODY = "*%s* issue exists @ *%s* in branch *%s*";
@@ -236,14 +240,8 @@ public class ScanUtils {
         return request;
     }
 
-    /**
-     * Build BugTracker object (referenced within ScanRequest)
-     * @param assignee
-     * @param bugType
-     * @param jiraProperties
-     * @return
-     */
-    public static BugTracker getBugTracker(@RequestParam(value = "assignee", required = false) String assignee, BugTracker.Type bugType, JiraProperties jiraProperties) {
+    public static BugTracker getBugTracker(@RequestParam(value = "assignee", required = false) String assignee,
+                                           BugTracker.Type bugType, JiraProperties jiraProperties, String bugTracker) {
         BugTracker bt;
         if(bugType.equals(BugTracker.Type.JIRA)) {
             bt = BugTracker.builder()
@@ -261,6 +259,12 @@ public class ScanUtils {
                     .fields(jiraProperties.getFields())
                     .build();
         }
+        else if(bugType.equals(BugTracker.Type.CUSTOM)){
+            bt = BugTracker.builder()
+                    .type(bugType)
+                    .customBean(bugTracker)
+                    .build();
+        }
         else {
             bt = BugTracker.builder()
                     .type(bugType)
@@ -268,7 +272,6 @@ public class ScanUtils {
         }
         return bt;
     }
-
 
     public static void zipDirectory(String sourceDirectoryPath, String zipPath) throws IOException {
         Path zipFilePath = Files.createFile(Paths.get(zipPath));
@@ -376,6 +379,9 @@ public class ScanUtils {
                         if(request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)){
                             body.append("[").append(entry.getKey()).append("](").append(fileUrl).append("#lines-").append(entry.getKey()).append(") ");
                         }
+                        else if(request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)){
+                            body.append("[").append(entry.getKey()).append("](").append(fileUrl).append("#").append(entry.getKey()).append(") ");
+                        }
                         else{
                             body.append("[").append(entry.getKey()).append("](").append(fileUrl).append("#L").append(entry.getKey()).append(") ");
                         }
@@ -385,7 +391,7 @@ public class ScanUtils {
                 body.append(currentIssue.getSeverity()).append("|");
                 body.append(currentIssue.getVulnerability()).append("|");
                 body.append(currentIssue.getFilename()).append("|");
-                body.append("[link](").append(currentIssue.getLink()).append(")");
+                body.append("[Checkmarx](").append(currentIssue.getLink()).append(")");
                 body.append(CRLF);
             //body.append("```").append(currentIssue.getDescription()).append("```").append(CRLF); Description is too long
             } catch (HttpClientErrorException e) {
@@ -397,17 +403,35 @@ public class ScanUtils {
     }
 
     public static String getFileUrl(ScanRequest request, String filename) {
-        if(request.getProduct().equals(ScanRequest.Product.CXOSA)){
+        if(request.getProduct().equals(ScanRequest.Product.CXOSA) || filename == null || filename.isEmpty()){
             return null;
         }
         if(!ScanUtils.empty(request.getRepoUrl()) && !ScanUtils.empty(request.getBranch())) {
             String repoUrl = request.getRepoUrl().replace(".git", "/");
-            if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)) {
+            if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)) {
+                String url = request.getAdditionalMetadata("BITBUCKET_BROWSE");
+                if(url != null && !url.isEmpty()){
+                    if(!ScanUtils.empty(request.getBranch())) {
+                        return url.concat("/").concat(filename).concat("?at=").concat(request.getBranch());
+                    }
+                    else{
+                        return url.concat("/").concat(filename);
+                    }
+                }
+            }
+            else if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)) {
                 return repoUrl.concat("src/").concat(request.getBranch()).concat("/").concat(filename);
-            } else {
-                return repoUrl.concat("/blob/").concat(request.getBranch()).concat("/").concat(filename);
+            }
+            else {
+                if(!ScanUtils.empty(request.getBranch())) {
+                    return repoUrl.concat("blob/").concat(request.getBranch()).concat("/").concat(filename);
+                }
+                else{ //default to master branch
+                    return repoUrl.concat("blob/").concat("master/").concat(filename);
+                }
             }
         }
+
         return null;
     }
 
@@ -496,5 +520,65 @@ public class ScanUtils {
         return fields;
     }
 
+    public static BugTracker.Type getBugTypeEnum(String bug, List<String> bugTrackerImpl) throws IllegalArgumentException{
+
+        BugTracker.Type bugType = EnumUtils.getEnum(BugTracker.Type.class, bug);
+        if(bugType == null){ //Try uppercase
+            bugType = EnumUtils.getEnum(BugTracker.Type.class, bug.toUpperCase());
+            if(bugType == null){
+                log.debug("Determine if custom bean is being used");
+                if(bugTrackerImpl == null || !bugTrackerImpl.contains(bug)){
+                    log.debug("bug tracker {} not found within available options {}", bug, bugTrackerImpl);
+                    throw new IllegalArgumentException("Custom bug tracker not found in list of available implementations");
+                }
+                return BugTracker.Type.CUSTOM;
+            }
+        }
+        return bugType;
+    }
+
+    public static String getFilename(ScanRequest request, String format){
+        String filename;
+        filename = format;
+
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd.HHmmss");
+        String dt = now.format(formatter);
+        filename = filename.replace("[TIME]", dt);
+        log.debug(dt);
+        log.debug(filename);
+
+        if(!empty(request.getTeam())){
+            String team = request.getTeam();
+            team = team.replaceAll("\\\\","_");
+            filename = filename.replace("[TEAM]", team);
+        }
+        if(!empty(request.getApplication())) {
+            filename = filename.replace("[APP]", request.getApplication());
+            log.debug(request.getApplication());
+            log.debug(filename);
+        }
+        if(!empty(request.getProject())) {
+            filename = filename.replace("[PROJECT]", request.getProject());
+            log.debug(request.getProject());
+            log.debug(filename);
+        }
+        if(!empty(request.getNamespace())) {
+            filename = filename.replace("[NAMESPACE]", request.getNamespace());
+            log.debug(request.getNamespace());
+            log.debug(filename);
+        }
+        if(!empty(request.getRepoName())) {
+            filename = filename.replace("[REPO]", request.getRepoName());
+            log.debug(request.getRepoName());
+            log.debug(filename);
+        }
+        if(!empty(request.getBranch())) {
+            filename = filename.replace("[BRANCH]", request.getBranch());
+            log.debug(request.getBranch());
+            log.debug(filename);
+        }
+        return filename;
+    }
 
 }

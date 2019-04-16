@@ -5,7 +5,6 @@ import com.custodela.machina.config.CxProperties;
 import com.custodela.machina.config.JiraProperties;
 import com.custodela.machina.config.MachinaProperties;
 import com.custodela.machina.dto.*;
-import com.custodela.machina.dto.bitbucketserver.Change;
 import com.custodela.machina.dto.bitbucketserver.PullEvent;
 import com.custodela.machina.dto.bitbucketserver.PushEvent;
 import com.custodela.machina.exception.InvalidTokenException;
@@ -29,7 +28,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 
 
@@ -94,6 +92,8 @@ public class BitbucketServerController {
             @RequestParam(value = "category", required = false) List<String> category,
             @RequestParam(value = "status", required = false) List<String> status,
             @RequestParam(value = "assignee", required = false) String assignee,
+            @RequestParam(value = "preset", required = false) String preset,
+            @RequestParam(value = "incremental", required = false) Boolean incremental,
             @RequestParam(value = "exclude-files", required = false) List<String> excludeFiles,
             @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders,
             @RequestParam(value = "override", required = false) String override,
@@ -101,7 +101,7 @@ public class BitbucketServerController {
     ){
         verifyHmacSignature(body, signature);
 
-        MachinaOverride o = null;
+        MachinaOverride o = ScanUtils.getMachinaOverride(override);
         ObjectMapper mapper = new ObjectMapper();
         PullEvent event;
 
@@ -113,17 +113,18 @@ public class BitbucketServerController {
         }
 
         log.info("Processing BitBucket MERGE request");
-        o = ScanUtils.getMachinaOverride(override);
 
         try {
             String app = event.getPullRequest().getFromRef().getRepository().getName();
             if(!ScanUtils.empty(application)){
                 app = application;
             }
+
             BugTracker.Type bugType = BugTracker.Type.BITBUCKETSERVERPULL;
             if(!ScanUtils.empty(bug)){
-                bugType = BugTracker.Type.valueOf(bug.toUpperCase());
+                bugType = ScanUtils.getBugTypeEnum(bug, machinaProperties.getBugTrackerImpl());
             }
+
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
             String currentBranch = event.getPullRequest().getFromRef().getDisplayId();
             String targetBranch = event.getPullRequest().getToRef().getDisplayId();;
@@ -137,7 +138,7 @@ public class BitbucketServerController {
                 branches.addAll(machinaProperties.getBranches());
             }
 
-            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties);
+            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
 
             if(!ScanUtils.empty(severity) || !ScanUtils.empty(cwe) || !ScanUtils.empty(category) || !ScanUtils.empty(status)){
                 filters = ScanUtils.getFilters(severity, cwe, category, status);
@@ -157,6 +158,16 @@ public class BitbucketServerController {
             mergeEndpoint = mergeEndpoint.replace("{project}", event.getPullRequest().getToRef().getRepository().getProject().getKey());
             mergeEndpoint = mergeEndpoint.replace("{repo}", event.getPullRequest().getToRef().getRepository().getSlug());
             mergeEndpoint = mergeEndpoint.replace("{id}", event.getPullRequest().getId().toString());
+
+            String scanPreset = cxProperties.getScanPreset();
+            if(!ScanUtils.empty(preset)){
+                scanPreset = preset;
+            }
+            boolean inc = cxProperties.getIncremental();
+            if(incremental != null){
+                inc = incremental;
+            }
+
             ScanRequest request = ScanRequest.builder()
                     .application(app)
                     .product(p)
@@ -164,14 +175,14 @@ public class BitbucketServerController {
                     .repoName(event.getPullRequest().getFromRef().getRepository().getName())
                     .repoUrl(gitUrl)
                     .repoUrlWithAuth(gitAuthUrl)
-                    .repoType(ScanRequest.Repository.BITBUCKET)
+                    .repoType(ScanRequest.Repository.BITBUCKETSERVER)
                     .branch(currentBranch)
                     .mergeTargetBranch(targetBranch)
                     .mergeNoteUri(mergeEndpoint)
                     .refs(event.getPullRequest().getFromRef().getId())
                     .email(null)
-                    .incremental(false) //todo handle incremental
-                    .scanPreset(cxProperties.getScanPreset())
+                    .incremental(inc)
+                    .scanPreset(scanPreset)
                     .excludeFolders(excludeFolders)
                     .excludeFiles(excludeFiles)
                     .bugTracker(bt)
@@ -179,7 +190,11 @@ public class BitbucketServerController {
                     .build();
 
             request = ScanUtils.overrideMap(request, o);
-
+            try {
+                request.putAdditionalMetadata("BITBUCKET_BROWSE", event.getPullRequest().getFromRef().getRepository().getLinks().getSelf().get(0).getHref());
+            }catch (NullPointerException e){
+                log.warn("Not able to determine file url for browsing");
+            }
             if(branches.isEmpty() || branches.contains(targetBranch)) {
                 machinaService.initiateAutomation(request);
             }
@@ -216,6 +231,8 @@ public class BitbucketServerController {
             @RequestParam(value = "category", required = false) List<String> category,
             @RequestParam(value = "status", required = false) List<String> status,
             @RequestParam(value = "assignee", required = false) String assignee,
+            @RequestParam(value = "preset", required = false) String preset,
+            @RequestParam(value = "incremental", required = false) Boolean incremental,
             @RequestParam(value = "exclude-files", required = false) List<String> excludeFiles,
             @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders,
             @RequestParam(value = "override", required = false) String override,
@@ -223,7 +240,7 @@ public class BitbucketServerController {
     ){
         verifyHmacSignature(body, signature);
 
-        MachinaOverride o = null;
+        MachinaOverride o = ScanUtils.getMachinaOverride(override);
         ObjectMapper mapper = new ObjectMapper();
         PushEvent event;
 
@@ -235,30 +252,18 @@ public class BitbucketServerController {
         }
 
         try {
-            //if override is provided, check if chars are more than 20 in length, implying base64 encoded json
-            if(!ScanUtils.empty(override)){
-                if(override.length() > 20){
-                    log.info("Overriding attributes with Base64 encoded String");
-                    String json = new String(Base64.getDecoder().decode(override));
-                    o = mapper.readValue(json, MachinaOverride.class);
-                }
-                else{
-                    //TODO download file
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new MachinaRuntimeException();
-        }
-        try {
             String app = event.getRepository().getName();
             if(!ScanUtils.empty(application)){
                 app = application;
             }
-            BugTracker.Type bugType = BugTracker.Type.valueOf(machinaProperties.getBugTracker().toUpperCase());
-            if(!ScanUtils.empty(bug)){
-                bugType = BugTracker.Type.valueOf(bug.toUpperCase());
+
+            //set the default bug tracker as per yml
+            BugTracker.Type bugType;
+            if (ScanUtils.empty(bug)) {
+                bug =  machinaProperties.getBugTracker();
             }
+            bugType = ScanUtils.getBugTypeEnum(bug, machinaProperties.getBugTrackerImpl());
+
 
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
             String currentBranch = event.getChanges().get(0).getRefId().split("/")[2];
@@ -272,7 +277,7 @@ public class BitbucketServerController {
                 branches.addAll(machinaProperties.getBranches());
             }
 
-            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties);
+            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
             if(!ScanUtils.empty(severity) || !ScanUtils.empty(cwe) || !ScanUtils.empty(category) || !ScanUtils.empty(status)){
                 filters = ScanUtils.getFilters(severity, cwe, category, status);
             }
@@ -283,13 +288,22 @@ public class BitbucketServerController {
             List<String> emails = new ArrayList<>();
 
             emails.add(event.getActor().getEmailAddress());
-//            http://localhost:7990/scm/cus/dvwa.git
 
             String gitUrl = properties.getUrl().concat("/scm/")
                     .concat(event.getRepository().getProject().getKey().concat("/"))
                     .concat(event.getRepository().getSlug()).concat(".git");
             String gitAuthUrl = gitUrl.replace("https://", "https://".concat(properties.getToken()).concat("@"));
             gitAuthUrl = gitAuthUrl.replace("http://", "http://".concat(properties.getToken()).concat("@"));
+
+            String scanPreset = cxProperties.getScanPreset();
+            if(!ScanUtils.empty(preset)){
+                scanPreset = preset;
+            }
+            boolean inc = cxProperties.getIncremental();
+            if(incremental != null){
+                inc = incremental;
+            }
+
             ScanRequest request = ScanRequest.builder()
                     .application(app)
                     .product(p)
@@ -297,18 +311,22 @@ public class BitbucketServerController {
                     .repoName(event.getRepository().getName())
                     .repoUrl(gitUrl)
                     .repoUrlWithAuth(gitAuthUrl)
-                    .repoType(ScanRequest.Repository.BITBUCKET)
+                    .repoType(ScanRequest.Repository.BITBUCKETSERVER)
                     .branch(currentBranch)
                     .refs(event.getChanges().get(0).getRefId())
                     .email(emails)
-                    .incremental(false)
-                    .scanPreset(cxProperties.getScanPreset())
+                    .incremental(inc)
+                    .scanPreset(scanPreset)
                     .excludeFolders(excludeFolders)
                     .excludeFiles(excludeFiles)
                     .bugTracker(bt)
                     .filters(filters)
                     .build();
-
+            try {
+                request.putAdditionalMetadata("BITBUCKET_BROWSE", event.getRepository().getLinks().getSelf().get(0).getHref());
+            }catch (NullPointerException e){
+                log.warn("Not able to determine file url for browsing");
+            }
             request = ScanUtils.overrideMap(request, o);
 
             if(branches.isEmpty() || branches.contains(currentBranch)) {

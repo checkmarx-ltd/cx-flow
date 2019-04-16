@@ -29,6 +29,8 @@ java -jar ${AUTOMATION_JAR} \
 --repo-url	| Required if issues tracking with GitHub Issues or GitLab Issues.  This value is also stored in the body of the issue.
 --f	| File to be processed.  This the output from Checkmarx CLI, Jenkins/Bamboo Plugin, etc
 --config |	Optional.  Configuration override file (JSON).  See details below.
+--bbs | Optional.  Indicates the repository is of type BitBucket Server
+--bb | Optional.  Indicates the repository is of type BitBucket Cloud
 
 ## Project Results (ad-hoc)
 _Project Results/Ad-hoc mode retrieves the latest results for a given project under a specific team within Checkmarx and publishes issues to the configured bug tracking system._
@@ -247,12 +249,12 @@ or Command line argument `--github.token=XXXXXXX`
 
 ## Jira Configuration
 **Jira Custom Fields (Command line)**
-**type**
-*static:* Used for static values (specifically requires jira-default-value to be provided)
-*cx:* Used to map specific Checkmarx Custom Field value
-*result:* Used to map known values from checkmarx results or repository/scan request details.  See Result values below. |
+* *type*:
+  * static: Used for static values (specifically requires jira-default-value to be provided)
+  * cx: Used to map specific Checkmarx Custom Field value
+  * result: Used to map known values from checkmarx results or repository/scan request details.  See Result values below. |
 
-**name**
+* *name*:
 When cx is the type, this is the name of the custom field within Checkmarx
 
 When result is provided it must be one of the following:
@@ -272,15 +274,14 @@ When result is provided it must be one of the following:
         filename - Filename provided by Checkmarx issue
         language - Language provided by Checkmarx issue
 
-**jira-field-name**	Custom field name in Jira (readable name, not custom field ID)
-**jira-field-type** Type of custom field in JIRA:
-
-*label* (if using static or cx values, csv format is used and broken into multiple labels)
-*text* (applies to many custom field types: url, text box, text, etc
-*multi-select* (csv format is used and broken into multiple select values)
-*single-select*
-*security* (used for issue security levels)
-*jira-default-value*	Static value if no value can be determined for field (Optional)
+* jira-field-name	Custom field name in Jira (readable name, not custom field ID)
+* jira-field-type** Type of custom field in JIRA:
+  * label (if using static or cx values, csv format is used and broken into multiple labels)
+  * text (applies to many custom field types: url, text box, text, etc
+  * multi-select (csv format is used and broken into multiple select values)
+  * single-select
+  * security (used for issue security levels)
+  * jira-default-value	Static value if no value can be determined for field (Optional)
 
 ## Override Files
 When providing --config override file you can override many elements associated with the bug tracking within Jira.
@@ -356,6 +357,7 @@ com.custodela.machina.service|	Core logic.  Each Issue tracker has a Service al
 com.custodela.machina.utils|	Utilities package
 
 **Services**
+
 |Service	|Description|
 --------|----------
 CxService|	SOAP Based API Client for Checkmarx
@@ -368,6 +370,7 @@ MachinaService|	Main Service driving integrations with other Service components
 BitbucketService|	TBD, this is not created yet.
 
 **Controllers (WebHook Web Service Only)**
+
 |Controller|	Description|
 ------|---------
 GitHubController|	Ping, Push, Pull  (TBD) event HTTP listeners

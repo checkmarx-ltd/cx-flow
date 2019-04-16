@@ -69,7 +69,7 @@ public class JiraService {
         String jql;
         /*Namespace/Repo/Branch provided*/
         if(!ScanUtils.empty(request.getNamespace()) && !ScanUtils.empty(request.getRepoName()) && !ScanUtils.empty(request.getBranch())) {
-            jql = String.format("project = %s and issueType = \"%s\" and (%s = \"%s\" and %s = \"%s:%s\" and %s = \"%s:%s\" and %s = \"%s:%s\")",
+            jql = String.format("project = %s and issueType = \"%s\" and (\"%s\" = \"%s\" and \"%s\" = \"%s:%s\" and \"%s\" = \"%s:%s\" and \"%s\" = \"%s:%s\")",
                     request.getBugTracker().getProjectKey(),
                     request.getBugTracker().getIssueType(),
                     jiraProperties.getLabelTracker(),
@@ -83,7 +83,7 @@ public class JiraService {
             );
         }/*Only application provided*/
         else if(!ScanUtils.empty(request.getApplication())){
-            jql = String.format("project = %s and issueType = \"%s\" and (%s = \"%s\" and %s = \"%s:%s\")",
+            jql = String.format("project = %s and issueType = \"%s\" and (\"%s\" = \"%s\" and \"%s\" = \"%s:%s\")",
                     request.getBugTracker().getProjectKey(),
                     request.getBugTracker().getIssueType(),
                     jiraProperties.getLabelTracker(),
@@ -93,6 +93,7 @@ public class JiraService {
             );
         }
         else{
+            log.error("Namespace/Repo/Branch or App must be provided in order to properly track ");
             throw new MachinaRuntimeException();
         }
         log.debug(jql);
@@ -224,6 +225,7 @@ public class JiraService {
         try{
             this.issueClient.updateIssue(bugId, issueBuilder.build()).claim();
         }catch (RestClientException e){
+            log.error(ExceptionUtils.getStackTrace(e));
             throw new JiraClientException();
         }
 
@@ -255,6 +257,11 @@ public class JiraService {
                     if (request.getCxFields() != null) {
                         log.debug("Checkmarx custom field");
                         value = request.getCxFields().get(f.getName());
+                        log.debug("Cx Field value: {}",value);
+                        if(ScanUtils.empty(value) && !ScanUtils.empty(f.getJiraDefaultValue())){
+                            value = f.getJiraDefaultValue();
+                            log.debug("JIRA default Value is {}", value);
+                        }
                     } else {
                         log.debug("No value found for {}", f.getName());
                         value = "";
@@ -310,7 +317,7 @@ public class JiraService {
                         case "recommendation":
                             StringBuilder recommendation = new StringBuilder();
                             if (issue.getLink() != null && !issue.getLink().isEmpty()) {
-                                recommendation.append("Issue Link: ").append(issue.getLink()).append(ScanUtils.CRLF);
+                                recommendation.append("Checkmarx Link: ").append(issue.getLink()).append(ScanUtils.CRLF);
                             }
                             if(!ScanUtils.empty(issue.getCwe())) {
                                 recommendation.append("Mitre Details: ").append(String.format(machinaProperties.getMitreUrl(), issue.getCwe())).append(ScanUtils.CRLF);
@@ -383,13 +390,18 @@ public class JiraService {
                         log.debug("text field");
                         issueBuilder.setFieldValue(customField, value);
                         break;
+                    case "component":
+                        log.debug("component field");
+                        issueBuilder.setComponentsNames(Collections.singletonList(value));
+                        break;
                     case "label": /*csv to array | replace space with _ */
                         log.debug("label field");
                         String[] l = StringUtils.split(value,",");
                         list = new ArrayList<>();
                         for(String x: l){
-                            list.add((x.replaceAll(" ","_")).trim());
+                            list.add(x.replaceAll("[^a-zA-Z0-9-_]+","_"));
                         }
+
                         if(!ScanUtils.empty(list)) {
                             issueBuilder.setFieldValue(customField, list);
                         }
@@ -646,7 +658,7 @@ public class JiraService {
 
         body.append(ScanUtils.CRLF).append("*Addition Info*").append(ScanUtils.CRLF).append("----").append(ScanUtils.CRLF);
         if(issue.getLink() != null && !issue.getLink().isEmpty()){
-            body.append("[Link|").append(issue.getLink()).append("]").append(ScanUtils.CRLF);
+            body.append("[Checkmarx|").append(issue.getLink()).append("]").append(ScanUtils.CRLF);
         }
         if(!ScanUtils.empty(issue.getCwe())) {
             body.append("[Mitre Details|").append(String.format(machinaProperties.getMitreUrl(), issue.getCwe())).append("]").append(ScanUtils.CRLF);
@@ -662,7 +674,15 @@ public class JiraService {
             for (Map.Entry<Integer, String> entry : issue.getDetails().entrySet()) {
                 if (!ScanUtils.empty(fileUrl)) {
                     if (entry.getKey() != null) {
-                        body.append("[").append(entry.getKey()).append("|").append(fileUrl).append("#L").append(entry.getKey()).append("] ");
+                        if(request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)){
+                            body.append("[").append(entry.getKey()).append("|").append(fileUrl).append("#").append(entry.getKey()).append("] ");
+                        }
+                        else if(request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)){ //BB Cloud
+                            body.append("[").append(entry.getKey()).append("|").append(fileUrl).append("#lines-").append(entry.getKey()).append("] ");
+                        }
+                        else {
+                            body.append("[").append(entry.getKey()).append("|").append(fileUrl).append("#L").append(entry.getKey()).append("] ");
+                        }
                     }
                 } else {
                     if (entry.getKey() != null) {
@@ -676,12 +696,19 @@ public class JiraService {
                 if(entry.getKey() != null && entry.getValue() != null){
                     body.append("----").append(ScanUtils.CRLF);
                     if(!ScanUtils.empty(fileUrl)) {
-                        body.append("[Line #").append(entry.getKey()).append(":|").append(fileUrl).append("#L").append(entry.getKey()).append("]").append(ScanUtils.CRLF);
+                        if(request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)){
+                            body.append("[Line #").append(entry.getKey()).append(":|").append(fileUrl).append("#").append(entry.getKey()).append("]").append(ScanUtils.CRLF);;
+                        }
+                        else if(request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)){ //BB Cloud
+                            body.append("[Line #").append(entry.getKey()).append(":|").append(fileUrl).append("#lines-").append(entry.getKey()).append("]").append(ScanUtils.CRLF);;
+                        }
+                        else {
+                            body.append("[Line #").append(entry.getKey()).append(":|").append(fileUrl).append("#L").append(entry.getKey()).append("]").append(ScanUtils.CRLF);;
+                        }
                     }
                     else {
                         body.append("Line #").append(entry.getKey()).append(ScanUtils.CRLF);
                     }
-                    //todo handle bitbucket differences
                     body.append("{code}").append(ScanUtils.CRLF);
                     body.append(entry.getValue()).append(ScanUtils.CRLF);
                     body.append("{code}").append(ScanUtils.CRLF);
@@ -743,7 +770,7 @@ public class JiraService {
                     Issue i = jiraMap.get(xIssue.getKey());
 
                     /*Ignore any with label indicating false positive*/
-                    if (!i.getLabels().contains(jiraProperties.getFalsePositiveLabel())) {  //TODO handle FALSE_POSITIVE status
+                    if (!i.getLabels().contains(jiraProperties.getFalsePositiveLabel())) {
                         log.debug("Issue still exists.  Updating issue with key {}", xIssue.getKey());
                         Issue updatedIssue = this.updateIssue(i.getKey(), currentIssue, request);
                         if (updatedIssue != null) {
@@ -764,6 +791,7 @@ public class JiraService {
                 }
             }catch(RestClientException e){
                 log.error("Error occurred while processing issue with key {}",xIssue.getKey(), e);
+                log.error(ExceptionUtils.getStackTrace(e));
                 throw new JiraClientException();
             }
         }
@@ -774,7 +802,7 @@ public class JiraService {
                 if (!map.containsKey(jiraIssue.getKey())) {
                     if (request.getBugTracker().getOpenStatus().contains(jiraIssue.getValue().getStatus().getName())) {
                         /*Close the issue*/
-                        log.info("Closing issue #{} with key {}", jiraIssue.getKey(), jiraIssue.getKey());
+                        log.info("Closing issue with key {}", jiraIssue.getKey());
                         this.transitionCloseIssue(jiraIssue.getValue().getKey(),
                                 request.getBugTracker().getCloseTransition(), request.getBugTracker());
                         closedIssues.add(jiraIssue.getValue().getKey());
@@ -782,6 +810,7 @@ public class JiraService {
                 }
             }catch(HttpClientErrorException e){
                 log.error("Error occurred while processing issue with key {} {}", jiraIssue.getKey(), e);
+                log.error(ExceptionUtils.getStackTrace(e));
             }
         }
 

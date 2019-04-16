@@ -16,6 +16,7 @@ import java.beans.ConstructorProperties;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import static com.custodela.machina.service.CxService.UNKNOWN;
@@ -74,34 +75,48 @@ public class MachinaService {
         }
     }
 
-    private void executeCxScanFlow(ScanRequest request, File cxFile) throws MachinaException {
+    private CompletableFuture<ScanResults> executeCxScanFlow(ScanRequest request, File cxFile) throws MachinaException {
         try {
-            String ownerId = cxService.getTeamId(cxProperties.getTeam());
+            String ownerId;
             Integer presetId = cxService.getPresetId(request.getScanPreset());
             Integer engineId = cxService.getScanConfiguration(cxProperties.getConfiguration());
             String projectName;
             Integer projectId;
-            if(cxProperties.isMultiTenant()){
-                String fullTeamName = cxProperties.getTeam().concat("\\").concat(request.getNamespace());
 
-                String tmpId = cxService.getTeamId(fullTeamName);
-                if(tmpId.equals(UNKNOWN)){
-                    ownerId = cxService.createTeam(ownerId, request.getNamespace());
-                }
-                else{
-                    ownerId = tmpId;
-                }
-                projectName = request.getRepoName().concat("-").concat(request.getBranch());
+            /*Check if the team and project was specified in the request object already implying it was driven with command line as an override*/
+            if(!ScanUtils.empty(request.getTeam()) && !ScanUtils.empty(request.getProject())){
+                log.info("Overriding team and project with {} - {}", request.getTeam(), request.getProject());
+                ownerId = cxService.getTeamId(request.getTeam());
+                projectName = request.getProject();
             }
-            else {
-                projectName = request.getNamespace().concat("-").concat(request.getRepoName()).concat("-").concat(request.getBranch());
+            else{
+                ownerId = cxService.getTeamId(cxProperties.getTeam());
+
+                if(cxProperties.isMultiTenant()){
+                    String fullTeamName = cxProperties.getTeam().concat("\\").concat(request.getNamespace());
+
+                    String tmpId = cxService.getTeamId(fullTeamName);
+                    if(tmpId.equals(UNKNOWN)){
+                        ownerId = cxService.createTeam(ownerId, request.getNamespace());
+                    }
+                    else{
+                        ownerId = tmpId;
+                    }
+                    projectName = request.getRepoName().concat("-").concat(request.getBranch());
+                }
+                else {
+                    projectName = request.getNamespace().concat("-").concat(request.getRepoName()).concat("-").concat(request.getBranch());
+                }
             }
+            //only - is allowed as special character
+            projectName = projectName.replaceAll("[^a-zA-Z0-9-_]+","-");
             projectId = cxService.getProjectId(ownerId, projectName);
             if (projectId.equals(UNKNOWN_INT)) {
+                log.info("Project does not exist.  Creating new project now for {}", projectName);
                 projectId = cxService.createProject(ownerId, projectName);
             }
             if(cxService.scanExists(projectId)){
-                throw new MachinaException("Active Scan already exists for Project");
+                throw new MachinaException("Active Scan already exists for Project:"+projectId);
             }
             cxService.createScanSetting(projectId, presetId, engineId);
             //If a file is provided, it will be uploaded as source
@@ -111,27 +126,48 @@ public class MachinaService {
             else {
                 cxService.setProjectRepositoryDetails(projectId, request.getRepoUrlWithAuth(), request.getRefs());
             }
+            /*
+            If incremental scan support is enabled, determine if the last full finished scan (within configurable number of scans) is under
+            a configurable number of days old, if so, an incremental scan is completed - otherwise, full scan is completed
+             */
+            if(request.isIncremental()){
+                LocalDateTime scanDate = cxService.getLastScanDate(projectId);
+                if(scanDate == null || LocalDateTime.now().isAfter(scanDate.plusDays(cxProperties.getIncrementalThreshold()))){
+                    log.debug("Last scanDate: {}", scanDate);
+                    log.info("Last scanDate does not meet the threshold for an incremental scan.");
+                    request.setIncremental(false);
+                }
+                else{
+                    log.info("Scan will be incremental");
+                }
+            }
             cxService.setProjectExcludeDetails(projectId, request.getExcludeFolders(), request.getExcludeFiles());
-            Integer scanId = cxService.createScan(projectId, request.isIncremental(), false, false, "Automated scan");
+            Integer scanId = cxService.createScan(projectId, request.isIncremental(), true, false, "Automated scan");
 
             String SCAN_MESSAGE = "Scan submitted to Checkmarx";
+            //TODO submit WIP for GITLAB and STATUS change for GITHUB
             if(request.getBugTracker().getType().equals(BugTracker.Type.GITLABMERGE)){
                 gitLabService.sendMergeComment(request, SCAN_MESSAGE);
+                gitLabService.startBlockMerge(request);
             }
             else if(request.getBugTracker().getType().equals(BugTracker.Type.GITLABCOMMIT)){
                 gitLabService.sendCommitComment(request, SCAN_MESSAGE);
             }
             else if(request.getBugTracker().getType().equals(BugTracker.Type.GITHUBPULL)){
                 gitService.sendMergeComment(request, SCAN_MESSAGE);
+                gitService.startBlockMerge(request, cxProperties.getUrl());
             }
             else if(request.getBugTracker().getType().equals(BugTracker.Type.BITBUCKETPULL)){
                 bbService.sendMergeComment(request, SCAN_MESSAGE);
+            }
+            else if(request.getBugTracker().getType().equals(BugTracker.Type.BITBUCKETSERVERPULL)){
+                bbService.sendServerMergeComment(request, SCAN_MESSAGE);
             }
 
             Integer status = cxService.getScanStatus(scanId);
             if(request.getBugTracker().getType().equals(BugTracker.Type.NONE)){
                 log.info("Not waiting for scan completion as Bug Tracker type is NONE");
-                return;
+                return CompletableFuture.completedFuture(null);
             }
             long timer = 0;
             while (!status.equals(CxService.SCAN_STATUS_FINISHED) && !status.equals(CxService.SCAN_STATUS_CANCELED) &&
@@ -147,7 +183,7 @@ public class MachinaService {
             if(status.equals(CxService.SCAN_STATUS_FAILED)){
                 throw new MachinaException("Scan failed");
             }
-             resutlsService.processScanResultsAsync(request, scanId, request.getFilters());
+             return resutlsService.processScanResultsAsync(request, scanId, request.getFilters());
         }catch (InterruptedException e) {
             log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaException("Interrupted Exception Occurred");
@@ -160,8 +196,8 @@ public class MachinaService {
             String cxZipFile = FileSystems.getDefault().getPath("cx.".concat(UUID.randomUUID().toString()).concat(".zip")).toAbsolutePath().toString();
             ScanUtils.zipDirectory(path, cxZipFile);
             File f = new File(cxZipFile);
-            executeCxScanFlow(request, f);
-            log.info("Processing results with JIRA issue tracking");
+            CompletableFuture<ScanResults> future = executeCxScanFlow(request, f);
+            future.join();
         } catch (IOException e) {
             log.error(ExceptionUtils.getStackTrace(e));
             log.error("Error occurred while attempting to zip path {}", path);
@@ -229,8 +265,14 @@ public class MachinaService {
             }
             else {
                 getCxFields(project, request);
-                return resutlsService.processScanResultsAsync(request, scanId, request.getFilters());
+                CompletableFuture<ScanResults> results = resutlsService.processScanResultsAsync(request, scanId, request.getFilters());
+                /*If cxProject is null, it is a single project request*/
+                if(cxProject == null) {
+                    results.join();
+                }
+                return results;
             }
+
         } catch (MachinaException e) {
             log.debug(ExceptionUtils.getStackTrace(e));
             log.error("Error occurred while processing results for {}{}", request.getTeam(), request.getProject());
@@ -292,8 +334,8 @@ public class MachinaService {
             }
             for(CxProject project: projects){
                 ScanRequest request = new ScanRequest(originalRequest);
-                request.setProject(project.getName());
-                request.setApplication(project.getName());
+                request.setProject(project.getName().replaceAll("[^a-zA-Z0-9-_]+","_"));
+                request.setApplication(project.getName().replaceAll("[^a-zA-Z0-9-_]+","_"));
                 processes.add(cxGetResults(request, project));
             }
             log.info("Waiting for processing to complete");
