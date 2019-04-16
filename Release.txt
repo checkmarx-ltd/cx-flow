@@ -1,4 +1,12 @@
 ---------------------------------------------------------------------
+Release 1.2
+---------------------------------------------------------------------
+#FEATURES
+* GitLab and GitHub Issues support has been added
+    Custom bug tracker "GitLab" and "GitHub"
+* Pull Request blocking support added for GitHub when running in WebHook mode - scans must finish in Checkmarx before merge can take place
+* Merge Request blocking support added for GitLab when running in WebHook mode - scans must finish in Checkmarx before merge can take place
+---------------------------------------------------------------------
 Release 1.1
 ---------------------------------------------------------------------
 #FEATURES
