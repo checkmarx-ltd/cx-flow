@@ -1,5 +1,6 @@
 package com.custodela.machina.custom;
 
+import com.custodela.machina.config.GitHubProperties;
 import com.custodela.machina.config.GitLabProperties;
 import com.custodela.machina.config.MachinaProperties;
 import com.custodela.machina.dto.Issue;
@@ -124,7 +125,7 @@ public class GitLabIssueTracker implements IssueTracker {
         if(response.getBody() == null) return new ArrayList<>();
         for(com.custodela.machina.dto.gitlab.Issue issue: response.getBody()){
             Issue i = mapToIssue(issue);
-            if(i != null) {
+            if(i != null && i.getTitle().startsWith(request.getProduct().getProduct())){
                 issues.add(i);
             }
         }
@@ -134,7 +135,7 @@ public class GitLabIssueTracker implements IssueTracker {
             if(responsePage.getBody() != null) {
                 for(com.custodela.machina.dto.gitlab.Issue issue: response.getBody()){
                     Issue i = mapToIssue(issue);
-                    if(i != null) {
+                    if(i != null && i.getTitle().startsWith(request.getProduct().getProduct())){
                         issues.add(i);
                     }
                 }
@@ -154,6 +155,7 @@ public class GitLabIssueTracker implements IssueTracker {
         i.setId(issue.getIid().toString());
         i.setLabels(issue.getLabels());
         i.setUrl(issue.getWebUrl());
+        i.setState(issue.getState());
         return i;
     }
 
@@ -226,7 +228,7 @@ public class GitLabIssueTracker implements IssueTracker {
      * @return
      */
     private com.custodela.machina.dto.gitlab.Issue closeIssue(Integer projectId, Integer iid) {
-        log.info("Executing closeIssue GitHub API call");
+        log.debug("Executing closeIssue GitHub API call");
         String endpoint = properties.getApiUrl().concat(ISSUE_PATH);
         HttpEntity httpEntity = new HttpEntity<>(getJSONCloseIssue().toString(), createAuthHeaders());
         ResponseEntity<com.custodela.machina.dto.gitlab.Issue> response = restTemplate.exchange(endpoint, HttpMethod.PUT, httpEntity,
@@ -234,6 +236,7 @@ public class GitLabIssueTracker implements IssueTracker {
         return response.getBody();
     }
 
+    @Override
     public Issue updateIssue(Issue issue, ScanResults.XIssue resultIssue, ScanRequest request) throws MachinaException {
         return  updateIssue(getJSONUpdateIssue(resultIssue, request), request.getRepoProjectId(), Integer.parseInt(issue.getId()));
     }
@@ -344,11 +347,17 @@ public class GitLabIssueTracker implements IssueTracker {
 
     @Override
     public boolean isIssueClosed(Issue issue) {
+        if(issue.getState() == null){
+            return false;
+        }
         return issue.getState().equals(TRANSITION_CLOSE);
     }
 
     @Override
     public boolean isIssueOpened(Issue issue) {
+        if(issue.getState() == null){
+            return true;
+        }
         return issue.getState().equals(OPEN_STATE);
     }
 

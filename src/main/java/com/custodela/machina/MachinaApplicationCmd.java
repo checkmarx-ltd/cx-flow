@@ -8,6 +8,7 @@ import com.custodela.machina.dto.ScanRequest;
 import com.custodela.machina.service.MachinaService;
 import com.custodela.machina.utils.ScanUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -30,11 +31,15 @@ public class MachinaApplicationCmd implements ApplicationRunner {
     private final CxProperties cxProperties;
     private final JiraProperties jiraProperties;
     private final GitHubProperties gitHubProperties;
-    private final GitLabProperties gitLabProperties;
+    private final GitHubProperties gitLabProperties;
     private final MachinaService machinaService;
 
-    @ConstructorProperties({"machinaProperties", "cxProperties", "jiraProperties", "gitHubProperties", "gitLabProperties", "machinaService"})
-    public MachinaApplicationCmd(MachinaProperties machinaProperties, CxProperties cxProperties, JiraProperties jiraProperties, GitHubProperties gitHubProperties, GitLabProperties gitLabProperties, MachinaService machinaService) {
+    @ConstructorProperties({"machinaProperties", "cxProperties", "jiraProperties", "gitHubProperties",
+            "gitLabProperties", "machinaService"})
+    public MachinaApplicationCmd(MachinaProperties machinaProperties,
+                                 CxProperties cxProperties, JiraProperties jiraProperties,
+                                 GitHubProperties gitHubProperties, GitHubProperties gitLabProperties,
+                                 MachinaService machinaService) {
         this.machinaProperties = machinaProperties;
         this.cxProperties = cxProperties;
         this.jiraProperties = jiraProperties;
@@ -174,6 +179,9 @@ public class MachinaApplicationCmd implements ApplicationRunner {
         BugTracker bt = null;
         String gitUrlAuth = null;
         switch (bugType){
+            case NONE:
+                log.info("No bug tracker will be used");
+                break;
             case JIRA:
                 bt = BugTracker.builder()
                         .type(bugType)
@@ -204,21 +212,16 @@ public class MachinaApplicationCmd implements ApplicationRunner {
                 }
                 mergeNoteUri = gitHubProperties.getMergeNoteUri(namespace, repoName, mergeId);
                 break;
-            /*case GITLAB:
-                gitUrlAuth = repoUrl.replace("https://", "https://oauth2:".concat(gitLabProperties.getToken()).concat("@"));
-                bt = BugTracker.builder()
-                        .type(bugType)
-                        .build();
+            case GITLABMERGE:
+            case gitlabmerge:
+                log.info("GitLab Merge not currently supported from command line");
+                exit(1);
                 break;
-            case GITHUB:
-                gitUrlAuth = repoUrl.replace("https://", "https://".concat(gitHubProperties.getToken()).concat("@"));
-                bt = BugTracker.builder()
-                        .type(bugType)
-                        .build();
+            case BITBUCKETPULL:
+            case bitbucketserverpull:
+                log.info("BitBucket Pull not currently supported from command line");
+                exit(1);
                 break;
-            case BITBUCKET:
-                log.warn("Bitbucket is not supported at this time");
-                break;*/
             case EMAIL:
                 break;
             case CUSTOM:
@@ -256,7 +259,6 @@ public class MachinaApplicationCmd implements ApplicationRunner {
 
         request = ScanUtils.overrideMap(request, o);
         /*Determine if BitBucket Cloud/Server is being used - this will determine formatting of URL that links to file/line in repository */
-
         if(bb){
             request.setRepoType(ScanRequest.Repository.BITBUCKETSERVER);
             //TODO create browse code url
@@ -313,6 +315,7 @@ public class MachinaApplicationCmd implements ApplicationRunner {
             }
         }catch (Exception e){
             log.error("An error occurred while processing request");
+            log.error(ExceptionUtils.getStackTrace(e));
             e.printStackTrace();
             exit(10);
         }
@@ -320,7 +323,7 @@ public class MachinaApplicationCmd implements ApplicationRunner {
         exit(0);
     }
 
-    public void cxScan(ScanRequest request, String path){
+    private void cxScan(ScanRequest request, String path){
         machinaService.cxFullScan(request, path);
     }
     private void cxOsaParse(ScanRequest request, File file, File libs){
