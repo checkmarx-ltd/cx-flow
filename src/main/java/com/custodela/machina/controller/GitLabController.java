@@ -62,6 +62,8 @@ public class GitLabController {
             @RequestParam(value = "severity", required = false) List<String> severity,
             @RequestParam(value = "cwe", required = false) List<String> cwe,
             @RequestParam(value = "category", required = false) List<String> category,
+            @RequestParam(value = "project", required = false) String project,
+            @RequestParam(value = "team", required = false) String team,
             @RequestParam(value = "status", required = false) List<String> status,
             @RequestParam(value = "assignee", required = false) String assignee,
             @RequestParam(value = "preset", required = false) String preset,
@@ -144,6 +146,8 @@ public class GitLabController {
                     .id(body.getProject().getId())
                     .application(app)
                     .product(p)
+                    .project(project)
+                    .team(team)
                     .namespace(body.getProject().getNamespace().replaceAll(" ","_"))
                     .repoName(body.getProject().getName())
                     .repoUrl(body.getProject().getGitHttpUrl())
@@ -198,6 +202,8 @@ public class GitLabController {
             @RequestParam(value = "severity", required = false) List<String> severity,
             @RequestParam(value = "cwe", required = false) List<String> cwe,
             @RequestParam(value = "category", required = false) List<String> category,
+            @RequestParam(value = "project", required = false) String project,
+            @RequestParam(value = "team", required = false) String team,
             @RequestParam(value = "status", required = false) List<String> status,
             @RequestParam(value = "assignee", required = false) String assignee,
             @RequestParam(value = "preset", required = false) String preset,
@@ -287,6 +293,8 @@ public class GitLabController {
                     .id(body.getProjectId())
                     .application(app)
                     .product(p)
+                    .project(project)
+                    .team(team)
                     .namespace(body.getProject().getNamespace().replaceAll(" ","_"))
                     .repoName(body.getProject().getName())
                     .repoUrl(body.getProject().getGitHttpUrl())

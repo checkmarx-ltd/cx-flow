@@ -82,11 +82,10 @@ public class MachinaService {
             String projectName;
             Integer projectId;
 
-            /*Check if the team and project was specified in the request object already implying it was driven with command line as an override*/
-            if(!ScanUtils.empty(request.getTeam()) && !ScanUtils.empty(request.getProject())){
+            /*Check if team is provided*/
+            if(!ScanUtils.empty(request.getTeam())){
                 log.info("Overriding team and project with {} - {}", request.getTeam(), request.getProject());
                 ownerId = cxService.getTeamId(request.getTeam());
-                projectName = request.getProject();
             }
             else{
                 ownerId = cxService.getTeamId(cxProperties.getTeam());
@@ -101,14 +100,22 @@ public class MachinaService {
                     else{
                         ownerId = tmpId;
                     }
-                    projectName = request.getRepoName().concat("-").concat(request.getBranch());
-                }
-                else {
-                    projectName = request.getNamespace().concat("-").concat(request.getRepoName()).concat("-").concat(request.getBranch());
                 }
             }
-            //only - is allowed as special character
-            projectName = projectName.replaceAll("[^a-zA-Z0-9-_]+","-");
+
+            /*Determine project name*/
+            if(!ScanUtils.empty(request.getProject())){
+                projectName = request.getProject();
+            }
+            else if(cxProperties.isMultiTenant()){
+                projectName = request.getRepoName().concat("-").concat(request.getBranch());
+            }
+            else{
+                projectName = request.getNamespace().concat("-").concat(request.getRepoName()).concat("-").concat(request.getBranch());
+            }
+
+            //only allow specific chars in project name
+            projectName = projectName.replaceAll("[^a-zA-Z0-9-_.]+","-");
             projectId = cxService.getProjectId(ownerId, projectName);
             if (projectId.equals(UNKNOWN_INT)) {
                 log.info("Project does not exist.  Creating new project now for {}", projectName);
@@ -144,7 +151,7 @@ public class MachinaService {
             Integer scanId = cxService.createScan(projectId, request.isIncremental(), true, false, "Automated scan");
 
             String SCAN_MESSAGE = "Scan submitted to Checkmarx";
-            //TODO submit WIP for GITLAB and STATUS change for GITHUB
+
             if(request.getBugTracker().getType().equals(BugTracker.Type.GITLABMERGE)){
                 gitLabService.sendMergeComment(request, SCAN_MESSAGE);
                 gitLabService.startBlockMerge(request);
