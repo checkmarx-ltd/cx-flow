@@ -147,11 +147,12 @@ public class ScanResults{
         private List<OsaDetails> osaDetails;
         private Map<Integer, String>  details;
 
-        @ConstructorProperties({"vulnerability", "cwe", "cve", "description", "language",
+        @ConstructorProperties({"vulnerability", "similarityId", "cwe", "cve", "description", "language",
                 "severity", "link", "filename", "gitUrl", "osaDetails", "details"})
-        XIssue(String vulnerability, String cwe, String cve, String description, String language,
+        XIssue(String vulnerability, String similarityId, String cwe, String cve, String description, String language,
                String severity, String link, String filename, String gitUrl, List<OsaDetails> osaDetails, Map<Integer, String> details) {
             this.vulnerability = vulnerability;
+            this.similarityId = similarityId;
             this.cwe = cwe;
             this.cve = cve;
             this.description = description;
@@ -354,7 +355,7 @@ public class ScanResults{
             }
 
             public XIssue build() {
-                return new XIssue(vulnerability, cwe, cve, description, language, severity, link, file, "", osaDetails, details);
+                return new XIssue(vulnerability, similarityId, cwe, cve, description, language, severity, link, file, "", osaDetails, details);
             }
 
             public String toString() {

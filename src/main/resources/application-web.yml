@@ -17,6 +17,7 @@ machina:
     - Json
     - GitLab
     - GitHub
+    - Csv
   branches:
     - develop
     - master
@@ -120,3 +121,36 @@ json:
 cx-xml:
   file-name-format: "[NAMESPACE]-[REPO]-[BRANCH]-[TIME].xml"
   data-folder: "C:\\tmp"
+
+csv:
+  file-name-format: "[TEAM]-[PROJECT]-[TIME].csv"
+  data-folder: "C:\\tmp"
+  include-header: true
+  fields:
+    - header: Customer field (Application)
+      name: application
+      default-value: unknown
+    - header: Primary URL
+      name: static
+      default-value: ${tmp.url}
+    - header: severity
+      name: severity
+    - header: Vulnerability ID
+      name: summary
+      prefix: "[APP]:"
+    - header: file
+      name: filename
+    - header: Vulnerability ID
+      name: summary
+    - header: Vulnerability Name
+      name: category
+    - header: Category ID
+      name: cwe
+    - header: Description
+      name: summary
+      prefix: "*"
+      postfix: "*"
+    - header: Severity
+      name: severity
+    - header: recommendation
+      name: recommendation
