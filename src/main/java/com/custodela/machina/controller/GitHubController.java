@@ -98,6 +98,8 @@ public class GitHubController {
             @RequestParam(value = "severity", required = false) List<String> severity,
             @RequestParam(value = "cwe", required = false) List<String> cwe,
             @RequestParam(value = "category", required = false) List<String> category,
+            @RequestParam(value = "project", required = false) String project,
+            @RequestParam(value = "team", required = false) String team,
             @RequestParam(value = "status", required = false) List<String> status,
             @RequestParam(value = "assignee", required = false) String assignee,
             @RequestParam(value = "preset", required = false) String preset,
@@ -185,6 +187,8 @@ public class GitHubController {
             ScanRequest request = ScanRequest.builder()
                     .application(app)
                     .product(p)
+                    .project(project)
+                    .team(team)
                     .namespace(event.getRepository().getOwner().getLogin().replaceAll(" ","_"))
                     .repoName(event.getRepository().getName())
                     .repoUrl(event.getRepository().getCloneUrl())
@@ -241,6 +245,8 @@ public class GitHubController {
             @RequestParam(value = "severity", required = false) List<String> severity,
             @RequestParam(value = "cwe", required = false) List<String> cwe,
             @RequestParam(value = "category", required = false) List<String> category,
+            @RequestParam(value = "project", required = false) String project,
+            @RequestParam(value = "team", required = false) String team,
             @RequestParam(value = "status", required = false) List<String> status,
             @RequestParam(value = "assignee", required = false) String assignee,
             @RequestParam(value = "preset", required = false) String preset,
@@ -331,6 +337,8 @@ public class GitHubController {
             ScanRequest request = ScanRequest.builder()
                     .application(app)
                     .product(p)
+                    .project(project)
+                    .team(team)
                     .namespace(event.getRepository().getOwner().getName().replaceAll(" ","_"))
                     .repoName(event.getRepository().getName())
                     .repoUrl(event.getRepository().getCloneUrl())

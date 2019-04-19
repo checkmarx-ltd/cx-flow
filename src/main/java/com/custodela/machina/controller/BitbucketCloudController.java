@@ -59,6 +59,8 @@ public class BitbucketCloudController {
             @RequestParam(value = "severity", required = false) List<String> severity,
             @RequestParam(value = "cwe", required = false) List<String> cwe,
             @RequestParam(value = "category", required = false) List<String> category,
+            @RequestParam(value = "project", required = false) String project,
+            @RequestParam(value = "team", required = false) String team,
             @RequestParam(value = "status", required = false) List<String> status,
             @RequestParam(value = "assignee", required = false) String assignee,
             @RequestParam(value = "preset", required = false) String preset,
@@ -128,6 +130,8 @@ public class BitbucketCloudController {
             ScanRequest request = ScanRequest.builder()
                     .application(app)
                     .product(p)
+                    .project(project)
+                    .team(team)
                     .namespace(body.getRepository().getOwner().getUsername().replaceAll(" ","_"))
                     .repoName(body.getRepository().getName())
                     .repoUrl(gitUrl)
@@ -180,6 +184,8 @@ public class BitbucketCloudController {
             @RequestParam(value = "severity", required = false) List<String> severity,
             @RequestParam(value = "cwe", required = false) List<String> cwe,
             @RequestParam(value = "category", required = false) List<String> category,
+            @RequestParam(value = "project", required = false) String project,
+            @RequestParam(value = "team", required = false) String team,
             @RequestParam(value = "status", required = false) List<String> status,
             @RequestParam(value = "assignee", required = false) String assignee,
             @RequestParam(value = "preset", required = false) String preset,
@@ -261,6 +267,8 @@ public class BitbucketCloudController {
             ScanRequest request = ScanRequest.builder()
                     .application(app)
                     .product(p)
+                    .project(project)
+                    .team(team)
                     .namespace(body.getRepository().getOwner().getUsername().replaceAll(" ","_"))
                     .repoName(body.getRepository().getName())
                     .repoUrl(gitUrl)
