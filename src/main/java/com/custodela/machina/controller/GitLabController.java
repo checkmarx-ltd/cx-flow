@@ -69,7 +69,8 @@ public class GitLabController {
             @RequestParam(value = "exclude-files", required = false) List<String> excludeFiles,
             @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders,
             @RequestParam(value = "override", required = false) String override,
-            @RequestParam(value = "bug", required = false) String bug
+            @RequestParam(value = "bug", required = false) String bug,
+            @RequestParam(value = "app-only", required = false) Boolean appOnlyTracking
     ){
 
         log.info("Processing GitLab MERGE request");
@@ -96,6 +97,9 @@ public class GitLabController {
                 bugType = ScanUtils.getBugTypeEnum(bug, machinaProperties.getBugTrackerImpl());
             }
 
+            if(appOnlyTracking != null){
+                machinaProperties.setTrackApplicationOnly(appOnlyTracking);
+            }
 
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
             String currentBranch = body.getObjectAttributes().getSourceBranch();
@@ -201,8 +205,9 @@ public class GitLabController {
             @RequestParam(value = "exclude-files", required = false) List<String> excludeFiles,
             @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders,
             @RequestParam(value = "override", required = false) String override,
-            @RequestParam(value = "bug", required = false) String bug
-        ){
+            @RequestParam(value = "bug", required = false) String bug,
+            @RequestParam(value = "app-only", required = false) Boolean appOnlyTracking
+    ){
         validateGitLabRequest(token);
 
         MachinaOverride o = ScanUtils.getMachinaOverride(override);
@@ -219,6 +224,10 @@ public class GitLabController {
                 bug =  machinaProperties.getBugTracker();
             }
             bugType = ScanUtils.getBugTypeEnum(bug, machinaProperties.getBugTrackerImpl());
+
+            if(appOnlyTracking != null){
+                machinaProperties.setTrackApplicationOnly(appOnlyTracking);
+            }
 
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
             //extract branch from ref (refs/heads/master -> master)
@@ -344,7 +353,8 @@ public class GitLabController {
         }
         /*Merge has been changed from WIP to not-WIP, ignoring*/
         else if(event.getChanges() != null && event.getChanges().getTitle() != null){
-            if(event.getChanges().getTitle().getPrevious().startsWith("WIP:CX|") &&
+            if(event.getChanges().getTitle().getPrevious() != null &&
+                    event.getChanges().getTitle().getPrevious().startsWith("WIP:CX|") &&
                     !event.getChanges().getTitle().getCurrent().startsWith("WIP:")){
                 return true;
             }
