@@ -105,7 +105,8 @@ public class GitHubController {
             @RequestParam(value = "exclude-files", required = false) List<String> excludeFiles,
             @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders,
             @RequestParam(value = "override", required = false) String override,
-            @RequestParam(value = "bug", required = false) String bug
+            @RequestParam(value = "bug", required = false) String bug,
+            @RequestParam(value = "app-only", required = false) Boolean appOnlyTracking
     ){
         log.info("Processing GitHub PULL request");
         PullEvent event;
@@ -138,6 +139,10 @@ public class GitHubController {
             BugTracker.Type bugType = BugTracker.Type.GITHUBPULL;
             if(!ScanUtils.empty(bug)){
                 bugType = ScanUtils.getBugTypeEnum(bug, machinaProperties.getBugTrackerImpl());
+            }
+
+            if(appOnlyTracking != null){
+                machinaProperties.setTrackApplicationOnly(appOnlyTracking);
             }
 
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
@@ -243,7 +248,8 @@ public class GitHubController {
             @RequestParam(value = "exclude-files", required = false) List<String> excludeFiles,
             @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders,
             @RequestParam(value = "override", required = false) String override,
-            @RequestParam(value = "bug", required = false) String bug
+            @RequestParam(value = "bug", required = false) String bug,
+            @RequestParam(value = "app-only", required = false) Boolean appOnlyTracking
     ){
         log.info("Processing GitHub PUSH request");
         PushEvent event;
@@ -271,6 +277,10 @@ public class GitHubController {
                 bug =  machinaProperties.getBugTracker();
             }
             bugType = ScanUtils.getBugTypeEnum(bug, machinaProperties.getBugTrackerImpl());
+
+            if(appOnlyTracking != null){
+                machinaProperties.setTrackApplicationOnly(appOnlyTracking);
+            }
 
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
 

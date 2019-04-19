@@ -67,6 +67,7 @@ public class BitbucketCloudController {
             @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders,
             @RequestParam(value = "override", required = false) String override,
             @RequestParam(value = "bug", required = false) String bug,
+            @RequestParam(value = "app-only", required = false) Boolean appOnlyTracking,
             @RequestParam(value = "token") String token
 
     ){
@@ -83,6 +84,10 @@ public class BitbucketCloudController {
             BugTracker.Type bugType = BugTracker.Type.BITBUCKETPULL;
             if(!ScanUtils.empty(bug)){
                 bugType = ScanUtils.getBugTypeEnum(bug, machinaProperties.getBugTrackerImpl());
+            }
+
+            if(appOnlyTracking != null){
+                machinaProperties.setTrackApplicationOnly(appOnlyTracking);
             }
 
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
@@ -183,6 +188,7 @@ public class BitbucketCloudController {
             @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders,
             @RequestParam(value = "override", required = false) String override,
             @RequestParam(value = "bug", required = false) String bug,
+            @RequestParam(value = "app-only", required = false) Boolean appOnlyTracking,
             @RequestParam(value = "token") String token
 
     ){
@@ -204,6 +210,10 @@ public class BitbucketCloudController {
                 bug =  machinaProperties.getBugTracker();
             }
             bugType = ScanUtils.getBugTypeEnum(bug, machinaProperties.getBugTrackerImpl());
+
+            if(appOnlyTracking != null){
+                machinaProperties.setTrackApplicationOnly(appOnlyTracking);
+            }
 
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
             String currentBranch = body.getPush().getChanges().get(0).getNew().getName();

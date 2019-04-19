@@ -97,7 +97,8 @@ public class BitbucketServerController {
             @RequestParam(value = "exclude-files", required = false) List<String> excludeFiles,
             @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders,
             @RequestParam(value = "override", required = false) String override,
-            @RequestParam(value = "bug", required = false) String bug
+            @RequestParam(value = "bug", required = false) String bug,
+            @RequestParam(value = "app-only", required = false) Boolean appOnlyTracking
     ){
         verifyHmacSignature(body, signature);
 
@@ -123,6 +124,9 @@ public class BitbucketServerController {
             BugTracker.Type bugType = BugTracker.Type.BITBUCKETSERVERPULL;
             if(!ScanUtils.empty(bug)){
                 bugType = ScanUtils.getBugTypeEnum(bug, machinaProperties.getBugTrackerImpl());
+            }
+            if(appOnlyTracking != null){
+                machinaProperties.setTrackApplicationOnly(appOnlyTracking);
             }
 
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
@@ -236,7 +240,9 @@ public class BitbucketServerController {
             @RequestParam(value = "exclude-files", required = false) List<String> excludeFiles,
             @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders,
             @RequestParam(value = "override", required = false) String override,
-            @RequestParam(value = "bug", required = false) String bug
+            @RequestParam(value = "bug", required = false) String bug,
+            @RequestParam(value = "app-only", required = false) Boolean appOnlyTracking
+
     ){
         verifyHmacSignature(body, signature);
 
@@ -264,6 +270,9 @@ public class BitbucketServerController {
             }
             bugType = ScanUtils.getBugTypeEnum(bug, machinaProperties.getBugTrackerImpl());
 
+            if(appOnlyTracking != null){
+                machinaProperties.setTrackApplicationOnly(appOnlyTracking);
+            }
 
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
             String currentBranch = event.getChanges().get(0).getRefId().split("/")[2];
