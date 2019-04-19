@@ -1,6 +1,5 @@
 package com.custodela.machina.service;
 
-import checkmarx.wsdl.portal.Scan;
 import com.custodela.machina.config.CxProperties;
 import com.custodela.machina.config.MachinaProperties;
 import com.custodela.machina.dto.*;
