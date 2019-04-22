@@ -6,6 +6,8 @@ Release 1.2
     Custom bug tracker "GitLab" and "GitHub"
 * Pull Request blocking support added for GitHub when running in WebHook mode - scans must finish in Checkmarx before merge can take place
 * Merge Request blocking support added for GitLab when running in WebHook mode - scans must finish in Checkmarx before merge can take place
+* Override Cx Project name on webhook
+* Allow for Application Defect tracking on webhook flow (branch is removed from uniqueness of issue tracking)
 ---------------------------------------------------------------------
 Release 1.1
 ---------------------------------------------------------------------

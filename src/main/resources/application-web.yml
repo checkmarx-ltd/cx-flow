@@ -11,7 +11,7 @@ logging:
   file: machina.log
 
 machina:
-  bug-tracker: GitLab
+  bug-tracker: JIRA
   bug-tracker-impl:
     - CxXml
     - Json
@@ -24,6 +24,7 @@ machina:
     - security
   filter-severity:
     - High
+  track-application-only: false
   mitre-url: https://cwe.mitre.org/data/definitions/%s.html
   wiki-url: https://custodela.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
   codebash-url: https://cxa.codebashing.com/courses/
