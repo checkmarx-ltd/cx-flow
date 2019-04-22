@@ -33,7 +33,6 @@ public class CxProperties {
     private Boolean incremental = false;
     private Integer incrementalThreshold = 7;
     private Integer incrementalNumScans = 5;
-
     private String team;
     private Boolean offline = false;
     private Boolean preserveXml = false;

@@ -165,6 +165,7 @@ public class IssueService implements ApplicationContextAware {
             throw new MachinaRuntimeException();
         } catch (ClassCastException e){
             log.error("Bean must implement the IssueTracker Interface");
+            log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaRuntimeException();
         }
     }

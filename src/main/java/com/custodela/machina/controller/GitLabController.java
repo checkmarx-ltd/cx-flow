@@ -62,6 +62,8 @@ public class GitLabController {
             @RequestParam(value = "severity", required = false) List<String> severity,
             @RequestParam(value = "cwe", required = false) List<String> cwe,
             @RequestParam(value = "category", required = false) List<String> category,
+            @RequestParam(value = "project", required = false) String project,
+            @RequestParam(value = "team", required = false) String team,
             @RequestParam(value = "status", required = false) List<String> status,
             @RequestParam(value = "assignee", required = false) String assignee,
             @RequestParam(value = "preset", required = false) String preset,
@@ -69,7 +71,8 @@ public class GitLabController {
             @RequestParam(value = "exclude-files", required = false) List<String> excludeFiles,
             @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders,
             @RequestParam(value = "override", required = false) String override,
-            @RequestParam(value = "bug", required = false) String bug
+            @RequestParam(value = "bug", required = false) String bug,
+            @RequestParam(value = "app-only", required = false) Boolean appOnlyTracking
     ){
 
         log.info("Processing GitLab MERGE request");
@@ -96,6 +99,9 @@ public class GitLabController {
                 bugType = ScanUtils.getBugTypeEnum(bug, machinaProperties.getBugTrackerImpl());
             }
 
+            if(appOnlyTracking != null){
+                machinaProperties.setTrackApplicationOnly(appOnlyTracking);
+            }
 
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
             String currentBranch = body.getObjectAttributes().getSourceBranch();
@@ -140,6 +146,8 @@ public class GitLabController {
                     .id(body.getProject().getId())
                     .application(app)
                     .product(p)
+                    .project(project)
+                    .team(team)
                     .namespace(body.getProject().getNamespace().replaceAll(" ","_"))
                     .repoName(body.getProject().getName())
                     .repoUrl(body.getProject().getGitHttpUrl())
@@ -194,6 +202,8 @@ public class GitLabController {
             @RequestParam(value = "severity", required = false) List<String> severity,
             @RequestParam(value = "cwe", required = false) List<String> cwe,
             @RequestParam(value = "category", required = false) List<String> category,
+            @RequestParam(value = "project", required = false) String project,
+            @RequestParam(value = "team", required = false) String team,
             @RequestParam(value = "status", required = false) List<String> status,
             @RequestParam(value = "assignee", required = false) String assignee,
             @RequestParam(value = "preset", required = false) String preset,
@@ -201,8 +211,9 @@ public class GitLabController {
             @RequestParam(value = "exclude-files", required = false) List<String> excludeFiles,
             @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders,
             @RequestParam(value = "override", required = false) String override,
-            @RequestParam(value = "bug", required = false) String bug
-        ){
+            @RequestParam(value = "bug", required = false) String bug,
+            @RequestParam(value = "app-only", required = false) Boolean appOnlyTracking
+    ){
         validateGitLabRequest(token);
 
         MachinaOverride o = ScanUtils.getMachinaOverride(override);
@@ -219,6 +230,10 @@ public class GitLabController {
                 bug =  machinaProperties.getBugTracker();
             }
             bugType = ScanUtils.getBugTypeEnum(bug, machinaProperties.getBugTrackerImpl());
+
+            if(appOnlyTracking != null){
+                machinaProperties.setTrackApplicationOnly(appOnlyTracking);
+            }
 
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
             //extract branch from ref (refs/heads/master -> master)
@@ -278,6 +293,8 @@ public class GitLabController {
                     .id(body.getProjectId())
                     .application(app)
                     .product(p)
+                    .project(project)
+                    .team(team)
                     .namespace(body.getProject().getNamespace().replaceAll(" ","_"))
                     .repoName(body.getProject().getName())
                     .repoUrl(body.getProject().getGitHttpUrl())
@@ -344,7 +361,8 @@ public class GitLabController {
         }
         /*Merge has been changed from WIP to not-WIP, ignoring*/
         else if(event.getChanges() != null && event.getChanges().getTitle() != null){
-            if(event.getChanges().getTitle().getPrevious().startsWith("WIP:CX|") &&
+            if(event.getChanges().getTitle().getPrevious() != null &&
+                    event.getChanges().getTitle().getPrevious().startsWith("WIP:CX|") &&
                     !event.getChanges().getTitle().getCurrent().startsWith("WIP:")){
                 return true;
             }

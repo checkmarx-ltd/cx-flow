@@ -2,19 +2,20 @@ logging:
   file: machina.log
 
 machina:
-  bug-tracker: JIRA
+  bug-tracker: Csv
   bug-tracker-impl:
     - CxXml
     - Json
     - GitLab
     - GitHub
+    - Csv
   filter-severity:
     - High
   filter-category:
   filter-cwe:
   filter-status:
   mitre-url: https://cwe.mitre.org/data/definitions/%s.html
-  wiki-url: https://custodela.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
+  wiki-url: https://xxxxxx
   codebash-url: https://cxa.codebashing.com/courses/
 
 checkmarx:
@@ -33,7 +34,7 @@ checkmarx:
   jira-issuetype-field:
 
 jira:
-  url: https://jira.ken-mcdonald.com
+  url: https://xxx.xxxxx.com
   username: xxxx
   token: xxxx
   project: SS
@@ -91,11 +92,43 @@ gitlab:
   false-positive-label: false-positive
   block-merge: true
 
-
 json:
-  file-name-format: "ABC-[PROJECT]-[TIME].json"
+  file-name-format: "[TEAM]-[PROJECT]-[TIME].json"
   data-folder: "C:\\tmp"
 
 cx-xml:
   file-name-format: "[TEAM]-[PROJECT]-[TIME].xml"
   data-folder: "C:\\tmp"
+
+csv:
+  file-name-format: "[TEAM]-[PROJECT]-[TIME].csv"
+  data-folder: "C:\\tmp"
+  include-header: true
+  fields:
+    - header: Customer field (Application)
+      name: application
+      default-value: unknown
+    - header: Primary URL
+      name: static
+      default-value: ${tmp.url}
+    - header: severity
+      name: severity
+    - header: Vulnerability ID
+      name: summary
+      prefix: "[APP]:"
+    - header: file
+      name: filename
+    - header: Vulnerability ID
+      name: summary
+    - header: Vulnerability Name
+      name: category
+    - header: Category ID
+      name: cwe
+    - header: Description
+      name: summary
+      prefix: "*"
+      postfix: "*"
+    - header: Severity
+      name: severity
+    - header: recommendation
+      name: recommendation

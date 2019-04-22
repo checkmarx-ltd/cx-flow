@@ -27,12 +27,10 @@ import java.util.List;
 public class JsonIssueTracker implements IssueTracker {
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(JsonIssueTracker.class);
     private final JsonProperties properties;
-    private final MachinaProperties machinaProperties;
 
-    @ConstructorProperties({"properties", "machinaProperties"})
-    public JsonIssueTracker(JsonProperties properties, MachinaProperties machinaProperties) {
+    @ConstructorProperties({"properties"})
+    public JsonIssueTracker(JsonProperties properties) {
         this.properties = properties;
-        this.machinaProperties = machinaProperties;
     }
 
     @Override

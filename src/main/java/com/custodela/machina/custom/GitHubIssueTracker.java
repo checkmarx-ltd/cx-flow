@@ -243,7 +243,7 @@ public class GitHubIssueTracker implements IssueTracker {
 
     @Override
     public String getXIssueKey(ScanResults.XIssue issue, ScanRequest request) {
-        if(ScanUtils.empty(request.getBranch())){
+        if(machinaProperties.isTrackApplicationOnly() || ScanUtils.empty(request.getBranch())){
             return String.format(ScanUtils.ISSUE_KEY_2, request.getProduct().getProduct(), issue.getVulnerability(), issue.getFilename());
         }
         else {
