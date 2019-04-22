@@ -43,9 +43,10 @@ checkmarx:
   scan-preset: Checkmarx Default
   configuration: Default Configuration
   team: \CxServer\SP\Machina
-  scan-timeout: 120
+  scan-timeout: 120 #Webhook and --scan command line only, number of minutes
   jira-project-field: jira-project
   jira-issuetype-field: jira-issuetype
+  jira-custom-field: jira-fields
 #WSDL Config
   portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
   sdk-url: ${checkmarx.base-url}/cxwebinterface/SDK/CxSDKWebService.asmx
@@ -58,6 +59,7 @@ github:
   url: https://github.com
   api-url: https://api.github.com/repos/
   false-positive-label: false-positive
+  block-merge: true
 
 gitlab:
   webhook-token: 1234
@@ -65,6 +67,7 @@ gitlab:
   url: https://gitlab.com
   api-url: https://gitlab.com/api/v4/
   false-positive-label: false-positive
+  block-merge: true
 
 bitbucket:
   webhook-token:
@@ -127,3 +130,36 @@ json:
 cx-xml:
   file-name-format: "[NAMESPACE]-[REPO]-[BRANCH]-[TIME].xml"
   data-folder: "C:\\tmp"
+
+csv:
+  file-name-format: "[TEAM]-[PROJECT]-[TIME].csv"
+  data-folder: "C:\\tmp"
+  include-header: true
+  fields:
+    - header: Customer field (Application)
+      name: application
+      default-value: unknown
+    - header: Primary URL
+      name: static
+      default-value: ${tmp.url}
+    - header: severity
+      name: severity
+    - header: Vulnerability ID
+      name: summary
+      prefix: "[APP]:"
+    - header: file
+      name: filename
+    - header: Vulnerability ID
+      name: summary
+    - header: Vulnerability Name
+      name: category
+    - header: Category ID
+      name: cwe
+    - header: Description
+      name: summary
+      prefix: "*"
+      postfix: "*"
+    - header: Severity
+      name: severity
+    - header: recommendation
+      name: recommendation

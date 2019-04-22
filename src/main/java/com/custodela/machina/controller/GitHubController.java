@@ -98,6 +98,8 @@ public class GitHubController {
             @RequestParam(value = "severity", required = false) List<String> severity,
             @RequestParam(value = "cwe", required = false) List<String> cwe,
             @RequestParam(value = "category", required = false) List<String> category,
+            @RequestParam(value = "project", required = false) String project,
+            @RequestParam(value = "team", required = false) String team,
             @RequestParam(value = "status", required = false) List<String> status,
             @RequestParam(value = "assignee", required = false) String assignee,
             @RequestParam(value = "preset", required = false) String preset,
@@ -105,7 +107,8 @@ public class GitHubController {
             @RequestParam(value = "exclude-files", required = false) List<String> excludeFiles,
             @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders,
             @RequestParam(value = "override", required = false) String override,
-            @RequestParam(value = "bug", required = false) String bug
+            @RequestParam(value = "bug", required = false) String bug,
+            @RequestParam(value = "app-only", required = false) Boolean appOnlyTracking
     ){
         log.info("Processing GitHub PULL request");
         PullEvent event;
@@ -138,6 +141,10 @@ public class GitHubController {
             BugTracker.Type bugType = BugTracker.Type.GITHUBPULL;
             if(!ScanUtils.empty(bug)){
                 bugType = ScanUtils.getBugTypeEnum(bug, machinaProperties.getBugTrackerImpl());
+            }
+
+            if(appOnlyTracking != null){
+                machinaProperties.setTrackApplicationOnly(appOnlyTracking);
             }
 
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
@@ -180,6 +187,8 @@ public class GitHubController {
             ScanRequest request = ScanRequest.builder()
                     .application(app)
                     .product(p)
+                    .project(project)
+                    .team(team)
                     .namespace(event.getRepository().getOwner().getLogin().replaceAll(" ","_"))
                     .repoName(event.getRepository().getName())
                     .repoUrl(event.getRepository().getCloneUrl())
@@ -236,6 +245,8 @@ public class GitHubController {
             @RequestParam(value = "severity", required = false) List<String> severity,
             @RequestParam(value = "cwe", required = false) List<String> cwe,
             @RequestParam(value = "category", required = false) List<String> category,
+            @RequestParam(value = "project", required = false) String project,
+            @RequestParam(value = "team", required = false) String team,
             @RequestParam(value = "status", required = false) List<String> status,
             @RequestParam(value = "assignee", required = false) String assignee,
             @RequestParam(value = "preset", required = false) String preset,
@@ -243,7 +254,8 @@ public class GitHubController {
             @RequestParam(value = "exclude-files", required = false) List<String> excludeFiles,
             @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders,
             @RequestParam(value = "override", required = false) String override,
-            @RequestParam(value = "bug", required = false) String bug
+            @RequestParam(value = "bug", required = false) String bug,
+            @RequestParam(value = "app-only", required = false) Boolean appOnlyTracking
     ){
         log.info("Processing GitHub PUSH request");
         PushEvent event;
@@ -271,6 +283,10 @@ public class GitHubController {
                 bug =  machinaProperties.getBugTracker();
             }
             bugType = ScanUtils.getBugTypeEnum(bug, machinaProperties.getBugTrackerImpl());
+
+            if(appOnlyTracking != null){
+                machinaProperties.setTrackApplicationOnly(appOnlyTracking);
+            }
 
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
 
@@ -321,6 +337,8 @@ public class GitHubController {
             ScanRequest request = ScanRequest.builder()
                     .application(app)
                     .product(p)
+                    .project(project)
+                    .team(team)
                     .namespace(event.getRepository().getOwner().getName().replaceAll(" ","_"))
                     .repoName(event.getRepository().getName())
                     .repoUrl(event.getRepository().getCloneUrl())

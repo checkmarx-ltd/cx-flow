@@ -16,12 +16,12 @@ public class MachinaProperties {
     @NotNull @NotBlank
     private String bugTracker;
     private List<String> bugTrackerImpl;
-    private String dataFolder;
     private List<String> branches;
     private List<String> filterSeverity;
     private List<String> filterCwe;
     private List<String> filterCategory;
     private List<String> filterStatus;
+    private boolean trackApplicationOnly = false;
     private String mitreUrl;
     private String wikiUrl;
     private String codebashUrl;
@@ -51,14 +51,6 @@ public class MachinaProperties {
 
     public void setBugTrackerImpl(List<String> bugTrackerImpl) {
         this.bugTrackerImpl = bugTrackerImpl;
-    }
-
-    public String getDataFolder() {
-        return dataFolder;
-    }
-
-    public void setDataFolder(String dataFolder) {
-        this.dataFolder = dataFolder;
     }
 
     public List<String> getBranches() {
@@ -127,6 +119,14 @@ public class MachinaProperties {
 
     public void setFilterStatus(List<String> filterStatus) {
         this.filterStatus = filterStatus;
+    }
+
+    public boolean isTrackApplicationOnly() {
+        return trackApplicationOnly;
+    }
+
+    public void setTrackApplicationOnly(boolean trackApplicationOnly) {
+        this.trackApplicationOnly = trackApplicationOnly;
     }
 
     public void setMitreUrl(String mitreUrl) {
