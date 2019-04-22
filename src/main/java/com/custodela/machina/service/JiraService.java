@@ -68,7 +68,10 @@ public class JiraService {
         List<Issue> issues = new ArrayList<>();
         String jql;
         /*Namespace/Repo/Branch provided*/
-        if(!ScanUtils.empty(request.getNamespace()) && !ScanUtils.empty(request.getRepoName()) && !ScanUtils.empty(request.getBranch())) {
+        if(!machinaProperties.isTrackApplicationOnly() &&
+                !ScanUtils.empty(request.getNamespace()) &&
+                !ScanUtils.empty(request.getRepoName()) &&
+                !ScanUtils.empty(request.getBranch())) {
             jql = String.format("project = %s and issueType = \"%s\" and (\"%s\" = \"%s\" and \"%s\" = \"%s:%s\" and \"%s\" = \"%s:%s\" and \"%s\" = \"%s:%s\")",
                     request.getBugTracker().getProjectKey(),
                     request.getBugTracker().getIssueType(),
@@ -133,7 +136,10 @@ public class JiraService {
             }
 
             String summary;
-            if(!ScanUtils.empty(request.getNamespace()) && !ScanUtils.empty(request.getRepoName()) && !ScanUtils.empty(request.getBranch())) {
+            if(!machinaProperties.isTrackApplicationOnly() &&
+                    !ScanUtils.empty(request.getNamespace()) &&
+                    !ScanUtils.empty(request.getRepoName()) &&
+                    !ScanUtils.empty(request.getBranch())) {
                 summary = String.format(ScanUtils.JIRA_ISSUE_KEY, issuePrefix, issue.getVulnerability(), issue.getFilename(), request.getBranch());
             }
             else{
@@ -166,7 +172,10 @@ public class JiraService {
 
             /*Add labels for tracking existing issues*/
             List<String> labels = new ArrayList<>();
-            if(!ScanUtils.empty(request.getNamespace()) && !ScanUtils.empty(request.getRepoName()) && !ScanUtils.empty(request.getBranch())) {
+            if(!machinaProperties.isTrackApplicationOnly() &&
+                    !ScanUtils.empty(request.getNamespace()) &&
+                    !ScanUtils.empty(request.getRepoName()) &&
+                    !ScanUtils.empty(request.getBranch())) {
                 labels.add(request.getProduct().getProduct());
                 labels.add(jiraProperties.getOwnerLabelPrefix().concat(":").concat(request.getNamespace()));
                 labels.add(jiraProperties.getRepoLabelPrefix().concat(":").concat(request.getRepoName()));
@@ -601,7 +610,10 @@ public class JiraService {
         }
         Map<String, ScanResults.XIssue> map = new HashMap<>();
 
-        if(!ScanUtils.empty(request.getNamespace()) && !ScanUtils.empty(request.getRepoName()) && !ScanUtils.empty(request.getBranch())) {
+        if(!machinaProperties.isTrackApplicationOnly() &&
+                !ScanUtils.empty(request.getNamespace()) &&
+                !ScanUtils.empty(request.getRepoName()) &&
+                !ScanUtils.empty(request.getBranch())) {
             for (ScanResults.XIssue issue : issues) {
                 String key = String.format(ScanUtils.JIRA_ISSUE_KEY, issuePrefix, issue.getVulnerability(), issue.getFilename(), request.getBranch());
                 map.put(key, issue);
@@ -618,15 +630,15 @@ public class JiraService {
 
     private String getBody(ScanResults.XIssue issue, ScanRequest request, String fileUrl){
         StringBuilder body = new StringBuilder();
-        if(!ScanUtils.empty(request.getNamespace()) && !ScanUtils.empty(request.getRepoName()) && !ScanUtils.empty(request.getBranch())) {
+        if(!machinaProperties.isTrackApplicationOnly() &&
+                !ScanUtils.empty(request.getNamespace()) &&
+                !ScanUtils.empty(request.getRepoName()) &&
+                !ScanUtils.empty(request.getBranch())) {
             body.append(String.format(ScanUtils.JIRA_ISSUE_BODY, issue.getVulnerability(), issue.getFilename(), request.getBranch())).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
         }
         else{
             body.append(String.format(ScanUtils.JIRA_ISSUE_BODY_2, issue.getVulnerability(), issue.getFilename())).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
         }
-        /*if(!ScanUtils.empty(issue.getDescription())) {
-            body.append("_").append(issue.getDescription().trim()).append("_").append(ScanUtils.CRLF).append(ScanUtils.CRLF);
-        }*/
         if(!ScanUtils.empty(issue.getDescription())) {
             body.append(issue.getDescription().trim()).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
         }
