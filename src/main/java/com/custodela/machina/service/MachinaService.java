@@ -92,7 +92,7 @@ public class MachinaService {
 
                 if(cxProperties.isMultiTenant()){
                     String fullTeamName = cxProperties.getTeam().concat("\\").concat(request.getNamespace());
-
+                    request.setTeam(fullTeamName);
                     String tmpId = cxService.getTeamId(fullTeamName);
                     if(tmpId.equals(UNKNOWN)){
                         ownerId = cxService.createTeam(ownerId, request.getNamespace());
@@ -100,6 +100,9 @@ public class MachinaService {
                     else{
                         ownerId = tmpId;
                     }
+                }
+                else{
+                    request.setTeam(cxProperties.getTeam());
                 }
             }
 
@@ -121,6 +124,7 @@ public class MachinaService {
                 log.info("Project does not exist.  Creating new project now for {}", projectName);
                 projectId = cxService.createProject(ownerId, projectName);
             }
+            request.setProject(projectName);
             if(cxService.scanExists(projectId)){
                 throw new MachinaException("Active Scan already exists for Project:"+projectId);
             }
