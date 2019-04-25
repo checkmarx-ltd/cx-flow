@@ -64,7 +64,7 @@ public class CsvIssueTracker implements IssueTracker {
 
     @Override
     public void complete(ScanRequest request, ScanResults results) throws MachinaException {
-        log.info("Finializing CSV output");
+        log.info("Finalizing CSV output");
     }
 
     @Override
