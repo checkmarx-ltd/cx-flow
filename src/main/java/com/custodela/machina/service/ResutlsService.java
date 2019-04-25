@@ -58,10 +58,15 @@ public class ResutlsService {
         if(machinaProperties.getMail() != null && machinaProperties.getMail().isEnabled() &&
                 !request.getBugTracker().getType().equals(BugTracker.Type.NONE) &&
                 !request.getBugTracker().getType().equals(BugTracker.Type.EMAIL)) {
-
-            emailCtx.put("message", "Successfully completed processing for "
-                    .concat(request.getNamespace()).concat("/").concat(request.getRepoName()).concat(" - ")
-                    .concat(request.getRepoUrl()));
+            if(!ScanUtils.empty(request.getNamespace()) && !ScanUtils.empty(request.getBranch()) && !ScanUtils.empty(request.getBranch())) {
+                emailCtx.put("message", "Successfully completed processing for "
+                        .concat(request.getNamespace()).concat("/").concat(request.getRepoName()).concat(" - ")
+                        .concat(request.getRepoUrl()));
+            }
+            else if(!ScanUtils.empty(request.getApplication())) {
+                emailCtx.put("message", "Successfully completed processing for "
+                        .concat(request.getApplication()));
+            }
             emailCtx.put("heading", "Scan Successfully Completed");
 
             if (results != null) {
