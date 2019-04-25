@@ -768,6 +768,11 @@ public class JiraService {
         List<String> closedIssues = new ArrayList<>();
 
         log.info("Processing Results and publishing findings to Jira");
+        String application = request.getApplication();
+        if(!ScanUtils.empty(application)){
+            application = application.replaceAll("[^a-zA-Z0-9-_.+]+","_");
+            request.setApplication(application);
+        }
 
         List<Issue> issues = this.getIssues(request);
         map = this.getIssueMap(results.getXIssues(), request);
