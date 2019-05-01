@@ -17,12 +17,13 @@ cx-flow:
     - master
     - security
   filter-severity:
-#    - High
+    - High
   filter-category:
   filter-cwe:
   filter-status:
 # track-application-only: false
   mitre-url: https://cwe.mitre.org/data/definitions/%s.html
+#  break-build: true
 #  wiki-url: https://custodela.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
 #  codebash-url: https://cxa.codebashing.com/courses/
 #  mail:
@@ -40,7 +41,7 @@ checkmarx:
   multi-tenant: true
   configuration: Default Configuration
   scan-preset: Checkmarx Default
-  team: \CxServer\SP\Checkmarx\Automation
+  team: \CxServer\SP\Checkmarx
   url: ${checkmarx.base-url}/cxrestapi
   #preserve-xml: true
   #incremental: true
