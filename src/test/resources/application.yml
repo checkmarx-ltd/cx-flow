@@ -2,17 +2,15 @@ server:
   port: ${PORT:8080}
 
 logging:
-  file: machina.log
+  file: cx-flow.log
 
 spring:
   application:
-    name: machina
+    name: cx-flow
   jackson:
     serialization.indent_output: true
 
-machina:
-  contact: machina@custodela.com
-  token: xxx
+cx-flow:
   bug-tracker: JIRA
   branches:
   filter-severity:

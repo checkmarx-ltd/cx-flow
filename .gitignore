@@ -25,4 +25,4 @@
 /dist/
 /nbdist/
 /.nb-gradle/
-machina.log*
+cx-flow.log*
