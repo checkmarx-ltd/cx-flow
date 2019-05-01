@@ -90,7 +90,8 @@ public class FlowService {
             else{
                 ownerId = cxService.getTeamId(cxProperties.getTeam());
 
-                if(cxProperties.isMultiTenant()){
+                if(cxProperties.isMultiTenant() &&
+                        !ScanUtils.empty(request.getNamespace())){
                     String fullTeamName = cxProperties.getTeam().concat("\\").concat(request.getNamespace());
                     request.setTeam(fullTeamName);
                     String tmpId = cxService.getTeamId(fullTeamName);
@@ -207,7 +208,11 @@ public class FlowService {
             ScanUtils.zipDirectory(path, cxZipFile);
             File f = new File(cxZipFile);
             CompletableFuture<ScanResults> future = executeCxScanFlow(request, f);
-            future.join();
+            ScanResults results = future.join();
+            if(flowProperties.isBreakBuild() && !results.getXIssues().isEmpty()){
+                log.error("Exiting with Error code 10 due to issues present");
+                exit(10);
+            }
         } catch (IOException e) {
             log.error(ExceptionUtils.getStackTrace(e));
             log.error("Error occurred while attempting to zip path {}", path);
@@ -276,10 +281,6 @@ public class FlowService {
             else {
                 getCxFields(project, request);
                 CompletableFuture<ScanResults> results = resutlsService.processScanResultsAsync(request, scanId, request.getFilters());
-                /*If cxProject is null, it is a single project request*/
-                if(cxProject == null) {
-                    results.join();
-                }
                 return results;
             }
 
