@@ -1,8 +1,8 @@
 logging:
-  file: machina.log
+  file: cx-flow.log
 
-machina:
-  bug-tracker: Csv
+cx-flow:
+  bug-tracker: JIRA
   bug-tracker-impl:
     - CxXml
     - Json
@@ -15,8 +15,8 @@ machina:
   filter-cwe:
   filter-status:
   mitre-url: https://cwe.mitre.org/data/definitions/%s.html
-  wiki-url: https://xxxxxx
-  codebash-url: https://cxa.codebashing.com/courses/
+  #wiki-url: https://xxxxxx
+  #codebash-url: https://cxa.codebashing.com/courses/
 
 checkmarx:
   username: xxxx
@@ -32,6 +32,7 @@ checkmarx:
   jira-project-field:
   jira-custom-field:
   jira-issuetype-field:
+  jira-assignee-field:
 
 jira:
   url: https://xxx.xxxxx.com
@@ -105,12 +106,12 @@ csv:
   data-folder: "C:\\tmp"
   include-header: true
   fields:
-    - header: Customer field (Application)
+    - header: Application
       name: application
       default-value: unknown
-    - header: Primary URL
-      name: static
-      default-value: ${tmp.url}
+    #- header: Primary URL
+      #name: static
+      #default-value: ${tmp.url}
     - header: severity
       name: severity
     - header: Vulnerability ID
@@ -126,8 +127,8 @@ csv:
       name: cwe
     - header: Description
       name: summary
-      prefix: "*"
-      postfix: "*"
+      #prefix: "*"
+      #postfix: "*"
     - header: Severity
       name: severity
     - header: recommendation

@@ -1,16 +1,10 @@
 server:
   port: ${PORT:8080}
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include: '*'
-
 logging:
-  file: machina.log
+  file: cx-flow.log
 
-machina:
+cx-flow:
   bug-tracker: JIRA
   bug-tracker-impl:
     - CxXml
@@ -24,22 +18,16 @@ machina:
     - security
   filter-severity:
     - High
-  track-application-only: false
   mitre-url: https://cwe.mitre.org/data/definitions/%s.html
-  wiki-url: https://custodela.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
+  wiki-url: https://checkmarx.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
   codebash-url: https://cxa.codebashing.com/courses/
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    username: xxx
-    password: xxx
-    enabled: true
+
 
 checkmarx:
   username: xxx
   password: xxx
   client-secret: xxx
-  base-url: https://cx.aws.custodela.com
+  base-url: https://cx.aws.checkmarx.com
   url: ${checkmarx.base-url}/cxrestapi
   multi-tenant: true
   incremental: true
@@ -47,15 +35,17 @@ checkmarx:
   configuration: Default Configuration
   team: \CxServer\SP\Machina
   scan-timeout: 120
-  jira-project-field: jira-project
-  jira-issuetype-field: jira-issuetype
-  jira-custom-field: jira-customfields
 #WSDL Config
   portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
   sdk-url: ${checkmarx.base-url}/cxwebinterface/SDK/CxSDKWebService.asmx
   portal-wsdl: ${checkmarx.base-url}/Portal/CxWebService.asmx?wsdl
   sdk-wsdl: ${checkmarx.base-url}/SDK/CxSDKWebService.asmx?wsdl
   portal-package: checkmarx.wsdl.portal
+  preserve-xml: true
+  jira-project-field:
+  jira-custom-field:
+  jira-issuetype-field:
+  jira-assignee-field:
 
 
 jira:
