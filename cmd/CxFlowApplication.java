@@ -181,6 +181,10 @@ public class CxFlowApplication implements ApplicationRunner {
         switch (bugType){
             case NONE:
                 log.info("No bug tracker will be used");
+                bugType = BugTracker.Type.NONE;
+                bt = BugTracker.builder()
+                        .type(bugType)
+                        .build();
                 break;
             case JIRA:
                 bt = BugTracker.builder()
