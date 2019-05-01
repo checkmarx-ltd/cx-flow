@@ -23,6 +23,7 @@ checkmarx:
   password: xxxx
   client-secret: 014DF517-39D1-4453-B7B3-9930C563627C
   base-url: https://xxx/
+  team: \CxServer\SP\Checkmarx
   url: ${checkmarx.base-url}/cxrestapi
   portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
   sdk-url: ${checkmarx.base-url}/cxwebinterface/SDK/CxSDKWebService.asmx

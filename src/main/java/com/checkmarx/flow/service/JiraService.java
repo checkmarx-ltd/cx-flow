@@ -672,7 +672,7 @@ public class JiraService {
         if(issue.getLink() != null && !issue.getLink().isEmpty()){
             body.append("[Checkmarx|").append(issue.getLink()).append("]").append(ScanUtils.CRLF);
         }
-        if(!ScanUtils.empty(issue.getCwe())) {
+        if(!ScanUtils.empty(issue.getCwe()) && !ScanUtils.empty(flowProperties.getMitreUrl())) {
             body.append("[Mitre Details|").append(String.format(flowProperties.getMitreUrl(), issue.getCwe())).append("]").append(ScanUtils.CRLF);
         }
         if(!ScanUtils.empty(flowProperties.getCodebashUrl())) {
