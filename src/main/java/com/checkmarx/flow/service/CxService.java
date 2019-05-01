@@ -1112,7 +1112,7 @@ public class CxService {
         if(tokenExpires == null){
             return true;
         }
-        return !LocalDateTime.now().isAfter(tokenExpires);
+        return LocalDateTime.now().isAfter(tokenExpires);
     }
 
     private HttpHeaders createAuthHeaders(){
