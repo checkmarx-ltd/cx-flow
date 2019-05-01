@@ -1093,6 +1093,7 @@ public class CxService {
 
         try {
             //get the access token
+            log.info("Logging into Checkmarx {}", cxProperties.getUrl().concat(LOGIN));
             CxAuthResponse response = restTemplate.postForObject(cxProperties.getUrl().concat(LOGIN), requestEntity,  CxAuthResponse.class);
             if(response == null){
                 throw new InvalidCredentialsException();
