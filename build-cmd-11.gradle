@@ -9,7 +9,7 @@ buildscript {
 	repositories {
 		mavenCentral()
         maven {
-            url = 'https://maven.atlassian.com/content/repositories/atlassian-public'
+            url = 'https://packages.atlassian.com/mvn/maven-external'
         }
 	}
 	dependencies {
@@ -31,7 +31,7 @@ sourceCompatibility = 1.8
 repositories {
 	mavenCentral()
     maven {
-        url = 'https://maven.atlassian.com/content/repositories/atlassian-public'
+        url = 'https://packages.atlassian.com/mvn/maven-external'
     }
 }
 
