@@ -1,10 +1,7 @@
 package com.checkmarx.flow;
 
 import com.checkmarx.flow.config.*;
-import com.checkmarx.flow.dto.BugTracker;
-import com.checkmarx.flow.dto.Filter;
-import com.checkmarx.flow.dto.MachinaOverride;
-import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -340,6 +337,10 @@ public class CxFlowApplicationCmd implements ApplicationRunner {
         flowService.cxBatch(request);
     }
     private void cxResults(ScanRequest request){
-        flowService.cxGetResults(request, null);
+        ScanResults results = flowService.cxGetResults(request, null).join();
+        if(flowProperties.isBreakBuild() && !results.getXIssues().isEmpty()){
+            log.error("Exiting with Error code 10 due to issues present");
+            exit(10);
+        }
     }
 }
