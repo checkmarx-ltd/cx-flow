@@ -4,12 +4,12 @@ buildscript {
         sonarqubeVersion = '2.5'
         atlassianVersion = "5.0.4"
         atlassianFugueVersion = "2.2.1"
-        mainClass='com.custodela.machina.MachinaApplication'
+        mainClass='com.checkmarx.flow.CxFlowApplication'
     }
 	repositories {
 		mavenCentral()
         maven {
-            url = 'https://maven.atlassian.com/content/repositories/atlassian-public'
+            url = 'https://packages.atlassian.com/mvn/maven-external'
         }
 	}
 	dependencies {
@@ -23,14 +23,14 @@ apply plugin: 'eclipse'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
 
-group = 'com.custodela'
-version = '1.2'
+group = 'com.checkmarx'
+version = '1.2.1'
 sourceCompatibility = 1.8
 
 repositories {
 	mavenCentral()
     maven {
-        url = 'https://maven.atlassian.com/content/repositories/atlassian-public'
+        url = 'https://packages.atlassian.com/mvn/maven-external'
     }
 }
 

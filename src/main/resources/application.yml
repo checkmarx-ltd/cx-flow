@@ -1,29 +1,37 @@
 logging:
-  file: machina.log
-  level:
-    com:
-      custodela:
-        machina:
-          service: info
-    org:
-      apache:
-        http:
-          wire: info
+  file: cx-flow.log
+#  level:
+#    com:
+#      custodela:
+#        flow:
+#          service: info
+#    org:
+#      apache:
+#        http:
+#          wire: info
 
-machina:
+cx-flow:
   bug-tracker: JIRA
   branches:
     - develop
     - master
     - security
   filter-severity:
-#    - High
+    - High
   filter-category:
   filter-cwe:
   filter-status:
-#  mitre-url: https://cwe.mitre.org/data/definitions/%s.html
+# track-application-only: false
+  mitre-url: https://cwe.mitre.org/data/definitions/%s.html
+#  break-build: true
 #  wiki-url: https://custodela.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
 #  codebash-url: https://cxa.codebashing.com/courses/
+#  mail:
+ #    host: smtp.gmail.com
+ #    port: 587
+ #    username: xxx
+ #    password: xxx
+ #    enabled:
 
 checkmarx:
   username: xxxxx
@@ -33,8 +41,10 @@ checkmarx:
   multi-tenant: true
   configuration: Default Configuration
   scan-preset: Checkmarx Default
-  team: \CxServer\SP\Checkmarx\Automation
+  team: \CxServer\SP\Checkmarx
   url: ${checkmarx.base-url}/cxrestapi
+  #preserve-xml: true
+  #incremental: true
 #WSDL Config
   portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
   sdk-url: ${checkmarx.base-url}/cxwebinterface/SDK/CxSDKWebService.asmx
@@ -43,6 +53,7 @@ checkmarx:
   jira-project-field:
   jira-custom-field:
   jira-issuetype-field:
+  jira-assignee-field:
 
 jira:
   url: https://xxxxx.com
