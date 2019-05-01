@@ -2,9 +2,9 @@ server:
   port: ${PORT:8080}
 
 logging:
-  file: machina.log
+  file: flow.log
 
-machina:
+cx-flow:
   bug-tracker: Json
   bug-tracker-impl:
     - Xml
@@ -22,7 +22,7 @@ machina:
     - New
     - Confirmed
   mitre-url: https://cwe.mitre.org/data/definitions/%s.html
-  wiki-url: https://custodela.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
+  wiki-url: https://checkmarx.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
   codebash-url: https://cxa.codebashing.com/courses/
   web-hook-queue: 20
   scan-result-queue: 8
@@ -37,7 +37,7 @@ checkmarx:
   username:
   password: xxx
   client-secret: xxx
-  base-url: https://cx.aws.custodela.com
+  base-url: https://cx.aws.checkmarx.com
   url: ${checkmarx.base-url}/cxrestapi
   multi-tenant: true
   scan-preset: Checkmarx Default
