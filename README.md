@@ -10,7 +10,7 @@ _Parse mode will use the Checkmarx Scan XML as input to drive the automation_
 java -jar ${AUTOMATION_JAR} \
 --spring.config.location=${APPLICATION_YML} \
 --parse \
---namespace=Custodela \
+--namespace=checkmarx \
 --repo-name=Riches.NET \
 --repo-url=https://github.com/Custodela/Riches.NET.git \
 --branch=master \
@@ -126,9 +126,9 @@ server:
   port: ${PORT:8080} #If WebHook Web Service is used, this will specify the port the Web Service listens on
 
 logging:
-  file: machina.log #specify log file location.  Log file rotates daily
+  file: flow #specify log file location.  Log file rotates daily
 
-machina:
+cx-flow:
   bug-tracker: JIRA #specify default bug tracker - GITHUB, GITHUB, JIRA
   filter-severity: #specify which issues are to be tracked with bug tracking based on severity from checkmarx (High, Medium, Low)
     - Critical
@@ -137,7 +137,7 @@ machina:
   filter-cwe: #specify the cwe within Checkmarx results to track via bug tracker (79, 89, etc)
   filter-status: #specify the Issue status in Checkmarx results to track via bug tracker (New, Confirmed, etc)
   mitre-url: https://cwe.mitre.org/data/definitions/%s.html #used within recommendation link (cwe based)
-  wiki-url: https://custodela.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance #Custom organization specific wiki/guidance link
+  wiki-url: https://checkmarx.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance #Custom organization specific wiki/guidance link
   codebash-url: https://cxa.codebashing.com/courses/
   mail: #specify if email is enabled (default turned off for command line mode)
     enabled: false
@@ -294,7 +294,7 @@ When providing --config override file you can override many elements associated 
 "scan_preset": "Checkmarx Default", //WebHook Web Service Only
 "exclude_folders": "tmp/", //WebHook Web Service Only
 "exclude_files": "*.tst", //WebHook Web Service Only
-"emails": ["xxxx@custodela.com", "xxxx@checkmarx.com"], //Override email addresses if email issue tracking is enabled
+"emails": [checkmarx, "xxxx@checkmarx.com"], //Override email addresses if email issue tracking is enabled
  "jira": { //override JIRA specific configurations
 "project": "APPSEC", //JIRA project
  "issue_type": "Bug", // JIRA issueType
@@ -346,15 +346,16 @@ All overrides are optional.  If a value is not provided, the default provided i
 
 ## Source
 **Packages**
+
 |Package|	Description|
 ---------|---------
-com.custodela.machina.config|	All bean configurations and Property file POJO mappings.
-com.custodela.machina.controller|	All HTTP Endpoints.  GitHub/GitLab/Bitbucket WebHook services.
-com.custodela.machina.dto|	Sub-packages contain all DTO objects for Checkmarx, GitHub, GitLab, etc.
-com.custodela.machina.exception|	Exceptions
-com.custodela.machina.filter|	Specify any filters applied to Web Traffic flow.  Currently passthrough, but can be used for IP filtering.
-com.custodela.machina.service|	Core logic.  Each Issue tracker has a Service along with a main MachinaService, which drives the overall flow.
-com.custodela.machina.utils|	Utilities package
+com.checkmarx.flow.config|	All bean configurations and Property file POJO mappings.
+com.checkmarx.flow.controller|	All HTTP Endpoints.  GitHub/GitLab/Bitbucket WebHook services.
+com.checkmarx.flow.dto|	Sub-packages contain all DTO objects for Checkmarx, GitHub, GitLab, etc.
+com.checkmarx.flow.exception|	Exceptions
+com.checkmarx.flow.filter|	Specify any filters applied to Web Traffic flow.  Currently passthrough, but can be used for IP filtering.
+com.checkmarx.flow.service|	Core logic.  Each Issue tracker has a Service along with a main flowService, which drives the overall flow.
+com.checkmarx.flow.utils|	Utilities package
 
 **Services**
 
@@ -366,7 +367,7 @@ JiraIssueService|	REST Based API Client for Jira (JRJC - Jira Java REST Client)
 GitHubService|	REST Based API Client GitHub
 GitLabService|	REST Based API Client GitLab
 EmailService|	Email (SMTP) client
-MachinaService|	Main Service driving integrations with other Service components
+flowService|	Main Service driving integrations with other Service components
 BitbucketService|	TBD, this is not created yet.
 
 **Controllers (WebHook Web Service Only)**
@@ -376,7 +377,7 @@ BitbucketService|	TBD, this is not created yet.
 GitHubController|	Ping, Push, Pull  (TBD) event HTTP listeners
 GitLabController|	Push, Merge (TBD) event HTTP listeners
 BitbucketController|	Push event HTTP listener
-MachinaController|	Unused, but intended for Call-back implementation
+flowController|	Unused, but intended for Call-back implementation
 
 ## Build
 Executable JAR is compiled using Gradle (tested with version 4.10 and 5.0)
@@ -386,7 +387,7 @@ Executable JAR is compiled using Gradle (tested with version 4.10 and 5.0)
 
 **Java 8 JRE - CLI:**
 ```
-cp cmd/MachinaApplication.java src/main/java/com/custodela/machina/
+cp cmd/CxFlowApplication.java src/main/java/com/checkmarx/flow/
 gradle -b build-cmd.gradle --build-cache assemble
 ```
 
@@ -398,7 +399,7 @@ This was the approach to keep a single code base.*
 
 **Java 11 JRE - CLI:**
 ```
-cp cmd/MachinaApplication.java src/main/java/com/custodela/machina/
+cp cmd/CxFlowApplication.java src/main/java/com/checkmarx/flow/
 gradle -b build-cmd-11.gradle --build-cache assemble
 ```
 
