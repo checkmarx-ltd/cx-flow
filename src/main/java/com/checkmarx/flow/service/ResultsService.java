@@ -58,7 +58,7 @@ public class ResultsService {
         if(flowProperties.getMail() != null && flowProperties.getMail().isEnabled() &&
                 !request.getBugTracker().getType().equals(BugTracker.Type.NONE) &&
                 !request.getBugTracker().getType().equals(BugTracker.Type.EMAIL)) {
-            if(!ScanUtils.empty(request.getNamespace()) && !ScanUtils.empty(request.getBranch()) && !ScanUtils.empty(request.getBranch())) {
+            if(!ScanUtils.empty(request.getNamespace()) && !ScanUtils.empty(request.getBranch())) {
                 emailCtx.put("message", "Successfully completed processing for "
                         .concat(request.getNamespace()).concat("/").concat(request.getRepoName()).concat(" - ")
                         .concat(request.getRepoUrl()));
