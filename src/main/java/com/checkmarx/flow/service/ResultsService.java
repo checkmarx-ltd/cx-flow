@@ -19,8 +19,8 @@ import java.util.concurrent.CompletableFuture;
 import static com.checkmarx.flow.service.CxService.UNKNOWN;
 
 @Service
-public class ResutlsService {
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(ResutlsService.class);
+public class ResultsService {
+    private static final Logger log = org.slf4j.LoggerFactory.getLogger(ResultsService.class);
     private final CxService cxService;
     private final JiraService jiraService;
     private final IssueService issueService;
@@ -34,7 +34,7 @@ public class ResutlsService {
     private static final Long TIMEOUT = 300000L;
 
     @ConstructorProperties({"cxService", "jiraService", "issueService", "gitService", "gitLabService", "bbService","emailService", "cxProperties", "flowProperties"})
-    public ResutlsService(CxService cxService, JiraService jiraService, IssueService issueService, GitHubService gitService,
+    public ResultsService(CxService cxService, JiraService jiraService, IssueService issueService, GitHubService gitService,
                           GitLabService gitLabService, BitBucketService bbService, EmailService emailService,
                           CxProperties cxProperties, FlowProperties flowProperties) {
         this.cxService = cxService;

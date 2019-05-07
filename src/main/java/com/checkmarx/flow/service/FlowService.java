@@ -33,15 +33,15 @@ public class FlowService {
     private final EmailService emailService;
     private final CxProperties cxProperties;
     private final FlowProperties flowProperties;
-    private final ResutlsService resutlsService;
+    private final ResultsService resultsService;
     private static final Long SLEEP = 20000L;
 
     @ConstructorProperties({"cxService", "resultService", "gitService", "gitLabService", "bbService", "emailService", "cxProperties", "flowProperties"})
-    public FlowService(CxService cxService, ResutlsService resutlsService, GitHubService gitService,
+    public FlowService(CxService cxService, ResultsService resultsService, GitHubService gitService,
                        GitLabService gitLabService, BitBucketService bbService, EmailService emailService,
                        CxProperties cxProperties, FlowProperties flowProperties) {
         this.cxService = cxService;
-        this.resutlsService = resutlsService;
+        this.resultsService = resultsService;
         this.gitService = gitService;
         this.gitLabService = gitLabService;
         this.bbService = bbService;
@@ -194,7 +194,7 @@ public class FlowService {
             if(status.equals(CxService.SCAN_STATUS_FAILED)){
                 throw new MachinaException("Scan failed");
             }
-             return resutlsService.processScanResultsAsync(request, scanId, request.getFilters());
+             return resultsService.processScanResultsAsync(request, scanId, request.getFilters());
         }catch (InterruptedException e) {
             log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaException("Interrupted Exception Occurred");
@@ -226,7 +226,7 @@ public class FlowService {
     public void cxParseResults(ScanRequest request, File file){
         try {
             ScanResults results = cxService.getReportContent(file, request.getFilters());
-            resutlsService.processResults(request, results);
+            resultsService.processResults(request, results);
             if(flowProperties.isBreakBuild() && !results.getXIssues().isEmpty()){
                 log.error("Exiting with Error code 10 due to issues present");
                 exit(10);
@@ -241,7 +241,7 @@ public class FlowService {
     public void cxOsaParseResults(ScanRequest request, File file, File libs){
         try {
             ScanResults results = cxService.getOsaReportContent(file, libs, request.getFilters());
-            resutlsService.processResults(request, results);
+            resultsService.processResults(request, results);
             if(flowProperties.isBreakBuild() && !results.getXIssues().isEmpty()){
                 log.error("Exiting with Error code 10 due to issues present");
                 exit(10);
@@ -280,7 +280,7 @@ public class FlowService {
             }
             else {
                 getCxFields(project, request);
-                CompletableFuture<ScanResults> results = resutlsService.processScanResultsAsync(request, scanId, request.getFilters());
+                CompletableFuture<ScanResults> results = resultsService.processScanResultsAsync(request, scanId, request.getFilters());
                 return results;
             }
 
