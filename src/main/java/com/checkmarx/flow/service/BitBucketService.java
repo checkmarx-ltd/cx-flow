@@ -12,10 +12,10 @@ import org.slf4j.Logger;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+
 import java.beans.ConstructorProperties;
 import java.util.Base64;
 
@@ -37,12 +37,11 @@ public class BitBucketService {
 
     private HttpHeaders createAuthHeaders(){
         String encoding = Base64.getEncoder().encodeToString(properties.getToken().getBytes());
-
-        return new HttpHeaders() {{
-            set("Content-Type", "application/json");
-            set("Authorization", "Basic ".concat(encoding));
-            set("Accept", "application/json");
-        }};
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.set("Content-Type", "application/json");
+        httpHeaders.set("Authorization", "Basic ".concat(encoding));
+        httpHeaders.set("Accept", "application/json");
+        return httpHeaders;
     }
 
     void processMerge(ScanRequest request,ScanResults results) throws BitBucketClienException {
@@ -69,12 +68,12 @@ public class BitBucketService {
 
     void sendMergeComment(ScanRequest request, String comment){
         HttpEntity httpEntity = new HttpEntity<>(getJSONComment(comment).toString(), createAuthHeaders());
-        ResponseEntity<String> response = restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
+        restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
     void sendServerMergeComment(ScanRequest request, String comment){
         HttpEntity httpEntity = new HttpEntity<>(getServerJSONComment(comment).toString(), createAuthHeaders());
-        ResponseEntity<String> response = restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
+        restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
     void processCommit(ScanRequest request,ScanResults results) throws BitBucketClienException {
@@ -92,7 +91,7 @@ public class BitBucketService {
         JSONObject note = new JSONObject();
         note.put("note", comment);
         HttpEntity<String> httpEntity = new HttpEntity<>(note.toString(), createAuthHeaders());
-        ResponseEntity<String> response = restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
+        restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
     private static JSONObject getJSONComment(String comment) throws JSONException {

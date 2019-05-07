@@ -85,11 +85,11 @@ public class GitLabService {
      * @return HttpHeaders for authentication
      */
     private HttpHeaders createAuthHeaders(){
-        return new HttpHeaders() {{
-            set("Content-Type", "application/json");
-            set("PRIVATE-TOKEN", properties.getToken());
-            set("Accept", "application/json");
-        }};
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.set("Content-Type", "application/json");
+        httpHeaders.set("PRIVATE-TOKEN", properties.getToken());
+        httpHeaders.set("Accept", "application/json");
+        return httpHeaders;
     }
 
     void processMerge(ScanRequest request,ScanResults results) throws GitLabClienException {
@@ -108,7 +108,7 @@ public class GitLabService {
                 .body(comment)
                 .build();
         HttpEntity<Note> httpEntity = new HttpEntity<>(note, createAuthHeaders());
-        ResponseEntity<String> response = restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
+        restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
     void processCommit(ScanRequest request,ScanResults results) throws GitLabClienException {
@@ -126,7 +126,7 @@ public class GitLabService {
         JSONObject note = new JSONObject();
         note.put("note", comment);
         HttpEntity<String> httpEntity = new HttpEntity<>(note.toString(), createAuthHeaders());
-        ResponseEntity<String> response = restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
+        restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
     void startBlockMerge(ScanRequest request){
@@ -144,7 +144,7 @@ public class GitLabService {
                     getJSONMergeTitle("WIP:CX|".concat(request.getAdditionalMetadata("merge_title"))).toString(),
                     createAuthHeaders()
             );
-            ResponseEntity<String> response = restTemplate.exchange(endpoint,
+            restTemplate.exchange(endpoint,
                     HttpMethod.PUT, httpEntity, String.class);
         }
     }
@@ -164,7 +164,7 @@ public class GitLabService {
                             .replace("WIP:CX|","")).toString(),
                     createAuthHeaders()
             );
-            ResponseEntity<String> response = restTemplate.exchange(endpoint,
+            restTemplate.exchange(endpoint,
                     HttpMethod.PUT, httpEntity, String.class);
         }
     }

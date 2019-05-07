@@ -27,7 +27,7 @@ public class FlowService {
 
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(FlowService.class);
 
-    private final String SCAN_MESSAGE = "Scan submitted to Checkmarx";
+    private static final String SCAN_MESSAGE = "Scan submitted to Checkmarx";
 
     private final CxService cxService;
     private final GitHubService gitService;
@@ -281,8 +281,7 @@ public class FlowService {
             }
             else {
                 getCxFields(project, request);
-                CompletableFuture<ScanResults> results = resultsService.processScanResultsAsync(request, scanId, request.getFilters());
-                return results;
+                return resultsService.processScanResultsAsync(request, scanId, request.getFilters());
             }
 
         } catch (MachinaException e) {

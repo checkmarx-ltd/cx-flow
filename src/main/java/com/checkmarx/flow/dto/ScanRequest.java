@@ -145,7 +145,7 @@ public class ScanRequest {
     }
 
     public String getHash() {
-        return hash;
+        return this.hash;
     }
 
     public void setHash(String hash) {

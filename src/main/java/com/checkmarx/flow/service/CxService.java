@@ -1120,9 +1120,9 @@ public class CxService {
         if(token == null || isTokenExpired()){
             getAuthToken();
         }
-        return new HttpHeaders() {{
-            set("Authorization", "Bearer ".concat(token));
-            setContentType(MediaType.APPLICATION_JSON_UTF8);
-        }};
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.set("Authorization", "Bearer ".concat(token));
+        httpHeaders.setContentType(MediaType.APPLICATION_JSON_UTF8);
+        return httpHeaders;
     }
 }
