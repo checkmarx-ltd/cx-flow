@@ -476,7 +476,7 @@ public class ScanRequest {
         }
 
 
-        public ScanRequest.ScanRequestBuilder hash(String site) {
+        public ScanRequest.ScanRequestBuilder hash(String hash) {
             this.hash = hash;
             return this;
         }

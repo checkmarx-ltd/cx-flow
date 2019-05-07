@@ -12,6 +12,7 @@ import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +36,8 @@ import java.util.List;
 @RequestMapping(value = "/" )
 public class BitbucketServerController {
 
+    private static final String HTTP = "http://";
+    private static final String HTTPS = "https://";
     private static final String SIGNATURE = "X-Hub-Signature";
     private static final String EVENT = "X-Event-Key";
     private static final String PING = EVENT + "=diagnostics:ping";
@@ -111,7 +114,7 @@ public class BitbucketServerController {
         try {
             event = mapper.readValue(body, PullEvent.class);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaRuntimeException();
         }
 
@@ -136,7 +139,7 @@ public class BitbucketServerController {
             }
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
             String currentBranch = event.getPullRequest().getFromRef().getDisplayId();
-            String targetBranch = event.getPullRequest().getToRef().getDisplayId();;
+            String targetBranch = event.getPullRequest().getToRef().getDisplayId();
             List<String> branches = new ArrayList<>();
             List<Filter> filters;
 
@@ -161,8 +164,8 @@ public class BitbucketServerController {
                     .concat(event.getPullRequest().getFromRef().getRepository().getProject().getKey().concat("/"))
                     .concat(event.getPullRequest().getFromRef().getRepository().getSlug()).concat(".git");
 
-            String gitAuthUrl = gitUrl.replace("https://", "https://".concat(properties.getToken()).concat("@"));
-            gitAuthUrl = gitAuthUrl.replace("http://", "http://".concat(properties.getToken()).concat("@"));
+            String gitAuthUrl = gitUrl.replace(HTTPS, HTTPS.concat(properties.getToken()).concat("@"));
+            gitAuthUrl = gitAuthUrl.replace(HTTP, HTTP.concat(properties.getToken()).concat("@"));
             String mergeEndpoint = properties.getUrl().concat(properties.getApiPath()).concat(MERGE_COMMENT);
             mergeEndpoint = mergeEndpoint.replace("{project}", event.getPullRequest().getToRef().getRepository().getProject().getKey());
             mergeEndpoint = mergeEndpoint.replace("{repo}", event.getPullRequest().getToRef().getRepository().getSlug());
@@ -262,7 +265,7 @@ public class BitbucketServerController {
         try {
             event = mapper.readValue(body, PushEvent.class);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaRuntimeException();
         }
 

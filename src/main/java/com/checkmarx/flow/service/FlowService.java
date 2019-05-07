@@ -26,6 +26,9 @@ import static java.lang.System.exit;
 public class FlowService {
 
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(FlowService.class);
+
+    private final String SCAN_MESSAGE = "Scan submitted to Checkmarx";
+
     private final CxService cxService;
     private final GitHubService gitService;
     private final GitLabService gitLabService;
@@ -154,8 +157,6 @@ public class FlowService {
             }
             cxService.setProjectExcludeDetails(projectId, request.getExcludeFolders(), request.getExcludeFiles());
             Integer scanId = cxService.createScan(projectId, request.isIncremental(), true, false, "Automated scan");
-
-            String SCAN_MESSAGE = "Scan submitted to Checkmarx";
 
             if(request.getBugTracker().getType().equals(BugTracker.Type.GITLABMERGE)){
                 gitLabService.sendMergeComment(request, SCAN_MESSAGE);

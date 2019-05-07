@@ -24,17 +24,10 @@ import java.util.*;
 @Service
 public class GitLabService {
 
-    private static final String ISSUES_PER_PAGE = "100";
     private static final String PROJECT = "/projects/{namespace}{x}{repo}";
-    private static final String PROJECT_PATH = "/projects/{id}";
     public static final String MERGE_NOTE_PATH = "/projects/{id}/merge_requests/{iid}/notes";
     public static final String MERGE_PATH = "/projects/{id}/merge_requests/{iid}";
     public static final String COMMIT_PATH = "/projects/{id}/repository/commits/{sha}/comments";
-    private static final String ISSUES_PATH = "/projects/{id}/issues?per_page=".concat(ISSUES_PER_PAGE);
-    private static final String NEW_ISSUE_PATH = "/projects/{id}/issues";
-    private static final String ISSUE_PATH = "/projects/{id}/issues/{iid}";
-    private static final String COMMENT_PATH = "/projects/{id}/issues/{iid}/notes";
-    private static final String PROJECT_FILES = PROJECT_PATH + "/repository/tree?ref=";
     private static final int UNKNOWN_INT = -1;
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(GitLabService.class);
     private final RestTemplate restTemplate;

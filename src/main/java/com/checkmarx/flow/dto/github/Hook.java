@@ -49,7 +49,7 @@ public class Hook {
     @JsonProperty("last_response")
     private LastResponse lastResponse;
     @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+    private Map<String, Object> additionalProperties = new HashMap<>();
 
     @JsonProperty("type")
     public String getType() {

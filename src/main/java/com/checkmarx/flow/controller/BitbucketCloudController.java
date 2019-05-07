@@ -2,8 +2,8 @@ package com.checkmarx.flow.controller;
 
 import com.checkmarx.flow.config.BitBucketProperties;
 import com.checkmarx.flow.config.CxProperties;
-import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.bitbucket.Change;
 import com.checkmarx.flow.dto.bitbucket.Commit;
@@ -12,7 +12,6 @@ import com.checkmarx.flow.dto.bitbucket.PushEvent;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.utils.ScanUtils;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +26,7 @@ import java.util.List;
 @RequestMapping(value = "/" )
 public class BitbucketCloudController {
 
+    private static final String HTTPS = "https://";
     private static final String EVENT = "X-Event-Key";
     private static final String PUSH = EVENT + "=repo:push";
     private static final String MERGE = EVENT + "=pullrequest:created";
@@ -138,7 +138,7 @@ public class BitbucketCloudController {
                     .namespace(body.getRepository().getOwner().getUsername().replaceAll(" ","_"))
                     .repoName(body.getRepository().getName())
                     .repoUrl(gitUrl)
-                    .repoUrlWithAuth(gitUrl.replace("https://", "https://".concat(properties.getToken()).concat("@")))
+                    .repoUrlWithAuth(gitUrl.replace(HTTPS, HTTPS.concat(properties.getToken()).concat("@")))
                     .repoType(ScanRequest.Repository.BITBUCKET)
                     .branch(currentBranch)
                     .mergeTargetBranch(targetBranch)
@@ -205,7 +205,6 @@ public class BitbucketCloudController {
         validateBitBucketRequest(token);
 
         MachinaOverride o = ScanUtils.getMachinaOverride(override);
-        ObjectMapper mapper = new ObjectMapper();
 
         try {
             String app = body.getRepository().getName();
@@ -278,7 +277,7 @@ public class BitbucketCloudController {
                     .namespace(body.getRepository().getOwner().getUsername().replaceAll(" ","_"))
                     .repoName(body.getRepository().getName())
                     .repoUrl(gitUrl)
-                    .repoUrlWithAuth(gitUrl.replace("https://", "https://".concat(properties.getToken()).concat("@")))
+                    .repoUrlWithAuth(gitUrl.replace(HTTPS, HTTPS.concat(properties.getToken()).concat("@")))
                     .repoType(ScanRequest.Repository.BITBUCKET)
                     .branch(currentBranch)
                     .refs("refs/heads/".concat(currentBranch))

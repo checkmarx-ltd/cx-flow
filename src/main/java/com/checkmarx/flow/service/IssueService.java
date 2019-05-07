@@ -138,13 +138,11 @@ public class IssueService implements ApplicationContextAware {
             /*Check if an issue exists in GitLab but not within results and close if not*/
             for (Map.Entry<String, Issue> issue : iMap.entrySet()) {
                 try {
-                    if (!xMap.containsKey(issue.getKey())) {
-                        if (tracker.isIssueOpened(issue.getValue())) {
-                            /*Close the issue*/
-                            tracker.closeIssue(issue.getValue(), request);
-                            closedIssues.add(issue.getValue().getId());
-                            log.info("Closing issue #{} with key {}", issue.getValue().getId(), issue.getKey());
-                        }
+                    if (!xMap.containsKey(issue.getKey()) && tracker.isIssueOpened(issue.getValue())) {
+                        /*Close the issue*/
+                        tracker.closeIssue(issue.getValue(), request);
+                        closedIssues.add(issue.getValue().getId());
+                        log.info("Closing issue #{} with key {}", issue.getValue().getId(), issue.getKey());
                     }
                 } catch (HttpClientErrorException e) {
                     log.error("Error occurred while processing issue with key {} {}", issue.getKey(), e);

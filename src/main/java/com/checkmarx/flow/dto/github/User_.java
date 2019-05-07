@@ -63,7 +63,7 @@ public class User_ {
     @JsonProperty("site_admin")
     private Boolean siteAdmin;
     @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+    private Map<String, Object> additionalProperties = new HashMap<>();
 
     @JsonProperty("login")
     public String getLogin() {

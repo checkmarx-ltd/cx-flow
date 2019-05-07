@@ -30,7 +30,7 @@ public class Namespace {
     @JsonProperty("parent_id")
     private Object parentId;
     @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+    private Map<String, Object> additionalProperties = new HashMap<>();
 
     @JsonProperty("id")
     public Integer getId() {
