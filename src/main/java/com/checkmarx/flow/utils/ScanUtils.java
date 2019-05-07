@@ -6,6 +6,7 @@ import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.EnumUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.HttpClientErrorException;
@@ -286,7 +287,7 @@ public class ScanUtils {
                             zipOutputStream.write(Files.readAllBytes(path));
                             zipOutputStream.closeEntry();
                         } catch (Exception e) {
-                            System.err.println(e);
+                            log.error(ExceptionUtils.getStackTrace(e));
                         }
                     });
         }
@@ -474,7 +475,7 @@ public class ScanUtils {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaRuntimeException();
         }
         return o;

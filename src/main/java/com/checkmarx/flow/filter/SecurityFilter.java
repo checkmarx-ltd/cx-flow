@@ -13,7 +13,6 @@ import java.io.IOException;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class SecurityFilter implements Filter {
 
-    private static final String AUTH_HEADER = "Authorization";
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(SecurityFilter.class);
 
     public SecurityFilter() {

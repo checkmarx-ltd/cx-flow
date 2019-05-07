@@ -55,7 +55,7 @@ public class PushEvent {
     @JsonProperty("sender")
     private Sender sender;
     @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+    private Map<String, Object> additionalProperties = new HashMap<>();
 
     @JsonProperty("ref")
     public String getRef() {

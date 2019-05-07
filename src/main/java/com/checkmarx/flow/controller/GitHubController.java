@@ -13,6 +13,7 @@ import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,6 +38,8 @@ import java.util.List;
 @RequestMapping(value = "/")
 public class GitHubController {
 
+    private static final String HTTP = "http://";
+    private static final String HTTPS = "https://";
     private static final String SIGNATURE = "X-Hub-Signature";
     private static final String EVENT = "X-GitHub-Event";
     private static final String PING = EVENT + "=ping";
@@ -118,7 +121,7 @@ public class GitHubController {
         try {
             event = mapper.readValue(body, PullEvent.class);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaRuntimeException();
         }
         //verify message signature
@@ -175,8 +178,8 @@ public class GitHubController {
             //build request object
             String gitUrl = event.getRepository().getCloneUrl();
             log.info("Using url: {}", gitUrl);
-            String gitAuthUrl = gitUrl.replace("https://", "https://".concat(properties.getToken()).concat("@"));
-            gitAuthUrl = gitAuthUrl.replace("http://", "http://".concat(properties.getToken()).concat("@"));
+            String gitAuthUrl = gitUrl.replace(HTTPS, HTTPS.concat(properties.getToken()).concat("@"));
+            gitAuthUrl = gitAuthUrl.replace(HTTP, HTTP.concat(properties.getToken()).concat("@"));
 
             String scanPreset = cxProperties.getScanPreset();
             if(!ScanUtils.empty(preset)){
@@ -268,7 +271,7 @@ public class GitHubController {
         try {
             event = mapper.readValue(body, PushEvent.class);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaRuntimeException();
         }
         //verify message signature
@@ -394,5 +397,5 @@ public class GitHubController {
         }
         log.info("Signature verified");
     }
-    
+
 }

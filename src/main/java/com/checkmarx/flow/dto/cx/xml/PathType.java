@@ -66,7 +66,7 @@ public class PathType {
      */
     public List<PathNodeType> getPathNode() {
         if (pathNode == null) {
-            pathNode = new ArrayList<PathNodeType>();
+            pathNode = new ArrayList<>();
         }
         return this.pathNode;
     }

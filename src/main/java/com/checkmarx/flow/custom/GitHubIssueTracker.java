@@ -9,6 +9,7 @@ import com.checkmarx.flow.dto.github.LabelsItem;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.utils.ScanUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -150,13 +151,12 @@ public class GitHubIssueTracker implements IssueTracker {
         }
         catch (HttpClientErrorException e){
             log.error("Error occurred while creating GitHub Issue");
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
             if(e.getStatusCode().equals(HttpStatus.GONE)){
-                //throw new MachinaException("Issues are not enabled for this repository");
+                log.error("Issues are not enabled for this repository");
                 throw new MachinaRuntimeException();
             }
             else{
-                //throw new MachinaException("Error occurred while creating GitHub Issue");
                 throw new MachinaRuntimeException();
             }
         }

@@ -128,7 +128,7 @@ public class CxService {
             return Integer.parseInt(id);
         }catch (HttpStatusCodeException e){
             log.error("Error occurred while creating Scan for project {}, http error {}", projectId, e.getStatusCode());
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
         }
         return UNKNOWN_INT;
     }
@@ -153,7 +153,7 @@ public class CxService {
             return Integer.parseInt(id);
         }catch (HttpStatusCodeException e){
             log.error("Error occurred while creating Scan for project {}, http error {}", projectId, e.getStatusCode());
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
         }
         return UNKNOWN_INT;
     }
@@ -204,7 +204,7 @@ public class CxService {
             }
         } catch (HttpStatusCodeException e) {
             log.error("Error occurred while creating Scan for project {}, http error {}", projectId, e.getStatusCode());
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
         } catch (NullPointerException e){
             log.error("Error parsing JSON response for dateAndTime status. {}");
         }
@@ -229,10 +229,10 @@ public class CxService {
             return status.getInt("id");
         }catch (HttpStatusCodeException e){
             log.error("HTTP Status Code of {} while getting xml status for xml Id {}", e.getStatusCode(),scanId);
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
         }catch (JSONException e){
             log.error("Error processing JSON Response");
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
         }
         return UNKNOWN_INT;
     }
@@ -256,10 +256,10 @@ public class CxService {
             return id;
         }catch (HttpStatusCodeException e){
             log.error("HTTP Status Code of {} while creating xml report for xml Id {}", e.getStatusCode(),scanId);
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
         }catch (JSONException e){
             log.error("Error processing JSON Response");
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
         }
         return UNKNOWN_INT;
     }
@@ -281,10 +281,10 @@ public class CxService {
             return status.getInt("id");
         }catch (HttpStatusCodeException e){
             log.error("HTTP Status Code of {} while getting report status for report Id {}", e.getStatusCode(),reportId);
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
         }catch (JSONException e){
             log.error("Error processing JSON Response");
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
         }
         return UNKNOWN_INT;
     }
@@ -352,17 +352,17 @@ public class CxService {
             return results;
         }catch (HttpStatusCodeException e) {
             log.error("HTTP Status Code of {} while getting downloading report contents of report Id {}", e.getStatusCode(), reportId);
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaException("Error while processing scan results for report Id ".concat(reportId.toString()));
         }
         catch (XMLStreamException | JAXBException e){
             log.error("Error with XML report");
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaException("Error while processing scan results for report Id ".concat(reportId.toString()));
         }
         catch (NullPointerException e){
             log.info("Null Error");
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaException("Error while processing scan results for report Id ".concat(reportId.toString()));
         }
     }
@@ -415,12 +415,12 @@ public class CxService {
 
         } catch (JAXBException e){
             log.error("Error with XML report");
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaException("Error while processing scan results");
         }
         catch (NullPointerException e){
             log.info("Null error");
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaException("Error while processing scan results");
         }
     }
@@ -497,12 +497,12 @@ public class CxService {
 
         } catch ( IOException e){
             log.error("Error parsing JSON OSA report");
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaException("Error while processing scan results");
         }
         catch (NullPointerException e){
             log.info("Null error");
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaException("Error while processing scan results");
         }
     }
@@ -553,7 +553,7 @@ public class CxService {
                 ScanResults.XIssue.XIssueBuilder xIssueBuilder = ScanResults.XIssue.builder();
                 /*Top node of each issue*/
                 for (ResultType r : q.getResult()) {
-                    if (r.getFalsePositive().toUpperCase().equals("FALSE") && checkFilter(r, filter)) {
+                    if (r.getFalsePositive().equalsIgnoreCase("FALSE") && checkFilter(r, filter)) {
                         /*Map issue details*/
                         xIssueBuilder.cwe(q.getCweId());
                         xIssueBuilder.language(q.getLanguage());
@@ -687,10 +687,10 @@ public class CxService {
             return Integer.parseInt(id);
         }catch (HttpStatusCodeException e){
             log.error("HTTP error code {} while creating project with name {} under owner id {}", e.getStatusCode(), name, ownerId);
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
         }catch (JSONException e){
             log.error("Error processing JSON Response");
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
         }
         return UNKNOWN_INT;
     }
@@ -708,7 +708,7 @@ public class CxService {
             return projects.getBody();
         }catch (HttpStatusCodeException e){
             log.warn("Error occurred while retrieving projects, http error {}", e.getStatusCode());
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaException("Error retrieving Projects");
         }
     }
@@ -1081,7 +1081,7 @@ public class CxService {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-        MultiValueMap<String, String> map = new LinkedMultiValueMap<String, String>();
+        MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
         map.add("username", cxProperties.getUsername());
         map.add("password", cxProperties.getPassword());
         map.add("grant_type", "password");

@@ -23,8 +23,6 @@ import java.util.Base64;
 @Service
 public class BitBucketService {
 
-    private static final String ISSUES_PER_PAGE = "100";
-    private static final int UNKNOWN_INT = -1;
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(BitBucketService.class);
     private final RestTemplate restTemplate;
     private final BitBucketProperties properties;

@@ -65,7 +65,7 @@ public class FlowConfig {
         }
         Properties props = mailSender.getJavaMailProperties();
 
-        if(!ScanUtils.empty(properties.getMail().getUsername()) && !ScanUtils.empty(properties.getMail().getUsername()) &&
+        if(!ScanUtils.empty(properties.getMail().getUsername()) &&
                 properties.getMail().getPort() != null && !ScanUtils.empty(properties.getMail().getHost())){
             mailSender.setHost(properties.getMail().getHost());
             mailSender.setPort(properties.getMail().getPort());

@@ -27,7 +27,7 @@ public class Head {
     @JsonProperty("repo")
     private Repo repo;
     @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+    private Map<String, Object> additionalProperties = new HashMap<>();
 
     @JsonProperty("label")
     public String getLabel() {
