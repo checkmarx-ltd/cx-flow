@@ -35,6 +35,8 @@ public class ScanUtils {
 
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(ScanUtils.class);
 
+    public ScanUtils() {
+    }
 
     /**
      * Function used to determine if file extension of full filename is preset in list
@@ -110,12 +112,7 @@ public class ScanUtils {
      * @return
      */
     public static boolean empty(String str) {
-        if (str == null) {
-            return true;
-        } else if (str.isEmpty()) {
-            return true;
-        }
-        return false;
+        return str == null || str.isEmpty();
     }
 
     /**
@@ -154,45 +151,43 @@ public class ScanUtils {
         }
         BugTracker bt = request.getBugTracker();
         /*Override only applicable to Simple JIRA bug*/
-        if(request.getBugTracker().getType().equals(BugTracker.Type.JIRA)) {
-            if(override.getJira()!=null) {
-                MachinaOverride.Jira jira = override.getJira();
-                if(!ScanUtils.empty(jira.getAssignee())) {
-                    bt.setAssignee(jira.getAssignee());
-                }//if empty value override with null
-                if(jira.getAssignee() != null && jira.getAssignee().isEmpty()) {
-                    bt.setAssignee(null);
-                }
-                if(!ScanUtils.empty(jira.getProject())) {
-                    bt.setProjectKey(jira.getProject());
-                }
-                if(!ScanUtils.empty(jira.getIssueType())) {
-                    bt.setIssueType(jira.getIssueType());
-                }
-                if(!ScanUtils.empty(jira.getOpenedStatus())) {
-                    bt.setOpenStatus(jira.getOpenedStatus());
-                }
-                if(!ScanUtils.empty(jira.getClosedStatus())) {
-                    bt.setClosedStatus(jira.getClosedStatus());
-                }
-                if(!ScanUtils.empty(jira.getOpenTransition())) {
-                    bt.setOpenTransition(jira.getOpenTransition());
-                }
-                if(!ScanUtils.empty(jira.getCloseTransition())) {
-                    bt.setCloseTransition(jira.getCloseTransition());
-                }
-                if(!ScanUtils.empty(jira.getCloseTransitionField())) {
-                    bt.setCloseTransitionField(jira.getCloseTransitionField());
-                }
-                if(!ScanUtils.empty(jira.getCloseTransitionValue())) {
-                    bt.setCloseTransitionValue(jira.getCloseTransitionValue());
-                }
-                if(jira.getFields()!=null) { //if empty, assume no fields
-                    bt.setFields(jira.getFields());
-                }
-                if(jira.getPriorities() != null && !jira.getPriorities().isEmpty()) {
-                    bt.setPriorities(jira.getPriorities());
-                }
+        if(request.getBugTracker().getType().equals(BugTracker.Type.JIRA) && override.getJira()!=null) {
+            MachinaOverride.Jira jira = override.getJira();
+            if(!ScanUtils.empty(jira.getAssignee())) {
+                bt.setAssignee(jira.getAssignee());
+            }//if empty value override with null
+            if(jira.getAssignee() != null && jira.getAssignee().isEmpty()) {
+                bt.setAssignee(null);
+            }
+            if(!ScanUtils.empty(jira.getProject())) {
+                bt.setProjectKey(jira.getProject());
+            }
+            if(!ScanUtils.empty(jira.getIssueType())) {
+                bt.setIssueType(jira.getIssueType());
+            }
+            if(!ScanUtils.empty(jira.getOpenedStatus())) {
+                bt.setOpenStatus(jira.getOpenedStatus());
+            }
+            if(!ScanUtils.empty(jira.getClosedStatus())) {
+                bt.setClosedStatus(jira.getClosedStatus());
+            }
+            if(!ScanUtils.empty(jira.getOpenTransition())) {
+                bt.setOpenTransition(jira.getOpenTransition());
+            }
+            if(!ScanUtils.empty(jira.getCloseTransition())) {
+                bt.setCloseTransition(jira.getCloseTransition());
+            }
+            if(!ScanUtils.empty(jira.getCloseTransitionField())) {
+                bt.setCloseTransitionField(jira.getCloseTransitionField());
+            }
+            if(!ScanUtils.empty(jira.getCloseTransitionValue())) {
+                bt.setCloseTransitionValue(jira.getCloseTransitionValue());
+            }
+            if(jira.getFields()!=null) { //if empty, assume no fields
+                bt.setFields(jira.getFields());
+            }
+            if(jira.getPriorities() != null && !jira.getPriorities().isEmpty()) {
+                bt.setPriorities(jira.getPriorities());
             }
         }
         request.setBugTracker(bt);

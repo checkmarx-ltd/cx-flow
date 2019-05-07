@@ -372,11 +372,11 @@ public class GitLabIssueTracker implements IssueTracker {
      * @return HttpHeaders for authentication
      */
     private HttpHeaders createAuthHeaders(){
-        return new HttpHeaders() {{
-            set("Content-Type", "application/json");
-            set("PRIVATE-TOKEN", properties.getToken());
-            set("Accept", "application/json");
-        }};
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.set("Content-Type", "application/json");
+        httpHeaders.set("PRIVATE-TOKEN", properties.getToken());
+        httpHeaders.set("Accept", "application/json");
+        return httpHeaders;
     }
 
     private static String getNextURIFromHeaders(HttpHeaders headers, final String headerName, final String rel) {
