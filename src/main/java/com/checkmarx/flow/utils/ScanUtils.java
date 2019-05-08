@@ -12,6 +12,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.HttpClientErrorException;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CodingErrorAction;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -20,6 +25,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class ScanUtils {
 
@@ -579,6 +586,10 @@ public class ScanUtils {
             log.debug(filename);
         }
         return filename;
+    }
+
+    public static String cleanStringUTF8(String dirty){
+        return new String(dirty.getBytes(), 0, dirty.length(), UTF_8);
     }
 
 }

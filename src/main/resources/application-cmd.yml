@@ -2,7 +2,7 @@ logging:
   file: cx-flow.log
 
 cx-flow:
-  bug-tracker: JIRA
+  bug-tracker: Json
   bug-tracker-impl:
     - CxXml
     - Json
@@ -19,10 +19,10 @@ cx-flow:
   #codebash-url: https://cxa.codebashing.com/courses/
 
 checkmarx:
-  username: xxxx
+  username:
   password: xxxx
   client-secret: 014DF517-39D1-4453-B7B3-9930C563627C
-  base-url: https://xxx/
+  base-url: https://xxx
   team: \CxServer\SP\Checkmarx
   url: ${checkmarx.base-url}/cxrestapi
   portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
@@ -34,6 +34,7 @@ checkmarx:
   jira-custom-field:
   jira-issuetype-field:
   jira-assignee-field:
+  scan-timeout: 120
 
 jira:
   url: https://xxx.xxxxx.com
