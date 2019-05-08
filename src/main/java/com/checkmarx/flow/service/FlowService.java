@@ -214,9 +214,14 @@ public class FlowService {
             String cxZipFile = FileSystems.getDefault().getPath("cx.".concat(UUID.randomUUID().toString()).concat(".zip")).toAbsolutePath().toString();
             ScanUtils.zipDirectory(path, cxZipFile);
             File f = new File(cxZipFile);
+            log.debug(f.getPath());
+            log.debug("free space "+ f.getFreeSpace());
+            log.debug("total space "+ f.getTotalSpace());
+            log.debug(f.getAbsolutePath());
             CompletableFuture<ScanResults> future = executeCxScanFlow(request, f);
+            log.debug("Waiting for scan to complete");
             ScanResults results = future.join();
-            if(flowProperties.isBreakBuild() && !results.getXIssues().isEmpty()){
+            if(flowProperties.isBreakBuild() && results !=null && results.getXIssues()!=null && !results.getXIssues().isEmpty()){
                 log.error("Exiting with Error code 10 due to issues present");
                 exit(10);
             }
@@ -234,7 +239,7 @@ public class FlowService {
         try {
             ScanResults results = cxService.getReportContent(file, request.getFilters());
             resultsService.processResults(request, results);
-            if(flowProperties.isBreakBuild() && !results.getXIssues().isEmpty()){
+            if(flowProperties.isBreakBuild() && results !=null && results.getXIssues()!=null && !results.getXIssues().isEmpty()){
                 log.error("Exiting with Error code 10 due to issues present");
                 exit(10);
             }
@@ -249,7 +254,7 @@ public class FlowService {
         try {
             ScanResults results = cxService.getOsaReportContent(file, libs, request.getFilters());
             resultsService.processResults(request, results);
-            if(flowProperties.isBreakBuild() && !results.getXIssues().isEmpty()){
+            if(flowProperties.isBreakBuild() && results !=null && results.getXIssues()!=null && !results.getXIssues().isEmpty()){
                 log.error("Exiting with Error code 10 due to issues present");
                 exit(10);
             }

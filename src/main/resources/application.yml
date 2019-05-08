@@ -2,13 +2,17 @@ logging:
   file: cx-flow.log
 #  level:
 #    com:
-#      custodela:
+#      checkmarx:
 #        flow:
 #          service: info
 #    org:
 #      apache:
 #        http:
-#          wire: info
+#          wire: TRACE
+#      springframework:
+#        web:
+#          client:
+#            RestTemplate: TRACE
 
 cx-flow:
   bug-tracker: JIRA
@@ -23,6 +27,7 @@ cx-flow:
   filter-status:
 # track-application-only: false
   mitre-url: https://cwe.mitre.org/data/definitions/%s.html
+#  break-build: true
 #  break-build: true
 #  wiki-url: https://custodela.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
 #  codebash-url: https://cxa.codebashing.com/courses/
@@ -56,17 +61,16 @@ checkmarx:
   jira-assignee-field:
 
 jira:
-  url: https://xxxxx.com
-  username: xxxxx
-  token: xxxxx
+  url: https://xxx.xxxxx.com
+  username: xxxx
+  token: xxxx
   project: SS
   issue-type: Application Security Bug
   priorities:
-    Critical: Highest
     High: High
     Medium: Medium
     Low: Low
-    informational: Lowest
+    Informational: Lowest
   open-transition: In Review
   close-transition: Done
   open-status:
@@ -76,10 +80,11 @@ jira:
   closed-status:
     - Done
   fields:
-    - type: result
+    - type: cx
       name: application
       jira-field-name: Application
       jira-field-type: label
+      jira-default-value: xxxx
     - type: result
       name: cve
       jira-field-name: CVEs

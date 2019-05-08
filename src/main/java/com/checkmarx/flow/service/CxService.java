@@ -10,6 +10,7 @@ import com.checkmarx.flow.dto.cx.xml.ResultType;
 import com.checkmarx.flow.exception.CheckmarxLegacyException;
 import com.checkmarx.flow.exception.InvalidCredentialsException;
 import com.checkmarx.flow.exception.MachinaException;
+import com.checkmarx.flow.utils.ScanUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
@@ -41,6 +42,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Class used to orchestrate submitting scans and retrieving results
@@ -320,8 +323,9 @@ public class CxService {
             log.debug("Base64:");
             log.debug(Base64.getEncoder().encodeToString(resultsXML.toString().getBytes()));
             /*Remove any chars before the start xml tag*/
-
             xml = xml.trim().replaceFirst("^([\\W]+)<","<");
+            xml = ScanUtils.cleanStringUTF8(xml);
+            log.trace(xml);
             InputStream xmlStream = new ByteArrayInputStream(Objects.requireNonNull(xml.getBytes()));
 
             /* protect against XXE */
@@ -997,6 +1001,7 @@ public class CxService {
             log.error("Error occurred while retrieving Teams");
             log.error(ExceptionUtils.getStackTrace(e));
         }
+        log.info("No team was found for {}", teamPath);
         return UNKNOWN;
     }
 
@@ -1048,6 +1053,7 @@ public class CxService {
             log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaException("Error obtaining Team Id");
         }
+        log.info("No scan configuration found for {}", configuration);
         return UNKNOWN_INT;
     }
 
@@ -1071,6 +1077,7 @@ public class CxService {
             log.error("Error occurred while retrieving presets");
             log.error(ExceptionUtils.getStackTrace(e));
         }
+        log.info("No Preset was found for {}", preset);
         return UNKNOWN_INT;
     }
 
