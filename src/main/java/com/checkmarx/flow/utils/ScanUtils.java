@@ -522,7 +522,7 @@ public class ScanUtils {
 
         BugTracker.Type bugType = EnumUtils.getEnum(BugTracker.Type.class, bug);
         if(bugType == null){ //Try uppercase
-            bugType = EnumUtils.getEnum(BugTracker.Type.class, bug.toUpperCase());
+            bugType = EnumUtils.getEnum(BugTracker.Type.class, bug.toUpperCase(Locale.ROOT));
             if(bugType == null){
                 log.debug("Determine if custom bean is being used");
                 if(bugTrackerImpl == null || !bugTrackerImpl.contains(bug)){
