@@ -26,6 +26,7 @@ cx-flow:
   codebash-url: https://cxa.codebashing.com/courses/
   web-hook-queue: 20
   scan-result-queue: 8
+  break-build: false
   mail:
     host: smtp.gmail.com
     port: 587
