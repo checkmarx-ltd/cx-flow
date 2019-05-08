@@ -5,7 +5,7 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.RepoIssue;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.ScanResults;
-import com.checkmarx.flow.exception.GitHubClienException;
+import com.checkmarx.flow.exception.GitHubClientException;
 import com.checkmarx.flow.utils.ScanUtils;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -38,18 +38,18 @@ public class GitHubService {
         return httpHeaders;
     }
 
-    Map<String, List<String>> process(ScanResults results, ScanRequest request) throws GitHubClienException {
+    Map<String, List<String>> process(ScanResults results, ScanRequest request) throws GitHubClientException {
         return null;
     }
 
-    void processPull(ScanRequest request,ScanResults results) throws GitHubClienException {
+    void processPull(ScanRequest request,ScanResults results) throws GitHubClientException {
         try {
             String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties);
             log.debug("comment: {}", comment);
             sendMergeComment(request, comment);
         } catch (HttpClientErrorException e){
             log.error("Error occurred while creating Merge Request comment");
-            throw new GitHubClienException();
+            throw new GitHubClientException();
         }
     }
 

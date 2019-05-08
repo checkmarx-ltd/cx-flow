@@ -60,17 +60,19 @@ public class FlowConfig {
     public JavaMailSender getJavaMailSender() {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
 
-        if(properties.getMail() == null || !properties.getMail().isEnabled()){
+        FlowProperties.Mail mail = properties.getMail();
+
+        if(mail == null || !mail.isEnabled()){
             return mailSender;
         }
         Properties props = mailSender.getJavaMailProperties();
 
-        if(!ScanUtils.empty(properties.getMail().getUsername()) &&
-                properties.getMail().getPort() != null && !ScanUtils.empty(properties.getMail().getHost())){
-            mailSender.setHost(properties.getMail().getHost());
-            mailSender.setPort(properties.getMail().getPort());
-            mailSender.setUsername(properties.getMail().getUsername());
-            mailSender.setPassword(properties.getMail().getPassword());
+        if(!ScanUtils.empty(mail.getUsername()) &&
+                mail.getPort() != null && !ScanUtils.empty(mail.getHost())){
+            mailSender.setHost(mail.getHost());
+            mailSender.setPort(mail.getPort());
+            mailSender.setUsername(mail.getUsername());
+            mailSender.setPassword(mail.getPassword());
             props.put("mail.smtp.auth", "true");
 
         }

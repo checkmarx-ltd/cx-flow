@@ -5,7 +5,7 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.ScanResults;
 import com.checkmarx.flow.dto.gitlab.Note;
-import com.checkmarx.flow.exception.GitLabClienException;
+import com.checkmarx.flow.exception.GitLabClientException;
 import com.checkmarx.flow.utils.ScanUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONException;
@@ -72,7 +72,7 @@ public class GitLabService {
     }
 
 
-    Map<String, List<String>> process(ScanResults results, ScanRequest request) throws GitLabClienException {
+    Map<String, List<String>> process(ScanResults results, ScanRequest request) throws GitLabClientException {
         return null;
     }
 
@@ -92,14 +92,14 @@ public class GitLabService {
         return httpHeaders;
     }
 
-    void processMerge(ScanRequest request,ScanResults results) throws GitLabClienException {
+    void processMerge(ScanRequest request,ScanResults results) throws GitLabClientException {
         try {
             String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties);
             log.debug("comment: {}", comment);
             sendMergeComment(request, comment);
         } catch (HttpClientErrorException e){
             log.error("Error occurred while creating Merge Request comment");
-            throw new GitLabClienException();
+            throw new GitLabClientException();
         }
     }
 
@@ -111,14 +111,14 @@ public class GitLabService {
         restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
-    void processCommit(ScanRequest request,ScanResults results) throws GitLabClienException {
+    void processCommit(ScanRequest request,ScanResults results) throws GitLabClientException {
         try {
             String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties);
             log.debug("comment: {}", comment);
             sendCommitComment(request, comment);
         } catch (HttpClientErrorException e){
             log.error("Error occurred while creating Commit comment");
-            throw new GitLabClienException();
+            throw new GitLabClientException();
         }
     }
 
@@ -159,6 +159,7 @@ public class GitLabService {
             String endpoint = properties.getApiUrl().concat(MERGE_PATH);
             endpoint = endpoint.replace("{id}", request.getRepoProjectId().toString());
             endpoint = endpoint.replace("{iid}", mergeId);
+
             HttpEntity httpEntity = new HttpEntity<>(
                     getJSONMergeTitle(request.getAdditionalMetadata("merge_title")
                             .replace("WIP:CX|","")).toString(),
