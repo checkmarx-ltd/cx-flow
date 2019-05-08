@@ -475,7 +475,7 @@ public class CxService {
                     if(issueList.contains(issue)){
                         issue = issueList.get(issueList.indexOf(issue));
                         //bump up the severity if required
-                        if(severityMap.get(issue.getSeverity().toUpperCase()) < severityMap.get(o.getSeverity().getName().toUpperCase())){
+                        if(severityMap.get(issue.getSeverity().toUpperCase(Locale.ROOT)) < severityMap.get(o.getSeverity().getName().toUpperCase(Locale.ROOT))){
                             issue.setSeverity(o.getSeverity().getName());
                         }
                         issue.setCve(issue.getCve().concat(",").concat(o.getCveName()));
@@ -610,23 +610,23 @@ public class CxService {
 
         for(Filter f: filters){
             if(f.getType().equals(Filter.Type.SEVERITY)){
-                severity.add(f.getValue().toUpperCase());
+                severity.add(f.getValue().toUpperCase(Locale.ROOT));
             }
             else if(f.getType().equals(Filter.Type.TYPE)){
-                category.add(f.getValue().toUpperCase());
+                category.add(f.getValue().toUpperCase(Locale.ROOT));
             }
             else if(f.getType().equals(Filter.Type.CWE)){
-                cwe.add(f.getValue().toUpperCase());
+                cwe.add(f.getValue().toUpperCase(Locale.ROOT));
             }
         }
-        if(!severity.isEmpty() && !severity.contains(q.getSeverity().toUpperCase())){
+        if(!severity.isEmpty() && !severity.contains(q.getSeverity().toUpperCase(Locale.ROOT))){
             return false;
         }
         if(!cwe.isEmpty() && !cwe.contains(q.getCweId())){
             return false;
         }
 
-        return category.isEmpty() || category.contains(q.getName().toUpperCase());
+        return category.isEmpty() || category.contains(q.getName().toUpperCase(Locale.ROOT));
     }
 
     private boolean checkFilter(ResultType r, List<Filter> filters){
@@ -637,7 +637,7 @@ public class CxService {
 
         for(Filter f: filters){
             if(f.getType().equals(Filter.Type.STATUS)){
-                status.add(STATUS_MAP.get(f.getValue().toUpperCase()));
+                status.add(STATUS_MAP.get(f.getValue().toUpperCase(Locale.ROOT)));
             }
         }
         return status.isEmpty() || status.contains(Integer.parseInt(r.getState()));

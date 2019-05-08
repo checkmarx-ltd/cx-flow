@@ -30,6 +30,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Class used to manage Controller for GitHub WebHooks
@@ -153,7 +154,7 @@ public class GitHubController {
             if(ScanUtils.empty(product)){
                 product = ScanRequest.Product.CX.getProduct();
             }
-            ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
+            ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
             String currentBranch = event.getPullRequest().getHead().getRef();
             String targetBranch = event.getPullRequest().getBase().getRef();
             List<String> branches = new ArrayList<>();
@@ -296,7 +297,7 @@ public class GitHubController {
             if(ScanUtils.empty(product)){
                 product = ScanRequest.Product.CX.getProduct();
             }
-            ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
+            ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
 
             //determine branch (without refs)
             String currentBranch = event.getRef().split("/")[2];

@@ -30,6 +30,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 
 @RestController
@@ -137,7 +138,7 @@ public class BitbucketServerController {
             if(ScanUtils.empty(product)){
                 product = ScanRequest.Product.CX.getProduct();
             }
-            ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
+            ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
             String currentBranch = event.getPullRequest().getFromRef().getDisplayId();
             String targetBranch = event.getPullRequest().getToRef().getDisplayId();
             List<String> branches = new ArrayList<>();
@@ -289,7 +290,7 @@ public class BitbucketServerController {
             if(ScanUtils.empty(product)){
                 product = ScanRequest.Product.CX.getProduct();
             }
-            ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
+            ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
             String currentBranch = event.getChanges().get(0).getRefId().split("/")[2];
             List<String> branches = new ArrayList<>();
             List<Filter> filters;

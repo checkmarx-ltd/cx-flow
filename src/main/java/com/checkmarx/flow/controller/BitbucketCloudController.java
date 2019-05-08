@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import java.beans.ConstructorProperties;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 
 @RestController
@@ -95,7 +96,7 @@ public class BitbucketCloudController {
             if(ScanUtils.empty(product)){
                 product = ScanRequest.Product.CX.getProduct();
             }
-            ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
+            ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
             String currentBranch = body.getPullrequest().getSource().getBranch().getName();
             String targetBranch = body.getPullrequest().getDestination().getBranch().getName();
             List<String> branches = new ArrayList<>();
@@ -226,7 +227,7 @@ public class BitbucketCloudController {
             if(ScanUtils.empty(product)){
                 product = ScanRequest.Product.CX.getProduct();
             }
-            ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
+            ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
             String currentBranch = body.getPush().getChanges().get(0).getNew().getName();
             List<String> branches = new ArrayList<>();
             List<Filter> filters;

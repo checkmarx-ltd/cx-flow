@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.beans.ConstructorProperties;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 
 @RestController
@@ -106,7 +107,7 @@ public class GitLabController {
             if(ScanUtils.empty(product)){
                 product = ScanRequest.Product.CX.getProduct();
             }
-            ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
+            ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
             String currentBranch = body.getObjectAttributes().getSourceBranch();
             String targetBranch = body.getObjectAttributes().getTargetBranch();
             List<String> branches = new ArrayList<>();
@@ -240,7 +241,7 @@ public class GitLabController {
             if(ScanUtils.empty(product)){
                 product = ScanRequest.Product.CX.getProduct();
             }
-            ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
+            ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
             //extract branch from ref (refs/heads/master -> master)
             String currentBranch = body.getRef().split("/")[2];
             List<String> branches = new ArrayList<>();
