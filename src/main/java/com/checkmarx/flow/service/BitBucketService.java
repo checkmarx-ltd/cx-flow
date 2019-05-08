@@ -4,7 +4,7 @@ import com.checkmarx.flow.config.BitBucketProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.ScanResults;
-import com.checkmarx.flow.exception.BitBucketClienException;
+import com.checkmarx.flow.exception.BitBucketClientException;
 import com.checkmarx.flow.utils.ScanUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -44,25 +44,25 @@ public class BitBucketService {
         return httpHeaders;
     }
 
-    void processMerge(ScanRequest request,ScanResults results) throws BitBucketClienException {
+    void processMerge(ScanRequest request,ScanResults results) throws BitBucketClientException {
         try {
             String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties);
             log.debug("comment: {}", comment);
             sendMergeComment(request, comment);
         } catch (HttpClientErrorException e){
             log.error("Error occurred while creating Merge Request comment");
-            throw new BitBucketClienException();
+            throw new BitBucketClientException();
         }
     }
 
-    void processServerMerge(ScanRequest request,ScanResults results) throws BitBucketClienException {
+    void processServerMerge(ScanRequest request,ScanResults results) throws BitBucketClientException {
         try {
             String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties);
             log.debug("comment: {}", comment);
             sendServerMergeComment(request, comment);
         } catch (HttpClientErrorException e){
             log.error("Error occurred while creating Merge Request comment");
-            throw new BitBucketClienException();
+            throw new BitBucketClientException();
         }
     }
 
@@ -76,14 +76,14 @@ public class BitBucketService {
         restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
-    void processCommit(ScanRequest request,ScanResults results) throws BitBucketClienException {
+    void processCommit(ScanRequest request,ScanResults results) throws BitBucketClientException {
         try {
             String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties);
             log.debug("comment: {}", comment);
             sendCommitComment(request, comment);
         } catch (HttpClientErrorException e){
             log.error("Error occurred while creating Commit comment");
-            throw new BitBucketClienException();
+            throw new BitBucketClientException();
         }
     }
 

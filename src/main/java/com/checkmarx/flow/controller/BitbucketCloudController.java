@@ -5,10 +5,8 @@ import com.checkmarx.flow.config.CxProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.dto.*;
-import com.checkmarx.flow.dto.bitbucket.Change;
-import com.checkmarx.flow.dto.bitbucket.Commit;
-import com.checkmarx.flow.dto.bitbucket.MergeEvent;
-import com.checkmarx.flow.dto.bitbucket.PushEvent;
+import com.checkmarx.flow.dto.bitbucket.*;
+import com.checkmarx.flow.dto.github.PullRequest;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.utils.ScanUtils;
@@ -79,7 +77,8 @@ public class BitbucketCloudController {
         MachinaOverride o = ScanUtils.getMachinaOverride(override);
 
         try {
-            String app = body.getRepository().getName();
+            Repository repository = body.getRepository();
+            String app = repository.getName();
             if(!ScanUtils.empty(application)){
                 app = application;
             }
@@ -97,8 +96,9 @@ public class BitbucketCloudController {
                 product = ScanRequest.Product.CX.getProduct();
             }
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
-            String currentBranch = body.getPullrequest().getSource().getBranch().getName();
-            String targetBranch = body.getPullrequest().getDestination().getBranch().getName();
+            Pullrequest pullRequest = body.getPullrequest();
+            String currentBranch = pullRequest.getSource().getBranch().getName();
+            String targetBranch = pullRequest.getDestination().getBranch().getName();
             List<String> branches = new ArrayList<>();
             List<Filter> filters;
 
@@ -119,8 +119,8 @@ public class BitbucketCloudController {
                         flowProperties.getFilterCategory(), flowProperties.getFilterStatus());
             }
 
-            String gitUrl = body.getRepository().getLinks().getHtml().getHref().concat(".git");
-            String mergeEndpoint = body.getPullrequest().getLinks().getComments().getHref();
+            String gitUrl = repository.getLinks().getHtml().getHref().concat(".git");
+            String mergeEndpoint = pullRequest.getLinks().getComments().getHref();
 
             String scanPreset = cxProperties.getScanPreset();
             if(!ScanUtils.empty(preset)){
@@ -136,8 +136,8 @@ public class BitbucketCloudController {
                     .product(p)
                     .project(project)
                     .team(team)
-                    .namespace(body.getRepository().getOwner().getUsername().replaceAll(" ","_"))
-                    .repoName(body.getRepository().getName())
+                    .namespace(repository.getOwner().getUsername().replaceAll(" ","_"))
+                    .repoName(repository.getName())
                     .repoUrl(gitUrl)
                     .repoUrlWithAuth(gitUrl.replace(HTTPS, HTTPS.concat(properties.getToken()).concat("@")))
                     .repoType(ScanRequest.Repository.BITBUCKET)

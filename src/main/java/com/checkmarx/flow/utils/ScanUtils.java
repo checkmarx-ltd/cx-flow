@@ -214,21 +214,23 @@ public class ScanUtils {
             request.setExcludeFiles(Arrays.asList(override.getExcludeFiles().split(",")));
         }
 
-        if(override.getEmails() != null) {
-            if (override.getEmails().isEmpty()) {
+        List<String> emails = override.getEmails();
+        if(emails != null) {
+            if (emails.isEmpty()) {
                 request.setEmail(null);
             } else {
-                request.setEmail(override.getEmails());
+                request.setEmail(emails);
             }
         }
+        MachinaOverride.Filters filtersObj = override.getFilters();
 
-        if(override.getFilters() != null && (!ScanUtils.empty(override.getFilters().getSeverity()) || !ScanUtils.empty(override.getFilters().getCwe()) ||
-                !ScanUtils.empty(override.getFilters().getCategory()) || !ScanUtils.empty(override.getFilters().getStatus()))) {
-            List<Filter> filters = ScanUtils.getFilters(override.getFilters().getSeverity(), override.getFilters().getCwe(),
-                    override.getFilters().getCategory(), override.getFilters().getStatus());
+        if(filtersObj != null && (!ScanUtils.empty(filtersObj.getSeverity()) || !ScanUtils.empty(filtersObj.getCwe()) ||
+                !ScanUtils.empty(filtersObj.getCategory()) || !ScanUtils.empty(filtersObj.getStatus()))) {
+            List<Filter> filters = ScanUtils.getFilters(filtersObj.getSeverity(), filtersObj.getCwe(),
+                    filtersObj.getCategory(), filtersObj.getStatus());
             request.setFilters(filters);
         }
-        else if (override.getFilters() != null){
+        else if (filtersObj != null){
             request.setFilters(null);
         }
 
