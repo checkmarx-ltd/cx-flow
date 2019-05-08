@@ -339,7 +339,7 @@ public class CxFlowApplicationCmd implements ApplicationRunner {
     }
     private void cxResults(ScanRequest request){
         ScanResults results = flowService.cxGetResults(request, null).join();
-        if(flowProperties.isBreakBuild() && !results.getXIssues().isEmpty()){
+        if(flowProperties.isBreakBuild() && results !=null && results.getXIssues()!=null && !results.getXIssues().isEmpty()){
             log.error("Exiting with Error code 10 due to issues present");
             exit(10);
         }
