@@ -322,6 +322,14 @@ public class FlowService {
                 (fields.get(cxProperties.getJiraCustomField()) != null) && !fields.get(cxProperties.getJiraCustomField()).isEmpty()){
             request.getBugTracker().setFields(ScanUtils.getCustomFieldsFromCx(fields.get(cxProperties.getJiraCustomField())));
         }
+
+        if(!ScanUtils.empty(cxProperties.getJiraAssigneeField())){
+            String assignee = fields.get(cxProperties.getJiraAssigneeField());
+            if(!ScanUtils.empty(assignee)) {
+                request.getBugTracker().setAssignee(assignee);
+            }
+        }
+
         request.setCxFields(fields);
     }
 

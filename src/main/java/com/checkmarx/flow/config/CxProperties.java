@@ -27,9 +27,9 @@ public class CxProperties {
     @NotNull @NotBlank
     private String url;
 
-    private boolean multiTenant;
-    private String scanPreset;
-    private String configuration;
+    private boolean multiTenant = false;
+    private String scanPreset = "Checkmarx Default";
+    private String configuration = "Default Configuration";
     private Boolean incremental = false;
     private Integer incrementalThreshold = 7;
     private Integer incrementalNumScans = 5;

@@ -26,7 +26,6 @@ public class FlowProperties {
     private String wikiUrl;
     private String codebashUrl;
     private boolean breakBuild = false;
-    private boolean incremental = false;
     private Integer webHookQueue = 100;
     private Integer scanResultQueue = 4;
 
@@ -159,14 +158,6 @@ public class FlowProperties {
 
     public void setScanResultQueue(Integer scanResultQueue) {
         this.scanResultQueue = scanResultQueue;
-    }
-
-    public boolean isIncremental() {
-        return incremental;
-    }
-
-    public void setIncremental(boolean incremental) {
-        this.incremental = incremental;
     }
 
     public boolean isBreakBuild() {
