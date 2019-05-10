@@ -20,9 +20,11 @@ public class CxLegacyService {
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(CxLegacyService.class);
     private final CxProperties properties;
     private final WebServiceTemplate ws;
-    private static final String CX_WS_LOGIN_URI = "http://Checkmarx.com/LoginV2";
-    private static final String CX_WS_DESCRIPTION_URI = "http://Checkmarx.com/GetResultDescription";
-    private static final String CX_WS_TEAM_URI = "http://Checkmarx.com/CreateNewTeam";
+
+    private static final String CX_WS_PREFIX= "http://Checkmarx.com/";
+    private static final String CX_WS_LOGIN_URI = CX_WS_PREFIX + "LoginV2";
+    private static final String CX_WS_DESCRIPTION_URI = CX_WS_PREFIX + "GetResultDescription";
+    private static final String CX_WS_TEAM_URI = CX_WS_PREFIX + "CreateNewTeam";
 
     @ConstructorProperties({"properties", "ws"})
     public CxLegacyService(CxProperties properties, WebServiceTemplate ws) {

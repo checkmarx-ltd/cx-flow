@@ -18,7 +18,7 @@ public class Permissions {
     @JsonProperty("group_access")
     private GroupAccess groupAccess;
     @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+    private Map<String, Object> additionalProperties = new HashMap<>();
 
     @JsonProperty("project_access")
     public Object getProjectAccess() {

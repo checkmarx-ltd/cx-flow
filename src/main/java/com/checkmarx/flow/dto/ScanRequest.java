@@ -145,7 +145,7 @@ public class ScanRequest {
     }
 
     public String getHash() {
-        return hash;
+        return this.hash;
     }
 
     public void setHash(String hash) {
@@ -476,7 +476,7 @@ public class ScanRequest {
         }
 
 
-        public ScanRequest.ScanRequestBuilder hash(String site) {
+        public ScanRequest.ScanRequestBuilder hash(String hash) {
             this.hash = hash;
             return this;
         }

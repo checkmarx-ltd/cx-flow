@@ -18,7 +18,7 @@ public class GroupAccess {
     @JsonProperty("notification_level")
     private Integer notificationLevel;
     @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+    private Map<String, Object> additionalProperties = new HashMap<>();
 
     @JsonProperty("access_level")
     public Integer getAccessLevel() {

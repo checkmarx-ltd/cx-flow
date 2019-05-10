@@ -30,7 +30,7 @@ public class PullEvent {
     @JsonProperty("installation")
     private Installation installation;
     @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+    private Map<String, Object> additionalProperties = new HashMap<>();
 
     @JsonProperty("action")
     public String getAction() {
