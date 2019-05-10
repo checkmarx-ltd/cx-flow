@@ -12,7 +12,7 @@ import java.util.List;
 public class BitBucketProperties {
     private String webhookToken;
     private String token;
-    private String url;;
+    private String url;
     private String apiPath;
     private String falsePositiveLabel;
     private List<String> ipAddresses;

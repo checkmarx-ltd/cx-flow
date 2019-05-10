@@ -442,8 +442,6 @@ public class JiraService {
         options = new GetCreateIssueMetadataOptionsBuilder().withExpandedIssueTypesFields().withIssueTypeNames(issueType).withProjectKeys(projectKey).build();
         Iterable<CimProject> metadata = this.issueClient.getCreateIssueMetadata(options).claim();
 
-        CimProject project = metadata.iterator().next();
-
         CimProject cim = metadata.iterator().next();
 
         Map<String,CimFieldInfo> fields = cim.getIssueTypes().iterator().next().getFields();
@@ -710,13 +708,13 @@ public class JiraService {
                     body.append("----").append(ScanUtils.CRLF);
                     if(!ScanUtils.empty(fileUrl)) {
                         if(request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)){
-                            body.append("[Line #").append(entry.getKey()).append(":|").append(fileUrl).append("#").append(entry.getKey()).append("]").append(ScanUtils.CRLF);;
+                            body.append("[Line #").append(entry.getKey()).append(":|").append(fileUrl).append("#").append(entry.getKey()).append("]").append(ScanUtils.CRLF);
                         }
                         else if(request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)){ //BB Cloud
-                            body.append("[Line #").append(entry.getKey()).append(":|").append(fileUrl).append("#lines-").append(entry.getKey()).append("]").append(ScanUtils.CRLF);;
+                            body.append("[Line #").append(entry.getKey()).append(":|").append(fileUrl).append("#lines-").append(entry.getKey()).append("]").append(ScanUtils.CRLF);
                         }
                         else {
-                            body.append("[Line #").append(entry.getKey()).append(":|").append(fileUrl).append("#L").append(entry.getKey()).append("]").append(ScanUtils.CRLF);;
+                            body.append("[Line #").append(entry.getKey()).append(":|").append(fileUrl).append("#L").append(entry.getKey()).append("]").append(ScanUtils.CRLF);
                         }
                     }
                     else {

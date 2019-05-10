@@ -65,14 +65,6 @@ public class ScanResults{
         this.project = project;
     }
 
-    public List<XIssue> getxIssues() {
-        return xIssues;
-    }
-
-    public void setxIssues(List<XIssue> xIssues) {
-        this.xIssues = xIssues;
-    }
-
     public Boolean getOsa() {
         return this.osa;
     }

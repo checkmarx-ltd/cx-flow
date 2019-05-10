@@ -76,6 +76,7 @@ public class EventResponse {
         private String step;
 
         EventResponseBuilder() {
+            this.success = false;
         }
 
         public EventResponse.EventResponseBuilder success(@NotNull Boolean success) {

@@ -93,7 +93,7 @@ public class QueryType {
      */
     public List<ResultType> getResult() {
         if (result == null) {
-            result = new ArrayList<ResultType>();
+            result = new ArrayList<>();
         }
         return this.result;
     }

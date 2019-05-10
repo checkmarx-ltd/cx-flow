@@ -99,25 +99,25 @@ public class CxFlowApplicationCmd implements ApplicationRunner {
             try {
                 o = mapper.readValue(new File(config), MachinaOverride.class);
             } catch (IOException e) {
-                e.printStackTrace();
                 log.error("Error reading config file, ignoring...");
+                log.error(ExceptionUtils.getStackTrace(e));
             }
         }
 
         /*Collect command line options (String)*/
-        bugTracker = ((ScanUtils.empty(arg.getOptionValues("bug-tracker")))) ? null : arg.getOptionValues("bug-tracker").get(0);
-        file = ((ScanUtils.empty(arg.getOptionValues("f")))) ? null : arg.getOptionValues("f").get(0);
-        libFile = ((ScanUtils.empty(arg.getOptionValues("lib-file")))) ? null : arg.getOptionValues("lib-file").get(0);
-        repoName = ((ScanUtils.empty(arg.getOptionValues("repo-name")))) ? null : arg.getOptionValues("repo-name").get(0);
-        repoUrl = ((ScanUtils.empty(arg.getOptionValues("repo-url")))) ? null : arg.getOptionValues("repo-url").get(0);
-        branch = ((ScanUtils.empty(arg.getOptionValues("branch")))) ? null : arg.getOptionValues("branch").get(0);
-        namespace = ((ScanUtils.empty(arg.getOptionValues("namespace")))) ? null : arg.getOptionValues("namespace").get(0);
-        team = ((ScanUtils.empty(arg.getOptionValues("cx-team")))) ? null : arg.getOptionValues("cx-team").get(0);
-        cxProject = ((ScanUtils.empty(arg.getOptionValues("cx-project")))) ? null : arg.getOptionValues("cx-project").get(0);
-        application = ((ScanUtils.empty(arg.getOptionValues("app")))) ? null : arg.getOptionValues("app").get(0);
-        assignee = ((ScanUtils.empty(arg.getOptionValues("assignee")))) ? null : arg.getOptionValues("assignee").get(0);
-        mergeId = ((ScanUtils.empty(arg.getOptionValues("merge-id")))) ? null : arg.getOptionValues("merge-id").get(0);
-        preset = ((ScanUtils.empty(arg.getOptionValues("preset")))) ? null : arg.getOptionValues("preset").get(0);
+        bugTracker = ScanUtils.empty(arg.getOptionValues("bug-tracker")) ? null : arg.getOptionValues("bug-tracker").get(0);
+        file = ScanUtils.empty(arg.getOptionValues("f")) ? null : arg.getOptionValues("f").get(0);
+        libFile = ScanUtils.empty(arg.getOptionValues("lib-file")) ? null : arg.getOptionValues("lib-file").get(0);
+        repoName = ScanUtils.empty(arg.getOptionValues("repo-name")) ? null : arg.getOptionValues("repo-name").get(0);
+        repoUrl = ScanUtils.empty(arg.getOptionValues("repo-url")) ? null : arg.getOptionValues("repo-url").get(0);
+        branch = ScanUtils.empty(arg.getOptionValues("branch")) ? null : arg.getOptionValues("branch").get(0);
+        namespace = ScanUtils.empty(arg.getOptionValues("namespace")) ? null : arg.getOptionValues("namespace").get(0);
+        team = ScanUtils.empty(arg.getOptionValues("cx-team")) ? null : arg.getOptionValues("cx-team").get(0);
+        cxProject = ScanUtils.empty(arg.getOptionValues("cx-project")) ? null : arg.getOptionValues("cx-project").get(0);
+        application = ScanUtils.empty(arg.getOptionValues("app")) ? null : arg.getOptionValues("app").get(0);
+        assignee = ScanUtils.empty(arg.getOptionValues("assignee")) ? null : arg.getOptionValues("assignee").get(0);
+        mergeId = ScanUtils.empty(arg.getOptionValues("merge-id")) ? null : arg.getOptionValues("merge-id").get(0);
+        preset = ScanUtils.empty(arg.getOptionValues("preset")) ? null : arg.getOptionValues("preset").get(0);
         osa = arg.getOptionValues("osa") != null;
         /*Collect command line options (List of Strings)*/
         emails = arg.getOptionValues("emails");
@@ -266,10 +266,12 @@ public class CxFlowApplicationCmd implements ApplicationRunner {
         }
         else if(bbs){
             request.setRepoType(ScanRequest.Repository.BITBUCKETSERVER);
-            repoUrl = repoUrl.replaceAll("\\/scm\\/", "/projects/");
-            repoUrl = repoUrl.replaceAll("\\/[\\w-]+.git$", "/repos$0");
-            repoUrl = repoUrl.replaceAll(".git$", "");
-            repoUrl = repoUrl.concat("/browse");
+            if(repoUrl != null) {
+                repoUrl = repoUrl.replaceAll("\\/scm\\/", "/projects/");
+                repoUrl = repoUrl.replaceAll("\\/[\\w-]+.git$", "/repos$0");
+                repoUrl = repoUrl.replaceAll(".git$", "");
+                repoUrl = repoUrl.concat("/browse");
+            }
             request.putAdditionalMetadata("BITBUCKET_BROWSE", repoUrl);
         }
 
@@ -317,7 +319,6 @@ public class CxFlowApplicationCmd implements ApplicationRunner {
         }catch (Exception e){
             log.error("An error occurred while processing request");
             log.error(ExceptionUtils.getStackTrace(e));
-            e.printStackTrace();
             exit(10);
         }
         log.info("Completed Successfully");

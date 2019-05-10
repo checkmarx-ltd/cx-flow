@@ -123,7 +123,7 @@ public class CxXMLResultsType {
      */
     public List<QueryType> getQuery() {
         if (query == null) {
-            query = new ArrayList<QueryType>();
+            query = new ArrayList<>();
         }
         return this.query;
     }
