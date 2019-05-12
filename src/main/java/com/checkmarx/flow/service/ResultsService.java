@@ -103,6 +103,7 @@ public class ResultsService {
             return cxService.getReportContent(reportId, filters);
         } catch (InterruptedException e) {
             log.error(ExceptionUtils.getStackTrace(e));
+            Thread.currentThread().interrupt();
             throw new MachinaException("Interrupted Exception Occurred");
         }
     }
