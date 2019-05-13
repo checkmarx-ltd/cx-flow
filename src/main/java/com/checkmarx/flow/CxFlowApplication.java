@@ -8,6 +8,8 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @EnableAsync
 public class CxFlowApplication {
 	public static void main(String[] args) {
-		SpringApplication.run(CxFlowApplication.class, args);
+		if(args != null) {
+			SpringApplication.run(CxFlowApplication.class, args);
+		}
 	}
 }

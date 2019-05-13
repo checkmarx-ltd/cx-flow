@@ -29,14 +29,12 @@ public class GitLabIssueTracker implements IssueTracker {
     private static final String TRANSITION_OPEN = "reopen";
     private static final String OPEN_STATE = "opened";
     private static final String ISSUES_PER_PAGE = "100";
-    private static final String NEW_LINE = "\r\n";
     private static final String PROJECT_PATH = "/projects/{id}";
     private static final String PROJECT = "projects/{namespace}{x}{repo}";
     private static final String ISSUES_PATH = "/projects/{id}/issues?per_page=".concat(ISSUES_PER_PAGE);
     private static final String NEW_ISSUE_PATH = "/projects/{id}/issues";
     private static final String ISSUE_PATH = "/projects/{id}/issues/{iid}";
     private static final String COMMENT_PATH = "/projects/{id}/issues/{iid}/notes";
-    private static final String PROJECT_FILES = PROJECT_PATH + "/repository/tree?ref=";
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(GitLabIssueTracker.class);
     private static final int UNKNOWN_INT = -1;
     private final RestTemplate restTemplate;
@@ -95,10 +93,10 @@ public class GitLabIssueTracker implements IssueTracker {
             return obj.getInt("id");
         }catch (HttpClientErrorException e){
             log.error("Error calling gitlab project api {}", e.getResponseBodyAsString());
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
         }catch (JSONException e){
             log.error("Error parsing gitlab project response.", e);
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
         }
         catch (URISyntaxException e){
             log.error("Incorrect URI {}", ExceptionUtils.getStackTrace(e));
@@ -204,7 +202,7 @@ public class GitLabIssueTracker implements IssueTracker {
         }
         catch (HttpClientErrorException e){
             log.error("Error occurred while creating GitLab Issue");
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
             if(e.getStatusCode().equals(HttpStatus.GONE)){
                 throw new MachinaException("Issues are not enabled for this repository");
             }
@@ -374,11 +372,11 @@ public class GitLabIssueTracker implements IssueTracker {
      * @return HttpHeaders for authentication
      */
     private HttpHeaders createAuthHeaders(){
-        return new HttpHeaders() {{
-            set("Content-Type", "application/json");
-            set("PRIVATE-TOKEN", properties.getToken());
-            set("Accept", "application/json");
-        }};
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.set("Content-Type", "application/json");
+        httpHeaders.set("PRIVATE-TOKEN", properties.getToken());
+        httpHeaders.set("Accept", "application/json");
+        return httpHeaders;
     }
 
     private static String getNextURIFromHeaders(HttpHeaders headers, final String headerName, final String rel) {

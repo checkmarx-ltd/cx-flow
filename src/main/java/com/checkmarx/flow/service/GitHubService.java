@@ -5,7 +5,7 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.RepoIssue;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.ScanResults;
-import com.checkmarx.flow.exception.GitHubClienException;
+import com.checkmarx.flow.exception.GitHubClientException;
 import com.checkmarx.flow.utils.ScanUtils;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -33,29 +33,29 @@ public class GitHubService {
 
 
     private HttpHeaders createAuthHeaders(){
-        return new HttpHeaders() {{
-            set("Authorization", "token ".concat(properties.getToken()));
-        }};
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.set("Authorization", "token ".concat(properties.getToken()));
+        return httpHeaders;
     }
 
-    Map<String, List<String>> process(ScanResults results, ScanRequest request) throws GitHubClienException {
+    Map<String, List<String>> process(ScanResults results, ScanRequest request) throws GitHubClientException {
         return null;
     }
 
-    void processPull(ScanRequest request,ScanResults results) throws GitHubClienException {
+    void processPull(ScanRequest request,ScanResults results) throws GitHubClientException {
         try {
             String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties);
             log.debug("comment: {}", comment);
             sendMergeComment(request, comment);
         } catch (HttpClientErrorException e){
             log.error("Error occurred while creating Merge Request comment");
-            throw new GitHubClienException();
+            throw new GitHubClientException();
         }
     }
 
     void sendMergeComment(ScanRequest request, String comment){
         HttpEntity httpEntity = new HttpEntity<>(RepoIssue.getJSONComment("body",comment).toString(), createAuthHeaders());
-        ResponseEntity<String> response = restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
+        restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
     void startBlockMerge(ScanRequest request, String url){
@@ -68,7 +68,7 @@ public class GitHubService {
                 log.error("statuses_url was not provided within the request object, which is required for blocking / unblocking pull requests");
                 return;
             }
-            ResponseEntity<String> response = restTemplate.exchange(request.getAdditionalMetadata("statuses_url"),
+            restTemplate.exchange(request.getAdditionalMetadata("statuses_url"),
                     HttpMethod.POST, httpEntity, String.class);
         }
     }
@@ -83,7 +83,7 @@ public class GitHubService {
                 log.error("statuses_url was not provided within the request object, which is required for blocking / unblocking pull requests");
                 return;
             }
-            ResponseEntity<String> response = restTemplate.exchange(request.getAdditionalMetadata("statuses_url"),
+            restTemplate.exchange(request.getAdditionalMetadata("statuses_url"),
                     HttpMethod.POST, httpEntity, String.class);
         }
     }
@@ -98,7 +98,7 @@ public class GitHubService {
                 log.error("statuses_url was not provided within the request object, which is required for blocking / unblocking pull requests");
                 return;
             }
-            ResponseEntity<String> response = restTemplate.exchange(request.getAdditionalMetadata("statuses_url"),
+            restTemplate.exchange(request.getAdditionalMetadata("statuses_url"),
                     HttpMethod.POST, httpEntity, String.class);
         }
     }

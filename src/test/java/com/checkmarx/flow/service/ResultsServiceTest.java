@@ -2,7 +2,7 @@ package com.checkmarx.flow.service;
 
 import org.junit.Test;
 
-public class ResutlsServiceTest {
+public class ResultsServiceTest {
 
     @Test
     public void processScanResultsAsync() {

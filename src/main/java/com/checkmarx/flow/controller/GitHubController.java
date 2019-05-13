@@ -5,14 +5,13 @@ import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.*;
-import com.checkmarx.flow.dto.github.Commit;
-import com.checkmarx.flow.dto.github.PullEvent;
-import com.checkmarx.flow.dto.github.PushEvent;
+import com.checkmarx.flow.dto.github.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +28,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Class used to manage Controller for GitHub WebHooks
@@ -37,6 +37,8 @@ import java.util.List;
 @RequestMapping(value = "/")
 public class GitHubController {
 
+    private static final String HTTP = "http://";
+    private static final String HTTPS = "https://";
     private static final String SIGNATURE = "X-Hub-Signature";
     private static final String EVENT = "X-GitHub-Event";
     private static final String PING = EVENT + "=ping";
@@ -118,22 +120,24 @@ public class GitHubController {
         try {
             event = mapper.readValue(body, PullEvent.class);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaRuntimeException();
         }
         //verify message signature
         verifyHmacSignature(body, signature);
 
         try {
-            if(!event.getAction().equalsIgnoreCase("opened") &&
-                    !event.getAction().equalsIgnoreCase("reopened")){
-                log.info("Pull requested not processed.  Status was not opened ({})", event.getAction());
+            String action = event.getAction();
+            if(!action.equalsIgnoreCase("opened") &&
+                    !action.equalsIgnoreCase("reopened")){
+                log.info("Pull requested not processed.  Status was not opened ({})", action);
                 return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
                         .message("No processing occurred for updates to Pull Request")
                         .success(true)
                         .build());
             }
-            String app = event.getRepository().getName();
+            Repository repository = event.getRepository();
+            String app = repository.getName();
             if(!ScanUtils.empty(application)){
                 app = application;
             }
@@ -150,9 +154,10 @@ public class GitHubController {
             if(ScanUtils.empty(product)){
                 product = ScanRequest.Product.CX.getProduct();
             }
-            ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
-            String currentBranch = event.getPullRequest().getHead().getRef();
-            String targetBranch = event.getPullRequest().getBase().getRef();
+            ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
+            PullRequest pullRequest = event.getPullRequest();
+            String currentBranch = pullRequest.getHead().getRef();
+            String targetBranch = pullRequest.getBase().getRef();
             List<String> branches = new ArrayList<>();
             List<Filter> filters;
             if(!ScanUtils.empty(branch)){
@@ -173,10 +178,11 @@ public class GitHubController {
             }
 
             //build request object
-            String gitUrl = event.getRepository().getCloneUrl();
+            String gitUrl = repository.getCloneUrl();
+            String token = properties.getToken();
             log.info("Using url: {}", gitUrl);
-            String gitAuthUrl = gitUrl.replace("https://", "https://".concat(properties.getToken()).concat("@"));
-            gitAuthUrl = gitAuthUrl.replace("http://", "http://".concat(properties.getToken()).concat("@"));
+            String gitAuthUrl = gitUrl.replace(HTTPS, HTTPS.concat(token).concat("@"));
+            gitAuthUrl = gitAuthUrl.replace(HTTP, HTTP.concat(token).concat("@"));
 
             String scanPreset = cxProperties.getScanPreset();
             if(!ScanUtils.empty(preset)){
@@ -192,9 +198,9 @@ public class GitHubController {
                     .product(p)
                     .project(project)
                     .team(team)
-                    .namespace(event.getRepository().getOwner().getLogin().replaceAll(" ","_"))
-                    .repoName(event.getRepository().getName())
-                    .repoUrl(event.getRepository().getCloneUrl())
+                    .namespace(repository.getOwner().getLogin().replaceAll(" ","_"))
+                    .repoName(repository.getName())
+                    .repoUrl(repository.getCloneUrl())
                     .repoUrlWithAuth(gitAuthUrl)
                     .repoType(ScanRequest.Repository.GITHUB)
                     .branch(currentBranch)
@@ -268,7 +274,7 @@ public class GitHubController {
         try {
             event = mapper.readValue(body, PushEvent.class);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaRuntimeException();
         }
         //verify message signature
@@ -293,7 +299,7 @@ public class GitHubController {
             if(ScanUtils.empty(product)){
                 product = ScanRequest.Product.CX.getProduct();
             }
-            ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
+            ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
 
             //determine branch (without refs)
             String currentBranch = event.getRef().split("/")[2];
@@ -325,10 +331,11 @@ public class GitHubController {
             emails.add(event.getPusher().getEmail());
 
             //build request object
-            String gitUrl = event.getRepository().getCloneUrl();
+            Repository repository = event.getRepository();
+            String gitUrl = repository.getCloneUrl();
             log.debug("Using url: {}", gitUrl);
-            String gitAuthUrl = gitUrl.replace("https://", "https://".concat(properties.getToken()).concat("@"));
-            gitAuthUrl = gitAuthUrl.replace("http://", "http://".concat(properties.getToken()).concat("@"));
+            String gitAuthUrl = gitUrl.replace(HTTPS, HTTPS.concat(properties.getToken()).concat("@"));
+            gitAuthUrl = gitAuthUrl.replace(HTTP, HTTP.concat(properties.getToken()).concat("@"));
 
             String scanPreset = cxProperties.getScanPreset();
             if(!ScanUtils.empty(preset)){
@@ -344,9 +351,9 @@ public class GitHubController {
                     .product(p)
                     .project(project)
                     .team(team)
-                    .namespace(event.getRepository().getOwner().getName().replaceAll(" ","_"))
-                    .repoName(event.getRepository().getName())
-                    .repoUrl(event.getRepository().getCloneUrl())
+                    .namespace(repository.getOwner().getName().replaceAll(" ","_"))
+                    .repoName(repository.getName())
+                    .repoUrl(repository.getCloneUrl())
                     .repoUrlWithAuth(gitAuthUrl)
                     .repoType(ScanRequest.Repository.GITHUB)
                     .branch(currentBranch)
@@ -394,5 +401,5 @@ public class GitHubController {
         }
         log.info("Signature verified");
     }
-    
+
 }

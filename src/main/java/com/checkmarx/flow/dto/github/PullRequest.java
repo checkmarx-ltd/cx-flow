@@ -123,7 +123,7 @@ public class PullRequest {
     @JsonProperty("changed_files")
     private Integer changedFiles;
     @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+    private Map<String, Object> additionalProperties = new HashMap<>();
 
     @JsonProperty("url")
     public String getUrl() {

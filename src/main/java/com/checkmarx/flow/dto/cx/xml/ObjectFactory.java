@@ -23,7 +23,7 @@ import javax.xml.namespace.QName;
 @XmlRegistry
 public class ObjectFactory {
 
-    private final static QName _CxXMLResults_QNAME = new QName("", "CxXMLResults");
+    private static final QName _CxXMLResults_QNAME = new QName("", "CxXMLResults");
 
     /**
      * Create a new ObjectFactory that can be used to create new instances of schema derived classes for package: com.model.cx
@@ -94,7 +94,7 @@ public class ObjectFactory {
      */
     @XmlElementDecl(namespace = "", name = "CxXMLResults")
     public JAXBElement<CxXMLResultsType> createCxXMLResults(CxXMLResultsType value) {
-        return new JAXBElement<CxXMLResultsType>(_CxXMLResults_QNAME, CxXMLResultsType.class, null, value);
+        return new JAXBElement<>(_CxXMLResults_QNAME, CxXMLResultsType.class, null, value);
     }
 
 }
