@@ -168,6 +168,10 @@ public class CsvIssueTracker implements IssueTracker {
                     log.debug("similarity-id: {}", issue.getSimilarityId());
                     value = issue.getSimilarityId();
                     break;
+                case "description":
+                    log.debug("description: {}", issue.getDescription());
+                    value = issue.getDescription();
+                    break;
                 default:
                     if (request.getCxFields() != null) {
                         log.debug("Checking for Checkmarx custom field {}", f.getName());
