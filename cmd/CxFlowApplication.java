@@ -266,7 +266,7 @@ public class CxFlowApplication implements ApplicationRunner {
         }
         else if(bbs){
             request.setRepoType(ScanRequest.Repository.BITBUCKETSERVER);
-            if(repoUrl) {
+            if(repoUrl != null) {
                 repoUrl = repoUrl.replaceAll("\\/scm\\/", "/projects/");
                 repoUrl = repoUrl.replaceAll("\\/[\\w-]+.git$", "/repos$0");
                 repoUrl = repoUrl.replaceAll(".git$", "");
