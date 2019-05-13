@@ -234,7 +234,7 @@ public class Repository {
     @JsonProperty("organization")
     private String organization;
     @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+    private Map<String, Object> additionalProperties = new HashMap<>();
 
     @JsonProperty("id")
     public Integer getId() {

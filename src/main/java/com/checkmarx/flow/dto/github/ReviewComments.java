@@ -15,7 +15,7 @@ public class ReviewComments {
     @JsonProperty("href")
     private String href;
     @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+    private Map<String, Object> additionalProperties = new HashMap<>();
 
     @JsonProperty("href")
     public String getHref() {

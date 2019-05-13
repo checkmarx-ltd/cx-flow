@@ -26,6 +26,9 @@ import static java.lang.System.exit;
 public class FlowService {
 
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(FlowService.class);
+
+    private static final String SCAN_MESSAGE = "Scan submitted to Checkmarx";
+
     private final CxService cxService;
     private final GitHubService gitService;
     private final GitLabService gitLabService;
@@ -33,15 +36,15 @@ public class FlowService {
     private final EmailService emailService;
     private final CxProperties cxProperties;
     private final FlowProperties flowProperties;
-    private final ResutlsService resutlsService;
+    private final ResultsService resultsService;
     private static final Long SLEEP = 20000L;
 
     @ConstructorProperties({"cxService", "resultService", "gitService", "gitLabService", "bbService", "emailService", "cxProperties", "flowProperties"})
-    public FlowService(CxService cxService, ResutlsService resutlsService, GitHubService gitService,
+    public FlowService(CxService cxService, ResultsService resultsService, GitHubService gitService,
                        GitLabService gitLabService, BitBucketService bbService, EmailService emailService,
                        CxProperties cxProperties, FlowProperties flowProperties) {
         this.cxService = cxService;
-        this.resutlsService = resutlsService;
+        this.resultsService = resultsService;
         this.gitService = gitService;
         this.gitLabService = gitLabService;
         this.bbService = bbService;
@@ -81,22 +84,27 @@ public class FlowService {
             Integer engineId = cxService.getScanConfiguration(cxProperties.getConfiguration());
             String projectName;
             Integer projectId;
+            String project = request.getProject();
+            String repoName = request.getRepoName();
+            String branch = request.getBranch();
+            String team = request.getTeam();
+            String namespace = request.getNamespace();
 
             /*Check if team is provided*/
-            if(!ScanUtils.empty(request.getTeam())){
-                log.info("Overriding team and project with {} - {}", request.getTeam(), request.getProject());
-                ownerId = cxService.getTeamId(request.getTeam());
+            if(!ScanUtils.empty(team)){
+                log.info("Overriding team and project with {} - {}", team, project);
+                ownerId = cxService.getTeamId(team);
             }
             else{
                 ownerId = cxService.getTeamId(cxProperties.getTeam());
 
                 if(cxProperties.isMultiTenant() &&
-                        !ScanUtils.empty(request.getNamespace())){
-                    String fullTeamName = cxProperties.getTeam().concat("\\").concat(request.getNamespace());
+                        !ScanUtils.empty(namespace)){
+                    String fullTeamName = cxProperties.getTeam().concat("\\").concat(namespace);
                     request.setTeam(fullTeamName);
                     String tmpId = cxService.getTeamId(fullTeamName);
                     if(tmpId.equals(UNKNOWN)){
-                        ownerId = cxService.createTeam(ownerId, request.getNamespace());
+                        ownerId = cxService.createTeam(ownerId, namespace);
                     }
                     else{
                         ownerId = tmpId;
@@ -108,14 +116,14 @@ public class FlowService {
             }
 
             /*Determine project name*/
-            if(!ScanUtils.empty(request.getProject())){
-                projectName = request.getProject();
+            if(!ScanUtils.empty(project)){
+                projectName = project;
             }
             else if(cxProperties.isMultiTenant()){
-                projectName = request.getRepoName().concat("-").concat(request.getBranch());
+                projectName = repoName.concat("-").concat(branch);
             }
             else{
-                projectName = request.getNamespace().concat("-").concat(request.getRepoName()).concat("-").concat(request.getBranch());
+                projectName = namespace.concat("-").concat(repoName).concat("-").concat(branch);
             }
 
             //only allow specific chars in project name
@@ -155,28 +163,27 @@ public class FlowService {
             cxService.setProjectExcludeDetails(projectId, request.getExcludeFolders(), request.getExcludeFiles());
             Integer scanId = cxService.createScan(projectId, request.isIncremental(), true, false, "Automated scan");
 
-            String SCAN_MESSAGE = "Scan submitted to Checkmarx";
-
-            if(request.getBugTracker().getType().equals(BugTracker.Type.GITLABMERGE)){
+            BugTracker.Type bugTrackerType = request.getBugTracker().getType();
+            if(bugTrackerType.equals(BugTracker.Type.GITLABMERGE)){
                 gitLabService.sendMergeComment(request, SCAN_MESSAGE);
                 gitLabService.startBlockMerge(request);
             }
-            else if(request.getBugTracker().getType().equals(BugTracker.Type.GITLABCOMMIT)){
+            else if(bugTrackerType.equals(BugTracker.Type.GITLABCOMMIT)){
                 gitLabService.sendCommitComment(request, SCAN_MESSAGE);
             }
-            else if(request.getBugTracker().getType().equals(BugTracker.Type.GITHUBPULL)){
+            else if(bugTrackerType.equals(BugTracker.Type.GITHUBPULL)){
                 gitService.sendMergeComment(request, SCAN_MESSAGE);
                 gitService.startBlockMerge(request, cxProperties.getUrl());
             }
-            else if(request.getBugTracker().getType().equals(BugTracker.Type.BITBUCKETPULL)){
+            else if(bugTrackerType.equals(BugTracker.Type.BITBUCKETPULL)){
                 bbService.sendMergeComment(request, SCAN_MESSAGE);
             }
-            else if(request.getBugTracker().getType().equals(BugTracker.Type.BITBUCKETSERVERPULL)){
+            else if(bugTrackerType.equals(BugTracker.Type.BITBUCKETSERVERPULL)){
                 bbService.sendServerMergeComment(request, SCAN_MESSAGE);
             }
 
             Integer status = cxService.getScanStatus(scanId);
-            if(request.getBugTracker().getType().equals(BugTracker.Type.NONE)){
+            if(bugTrackerType.equals(BugTracker.Type.NONE)){
                 log.info("Not waiting for scan completion as Bug Tracker type is NONE");
                 return CompletableFuture.completedFuture(null);
             }
@@ -194,7 +201,7 @@ public class FlowService {
             if(status.equals(CxService.SCAN_STATUS_FAILED)){
                 throw new MachinaException("Scan failed");
             }
-             return resutlsService.processScanResultsAsync(request, scanId, request.getFilters());
+             return resultsService.processScanResultsAsync(request, scanId, request.getFilters());
         }catch (InterruptedException e) {
             log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaException("Interrupted Exception Occurred");
@@ -231,7 +238,7 @@ public class FlowService {
     public void cxParseResults(ScanRequest request, File file){
         try {
             ScanResults results = cxService.getReportContent(file, request.getFilters());
-            resutlsService.processResults(request, results);
+            resultsService.processResults(request, results);
             if(flowProperties.isBreakBuild() && results !=null && results.getXIssues()!=null && !results.getXIssues().isEmpty()){
                 log.error("Exiting with Error code 10 due to issues present");
                 exit(10);
@@ -246,7 +253,7 @@ public class FlowService {
     public void cxOsaParseResults(ScanRequest request, File file, File libs){
         try {
             ScanResults results = cxService.getOsaReportContent(file, libs, request.getFilters());
-            resutlsService.processResults(request, results);
+            resultsService.processResults(request, results);
             if(flowProperties.isBreakBuild() && results !=null && results.getXIssues()!=null && !results.getXIssues().isEmpty()){
                 log.error("Exiting with Error code 10 due to issues present");
                 exit(10);
@@ -270,6 +277,12 @@ public class FlowService {
                 }
                 String teamId = cxService.getTeamId(team);
                 Integer projectId = cxService.getProjectId(teamId, request.getProject());
+                if(projectId.equals(UNKNOWN_INT)){
+                    log.warn("No project found for {}", request.getProject());
+                    CompletableFuture<ScanResults> x = new CompletableFuture<>();
+                    x.complete(null);
+                    return x;
+                }
                 project = cxService.getProject(projectId);
 
             }
@@ -278,14 +291,14 @@ public class FlowService {
             }
             Integer scanId = cxService.getLastScanId(project.getId());
             if(scanId.equals(UNKNOWN_INT)){
-                log.info("No Scan Results to process for project {}", project.getName());
+                log.warn("No Scan Results to process for project {}", project.getName());
                 CompletableFuture<ScanResults> x = new CompletableFuture<>();
                 x.complete(null);
                 return x;
             }
             else {
                 getCxFields(project, request);
-                return resutlsService.processScanResultsAsync(request, scanId, request.getFilters());
+                return resultsService.processScanResultsAsync(request, scanId, request.getFilters());
             }
 
         } catch (MachinaException e) {
@@ -302,8 +315,10 @@ public class FlowService {
 
         Map<String, String> fields = new HashMap<>();
         for(CxProject.CustomField field : project.getCustomFields()){
-            if(!ScanUtils.empty(field.getName()) && !ScanUtils.empty(field.getValue())) {
-                fields.put(field.getName(), field.getValue());
+            String name = field.getName();
+            String value = field.getValue();
+            if(!ScanUtils.empty(name) && !ScanUtils.empty(value)) {
+                fields.put(name, value);
             }
         }
         if(!ScanUtils.empty(cxProperties.getJiraProjectField())){
@@ -322,6 +337,14 @@ public class FlowService {
                 (fields.get(cxProperties.getJiraCustomField()) != null) && !fields.get(cxProperties.getJiraCustomField()).isEmpty()){
             request.getBugTracker().setFields(ScanUtils.getCustomFieldsFromCx(fields.get(cxProperties.getJiraCustomField())));
         }
+
+        if(!ScanUtils.empty(cxProperties.getJiraAssigneeField())){
+            String assignee = fields.get(cxProperties.getJiraAssigneeField());
+            if(!ScanUtils.empty(assignee)) {
+                request.getBugTracker().setAssignee(assignee);
+            }
+        }
+
         request.setCxFields(fields);
     }
 
@@ -349,8 +372,9 @@ public class FlowService {
             }
             for(CxProject project: projects){
                 ScanRequest request = new ScanRequest(originalRequest);
-                request.setProject(project.getName().replaceAll("[^a-zA-Z0-9-_]+","_"));
-                request.setApplication(project.getName().replaceAll("[^a-zA-Z0-9-_]+","_"));
+                String name = project.getName().replaceAll("[^a-zA-Z0-9-_]+","_");
+                request.setProject(name);
+                request.setApplication(name);
                 processes.add(cxGetResults(request, project));
             }
             log.info("Waiting for processing to complete");

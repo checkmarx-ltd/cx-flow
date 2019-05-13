@@ -48,8 +48,9 @@ public class EmailService {
             log.info("Sending email");
             MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage);
 
-            if(!ScanUtils.empty(properties.getContact())){
-                messageHelper.setFrom(properties.getContact());
+            String contact = properties.getContact();
+            if(!ScanUtils.empty(contact)){
+                messageHelper.setFrom(contact);
             }
             messageHelper.setTo(recipients.toArray(new String[0]));
             messageHelper.setSubject(subject);
@@ -57,7 +58,8 @@ public class EmailService {
             messageHelper.setText(content, true);
         };
         try {
-            if(properties.getMail() != null && properties.getMail().isEnabled()) {
+            FlowProperties.Mail mail = properties.getMail();
+            if(mail != null && mail.isEnabled()) {
                 emailSender.send(messagePreparator);
             }
         } catch (MailException e) {

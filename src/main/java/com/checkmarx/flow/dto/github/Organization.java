@@ -45,7 +45,7 @@ public class Organization {
     @JsonProperty("description")
     private Object description;
     @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+    private Map<String, Object> additionalProperties = new HashMap<>();
 
     @JsonProperty("login")
     public String getLogin() {

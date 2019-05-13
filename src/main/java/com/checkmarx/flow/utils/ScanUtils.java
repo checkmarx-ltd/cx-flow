@@ -6,16 +6,12 @@ import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.EnumUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.HttpClientErrorException;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
-import java.nio.charset.CodingErrorAction;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -41,6 +37,8 @@ public class ScanUtils {
 
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(ScanUtils.class);
 
+    public ScanUtils() {
+    }
 
     /**
      * Function used to determine if file extension of full filename is preset in list
@@ -116,12 +114,7 @@ public class ScanUtils {
      * @return
      */
     public static boolean empty(String str) {
-        if (str == null) {
-            return true;
-        } else if (str.isEmpty()) {
-            return true;
-        }
-        return false;
+        return str == null || str.isEmpty();
     }
 
     /**
@@ -160,45 +153,43 @@ public class ScanUtils {
         }
         BugTracker bt = request.getBugTracker();
         /*Override only applicable to Simple JIRA bug*/
-        if(request.getBugTracker().getType().equals(BugTracker.Type.JIRA)) {
-            if(override.getJira()!=null) {
-                MachinaOverride.Jira jira = override.getJira();
-                if(!ScanUtils.empty(jira.getAssignee())) {
-                    bt.setAssignee(jira.getAssignee());
-                }//if empty value override with null
-                if(jira.getAssignee() != null && jira.getAssignee().isEmpty()) {
-                    bt.setAssignee(null);
-                }
-                if(!ScanUtils.empty(jira.getProject())) {
-                    bt.setProjectKey(jira.getProject());
-                }
-                if(!ScanUtils.empty(jira.getIssueType())) {
-                    bt.setIssueType(jira.getIssueType());
-                }
-                if(!ScanUtils.empty(jira.getOpenedStatus())) {
-                    bt.setOpenStatus(jira.getOpenedStatus());
-                }
-                if(!ScanUtils.empty(jira.getClosedStatus())) {
-                    bt.setClosedStatus(jira.getClosedStatus());
-                }
-                if(!ScanUtils.empty(jira.getOpenTransition())) {
-                    bt.setOpenTransition(jira.getOpenTransition());
-                }
-                if(!ScanUtils.empty(jira.getCloseTransition())) {
-                    bt.setCloseTransition(jira.getCloseTransition());
-                }
-                if(!ScanUtils.empty(jira.getCloseTransitionField())) {
-                    bt.setCloseTransitionField(jira.getCloseTransitionField());
-                }
-                if(!ScanUtils.empty(jira.getCloseTransitionValue())) {
-                    bt.setCloseTransitionValue(jira.getCloseTransitionValue());
-                }
-                if(jira.getFields()!=null) { //if empty, assume no fields
-                    bt.setFields(jira.getFields());
-                }
-                if(jira.getPriorities() != null && !jira.getPriorities().isEmpty()) {
-                    bt.setPriorities(jira.getPriorities());
-                }
+        if(request.getBugTracker().getType().equals(BugTracker.Type.JIRA) && override.getJira()!=null) {
+            MachinaOverride.Jira jira = override.getJira();
+            if(!ScanUtils.empty(jira.getAssignee())) {
+                bt.setAssignee(jira.getAssignee());
+            }//if empty value override with null
+            if(jira.getAssignee() != null && jira.getAssignee().isEmpty()) {
+                bt.setAssignee(null);
+            }
+            if(!ScanUtils.empty(jira.getProject())) {
+                bt.setProjectKey(jira.getProject());
+            }
+            if(!ScanUtils.empty(jira.getIssueType())) {
+                bt.setIssueType(jira.getIssueType());
+            }
+            if(!ScanUtils.empty(jira.getOpenedStatus())) {
+                bt.setOpenStatus(jira.getOpenedStatus());
+            }
+            if(!ScanUtils.empty(jira.getClosedStatus())) {
+                bt.setClosedStatus(jira.getClosedStatus());
+            }
+            if(!ScanUtils.empty(jira.getOpenTransition())) {
+                bt.setOpenTransition(jira.getOpenTransition());
+            }
+            if(!ScanUtils.empty(jira.getCloseTransition())) {
+                bt.setCloseTransition(jira.getCloseTransition());
+            }
+            if(!ScanUtils.empty(jira.getCloseTransitionField())) {
+                bt.setCloseTransitionField(jira.getCloseTransitionField());
+            }
+            if(!ScanUtils.empty(jira.getCloseTransitionValue())) {
+                bt.setCloseTransitionValue(jira.getCloseTransitionValue());
+            }
+            if(jira.getFields()!=null) { //if empty, assume no fields
+                bt.setFields(jira.getFields());
+            }
+            if(jira.getPriorities() != null && !jira.getPriorities().isEmpty()) {
+                bt.setPriorities(jira.getPriorities());
             }
         }
         request.setBugTracker(bt);
@@ -225,21 +216,23 @@ public class ScanUtils {
             request.setExcludeFiles(Arrays.asList(override.getExcludeFiles().split(",")));
         }
 
-        if(override.getEmails() != null) {
-            if (override.getEmails().isEmpty()) {
+        List<String> emails = override.getEmails();
+        if(emails != null) {
+            if (emails.isEmpty()) {
                 request.setEmail(null);
             } else {
-                request.setEmail(override.getEmails());
+                request.setEmail(emails);
             }
         }
+        MachinaOverride.Filters filtersObj = override.getFilters();
 
-        if(override.getFilters() != null && (!ScanUtils.empty(override.getFilters().getSeverity()) || !ScanUtils.empty(override.getFilters().getCwe()) ||
-                !ScanUtils.empty(override.getFilters().getCategory()) || !ScanUtils.empty(override.getFilters().getStatus()))) {
-            List<Filter> filters = ScanUtils.getFilters(override.getFilters().getSeverity(), override.getFilters().getCwe(),
-                    override.getFilters().getCategory(), override.getFilters().getStatus());
+        if(filtersObj != null && (!ScanUtils.empty(filtersObj.getSeverity()) || !ScanUtils.empty(filtersObj.getCwe()) ||
+                !ScanUtils.empty(filtersObj.getCategory()) || !ScanUtils.empty(filtersObj.getStatus()))) {
+            List<Filter> filters = ScanUtils.getFilters(filtersObj.getSeverity(), filtersObj.getCwe(),
+                    filtersObj.getCategory(), filtersObj.getStatus());
             request.setFilters(filters);
         }
-        else if (override.getFilters() != null){
+        else if (filtersObj != null){
             request.setFilters(null);
         }
 
@@ -293,7 +286,7 @@ public class ScanUtils {
                             zipOutputStream.write(Files.readAllBytes(path));
                             zipOutputStream.closeEntry();
                         } catch (Exception e) {
-                            System.err.println(e);
+                            log.error(ExceptionUtils.getStackTrace(e));
                         }
                     });
         }
@@ -481,7 +474,7 @@ public class ScanUtils {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaRuntimeException();
         }
         return o;
@@ -533,7 +526,7 @@ public class ScanUtils {
 
         BugTracker.Type bugType = EnumUtils.getEnum(BugTracker.Type.class, bug);
         if(bugType == null){ //Try uppercase
-            bugType = EnumUtils.getEnum(BugTracker.Type.class, bug.toUpperCase());
+            bugType = EnumUtils.getEnum(BugTracker.Type.class, bug.toUpperCase(Locale.ROOT));
             if(bugType == null){
                 log.debug("Determine if custom bean is being used");
                 if(bugTrackerImpl == null || !bugTrackerImpl.contains(bug)){

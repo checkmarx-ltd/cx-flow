@@ -36,7 +36,7 @@ public class Links {
     @JsonProperty("statuses")
     private Statuses statuses;
     @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+    private Map<String, Object> additionalProperties = new HashMap<>();
 
     @JsonProperty("self")
     public Self getSelf() {

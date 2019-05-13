@@ -21,7 +21,7 @@ public class LastResponse {
     @JsonProperty("message")
     private Object message;
     @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+    private Map<String, Object> additionalProperties = new HashMap<>();
 
     @JsonProperty("code")
     public Object getCode() {
