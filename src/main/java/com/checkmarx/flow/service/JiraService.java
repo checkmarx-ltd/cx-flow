@@ -260,7 +260,13 @@ public class JiraService {
             String value;
             if(!ScanUtils.empty(customField)) {
                 /*cx | static | other - specific values that can be linked from scan request or the issue details*/
-                switch (f.getType()) {
+                String fieldType = f.getType();
+                if(ScanUtils.empty(fieldType)) {
+                    log.warn("Field type not supplied for custom field: {}. Using 'result' by default.", customField);
+                    // use default = result
+                    fieldType = "result";
+                }
+                switch (fieldType) {
                     case "cx":
                         log.debug("Checkmarx custom field {}", f.getName());
                         if (request.getCxFields() != null) {
@@ -281,8 +287,14 @@ public class JiraService {
                         value = f.getJiraDefaultValue();
                         break;
                     default:  //result
+                        String fieldName = f.getName();
+                        if(fieldName == null) {
+                            log.warn("Field name not supplied for custom field: {}. Skipping.", customField);
+                            /* there is no default, move on to the next field */
+                            continue;
+                        }
                         /*known values we can use*/
-                        switch (f.getName()) {
+                        switch (fieldName) {
                             case "application":
                                 log.debug("application: {}", request.getApplication());
                                 value = request.getApplication();
@@ -385,8 +397,15 @@ public class JiraService {
                 }
                 /*Determine the expected custom field type within JIRA*/
                 if (!ScanUtils.empty(value)) {
+                    String jiraFieldType = f.getJiraFieldType();
+                    if(ScanUtils.empty(jiraFieldType)) {
+                        log.warn("JIRA field type not supplied for custom field: {}. Using 'text' by default.", f.getName());
+                        // use default = text
+                        jiraFieldType = "text";
+                    }
+
                     List<String> list;
-                    switch (f.getJiraFieldType()) {
+                    switch (jiraFieldType) {
                         case "security":
                             log.debug("Security field");
                             SecurityLevel securityLevel = getSecurityLevel(projectKey, issueTypeStr, value);
