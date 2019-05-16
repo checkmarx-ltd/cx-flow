@@ -12,9 +12,9 @@ public class CxFlowApplicationTest {
         cxFlowApplication.main(null);
     }
 
-    @Test
+    /*@Test
     public void mainWithEmptyListArgs() {
         CxFlowApplication cxFlowApplication = new CxFlowApplication();
         cxFlowApplication.main(new String[]{});
-    }
+    }*/
 }
