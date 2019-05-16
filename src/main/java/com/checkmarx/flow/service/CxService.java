@@ -131,7 +131,7 @@ public class CxService {
             return Integer.parseInt(id);
         }catch (HttpStatusCodeException e){
             log.error("Error occurred while creating Scan for project {}, http error {}", projectId, e.getStatusCode());
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
         }
         return UNKNOWN_INT;
     }
@@ -156,7 +156,7 @@ public class CxService {
             return Integer.parseInt(id);
         }catch (HttpStatusCodeException e){
             log.error("Error occurred while creating Scan for project {}, http error {}", projectId, e.getStatusCode());
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
         }
         return UNKNOWN_INT;
     }
@@ -207,7 +207,7 @@ public class CxService {
             }
         } catch (HttpStatusCodeException e) {
             log.error("Error occurred while creating Scan for project {}, http error {}", projectId, e.getStatusCode());
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
         } catch (NullPointerException e){
             log.error("Error parsing JSON response for dateAndTime status. {}");
         }
@@ -232,10 +232,10 @@ public class CxService {
             return status.getInt("id");
         }catch (HttpStatusCodeException e){
             log.error("HTTP Status Code of {} while getting xml status for xml Id {}", e.getStatusCode(),scanId);
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
         }catch (JSONException e){
             log.error("Error processing JSON Response");
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
         }
         return UNKNOWN_INT;
     }
@@ -259,10 +259,10 @@ public class CxService {
             return id;
         }catch (HttpStatusCodeException e){
             log.error("HTTP Status Code of {} while creating xml report for xml Id {}", e.getStatusCode(),scanId);
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
         }catch (JSONException e){
             log.error("Error processing JSON Response");
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
         }
         return UNKNOWN_INT;
     }
@@ -284,10 +284,10 @@ public class CxService {
             return status.getInt("id");
         }catch (HttpStatusCodeException e){
             log.error("HTTP Status Code of {} while getting report status for report Id {}", e.getStatusCode(),reportId);
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
         }catch (JSONException e){
             log.error("Error processing JSON Response");
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
         }
         return UNKNOWN_INT;
     }
@@ -356,17 +356,17 @@ public class CxService {
             return results;
         }catch (HttpStatusCodeException e) {
             log.error("HTTP Status Code of {} while getting downloading report contents of report Id {}", e.getStatusCode(), reportId);
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaException("Error while processing scan results for report Id ".concat(reportId.toString()));
         }
         catch (XMLStreamException | JAXBException e){
             log.error("Error with XML report");
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaException("Error while processing scan results for report Id ".concat(reportId.toString()));
         }
         catch (NullPointerException e){
             log.info("Null Error");
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaException("Error while processing scan results for report Id ".concat(reportId.toString()));
         }
     }
@@ -419,12 +419,12 @@ public class CxService {
 
         } catch (JAXBException e){
             log.error("Error with XML report");
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaException("Error while processing scan results");
         }
         catch (NullPointerException e){
             log.info("Null error");
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaException("Error while processing scan results");
         }
     }
@@ -479,7 +479,7 @@ public class CxService {
                     if(issueList.contains(issue)){
                         issue = issueList.get(issueList.indexOf(issue));
                         //bump up the severity if required
-                        if(severityMap.get(issue.getSeverity().toUpperCase()) < severityMap.get(o.getSeverity().getName().toUpperCase())){
+                        if(severityMap.get(issue.getSeverity().toUpperCase(Locale.ROOT)) < severityMap.get(o.getSeverity().getName().toUpperCase(Locale.ROOT))){
                             issue.setSeverity(o.getSeverity().getName());
                         }
                         issue.setCve(issue.getCve().concat(",").concat(o.getCveName()));
@@ -501,12 +501,12 @@ public class CxService {
 
         } catch ( IOException e){
             log.error("Error parsing JSON OSA report");
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaException("Error while processing scan results");
         }
         catch (NullPointerException e){
             log.info("Null error");
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaException("Error while processing scan results");
         }
     }
@@ -557,7 +557,7 @@ public class CxService {
                 ScanResults.XIssue.XIssueBuilder xIssueBuilder = ScanResults.XIssue.builder();
                 /*Top node of each issue*/
                 for (ResultType r : q.getResult()) {
-                    if (r.getFalsePositive().toUpperCase().equals("FALSE") && checkFilter(r, filter)) {
+                    if (r.getFalsePositive().equalsIgnoreCase("FALSE") && checkFilter(r, filter)) {
                         /*Map issue details*/
                         xIssueBuilder.cwe(q.getCweId());
                         xIssueBuilder.language(q.getLanguage());
@@ -614,23 +614,23 @@ public class CxService {
 
         for(Filter f: filters){
             if(f.getType().equals(Filter.Type.SEVERITY)){
-                severity.add(f.getValue().toUpperCase());
+                severity.add(f.getValue().toUpperCase(Locale.ROOT));
             }
             else if(f.getType().equals(Filter.Type.TYPE)){
-                category.add(f.getValue().toUpperCase());
+                category.add(f.getValue().toUpperCase(Locale.ROOT));
             }
             else if(f.getType().equals(Filter.Type.CWE)){
-                cwe.add(f.getValue().toUpperCase());
+                cwe.add(f.getValue().toUpperCase(Locale.ROOT));
             }
         }
-        if(!severity.isEmpty() && !severity.contains(q.getSeverity().toUpperCase())){
+        if(!severity.isEmpty() && !severity.contains(q.getSeverity().toUpperCase(Locale.ROOT))){
             return false;
         }
         if(!cwe.isEmpty() && !cwe.contains(q.getCweId())){
             return false;
         }
 
-        return category.isEmpty() || category.contains(q.getName().toUpperCase());
+        return category.isEmpty() || category.contains(q.getName().toUpperCase(Locale.ROOT));
     }
 
     private boolean checkFilter(ResultType r, List<Filter> filters){
@@ -641,7 +641,7 @@ public class CxService {
 
         for(Filter f: filters){
             if(f.getType().equals(Filter.Type.STATUS)){
-                status.add(STATUS_MAP.get(f.getValue().toUpperCase()));
+                status.add(STATUS_MAP.get(f.getValue().toUpperCase(Locale.ROOT)));
             }
         }
         return status.isEmpty() || status.contains(Integer.parseInt(r.getState()));
@@ -691,10 +691,10 @@ public class CxService {
             return Integer.parseInt(id);
         }catch (HttpStatusCodeException e){
             log.error("HTTP error code {} while creating project with name {} under owner id {}", e.getStatusCode(), name, ownerId);
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
         }catch (JSONException e){
             log.error("Error processing JSON Response");
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
         }
         return UNKNOWN_INT;
     }
@@ -712,7 +712,7 @@ public class CxService {
             return projects.getBody();
         }catch (HttpStatusCodeException e){
             log.warn("Error occurred while retrieving projects, http error {}", e.getStatusCode());
-            e.printStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaException("Error retrieving Projects");
         }
     }
@@ -1088,7 +1088,7 @@ public class CxService {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-        MultiValueMap<String, String> map = new LinkedMultiValueMap<String, String>();
+        MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
         map.add("username", cxProperties.getUsername());
         map.add("password", cxProperties.getPassword());
         map.add("grant_type", "password");
@@ -1127,9 +1127,9 @@ public class CxService {
         if(token == null || isTokenExpired()){
             getAuthToken();
         }
-        return new HttpHeaders() {{
-            set("Authorization", "Bearer ".concat(token));
-            setContentType(MediaType.APPLICATION_JSON_UTF8);
-        }};
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.set("Authorization", "Bearer ".concat(token));
+        httpHeaders.setContentType(MediaType.APPLICATION_JSON_UTF8);
+        return httpHeaders;
     }
 }

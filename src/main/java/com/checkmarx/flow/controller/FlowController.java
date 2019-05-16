@@ -11,7 +11,6 @@ import java.beans.ConstructorProperties;
 @RequestMapping(value = "/")
 public class FlowController {
 
-    private static final String EVENT = "token";
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(FlowController.class);
 
     private final FlowProperties properties;

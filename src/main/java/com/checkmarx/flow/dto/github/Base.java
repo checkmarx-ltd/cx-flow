@@ -27,7 +27,7 @@ public class Base {
     @JsonProperty("repo")
     private Repo_ repo;
     @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+    private Map<String, Object> additionalProperties = new HashMap<>();
 
     @JsonProperty("label")
     public String getLabel() {

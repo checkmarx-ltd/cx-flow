@@ -258,179 +258,199 @@ public class JiraService {
             String issueTypeStr = request.getBugTracker().getIssueType();
             String customField = getCustomFieldByName(projectKey, issueTypeStr, f.getJiraFieldName());
             String value;
-
-            /*cx | static | other - specific values that can be linked from scan request or the issue details*/
-            switch (f.getType()) {
-                case "cx":
-                    log.debug("Checkmarx custom field {}", f.getName());
-                    if (request.getCxFields() != null) {
-                        log.debug("Checkmarx custom field");
-                        value = request.getCxFields().get(f.getName());
-                        log.debug("Cx Field value: {}",value);
-                        if(ScanUtils.empty(value) && !ScanUtils.empty(f.getJiraDefaultValue())){
-                            value = f.getJiraDefaultValue();
-                            log.debug("JIRA default Value is {}", value);
-                        }
-                    } else {
-                        log.debug("No value found for {}", f.getName());
-                        value = "";
-                    }
-                    break;
-                case "static":
-                    log.debug("Static value {} - {}", f.getName(), f.getJiraDefaultValue());
-                    value = f.getJiraDefaultValue();
-                    break;
-                default:  //result
-                    /*known values we can use*/
-                    switch (f.getName()) {
-                        case "application":
-                            log.debug("application: {}", request.getApplication());
-                            value = request.getApplication();
-                            break;
-                        case "project":
-                            log.debug("project: {}", request.getProject());
-                            value = request.getProject();
-                            break;
-                        case "namespace":
-                            log.debug("namespace: {}", request.getNamespace());
-                            value = request.getNamespace();
-                            break;
-                        case "repo-name":
-                            log.debug("repo-name: {}", request.getRepoName());
-                            value = request.getRepoName();
-                            break;
-                        case "repo-url":
-                            log.debug("repo-url: {}", request.getRepoUrl());
-                            value = request.getRepoUrl();
-                            break;
-                        case "branch":
-                            log.debug("branch: {}", request.getBranch());
-                            value = request.getBranch();
-                            break;
-                        case "severity":
-                            log.debug("severity: {}", issue.getSeverity());
-                            value = issue.getSeverity();
-                            break;
-                        case "category":
-                            log.debug("category: {}", issue.getVulnerability());
-                            value = issue.getVulnerability();
-                            break;
-                        case "cwe":
-                            log.debug("cwe: {}", issue.getCwe());
-                            value = issue.getCwe();
-                            break;
-                        case "cve":
-                            log.debug("cve: {}", issue.getCve());
-                            value = issue.getCve();
-                            break;
-                        case "recommendation":
-                            StringBuilder recommendation = new StringBuilder();
-                            if (issue.getLink() != null && !issue.getLink().isEmpty()) {
-                                recommendation.append("Checkmarx Link: ").append(issue.getLink()).append(ScanUtils.CRLF);
+            if(!ScanUtils.empty(customField)) {
+                /*cx | static | other - specific values that can be linked from scan request or the issue details*/
+                String fieldType = f.getType();
+                if(ScanUtils.empty(fieldType)) {
+                    log.warn("Field type not supplied for custom field: {}. Using 'result' by default.", customField);
+                    // use default = result
+                    fieldType = "result";
+                }
+                switch (fieldType) {
+                    case "cx":
+                        log.debug("Checkmarx custom field {}", f.getName());
+                        if (request.getCxFields() != null) {
+                            log.debug("Checkmarx custom field");
+                            value = request.getCxFields().get(f.getName());
+                            log.debug("Cx Field value: {}", value);
+                            if (ScanUtils.empty(value) && !ScanUtils.empty(f.getJiraDefaultValue())) {
+                                value = f.getJiraDefaultValue();
+                                log.debug("JIRA default Value is {}", value);
                             }
-                            if(!ScanUtils.empty(issue.getCwe())) {
-                                recommendation.append("Mitre Details: ").append(String.format(flowProperties.getMitreUrl(), issue.getCwe())).append(ScanUtils.CRLF);
-                            }
-                            if (!ScanUtils.empty(flowProperties.getCodebashUrl())) {
-                                recommendation.append("Training: ").append(flowProperties.getCodebashUrl()).append(ScanUtils.CRLF);
-                            }
-                            if (!ScanUtils.empty(flowProperties.getWikiUrl())) {
-                                recommendation.append("Guidance: ").append(flowProperties.getWikiUrl()).append(ScanUtils.CRLF);
-                            }
-                            value = recommendation.toString();
-                            break;
-                        case "loc":
+                        } else {
+                            log.debug("No value found for {}", f.getName());
                             value = "";
-                            List<String> lines = new ArrayList<>();
-                            if(issue.getDetails() != null && !issue.getDetails().isEmpty()) {
-                                for (Map.Entry<Integer, String> entry : issue.getDetails().entrySet()) {
-                                    if (entry.getKey() != null && entry.getValue() != null) {
-                                        lines.add(entry.getKey().toString());
-                                    }
+                        }
+                        break;
+                    case "static":
+                        log.debug("Static value {} - {}", f.getName(), f.getJiraDefaultValue());
+                        value = f.getJiraDefaultValue();
+                        break;
+                    default:  //result
+                        String fieldName = f.getName();
+                        if(fieldName == null) {
+                            log.warn("Field name not supplied for custom field: {}. Skipping.", customField);
+                            /* there is no default, move on to the next field */
+                            continue;
+                        }
+                        /*known values we can use*/
+                        switch (fieldName) {
+                            case "application":
+                                log.debug("application: {}", request.getApplication());
+                                value = request.getApplication();
+                                break;
+                            case "project":
+                                log.debug("project: {}", request.getProject());
+                                value = request.getProject();
+                                break;
+                            case "namespace":
+                                log.debug("namespace: {}", request.getNamespace());
+                                value = request.getNamespace();
+                                break;
+                            case "repo-name":
+                                log.debug("repo-name: {}", request.getRepoName());
+                                value = request.getRepoName();
+                                break;
+                            case "repo-url":
+                                log.debug("repo-url: {}", request.getRepoUrl());
+                                value = request.getRepoUrl();
+                                break;
+                            case "branch":
+                                log.debug("branch: {}", request.getBranch());
+                                value = request.getBranch();
+                                break;
+                            case "severity":
+                                log.debug("severity: {}", issue.getSeverity());
+                                value = issue.getSeverity();
+                                break;
+                            case "category":
+                                log.debug("category: {}", issue.getVulnerability());
+                                value = issue.getVulnerability();
+                                break;
+                            case "cwe":
+                                log.debug("cwe: {}", issue.getCwe());
+                                value = issue.getCwe();
+                                break;
+                            case "cve":
+                                log.debug("cve: {}", issue.getCve());
+                                value = issue.getCve();
+                                break;
+                            case "recommendation":
+                                StringBuilder recommendation = new StringBuilder();
+                                if (issue.getLink() != null && !issue.getLink().isEmpty()) {
+                                    recommendation.append("Checkmarx Link: ").append(issue.getLink()).append(ScanUtils.CRLF);
                                 }
-                                Collections.sort(lines);
-                                value = StringUtils.join(lines, ",");
-                                log.debug("loc: {}", value);
+                                if (!ScanUtils.empty(issue.getCwe())) {
+                                    recommendation.append("Mitre Details: ").append(String.format(flowProperties.getMitreUrl(), issue.getCwe())).append(ScanUtils.CRLF);
+                                }
+                                if (!ScanUtils.empty(flowProperties.getCodebashUrl())) {
+                                    recommendation.append("Training: ").append(flowProperties.getCodebashUrl()).append(ScanUtils.CRLF);
+                                }
+                                if (!ScanUtils.empty(flowProperties.getWikiUrl())) {
+                                    recommendation.append("Guidance: ").append(flowProperties.getWikiUrl()).append(ScanUtils.CRLF);
+                                }
+                                value = recommendation.toString();
+                                break;
+                            case "loc":
+                                value = "";
+                                List<String> lines = new ArrayList<>();
+                                if (issue.getDetails() != null && !issue.getDetails().isEmpty()) {
+                                    for (Map.Entry<Integer, String> entry : issue.getDetails().entrySet()) {
+                                        if (entry.getKey() != null && entry.getValue() != null) {
+                                            lines.add(entry.getKey().toString());
+                                        }
+                                    }
+                                    Collections.sort(lines);
+                                    value = StringUtils.join(lines, ",");
+                                    log.debug("loc: {}", value);
+                                }
+                                break;
+                            case "site":
+                                log.debug("site: {}", request.getSite());
+                                value = request.getSite();
+                                break;
+                            case "issue-link":
+                                log.debug("issue-link: {}", issue.getLink());
+                                value = issue.getLink();
+                                break;
+                            case "filename":
+                                log.debug("filename: {}", issue.getFilename());
+                                value = issue.getFilename();
+                                break;
+                            case "language":
+                                log.debug("language: {}", issue.getLanguage());
+                                value = issue.getLanguage();
+                                break;
+                            default:
+                                log.warn("field value for {} not found", f.getName());
+                                value = "";
+                        }
+                        /*If the value is missing, check if a default value was specified*/
+                        if (ScanUtils.empty(value)) {
+                            log.debug("Value is empty, defaulting to configured default (if applicable)");
+                            if (!ScanUtils.empty(f.getJiraDefaultValue())) {
+                                value = f.getJiraDefaultValue();
+                                log.debug("Default value is {}", value);
+                            }
+                        }
+                        break;
+                }
+                /*Determine the expected custom field type within JIRA*/
+                if (!ScanUtils.empty(value)) {
+                    String jiraFieldType = f.getJiraFieldType();
+                    if(ScanUtils.empty(jiraFieldType)) {
+                        log.warn("JIRA field type not supplied for custom field: {}. Using 'text' by default.", f.getName());
+                        // use default = text
+                        jiraFieldType = "text";
+                    }
+
+                    List<String> list;
+                    switch (jiraFieldType) {
+                        case "security":
+                            log.debug("Security field");
+                            SecurityLevel securityLevel = getSecurityLevel(projectKey, issueTypeStr, value);
+                            if (securityLevel != null) {
+                                log.warn("JIRA Security level was not found: {}", value);
+                                issueBuilder.setFieldValue("security", securityLevel);
                             }
                             break;
-                        case "site":
-                            log.debug("site: {}", request.getSite());
-                            value = request.getSite();
+                        case "text":
+                            log.debug("text field");
+                            issueBuilder.setFieldValue(customField, value);
                             break;
-                        case "issue-link":
-                            log.debug("issue-link: {}", issue.getLink());
-                            value = issue.getLink();
+                        case "component":
+                            log.debug("component field");
+                            issueBuilder.setComponentsNames(Collections.singletonList(value));
                             break;
-                        case "filename":
-                            log.debug("filename: {}", issue.getFilename());
-                            value = issue.getFilename();
+                        case "label": /*csv to array | replace space with _ */
+                            log.debug("label field");
+                            String[] l = StringUtils.split(value, ",");
+                            list = new ArrayList<>();
+                            for (String x : l) {
+                                list.add(x.replaceAll("[^a-zA-Z0-9-_]+", "_"));
+                            }
+
+                            if (!ScanUtils.empty(list)) {
+                                issueBuilder.setFieldValue(customField, list);
+                            }
                             break;
-                        case "language":
-                            log.debug("language: {}", issue.getLanguage());
-                            value = issue.getLanguage();
+                        case "single-select":
+                            log.debug("single select field");
+                            issueBuilder.setFieldValue(customField, ComplexIssueInputFieldValue.with("value", value));
+                            break;
+                        case "multi-select":
+                            log.debug("multi select field");
+                            String[] selected = StringUtils.split(value, ",");
+                            List<ComplexIssueInputFieldValue> fields = new ArrayList<>();
+                            for (String s : selected) {
+                                ComplexIssueInputFieldValue fieldValue = ComplexIssueInputFieldValue.with("value", s.trim());
+                                fields.add(fieldValue);
+                            }
+                            issueBuilder.setFieldValue(customField, fields);
                             break;
                         default:
-                            log.warn("field value for {} not found", f.getName());
-                            value = "";
+                            log.warn("{} not a valid option for jira field type", f.getJiraFieldType());
                     }
-                    /*If the value is missing, check if a default value was specified*/
-                    if (ScanUtils.empty(value)) {
-                        log.debug("Value is empty, defaulting to configured default (if applicable)");
-                        if (!ScanUtils.empty(f.getJiraDefaultValue())) {
-                            value = f.getJiraDefaultValue();
-                            log.debug("Default value is {}", value);
-                        }
-                    }
-                    break;
-            }
-            /*Determine the expected custom field type within JIRA*/
-            if(!ScanUtils.empty(value)) {
-                List<String> list;
-                switch (f.getJiraFieldType()) {
-                    case "security":
-                        log.debug("Security field");
-                        SecurityLevel securityLevel = getSecurityLevel(projectKey, issueTypeStr, value);
-                        if(securityLevel != null) {
-                            log.warn("JIRA Security level was not found: {}", value);
-                            issueBuilder.setFieldValue("security", securityLevel);
-                        }
-                        break;
-                    case "text":
-                        log.debug("text field");
-                        issueBuilder.setFieldValue(customField, value);
-                        break;
-                    case "component":
-                        log.debug("component field");
-                        issueBuilder.setComponentsNames(Collections.singletonList(value));
-                        break;
-                    case "label": /*csv to array | replace space with _ */
-                        log.debug("label field");
-                        String[] l = StringUtils.split(value,",");
-                        list = new ArrayList<>();
-                        for(String x: l){
-                            list.add(x.replaceAll("[^a-zA-Z0-9-_]+","_"));
-                        }
-
-                        if(!ScanUtils.empty(list)) {
-                            issueBuilder.setFieldValue(customField, list);
-                        }
-                        break;
-                    case "single-select":
-                        log.debug("single select field");
-                        issueBuilder.setFieldValue(customField, ComplexIssueInputFieldValue.with("value",value));
-                        break;
-                    case "multi-select":
-                        log.debug("multi select field");
-                        String[] selected = StringUtils.split(value,",");
-                        List<ComplexIssueInputFieldValue> fields = new ArrayList<>();
-                        for(String s : selected){
-                            ComplexIssueInputFieldValue fieldValue =  ComplexIssueInputFieldValue.with("value", s.trim());
-                            fields.add(fieldValue);
-                        }
-                        issueBuilder.setFieldValue(customField, fields);
-                        break;
-                    default:
-                        log.warn("{} not a valid option for jira field type", f.getJiraFieldType());
                 }
             }
         }
@@ -440,8 +460,6 @@ public class JiraService {
         GetCreateIssueMetadataOptions options;
         options = new GetCreateIssueMetadataOptionsBuilder().withExpandedIssueTypesFields().withIssueTypeNames(issueType).withProjectKeys(projectKey).build();
         Iterable<CimProject> metadata = this.issueClient.getCreateIssueMetadata(options).claim();
-
-        CimProject project = metadata.iterator().next();
 
         CimProject cim = metadata.iterator().next();
 
@@ -709,13 +727,13 @@ public class JiraService {
                     body.append("----").append(ScanUtils.CRLF);
                     if(!ScanUtils.empty(fileUrl)) {
                         if(request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)){
-                            body.append("[Line #").append(entry.getKey()).append(":|").append(fileUrl).append("#").append(entry.getKey()).append("]").append(ScanUtils.CRLF);;
+                            body.append("[Line #").append(entry.getKey()).append(":|").append(fileUrl).append("#").append(entry.getKey()).append("]").append(ScanUtils.CRLF);
                         }
                         else if(request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)){ //BB Cloud
-                            body.append("[Line #").append(entry.getKey()).append(":|").append(fileUrl).append("#lines-").append(entry.getKey()).append("]").append(ScanUtils.CRLF);;
+                            body.append("[Line #").append(entry.getKey()).append(":|").append(fileUrl).append("#lines-").append(entry.getKey()).append("]").append(ScanUtils.CRLF);
                         }
                         else {
-                            body.append("[Line #").append(entry.getKey()).append(":|").append(fileUrl).append("#L").append(entry.getKey()).append("]").append(ScanUtils.CRLF);;
+                            body.append("[Line #").append(entry.getKey()).append(":|").append(fileUrl).append("#L").append(entry.getKey()).append("]").append(ScanUtils.CRLF);
                         }
                     }
                     else {

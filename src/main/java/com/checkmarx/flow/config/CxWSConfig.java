@@ -20,16 +20,22 @@ public class CxWSConfig {
     @Bean
     public Jaxb2Marshaller marshaller() {
         Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
-        marshaller.setContextPaths(properties.getPortalPackage());
+        if (properties != null && properties.getPortalPackage() != null && !properties.getPortalPackage().isEmpty()) {
+            marshaller.setContextPaths(properties.getPortalPackage());
+        }
         return marshaller;
     }
 
     @Bean
     public WebServiceTemplate webServiceTemplate(Jaxb2Marshaller marshaller) {
         WebServiceTemplate ws = new WebServiceTemplate();
-        ws.setDefaultUri(properties.getPortalUrl());
-        ws.setMarshaller(marshaller);
-        ws.setUnmarshaller(marshaller);
+        if (properties != null && properties.getPortalUrl() != null && !properties.getPortalUrl().isEmpty()) {
+            ws.setDefaultUri(properties.getPortalUrl());
+        }
+        if(marshaller != null) {
+            ws.setMarshaller(marshaller);
+            ws.setUnmarshaller(marshaller);
+        }
         return ws;
     }
 

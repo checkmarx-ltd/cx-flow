@@ -21,7 +21,7 @@ public class Committer {
     @JsonProperty("username")
     private String username;
     @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+    private Map<String, Object> additionalProperties = new HashMap<>();
 
     @JsonProperty("name")
     public String getName() {
