@@ -13,6 +13,10 @@ public class Field {
     private String jiraFieldType;
     @JsonProperty("jira_default_value")
     private String jiraDefaultValue;
+    @JsonProperty("skip_update")
+    private boolean skipUpdate = false;
+    @JsonProperty("offset")
+    private int offset = 0;
 
     public String getType() {
         return this.type;
@@ -52,5 +56,21 @@ public class Field {
 
     public void setJiraDefaultValue(String jiraDefaultValue) {
         this.jiraDefaultValue = jiraDefaultValue;
+    }
+
+    public boolean isSkipUpdate() {
+        return skipUpdate;
+    }
+
+    public void setSkipUpdate(boolean skipUpdate) {
+        this.skipUpdate = skipUpdate;
+    }
+
+    public int getOffset() {
+        return offset;
+    }
+
+    public void setOffset(int offset) {
+        this.offset = offset;
     }
 }
