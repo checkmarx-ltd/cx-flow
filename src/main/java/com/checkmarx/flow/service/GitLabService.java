@@ -5,7 +5,7 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.ScanResults;
 import com.checkmarx.flow.dto.gitlab.Note;
-import com.checkmarx.flow.exception.GitLabClienException;
+import com.checkmarx.flow.exception.GitLabClientException;
 import com.checkmarx.flow.utils.ScanUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONException;
@@ -24,17 +24,10 @@ import java.util.*;
 @Service
 public class GitLabService {
 
-    private static final String ISSUES_PER_PAGE = "100";
     private static final String PROJECT = "/projects/{namespace}{x}{repo}";
-    private static final String PROJECT_PATH = "/projects/{id}";
     public static final String MERGE_NOTE_PATH = "/projects/{id}/merge_requests/{iid}/notes";
     public static final String MERGE_PATH = "/projects/{id}/merge_requests/{iid}";
     public static final String COMMIT_PATH = "/projects/{id}/repository/commits/{sha}/comments";
-    private static final String ISSUES_PATH = "/projects/{id}/issues?per_page=".concat(ISSUES_PER_PAGE);
-    private static final String NEW_ISSUE_PATH = "/projects/{id}/issues";
-    private static final String ISSUE_PATH = "/projects/{id}/issues/{iid}";
-    private static final String COMMENT_PATH = "/projects/{id}/issues/{iid}/notes";
-    private static final String PROJECT_FILES = PROJECT_PATH + "/repository/tree?ref=";
     private static final int UNKNOWN_INT = -1;
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(GitLabService.class);
     private final RestTemplate restTemplate;
@@ -79,7 +72,7 @@ public class GitLabService {
     }
 
 
-    Map<String, List<String>> process(ScanResults results, ScanRequest request) throws GitLabClienException {
+    Map<String, List<String>> process(ScanResults results, ScanRequest request) throws GitLabClientException {
         return null;
     }
 
@@ -92,21 +85,21 @@ public class GitLabService {
      * @return HttpHeaders for authentication
      */
     private HttpHeaders createAuthHeaders(){
-        return new HttpHeaders() {{
-            set("Content-Type", "application/json");
-            set("PRIVATE-TOKEN", properties.getToken());
-            set("Accept", "application/json");
-        }};
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.set("Content-Type", "application/json");
+        httpHeaders.set("PRIVATE-TOKEN", properties.getToken());
+        httpHeaders.set("Accept", "application/json");
+        return httpHeaders;
     }
 
-    void processMerge(ScanRequest request,ScanResults results) throws GitLabClienException {
+    void processMerge(ScanRequest request,ScanResults results) throws GitLabClientException {
         try {
             String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties);
             log.debug("comment: {}", comment);
             sendMergeComment(request, comment);
         } catch (HttpClientErrorException e){
             log.error("Error occurred while creating Merge Request comment");
-            throw new GitLabClienException();
+            throw new GitLabClientException();
         }
     }
 
@@ -115,17 +108,17 @@ public class GitLabService {
                 .body(comment)
                 .build();
         HttpEntity<Note> httpEntity = new HttpEntity<>(note, createAuthHeaders());
-        ResponseEntity<String> response = restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
+        restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
-    void processCommit(ScanRequest request,ScanResults results) throws GitLabClienException {
+    void processCommit(ScanRequest request,ScanResults results) throws GitLabClientException {
         try {
             String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties);
             log.debug("comment: {}", comment);
             sendCommitComment(request, comment);
         } catch (HttpClientErrorException e){
             log.error("Error occurred while creating Commit comment");
-            throw new GitLabClienException();
+            throw new GitLabClientException();
         }
     }
 
@@ -133,7 +126,7 @@ public class GitLabService {
         JSONObject note = new JSONObject();
         note.put("note", comment);
         HttpEntity<String> httpEntity = new HttpEntity<>(note.toString(), createAuthHeaders());
-        ResponseEntity<String> response = restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
+        restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
     void startBlockMerge(ScanRequest request){
@@ -151,7 +144,7 @@ public class GitLabService {
                     getJSONMergeTitle("WIP:CX|".concat(request.getAdditionalMetadata("merge_title"))).toString(),
                     createAuthHeaders()
             );
-            ResponseEntity<String> response = restTemplate.exchange(endpoint,
+            restTemplate.exchange(endpoint,
                     HttpMethod.PUT, httpEntity, String.class);
         }
     }
@@ -166,12 +159,13 @@ public class GitLabService {
             String endpoint = properties.getApiUrl().concat(MERGE_PATH);
             endpoint = endpoint.replace("{id}", request.getRepoProjectId().toString());
             endpoint = endpoint.replace("{iid}", mergeId);
+
             HttpEntity httpEntity = new HttpEntity<>(
                     getJSONMergeTitle(request.getAdditionalMetadata("merge_title")
                             .replace("WIP:CX|","")).toString(),
                     createAuthHeaders()
             );
-            ResponseEntity<String> response = restTemplate.exchange(endpoint,
+            restTemplate.exchange(endpoint,
                     HttpMethod.PUT, httpEntity, String.class);
         }
     }

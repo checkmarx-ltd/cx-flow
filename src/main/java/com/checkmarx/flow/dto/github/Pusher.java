@@ -18,7 +18,7 @@ public class Pusher {
     @JsonProperty("email")
     private String email;
     @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+    private Map<String, Object> additionalProperties = new HashMap<>();
 
     @JsonProperty("name")
     public String getName() {

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.beans.ConstructorProperties;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 
 @RestController
@@ -106,7 +107,7 @@ public class GitLabController {
             if(ScanUtils.empty(product)){
                 product = ScanRequest.Product.CX.getProduct();
             }
-            ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
+            ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
             String currentBranch = body.getObjectAttributes().getSourceBranch();
             String targetBranch = body.getObjectAttributes().getTargetBranch();
             List<String> branches = new ArrayList<>();
@@ -240,7 +241,7 @@ public class GitLabController {
             if(ScanUtils.empty(product)){
                 product = ScanRequest.Product.CX.getProduct();
             }
-            ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase());
+            ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
             //extract branch from ref (refs/heads/master -> master)
             String currentBranch = body.getRef().split("/")[2];
             List<String> branches = new ArrayList<>();
@@ -268,12 +269,10 @@ public class GitLabController {
                 if (c.getAuthor() != null && !ScanUtils.empty(c.getAuthor().getEmail())){
                     emails.add(c.getAuthor().getEmail());
                 }
-                if(!ScanUtils.empty(c.getUrl())){
-                    if(bugType.equals(BugTracker.Type.GITLABCOMMIT)) {
-                        commitEndpoint = properties.getApiUrl().concat(GitLabService.COMMIT_PATH);
-                        commitEndpoint = commitEndpoint.replace("{id}", body.getProject().getId().toString());
-                        commitEndpoint = commitEndpoint.replace("{sha}", c.getId());
-                    }
+                if(!ScanUtils.empty(c.getUrl()) && bugType.equals(BugTracker.Type.GITLABCOMMIT)) {
+                    commitEndpoint = properties.getApiUrl().concat(GitLabService.COMMIT_PATH);
+                    commitEndpoint = commitEndpoint.replace("{id}", body.getProject().getId().toString());
+                    commitEndpoint = commitEndpoint.replace("{sha}", c.getId());
                 }
             }
 
@@ -365,12 +364,10 @@ public class GitLabController {
             return false;
         }
         /*Merge has been changed from WIP to not-WIP, ignoring*/
-        else if(event.getChanges() != null && event.getChanges().getTitle() != null){
-            if(event.getChanges().getTitle().getPrevious() != null &&
+        else if(event.getChanges() != null && event.getChanges().getTitle() != null && event.getChanges().getTitle().getPrevious() != null &&
                     event.getChanges().getTitle().getPrevious().startsWith("WIP:CX|") &&
                     !event.getChanges().getTitle().getCurrent().startsWith("WIP:")){
-                return true;
-            }
+            return true;
         }
         return false;
     }

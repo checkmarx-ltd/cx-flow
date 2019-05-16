@@ -46,7 +46,7 @@ public class HeadCommit {
     @JsonProperty("modified")
     private List<String> modified = null;
     @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+    private Map<String, Object> additionalProperties = new HashMap<>();
 
     @JsonProperty("id")
     public String getId() {

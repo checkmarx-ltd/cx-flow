@@ -74,16 +74,18 @@ public class IssueService implements ApplicationContextAware {
         List<String> newIssues = new ArrayList<>();
         List<String> updatedIssues = new ArrayList<>();
         List<String> closedIssues = new ArrayList<>();
-        if (!request.getBugTracker().getType().equals(BugTracker.Type.CUSTOM) && !ScanUtils.empty(request.getBugTracker().getCustomBean())) {
+        BugTracker bugTracker = request.getBugTracker();
+        String customBean = bugTracker.getCustomBean();
+        if (!bugTracker.getType().equals(BugTracker.Type.CUSTOM) && !ScanUtils.empty(customBean)) {
             throw new MachinaException("A valid custom bean must be used here.");
         }
 
         try {
-            IssueTracker tracker = (IssueTracker) context.getBean(request.getBugTracker().getCustomBean());
+            IssueTracker tracker = (IssueTracker) context.getBean(customBean);
             tracker.init(request, results);
             String fpLabel = tracker.getFalsePositiveLabel();
 
-            log.info("Processing Issues with custom bean {}", request.getBugTracker().getCustomBean());
+            log.info("Processing Issues with custom bean {}", customBean);
 
             List<Issue> issues = tracker.getIssues(request);
             if(issues == null){
@@ -136,18 +138,18 @@ public class IssueService implements ApplicationContextAware {
             }
 
             /*Check if an issue exists in GitLab but not within results and close if not*/
-            for (Map.Entry<String, Issue> issue : iMap.entrySet()) {
+            for (Map.Entry<String, Issue> issueMap : iMap.entrySet()) {
+                String key = issueMap.getKey();
+                Issue issue = issueMap.getValue();
                 try {
-                    if (!xMap.containsKey(issue.getKey())) {
-                        if (tracker.isIssueOpened(issue.getValue())) {
-                            /*Close the issue*/
-                            tracker.closeIssue(issue.getValue(), request);
-                            closedIssues.add(issue.getValue().getId());
-                            log.info("Closing issue #{} with key {}", issue.getValue().getId(), issue.getKey());
-                        }
+                    if (!xMap.containsKey(key) && tracker.isIssueOpened(issue)) {
+                        /*Close the issue*/
+                        tracker.closeIssue(issue, request);
+                        closedIssues.add(issue.getId());
+                        log.info("Closing issue #{} with key {}", issue.getId(), key);
                     }
                 } catch (HttpClientErrorException e) {
-                    log.error("Error occurred while processing issue with key {} {}", issue.getKey(), e);
+                    log.error("Error occurred while processing issue with key {} {}", key, e);
                 }
             }
 

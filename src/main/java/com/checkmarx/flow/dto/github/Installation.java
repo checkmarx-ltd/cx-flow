@@ -15,7 +15,7 @@ public class Installation {
     @JsonProperty("id")
     private Integer id;
     @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+    private Map<String, Object> additionalProperties = new HashMap<>();
 
     @JsonProperty("id")
     public Integer getId() {

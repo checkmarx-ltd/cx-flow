@@ -6,14 +6,12 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.*;
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class SecurityFilter implements Filter {
 
-    private static final String AUTH_HEADER = "Authorization";
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(SecurityFilter.class);
 
     public SecurityFilter() {
@@ -39,7 +37,6 @@ public class SecurityFilter implements Filter {
                          FilterChain chain) throws IOException, ServletException {
 
         //TODO Per-Request Validation as required (white list)
-        HttpServletRequest req =  ((HttpServletRequest)request);
         chain.doFilter(request, response);
     }
 
