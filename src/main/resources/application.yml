@@ -3,7 +3,7 @@ server:
 
 logging:
   file: cx-flow.log
-#  level:
+  level:
 #    com:
 #      checkmarx:
 #        flow:
@@ -30,13 +30,12 @@ cx-flow:
     - master
     - security
   filter-severity:
-    - High
+#    - High
   filter-category:
   filter-cwe:
   filter-status:
 # track-application-only: false
   mitre-url: https://cwe.mitre.org/data/definitions/%s.html
-#  break-build: true
 #  break-build: true
 #  wiki-url: https://custodela.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
 #  codebash-url: https://cxa.codebashing.com/courses/
@@ -76,10 +75,11 @@ jira:
   project: APPSEC
   issue-type: Application Security Bug
   priorities:
-    High: High
-    Medium: Medium
-    Low: Low
-    Informational: Lowest
+    X: Y
+#    High: High
+#    Medium: Medium
+#    Low: Low
+#    Informational: Lowest
   open-transition: Reopen Issue
   close-transition: Close Issue
   open-status:
@@ -90,36 +90,36 @@ jira:
     - Closed
     - Resolved
   fields:
-    - type: result
-      name: application
-      jira-field-name: Application
-      jira-field-type: label
-    - type: result
-      name: category
-      jira-field-name: Category
-      jira-field-type: label
-    - type: result
-      name: cwe
-      jira-field-name: CWEs
-      jira-field-type: label
-    - type: result
-      name: severity
-      jira-field-name: Severity
-      jira-field-type: single-select
-    - type: result
-      name: loc
-      jira-field-name: Line Numbers
-      jira-field-type: label
-    - type: static
-      name: identified-by
-      jira-field-name: Identified By
-      jira-field-type: single-select
-      jira-default-value: Automation
-    - type: static
-      name: dependencies
-      jira-field-name: Dependencies
-      jira-field-type: multi-select
-      jira-default-value: Java, AngularJS
+#    - type: result
+#      name: application
+#      jira-field-name: Application
+#      jira-field-type: label
+#    - type: result
+#      name: category
+#      jira-field-name: Category
+#      jira-field-type: label
+#    - type: result
+#      name: cwe
+#      jira-field-name: CWEs
+#      jira-field-type: label
+#    - type: result
+#      name: severity
+#      jira-field-name: Severity
+#      jira-field-type: single-select
+#    - type: result
+#      name: loc
+#      jira-field-name: Line Numbers
+#      jira-field-type: label
+#    - type: static
+#      name: identified-by
+#      jira-field-name: Identified By
+#      jira-field-type: single-select
+#      jira-default-value: Automation
+#    - type: static
+#      name: dependencies
+#      jira-field-name: Dependencies
+#      jira-field-type: multi-select
+#      jira-default-value: Java, AngularJS
 
 github:
   webhook-token: xxxx
@@ -134,6 +134,15 @@ gitlab:
   token: xxxx
   url: https://gitlab.com
   api-url: https://gitlab.com/api/v4/
+  false-positive-label: false-positive
+  block-merge: true
+
+azure:
+  webhook-token: xxxx
+  token: xxxx
+  url: https://dev.azure.com
+  api-url: https://dev.azure.com
+  api-version: 5.0
   false-positive-label: false-positive
   block-merge: true
 

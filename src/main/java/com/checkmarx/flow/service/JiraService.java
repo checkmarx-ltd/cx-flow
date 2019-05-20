@@ -346,7 +346,7 @@ public class JiraService {
                                 DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
                                 LocalDateTime now = LocalDateTime.now().plusDays(f.getOffset());
                                 value = dtf.format(now);
-                                log.debug("system date: {}");
+                                log.debug("system date: {}", value);
                                 break;
                             case "recommendation":
                                 StringBuilder recommendation = new StringBuilder();

@@ -95,6 +95,15 @@ gitlab:
   false-positive-label: false-positive
   block-merge: true
 
+azure:
+  webhook-token: xxxx
+  token: xxxx
+  url: https://dev.azure.com
+  api-url: https://dev.azure.com
+  api-version: 5.0
+  false-positive-label: false-positive
+  block-merge: true
+
 json:
   file-name-format: "[TEAM]-[PROJECT]-[TIME].json"
   data-folder: "C:\\tmp"
