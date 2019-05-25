@@ -13,7 +13,16 @@ public class AzureProperties {
     private String webhookToken;
     private String token;
     private String url;
-    private String apiPath;
+    private String apiUrl;
+    private String issueType = "Issue";
+    private String issueBody = "Description";
+    private String appTagPrefix = "app";
+    private String ownerTagPrefix = "owner";
+    private String repoTagPrefix = "repo";
+    private String branchLabelPrefix = "branch";
+    private String apiVersion = "5.0";
+    private String openStatus;
+    private String closedStatus;
     private String falsePositiveLabel;
 
     public String getWebhookToken() {
@@ -28,8 +37,8 @@ public class AzureProperties {
         return this.url;
     }
 
-    public String getApiPath() {
-        return this.apiPath;
+    public String getApiUrl() {
+        return this.apiUrl;
     }
 
     public String getFalsePositiveLabel() {
@@ -48,12 +57,83 @@ public class AzureProperties {
         this.url = url;
     }
 
-    public void setApiPath(String apiPath) {
-        this.apiPath = apiPath;
+    public void setApiUrl(String apiUrl) {
+        this.apiUrl = apiUrl;
+    }
+
+    public String getApiVersion() {
+        return apiVersion;
+    }
+
+    public void setApiVersion(String apiVersion) {
+        this.apiVersion = apiVersion;
     }
 
     public void setFalsePositiveLabel(String falsePositiveLabel) {
         this.falsePositiveLabel = falsePositiveLabel;
     }
 
+    public String getIssueType() {
+        return issueType;
+    }
+
+    public void setIssueType(String issueType) {
+        this.issueType = issueType;
+    }
+
+    public String getIssueBody() {
+        return issueBody;
+    }
+
+    public void setIssueBody(String issueBody) {
+        this.issueBody = issueBody;
+    }
+
+    public String getAppTagPrefix() {
+        return appTagPrefix;
+    }
+
+    public void setAppTagPrefix(String appTagPrefix) {
+        this.appTagPrefix = appTagPrefix;
+    }
+
+    public String getOwnerTagPrefix() {
+        return ownerTagPrefix;
+    }
+
+    public void setOwnerTagPrefix(String ownerTagPrefix) {
+        this.ownerTagPrefix = ownerTagPrefix;
+    }
+
+    public String getRepoTagPrefix() {
+        return repoTagPrefix;
+    }
+
+    public void setRepoTagPrefix(String repoTagPrefix) {
+        this.repoTagPrefix = repoTagPrefix;
+    }
+
+    public String getBranchLabelPrefix() {
+        return branchLabelPrefix;
+    }
+
+    public void setBranchLabelPrefix(String branchLabelPrefix) {
+        this.branchLabelPrefix = branchLabelPrefix;
+    }
+
+    public String getOpenStatus() {
+        return openStatus;
+    }
+
+    public void setOpenStatus(String openStatus) {
+        this.openStatus = openStatus;
+    }
+
+    public String getClosedStatus() {
+        return closedStatus;
+    }
+
+    public void setClosedStatus(String closedStatus) {
+        this.closedStatus = closedStatus;
+    }
 }

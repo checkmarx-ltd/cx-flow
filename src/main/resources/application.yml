@@ -3,7 +3,7 @@ server:
 
 logging:
   file: cx-flow.log
-  level:
+#  level:
 #    com:
 #      checkmarx:
 #        flow:
@@ -30,7 +30,7 @@ cx-flow:
     - master
     - security
   filter-severity:
-#    - High
+    - High
   filter-category:
   filter-cwe:
   filter-status:
@@ -49,8 +49,8 @@ cx-flow:
 checkmarx:
   username: xxxxx
   password: xxxxx
-  client-secret: xxxxxxx
-  base-url: https://cx.ken-mcdonald.com/
+  client-secret: 014DF517-39D1-4453-B7B3-9930C563627C
+  base-url: http://cx.local
   multi-tenant: true
   configuration: Default Configuration
   scan-preset: Checkmarx Default
@@ -69,7 +69,7 @@ checkmarx:
   jira-assignee-field:
 
 jira:
-  url: https://xxxx.atlassian.net
+  url: https://xxxxx.atlassian.net
   username: xxxx
   token: xxxx
   project: APPSEC
@@ -89,37 +89,7 @@ jira:
   closed-status:
     - Closed
     - Resolved
-  fields:
-#    - type: result
-#      name: application
-#      jira-field-name: Application
-#      jira-field-type: label
-#    - type: result
-#      name: category
-#      jira-field-name: Category
-#      jira-field-type: label
-#    - type: result
-#      name: cwe
-#      jira-field-name: CWEs
-#      jira-field-type: label
-#    - type: result
-#      name: severity
-#      jira-field-name: Severity
-#      jira-field-type: single-select
-#    - type: result
-#      name: loc
-#      jira-field-name: Line Numbers
-#      jira-field-type: label
-#    - type: static
-#      name: identified-by
-#      jira-field-name: Identified By
-#      jira-field-type: single-select
-#      jira-default-value: Automation
-#    - type: static
-#      name: dependencies
-#      jira-field-name: Dependencies
-#      jira-field-type: multi-select
-#      jira-default-value: Java, AngularJS
+#  fields:
 
 github:
   webhook-token: xxxx
@@ -142,6 +112,7 @@ azure:
   token: xxxx
   url: https://dev.azure.com
   api-url: https://dev.azure.com
+  issue-type: issue
   api-version: 5.0
   false-positive-label: false-positive
   block-merge: true
