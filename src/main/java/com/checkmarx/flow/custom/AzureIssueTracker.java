@@ -4,21 +4,26 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.ScanResults;
+import com.checkmarx.flow.dto.azure.CreateWorkItemAttr;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.utils.ScanUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import java.util.ArrayList;
-import java.util.List;
+
+import java.util.*;
 
 @Service("Azure")
 public class AzureIssueTracker implements IssueTracker {
 
     private static final String TRANSITION_ACTIVE = "closed";
     private static final String TRANSITION_CLOSED = "open";
+    private static final String STATE_FIELD = "System.State";
+    private static final String TITLE_FIELD = "System.Title";
+    private static final String TAGS_FIELD = "System.Tags";
     private static final String ISSUES_PER_PAGE = "100";
     private static final String WORKITEMS="%s/{o}/{p}/_apis/wit/wiql?api-version=%s";
     private static final String CREATEWORKITEMS="%s/{o}/{p}/_apis/wit/workitems/$%s?api-version=%s";
@@ -50,7 +55,7 @@ public class AzureIssueTracker implements IssueTracker {
                 ScanUtils.empty(request.getBranch())){
             throw new MachinaException("Namespace / RepoName / Branch are required");
         }
-        if(ScanUtils.empty(properties.getApiPath())){
+        if(ScanUtils.empty(properties.getApiUrl())){
             throw new MachinaException("Azure API Url must be provided in property config");
         }
     }
@@ -62,57 +67,109 @@ public class AzureIssueTracker implements IssueTracker {
      * @ full name (owner/repo format)
      */
     @Override
-    public List<Issue> getIssues(ScanRequest request) {
+    public List<Issue> getIssues(ScanRequest request) throws MachinaException {
         log.info("Executing getIssues Azure API call");
         List<Issue> issues = new ArrayList<>();
-        HttpEntity httpEntity = new HttpEntity<>(createAuthHeaders());
+        String endpoint = String.format(WORKITEMS, properties.getApiUrl(), properties.getApiVersion());
+
+        String wiq;
+        /*Namespace/Repo/Branch provided*/
+        if(!flowProperties.isTrackApplicationOnly() &&
+                !ScanUtils.empty(request.getNamespace()) &&
+                !ScanUtils.empty(request.getRepoName()) &&
+                !ScanUtils.empty(request.getBranch())) {
+            wiq = String.format(WIQ_REPO_BRANCH,
+                    request.getProduct().getProduct(),
+                    properties.getOwnerTagPrefix(),
+                    request.getNamespace(),
+                    properties.getRepoTagPrefix(),
+                    request.getRepoName(),
+                    properties.getBranchLabelPrefix(),
+                    request.getBranch()
+            );
+        }/*Only application provided*/
+        else if(!ScanUtils.empty(request.getApplication())){
+            wiq = String.format(WIQ_APP,
+                    request.getProduct().getProduct(),
+                    properties.getAppTagPrefix(),
+                    request.getApplication()
+            );
+        }
+        else {
+            log.error("Application must be set at minimum");
+            throw new MachinaException("Application must be set at minimum");
+        }
+        log.debug(wiq);
+        HttpEntity httpEntity = new HttpEntity<>(wiq, createAuthHeaders());
+
+        ResponseEntity<String> response = restTemplate.exchange(endpoint,
+                HttpMethod.POST, httpEntity, String.class, request.getNamespace(), request.getRepoName());
+        if(response.getBody() == null) return issues;
+
+        JSONObject json = new JSONObject(response.getBody());
+        JSONArray workItems = json.getJSONArray("workItems");
+
+        if(workItems.length() < 1) return issues;
+
+        for (int i = 0; i < workItems.length(); i++) {
+            JSONObject workItem = workItems.getJSONObject(i);
+            String workItemUri = workItem.getString("url");
+            Issue wi = getIssue(workItemUri);
+            if(wi != null){
+                issues.add(wi);
+            }
+
+        }
         return issues;
     }
 
-
-    /*private Issue mapToIssue(com.checkmarx.flow.dto.Azure.Issue issue){
-        if(issue == null){
+    private Issue getIssue(String uri){
+        HttpEntity httpEntity = new HttpEntity<>(createAuthHeaders());
+        log.debug("Getting issue at uri {}", uri);
+        ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, httpEntity, String.class);
+        String r = response.getBody();
+        if( r == null){
             return null;
         }
+        JSONObject o = new JSONObject(r);
+        JSONObject fields = o.getJSONObject("fields");
+
         Issue i = new Issue();
-        i.setBody(issue.getBody());
-        i.setTitle(issue.getTitle());
-        i.setId(String.valueOf(issue.getId()));
-        List<String> labels = new ArrayList<>();
-        for(LabelsItem l: issue.getLabels()){
-            labels.add(l.getName());
-        }
-        i.setLabels(labels);
-        i.setUrl(issue.getUrl());
-        i.setState(issue.getState());
+        i.setBody(fields.getString(properties.getIssueBody()));
+        i.setTitle(fields.getString(TITLE_FIELD));
+        i.setId(String.valueOf(fields.getInt("id")));
+        String[] tags = fields.getString(TAGS_FIELD).split(";");
+        i.setLabels(Arrays.asList(tags));
+        i.setUrl(uri);
+        i.setState(fields.getString(STATE_FIELD));
         return i;
-    }*/
-
-    /**
-     * Retrieve DTO representation of Azure Issue
-     *
-     * @param issueUrl URL for specific Azure Issue
-     * @return Azure Issue
-     */
-    private Issue getIssue(String issueUrl) {
-        return null;
-    }
-
-    /**
-     * Add a comment to an existing Azure Issue
-     *
-     * @param issueUrl URL for specific Azure Issue
-     * @param comment  Comment to append to the Azure Issue
-     */
-    private void addComment(String issueUrl, String comment) {
-        log.debug("Executing add comment Azure API call");
-        //HttpEntity<String> httpEntity = new HttpEntity<>(getJSONComment(comment).toString(), createAuthHeaders());
-        //restTemplate.exchange(issueUrl.concat("/comments"), HttpMethod.POST, httpEntity, String.class);
     }
 
     @Override
     public Issue createIssue(ScanResults.XIssue resultIssue, ScanRequest request) throws MachinaException {
         log.debug("Executing createIssue Azure API call");
+        String endpoint = String.format(CREATEWORKITEMS, properties.getApiUrl(),
+                request.getNamespace(),
+                properties.getApiVersion());
+
+        CreateWorkItemAttr title = new CreateWorkItemAttr();
+        CreateWorkItemAttr description = new CreateWorkItemAttr();
+        CreateWorkItemAttr tags = new CreateWorkItemAttr();
+        title.setOp("add");
+        title.setPath("fields/".concat(TITLE_FIELD));
+        title.setValue("");
+        description.setOp("add");
+        description.setPath("fields/".concat(properties.getIssueBody()));
+        description.setValue("");
+        tags.setOp("add");
+        tags.setPath("fields/".concat(TAGS_FIELD));
+        tags.setValue("");
+        List<CreateWorkItemAttr> body = new ArrayList<>(Arrays.asList(title, description, tags));
+        HttpEntity<List<CreateWorkItemAttr>> httpEntity = new HttpEntity<>(body, createPatchAuthHeaders());
+
+        ResponseEntity<String> response = restTemplate.exchange(endpoint,
+                HttpMethod.POST, httpEntity, String.class, request.getNamespace(), request.getRepoName());
+
         return null;
     }
 
@@ -154,7 +211,7 @@ public class AzureIssueTracker implements IssueTracker {
         if(issue.getState() == null){
             return false;
         }
-        return issue.getState().equals(TRANSITION_CLOSED); //TODO property
+        return issue.getState().equals(properties.getClosedStatus());
     }
 
     @Override
@@ -162,7 +219,7 @@ public class AzureIssueTracker implements IssueTracker {
         if(issue.getState() == null){
             return true;
         }
-        return issue.getState().equals(TRANSITION_ACTIVE); // TODO property
+        return issue.getState().equals(properties.getOpenStatus());
     }
 
     @Override
@@ -170,12 +227,18 @@ public class AzureIssueTracker implements IssueTracker {
         log.info("Finalizing Azure Processing");
     }
 
-    /**
-     * @return Header consisting of API token used for authentication
-     */
-    private HttpHeaders createAuthHeaders() {
+    private HttpHeaders createAuthHeaders(){
+        String encoding = Base64.getEncoder().encodeToString(properties.getToken().getBytes());
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.set("Authorization", "token ".concat(properties.getToken()));
+        httpHeaders.set("Content-Type", "application/json");
+        httpHeaders.set("Authorization", "Basic ".concat(encoding));
+        httpHeaders.set("Accept", "application/json");
+        return httpHeaders;
+    }
+
+    private HttpHeaders createPatchAuthHeaders(){
+        HttpHeaders httpHeaders = createAuthHeaders();
+        httpHeaders.set("Content-Type", "application/json-patch+json");
         return httpHeaders;
     }
 

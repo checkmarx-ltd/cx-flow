@@ -75,6 +75,12 @@ jira:
       jira-field-name: Due date
       jira-field-type: text
     - type: result
+      name: system-date
+      skip-update: true
+      offset: 10
+      jira-field-name: Due date
+      jira-field-type: text
+    - type: result
       name: application
       jira-field-name: Application
       jira-field-type: label
