@@ -105,19 +105,19 @@ public class CxFlowApplicationCmd implements ApplicationRunner {
         }
 
         /*Collect command line options (String)*/
-        bugTracker = ScanUtils.empty(arg.getOptionValues("bug-tracker")) ? null : arg.getOptionValues("bug-tracker").get(0);
-        file = ScanUtils.empty(arg.getOptionValues("f")) ? null : arg.getOptionValues("f").get(0);
-        libFile = ScanUtils.empty(arg.getOptionValues("lib-file")) ? null : arg.getOptionValues("lib-file").get(0);
-        repoName = ScanUtils.empty(arg.getOptionValues("repo-name")) ? null : arg.getOptionValues("repo-name").get(0);
-        repoUrl = ScanUtils.empty(arg.getOptionValues("repo-url")) ? null : arg.getOptionValues("repo-url").get(0);
-        branch = ScanUtils.empty(arg.getOptionValues("branch")) ? null : arg.getOptionValues("branch").get(0);
-        namespace = ScanUtils.empty(arg.getOptionValues("namespace")) ? null : arg.getOptionValues("namespace").get(0);
-        team = ScanUtils.empty(arg.getOptionValues("cx-team")) ? null : arg.getOptionValues("cx-team").get(0);
-        cxProject = ScanUtils.empty(arg.getOptionValues("cx-project")) ? null : arg.getOptionValues("cx-project").get(0);
-        application = ScanUtils.empty(arg.getOptionValues("app")) ? null : arg.getOptionValues("app").get(0);
-        assignee = ScanUtils.empty(arg.getOptionValues("assignee")) ? null : arg.getOptionValues("assignee").get(0);
-        mergeId = ScanUtils.empty(arg.getOptionValues("merge-id")) ? null : arg.getOptionValues("merge-id").get(0);
-        preset = ScanUtils.empty(arg.getOptionValues("preset")) ? null : arg.getOptionValues("preset").get(0);
+        bugTracker = getOptionValues(arg, "bug-tracker");
+        file = getOptionValues(arg,"f");
+        libFile = getOptionValues(arg,"lib-file");
+        repoName = getOptionValues(arg,"repo-name");
+        repoUrl = getOptionValues(arg,"repo-url");
+        branch = getOptionValues(arg,"branch");
+        namespace = getOptionValues(arg,"namespace");
+        team = getOptionValues(arg,"cx-team");
+        cxProject = getOptionValues(arg,"cx-project");
+        application = getOptionValues(arg,"app");
+        assignee = getOptionValues(arg,"assignee");
+        mergeId = getOptionValues(arg,"merge-id");
+        preset = getOptionValues(arg,"preset");
         osa = arg.getOptionValues("osa") != null;
         /*Collect command line options (List of Strings)*/
         emails = arg.getOptionValues("emails");
@@ -164,8 +164,7 @@ public class CxFlowApplicationCmd implements ApplicationRunner {
                 exit(1);
             }
             p = ScanRequest.Product.CXOSA;
-        }
-        else {
+        } else {
             p = ScanRequest.Product.CX;
         }
 
@@ -290,8 +289,7 @@ public class CxFlowApplicationCmd implements ApplicationRunner {
                         exit(2);
                     }
                     cxOsaParse(request, f, libs);
-                }
-                else{ //SAST
+                } else { //SAST
                     if(arg.containsOption("offline")){
                         cxProperties.setOffline(true);
                     }
@@ -323,6 +321,15 @@ public class CxFlowApplicationCmd implements ApplicationRunner {
         }
         log.info("Completed Successfully");
         exit(0);
+    }
+
+    private String getOptionValues(ApplicationArguments arg, String option){
+        if(arg != null && option != null) {
+            List<String> values = arg.getOptionValues(option);
+            return ScanUtils.empty(values) ? null : values.get(0);
+        } else {
+            return  null;
+        }
     }
 
     private void cxScan(ScanRequest request, String path){

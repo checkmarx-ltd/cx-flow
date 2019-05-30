@@ -208,7 +208,8 @@ public class BitbucketCloudController {
         MachinaOverride o = ScanUtils.getMachinaOverride(override);
 
         try {
-            String app = body.getRepository().getName();
+            Repository repository = body.getRepository();
+            String app = repository.getName();
             if(!ScanUtils.empty(application)){
                 app = application;
             }
@@ -228,7 +229,8 @@ public class BitbucketCloudController {
                 product = ScanRequest.Product.CX.getProduct();
             }
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
-            String currentBranch = body.getPush().getChanges().get(0).getNew().getName();
+            List<Change> changeList =  body.getPush().getChanges();
+            String currentBranch = changeList.get(0).getNew().getName();
             List<String> branches = new ArrayList<>();
             List<Filter> filters;
 
@@ -251,15 +253,16 @@ public class BitbucketCloudController {
             /*Determine emails*/
             List<String> emails = new ArrayList<>();
 
-            for(Change ch: body.getPush().getChanges()){
+            for(Change ch: changeList){
                 for(Commit c: ch.getCommits()){
-                    if(!ScanUtils.empty(c.getAuthor().getRaw())){
-                        emails.add(c.getAuthor().getRaw());
+                    String author = c.getAuthor().getRaw();
+                    if(!ScanUtils.empty(author)){
+                        emails.add(author);
                     }
                 }
             }
 
-            String gitUrl = body.getRepository().getLinks().getHtml().getHref().concat(".git");
+            String gitUrl = repository.getLinks().getHtml().getHref().concat(".git");
 
             String scanPreset = cxProperties.getScanPreset();
             if(!ScanUtils.empty(preset)){
@@ -275,8 +278,8 @@ public class BitbucketCloudController {
                     .product(p)
                     .project(project)
                     .team(team)
-                    .namespace(body.getRepository().getOwner().getUsername().replaceAll(" ","_"))
-                    .repoName(body.getRepository().getName())
+                    .namespace(repository.getOwner().getUsername().replaceAll(" ","_"))
+                    .repoName(repository.getName())
                     .repoUrl(gitUrl)
                     .repoUrlWithAuth(gitUrl.replace(HTTPS, HTTPS.concat(properties.getToken()).concat("@")))
                     .repoType(ScanRequest.Repository.BITBUCKET)
