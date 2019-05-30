@@ -150,11 +150,10 @@ public class CxFlowApplication implements ApplicationRunner {
         BugTracker.Type bugType = null;
         if (ScanUtils.empty(bugTracker)) {
             bugTracker =  flowProperties.getBugTracker();
-        } else {
-            for(String existingBugTracker : flowProperties.getBugTrackerImpl()){
-                if(existingBugTracker.equalsIgnoreCase(bugTracker)){
-                    bugTracker = existingBugTracker;
-                }
+        }
+        for(String existingBugTracker : flowProperties.getBugTrackerImpl()){
+            if(existingBugTracker.equalsIgnoreCase(bugTracker)){
+                bugTracker = existingBugTracker;
             }
         }
         try {
