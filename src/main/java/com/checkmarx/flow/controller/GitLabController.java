@@ -4,10 +4,12 @@ import com.checkmarx.flow.config.*;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.gitlab.Commit;
 import com.checkmarx.flow.dto.gitlab.MergeEvent;
+import com.checkmarx.flow.dto.gitlab.ObjectAttributes;
 import com.checkmarx.flow.dto.gitlab.PushEvent;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.service.GitLabService;
 import com.checkmarx.flow.service.FlowService;
+import com.checkmarx.flow.utils.Constants;
 import com.checkmarx.flow.utils.ScanUtils;
 import org.slf4j.Logger;
 import org.springframework.http.HttpStatus;
@@ -23,6 +25,10 @@ import java.util.Locale;
 @RequestMapping(value = "/")
 public class GitLabController {
 
+
+    private static final String OAUTH2 = "oauth2:";
+    private static final String HTTPS_OAUTH2 = Constants.HTTPS + OAUTH2;
+    private static final String HTTP_OAUTH2 = Constants.HTTP + OAUTH2;
     private static final String TOKEN_HEADER = "X-Gitlab-Token";
     private static final String EVENT = "X-Gitlab-Event";
     private static final String PUSH = EVENT + "=Push Hook";
@@ -113,8 +119,9 @@ public class GitLabController {
                 product = ScanRequest.Product.CX.getProduct();
             }
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
-            String currentBranch = body.getObjectAttributes().getSourceBranch();
-            String targetBranch = body.getObjectAttributes().getTargetBranch();
+            ObjectAttributes objectAttributes = body.getObjectAttributes();
+            String currentBranch = objectAttributes.getSourceBranch();
+            String targetBranch = objectAttributes.getTargetBranch();
             List<String> branches = new ArrayList<>();
             List<Filter> filters;
 
@@ -138,11 +145,11 @@ public class GitLabController {
 
             String mergeEndpoint = properties.getApiUrl().concat(GitLabService.MERGE_NOTE_PATH);
             mergeEndpoint = mergeEndpoint.replace("{id}", body.getProject().getId().toString());
-            mergeEndpoint = mergeEndpoint.replace("{iid}", body.getObjectAttributes().getIid().toString());
+            mergeEndpoint = mergeEndpoint.replace("{iid}", objectAttributes.getIid().toString());
             String gitUrl = body.getProject().getGitHttpUrl();
             log.info("Using url: {}", gitUrl);
-            String gitAuthUrl = gitUrl.replace("https://", "https://oauth2:".concat(properties.getToken()).concat("@"));
-            gitAuthUrl = gitAuthUrl.replace("http://", "http://oauth2:".concat(properties.getToken()).concat("@"));
+            String gitAuthUrl = gitUrl.replace(Constants.HTTPS, HTTPS_OAUTH2.concat(properties.getToken()).concat("@"));
+            gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, HTTP_OAUTH2.concat(properties.getToken()).concat("@"));
             String scanPreset = cxProperties.getScanPreset();
             if(!ScanUtils.empty(preset)){
                 scanPreset = preset;
@@ -165,7 +172,7 @@ public class GitLabController {
                     .branch(currentBranch)
                     .mergeTargetBranch(targetBranch)
                     .mergeNoteUri(mergeEndpoint)
-                    .refs("refs/heads/".concat(currentBranch))
+                    .refs(Constants.CX_BRANCH_PREFIX.concat(currentBranch))
                     .email(null)
                     .incremental(inc)
                     .scanPreset(scanPreset)
@@ -176,8 +183,8 @@ public class GitLabController {
                     .build();
 
             request = ScanUtils.overrideMap(request, o);
-            request.putAdditionalMetadata("merge_id",body.getObjectAttributes().getIid().toString());
-            request.putAdditionalMetadata("merge_title", body.getObjectAttributes().getTitle());
+            request.putAdditionalMetadata("merge_id",objectAttributes.getIid().toString());
+            request.putAdditionalMetadata("merge_title", objectAttributes.getTitle());
 
             if(branches.isEmpty() || branches.contains(targetBranch)) {
                 flowService.initiateAutomation(request);
@@ -291,8 +298,8 @@ public class GitLabController {
             }
             String gitUrl = body.getProject().getGitHttpUrl();
             log.debug("Using url: {}", gitUrl);
-            String gitAuthUrl = gitUrl.replace("https://", "https://oauth2:".concat(properties.getToken()).concat("@"));
-            gitAuthUrl = gitAuthUrl.replace("http://", "http://oauth2:".concat(properties.getToken()).concat("@"));
+            String gitAuthUrl = gitUrl.replace(Constants.HTTPS, HTTPS_OAUTH2.concat(properties.getToken()).concat("@"));
+            gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, HTTP_OAUTH2.concat(properties.getToken()).concat("@"));
 
             String scanPreset = cxProperties.getScanPreset();
             if(!ScanUtils.empty(preset)){
