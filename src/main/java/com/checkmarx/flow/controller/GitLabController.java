@@ -327,7 +327,7 @@ public class GitLabController {
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
-                    .message("Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product))
+                    .message("Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product != null ? product : "").concat(" | ").concat(bug != null ? bug : ""))
                     .success(false)
                     .build());
         }
