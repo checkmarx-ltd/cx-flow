@@ -57,6 +57,7 @@ public class CxService {
     private final RestTemplate restTemplate;
     private String token = null;
     private LocalDateTime tokenExpires = null;
+    private static final String DEFAULT_PRESET = "Checkmarx Default";
     private static final String LOGIN = "/auth/identity/connect/token";
     private static final String TEAMS = "/auth/teams";
     private static final String PROJECTS = "/projects";
@@ -1059,7 +1060,7 @@ public class CxService {
 
     public Integer getPresetId(String preset) throws MachinaException {
         HttpEntity httpEntity = new HttpEntity<>(createAuthHeaders());
-
+        int defaultPresetId = UNKNOWN_INT;
         try {
             log.info("Retrieving Cx presets");
             ResponseEntity<CxPreset[]> response = restTemplate.exchange(cxProperties.getUrl().concat(PRESETS), HttpMethod.GET, httpEntity, CxPreset[].class);
@@ -1072,13 +1073,18 @@ public class CxService {
                     log.info("Found preset {} with ID {}", preset, cxPreset.getId());
                     return cxPreset.getId();
                 }
+                if(cxPreset.getName().equals(DEFAULT_PRESET)){
+                    defaultPresetId =  cxPreset.getId();
+                }
             }
+            log.warn("No Preset was found for {}", preset);
+            log.warn("Default Preset {} will be used instead", DEFAULT_PRESET);
+            return defaultPresetId;
         }   catch (HttpStatusCodeException e) {
             log.error("Error occurred while retrieving presets");
             log.error(ExceptionUtils.getStackTrace(e));
+            return UNKNOWN_INT;
         }
-        log.info("No Preset was found for {}", preset);
-        return UNKNOWN_INT;
     }
 
     /**
