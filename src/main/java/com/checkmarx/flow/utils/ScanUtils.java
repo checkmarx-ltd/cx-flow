@@ -529,14 +529,7 @@ public class ScanUtils {
             bugType = EnumUtils.getEnum(BugTracker.Type.class, bug.toUpperCase(Locale.ROOT));
             if(bugType == null){
                 log.debug("Determine if custom bean is being used");
-                boolean existingBugTracker = false;
-                for(String bugTracker : bugTrackerImpl){
-                    if(bugTracker.equalsIgnoreCase(bug)){
-                        existingBugTracker = true;
-                        break;
-                    }
-                }
-                if(bugTrackerImpl == null || !existingBugTracker){
+                if(bugTrackerImpl == null){
                     log.debug("bug tracker {} not found within available options {}", bug, bugTrackerImpl);
                     throw new IllegalArgumentException("Custom bug tracker not found in list of available implementations");
                 }
