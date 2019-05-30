@@ -25,7 +25,6 @@ import java.util.Locale;
 @RequestMapping(value = "/" )
 public class BitbucketCloudController {
 
-    private static final String HTTPS = "https://";
     private static final String EVENT = "X-Event-Key";
     private static final String PUSH = EVENT + "=repo:push";
     private static final String MERGE = EVENT + "=pullrequest:created";
@@ -144,7 +143,7 @@ public class BitbucketCloudController {
                     .namespace(repository.getOwner().getUsername().replaceAll(" ","_"))
                     .repoName(repository.getName())
                     .repoUrl(gitUrl)
-                    .repoUrlWithAuth(gitUrl.replace(HTTPS, HTTPS.concat(properties.getToken()).concat("@")))
+                    .repoUrlWithAuth(gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(properties.getToken()).concat("@")))
                     .repoType(ScanRequest.Repository.BITBUCKET)
                     .branch(currentBranch)
                     .mergeTargetBranch(targetBranch)
@@ -291,7 +290,7 @@ public class BitbucketCloudController {
                     .namespace(repository.getOwner().getUsername().replaceAll(" ","_"))
                     .repoName(repository.getName())
                     .repoUrl(gitUrl)
-                    .repoUrlWithAuth(gitUrl.replace(HTTPS, HTTPS.concat(properties.getToken()).concat("@")))
+                    .repoUrlWithAuth(gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(properties.getToken()).concat("@")))
                     .repoType(ScanRequest.Repository.BITBUCKET)
                     .branch(currentBranch)
                     .refs(Constants.CX_BRANCH_PREFIX.concat(currentBranch))

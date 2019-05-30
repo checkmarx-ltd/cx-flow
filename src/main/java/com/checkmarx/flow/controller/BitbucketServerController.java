@@ -9,6 +9,7 @@ import com.checkmarx.flow.dto.bitbucketserver.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.service.FlowService;
+import com.checkmarx.flow.utils.Constants;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -36,8 +37,6 @@ import java.util.Locale;
 @RequestMapping(value = "/" )
 public class BitbucketServerController {
 
-    private static final String HTTP = "http://";
-    private static final String HTTPS = "https://";
     private static final String SIGNATURE = "X-Hub-Signature";
     private static final String EVENT = "X-Event-Key";
     private static final String PING = EVENT + "=diagnostics:ping";
@@ -174,8 +173,8 @@ public class BitbucketServerController {
                     .concat(fromRefRepository.getProject().getKey().concat("/"))
                     .concat(fromRefRepository.getSlug()).concat(".git");
 
-            String gitAuthUrl = gitUrl.replace(HTTPS, HTTPS.concat(properties.getToken()).concat("@"));
-            gitAuthUrl = gitAuthUrl.replace(HTTP, HTTP.concat(properties.getToken()).concat("@"));
+            String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(properties.getToken()).concat("@"));
+            gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(properties.getToken()).concat("@"));
             String mergeEndpoint = properties.getUrl().concat(properties.getApiPath()).concat(MERGE_COMMENT);
             mergeEndpoint = mergeEndpoint.replace("{project}", toRefRepository.getProject().getKey());
             mergeEndpoint = mergeEndpoint.replace("{repo}", toRefRepository.getSlug());
@@ -332,8 +331,8 @@ public class BitbucketServerController {
             String gitUrl = properties.getUrl().concat("/scm/")
                     .concat(repository.getProject().getKey().concat("/"))
                     .concat(repository.getSlug()).concat(".git");
-            String gitAuthUrl = gitUrl.replace(HTTPS, HTTPS.concat(properties.getToken()).concat("@"));
-            gitAuthUrl = gitAuthUrl.replace(HTTP, HTTP.concat(properties.getToken()).concat("@"));
+            String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(properties.getToken()).concat("@"));
+            gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(properties.getToken()).concat("@"));
 
             String scanPreset = cxProperties.getScanPreset();
             if(!ScanUtils.empty(preset)){
