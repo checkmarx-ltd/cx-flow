@@ -58,6 +58,7 @@ public class CxService {
     private String token = null;
     private LocalDateTime tokenExpires = null;
     private static final String DEFAULT_PRESET = "Checkmarx Default";
+    private static final String DEFAULT_CONFIGURATION = "Default Configuration";
     private static final String LOGIN = "/auth/identity/connect/token";
     private static final String TEAMS = "/auth/teams";
     private static final String PROJECTS = "/projects";
@@ -1035,7 +1036,7 @@ public class CxService {
      */
     public Integer getScanConfiguration(String configuration) throws MachinaException {
         HttpEntity httpEntity = new HttpEntity<>(createAuthHeaders());
-
+        int defaultConfigId = UNKNOWN_INT;
         try {
             log.info("Retrieving Cx engineConfigurations");
             ResponseEntity<CxScanEngine[]> response = restTemplate.exchange(cxProperties.getUrl().concat(SCAN_CONFIGURATIONS), HttpMethod.GET, httpEntity, CxScanEngine[].class);
@@ -1044,18 +1045,25 @@ public class CxService {
                 throw new MachinaException("Error obtaining Scan configurations");
             }
             for(CxScanEngine engine: engines){
-                if(engine.getName().equals(configuration)){
-                    log.info("Found xml/engine configuration {} with ID {}", configuration, engine.getId());
-                    return engine.getId();
+                String engineName = engine.getName();
+                int engineId = engine.getId();
+                if(engineName.equalsIgnoreCase(configuration)){
+                    log.info("Found xml/engine configuration {} with ID {}", configuration, engineId);
+                    return engineId;
                 }
+                if(engineName.equalsIgnoreCase(DEFAULT_CONFIGURATION)){
+                    defaultConfigId = engineId;
+                }
+
             }
+            log.warn("No scan configuration found for {}", configuration);
+            log.warn("Scan Configuration {} with ID {} will be used instead", DEFAULT_CONFIGURATION, defaultConfigId);
+            return defaultConfigId;
         }   catch (HttpStatusCodeException e) {
             log.error("Error occurred while retrieving engine configurations");
             log.error(ExceptionUtils.getStackTrace(e));
-            throw new MachinaException("Error obtaining Team Id");
+            throw new MachinaException("Error obtaining Configuration Id");
         }
-        log.info("No scan configuration found for {}", configuration);
-        return UNKNOWN_INT;
     }
 
     public Integer getPresetId(String preset) throws MachinaException {
@@ -1069,21 +1077,23 @@ public class CxService {
                 throw new MachinaException("Error obtaining Team Id");
             }
             for(CxPreset cxPreset: cxPresets){
-                if(cxPreset.getName().equals(preset)){
-                    log.info("Found preset {} with ID {}", preset, cxPreset.getId());
+                String presetName = cxPreset.getName();
+                int presetId = cxPreset.getId();
+                if(presetName.equalsIgnoreCase(preset)){
+                    log.info("Found preset {} with ID {}", preset, presetId);
                     return cxPreset.getId();
                 }
-                if(cxPreset.getName().equals(DEFAULT_PRESET)){
-                    defaultPresetId =  cxPreset.getId();
+                if(presetName.equalsIgnoreCase(DEFAULT_PRESET)){
+                    defaultPresetId =  presetId;
                 }
             }
             log.warn("No Preset was found for {}", preset);
-            log.warn("Default Preset {} will be used instead", DEFAULT_PRESET);
+            log.warn("Default Preset {} with ID {} will be used instead", DEFAULT_PRESET, defaultPresetId);
             return defaultPresetId;
         }   catch (HttpStatusCodeException e) {
             log.error("Error occurred while retrieving presets");
             log.error(ExceptionUtils.getStackTrace(e));
-            return UNKNOWN_INT;
+            throw new MachinaException("Error obtaining Preset Id");
         }
     }
 
