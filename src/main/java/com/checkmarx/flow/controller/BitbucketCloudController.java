@@ -6,9 +6,9 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.bitbucket.*;
-import com.checkmarx.flow.dto.github.PullRequest;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.service.FlowService;
+import com.checkmarx.flow.utils.Constants;
 import com.checkmarx.flow.utils.ScanUtils;
 import org.slf4j.Logger;
 import org.springframework.http.HttpStatus;
@@ -149,7 +149,7 @@ public class BitbucketCloudController {
                     .branch(currentBranch)
                     .mergeTargetBranch(targetBranch)
                     .mergeNoteUri(mergeEndpoint)
-                    .refs("refs/heads/".concat(currentBranch))
+                    .refs(Constants.CX_BRANCH_PREFIX.concat(currentBranch))
                     .email(null)
                     .incremental(inc)
                     .scanPreset(scanPreset)
@@ -294,7 +294,7 @@ public class BitbucketCloudController {
                     .repoUrlWithAuth(gitUrl.replace(HTTPS, HTTPS.concat(properties.getToken()).concat("@")))
                     .repoType(ScanRequest.Repository.BITBUCKET)
                     .branch(currentBranch)
-                    .refs("refs/heads/".concat(currentBranch))
+                    .refs(Constants.CX_BRANCH_PREFIX.concat(currentBranch))
                     .email(emails)
                     .incremental(inc)
                     .scanPreset(scanPreset)

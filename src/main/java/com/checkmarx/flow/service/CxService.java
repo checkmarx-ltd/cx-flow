@@ -10,6 +10,7 @@ import com.checkmarx.flow.dto.cx.xml.ResultType;
 import com.checkmarx.flow.exception.CheckmarxLegacyException;
 import com.checkmarx.flow.exception.InvalidCredentialsException;
 import com.checkmarx.flow.exception.MachinaException;
+import com.checkmarx.flow.utils.Constants;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -57,8 +58,6 @@ public class CxService {
     private final RestTemplate restTemplate;
     private String token = null;
     private LocalDateTime tokenExpires = null;
-    private static final String DEFAULT_PRESET = "Checkmarx Default";
-    private static final String DEFAULT_CONFIGURATION = "Default Configuration";
     private static final String LOGIN = "/auth/identity/connect/token";
     private static final String TEAMS = "/auth/teams";
     private static final String PROJECTS = "/projects";
@@ -1051,13 +1050,13 @@ public class CxService {
                     log.info("Found xml/engine configuration {} with ID {}", configuration, engineId);
                     return engineId;
                 }
-                if(engineName.equalsIgnoreCase(DEFAULT_CONFIGURATION)){
+                if(engineName.equalsIgnoreCase(Constants.CX_DEFAULT_CONFIGURATION)){
                     defaultConfigId = engineId;
                 }
 
             }
             log.warn("No scan configuration found for {}", configuration);
-            log.warn("Scan Configuration {} with ID {} will be used instead", DEFAULT_CONFIGURATION, defaultConfigId);
+            log.warn("Scan Configuration {} with ID {} will be used instead", Constants.CX_DEFAULT_CONFIGURATION, defaultConfigId);
             return defaultConfigId;
         }   catch (HttpStatusCodeException e) {
             log.error("Error occurred while retrieving engine configurations");
@@ -1083,12 +1082,12 @@ public class CxService {
                     log.info("Found preset {} with ID {}", preset, presetId);
                     return cxPreset.getId();
                 }
-                if(presetName.equalsIgnoreCase(DEFAULT_PRESET)){
+                if(presetName.equalsIgnoreCase(Constants.CX_DEFAULT_PRESET)){
                     defaultPresetId =  presetId;
                 }
             }
             log.warn("No Preset was found for {}", preset);
-            log.warn("Default Preset {} with ID {} will be used instead", DEFAULT_PRESET, defaultPresetId);
+            log.warn("Default Preset {} with ID {} will be used instead", Constants.CX_DEFAULT_PRESET, defaultPresetId);
             return defaultPresetId;
         }   catch (HttpStatusCodeException e) {
             log.error("Error occurred while retrieving presets");
