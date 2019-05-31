@@ -614,14 +614,16 @@ public class CxService {
         List<String> category = new ArrayList<>();
 
         for(Filter f: filters){
-            if(f.getType().equals(Filter.Type.SEVERITY)){
-                severity.add(f.getValue().toUpperCase(Locale.ROOT));
+            Filter.Type type = f.getType();
+            String value = f.getValue();
+            if(type.equals(Filter.Type.SEVERITY)){
+                severity.add(value.toUpperCase(Locale.ROOT));
             }
-            else if(f.getType().equals(Filter.Type.TYPE)){
-                category.add(f.getValue().toUpperCase(Locale.ROOT));
+            else if(type.equals(Filter.Type.TYPE)){
+                category.add(value.toUpperCase(Locale.ROOT));
             }
-            else if(f.getType().equals(Filter.Type.CWE)){
-                cwe.add(f.getValue().toUpperCase(Locale.ROOT));
+            else if(type.equals(Filter.Type.CWE)){
+                cwe.add(value.toUpperCase(Locale.ROOT));
             }
         }
         if(!severity.isEmpty() && !severity.contains(q.getSeverity().toUpperCase(Locale.ROOT))){
@@ -1143,7 +1145,7 @@ public class CxService {
             getAuthToken();
         }
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.set("Authorization", "Bearer ".concat(token));
+        httpHeaders.set(HttpHeaders.AUTHORIZATION, "Bearer ".concat(token));
         httpHeaders.setContentType(MediaType.APPLICATION_JSON_UTF8);
         return httpHeaders;
     }
