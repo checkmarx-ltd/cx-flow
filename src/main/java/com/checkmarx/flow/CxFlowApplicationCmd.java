@@ -142,8 +142,7 @@ public class CxFlowApplicationCmd implements ApplicationRunner {
             filters = ScanUtils.getFilters(severity, cwe, category, status);
         }
         else{
-            filters = ScanUtils.getFilters(flowProperties.getFilterSeverity(), flowProperties.getFilterCwe(),
-                    flowProperties.getFilterCategory(), flowProperties.getFilterStatus());
+            filters = ScanUtils.getFilters(flowProperties);
         }
 
         //set the default bug tracker as per yml

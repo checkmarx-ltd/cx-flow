@@ -55,6 +55,14 @@ public class ScanUtils {
         }
         return false;
     }
+    /**
+     * Create List of filters based on String lists of severity, cwe, category
+     * @param flowProperties
+     * @return
+     */
+    public static List<Filter> getFilters(FlowProperties flowProperties) {
+        return getFilters(flowProperties.getFilterSeverity(), flowProperties.getFilterCwe(), flowProperties.getFilterCategory(), flowProperties.getFilterStatus());
+    }
 
     /**
      * Create List of filters based on String lists of severity, cwe, category
@@ -64,48 +72,25 @@ public class ScanUtils {
      * @return
      */
     public static List<Filter> getFilters(List<String> severity, List<String> cwe, List<String> category, List<String> status) {
-        List<Filter> severityList = new ArrayList<>();
-        List<Filter> categoryList = new ArrayList<>();
-        List<Filter> cweList = new ArrayList<>();
-        List<Filter> statusList = new ArrayList<>();
         List<Filter> filters = new ArrayList<>();
-        if(severity != null) {
-            for (String s : severity) {
-                severityList.add(Filter.builder()
-                        .type(Filter.Type.SEVERITY)
-                        .value(s)
-                        .build());
-            }
-        }
-        if(cwe != null) {
-            for (String c : cwe) {
-                cweList.add(Filter.builder()
-                        .type(Filter.Type.CWE)
-                        .value(c)
-                        .build());
-            }
-        }
-        if(category != null) {
-            for (String c : category) {
-                categoryList.add(Filter.builder()
-                        .type(Filter.Type.TYPE)
-                        .value(c)
-                        .build());
-            }
-        }
-        if(status != null) {
-            for (String s : status) {
-                statusList.add(Filter.builder()
-                        .type(Filter.Type.STATUS)
-                        .value(s)
-                        .build());
-            }
-        }
-        filters.addAll(severityList);
-        filters.addAll(cweList);
-        filters.addAll(categoryList);
-        filters.addAll(statusList);
+        filters.addAll(getListFilter(severity, Filter.Type.SEVERITY));
+        filters.addAll(getListFilter(cwe, Filter.Type.CWE));
+        filters.addAll(getListFilter(category, Filter.Type.TYPE));
+        filters.addAll(getListFilter(status, Filter.Type.STATUS));
         return filters;
+    }
+
+    private static List<Filter> getListFilter(List<String> stringFilters, Filter.Type type){
+        List<Filter> filterList = new ArrayList<>();
+        if(stringFilters != null) {
+            for (String s : stringFilters) {
+                filterList.add(Filter.builder()
+                        .type(type)
+                        .value(s)
+                        .build());
+            }
+        }
+        return filterList;
     }
 
     /**
