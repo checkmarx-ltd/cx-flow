@@ -103,11 +103,6 @@ public class GitLabController {
 
             BugTracker.Type bugType = BugTracker.Type.GITLABMERGE;
             if(!ScanUtils.empty(bug)){
-                for(String existingBugTracker : flowProperties.getBugTrackerImpl()){
-                    if(existingBugTracker.equalsIgnoreCase(bug)){
-                        bug = existingBugTracker;
-                    }
-                }
                 bugType = ScanUtils.getBugTypeEnum(bug, flowProperties.getBugTrackerImpl());
             }
 
@@ -244,11 +239,6 @@ public class GitLabController {
             BugTracker.Type bugType;
             if (ScanUtils.empty(bug)) {
                 bug =  flowProperties.getBugTracker();
-            }
-            for(String existingBugTracker : flowProperties.getBugTrackerImpl()){
-                if(existingBugTracker.equalsIgnoreCase(bug)){
-                    bug = existingBugTracker;
-                }
             }
             bugType = ScanUtils.getBugTypeEnum(bug, flowProperties.getBugTrackerImpl());
 
