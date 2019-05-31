@@ -224,11 +224,12 @@ public class GitHubController {
 
 
         }catch (IllegalArgumentException e){
-            log.error("Error submitting Scan Request. Product option incorrect {}", product);
+            String errorMessage = "Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product != null ? product : "").concat(" | ").concat(bug != null ? bug : "");
+            log.error(errorMessage);
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
-                    .message("Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product))
+                    .message(errorMessage)
                     .success(false)
                     .build());
         }
@@ -375,11 +376,12 @@ public class GitHubController {
             }
 
         }catch (IllegalArgumentException e){
-            log.error("Error submitting Scan Request. Product option incorrect {}", product);
+            String errorMessage = "Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product != null ? product : "").concat(" | ").concat(bug != null ? bug : "");
+            log.error(errorMessage);
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 
-           return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
-                    .message("Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product))
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
+                    .message(errorMessage)
                     .success(false)
                     .build());
         }
