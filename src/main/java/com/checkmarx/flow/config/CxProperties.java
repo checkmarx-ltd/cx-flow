@@ -1,6 +1,5 @@
 package com.checkmarx.flow.config;
 
-import com.checkmarx.flow.utils.Constants;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
@@ -29,8 +28,8 @@ public class CxProperties {
     private String url;
 
     private boolean multiTenant = false;
-    private String scanPreset = Constants.CX_DEFAULT_PRESET;
-    private String configuration = Constants.CX_DEFAULT_CONFIGURATION;
+    private String scanPreset = "Checkmarx Default";
+    private String configuration = "Default Configuration";
     private Boolean incremental = false;
     private Integer incrementalThreshold = 7;
     private Integer incrementalNumScans = 5;

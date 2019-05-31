@@ -48,7 +48,6 @@ dependencies {
     compile ("com.atlassian.fugue:fugue:${atlassianFugueVersion}")
     compile ("com.atlassian.jira:jira-rest-java-client-core:${atlassianVersion}")
     compile ("com.atlassian.jira:jira-rest-java-client-api:${atlassianVersion}")
-    compile ("org.apache.httpcomponents:httpclient:4.5.8")
     compile ("org.thymeleaf:thymeleaf:3.0.9.RELEASE")
     compileOnly ('org.springframework.boot:spring-boot-configuration-processor')
     runtime('org.springframework.boot:spring-boot-devtools')
