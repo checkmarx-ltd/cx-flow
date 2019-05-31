@@ -11,7 +11,6 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableAsync;
 import java.beans.ConstructorProperties;
 import java.io.File;
@@ -28,14 +27,14 @@ public class CxFlowApplication implements ApplicationRunner {
     private final CxProperties cxProperties;
     private final JiraProperties jiraProperties;
     private final GitHubProperties gitHubProperties;
-    private final GitHubProperties gitLabProperties;
+    private final GitLabProperties gitLabProperties;
     private final FlowService flowService;
 
     @ConstructorProperties({"flowProperties", "cxProperties", "jiraProperties", "gitHubProperties",
             "gitLabProperties", "flowService"})
     public CxFlowApplication(FlowProperties flowProperties,
                                 CxProperties cxProperties, JiraProperties jiraProperties,
-                                GitHubProperties gitHubProperties, GitHubProperties gitLabProperties,
+                                GitHubProperties gitHubProperties, GitLabProperties gitLabProperties,
                                 FlowService flowService) {
         this.flowProperties = flowProperties;
         this.cxProperties = cxProperties;

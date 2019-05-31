@@ -1,5 +1,6 @@
 package com.checkmarx.flow.custom;
 
+import com.checkmarx.flow.config.ADOProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
@@ -17,7 +18,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.*;
 
 @Service("Azure")
-public class AzureIssueTracker implements IssueTracker {
+public class ADOIssueTracker implements IssueTracker {
 
     private static final String TRANSITION_ACTIVE = "closed";
     private static final String TRANSITION_CLOSED = "open";
@@ -34,14 +35,14 @@ public class AzureIssueTracker implements IssueTracker {
     private static final String WIQ_APP = "Select [System.Id], [System.Title], " +
             "[System.State], [System.State], [System.WorkItemType] From WorkItems Where " +
             "[System.TeamProject] = @project AND [Tags] Contains '%s' AND [Tags] Contains '%s:%s'";
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(AzureIssueTracker.class);
+    private static final Logger log = org.slf4j.LoggerFactory.getLogger(ADOIssueTracker.class);
 
     private final RestTemplate restTemplate;
-    private final AzureProperties properties;
+    private final ADOProperties properties;
     private final FlowProperties flowProperties;
 
 
-    public AzureIssueTracker(RestTemplate restTemplate, AzureProperties properties, FlowProperties flowProperties) {
+    public ADOIssueTracker(RestTemplate restTemplate, ADOProperties properties, FlowProperties flowProperties) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.flowProperties = flowProperties;
