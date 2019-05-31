@@ -1,4 +1,4 @@
-package com.checkmarx.flow.custom;
+package com.checkmarx.flow.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -24,6 +24,9 @@ public class ADOProperties {
     private String openStatus;
     private String closedStatus;
     private String falsePositiveLabel;
+    private boolean blockMerge = false;
+    private boolean blockMergeComplete = false;
+
 
     public String getWebhookToken() {
         return this.webhookToken;
@@ -135,5 +138,21 @@ public class ADOProperties {
 
     public void setClosedStatus(String closedStatus) {
         this.closedStatus = closedStatus;
+    }
+
+    public boolean isBlockMerge() {
+        return blockMerge;
+    }
+
+    public void setBlockMerge(boolean blockMerge) {
+        this.blockMerge = blockMerge;
+    }
+
+    public boolean isBlockMergeComplete() {
+        return blockMergeComplete;
+    }
+
+    public void setBlockMergeComplete(boolean blockMergeComplete) {
+        this.blockMergeComplete = blockMergeComplete;
     }
 }
