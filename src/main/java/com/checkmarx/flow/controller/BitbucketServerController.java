@@ -160,8 +160,7 @@ public class BitbucketServerController {
                 filters = ScanUtils.getFilters(severity, cwe, category, status);
             }
             else{
-                filters = ScanUtils.getFilters(flowProperties.getFilterSeverity(), flowProperties.getFilterCwe(),
-                        flowProperties.getFilterCategory(), flowProperties.getFilterStatus());
+                filters = ScanUtils.getFilters(flowProperties);
             }
             String projectKey = fromRefRepository.getProject().getKey();
             String gitUrl = properties.getUrl().concat("/scm/")
@@ -312,8 +311,7 @@ public class BitbucketServerController {
                 filters = ScanUtils.getFilters(severity, cwe, category, status);
             }
             else{
-                filters = ScanUtils.getFilters(flowProperties.getFilterSeverity(), flowProperties.getFilterCwe(),
-                        flowProperties.getFilterCategory(), flowProperties.getFilterStatus());
+                filters = ScanUtils.getFilters(flowProperties);
             }
             List<String> emails = new ArrayList<>();
 
