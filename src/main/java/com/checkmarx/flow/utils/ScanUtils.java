@@ -226,33 +226,33 @@ public class ScanUtils {
 
     public static BugTracker getBugTracker(@RequestParam(value = "assignee", required = false) String assignee,
                                            BugTracker.Type bugType, JiraProperties jiraProperties, String bugTracker) {
-        BugTracker bt;
-        if(bugType.equals(BugTracker.Type.JIRA)) {
-            bt = BugTracker.builder()
-                    .type(bugType)
-                    .projectKey(jiraProperties.getProject())
-                    .issueType(jiraProperties.getIssueType())
-                    .assignee(assignee)
-                    .priorities(jiraProperties.getPriorities())
-                    .closeTransitionField(jiraProperties.getCloseTransitionField())
-                    .closeTransitionValue(jiraProperties.getCloseTransitionValue())
-                    .closedStatus(jiraProperties.getClosedStatus())
-                    .closeTransition(jiraProperties.getCloseTransition())
-                    .openStatus(jiraProperties.getOpenStatus())
-                    .openTransition(jiraProperties.getOpenTransition())
-                    .fields(jiraProperties.getFields())
-                    .build();
-        }
-        else if(bugType.equals(BugTracker.Type.CUSTOM)){
-            bt = BugTracker.builder()
-                    .type(bugType)
-                    .customBean(bugTracker)
-                    .build();
-        }
-        else {
-            bt = BugTracker.builder()
-                    .type(bugType)
-                    .build();
+        BugTracker bt = null;
+        if(bugType != null) {
+            if (bugType.equals(BugTracker.Type.JIRA)) {
+                bt = BugTracker.builder()
+                        .type(bugType)
+                        .projectKey(jiraProperties.getProject())
+                        .issueType(jiraProperties.getIssueType())
+                        .assignee(assignee)
+                        .priorities(jiraProperties.getPriorities())
+                        .closeTransitionField(jiraProperties.getCloseTransitionField())
+                        .closeTransitionValue(jiraProperties.getCloseTransitionValue())
+                        .closedStatus(jiraProperties.getClosedStatus())
+                        .closeTransition(jiraProperties.getCloseTransition())
+                        .openStatus(jiraProperties.getOpenStatus())
+                        .openTransition(jiraProperties.getOpenTransition())
+                        .fields(jiraProperties.getFields())
+                        .build();
+            } else if (bugType.equals(BugTracker.Type.CUSTOM)) {
+                bt = BugTracker.builder()
+                        .type(bugType)
+                        .customBean(bugTracker)
+                        .build();
+            } else {
+                bt = BugTracker.builder()
+                        .type(bugType)
+                        .build();
+            }
         }
         return bt;
     }
@@ -519,7 +519,7 @@ public class ScanUtils {
     public static BugTracker.Type getBugTypeEnum(String bug, List<String> bugTrackerImpl) throws IllegalArgumentException{
 
         BugTracker.Type bugType = EnumUtils.getEnum(BugTracker.Type.class, bug);
-        if(bugType == null){ //Try uppercase
+        if(bugType == null && bug != null){ //Try uppercase
             bugType = EnumUtils.getEnum(BugTracker.Type.class, bug.toUpperCase(Locale.ROOT));
             if(bugType == null){
                 log.debug("Determine if custom bean is being used");
