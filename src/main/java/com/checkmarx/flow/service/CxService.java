@@ -1125,7 +1125,7 @@ public class CxService {
             token = response.getAccessToken();
             tokenExpires = LocalDateTime.now().plusSeconds(response.getExpiresIn()-500); //expire 500 seconds early
         }
-        catch (HttpStatusCodeException e) {
+        catch (NullPointerException | HttpStatusCodeException e) {
             log.error("Error occurred white obtaining Access Token.  Possibly incorrect credentials");
             log.error(ExceptionUtils.getStackTrace(e));
             throw new InvalidCredentialsException();
