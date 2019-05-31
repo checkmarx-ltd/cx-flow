@@ -50,7 +50,6 @@ dependencies {
     compile ("com.atlassian.jira:jira-rest-java-client-core:${atlassianVersion}")
     compile ("com.atlassian.jira:jira-rest-java-client-api:${atlassianVersion}")
     compile ("org.thymeleaf:thymeleaf:3.0.9.RELEASE")
-    compile ("org.apache.httpcomponents:httpclient:4.5.8")
     compileOnly ('org.springframework.boot:spring-boot-configuration-processor')
     runtime('org.springframework.boot:spring-boot-devtools')
     testCompile('org.springframework.boot:spring-boot-starter-test')

@@ -373,9 +373,9 @@ public class GitLabIssueTracker implements IssueTracker {
      */
     private HttpHeaders createAuthHeaders(){
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+        httpHeaders.set("Content-Type", "application/json");
         httpHeaders.set("PRIVATE-TOKEN", properties.getToken());
-        httpHeaders.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+        httpHeaders.set("Accept", "application/json");
         return httpHeaders;
     }
 

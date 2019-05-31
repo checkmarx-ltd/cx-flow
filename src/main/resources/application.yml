@@ -18,7 +18,6 @@ logging:
 #            RestTemplate: TRACE
 
 cx-flow:
-  token: xxxxxxx
   bug-tracker: JIRA
   bug-tracker-impl:
     - CxXml
@@ -38,6 +37,7 @@ cx-flow:
 # track-application-only: false
   mitre-url: https://cwe.mitre.org/data/definitions/%s.html
 #  break-build: true
+#  break-build: true
 #  wiki-url: https://custodela.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
 #  codebash-url: https://cxa.codebashing.com/courses/
 #  mail:
@@ -50,8 +50,8 @@ cx-flow:
 checkmarx:
   username: xxxxx
   password: xxxxx
-  client-secret: 014DF517-39D1-4453-B7B3-9930C563627C
-  base-url: http://cx.local
+  client-secret: xxxxxxx
+  base-url: https://cx.ken-mcdonald.com/
   multi-tenant: true
   configuration: Default Configuration
   scan-preset: Checkmarx Default
@@ -70,17 +70,16 @@ checkmarx:
   jira-assignee-field:
 
 jira:
-  url: https://xxxxx.atlassian.net
+  url: https://xxxx.atlassian.net
   username: xxxx
   token: xxxx
   project: APPSEC
   issue-type: Application Security Bug
   priorities:
-    X: Y
-#    High: High
-#    Medium: Medium
-#    Low: Low
-#    Informational: Lowest
+    High: High
+    Medium: Medium
+    Low: Low
+    Informational: Lowest
   open-transition: Reopen Issue
   close-transition: Close Issue
   open-status:
@@ -90,7 +89,37 @@ jira:
   closed-status:
     - Closed
     - Resolved
-#  fields:
+  fields:
+    - type: result
+      name: application
+      jira-field-name: Application
+      jira-field-type: label
+    - type: result
+      name: category
+      jira-field-name: Category
+      jira-field-type: label
+    - type: result
+      name: cwe
+      jira-field-name: CWEs
+      jira-field-type: label
+    - type: result
+      name: severity
+      jira-field-name: Severity
+      jira-field-type: single-select
+    - type: result
+      name: loc
+      jira-field-name: Line Numbers
+      jira-field-type: label
+    - type: static
+      name: identified-by
+      jira-field-name: Identified By
+      jira-field-type: single-select
+      jira-default-value: Automation
+    - type: static
+      name: dependencies
+      jira-field-name: Dependencies
+      jira-field-type: multi-select
+      jira-default-value: Java, AngularJS
 
 github:
   webhook-token: xxxx
@@ -107,17 +136,6 @@ gitlab:
   api-url: https://gitlab.com/api/v4/
   false-positive-label: false-positive
   block-merge: true
-
-azure:
-  webhook-token: xxxx
-  token: xxxx
-  url: https://dev.azure.com
-  api-url: https://dev.azure.com
-  issue-type: issue
-  api-version: 5.0
-  false-positive-label: false-positive
-  block-merge: true
-
 
 json:
   file-name-format: "[TEAM]-[PROJECT]-[TIME].json"
