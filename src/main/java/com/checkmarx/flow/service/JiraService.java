@@ -67,14 +67,15 @@ public class JiraService {
         log.info("Executing getIssues API call");
         List<Issue> issues = new ArrayList<>();
         String jql;
+        BugTracker bugTracker = request.getBugTracker();
         /*Namespace/Repo/Branch provided*/
         if(!flowProperties.isTrackApplicationOnly() &&
                 !ScanUtils.empty(request.getNamespace()) &&
                 !ScanUtils.empty(request.getRepoName()) &&
                 !ScanUtils.empty(request.getBranch())) {
             jql = String.format("project = %s and issueType = \"%s\" and (\"%s\" = \"%s\" and \"%s\" = \"%s:%s\" and \"%s\" = \"%s:%s\" and \"%s\" = \"%s:%s\")",
-                    request.getBugTracker().getProjectKey(),
-                    request.getBugTracker().getIssueType(),
+                    bugTracker.getProjectKey(),
+                    bugTracker.getIssueType(),
                     jiraProperties.getLabelTracker(),
                     request.getProduct().getProduct(),
                     jiraProperties.getLabelTracker(),
@@ -87,8 +88,8 @@ public class JiraService {
         }/*Only application provided*/
         else if(!ScanUtils.empty(request.getApplication())){
             jql = String.format("project = %s and issueType = \"%s\" and (\"%s\" = \"%s\" and \"%s\" = \"%s:%s\")",
-                    request.getBugTracker().getProjectKey(),
-                    request.getBugTracker().getIssueType(),
+                    bugTracker.getProjectKey(),
+                    bugTracker.getIssueType(),
                     jiraProperties.getLabelTracker(),
                     request.getProduct().getProduct(),
                     jiraProperties.getLabelTracker(),
