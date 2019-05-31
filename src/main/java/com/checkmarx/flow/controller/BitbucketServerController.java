@@ -163,9 +163,9 @@ public class BitbucketServerController {
                 filters = ScanUtils.getFilters(flowProperties.getFilterSeverity(), flowProperties.getFilterCwe(),
                         flowProperties.getFilterCategory(), flowProperties.getFilterStatus());
             }
-
+            String projectKey = fromRefRepository.getProject().getKey();
             String gitUrl = properties.getUrl().concat("/scm/")
-                    .concat(fromRefRepository.getProject().getKey().concat("/"))
+                    .concat(projectKey.concat("/"))
                     .concat(fromRefRepository.getSlug()).concat(".git");
 
             String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(properties.getToken()).concat("@"));
@@ -189,7 +189,7 @@ public class BitbucketServerController {
                     .product(p)
                     .project(project)
                     .team(team)
-                    .namespace(fromRefRepository.getProject().getKey().replaceAll(" ","_"))
+                    .namespace(projectKey.replaceAll(" ","_"))
                     .repoName(fromRefRepository.getName())
                     .repoUrl(gitUrl)
                     .repoUrlWithAuth(gitAuthUrl)
@@ -218,11 +218,12 @@ public class BitbucketServerController {
             }
 
         }catch (IllegalArgumentException e){
-            log.error("Error submitting Scan Request. Product option incorrect {}", product);
+            String errorMessage = "Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product != null ? product : "").concat(" | ").concat(bug != null ? bug : "");
+            log.error(errorMessage);
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
-                    .message("Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product))
+                    .message(errorMessage)
                     .success(false)
                     .build());
         }
@@ -318,8 +319,9 @@ public class BitbucketServerController {
 
             emails.add(event.getActor().getEmailAddress());
 
+            String projectKey = repository.getProject().getKey();
             String gitUrl = properties.getUrl().concat("/scm/")
-                    .concat(repository.getProject().getKey().concat("/"))
+                    .concat(projectKey.concat("/"))
                     .concat(repository.getSlug()).concat(".git");
             String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(properties.getToken()).concat("@"));
             gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(properties.getToken()).concat("@"));
@@ -338,7 +340,7 @@ public class BitbucketServerController {
                     .product(p)
                     .project(project)
                     .team(team)
-                    .namespace(repository.getProject().getKey().replaceAll(" ","_"))
+                    .namespace(projectKey.replaceAll(" ","_"))
                     .repoName(repository.getName())
                     .repoUrl(gitUrl)
                     .repoUrlWithAuth(gitAuthUrl)
@@ -365,11 +367,12 @@ public class BitbucketServerController {
             }
 
         }catch (IllegalArgumentException e){
-            log.error("Error submitting Scan Request. Product option incorrect {}", product);
+            String errorMessage = "Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product != null ? product : "").concat(" | ").concat(bug != null ? bug : "");
+            log.error(errorMessage);
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
-                    .message("Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product))
+                    .message(errorMessage)
                     .success(false)
                     .build());
         }
