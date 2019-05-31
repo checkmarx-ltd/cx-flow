@@ -363,15 +363,19 @@ public class ScanUtils {
                 String fileUrl = ScanUtils.getFileUrl(request, currentIssue.getFilename());
                 for (Map.Entry<Integer, String> entry : currentIssue.getDetails().entrySet()) {
                     if (entry.getKey() != null) {  //[<line>](<url>)
-                        body.append("[").append(entry.getKey()).append("](").append(fileUrl);
-                        if(request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)){
-                            body.append("#lines-").append(entry.getKey()).append(") ");
+                        //Azure DevOps direct repo line url is unknown at this time.
+                        if(request.getRepoType().equals(ScanRequest.Repository.ADO)) {
+                            body.append(entry.getKey()).append(" ");
                         }
-                        else if(request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)){
-                            body.append("#").append(entry.getKey()).append(") ");
-                        }
-                        else{
-                            body.append("#L").append(entry.getKey()).append(") ");
+                        else {
+                            body.append("[").append(entry.getKey()).append("](").append(fileUrl);
+                            if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)) {
+                                body.append("#lines-").append(entry.getKey()).append(") ");
+                            } else if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)) {
+                                body.append("#").append(entry.getKey()).append(") ");
+                            } else {
+                                body.append("#L").append(entry.getKey()).append(") ");
+                            }
                         }
                     }
                 }

@@ -395,6 +395,7 @@ public class ScanRequest {
         GITLAB("GITLAB"),
         BITBUCKET("BITBUCKET"),
         BITBUCKETSERVER("BITBUCKETSERVER"),
+        ADO("ADO"),
         NA("NA");
 
         private String repository;

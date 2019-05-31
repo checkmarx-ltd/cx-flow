@@ -28,14 +28,14 @@ public class CxFlowApplicationCmd implements ApplicationRunner {
     private final CxProperties cxProperties;
     private final JiraProperties jiraProperties;
     private final GitHubProperties gitHubProperties;
-    private final GitHubProperties gitLabProperties;
+    private final GitLabProperties gitLabProperties;
     private final FlowService flowService;
 
     @ConstructorProperties({"flowProperties", "cxProperties", "jiraProperties", "gitHubProperties",
             "gitLabProperties", "flowService"})
     public CxFlowApplicationCmd(FlowProperties flowProperties,
                                 CxProperties cxProperties, JiraProperties jiraProperties,
-                                GitHubProperties gitHubProperties, GitHubProperties gitLabProperties,
+                                GitHubProperties gitHubProperties, GitLabProperties gitLabProperties,
                                 FlowService flowService) {
         this.flowProperties = flowProperties;
         this.cxProperties = cxProperties;
