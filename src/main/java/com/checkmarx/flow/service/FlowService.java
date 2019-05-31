@@ -381,6 +381,7 @@ public class FlowService {
             for(CxProject project: projects){
                 ScanRequest request = new ScanRequest(originalRequest);
                 String name = project.getName().replaceAll("[^a-zA-Z0-9-_]+","_");
+                //TODO set team
                 request.setProject(name);
                 request.setApplication(name);
                 processes.add(cxGetResults(request, project));
