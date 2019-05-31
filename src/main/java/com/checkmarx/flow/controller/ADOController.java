@@ -216,8 +216,10 @@ public class ADOController {
             @RequestParam(value = "bug", required = false) String bug,
             @RequestParam(value = "app-only", required = false) Boolean appOnlyTracking
     ){
-        log.info("Processing Azure PULL request");
+        log.info("Processing Azure Push request");
         validateBasicAuth(auth);
+
+
 
         MachinaOverride o = ScanUtils.getMachinaOverride(override);
 
@@ -271,13 +273,14 @@ public class ADOController {
             }
             /*Determine emails*/
             List<String> emails = new ArrayList<>();
-            for(Commit c: resource.getCommits()){
-                if (c.getAuthor() != null && !ScanUtils.empty(c.getAuthor().getEmail())){
-                    emails.add(c.getAuthor().getEmail());
+            if(resource.getCommits() != null) {
+                for (Commit c : resource.getCommits()) {
+                    if (c.getAuthor() != null && !ScanUtils.empty(c.getAuthor().getEmail())) {
+                        emails.add(c.getAuthor().getEmail());
+                    }
                 }
+                emails.add(resource.getPushedBy().getUniqueName());
             }
-            emails.add(resource.getPushedBy().getUniqueName());
-
             //build request object
             String gitUrl = repository.getRemoteUrl();
             log.debug("Using url: {}", gitUrl);
