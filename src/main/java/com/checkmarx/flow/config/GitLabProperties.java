@@ -16,7 +16,6 @@ public class GitLabProperties {
     private String openTransition = "reopen";
     private String closeTransition = "close";
     private boolean blockMerge = false;
-    private boolean blockMergeComplete = false;
 
     public String getWebhookToken() {
         return this.webhookToken;
@@ -80,13 +79,5 @@ public class GitLabProperties {
 
     public void setBlockMerge(boolean blockMerge) {
         this.blockMerge = blockMerge;
-    }
-
-    public boolean isBlockMergeComplete() {
-        return blockMergeComplete;
-    }
-
-    public void setBlockMergeComplete(boolean blockMergeComplete) {
-        this.blockMergeComplete = blockMergeComplete;
     }
 }

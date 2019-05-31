@@ -190,7 +190,7 @@ public class GitHubIssueTracker implements IssueTracker {
     }
 
     /**
-     * Create JSON http request body for an create/update Issue POST request to GitHub
+     * Create JSON http request body for an create/update Issue POST request to GitLab
      *
      */
     private JSONObject getJSONUpdateIssue(ScanResults.XIssue resultIssue, ScanRequest request) {
@@ -267,7 +267,7 @@ public class GitHubIssueTracker implements IssueTracker {
 
     @Override
     public void complete(ScanRequest request, ScanResults results) throws MachinaException {
-        log.info("Finalizing GitHub Processing");
+        log.info("Finalizing GitLab Processing");
     }
 
     /**
@@ -304,7 +304,7 @@ public class GitHubIssueTracker implements IssueTracker {
      */
     private HttpHeaders createAuthHeaders() {
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.set(HttpHeaders.AUTHORIZATION, "token ".concat(properties.getToken()));
+        httpHeaders.set("Authorization", "token ".concat(properties.getToken()));
         return httpHeaders;
     }
 

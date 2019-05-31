@@ -55,14 +55,6 @@ public class ScanUtils {
         }
         return false;
     }
-    /**
-     * Create List of filters based on String lists of severity, cwe, category
-     * @param flowProperties
-     * @return
-     */
-    public static List<Filter> getFilters(FlowProperties flowProperties) {
-        return getFilters(flowProperties.getFilterSeverity(), flowProperties.getFilterCwe(), flowProperties.getFilterCategory(), flowProperties.getFilterStatus());
-    }
 
     /**
      * Create List of filters based on String lists of severity, cwe, category
@@ -72,25 +64,48 @@ public class ScanUtils {
      * @return
      */
     public static List<Filter> getFilters(List<String> severity, List<String> cwe, List<String> category, List<String> status) {
+        List<Filter> severityList = new ArrayList<>();
+        List<Filter> categoryList = new ArrayList<>();
+        List<Filter> cweList = new ArrayList<>();
+        List<Filter> statusList = new ArrayList<>();
         List<Filter> filters = new ArrayList<>();
-        filters.addAll(getListByFilterType(severity, Filter.Type.SEVERITY));
-        filters.addAll(getListByFilterType(cwe, Filter.Type.CWE));
-        filters.addAll(getListByFilterType(category, Filter.Type.TYPE));
-        filters.addAll(getListByFilterType(status, Filter.Type.STATUS));
-        return filters;
-    }
-
-    private static List<Filter> getListByFilterType(List<String> stringFilters, Filter.Type type){
-        List<Filter> filterList = new ArrayList<>();
-        if(stringFilters != null) {
-            for (String s : stringFilters) {
-                filterList.add(Filter.builder()
-                        .type(type)
+        if(severity != null) {
+            for (String s : severity) {
+                severityList.add(Filter.builder()
+                        .type(Filter.Type.SEVERITY)
                         .value(s)
                         .build());
             }
         }
-        return filterList;
+        if(cwe != null) {
+            for (String c : cwe) {
+                cweList.add(Filter.builder()
+                        .type(Filter.Type.CWE)
+                        .value(c)
+                        .build());
+            }
+        }
+        if(category != null) {
+            for (String c : category) {
+                categoryList.add(Filter.builder()
+                        .type(Filter.Type.TYPE)
+                        .value(c)
+                        .build());
+            }
+        }
+        if(status != null) {
+            for (String s : status) {
+                statusList.add(Filter.builder()
+                        .type(Filter.Type.STATUS)
+                        .value(s)
+                        .build());
+            }
+        }
+        filters.addAll(severityList);
+        filters.addAll(cweList);
+        filters.addAll(categoryList);
+        filters.addAll(statusList);
+        return filters;
     }
 
     /**
@@ -226,33 +241,33 @@ public class ScanUtils {
 
     public static BugTracker getBugTracker(@RequestParam(value = "assignee", required = false) String assignee,
                                            BugTracker.Type bugType, JiraProperties jiraProperties, String bugTracker) {
-        BugTracker bt = null;
-        if(bugType != null) {
-            if (bugType.equals(BugTracker.Type.JIRA)) {
-                bt = BugTracker.builder()
-                        .type(bugType)
-                        .projectKey(jiraProperties.getProject())
-                        .issueType(jiraProperties.getIssueType())
-                        .assignee(assignee)
-                        .priorities(jiraProperties.getPriorities())
-                        .closeTransitionField(jiraProperties.getCloseTransitionField())
-                        .closeTransitionValue(jiraProperties.getCloseTransitionValue())
-                        .closedStatus(jiraProperties.getClosedStatus())
-                        .closeTransition(jiraProperties.getCloseTransition())
-                        .openStatus(jiraProperties.getOpenStatus())
-                        .openTransition(jiraProperties.getOpenTransition())
-                        .fields(jiraProperties.getFields())
-                        .build();
-            } else if (bugType.equals(BugTracker.Type.CUSTOM)) {
-                bt = BugTracker.builder()
-                        .type(bugType)
-                        .customBean(bugTracker)
-                        .build();
-            } else {
-                bt = BugTracker.builder()
-                        .type(bugType)
-                        .build();
-            }
+        BugTracker bt;
+        if(bugType.equals(BugTracker.Type.JIRA)) {
+            bt = BugTracker.builder()
+                    .type(bugType)
+                    .projectKey(jiraProperties.getProject())
+                    .issueType(jiraProperties.getIssueType())
+                    .assignee(assignee)
+                    .priorities(jiraProperties.getPriorities())
+                    .closeTransitionField(jiraProperties.getCloseTransitionField())
+                    .closeTransitionValue(jiraProperties.getCloseTransitionValue())
+                    .closedStatus(jiraProperties.getClosedStatus())
+                    .closeTransition(jiraProperties.getCloseTransition())
+                    .openStatus(jiraProperties.getOpenStatus())
+                    .openTransition(jiraProperties.getOpenTransition())
+                    .fields(jiraProperties.getFields())
+                    .build();
+        }
+        else if(bugType.equals(BugTracker.Type.CUSTOM)){
+            bt = BugTracker.builder()
+                    .type(bugType)
+                    .customBean(bugTracker)
+                    .build();
+        }
+        else {
+            bt = BugTracker.builder()
+                    .type(bugType)
+                    .build();
         }
         return bt;
     }
@@ -363,19 +378,14 @@ public class ScanUtils {
                 String fileUrl = ScanUtils.getFileUrl(request, currentIssue.getFilename());
                 for (Map.Entry<Integer, String> entry : currentIssue.getDetails().entrySet()) {
                     if (entry.getKey() != null) {  //[<line>](<url>)
-                        //Azure DevOps direct repo line url is unknown at this time.
-                        if(request.getRepoType().equals(ScanRequest.Repository.ADO)) {
-                            body.append(entry.getKey()).append(" ");
+                        if(request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)){
+                            body.append("[").append(entry.getKey()).append("](").append(fileUrl).append("#lines-").append(entry.getKey()).append(") ");
                         }
-                        else {
-                            body.append("[").append(entry.getKey()).append("](").append(fileUrl);
-                            if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)) {
-                                body.append("#lines-").append(entry.getKey()).append(") ");
-                            } else if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)) {
-                                body.append("#").append(entry.getKey()).append(") ");
-                            } else {
-                                body.append("#L").append(entry.getKey()).append(") ");
-                            }
+                        else if(request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)){
+                            body.append("[").append(entry.getKey()).append("](").append(fileUrl).append("#").append(entry.getKey()).append(") ");
+                        }
+                        else{
+                            body.append("[").append(entry.getKey()).append("](").append(fileUrl).append("#L").append(entry.getKey()).append(") ");
                         }
                     }
                 }
@@ -398,32 +408,28 @@ public class ScanUtils {
         if(request.getProduct().equals(ScanRequest.Product.CXOSA) || filename == null || filename.isEmpty()){
             return null;
         }
-
-        String branch = request.getBranch();
-        if(!ScanUtils.empty(request.getRepoUrl()) && !ScanUtils.empty(branch)) {
+        if(!ScanUtils.empty(request.getRepoUrl()) && !ScanUtils.empty(request.getBranch())) {
             String repoUrl = request.getRepoUrl().replace(".git", "/");
             if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)) {
                 String url = request.getAdditionalMetadata("BITBUCKET_BROWSE");
                 if(url != null && !url.isEmpty()){
-                    url = url.concat("/").concat(filename);
-                    if(!ScanUtils.empty(branch)) {
-                        return url.concat("?at=").concat(branch);
+                    if(!ScanUtils.empty(request.getBranch())) {
+                        return url.concat("/").concat(filename).concat("?at=").concat(request.getBranch());
                     }
                     else{
-                        return url;
+                        return url.concat("/").concat(filename);
                     }
                 }
             }
             else if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)) {
-                return repoUrl.concat("src/").concat(branch).concat("/").concat(filename);
+                return repoUrl.concat("src/").concat(request.getBranch()).concat("/").concat(filename);
             }
             else {
-                repoUrl = repoUrl.concat("blob/");
-                if(!ScanUtils.empty(branch)) {
-                    return repoUrl.concat(branch).concat("/").concat(filename);
+                if(!ScanUtils.empty(request.getBranch())) {
+                    return repoUrl.concat("blob/").concat(request.getBranch()).concat("/").concat(filename);
                 }
                 else{ //default to master branch
-                    return repoUrl.concat("master/").concat(filename);
+                    return repoUrl.concat("blob/").concat("master/").concat(filename);
                 }
             }
         }
@@ -519,7 +525,7 @@ public class ScanUtils {
     public static BugTracker.Type getBugTypeEnum(String bug, List<String> bugTrackerImpl) throws IllegalArgumentException{
 
         BugTracker.Type bugType = EnumUtils.getEnum(BugTracker.Type.class, bug);
-        if(bugType == null && bug != null){ //Try uppercase
+        if(bugType == null){ //Try uppercase
             bugType = EnumUtils.getEnum(BugTracker.Type.class, bug.toUpperCase(Locale.ROOT));
             if(bugType == null){
                 log.debug("Determine if custom bean is being used");
@@ -549,19 +555,29 @@ public class ScanUtils {
             team = team.replaceAll("\\\\","_");
             filename = filename.replace("[TEAM]", team);
         }
-        filename = getGenericFilename(filename, "[APP]", request.getApplication());
-        filename = getGenericFilename(filename, "[PROJECT]", request.getProject());
-        filename = getGenericFilename(filename, "[NAMESPACE]", request.getNamespace());
-        filename = getGenericFilename(filename, "[REPO]", request.getRepoName());
-        filename = getGenericFilename(filename, "[BRANCH]", request.getBranch());
-
-        return filename;
-    }
-
-    public static String getGenericFilename(String filename, String valueToReplace, String replacement){
-        if(!empty(replacement)) {
-            filename = filename.replace(valueToReplace, replacement);
-            log.debug(replacement);
+        if(!empty(request.getApplication())) {
+            filename = filename.replace("[APP]", request.getApplication());
+            log.debug(request.getApplication());
+            log.debug(filename);
+        }
+        if(!empty(request.getProject())) {
+            filename = filename.replace("[PROJECT]", request.getProject());
+            log.debug(request.getProject());
+            log.debug(filename);
+        }
+        if(!empty(request.getNamespace())) {
+            filename = filename.replace("[NAMESPACE]", request.getNamespace());
+            log.debug(request.getNamespace());
+            log.debug(filename);
+        }
+        if(!empty(request.getRepoName())) {
+            filename = filename.replace("[REPO]", request.getRepoName());
+            log.debug(request.getRepoName());
+            log.debug(filename);
+        }
+        if(!empty(request.getBranch())) {
+            filename = filename.replace("[BRANCH]", request.getBranch());
+            log.debug(request.getBranch());
             log.debug(filename);
         }
         return filename;

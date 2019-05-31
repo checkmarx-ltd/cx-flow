@@ -3,19 +3,6 @@ server:
 
 logging:
   file: cx-flow.log
-#  level:
-#    com:
-#      checkmarx:
-#        flow:
-#          service: TRACE
-#    org:
-#      apache:
-#        http:
-#          wire: TRACE
-#      springframework:
-#        web:
-#          client:
-#            RestTemplate: TRACE
 
 cx-flow:
   bug-tracker: JIRA
@@ -35,17 +22,18 @@ cx-flow:
   wiki-url: https://checkmarx.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
   codebash-url: https://cxa.codebashing.com/courses/
 
+
 checkmarx:
   username: xxx
   password: xxx
-  client-secret: 014DF517-39D1-4453-B7B3-9930C563627C
-  base-url: http://localhost:8100
+  client-secret: xxx
+  base-url: https://cx.aws.checkmarx.com
   url: ${checkmarx.base-url}/cxrestapi
   multi-tenant: true
   incremental: true
   scan-preset: Checkmarx Default
   configuration: Default Configuration
-  team: \CxServer\SP\Checkmarx
+  team: \CxServer\SP\Machina
   scan-timeout: 120
 #WSDL Config
   portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
@@ -59,61 +47,47 @@ checkmarx:
   jira-issuetype-field:
   jira-assignee-field:
 
+
 jira:
-  url: http://localhost:8180
+  url: https://xxxx.atlassian.net
   username: xxxx
   token: xxxx
-  project: APPSEC
-  issue-type: Bug
+  project: SS
+  issue-type: Application Security Bug
   priorities:
     High: High
     Medium: Medium
     Low: Low
     Informational: Lowest
-  open-transition: In Progress
+  open-transition: In Review
   close-transition: Done
   open-status:
     - To Do
     - In Progress
+    - In Review
   closed-status:
     - Done
   fields:
-    - type: result
-      name: system-date
-      skip-update: true
-      offset: 60
-      jira-field-name: Due Date #Due date (cloud)
-      jira-field-type: text
     - type: result
       name: application
       jira-field-name: Application
       jira-field-type: label
     - type: result
-      name: category
-      jira-field-name: Category
+      name: cve
+      jira-field-name: CVEs
       jira-field-type: label
     - type: result
       name: cwe
       jira-field-name: CWEs
       jira-field-type: label
     - type: result
-      name: severity
-      jira-field-name: Severity
-      jira-field-type: single-select
+      name: category
+      jira-field-name: Category
+      jira-field-type: label
     - type: result
       name: loc
-      jira-field-name: Line Numbers
+      jira-field-name: LOC
       jira-field-type: label
-    - type: static
-      name: identified-by
-      jira-field-name: Identified By
-      jira-field-type: single-select
-      jira-default-value: Automation
-    - type: static
-      name: dependencies
-      jira-field-name: Dependencies
-      jira-field-type: multi-select
-      jira-default-value: Java, AngularJS
 
 github:
   webhook-token: 1234
@@ -131,27 +105,17 @@ gitlab:
   false-positive-label: false-positive
   block-merge: true
 
-azure:
-  webhook-token: cxflow:1234
-  token: xxxx
-  url: https://dev.azure.com
-  api-url: https://dev.azure.com
-  issue-type: issue
-  api-version: 5.0
-  false-positive-label: false-positive
-  block-merge: true
-
 json:
   file-name-format: "[NAMESPACE]-[REPO]-[BRANCH]-[TIME].json"
-  data-folder: "D:\\tmp"
+  data-folder: "C:\\tmp"
 
 cx-xml:
   file-name-format: "[NAMESPACE]-[REPO]-[BRANCH]-[TIME].xml"
-  data-folder: "D:\\tmp"
+  data-folder: "C:\\tmp"
 
 csv:
   file-name-format: "[TEAM]-[PROJECT]-[TIME].csv"
-  data-folder: "D:\\tmp"
+  data-folder: "C:\\tmp"
   include-header: true
   fields:
     - header: Customer field (Application)
