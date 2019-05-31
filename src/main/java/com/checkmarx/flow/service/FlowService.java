@@ -211,6 +211,7 @@ public class FlowService {
              return resultsService.processScanResultsAsync(request, scanId, request.getFilters());
         }catch (InterruptedException e) {
             log.error(ExceptionUtils.getStackTrace(e));
+            Thread.currentThread().interrupt();
             throw new MachinaException("Interrupted Exception Occurred");
         }
     }
