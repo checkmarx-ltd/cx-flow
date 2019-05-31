@@ -9,7 +9,7 @@ import java.util.List;
 @Component
 @ConfigurationProperties(prefix = "azure")
 @Validated
-public class AzureProperties {
+public class ADOProperties {
     private String webhookToken;
     private String token;
     private String url;
