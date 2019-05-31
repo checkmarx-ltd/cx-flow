@@ -126,7 +126,7 @@ azure:
   block-merge: true
 
 json:
-  file-name-format: "[TEAM]-[PROJECT]-[TIME].json"
+  file-name-format: "[PROJECT]-[TIME].json"
   data-folder: "C:\\tmp"
 
 cx-xml:
