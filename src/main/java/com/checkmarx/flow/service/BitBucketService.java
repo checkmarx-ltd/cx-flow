@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -38,9 +39,9 @@ public class BitBucketService {
     private HttpHeaders createAuthHeaders(){
         String encoding = Base64.getEncoder().encodeToString(properties.getToken().getBytes());
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.set("Content-Type", "application/json");
-        httpHeaders.set("Authorization", "Basic ".concat(encoding));
-        httpHeaders.set("Accept", "application/json");
+        httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+        httpHeaders.set(HttpHeaders.AUTHORIZATION, "Basic ".concat(encoding));
+        httpHeaders.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
         return httpHeaders;
     }
 
