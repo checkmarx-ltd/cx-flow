@@ -10,7 +10,6 @@ import com.checkmarx.flow.dto.cx.xml.ResultType;
 import com.checkmarx.flow.exception.CheckmarxLegacyException;
 import com.checkmarx.flow.exception.InvalidCredentialsException;
 import com.checkmarx.flow.exception.MachinaException;
-import com.checkmarx.flow.utils.Constants;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -614,16 +613,14 @@ public class CxService {
         List<String> category = new ArrayList<>();
 
         for(Filter f: filters){
-            Filter.Type type = f.getType();
-            String value = f.getValue();
-            if(type.equals(Filter.Type.SEVERITY)){
-                severity.add(value.toUpperCase(Locale.ROOT));
+            if(f.getType().equals(Filter.Type.SEVERITY)){
+                severity.add(f.getValue().toUpperCase(Locale.ROOT));
             }
-            else if(type.equals(Filter.Type.TYPE)){
-                category.add(value.toUpperCase(Locale.ROOT));
+            else if(f.getType().equals(Filter.Type.TYPE)){
+                category.add(f.getValue().toUpperCase(Locale.ROOT));
             }
-            else if(type.equals(Filter.Type.CWE)){
-                cwe.add(value.toUpperCase(Locale.ROOT));
+            else if(f.getType().equals(Filter.Type.CWE)){
+                cwe.add(f.getValue().toUpperCase(Locale.ROOT));
             }
         }
         if(!severity.isEmpty() && !severity.contains(q.getSeverity().toUpperCase(Locale.ROOT))){
@@ -1037,7 +1034,7 @@ public class CxService {
      */
     public Integer getScanConfiguration(String configuration) throws MachinaException {
         HttpEntity httpEntity = new HttpEntity<>(createAuthHeaders());
-        int defaultConfigId = UNKNOWN_INT;
+
         try {
             log.info("Retrieving Cx engineConfigurations");
             ResponseEntity<CxScanEngine[]> response = restTemplate.exchange(cxProperties.getUrl().concat(SCAN_CONFIGURATIONS), HttpMethod.GET, httpEntity, CxScanEngine[].class);
@@ -1046,30 +1043,23 @@ public class CxService {
                 throw new MachinaException("Error obtaining Scan configurations");
             }
             for(CxScanEngine engine: engines){
-                String engineName = engine.getName();
-                int engineId = engine.getId();
-                if(engineName.equalsIgnoreCase(configuration)){
-                    log.info("Found xml/engine configuration {} with ID {}", configuration, engineId);
-                    return engineId;
+                if(engine.getName().equals(configuration)){
+                    log.info("Found xml/engine configuration {} with ID {}", configuration, engine.getId());
+                    return engine.getId();
                 }
-                if(engineName.equalsIgnoreCase(Constants.CX_DEFAULT_CONFIGURATION)){
-                    defaultConfigId = engineId;
-                }
-
             }
-            log.warn("No scan configuration found for {}", configuration);
-            log.warn("Scan Configuration {} with ID {} will be used instead", Constants.CX_DEFAULT_CONFIGURATION, defaultConfigId);
-            return defaultConfigId;
         }   catch (HttpStatusCodeException e) {
             log.error("Error occurred while retrieving engine configurations");
             log.error(ExceptionUtils.getStackTrace(e));
-            throw new MachinaException("Error obtaining Configuration Id");
+            throw new MachinaException("Error obtaining Team Id");
         }
+        log.info("No scan configuration found for {}", configuration);
+        return UNKNOWN_INT;
     }
 
     public Integer getPresetId(String preset) throws MachinaException {
         HttpEntity httpEntity = new HttpEntity<>(createAuthHeaders());
-        int defaultPresetId = UNKNOWN_INT;
+
         try {
             log.info("Retrieving Cx presets");
             ResponseEntity<CxPreset[]> response = restTemplate.exchange(cxProperties.getUrl().concat(PRESETS), HttpMethod.GET, httpEntity, CxPreset[].class);
@@ -1078,24 +1068,17 @@ public class CxService {
                 throw new MachinaException("Error obtaining Team Id");
             }
             for(CxPreset cxPreset: cxPresets){
-                String presetName = cxPreset.getName();
-                int presetId = cxPreset.getId();
-                if(presetName.equalsIgnoreCase(preset)){
-                    log.info("Found preset {} with ID {}", preset, presetId);
+                if(cxPreset.getName().equals(preset)){
+                    log.info("Found preset {} with ID {}", preset, cxPreset.getId());
                     return cxPreset.getId();
                 }
-                if(presetName.equalsIgnoreCase(Constants.CX_DEFAULT_PRESET)){
-                    defaultPresetId =  presetId;
-                }
             }
-            log.warn("No Preset was found for {}", preset);
-            log.warn("Default Preset {} with ID {} will be used instead", Constants.CX_DEFAULT_PRESET, defaultPresetId);
-            return defaultPresetId;
         }   catch (HttpStatusCodeException e) {
             log.error("Error occurred while retrieving presets");
             log.error(ExceptionUtils.getStackTrace(e));
-            throw new MachinaException("Error obtaining Preset Id");
         }
+        log.info("No Preset was found for {}", preset);
+        return UNKNOWN_INT;
     }
 
     /**
@@ -1125,7 +1108,7 @@ public class CxService {
             token = response.getAccessToken();
             tokenExpires = LocalDateTime.now().plusSeconds(response.getExpiresIn()-500); //expire 500 seconds early
         }
-        catch (NullPointerException | HttpStatusCodeException e) {
+        catch (HttpStatusCodeException e) {
             log.error("Error occurred white obtaining Access Token.  Possibly incorrect credentials");
             log.error(ExceptionUtils.getStackTrace(e));
             throw new InvalidCredentialsException();
@@ -1145,7 +1128,7 @@ public class CxService {
             getAuthToken();
         }
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.set(HttpHeaders.AUTHORIZATION, "Bearer ".concat(token));
+        httpHeaders.set("Authorization", "Bearer ".concat(token));
         httpHeaders.setContentType(MediaType.APPLICATION_JSON_UTF8);
         return httpHeaders;
     }

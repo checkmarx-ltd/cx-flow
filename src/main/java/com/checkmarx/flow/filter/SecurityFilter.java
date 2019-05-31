@@ -37,9 +37,7 @@ public class SecurityFilter implements Filter {
                          FilterChain chain) throws IOException, ServletException {
 
         //TODO Per-Request Validation as required (white list)
-        if(chain != null && request != null && response != null) {
-            chain.doFilter(request, response);
-        }
+        chain.doFilter(request, response);
     }
 
     @Override

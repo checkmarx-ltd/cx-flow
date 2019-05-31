@@ -1,5 +1,5 @@
 server:
-  port: ${PORT:0}
+  port: ${PORT:8080}
 
 logging:
   file: cx-flow.log
