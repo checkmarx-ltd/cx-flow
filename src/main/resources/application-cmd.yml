@@ -37,47 +37,68 @@ checkmarx:
   scan-timeout: 120
 
 jira:
-  url: https://xxx.xxxxx.com
+  url: https://xxxxxx
   username: xxxx
   token: xxxx
-  project: SS
+  project: APPSEC
   issue-type: Application Security Bug
   priorities:
     High: High
     Medium: Medium
     Low: Low
     Informational: Lowest
-  open-transition: In Review
-  close-transition: Done
+  open-transition: Reopen Issue
+  close-transition: Close Issue
   open-status:
-    - To Do
+    - Open
     - In Progress
-    - In Review
+    - Reopened
   closed-status:
-    - Done
+    - Closed
+    - Resolved
   fields:
-    - type: cx
+    - type: result
+      name: system-date
+      skip-update: true
+      offset: 10
+      jira-field-name: Due date
+      jira-field-type: text
+    - type: result
+      name: system-date
+      skip-update: true
+      offset: 10
+      jira-field-name: Due date
+      jira-field-type: text
+    - type: result
       name: application
       jira-field-name: Application
-      jira-field-type: label
-      jira-default-value: xxxx
-    - type: result
-      name: cve
-      jira-field-name: CVEs
-      jira-field-type: label
-    - type: result
-      name: cwe
-      jira-field-name: CWEs
       jira-field-type: label
     - type: result
       name: category
       jira-field-name: Category
       jira-field-type: label
     - type: result
-      name: loc
-      jira-field-name: LOC
+      name: cwe
+      jira-field-name: CWEs
       jira-field-type: label
-      jira-default-value: XXXX
+    - type: result
+      name: severity
+      jira-field-name: Severity
+      jira-field-type: single-select
+    - type: result
+      name: loc
+      jira-field-name: Line Numbers
+      jira-field-type: label
+    - type: static
+      name: identified-by
+      jira-field-name: Identified By
+      jira-field-type: single-select
+      jira-default-value: Automation
+    - type: static
+      name: dependencies
+      jira-field-name: Dependencies
+      jira-field-type: multi-select
+      jira-default-value: Java, AngularJS
 
 github:
   webhook-token: 1234
@@ -95,8 +116,17 @@ gitlab:
   false-positive-label: false-positive
   block-merge: true
 
+azure:
+  webhook-token: xxxx
+  token: 6ytqw4fwawzw7lgkuoy2ynq33hrrmihemu7sz77mzk6rpc5ofx2a
+  url: https://dev.azure.com
+  api-url: https://dev.azure.com
+  api-version: 5.0
+  false-positive-label: false-positive
+  block-merge: true
+
 json:
-  file-name-format: "[TEAM]-[PROJECT]-[TIME].json"
+  file-name-format: "[PROJECT]-[TIME].json"
   data-folder: "C:\\tmp"
 
 cx-xml:

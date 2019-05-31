@@ -26,6 +26,8 @@ import javax.annotation.PostConstruct;
 import java.beans.ConstructorProperties;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 
@@ -67,14 +69,15 @@ public class JiraService {
         log.info("Executing getIssues API call");
         List<Issue> issues = new ArrayList<>();
         String jql;
+        BugTracker bugTracker = request.getBugTracker();
         /*Namespace/Repo/Branch provided*/
         if(!flowProperties.isTrackApplicationOnly() &&
                 !ScanUtils.empty(request.getNamespace()) &&
                 !ScanUtils.empty(request.getRepoName()) &&
                 !ScanUtils.empty(request.getBranch())) {
             jql = String.format("project = %s and issueType = \"%s\" and (\"%s\" = \"%s\" and \"%s\" = \"%s:%s\" and \"%s\" = \"%s:%s\" and \"%s\" = \"%s:%s\")",
-                    request.getBugTracker().getProjectKey(),
-                    request.getBugTracker().getIssueType(),
+                    bugTracker.getProjectKey(),
+                    bugTracker.getIssueType(),
                     jiraProperties.getLabelTracker(),
                     request.getProduct().getProduct(),
                     jiraProperties.getLabelTracker(),
@@ -87,8 +90,8 @@ public class JiraService {
         }/*Only application provided*/
         else if(!ScanUtils.empty(request.getApplication())){
             jql = String.format("project = %s and issueType = \"%s\" and (\"%s\" = \"%s\" and \"%s\" = \"%s:%s\")",
-                    request.getBugTracker().getProjectKey(),
-                    request.getBugTracker().getIssueType(),
+                    bugTracker.getProjectKey(),
+                    bugTracker.getIssueType(),
                     jiraProperties.getLabelTracker(),
                     request.getProduct().getProduct(),
                     jiraProperties.getLabelTracker(),
@@ -128,8 +131,19 @@ public class JiraService {
     private String createIssue(ScanResults.XIssue issue, ScanRequest request) throws JiraClientException{
         log.debug("Retrieving issuetype object for project {}, type {}", request.getBugTracker().getProjectKey(), request.getBugTracker().getIssueType());
         try{
-            IssueType issueType = this.getIssueType(request.getBugTracker().getProjectKey(), request.getBugTracker().getIssueType());
-            IssueInputBuilder issueBuilder = new IssueInputBuilder(request.getBugTracker().getProjectKey(), issueType.getId());
+            BugTracker bugTracker = request.getBugTracker();
+            String assignee = bugTracker.getAssignee();
+            String projectKey = bugTracker.getProjectKey();
+            String application = request.getApplication();
+            String namespace = request.getNamespace();
+            String repoName = request.getRepoName();
+            String branch = request.getBranch();
+            String filename = issue.getFilename();
+            String vulnerability = issue.getVulnerability();
+            String severity = issue.getSeverity();
+
+            IssueType issueType = this.getIssueType(projectKey, bugTracker.getIssueType());
+            IssueInputBuilder issueBuilder = new IssueInputBuilder(projectKey, issueType.getId());
             String issuePrefix = jiraProperties.getIssuePrefix();
             if(issuePrefix == null){
                 issuePrefix = "";
@@ -137,13 +151,13 @@ public class JiraService {
 
             String summary;
             if(!flowProperties.isTrackApplicationOnly() &&
-                    !ScanUtils.empty(request.getNamespace()) &&
-                    !ScanUtils.empty(request.getRepoName()) &&
-                    !ScanUtils.empty(request.getBranch())) {
-                summary = String.format(ScanUtils.JIRA_ISSUE_KEY, issuePrefix, issue.getVulnerability(), issue.getFilename(), request.getBranch());
+                    !ScanUtils.empty(namespace) &&
+                    !ScanUtils.empty(repoName) &&
+                    !ScanUtils.empty(branch)) {
+                summary = String.format(ScanUtils.JIRA_ISSUE_KEY, issuePrefix, vulnerability, filename, branch);
             }
             else{
-                summary = String.format(ScanUtils.JIRA_ISSUE_KEY_2, issuePrefix, issue.getVulnerability(), issue.getFilename());
+                summary = String.format(ScanUtils.JIRA_ISSUE_KEY_2, issuePrefix, vulnerability, filename);
             }
             String fileUrl = ScanUtils.getFileUrl(request,issue.getFilename());
 
@@ -155,40 +169,40 @@ public class JiraService {
 
             issueBuilder.setDescription(this.getBody(issue, request, fileUrl));
 
-            if(request.getBugTracker().getAssignee() != null && !request.getBugTracker().getAssignee().isEmpty()){
+            if(assignee != null && !assignee.isEmpty()){
                 try{
-                    User assignee = getAssignee(request.getBugTracker().getAssignee());
-                    issueBuilder.setAssignee(assignee);
+                    User userAssignee = getAssignee(assignee);
+                    issueBuilder.setAssignee(userAssignee);
                 }catch(RestClientException e) {
-                    log.error("Error occurred while assigning to user {}", request.getBugTracker().getAssignee());
+                    log.error("Error occurred while assigning to user {}", assignee);
                     log.error(ExceptionUtils.getStackTrace(e));
                 }
             }
 
-            if(request.getBugTracker().getPriorities().containsKey(issue.getSeverity())) {
+            if(bugTracker.getPriorities().containsKey(severity)) {
                 issueBuilder.setFieldValue("priority", ComplexIssueInputFieldValue.with("name",
-                        request.getBugTracker().getPriorities().get(issue.getSeverity())));
+                        bugTracker.getPriorities().get(severity)));
             }
 
             /*Add labels for tracking existing issues*/
             List<String> labels = new ArrayList<>();
             if(!flowProperties.isTrackApplicationOnly() &&
-                    !ScanUtils.empty(request.getNamespace()) &&
-                    !ScanUtils.empty(request.getRepoName()) &&
-                    !ScanUtils.empty(request.getBranch())) {
+                    !ScanUtils.empty(namespace) &&
+                    !ScanUtils.empty(repoName) &&
+                    !ScanUtils.empty(branch)) {
                 labels.add(request.getProduct().getProduct());
-                labels.add(jiraProperties.getOwnerLabelPrefix().concat(":").concat(request.getNamespace()));
-                labels.add(jiraProperties.getRepoLabelPrefix().concat(":").concat(request.getRepoName()));
-                labels.add(jiraProperties.getBranchLabelPrefix().concat(":").concat(request.getBranch()));
+                labels.add(jiraProperties.getOwnerLabelPrefix().concat(":").concat(namespace));
+                labels.add(jiraProperties.getRepoLabelPrefix().concat(":").concat(repoName));
+                labels.add(jiraProperties.getBranchLabelPrefix().concat(":").concat(branch));
             }
-            else if(!ScanUtils.empty(request.getApplication())){
+            else if(!ScanUtils.empty(application)){
                 labels.add(request.getProduct().getProduct());
-                labels.add(jiraProperties.getAppLabelPrefix().concat(":").concat(request.getApplication()));
+                labels.add(jiraProperties.getAppLabelPrefix().concat(":").concat(application));
             }
             log.debug("Adding tracker labels: {} - {}", jiraProperties.getLabelTracker(), labels);
             if(!jiraProperties.getLabelTracker().equals("labels")){
-                String customField = getCustomFieldByName(request.getBugTracker().getProjectKey(),
-                        request.getBugTracker().getIssueType(), jiraProperties.getLabelTracker());
+                String customField = getCustomFieldByName(projectKey,
+                        bugTracker.getIssueType(), jiraProperties.getLabelTracker());
                 issueBuilder.setFieldValue(customField, labels);
             }
             else{
@@ -197,7 +211,7 @@ public class JiraService {
 
             log.debug("Creating JIRA issue");
 
-            mapCustomFields(request, issue, issueBuilder);
+            mapCustomFields(request, issue, issueBuilder, false);
 
             log.debug("Creating JIRA issue");
             log.debug(issueBuilder.toString());
@@ -212,22 +226,24 @@ public class JiraService {
     }
 
     private Issue updateIssue(String bugId, ScanResults.XIssue issue, ScanRequest request) throws JiraClientException{
+        BugTracker bugTracker = request.getBugTracker();
+        String severity = issue.getSeverity();
         Issue jiraIssue = this.getIssue(bugId);
-        if(request.getBugTracker().getClosedStatus().contains(jiraIssue.getStatus().getName())){
-            this.transitionIssue(bugId, request.getBugTracker().getOpenTransition());
+        if(bugTracker.getClosedStatus().contains(jiraIssue.getStatus().getName())){
+            this.transitionIssue(bugId, bugTracker.getOpenTransition());
         }
         IssueInputBuilder issueBuilder = new IssueInputBuilder();
         String fileUrl = ScanUtils.getFileUrl(request,issue.getFilename());
         issueBuilder.setDescription(this.getBody(issue, request, fileUrl));
 
-        if(request.getBugTracker().getPriorities().containsKey(issue.getSeverity())) {
+        if(bugTracker.getPriorities().containsKey(severity)) {
             issueBuilder.setFieldValue("priority", ComplexIssueInputFieldValue.with("name",
-                    request.getBugTracker().getPriorities().get(issue.getSeverity())));
+                    bugTracker.getPriorities().get(severity)));
         }
 
         log.info("Updating issue #{}", bugId);
 
-        mapCustomFields(request, issue, issueBuilder);
+        mapCustomFields(request, issue, issueBuilder, true);
 
         log.debug("Updating JIRA issue");
         log.debug(issueBuilder.toString());
@@ -248,16 +264,26 @@ public class JiraService {
      * @param issue
      * @param issueBuilder
      */
-    private void mapCustomFields(ScanRequest request, ScanResults.XIssue issue, IssueInputBuilder issueBuilder){
+
+    private void mapCustomFields(ScanRequest request, ScanResults.XIssue issue, IssueInputBuilder issueBuilder, boolean update){
+        BugTracker bugTracker = request.getBugTracker();
+
         log.debug("Handling custom field mappings");
-        if(request.getBugTracker().getFields() == null){
+        if(bugTracker.getFields() == null){
             return;
         }
-        for(com.checkmarx.flow.dto.Field f: request.getBugTracker().getFields()){
-            String projectKey = request.getBugTracker().getProjectKey();
-            String issueTypeStr = request.getBugTracker().getIssueType();
+
+        String projectKey = bugTracker.getProjectKey();
+        String issueTypeStr = bugTracker.getIssueType();
+
+        for(com.checkmarx.flow.dto.Field f: bugTracker.getFields()){
+
             String customField = getCustomFieldByName(projectKey, issueTypeStr, f.getJiraFieldName());
             String value;
+            if(update && f.isSkipUpdate()) {
+                log.debug("Skip update to field {}", f.getName());
+                continue;
+            }
             if(!ScanUtils.empty(customField)) {
                 /*cx | static | other - specific values that can be linked from scan request or the issue details*/
                 String fieldType = f.getType();
@@ -266,6 +292,7 @@ public class JiraService {
                     // use default = result
                     fieldType = "result";
                 }
+
                 switch (fieldType) {
                     case "cx":
                         log.debug("Checkmarx custom field {}", f.getName());
@@ -334,6 +361,12 @@ public class JiraService {
                             case "cve":
                                 log.debug("cve: {}", issue.getCve());
                                 value = issue.getCve();
+                                break;
+                            case "system-date":
+                                DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                                LocalDateTime now = LocalDateTime.now().plusDays(f.getOffset());
+                                value = dtf.format(now);
+                                log.debug("system date: {}", value);
                                 break;
                             case "recommendation":
                                 StringBuilder recommendation = new StringBuilder();
