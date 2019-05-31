@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.converter.StringHttpMessageConverter;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -83,8 +84,7 @@ public class FlowConfig {
             props.put("mail.smtp.auth", "true");
 
         }
-
-        props.put("mail.transport.protocol", "smtp");
+        props.put("mail.transport.protocol", JavaMailSenderImpl.DEFAULT_PROTOCOL);
         props.put("mail.smtp.starttls.enable", "true");
 
         return mailSender;
