@@ -18,6 +18,7 @@ logging:
 #            RestTemplate: TRACE
 
 cx-flow:
+  token: xxxxxxx
   bug-tracker: JIRA
   bug-tracker-impl:
     - CxXml
@@ -116,6 +117,7 @@ azure:
   api-version: 5.0
   false-positive-label: false-positive
   block-merge: true
+
 
 json:
   file-name-format: "[TEAM]-[PROJECT]-[TIME].json"

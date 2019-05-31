@@ -379,10 +379,14 @@ public class ScanUtils {
                 for (Map.Entry<Integer, String> entry : currentIssue.getDetails().entrySet()) {
                     if (entry.getKey() != null) {  //[<line>](<url>)
                         if(request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)){
+                            //TODO handle  forward slash '/' in branch name, this results in dead link
                             body.append("[").append(entry.getKey()).append("](").append(fileUrl).append("#lines-").append(entry.getKey()).append(") ");
                         }
                         else if(request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)){
                             body.append("[").append(entry.getKey()).append("](").append(fileUrl).append("#").append(entry.getKey()).append(") ");
+                        }
+                        else if(request.getRepoType().equals(ScanRequest.Repository.ADO)){
+                            body.append(entry.getKey()).append(" ");
                         }
                         else{
                             body.append("[").append(entry.getKey()).append("](").append(fileUrl).append("#L").append(entry.getKey()).append(") ");

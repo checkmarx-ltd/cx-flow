@@ -131,6 +131,16 @@ gitlab:
   false-positive-label: false-positive
   block-merge: true
 
+azure:
+  webhook-token: cxflow:1234
+  token: xxxx
+  url: https://dev.azure.com
+  api-url: https://dev.azure.com
+  issue-type: issue
+  api-version: 5.0
+  false-positive-label: false-positive
+  block-merge: true
+
 json:
   file-name-format: "[NAMESPACE]-[REPO]-[BRANCH]-[TIME].json"
   data-folder: "D:\\tmp"
