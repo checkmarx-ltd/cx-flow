@@ -73,14 +73,14 @@ public class ScanUtils {
      */
     public static List<Filter> getFilters(List<String> severity, List<String> cwe, List<String> category, List<String> status) {
         List<Filter> filters = new ArrayList<>();
-        filters.addAll(getListFilter(severity, Filter.Type.SEVERITY));
-        filters.addAll(getListFilter(cwe, Filter.Type.CWE));
-        filters.addAll(getListFilter(category, Filter.Type.TYPE));
-        filters.addAll(getListFilter(status, Filter.Type.STATUS));
+        filters.addAll(getListByFilterType(severity, Filter.Type.SEVERITY));
+        filters.addAll(getListByFilterType(cwe, Filter.Type.CWE));
+        filters.addAll(getListByFilterType(category, Filter.Type.TYPE));
+        filters.addAll(getListByFilterType(status, Filter.Type.STATUS));
         return filters;
     }
 
-    private static List<Filter> getListFilter(List<String> stringFilters, Filter.Type type){
+    private static List<Filter> getListByFilterType(List<String> stringFilters, Filter.Type type){
         List<Filter> filterList = new ArrayList<>();
         if(stringFilters != null) {
             for (String s : stringFilters) {
