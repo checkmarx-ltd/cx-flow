@@ -55,6 +55,14 @@ public class ScanUtils {
         }
         return false;
     }
+    /**
+     * Create List of filters based on String lists of severity, cwe, category
+     * @param flowProperties
+     * @return
+     */
+    public static List<Filter> getFilters(FlowProperties flowProperties) {
+        return getFilters(flowProperties.getFilterSeverity(), flowProperties.getFilterCwe(), flowProperties.getFilterCategory(), flowProperties.getFilterStatus());
+    }
 
     /**
      * Create List of filters based on String lists of severity, cwe, category
@@ -64,48 +72,25 @@ public class ScanUtils {
      * @return
      */
     public static List<Filter> getFilters(List<String> severity, List<String> cwe, List<String> category, List<String> status) {
-        List<Filter> severityList = new ArrayList<>();
-        List<Filter> categoryList = new ArrayList<>();
-        List<Filter> cweList = new ArrayList<>();
-        List<Filter> statusList = new ArrayList<>();
         List<Filter> filters = new ArrayList<>();
-        if(severity != null) {
-            for (String s : severity) {
-                severityList.add(Filter.builder()
-                        .type(Filter.Type.SEVERITY)
-                        .value(s)
-                        .build());
-            }
-        }
-        if(cwe != null) {
-            for (String c : cwe) {
-                cweList.add(Filter.builder()
-                        .type(Filter.Type.CWE)
-                        .value(c)
-                        .build());
-            }
-        }
-        if(category != null) {
-            for (String c : category) {
-                categoryList.add(Filter.builder()
-                        .type(Filter.Type.TYPE)
-                        .value(c)
-                        .build());
-            }
-        }
-        if(status != null) {
-            for (String s : status) {
-                statusList.add(Filter.builder()
-                        .type(Filter.Type.STATUS)
-                        .value(s)
-                        .build());
-            }
-        }
-        filters.addAll(severityList);
-        filters.addAll(cweList);
-        filters.addAll(categoryList);
-        filters.addAll(statusList);
+        filters.addAll(getListByFilterType(severity, Filter.Type.SEVERITY));
+        filters.addAll(getListByFilterType(cwe, Filter.Type.CWE));
+        filters.addAll(getListByFilterType(category, Filter.Type.TYPE));
+        filters.addAll(getListByFilterType(status, Filter.Type.STATUS));
         return filters;
+    }
+
+    private static List<Filter> getListByFilterType(List<String> stringFilters, Filter.Type type){
+        List<Filter> filterList = new ArrayList<>();
+        if(stringFilters != null) {
+            for (String s : stringFilters) {
+                filterList.add(Filter.builder()
+                        .type(type)
+                        .value(s)
+                        .build());
+            }
+        }
+        return filterList;
     }
 
     /**
@@ -378,14 +363,15 @@ public class ScanUtils {
                 String fileUrl = ScanUtils.getFileUrl(request, currentIssue.getFilename());
                 for (Map.Entry<Integer, String> entry : currentIssue.getDetails().entrySet()) {
                     if (entry.getKey() != null) {  //[<line>](<url>)
+                        body.append("[").append(entry.getKey()).append("](").append(fileUrl);
                         if(request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)){
-                            body.append("[").append(entry.getKey()).append("](").append(fileUrl).append("#lines-").append(entry.getKey()).append(") ");
+                            body.append("#lines-").append(entry.getKey()).append(") ");
                         }
                         else if(request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)){
-                            body.append("[").append(entry.getKey()).append("](").append(fileUrl).append("#").append(entry.getKey()).append(") ");
+                            body.append("#").append(entry.getKey()).append(") ");
                         }
                         else{
-                            body.append("[").append(entry.getKey()).append("](").append(fileUrl).append("#L").append(entry.getKey()).append(") ");
+                            body.append("#L").append(entry.getKey()).append(") ");
                         }
                     }
                 }
@@ -408,28 +394,32 @@ public class ScanUtils {
         if(request.getProduct().equals(ScanRequest.Product.CXOSA) || filename == null || filename.isEmpty()){
             return null;
         }
-        if(!ScanUtils.empty(request.getRepoUrl()) && !ScanUtils.empty(request.getBranch())) {
+
+        String branch = request.getBranch();
+        if(!ScanUtils.empty(request.getRepoUrl()) && !ScanUtils.empty(branch)) {
             String repoUrl = request.getRepoUrl().replace(".git", "/");
             if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)) {
                 String url = request.getAdditionalMetadata("BITBUCKET_BROWSE");
                 if(url != null && !url.isEmpty()){
-                    if(!ScanUtils.empty(request.getBranch())) {
-                        return url.concat("/").concat(filename).concat("?at=").concat(request.getBranch());
+                    url = url.concat("/").concat(filename);
+                    if(!ScanUtils.empty(branch)) {
+                        return url.concat("?at=").concat(branch);
                     }
                     else{
-                        return url.concat("/").concat(filename);
+                        return url;
                     }
                 }
             }
             else if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)) {
-                return repoUrl.concat("src/").concat(request.getBranch()).concat("/").concat(filename);
+                return repoUrl.concat("src/").concat(branch).concat("/").concat(filename);
             }
             else {
-                if(!ScanUtils.empty(request.getBranch())) {
-                    return repoUrl.concat("blob/").concat(request.getBranch()).concat("/").concat(filename);
+                repoUrl = repoUrl.concat("blob/");
+                if(!ScanUtils.empty(branch)) {
+                    return repoUrl.concat(branch).concat("/").concat(filename);
                 }
                 else{ //default to master branch
-                    return repoUrl.concat("blob/").concat("master/").concat(filename);
+                    return repoUrl.concat("master/").concat(filename);
                 }
             }
         }
@@ -555,29 +545,19 @@ public class ScanUtils {
             team = team.replaceAll("\\\\","_");
             filename = filename.replace("[TEAM]", team);
         }
-        if(!empty(request.getApplication())) {
-            filename = filename.replace("[APP]", request.getApplication());
-            log.debug(request.getApplication());
-            log.debug(filename);
-        }
-        if(!empty(request.getProject())) {
-            filename = filename.replace("[PROJECT]", request.getProject());
-            log.debug(request.getProject());
-            log.debug(filename);
-        }
-        if(!empty(request.getNamespace())) {
-            filename = filename.replace("[NAMESPACE]", request.getNamespace());
-            log.debug(request.getNamespace());
-            log.debug(filename);
-        }
-        if(!empty(request.getRepoName())) {
-            filename = filename.replace("[REPO]", request.getRepoName());
-            log.debug(request.getRepoName());
-            log.debug(filename);
-        }
-        if(!empty(request.getBranch())) {
-            filename = filename.replace("[BRANCH]", request.getBranch());
-            log.debug(request.getBranch());
+        filename = getGenericFilename(filename, "[APP]", request.getApplication());
+        filename = getGenericFilename(filename, "[PROJECT]", request.getProject());
+        filename = getGenericFilename(filename, "[NAMESPACE]", request.getNamespace());
+        filename = getGenericFilename(filename, "[REPO]", request.getRepoName());
+        filename = getGenericFilename(filename, "[BRANCH]", request.getBranch());
+
+        return filename;
+    }
+
+    public static String getGenericFilename(String filename, String valueToReplace, String replacement){
+        if(!empty(replacement)) {
+            filename = filename.replace(valueToReplace, replacement);
+            log.debug(replacement);
             log.debug(filename);
         }
         return filename;

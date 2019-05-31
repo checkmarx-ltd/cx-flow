@@ -34,7 +34,7 @@ public class GitHubService {
 
     private HttpHeaders createAuthHeaders(){
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.set("Authorization", "token ".concat(properties.getToken()));
+        httpHeaders.set(HttpHeaders.AUTHORIZATION, "token ".concat(properties.getToken()));
         return httpHeaders;
     }
 

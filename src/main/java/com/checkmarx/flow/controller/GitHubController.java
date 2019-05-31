@@ -9,6 +9,7 @@ import com.checkmarx.flow.dto.github.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.service.FlowService;
+import com.checkmarx.flow.utils.Constants;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -37,8 +38,6 @@ import java.util.Locale;
 @RequestMapping(value = "/")
 public class GitHubController {
 
-    private static final String HTTP = "http://";
-    private static final String HTTPS = "https://";
     private static final String SIGNATURE = "X-Hub-Signature";
     private static final String EVENT = "X-GitHub-Event";
     private static final String PING = EVENT + "=ping";
@@ -173,16 +172,15 @@ public class GitHubController {
                 filters = ScanUtils.getFilters(severity, cwe, category, status);
             }
             else{
-                filters = ScanUtils.getFilters(flowProperties.getFilterSeverity(), flowProperties.getFilterCwe(),
-                        flowProperties.getFilterCategory(), flowProperties.getFilterStatus());
+                filters = ScanUtils.getFilters(flowProperties);
             }
 
             //build request object
             String gitUrl = repository.getCloneUrl();
             String token = properties.getToken();
             log.info("Using url: {}", gitUrl);
-            String gitAuthUrl = gitUrl.replace(HTTPS, HTTPS.concat(token).concat("@"));
-            gitAuthUrl = gitAuthUrl.replace(HTTP, HTTP.concat(token).concat("@"));
+            String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(token).concat("@"));
+            gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(token).concat("@"));
 
             String scanPreset = cxProperties.getScanPreset();
             if(!ScanUtils.empty(preset)){
@@ -204,7 +202,7 @@ public class GitHubController {
                     .repoUrlWithAuth(gitAuthUrl)
                     .repoType(ScanRequest.Repository.GITHUB)
                     .branch(currentBranch)
-                    .refs("refs/heads/".concat(currentBranch))
+                    .refs(Constants.CX_BRANCH_PREFIX.concat(currentBranch))
                     .mergeNoteUri(event.getPullRequest().getIssueUrl().concat("/comments"))
                     .mergeTargetBranch(targetBranch)
                     .email(null)
@@ -225,11 +223,12 @@ public class GitHubController {
 
 
         }catch (IllegalArgumentException e){
-            log.error("Error submitting Scan Request. Product option incorrect {}", product);
+            String errorMessage = "Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product != null ? product : "").concat(" | ").concat(bug != null ? bug : "");
+            log.error(errorMessage);
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
-                    .message("Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product))
+                    .message(errorMessage)
                     .success(false)
                     .build());
         }
@@ -318,8 +317,7 @@ public class GitHubController {
                 filters = ScanUtils.getFilters(severity, cwe, category, status);
             }
             else{
-                filters = ScanUtils.getFilters(flowProperties.getFilterSeverity(), flowProperties.getFilterCwe(),
-                        flowProperties.getFilterCategory(), flowProperties.getFilterStatus());
+                filters = ScanUtils.getFilters(flowProperties);
             }
             /*Determine emails*/
             List<String> emails = new ArrayList<>();
@@ -334,8 +332,8 @@ public class GitHubController {
             Repository repository = event.getRepository();
             String gitUrl = repository.getCloneUrl();
             log.debug("Using url: {}", gitUrl);
-            String gitAuthUrl = gitUrl.replace(HTTPS, HTTPS.concat(properties.getToken()).concat("@"));
-            gitAuthUrl = gitAuthUrl.replace(HTTP, HTTP.concat(properties.getToken()).concat("@"));
+            String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(properties.getToken()).concat("@"));
+            gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(properties.getToken()).concat("@"));
 
             String scanPreset = cxProperties.getScanPreset();
             if(!ScanUtils.empty(preset)){
@@ -376,11 +374,12 @@ public class GitHubController {
             }
 
         }catch (IllegalArgumentException e){
-            log.error("Error submitting Scan Request. Product option incorrect {}", product);
+            String errorMessage = "Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product != null ? product : "").concat(" | ").concat(bug != null ? bug : "");
+            log.error(errorMessage);
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 
-           return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
-                    .message("Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product))
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
+                    .message(errorMessage)
                     .success(false)
                     .build());
         }
