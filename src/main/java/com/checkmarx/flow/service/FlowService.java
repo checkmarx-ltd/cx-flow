@@ -278,6 +278,12 @@ public class FlowService {
                 }
                 String teamId = cxService.getTeamId(team);
                 Integer projectId = cxService.getProjectId(teamId, request.getProject());
+                if(projectId.equals(UNKNOWN_INT)){
+                    log.warn("No project found for {}", request.getProject());
+                    CompletableFuture<ScanResults> x = new CompletableFuture<>();
+                    x.complete(null);
+                    return x;
+                }
                 project = cxService.getProject(projectId);
 
             }
@@ -286,7 +292,7 @@ public class FlowService {
             }
             Integer scanId = cxService.getLastScanId(project.getId());
             if(scanId.equals(UNKNOWN_INT)){
-                log.info("No Scan Results to process for project {}", project.getName());
+                log.warn("No Scan Results to process for project {}", project.getName());
                 CompletableFuture<ScanResults> x = new CompletableFuture<>();
                 x.complete(null);
                 return x;

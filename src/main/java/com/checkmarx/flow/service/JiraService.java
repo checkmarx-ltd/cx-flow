@@ -26,6 +26,8 @@ import javax.annotation.PostConstruct;
 import java.beans.ConstructorProperties;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 
@@ -209,7 +211,7 @@ public class JiraService {
 
             log.debug("Creating JIRA issue");
 
-            mapCustomFields(request, issue, issueBuilder);
+            mapCustomFields(request, issue, issueBuilder, false);
 
             log.debug("Creating JIRA issue");
             log.debug(issueBuilder.toString());
@@ -241,7 +243,7 @@ public class JiraService {
 
         log.info("Updating issue #{}", bugId);
 
-        mapCustomFields(request, issue, issueBuilder);
+        mapCustomFields(request, issue, issueBuilder, true);
 
         log.debug("Updating JIRA issue");
         log.debug(issueBuilder.toString());
@@ -262,20 +264,36 @@ public class JiraService {
      * @param issue
      * @param issueBuilder
      */
-    private void mapCustomFields(ScanRequest request, ScanResults.XIssue issue, IssueInputBuilder issueBuilder){
+
+    private void mapCustomFields(ScanRequest request, ScanResults.XIssue issue, IssueInputBuilder issueBuilder, boolean update){
         BugTracker bugTracker = request.getBugTracker();
+
         log.debug("Handling custom field mappings");
         if(bugTracker.getFields() == null){
             return;
         }
+
+        String projectKey = bugTracker.getProjectKey();
+        String issueTypeStr = bugTracker.getIssueType();
+
         for(com.checkmarx.flow.dto.Field f: bugTracker.getFields()){
-            String projectKey = bugTracker.getProjectKey();
-            String issueTypeStr = bugTracker.getIssueType();
+
             String customField = getCustomFieldByName(projectKey, issueTypeStr, f.getJiraFieldName());
             String value;
+            if(update && f.isSkipUpdate()) {
+                log.debug("Skip update to field {}", f.getName());
+                continue;
+            }
             if(!ScanUtils.empty(customField)) {
                 /*cx | static | other - specific values that can be linked from scan request or the issue details*/
-                switch (f.getType()) {
+                String fieldType = f.getType();
+                if(ScanUtils.empty(fieldType)) {
+                    log.warn("Field type not supplied for custom field: {}. Using 'result' by default.", customField);
+                    // use default = result
+                    fieldType = "result";
+                }
+
+                switch (fieldType) {
                     case "cx":
                         log.debug("Checkmarx custom field {}", f.getName());
                         if (request.getCxFields() != null) {
@@ -296,8 +314,14 @@ public class JiraService {
                         value = f.getJiraDefaultValue();
                         break;
                     default:  //result
+                        String fieldName = f.getName();
+                        if(fieldName == null) {
+                            log.warn("Field name not supplied for custom field: {}. Skipping.", customField);
+                            /* there is no default, move on to the next field */
+                            continue;
+                        }
                         /*known values we can use*/
-                        switch (f.getName()) {
+                        switch (fieldName) {
                             case "application":
                                 log.debug("application: {}", request.getApplication());
                                 value = request.getApplication();
@@ -337,6 +361,12 @@ public class JiraService {
                             case "cve":
                                 log.debug("cve: {}", issue.getCve());
                                 value = issue.getCve();
+                                break;
+                            case "system-date":
+                                DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                                LocalDateTime now = LocalDateTime.now().plusDays(f.getOffset());
+                                value = dtf.format(now);
+                                log.debug("system date: {}");
                                 break;
                             case "recommendation":
                                 StringBuilder recommendation = new StringBuilder();
@@ -400,8 +430,15 @@ public class JiraService {
                 }
                 /*Determine the expected custom field type within JIRA*/
                 if (!ScanUtils.empty(value)) {
+                    String jiraFieldType = f.getJiraFieldType();
+                    if(ScanUtils.empty(jiraFieldType)) {
+                        log.warn("JIRA field type not supplied for custom field: {}. Using 'text' by default.", f.getName());
+                        // use default = text
+                        jiraFieldType = "text";
+                    }
+
                     List<String> list;
-                    switch (f.getJiraFieldType()) {
+                    switch (jiraFieldType) {
                         case "security":
                             log.debug("Security field");
                             SecurityLevel securityLevel = getSecurityLevel(projectKey, issueTypeStr, value);

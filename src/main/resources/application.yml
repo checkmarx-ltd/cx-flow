@@ -1,10 +1,13 @@
+server:
+  port: 8080
+
 logging:
   file: cx-flow.log
 #  level:
 #    com:
 #      checkmarx:
 #        flow:
-#          service: info
+#          service: TRACE
 #    org:
 #      apache:
 #        http:
@@ -16,6 +19,12 @@ logging:
 
 cx-flow:
   bug-tracker: JIRA
+  bug-tracker-impl:
+    - CxXml
+    - Json
+    - GitLab
+    - GitHub
+    - Csv
   branches:
     - develop
     - master
@@ -61,44 +70,110 @@ checkmarx:
   jira-assignee-field:
 
 jira:
-  url: https://xxx.xxxxx.com
+  url: https://xxxx.atlassian.net
   username: xxxx
   token: xxxx
-  project: SS
+  project: APPSEC
   issue-type: Application Security Bug
   priorities:
     High: High
     Medium: Medium
     Low: Low
     Informational: Lowest
-  open-transition: In Review
-  close-transition: Done
+  open-transition: Reopen Issue
+  close-transition: Close Issue
   open-status:
-    - To Do
+    - Open
     - In Progress
-    - In Review
+    - Reopened
   closed-status:
-    - Done
+    - Closed
+    - Resolved
   fields:
-    - type: cx
+    - type: result
       name: application
       jira-field-name: Application
-      jira-field-type: label
-      jira-default-value: xxxx
-    - type: result
-      name: cve
-      jira-field-name: CVEs
-      jira-field-type: label
-    - type: result
-      name: cwe
-      jira-field-name: CWEs
       jira-field-type: label
     - type: result
       name: category
       jira-field-name: Category
       jira-field-type: label
     - type: result
-      name: loc
-      jira-field-name: LOC
+      name: cwe
+      jira-field-name: CWEs
       jira-field-type: label
-      jira-default-value: XXXX
+    - type: result
+      name: severity
+      jira-field-name: Severity
+      jira-field-type: single-select
+    - type: result
+      name: loc
+      jira-field-name: Line Numbers
+      jira-field-type: label
+    - type: static
+      name: identified-by
+      jira-field-name: Identified By
+      jira-field-type: single-select
+      jira-default-value: Automation
+    - type: static
+      name: dependencies
+      jira-field-name: Dependencies
+      jira-field-type: multi-select
+      jira-default-value: Java, AngularJS
+
+github:
+  webhook-token: xxxx
+  token: xxxx
+  url: https://github.com
+  api-url: https://api.github.com/repos/
+  false-positive-label: false-positive
+  block-merge: true
+
+gitlab:
+  webhook-token: xxxx
+  token: xxxx
+  url: https://gitlab.com
+  api-url: https://gitlab.com/api/v4/
+  false-positive-label: false-positive
+  block-merge: true
+
+json:
+  file-name-format: "[TEAM]-[PROJECT]-[TIME].json"
+  data-folder: "/tmp/cxflow"
+
+cx-xml:
+  file-name-format: "[TEAM]-[PROJECT]-[TIME].xml"
+  data-folder: "/tmp/cxflow"
+
+csv:
+  file-name-format: "[TEAM]-[PROJECT]-[TIME].csv"
+  data-folder: "/tmp/cxflow"
+  include-header: true
+  fields:
+    - header: Application
+      name: application
+      default-value: unknown
+      #- header: Primary URL
+      #name: static
+      #default-value: ${tmp.url}
+    - header: severity
+      name: severity
+    - header: Vulnerability ID
+      name: summary
+      prefix: "[APP]:"
+    - header: file
+      name: filename
+    - header: Vulnerability ID
+      name: summary
+    - header: Vulnerability Name
+      name: category
+    - header: Category ID
+      name: cwe
+    - header: Description
+      name: description
+      #prefix: "*"
+      #postfix: "*"
+    - header: Severity
+      name: severity
+    - header: recommendation
+      name: recommendation
