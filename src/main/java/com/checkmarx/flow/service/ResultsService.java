@@ -27,22 +27,25 @@ public class ResultsService {
     private final GitHubService gitService;
     private final GitLabService gitLabService;
     private final BitBucketService bbService;
+    private final ADOService adoService;
     private final EmailService emailService;
     private final CxProperties cxProperties;
     private final FlowProperties flowProperties;
     private static final Long SLEEP = 20000L;
     private static final Long TIMEOUT = 300000L;
 
-    @ConstructorProperties({"cxService", "jiraService", "issueService", "gitService", "gitLabService", "bbService","emailService", "cxProperties", "flowProperties"})
+    @ConstructorProperties({"cxService", "jiraService", "issueService", "gitService", "gitLabService", "bbService",
+            "adoService","emailService", "cxProperties", "flowProperties"})
     public ResultsService(CxService cxService, JiraService jiraService, IssueService issueService, GitHubService gitService,
-                          GitLabService gitLabService, BitBucketService bbService, EmailService emailService,
-                          CxProperties cxProperties, FlowProperties flowProperties) {
+                          GitLabService gitLabService, BitBucketService bbService, ADOService adoService,
+                          EmailService emailService, CxProperties cxProperties, FlowProperties flowProperties) {
         this.cxService = cxService;
         this.jiraService = jiraService;
         this.issueService = issueService;
         this.gitService = gitService;
         this.gitLabService = gitLabService;
         this.bbService = bbService;
+        this.adoService = adoService;
         this.emailService = emailService;
         this.cxProperties = cxProperties;
         this.flowProperties = flowProperties;
@@ -142,6 +145,10 @@ public class ResultsService {
                 break;
             case BITBUCKETSERVERPULL:
                 bbService.processServerMerge(request, results);
+                break;
+            case ADOPULL:
+                adoService.processPull(request, results);
+                adoService.endBlockMerge(request);
                 break;
             case EMAIL:
                 if(!flowProperties.getMail().isEnabled()) {

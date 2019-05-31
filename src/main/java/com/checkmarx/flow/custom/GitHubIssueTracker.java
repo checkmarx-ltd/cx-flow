@@ -190,7 +190,7 @@ public class GitHubIssueTracker implements IssueTracker {
     }
 
     /**
-     * Create JSON http request body for an create/update Issue POST request to GitLab
+     * Create JSON http request body for an create/update Issue POST request to GitHub
      *
      */
     private JSONObject getJSONUpdateIssue(ScanResults.XIssue resultIssue, ScanRequest request) {
@@ -267,7 +267,7 @@ public class GitHubIssueTracker implements IssueTracker {
 
     @Override
     public void complete(ScanRequest request, ScanResults results) throws MachinaException {
-        log.info("Finalizing GitLab Processing");
+        log.info("Finalizing GitHub Processing");
     }
 
     /**

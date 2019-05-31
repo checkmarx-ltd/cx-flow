@@ -33,21 +33,24 @@ public class FlowService {
     private final GitHubService gitService;
     private final GitLabService gitLabService;
     private final BitBucketService bbService;
+    private final ADOService adoService;
     private final EmailService emailService;
     private final CxProperties cxProperties;
     private final FlowProperties flowProperties;
     private final ResultsService resultsService;
     private static final Long SLEEP = 20000L;
 
-    @ConstructorProperties({"cxService", "resultService", "gitService", "gitLabService", "bbService", "emailService", "cxProperties", "flowProperties"})
+    @ConstructorProperties({"cxService", "resultService", "gitService", "gitLabService", "bbService",
+            "adoService", "emailService", "cxProperties", "flowProperties"})
     public FlowService(CxService cxService, ResultsService resultsService, GitHubService gitService,
-                       GitLabService gitLabService, BitBucketService bbService, EmailService emailService,
-                       CxProperties cxProperties, FlowProperties flowProperties) {
+                       GitLabService gitLabService, BitBucketService bbService, ADOService adoService,
+                       EmailService emailService, CxProperties cxProperties, FlowProperties flowProperties) {
         this.cxService = cxService;
         this.resultsService = resultsService;
         this.gitService = gitService;
         this.gitLabService = gitLabService;
         this.bbService = bbService;
+        this.adoService = adoService;
         this.emailService = emailService;
         this.cxProperties = cxProperties;
         this.flowProperties = flowProperties;
@@ -180,6 +183,10 @@ public class FlowService {
             }
             else if(bugTrackerType.equals(BugTracker.Type.BITBUCKETSERVERPULL)){
                 bbService.sendServerMergeComment(request, SCAN_MESSAGE);
+            }
+            else if(bugTrackerType.equals(BugTracker.Type.ADOPULL)){
+                adoService.sendMergeComment(request, SCAN_MESSAGE);
+                adoService.startBlockMerge(request);
             }
 
             Integer status = cxService.getScanStatus(scanId);
@@ -374,6 +381,7 @@ public class FlowService {
             for(CxProject project: projects){
                 ScanRequest request = new ScanRequest(originalRequest);
                 String name = project.getName().replaceAll("[^a-zA-Z0-9-_]+","_");
+                //TODO set team
                 request.setProject(name);
                 request.setApplication(name);
                 processes.add(cxGetResults(request, project));
