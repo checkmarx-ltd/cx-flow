@@ -65,7 +65,7 @@ public class GitHubController {
     @PostConstruct
     public void init() throws NoSuchAlgorithmException, InvalidKeyException {
         // initialize HMAC with SHA1 algorithm and secret
-        if(!ScanUtils.empty(properties.getWebhookToken())) {
+        if(properties != null && !ScanUtils.empty(properties.getWebhookToken())) {
             SecretKeySpec secret = new SecretKeySpec(properties.getWebhookToken().getBytes(CHARSET), HMAC_ALGORITHM);
             hmac = Mac.getInstance(HMAC_ALGORITHM);
             hmac.init(secret);
@@ -272,8 +272,13 @@ public class GitHubController {
 
         try {
             event = mapper.readValue(body, PushEvent.class);
-        } catch (IOException e) {
+        } catch (NullPointerException | IOException e) {
             log.error(ExceptionUtils.getStackTrace(e));
+            throw new MachinaRuntimeException();
+        }
+
+        if(flowProperties == null || cxProperties == null){
+            log.error("Properties have null values");
             throw new MachinaRuntimeException();
         }
         //verify message signature
@@ -332,13 +337,19 @@ public class GitHubController {
             Repository repository = event.getRepository();
             String gitUrl = repository.getCloneUrl();
             log.debug("Using url: {}", gitUrl);
-            String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(properties.getToken()).concat("@"));
-            gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(properties.getToken()).concat("@"));
+            String token = properties.getToken();
+            if(ScanUtils.empty(token)){
+                log.error("No token was provided for Github");
+                throw new MachinaRuntimeException();
+            }
+            String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(token).concat("@"));
+            gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(token).concat("@"));
 
             String scanPreset = cxProperties.getScanPreset();
             if(!ScanUtils.empty(preset)){
                 scanPreset = preset;
             }
+
             boolean inc = cxProperties.getIncremental();
             if(incremental != null){
                 inc = incremental;
@@ -369,7 +380,7 @@ public class GitHubController {
             request = ScanUtils.overrideMap(request, o);
 
             //only initiate scan/automation if branch is applicable
-            if(branches.isEmpty() || branches.contains(currentBranch)) {
+            if(flowService != null && (branches.isEmpty() || branches.contains(currentBranch))) {
                 flowService.initiateAutomation(request);
             }
 
@@ -393,12 +404,31 @@ public class GitHubController {
 
     /** Validates the received body using the Github hook secret. */
     private void verifyHmacSignature(String message, String signature) {
-        byte[] sig = hmac.doFinal(message.getBytes(CHARSET));
-        String computedSignature = "sha1=" + DatatypeConverter.printHexBinary(sig);
-        if (!computedSignature.equalsIgnoreCase(signature)) {
+        if(hmac == null) {
+            log.error("Hmac was not initialized. Trying to initialize...");
+            try {
+                init();
+            } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+                log.error(ExceptionUtils.getStackTrace(e));
+            }
+        }
+        if(hmac != null) {
+            if(message != null) {
+                byte[] sig = hmac.doFinal(message.getBytes(CHARSET));
+                String computedSignature = "sha1=" + DatatypeConverter.printHexBinary(sig);
+                if (!computedSignature.equalsIgnoreCase(signature)) {
+                    log.error("Message was not signed with signature provided.");
+                    throw new InvalidTokenException();
+                }
+                log.info("Signature verified");
+            } else{
+                log.error("Signature cannot be verified because message is null.");
+                throw new InvalidTokenException();
+            }
+        } else {
+            log.error("Unable to initialize Hmac. Signature cannot be verified.");
             throw new InvalidTokenException();
         }
-        log.info("Signature verified");
     }
 
 }
