@@ -6,7 +6,6 @@ import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.utils.ScanUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.springframework.web.bind.annotation.*;
 
@@ -52,13 +51,13 @@ public class FlowController {
             @RequestParam(value = "status", required = false) List<String> status,
             @RequestParam(value = "assignee", required = false) String assignee,
             @RequestParam(value = "override", required = false) String override,
-            @RequestParam(value = "tracker", required = false) String tracker) {
+            @RequestParam(value = "bug", required = false) String bug) {
 
         // Validate shared API token from header
         validateToken(token);
 
         // Create bug tracker
-        BugTracker bugTracker = getBugTracker(assignee, tracker);
+        BugTracker bugTracker = getBugTracker(assignee, bug);
 
         // Create filters if available
         List<Filter> filters = getFilters(severity, cwe, category, status);
@@ -66,7 +65,8 @@ public class FlowController {
         // Create the scan request
         ScanRequest scanRequest = ScanRequest.builder()
                 // By default, use project as application, unless overridden
-                .application(StringUtils.isBlank(application) ? project : application)
+                .application(ScanUtils.empty(application) ? project : application)
+                .product(ScanRequest.Product.CX) // Default product: CX
                 .project(project)
                 .team(team)
                 .bugTracker(bugTracker)
@@ -74,7 +74,7 @@ public class FlowController {
                 .build();
 
         // If an override blob/file is provided, substitute these values
-        if (StringUtils.isNotBlank(override)) {
+        if (!ScanUtils.empty(override)) {
             MachinaOverride ovr = ScanUtils.getMachinaOverride(override);
             scanRequest = ScanUtils.overrideMap(scanRequest, ovr);
         }
@@ -135,18 +135,18 @@ public class FlowController {
      * a default tracker of type {@link BugTracker.Type#NONE} will be returned.
      *
      * @param assignee assignee for bug tracking
-     * @param tracker  bug tracker type to use
+     * @param bug  bug tracker type to use
      * @return a {@link BugTracker}
      */
-    protected BugTracker getBugTracker(String assignee, String tracker) {
+    protected BugTracker getBugTracker(String assignee, String bug) {
         // Default bug tracker type : NONE
         BugTracker bugTracker = BugTracker.builder().type(BugTracker.Type.NONE).build();
 
         // If a bug tracker is explicitly provided, override the default
         // TODO: Ask Ken if assignee is mandatory for a tracker
-        if (StringUtils.isNotBlank(tracker) && StringUtils.isNotBlank(assignee)) {
-            BugTracker.Type bugTypeEnum = ScanUtils.getBugTypeEnum(tracker, properties.getBugTrackerImpl());
-            bugTracker = ScanUtils.getBugTracker(assignee, bugTypeEnum, jiraProperties, tracker);
+        if (!ScanUtils.empty(bug)) {
+            BugTracker.Type bugTypeEnum = ScanUtils.getBugTypeEnum(bug, properties.getBugTrackerImpl());
+            bugTracker = ScanUtils.getBugTracker(assignee, bugTypeEnum, jiraProperties, bug);
         }
         return bugTracker;
     }

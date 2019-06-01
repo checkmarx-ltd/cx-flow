@@ -17,7 +17,6 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.json.JSONString;
 import org.slf4j.Logger;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
@@ -397,9 +396,9 @@ public class CxService {
      * @param cxResults the source to use
      * @return  a map of additional scan details
      */
-    protected Map<String, String> getAdditionalScanDetails(CxXMLResultsType cxResults) {
+    protected Map<String, Object> getAdditionalScanDetails(CxXMLResultsType cxResults) {
         // Add additional data from the results
-        Map<String, String> additionalDetails = new HashMap<String, String>();
+        Map<String, Object> additionalDetails = new HashMap<String, Object>();
         additionalDetails.put("scanId", cxResults.getScanId());
         additionalDetails.put("scanStartDate", cxResults.getScanStart());
         JSONObject jsonObject = getScanData(cxResults.getScanId());
@@ -411,7 +410,30 @@ public class CxService {
                 additionalDetails.put("numFailedLoc", String.valueOf(scanState.getInt("failedLinesOfCode")));
             }
         }
+        // Add custom field values if requested
+        Map<String, String> customFields = getCustomFields(cxResults.getProjectId());
+        additionalDetails.put("customFields", customFields);
         return additionalDetails;
+    }
+
+    /**
+     * Returns custom field values read from a Checkmarx project, based on given projectId.
+     *
+     * @param projectId ID of project to lookup from Checkmarx
+     * @return Map of custom field names to values
+     */
+    protected Map<String, String> getCustomFields(String projectId) {
+        Map<String, String> customFields = new HashMap<String, String>();
+        log.info("Fetching custom fields from project ID ".concat(projectId));
+        CxProject cxProject = getProject(Integer.valueOf(projectId));
+        if (cxProject != null) {
+            for (CxProject.CustomField customField : cxProject.getCustomFields()) {
+                customFields.put(customField.getName(), customField.getValue());
+            }
+        } else {
+            log.error("Could not find project with ID ".concat(projectId));
+        }
+        return customFields;
     }
 
     /**
@@ -609,25 +631,7 @@ public class CxService {
                         xIssueBuilder.link(r.getDeepLink());
 
                         // Add additional details
-                        Map<String, Object> additionalDetails = new HashMap<String, Object>();
-                        additionalDetails.put("categories", q.getCategories());
-                        additionalDetails.put("resultState", r.getState());
-                        String descUrl = ScanUtils.getHostWithProtocol(r.getDeepLink()) +
-                                "/CxWebClient/ScanQueryDescription.aspx?queryID=" + q.getId() +
-                                "&queryVersionCode=" + q.getQueryVersionCode() +
-                                "&queryTitle=" + q.getName();
-                        additionalDetails.put("recommendedFix", descUrl);
-                        // Source / Sink data
-                        PathType path = r.getPath();
-                        if (path != null) {
-                            List<PathNodeType> nodes = path.getPathNode();
-                            if (!nodes.isEmpty()) {
-                                additionalDetails.put("source", getNodeData(nodes, 0));
-                                additionalDetails.put("sink", getNodeData(nodes, nodes.size() - 1)); // Last node in dataFlow
-                            } else {
-                                log.debug("Result " + q.getName() + r.getNodeId() + " did not have node paths to process.");
-                            }
-                        }
+                        Map<String, Object> additionalDetails = getAdditionalIssueDetails(q, r);
                         xIssueBuilder.additionalDetails(additionalDetails);
 
                         Map<Integer, String> details = new HashMap<>();
@@ -657,6 +661,34 @@ public class CxService {
                 }
             }
         }
+    }
+
+    private Map<String, Object> getAdditionalIssueDetails(QueryType q, ResultType r) {
+        Map<String, Object> additionalDetails = new HashMap<String, Object>();
+        additionalDetails.put("categories", q.getCategories());
+        String descUrl = ScanUtils.getHostWithProtocol(r.getDeepLink()) +
+                "/CxWebClient/ScanQueryDescription.aspx?queryID=" + q.getId() +
+                "&queryVersionCode=" + q.getQueryVersionCode() +
+                "&queryTitle=" + q.getName();
+        additionalDetails.put("recommendedFix", descUrl);
+
+        List<Map<String, Object>> results = new ArrayList<Map<String, Object>>();
+        // Source / Sink data
+        Map<String, Object> result = new HashMap<String, Object>();
+        result.put("state", r.getState());
+        PathType path = r.getPath();
+        if (path != null) {
+            List<PathNodeType> nodes = path.getPathNode();
+            if (!nodes.isEmpty()) {
+                result.put("source", getNodeData(nodes, 0));
+                result.put("sink", getNodeData(nodes, nodes.size() - 1)); // Last node in dataFlow
+            } else {
+                log.debug("Result " + q.getName() + r.getNodeId() + " did not have node paths to process.");
+            }
+        }
+        results.add(result);
+        additionalDetails.put("results", results);
+        return additionalDetails;
     }
 
     /**
@@ -744,6 +776,10 @@ public class CxService {
                     details.put(Integer.parseInt(r.getLine()), null);
                 }
             }
+            // Copy additionalData.results from issue to existingIssue
+            List<Map<String, Object>> results = (List<Map<String, Object>>) existingIssue.getAdditionalDetails().get("results");
+            results.addAll((List<Map<String, Object>>)issue.getAdditionalDetails().get("results"));
+
         } else {
             cxIssueList.add(issue);
         }
