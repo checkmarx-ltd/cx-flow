@@ -19,10 +19,10 @@ public class ScanResults{
     private String  scanType;
     private List<XIssue> xIssues;
     private String output;
-    private Map<String, String> additionalDetails;
+    private Map<String, Object> additionalDetails;
 
     @ConstructorProperties({"osa", "projectId", "team", "project", "link", "files", "loc", "scanType", "xIssues", "additionalDetails"})
-    public ScanResults(Boolean osa, String projectId, String team, String project, String link, String files, String loc, String scanType, List<XIssue> xIssues, Map<String, String> additionalDetails) {
+    public ScanResults(Boolean osa, String projectId, String team, String project, String link, String files, String loc, String scanType, List<XIssue> xIssues, Map<String, Object> additionalDetails) {
         this.osa = osa;
         this.projectId = projectId;
         this.team = team;
@@ -79,7 +79,7 @@ public class ScanResults{
         return this.xIssues;
     }
 
-    public Map<String, String> getAdditionalDetails() { return this.additionalDetails; }
+    public Map<String, Object> getAdditionalDetails() { return this.additionalDetails; }
 
     public String getLink(){
         return this.link;
@@ -117,7 +117,7 @@ public class ScanResults{
         this.xIssues = xIssues;
     }
 
-    public void setAdditionalDetails(Map<String, String> additionalDetails) {
+    public void setAdditionalDetails(Map<String, Object> additionalDetails) {
         this.additionalDetails = additionalDetails;
     }
 
@@ -512,7 +512,7 @@ public class ScanResults{
         private String loc;
         private String scanType;
         private List<XIssue> xIssues;
-        private Map<String, String> additionalDetails;
+        private Map<String, Object> additionalDetails;
 
         ScanResultsBuilder() {
         }
@@ -563,7 +563,7 @@ public class ScanResults{
             return this;
         }
 
-        public ScanResults.ScanResultsBuilder additionalDetails(Map<String, String> additionalDetails) {
+        public ScanResults.ScanResultsBuilder additionalDetails(Map<String, Object> additionalDetails) {
             this.additionalDetails = additionalDetails;
             return this;
         }
