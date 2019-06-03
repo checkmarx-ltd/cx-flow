@@ -171,6 +171,8 @@ public class BugTracker {
         BITBUCKETPULL("BITBUCKETPULL"),
         BITBUCKETSERVERPULL("BITBUCKETSERVERPULL"),
         bitbucketserverpull("bitbucketserverpull"),
+        ADOPULL("ADOPULL"),
+        adopull("adopull"),
         GITHUBPULL("GITHUBPULL"),
         githubpull("githubpull"),
         GITHUBCOMMIT("GITHUBCOMMIT"),

@@ -6,15 +6,15 @@ import static org.junit.Assert.*;
 
 public class CxFlowApplicationTest {
 
-    @Test
+    /*@Test
     public void mainWithNullArgs() {
         CxFlowApplication cxFlowApplication = new CxFlowApplication();
         cxFlowApplication.main(null);
-    }
+    }*/
 
-    /*@Test
+    @Test
     public void mainWithEmptyListArgs() {
         CxFlowApplication cxFlowApplication = new CxFlowApplication();
         cxFlowApplication.main(new String[]{});
-    }*/
+    }
 }
