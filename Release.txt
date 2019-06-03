@@ -1,4 +1,22 @@
 ---------------------------------------------------------------------
+Release 1.3.0
+---------------------------------------------------------------------
+# CHANGES
+* Removing need for a separate Command Line version JAR
+** Dockerfile updates
+** gradle.build updates
+** Application entry points were changed to accomodate
+
+# FEATURES
+* Introduced rest endpoint to retrieve latest results for a project and return JSON object
+* Introduced Azure DevOps WebHook Integration
+
+#FIXES
+* Several Code Quality Changes (Sonar Lint and peer code review)
+
+#WIP
+* Initial class / service structure is in place for Azure DevOps WorkItems (TBD)
+---------------------------------------------------------------------
 Release 1.2.1
 ---------------------------------------------------------------------
 # CHANGES
