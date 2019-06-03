@@ -2,10 +2,12 @@
 Release 1.3.0
 ---------------------------------------------------------------------
 # CHANGES
+* Update Spring Boot to 5.1.5
+* Update Gradle Wrapper to 5.4.1
 * Removing need for a separate Command Line version JAR
 ** Dockerfile updates
 ** gradle.build updates
-** Application entry points were changed to accomodate
+** Application entry points were changed to accommodate
 
 # FEATURES
 * Introduced rest endpoint to retrieve latest results for a project and return JSON object
