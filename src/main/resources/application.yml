@@ -19,7 +19,7 @@ logging:
 
 cx-flow:
   # Agreed upon shared API token
-  token: 1F4QipGtiR2Ub68ABEYx
+  token: xxxx
   bug-tracker: JIRA
   bug-tracker-impl:
     - CxXml
