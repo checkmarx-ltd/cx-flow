@@ -20,6 +20,7 @@ public class GitHubProperties {
     private String openTransition = "open";
     private String closeTransition = "closed";
     private boolean blockMerge = false;
+    private boolean blockMergeComplete = false;
 
     public @NotNull
     boolean isEnabled() {
@@ -92,6 +93,14 @@ public class GitHubProperties {
 
     public void setBlockMerge(boolean blockMerge) {
         this.blockMerge = blockMerge;
+    }
+
+    public boolean isBlockMergeComplete() {
+        return blockMergeComplete;
+    }
+
+    public void setBlockMergeComplete(boolean blockMergeComplete) {
+        this.blockMergeComplete = blockMergeComplete;
     }
 
     public String getMergeNoteUri(String namespace, String repo, String mergeId){

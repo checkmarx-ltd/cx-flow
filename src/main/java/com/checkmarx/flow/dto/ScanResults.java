@@ -19,9 +19,10 @@ public class ScanResults{
     private String  scanType;
     private List<XIssue> xIssues;
     private String output;
+    private Map<String, Object> additionalDetails;
 
-    @ConstructorProperties({"osa", "projectId", "team", "project", "link", "files", "loc", "scanType", "xIssues"})
-    public ScanResults(Boolean osa, String projectId, String team, String project, String link, String files, String loc, String scanType, List<XIssue> xIssues) {
+    @ConstructorProperties({"osa", "projectId", "team", "project", "link", "files", "loc", "scanType", "xIssues", "additionalDetails"})
+    public ScanResults(Boolean osa, String projectId, String team, String project, String link, String files, String loc, String scanType, List<XIssue> xIssues, Map<String, Object> additionalDetails) {
         this.osa = osa;
         this.projectId = projectId;
         this.team = team;
@@ -31,6 +32,7 @@ public class ScanResults{
         this.loc = loc;
         this.scanType = scanType;
         this.xIssues = xIssues;
+        this.additionalDetails = additionalDetails;
     }
 
 
@@ -77,6 +79,8 @@ public class ScanResults{
         return this.xIssues;
     }
 
+    public Map<String, Object> getAdditionalDetails() { return this.additionalDetails; }
+
     public String getLink(){
         return this.link;
     }
@@ -113,6 +117,10 @@ public class ScanResults{
         this.xIssues = xIssues;
     }
 
+    public void setAdditionalDetails(Map<String, Object> additionalDetails) {
+        this.additionalDetails = additionalDetails;
+    }
+
     public String getOutput() {
         return output;
     }
@@ -138,11 +146,13 @@ public class ScanResults{
         private String gitUrl;
         private List<OsaDetails> osaDetails;
         private Map<Integer, String>  details;
+        private Map<String, Object> additionalDetails;
 
         @ConstructorProperties({"vulnerability", "similarityId", "cwe", "cve", "description", "language",
-                "severity", "link", "filename", "gitUrl", "osaDetails", "details"})
+                "severity", "link", "filename", "gitUrl", "osaDetails", "details", "additionalDetails"})
         XIssue(String vulnerability, String similarityId, String cwe, String cve, String description, String language,
-               String severity, String link, String filename, String gitUrl, List<OsaDetails> osaDetails, Map<Integer, String> details) {
+               String severity, String link, String filename, String gitUrl, List<OsaDetails> osaDetails, Map<Integer, String> details,
+               Map<String, Object> additionalDetails) {
             this.vulnerability = vulnerability;
             this.similarityId = similarityId;
             this.cwe = cwe;
@@ -155,6 +165,7 @@ public class ScanResults{
             this.gitUrl = gitUrl;
             this.osaDetails = osaDetails;
             this.details = details;
+            this.additionalDetails = additionalDetails;
         }
 
         public static XIssueBuilder builder() {
@@ -231,6 +242,10 @@ public class ScanResults{
             return this.details;
         }
 
+        public Map<String, Object> getAdditionalDetails() {
+            return this.additionalDetails;
+        }
+
         public void setVulnerability(String vulnerability) {
             this.vulnerability = vulnerability;
         }
@@ -275,6 +290,10 @@ public class ScanResults{
             this.details = details;
         }
 
+        public void setAdditionalDetails(Map<String, Object> additionalDetails) {
+            this.additionalDetails = additionalDetails;
+        }
+
         public static class XIssueBuilder {
             private String vulnerability;
             private String similarityId;
@@ -287,6 +306,7 @@ public class ScanResults{
             private String file;
             private List<OsaDetails> osaDetails;
             private Map<Integer, String> details;
+            private Map<String, Object> additionalDetails;
 
             XIssueBuilder() {
             }
@@ -346,12 +366,17 @@ public class ScanResults{
                 return this;
             }
 
+            public XIssue.XIssueBuilder additionalDetails(Map<String, Object> additionalDetails) {
+                this.additionalDetails = additionalDetails;
+                return this;
+            }
+
             public XIssue build() {
-                return new XIssue(vulnerability, similarityId, cwe, cve, description, language, severity, link, file, "", osaDetails, details);
+                return new XIssue(vulnerability, similarityId, cwe, cve, description, language, severity, link, file, "", osaDetails, details, additionalDetails);
             }
 
             public String toString() {
-                return "ScanResults.XIssue.XIssueBuilder(simiarlityId="+ this.similarityId +",vulnerability=" + this.vulnerability + ", cwe=" + this.cwe + ", cve=" + this.cve + ", description=" + this.description + ", language=" + this.language + ", severity=" + this.severity + ", link=" + this.link + ", filename=" + this.file + ", osaDetails=" + this.osaDetails + ", details=" + this.details + ")";
+                return "ScanResults.XIssue.XIssueBuilder(simiarlityId="+ this.similarityId +",vulnerability=" + this.vulnerability + ", cwe=" + this.cwe + ", cve=" + this.cve + ", description=" + this.description + ", language=" + this.language + ", severity=" + this.severity + ", link=" + this.link + ", filename=" + this.file + ", osaDetails=" + this.osaDetails + ", details=" + this.details + ", additionalDetails=" + this.additionalDetails + ")";
             }
         }
     }
@@ -487,6 +512,7 @@ public class ScanResults{
         private String loc;
         private String scanType;
         private List<XIssue> xIssues;
+        private Map<String, Object> additionalDetails;
 
         ScanResultsBuilder() {
         }
@@ -537,12 +563,17 @@ public class ScanResults{
             return this;
         }
 
+        public ScanResults.ScanResultsBuilder additionalDetails(Map<String, Object> additionalDetails) {
+            this.additionalDetails = additionalDetails;
+            return this;
+        }
+
         public ScanResults build() {
-            return new ScanResults(osa, projectId, team, project, link, files, loc, scanType, xIssues);
+            return new ScanResults(osa, projectId, team, project, link, files, loc, scanType, xIssues, additionalDetails);
         }
 
         public String toString() {
-            return "ScanResults.ScanResultsBuilder(osa=" + this.osa + ", link=" + this.link + ", files=" + this.files + ", loc=" + this.loc + ", scanType=" + this.scanType + ", xIssues=" + this.xIssues + ")";
+            return "ScanResults.ScanResultsBuilder(osa=" + this.osa + ", link=" + this.link + ", files=" + this.files + ", loc=" + this.loc + ", scanType=" + this.scanType + ", xIssues=" + this.xIssues + ", additionalDetails=" + this.additionalDetails + ")";
         }
     }
 }
