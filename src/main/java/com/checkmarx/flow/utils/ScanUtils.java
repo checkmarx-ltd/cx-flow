@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.HttpClientErrorException;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -569,6 +571,24 @@ public class ScanUtils {
 
     public static String cleanStringUTF8(String dirty){
         return new String(dirty.getBytes(), 0, dirty.length(), UTF_8);
+    }
+
+    /**
+     * Returns the protocol, host and port from given url.
+     *
+     * @param url url to process
+     * @return  host with protocol and port
+     */
+    public static String getHostWithProtocol(String url) {
+        String hostWithProtocol = null;
+        try {
+            URI uri = new URI(url);
+            int port = uri.getPort();
+            hostWithProtocol = uri.getScheme() + "//"  + uri.getHost() + (port > 0 ? ":" + port : "");
+        } catch (URISyntaxException e) {
+            log.debug("Could not parse given URL" + url, e);
+        }
+        return hostWithProtocol;
     }
 
 }
