@@ -1,5 +1,0 @@
-FROM openjdk:11
-VOLUME /tmp
-ADD build/libs/cx-flow-cmd-11-1.2.jar //
-ENTRYPOINT ["/usr/bin/java"]
-CMD ["-Xms256m", "-Xmx500m","-Djava.security.egd=file:/dev/./urandom", "-Dspring.profiles.active=cmd", "-jar", "/cx-flow-cmd-11-1.2.jar"]
