@@ -9,21 +9,17 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.WebApplicationType;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.stereotype.Component;
 import java.beans.ConstructorProperties;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import static java.lang.System.exit;
 
-@EnableAsync
-//@SpringBootApplication
-public class CxFlowApplicationCmd implements ApplicationRunner {
+@Component
+public class CxFlowRunner implements ApplicationRunner {
 
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(CxFlowApplicationCmd.class);
+    private static final Logger log = org.slf4j.LoggerFactory.getLogger(CxFlowRunner.class);
     private final FlowProperties flowProperties;
     private final CxProperties cxProperties;
     private final JiraProperties jiraProperties;
@@ -33,10 +29,10 @@ public class CxFlowApplicationCmd implements ApplicationRunner {
 
     @ConstructorProperties({"flowProperties", "cxProperties", "jiraProperties", "gitHubProperties",
             "gitLabProperties", "flowService"})
-    public CxFlowApplicationCmd(FlowProperties flowProperties,
-                                CxProperties cxProperties, JiraProperties jiraProperties,
-                                GitHubProperties gitHubProperties, GitLabProperties gitLabProperties,
-                                FlowService flowService) {
+    public CxFlowRunner(FlowProperties flowProperties,
+                        CxProperties cxProperties, JiraProperties jiraProperties,
+                        GitHubProperties gitHubProperties, GitLabProperties gitLabProperties,
+                        FlowService flowService) {
         this.flowProperties = flowProperties;
         this.cxProperties = cxProperties;
         this.jiraProperties = jiraProperties;
@@ -45,14 +41,18 @@ public class CxFlowApplicationCmd implements ApplicationRunner {
         this.flowService = flowService;
     }
 
-    public static void main(String[] args) {
-        SpringApplication app = new SpringApplication(CxFlowApplicationCmd.class);
-        app.setWebApplicationType(WebApplicationType.NONE);
-        app.run(args);
+    @Override
+    public void run(ApplicationArguments args) {
+        if(args.containsOption("web") || args.getOptionNames().isEmpty()){
+            log.debug("running web mode");
+        }
+        else{
+            log.debug("Running cmd mode");
+            commandLineRunner(args);
+        }
     }
 
-    @Override
-    public void run(ApplicationArguments arg) {
+    private void commandLineRunner(ApplicationArguments args) {
         String bugTracker;
         String application;
         String namespace;
@@ -80,22 +80,22 @@ public class CxFlowApplicationCmd implements ApplicationRunner {
         MachinaOverride o = null;
         ObjectMapper mapper = new ObjectMapper();
 
-        if(arg.containsOption("branch-create")){
+        if(args.containsOption("branch-create")){
 
             exit(0);
         }
-        if(arg.containsOption("branch-delete")){
+        if(args.containsOption("branch-delete")){
 
             exit(0);
         }
-        if(!arg.containsOption("scan") && !arg.containsOption("parse") && !arg.containsOption("batch") && !arg.containsOption("project")){
+        if(!args.containsOption("scan") && !args.containsOption("parse") && !args.containsOption("batch") && !args.containsOption("project")){
             log.error("--scan | --parse | --batch | --project option must be specified");
             exit(1);
         }
 
         //override with config
-        if (arg.containsOption("config")) {
-            config = arg.getOptionValues("config").get(0);
+        if (args.containsOption("config")) {
+            config = args.getOptionValues("config").get(0);
             try {
                 o = mapper.readValue(new File(config), MachinaOverride.class);
             } catch (IOException e) {
@@ -105,33 +105,33 @@ public class CxFlowApplicationCmd implements ApplicationRunner {
         }
 
         /*Collect command line options (String)*/
-        bugTracker = getOptionValues(arg, "bug-tracker");
-        file = getOptionValues(arg,"f");
-        libFile = getOptionValues(arg,"lib-file");
-        repoName = getOptionValues(arg,"repo-name");
-        repoUrl = getOptionValues(arg,"repo-url");
-        branch = getOptionValues(arg,"branch");
-        namespace = getOptionValues(arg,"namespace");
-        team = getOptionValues(arg,"cx-team");
-        cxProject = getOptionValues(arg,"cx-project");
-        application = getOptionValues(arg,"app");
-        assignee = getOptionValues(arg,"assignee");
-        mergeId = getOptionValues(arg,"merge-id");
-        preset = getOptionValues(arg,"preset");
-        osa = arg.getOptionValues("osa") != null;
+        bugTracker = getOptionValues(args, "bug-tracker");
+        file = getOptionValues(args,"f");
+        libFile = getOptionValues(args,"lib-file");
+        repoName = getOptionValues(args,"repo-name");
+        repoUrl = getOptionValues(args,"repo-url");
+        branch = getOptionValues(args,"branch");
+        namespace = getOptionValues(args,"namespace");
+        team = getOptionValues(args,"cx-team");
+        cxProject = getOptionValues(args,"cx-project");
+        application = getOptionValues(args,"app");
+        assignee = getOptionValues(args,"assignee");
+        mergeId = getOptionValues(args,"merge-id");
+        preset = getOptionValues(args,"preset");
+        osa = args.getOptionValues("osa") != null;
         /*Collect command line options (List of Strings)*/
-        emails = arg.getOptionValues("emails");
-        severity = arg.getOptionValues("severity");
-        category = arg.getOptionValues("category");
-        cwe = arg.getOptionValues("cwe");
-        status = arg.getOptionValues("status");
-        excludeFiles = arg.getOptionValues("exclude-files");
-        excludeFolders = arg.getOptionValues("exclude-folders");
-        boolean bb = arg.containsOption("bb"); //BitBucket Cloud
-        boolean bbs = arg.containsOption("bbs"); //BitBucket Server
+        emails = args.getOptionValues("emails");
+        severity = args.getOptionValues("severity");
+        category = args.getOptionValues("category");
+        cwe = args.getOptionValues("cwe");
+        status = args.getOptionValues("status");
+        excludeFiles = args.getOptionValues("exclude-files");
+        excludeFolders = args.getOptionValues("exclude-folders");
+        boolean bb = args.containsOption("bb"); //BitBucket Cloud
+        boolean bbs = args.containsOption("bbs"); //BitBucket Server
 
         if(((ScanUtils.empty(namespace) && ScanUtils.empty(repoName) && ScanUtils.empty(branch)) &&
-                ScanUtils.empty(application)) && !arg.containsOption("batch")) {
+                ScanUtils.empty(application)) && !args.containsOption("batch")) {
             log.error("Namespace/Repo/Branch or Application (app) must be provided");
             exit(1);
         }
@@ -274,7 +274,7 @@ public class CxFlowApplicationCmd implements ApplicationRunner {
         }
 
         try {
-            if(arg.containsOption("parse")){
+            if(args.containsOption("parse")){
 
                 File f = new File(file);
                 if(!f.exists()){
@@ -289,7 +289,7 @@ public class CxFlowApplicationCmd implements ApplicationRunner {
                     }
                     cxOsaParse(request, f, libs);
                 } else { //SAST
-                    if(arg.containsOption("offline")){
+                    if(args.containsOption("offline")){
                         cxProperties.setOffline(true);
                     }
                     log.info("Processing Checkmarx result file {}", file);
@@ -298,18 +298,18 @@ public class CxFlowApplicationCmd implements ApplicationRunner {
                 }
 
             }
-            else if(arg.containsOption("batch")){
+            else if(args.containsOption("batch")){
                 log.info("Executing batch process");
                 cxBatch(request);
             }
-            else if(arg.containsOption("project")){
+            else if(args.containsOption("project")){
                 if(ScanUtils.empty(team) || ScanUtils.empty(cxProject)){
                     log.error("team and cx-project must be provided when --project option is used");
                     exit(2);
                 }
                 cxResults(request);
             }
-            else if(arg.containsOption("scan")){
+            else if(args.containsOption("scan")){
                 log.info("Executing scan process");
                 cxScan(request, file);
             }
