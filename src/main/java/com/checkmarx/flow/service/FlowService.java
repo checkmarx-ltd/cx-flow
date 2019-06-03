@@ -312,7 +312,7 @@ public class FlowService {
         } catch (MachinaException e) {
             log.debug(ExceptionUtils.getStackTrace(e));
             log.error("Error occurred while processing results for {}{}", request.getTeam(), request.getProject());
-            CompletableFuture x = new CompletableFuture();
+            CompletableFuture<ScanResults> x = new CompletableFuture<>();
             x.completeExceptionally(e);
             return x;
         }
