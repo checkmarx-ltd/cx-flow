@@ -5,6 +5,7 @@ import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.azure.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.service.FlowService;
+import com.checkmarx.flow.utils.Constants;
 import com.checkmarx.flow.utils.ScanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -169,6 +170,8 @@ public class ADOController {
 
             request = ScanUtils.overrideMap(request, o);
             request.putAdditionalMetadata("statuses_url", pullUrl.concat("/statuses"));
+            String baseUrl = body.getResourceContainers().getAccount().getBaseUrl();
+            request.putAdditionalMetadata(Constants.ADO_BASE_URL_KEY,baseUrl);
             //only initiate scan/automation if target branch is applicable
             if(branches.isEmpty() || branches.contains(targetBranch)) {
                 flowService.initiateAutomation(request);
@@ -316,7 +319,8 @@ public class ADOController {
                     .bugTracker(bt)
                     .filters(filters)
                     .build();
-
+            String baseUrl = body.getResourceContainers().getAccount().getBaseUrl();
+            request.putAdditionalMetadata(Constants.ADO_BASE_URL_KEY,baseUrl);
             //if an override blob/file is provided, substitute these values
             request = ScanUtils.overrideMap(request, o);
 

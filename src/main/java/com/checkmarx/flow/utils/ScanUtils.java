@@ -304,7 +304,12 @@ public class ScanUtils {
             body.append("Lines: ");
             for (Map.Entry<Integer, String> entry : issue.getDetails().entrySet()) {
                 if (entry.getKey() != null) {  //[<line>](<url>)
-                    body.append("[").append(entry.getKey()).append("](").append(fileUrl).append("#L").append(entry.getKey()).append(") ");
+                    if(fileUrl != null) {
+                        body.append("[").append(entry.getKey()).append("](").append(fileUrl).append("#L").append(entry.getKey()).append(") ");
+                    }
+                    else{ //if the fileUrl is not provided, simply putting the line number (no link) - ADO for example
+                        body.append(entry.getKey()).append(" ");
+                    }
                 }
             }
             body.append(CRLF).append(CRLF);
@@ -418,6 +423,9 @@ public class ScanUtils {
             }
             else if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)) {
                 return repoUrl.concat("src/").concat(branch).concat("/").concat(filename);
+            }
+            else if (request.getRepoType().equals(ScanRequest.Repository.ADO)) {
+                return null;
             }
             else {
                 repoUrl = repoUrl.concat("blob/");

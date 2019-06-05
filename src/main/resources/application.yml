@@ -160,3 +160,5 @@ csv:
       name: severity
     - header: recommendation
       name: recommendation
+    - header: Similarity ID
+      name: similarity-id

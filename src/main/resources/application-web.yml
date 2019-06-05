@@ -1,6 +1,19 @@
 server:
   port: ${PORT:8080}
 
+management:
+  endpoint:
+    shutdown:
+      enabled: true
+    beans:
+      enabled: true
+    env:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: "shutdown,beans,env,info,health"
+
 logging:
   file: cx-flow.log
 #  level:
@@ -19,14 +32,15 @@ logging:
 
 cx-flow:
   # Agreed upon shared API token
-  token: 1F4QipGtiR2Ub68ABEYx
-  bug-tracker: JIRA
+  token: xxxx
+  bug-tracker: Azure
   bug-tracker-impl:
     - CxXml
     - Json
     - GitLab
     - GitHub
     - Csv
+    - Azure
   branches:
     - develop
     - master
@@ -137,11 +151,12 @@ azure:
   webhook-token: cxflow:1234
   token: xxxx
   url: https://dev.azure.com
-  api-url: https://dev.azure.com
   issue-type: issue
   api-version: 5.0
   false-positive-label: false-positive
   block-merge: true
+  closed-status: Closed
+  open-status: Active
 
 json:
   file-name-format: "[NAMESPACE]-[REPO]-[BRANCH]-[TIME].json"
@@ -183,3 +198,5 @@ csv:
       name: severity
     - header: recommendation
       name: recommendation
+    - header: Similarity ID
+      name: similarity-id
