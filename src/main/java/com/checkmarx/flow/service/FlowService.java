@@ -122,14 +122,26 @@ public class FlowService {
             if(!ScanUtils.empty(project)){
                 projectName = project;
             }
-            else if(cxProperties.isMultiTenant()){
-                projectName = repoName.concat("-").concat(branch);
+            else if(cxProperties.isMultiTenant() && !ScanUtils.empty(repoName)){
+                projectName = repoName;
+                if(!ScanUtils.empty(branch)){
+                    projectName = projectName.concat("-").concat(branch);
+                }
             }
             else{
-                projectName = namespace.concat("-").concat(repoName).concat("-").concat(branch);
+                if(!ScanUtils.empty(namespace) && !ScanUtils.empty(repoName) && !ScanUtils.empty(branch)) {
+                    projectName = namespace.concat("-").concat(repoName).concat("-").concat(branch);
+                }
+                else if(!ScanUtils.empty(request.getApplication())) {
+                    projectName = request.getApplication();
+                }
+                else{
+                    log.error("Namespace (--namespace)/RepoName(--repo-name)/Branch(--branch) OR Application (--app) must be provided if the Project is not provided (--cx-project)");
+                    throw new MachinaException("Namespace (--namespace)/RepoName(--repo-name)/Branch(--branch) OR Application (--app) must be provided if the Project is not provided (--cx-project)") ;
+                }
             }
 
-            //only allow specific chars in project name
+            //only allow specific chars in project name in checkmarx
             projectName = projectName.replaceAll("[^a-zA-Z0-9-_.]+","-");
             projectId = cxService.getProjectId(ownerId, projectName);
             if (projectId.equals(UNKNOWN_INT)) {

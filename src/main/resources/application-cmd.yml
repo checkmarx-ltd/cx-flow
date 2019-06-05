@@ -4,13 +4,14 @@ logging:
 cx-flow:
   # Agreed upon shared API token
   token: xxxx
-  bug-tracker: Json
+  bug-tracker: Azure
   bug-tracker-impl:
     - CxXml
     - Json
     - GitLab
     - GitHub
     - Csv
+    - Azure
   filter-severity:
     - High
   filter-category:
@@ -31,7 +32,7 @@ checkmarx:
   sdk-url: ${checkmarx.base-url}/cxwebinterface/SDK/CxSDKWebService.asmx
   portal-wsdl: ${checkmarx.base-url}/Portal/CxWebService.asmx?wsdl
   sdk-wsdl: ${checkmarx.base-url}/SDK/CxSDKWebService.asmx?wsdl
-  preserve-xml: true
+  preserve-xml: false
   jira-project-field:
   jira-custom-field:
   jira-issuetype-field:
@@ -119,13 +120,16 @@ gitlab:
   block-merge: true
 
 azure:
-  webhook-token: xxxx
-  token: 6ytqw4fwawzw7lgkuoy2ynq33hrrmihemu7sz77mzk6rpc5ofx2a
-  url: https://dev.azure.com
-  api-url: https://dev.azure.com
+  webhook-token: cxflow:1234
+  token: xxxx
+  url: https://dev.azure.com/XXXXXX
+  issue-type: issue
   api-version: 5.0
   false-positive-label: false-positive
   block-merge: true
+  open-status: Active
+  closed-status: Closed
+
 
 json:
   file-name-format: "[TEAM]-[PROJECT].json"

@@ -24,6 +24,7 @@ public class ADOIssueTracker implements IssueTracker {
     private static final String STATE_FIELD = "System.State";
     private static final String TITLE_FIELD = "System.Title";
     private static final String TAGS_FIELD = "System.Tags";
+    private static final String PROPOSED_STATE="Proposed";
     private static final String ISSUE_BODY = "<b>%s</b> issue exists @ <b>%s</b> in branch <b>%s</b>";
     public static final String CRLF = "<div><br></div>";
     private static final String ISSUES_PER_PAGE = "100";
@@ -53,6 +54,27 @@ public class ADOIssueTracker implements IssueTracker {
     @Override
     public void init(ScanRequest request, ScanResults results) throws MachinaException {
         log.info("Initializing Azure processing");
+        String issueType = request.getAdditionalMetadata(Constants.ADO_ISSUE_KEY);
+        String issueBody = request.getAdditionalMetadata(Constants.ADO_ISSUE_BODY_KEY);
+        String openedState = request.getAdditionalMetadata(Constants.ADO_OPENED_STATE_KEY);
+        String closedState = request.getAdditionalMetadata(Constants.ADO_CLOSED_STATE_KEY);
+
+        if(ScanUtils.empty(issueType)){
+            issueType = properties.getIssueType();
+            request.putAdditionalMetadata(Constants.ADO_ISSUE_KEY, issueType);
+        }
+        if(ScanUtils.empty(issueBody)){
+            issueBody = properties.getIssueBody();
+            request.putAdditionalMetadata(Constants.ADO_ISSUE_BODY_KEY, issueBody);
+        }
+        if(ScanUtils.empty(openedState)){
+            openedState = properties.getOpenStatus();
+            request.putAdditionalMetadata(Constants.ADO_OPENED_STATE_KEY, openedState);
+        }
+        if(ScanUtils.empty(closedState)){
+            closedState = properties.getClosedStatus();
+            request.putAdditionalMetadata(Constants.ADO_CLOSED_STATE_KEY, closedState);
+        }
         if(ScanUtils.empty(request.getNamespace()) ||
                 ScanUtils.empty(request.getRepoName()) ||
                 ScanUtils.empty(request.getBranch())){
@@ -64,6 +86,9 @@ public class ADOIssueTracker implements IssueTracker {
                 throw new MachinaException("Azure API Url must be provided in property config");
             }
             else{
+                if(!properties.getUrl().endsWith("/")){
+                    properties.setUrl(properties.getUrl().concat("/"));
+                }
                 request.putAdditionalMetadata(Constants.ADO_BASE_URL_KEY, properties.getUrl());
             }
         }
@@ -81,7 +106,7 @@ public class ADOIssueTracker implements IssueTracker {
         String baseUrl = request.getAdditionalMetadata(Constants.ADO_BASE_URL_KEY);
         List<Issue> issues = new ArrayList<>();
         String endpoint = String.format(WORKITEMS, baseUrl, properties.getApiVersion());
-
+        String issueBody = request.getAdditionalMetadata(Constants.ADO_ISSUE_BODY_KEY);
         String wiq;
         /*Namespace/Repo/Branch provided*/
         if(!flowProperties.isTrackApplicationOnly() &&
@@ -126,7 +151,7 @@ public class ADOIssueTracker implements IssueTracker {
         for (int i = 0; i < workItems.length(); i++) {
             JSONObject workItem = workItems.getJSONObject(i);
             String workItemUri = workItem.getString("url");
-            Issue wi = getIssue(workItemUri);
+            Issue wi = getIssue(workItemUri, issueBody);
             if(wi != null){
                 issues.add(wi);
             }
@@ -134,7 +159,7 @@ public class ADOIssueTracker implements IssueTracker {
         return issues;
     }
 
-    private Issue getIssue(String uri){
+    private Issue getIssue(String uri, String issueBody){
         HttpEntity httpEntity = new HttpEntity<>(createAuthHeaders());
         log.debug("Getting issue at uri {}", uri);
         ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, httpEntity, String.class);
@@ -142,11 +167,12 @@ public class ADOIssueTracker implements IssueTracker {
         if( r == null){
             return null;
         }
+
         JSONObject o = new JSONObject(r);
         JSONObject fields = o.getJSONObject("fields");
 
         Issue i = new Issue();
-        i.setBody(fields.getString(FIELD_PREFIX.concat(properties.getIssueBody())));
+        i.setBody(fields.getString(FIELD_PREFIX.concat(issueBody)));
         i.setTitle(fields.getString(TITLE_FIELD));
         i.setId(String.valueOf(o.getInt("id")));
         String[] tags = fields.getString(TAGS_FIELD).split(";");
@@ -160,8 +186,10 @@ public class ADOIssueTracker implements IssueTracker {
     public Issue createIssue(ScanResults.XIssue resultIssue, ScanRequest request) throws MachinaException {
         log.debug("Executing createIssue Azure API call");
         String baseUrl = request.getAdditionalMetadata(Constants.ADO_BASE_URL_KEY);
+        String issueType = request.getAdditionalMetadata(Constants.ADO_ISSUE_KEY);
+        String issueBody = request.getAdditionalMetadata(Constants.ADO_ISSUE_BODY_KEY);
         String endpoint = String.format(CREATEWORKITEMS, baseUrl,
-                properties.getIssueType(),
+                issueType,
                 properties.getApiVersion());
         /*Namespace/Repo/Branch provided*/
         StringBuilder tags = new StringBuilder();
@@ -185,7 +213,7 @@ public class ADOIssueTracker implements IssueTracker {
 
         CreateWorkItemAttr description = new CreateWorkItemAttr();
         description.setOp("add");
-        description.setPath(Constants.ADO_FIELD.concat(FIELD_PREFIX.concat(properties.getIssueBody())));
+        description.setPath(Constants.ADO_FIELD.concat(FIELD_PREFIX.concat(issueBody)));
         description.setValue(getMDBody(resultIssue, request.getBranch()));
 
         CreateWorkItemAttr tagsBlock = new CreateWorkItemAttr();
@@ -200,8 +228,8 @@ public class ADOIssueTracker implements IssueTracker {
         ResponseEntity<String> response = restTemplate.exchange(endpoint,
                 HttpMethod.POST, httpEntity, String.class, request.getNamespace());
         try {
-            String url = new JSONObject(response.getBody()).getJSONObject("_links").getString("href");
-            return getIssue(url);
+            String url = new JSONObject(response.getBody()).getJSONObject("_links").getJSONObject("self").getString("href");
+            return getIssue(url, issueBody);
         }catch (NullPointerException e){
             log.warn("Error occurred while retrieving new WorkItem url.  Returning null");
             return null;
@@ -211,12 +239,13 @@ public class ADOIssueTracker implements IssueTracker {
     @Override
     public void closeIssue(Issue issue, ScanRequest request) {
         log.debug("Executing closeIssue Azure API call");
-        String endpoint = issue.getUrl().concat("?").concat(properties.getApiVersion());
+        String endpoint = issue.getUrl().concat("?api-version=").concat(properties.getApiVersion());
+        String adoClosedState = request.getAdditionalMetadata(Constants.ADO_CLOSED_STATE_KEY);
 
         CreateWorkItemAttr state = new CreateWorkItemAttr();
         state.setOp("add");
         state.setPath(Constants.ADO_FIELD.concat(STATE_FIELD));
-        state.setValue(properties.getClosedStatus());
+        state.setValue(adoClosedState);
 
         List<CreateWorkItemAttr> body = new ArrayList<>(Collections.singletonList(state));
 
@@ -229,15 +258,17 @@ public class ADOIssueTracker implements IssueTracker {
     public Issue updateIssue(Issue issue, ScanResults.XIssue resultIssue, ScanRequest request)  {
         log.debug("Executing update Azure API call");
         String endpoint = issue.getUrl().concat("?api-version=").concat(properties.getApiVersion());
+        String issueBody = request.getAdditionalMetadata(Constants.ADO_ISSUE_BODY_KEY);
+        String adoOpenedState = request.getAdditionalMetadata(Constants.ADO_OPENED_STATE_KEY);
 
         CreateWorkItemAttr state = new CreateWorkItemAttr();
         state.setOp("add");
         state.setPath(Constants.ADO_FIELD.concat(STATE_FIELD));
-        state.setValue(properties.getOpenStatus());
+        state.setValue(adoOpenedState);
 
         CreateWorkItemAttr description = new CreateWorkItemAttr();
         description.setOp("add");
-        description.setPath(Constants.ADO_FIELD.concat(FIELD_PREFIX.concat(properties.getIssueBody())));
+        description.setPath(Constants.ADO_FIELD.concat(FIELD_PREFIX.concat(issueBody)));
         description.setValue(getMDBody(resultIssue, request.getBranch()));
 
         List<CreateWorkItemAttr> body = new ArrayList<>(Arrays.asList(state, description));
@@ -245,7 +276,7 @@ public class ADOIssueTracker implements IssueTracker {
         HttpEntity<List<CreateWorkItemAttr>> httpEntity = new HttpEntity<>(body, createPatchAuthHeaders());
 
         restTemplate.exchange(endpoint, HttpMethod.PATCH, httpEntity, String.class);
-        return getIssue(issue.getUrl());
+        return getIssue(issue.getUrl(), issueBody);
     }
 
     @Override
@@ -269,19 +300,22 @@ public class ADOIssueTracker implements IssueTracker {
     }
 
     @Override
-    public boolean isIssueClosed(Issue issue) {
+    public boolean isIssueClosed(Issue issue, ScanRequest request) {
+        String adoClosedState = request.getAdditionalMetadata(Constants.ADO_CLOSED_STATE_KEY);
         if(issue.getState() == null){
             return false;
         }
-        return issue.getState().equals(properties.getClosedStatus());
+        return issue.getState().equals(adoClosedState);
     }
 
     @Override
-    public boolean isIssueOpened(Issue issue) {
-        if(issue.getState() == null){
+    public boolean isIssueOpened(Issue issue, ScanRequest request) {
+        String adoOpenedState = request.getAdditionalMetadata(Constants.ADO_OPENED_STATE_KEY);
+        String state = issue.getState();
+        if(state == null){
             return true;
         }
-        return issue.getState().equals(properties.getOpenStatus());
+        return (state.equals(adoOpenedState) || state.equals(PROPOSED_STATE));
     }
 
     @Override
@@ -297,7 +331,7 @@ public class ADOIssueTracker implements IssueTracker {
             body.append("<div><i>").append(issue.getDescription().trim()).append("</i></div>");
         }
         body.append(CRLF);
-        
+
         if(!ScanUtils.empty(issue.getSeverity())) {
             body.append("<div><b>Severity:</b> ").append(issue.getSeverity()).append("</div>");
         }

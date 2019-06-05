@@ -69,7 +69,7 @@ checkmarx:
   portal-wsdl: ${checkmarx.base-url}/Portal/CxWebService.asmx?wsdl
   sdk-wsdl: ${checkmarx.base-url}/SDK/CxSDKWebService.asmx?wsdl
   portal-package: checkmarx.wsdl.portal
-  preserve-xml: true
+  preserve-xml: false
   jira-project-field:
   jira-custom-field:
   jira-issuetype-field:
@@ -150,7 +150,7 @@ gitlab:
 azure:
   webhook-token: cxflow:1234
   token: xxxx
-  url: https://dev.azure.com
+  url: https://dev.azure.com/XXXXXX
   issue-type: issue
   api-version: 5.0
   false-positive-label: false-positive
