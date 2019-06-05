@@ -349,6 +349,7 @@ When result is provided it must be one of the following:
   * multi-select (csv format is used and broken into multiple select values)
   * single-select
   * security (used for issue security levels)
+  * component (used for build in Jira Component/s field)
   * jira-default-value	Static value if no value can be determined for field (Optional)
 * *skip-update*: The value is only provided during the initial creation of the ticket and not updated during subsequent iterations
 * *offset*: Used with system-date, the value of offset is added to the system date

@@ -1090,7 +1090,7 @@ public class CxService {
             log.info("Updating Project folder and file exclusion details for project Id {}", projectId);
             restTemplate.exchange(cxProperties.getUrl().concat(PROJECT_EXCLUDE), HttpMethod.PUT, requestEntity, String.class, projectId);
         } catch (HttpStatusCodeException e) {
-            log.error("Error occurred while updating Project source info for project {}.");
+            log.error("Error occurred while updating Project source info for project {}.", projectId);
             log.error(ExceptionUtils.getStackTrace(e));
         }
     }

@@ -13,8 +13,7 @@ public class ADOProperties {
     private String webhookToken;
     private String token;
     private String url;
-    private String apiUrl;
-    private String issueType = "Issue";
+    private String issueType = "issue";
     private String issueBody = "Description";
     private String appTagPrefix = "app";
     private String ownerTagPrefix = "owner";
@@ -40,10 +39,6 @@ public class ADOProperties {
         return this.url;
     }
 
-    public String getApiUrl() {
-        return this.apiUrl;
-    }
-
     public String getFalsePositiveLabel() {
         return this.falsePositiveLabel;
     }
@@ -58,10 +53,6 @@ public class ADOProperties {
 
     public void setUrl(String url) {
         this.url = url;
-    }
-
-    public void setApiUrl(String apiUrl) {
-        this.apiUrl = apiUrl;
     }
 
     public String getApiVersion() {

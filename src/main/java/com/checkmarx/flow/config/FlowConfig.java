@@ -1,9 +1,11 @@
 package com.checkmarx.flow.config;
 
 import com.checkmarx.flow.utils.ScanUtils;
+import org.apache.http.impl.client.HttpClients;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.mail.SimpleMailMessage;
@@ -18,6 +20,8 @@ import java.util.Properties;
 @Configuration
 public class FlowConfig {
 
+    public static final int HTTP_CONNECTION_TIMEOUT = 30000;
+    public static final int HTTP_READ_TIMEOUT = 30000;
     private final FlowProperties properties;
     public static final int QUEUE_CAPACITY = 10000;
 
@@ -31,11 +35,13 @@ public class FlowConfig {
     public RestTemplate getRestTemplate(){
         RestTemplate restTemplate = new RestTemplate();
 
-        HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
-        //requestFactory.setConnectTimeout(TIMEOUT);
-        //requestFactory.setReadTimeout(TIMEOUT);
-
+        HttpComponentsClientHttpRequestFactory requestFactory = new
+                HttpComponentsClientHttpRequestFactory(HttpClients.createDefault());
+        requestFactory.setConnectTimeout(HTTP_CONNECTION_TIMEOUT);
+        requestFactory.setReadTimeout(HTTP_READ_TIMEOUT);
         restTemplate.setRequestFactory(requestFactory);
+
+
         restTemplate.getMessageConverters()
                 .add(0, new StringHttpMessageConverter(Charset.forName("UTF-8")));
         return restTemplate;

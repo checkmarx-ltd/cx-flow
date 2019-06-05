@@ -142,7 +142,7 @@ public class IssueService implements ApplicationContextAware {
                 String key = issueMap.getKey();
                 Issue issue = issueMap.getValue();
                 try {
-                    if (!xMap.containsKey(key) && tracker.isIssueOpened(issue)) {
+                    if (!xMap.containsKey(key) && tracker.isIssueOpened(issue, request)) {
                         /*Close the issue*/
                         tracker.closeIssue(issue, request);
                         closedIssues.add(issue.getId());
