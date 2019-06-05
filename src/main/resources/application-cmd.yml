@@ -3,7 +3,7 @@ logging:
 
 cx-flow:
   # Agreed upon shared API token
-  token: 1F4QipGtiR2Ub68ABEYx
+  token: xxxx
   bug-tracker: Json
   bug-tracker-impl:
     - CxXml
@@ -128,24 +128,24 @@ azure:
   block-merge: true
 
 json:
-  file-name-format: "[PROJECT]-[TIME].json"
-  data-folder: "C:\\tmp"
+  file-name-format: "[TEAM]-[PROJECT].json"
+  data-folder: "D:\\tmp"
 
 cx-xml:
-  file-name-format: "[TEAM]-[PROJECT]-[TIME].xml"
-  data-folder: "C:\\tmp"
+  file-name-format: "[TEAM]-[PROJECT].xml"
+  data-folder: "D:\\tmp"
 
 csv:
-  file-name-format: "[TEAM]-[PROJECT]-[TIME].csv"
-  data-folder: "C:\\tmp"
+  file-name-format: "[TEAM]-[PROJECT].csv"
+  data-folder: "D:\\tmp"
   include-header: true
   fields:
-    - header: Application
+    - header: Customer field (Application)
       name: application
       default-value: unknown
-    #- header: Primary URL
-      #name: static
-      #default-value: ${tmp.url}
+    - header: Primary URL
+      name: static
+      default-value: ${tmp.url}
     - header: severity
       name: severity
     - header: Vulnerability ID
@@ -161,9 +161,11 @@ csv:
       name: cwe
     - header: Description
       name: summary
-      #prefix: "*"
-      #postfix: "*"
+      prefix: "*"
+      postfix: "*"
     - header: Severity
       name: severity
     - header: recommendation
       name: recommendation
+    - header: Similarity ID
+      name: similarity-id
