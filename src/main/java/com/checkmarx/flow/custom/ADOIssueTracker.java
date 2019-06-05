@@ -292,49 +292,51 @@ public class ADOIssueTracker implements IssueTracker {
     private String getMDBody(ScanResults.XIssue issue, String branch) {
         StringBuilder body = new StringBuilder();
         body.append("<div>");
-        body.append(String.format(ISSUE_BODY, issue.getVulnerability(), issue.getFilename(), branch)).append(CRLF).append(CRLF);
+        body.append(String.format(ISSUE_BODY, issue.getVulnerability(), issue.getFilename(), branch)).append(CRLF);
         if(!ScanUtils.empty(issue.getDescription())) {
-            body.append("<b>").append(issue.getDescription().trim()).append("</b>").append(CRLF).append(CRLF);
+            body.append("<div><i>").append(issue.getDescription().trim()).append("</i></div>");
         }
+        body.append(CRLF);
+        
         if(!ScanUtils.empty(issue.getSeverity())) {
-            body.append("Severity: ").append(issue.getSeverity()).append(CRLF);
+            body.append("<div><b>Severity:</b> ").append(issue.getSeverity()).append("</div>");
         }
         if(!ScanUtils.empty(issue.getCwe())) {
-            body.append("CWE:").append(issue.getCwe()).append(CRLF);
+            body.append("<div><b>CWE:</b>").append(issue.getCwe()).append("</div>");
             if(!ScanUtils.empty(flowProperties.getMitreUrl())) {
-                body.append("<a href=\'").append(
+                body.append("<div><a href=\'").append(
                         String.format(
                                 flowProperties.getMitreUrl(),
                                 issue.getCwe()
                         )
-                ).append("\'>Vulnerability details and guidance</a>").append(CRLF);
+                ).append("\'>Vulnerability details and guidance</a></div>");
             }
         }
         if(!ScanUtils.empty(flowProperties.getWikiUrl())) {
-            body.append("<a href=\'").append(flowProperties.getWikiUrl()).append("\'>Mitre</a>").append(CRLF);
+            body.append("<div><a href=\'").append(flowProperties.getWikiUrl()).append("\'>Internal Guidance</a></div>");
         }
         if(!ScanUtils.empty(issue.getLink())){
-            body.append("<a href=\'").append(issue.getLink()).append("\'>Checkmarx</a>").append(CRLF);
+            body.append("<div><a href=\'").append(issue.getLink()).append("\'>Checkmarx</a></div>");
         }
         if(issue.getDetails() != null && !issue.getDetails().isEmpty()) {
-            body.append("Lines: ");
+            body.append("<div><b>Lines: </b>");
             for (Map.Entry<Integer, String> entry : issue.getDetails().entrySet()) {
                 if (entry.getKey() != null) {  //[<line>](<url>)
                         body.append(entry.getKey()).append(" ");
                 }
             }
-            body.append(CRLF).append(CRLF);
+            body.append("</div>");
 
             for (Map.Entry<Integer, String> entry : issue.getDetails().entrySet()) {
                 if (entry.getKey() != null && entry.getValue() != null) {
                     body.append("<hr/>");
-                    body.append("<b>Line #").append(entry.getKey()).append("<b>").append(CRLF);
+                    body.append("<b>Line #").append(entry.getKey()).append("</b>");
                     body.append("<pre><code><div>");
                     body.append(entry.getValue());
-                    body.append("</div></code></pre><div>").append(CRLF);
+                    body.append("</div></code></pre><div>");
                 }
             }
-            body.append("---").append(CRLF);
+            body.append("<hr/>");
         }
         if(issue.getOsaDetails()!=null){
             for(ScanResults.OsaDetails o: issue.getOsaDetails()){
