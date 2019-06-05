@@ -332,6 +332,10 @@ public class CxFlowRunner implements ApplicationRunner {
     }
 
     private void cxScan(ScanRequest request, String path){
+        if(ScanUtils.empty(request.getProject())){
+            log.error("Please provide --cx-project to define the project in Checkmarx");
+            exit(2);
+        }
         flowService.cxFullScan(request, path);
     }
     private void cxOsaParse(ScanRequest request, File file, File libs){
