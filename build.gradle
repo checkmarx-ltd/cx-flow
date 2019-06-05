@@ -7,41 +7,48 @@ buildscript {
         mainClass='com.checkmarx.flow.CxFlowApplication'
     }
 	repositories {
+        jcenter()
 		mavenCentral()
         maven {
             url = 'https://packages.atlassian.com/mvn/maven-external'
         }
+        gradlePluginPortal()
 	}
 	dependencies {
+        classpath ("gradle.plugin.com.gorylenko.gradle-git-properties:gradle-git-properties:2.0.0")
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
         classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:${sonarqubeVersion}"
     }
-/*    gradle.projectsEvaluated {
+   /*gradle.projectsEvaluated {
         tasks.withType(JavaCompile) {
             options.compilerArgs << "-Xlint:unchecked"
         }
     }
- */
+    */
 }
 
 apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
+apply plugin: 'com.gorylenko.gradle-git-properties'
 
 group = 'com.checkmarx'
 version = '1.3'
 sourceCompatibility = 1.8
 
 repositories {
-	mavenCentral()
+    jcenter()
+    mavenCentral()
     maven {
         url = 'https://packages.atlassian.com/mvn/maven-external'
     }
+    gradlePluginPortal()
+
 }
 
 dependencies {
-	compile('org.springframework.boot:spring-boot-starter-actuator')
+    compile('org.springframework.boot:spring-boot-starter-actuator')
 	compile('org.springframework.boot:spring-boot-starter-web')
     compile ('commons-codec:commons-codec:1.11')
     compile ('commons-io:commons-io:2.6')
