@@ -16,6 +16,6 @@ public interface IssueTracker {
     Issue updateIssue(Issue issue, ScanResults.XIssue resultIssue, ScanRequest request) throws MachinaException;
     String getIssueKey(Issue issue, ScanRequest request);
     String getXIssueKey(ScanResults.XIssue issue, ScanRequest request);
-    boolean isIssueClosed(Issue issue);
-    boolean isIssueOpened(Issue issue);
+    boolean isIssueClosed(Issue issue, ScanRequest request);
+    boolean isIssueOpened(Issue issue, ScanRequest request);
 }

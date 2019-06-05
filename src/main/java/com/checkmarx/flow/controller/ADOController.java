@@ -5,6 +5,7 @@ import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.azure.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.service.FlowService;
+import com.checkmarx.flow.utils.Constants;
 import com.checkmarx.flow.utils.ScanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -64,6 +65,10 @@ public class ADOController {
             @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders,
             @RequestParam(value = "override", required = false) String override,
             @RequestParam(value = "bug", required = false) String bug,
+            @RequestParam(value = "ado-issue", required = false) String adoIssueType,
+            @RequestParam(value = "ado-body", required = false) String adoIssueBody,
+            @RequestParam(value = "ado-opened", required = false) String adoOpenedState,
+            @RequestParam(value = "ado-closed", required = false) String adoClosedState,
             @RequestParam(value = "app-only", required = false) Boolean appOnlyTracking
     ){
         log.info("Processing Azure PULL request");
@@ -96,6 +101,19 @@ public class ADOController {
 
             if(appOnlyTracking != null){
                 flowProperties.setTrackApplicationOnly(appOnlyTracking);
+            }
+
+            if(ScanUtils.empty(adoIssueType)){
+                adoIssueType = properties.getIssueType();
+            }
+            if(ScanUtils.empty(adoIssueBody)){
+                adoIssueBody = properties.getIssueBody();
+            }
+            if(ScanUtils.empty(adoOpenedState)){
+                adoOpenedState = properties.getOpenStatus();
+            }
+            if(ScanUtils.empty(adoClosedState)){
+                adoClosedState = properties.getClosedStatus();
             }
 
             if(ScanUtils.empty(product)){
@@ -169,6 +187,12 @@ public class ADOController {
 
             request = ScanUtils.overrideMap(request, o);
             request.putAdditionalMetadata("statuses_url", pullUrl.concat("/statuses"));
+            String baseUrl = body.getResourceContainers().getAccount().getBaseUrl();
+            request.putAdditionalMetadata(Constants.ADO_BASE_URL_KEY,baseUrl);
+            request.putAdditionalMetadata(Constants.ADO_ISSUE_KEY, adoIssueType);
+            request.putAdditionalMetadata(Constants.ADO_ISSUE_BODY_KEY, adoIssueBody);
+            request.putAdditionalMetadata(Constants.ADO_OPENED_STATE_KEY, adoOpenedState);
+            request.putAdditionalMetadata(Constants.ADO_CLOSED_STATE_KEY, adoClosedState);
             //only initiate scan/automation if target branch is applicable
             if(branches.isEmpty() || branches.contains(targetBranch)) {
                 flowService.initiateAutomation(request);
@@ -214,12 +238,15 @@ public class ADOController {
             @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders,
             @RequestParam(value = "override", required = false) String override,
             @RequestParam(value = "bug", required = false) String bug,
+            @RequestParam(value = "ado-issue", required = false) String adoIssueType,
+            @RequestParam(value = "ado-body", required = false) String adoIssueBody,
+            @RequestParam(value = "ado-opened", required = false) String adoOpenedState,
+            @RequestParam(value = "ado-closed", required = false) String adoClosedState,
             @RequestParam(value = "app-only", required = false) Boolean appOnlyTracking
     ){
+        //TODO handle different state (Active/Closed
         log.info("Processing Azure Push request");
         validateBasicAuth(auth);
-
-
 
         MachinaOverride o = ScanUtils.getMachinaOverride(override);
 
@@ -238,6 +265,19 @@ public class ADOController {
                 bug =  flowProperties.getBugTracker();
             }
             bugType = ScanUtils.getBugTypeEnum(bug, flowProperties.getBugTrackerImpl());
+
+            if(ScanUtils.empty(adoIssueType)){
+                adoIssueType = properties.getIssueType();
+            }
+            if(ScanUtils.empty(adoIssueBody)){
+                adoIssueBody = properties.getIssueBody();
+            }
+            if(ScanUtils.empty(adoOpenedState)){
+                adoOpenedState = properties.getOpenStatus();
+            }
+            if(ScanUtils.empty(adoClosedState)){
+                adoClosedState = properties.getClosedStatus();
+            }
 
             if(appOnlyTracking != null){
                 flowProperties.setTrackApplicationOnly(appOnlyTracking);
@@ -316,7 +356,12 @@ public class ADOController {
                     .bugTracker(bt)
                     .filters(filters)
                     .build();
-
+            String baseUrl = body.getResourceContainers().getAccount().getBaseUrl();
+            request.putAdditionalMetadata(Constants.ADO_BASE_URL_KEY,baseUrl);
+            request.putAdditionalMetadata(Constants.ADO_ISSUE_KEY, adoIssueType);
+            request.putAdditionalMetadata(Constants.ADO_ISSUE_BODY_KEY, adoIssueBody);
+            request.putAdditionalMetadata(Constants.ADO_OPENED_STATE_KEY, adoOpenedState);
+            request.putAdditionalMetadata(Constants.ADO_CLOSED_STATE_KEY, adoClosedState);
             //if an override blob/file is provided, substitute these values
             request = ScanUtils.overrideMap(request, o);
 
