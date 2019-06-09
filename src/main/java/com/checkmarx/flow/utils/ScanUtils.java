@@ -6,12 +6,16 @@ import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.EnumUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.HttpClientErrorException;
 import javax.validation.constraints.NotNull;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
@@ -578,9 +582,24 @@ public class ScanUtils {
     }
 
     public static String cleanStringUTF8(String dirty){
+        log.debug(""+dirty.length());
         return new String(dirty.getBytes(), 0, dirty.length(), UTF_8);
     }
 
+    public static String cleanStringUTF8_2(String dirty){
+        return new String(dirty.getBytes(), UTF_8);
+    }
+
+    public static void writeByte(String filename, byte[] bytes) {
+        try {
+            OutputStream os = new FileOutputStream(new File(filename));
+            os.write(bytes);
+            os.close();
+        }
+        catch (IOException e) {
+            log.error("Error while writing file {} - {}", filename, ExceptionUtils.getMessage(e));
+        }
+    }
     /**
      * Returns the protocol, host and port from given url.
      *
@@ -597,6 +616,13 @@ public class ScanUtils {
             log.debug("Could not parse given URL" + url, e);
         }
         return hostWithProtocol;
+    }
+
+    public static String getBranchFromRef(String ref){
+        // refs/head/master (get 2nd position of /
+        int index = StringUtils.ordinalIndexOf(ref, "/", 2);
+        if(index < 0) return ref;
+        return ref.substring(index+1);
     }
 
 }
