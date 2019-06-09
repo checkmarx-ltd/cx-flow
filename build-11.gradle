@@ -38,6 +38,7 @@ repositories {
 dependencies {
 	compile('org.springframework.boot:spring-boot-starter-actuator')
 	compile('org.springframework.boot:spring-boot-starter-web')
+    compile('org.springframework.boot:spring-boot-starter-aop')
     compile ('commons-codec:commons-codec:1.11')
     compile ('commons-io:commons-io:2.6')
     compile ('org.json:json:20171018')

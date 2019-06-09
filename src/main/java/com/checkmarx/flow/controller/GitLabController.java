@@ -6,9 +6,11 @@ import com.checkmarx.flow.dto.gitlab.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.service.GitLabService;
 import com.checkmarx.flow.service.FlowService;
+import com.checkmarx.flow.service.HelperService;
 import com.checkmarx.flow.utils.Constants;
 import com.checkmarx.flow.utils.ScanUtils;
 import org.slf4j.Logger;
+import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +24,6 @@ import java.util.Locale;
 @RequestMapping(value = "/")
 public class GitLabController {
 
-
     private static final String OAUTH2 = "oauth2:";
     private static final String HTTPS_OAUTH2 = Constants.HTTPS + OAUTH2;
     private static final String HTTP_OAUTH2 = Constants.HTTP + OAUTH2;
@@ -32,20 +33,23 @@ public class GitLabController {
     private static final String MERGE = EVENT + "=Merge Request Hook";
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(GitLabController.class);
     private final FlowService flowService;
+    private final HelperService helperService;
     private final GitLabProperties properties;
     private final CxProperties cxProperties;
     private final JiraProperties jiraProperties;
     private final FlowProperties flowProperties;
 
-    @ConstructorProperties({"flowService", "properties", "cxProperties", "jiraProperties", "flowProperties"})
-    public GitLabController(FlowService flowService, GitLabProperties properties, CxProperties cxProperties, JiraProperties jiraProperties, FlowProperties flowProperties) {
+    @ConstructorProperties({"flowService", "helperService", "properties",
+            "cxProperties", "jiraProperties", "flowProperties"})
+    public GitLabController(FlowService flowService, HelperService helperService, GitLabProperties properties,
+                            CxProperties cxProperties, JiraProperties jiraProperties, FlowProperties flowProperties) {
         this.flowService = flowService;
+        this.helperService = helperService;
         this.properties = properties;
         this.cxProperties = cxProperties;
         this.jiraProperties = jiraProperties;
         this.flowProperties = flowProperties;
     }
-
 
     @GetMapping(value = "/test")
     public String getTest() {
@@ -78,7 +82,8 @@ public class GitLabController {
             @RequestParam(value = "bug", required = false) String bug,
             @RequestParam(value = "app-only", required = false) Boolean appOnlyTracking
     ){
-
+        String uid = helperService.getShortUid();
+        MDC.put("cx", uid);
         log.info("Processing GitLab MERGE request");
         validateGitLabRequest(token);
         MachinaOverride o = ScanUtils.getMachinaOverride(override);
@@ -177,8 +182,8 @@ public class GitLabController {
             request = ScanUtils.overrideMap(request, o);
             request.putAdditionalMetadata("merge_id",objectAttributes.getIid().toString());
             request.putAdditionalMetadata("merge_title", objectAttributes.getTitle());
-
-            if(branches.isEmpty() || branches.contains(targetBranch)) {
+            request.setId(uid);
+            if(helperService.isBranch2Scan(request, branches)){
                 flowService.initiateAutomation(request);
             }
 
@@ -223,6 +228,8 @@ public class GitLabController {
             @RequestParam(value = "bug", required = false) String bug,
             @RequestParam(value = "app-only", required = false) Boolean appOnlyTracking
     ){
+        String uid = helperService.getShortUid();
+        MDC.put("cx", uid);
         validateGitLabRequest(token);
 
         MachinaOverride o = ScanUtils.getMachinaOverride(override);
@@ -248,7 +255,7 @@ public class GitLabController {
             }
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
             //extract branch from ref (refs/heads/master -> master)
-            String currentBranch = body.getRef().split("/")[2];
+            String currentBranch = ScanUtils.getBranchFromRef(body.getRef());
             List<String> branches = new ArrayList<>();
             List<Filter> filters;
 
@@ -323,8 +330,8 @@ public class GitLabController {
                     .build();
 
             request = ScanUtils.overrideMap(request, o);
-
-            if(branches.isEmpty() || branches.contains(currentBranch)) {
+            request.setId(uid);
+            if(helperService.isBranch2Scan(request, branches)){
                 flowService.initiateAutomation(request);
             }
 
