@@ -6,12 +6,18 @@ import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.EnumUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.HttpClientErrorException;
 import javax.validation.constraints.NotNull;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -317,7 +323,12 @@ public class ScanUtils {
             body.append("Lines: ");
             for (Map.Entry<Integer, String> entry : issue.getDetails().entrySet()) {
                 if (entry.getKey() != null) {  //[<line>](<url>)
-                    body.append("[").append(entry.getKey()).append("](").append(fileUrl).append("#L").append(entry.getKey()).append(") ");
+                    if(fileUrl != null) {
+                        body.append("[").append(entry.getKey()).append("](").append(fileUrl).append("#L").append(entry.getKey()).append(") ");
+                    }
+                    else{ //if the fileUrl is not provided, simply putting the line number (no link) - ADO for example
+                        body.append(entry.getKey()).append(" ");
+                    }
                 }
             }
             body.append(CRLF).append(CRLF);
@@ -423,6 +434,9 @@ public class ScanUtils {
             }
             else if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)) {
                 return repoUrl.concat("src/").concat(request.getBranch()).concat("/").concat(filename);
+            }
+            else if (request.getRepoType().equals(ScanRequest.Repository.ADO)) {
+                return null;
             }
             else {
                 if(!ScanUtils.empty(request.getBranch())) {
@@ -584,7 +598,47 @@ public class ScanUtils {
     }
 
     public static String cleanStringUTF8(String dirty){
+        log.debug(""+dirty.length());
         return new String(dirty.getBytes(), 0, dirty.length(), UTF_8);
+    }
+
+    public static String cleanStringUTF8_2(String dirty){
+        return new String(dirty.getBytes(), UTF_8);
+    }
+
+    public static void writeByte(String filename, byte[] bytes) {
+        try {
+            OutputStream os = new FileOutputStream(new File(filename));
+            os.write(bytes);
+            os.close();
+        }
+        catch (IOException e) {
+            log.error("Error while writing file {} - {}", filename, ExceptionUtils.getMessage(e));
+        }
+    }
+    /**
+     * Returns the protocol, host and port from given url.
+     *
+     * @param url url to process
+     * @return  host with protocol and port
+     */
+    public static String getHostWithProtocol(String url) {
+        String hostWithProtocol = null;
+        try {
+            URI uri = new URI(url);
+            int port = uri.getPort();
+            hostWithProtocol = uri.getScheme() + "//"  + uri.getHost() + (port > 0 ? ":" + port : "");
+        } catch (URISyntaxException e) {
+            log.debug("Could not parse given URL" + url, e);
+        }
+        return hostWithProtocol;
+    }
+
+    public static String getBranchFromRef(String ref){
+        // refs/head/master (get 2nd position of /
+        int index = StringUtils.ordinalIndexOf(ref, "/", 2);
+        if(index < 0) return ref;
+        return ref.substring(index+1);
     }
 
 }

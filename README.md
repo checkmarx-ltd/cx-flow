@@ -123,122 +123,188 @@ See configuration/Override details below
 ```yaml
 Configuration(s)
 server:
-  port: ${PORT:8080} #If WebHook Web Service is used, this will specify the port the Web Service listens on
+  port: ${PORT:8080}
 
 logging:
-  file: flow #specify log file location.  Log file rotates daily
+  file: cx-flow.log
+#  level:
+#    com:
+#      checkmarx:
+#        flow:
+#          service: TRACE
+#    org:
+#      apache:
+#        http:
+#          wire: TRACE
+#      springframework:
+#        web:
+#          client:
+#            RestTemplate: TRACE
 
 cx-flow:
-  bug-tracker: JIRA #specify default bug tracker - GITHUB, GITHUB, JIRA
-  filter-severity: #specify which issues are to be tracked with bug tracking based on severity from checkmarx (High, Medium, Low)
-    - Critical
+  bug-tracker: JIRA
+  bug-tracker-impl:
+    - CxXml
+    - Json
+    - GitLab
+    - GitHub
+    - Csv
+  branches:
+    - develop
+    - master
+    - security
+  filter-severity:
     - High
-  filter-category: #specify the categories within Checkmarx results to track via bug tracker (SQL_Injection, XSS_Reflected, etc)
-  filter-cwe: #specify the cwe within Checkmarx results to track via bug tracker (79, 89, etc)
-  filter-status: #specify the Issue status in Checkmarx results to track via bug tracker (New, Confirmed, etc)
-  mitre-url: https://cwe.mitre.org/data/definitions/%s.html #used within recommendation link (cwe based)
-  wiki-url: https://checkmarx.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance #Custom organization specific wiki/guidance link
+  mitre-url: https://cwe.mitre.org/data/definitions/%s.html
+  wiki-url: https://checkmarx.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
   codebash-url: https://cxa.codebashing.com/courses/
-  mail: #specify if email is enabled (default turned off for command line mode)
-    enabled: false
 
 checkmarx:
-  username: xxxx
-  password: xxxx
-  client-secret: xxxx #OIDC API Client Secret
-  base-url: http://checkmarx.local #Base URL for checkmarx
+  username: xxx
+  password: xxx
+  client-secret: 014DF517-39D1-4453-B7B3-9930C563627C
+  base-url: http://localhost:8100
   url: ${checkmarx.base-url}/cxrestapi
+  multi-tenant: true
+  incremental: true
+  scan-preset: Checkmarx Default
+  configuration: Default Configuration
+  team: \CxServer\SP\Checkmarx
+  scan-timeout: 120
+#WSDL Config
   portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
   sdk-url: ${checkmarx.base-url}/cxwebinterface/SDK/CxSDKWebService.asmx
   portal-wsdl: ${checkmarx.base-url}/Portal/CxWebService.asmx?wsdl
   sdk-wsdl: ${checkmarx.base-url}/SDK/CxSDKWebService.asmx?wsdl
+  portal-package: checkmarx.wsdl.portal
+  preserve-xml: true
+  jira-project-field:
+  jira-custom-field:
+  jira-issuetype-field:
+  jira-assignee-field:
+
+jira:
+  url: http://localhost:8180
+  username: xxxx
+  token: xxxx
+  project: APPSEC
+  issue-type: Bug
+  priorities:
+    High: High
+    Medium: Medium
+    Low: Low
+    Informational: Lowest
+  open-transition: In Progress
+  close-transition: Done
+  open-status:
+    - To Do
+    - In Progress
+  closed-status:
+    - Done
+  fields:
+    - type: result
+      name: system-date
+      skip-update: true
+      offset: 60
+      jira-field-name: Due Date #Due date (cloud)
+      jira-field-type: text
+    - type: result
+      name: application
+      jira-field-name: Application
+      jira-field-type: label
+    - type: result
+      name: category
+      jira-field-name: Category
+      jira-field-type: label
+    - type: result
+      name: cwe
+      jira-field-name: CWEs
+      jira-field-type: label
+    - type: result
+      name: severity
+      jira-field-name: Severity
+      jira-field-type: single-select
+    - type: result
+      name: loc
+      jira-field-name: Line Numbers
+      jira-field-type: label
+    - type: static
+      name: identified-by
+      jira-field-name: Identified By
+      jira-field-type: single-select
+      jira-default-value: Automation
+    - type: static
+      name: dependencies
+      jira-field-name: Dependencies
+      jira-field-type: multi-select
+      jira-default-value: Java, AngularJS
 
 github:
-  token: xxxx #API token for GitHub integration - must have access to read repositories and create issues
-  webhook-token: xxxx #Used as WebHook Shared secret in Web Service
+  webhook-token: 1234
+  token: xxx
   url: https://github.com
   api-url: https://api.github.com/repos/
   false-positive-label: false-positive
+  block-merge: true
 
 gitlab:
-  token: #API token for GitLab integration - must have access to read repositories and create issues
-  webhook-token: xxxx #Used as WebHook Shared secret in Web Service
+  webhook-token: 1234
+  token: xxx
   url: https://gitlab.com
   api-url: https://gitlab.com/api/v4/
   false-positive-label: false-positive
+  block-merge: true
 
-bitbucket:
-  webhook-token: XXXX
-  token: xxx
-  url: http://452ad9ac.ngrok.io
-  api-path: /rest/api/1.0
+azure:
+  webhook-token: cxflow:1234
+  token: xxxx
+  url: https://dev.azure.com
+  api-url: https://dev.azure.com
+  issue-type: issue
+  api-version: 5.0
   false-positive-label: false-positive
+  block-merge: true
 
-jira:
- url: https://xxxx.atlassian.net #Base URL for JIRA
- username: xxxx #JIRA username
- token: xxxx #JIRA api token or password
- project: APPSEC #Default/Global Project
- issue-type: Application Security Bug #Default/Global IssueType
- priorities: #JIRA priorities
- Critical: Highest
-High: High
-Medium: Medium
-Low: Low
-informational: Lowest
-open-transition: Reopen Issue #Transition to re-open an issue
- close-transition: Close Issue #Transition to close an issue
- close-transition-field: resolution
-close-transition-value: Done
-open-status: #Statuses that represent an open issue
- - Open
-- In Progress
-- Reopened
-closed-status: #Statuses that represent a closed issue
- - Closed
-- Resolved
-fields: #Custom Field Mappings
- - type: result
-name: application
-jira-field-name: Application
-jira-field-type: label
-- type: result
-name: repo-url
-jira-field-name: Source Code Repository
-jira-field-type: text
-- type: result
-name: branch
-jira-field-name: Branch/Tag Details
-jira-field-type: text
-- type: result
-name: severity
-jira-field-name: Severity
-jira-field-type: single-select
-- type: result
-name: recommendation
-jira-field-name: Recommendations
-jira-field-type: text
-- type: result
-name: cwe
-jira-field-name: CWEs
-jira-field-type: label
-- type: result
-name: category
-jira-field-name: Category
-jira-field-type: label
-- type: result
-name: loc
-jira-field-name: Line Numbers
-jira-field-type: label
-- type: result
-name: issue-link
-jira-field-name: Issue URL
-jira-field-type: text
-- type: static
-name: identified-by
-jira-field-name: Identified By
-jira-field-type: single-select
-jira-default-value: Automation
+json:
+  file-name-format: "[NAMESPACE]-[REPO]-[BRANCH]-[TIME].json"
+  data-folder: "D:\\tmp"
+
+cx-xml:
+  file-name-format: "[NAMESPACE]-[REPO]-[BRANCH]-[TIME].xml"
+  data-folder: "D:\\tmp"
+
+csv:
+  file-name-format: "[TEAM]-[PROJECT]-[TIME].csv"
+  data-folder: "D:\\tmp"
+  include-header: true
+  fields:
+    - header: Customer field (Application)
+      name: application
+      default-value: unknown
+    - header: Primary URL
+      name: static
+      default-value: ${tmp.url}
+    - header: severity
+      name: severity
+    - header: Vulnerability ID
+      name: summary
+      prefix: "[APP]:"
+    - header: file
+      name: filename
+    - header: Vulnerability ID
+      name: summary
+    - header: Vulnerability Name
+      name: category
+    - header: Category ID
+      name: cwe
+    - header: Description
+      name: summary
+      prefix: "*"
+      postfix: "*"
+    - header: Severity
+      name: severity
+    - header: recommendation
+      name: recommendation
 ```
 
 Note: All of the above configurations can be overridden with environment variables and command line arguments.  The github token can be overridden with:
@@ -248,7 +314,7 @@ Environment variable GITHUB_TOKEN
 or Command line argument `--github.token=XXXXXXX`
 
 ## Jira Configuration
-**Jira Custom Fields (Command line)**
+**Jira Custom Fields**
 * *type*:
   * static: Used for static values (specifically requires jira-default-value to be provided)
   * cx: Used to map specific Checkmarx Custom Field value
@@ -273,6 +339,8 @@ When result is provided it must be one of the following:
         issue-link - Direct link to issue within Checkmarx
         filename - Filename provided by Checkmarx issue
         language - Language provided by Checkmarx issue
+        similarirty-id - Checkmarx Similarity ID
+        system-date - Current system time
 
 * jira-field-name	Custom field name in Jira (readable name, not custom field ID)
 * jira-field-type** Type of custom field in JIRA:
@@ -281,7 +349,10 @@ When result is provided it must be one of the following:
   * multi-select (csv format is used and broken into multiple select values)
   * single-select
   * security (used for issue security levels)
+  * component (used for build in Jira Component/s field)
   * jira-default-value	Static value if no value can be determined for field (Optional)
+* *skip-update*: The value is only provided during the initial creation of the ticket and not updated during subsequent iterations
+* *offset*: Used with system-date, the value of offset is added to the system date
 
 ## Override Files
 When providing --config override file you can override many elements associated with the bug tracking within Jira.
@@ -382,26 +453,8 @@ flowController|	Unused, but intended for Call-back implementation
 ## Build
 Executable JAR is compiled using Gradle (tested with version 4.10 and 5.0)
 
-**Java 8 JRE - WebHook Web Service:**
+**Java 8 JRE:**
 `gradle --build-cache assemble`
 
-**Java 8 JRE - CLI:**
-```
-cp cmd/CxFlowApplication.java src/main/java/com/checkmarx/flow/
-gradle -b build-cmd.gradle --build-cache assemble
-```
-
-*Note: the cmd folder holds the CLI version of the application  (this is due to the fact that Spring boot cannot have 2 application contexts under the same package structure.  
-This was the approach to keep a single code base.*
-
-**Java 11 JRE - WebHook Web Service:**
+**Java 11 JRE:**
 `gradle -b build-11.gradle --build-cache assemble`
-
-**Java 11 JRE - CLI:**
-```
-cp cmd/CxFlowApplication.java src/main/java/com/checkmarx/flow/
-gradle -b build-cmd-11.gradle --build-cache assemble
-```
-
-*Note: the cmd folder holds the CLI version of the application (this is due to the fact that Spring boot cannot have 2 application contexts under the same package structure.
-This was the approach to keep a single code base.*

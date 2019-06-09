@@ -11,6 +11,7 @@ import java.util.Map;
  * Object containing all applicable information about the scan request details
  */
 public class ScanRequest {
+    private String id;
     private String namespace;
     private String application;
     private String org;
@@ -110,6 +111,14 @@ public class ScanRequest {
 
     public String getNamespace() {
         return this.namespace;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getApplication() {

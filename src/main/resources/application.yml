@@ -1,8 +1,24 @@
 server:
   port: 8080
 
+#management:
+#  endpoint:
+#    shutdown:
+#      enabled: true
+#    beans:
+#      enabled: true
+#    env:
+#      enabled: true
+#  endpoints:
+#    web:
+#      exposure:
+#        include: "shutdown,beans,env,info,health"
+
 logging:
   file: cx-flow.log
+  pattern:
+    console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{15}){cyan}  [%clr(%X{cx}){blue}] %clr(:){faint} %m%n%wEx"
+
 #  level:
 #    com:
 #      checkmarx:
@@ -18,6 +34,8 @@ logging:
 #            RestTemplate: TRACE
 
 cx-flow:
+  # Agreed upon shared API token
+  token: xxxx
   bug-tracker: JIRA
   bug-tracker-impl:
     - CxXml
@@ -137,6 +155,15 @@ gitlab:
   false-positive-label: false-positive
   block-merge: true
 
+azure:
+  webhook-token: xxxx
+  token: xxxx
+  url: https://dev.azure.com
+  issue-type: issue
+  api-version: 5.0
+  false-positive-label: false-positive
+  #block-merge: true
+
 json:
   file-name-format: "[TEAM]-[PROJECT]-[TIME].json"
   data-folder: "/tmp/cxflow"
@@ -177,3 +204,5 @@ csv:
       name: severity
     - header: recommendation
       name: recommendation
+    - header: Similarity ID
+      name: similarity-id

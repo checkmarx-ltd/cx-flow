@@ -9,10 +9,13 @@ import com.checkmarx.flow.dto.github.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.service.FlowService;
+import com.checkmarx.flow.service.HelperService;
+import com.checkmarx.flow.utils.Constants;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
+import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -52,15 +55,19 @@ public class GitHubController {
     private final CxProperties cxProperties;
     private final JiraProperties jiraProperties;
     private final FlowService flowService;
+    private final HelperService helperService;
     private Mac hmac;
 
-    @ConstructorProperties({"properties", "flowProperties", "cxProperties", "jiraProperties", "flowService"})
-    public GitHubController(GitHubProperties properties, FlowProperties flowProperties, CxProperties cxProperties, JiraProperties jiraProperties, FlowService flowService) {
+    @ConstructorProperties({"properties", "flowProperties", "cxProperties",
+            "jiraProperties", "flowService", "helperService"})
+    public GitHubController(GitHubProperties properties, FlowProperties flowProperties, CxProperties cxProperties,
+                            JiraProperties jiraProperties, FlowService flowService, HelperService helperService) {
         this.properties = properties;
         this.flowProperties = flowProperties;
         this.cxProperties = cxProperties;
         this.jiraProperties = jiraProperties;
         this.flowService = flowService;
+        this.helperService = helperService;
     }
 
     @PostConstruct
@@ -112,6 +119,8 @@ public class GitHubController {
             @RequestParam(value = "bug", required = false) String bug,
             @RequestParam(value = "app-only", required = false) Boolean appOnlyTracking
     ){
+        String uid = helperService.getShortUid();
+        MDC.put("cx", uid);
         log.info("Processing GitHub PULL request");
         PullEvent event;
         ObjectMapper mapper = new ObjectMapper();
@@ -218,8 +227,9 @@ public class GitHubController {
 
             request = ScanUtils.overrideMap(request, o);
             request.putAdditionalMetadata("statuses_url", event.getPullRequest().getStatusesUrl());
+            request.setId(uid);
             //only initiate scan/automation if target branch is applicable
-            if(branches.isEmpty() || branches.contains(targetBranch)) {
+            if(helperService.isBranch2Scan(request, branches)){
                 flowService.initiateAutomation(request);
             }
 
@@ -266,6 +276,8 @@ public class GitHubController {
             @RequestParam(value = "bug", required = false) String bug,
             @RequestParam(value = "app-only", required = false) Boolean appOnlyTracking
     ){
+        String uid = helperService.getShortUid();
+        MDC.put("cx", uid);
         log.info("Processing GitHub PUSH request");
         PushEvent event;
         ObjectMapper mapper = new ObjectMapper();
@@ -302,7 +314,7 @@ public class GitHubController {
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
 
             //determine branch (without refs)
-            String currentBranch = event.getRef().split("/")[2];
+            String currentBranch = ScanUtils.getBranchFromRef(event.getRef());
             List<String> branches = new ArrayList<>();
             List<Filter> filters;
             if(!ScanUtils.empty(branch)){
@@ -369,9 +381,10 @@ public class GitHubController {
 
             //if an override blob/file is provided, substitute these values
             request = ScanUtils.overrideMap(request, o);
+            request.setId(uid);
 
             //only initiate scan/automation if branch is applicable
-            if(branches.isEmpty() || branches.contains(currentBranch)) {
+            if(helperService.isBranch2Scan(request, branches)){
                 flowService.initiateAutomation(request);
             }
 
