@@ -12,4 +12,6 @@ public class Constants {
     public static final String ADO_BASE_URL_KEY = "ado-base-url";
     public static final String ADO_OPENED_STATE_KEY = "ado-opened-state";
     public static final String ADO_CLOSED_STATE_KEY = "ado-closed-state";
+    public static final int SHORT_ID_LENGTH = 8;
+
 }

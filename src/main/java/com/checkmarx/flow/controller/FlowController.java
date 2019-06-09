@@ -5,8 +5,10 @@ import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.service.FlowService;
+import com.checkmarx.flow.service.HelperService;
 import com.checkmarx.flow.utils.ScanUtils;
 import org.slf4j.Logger;
+import org.slf4j.MDC;
 import org.springframework.web.bind.annotation.*;
 
 import java.beans.ConstructorProperties;
@@ -28,22 +30,24 @@ public class FlowController {
 
     private final FlowProperties properties;
     private final FlowService scanService;
+    private final HelperService helperService;
     private final JiraProperties jiraProperties;
 
-    @ConstructorProperties({"properties", "scanService", "jiraProperties"})
-    public FlowController(FlowProperties properties, FlowService scanService, JiraProperties jiraProperties) {
+    @ConstructorProperties({"properties", "scanService", "helperService", "jiraProperties"})
+    public FlowController(FlowProperties properties, FlowService scanService, HelperService helperService, JiraProperties jiraProperties) {
         this.properties = properties;
         this.scanService = scanService;
+        this.helperService = helperService;
         this.jiraProperties = jiraProperties;
     }
 
     @RequestMapping(value = "/scanresults", method = RequestMethod.GET, produces = "application/json")
     public ScanResults latestScanResults(
             // Mandatory parameters
-            @RequestParam(value = "team", required = true) String team,
             @RequestParam(value = "project", required = true) String project,
             @RequestHeader(value = TOKEN_HEADER) String token,
             // Optional parameters
+            @RequestParam(value = "team", required = false) String team,
             @RequestParam(value = "application", required = false) String application,
             @RequestParam(value = "severity", required = false) List<String> severity,
             @RequestParam(value = "cwe", required = false) List<String> cwe,
@@ -53,6 +57,8 @@ public class FlowController {
             @RequestParam(value = "override", required = false) String override,
             @RequestParam(value = "bug", required = false) String bug) {
 
+        String uid = helperService.getShortUid();
+        MDC.put("cx", uid);
         // Validate shared API token from header
         validateToken(token);
 
@@ -72,7 +78,7 @@ public class FlowController {
                 .bugTracker(bugTracker)
                 .filters(filters)
                 .build();
-
+        scanRequest.setId(uid);
         // If an override blob/file is provided, substitute these values
         if (!ScanUtils.empty(override)) {
             MachinaOverride ovr = ScanUtils.getMachinaOverride(override);
@@ -83,11 +89,7 @@ public class FlowController {
         // The cxProject parameter is null because the required project metadata
         // is already contained in the scanRequest parameter.
         ScanResults scanResults = scanService.cxGetResults(scanRequest, null).join();
-
-        // Debug log
-        if (log.isDebugEnabled()) {
-            log.debug("ScanResults " + scanResults.toString());
-        }
+        log.debug("ScanResults {}", scanResults);
 
         return scanResults;
     }
@@ -143,7 +145,6 @@ public class FlowController {
         BugTracker bugTracker = BugTracker.builder().type(BugTracker.Type.NONE).build();
 
         // If a bug tracker is explicitly provided, override the default
-        // TODO: Ask Ken if assignee is mandatory for a tracker
         if (!ScanUtils.empty(bug)) {
             BugTracker.Type bugTypeEnum = ScanUtils.getBugTypeEnum(bug, properties.getBugTrackerImpl());
             bugTracker = ScanUtils.getBugTracker(assignee, bugTypeEnum, jiraProperties, bug);
