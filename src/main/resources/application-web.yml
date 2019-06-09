@@ -1,19 +1,6 @@
 server:
   port: ${PORT:8080}
 
-management:
-  endpoint:
-    shutdown:
-      enabled: true
-    beans:
-      enabled: true
-    env:
-      enabled: true
-  endpoints:
-    web:
-      exposure:
-        include: "shutdown,beans,env,info,health"
-
 logging:
   file: cx-flow.log
 #  level:
@@ -33,7 +20,7 @@ logging:
 cx-flow:
   # Agreed upon shared API token
   token: xxxx
-  bug-tracker: Azure
+  bug-tracker: JIRA
   bug-tracker-impl:
     - CxXml
     - Json
@@ -74,6 +61,8 @@ checkmarx:
   jira-custom-field:
   jira-issuetype-field:
   jira-assignee-field:
+  #project-script: D:\\tmp\CxProject.groovy
+  #team-script: D:\\tmp\CxTeam.groovy
 
 jira:
   url: http://localhost:8180
@@ -146,6 +135,13 @@ gitlab:
   api-url: https://gitlab.com/api/v4/
   false-positive-label: false-positive
   block-merge: true
+
+bitbucket:
+  webhook-token: 1234
+  token: xxx
+  url: https://api.bitbucket.org
+  api-path: /2.0
+  false-positive-label: false-positive
 
 azure:
   webhook-token: cxflow:1234

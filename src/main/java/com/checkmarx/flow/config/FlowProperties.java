@@ -22,13 +22,13 @@ public class FlowProperties {
     private List<String> filterCategory;
     private List<String> filterStatus;
     private boolean trackApplicationOnly = false;
+    private String branchScript;
     private String mitreUrl;
     private String wikiUrl;
     private String codebashUrl;
     private boolean breakBuild = false;
     private Integer webHookQueue = 100;
     private Integer scanResultQueue = 4;
-
     private Mail mail;
 
     public String getContact() {
@@ -126,6 +126,14 @@ public class FlowProperties {
 
     public void setTrackApplicationOnly(boolean trackApplicationOnly) {
         this.trackApplicationOnly = trackApplicationOnly;
+    }
+
+    public String getBranchScript() {
+        return branchScript;
+    }
+
+    public void setBranchScript(String branchScript) {
+        this.branchScript = branchScript;
     }
 
     public void setMitreUrl(String mitreUrl) {
