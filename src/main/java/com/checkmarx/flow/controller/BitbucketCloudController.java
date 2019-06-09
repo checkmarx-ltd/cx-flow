@@ -8,9 +8,11 @@ import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.bitbucket.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.service.FlowService;
+import com.checkmarx.flow.service.HelperService;
 import com.checkmarx.flow.utils.Constants;
 import com.checkmarx.flow.utils.ScanUtils;
 import org.slf4j.Logger;
+import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -35,14 +37,17 @@ public class BitbucketCloudController {
     private final CxProperties cxProperties;
     private final JiraProperties jiraProperties;
     private final FlowService flowService;
+    private final HelperService helperService;
 
-    @ConstructorProperties({"flowProperties", "properties", "cxProperties", "jiraProperties", "flowService"})
-    public BitbucketCloudController(FlowProperties flowProperties, BitBucketProperties properties, CxProperties cxProperties, JiraProperties jiraProperties, FlowService flowService) {
+    @ConstructorProperties({"flowProperties", "properties", "cxProperties", "jiraProperties", "flowService", "helperService"})
+    public BitbucketCloudController(FlowProperties flowProperties, BitBucketProperties properties, CxProperties cxProperties,
+                                    JiraProperties jiraProperties, FlowService flowService, HelperService helperService) {
         this.flowProperties = flowProperties;
         this.properties = properties;
         this.cxProperties = cxProperties;
         this.jiraProperties = jiraProperties;
         this.flowService = flowService;
+        this.helperService = helperService;
     }
 
     /**
@@ -71,6 +76,8 @@ public class BitbucketCloudController {
             @RequestParam(value = "token") String token
 
     ){
+        String uid = helperService.getShortUid();
+        MDC.put("cx", uid);
         validateBitBucketRequest(token);
         log.info("Processing BitBucket MERGE request");
         MachinaOverride o = ScanUtils.getMachinaOverride(override);
@@ -153,8 +160,9 @@ public class BitbucketCloudController {
                     .build();
 
             request = ScanUtils.overrideMap(request, o);
+            request.setId(uid);
 
-            if(branches.isEmpty() || branches.contains(targetBranch)) {
+            if(helperService.isBranch2Scan(request, branches)){
                 flowService.initiateAutomation(request);
             }
 
@@ -201,7 +209,8 @@ public class BitbucketCloudController {
             @RequestParam(value = "token") String token
 
     ){
-
+        String uid = helperService.getShortUid();
+        MDC.put("cx", uid);
         validateBitBucketRequest(token);
 
         MachinaOverride o = ScanUtils.getMachinaOverride(override);
@@ -293,10 +302,12 @@ public class BitbucketCloudController {
                     .build();
 
             request = ScanUtils.overrideMap(request, o);
+            request.setId(uid);
 
-            if(branches.isEmpty() || branches.contains(currentBranch)) {
+            if(helperService.isBranch2Scan(request, branches)){
                 flowService.initiateAutomation(request);
             }
+
 
         }catch (IllegalArgumentException e){
             String errorMessage = "Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product != null ? product : "").concat(" | ").concat(bug != null ? bug : "");

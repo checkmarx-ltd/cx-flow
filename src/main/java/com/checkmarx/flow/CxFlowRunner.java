@@ -3,10 +3,12 @@ package com.checkmarx.flow;
 import com.checkmarx.flow.config.*;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.service.FlowService;
+import com.checkmarx.flow.service.HelperService;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
+import org.slf4j.MDC;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
@@ -25,20 +27,22 @@ public class CxFlowRunner implements ApplicationRunner {
     private final JiraProperties jiraProperties;
     private final GitHubProperties gitHubProperties;
     private final GitLabProperties gitLabProperties;
+    private final HelperService helperService;
     private final FlowService flowService;
 
     @ConstructorProperties({"flowProperties", "cxProperties", "jiraProperties", "gitHubProperties",
-            "gitLabProperties", "flowService"})
+            "gitLabProperties", "flowService", "helperService"})
     public CxFlowRunner(FlowProperties flowProperties,
                         CxProperties cxProperties, JiraProperties jiraProperties,
                         GitHubProperties gitHubProperties, GitLabProperties gitLabProperties,
-                        FlowService flowService) {
+                        FlowService flowService, HelperService helperService) {
         this.flowProperties = flowProperties;
         this.cxProperties = cxProperties;
         this.jiraProperties = jiraProperties;
         this.gitHubProperties = gitHubProperties;
         this.gitLabProperties = gitLabProperties;
         this.flowService = flowService;
+        this.helperService = helperService;
     }
 
     @Override
@@ -79,6 +83,8 @@ public class CxFlowRunner implements ApplicationRunner {
         boolean osa;
         MachinaOverride o = null;
         ObjectMapper mapper = new ObjectMapper();
+        String uid = helperService.getShortUid();
+        MDC.put("cx", uid);
 
         if(args.containsOption("branch-create")){
 
@@ -258,6 +264,7 @@ public class CxFlowRunner implements ApplicationRunner {
 
         request = ScanUtils.overrideMap(request, o);
         /*Determine if BitBucket Cloud/Server is being used - this will determine formatting of URL that links to file/line in repository */
+        request.setId(uid);
         if(bb){
             request.setRepoType(ScanRequest.Repository.BITBUCKETSERVER);
             //TODO create browse code url

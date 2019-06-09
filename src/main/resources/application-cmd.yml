@@ -130,7 +130,6 @@ azure:
   open-status: Active
   closed-status: Closed
 
-
 json:
   file-name-format: "[TEAM]-[PROJECT].json"
   data-folder: "D:\\tmp"

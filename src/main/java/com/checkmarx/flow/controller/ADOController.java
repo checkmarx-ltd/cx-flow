@@ -5,10 +5,12 @@ import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.azure.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.service.FlowService;
+import com.checkmarx.flow.service.HelperService;
 import com.checkmarx.flow.utils.Constants;
 import com.checkmarx.flow.utils.ScanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
+import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,14 +34,17 @@ public class ADOController {
     private final CxProperties cxProperties;
     private final JiraProperties jiraProperties;
     private final FlowService flowService;
+    private final HelperService helperService;
 
-    @ConstructorProperties({"properties", "flowProperties", "cxProperties", "jiraProperties", "flowService"})
-    public ADOController(ADOProperties properties, FlowProperties flowProperties, CxProperties cxProperties, JiraProperties jiraProperties, FlowService flowService) {
+    @ConstructorProperties({"properties", "flowProperties", "cxProperties", "jiraProperties", "flowService", "helperService"})
+    public ADOController(ADOProperties properties, FlowProperties flowProperties, CxProperties cxProperties,
+                         JiraProperties jiraProperties, FlowService flowService, HelperService helperService) {
         this.properties = properties;
         this.flowProperties = flowProperties;
         this.cxProperties = cxProperties;
         this.jiraProperties = jiraProperties;
         this.flowService = flowService;
+        this.helperService = helperService;
     }
 
     /**
@@ -71,6 +76,8 @@ public class ADOController {
             @RequestParam(value = "ado-closed", required = false) String adoClosedState,
             @RequestParam(value = "app-only", required = false) Boolean appOnlyTracking
     ){
+        String uid = helperService.getShortUid();
+        MDC.put("cx", uid);
         log.info("Processing Azure PULL request");
         validateBasicAuth(auth);
 
@@ -122,11 +129,9 @@ public class ADOController {
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
 
             String ref = resource.getSourceRefName();
-            int index = StringUtils.ordinalIndexOf(ref, "/", 2);
-            String currentBranch = ref.substring(index+1);
-            String targetBranch = resource.getTargetRefName();
-            int index2 = StringUtils.ordinalIndexOf(targetBranch, "/", 2);
-            targetBranch = targetBranch.substring(index2+1);
+            String currentBranch = ScanUtils.getBranchFromRef(ref);
+            String targetBranch = ScanUtils.getBranchFromRef(resource.getTargetRefName());
+
             List<String> branches = new ArrayList<>();
             List<Filter> filters;
             if(!ScanUtils.empty(branch)){
@@ -193,11 +198,11 @@ public class ADOController {
             request.putAdditionalMetadata(Constants.ADO_ISSUE_BODY_KEY, adoIssueBody);
             request.putAdditionalMetadata(Constants.ADO_OPENED_STATE_KEY, adoOpenedState);
             request.putAdditionalMetadata(Constants.ADO_CLOSED_STATE_KEY, adoClosedState);
+            request.setId(uid);
             //only initiate scan/automation if target branch is applicable
-            if(branches.isEmpty() || branches.contains(targetBranch)) {
+            if(helperService.isBranch2Scan(request, branches)){
                 flowService.initiateAutomation(request);
             }
-
 
         }catch (IllegalArgumentException e){
             log.error("Error submitting Scan Request. Product option incorrect {}", product);
@@ -244,7 +249,9 @@ public class ADOController {
             @RequestParam(value = "ado-closed", required = false) String adoClosedState,
             @RequestParam(value = "app-only", required = false) Boolean appOnlyTracking
     ){
-        //TODO handle different state (Active/Closed
+        //TODO handle different state (Active/Closed)
+        String uid = helperService.getShortUid();
+        MDC.put("cx", uid);
         log.info("Processing Azure Push request");
         validateBasicAuth(auth);
 
@@ -289,8 +296,7 @@ public class ADOController {
 
             //determine branch (without refs)
             String ref = resource.getRefUpdates().get(0).getName();
-            int index = StringUtils.ordinalIndexOf(ref, "/", 2);
-            String currentBranch = ref.substring(index+1);
+            String currentBranch = ScanUtils.getBranchFromRef(ref);
 
             List<String> branches = new ArrayList<>();
             List<Filter> filters;
@@ -365,8 +371,9 @@ public class ADOController {
             //if an override blob/file is provided, substitute these values
             request = ScanUtils.overrideMap(request, o);
 
-            //only initiate scan/automation if branch is applicable
-            if(branches.isEmpty() || branches.contains(currentBranch)) {
+            request.setId(uid);
+            //only initiate scan/automation if target branch is applicable
+            if(helperService.isBranch2Scan(request, branches)){
                 flowService.initiateAutomation(request);
             }
 
