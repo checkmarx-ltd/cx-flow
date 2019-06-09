@@ -9,11 +9,13 @@ import com.checkmarx.flow.dto.bitbucketserver.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.service.FlowService;
+import com.checkmarx.flow.service.HelperService;
 import com.checkmarx.flow.utils.Constants;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
+import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -52,15 +54,18 @@ public class BitbucketServerController {
     private final CxProperties cxProperties;
     private final JiraProperties jiraProperties;
     private final FlowService flowService;
+    private final HelperService helperService;
     private Mac hmac;
 
-    @ConstructorProperties({"flowProperties", "properties", "cxProperties", "jiraProperties", "flowService"})
-    public BitbucketServerController(FlowProperties flowProperties, BitBucketProperties properties, CxProperties cxProperties, JiraProperties jiraProperties, FlowService flowService) {
+    @ConstructorProperties({"flowProperties", "properties", "cxProperties", "jiraProperties", "flowService", "helperService"})
+    public BitbucketServerController(FlowProperties flowProperties, BitBucketProperties properties, CxProperties cxProperties,
+                                     JiraProperties jiraProperties, FlowService flowService, HelperService helperService) {
         this.flowProperties = flowProperties;
         this.properties = properties;
         this.cxProperties = cxProperties;
         this.jiraProperties = jiraProperties;
         this.flowService = flowService;
+        this.helperService = helperService;
     }
 
     @PostConstruct
@@ -104,6 +109,8 @@ public class BitbucketServerController {
             @RequestParam(value = "bug", required = false) String bug,
             @RequestParam(value = "app-only", required = false) Boolean appOnlyTracking
     ){
+        String uid = helperService.getShortUid();
+        MDC.put("cx", uid);
         verifyHmacSignature(body, signature);
 
         MachinaOverride o = ScanUtils.getMachinaOverride(override);
@@ -207,14 +214,17 @@ public class BitbucketServerController {
                     .build();
 
             request = ScanUtils.overrideMap(request, o);
+            request.setId(uid);
             try {
                 request.putAdditionalMetadata("BITBUCKET_BROWSE", fromRefRepository.getLinks().getSelf().get(0).getHref());
             }catch (NullPointerException e){
                 log.warn("Not able to determine file url for browsing");
             }
-            if(branches.isEmpty() || branches.contains(targetBranch)) {
+            //only initiate scan/automation if target branch is applicable
+            if(helperService.isBranch2Scan(request, branches)){
                 flowService.initiateAutomation(request);
             }
+
 
         }catch (IllegalArgumentException e){
             String errorMessage = "Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product != null ? product : "").concat(" | ").concat(bug != null ? bug : "");
@@ -260,6 +270,8 @@ public class BitbucketServerController {
             @RequestParam(value = "app-only", required = false) Boolean appOnlyTracking
 
     ){
+        String uid = helperService.getShortUid();
+        MDC.put("cx", uid);
         verifyHmacSignature(body, signature);
 
         MachinaOverride o = ScanUtils.getMachinaOverride(override);
@@ -295,7 +307,7 @@ public class BitbucketServerController {
                 product = ScanRequest.Product.CX.getProduct();
             }
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
-            String currentBranch = event.getChanges().get(0).getRefId().split("/")[2];
+            String currentBranch = ScanUtils.getBranchFromRef(event.getChanges().get(0).getRefId());
             List<String> branches = new ArrayList<>();
             List<Filter> filters;
 
@@ -359,10 +371,12 @@ public class BitbucketServerController {
                 log.warn("Not able to determine file url for browsing");
             }
             request = ScanUtils.overrideMap(request, o);
-
-            if(branches.isEmpty() || branches.contains(currentBranch)) {
+            request.setId(uid);
+            //only initiate scan/automation if target branch is applicable
+            if(helperService.isBranch2Scan(request, branches)){
                 flowService.initiateAutomation(request);
             }
+
 
         }catch (IllegalArgumentException e){
             String errorMessage = "Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product != null ? product : "").concat(" | ").concat(bug != null ? bug : "");

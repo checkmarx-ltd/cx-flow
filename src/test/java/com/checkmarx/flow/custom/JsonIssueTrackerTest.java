@@ -91,13 +91,13 @@ public class JsonIssueTrackerTest {
     public void isIssueClosed() throws MachinaException {
         JsonProperties jsonProperties = new JsonProperties();
         JsonIssueTracker jsonIssueTracker = new JsonIssueTracker(jsonProperties);
-        assert !jsonIssueTracker.isIssueClosed(null);
+        assert !jsonIssueTracker.isIssueClosed(null, null);
     }
     @Test
     public void isIssueOpened() throws MachinaException {
         JsonProperties jsonProperties = new JsonProperties();
         JsonIssueTracker jsonIssueTracker = new JsonIssueTracker(jsonProperties);
-        assert !jsonIssueTracker.isIssueOpened(null);
+        assert !jsonIssueTracker.isIssueOpened(null, null);
     }
 
 

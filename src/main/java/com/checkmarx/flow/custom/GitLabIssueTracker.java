@@ -264,6 +264,9 @@ public class GitLabIssueTracker implements IssueTracker {
     }
 
     private String getFileUrl(ScanRequest request, String filename) {
+        if(ScanUtils.empty(request.getRepoUrl())){
+            return null;
+        }
         String repoUrl = request.getRepoUrl().replace(".git", "/");
         return repoUrl.concat("/blob/").concat(request.getBranch()).concat("/").concat(filename);
     }

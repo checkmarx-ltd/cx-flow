@@ -23,8 +23,6 @@ public class FlowConfig {
     public static final int HTTP_CONNECTION_TIMEOUT = 30000;
     public static final int HTTP_READ_TIMEOUT = 30000;
     private final FlowProperties properties;
-    public static final int QUEUE_CAPACITY = 10000;
-
 
     @ConstructorProperties({"properties"})
     public FlowConfig(FlowProperties properties) {
@@ -45,29 +43,6 @@ public class FlowConfig {
         restTemplate.getMessageConverters()
                 .add(0, new StringHttpMessageConverter(Charset.forName("UTF-8")));
         return restTemplate;
-    }
-
-    @Bean("webHook")
-    public TaskExecutor webHookTaskExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(4);
-        executor.setMaxPoolSize(properties.getWebHookQueue());
-        executor.setQueueCapacity(QUEUE_CAPACITY);
-        executor.setThreadNamePrefix("flow-web");
-        executor.initialize();
-        return executor;
-    }
-
-    @Bean("scanRequest")
-    public TaskExecutor scanRequestTaskExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(4);
-        executor.setMaxPoolSize(properties.getScanResultQueue());
-        executor.setQueueCapacity(QUEUE_CAPACITY);
-        executor.setThreadNamePrefix("scan-results");
-        executor.setWaitForTasksToCompleteOnShutdown(true);
-        executor.initialize();
-        return executor;
     }
 
     @Bean
