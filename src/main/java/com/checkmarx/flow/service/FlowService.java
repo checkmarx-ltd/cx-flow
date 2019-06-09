@@ -38,13 +38,15 @@ public class FlowService {
     private final CxProperties cxProperties;
     private final FlowProperties flowProperties;
     private final ResultsService resultsService;
+    private final HelperService helperService;
     private static final Long SLEEP = 20000L;
 
     @ConstructorProperties({"cxService", "resultService", "gitService", "gitLabService", "bbService",
-            "adoService", "emailService", "cxProperties", "flowProperties"})
+            "adoService", "emailService", "helperService", "cxProperties", "flowProperties"})
     public FlowService(CxService cxService, ResultsService resultsService, GitHubService gitService,
                        GitLabService gitLabService, BitBucketService bbService, ADOService adoService,
-                       EmailService emailService, CxProperties cxProperties, FlowProperties flowProperties) {
+                       EmailService emailService, HelperService helperService, CxProperties cxProperties,
+                       FlowProperties flowProperties) {
         this.cxService = cxService;
         this.resultsService = resultsService;
         this.gitService = gitService;
@@ -52,6 +54,7 @@ public class FlowService {
         this.bbService = bbService;
         this.adoService = adoService;
         this.emailService = emailService;
+        this.helperService = helperService;
         this.cxProperties = cxProperties;
         this.flowProperties = flowProperties;
     }
@@ -66,7 +69,10 @@ public class FlowService {
                         .concat(request.getRepoUrl()));
                 emailCtx.put("heading","Scan Request Submitted");
                 emailService.sendmail(request.getEmail(), "Checkmarx Scan Submitted for ".concat(request.getNamespace()).concat("/").concat(request.getRepoName()), emailCtx, "message.html");
-                executeCxScanFlow(request, null);
+                CompletableFuture<ScanResults> results = executeCxScanFlow(request, null);
+                if(results.isCompletedExceptionally()){
+                    log.error("An error occurred while executing process");
+                }
             } else {
                 log.warn("Unknown Product type of {}, exiting", request.getProduct());
             }
@@ -87,15 +93,14 @@ public class FlowService {
             Integer engineId = cxService.getScanConfiguration(cxProperties.getConfiguration());
             String projectName;
             Integer projectId;
-            String project = request.getProject();
             String repoName = request.getRepoName();
             String branch = request.getBranch();
-            String team = request.getTeam();
             String namespace = request.getNamespace();
 
             /*Check if team is provided*/
+            String team = helperService.getCxTeam(request);
             if(!ScanUtils.empty(team)){
-                log.info("Overriding team and project with {} - {}", team, project);
+                log.info("Overriding team with {}", team);
                 ownerId = cxService.getTeamId(team);
             }
             else{
@@ -119,6 +124,7 @@ public class FlowService {
             }
 
             /*Determine project name*/
+            String project = helperService.getCxProject(request);
             if(!ScanUtils.empty(project)){
                 projectName = project;
             }
@@ -143,6 +149,7 @@ public class FlowService {
 
             //only allow specific chars in project name in checkmarx
             projectName = projectName.replaceAll("[^a-zA-Z0-9-_.]+","-");
+            log.info("Project Name being used {}", projectName);
             projectId = cxService.getProjectId(ownerId, projectName);
             if (projectId.equals(UNKNOWN_INT)) {
                 log.info("Project does not exist.  Creating new project now for {}", projectName);
@@ -292,6 +299,11 @@ public class FlowService {
 
             if(cxProject == null) {
                 String team = request.getTeam();
+                if(ScanUtils.empty(team)){
+                    //if the team is not provided, use the default
+                    team = cxProperties.getTeam();
+                    request.setTeam(team);
+                }
                 if (!team.startsWith("\\")) {
                     team = "\\".concat(team);
                 }
@@ -393,7 +405,8 @@ public class FlowService {
             for(CxProject project: projects){
                 ScanRequest request = new ScanRequest(originalRequest);
                 String name = project.getName().replaceAll("[^a-zA-Z0-9-_]+","_");
-                //TODO set team
+                //TODO set team when entire instance batch mode
+                helperService.getShortUid(request); //update new request object with a unique id for thread log monitoring
                 request.setProject(name);
                 request.setApplication(name);
                 processes.add(cxGetResults(request, project));

@@ -13,6 +13,7 @@ import com.checkmarx.flow.utils.ScanUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -28,6 +29,7 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.UnmarshalException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -64,6 +66,7 @@ public class CxService {
     public static final Integer REPORT_STATUS_CREATED = 2;
     public static final Integer REPORT_STATUS_FINISHED = 7;
     public static final Map<String, Integer> STATUS_MAP = ImmutableMap.of(
+            "TO VERIFY", 1,
             "CONFIRMED", 2,
             "URGENT", 3
     );
@@ -334,18 +337,17 @@ public class CxService {
         try {
             ResponseEntity<String> resultsXML = restTemplate.exchange(cxProperties.getUrl().concat(REPORT_DOWNLOAD), HttpMethod.GET, httpEntity, String.class, reportId);
             String xml = resultsXML.getBody();
-            log.debug("Headers:");
-            log.debug(resultsXML.getHeaders().toSingleValueMap().toString());
+            log.debug("Report length: {}", xml.length());
+            log.debug("Headers: {}", resultsXML.getHeaders().toSingleValueMap().toString());
             log.info("Report downloaded for report Id {}", reportId);
-            log.debug("XML String Output:");
-            log.debug(xml);
-            log.debug("Base64:");
-            log.debug(Base64.getEncoder().encodeToString(resultsXML.toString().getBytes()));
+            log.debug("XML String Output: {}", xml);
+            log.debug("Base64:", Base64.getEncoder().encodeToString(resultsXML.toString().getBytes()));
             /*Remove any chars before the start xml tag*/
             xml = xml.trim().replaceFirst("^([\\W]+)<", "<");
-            xml = ScanUtils.cleanStringUTF8(xml);
-            log.trace(xml);
-            InputStream xmlStream = new ByteArrayInputStream(Objects.requireNonNull(xml.getBytes()));
+            log.debug("Report length: {}", xml.length());
+            String xml2 = ScanUtils.cleanStringUTF8_2(xml);
+            log.trace("XML2: {}", xml2);
+            InputStream xmlStream = new ByteArrayInputStream(Objects.requireNonNull(xml2.getBytes()));
 
             /* protect against XXE */
             JAXBContext jc = JAXBContext.newInstance(CxXMLResultsType.class);
@@ -353,11 +355,29 @@ public class CxService {
             xif.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
             xif.setProperty(XMLInputFactory.SUPPORT_DTD, false);
             xif.setProperty(XMLInputFactory.IS_NAMESPACE_AWARE, false);
-            XMLStreamReader xsr = xif.createXMLStreamReader(xmlStream);
-            Unmarshaller unmarshaller = jc.createUnmarshaller();
-
             List<ScanResults.XIssue> xIssueList = new ArrayList<>();
-            CxXMLResultsType cxResults = (CxXMLResultsType) unmarshaller.unmarshal(xsr);
+            CxXMLResultsType cxResults;
+            try {
+                XMLStreamReader xsr = xif.createXMLStreamReader(xmlStream);
+                Unmarshaller unmarshaller = jc.createUnmarshaller();
+                cxResults = (CxXMLResultsType) unmarshaller.unmarshal(xsr);
+            }catch (UnmarshalException e){
+                log.warn("Issue occurred performing unmashall step - trying again {}", ExceptionUtils.getMessage(e));
+                if(resultsXML.getBody() != null) {
+                    log.error("Writing raw response from CX to {}", "CX_".concat(String.valueOf(reportId)));
+                    ScanUtils.writeByte("CX_".concat(String.valueOf(reportId)), resultsXML.getBody().getBytes());
+                    xml2 = ScanUtils.cleanStringUTF8(xml);
+                    xmlStream = new ByteArrayInputStream(Objects.requireNonNull(xml2.getBytes()));
+                    XMLStreamReader xsr = xif.createXMLStreamReader(xmlStream);
+                    Unmarshaller unmarshaller = jc.createUnmarshaller();
+                    cxResults = (CxXMLResultsType) unmarshaller.unmarshal(xsr);
+                }
+                else{
+                    log.error("CX Response for report {} was null", reportId);
+                    throw new MachinaException("CX report was empty (null)");
+                }
+            }
+
             ScanResults.ScanResultsBuilder cxScanBuilder = ScanResults.builder();
             cxScanBuilder.projectId(cxResults.getProjectId());
             cxScanBuilder.team(cxResults.getTeam());
@@ -683,7 +703,7 @@ public class CxService {
                 result.put("source", getNodeData(nodes, 0));
                 result.put("sink", getNodeData(nodes, nodes.size() - 1)); // Last node in dataFlow
             } else {
-                log.debug("Result " + q.getName() + r.getNodeId() + " did not have node paths to process.");
+                log.debug(String.format("Result %s%s did not have node paths to process.", q.getName(), r.getNodeId()));
             }
         }
         results.add(result);

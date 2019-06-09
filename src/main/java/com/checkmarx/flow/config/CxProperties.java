@@ -29,6 +29,8 @@ public class CxProperties {
     private String url;
 
     private boolean multiTenant = false;
+    private String teamScript;
+    private String projectScript;
     private String scanPreset = Constants.CX_DEFAULT_PRESET;
     private String configuration = Constants.CX_DEFAULT_CONFIGURATION;
     private Boolean incremental = false;
@@ -192,6 +194,22 @@ public class CxProperties {
 
     public void setMultiTenant(boolean multiTenant) {
         this.multiTenant = multiTenant;
+    }
+
+    public String getTeamScript() {
+        return teamScript;
+    }
+
+    public void setTeamScript(String teamScript) {
+        this.teamScript = teamScript;
+    }
+
+    public String getProjectScript() {
+        return projectScript;
+    }
+
+    public void setProjectScript(String projectScript) {
+        this.projectScript = projectScript;
     }
 
     public void setIncremental(@NotNull Boolean incremental) {
