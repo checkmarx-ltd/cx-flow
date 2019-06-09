@@ -264,6 +264,9 @@ public class GitLabIssueTracker implements IssueTracker {
     }
 
     private String getFileUrl(ScanRequest request, String filename) {
+        if(ScanUtils.empty(request.getRepoUrl())){
+            return null;
+        }
         String repoUrl = request.getRepoUrl().replace(".git", "/");
         return repoUrl.concat("/blob/").concat(request.getBranch()).concat("/").concat(filename);
     }
@@ -343,7 +346,7 @@ public class GitLabIssueTracker implements IssueTracker {
     }
 
     @Override
-    public boolean isIssueClosed(Issue issue) {
+    public boolean isIssueClosed(Issue issue, ScanRequest request) {
         if(issue.getState() == null){
             return false;
         }
@@ -351,7 +354,7 @@ public class GitLabIssueTracker implements IssueTracker {
     }
 
     @Override
-    public boolean isIssueOpened(Issue issue) {
+    public boolean isIssueOpened(Issue issue, ScanRequest request) {
         if(issue.getState() == null){
             return true;
         }

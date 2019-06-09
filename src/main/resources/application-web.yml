@@ -5,6 +5,8 @@ logging:
   file: cx-flow.log
 
 cx-flow:
+  # Agreed upon shared API token
+  token: xxxx
   bug-tracker: JIRA
   bug-tracker-impl:
     - CxXml
@@ -12,6 +14,7 @@ cx-flow:
     - GitLab
     - GitHub
     - Csv
+    - Azure
   branches:
     - develop
     - master
@@ -21,8 +24,7 @@ cx-flow:
   mitre-url: https://cwe.mitre.org/data/definitions/%s.html
   wiki-url: https://checkmarx.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
   codebash-url: https://cxa.codebashing.com/courses/
-
-
+  #branch-script: D:\\tmp\Branch.groovy
 checkmarx:
   username: xxx
   password: xxx
@@ -41,11 +43,13 @@ checkmarx:
   portal-wsdl: ${checkmarx.base-url}/Portal/CxWebService.asmx?wsdl
   sdk-wsdl: ${checkmarx.base-url}/SDK/CxSDKWebService.asmx?wsdl
   portal-package: checkmarx.wsdl.portal
-  preserve-xml: true
+  preserve-xml: false
   jira-project-field:
   jira-custom-field:
   jira-issuetype-field:
   jira-assignee-field:
+  #project-script: D:\\tmp\CxProject.groovy
+  #team-script: D:\\tmp\CxTeam.groovy
 
 
 jira:
@@ -105,6 +109,24 @@ gitlab:
   false-positive-label: false-positive
   block-merge: true
 
+bitbucket:
+  webhook-token: 1234
+  token: xxx
+  url: https://api.bitbucket.org
+  api-path: /2.0
+  false-positive-label: false-positive
+
+azure:
+  webhook-token: cxflow:1234
+  token: xxxx
+  url: https://dev.azure.com/XXXXXX
+  issue-type: issue
+  api-version: 5.0
+  false-positive-label: false-positive
+  block-merge: true
+  closed-status: Closed
+  open-status: Active
+
 json:
   file-name-format: "[NAMESPACE]-[REPO]-[BRANCH]-[TIME].json"
   data-folder: "C:\\tmp"
@@ -145,3 +167,5 @@ csv:
       name: severity
     - header: recommendation
       name: recommendation
+    - header: Similarity ID
+      name: similarity-id

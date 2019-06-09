@@ -5,6 +5,8 @@ logging:
   file: flow.log
 
 cx-flow:
+  # Agreed upon shared API token
+  token: 1F4QipGtiR2Ub68ABEYx
   bug-tracker: Json
   bug-tracker-impl:
     - Xml
@@ -76,6 +78,17 @@ bitbucket:
   url: https://api.bitbucket.org
   api-path: /2.0
   false-positive-label: false-positive
+
+azure:
+  webhook-token: cxflow:1234
+  token: xxxx
+  url: https://dev.azure.com/XXXXXX
+  issue-type: issue
+  api-version: 5.0
+  false-positive-label: false-positive
+  block-merge: true
+  closed-status: Closed
+  open-status: Active
 
 jira:
   url: https://xxxx.atlassian.net

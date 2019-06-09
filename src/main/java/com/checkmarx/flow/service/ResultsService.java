@@ -50,40 +50,49 @@ public class ResultsService {
 
     @Async("scanRequest")
     public CompletableFuture<ScanResults> processScanResultsAsync(ScanRequest request, Integer scanId, List<Filter> filters) throws MachinaException {
+        try {
+            CompletableFuture<ScanResults> future = new CompletableFuture<>();
+            ScanResults results = getScanResults(scanId, filters);
+            Map<String, Object> emailCtx = new HashMap<>();
+            BugTracker.Type bugTrackerType = request.getBugTracker().getType();
+            //Send email (if EMAIL was enabled and EMAL was not main feedback option
+            if (flowProperties.getMail() != null && flowProperties.getMail().isEnabled() &&
+                    !bugTrackerType.equals(BugTracker.Type.NONE) &&
+                    !bugTrackerType.equals(BugTracker.Type.EMAIL)) {
+                String namespace = request.getNamespace();
+                String repoName = request.getRepoName();
+                if (!ScanUtils.empty(namespace) && !ScanUtils.empty(request.getBranch())) {
+                    emailCtx.put("message", "Successfully completed processing for "
+                            .concat(namespace).concat("/").concat(repoName).concat(" - ")
+                            .concat(request.getRepoUrl()));
+                } else if (!ScanUtils.empty(request.getApplication())) {
+                    emailCtx.put("message", "Successfully completed processing for "
+                            .concat(request.getApplication()));
+                }
+                emailCtx.put("heading", "Scan Successfully Completed");
 
-        CompletableFuture<ScanResults> future = new CompletableFuture<>();
-        ScanResults results = getScanResults(scanId, filters);
-        Map<String, Object>  emailCtx = new HashMap<>();
-        //Send email (if EMAIL was enabled and EMAL was not main feedback option
-        if(flowProperties.getMail() != null && flowProperties.getMail().isEnabled() &&
-                !request.getBugTracker().getType().equals(BugTracker.Type.NONE) &&
-                !request.getBugTracker().getType().equals(BugTracker.Type.EMAIL)) {
-            if(!ScanUtils.empty(request.getNamespace()) && !ScanUtils.empty(request.getBranch())) {
-                emailCtx.put("message", "Successfully completed processing for "
-                        .concat(request.getNamespace()).concat("/").concat(request.getRepoName()).concat(" - ")
-                        .concat(request.getRepoUrl()));
+                if (results != null) {
+                    emailCtx.put("issues", results.getXIssues());
+                }
+                if (results != null && !ScanUtils.empty(results.getLink())) {
+                    emailCtx.put("link", results.getLink());
+                }
+                emailCtx.put("repo", request.getRepoUrl());
+                emailCtx.put("repo_fullname", namespace.concat("/").concat(repoName));
+                emailService.sendmail(request.getEmail(), "Successfully completed processing for ".concat(namespace).concat("/").concat(repoName), emailCtx, "template-demo.html");
+                log.info("Successfully completed automation for repository {} under namespace {}", repoName, namespace);
             }
-            else if(!ScanUtils.empty(request.getApplication())) {
-                emailCtx.put("message", "Successfully completed processing for "
-                        .concat(request.getApplication()));
-            }
-            emailCtx.put("heading", "Scan Successfully Completed");
-
-            if (results != null) {
-                emailCtx.put("issues", results.getXIssues());
-            }
-            if (results != null && !ScanUtils.empty(results.getLink())) {
-                emailCtx.put("link", results.getLink());
-            }
-            emailCtx.put("repo", request.getRepoUrl());
-            emailCtx.put("repo_fullname", request.getNamespace().concat("/").concat(request.getRepoName()));
-            emailService.sendmail(request.getEmail(), "Successfully completed processing for ".concat(request.getNamespace()).concat("/").concat(request.getRepoName()), emailCtx, "template-demo.html");
-            log.info("Successfully completed automation for repository {} under namespace {}", request.getRepoName(), request.getNamespace());
+            processResults(request, results);
+            log.info("Process completed Succesfully");
+            future.complete(results);
+            return future;
+        }catch (Exception e){
+            log.error("Error occurred while processing results {}", ExceptionUtils.getMessage(e));
+            CompletableFuture<ScanResults> x = new CompletableFuture<>();
+            x.completeExceptionally(e);
+            return x;
         }
-        processResults(request, results);
-        log.info("Process completed Succesfully");
-        future.complete(results);
-        return future;
+
     }
 
     private ScanResults getScanResults(Integer scanId, List<Filter> filters) throws MachinaException {

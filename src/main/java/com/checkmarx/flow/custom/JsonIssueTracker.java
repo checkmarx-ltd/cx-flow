@@ -100,12 +100,12 @@ public class JsonIssueTracker implements IssueTracker {
     }
 
     @Override
-    public boolean isIssueClosed(Issue issue) {
+    public boolean isIssueClosed(Issue issue, ScanRequest request) {
         return false;
     }
 
     @Override
-    public boolean isIssueOpened(Issue issue) {
+    public boolean isIssueOpened(Issue issue, ScanRequest request) {
         return false;
     }
 

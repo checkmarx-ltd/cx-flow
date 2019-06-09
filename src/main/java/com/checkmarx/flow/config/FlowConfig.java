@@ -1,9 +1,12 @@
 package com.checkmarx.flow.config;
 
 import com.checkmarx.flow.utils.ScanUtils;
+import org.apache.http.impl.client.HttpClients;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.http.client.ClientHttpRequestFactory;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
@@ -16,9 +19,9 @@ import java.util.Properties;
 @Configuration
 public class FlowConfig {
 
+    public static final int HTTP_CONNECTION_TIMEOUT = 30000;
+    public static final int HTTP_READ_TIMEOUT = 30000;
     private final FlowProperties properties;
-    public static final int QUEUE_CAPACITY = 10000;
-
 
     @ConstructorProperties({"properties"})
     public FlowConfig(FlowProperties properties) {
@@ -28,32 +31,14 @@ public class FlowConfig {
     @Bean
     public RestTemplate getRestTemplate(){
         RestTemplate restTemplate = new RestTemplate();
+        HttpComponentsClientHttpRequestFactory requestFactory = new
+                HttpComponentsClientHttpRequestFactory(HttpClients.createDefault());
+        requestFactory.setConnectTimeout(HTTP_CONNECTION_TIMEOUT);
+        requestFactory.setReadTimeout(HTTP_READ_TIMEOUT);
+        restTemplate.setRequestFactory(requestFactory);
         restTemplate.getMessageConverters()
                 .add(0, new StringHttpMessageConverter(Charset.forName("UTF-8")));
         return restTemplate;
-    }
-
-    @Bean("webHook")
-    public TaskExecutor webHookTaskExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(4);
-        executor.setMaxPoolSize(properties.getWebHookQueue());
-        executor.setQueueCapacity(QUEUE_CAPACITY);
-        executor.setThreadNamePrefix("flow-web");
-        executor.initialize();
-        return executor;
-    }
-
-    @Bean("scanRequest")
-    public TaskExecutor scanRequestTaskExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(4);
-        executor.setMaxPoolSize(properties.getScanResultQueue());
-        executor.setQueueCapacity(QUEUE_CAPACITY);
-        executor.setThreadNamePrefix("scan-results");
-        executor.setWaitForTasksToCompleteOnShutdown(true);
-        executor.initialize();
-        return executor;
     }
 
     @Bean

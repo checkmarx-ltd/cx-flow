@@ -2,13 +2,16 @@ logging:
   file: cx-flow.log
 
 cx-flow:
-  bug-tracker: Json
+  # Agreed upon shared API token
+  token: xxxx
+  bug-tracker: Azure
   bug-tracker-impl:
     - CxXml
     - Json
     - GitLab
     - GitHub
     - Csv
+    - Azure
   filter-severity:
     - High
   filter-category:
@@ -29,7 +32,7 @@ checkmarx:
   sdk-url: ${checkmarx.base-url}/cxwebinterface/SDK/CxSDKWebService.asmx
   portal-wsdl: ${checkmarx.base-url}/Portal/CxWebService.asmx?wsdl
   sdk-wsdl: ${checkmarx.base-url}/SDK/CxSDKWebService.asmx?wsdl
-  preserve-xml: true
+  preserve-xml: false
   jira-project-field:
   jira-custom-field:
   jira-issuetype-field:
@@ -95,25 +98,36 @@ gitlab:
   false-positive-label: false-positive
   block-merge: true
 
+azure:
+  webhook-token: cxflow:1234
+  token: xxxx
+  url: https://dev.azure.com/XXXXXX
+  issue-type: issue
+  api-version: 5.0
+  false-positive-label: false-positive
+  block-merge: true
+  open-status: Active
+  closed-status: Closed
+
 json:
-  file-name-format: "[TEAM]-[PROJECT]-[TIME].json"
-  data-folder: "C:\\tmp"
+  file-name-format: "[TEAM]-[PROJECT].json"
+  data-folder: "D:\\tmp"
 
 cx-xml:
-  file-name-format: "[TEAM]-[PROJECT]-[TIME].xml"
-  data-folder: "C:\\tmp"
+  file-name-format: "[TEAM]-[PROJECT].xml"
+  data-folder: "D:\\tmp"
 
 csv:
-  file-name-format: "[TEAM]-[PROJECT]-[TIME].csv"
-  data-folder: "C:\\tmp"
+  file-name-format: "[TEAM]-[PROJECT].csv"
+  data-folder: "D:\\tmp"
   include-header: true
   fields:
-    - header: Application
+    - header: Customer field (Application)
       name: application
       default-value: unknown
-    #- header: Primary URL
-      #name: static
-      #default-value: ${tmp.url}
+    - header: Primary URL
+      name: static
+      default-value: ${tmp.url}
     - header: severity
       name: severity
     - header: Vulnerability ID
@@ -129,9 +143,11 @@ csv:
       name: cwe
     - header: Description
       name: summary
-      #prefix: "*"
-      #postfix: "*"
+      prefix: "*"
+      postfix: "*"
     - header: Severity
       name: severity
     - header: recommendation
       name: recommendation
+    - header: Similarity ID
+      name: similarity-id
