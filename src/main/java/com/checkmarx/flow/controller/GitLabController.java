@@ -2,9 +2,7 @@ package com.checkmarx.flow.controller;
 
 import com.checkmarx.flow.config.*;
 import com.checkmarx.flow.dto.*;
-import com.checkmarx.flow.dto.gitlab.Commit;
-import com.checkmarx.flow.dto.gitlab.MergeEvent;
-import com.checkmarx.flow.dto.gitlab.PushEvent;
+import com.checkmarx.flow.dto.gitlab.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.service.GitLabService;
 import com.checkmarx.flow.service.FlowService;
@@ -91,9 +89,10 @@ public class GitLabController {
         MachinaOverride o = ScanUtils.getMachinaOverride(override);
 
         try {
-            if(!body.getObjectAttributes().getState().equalsIgnoreCase("opened") ||
+            ObjectAttributes objectAttributes = body.getObjectAttributes();
+            if(!objectAttributes.getState().equalsIgnoreCase("opened") ||
                     isWIP(body)){
-                log.info("Merge requested not processed.  Status was not opened , or was WIP ({})", body.getObjectAttributes().getState());
+                log.info("Merge requested not processed.  Status was not opened , or was WIP ({})", objectAttributes.getState());
 
                 return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
                         .message("No processing occurred for updates to Merge Request")
@@ -118,8 +117,8 @@ public class GitLabController {
                 product = ScanRequest.Product.CX.getProduct();
             }
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
-            String currentBranch = body.getObjectAttributes().getSourceBranch();
-            String targetBranch = body.getObjectAttributes().getTargetBranch();
+            String currentBranch = objectAttributes.getSourceBranch();
+            String targetBranch = objectAttributes.getTargetBranch();
             List<String> branches = new ArrayList<>();
             List<Filter> filters;
 
@@ -137,17 +136,17 @@ public class GitLabController {
                 filters = ScanUtils.getFilters(severity, cwe, category, status);
             }
             else{
-                filters = ScanUtils.getFilters(flowProperties.getFilterSeverity(), flowProperties.getFilterCwe(),
-                        flowProperties.getFilterCategory(), flowProperties.getFilterStatus());
+                filters = ScanUtils.getFilters(flowProperties);
             }
 
+            Project proj = body.getProject();
             String mergeEndpoint = properties.getApiUrl().concat(GitLabService.MERGE_NOTE_PATH);
-            mergeEndpoint = mergeEndpoint.replace("{id}", body.getProject().getId().toString());
-            mergeEndpoint = mergeEndpoint.replace("{iid}", body.getObjectAttributes().getIid().toString());
-            String gitUrl = body.getProject().getGitHttpUrl();
+            mergeEndpoint = mergeEndpoint.replace("{id}", proj.getId().toString());
+            mergeEndpoint = mergeEndpoint.replace("{iid}", objectAttributes.getIid().toString());
+            String gitUrl = proj.getGitHttpUrl();
             log.info("Using url: {}", gitUrl);
-            String gitAuthUrl = gitUrl.replace("https://", "https://oauth2:".concat(properties.getToken()).concat("@"));
-            gitAuthUrl = gitAuthUrl.replace("http://", "http://oauth2:".concat(properties.getToken()).concat("@"));
+            String gitAuthUrl = gitUrl.replace(Constants.HTTPS, HTTPS_OAUTH2.concat(properties.getToken()).concat("@"));
+            gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, HTTP_OAUTH2.concat(properties.getToken()).concat("@"));
             String scanPreset = cxProperties.getScanPreset();
             if(!ScanUtils.empty(preset)){
                 scanPreset = preset;
@@ -157,20 +156,20 @@ public class GitLabController {
                 inc = incremental;
             }
             ScanRequest request = ScanRequest.builder()
-                    .id(body.getProject().getId())
+                    .id(proj.getId())
                     .application(app)
                     .product(p)
                     .project(project)
                     .team(team)
-                    .namespace(body.getProject().getNamespace().replaceAll(" ","_"))
-                    .repoName(body.getProject().getName())
-                    .repoUrl(body.getProject().getGitHttpUrl())
+                    .namespace(proj.getNamespace().replaceAll(" ","_"))
+                    .repoName(proj.getName())
+                    .repoUrl(proj.getGitHttpUrl())
                     .repoUrlWithAuth(gitAuthUrl)
                     .repoType(ScanRequest.Repository.GITLAB)
                     .branch(currentBranch)
                     .mergeTargetBranch(targetBranch)
                     .mergeNoteUri(mergeEndpoint)
-                    .refs("refs/heads/".concat(currentBranch))
+                    .refs(Constants.CX_BRANCH_PREFIX.concat(currentBranch))
                     .email(null)
                     .incremental(inc)
                     .scanPreset(scanPreset)
@@ -189,11 +188,12 @@ public class GitLabController {
             }
 
         }catch (IllegalArgumentException e){
-            log.error("Error submitting Scan Request. Product option incorrect {}", product);
+            String errorMessage = "Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product != null ? product : "").concat(" | ").concat(bug != null ? bug : "");
+            log.error(errorMessage);
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
-                    .message("Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product))
+                    .message(errorMessage)
                     .success(false)
                     .build());
         }
@@ -272,18 +272,19 @@ public class GitLabController {
                 filters = ScanUtils.getFilters(severity, cwe, category, status);
             }
             else{
-                filters = ScanUtils.getFilters(flowProperties.getFilterSeverity(), flowProperties.getFilterCwe(),
-                        flowProperties.getFilterCategory(), flowProperties.getFilterStatus());
+                filters = ScanUtils.getFilters(flowProperties);
             }
+            Project proj = body.getProject();
             /*Determine emails*/
             List<String> emails = new ArrayList<>();
             for(Commit c: body.getCommits()){
-                if (c.getAuthor() != null && !ScanUtils.empty(c.getAuthor().getEmail())){
-                    emails.add(c.getAuthor().getEmail());
+                Author author = c.getAuthor();
+                if (author != null && !ScanUtils.empty(author.getEmail())){
+                    emails.add(author.getEmail());
                 }
                 if(!ScanUtils.empty(c.getUrl()) && bugType.equals(BugTracker.Type.GITLABCOMMIT)) {
                     commitEndpoint = properties.getApiUrl().concat(GitLabService.COMMIT_PATH);
-                    commitEndpoint = commitEndpoint.replace("{id}", body.getProject().getId().toString());
+                    commitEndpoint = commitEndpoint.replace("{id}", proj.getId().toString());
                     commitEndpoint = commitEndpoint.replace("{sha}", c.getId());
                 }
             }
@@ -291,10 +292,10 @@ public class GitLabController {
             if(!ScanUtils.empty(body.getUserEmail())) {
                 emails.add(body.getUserEmail());
             }
-            String gitUrl = body.getProject().getGitHttpUrl();
+            String gitUrl = proj.getGitHttpUrl();
             log.debug("Using url: {}", gitUrl);
-            String gitAuthUrl = gitUrl.replace("https://", "https://oauth2:".concat(properties.getToken()).concat("@"));
-            gitAuthUrl = gitAuthUrl.replace("http://", "http://oauth2:".concat(properties.getToken()).concat("@"));
+            String gitAuthUrl = gitUrl.replace(Constants.HTTPS, HTTPS_OAUTH2.concat(properties.getToken()).concat("@"));
+            gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, HTTP_OAUTH2.concat(properties.getToken()).concat("@"));
 
             String scanPreset = cxProperties.getScanPreset();
             if(!ScanUtils.empty(preset)){
@@ -311,9 +312,9 @@ public class GitLabController {
                     .product(p)
                     .project(project)
                     .team(team)
-                    .namespace(body.getProject().getNamespace().replaceAll(" ","_"))
-                    .repoName(body.getProject().getName())
-                    .repoUrl(body.getProject().getGitHttpUrl())
+                    .namespace(proj.getNamespace().replaceAll(" ","_"))
+                    .repoName(proj.getName())
+                    .repoUrl(proj.getGitHttpUrl())
                     .repoUrlWithAuth(gitAuthUrl)
                     .repoType(ScanRequest.Repository.GITLAB)
                     .branch(currentBranch)
@@ -335,11 +336,12 @@ public class GitLabController {
             }
 
         }catch (IllegalArgumentException e){
-            log.error("Error submitting Scan Request. Product option or BugTracker not valid {} | {}", product, bug);
+            String errorMessage = "Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product != null ? product : "").concat(" | ").concat(bug != null ? bug : "");
+            log.error(errorMessage);
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
-                    .message("Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product))
+                    .message(errorMessage)
                     .success(false)
                     .build());
         }
@@ -371,14 +373,14 @@ public class GitLabController {
         if(event.getObjectAttributes().getWorkInProgress()){
             return true;
         }
-
+        Changes changes = event.getChanges();
         if(!properties.isBlockMerge()){ //skip looking for WIP changes
             return false;
         }
         /*Merge has been changed from WIP to not-WIP, ignoring*/
-        else if(event.getChanges() != null && event.getChanges().getTitle() != null && event.getChanges().getTitle().getPrevious() != null &&
-                    event.getChanges().getTitle().getPrevious().startsWith("WIP:CX|") &&
-                    !event.getChanges().getTitle().getCurrent().startsWith("WIP:")){
+        else if(changes != null && changes.getTitle() != null && changes.getTitle().getPrevious() != null &&
+                changes.getTitle().getPrevious().startsWith("WIP:CX|") &&
+                    !changes.getTitle().getCurrent().startsWith("WIP:")){
             return true;
         }
         return false;

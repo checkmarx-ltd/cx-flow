@@ -40,8 +40,6 @@ import java.util.Locale;
 @RequestMapping(value = "/")
 public class GitHubController {
 
-    private static final String HTTP = "http://";
-    private static final String HTTPS = "https://";
     private static final String SIGNATURE = "X-Hub-Signature";
     private static final String EVENT = "X-GitHub-Event";
     private static final String PING = EVENT + "=ping";
@@ -73,7 +71,7 @@ public class GitHubController {
     @PostConstruct
     public void init() throws NoSuchAlgorithmException, InvalidKeyException {
         // initialize HMAC with SHA1 algorithm and secret
-        if(!ScanUtils.empty(properties.getWebhookToken())) {
+        if(properties != null && !ScanUtils.empty(properties.getWebhookToken())) {
             SecretKeySpec secret = new SecretKeySpec(properties.getWebhookToken().getBytes(CHARSET), HMAC_ALGORITHM);
             hmac = Mac.getInstance(HMAC_ALGORITHM);
             hmac.init(secret);
@@ -182,16 +180,15 @@ public class GitHubController {
                 filters = ScanUtils.getFilters(severity, cwe, category, status);
             }
             else{
-                filters = ScanUtils.getFilters(flowProperties.getFilterSeverity(), flowProperties.getFilterCwe(),
-                        flowProperties.getFilterCategory(), flowProperties.getFilterStatus());
+                filters = ScanUtils.getFilters(flowProperties);
             }
 
             //build request object
             String gitUrl = repository.getCloneUrl();
             String token = properties.getToken();
             log.info("Using url: {}", gitUrl);
-            String gitAuthUrl = gitUrl.replace(HTTPS, HTTPS.concat(token).concat("@"));
-            gitAuthUrl = gitAuthUrl.replace(HTTP, HTTP.concat(token).concat("@"));
+            String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(token).concat("@"));
+            gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(token).concat("@"));
 
             String scanPreset = cxProperties.getScanPreset();
             if(!ScanUtils.empty(preset)){
@@ -213,7 +210,7 @@ public class GitHubController {
                     .repoUrlWithAuth(gitAuthUrl)
                     .repoType(ScanRequest.Repository.GITHUB)
                     .branch(currentBranch)
-                    .refs("refs/heads/".concat(currentBranch))
+                    .refs(Constants.CX_BRANCH_PREFIX.concat(currentBranch))
                     .mergeNoteUri(event.getPullRequest().getIssueUrl().concat("/comments"))
                     .mergeTargetBranch(targetBranch)
                     .email(null)
@@ -235,11 +232,12 @@ public class GitHubController {
 
 
         }catch (IllegalArgumentException e){
-            log.error("Error submitting Scan Request. Product option incorrect {}", product);
+            String errorMessage = "Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product != null ? product : "").concat(" | ").concat(bug != null ? bug : "");
+            log.error(errorMessage);
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
-                    .message("Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product))
+                    .message(errorMessage)
                     .success(false)
                     .build());
         }
@@ -285,8 +283,13 @@ public class GitHubController {
 
         try {
             event = mapper.readValue(body, PushEvent.class);
-        } catch (IOException e) {
+        } catch (NullPointerException | IOException e) {
             log.error(ExceptionUtils.getStackTrace(e));
+            throw new MachinaRuntimeException();
+        }
+
+        if(flowProperties == null || cxProperties == null){
+            log.error("Properties have null values");
             throw new MachinaRuntimeException();
         }
         //verify message signature
@@ -330,8 +333,7 @@ public class GitHubController {
                 filters = ScanUtils.getFilters(severity, cwe, category, status);
             }
             else{
-                filters = ScanUtils.getFilters(flowProperties.getFilterSeverity(), flowProperties.getFilterCwe(),
-                        flowProperties.getFilterCategory(), flowProperties.getFilterStatus());
+                filters = ScanUtils.getFilters(flowProperties);
             }
             /*Determine emails*/
             List<String> emails = new ArrayList<>();
@@ -346,13 +348,19 @@ public class GitHubController {
             Repository repository = event.getRepository();
             String gitUrl = repository.getCloneUrl();
             log.debug("Using url: {}", gitUrl);
-            String gitAuthUrl = gitUrl.replace(HTTPS, HTTPS.concat(properties.getToken()).concat("@"));
-            gitAuthUrl = gitAuthUrl.replace(HTTP, HTTP.concat(properties.getToken()).concat("@"));
+            String token = properties.getToken();
+            if(ScanUtils.empty(token)){
+                log.error("No token was provided for Github");
+                throw new MachinaRuntimeException();
+            }
+            String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(token).concat("@"));
+            gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(token).concat("@"));
 
             String scanPreset = cxProperties.getScanPreset();
             if(!ScanUtils.empty(preset)){
                 scanPreset = preset;
             }
+
             boolean inc = cxProperties.getIncremental();
             if(incremental != null){
                 inc = incremental;
@@ -389,11 +397,12 @@ public class GitHubController {
             }
 
         }catch (IllegalArgumentException e){
-            log.error("Error submitting Scan Request. Product option incorrect {}", product);
+            String errorMessage = "Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product != null ? product : "").concat(" | ").concat(bug != null ? bug : "");
+            log.error(errorMessage);
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 
-           return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
-                    .message("Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product))
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
+                    .message(errorMessage)
                     .success(false)
                     .build());
         }
@@ -407,12 +416,31 @@ public class GitHubController {
 
     /** Validates the received body using the Github hook secret. */
     private void verifyHmacSignature(String message, String signature) {
-        byte[] sig = hmac.doFinal(message.getBytes(CHARSET));
-        String computedSignature = "sha1=" + DatatypeConverter.printHexBinary(sig);
-        if (!computedSignature.equalsIgnoreCase(signature)) {
+        if(hmac == null) {
+            log.error("Hmac was not initialized. Trying to initialize...");
+            try {
+                init();
+            } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+                log.error(ExceptionUtils.getStackTrace(e));
+            }
+        }
+        if(hmac != null) {
+            if(message != null) {
+                byte[] sig = hmac.doFinal(message.getBytes(CHARSET));
+                String computedSignature = "sha1=" + DatatypeConverter.printHexBinary(sig);
+                if (!computedSignature.equalsIgnoreCase(signature)) {
+                    log.error("Message was not signed with signature provided.");
+                    throw new InvalidTokenException();
+                }
+                log.info("Signature verified");
+            } else{
+                log.error("Signature cannot be verified because message is null.");
+                throw new InvalidTokenException();
+            }
+        } else {
+            log.error("Unable to initialize Hmac. Signature cannot be verified.");
             throw new InvalidTokenException();
         }
-        log.info("Signature verified");
     }
 
 }

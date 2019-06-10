@@ -30,24 +30,33 @@ public class JsonIssueTracker implements IssueTracker {
 
     @Override
     public void init(ScanRequest request, ScanResults results) throws MachinaException {
-        String filename = properties.getFileNameFormat();
-        filename = ScanUtils.getFilename(request, filename);
-        String folder = properties.getDataFolder();
-        if(!ScanUtils.empty(folder) && folder.endsWith("/")){
-            filename = folder.concat(filename);
-        }
-        else if(!ScanUtils.empty(folder) && !folder.endsWith("/")){
-            filename = folder.concat("/").concat(filename);
-        }
-        request.setFilename(filename);
-        log.info("Creating file {}", filename);
-        log.info("Deleting if already exists");
-        try {
-            Files.deleteIfExists(Paths.get(filename));
-            Files.createFile(Paths.get(filename));
-        } catch (IOException e){
-            log.error("Issue deleting existing file {}", filename);
-            log.error(ExceptionUtils.getStackTrace(e));
+        if (properties != null) {
+            String filename = properties.getFileNameFormat();
+            if(request != null && filename != null) {
+                filename = ScanUtils.getFilename(request, filename);
+                String folder = properties.getDataFolder();
+                if (!ScanUtils.empty(folder) && folder.endsWith("/")) {
+                    filename = folder.concat(filename);
+                } else if (!ScanUtils.empty(folder) && !folder.endsWith("/")) {
+                    filename = folder.concat("/").concat(filename);
+                }
+                request.setFilename(filename);
+                log.info("Creating file {}", filename);
+                log.info("Deleting if already exists");
+                try {
+                    Files.deleteIfExists(Paths.get(filename));
+                    Files.createFile(Paths.get(filename));
+                } catch (IOException e) {
+                    log.error("Issue deleting existing file {}", filename);
+                    log.error(ExceptionUtils.getStackTrace(e));
+                }
+            } else {
+                log.error("Filename or Request is not set");
+                throw new MachinaException();
+            }
+        } else {
+            log.error("Properties are not set");
+            throw new MachinaException();
         }
     }
 
@@ -56,11 +65,17 @@ public class JsonIssueTracker implements IssueTracker {
         try {
             ObjectMapper mapper = new ObjectMapper();
             mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-            mapper.writeValue(new File(request.getFilename()), results);
+            if(request != null && results != null) {
+                mapper.writeValue(new File(request.getFilename()), results);
+            } else {
+                log.error("No request or results provided");
+                throw new MachinaException();
+            }
 
         } catch (IOException e) {
             log.error("Issue occurred while writing file {}", request.getFilename());
             log.error(ExceptionUtils.getStackTrace(e));
+            throw new MachinaException();
         }
     }
 
@@ -91,12 +106,12 @@ public class JsonIssueTracker implements IssueTracker {
 
     @Override
     public String getIssueKey(Issue issue, ScanRequest request) {
-        return issue.getId();
+        return issue != null ? issue.getId() : "";
     }
 
     @Override
     public String getXIssueKey(ScanResults.XIssue issue, ScanRequest request) {
-        return issue.getFilename();
+        return issue != null ? issue.getFilename(): "";
     }
 
     @Override

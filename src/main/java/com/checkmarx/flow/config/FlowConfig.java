@@ -8,6 +8,7 @@ import org.springframework.core.task.TaskExecutor;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.converter.StringHttpMessageConverter;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -31,11 +32,14 @@ public class FlowConfig {
     @Bean
     public RestTemplate getRestTemplate(){
         RestTemplate restTemplate = new RestTemplate();
+
         HttpComponentsClientHttpRequestFactory requestFactory = new
                 HttpComponentsClientHttpRequestFactory(HttpClients.createDefault());
         requestFactory.setConnectTimeout(HTTP_CONNECTION_TIMEOUT);
         requestFactory.setReadTimeout(HTTP_READ_TIMEOUT);
         restTemplate.setRequestFactory(requestFactory);
+
+
         restTemplate.getMessageConverters()
                 .add(0, new StringHttpMessageConverter(Charset.forName("UTF-8")));
         return restTemplate;
@@ -61,8 +65,7 @@ public class FlowConfig {
             props.put("mail.smtp.auth", "true");
 
         }
-
-        props.put("mail.transport.protocol", "smtp");
+        props.put("mail.transport.protocol", JavaMailSenderImpl.DEFAULT_PROTOCOL);
         props.put("mail.smtp.starttls.enable", "true");
 
         return mailSender;

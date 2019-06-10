@@ -27,22 +27,25 @@ public class ResultsService {
     private final GitHubService gitService;
     private final GitLabService gitLabService;
     private final BitBucketService bbService;
+    private final ADOService adoService;
     private final EmailService emailService;
     private final CxProperties cxProperties;
     private final FlowProperties flowProperties;
     private static final Long SLEEP = 20000L;
     private static final Long TIMEOUT = 300000L;
 
-    @ConstructorProperties({"cxService", "jiraService", "issueService", "gitService", "gitLabService", "bbService","emailService", "cxProperties", "flowProperties"})
+    @ConstructorProperties({"cxService", "jiraService", "issueService", "gitService", "gitLabService", "bbService",
+            "adoService","emailService", "cxProperties", "flowProperties"})
     public ResultsService(CxService cxService, JiraService jiraService, IssueService issueService, GitHubService gitService,
-                          GitLabService gitLabService, BitBucketService bbService, EmailService emailService,
-                          CxProperties cxProperties, FlowProperties flowProperties) {
+                          GitLabService gitLabService, BitBucketService bbService, ADOService adoService,
+                          EmailService emailService, CxProperties cxProperties, FlowProperties flowProperties) {
         this.cxService = cxService;
         this.jiraService = jiraService;
         this.issueService = issueService;
         this.gitService = gitService;
         this.gitLabService = gitLabService;
         this.bbService = bbService;
+        this.adoService = adoService;
         this.emailService = emailService;
         this.cxProperties = cxProperties;
         this.flowProperties = flowProperties;
@@ -112,6 +115,7 @@ public class ResultsService {
             return cxService.getReportContent(reportId, filters);
         } catch (InterruptedException e) {
             log.error(ExceptionUtils.getStackTrace(e));
+            Thread.currentThread().interrupt();
             throw new MachinaException("Interrupted Exception Occurred");
         }
     }
@@ -148,11 +152,17 @@ public class ResultsService {
             case BITBUCKETSERVERPULL:
                 bbService.processServerMerge(request, results);
                 break;
+            case ADOPULL:
+                adoService.processPull(request, results);
+                adoService.endBlockMerge(request);
+                break;
             case EMAIL:
                 if(!flowProperties.getMail().isEnabled()) {
                     Map<String, Object> emailCtx = new HashMap<>();
+                    String namespace = request.getNamespace();
+                    String repoName = request.getRepoName();
                     emailCtx.put("message", "Checkmarx Scan Results "
-                            .concat(request.getNamespace()).concat("/").concat(request.getRepoName()).concat(" - ")
+                            .concat(namespace).concat("/").concat(repoName).concat(" - ")
                             .concat(request.getRepoUrl()));
                     emailCtx.put("heading", "Scan Successfully Completed");
 
@@ -163,8 +173,8 @@ public class ResultsService {
                         emailCtx.put("link", results.getLink());
                     }
                     emailCtx.put("repo", request.getRepoUrl());
-                    emailCtx.put("repo_fullname", request.getNamespace().concat("/").concat(request.getRepoName()));
-                    emailService.sendmail(request.getEmail(), "Successfully completed processing for ".concat(request.getNamespace()).concat("/").concat(request.getRepoName()), emailCtx, "template-demo.html");
+                    emailCtx.put("repo_fullname", namespace.concat("/").concat(repoName));
+                    emailService.sendmail(request.getEmail(), "Successfully completed processing for ".concat(namespace).concat("/").concat(repoName), emailCtx, "template-demo.html");
                 }
                 break;
             case CUSTOM:

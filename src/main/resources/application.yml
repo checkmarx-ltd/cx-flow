@@ -18,6 +18,7 @@ logging:
   file: cx-flow.log
   pattern:
     console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{15}){cyan}  [%clr(%X{cx}){blue}] %clr(:){faint} %m%n%wEx"
+    file: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{15}){cyan}  [%clr(%X{cx}){blue}] %clr(:){faint} %m%n%wEx"
 
 #  level:
 #    com:
@@ -43,6 +44,7 @@ cx-flow:
     - GitLab
     - GitHub
     - Csv
+    - Azure
   branches:
     - develop
     - master
@@ -54,7 +56,6 @@ cx-flow:
   filter-status:
 # track-application-only: false
   mitre-url: https://cwe.mitre.org/data/definitions/%s.html
-#  break-build: true
 #  break-build: true
 #  wiki-url: https://custodela.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
 #  codebash-url: https://cxa.codebashing.com/courses/
@@ -68,8 +69,8 @@ cx-flow:
 checkmarx:
   username: xxxxx
   password: xxxxx
-  client-secret: xxxxxxx
-  base-url: https://cx.ken-mcdonald.com/
+  client-secret: 014DF517-39D1-4453-B7B3-9930C563627C
+  base-url: http://cx.local
   multi-tenant: true
   configuration: Default Configuration
   scan-preset: Checkmarx Default
@@ -86,18 +87,17 @@ checkmarx:
   jira-custom-field:
   jira-issuetype-field:
   jira-assignee-field:
+  #team-script:
+  #project-script:
 
 jira:
-  url: https://xxxx.atlassian.net
+  url: https://xxxxx.atlassian.net
   username: xxxx
   token: xxxx
   project: APPSEC
   issue-type: Application Security Bug
   priorities:
-    High: High
-    Medium: Medium
-    Low: Low
-    Informational: Lowest
+    X: Y # Map Checkmarx severity : to JIRA Priority
   open-transition: Reopen Issue
   close-transition: Close Issue
   open-status:
@@ -107,37 +107,7 @@ jira:
   closed-status:
     - Closed
     - Resolved
-  fields:
-    - type: result
-      name: application
-      jira-field-name: Application
-      jira-field-type: label
-    - type: result
-      name: category
-      jira-field-name: Category
-      jira-field-type: label
-    - type: result
-      name: cwe
-      jira-field-name: CWEs
-      jira-field-type: label
-    - type: result
-      name: severity
-      jira-field-name: Severity
-      jira-field-type: single-select
-    - type: result
-      name: loc
-      jira-field-name: Line Numbers
-      jira-field-type: label
-    - type: static
-      name: identified-by
-      jira-field-name: Identified By
-      jira-field-type: single-select
-      jira-default-value: Automation
-    - type: static
-      name: dependencies
-      jira-field-name: Dependencies
-      jira-field-type: multi-select
-      jira-default-value: Java, AngularJS
+#  fields:
 
 github:
   webhook-token: xxxx

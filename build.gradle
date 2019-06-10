@@ -62,6 +62,7 @@ dependencies {
     compile ("com.atlassian.fugue:fugue:${atlassianFugueVersion}")
     compile ("com.atlassian.jira:jira-rest-java-client-core:${atlassianVersion}")
     compile ("com.atlassian.jira:jira-rest-java-client-api:${atlassianVersion}")
+    compile ("org.apache.httpcomponents:httpclient:4.5.8")
     compile ("org.thymeleaf:thymeleaf:3.0.9.RELEASE")
     compile ("org.codehaus.groovy:groovy-all:2.5.7")
     compile ("org.apache.ivy:ivy:2.5.0-rc1")
