@@ -148,8 +148,7 @@ public class CxFlowRunner implements ApplicationRunner {
             filters = ScanUtils.getFilters(severity, cwe, category, status);
         }
         else{
-            filters = ScanUtils.getFilters(flowProperties.getFilterSeverity(), flowProperties.getFilterCwe(),
-                    flowProperties.getFilterCategory(), flowProperties.getFilterStatus());
+            filters = ScanUtils.getFilters(flowProperties);
         }
 
         //set the default bug tracker as per yml
@@ -170,8 +169,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 exit(1);
             }
             p = ScanRequest.Product.CXOSA;
-        }
-        else {
+        } else {
             p = ScanRequest.Product.CX;
         }
 
@@ -329,6 +327,15 @@ public class CxFlowRunner implements ApplicationRunner {
         }
         log.info("Completed Successfully");
         exit(0);
+    }
+
+    private String getOptionValues(ApplicationArguments arg, String option){
+        if(arg != null && option != null) {
+            List<String> values = arg.getOptionValues(option);
+            return ScanUtils.empty(values) ? null : values.get(0);
+        } else {
+            return  null;
+        }
     }
 
     private void cxScan(ScanRequest request, String path){

@@ -1,5 +1,6 @@
 package com.checkmarx.flow.config;
 
+import com.checkmarx.flow.utils.Constants;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;

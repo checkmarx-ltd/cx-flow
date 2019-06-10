@@ -33,6 +33,7 @@ public class FlowService {
     private final GitHubService gitService;
     private final GitLabService gitLabService;
     private final BitBucketService bbService;
+    private final ADOService adoService;
     private final EmailService emailService;
     private final CxProperties cxProperties;
     private final FlowProperties flowProperties;
@@ -51,6 +52,7 @@ public class FlowService {
         this.gitService = gitService;
         this.gitLabService = gitLabService;
         this.bbService = bbService;
+        this.adoService = adoService;
         this.emailService = emailService;
         this.helperService = helperService;
         this.cxProperties = cxProperties;
@@ -201,6 +203,10 @@ public class FlowService {
             else if(bugTrackerType.equals(BugTracker.Type.BITBUCKETSERVERPULL)){
                 bbService.sendServerMergeComment(request, SCAN_MESSAGE);
             }
+            else if(bugTrackerType.equals(BugTracker.Type.ADOPULL)){
+                adoService.sendMergeComment(request, SCAN_MESSAGE);
+                adoService.startBlockMerge(request);
+            }
 
             Integer status = cxService.getScanStatus(scanId);
             if(bugTrackerType.equals(BugTracker.Type.NONE)){
@@ -224,6 +230,7 @@ public class FlowService {
              return resultsService.processScanResultsAsync(request, scanId, request.getFilters());
         }catch (InterruptedException e) {
             log.error(ExceptionUtils.getStackTrace(e));
+            Thread.currentThread().interrupt();
             throw new MachinaException("Interrupted Exception Occurred");
         }
     }

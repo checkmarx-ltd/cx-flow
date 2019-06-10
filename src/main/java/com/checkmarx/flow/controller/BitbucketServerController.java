@@ -5,8 +5,7 @@ import com.checkmarx.flow.config.CxProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.*;
-import com.checkmarx.flow.dto.bitbucketserver.PullEvent;
-import com.checkmarx.flow.dto.bitbucketserver.PushEvent;
+import com.checkmarx.flow.dto.bitbucketserver.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.service.FlowService;
@@ -40,8 +39,6 @@ import java.util.Locale;
 @RequestMapping(value = "/" )
 public class BitbucketServerController {
 
-    private static final String HTTP = "http://";
-    private static final String HTTPS = "https://";
     private static final String SIGNATURE = "X-Hub-Signature";
     private static final String EVENT = "X-Event-Key";
     private static final String PING = EVENT + "=diagnostics:ping";
@@ -130,7 +127,12 @@ public class BitbucketServerController {
         log.info("Processing BitBucket MERGE request");
 
         try {
-            String app = event.getPullRequest().getFromRef().getRepository().getName();
+            PullRequest pullRequest = event.getPullRequest();
+            FromRef fromRef = pullRequest.getFromRef();
+            ToRef toRef = pullRequest.getToRef();
+            Repository fromRefRepository = fromRef.getRepository();
+            Repository_ toRefRepository = toRef.getRepository();
+            String app = fromRefRepository.getName();
             if(!ScanUtils.empty(application)){
                 app = application;
             }
@@ -147,8 +149,8 @@ public class BitbucketServerController {
                 product = ScanRequest.Product.CX.getProduct();
             }
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
-            String currentBranch = event.getPullRequest().getFromRef().getDisplayId();
-            String targetBranch = event.getPullRequest().getToRef().getDisplayId();
+            String currentBranch = fromRef.getDisplayId();
+            String targetBranch = toRef.getDisplayId();
             List<String> branches = new ArrayList<>();
             List<Filter> filters;
 
@@ -165,20 +167,19 @@ public class BitbucketServerController {
                 filters = ScanUtils.getFilters(severity, cwe, category, status);
             }
             else{
-                filters = ScanUtils.getFilters(flowProperties.getFilterSeverity(), flowProperties.getFilterCwe(),
-                        flowProperties.getFilterCategory(), flowProperties.getFilterStatus());
+                filters = ScanUtils.getFilters(flowProperties);
             }
-
+            String projectKey = fromRefRepository.getProject().getKey();
             String gitUrl = properties.getUrl().concat("/scm/")
-                    .concat(event.getPullRequest().getFromRef().getRepository().getProject().getKey().concat("/"))
-                    .concat(event.getPullRequest().getFromRef().getRepository().getSlug()).concat(".git");
+                    .concat(projectKey.concat("/"))
+                    .concat(fromRefRepository.getSlug()).concat(".git");
 
-            String gitAuthUrl = gitUrl.replace(HTTPS, HTTPS.concat(properties.getToken()).concat("@"));
-            gitAuthUrl = gitAuthUrl.replace(HTTP, HTTP.concat(properties.getToken()).concat("@"));
+            String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(properties.getToken()).concat("@"));
+            gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(properties.getToken()).concat("@"));
             String mergeEndpoint = properties.getUrl().concat(properties.getApiPath()).concat(MERGE_COMMENT);
-            mergeEndpoint = mergeEndpoint.replace("{project}", event.getPullRequest().getToRef().getRepository().getProject().getKey());
-            mergeEndpoint = mergeEndpoint.replace("{repo}", event.getPullRequest().getToRef().getRepository().getSlug());
-            mergeEndpoint = mergeEndpoint.replace("{id}", event.getPullRequest().getId().toString());
+            mergeEndpoint = mergeEndpoint.replace("{project}", toRefRepository.getProject().getKey());
+            mergeEndpoint = mergeEndpoint.replace("{repo}", toRefRepository.getSlug());
+            mergeEndpoint = mergeEndpoint.replace("{id}", pullRequest.getId().toString());
 
             String scanPreset = cxProperties.getScanPreset();
             if(!ScanUtils.empty(preset)){
@@ -194,15 +195,15 @@ public class BitbucketServerController {
                     .product(p)
                     .project(project)
                     .team(team)
-                    .namespace(event.getPullRequest().getFromRef().getRepository().getProject().getKey().replaceAll(" ","_"))
-                    .repoName(event.getPullRequest().getFromRef().getRepository().getName())
+                    .namespace(projectKey.replaceAll(" ","_"))
+                    .repoName(fromRefRepository.getName())
                     .repoUrl(gitUrl)
                     .repoUrlWithAuth(gitAuthUrl)
                     .repoType(ScanRequest.Repository.BITBUCKETSERVER)
                     .branch(currentBranch)
                     .mergeTargetBranch(targetBranch)
                     .mergeNoteUri(mergeEndpoint)
-                    .refs(event.getPullRequest().getFromRef().getId())
+                    .refs(fromRef.getId())
                     .email(null)
                     .incremental(inc)
                     .scanPreset(scanPreset)
@@ -215,7 +216,7 @@ public class BitbucketServerController {
             request = ScanUtils.overrideMap(request, o);
             request.setId(uid);
             try {
-                request.putAdditionalMetadata("BITBUCKET_BROWSE", event.getPullRequest().getFromRef().getRepository().getLinks().getSelf().get(0).getHref());
+                request.putAdditionalMetadata("BITBUCKET_BROWSE", fromRefRepository.getLinks().getSelf().get(0).getHref());
             }catch (NullPointerException e){
                 log.warn("Not able to determine file url for browsing");
             }
@@ -226,11 +227,12 @@ public class BitbucketServerController {
 
 
         }catch (IllegalArgumentException e){
-            log.error("Error submitting Scan Request. Product option incorrect {}", product);
+            String errorMessage = "Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product != null ? product : "").concat(" | ").concat(bug != null ? bug : "");
+            log.error(errorMessage);
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
-                    .message("Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product))
+                    .message(errorMessage)
                     .success(false)
                     .build());
         }
@@ -284,7 +286,8 @@ public class BitbucketServerController {
         }
 
         try {
-            String app = event.getRepository().getName();
+            Repository repository = event.getRepository();
+            String app = repository.getName();
             if(!ScanUtils.empty(application)){
                 app = application;
             }
@@ -320,18 +323,18 @@ public class BitbucketServerController {
                 filters = ScanUtils.getFilters(severity, cwe, category, status);
             }
             else{
-                filters = ScanUtils.getFilters(flowProperties.getFilterSeverity(), flowProperties.getFilterCwe(),
-                        flowProperties.getFilterCategory(), flowProperties.getFilterStatus());
+                filters = ScanUtils.getFilters(flowProperties);
             }
             List<String> emails = new ArrayList<>();
 
             emails.add(event.getActor().getEmailAddress());
 
+            String projectKey = repository.getProject().getKey();
             String gitUrl = properties.getUrl().concat("/scm/")
-                    .concat(event.getRepository().getProject().getKey().concat("/"))
-                    .concat(event.getRepository().getSlug()).concat(".git");
-            String gitAuthUrl = gitUrl.replace("https://", "https://".concat(properties.getToken()).concat("@"));
-            gitAuthUrl = gitAuthUrl.replace("http://", "http://".concat(properties.getToken()).concat("@"));
+                    .concat(projectKey.concat("/"))
+                    .concat(repository.getSlug()).concat(".git");
+            String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(properties.getToken()).concat("@"));
+            gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(properties.getToken()).concat("@"));
 
             String scanPreset = cxProperties.getScanPreset();
             if(!ScanUtils.empty(preset)){
@@ -347,8 +350,8 @@ public class BitbucketServerController {
                     .product(p)
                     .project(project)
                     .team(team)
-                    .namespace(event.getRepository().getProject().getKey().replaceAll(" ","_"))
-                    .repoName(event.getRepository().getName())
+                    .namespace(projectKey.replaceAll(" ","_"))
+                    .repoName(repository.getName())
                     .repoUrl(gitUrl)
                     .repoUrlWithAuth(gitAuthUrl)
                     .repoType(ScanRequest.Repository.BITBUCKETSERVER)
@@ -363,7 +366,7 @@ public class BitbucketServerController {
                     .filters(filters)
                     .build();
             try {
-                request.putAdditionalMetadata("BITBUCKET_BROWSE", event.getRepository().getLinks().getSelf().get(0).getHref());
+                request.putAdditionalMetadata("BITBUCKET_BROWSE", repository.getLinks().getSelf().get(0).getHref());
             }catch (NullPointerException e){
                 log.warn("Not able to determine file url for browsing");
             }
@@ -376,11 +379,12 @@ public class BitbucketServerController {
 
 
         }catch (IllegalArgumentException e){
-            log.error("Error submitting Scan Request. Product option incorrect {}", product);
+            String errorMessage = "Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product != null ? product : "").concat(" | ").concat(bug != null ? bug : "");
+            log.error(errorMessage);
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
-                    .message("Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product))
+                    .message(errorMessage)
                     .success(false)
                     .build());
         }

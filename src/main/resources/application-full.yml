@@ -136,6 +136,8 @@ jira:
       jira-field-name: LOC
       jira-field-type: label
       jira-default-value: XXXXX
+  close-transition-value:
+  close-transition-field:
 
 json:
   file-name-format: "[NAMESPACE]-[REPO]-[BRANCH]-[TIME].json"
