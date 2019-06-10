@@ -777,6 +777,12 @@ public class CxService {
 
         for (Filter f : filters) {
             if (f.getType().equals(Filter.Type.STATUS)) {
+                //handle New Status separately (this field is Status as opposed to State for the others
+                if(f.getValue().equalsIgnoreCase("New")){
+                    if(r.getStatus().equalsIgnoreCase("New")){
+                        return true;
+                    }
+                }
                 status.add(STATUS_MAP.get(f.getValue().toUpperCase(Locale.ROOT)));
             }
         }
