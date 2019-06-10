@@ -44,6 +44,7 @@ cx-flow:
     - GitLab
     - GitHub
     - Csv
+    - Azure
   branches:
     - develop
     - master
@@ -86,6 +87,8 @@ checkmarx:
   jira-custom-field:
   jira-issuetype-field:
   jira-assignee-field:
+  #team-script:
+  #project-script:
 
 jira:
   url: https://xxxxx.atlassian.net
@@ -94,11 +97,7 @@ jira:
   project: APPSEC
   issue-type: Application Security Bug
   priorities:
-    X: Y
-#    High: High
-#    Medium: Medium
-#    Low: Low
-#    Informational: Lowest
+    X: Y # Map Checkmarx severity : to JIRA Priority
   open-transition: Reopen Issue
   close-transition: Close Issue
   open-status:
