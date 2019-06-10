@@ -18,6 +18,7 @@ logging:
   file: cx-flow.log
   pattern:
     console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{15}){cyan}  [%clr(%X{cx}){blue}] %clr(:){faint} %m%n%wEx"
+    file: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{15}){cyan}  [%clr(%X{cx}){blue}] %clr(:){faint} %m%n%wEx"
 
 #  level:
 #    com:
@@ -43,6 +44,7 @@ cx-flow:
     - GitLab
     - GitHub
     - Csv
+    - Azure
   branches:
     - develop
     - master
@@ -85,6 +87,8 @@ checkmarx:
   jira-custom-field:
   jira-issuetype-field:
   jira-assignee-field:
+  #team-script:
+  #project-script:
 
 jira:
   url: https://xxxxx.atlassian.net
@@ -93,11 +97,7 @@ jira:
   project: APPSEC
   issue-type: Application Security Bug
   priorities:
-    X: Y
-#    High: High
-#    Medium: Medium
-#    Low: Low
-#    Informational: Lowest
+    X: Y # Map Checkmarx severity : to JIRA Priority
   open-transition: Reopen Issue
   close-transition: Close Issue
   open-status:
