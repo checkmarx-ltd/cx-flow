@@ -15,6 +15,8 @@ import org.springframework.stereotype.Component;
 import java.beans.ConstructorProperties;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import static java.lang.System.exit;
 
@@ -150,7 +152,12 @@ public class CxFlowRunner implements ApplicationRunner {
         else{
             filters = ScanUtils.getFilters(flowProperties);
         }
-
+        if(excludeFiles == null){
+            excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
+        }
+        if(excludeFolders == null){
+            excludeFolders = Arrays.asList(cxProperties.getExcludeFolders().split(","));
+        }
         //set the default bug tracker as per yml
         BugTracker.Type bugType = null;
         if (ScanUtils.empty(bugTracker)) {
