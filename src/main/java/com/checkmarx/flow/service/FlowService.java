@@ -40,6 +40,7 @@ public class FlowService {
     private final ResultsService resultsService;
     private final HelperService helperService;
     private static final Long SLEEP = 20000L;
+    private static final String ERROR_BREAK_MSG = "Exiting with Error code 10 due to issues present";
 
     @ConstructorProperties({"cxService", "resultService", "gitService", "gitLabService", "bbService",
             "adoService", "emailService", "helperService", "cxProperties", "flowProperties"})
@@ -242,14 +243,14 @@ public class FlowService {
             ScanUtils.zipDirectory(path, cxZipFile);
             File f = new File(cxZipFile);
             log.debug(f.getPath());
-            log.debug("free space "+ f.getFreeSpace());
-            log.debug("total space "+ f.getTotalSpace());
+            log.debug("free space {}", f.getFreeSpace());
+            log.debug("total space {}", f.getTotalSpace());
             log.debug(f.getAbsolutePath());
             CompletableFuture<ScanResults> future = executeCxScanFlow(request, f);
             log.debug("Waiting for scan to complete");
             ScanResults results = future.join();
             if(flowProperties.isBreakBuild() && results !=null && results.getXIssues()!=null && !results.getXIssues().isEmpty()){
-                log.error("Exiting with Error code 10 due to issues present");
+                log.error(ERROR_BREAK_MSG);
                 exit(10);
             }
         } catch (IOException e) {
@@ -267,7 +268,7 @@ public class FlowService {
             ScanResults results = cxService.getReportContent(file, request.getFilters());
             resultsService.processResults(request, results);
             if(flowProperties.isBreakBuild() && results !=null && results.getXIssues()!=null && !results.getXIssues().isEmpty()){
-                log.error("Exiting with Error code 10 due to issues present");
+                log.error(ERROR_BREAK_MSG);
                 exit(10);
             }
         } catch (MachinaException e) {
@@ -282,7 +283,7 @@ public class FlowService {
             ScanResults results = cxService.getOsaReportContent(file, libs, request.getFilters());
             resultsService.processResults(request, results);
             if(flowProperties.isBreakBuild() && results !=null && results.getXIssues()!=null && !results.getXIssues().isEmpty()){
-                log.error("Exiting with Error code 10 due to issues present");
+                log.error(ERROR_BREAK_MSG);
                 exit(10);
             }
         } catch (MachinaException e) {
