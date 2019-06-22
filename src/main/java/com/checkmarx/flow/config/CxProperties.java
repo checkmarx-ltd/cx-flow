@@ -33,6 +33,8 @@ public class CxProperties {
     private String projectScript;
     private String scanPreset = Constants.CX_DEFAULT_PRESET;
     private String configuration = Constants.CX_DEFAULT_CONFIGURATION;
+    private String excludeFiles;
+    private String excludeFolders;
     private Boolean incremental = false;
     private Integer incrementalThreshold = 7;
     private Integer incrementalNumScans = 5;
@@ -287,4 +289,21 @@ public class CxProperties {
     public void setJiraAssigneeField(String jiraAssigneeField) {
         this.jiraAssigneeField = jiraAssigneeField;
     }
+
+    public String getExcludeFiles() {
+        return excludeFiles;
+    }
+
+    public void setExcludeFiles(String excludeFiles) {
+        this.excludeFiles = excludeFiles;
+    }
+
+    public String getExcludeFolders() {
+        return excludeFolders;
+    }
+
+    public void setExcludeFolders(String excludeFolders) {
+        this.excludeFolders = excludeFolders;
+    }
 }
+

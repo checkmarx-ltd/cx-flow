@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.beans.ConstructorProperties;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -139,6 +140,12 @@ public class GitLabController {
                 filters = ScanUtils.getFilters(flowProperties);
             }
 
+            if(excludeFiles == null){
+                excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
+            }
+            if(excludeFolders == null){
+                excludeFolders = Arrays.asList(cxProperties.getExcludeFolders().split(","));
+            }
             Project proj = body.getProject();
             String mergeEndpoint = properties.getApiUrl().concat(GitLabService.MERGE_NOTE_PATH);
             mergeEndpoint = mergeEndpoint.replace("{id}", proj.getId().toString());
@@ -274,6 +281,14 @@ public class GitLabController {
             else{
                 filters = ScanUtils.getFilters(flowProperties);
             }
+
+            if(excludeFiles == null){
+                excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
+            }
+            if(excludeFolders == null){
+                excludeFolders = Arrays.asList(cxProperties.getExcludeFolders().split(","));
+            }
+
             Project proj = body.getProject();
             /*Determine emails*/
             List<String> emails = new ArrayList<>();
