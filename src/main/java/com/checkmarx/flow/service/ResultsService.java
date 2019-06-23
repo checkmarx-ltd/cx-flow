@@ -121,8 +121,13 @@ public class ResultsService {
     }
 
     void processResults(ScanRequest request, ScanResults results) throws MachinaException {
+        //TODO log summary
+        //Log overall Cx Results summary
+        //Log filtered Cx Results summary
         switch (request.getBugTracker().getType()) {
             case NONE:
+            case nonewait:
+            case NONEWAIT:
                 log.info("Issue tracking is turned off");
                 break;
             case JIRA:
