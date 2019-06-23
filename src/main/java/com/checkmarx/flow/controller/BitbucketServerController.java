@@ -171,10 +171,10 @@ public class BitbucketServerController {
                 filters = ScanUtils.getFilters(flowProperties);
             }
 
-            if(excludeFiles == null){
+            if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
                 excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
             }
-            if(excludeFolders == null){
+            if(excludeFolders == null && !ScanUtils.empty(cxProperties.getExcludeFolders())){
                 excludeFolders = Arrays.asList(cxProperties.getExcludeFolders().split(","));
             }
 
@@ -335,10 +335,10 @@ public class BitbucketServerController {
                 filters = ScanUtils.getFilters(flowProperties);
             }
 
-            if(excludeFiles == null){
+            if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
                 excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
             }
-            if(excludeFolders == null){
+            if(excludeFolders == null && !ScanUtils.empty(cxProperties.getExcludeFolders())){
                 excludeFolders = Arrays.asList(cxProperties.getExcludeFolders().split(","));
             }
 

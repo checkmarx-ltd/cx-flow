@@ -263,6 +263,23 @@ public class FlowService {
         }
     }
 
+    public void cxFullScan(ScanRequest request){
+
+        try {
+            CompletableFuture<ScanResults> future = executeCxScanFlow(request, null);
+            log.debug("Waiting for scan to complete");
+            ScanResults results = future.join();
+            if(flowProperties.isBreakBuild() && results !=null && results.getXIssues()!=null && !results.getXIssues().isEmpty()){
+                log.error(ERROR_BREAK_MSG);
+                exit(10);
+            }
+        } catch (MachinaException e){
+            log.error(ExceptionUtils.getStackTrace(e));
+            exit(3);
+        }
+    }
+
+
     public void cxParseResults(ScanRequest request, File file){
         try {
             ScanResults results = cxService.getReportContent(file, request.getFilters());

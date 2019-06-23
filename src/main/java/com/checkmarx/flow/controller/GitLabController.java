@@ -25,9 +25,6 @@ import java.util.Locale;
 @RequestMapping(value = "/")
 public class GitLabController {
 
-    private static final String OAUTH2 = "oauth2:";
-    private static final String HTTPS_OAUTH2 = Constants.HTTPS + OAUTH2;
-    private static final String HTTP_OAUTH2 = Constants.HTTP + OAUTH2;
     private static final String TOKEN_HEADER = "X-Gitlab-Token";
     private static final String EVENT = "X-Gitlab-Event";
     private static final String PUSH = EVENT + "=Push Hook";
@@ -140,20 +137,21 @@ public class GitLabController {
                 filters = ScanUtils.getFilters(flowProperties);
             }
 
-            if(excludeFiles == null){
+            if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
                 excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
             }
-            if(excludeFolders == null){
+            if(excludeFolders == null && !ScanUtils.empty(cxProperties.getExcludeFolders())){
                 excludeFolders = Arrays.asList(cxProperties.getExcludeFolders().split(","));
             }
+
             Project proj = body.getProject();
             String mergeEndpoint = properties.getApiUrl().concat(GitLabService.MERGE_NOTE_PATH);
             mergeEndpoint = mergeEndpoint.replace("{id}", proj.getId().toString());
             mergeEndpoint = mergeEndpoint.replace("{iid}", objectAttributes.getIid().toString());
             String gitUrl = proj.getGitHttpUrl();
             log.info("Using url: {}", gitUrl);
-            String gitAuthUrl = gitUrl.replace(Constants.HTTPS, HTTPS_OAUTH2.concat(properties.getToken()).concat("@"));
-            gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, HTTP_OAUTH2.concat(properties.getToken()).concat("@"));
+            String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS_OAUTH2.concat(properties.getToken()).concat("@"));
+            gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP_OAUTH2.concat(properties.getToken()).concat("@"));
             String scanPreset = cxProperties.getScanPreset();
             if(!ScanUtils.empty(preset)){
                 scanPreset = preset;
@@ -282,10 +280,10 @@ public class GitLabController {
                 filters = ScanUtils.getFilters(flowProperties);
             }
 
-            if(excludeFiles == null){
+            if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
                 excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
             }
-            if(excludeFolders == null){
+            if(excludeFolders == null && !ScanUtils.empty(cxProperties.getExcludeFolders())){
                 excludeFolders = Arrays.asList(cxProperties.getExcludeFolders().split(","));
             }
 
@@ -309,8 +307,8 @@ public class GitLabController {
             }
             String gitUrl = proj.getGitHttpUrl();
             log.debug("Using url: {}", gitUrl);
-            String gitAuthUrl = gitUrl.replace(Constants.HTTPS, HTTPS_OAUTH2.concat(properties.getToken()).concat("@"));
-            gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, HTTP_OAUTH2.concat(properties.getToken()).concat("@"));
+            String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS_OAUTH2.concat(properties.getToken()).concat("@"));
+            gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP_OAUTH2.concat(properties.getToken()).concat("@"));
 
             String scanPreset = cxProperties.getScanPreset();
             if(!ScanUtils.empty(preset)){

@@ -108,6 +108,13 @@ public class ScanUtils {
         return str == null || str.isEmpty();
     }
 
+    public static boolean anyEmpty(String ...str){
+        for(String s : str)
+            if (empty(s)) {
+                return true;
+            }
+        return false;
+    }
     /**
      * Check if list is empty or null
      * @param list
