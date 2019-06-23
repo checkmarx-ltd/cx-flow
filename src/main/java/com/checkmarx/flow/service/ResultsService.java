@@ -121,9 +121,6 @@ public class ResultsService {
     }
 
     void processResults(ScanRequest request, ScanResults results) throws MachinaException {
-        //TODO log summary
-        //Log overall Cx Results summary
-        //Log filtered Cx Results summary
         switch (request.getBugTracker().getType()) {
             case NONE:
             case nonewait:
@@ -189,6 +186,10 @@ public class ResultsService {
             default:
                 log.warn("No valid bug type was provided");
         }
+        log.info("####Checkmarx Scan Results Summary####");
+        log.info(results.getScanSummary().toString());
+        log.info("To veiw results: {}", results.getLink());
+        log.info("######################################");
     }
 
     /**
