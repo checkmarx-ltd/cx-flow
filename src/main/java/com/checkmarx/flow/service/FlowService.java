@@ -154,6 +154,10 @@ public class FlowService {
                 }
             }
 
+            //Kick out if the team is unknown
+            if(ownerId.equals(UNKNOWN)){
+                throw new MachinaException("Parent team could not be established.  Please ensure correct team is provided");
+            }
             //only allow specific chars in project name in checkmarx
             projectName = projectName.replaceAll("[^a-zA-Z0-9-_.]+","-");
             log.info("Project Name being used {}", projectName);
