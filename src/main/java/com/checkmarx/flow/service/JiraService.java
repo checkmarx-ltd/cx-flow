@@ -846,7 +846,9 @@ public class JiraService {
                         if (updatedIssue != null) {
                             log.debug("Update completed for issue #{}", updatedIssue.getKey());
                             updatedIssues.add(updatedIssue.getKey());
-                            addCommentToBug(i.getKey(), "Issue still remains");
+                            if(jiraProperties.isUpdateComment() && !ScanUtils.empty(jiraProperties.getUpdateCommentValue())) {
+                                addCommentToBug(i.getKey(), jiraProperties.getUpdateCommentValue());
+                            }
                         }
                     } else {
                         log.info("Skipping issue marked as false-positive or has False Positive state with key {}", xIssue.getKey());
