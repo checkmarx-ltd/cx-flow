@@ -101,11 +101,17 @@ public class FlowService {
             /*Check if team is provided*/
             String team = helperService.getCxTeam(request);
             if(!ScanUtils.empty(team)){
+                if(!team.startsWith("\\"))
+                    team = "\\".concat(team);
                 log.info("Overriding team with {}", team);
                 ownerId = cxService.getTeamId(team);
             }
             else{
-                ownerId = cxService.getTeamId(cxProperties.getTeam());
+                team = cxProperties.getTeam();
+                if(!team.startsWith("\\"))
+                    team = "\\".concat(team);
+                log.info("Using team {}", team);
+                ownerId = cxService.getTeamId(team);
 
                 if(cxProperties.isMultiTenant() &&
                         !ScanUtils.empty(namespace)){
