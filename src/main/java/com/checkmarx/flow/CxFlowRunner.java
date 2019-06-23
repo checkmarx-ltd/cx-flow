@@ -4,6 +4,7 @@ import com.checkmarx.flow.config.*;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.HelperService;
+import com.checkmarx.flow.utils.Constants;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -15,9 +16,9 @@ import org.springframework.stereotype.Component;
 import java.beans.ConstructorProperties;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
 import static java.lang.System.exit;
 
 @Component
@@ -152,10 +153,11 @@ public class CxFlowRunner implements ApplicationRunner {
         else{
             filters = ScanUtils.getFilters(flowProperties);
         }
-        if(excludeFiles == null){
+        //Adding default file/folder exclusions from properties if they are not provided as an override
+        if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
             excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
         }
-        if(excludeFolders == null){
+        if(excludeFolders == null && !ScanUtils.empty(cxProperties.getExcludeFolders())){
             excludeFolders = Arrays.asList(cxProperties.getExcludeFolders().split(","));
         }
         //set the default bug tracker as per yml
@@ -185,7 +187,7 @@ public class CxFlowRunner implements ApplicationRunner {
         }
 
         BugTracker bt = null;
-        String gitUrlAuth = null;
+        String gitAuthUrl = null;
         switch (bugType){
             case NONE:
                 log.info("No bug tracker will be used");
@@ -256,7 +258,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 .repoName(repoName)
                 .mergeNoteUri(mergeNoteUri)
                 .repoUrl(repoUrl)
-                .repoUrlWithAuth(gitUrlAuth)
+                .repoUrlWithAuth(gitAuthUrl)
                 .repoType(repoType)
                 .branch(branch)
                 .refs(null)
@@ -325,7 +327,47 @@ public class CxFlowRunner implements ApplicationRunner {
             }
             else if(args.containsOption("scan")){
                 log.info("Executing scan process");
-                cxScan(request, file);
+                String gitUrl = getOptionValues(args, "git-url");
+                //GitHub Scan with Git Clone
+                if(args.containsOption("github")){
+                    if(ScanUtils.empty(gitUrl) && !ScanUtils.anyEmpty(namespace, repoName)) {
+                        gitUrl = gitHubProperties.getGitUri(namespace, repoName);
+                    } else if(ScanUtils.empty(gitUrl)){
+                        log.error("Unable to determine git url for scanning, exiting...");
+                        exit(2);
+                    }
+                    String token = gitHubProperties.getToken();
+                    gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(token).concat("@"));
+                    gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(token).concat("@"));
+
+                    cxScan(request, gitUrl, gitAuthUrl, branch, ScanRequest.Repository.GITHUB);
+                } //GitLab Scan with Git Clone
+                else if(args.containsOption("gitlab") &&  !ScanUtils.anyEmpty(namespace, repoName)){
+                    if(ScanUtils.empty(gitUrl) && !ScanUtils.anyEmpty(namespace, repoName)) {
+                        gitUrl = gitLabProperties.getGitUri(namespace, repoName);
+                    } else if(ScanUtils.empty(gitUrl)){
+                        log.error("Unable to determine git url for scanning, exiting...");
+                        exit(2);
+                    }
+                    String token = gitLabProperties.getToken();
+                    gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS_OAUTH2.concat(token).concat("@"));
+                    gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP_OAUTH2.concat(token).concat("@"));
+                    cxScan(request, gitUrl, gitAuthUrl, branch, ScanRequest.Repository.GITLAB);
+                }
+                else if(args.containsOption("bitbucket") && containsRepoArgs(namespace, repoName, branch)){
+                    log.warn("Bitbucket git clone scan not implemented");
+                }
+                else if(args.containsOption("ado") && containsRepoArgs(namespace, repoName, branch)){
+                    log.warn("Azure DevOps git clone scan not implemented");
+                }
+                else if(file != null) {
+                        cxScan(request, file);
+                    }
+                else{
+                        log.error("No valid option was provided for driving scan");
+                }
+
+
             }
         }catch (Exception e){
             log.error("An error occurred while processing request");
@@ -334,6 +376,12 @@ public class CxFlowRunner implements ApplicationRunner {
         }
         log.info("Completed Successfully");
         exit(0);
+    }
+
+    private boolean containsRepoArgs(String namespace, String repoName, String branch){
+        return (!ScanUtils.empty(namespace) &&
+                !ScanUtils.empty(repoName) &&
+                !ScanUtils.empty(branch));
     }
 
     private String getOptionValues(ApplicationArguments arg, String option){
@@ -345,6 +393,16 @@ public class CxFlowRunner implements ApplicationRunner {
         }
     }
 
+    private void cxScan(ScanRequest request, String gitUrl, String gitAuthUrl, String branch, ScanRequest.Repository repoType){
+        log.info("Initiating scan using Checkmarx git clone");
+        request.setRepoType(repoType);
+        log.info("Git url: {}", gitUrl);
+        request.setBranch(branch);
+        request.setRepoUrl(gitUrl);
+        request.setRepoUrlWithAuth(gitAuthUrl);
+        request.setRefs(Constants.CX_BRANCH_PREFIX.concat(branch));
+        flowService.cxFullScan(request);
+    }
     private void cxScan(ScanRequest request, String path){
         if(ScanUtils.empty(request.getProject())){
             log.error("Please provide --cx-project to define the project in Checkmarx");

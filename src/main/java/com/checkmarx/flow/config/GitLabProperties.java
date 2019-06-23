@@ -89,4 +89,11 @@ public class GitLabProperties {
     public void setBlockMergeComplete(boolean blockMergeComplete) {
         this.blockMergeComplete = blockMergeComplete;
     }
+
+    public String getGitUri(String namespace, String repo){
+        String format = "%s/%s/%s.git";
+        return String.format(format, getUrl(), namespace, repo);
+        //sample: https://github.com/namespace/repo.git
+    }
+
 }

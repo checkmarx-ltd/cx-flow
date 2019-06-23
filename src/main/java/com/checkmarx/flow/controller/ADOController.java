@@ -151,10 +151,10 @@ public class ADOController {
                         flowProperties.getFilterCategory(), flowProperties.getFilterStatus());
             }
 
-            if(excludeFiles == null){
+            if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
                 excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
             }
-            if(excludeFolders == null){
+            if(excludeFolders == null && !ScanUtils.empty(cxProperties.getExcludeFolders())){
                 excludeFolders = Arrays.asList(cxProperties.getExcludeFolders().split(","));
             }
 
@@ -324,10 +324,10 @@ public class ADOController {
                 filters = ScanUtils.getFilters(flowProperties.getFilterSeverity(), flowProperties.getFilterCwe(),
                         flowProperties.getFilterCategory(), flowProperties.getFilterStatus());
             }
-            if(excludeFiles == null){
+            if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
                 excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
             }
-            if(excludeFolders == null){
+            if(excludeFolders == null && !ScanUtils.empty(cxProperties.getExcludeFolders())){
                 excludeFolders = Arrays.asList(cxProperties.getExcludeFolders().split(","));
             }
             /*Determine emails*/
