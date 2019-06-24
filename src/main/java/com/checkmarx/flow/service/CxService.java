@@ -82,6 +82,7 @@ public class CxService {
     private static final String SCAN_CONFIGURATIONS = "/sast/engineConfigurations";
     private static final String SCAN_SETTINGS = "/sast/scanSettings";
     private static final String SCAN = "/sast/scans";
+    private static final String SCAN_SUMMARY = "/sast/scans/{id}/resultsStatistics";
     private static final String PROJECT_SCANS = "/sast/scans?projectId={pid}";
     private static final String SCAN_STATUS = "/sast/scans/{id}";
     private static final String REPORT = "/reports/sastScan";
@@ -386,10 +387,14 @@ public class CxService {
             cxScanBuilder.files(cxResults.getFilesScanned());
             cxScanBuilder.loc(cxResults.getLinesOfCodeScanned());
             cxScanBuilder.scanType(cxResults.getScanType());
-            getIssues(filter, session, xIssueList, cxResults);
+            Map<String, Integer> summary = getIssues(filter, session, xIssueList, cxResults);
             cxScanBuilder.xIssues(xIssueList);
             cxScanBuilder.additionalDetails(getAdditionalScanDetails(cxResults));
+            CxScanSummary scanSummary = getScanSummary(Integer.valueOf(cxResults.getScanId()));
+            cxScanBuilder.scanSummary(scanSummary);
             ScanResults results = cxScanBuilder.build();
+            //Add the summary map (severity, count)
+            results.getAdditionalDetails().put(Constants.SUMMARY_KEY, summary);
             if (cxProperties.getPreserveXml()) {
                 results.setOutput(xml);
             }
@@ -500,6 +505,10 @@ public class CxService {
             getIssues(filter, session, issueList, cxResults);
             cxScanBuilder.xIssues(issueList);
             cxScanBuilder.additionalDetails(getAdditionalScanDetails(cxResults));
+            if (!cxProperties.getOffline() && !ScanUtils.empty(cxResults.getScanId())) {
+                CxScanSummary scanSummary = getScanSummary(Integer.valueOf(cxResults.getScanId()));
+                cxScanBuilder.scanSummary(scanSummary);
+            }
             return cxScanBuilder.build();
 
         } catch (JAXBException e) {
@@ -633,15 +642,21 @@ public class CxService {
      * @param cxIssueList
      * @param cxResults
      */
-    private void getIssues(List<Filter> filter, String session, List<ScanResults.XIssue> cxIssueList, CxXMLResultsType cxResults) {
+    private Map<String, Integer> getIssues(List<Filter> filter, String session, List<ScanResults.XIssue> cxIssueList, CxXMLResultsType cxResults) {
+        Map<String, Integer> summary = new HashMap<>();
         for (QueryType q : cxResults.getQuery()) {
             if (checkFilter(q, filter)) {
                 ScanResults.XIssue.XIssueBuilder xIssueBuilder = ScanResults.XIssue.builder();
                 /*Top node of each issue*/
                 for (ResultType r : q.getResult()) {
                     if (r.getFalsePositive().equalsIgnoreCase("FALSE") && checkFilter(r, filter)) {
+                        if(!summary.containsKey(r.getSeverity())){
+                            summary.put(r.getSeverity(), 0);
+                        }
+                        int x = summary.get(r.getSeverity());
+                        x++;
+                        summary.put(r.getSeverity(), x);
                         /*Map issue details*/
-
                         xIssueBuilder.cwe(q.getCweId());
                         xIssueBuilder.language(q.getLanguage());
                         xIssueBuilder.severity(q.getSeverity());
@@ -681,6 +696,7 @@ public class CxService {
                 }
             }
         }
+        return summary;
     }
 
     private Map<String, Object> getAdditionalIssueDetails(QueryType q, ResultType r) {
@@ -1236,6 +1252,32 @@ public class CxService {
             throw new MachinaException("Error obtaining Preset Id");
         }
     }
+
+    /**
+     * Get scan summary for given scanId
+     *
+     * @param scanId
+     * @return
+     * @throws MachinaException
+     */
+    public CxScanSummary getScanSummary(Integer scanId) throws MachinaException {
+        HttpEntity httpEntity = new HttpEntity<>(createAuthHeaders());
+        try {
+            log.debug("Retrieving scan summary for scan id: {}", scanId);
+            ResponseEntity<CxScanSummary> response = restTemplate.exchange(cxProperties.getUrl().concat(SCAN_SUMMARY), HttpMethod.GET, httpEntity, CxScanSummary.class, scanId);
+            CxScanSummary scanSummary = response.getBody();
+            if (scanSummary == null) {
+                log.warn("No scan summary was available for scan id: {}", scanId);
+            }
+            return scanSummary;
+        } catch (HttpStatusCodeException e) {
+            log.error("Error occurred while retrieving scan summary for scan id: {}", scanId);
+            log.error(ExceptionUtils.getStackTrace(e));
+        }
+        log.warn("No scan summary was available for scan id: {}", scanId);
+        return null;
+    }
+
 
     /**
      * Get Auth Token

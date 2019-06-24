@@ -30,6 +30,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -183,6 +184,12 @@ public class GitHubController {
                 filters = ScanUtils.getFilters(flowProperties);
             }
 
+            if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
+                excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
+            }
+            if(excludeFolders == null && !ScanUtils.empty(cxProperties.getExcludeFolders())){
+                excludeFolders = Arrays.asList(cxProperties.getExcludeFolders().split(","));
+            }
             //build request object
             String gitUrl = repository.getCloneUrl();
             String token = properties.getToken();
@@ -335,6 +342,14 @@ public class GitHubController {
             else{
                 filters = ScanUtils.getFilters(flowProperties);
             }
+
+            if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
+                excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
+            }
+            if(excludeFolders == null && !ScanUtils.empty(cxProperties.getExcludeFolders())){
+                excludeFolders = Arrays.asList(cxProperties.getExcludeFolders().split(","));
+            }
+
             /*Determine emails*/
             List<String> emails = new ArrayList<>();
             for(Commit c: event.getCommits()){

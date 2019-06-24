@@ -9,10 +9,7 @@ import java.util.List;
 @Component
 @ConfigurationProperties(prefix = "azure")
 @Validated
-public class ADOProperties {
-    private String webhookToken;
-    private String token;
-    private String url;
+public class ADOProperties extends RepoProperties{
     private String issueType = "issue";
     private String issueBody = "Description";
     private String appTagPrefix = "app";
@@ -22,38 +19,6 @@ public class ADOProperties {
     private String apiVersion = "5.0";
     private String openStatus;
     private String closedStatus;
-    private String falsePositiveLabel;
-    private boolean blockMerge = false;
-    private boolean blockMergeComplete = false;
-
-
-    public String getWebhookToken() {
-        return this.webhookToken;
-    }
-
-    public String getToken() {
-        return this.token;
-    }
-
-    public String getUrl() {
-        return this.url;
-    }
-
-    public String getFalsePositiveLabel() {
-        return this.falsePositiveLabel;
-    }
-
-    public void setWebhookToken(String webhookToken) {
-        this.webhookToken = webhookToken;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
-    }
 
     public String getApiVersion() {
         return apiVersion;
@@ -61,10 +26,6 @@ public class ADOProperties {
 
     public void setApiVersion(String apiVersion) {
         this.apiVersion = apiVersion;
-    }
-
-    public void setFalsePositiveLabel(String falsePositiveLabel) {
-        this.falsePositiveLabel = falsePositiveLabel;
     }
 
     public String getIssueType() {
@@ -131,19 +92,4 @@ public class ADOProperties {
         this.closedStatus = closedStatus;
     }
 
-    public boolean isBlockMerge() {
-        return blockMerge;
-    }
-
-    public void setBlockMerge(boolean blockMerge) {
-        this.blockMerge = blockMerge;
-    }
-
-    public boolean isBlockMergeComplete() {
-        return blockMergeComplete;
-    }
-
-    public void setBlockMergeComplete(boolean blockMergeComplete) {
-        this.blockMergeComplete = blockMergeComplete;
-    }
 }
