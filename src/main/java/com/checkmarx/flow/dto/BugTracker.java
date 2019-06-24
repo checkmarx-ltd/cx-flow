@@ -182,8 +182,8 @@ public class BugTracker {
         EMAIL("EMAIL"),
         CUSTOM("CUSTOM"),
         NONE("NONE"),
-        NONEWAIT("NONE-WAIT"),
-        nonewait("none-wait");
+        WAIT("WAIT"),
+        wait("wait");
 
         private String type;
 

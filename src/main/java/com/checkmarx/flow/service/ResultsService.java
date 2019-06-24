@@ -123,8 +123,8 @@ public class ResultsService {
     void processResults(ScanRequest request, ScanResults results) throws MachinaException {
         switch (request.getBugTracker().getType()) {
             case NONE:
-            case nonewait:
-            case NONEWAIT:
+            case wait:
+            case WAIT:
                 log.info("Issue tracking is turned off");
                 break;
             case JIRA:
