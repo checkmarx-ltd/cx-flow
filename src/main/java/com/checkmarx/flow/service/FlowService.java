@@ -40,6 +40,7 @@ public class FlowService {
     private final ResultsService resultsService;
     private final HelperService helperService;
     private static final Long SLEEP = 20000L;
+    private static final String ERROR_BREAK_MSG = "Exiting with Error code 10 due to issues present";
 
     @ConstructorProperties({"cxService", "resultService", "gitService", "gitLabService", "bbService",
             "adoService", "emailService", "helperService", "cxProperties", "flowProperties"})
@@ -100,11 +101,17 @@ public class FlowService {
             /*Check if team is provided*/
             String team = helperService.getCxTeam(request);
             if(!ScanUtils.empty(team)){
+                if(!team.startsWith("\\"))
+                    team = "\\".concat(team);
                 log.info("Overriding team with {}", team);
                 ownerId = cxService.getTeamId(team);
             }
             else{
-                ownerId = cxService.getTeamId(cxProperties.getTeam());
+                team = cxProperties.getTeam();
+                if(!team.startsWith("\\"))
+                    team = "\\".concat(team);
+                log.info("Using team {}", team);
+                ownerId = cxService.getTeamId(team);
 
                 if(cxProperties.isMultiTenant() &&
                         !ScanUtils.empty(namespace)){
@@ -147,6 +154,10 @@ public class FlowService {
                 }
             }
 
+            //Kick out if the team is unknown
+            if(ownerId.equals(UNKNOWN)){
+                throw new MachinaException("Parent team could not be established.  Please ensure correct team is provided");
+            }
             //only allow specific chars in project name in checkmarx
             projectName = projectName.replaceAll("[^a-zA-Z0-9-_.]+","-");
             log.info("Project Name being used {}", projectName);
@@ -242,14 +253,14 @@ public class FlowService {
             ScanUtils.zipDirectory(path, cxZipFile);
             File f = new File(cxZipFile);
             log.debug(f.getPath());
-            log.debug("free space "+ f.getFreeSpace());
-            log.debug("total space "+ f.getTotalSpace());
+            log.debug("free space {}", f.getFreeSpace());
+            log.debug("total space {}", f.getTotalSpace());
             log.debug(f.getAbsolutePath());
             CompletableFuture<ScanResults> future = executeCxScanFlow(request, f);
             log.debug("Waiting for scan to complete");
             ScanResults results = future.join();
             if(flowProperties.isBreakBuild() && results !=null && results.getXIssues()!=null && !results.getXIssues().isEmpty()){
-                log.error("Exiting with Error code 10 due to issues present");
+                log.error(ERROR_BREAK_MSG);
                 exit(10);
             }
         } catch (IOException e) {
@@ -262,12 +273,29 @@ public class FlowService {
         }
     }
 
+    public void cxFullScan(ScanRequest request){
+
+        try {
+            CompletableFuture<ScanResults> future = executeCxScanFlow(request, null);
+            log.debug("Waiting for scan to complete");
+            ScanResults results = future.join();
+            if(flowProperties.isBreakBuild() && results !=null && results.getXIssues()!=null && !results.getXIssues().isEmpty()){
+                log.error(ERROR_BREAK_MSG);
+                exit(10);
+            }
+        } catch (MachinaException e){
+            log.error(ExceptionUtils.getStackTrace(e));
+            exit(3);
+        }
+    }
+
+
     public void cxParseResults(ScanRequest request, File file){
         try {
             ScanResults results = cxService.getReportContent(file, request.getFilters());
             resultsService.processResults(request, results);
             if(flowProperties.isBreakBuild() && results !=null && results.getXIssues()!=null && !results.getXIssues().isEmpty()){
-                log.error("Exiting with Error code 10 due to issues present");
+                log.error(ERROR_BREAK_MSG);
                 exit(10);
             }
         } catch (MachinaException e) {
@@ -282,7 +310,7 @@ public class FlowService {
             ScanResults results = cxService.getOsaReportContent(file, libs, request.getFilters());
             resultsService.processResults(request, results);
             if(flowProperties.isBreakBuild() && results !=null && results.getXIssues()!=null && !results.getXIssues().isEmpty()){
-                log.error("Exiting with Error code 10 due to issues present");
+                log.error(ERROR_BREAK_MSG);
                 exit(10);
             }
         } catch (MachinaException e) {

@@ -44,7 +44,7 @@ public class GitHubService {
 
     void processPull(ScanRequest request,ScanResults results) throws GitHubClientException {
         try {
-            String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties);
+            String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties, properties);
             log.debug("comment: {}", comment);
             sendMergeComment(request, comment);
         } catch (HttpClientErrorException e){

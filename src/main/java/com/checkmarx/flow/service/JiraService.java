@@ -52,17 +52,19 @@ public class JiraService {
 
     @PostConstruct
     public void init() {
-        JiraRestClientFactory factory = new AsynchronousJiraRestClientFactory();
+        if(jiraProperties != null && !ScanUtils.empty(jiraProperties.getUrl())) {
+            JiraRestClientFactory factory = new AsynchronousJiraRestClientFactory();
 
-        try {
-            this.jiraURI = new URI(jiraProperties.getUrl());
-        } catch (URISyntaxException e) {
-            log.error("Error constructing URI for JIRA");
+            try {
+                this.jiraURI = new URI(jiraProperties.getUrl());
+            } catch (URISyntaxException e) {
+                log.error("Error constructing URI for JIRA");
+            }
+            this.client = factory.createWithBasicHttpAuthentication(jiraURI, jiraProperties.getUsername(), jiraProperties.getToken());
+            this.issueClient = this.client.getIssueClient();
+            this.projectClient = this.client.getProjectClient();
+            this.metaClient = this.client.getMetadataClient();
         }
-        this.client = factory.createWithBasicHttpAuthentication(jiraURI, jiraProperties.getUsername(), jiraProperties.getToken());
-        this.issueClient = this.client.getIssueClient();
-        this.projectClient = this.client.getProjectClient();
-        this.metaClient = this.client.getMetadataClient();
     }
 
     private List<Issue> getIssues(ScanRequest request) {
@@ -844,7 +846,9 @@ public class JiraService {
                         if (updatedIssue != null) {
                             log.debug("Update completed for issue #{}", updatedIssue.getKey());
                             updatedIssues.add(updatedIssue.getKey());
-                            addCommentToBug(i.getKey(), "Issue still remains");
+                            if(jiraProperties.isUpdateComment() && !ScanUtils.empty(jiraProperties.getUpdateCommentValue())) {
+                                addCommentToBug(i.getKey(), jiraProperties.getUpdateCommentValue());
+                            }
                         }
                     } else {
                         log.info("Skipping issue marked as false-positive or has False Positive state with key {}", xIssue.getKey());

@@ -63,6 +63,8 @@ checkmarx:
   jira-assignee-field:
   #project-script: D:\\tmp\CxProject.groovy
   #team-script: D:\\tmp\CxTeam.groovy
+  exclude-files:
+  exclude-folders:
 
 jira:
   url: http://localhost:8180
@@ -127,6 +129,7 @@ github:
   api-url: https://api.github.com/repos/
   false-positive-label: false-positive
   block-merge: true
+  detailed: true
 
 gitlab:
   webhook-token: 1234
