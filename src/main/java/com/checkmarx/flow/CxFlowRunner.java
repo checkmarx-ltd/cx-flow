@@ -189,6 +189,14 @@ public class CxFlowRunner implements ApplicationRunner {
         BugTracker bt = null;
         String gitAuthUrl = null;
         switch (bugType){
+            case WAIT:
+            case wait:
+                log.info("No bug tracker will be used...waiting for scan to complete");
+                bugType = BugTracker.Type.WAIT;
+                bt = BugTracker.builder()
+                        .type(bugType)
+                        .build();
+                break;
             case NONE:
                 log.info("No bug tracker will be used");
                 bugType = BugTracker.Type.NONE;
