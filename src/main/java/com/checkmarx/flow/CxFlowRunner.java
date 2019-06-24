@@ -327,32 +327,31 @@ public class CxFlowRunner implements ApplicationRunner {
             }
             else if(args.containsOption("scan")){
                 log.info("Executing scan process");
-                String gitUrl = getOptionValues(args, "git-url");
                 //GitHub Scan with Git Clone
                 if(args.containsOption("github")){
-                    if(ScanUtils.empty(gitUrl) && !ScanUtils.anyEmpty(namespace, repoName)) {
-                        gitUrl = gitHubProperties.getGitUri(namespace, repoName);
-                    } else if(ScanUtils.empty(gitUrl)){
+                    if(ScanUtils.empty(repoUrl) && !ScanUtils.anyEmpty(namespace, repoName)) {
+                        repoUrl = gitHubProperties.getGitUri(namespace, repoName);
+                    } else if(ScanUtils.empty(repoUrl)){
                         log.error("Unable to determine git url for scanning, exiting...");
                         exit(2);
                     }
                     String token = gitHubProperties.getToken();
-                    gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(token).concat("@"));
+                    gitAuthUrl = repoUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(token).concat("@"));
                     gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(token).concat("@"));
 
-                    cxScan(request, gitUrl, gitAuthUrl, branch, ScanRequest.Repository.GITHUB);
+                    cxScan(request, repoUrl, gitAuthUrl, branch, ScanRequest.Repository.GITHUB);
                 } //GitLab Scan with Git Clone
                 else if(args.containsOption("gitlab") &&  !ScanUtils.anyEmpty(namespace, repoName)){
-                    if(ScanUtils.empty(gitUrl) && !ScanUtils.anyEmpty(namespace, repoName)) {
-                        gitUrl = gitLabProperties.getGitUri(namespace, repoName);
-                    } else if(ScanUtils.empty(gitUrl)){
+                    if(ScanUtils.empty(repoUrl) && !ScanUtils.anyEmpty(namespace, repoName)) {
+                        repoUrl = gitLabProperties.getGitUri(namespace, repoName);
+                    } else if(ScanUtils.empty(repoUrl)){
                         log.error("Unable to determine git url for scanning, exiting...");
                         exit(2);
                     }
                     String token = gitLabProperties.getToken();
-                    gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS_OAUTH2.concat(token).concat("@"));
+                    gitAuthUrl = repoUrl.replace(Constants.HTTPS, Constants.HTTPS_OAUTH2.concat(token).concat("@"));
                     gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP_OAUTH2.concat(token).concat("@"));
-                    cxScan(request, gitUrl, gitAuthUrl, branch, ScanRequest.Repository.GITLAB);
+                    cxScan(request, repoUrl, gitAuthUrl, branch, ScanRequest.Repository.GITLAB);
                 }
                 else if(args.containsOption("bitbucket") && containsRepoArgs(namespace, repoName, branch)){
                     log.warn("Bitbucket git clone scan not implemented");
