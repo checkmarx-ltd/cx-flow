@@ -1,4 +1,52 @@
 ---------------------------------------------------------------------
+Release 1.3.1
+---------------------------------------------------------------------
+# Changes
+* Allow for optional JIRA comment on updating issues
+* Introduced external Conmessage for comment on
+# Features
+* Allow for configurable http connection and read timeout settings under the cx-flow configuration block:
+cx-flow:
+...
+http-connection-timeout: xxx #milliseconds - default 30000
+http-read-timeout: xxx #milliseconds - default 120000
+* Introduced CLI Summary Output:
+2019-06-23 17:19:36.869  INFO 3632 --- [  scan-results1] c.c.f.s.ResultsService                    [9zxIHPWA] : ####Checkmarx Scan Results Summary####
+2019-06-23 17:19:36.869  INFO 3632 --- [  scan-results1] c.c.f.s.ResultsService                    [9zxIHPWA] : high: 32, medium: 56, low: 328, info: 4
+2019-06-23 17:19:36.869  INFO 3632 --- [  scan-results1] c.c.f.s.ResultsService                    [9zxIHPWA] : To veiw results: http://WIN-8KCMUUB70RI/CxWebClient/ViewerMain.aspx?scanid=1010215&projectid=10076
+2019-06-23 17:19:36.869  INFO 3632 --- [  scan-results1] c.c.f.s.ResultsService                    [9zxIHPWA] : ######################################
+2019-06-23 17:19:36.869  INFO 3632 --- [  scan-results1] c.c.f.s.ResultsService                    [9zxIHPWA] : Process completed Succesfully
+* Introduced option for Checkmarx Summary, CxFlow Violation Summary, Detailed Summary options for Pull/Merge feedback.
+  The header value within the comment is also configurable.  This is to allow greater flexibility as to what is presented in pull/merge comments Optional as per each repo configuration block.  i.e.:
+github:
+  webhook-token: xxxx
+  token: xxxx
+  url: https://github.com
+  api-url: https://api.github.com/repos/
+  false-positive-label: false-positive
+  block-merge: true
+  cx-summary-header: Checkmarx Scan Summary
+  cx-summary: true #default false if not provided
+  flow-summary-header: Violation Summary
+  flow-summary: true #default true if not provided
+  detailed-header: Details
+  detailed: true #default true if not provided
+* CLI Enhancements
+** Allow for git clone scan initiation using --scan option along with --github|gitlab options (NOTE: Bitbucket is not complete, but will be for next release)
+** Addition of new bug-tracker option (NONE-WAIT | none-wait), which indicates no feedback channel, but to wait for scan completion.  NOTE: NONE initiates the scan but does not wait for scan completion (async).
+** Add global Checkmarx default file/folder exclusions to apply to all projects unless overridden through webhook url param / cli param
+checkmarx:
+  ...
+  exclude-files: "*.jpg, *.gif" #comma separated
+  exclude-folders: "node_modules/" #comma separated
+
+# FIXES
+* Fix for JiraService bean init failure when jira configuration block is excluded from application.yml
+* Exception is now thrown if the team is not found instead of attempting to create project under Id -1
+* Checkmarx rest api requires a leading slash for team paths, a leading backslash is added automatically if one is not present
+
+---------------------------------------------------------------------
+---------------------------------------------------------------------
 Release 1.3.0
 ---------------------------------------------------------------------
 # CHANGES
