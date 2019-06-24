@@ -596,11 +596,7 @@ public class ScanUtils {
         log.debug(dt);
         log.debug(filename);
 
-        if(!empty(request.getTeam())){
-            String team = request.getTeam();
-            team = team.replaceAll("\\\\","_");
-            filename = filename.replace("[TEAM]", team);
-        }
+        filename = getGenericFilename(filename, "[TEAM]", request.getTeam());
         filename = getGenericFilename(filename, "[APP]", request.getApplication());
         filename = getGenericFilename(filename, "[PROJECT]", request.getProject());
         filename = getGenericFilename(filename, "[NAMESPACE]", request.getNamespace());
@@ -611,7 +607,10 @@ public class ScanUtils {
     }
 
     public static String getGenericFilename(String filename, String valueToReplace, String replacement){
+
         if(!empty(replacement)) {
+            replacement = replacement.replaceAll("[^a-zA-Z0-9-_]+","_");
+
             filename = filename.replace(valueToReplace, replacement);
             log.debug(replacement);
             log.debug(filename);
