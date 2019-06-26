@@ -10,7 +10,7 @@ public class RepoProperties {
     private String openTransition = "open";
     private String closeTransition = "closed";
     private boolean blockMerge = false;
-    private boolean blockMergeComplete = false;
+    private boolean errorMerge = false;
     private boolean detailed = true;
     private String detailHeader = "Details";
     private boolean flowSummary = true;
@@ -90,12 +90,12 @@ public class RepoProperties {
         this.blockMerge = blockMerge;
     }
 
-    public boolean isBlockMergeComplete() {
-        return blockMergeComplete;
+    public boolean isErrorMerge() {
+        return errorMerge;
     }
 
-    public void setBlockMergeComplete(boolean blockMergeComplete) {
-        this.blockMergeComplete = blockMergeComplete;
+    public void setErrorMerge(boolean errorMerge) {
+        this.errorMerge = errorMerge;
     }
 
     public boolean isDetailed() {
