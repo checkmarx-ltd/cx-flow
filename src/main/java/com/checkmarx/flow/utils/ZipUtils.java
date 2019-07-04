@@ -55,6 +55,9 @@ public class ZipUtils {
             }
         } else {
             String tmpPath = FileSystems.getDefault().getPath(srcFile).toAbsolutePath().toString();
+            tmpPath = tmpPath.replace("/./","/"); //Linux FS
+            tmpPath = tmpPath.replace("\\.\\","\\"); //Windows FS
+
             log.debug("@@@ {} | {} @@@", zipFile, tmpPath);
             if(tmpPath.equals(zipFile)){
                 log.debug("#########Skipping the new zip file {}#########", zipFile);
