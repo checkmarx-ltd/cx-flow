@@ -51,6 +51,7 @@ public class ZipUtils {
         } else {
             String tmpPath = srcFile.replace("\\","/");
             tmpPath = tmpPath.replace("./","");
+            log.debug("@@@ {} | {} @@@", zipFile, tmpPath);
             if(tmpPath.equals(zipFile)){
                 log.debug("#########Skipping zip file {}#########", zipFile);
                 return;
