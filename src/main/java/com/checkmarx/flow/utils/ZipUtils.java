@@ -21,11 +21,15 @@ public class ZipUtils {
     public static void zipFile(String fileToZip, String zipFile, String excludePatterns)
             throws IOException {
         List<String> excludeList = null;
+        log.info("Creating zip file {} of the path {}", zipFile, fileToZip);
+        log.debug("Exclusions: {}", excludePatterns);
         if(!ScanUtils.empty(excludePatterns)) {
             excludeList = Arrays.asList(excludePatterns.split(","));
         }
         zipFile = zipFile.replace("\\","/");
         zipFile = zipFile.replace("./","");
+        log.debug("zipFile: {}", zipFile);
+        log.debug("fileToZip: {}", fileToZip);
         try (ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(zipFile))) {
             File srcFile = new File(fileToZip);
             if (srcFile.isDirectory()) {
