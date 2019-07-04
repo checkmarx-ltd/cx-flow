@@ -147,8 +147,13 @@ public class JiraService {
             IssueType issueType = this.getIssueType(projectKey, bugTracker.getIssueType());
             IssueInputBuilder issueBuilder = new IssueInputBuilder(projectKey, issueType.getId());
             String issuePrefix = jiraProperties.getIssuePrefix();
+            String issuePostfix = jiraProperties.getIssuePostfix();
+
             if(issuePrefix == null){
                 issuePrefix = "";
+            }
+            if(issuePostfix == null){
+                issuePostfix = "";
             }
 
             String summary;
@@ -156,10 +161,10 @@ public class JiraService {
                     !ScanUtils.empty(namespace) &&
                     !ScanUtils.empty(repoName) &&
                     !ScanUtils.empty(branch)) {
-                summary = String.format(ScanUtils.JIRA_ISSUE_KEY, issuePrefix, vulnerability, filename, branch);
+                summary = String.format(ScanUtils.JIRA_ISSUE_KEY, issuePrefix, vulnerability, filename, branch, issuePostfix);
             }
             else{
-                summary = String.format(ScanUtils.JIRA_ISSUE_KEY_2, issuePrefix, vulnerability, filename);
+                summary = String.format(ScanUtils.JIRA_ISSUE_KEY_2, issuePrefix, vulnerability, filename, issuePostfix);
             }
             String fileUrl = ScanUtils.getFileUrl(request,issue.getFilename());
 
@@ -473,6 +478,10 @@ public class JiraService {
                             log.debug("single select field");
                             issueBuilder.setFieldValue(customField, ComplexIssueInputFieldValue.with("value", value));
                             break;
+                        case "radio":
+                            log.debug("radio field");
+                            issueBuilder.setFieldValue(customField, ComplexIssueInputFieldValue.with("value", value));
+                            break;
                         case "multi-select":
                             log.debug("multi select field");
                             String[] selected = StringUtils.split(value, ",");
@@ -658,8 +667,12 @@ public class JiraService {
 
     private Map<String, ScanResults.XIssue> getIssueMap(List<ScanResults.XIssue> issues, ScanRequest request){
         String issuePrefix = jiraProperties.getIssuePrefix();
+        String issuePostfix = jiraProperties.getIssuePostfix();
         if(issuePrefix == null){
             issuePrefix = "";
+        }
+        if(issuePostfix == null){
+            issuePostfix = "";
         }
         Map<String, ScanResults.XIssue> map = new HashMap<>();
 
@@ -668,13 +681,13 @@ public class JiraService {
                 !ScanUtils.empty(request.getRepoName()) &&
                 !ScanUtils.empty(request.getBranch())) {
             for (ScanResults.XIssue issue : issues) {
-                String key = String.format(ScanUtils.JIRA_ISSUE_KEY, issuePrefix, issue.getVulnerability(), issue.getFilename(), request.getBranch());
+                String key = String.format(ScanUtils.JIRA_ISSUE_KEY, issuePrefix, issue.getVulnerability(), issue.getFilename(), request.getBranch(), issuePostfix);
                 map.put(key, issue);
             }
         }
         else{
             for (ScanResults.XIssue issue : issues) {
-                String key = String.format(ScanUtils.JIRA_ISSUE_KEY_2, issuePrefix, issue.getVulnerability(), issue.getFilename());
+                String key = String.format(ScanUtils.JIRA_ISSUE_KEY_2, issuePrefix, issue.getVulnerability(), issue.getFilename(), issuePostfix);
                 map.put(key, issue);
             }
         }
@@ -683,6 +696,9 @@ public class JiraService {
 
     private String getBody(ScanResults.XIssue issue, ScanRequest request, String fileUrl){
         StringBuilder body = new StringBuilder();
+        if(!ScanUtils.empty(jiraProperties.getDescriptionPrefix())){
+            body.append(jiraProperties.getDescriptionPrefix());
+        }
         if(!flowProperties.isTrackApplicationOnly() &&
                 !ScanUtils.empty(request.getNamespace()) &&
                 !ScanUtils.empty(request.getRepoName()) &&
@@ -808,7 +824,9 @@ public class JiraService {
                 body.append(ScanUtils.CRLF);
             }
         }
-
+        if(!ScanUtils.empty(jiraProperties.getDescriptionPostfix())){
+            body.append(jiraProperties.getDescriptionPostfix());
+        }
         return body.toString();
     }
 

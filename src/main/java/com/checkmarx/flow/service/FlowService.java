@@ -6,11 +6,11 @@ import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.cx.CxProject;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.flow.utils.ZipUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import javax.annotation.Nullable;
 import java.beans.ConstructorProperties;
 import java.io.File;
 import java.io.IOException;
@@ -250,7 +250,7 @@ public class FlowService {
 
         try {
             String cxZipFile = FileSystems.getDefault().getPath("cx.".concat(UUID.randomUUID().toString()).concat(".zip")).toAbsolutePath().toString();
-            ScanUtils.zipDirectory(path, cxZipFile);
+            ZipUtils.zipFile(path, cxZipFile, flowProperties.getZipExclude());
             File f = new File(cxZipFile);
             log.debug(f.getPath());
             log.debug("free space {}", f.getFreeSpace());
@@ -321,7 +321,7 @@ public class FlowService {
     }
 
 
-    public CompletableFuture<ScanResults> cxGetResults(ScanRequest request, @Nullable CxProject cxProject){
+    public CompletableFuture<ScanResults> cxGetResults(ScanRequest request, CxProject cxProject){
         try {
             CxProject project;
 

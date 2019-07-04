@@ -73,10 +73,14 @@ public class GitHubService {
         }
     }
 
-    void endBlockMerge(ScanRequest request, String url){
+    void endBlockMerge(ScanRequest request, String url, boolean findingsPresent){
+        String state = "success";
+        if(properties.isErrorMerge() && findingsPresent){
+            state = "failure";
+        }
         if(properties.isBlockMerge()) {
             HttpEntity httpEntity = new HttpEntity<>(
-                    getJSONStatus("success", url, "Checkmarx Scan Completed").toString(),
+                    getJSONStatus(state, url, "Checkmarx Scan Completed").toString(),
                     createAuthHeaders()
             );
             if(ScanUtils.empty(request.getAdditionalMetadata("statuses_url"))){

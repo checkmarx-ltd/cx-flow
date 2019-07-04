@@ -185,9 +185,7 @@ public class CxService {
 
     LocalDateTime getLastScanDate(Integer projectId) {
         HttpEntity requestEntity = new HttpEntity<>(createAuthHeaders());
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
-        DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SS");
-        DateTimeFormatter formatter3 = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
         log.info("Finding last Scan Id for project Id {}", projectId);
         try {
@@ -202,29 +200,19 @@ public class CxService {
                 if (!scan.getBoolean("isIncremental")) {
                     JSONObject dateAndTime = scan.getJSONObject("dateAndTime");
                     log.debug("Last full scan was {}", dateAndTime);
-                    //example: "finishedOn": "2018-06-18T01:09:12.707",
-                    //example: "finishedOn": "2019-03-22T01:51:18.11",
+                    //example: "finishedOn": "2018-06-18T01:09:12.707", Grab only first 19 digits due to inconsistency of checkmarx results
                     LocalDateTime d;
                     try {
-                        d = LocalDateTime.parse(dateAndTime.getString("finishedOn"), formatter);
+                        String finishedOn = dateAndTime.getString("finishedOn");
+                        finishedOn = finishedOn.substring(0, 19);
+                        log.debug("finishedOn: {}", finishedOn);
+                        d = LocalDateTime.parse(finishedOn, formatter);
+                        return d;
                     } catch (DateTimeParseException e) {
-                        //log.warn(ExceptionUtils.getStackTrace(e));
                         log.warn("Error Parsing last finished scan time {}", e.getParsedString());
-                        try {
-                            log.info("Attempting 2nd format 'yyyy-MM-dd'T'HH:mm:ss.SS'");
-                            d = LocalDateTime.parse(dateAndTime.getString("finishedOn"), formatter2);
-                        } catch (DateTimeParseException e2) {
-                            log.info("Attempting 3rd format 'yyyy-MM-dd'T'HH:mm:ss'");
-                            try {
-                                d = LocalDateTime.parse(dateAndTime.getString("finishedOn"), formatter3);
-                            } catch (DateTimeParseException e3) {
-                                log.error(ExceptionUtils.getStackTrace(e2));
-                                log.error(e2.getParsedString());
-                                return null;
-                            }
-                        }
+                        log.error(ExceptionUtils.getStackTrace(e));
+                        return null;
                     }
-                    return d;
                 }
             }
         } catch (HttpStatusCodeException e) {
