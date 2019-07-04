@@ -22,19 +22,15 @@ public class ZipUtils {
     public static void zipFile(String fileToZip, String zipFile, String excludePatterns)
             throws IOException {
         List<String> excludeList = null;
-        log.info("Creating zip file {} of the path {}", zipFile, fileToZip);
-        log.debug("Exclusions: {}", excludePatterns);
+        log.info("Creating zip file {} from contents of path {}", zipFile, fileToZip);
+        log.info("Applying exclusions: {}", excludePatterns);
+
         if(!ScanUtils.empty(excludePatterns)) {
             excludeList = Arrays.asList(excludePatterns.split(","));
         }
+
         zipFile = FileSystems.getDefault().getPath(zipFile).toAbsolutePath().toString();
-        log.trace("FS: {}", zipFile);
-        zipFile = zipFile.replace("\\","/");
-        log.trace("FS: {}", zipFile);
-        zipFile = zipFile.replace("./","");
-        log.trace("FS: {}", zipFile);
-        log.debug("zipFile: {}", zipFile);
-        log.debug("fileToZip: {}", fileToZip);
+        log.debug("Zip Absolute path: {}", zipFile);
         try (ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(zipFile))) {
             File srcFile = new File(fileToZip);
             if (srcFile.isDirectory()) {
@@ -58,11 +54,10 @@ public class ZipUtils {
                 addToZip(filePath, srcFile + "/" + fileName, zipFile, zipOut, excludePatterns);
             }
         } else {
-            String tmpPath = srcFile.replace("\\","/");
-            tmpPath = tmpPath.replace("./","");
+            String tmpPath = FileSystems.getDefault().getPath(srcFile).toAbsolutePath().toString();
             log.debug("@@@ {} | {} @@@", zipFile, tmpPath);
             if(tmpPath.equals(zipFile)){
-                log.debug("#########Skipping zip file {}#########", zipFile);
+                log.debug("#########Skipping the new zip file {}#########", zipFile);
                 return;
             }
             if(excludePatterns == null || excludePatterns.isEmpty() || !anyMatches(excludePatterns, filePath)) {
