@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.FileSystems;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -26,8 +27,12 @@ public class ZipUtils {
         if(!ScanUtils.empty(excludePatterns)) {
             excludeList = Arrays.asList(excludePatterns.split(","));
         }
+        zipFile = FileSystems.getDefault().getPath(zipFile).toAbsolutePath().toString();
+        log.trace("FS: {}", zipFile);
         zipFile = zipFile.replace("\\","/");
+        log.trace("FS: {}", zipFile);
         zipFile = zipFile.replace("./","");
+        log.trace("FS: {}", zipFile);
         log.debug("zipFile: {}", zipFile);
         log.debug("fileToZip: {}", fileToZip);
         try (ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(zipFile))) {
