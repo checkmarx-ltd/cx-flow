@@ -4,7 +4,7 @@ logging:
 cx-flow:
   # Agreed upon shared API token
   token: xxxx
-  bug-tracker: Azure
+  bug-tracker: JIRA
   bug-tracker-impl:
     - CxXml
     - Json
@@ -20,6 +20,9 @@ cx-flow:
   mitre-url: https://cwe.mitre.org/data/definitions/%s.html
   #wiki-url: https://xxxxxx
   #codebash-url: https://cxa.codebashing.com/courses/
+  #track-application-only: true
+  #zip-exclude: .*.json$, bin\/.*
+
 
 checkmarx:
   username:
@@ -38,39 +41,32 @@ checkmarx:
   jira-issuetype-field:
   jira-assignee-field:
   scan-timeout: 120
+  incremental: true
 
 jira:
-  url: https://xxxxxx
+  url: http://localhost:8180
   username: xxxx
   token: xxxx
   project: APPSEC
-  issue-type: Application Security Bug
+  issue-type: Bug
   priorities:
     High: High
     Medium: Medium
     Low: Low
     Informational: Lowest
-  open-transition: Reopen Issue
-  close-transition: Close Issue
+  open-transition: In Progress
+  close-transition: Done
   open-status:
-    - Open
+    - To Do
     - In Progress
-    - Reopened
   closed-status:
-    - Closed
-    - Resolved
+    - Done
   fields:
     - type: result
       name: system-date
       skip-update: true
-      offset: 10
-      jira-field-name: Due date
-      jira-field-type: text
-    - type: result
-      name: system-date
-      skip-update: true
-      offset: 10
-      jira-field-name: Due date
+      offset: 60
+      jira-field-name: Due Date #Due date (cloud)
       jira-field-type: text
     - type: result
       name: application
@@ -98,10 +94,19 @@ jira:
       jira-field-type: single-select
       jira-default-value: Automation
     - type: static
+      name: state
+      jira-field-name: State
+      jira-field-type: radio
+      jira-default-value: Active
+    - type: static
       name: dependencies
       jira-field-name: Dependencies
       jira-field-type: multi-select
       jira-default-value: Java, AngularJS
+  #issue-prefix: "<PREFIX>-"
+  #issue-postfix: "-<POSTFIX>"
+  #description-prefix: "<PRE>-"
+  #description-postfix: "<POST>-"
 
 github:
   webhook-token: 1234
