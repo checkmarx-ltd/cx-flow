@@ -38,6 +38,8 @@ cx-flow:
   wiki-url: https://checkmarx.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
   codebash-url: https://cxa.codebashing.com/courses/
   #branch-script: D:\\tmp\Branch.groovy
+  #zip-exclude: .*.json$, bin\/.*
+
 checkmarx:
   username: xxx
   password: xxx
@@ -63,8 +65,8 @@ checkmarx:
   jira-assignee-field:
   #project-script: D:\\tmp\CxProject.groovy
   #team-script: D:\\tmp\CxTeam.groovy
-  exclude-files:
-  exclude-folders:
+  #exclude-files:
+  #exclude-folders:
 
 jira:
   url: http://localhost:8180
@@ -121,6 +123,10 @@ jira:
       jira-field-name: Dependencies
       jira-field-type: multi-select
       jira-default-value: Java, AngularJS
+  #issue-prefix: "<PREFIX>-"
+  #issue-postfix: "-<POSTFIX>"
+  #description-prefix: "<PRE>-"
+  #description-postfix: "<POST>-"
 
 github:
   webhook-token: 1234
@@ -129,7 +135,8 @@ github:
   api-url: https://api.github.com/repos/
   false-positive-label: false-positive
   block-merge: true
-  detailed: true
+  error-merge: true
+  cx-summary: true
 
 gitlab:
   webhook-token: 1234

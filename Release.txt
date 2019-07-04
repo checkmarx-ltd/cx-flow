@@ -1,15 +1,41 @@
 ---------------------------------------------------------------------
+Release 1.3.2
+---------------------------------------------------------------------
+# FEATURES
+* Ability to fail the status of a merge request in GitHub if any of the filter criteria is met (any issues are presented in the pull feedback).
+** Following configuration can be enabled under the github block for this:
+github:
+...
+  block-merge: true
+...
+* Ability to exclude files from being zipped up during the CLI scan process using the cx-flow.zip-exclude cli option, or with the following
+  configuration block using csv of regular expressions:
+cx-flow:
+...
+  zip-exclude: .*.json$, bin\/.* #Regular expression CSV
+...
+* Ability to add a prefix/postfix to both JIRA Issue Summary and Issue Description using the following configurations under the jira block:
+jira
+...
+  issue-prefix: "<PREFIX>-"
+  issue-postfix: "-<POSTFIX>"
+  description-prefix: "<PRE>-"
+  description-postfix: "-<POST>"
+...
+# FIXES
+* Fix parsing issues with the timestamp returned by Checkmarx for the latest full scan.  Checkmarx was inconsistently providing a format that would change.  The
+timestamp is now trimmed to exclude the millisecond portion, which was the value
+---------------------------------------------------------------------
 Release 1.3.1
 ---------------------------------------------------------------------
 # Changes
-* Allow for optional JIRA comment on updating issues
-* Introduced external Conmessage for comment on
+* Allow for optional and configurable JIRA comment on updating existing issues
 # Features
 * Allow for configurable http connection and read timeout settings under the cx-flow configuration block:
 cx-flow:
 ...
-http-connection-timeout: xxx #milliseconds - default 30000
-http-read-timeout: xxx #milliseconds - default 120000
+  http-connection-timeout: xxx #milliseconds - default 30000
+  http-read-timeout: xxx #milliseconds - default 120000
 * Introduced CLI Summary Output:
 2019-06-23 17:19:36.869  INFO 3632 --- [  scan-results1] c.c.f.s.ResultsService                    [9zxIHPWA] : ####Checkmarx Scan Results Summary####
 2019-06-23 17:19:36.869  INFO 3632 --- [  scan-results1] c.c.f.s.ResultsService                    [9zxIHPWA] : high: 32, medium: 56, low: 328, info: 4
@@ -44,7 +70,6 @@ checkmarx:
 * Fix for JiraService bean init failure when jira configuration block is excluded from application.yml
 * Exception is now thrown if the team is not found instead of attempting to create project under Id -1
 * Checkmarx rest api requires a leading slash for team paths, a leading backslash is added automatically if one is not present
-
 ---------------------------------------------------------------------
 ---------------------------------------------------------------------
 Release 1.3.0
