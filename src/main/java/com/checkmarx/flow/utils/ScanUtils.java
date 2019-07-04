@@ -38,8 +38,8 @@ public class ScanUtils {
     public static final String ISSUE_BODY = "**%s** issue exists @ **%s** in branch **%s**";
     public static final String ISSUE_KEY = "%s %s @ %s [%s]";
     public static final String ISSUE_KEY_2 = "%s %s @ %s";
-    public static final String JIRA_ISSUE_KEY = "%s%s @ %s [%s]";
-    public static final String JIRA_ISSUE_KEY_2 = "%s%s @ %s";
+    public static final String JIRA_ISSUE_KEY = "%s%s @ %s [%s]%s";
+    public static final String JIRA_ISSUE_KEY_2 = "%s%s @ %s%s";
     public static final String JIRA_ISSUE_BODY = "*%s* issue exists @ *%s* in branch *%s*";
     public static final String JIRA_ISSUE_BODY_2 = "*%s* issue exists @ *%s*";
 
