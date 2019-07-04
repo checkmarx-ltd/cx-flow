@@ -26,6 +26,7 @@ public class FlowProperties {
     private String mitreUrl;
     private String wikiUrl;
     private String codebashUrl;
+    private String zipExclude;
     private boolean breakBuild = false;
     private Integer webHookQueue = 100;
     private Integer scanResultQueue = 4;
@@ -176,6 +177,14 @@ public class FlowProperties {
 
     public void setBreakBuild(boolean breakBuild) {
         this.breakBuild = breakBuild;
+    }
+
+    public String getZipExclude() {
+        return zipExclude;
+    }
+
+    public void setZipExclude(String zipExclude) {
+        this.zipExclude = zipExclude;
     }
 
     public Integer getHttpConnectionTimeout() {
