@@ -715,6 +715,15 @@ public class JiraService {
         if(!ScanUtils.empty(request.getNamespace())) {
             body.append("*Namespace:* ").append(request.getNamespace()).append(ScanUtils.CRLF);
         }
+        if(!ScanUtils.empty(request.getRepoName())) {
+            body.append("*Repository:* ").append(request.getRepoName()).append(ScanUtils.CRLF);
+        }
+        if(!ScanUtils.empty(request.getBranch())) {
+            body.append("*Branch:* ").append(request.getBranch()).append(ScanUtils.CRLF);
+        }
+        if(!ScanUtils.empty(request.getRepoUrl())) {
+            body.append("*Repository Url:* ").append(request.getRepoUrl()).append(ScanUtils.CRLF);
+        }
         if(!ScanUtils.empty(request.getApplication())) {
             body.append("*Application:* ").append(request.getApplication()).append(ScanUtils.CRLF);
         }
@@ -723,12 +732,6 @@ public class JiraService {
         }
         if(!ScanUtils.empty(request.getTeam())) {
             body.append("*Cx-Team:* ").append(request.getTeam()).append(ScanUtils.CRLF);
-        }
-        if(!ScanUtils.empty(request.getRepoUrl())) {
-            body.append("*Repository:* ").append(request.getRepoUrl()).append(ScanUtils.CRLF);
-        }
-        if(!ScanUtils.empty(request.getBranch())) {
-            body.append("*Branch:* ").append(request.getBranch()).append(ScanUtils.CRLF);
         }
         if(!ScanUtils.empty(issue.getSeverity())) {
             body.append("*Severity:* ").append(issue.getSeverity()).append(ScanUtils.CRLF);
