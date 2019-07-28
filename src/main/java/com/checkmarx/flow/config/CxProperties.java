@@ -42,6 +42,8 @@ public class CxProperties {
     private Boolean offline = false;
     private Boolean preserveXml = false;
     private Integer scanTimeout = 120;
+    private Integer reportPolling = 4000;
+    private Integer reportTimeout = 300000;
     private String jiraProjectField = "jira-project";
     private String jiraIssuetypeField = "jira-issuetype";
     private String jiraCustomField = "jira-fields";
@@ -304,6 +306,21 @@ public class CxProperties {
 
     public void setExcludeFolders(String excludeFolders) {
         this.excludeFolders = excludeFolders;
+    }
+    public Integer getReportTimeout() {
+        return reportTimeout;
+    }
+
+    public void setReportTimeout(Integer reportTimeout) {
+        this.reportTimeout = reportTimeout;
+    }
+
+    public Integer getReportPolling() {
+        return reportPolling;
+    }
+
+    public void setReportPolling(Integer reportPolling) {
+        this.reportPolling = reportPolling;
     }
 }
 
