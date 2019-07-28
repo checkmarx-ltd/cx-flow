@@ -31,7 +31,7 @@ public class ResultsService {
     private final EmailService emailService;
     private final CxProperties cxProperties;
     private final FlowProperties flowProperties;
-    private static final Long SLEEP = 20000L;
+    private static final Long SLEEP = 5000L;
     private static final Long TIMEOUT = 300000L;
 
     @ConstructorProperties({"cxService", "jiraService", "issueService", "gitService", "gitLabService", "bbService",
@@ -101,17 +101,17 @@ public class ResultsService {
     private ScanResults getScanResults(Integer scanId, List<Filter> filters) throws MachinaException {
         try {
             Integer reportId = cxService.createScanReport(scanId);
-            Thread.sleep(SLEEP);
+            Thread.sleep(cxProperties.getReportPolling());
             int timer = 0;
             while (cxService.getReportStatus(reportId).equals(CxService.REPORT_STATUS_FINISHED)) {
-                Thread.sleep(SLEEP);
-                timer += SLEEP;
-                if (timer >= TIMEOUT) {
-                    log.error("Report Generation timeout.  {}", TIMEOUT);
+                Thread.sleep(cxProperties.getReportPolling());
+                timer += cxProperties.getReportPolling();
+                if (timer >= cxProperties.getReportTimeout()) {
+                    log.error("Report Generation timeout.  {}", cxProperties.getReportTimeout());
                     throw new MachinaException("Timeout exceeded during report generation");
                 }
             }
-            Thread.sleep(SLEEP);
+            Thread.sleep(cxProperties.getReportPolling());
             return cxService.getReportContent(reportId, filters);
         } catch (InterruptedException e) {
             log.error(ExceptionUtils.getStackTrace(e));
