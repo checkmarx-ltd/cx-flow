@@ -227,9 +227,9 @@ public class FlowService {
             long timer = 0;
             while (!status.equals(CxService.SCAN_STATUS_FINISHED) && !status.equals(CxService.SCAN_STATUS_CANCELED) &&
                     !status.equals(CxService.SCAN_STATUS_FAILED)) {
-                Thread.sleep(SLEEP);
+                Thread.sleep(cxProperties.getScanPolling());
                 status = cxService.getScanStatus(scanId);
-                timer += SLEEP;
+                timer += cxProperties.getScanPolling();
                 if(timer >= (cxProperties.getScanTimeout()*60000)){
                     log.error("Scan timeout exceeded.  {} minutes", cxProperties.getScanTimeout());
                     throw new MachinaException("Timeout exceeded during scan");
