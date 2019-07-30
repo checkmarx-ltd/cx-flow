@@ -1,9 +1,13 @@
 package com.checkmarx.flow.config;
 
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Builder;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.checkmarx.flow.utils.ScanUtils;
 import org.apache.http.impl.client.HttpClients;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -63,6 +67,16 @@ public class FlowConfig {
         props.put("mail.smtp.starttls.enable", "true");
 
         return mailSender;
+    }
+
+    @Profile("s3")
+    @Bean
+    public AmazonS3 s3Client(){
+        try {
+            return AmazonS3ClientBuilder.defaultClient();
+        }catch (Exception e){
+            return null;
+        }
     }
 
 }
