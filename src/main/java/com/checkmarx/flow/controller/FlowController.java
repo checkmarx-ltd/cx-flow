@@ -197,10 +197,7 @@ public class FlowController {
                     .build();
 
             if(!ScanUtils.empty(scanRequest.getResultBucket())){
-                request.putAdditionalMetadata("result_bucket", scanRequest.getResultBucket());
-            }
-            if(!ScanUtils.empty(scanRequest.getResultKey())){
-                request.putAdditionalMetadata("result_key", scanRequest.getResultKey());
+                request.putAdditionalMetadata("result_url", scanRequest.getResultBucket());
             }
 
             scanService.initiateAutomation(request);

@@ -1,7 +1,5 @@
 package com.checkmarx.flow.custom;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.services.s3.AmazonS3;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.ScanResults;
@@ -11,26 +9,35 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
-import org.springframework.context.annotation.Profile;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-@Profile("s3")
-@Service("S3")
-public class S3IssueTracker implements IssueTracker {
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(S3IssueTracker.class);
-    private final S3Properties properties;
-    private final AmazonS3 s3Client;
+@Service("Web")
+public class WebPostIssueTracker implements IssueTracker {
+    private static final Logger log = org.slf4j.LoggerFactory.getLogger(WebPostIssueTracker.class);
+    private final WebPostProperties properties;
+    private final RestTemplate restTemplate;
 
-    public S3IssueTracker(S3Properties properties, AmazonS3 s3Client) {
+    public WebPostIssueTracker(WebPostProperties properties, RestTemplate restTemplate) {
         this.properties = properties;
-        this.s3Client = s3Client;
+        this.restTemplate = restTemplate;
     }
+
 
     @Override
     public void init(ScanRequest request, ScanResults results) throws MachinaException {
@@ -65,16 +72,18 @@ public class S3IssueTracker implements IssueTracker {
             mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
             if(request != null && results != null) {
                 mapper.writeValue(new File(request.getFilename()), results);
-                String bucket = request.getAdditionalMetadata("result_bucket");
-                String key = request.getAdditionalMetadata("result_key");
+                String resultUrl = request.getAdditionalMetadata("result_url");
                 String filename = request.getFilename();
-                if(ScanUtils.anyEmpty(bucket, key, filename)){
-                    log.error("result_bucket | result_key | temporary file was massing from the ScanRequest metadata");
+                if(ScanUtils.anyEmpty(resultUrl, filename)){
+                    log.error("result_url | temporary file was massing from the ScanRequest metadata");
                     throw new MachinaException();
                 }
                 File resultFile = new File(filename);
-                log.info("Saving {} to S3 bucket {} with key {}", filename, bucket, key);
-                s3Client.putObject(bucket, key, resultFile);
+                log.info("Saving file {} to signed web url", filename);
+                HttpHeaders headers = new HttpHeaders();
+                headers.setAccept(Collections.singletonList(MediaType.ALL));
+                HttpEntity<byte[]> entity = new HttpEntity<>(Files.readAllBytes(resultFile.toPath()), headers);
+                restTemplate.put(new URI(resultUrl), entity);
                 log.info("Save successful");
             } else {
                 log.error("No request or results provided");
@@ -85,8 +94,12 @@ public class S3IssueTracker implements IssueTracker {
             log.error("Issue occurred while writing file {}", request.getFilename());
             log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaException();
-        } catch (AmazonClientException e){
-            log.error("AWS Exception occurred: {}", ExceptionUtils.getMessage(e));
+        }catch (URISyntaxException e){
+            log.error("Error occurred: {}", ExceptionUtils.getMessage(e));
+            throw new MachinaException();
+        }catch (HttpClientErrorException e){
+            log.error("HttpClientErrorException occurred: {}", ExceptionUtils.getMessage(e));
+            throw new MachinaException();
         }
     }
 

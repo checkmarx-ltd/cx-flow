@@ -5,11 +5,10 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
-@Profile("s3")
 @Component
-@ConfigurationProperties(prefix = "s3")
+@ConfigurationProperties(prefix = "web")
 @Validated
-public class S3Properties {
+public class WebPostProperties {
     private String fileNameFormat = "[APP]-[BRANCH]-[TIME]";
     private String dataFolder = "/tmp";
 
