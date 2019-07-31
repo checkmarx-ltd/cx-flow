@@ -68,15 +68,4 @@ public class FlowConfig {
 
         return mailSender;
     }
-
-    @Profile("s3")
-    @Bean
-    public AmazonS3 s3Client(){
-        try {
-            return AmazonS3ClientBuilder.defaultClient();
-        }catch (Exception e){
-            return null;
-        }
-    }
-
 }
