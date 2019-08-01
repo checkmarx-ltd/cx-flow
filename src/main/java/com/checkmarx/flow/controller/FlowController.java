@@ -195,9 +195,10 @@ public class FlowController {
                     .bugTracker(bt)
                     .filters(filters)
                     .build();
+            request.setId(uid);
 
-            if(!ScanUtils.empty(scanRequest.getResultBucket())){
-                request.putAdditionalMetadata("result_url", scanRequest.getResultBucket());
+            if(!ScanUtils.empty(scanRequest.getResultUrl())){
+                request.putAdditionalMetadata("result_url", scanRequest.getResultUrl());
             }
 
             scanService.initiateAutomation(request);
@@ -288,10 +289,8 @@ public class FlowController {
         @JsonProperty("cx_project")
         public String project;
         /*optional*/
-        @JsonProperty("result_bucket")
-        public String resultBucket;
-        @JsonProperty("result_key")
-        public String resultKey;
+        @JsonProperty("result_url")
+        public String resultUrl;
         @JsonProperty("namespace")
         public String namespace;
         @JsonProperty("repo_name")
@@ -455,20 +454,12 @@ public class FlowController {
             this.incremental = incremental;
         }
 
-        public String getResultBucket() {
-            return resultBucket;
+        public String getResultUrl() {
+            return resultUrl;
         }
 
-        public void setResultBucket(String resultBucket) {
-            this.resultBucket = resultBucket;
-        }
-
-        public String getResultKey() {
-            return resultKey;
-        }
-
-        public void setResultKey(String resultKey) {
-            this.resultKey = resultKey;
+        public void setResultUrl(String resultUrl) {
+            this.resultUrl = resultUrl;
         }
     }
 
