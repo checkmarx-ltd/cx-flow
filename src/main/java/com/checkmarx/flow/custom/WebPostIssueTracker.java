@@ -15,14 +15,17 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -81,9 +84,10 @@ public class WebPostIssueTracker implements IssueTracker {
                 File resultFile = new File(filename);
                 log.info("Saving file {} to signed web url", filename);
                 HttpHeaders headers = new HttpHeaders();
-                headers.setAccept(Collections.singletonList(MediaType.ALL));
+                headers.setContentType(MediaType.APPLICATION_JSON);
                 HttpEntity<byte[]> entity = new HttpEntity<>(Files.readAllBytes(resultFile.toPath()), headers);
-                restTemplate.put(new URI(resultUrl), entity);
+                URI uri = new URI(resultUrl);
+                restTemplate.put(uri, entity);
                 log.info("Save successful");
             } else {
                 log.error("No request or results provided");
