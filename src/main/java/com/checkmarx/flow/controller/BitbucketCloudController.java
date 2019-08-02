@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.beans.ConstructorProperties;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -122,6 +123,13 @@ public class BitbucketCloudController {
             }
             else{
                 filters = ScanUtils.getFilters(flowProperties);
+            }
+
+            if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
+                excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
+            }
+            if(excludeFolders == null && !ScanUtils.empty(cxProperties.getExcludeFolders())){
+                excludeFolders = Arrays.asList(cxProperties.getExcludeFolders().split(","));
             }
 
             String gitUrl = repository.getLinks().getHtml().getHref().concat(".git");
@@ -257,6 +265,14 @@ public class BitbucketCloudController {
             else{
                 filters = ScanUtils.getFilters(flowProperties);
             }
+
+            if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
+                excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
+            }
+            if(excludeFolders == null && !ScanUtils.empty(cxProperties.getExcludeFolders())){
+                excludeFolders = Arrays.asList(cxProperties.getExcludeFolders().split(","));
+            }
+
             /*Determine emails*/
             List<String> emails = new ArrayList<>();
 

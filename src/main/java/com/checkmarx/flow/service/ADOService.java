@@ -51,7 +51,7 @@ public class ADOService {
 
     void processPull(ScanRequest request,ScanResults results) throws ADOClientException {
         try {
-            String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties);
+            String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties, properties);
             log.debug("comment: {}", comment);
             sendMergeComment(request, comment);
         } catch (HttpClientErrorException e){

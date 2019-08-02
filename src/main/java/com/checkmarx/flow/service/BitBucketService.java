@@ -47,7 +47,7 @@ public class BitBucketService {
 
     void processMerge(ScanRequest request,ScanResults results) throws BitBucketClientException {
         try {
-            String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties);
+            String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties, properties);
             log.debug("comment: {}", comment);
             sendMergeComment(request, comment);
         } catch (HttpClientErrorException e){
@@ -58,7 +58,7 @@ public class BitBucketService {
 
     void processServerMerge(ScanRequest request,ScanResults results) throws BitBucketClientException {
         try {
-            String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties);
+            String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties, properties);
             log.debug("comment: {}", comment);
             sendServerMergeComment(request, comment);
         } catch (HttpClientErrorException e){
@@ -79,7 +79,7 @@ public class BitBucketService {
 
     void processCommit(ScanRequest request,ScanResults results) throws BitBucketClientException {
         try {
-            String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties);
+            String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties, properties);
             log.debug("comment: {}", comment);
             sendCommitComment(request, comment);
         } catch (HttpClientErrorException e){

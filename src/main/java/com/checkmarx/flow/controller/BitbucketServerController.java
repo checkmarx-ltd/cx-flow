@@ -31,6 +31,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -169,6 +170,14 @@ public class BitbucketServerController {
             else{
                 filters = ScanUtils.getFilters(flowProperties);
             }
+
+            if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
+                excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
+            }
+            if(excludeFolders == null && !ScanUtils.empty(cxProperties.getExcludeFolders())){
+                excludeFolders = Arrays.asList(cxProperties.getExcludeFolders().split(","));
+            }
+
             String projectKey = fromRefRepository.getProject().getKey();
             String gitUrl = properties.getUrl().concat("/scm/")
                     .concat(projectKey.concat("/"))
@@ -325,6 +334,14 @@ public class BitbucketServerController {
             else{
                 filters = ScanUtils.getFilters(flowProperties);
             }
+
+            if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
+                excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
+            }
+            if(excludeFolders == null && !ScanUtils.empty(cxProperties.getExcludeFolders())){
+                excludeFolders = Arrays.asList(cxProperties.getExcludeFolders().split(","));
+            }
+
             List<String> emails = new ArrayList<>();
 
             emails.add(event.getActor().getEmailAddress());

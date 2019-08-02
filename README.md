@@ -1,3 +1,6 @@
+## Release Notes
+Please read latest features and fixes from the Release.txt file
+
 ## Build
 `gradlew clean build`
 

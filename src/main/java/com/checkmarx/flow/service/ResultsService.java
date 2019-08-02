@@ -123,6 +123,8 @@ public class ResultsService {
     void processResults(ScanRequest request, ScanResults results) throws MachinaException {
         switch (request.getBugTracker().getType()) {
             case NONE:
+            case wait:
+            case WAIT:
                 log.info("Issue tracking is turned off");
                 break;
             case JIRA:
@@ -134,7 +136,7 @@ public class ResultsService {
                 break;
             case GITHUBPULL:
                 gitService.processPull(request, results);
-                gitService.endBlockMerge(request, results.getLink());
+                gitService.endBlockMerge(request, results.getLink(), !results.getXIssues().isEmpty());
                 break;
             case GITLABCOMMIT:
                 gitLabService.processCommit(request, results);
@@ -184,6 +186,10 @@ public class ResultsService {
             default:
                 log.warn("No valid bug type was provided");
         }
+        log.info("####Checkmarx Scan Results Summary####");
+        log.info(results.getScanSummary().toString());
+        log.info("To veiw results: {}", results.getLink());
+        log.info("######################################");
     }
 
     /**
