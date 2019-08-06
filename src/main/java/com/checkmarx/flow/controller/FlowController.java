@@ -114,14 +114,17 @@ public class FlowController {
             @RequestHeader(value = TOKEN_HEADER) String token
     ){
         String uid = helperService.getShortUid();
+        String errorMessage = "Error submitting Scan Request.";
         MDC.put("cx", uid);
         log.info("Processing Scan initiation request");
 
         validateToken(token);
 
         try {
+            log.trace(scanRequest.toString());
             ScanRequest.Product product = ScanRequest.Product.CX;
             String project = scanRequest.getProject();
+            String branch = scanRequest.getBranch();
             String application = scanRequest.getApplication();
             String team = scanRequest.getTeam();
 
@@ -133,6 +136,14 @@ public class FlowController {
             }
             properties.setTrackApplicationOnly(scanRequest.isApplicationOnly());
 
+            if(ScanUtils.anyEmpty(project, branch, scanRequest.getGitUrl())){
+                log.error("{}  The project | branch | git_url was not provided", errorMessage);
+                ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
+                        .message(errorMessage)
+                        .success(false)
+                        .build());
+            }
             String scanPreset = cxProperties.getScanPreset();
             if(!ScanUtils.empty(scanRequest.getPreset())){
                 scanPreset = scanRequest.getPreset();
@@ -185,8 +196,8 @@ public class FlowController {
                     .repoUrl(scanRequest.getGitUrl())
                     .repoUrlWithAuth(scanRequest.getGitUrl())
                     .repoType(ScanRequest.Repository.NA)
-                    .branch(scanRequest.getBranch())
-                    .refs(Constants.CX_BRANCH_PREFIX.concat(scanRequest.getBranch()))
+                    .branch(branch)
+                    .refs(Constants.CX_BRANCH_PREFIX.concat(branch))
                     .email(null)
                     .incremental(inc)
                     .scanPreset(scanPreset)
@@ -204,7 +215,6 @@ public class FlowController {
             scanService.initiateAutomation(request);
 
         }catch (Exception e){
-            String errorMessage = "Error submitting Scan Request.";
             log.error("Error submitting Scan Request. {}", ExceptionUtils.getMessage(e));
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
@@ -460,6 +470,30 @@ public class FlowController {
 
         public void setResultUrl(String resultUrl) {
             this.resultUrl = resultUrl;
+        }
+
+        @Override
+        public String toString() {
+            return "CxScanRequest{" +
+                    "gitUrl='" + gitUrl + '\'' +
+                    ", branch='" + branch + '\'' +
+                    ", application='" + application + '\'' +
+                    ", project='" + project + '\'' +
+                    ", resultUrl='" + resultUrl + '\'' +
+                    ", namespace='" + namespace + '\'' +
+                    ", repoName='" + repoName + '\'' +
+                    ", team='" + team + '\'' +
+                    ", filters=" + filters +
+                    ", product='" + product + '\'' +
+                    ", preset='" + preset + '\'' +
+                    ", incremental=" + incremental +
+                    ", configuration='" + configuration + '\'' +
+                    ", excludeFiles=" + excludeFiles +
+                    ", excludeFolders=" + excludeFolders +
+                    ", bug='" + bug + '\'' +
+                    ", assignee='" + assignee + '\'' +
+                    ", applicationOnly=" + applicationOnly +
+                    '}';
         }
     }
 
