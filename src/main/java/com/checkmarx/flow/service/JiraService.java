@@ -52,17 +52,19 @@ public class JiraService {
 
     @PostConstruct
     public void init() {
-        JiraRestClientFactory factory = new AsynchronousJiraRestClientFactory();
+        if(jiraProperties != null && !ScanUtils.empty(jiraProperties.getUrl())) {
+            JiraRestClientFactory factory = new AsynchronousJiraRestClientFactory();
 
-        try {
-            this.jiraURI = new URI(jiraProperties.getUrl());
-        } catch (URISyntaxException e) {
-            log.error("Error constructing URI for JIRA");
+            try {
+                this.jiraURI = new URI(jiraProperties.getUrl());
+            } catch (URISyntaxException e) {
+                log.error("Error constructing URI for JIRA");
+            }
+            this.client = factory.createWithBasicHttpAuthentication(jiraURI, jiraProperties.getUsername(), jiraProperties.getToken());
+            this.issueClient = this.client.getIssueClient();
+            this.projectClient = this.client.getProjectClient();
+            this.metaClient = this.client.getMetadataClient();
         }
-        this.client = factory.createWithBasicHttpAuthentication(jiraURI, jiraProperties.getUsername(), jiraProperties.getToken());
-        this.issueClient = this.client.getIssueClient();
-        this.projectClient = this.client.getProjectClient();
-        this.metaClient = this.client.getMetadataClient();
     }
 
     private List<Issue> getIssues(ScanRequest request) {
@@ -145,8 +147,13 @@ public class JiraService {
             IssueType issueType = this.getIssueType(projectKey, bugTracker.getIssueType());
             IssueInputBuilder issueBuilder = new IssueInputBuilder(projectKey, issueType.getId());
             String issuePrefix = jiraProperties.getIssuePrefix();
+            String issuePostfix = jiraProperties.getIssuePostfix();
+
             if(issuePrefix == null){
                 issuePrefix = "";
+            }
+            if(issuePostfix == null){
+                issuePostfix = "";
             }
 
             String summary;
@@ -154,10 +161,10 @@ public class JiraService {
                     !ScanUtils.empty(namespace) &&
                     !ScanUtils.empty(repoName) &&
                     !ScanUtils.empty(branch)) {
-                summary = String.format(ScanUtils.JIRA_ISSUE_KEY, issuePrefix, vulnerability, filename, branch);
+                summary = String.format(ScanUtils.JIRA_ISSUE_KEY, issuePrefix, vulnerability, filename, branch, issuePostfix);
             }
             else{
-                summary = String.format(ScanUtils.JIRA_ISSUE_KEY_2, issuePrefix, vulnerability, filename);
+                summary = String.format(ScanUtils.JIRA_ISSUE_KEY_2, issuePrefix, vulnerability, filename, issuePostfix);
             }
             String fileUrl = ScanUtils.getFileUrl(request,issue.getFilename());
 
@@ -471,6 +478,10 @@ public class JiraService {
                             log.debug("single select field");
                             issueBuilder.setFieldValue(customField, ComplexIssueInputFieldValue.with("value", value));
                             break;
+                        case "radio":
+                            log.debug("radio field");
+                            issueBuilder.setFieldValue(customField, ComplexIssueInputFieldValue.with("value", value));
+                            break;
                         case "multi-select":
                             log.debug("multi select field");
                             String[] selected = StringUtils.split(value, ",");
@@ -656,8 +667,12 @@ public class JiraService {
 
     private Map<String, ScanResults.XIssue> getIssueMap(List<ScanResults.XIssue> issues, ScanRequest request){
         String issuePrefix = jiraProperties.getIssuePrefix();
+        String issuePostfix = jiraProperties.getIssuePostfix();
         if(issuePrefix == null){
             issuePrefix = "";
+        }
+        if(issuePostfix == null){
+            issuePostfix = "";
         }
         Map<String, ScanResults.XIssue> map = new HashMap<>();
 
@@ -666,13 +681,13 @@ public class JiraService {
                 !ScanUtils.empty(request.getRepoName()) &&
                 !ScanUtils.empty(request.getBranch())) {
             for (ScanResults.XIssue issue : issues) {
-                String key = String.format(ScanUtils.JIRA_ISSUE_KEY, issuePrefix, issue.getVulnerability(), issue.getFilename(), request.getBranch());
+                String key = String.format(ScanUtils.JIRA_ISSUE_KEY, issuePrefix, issue.getVulnerability(), issue.getFilename(), request.getBranch(), issuePostfix);
                 map.put(key, issue);
             }
         }
         else{
             for (ScanResults.XIssue issue : issues) {
-                String key = String.format(ScanUtils.JIRA_ISSUE_KEY_2, issuePrefix, issue.getVulnerability(), issue.getFilename());
+                String key = String.format(ScanUtils.JIRA_ISSUE_KEY_2, issuePrefix, issue.getVulnerability(), issue.getFilename(), issuePostfix);
                 map.put(key, issue);
             }
         }
@@ -681,6 +696,9 @@ public class JiraService {
 
     private String getBody(ScanResults.XIssue issue, ScanRequest request, String fileUrl){
         StringBuilder body = new StringBuilder();
+        if(!ScanUtils.empty(jiraProperties.getDescriptionPrefix())){
+            body.append(jiraProperties.getDescriptionPrefix());
+        }
         if(!flowProperties.isTrackApplicationOnly() &&
                 !ScanUtils.empty(request.getNamespace()) &&
                 !ScanUtils.empty(request.getRepoName()) &&
@@ -697,6 +715,15 @@ public class JiraService {
         if(!ScanUtils.empty(request.getNamespace())) {
             body.append("*Namespace:* ").append(request.getNamespace()).append(ScanUtils.CRLF);
         }
+        if(!ScanUtils.empty(request.getRepoName())) {
+            body.append("*Repository:* ").append(request.getRepoName()).append(ScanUtils.CRLF);
+        }
+        if(!ScanUtils.empty(request.getBranch())) {
+            body.append("*Branch:* ").append(request.getBranch()).append(ScanUtils.CRLF);
+        }
+        if(!ScanUtils.empty(request.getRepoUrl())) {
+            body.append("*Repository Url:* ").append(request.getRepoUrl()).append(ScanUtils.CRLF);
+        }
         if(!ScanUtils.empty(request.getApplication())) {
             body.append("*Application:* ").append(request.getApplication()).append(ScanUtils.CRLF);
         }
@@ -705,12 +732,6 @@ public class JiraService {
         }
         if(!ScanUtils.empty(request.getTeam())) {
             body.append("*Cx-Team:* ").append(request.getTeam()).append(ScanUtils.CRLF);
-        }
-        if(!ScanUtils.empty(request.getRepoUrl())) {
-            body.append("*Repository:* ").append(request.getRepoUrl()).append(ScanUtils.CRLF);
-        }
-        if(!ScanUtils.empty(request.getBranch())) {
-            body.append("*Branch:* ").append(request.getBranch()).append(ScanUtils.CRLF);
         }
         if(!ScanUtils.empty(issue.getSeverity())) {
             body.append("*Severity:* ").append(issue.getSeverity()).append(ScanUtils.CRLF);
@@ -806,7 +827,9 @@ public class JiraService {
                 body.append(ScanUtils.CRLF);
             }
         }
-
+        if(!ScanUtils.empty(jiraProperties.getDescriptionPostfix())){
+            body.append(jiraProperties.getDescriptionPostfix());
+        }
         return body.toString();
     }
 
@@ -844,7 +867,9 @@ public class JiraService {
                         if (updatedIssue != null) {
                             log.debug("Update completed for issue #{}", updatedIssue.getKey());
                             updatedIssues.add(updatedIssue.getKey());
-                            addCommentToBug(i.getKey(), "Issue still remains");
+                            if(jiraProperties.isUpdateComment() && !ScanUtils.empty(jiraProperties.getUpdateCommentValue())) {
+                                addCommentToBug(i.getKey(), jiraProperties.getUpdateCommentValue());
+                            }
                         }
                     } else {
                         log.info("Skipping issue marked as false-positive or has False Positive state with key {}", xIssue.getKey());

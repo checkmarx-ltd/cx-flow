@@ -2,7 +2,9 @@ package com.checkmarx.flow.utils;
 
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.config.RepoProperties;
 import com.checkmarx.flow.dto.*;
+import com.checkmarx.flow.dto.cx.CxScanSummary;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.EnumUtils;
@@ -36,8 +38,8 @@ public class ScanUtils {
     public static final String ISSUE_BODY = "**%s** issue exists @ **%s** in branch **%s**";
     public static final String ISSUE_KEY = "%s %s @ %s [%s]";
     public static final String ISSUE_KEY_2 = "%s %s @ %s";
-    public static final String JIRA_ISSUE_KEY = "%s%s @ %s [%s]";
-    public static final String JIRA_ISSUE_KEY_2 = "%s%s @ %s";
+    public static final String JIRA_ISSUE_KEY = "%s%s @ %s [%s]%s";
+    public static final String JIRA_ISSUE_KEY_2 = "%s%s @ %s%s";
     public static final String JIRA_ISSUE_BODY = "*%s* issue exists @ *%s* in branch *%s*";
     public static final String JIRA_ISSUE_BODY_2 = "*%s* issue exists @ *%s*";
 
@@ -108,6 +110,13 @@ public class ScanUtils {
         return str == null || str.isEmpty();
     }
 
+    public static boolean anyEmpty(String ...str){
+        for(String s : str)
+            if (empty(s)) {
+                return true;
+            }
+        return false;
+    }
     /**
      * Check if list is empty or null
      * @param list
@@ -358,50 +367,79 @@ public class ScanUtils {
         return body.toString();
     }
 
-    public static String getMergeCommentMD(ScanRequest request, ScanResults results, FlowProperties flowProperties) {
+    public static String getMergeCommentMD(ScanRequest request, ScanResults results, FlowProperties flowProperties,
+                                           RepoProperties properties) {
+        CxScanSummary summary = results.getScanSummary();
         StringBuilder body = new StringBuilder();
-        body.append("#### Checkmarx scan completed with the following findings").append(CRLF);
-        body.append("|Lines|Severity|Category|File|Link|").append(CRLF);
-        body.append("---|---|---|---|---").append(CRLF);
+        body.append("### Checkmarx scan completed").append(CRLF);
+        body.append("[Full Scan Details](").append(results.getLink()).append(")").append(CRLF);
+        if(properties.isCxSummary()){
+            if(!ScanUtils.empty(properties.getCxSummaryHeader())) {
+                body.append("#### ").append(properties.getCxSummaryHeader()).append(CRLF);
+            }
+            body.append("Severity|Count").append(CRLF);
+            body.append("---|---").append(CRLF);
+            body.append("High|").append(summary.getHighSeverity().toString()).append(CRLF);
+            body.append("Medium|").append(summary.getMediumSeverity().toString()).append(CRLF);
+            body.append("Low|").append(summary.getLowSeverity().toString()).append(CRLF);
+            body.append("Informational|").append(summary.getInfoSeverity().toString()).append(CRLF).append(CRLF);
+        }
+        if(properties.isFlowSummary()){
+            if(!ScanUtils.empty(properties.getFlowSummaryHeader())) {
+                body.append("#### ").append(properties.getFlowSummaryHeader()).append(CRLF);
+            }
+            body.append("Severity|Count").append(CRLF);
+            body.append("---|---").append(CRLF);
+            Map<String, Integer> flow = (Map<String, Integer>) results.getAdditionalDetails().put(Constants.SUMMARY_KEY, summary);
+            for(Map.Entry<String, Integer> severity : flow.entrySet()){
+                body.append(severity.getKey()).append("|").append(severity.getValue().toString()).append(CRLF);
+            }
+            body.append(CRLF);
+        }
+        if(properties.isDetailed()) {
+            if(!ScanUtils.empty(properties.getDetailHeader())) {
+                body.append("#### ").append(properties.getDetailHeader()).append(CRLF);
+            }
+            body.append("|Lines|Severity|Category|File|Link|").append(CRLF);
+            body.append("---|---|---|---|---").append(CRLF);
 
-        Map<String, ScanResults.XIssue> xMap;
-        xMap = getXIssueMap(results.getXIssues(), request);
-        log.info("Creating Merge/Pull Request Markdown comment");
+            Map<String, ScanResults.XIssue> xMap;
+            xMap = getXIssueMap(results.getXIssues(), request);
+            log.info("Creating Merge/Pull Request Markdown comment");
 
-        for (Map.Entry<String, ScanResults.XIssue> xIssue : xMap.entrySet()) {
-            try {
-                ScanResults.XIssue currentIssue = xIssue.getValue();
-                String fileUrl = ScanUtils.getFileUrl(request, currentIssue.getFilename());
-                for (Map.Entry<Integer, String> entry : currentIssue.getDetails().entrySet()) {
-                    if (entry.getKey() != null) {  //[<line>](<url>)
-                        //Azure DevOps direct repo line url is unknown at this time.
-                        if(request.getRepoType().equals(ScanRequest.Repository.ADO)) {
-                            body.append(entry.getKey()).append(" ");
-                        }
-                        else {
-                            body.append("[").append(entry.getKey()).append("](").append(fileUrl);
-                            if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)) {
-                                body.append("#lines-").append(entry.getKey()).append(") ");
-                            } else if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)) {
-                                body.append("#").append(entry.getKey()).append(") ");
+            for (Map.Entry<String, ScanResults.XIssue> xIssue : xMap.entrySet()) {
+                try {
+                    ScanResults.XIssue currentIssue = xIssue.getValue();
+                    String fileUrl = ScanUtils.getFileUrl(request, currentIssue.getFilename());
+                    for (Map.Entry<Integer, String> entry : currentIssue.getDetails().entrySet()) {
+                        if (entry.getKey() != null) {  //[<line>](<url>)
+                            //Azure DevOps direct repo line url is unknown at this time.
+                            if (request.getRepoType().equals(ScanRequest.Repository.ADO)) {
+                                body.append(entry.getKey()).append(" ");
                             } else {
-                                body.append("#L").append(entry.getKey()).append(") ");
+                                body.append("[").append(entry.getKey()).append("](").append(fileUrl);
+                                if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)) {
+                                    body.append("#lines-").append(entry.getKey()).append(") ");
+                                } else if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)) {
+                                    body.append("#").append(entry.getKey()).append(") ");
+                                } else {
+                                    body.append("#L").append(entry.getKey()).append(") ");
+                                }
                             }
                         }
                     }
+                    body.append("|");
+                    body.append(currentIssue.getSeverity()).append("|");
+                    body.append(currentIssue.getVulnerability()).append("|");
+                    body.append(currentIssue.getFilename()).append("|");
+                    body.append("[Checkmarx](").append(currentIssue.getLink()).append(")");
+                    body.append(CRLF);
+                    //body.append("```").append(currentIssue.getDescription()).append("```").append(CRLF); Description is too long
+                } catch (HttpClientErrorException e) {
+                    log.error("Error occurred while processing issue with key {} {}", xIssue.getKey(), e);
                 }
-                body.append("|");
-                body.append(currentIssue.getSeverity()).append("|");
-                body.append(currentIssue.getVulnerability()).append("|");
-                body.append(currentIssue.getFilename()).append("|");
-                body.append("[Checkmarx](").append(currentIssue.getLink()).append(")");
-                body.append(CRLF);
-            //body.append("```").append(currentIssue.getDescription()).append("```").append(CRLF); Description is too long
-            } catch (HttpClientErrorException e) {
-                log.error("Error occurred while processing issue with key {} {}", xIssue.getKey(), e);
             }
         }
-
         return body.toString();
     }
 
@@ -558,11 +596,7 @@ public class ScanUtils {
         log.debug(dt);
         log.debug(filename);
 
-        if(!empty(request.getTeam())){
-            String team = request.getTeam();
-            team = team.replaceAll("\\\\","_");
-            filename = filename.replace("[TEAM]", team);
-        }
+        filename = getGenericFilename(filename, "[TEAM]", request.getTeam());
         filename = getGenericFilename(filename, "[APP]", request.getApplication());
         filename = getGenericFilename(filename, "[PROJECT]", request.getProject());
         filename = getGenericFilename(filename, "[NAMESPACE]", request.getNamespace());
@@ -573,7 +607,10 @@ public class ScanUtils {
     }
 
     public static String getGenericFilename(String filename, String valueToReplace, String replacement){
+
         if(!empty(replacement)) {
+            replacement = replacement.replaceAll("[^a-zA-Z0-9-_]+","_");
+
             filename = filename.replace(valueToReplace, replacement);
             log.debug(replacement);
             log.debug(filename);
