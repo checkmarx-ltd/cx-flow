@@ -1,5 +1,6 @@
 package com.checkmarx.flow.dto;
 
+import com.checkmarx.flow.dto.cx.CxScanSummary;
 import java.beans.ConstructorProperties;
 import java.util.List;
 import java.util.Map;
@@ -20,9 +21,11 @@ public class ScanResults{
     private List<XIssue> xIssues;
     private String output;
     private Map<String, Object> additionalDetails;
+    private CxScanSummary scanSummary;
 
-    @ConstructorProperties({"osa", "projectId", "team", "project", "link", "files", "loc", "scanType", "xIssues", "additionalDetails"})
-    public ScanResults(Boolean osa, String projectId, String team, String project, String link, String files, String loc, String scanType, List<XIssue> xIssues, Map<String, Object> additionalDetails) {
+    @ConstructorProperties({"osa", "projectId", "team", "project", "link", "files", "loc", "scanType", "xIssues", "additionalDetails", "scanSummary"})
+    public ScanResults(Boolean osa, String projectId, String team, String project, String link, String files, String loc, String scanType,
+                       List<XIssue> xIssues, Map<String, Object> additionalDetails, CxScanSummary scanSummary) {
         this.osa = osa;
         this.projectId = projectId;
         this.team = team;
@@ -33,8 +36,8 @@ public class ScanResults{
         this.scanType = scanType;
         this.xIssues = xIssues;
         this.additionalDetails = additionalDetails;
+        this.scanSummary = scanSummary;
     }
-
 
     public ScanResults() {
     }
@@ -121,6 +124,14 @@ public class ScanResults{
         this.additionalDetails = additionalDetails;
     }
 
+    public CxScanSummary getScanSummary() {
+        return scanSummary;
+    }
+
+    public void setScanSummary(CxScanSummary scanSummary) {
+        this.scanSummary = scanSummary;
+    }
+
     public String getOutput() {
         return output;
     }
@@ -147,9 +158,10 @@ public class ScanResults{
         private List<OsaDetails> osaDetails;
         private Map<Integer, String>  details;
         private Map<String, Object> additionalDetails;
+        private CxScanSummary scanSummary;
 
         @ConstructorProperties({"vulnerability", "similarityId", "cwe", "cve", "description", "language",
-                "severity", "link", "filename", "gitUrl", "osaDetails", "details", "additionalDetails"})
+                "severity", "link", "filename", "gitUrl", "osaDetails", "details", "additionalDetails", "scanSummary"})
         XIssue(String vulnerability, String similarityId, String cwe, String cve, String description, String language,
                String severity, String link, String filename, String gitUrl, List<OsaDetails> osaDetails, Map<Integer, String> details,
                Map<String, Object> additionalDetails) {
@@ -292,6 +304,10 @@ public class ScanResults{
 
         public void setAdditionalDetails(Map<String, Object> additionalDetails) {
             this.additionalDetails = additionalDetails;
+        }
+
+        public void setScanSummary(CxScanSummary scanSummary) {
+            this.scanSummary = scanSummary;
         }
 
         public static class XIssueBuilder {
@@ -513,6 +529,7 @@ public class ScanResults{
         private String scanType;
         private List<XIssue> xIssues;
         private Map<String, Object> additionalDetails;
+        private CxScanSummary scanSummary;
 
         ScanResultsBuilder() {
         }
@@ -568,8 +585,13 @@ public class ScanResults{
             return this;
         }
 
+        public ScanResults.ScanResultsBuilder scanSummary(CxScanSummary scanSummary) {
+            this.scanSummary = scanSummary;
+            return this;
+        }
+
         public ScanResults build() {
-            return new ScanResults(osa, projectId, team, project, link, files, loc, scanType, xIssues, additionalDetails);
+            return new ScanResults(osa, projectId, team, project, link, files, loc, scanType, xIssues, additionalDetails, scanSummary);
         }
 
         public String toString() {

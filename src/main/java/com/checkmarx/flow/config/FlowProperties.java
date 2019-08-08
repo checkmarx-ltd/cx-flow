@@ -26,9 +26,12 @@ public class FlowProperties {
     private String mitreUrl;
     private String wikiUrl;
     private String codebashUrl;
+    private String zipExclude;
     private boolean breakBuild = false;
     private Integer webHookQueue = 100;
     private Integer scanResultQueue = 4;
+    private Integer httpConnectionTimeout = 30000;
+    private Integer httpReadTimeout = 120000;
     private Mail mail;
 
     public String getContact() {
@@ -174,6 +177,30 @@ public class FlowProperties {
 
     public void setBreakBuild(boolean breakBuild) {
         this.breakBuild = breakBuild;
+    }
+
+    public String getZipExclude() {
+        return zipExclude;
+    }
+
+    public void setZipExclude(String zipExclude) {
+        this.zipExclude = zipExclude;
+    }
+
+    public Integer getHttpConnectionTimeout() {
+        return httpConnectionTimeout;
+    }
+
+    public void setHttpConnectionTimeout(Integer httpConnectionTimeout) {
+        this.httpConnectionTimeout = httpConnectionTimeout;
+    }
+
+    public Integer getHttpReadTimeout() {
+        return httpReadTimeout;
+    }
+
+    public void setHttpReadTimeout(Integer httpReadTimeout) {
+        this.httpReadTimeout = httpReadTimeout;
     }
 
     public static class Mail {

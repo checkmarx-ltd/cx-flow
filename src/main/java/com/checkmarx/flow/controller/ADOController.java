@@ -151,6 +151,13 @@ public class ADOController {
                         flowProperties.getFilterCategory(), flowProperties.getFilterStatus());
             }
 
+            if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
+                excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
+            }
+            if(excludeFolders == null && !ScanUtils.empty(cxProperties.getExcludeFolders())){
+                excludeFolders = Arrays.asList(cxProperties.getExcludeFolders().split(","));
+            }
+
             //build request object
             String gitUrl = repository.getWebUrl();
             String token = properties.getToken();
@@ -316,6 +323,12 @@ public class ADOController {
             else{
                 filters = ScanUtils.getFilters(flowProperties.getFilterSeverity(), flowProperties.getFilterCwe(),
                         flowProperties.getFilterCategory(), flowProperties.getFilterStatus());
+            }
+            if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
+                excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
+            }
+            if(excludeFolders == null && !ScanUtils.empty(cxProperties.getExcludeFolders())){
+                excludeFolders = Arrays.asList(cxProperties.getExcludeFolders().split(","));
             }
             /*Determine emails*/
             List<String> emails = new ArrayList<>();

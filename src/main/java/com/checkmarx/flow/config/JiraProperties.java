@@ -19,6 +19,9 @@ public class JiraProperties {
     private String issueType;
     private String labelTracker = "labels";
     private String issuePrefix;
+    private String issuePostfix;
+    private String descriptionPrefix;
+    private String descriptionPostfix;
     private String appLabelPrefix = "app";
     private String ownerLabelPrefix = "owner";
     private String repoLabelPrefix = "repo";
@@ -30,6 +33,8 @@ public class JiraProperties {
     private String closeTransitionField;
     private String closeTransitionValue;
     private String closeTransition;
+    private boolean updateComment = false;
+    private String updateCommentValue = "Issue still remains";
     private List<String> openStatus;
     private List<String> closedStatus;
     private List<Field> fields;
@@ -196,6 +201,46 @@ public class JiraProperties {
 
     public void setClosedStatus(List<String> closedStatus) {
         this.closedStatus = closedStatus;
+    }
+
+    public boolean isUpdateComment() {
+        return updateComment;
+    }
+
+    public void setUpdateComment(boolean updateComment) {
+        this.updateComment = updateComment;
+    }
+
+    public String getUpdateCommentValue() {
+        return updateCommentValue;
+    }
+
+    public void setUpdateCommentValue(String updateCommentValue) {
+        this.updateCommentValue = updateCommentValue;
+    }
+
+    public String getIssuePostfix() {
+        return issuePostfix;
+    }
+
+    public void setIssuePostfix(String issuePostfix) {
+        this.issuePostfix = issuePostfix;
+    }
+
+    public String getDescriptionPrefix() {
+        return descriptionPrefix;
+    }
+
+    public void setDescriptionPrefix(String descriptionPrefix) {
+        this.descriptionPrefix = descriptionPrefix;
+    }
+
+    public String getDescriptionPostfix() {
+        return descriptionPostfix;
+    }
+
+    public void setDescriptionPostfix(String descriptionPostfix) {
+        this.descriptionPostfix = descriptionPostfix;
     }
 
     public void setFields(List<Field> fields) {
