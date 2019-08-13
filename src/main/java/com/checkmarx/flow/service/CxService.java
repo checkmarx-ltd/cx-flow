@@ -1168,7 +1168,11 @@ public class CxService {
         try {
             session = cxLegacyService.login(cxProperties.getUsername(), cxProperties.getPassword());
             cxLegacyService.createTeam(session, parentTeamId, teamName);
+            if(!cxProperties.getNonamespace() ){
             return getTeamId(cxProperties.getTeam().concat("\\").concat(teamName));
+            }else{
+            return getTeamId(cxProperties.getTeam());
+            }
         } catch (CheckmarxLegacyException e) {
             log.error("Error occurring while logging into Legacy SOAP based WebService to create new team {} under parent {}", teamName, parentTeamId);
             throw new MachinaException("Error logging into legacy SOAP WebService for Team Creation");
