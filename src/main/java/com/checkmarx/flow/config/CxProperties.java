@@ -39,7 +39,6 @@ public class CxProperties {
     private Integer incrementalThreshold = 7;
     private Integer incrementalNumScans = 5;
     private String team;
-    private Boolean nonamespace = false;
     private Boolean offline = false;
     private Boolean preserveXml = false;
     private Integer scanTimeout = 120;
@@ -109,15 +108,7 @@ public class CxProperties {
     public String getScanPreset() {
         return this.scanPreset;
     }
-
-    public Boolean getNonamespace() {
-        return nonamespace;
-    }
-
-    public void setNonamespace(Boolean nonamespace) {
-        this.nonamespace = nonamespace;
-    }
-
+    
     public String getConfiguration() {
         return this.configuration;
     }
