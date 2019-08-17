@@ -22,6 +22,7 @@ public class FlowProperties {
     private List<String> filterCategory;
     private List<String> filterStatus;
     private boolean trackApplicationOnly = false;
+    private boolean ApplicationRepoOnly = false;
     private String branchScript;
     private String mitreUrl;
     private String wikiUrl;
@@ -251,4 +252,13 @@ public class FlowProperties {
         }
 
     }
+
+    public boolean isApplicationRepoOnly() {
+        return ApplicationRepoOnly;
+    }
+
+    public void setApplicationRepoOnly(boolean ApplicationRepoOnly) {
+        this.ApplicationRepoOnly = ApplicationRepoOnly;
+    }
+    
 }

@@ -111,7 +111,7 @@ public class CxProperties {
     public String getScanPreset() {
         return this.scanPreset;
     }
-
+    
     public String getConfiguration() {
         return this.configuration;
     }

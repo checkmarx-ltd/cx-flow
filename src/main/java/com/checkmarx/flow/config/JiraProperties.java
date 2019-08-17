@@ -38,6 +38,8 @@ public class JiraProperties {
     private List<String> openStatus;
     private List<String> closedStatus;
     private List<Field> fields;
+    private String ParentUrl = "";
+    private boolean child = false;
 
     public String getUrl() {
         return this.url;
@@ -246,4 +248,21 @@ public class JiraProperties {
     public void setFields(List<Field> fields) {
         this.fields = fields;
     }
+
+    public String getParentUrl() {
+        return ParentUrl;
+    }
+
+    public void setParentUrl(String ParentUrl) {
+        this.ParentUrl = ParentUrl;
+    }
+
+    public boolean isChild() {
+        return child;
+    }
+
+    public void setChild(boolean child) {
+        this.child = child;
+    }
+    
 }
