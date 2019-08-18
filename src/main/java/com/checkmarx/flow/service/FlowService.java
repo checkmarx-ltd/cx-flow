@@ -65,11 +65,13 @@ public class FlowService {
         Map<String, Object>  emailCtx = new HashMap<>();
         try {
             if (request.getProduct().equals(ScanRequest.Product.CX)) {
-                emailCtx.put("message", "Checkmarx Scan has been submitted for "
-                        .concat(request.getNamespace()).concat("/").concat(request.getRepoName()).concat(" - ")
-                        .concat(request.getRepoUrl()));
-                emailCtx.put("heading","Scan Request Submitted");
-                emailService.sendmail(request.getEmail(), "Checkmarx Scan Submitted for ".concat(request.getNamespace()).concat("/").concat(request.getRepoName()), emailCtx, "message.html");
+                if(!ScanUtils.anyEmpty(request.getNamespace(), request.getRepoName(), request.getRepoUrl())) {
+                    emailCtx.put("message", "Checkmarx Scan has been submitted for "
+                            .concat(request.getNamespace()).concat("/").concat(request.getRepoName()).concat(" - ")
+                            .concat(request.getRepoUrl()));
+                    emailCtx.put("heading", "Scan Request Submitted");
+                    emailService.sendmail(request.getEmail(), "Checkmarx Scan Submitted for ".concat(request.getNamespace()).concat("/").concat(request.getRepoName()), emailCtx, "message.html");
+                }
                 CompletableFuture<ScanResults> results = executeCxScanFlow(request, null);
                 if(results.isCompletedExceptionally()){
                     log.error("An error occurred while executing process");
