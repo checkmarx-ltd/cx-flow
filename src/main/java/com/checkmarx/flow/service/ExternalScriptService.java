@@ -11,7 +11,7 @@ import java.util.Map;
 
 @Service
 public class ExternalScriptService {
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(CxService.class);
+    private static final Logger log = org.slf4j.LoggerFactory.getLogger(ExternalScriptService.class);
 
     public Object runScript(String script, Map<String, Object> bindings){
         Binding binding = new Binding();

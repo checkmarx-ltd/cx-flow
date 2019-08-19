@@ -2,9 +2,9 @@ package com.checkmarx.flow.custom;
 
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.dto.ScanResults;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.dto.ScanResults;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -15,18 +15,12 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
-
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -40,7 +34,6 @@ public class WebPostIssueTracker implements IssueTracker {
         this.properties = properties;
         this.restTemplate = restTemplate;
     }
-
 
     @Override
     public void init(ScanRequest request, ScanResults results) throws MachinaException {

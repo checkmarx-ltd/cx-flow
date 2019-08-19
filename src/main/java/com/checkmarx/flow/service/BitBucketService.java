@@ -3,9 +3,9 @@ package com.checkmarx.flow.service;
 import com.checkmarx.flow.config.BitBucketProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.dto.ScanResults;
 import com.checkmarx.flow.exception.BitBucketClientException;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.dto.ScanResults;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -77,7 +77,7 @@ public class BitBucketService {
         restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
-    void processCommit(ScanRequest request,ScanResults results) throws BitBucketClientException {
+    void processCommit(ScanRequest request, ScanResults results) throws BitBucketClientException {
         try {
             String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties, properties);
             log.debug("comment: {}", comment);

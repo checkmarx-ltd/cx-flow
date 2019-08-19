@@ -3,10 +3,10 @@ package com.checkmarx.flow.service;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.ADOProperties;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.dto.ScanResults;
 import com.checkmarx.flow.dto.azure.CreateWorkItemAttr;
 import com.checkmarx.flow.exception.ADOClientException;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.dto.ScanResults;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -49,7 +49,7 @@ public class ADOService {
         return httpHeaders;
     }
 
-    void processPull(ScanRequest request,ScanResults results) throws ADOClientException {
+    void processPull(ScanRequest request, ScanResults results) throws ADOClientException {
         try {
             String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties, properties);
             log.debug("comment: {}", comment);

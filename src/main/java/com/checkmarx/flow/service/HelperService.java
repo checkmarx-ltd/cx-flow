@@ -1,10 +1,10 @@
 package com.checkmarx.flow.service;
 
-import com.checkmarx.flow.config.CxProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.utils.Constants;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.config.Constants;
+import com.checkmarx.sdk.config.CxProperties;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
