@@ -3,10 +3,10 @@ package com.checkmarx.flow.service;
 import com.checkmarx.flow.config.GitLabProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.dto.ScanResults;
 import com.checkmarx.flow.dto.gitlab.Note;
 import com.checkmarx.flow.exception.GitLabClientException;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.dto.ScanResults;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -111,7 +111,7 @@ public class GitLabService {
         restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
-    void processCommit(ScanRequest request,ScanResults results) throws GitLabClientException {
+    void processCommit(ScanRequest request, ScanResults results) throws GitLabClientException {
         try {
             String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties, properties);
             log.debug("comment: {}", comment);

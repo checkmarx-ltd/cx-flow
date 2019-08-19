@@ -52,7 +52,7 @@ checkmarx:
   configuration: Default Configuration
   team: \CxServer\SP\Checkmarx
   scan-timeout: 120
-  #WSDL Config
+#WSDL Config
   portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
   sdk-url: ${checkmarx.base-url}/cxwebinterface/SDK/CxSDKWebService.asmx
   portal-wsdl: ${checkmarx.base-url}/Portal/CxWebService.asmx?wsdl

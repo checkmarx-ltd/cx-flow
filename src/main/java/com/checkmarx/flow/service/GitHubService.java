@@ -4,9 +4,9 @@ import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.RepoIssue;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.dto.ScanResults;
 import com.checkmarx.flow.exception.GitHubClientException;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.dto.ScanResults;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.springframework.http.*;
@@ -42,7 +42,7 @@ public class GitHubService {
         return null;
     }
 
-    void processPull(ScanRequest request,ScanResults results) throws GitHubClientException {
+    void processPull(ScanRequest request, ScanResults results) throws GitHubClientException {
         try {
             String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties, properties);
             log.debug("comment: {}", comment);
