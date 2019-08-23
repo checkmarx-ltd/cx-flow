@@ -19,12 +19,10 @@ import java.util.List;
 public class CxXMLIssueTracker implements IssueTracker {
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(CxXMLIssueTracker.class);
     private final CxXMLProperties properties;
-    private final FlowProperties flowProperties;
 
-    @ConstructorProperties({"properties", "flowProperties"})
-    public CxXMLIssueTracker(CxXMLProperties properties, FlowProperties flowProperties) {
+    @ConstructorProperties("properties")
+    public CxXMLIssueTracker(CxXMLProperties properties) {
         this.properties = properties;
-        this.flowProperties = flowProperties;
     }
 
     @Override
