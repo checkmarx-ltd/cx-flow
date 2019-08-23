@@ -6,6 +6,7 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.flow.utils.ZipUtils;
+import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxProject;
@@ -95,10 +96,7 @@ public class FlowService {
     private CompletableFuture<ScanResults> executeCxScanFlow(ScanRequest request, File cxFile) throws MachinaException {
         try {
             String ownerId;
-            Integer presetId = cxService.getPresetId(request.getScanPreset());
-            Integer engineId = cxService.getScanConfiguration(cxProperties.getConfiguration());
             String projectName;
-            Integer projectId;
             String repoName = request.getRepoName();
             String branch = request.getBranch();
             String namespace = request.getNamespace();
@@ -106,21 +104,21 @@ public class FlowService {
             /*Check if team is provided*/
             String team = helperService.getCxTeam(request);
             if(!ScanUtils.empty(team)){
-                if(!team.startsWith("\\"))
-                    team = "\\".concat(team);
+                if(!team.startsWith(cxProperties.getTeamPathSeparator()))
+                    team = cxProperties.getTeamPathSeparator().concat(team);
                 log.info("Overriding team with {}", team);
                 ownerId = cxService.getTeamId(team);
             }
             else{
                 team = cxProperties.getTeam();
-                if(!team.startsWith("\\"))
-                    team = "\\".concat(team);
+                if(!team.startsWith(cxProperties.getTeamPathSeparator()))
+                    team = cxProperties.getTeamPathSeparator().concat(team);
                 log.info("Using team {}", team);
                 ownerId = cxService.getTeamId(team);
 
                 if(cxProperties.isMultiTenant() &&
                         !ScanUtils.empty(namespace)){
-                    String fullTeamName = cxProperties.getTeam().concat("\\").concat(namespace);
+                    String fullTeamName = cxProperties.getTeam().concat(cxProperties.getTeamPathSeparator()).concat(namespace);
                     request.setTeam(fullTeamName);
                     String tmpId = cxService.getTeamId(fullTeamName);
                     if(tmpId.equals(UNKNOWN)){
@@ -171,7 +169,7 @@ public class FlowService {
                     .withTeamName(request.getTeam())
                     .withProjectName(projectName)
                     .withGitUrl(request.getRepoUrlWithAuth())
-                    .withBranch(request.getBranch())
+                    .withBranch(Constants.CX_BRANCH_PREFIX.concat(request.getBranch()))
                     .withIncremental(request.isIncremental())
                     .withScanPreset(request.getScanPreset())
                     .withFileExclude(request.getExcludeFiles())
@@ -302,8 +300,8 @@ public class FlowService {
                     team = cxProperties.getTeam();
                     request.setTeam(team);
                 }
-                if (!team.startsWith("\\")) {
-                    team = "\\".concat(team);
+                if (!team.startsWith(cxProperties.getTeamPathSeparator())) {
+                    team = cxProperties.getTeamPathSeparator().concat(team);
                 }
                 String teamId = cxService.getTeamId(team);
                 Integer projectId = cxService.getProjectId(teamId, request.getProject());
@@ -394,8 +392,8 @@ public class FlowService {
             }
             else{ //Get projects for the provided team
                 String team = originalRequest.getTeam();
-                if(!team.startsWith("\\")){
-                    team = "\\".concat(team);
+                if(!team.startsWith(cxProperties.getTeamPathSeparator())){
+                    team = cxProperties.getTeamPathSeparator().concat(team);
                 }
                 String teamId = cxService.getTeamId(team);
                 projects = cxService.getProjects(teamId);
