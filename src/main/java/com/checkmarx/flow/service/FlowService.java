@@ -129,7 +129,7 @@ public class FlowService {
                     }
                 }
                 else{
-                    request.setTeam(cxProperties.getTeam());
+                    request.setTeam(team);
                 }
             }
 
@@ -166,15 +166,20 @@ public class FlowService {
             log.info("Project Name being used {}", projectName);
 
             CxScanParams params = new CxScanParams()
-                    .withTeamName(request.getTeam())
+                    .withTeamName(team)
                     .withProjectName(projectName)
                     .withGitUrl(request.getRepoUrlWithAuth())
-                    .withBranch(Constants.CX_BRANCH_PREFIX.concat(request.getBranch()))
                     .withIncremental(request.isIncremental())
                     .withScanPreset(request.getScanPreset())
                     .withFileExclude(request.getExcludeFiles())
                     .withFolderExclude(request.getExcludeFolders());
-
+            if(!com.checkmarx.sdk.utils.ScanUtils.empty(request.getBranch())){
+                params.withBranch(Constants.CX_BRANCH_PREFIX.concat(request.getBranch()));
+            }
+            if(cxFile != null){
+                params.setSourceType(CxScanParams.Type.FILE);
+                params.setFilePath(cxFile.getAbsolutePath());
+            }
             BugTracker.Type bugTrackerType = request.getBugTracker().getType();
             if(bugTrackerType.equals(BugTracker.Type.GITLABMERGE)){
                 gitLabService.sendMergeComment(request, SCAN_MESSAGE);
