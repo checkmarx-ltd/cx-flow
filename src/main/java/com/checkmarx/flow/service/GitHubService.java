@@ -9,6 +9,8 @@ import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
 import org.json.JSONObject;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -19,13 +21,13 @@ import java.util.Map;
 
 @Service
 public class GitHubService {
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(GitHubService.class);
+    private static final Logger log = LoggerFactory.getLogger(GitHubService.class);
     private final RestTemplate restTemplate;
     private final GitHubProperties properties;
     private final FlowProperties flowProperties;
 
     @ConstructorProperties({"restTemplate", "properties", "flowProperties"})
-    public GitHubService(RestTemplate restTemplate, GitHubProperties properties, FlowProperties flowProperties) {
+    public GitHubService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, GitHubProperties properties, FlowProperties flowProperties) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.flowProperties = flowProperties;
