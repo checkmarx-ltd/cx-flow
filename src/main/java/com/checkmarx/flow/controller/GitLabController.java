@@ -189,6 +189,9 @@ public class GitLabController {
             request = ScanUtils.overrideMap(request, o);
             request.putAdditionalMetadata("merge_id",objectAttributes.getIid().toString());
             request.putAdditionalMetadata("merge_title", objectAttributes.getTitle());
+            if(proj.getId() != null) {
+                request.setRepoProjectId(proj.getId());
+            }
             request.setId(uid);
             if(helperService.isBranch2Scan(request, branches)){
                 flowService.initiateAutomation(request);
@@ -346,6 +349,9 @@ public class GitLabController {
 
             request = ScanUtils.overrideMap(request, o);
             request.setId(uid);
+            if(proj.getId() != null) {
+                request.setRepoProjectId(proj.getId());
+            }
             if(helperService.isBranch2Scan(request, branches)){
                 flowService.initiateAutomation(request);
             }
