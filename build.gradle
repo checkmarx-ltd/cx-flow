@@ -2,12 +2,13 @@ buildscript {
 	ext {
 		springBootVersion = '2.1.5.RELEASE'
         sonarqubeVersion = '2.5'
-        atlassianVersion = "5.0.4"
-        atlassianFugueVersion = "2.2.1"
+        atlassianVersion = "5.1.6"
+        atlassianFugueVersion = "4.7.2"
         mainClass='com.checkmarx.flow.CxFlowApplication'
     }
 	repositories {
         jcenter()
+        mavenLocal()
 		mavenCentral()
         maven {
             url = 'https://packages.atlassian.com/mvn/maven-external'
@@ -61,7 +62,7 @@ dependencies {
     compile ('org.springframework.boot:spring-boot-starter-mail')
     compile ('org.springframework.boot:spring-boot-starter-thymeleaf')
     compile ('com.github.ulisesbocchio:jasypt-spring-boot-starter:2.1.0')
-    compile ("com.atlassian.fugue:fugue:${atlassianFugueVersion}")
+    compile ("io.atlassian.fugue:fugue:${atlassianFugueVersion}")
     compile ("com.atlassian.jira:jira-rest-java-client-core:${atlassianVersion}")
     compile ("com.atlassian.jira:jira-rest-java-client-api:${atlassianVersion}")
     compile ("org.apache.httpcomponents:httpclient:4.5.8")
