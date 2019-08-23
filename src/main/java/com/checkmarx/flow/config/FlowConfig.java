@@ -9,7 +9,6 @@ import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.web.client.RestTemplate;
-
 import java.beans.ConstructorProperties;
 import java.nio.charset.Charset;
 import java.util.Properties;
@@ -24,7 +23,7 @@ public class FlowConfig {
         this.properties = properties;
     }
 
-    @Bean
+    @Bean(name="flowRestTemplate")
     public RestTemplate getRestTemplate(){
         RestTemplate restTemplate = new RestTemplate();
 
@@ -64,5 +63,4 @@ public class FlowConfig {
 
         return mailSender;
     }
-
 }

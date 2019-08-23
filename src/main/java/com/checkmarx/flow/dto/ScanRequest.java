@@ -1,7 +1,7 @@
 package com.checkmarx.flow.dto;
 
 import com.checkmarx.flow.utils.ScanUtils;
-
+import com.checkmarx.sdk.dto.Filter;
 import java.beans.ConstructorProperties;
 import java.util.HashMap;
 import java.util.List;
@@ -233,7 +233,7 @@ public class ScanRequest {
         return this.activeBranches;
     }
 
-    public List<Filter> getFilters() {
+    public List<com.checkmarx.sdk.dto.Filter> getFilters() {
         return this.filters;
     }
 

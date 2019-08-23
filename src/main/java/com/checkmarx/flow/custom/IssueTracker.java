@@ -1,8 +1,8 @@
 package com.checkmarx.flow.custom;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.dto.ScanResults;
 import com.checkmarx.flow.exception.MachinaException;
+import com.checkmarx.sdk.dto.ScanResults;
 
 import java.util.List;
 
