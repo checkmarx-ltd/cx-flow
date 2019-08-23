@@ -1,0 +1,35 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/openjdk:8-jdk
+    working_directory: ~/repo
+    environment:
+      MAVEN_OPTS: -Xmx3200m
+    steps:
+      - checkout
+      - restore_cache:
+          key: v1-gradle-wrapper-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}
+      - restore_cache:
+          key: v1-gradle-cache-{{ checksum "build.gradle" }}
+      - run: ./gradlew clean build
+      - save_cache:
+          paths:
+            - ~/.gradle/wrapper
+          key: v1-gradle-wrapper-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}
+      - save_cache:
+          paths:
+            - ~/.gradle/caches
+          key: v1-gradle-cache-{{ checksum "build.gradle" }}
+
+workflows:
+  version: 2
+  build_deploy:
+    jobs:
+      - build
+#      - deploy:
+#          filters:
+#            branches:
+#              only: master
+#          requires:
+#            - build
