@@ -83,3 +83,9 @@ springBoot {
 bootJar {
     mainClassName = "${mainClass}"
 }
+
+task getVersion {
+    doLast {
+        println "${version}"
+    }
+}
