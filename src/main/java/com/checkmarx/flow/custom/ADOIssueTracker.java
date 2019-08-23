@@ -12,6 +12,8 @@ import com.checkmarx.sdk.dto.ScanResults;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -38,14 +40,14 @@ public class ADOIssueTracker implements IssueTracker {
     private static final String WIQ_APP = "Select [System.Id], [System.Title], " +
             "[System.State], [System.State], [System.WorkItemType] From WorkItems Where " +
             "[System.TeamProject] = @project AND [Tags] Contains '%s' AND [Tags] Contains '%s:%s'";
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(ADOIssueTracker.class);
+    private static final Logger log = LoggerFactory.getLogger(ADOIssueTracker.class);
 
     private final RestTemplate restTemplate;
     private final ADOProperties properties;
     private final FlowProperties flowProperties;
 
 
-    public ADOIssueTracker(RestTemplate restTemplate, ADOProperties properties, FlowProperties flowProperties) {
+    public ADOIssueTracker(@Qualifier("flowRestTemplate") RestTemplate restTemplate, ADOProperties properties, FlowProperties flowProperties) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.flowProperties = flowProperties;

@@ -11,6 +11,8 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -29,13 +31,13 @@ public class GitLabService {
     public static final String MERGE_PATH = "/projects/{id}/merge_requests/{iid}";
     public static final String COMMIT_PATH = "/projects/{id}/repository/commits/{sha}/comments";
     private static final int UNKNOWN_INT = -1;
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(GitLabService.class);
+    private static final Logger log = LoggerFactory.getLogger(GitLabService.class);
     private final RestTemplate restTemplate;
     private final GitLabProperties properties;
     private final FlowProperties flowProperties;
 
     @ConstructorProperties({"restTemplate", "properties", "flowProperties"})
-    public GitLabService(RestTemplate restTemplate, GitLabProperties properties, FlowProperties flowProperties) {
+    public GitLabService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, GitLabProperties properties, FlowProperties flowProperties) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.flowProperties = flowProperties;

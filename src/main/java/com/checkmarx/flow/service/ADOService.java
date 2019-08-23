@@ -10,6 +10,8 @@ import com.checkmarx.sdk.dto.ScanResults;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -22,13 +24,13 @@ import java.util.*;
 
 @Service
 public class ADOService {
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(ADOService.class);
+    private static final Logger log = LoggerFactory.getLogger(ADOService.class);
     private final RestTemplate restTemplate;
     private final ADOProperties properties;
     private final FlowProperties flowProperties;
 
     @ConstructorProperties({"restTemplate", "properties", "flowProperties"})
-    public ADOService(RestTemplate restTemplate, ADOProperties properties, FlowProperties flowProperties) {
+    public ADOService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, ADOProperties properties, FlowProperties flowProperties) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.flowProperties = flowProperties;
