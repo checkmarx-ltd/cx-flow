@@ -93,12 +93,7 @@ public class IssueService implements ApplicationContextAware {
             }
             xMap = this.getXIssueMap(tracker, results.getXIssues(), request);
             iMap = this.getIssueMap(tracker, issues, request);
-            if(iMap == null){
-                iMap = Collections.emptyMap();
-            }
-            if(xMap == null){
-                xMap = Collections.emptyMap();
-            }
+
             for (Map.Entry<String, ScanResults.XIssue> xIssue : xMap.entrySet()) {
                 try {
                     String fileUrl;
