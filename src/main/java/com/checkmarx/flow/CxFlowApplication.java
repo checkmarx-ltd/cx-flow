@@ -8,7 +8,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 
 import java.util.Arrays;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages={"com.checkmarx.sdk","com.checkmarx.flow"})
 @EnableAspectJAutoProxy(proxyTargetClass=true)
 @EnableAsync
 public class CxFlowApplication {
