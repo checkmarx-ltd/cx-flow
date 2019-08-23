@@ -23,6 +23,8 @@ jobs:
           paths:
             - ~/.gradle/caches
           key: v1-gradle-cache-{{ checksum "build.gradle" }}
+      - store_artifacts:
+          path: build/libs
 
 workflows:
   version: 2
