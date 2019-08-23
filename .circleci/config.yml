@@ -15,6 +15,8 @@ jobs:
           key: v1-gradle-cache-{{ checksum "build.gradle" }}
       - run: chmod u+x gradlew
       - run: ./gradlew clean build
+      - run: ./gradlew -b build-11.gradle --build-cache assemble
+      - run: ./gradlew -q getVersion > build/libs/version.txt
       - save_cache:
           paths:
             - ~/.gradle/wrapper
@@ -25,15 +27,35 @@ jobs:
           key: v1-gradle-cache-{{ checksum "build.gradle" }}
       - store_artifacts:
           path: build/libs
+      - persist_to_workspace:
+          root: .
+          paths:
+            - build/libs/*
+
+  publish-github-release:
+    docker:
+      - image: circleci/golang:1.8
+    steps:
+      - attach_workspace:
+          at: ./artifacts
+      - run:
+          name: "Publish Release on GitHub"
+          command: |
+            go get github.com/tcnksm/ghr
+            VERSION=$(cat ./artifacts/version.txt)
+            echo ${VERSION}
+            echo "$$$$$"
+            find .
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./artifacts/
 
 workflows:
   version: 2
   build_deploy:
     jobs:
       - build
-#      - deploy:
-#          filters:
-#            branches:
-#              only: master
-#          requires:
-#            - build
+      - publish-github-release:
+          filters:
+            branches:
+              only: develop
+          requires:
+            - build
