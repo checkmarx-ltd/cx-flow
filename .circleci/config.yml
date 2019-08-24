@@ -54,6 +54,6 @@ workflows:
       - publish-github-release:
           filters:
             branches:
-              only: master
+              only: develop
           requires:
             - build
