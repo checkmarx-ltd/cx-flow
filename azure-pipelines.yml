@@ -5,7 +5,6 @@ trigger:
   branches:
     include:
       - master
-      - develop
 
 steps:
 - task: Gradle@2
@@ -32,6 +31,8 @@ steps:
 
 - task: PublishBuildArtifacts@1
   displayName: 'Publish Artifact'
+  pathtoPublish: './build/libs'
+
 # https://devblogs.microsoft.com/devops/automating-releases-in-github-through-azure-pipelines/
 #- task: GitHubRelease@0
 #  condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
