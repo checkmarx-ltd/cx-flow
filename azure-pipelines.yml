@@ -51,12 +51,12 @@ steps:
     artifactName: 'release'
     displayName: 'Publish Artifact'
 
-- task: GithubRelease@0
-  displayName: 'Create GitHub Release'
-  inputs:
-    githubConnection: checkmarx-ltd
-    repositoryName: checkmarx-ltd/cx-flow
-    tagSource: manual
-    tag: $(CX_FLOW_VERSION)
-    assets: ./build/libs/*.jar
-  condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+#- task: GithubRelease@0
+#  displayName: 'Create GitHub Release'
+#  inputs:
+#    githubConnection: checkmarx-ltd
+#    repositoryName: checkmarx-ltd/cx-flow
+#    tagSource: manual
+#    tag: $(CX_FLOW_VERSION)
+#    assets: ./build/libs/*.jar
+#  condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
