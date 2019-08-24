@@ -32,7 +32,7 @@ steps:
 - task: PublishBuildArtifacts@1
   inputs:
     pathtoPublish: './build/libs'
-    artifactName: 'artifact'
+    artifactName: 'release'
     displayName: 'Publish Artifact'
 
 # https://devblogs.microsoft.com/devops/automating-releases-in-github-through-azure-pipelines/
