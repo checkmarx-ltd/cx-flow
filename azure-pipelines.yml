@@ -30,9 +30,10 @@ steps:
     tasks: '-b build-11.gradle assemble'
 
 - task: PublishBuildArtifacts@1
-  pathtoPublish: '$(Build.ArtifactStagingDirectory)'
-  artifactName: 'artifact'
-  displayName: 'Publish Artifact'
+  inputs:
+    pathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    artifactName: 'artifact'
+    displayName: 'Publish Artifact'
 
 # https://devblogs.microsoft.com/devops/automating-releases-in-github-through-azure-pipelines/
 #- task: GitHubRelease@0
