@@ -51,8 +51,7 @@ steps:
     artifactName: 'release'
     displayName: 'Publish Artifact'
 
-# https://devblogs.microsoft.com/devops/automating-releases-in-github-through-azure-pipelines/
-– task: GithubRelease@0
+- task: GithubRelease@0
   displayName: 'Create GitHub Release'
   inputs:
     githubConnection: checkmarx-ltd
@@ -61,4 +60,3 @@ steps:
     tag: $(CX_FLOW_VERSION)
     assets: ./build/libs/*.jar
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
-
