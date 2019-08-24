@@ -4,14 +4,16 @@ import com.checkmarx.flow.config.GitLabProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.dto.ScanResults;
 import com.checkmarx.flow.dto.gitlab.Note;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.dto.ScanResults;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -35,13 +37,13 @@ public class GitLabIssueTracker implements IssueTracker {
     private static final String NEW_ISSUE_PATH = "/projects/{id}/issues";
     private static final String ISSUE_PATH = "/projects/{id}/issues/{iid}";
     private static final String COMMENT_PATH = "/projects/{id}/issues/{iid}/notes";
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(GitLabIssueTracker.class);
+    private static final Logger log = LoggerFactory.getLogger(GitLabIssueTracker.class);
     private static final int UNKNOWN_INT = -1;
     private final RestTemplate restTemplate;
     private final GitLabProperties properties;
     private final FlowProperties flowProperties;
 
-    public GitLabIssueTracker(RestTemplate restTemplate, GitLabProperties properties, FlowProperties flowProperties) {
+    public GitLabIssueTracker(@Qualifier("flowRestTemplate") RestTemplate restTemplate, GitLabProperties properties, FlowProperties flowProperties) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.flowProperties = flowProperties;
@@ -58,8 +60,14 @@ public class GitLabIssueTracker implements IssueTracker {
         if(ScanUtils.empty(properties.getApiUrl())){
             throw new MachinaException("GitLab API Url must be provided in property config");
         }
-        Integer projectId = getProjectDetails(request.getNamespace(), request.getRepoName());
-        request.setRepoProjectId(projectId);
+        if(request.getRepoProjectId() == null) {
+            Integer projectId = getProjectDetails(request.getNamespace(), request.getRepoName());
+            if (projectId.equals(UNKNOWN_INT)) {
+                log.error("Could not obtain GitLab Project Id for {}/{}/{}", request.getNamespace(), request.getRepoName(), request.getBranch());
+                throw new MachinaException("Could not obtain GitLab Project Id");
+            }
+            request.setRepoProjectId(projectId);
+        }
     }
 
     /**

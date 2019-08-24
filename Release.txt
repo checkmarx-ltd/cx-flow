@@ -1,3 +1,17 @@
+Release 1.4.0
+---------------------------------------------------------------------
+# FEATURES
+- CIRCLE CI Pipeline Configuration | build and deploy (GitHub Releases)
+- Azure DevOps Pipeline Configuration
+- Generic REST API Endpoint to trigger scans and post results to a provided web end point (i.e. pre-signed S3 url)
+- Allow for parent/child issue association with JIRA issues
+- Support for Checkmarx 9.0
+- Externalize configuration for Report Polling
+- Externalize configuration for Scan Polling
+
+# CHANGES
+- Checkmarx logic has been pulled into an SDK - https://github.com/checkmarx-ts/checkmarx-spring-boot-java-sdk
+- Update JRJC Atlassian Java dependencies
 ---------------------------------------------------------------------
 Release 1.3.2
 ---------------------------------------------------------------------
@@ -28,7 +42,7 @@ timestamp is now trimmed to exclude the millisecond portion, which was the value
 ---------------------------------------------------------------------
 Release 1.3.1
 ---------------------------------------------------------------------
-# Changes
+# CHANGES
 * Allow for optional and configurable JIRA comment on updating existing issues
 # Features
 * Allow for configurable http connection and read timeout settings under the cx-flow configuration block:
