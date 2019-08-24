@@ -32,6 +32,25 @@ jobs:
           paths:
             - build/libs/*
 
+  docker-push:
+    docker:
+      - image: docker:18.06.3-ce-git
+        environment:
+          DOCKER_REPO: docker.io/checkmarxts/cxflow
+    steps:
+      - attach_workspace:
+          at: .
+      - checkout
+      - deploy:
+          name: Publish application to docker hub
+          command: |
+            VERSION=$(cat ./build/libs/version.txt)
+            docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} docker.io
+            docker build -t ${DOCKER_REPO} .
+            docker build -t ${DOCKER_REPO}:${VERSION} .
+            docker build -f Dockerfile-11 -t ${DOCKER_REPO}:${VERSION}-11 .
+            docker push ${DOCKER_REPO}
+
   publish-github-release:
     docker:
       - image: circleci/golang:1.8
@@ -51,6 +70,12 @@ workflows:
   build_deploy:
     jobs:
       - build
+      - docker-push:
+          filters:
+            branches:
+              only: develop
+          requires:
+            - build
       - publish-github-release:
           filters:
             branches:
