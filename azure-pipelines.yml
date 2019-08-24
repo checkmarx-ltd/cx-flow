@@ -36,14 +36,14 @@ steps:
 
 - task: CmdLine@2
   inputs:
-  script: |
-    chmod u+x ./gradlew
-    ./gradlew -q getVersion > ./build/libs/version.txt
-    CX_FLOW_VERISON=$(cat ./build/libs/version.txt)
+    script: |
+      chmod u+x ./gradlew
+      ./gradlew -q getVersion > ./build/libs/version.txt
+      CX_FLOW_VERISON=$(cat ./build/libs/version.txt)
 
 - task: CmdLine@2
   inputs:
-  script: echo ${CX_FLOW_VERISON}
+    script: echo ${CX_FLOW_VERISON}
 
 - task: PublishBuildArtifacts@1
   inputs:
