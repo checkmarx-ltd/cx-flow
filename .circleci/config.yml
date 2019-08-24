@@ -37,15 +37,12 @@ jobs:
       - image: circleci/golang:1.8
     steps:
       - attach_workspace:
-          at: ./artifacts
+          at: .
       - run:
           name: "Publish Release on GitHub"
           command: |
             go get github.com/tcnksm/ghr
-            VERSION=$(cat ./artifacts/version.txt)
-            echo ${VERSION}
-            echo "$$$$$"
-            find .
+            VERSION=$(cat ./build/libs/version.txt)
             ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./artifacts/
 
 workflows:
