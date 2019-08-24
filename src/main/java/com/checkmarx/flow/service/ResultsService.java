@@ -1,12 +1,16 @@
 package com.checkmarx.flow.service;
 
-import com.checkmarx.flow.config.CxProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.*;
-import com.checkmarx.flow.dto.cx.CxProject;
 import com.checkmarx.flow.exception.InvalidCredentialsException;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.config.Constants;
+import com.checkmarx.sdk.config.CxProperties;
+import com.checkmarx.sdk.dto.Filter;
+import com.checkmarx.sdk.dto.ScanResults;
+import com.checkmarx.sdk.dto.cx.CxProject;
+import com.checkmarx.sdk.service.CxClient;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.springframework.scheduling.annotation.Async;
@@ -16,12 +20,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import static com.checkmarx.flow.service.CxService.UNKNOWN;
 
 @Service
 public class ResultsService {
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(ResultsService.class);
-    private final CxService cxService;
+    private final CxClient cxService;
     private final JiraService jiraService;
     private final IssueService issueService;
     private final GitHubService gitService;
@@ -31,12 +34,10 @@ public class ResultsService {
     private final EmailService emailService;
     private final CxProperties cxProperties;
     private final FlowProperties flowProperties;
-    private static final Long SLEEP = 20000L;
-    private static final Long TIMEOUT = 300000L;
 
     @ConstructorProperties({"cxService", "jiraService", "issueService", "gitService", "gitLabService", "bbService",
             "adoService","emailService", "cxProperties", "flowProperties"})
-    public ResultsService(CxService cxService, JiraService jiraService, IssueService issueService, GitHubService gitService,
+    public ResultsService(CxClient cxService, JiraService jiraService, IssueService issueService, GitHubService gitService,
                           GitLabService gitLabService, BitBucketService bbService, ADOService adoService,
                           EmailService emailService, CxProperties cxProperties, FlowProperties flowProperties) {
         this.cxService = cxService;
@@ -55,7 +56,7 @@ public class ResultsService {
     public CompletableFuture<ScanResults> processScanResultsAsync(ScanRequest request, Integer scanId, List<Filter> filters) throws MachinaException {
         try {
             CompletableFuture<ScanResults> future = new CompletableFuture<>();
-            ScanResults results = getScanResults(scanId, filters);
+            ScanResults results = cxService.getReportContentByScanId(scanId, filters);
             Map<String, Object> emailCtx = new HashMap<>();
             BugTracker.Type bugTrackerType = request.getBugTracker().getType();
             //Send email (if EMAIL was enabled and EMAL was not main feedback option
@@ -96,28 +97,6 @@ public class ResultsService {
             return x;
         }
 
-    }
-
-    private ScanResults getScanResults(Integer scanId, List<Filter> filters) throws MachinaException {
-        try {
-            Integer reportId = cxService.createScanReport(scanId);
-            Thread.sleep(SLEEP);
-            int timer = 0;
-            while (cxService.getReportStatus(reportId).equals(CxService.REPORT_STATUS_FINISHED)) {
-                Thread.sleep(SLEEP);
-                timer += SLEEP;
-                if (timer >= TIMEOUT) {
-                    log.error("Report Generation timeout.  {}", TIMEOUT);
-                    throw new MachinaException("Timeout exceeded during report generation");
-                }
-            }
-            Thread.sleep(SLEEP);
-            return cxService.getReportContent(reportId, filters);
-        } catch (InterruptedException e) {
-            log.error(ExceptionUtils.getStackTrace(e));
-            Thread.currentThread().interrupt();
-            throw new MachinaException("Interrupted Exception Occurred");
-        }
     }
 
     void processResults(ScanRequest request, ScanResults results) throws MachinaException {
@@ -204,7 +183,7 @@ public class ResultsService {
                 return;
             }
             /*if so, then get them and add them to the request object*/
-            if(!ScanUtils.empty(results.getProjectId()) && !results.getProjectId().equals(UNKNOWN)){
+            if(!ScanUtils.empty(results.getProjectId()) && !results.getProjectId().equals(Constants.UNKNOWN)){
                 CxProject project = cxService.getProject(Integer.parseInt(results.getProjectId()));
                 Map<String, String> fields = new HashMap<>();
                 for(CxProject.CustomField field : project.getCustomFields()){

@@ -3,9 +3,9 @@ package com.checkmarx.flow.custom;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.dto.ScanResults;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.dto.ScanResults;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
@@ -279,6 +279,7 @@ public class CsvIssueTracker implements IssueTracker {
         if(!ScanUtils.empty(request.getTeam())){
             String team = request.getTeam();
             team = team.replaceAll("\\\\","_");
+            team = team.replaceAll("/","_");
             value = value.replace("[TEAM]", team);
         }
         if(!ScanUtils.empty(request.getApplication())) {

@@ -23,7 +23,9 @@ public class ZipUtils {
             throws IOException {
         List<String> excludeList = null;
         log.info("Creating zip file {} from contents of path {}", zipFile, fileToZip);
-        log.info("Applying exclusions: {}", excludePatterns);
+        if(excludePatterns != null) {
+            log.info("Applying exclusions: {}", excludePatterns);
+        }
 
         if(!ScanUtils.empty(excludePatterns)) {
             excludeList = Arrays.asList(excludePatterns.split(","));

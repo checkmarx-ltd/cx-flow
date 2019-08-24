@@ -3,9 +3,9 @@ package com.checkmarx.flow.custom;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.dto.ScanResults;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.dto.ScanResults;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
@@ -19,12 +19,10 @@ import java.util.List;
 public class CxXMLIssueTracker implements IssueTracker {
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(CxXMLIssueTracker.class);
     private final CxXMLProperties properties;
-    private final FlowProperties flowProperties;
 
-    @ConstructorProperties({"properties", "flowProperties"})
-    public CxXMLIssueTracker(CxXMLProperties properties, FlowProperties flowProperties) {
+    @ConstructorProperties("properties")
+    public CxXMLIssueTracker(CxXMLProperties properties) {
         this.properties = properties;
-        this.flowProperties = flowProperties;
     }
 
     @Override
