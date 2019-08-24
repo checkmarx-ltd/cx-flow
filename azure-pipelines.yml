@@ -9,6 +9,7 @@ pr:
   branches:
     include:
       - master
+      - develop
 
 steps:
 - task: Gradle@2
