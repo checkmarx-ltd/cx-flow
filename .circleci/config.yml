@@ -31,6 +31,8 @@ jobs:
           root: .
           paths:
             - build/libs/*
+            - Dockerfile
+            - Dockerfile-11
 
   docker-push:
     docker:
@@ -40,7 +42,6 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - checkout
       - deploy:
           name: Publish application to docker hub
           command: |
