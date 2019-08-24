@@ -5,6 +5,10 @@ trigger:
   branches:
     include:
       - master
+pr:
+  branches:
+    include:
+      - master
 
 steps:
 - task: Gradle@2
