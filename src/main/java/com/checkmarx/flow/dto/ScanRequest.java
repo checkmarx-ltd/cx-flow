@@ -3,6 +3,7 @@ package com.checkmarx.flow.dto;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.Filter;
 import java.beans.ConstructorProperties;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +18,8 @@ public class ScanRequest {
     private String org;
     private String team;
     private String project;
+	private String altProject;
+    private String altFields;
     private Map<String, String> cxFields;
     private String site;
     private String hash;
@@ -45,13 +48,15 @@ public class ScanRequest {
     @ConstructorProperties({"namespace", "application", "org", "team", "project", "cxFields", "site", "repoUrl",
             "repoUrlWithAuth", "repoName", "branch", "mergeTargetBranch", "mergeNoteUri", "repoProjectId", "refs", "email",
             "incremental", "scanPreset", "excludeFiles", "excludeFolders", "repoType", "product", "bugTracker",
-            "type", "activeBranches", "filters"})
-    ScanRequest(String namespace, String application, String org, String team, String project, Map<String, String> cxFields, String site, String repoUrl, String repoUrlWithAuth, String repoName, String branch, String mergeTargetBranch, String mergeNoteUri, Integer id, String refs, List<String> email, boolean incremental, String scanPreset, List<String> excludeFiles, List<String> excludeFolders, Repository repoType, Product product, BugTracker bugTracker, Type type, List<String> activeBranches, List<Filter> filters) {
+            "type", "activeBranches", "filters","altProject","altFields"})
+    ScanRequest(String namespace, String application, String org, String team, String project, Map<String, String> cxFields, String site, String repoUrl, String repoUrlWithAuth, String repoName, String branch, String mergeTargetBranch, String mergeNoteUri, Integer id, String refs, List<String> email, boolean incremental, String scanPreset, List<String> excludeFiles, List<String> excludeFolders, Repository repoType, Product product, BugTracker bugTracker, Type type, List<String> activeBranches, List<Filter> filters, String altProject,String altFields) {
         this.namespace = namespace;
         this.application = application;
         this.org = org;
         this.team = team;
         this.project = project;
+		this.altProject = altProject;
+        this.altFields = altFields;
         this.cxFields = cxFields;
         this.site = site;
         this.repoUrl = repoUrl;
@@ -73,6 +78,7 @@ public class ScanRequest {
         this.type = type;
         this.activeBranches = activeBranches;
         this.filters = filters;
+		this.altProject = altProject;
     }
 
     public ScanRequest(ScanRequest other) {
@@ -82,6 +88,8 @@ public class ScanRequest {
         this.team = other.team;
         this.project = other.project;
         this.cxFields = other.cxFields;
+		this.altProject = other.altProject;
+        this.altFields = other.altFields;
         this.site = other.site;
         this.hash = other.hash;
         this.repoUrl = other.repoUrl;
@@ -135,6 +143,18 @@ public class ScanRequest {
 
     public String getProject() {
         return this.project;
+    }
+
+   public String getAltProject() { return this.altProject; }
+
+    public Map<String,String> getAltFields() {
+        Map<String,String> map = new HashMap<String,String>();
+        for( String s :Arrays.asList(this.altFields.split(",")))
+        {
+            String[] split = s.split(":");
+            map.put(split[0],split[1]);
+        }
+        return map;
     }
 
     public Map<String, String> getAdditionalMetadata() {
@@ -325,6 +345,13 @@ public class ScanRequest {
         this.product = product;
     }
 
+	    public void setAltProject(String altProduct) {
+        this.altProject = altProject;
+    }
+
+    public void setAltFields(String altFields) {
+         this.altFields = altFields;
+    }
     public void setBugTracker(BugTracker bugTracker) {
         this.bugTracker = bugTracker;
     }
@@ -442,6 +469,8 @@ public class ScanRequest {
         private List<String> excludeFolders;
         private Repository repoType;
         private Product product;
+		private String altProject;
+        private String altFields;
         private BugTracker bugTracker;
         private Type type;
         private List<String> activeBranches;
@@ -571,6 +600,17 @@ public class ScanRequest {
             return this;
         }
 
+		public ScanRequest.ScanRequestBuilder altProject(String altProject) {
+            this.altProject = altProject;
+            return this;
+        }
+
+        public ScanRequest.ScanRequestBuilder altFields(String altFields) {
+            this.altFields = altFields;
+            return this;
+        }
+
+
         public ScanRequest.ScanRequestBuilder type(Type type) {
             this.type = type;
             return this;
@@ -587,7 +627,7 @@ public class ScanRequest {
         }
 
         public ScanRequest build() {
-            return new ScanRequest(namespace, application, org, team, project, cxFields, site, repoUrl, repoUrlWithAuth, repoName, branch, mergeTargetBranch, mergeNoteUri, id, refs, email, incremental, scanPreset, excludeFiles, excludeFolders, repoType, product, bugTracker, type, activeBranches, filters);
+            return new ScanRequest(namespace, application, org, team, project, cxFields, site, repoUrl, repoUrlWithAuth, repoName, branch, mergeTargetBranch, mergeNoteUri, id, refs, email, incremental, scanPreset, excludeFiles, excludeFolders, repoType, product, bugTracker, type, activeBranches, filters, altProject, altFields);
         }
 
         public String toString() {

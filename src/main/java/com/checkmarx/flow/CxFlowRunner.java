@@ -78,6 +78,8 @@ public class CxFlowRunner implements ApplicationRunner {
         String preset = null;
         String team;
         String cxProject;
+		String altProject;
+        String altFields;
         String config;
         List<String> severity;
         List<String> cwe;
@@ -125,6 +127,8 @@ public class CxFlowRunner implements ApplicationRunner {
         branch = getOptionValues(args,"branch");
         namespace = getOptionValues(args,"namespace");
         team = getOptionValues(args,"cx-team");
+		altProject = getOptionValues(args,"alt-project");
+        altFields = getOptionValues(args,"alt-fields");
         cxProject = getOptionValues(args,"cx-project");
         application = getOptionValues(args,"app");
         assignee = getOptionValues(args,"assignee");
@@ -280,6 +284,8 @@ public class CxFlowRunner implements ApplicationRunner {
                 .excludeFiles(excludeFiles)
                 .bugTracker(bt)
                 .filters(filters)
+				.altProject(altProject)
+                .altFields(altFields)
                 .build();
 
         request = ScanUtils.overrideMap(request, o);
