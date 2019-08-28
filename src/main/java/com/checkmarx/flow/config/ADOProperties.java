@@ -92,4 +92,9 @@ public class ADOProperties extends RepoProperties{
         this.closedStatus = closedStatus;
     }
 
+    public String getMergeNoteUri(String namespace, String repo, String mergeId){
+        String format = "%s/%s/_apis/git/repositories/%s/pullRequests/%s/threads";
+        return String.format(format, getUrl(), namespace, repo, mergeId);
+        //http://localhost:8080/tfs/DefaultCollection/Checkmarx/_apis/git/repositories/Checkmarx/pullRequests/2/threads
+    }
 }

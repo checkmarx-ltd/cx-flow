@@ -3,10 +3,7 @@ package com.checkmarx.flow.dto;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.Filter;
 import java.beans.ConstructorProperties;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Object containing all applicable information about the scan request details
@@ -148,9 +145,11 @@ public class ScanRequest {
    public String getAltProject() { return this.altProject; }
 
     public Map<String,String> getAltFields() {
+        if(this.altFields == null){
+            return Collections.emptyMap();
+        }
         Map<String,String> map = new HashMap<String,String>();
-        for( String s :Arrays.asList(this.altFields.split(",")))
-        {
+        for( String s :Arrays.asList(this.altFields.split(","))) {
             String[] split = s.split(":");
             map.put(split[0],split[1]);
         }
