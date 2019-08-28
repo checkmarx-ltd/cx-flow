@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import java.beans.ConstructorProperties;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -92,6 +93,8 @@ public class ResultsService {
             return future;
         }catch (Exception e){
             log.error("Error occurred while processing results {}", ExceptionUtils.getMessage(e));
+            log.error(ExceptionUtils.getRootCauseMessage(e));
+            log.error(Arrays.toString(ExceptionUtils.getRootCauseStackTrace(e)));
             CompletableFuture<ScanResults> x = new CompletableFuture<>();
             x.completeExceptionally(e);
             return x;
