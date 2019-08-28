@@ -35,7 +35,7 @@ apply plugin: 'io.spring.dependency-management'
 apply plugin: 'com.gorylenko.gradle-git-properties'
 
 group = 'com.checkmarx'
-version = '1.4.0'
+version = '1.4.1'
 sourceCompatibility = 1.8
 
 repositories {
