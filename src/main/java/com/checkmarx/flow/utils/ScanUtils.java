@@ -110,7 +110,7 @@ public class ScanUtils {
      * @return
      */
     public static boolean empty(String str) {
-        return str == null || str.isEmpty();
+        return str == null || str.trim().isEmpty();
     }
 
     public static boolean anyEmpty(String ...str){
