@@ -1,6 +1,7 @@
 Release 1.4.1
 ---------------------------------------------------------------------
 #FEATURES
+- Add ability to provide Azure DevOps / TFS Pull Request Feedback through command line with the adopull | ADOPULL bug-tracker
 - Azure DevOps, add command line --alt-project to select a project with a different name than the Cx project/
 - Azure DevOps, add command line --alt-fields to add additional fields to each project request. Format:
 	* <field-name1>:<field-value1>,<field-name2>:<field-value2>,...
