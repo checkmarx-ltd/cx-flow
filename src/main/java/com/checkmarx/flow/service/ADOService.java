@@ -63,20 +63,41 @@ public class ADOService {
     }
 
     void sendMergeComment(ScanRequest request, String comment){
-        HttpEntity httpEntity = new HttpEntity<>(getJSONThread(comment).toString(), createAuthHeaders());
         String mergeUrl = request.getMergeNoteUri();
         if(ScanUtils.empty(mergeUrl)){
             log.error("mergeUrl was not provided within the request object, which is required for commenting on pull request");
             return;
         }
         log.debug(mergeUrl);
-        restTemplate.exchange(mergeUrl.concat("?api-version=").concat(properties.getApiVersion()),
-                HttpMethod.POST, httpEntity, String.class);
+        String threadId = request.getAdditionalMetadata("ado_thread_id");
+        if(ScanUtils.empty(threadId)){
+            HttpEntity httpEntity = new HttpEntity<>(getJSONThread(comment).toString(), createAuthHeaders());
+            log.debug("Creating new thread for comments");
+            ResponseEntity<String> response = restTemplate.exchange(mergeUrl.concat("?api-version=").concat(properties.getApiVersion()),
+                    HttpMethod.POST, httpEntity, String.class);
+            if(response.getBody() != null) {
+                JSONObject json = new JSONObject(response.getBody());
+                int id = json.getInt("id");
+                request.putAdditionalMetadata("ado_thread_id", Integer.toString(id));
+                log.debug("Created new thread with Id {}", id);
+            }
+        }
+        else{
+            HttpEntity httpEntity = new HttpEntity<>(getJSONComment(comment).toString(), createAuthHeaders());
+            mergeUrl = mergeUrl.concat("/").concat(threadId).concat("/comments");
+            log.debug("Adding comment to thread Id {}", threadId);
+            restTemplate.exchange(mergeUrl.concat("?api-version=").concat(properties.getApiVersion()),
+                    HttpMethod.POST, httpEntity, String.class);
+        }
     }
 
     void startBlockMerge(ScanRequest request){
         if(properties.isBlockMerge()) {
             String url = request.getAdditionalMetadata("statuses_url");
+            if(url == null){
+                log.warn("No status url found, skipping status update");
+                return;
+            }
             HttpEntity httpEntity = new HttpEntity<>(
                     getJSONStatus("pending", url, "Checkmarx Scan Initiated").toString(),
                     createAuthHeaders()
@@ -101,8 +122,11 @@ public class ADOService {
     void endBlockMerge(ScanRequest request){
         if(properties.isBlockMerge()) {
             String url = request.getAdditionalMetadata("statuses_url");
-            String statusId = request.getAdditionalMetadata().get("status_id");
-
+            String statusId = request.getAdditionalMetadata("status_id");
+            if(statusId == null){
+                log.warn("No status Id found, skipping status update");
+                return;
+            }
             CreateWorkItemAttr item = new CreateWorkItemAttr();
             item.setOp("remove");
             item.setPath("/".concat(statusId));
@@ -172,7 +196,16 @@ public class ADOService {
         comment.put("commentType", 1);
         comments.put(comment);
         requestBody.put("comments", comments);
-        requestBody.put("status", 2);
+        requestBody.put("status", 1);
+
+        return requestBody;
+    }
+
+    private JSONObject getJSONComment(String description){
+        JSONObject requestBody = new JSONObject();
+        requestBody.put("content", description);
+        requestBody.put("parentCommentId", 1);
+        requestBody.put("commentType", 1);
 
         return requestBody;
     }

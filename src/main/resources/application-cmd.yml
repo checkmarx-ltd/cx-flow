@@ -6,6 +6,7 @@ cx-flow:
   token: xxxx
   bug-tracker: JIRA
   bug-tracker-impl:
+    - Web
     - CxXml
     - Json
     - GitLab
@@ -128,6 +129,7 @@ azure:
   webhook-token: cxflow:1234
   token: xxxx
   url: https://dev.azure.com/XXXXXX
+  #url: http://localhost:8080/tfs/DefaultCollection
   issue-type: issue
   api-version: 5.0
   false-positive-label: false-positive
