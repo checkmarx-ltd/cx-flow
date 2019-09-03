@@ -98,6 +98,12 @@ public class ADOController {
             String pullUrl = resource.getUrl();
             String app = repository.getName();
 
+            if(repository.getName().startsWith(properties.getTestRepository())){
+                log.info("Handling ADO Test Event");
+                return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
+                        .message("Test Event").success(true).build());
+            }
+
             if(!ScanUtils.empty(application)){
                 app = application;
             }
@@ -269,7 +275,11 @@ public class ADOController {
             Resource resource = body.getResource();
             Repository repository = resource.getRepository();
             String app = repository.getName();
-
+            if(repository.getName().startsWith(properties.getTestRepository())){
+                log.info("Handling ADO Test Event");
+                return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
+                        .message("Test Event").success(true).build());
+            }
             if(!ScanUtils.empty(application)){
                 app = application;
             }

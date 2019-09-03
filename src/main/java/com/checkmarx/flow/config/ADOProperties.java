@@ -17,6 +17,7 @@ public class ADOProperties extends RepoProperties{
     private String repoTagPrefix = "repo";
     private String branchLabelPrefix = "branch";
     private String apiVersion = "5.0";
+    private String testRepository = "Fabrikam";
     private String openStatus;
     private String closedStatus;
 
@@ -90,6 +91,14 @@ public class ADOProperties extends RepoProperties{
 
     public void setClosedStatus(String closedStatus) {
         this.closedStatus = closedStatus;
+    }
+
+    public String getTestRepository() {
+        return testRepository;
+    }
+
+    public void setTestRepository(String testRepository) {
+        this.testRepository = testRepository;
     }
 
     public String getMergeNoteUri(String namespace, String repo, String mergeId){
