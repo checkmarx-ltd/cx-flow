@@ -1,3 +1,13 @@
+Release 1.4.2
+---------------------------------------------------------------------
+# CHANGES
+- Update SDK to 0.3.2
+
+# FIXES
+- Fix ADO Pull/Push test event validation
+- Fix to namespace bug identified for BitBucket Cloud
+- Fix to vulnerability counting in Violation Summary
+
 Release 1.4.1
 ---------------------------------------------------------------------
 #FEATURES
