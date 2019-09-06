@@ -45,6 +45,7 @@ public class BitbucketServerController {
     private static final String PING = EVENT + "=diagnostics:ping";
     private static final String PUSH = EVENT + "=repo:refs_changed";
     private static final String MERGE = EVENT + "=pr:opened";
+    private static final String MERGED = EVENT + "=pr:merged";
     private static final String HMAC_ALGORITHM = "HMACSha256";
     private static final String MERGE_COMMENT = "/projects/{project}/repos/{repo}/pull-requests/{id}/comments";
     private static final Charset CHARSET = StandardCharsets.UTF_8;
@@ -80,8 +81,8 @@ public class BitbucketServerController {
     }
 
     @PostMapping(value = "/{product}", headers = PING)
-    public String pingEvent(@PathVariable("product") String product){
-        log.info("Processing PING request");
+    public String pingEvent(@PathVariable(value = "product", required = false) String product){
+        log.info("Processing Bitbucket Server PING request");
         return "ok";
     }
 
@@ -110,6 +111,74 @@ public class BitbucketServerController {
             @RequestParam(value = "bug", required = false) String bug,
             @RequestParam(value = "app-only", required = false) Boolean appOnlyTracking
     ){
+        return doMergeEvent(body,
+                product,
+                signature,
+                application,
+                branch,
+                severity,
+                cwe,
+                category,
+                project,
+                team,
+                status,
+                assignee,
+                preset,
+                incremental,
+                excludeFiles,
+                excludeFolders,
+                override,
+                bug,
+                appOnlyTracking);
+    }
+
+    /**
+     * Push Request event webhook submitted.
+     */
+    @PostMapping(value = {"/{product}", "/"}, headers = MERGED)
+    public ResponseEntity<EventResponse> mergedRequest(
+            @RequestBody String body,
+            @PathVariable(value = "product", required = false) String product,
+            @RequestHeader(value = SIGNATURE) String signature,
+            @RequestParam(value = "application", required = false) String application,
+            @RequestParam(value = "branch", required = false) List<String> branch,
+            @RequestParam(value = "severity", required = false) List<String> severity,
+            @RequestParam(value = "cwe", required = false) List<String> cwe,
+            @RequestParam(value = "category", required = false) List<String> category,
+            @RequestParam(value = "project", required = false) String project,
+            @RequestParam(value = "team", required = false) String team,
+            @RequestParam(value = "status", required = false) List<String> status,
+            @RequestParam(value = "assignee", required = false) String assignee,
+            @RequestParam(value = "preset", required = false) String preset,
+            @RequestParam(value = "incremental", required = false) Boolean incremental,
+            @RequestParam(value = "exclude-files", required = false) List<String> excludeFiles,
+            @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders,
+            @RequestParam(value = "override", required = false) String override,
+            @RequestParam(value = "bug", required = false) String bug,
+            @RequestParam(value = "app-only", required = false) Boolean appOnlyTracking
+    ){
+        return doMergeEvent(body,
+                product,
+                signature,
+                application,
+                branch,
+                severity,
+                cwe,
+                category,
+                project,
+                team,
+                status,
+                assignee,
+                preset,
+                incremental,
+                excludeFiles,
+                excludeFolders,
+                override,
+                bug,
+                appOnlyTracking);
+    }
+
+    private ResponseEntity<EventResponse> doMergeEvent(@RequestBody String body, @PathVariable(value = "product", required = false) String product, @RequestHeader(SIGNATURE) String signature, @RequestParam(value = "application", required = false) String application, @RequestParam(value = "branch", required = false) List<String> branch, @RequestParam(value = "severity", required = false) List<String> severity, @RequestParam(value = "cwe", required = false) List<String> cwe, @RequestParam(value = "category", required = false) List<String> category, @RequestParam(value = "project", required = false) String project, @RequestParam(value = "team", required = false) String team, @RequestParam(value = "status", required = false) List<String> status, @RequestParam(value = "assignee", required = false) String assignee, @RequestParam(value = "preset", required = false) String preset, @RequestParam(value = "incremental", required = false) Boolean incremental, @RequestParam(value = "exclude-files", required = false) List<String> excludeFiles, @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders, @RequestParam(value = "override", required = false) String override, @RequestParam(value = "bug", required = false) String bug, @RequestParam(value = "app-only", required = false) Boolean appOnlyTracking) {
         String uid = helperService.getShortUid();
         MDC.put("cx", uid);
         verifyHmacSignature(body, signature);
@@ -134,19 +203,19 @@ public class BitbucketServerController {
             Repository fromRefRepository = fromRef.getRepository();
             Repository_ toRefRepository = toRef.getRepository();
             String app = fromRefRepository.getName();
-            if(!ScanUtils.empty(application)){
+            if (!ScanUtils.empty(application)) {
                 app = application;
             }
 
             BugTracker.Type bugType = BugTracker.Type.BITBUCKETSERVERPULL;
-            if(!ScanUtils.empty(bug)){
+            if (!ScanUtils.empty(bug)) {
                 bugType = ScanUtils.getBugTypeEnum(bug, flowProperties.getBugTrackerImpl());
             }
-            if(appOnlyTracking != null){
+            if (appOnlyTracking != null) {
                 flowProperties.setTrackApplicationOnly(appOnlyTracking);
             }
 
-            if(ScanUtils.empty(product)){
+            if (ScanUtils.empty(product)) {
                 product = ScanRequest.Product.CX.getProduct();
             }
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
@@ -155,26 +224,24 @@ public class BitbucketServerController {
             List<String> branches = new ArrayList<>();
             List<Filter> filters;
 
-            if(!ScanUtils.empty(branch)){
+            if (!ScanUtils.empty(branch)) {
                 branches.addAll(branch);
-            }
-            else if(!ScanUtils.empty(flowProperties.getBranches())){
+            } else if (!ScanUtils.empty(flowProperties.getBranches())) {
                 branches.addAll(flowProperties.getBranches());
             }
 
             BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
 
-            if(!ScanUtils.empty(severity) || !ScanUtils.empty(cwe) || !ScanUtils.empty(category) || !ScanUtils.empty(status)){
+            if (!ScanUtils.empty(severity) || !ScanUtils.empty(cwe) || !ScanUtils.empty(category) || !ScanUtils.empty(status)) {
                 filters = ScanUtils.getFilters(severity, cwe, category, status);
-            }
-            else{
+            } else {
                 filters = ScanUtils.getFilters(flowProperties);
             }
 
-            if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
+            if (excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())) {
                 excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
             }
-            if(excludeFolders == null && !ScanUtils.empty(cxProperties.getExcludeFolders())){
+            if (excludeFolders == null && !ScanUtils.empty(cxProperties.getExcludeFolders())) {
                 excludeFolders = Arrays.asList(cxProperties.getExcludeFolders().split(","));
             }
 
@@ -191,11 +258,11 @@ public class BitbucketServerController {
             mergeEndpoint = mergeEndpoint.replace("{id}", pullRequest.getId().toString());
 
             String scanPreset = cxProperties.getScanPreset();
-            if(!ScanUtils.empty(preset)){
+            if (!ScanUtils.empty(preset)) {
                 scanPreset = preset;
             }
             boolean inc = cxProperties.getIncremental();
-            if(incremental != null){
+            if (incremental != null) {
                 inc = incremental;
             }
 
@@ -204,7 +271,7 @@ public class BitbucketServerController {
                     .product(p)
                     .project(project)
                     .team(team)
-                    .namespace(projectKey.replaceAll(" ","_"))
+                    .namespace(projectKey.replaceAll(" ", "_"))
                     .repoName(fromRefRepository.getName())
                     .repoUrl(gitUrl)
                     .repoUrlWithAuth(gitAuthUrl)
@@ -226,16 +293,16 @@ public class BitbucketServerController {
             request.setId(uid);
             try {
                 request.putAdditionalMetadata("BITBUCKET_BROWSE", fromRefRepository.getLinks().getSelf().get(0).getHref());
-            }catch (NullPointerException e){
+            } catch (NullPointerException e) {
                 log.warn("Not able to determine file url for browsing");
             }
             //only initiate scan/automation if target branch is applicable
-            if(helperService.isBranch2Scan(request, branches)){
+            if (helperService.isBranch2Scan(request, branches)) {
                 flowService.initiateAutomation(request);
             }
 
 
-        }catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             String errorMessage = "Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product != null ? product : "").concat(" | ").concat(bug != null ? bug : "");
             log.error(errorMessage);
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
@@ -249,7 +316,6 @@ public class BitbucketServerController {
                 .message("Scan Request Successfully Submitted")
                 .success(true)
                 .build());
-
     }
 
 
