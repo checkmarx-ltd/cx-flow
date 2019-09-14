@@ -1,5 +1,6 @@
 buildscript {
 	ext {
+        cxVersion = "8.90.5"
 		springBootVersion = '2.1.5.RELEASE'
         sonarqubeVersion = '2.5'
         atlassianVersion = "5.1.6"
@@ -58,6 +59,7 @@ dependencies {
     compile ("org.apache.httpcomponents:httpclient:4.5.8")
     compile ("org.codehaus.groovy:groovy-all:2.5.7")
     compile ("org.apache.ivy:ivy:2.5.0-rc1")
+    compile ("com.checkmarx:cx-client-common:${cxVersion}")
     compile group: 'com.sun.xml.bind', name: 'jaxb-impl', version: '2.4.0-b180830.0438'
     compile group: 'javax.xml.ws', name: 'jaxws-api', version: '2.3.1'
     compile group: 'com.sun.xml.bind', name: 'jaxb-core', version: '2.3.0.1'
