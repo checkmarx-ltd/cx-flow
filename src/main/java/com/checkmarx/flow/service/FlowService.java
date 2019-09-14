@@ -13,6 +13,7 @@ import com.checkmarx.sdk.dto.cx.CxProject;
 import com.checkmarx.sdk.dto.cx.CxScanParams;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
+import com.checkmarx.sdk.service.CxOsaClient;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.springframework.scheduling.annotation.Async;
@@ -34,6 +35,7 @@ public class FlowService {
 
     private static final String SCAN_MESSAGE = "Scan submitted to Checkmarx";
     private final CxClient cxService;
+    private final CxOsaClient osaService;
     private final GitHubService gitService;
     private final GitLabService gitLabService;
     private final BitBucketService bbService;
@@ -46,13 +48,12 @@ public class FlowService {
     private static final Long SLEEP = 20000L;
     private static final String ERROR_BREAK_MSG = "Exiting with Error code 10 due to issues present";
 
-    @ConstructorProperties({"cxService", "resultService", "gitService", "gitLabService", "bbService",
-            "adoService", "emailService", "helperService", "cxProperties", "flowProperties"})
-    public FlowService(CxClient cxService, ResultsService resultsService, GitHubService gitService,
+    public FlowService(CxClient cxService, CxOsaClient osaService, ResultsService resultsService, GitHubService gitService,
                        GitLabService gitLabService, BitBucketService bbService, ADOService adoService,
                        EmailService emailService, HelperService helperService, CxProperties cxProperties,
                        FlowProperties flowProperties) {
         this.cxService = cxService;
+        this.osaService = osaService;
         this.resultsService = resultsService;
         this.gitService = gitService;
         this.gitLabService = gitLabService;
@@ -204,13 +205,21 @@ public class FlowService {
             }
 
             Integer scanId = cxService.createScan(params,"CxFlow Automated Scan");
+            Integer projectId = cxService.getProjectId(ownerId, projectName);
 
             if(bugTrackerType.equals(BugTracker.Type.NONE)){
                 log.info("Not waiting for scan completion as Bug Tracker type is NONE");
                 return CompletableFuture.completedFuture(null);
             }
+
             cxService.waitForScanCompletion(scanId);
-             return resultsService.processScanResultsAsync(request, scanId, request.getFilters());
+            String osaScanId = null;
+            if(cxProperties.getOsaEnabled()){
+                //TODO clone to a local dir (check gitLab)
+                osaScanId = osaService.createScan(projectId, "");
+
+            }
+            return resultsService.processScanResultsAsync(request, projectId, scanId, osaScanId, request.getFilters());
         }catch (CheckmarxException e){
             log.error(ExceptionUtils.getStackTrace(e));
             log.error(ExceptionUtils.getRootCauseMessage(e));
@@ -331,7 +340,8 @@ public class FlowService {
             }
             else {
                 getCxFields(project, request);
-                return resultsService.processScanResultsAsync(request, scanId, request.getFilters());
+                //null is passed for osaScanId as it is not applicable here and will be ignored
+                return resultsService.processScanResultsAsync(request, project.getId(), scanId, null, request.getFilters());
             }
 
         } catch (MachinaException | CheckmarxException e) {

@@ -1,6 +1,7 @@
 buildscript {
 	ext {
-		springBootVersion = '2.1.5.RELEASE'
+        cxVersion = "8.90.5"
+        springBootVersion = '2.1.5.RELEASE'
         sonarqubeVersion = '2.5'
         atlassianVersion = "5.1.6"
         atlassianFugueVersion = "4.7.2"
@@ -53,7 +54,7 @@ dependencies {
     compile('org.springframework.boot:spring-boot-starter-actuator')
 	compile('org.springframework.boot:spring-boot-starter-web')
 	compile('org.springframework.boot:spring-boot-starter-aop')
-	compile('com.github.checkmarx-ts:cx-spring-boot-sdk:0.3.2')
+	compile('com.github.checkmarx-ts:cx-spring-boot-sdk:0.3.3')
     compile ('commons-codec:commons-codec:1.11')
     compile ('commons-io:commons-io:2.6')
     compile ('org.json:json:20171018')
@@ -69,6 +70,7 @@ dependencies {
     compile ("org.thymeleaf:thymeleaf:3.0.9.RELEASE")
     compile ("org.codehaus.groovy:groovy-all:2.5.7")
     compile ("org.apache.ivy:ivy:2.5.0-rc1")
+//    compile ("com.checkmarx:cx-client-common:${cxVersion}")
     compileOnly ('org.springframework.boot:spring-boot-configuration-processor')
     runtime('org.springframework.boot:spring-boot-devtools')
     testCompile('org.springframework.boot:spring-boot-starter-test')

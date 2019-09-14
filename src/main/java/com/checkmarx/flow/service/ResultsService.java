@@ -11,6 +11,7 @@ import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxProject;
 import com.checkmarx.sdk.service.CxClient;
+import com.checkmarx.sdk.service.CxOsaClient;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.springframework.scheduling.annotation.Async;
@@ -26,6 +27,7 @@ import java.util.concurrent.CompletableFuture;
 public class ResultsService {
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(ResultsService.class);
     private final CxClient cxService;
+    private final CxOsaClient osaService;
     private final JiraService jiraService;
     private final IssueService issueService;
     private final GitHubService gitService;
@@ -36,12 +38,11 @@ public class ResultsService {
     private final CxProperties cxProperties;
     private final FlowProperties flowProperties;
 
-    @ConstructorProperties({"cxService", "jiraService", "issueService", "gitService", "gitLabService", "bbService",
-            "adoService","emailService", "cxProperties", "flowProperties"})
-    public ResultsService(CxClient cxService, JiraService jiraService, IssueService issueService, GitHubService gitService,
+    public ResultsService(CxClient cxService, CxOsaClient osaService, JiraService jiraService, IssueService issueService, GitHubService gitService,
                           GitLabService gitLabService, BitBucketService bbService, ADOService adoService,
                           EmailService emailService, CxProperties cxProperties, FlowProperties flowProperties) {
         this.cxService = cxService;
+        this.osaService = osaService;
         this.jiraService = jiraService;
         this.issueService = issueService;
         this.gitService = gitService;
@@ -54,21 +55,28 @@ public class ResultsService {
     }
 
     @Async("scanRequest")
-    public CompletableFuture<ScanResults> processScanResultsAsync(ScanRequest request, Integer scanId, List<Filter> filters) throws MachinaException {
+    public CompletableFuture<ScanResults> processScanResultsAsync(ScanRequest request, Integer projectId,
+                                                                  Integer scanId, String osaScanId, List<Filter> filters) throws MachinaException {
         try {
             CompletableFuture<ScanResults> future = new CompletableFuture<>();
+            //TODO async these, and join and merge after
             ScanResults results = cxService.getReportContentByScanId(scanId, filters);
+            if(ScanUtils.empty(osaScanId)){
+                log.info("Waiting for OSA Scan results for scan id {}", osaScanId);
+                results = osaService.waitForOsaScan(osaScanId, projectId, results, filters);
+            }
             Map<String, Object> emailCtx = new HashMap<>();
             BugTracker.Type bugTrackerType = request.getBugTracker().getType();
-            //Send email (if EMAIL was enabled and EMAL was not main feedback option
+            //Send email (if EMAIL was enabled and EMAIL was not main feedback option
             if (flowProperties.getMail() != null && flowProperties.getMail().isEnabled() &&
                     !bugTrackerType.equals(BugTracker.Type.NONE) &&
                     !bugTrackerType.equals(BugTracker.Type.EMAIL)) {
                 String namespace = request.getNamespace();
                 String repoName = request.getRepoName();
+                String concat = "Successfully completed processing for "
+                        .concat(namespace).concat("/").concat(repoName);
                 if (!ScanUtils.empty(namespace) && !ScanUtils.empty(request.getBranch())) {
-                    emailCtx.put("message", "Successfully completed processing for "
-                            .concat(namespace).concat("/").concat(repoName).concat(" - ")
+                    emailCtx.put("message", concat.concat(" - ")
                             .concat(request.getRepoUrl()));
                 } else if (!ScanUtils.empty(request.getApplication())) {
                     emailCtx.put("message", "Successfully completed processing for "
@@ -84,7 +92,7 @@ public class ResultsService {
                 }
                 emailCtx.put("repo", request.getRepoUrl());
                 emailCtx.put("repo_fullname", namespace.concat("/").concat(repoName));
-                emailService.sendmail(request.getEmail(), "Successfully completed processing for ".concat(namespace).concat("/").concat(repoName), emailCtx, "template-demo.html");
+                emailService.sendmail(request.getEmail(), concat, emailCtx, "template-demo.html");
                 log.info("Successfully completed automation for repository {} under namespace {}", repoName, namespace);
             }
             processResults(request, results);
@@ -103,6 +111,9 @@ public class ResultsService {
     }
 
     void processResults(ScanRequest request, ScanResults results) throws MachinaException {
+        if(!cxProperties.getOffline()) {
+            getCxFields(request, results);
+        }
         switch (request.getBugTracker().getType()) {
             case NONE:
             case wait:
@@ -111,9 +122,6 @@ public class ResultsService {
                 break;
             case JIRA:
                 log.info("Processing results with JIRA issue tracking");
-                if(!cxProperties.getOffline()) {
-                    getCxFields(request, results);
-                }
                 jiraService.process(results, request);
                 break;
             case GITHUBPULL:
