@@ -70,6 +70,7 @@ dependencies {
     compile ("org.thymeleaf:thymeleaf:3.0.9.RELEASE")
     compile ("org.codehaus.groovy:groovy-all:2.5.7")
     compile ("org.apache.ivy:ivy:2.5.0-rc1")
+    compile ("org.eclipse.jgit:org.eclipse.jgit:5.5.0.201909110433-r")
 //    compile ("com.checkmarx:cx-client-common:${cxVersion}")
     compileOnly ('org.springframework.boot:spring-boot-configuration-processor')
     runtime('org.springframework.boot:spring-boot-devtools')
