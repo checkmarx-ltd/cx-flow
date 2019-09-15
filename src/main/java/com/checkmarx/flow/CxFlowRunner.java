@@ -1,7 +1,9 @@
 package com.checkmarx.flow;
 
 import com.checkmarx.flow.config.*;
-import com.checkmarx.flow.dto.*;
+import com.checkmarx.flow.dto.BugTracker;
+import com.checkmarx.flow.dto.MachinaOverride;
+import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.HelperService;
 import com.checkmarx.flow.utils.ScanUtils;
@@ -16,7 +18,7 @@ import org.slf4j.MDC;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
-import java.beans.ConstructorProperties;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;

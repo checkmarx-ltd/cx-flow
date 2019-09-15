@@ -15,15 +15,18 @@ import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
 import com.checkmarx.sdk.service.CxOsaClient;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.slf4j.Logger;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import java.beans.ConstructorProperties;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+
 import static com.checkmarx.sdk.config.Constants.UNKNOWN;
 import static com.checkmarx.sdk.config.Constants.UNKNOWN_INT;
 import static java.lang.System.exit;
@@ -167,7 +170,7 @@ public class FlowService {
             log.info("Project Name being used {}", projectName);
 
             CxScanParams params = new CxScanParams()
-                    .withTeamName(team)
+                    .withTeamName(request.getTeam())
                     .withProjectName(projectName)
                     .withGitUrl(request.getRepoUrlWithAuth())
                     .withIncremental(request.isIncremental())
@@ -205,7 +208,6 @@ public class FlowService {
             }
 
             Integer scanId = cxService.createScan(params,"CxFlow Automated Scan");
-            Integer projectId = cxService.getProjectId(ownerId, projectName);
 
             if(bugTrackerType.equals(BugTracker.Type.NONE)){
                 log.info("Not waiting for scan completion as Bug Tracker type is NONE");
@@ -213,14 +215,27 @@ public class FlowService {
             }
 
             cxService.waitForScanCompletion(scanId);
+            Integer projectId = cxService.getProjectId(ownerId, projectName); //get the project id of the updated or created project
+
             String osaScanId = null;
-            if(cxProperties.getOsaEnabled()){
-                //TODO clone to a local dir (check gitLab)
-                osaScanId = osaService.createScan(projectId, "");
+            if(cxProperties.getEnableOsa()){
+                String path = "C:\\temp\\".concat(UUID.randomUUID().toString());
+                File pathFile = new File(path);
+                //CredentialsProvider cp = new UsernamePasswordCredentialsProvider("xxx", "");
+
+
+                Git git = Git.cloneRepository()
+                        .setURI(request.getRepoUrlWithAuth())
+                        .setBranch(request.getBranch())
+                        .setBranchesToClone(Collections.singleton( "refs/heads/".concat(request.getBranch()) ))
+                       // .setCredentialsProvider(cp)
+                        .setDirectory(pathFile)
+                        .call();
+                osaScanId = osaService.createScan(projectId, path);
 
             }
             return resultsService.processScanResultsAsync(request, projectId, scanId, osaScanId, request.getFilters());
-        }catch (CheckmarxException e){
+        }catch (CheckmarxException | GitAPIException e){
             log.error(ExceptionUtils.getStackTrace(e));
             log.error(ExceptionUtils.getRootCauseMessage(e));
             Thread.currentThread().interrupt();
