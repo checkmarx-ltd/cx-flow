@@ -1,7 +1,7 @@
 package com.checkmarx.flow.custom;
 
-import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.github.LabelsItem;
@@ -19,6 +19,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
