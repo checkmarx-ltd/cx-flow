@@ -1,7 +1,9 @@
 package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.dto.*;
+import com.checkmarx.flow.dto.BugTracker;
+import com.checkmarx.flow.dto.Field;
+import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.InvalidCredentialsException;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.utils.ScanUtils;
@@ -16,7 +18,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import java.beans.ConstructorProperties;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -61,7 +63,7 @@ public class ResultsService {
             CompletableFuture<ScanResults> future = new CompletableFuture<>();
             //TODO async these, and join and merge after
             ScanResults results = cxService.getReportContentByScanId(scanId, filters);
-            if(ScanUtils.empty(osaScanId)){
+            if(cxProperties.getEnableOsa() && !ScanUtils.empty(osaScanId)){
                 log.info("Waiting for OSA Scan results for scan id {}", osaScanId);
                 results = osaService.waitForOsaScan(osaScanId, projectId, results, filters);
             }
