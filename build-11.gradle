@@ -42,7 +42,7 @@ dependencies {
 	compile('org.springframework.boot:spring-boot-starter-actuator')
 	compile('org.springframework.boot:spring-boot-starter-web')
     compile('org.springframework.boot:spring-boot-starter-aop')
-    compile('com.github.checkmarx-ts:cx-spring-boot-sdk:0.3.3-osa')
+    compile('com.github.checkmarx-ts:cx-spring-boot-sdk:0.3.4')
     compile ('commons-codec:commons-codec:1.11')
     compile ('commons-io:commons-io:2.6')
     compile ('org.json:json:20171018')
