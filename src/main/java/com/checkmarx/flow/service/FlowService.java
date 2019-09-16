@@ -219,20 +219,16 @@ public class FlowService {
 
             String osaScanId = null;
             if(cxProperties.getEnableOsa()){
-                String path = "C:\\temp\\".concat(UUID.randomUUID().toString());
+                String path = cxProperties.getGitClonePath().concat("/").concat(UUID.randomUUID().toString());
                 File pathFile = new File(path);
-                //CredentialsProvider cp = new UsernamePasswordCredentialsProvider("xxx", "");
-
 
                 Git git = Git.cloneRepository()
                         .setURI(request.getRepoUrlWithAuth())
                         .setBranch(request.getBranch())
-                        .setBranchesToClone(Collections.singleton( "refs/heads/".concat(request.getBranch()) ))
-                       // .setCredentialsProvider(cp)
+                        .setBranchesToClone(Collections.singleton(Constants.CX_BRANCH_PREFIX.concat(request.getBranch()) ))
                         .setDirectory(pathFile)
                         .call();
                 osaScanId = osaService.createScan(projectId, path);
-
             }
             return resultsService.processScanResultsAsync(request, projectId, scanId, osaScanId, request.getFilters());
         }catch (CheckmarxException | GitAPIException e){
