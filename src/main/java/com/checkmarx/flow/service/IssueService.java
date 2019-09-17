@@ -2,8 +2,8 @@ package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.custom.IssueTracker;
 import com.checkmarx.flow.dto.BugTracker;
-import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.Issue;
+import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.utils.ScanUtils;
@@ -15,6 +15,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+
 import java.util.*;
 
 @Service
