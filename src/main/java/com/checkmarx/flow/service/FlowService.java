@@ -13,16 +13,20 @@ import com.checkmarx.sdk.dto.cx.CxProject;
 import com.checkmarx.sdk.dto.cx.CxScanParams;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
+import com.checkmarx.sdk.service.CxOsaClient;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.slf4j.Logger;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import java.beans.ConstructorProperties;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+
 import static com.checkmarx.sdk.config.Constants.UNKNOWN;
 import static com.checkmarx.sdk.config.Constants.UNKNOWN_INT;
 import static java.lang.System.exit;
@@ -34,6 +38,7 @@ public class FlowService {
 
     private static final String SCAN_MESSAGE = "Scan submitted to Checkmarx";
     private final CxClient cxService;
+    private final CxOsaClient osaService;
     private final GitHubService gitService;
     private final GitLabService gitLabService;
     private final BitBucketService bbService;
@@ -46,13 +51,12 @@ public class FlowService {
     private static final Long SLEEP = 20000L;
     private static final String ERROR_BREAK_MSG = "Exiting with Error code 10 due to issues present";
 
-    @ConstructorProperties({"cxService", "resultService", "gitService", "gitLabService", "bbService",
-            "adoService", "emailService", "helperService", "cxProperties", "flowProperties"})
-    public FlowService(CxClient cxService, ResultsService resultsService, GitHubService gitService,
+    public FlowService(CxClient cxService, CxOsaClient osaService, ResultsService resultsService, GitHubService gitService,
                        GitLabService gitLabService, BitBucketService bbService, ADOService adoService,
                        EmailService emailService, HelperService helperService, CxProperties cxProperties,
                        FlowProperties flowProperties) {
         this.cxService = cxService;
+        this.osaService = osaService;
         this.resultsService = resultsService;
         this.gitService = gitService;
         this.gitLabService = gitLabService;
@@ -166,7 +170,7 @@ public class FlowService {
             log.info("Project Name being used {}", projectName);
 
             CxScanParams params = new CxScanParams()
-                    .withTeamName(team)
+                    .withTeamName(request.getTeam())
                     .withProjectName(projectName)
                     .withGitUrl(request.getRepoUrlWithAuth())
                     .withIncremental(request.isIncremental())
@@ -209,9 +213,25 @@ public class FlowService {
                 log.info("Not waiting for scan completion as Bug Tracker type is NONE");
                 return CompletableFuture.completedFuture(null);
             }
+
             cxService.waitForScanCompletion(scanId);
-             return resultsService.processScanResultsAsync(request, scanId, request.getFilters());
-        }catch (CheckmarxException e){
+            Integer projectId = cxService.getProjectId(ownerId, projectName); //get the project id of the updated or created project
+
+            String osaScanId = null;
+            if(cxProperties.getEnableOsa()){
+                String path = cxProperties.getGitClonePath().concat("/").concat(UUID.randomUUID().toString());
+                File pathFile = new File(path);
+
+                Git git = Git.cloneRepository()
+                        .setURI(request.getRepoUrlWithAuth())
+                        .setBranch(request.getBranch())
+                        .setBranchesToClone(Collections.singleton(Constants.CX_BRANCH_PREFIX.concat(request.getBranch()) ))
+                        .setDirectory(pathFile)
+                        .call();
+                osaScanId = osaService.createScan(projectId, path);
+            }
+            return resultsService.processScanResultsAsync(request, projectId, scanId, osaScanId, request.getFilters());
+        }catch (CheckmarxException | GitAPIException e){
             log.error(ExceptionUtils.getStackTrace(e));
             log.error(ExceptionUtils.getRootCauseMessage(e));
             Thread.currentThread().interrupt();
@@ -331,7 +351,8 @@ public class FlowService {
             }
             else {
                 getCxFields(project, request);
-                return resultsService.processScanResultsAsync(request, scanId, request.getFilters());
+                //null is passed for osaScanId as it is not applicable here and will be ignored
+                return resultsService.processScanResultsAsync(request, project.getId(), scanId, null, request.getFilters());
             }
 
         } catch (MachinaException | CheckmarxException e) {

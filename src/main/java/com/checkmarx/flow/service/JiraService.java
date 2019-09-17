@@ -7,8 +7,8 @@ import com.atlassian.jira.rest.client.api.domain.input.FieldInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
 import com.atlassian.jira.rest.client.api.domain.input.TransitionInput;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
-import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.JiraClientException;
@@ -22,6 +22,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+
 import javax.annotation.PostConstruct;
 import java.beans.ConstructorProperties;
 import java.net.URI;

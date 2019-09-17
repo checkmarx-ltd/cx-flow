@@ -1,6 +1,7 @@
 package com.checkmarx.flow.utils;
 
 import org.slf4j.Logger;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;

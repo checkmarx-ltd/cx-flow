@@ -2,6 +2,7 @@ package com.checkmarx.flow.dto;
 
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.Filter;
+
 import java.beans.ConstructorProperties;
 import java.util.*;
 
