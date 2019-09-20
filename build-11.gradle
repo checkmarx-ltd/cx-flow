@@ -28,7 +28,7 @@ apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
 
 group = 'com.checkmarx'
-version = '1.4.3'
+version = '1.4.4'
 sourceCompatibility = 1.8
 
 repositories {
@@ -42,7 +42,7 @@ dependencies {
 	compile('org.springframework.boot:spring-boot-starter-actuator')
 	compile('org.springframework.boot:spring-boot-starter-web')
     compile('org.springframework.boot:spring-boot-starter-aop')
-    compile('com.github.checkmarx-ts:cx-spring-boot-sdk:0.3.4')
+    compile('com.github.checkmarx-ts:cx-spring-boot-sdk:0.3.5')
     compile ('commons-codec:commons-codec:1.11')
     compile ('commons-io:commons-io:2.6')
     compile ('org.json:json:20171018')
