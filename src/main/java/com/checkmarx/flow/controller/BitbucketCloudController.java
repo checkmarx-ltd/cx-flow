@@ -3,13 +3,16 @@ package com.checkmarx.flow.controller;
 import com.checkmarx.flow.config.BitBucketProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
-import com.checkmarx.flow.dto.*;
+import com.checkmarx.flow.dto.BugTracker;
+import com.checkmarx.flow.dto.EventResponse;
+import com.checkmarx.flow.dto.MachinaOverride;
+import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.bitbucket.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.HelperService;
-import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.Filter;
 import org.slf4j.Logger;
@@ -150,7 +153,7 @@ public class BitbucketCloudController {
                     .product(p)
                     .project(project)
                     .team(team)
-                    .namespace(repository.getOwner().getUsername().replaceAll(" ","_"))
+                    .namespace(repository.getOwner().getDisplayName().replaceAll(" ","_"))
                     .repoName(repository.getName())
                     .repoUrl(gitUrl)
                     .repoUrlWithAuth(gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(properties.getToken()).concat("@")))
@@ -302,7 +305,7 @@ public class BitbucketCloudController {
                     .product(p)
                     .project(project)
                     .team(team)
-                    .namespace(repository.getOwner().getUsername().replaceAll(" ","_"))
+                    .namespace(repository.getOwner().getDisplayName().replaceAll(" ","_"))
                     .repoName(repository.getName())
                     .repoUrl(gitUrl)
                     .repoUrlWithAuth(gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(properties.getToken()).concat("@")))

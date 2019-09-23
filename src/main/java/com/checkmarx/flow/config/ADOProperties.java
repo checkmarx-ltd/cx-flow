@@ -4,8 +4,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
-import java.util.List;
-
 @Component
 @ConfigurationProperties(prefix = "azure")
 @Validated
@@ -17,6 +15,7 @@ public class ADOProperties extends RepoProperties{
     private String repoTagPrefix = "repo";
     private String branchLabelPrefix = "branch";
     private String apiVersion = "5.0";
+    private String testRepository = "Fabrikam";
     private String openStatus;
     private String closedStatus;
 
@@ -92,4 +91,17 @@ public class ADOProperties extends RepoProperties{
         this.closedStatus = closedStatus;
     }
 
+    public String getTestRepository() {
+        return testRepository;
+    }
+
+    public void setTestRepository(String testRepository) {
+        this.testRepository = testRepository;
+    }
+
+    public String getMergeNoteUri(String namespace, String repo, String mergeId){
+        String format = "%s/%s/_apis/git/repositories/%s/pullRequests/%s/threads";
+        return String.format(format, getUrl(), namespace, repo, mergeId);
+        //http://localhost:8080/tfs/DefaultCollection/Checkmarx/_apis/git/repositories/Checkmarx/pullRequests/2/threads
+    }
 }
