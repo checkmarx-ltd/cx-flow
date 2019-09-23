@@ -1,27 +1,35 @@
 package com.checkmarx.flow.service;
 
-import com.checkmarx.flow.config.CxProperties;
 import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.dto.*;
-import com.checkmarx.flow.dto.cx.CxProject;
+import com.checkmarx.flow.dto.BugTracker;
+import com.checkmarx.flow.dto.Field;
+import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.InvalidCredentialsException;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.config.Constants;
+import com.checkmarx.sdk.config.CxProperties;
+import com.checkmarx.sdk.dto.Filter;
+import com.checkmarx.sdk.dto.ScanResults;
+import com.checkmarx.sdk.dto.cx.CxProject;
+import com.checkmarx.sdk.service.CxClient;
+import com.checkmarx.sdk.service.CxOsaClient;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import java.beans.ConstructorProperties;
+
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import static com.checkmarx.flow.service.CxService.UNKNOWN;
 
 @Service
 public class ResultsService {
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(ResultsService.class);
-    private final CxService cxService;
+    private final CxClient cxService;
+    private final CxOsaClient osaService;
     private final JiraService jiraService;
     private final IssueService issueService;
     private final GitHubService gitService;
@@ -31,15 +39,12 @@ public class ResultsService {
     private final EmailService emailService;
     private final CxProperties cxProperties;
     private final FlowProperties flowProperties;
-    private static final Long SLEEP = 20000L;
-    private static final Long TIMEOUT = 300000L;
 
-    @ConstructorProperties({"cxService", "jiraService", "issueService", "gitService", "gitLabService", "bbService",
-            "adoService","emailService", "cxProperties", "flowProperties"})
-    public ResultsService(CxService cxService, JiraService jiraService, IssueService issueService, GitHubService gitService,
+    public ResultsService(CxClient cxService, CxOsaClient osaService, JiraService jiraService, IssueService issueService, GitHubService gitService,
                           GitLabService gitLabService, BitBucketService bbService, ADOService adoService,
                           EmailService emailService, CxProperties cxProperties, FlowProperties flowProperties) {
         this.cxService = cxService;
+        this.osaService = osaService;
         this.jiraService = jiraService;
         this.issueService = issueService;
         this.gitService = gitService;
@@ -52,21 +57,28 @@ public class ResultsService {
     }
 
     @Async("scanRequest")
-    public CompletableFuture<ScanResults> processScanResultsAsync(ScanRequest request, Integer scanId, List<Filter> filters) throws MachinaException {
+    public CompletableFuture<ScanResults> processScanResultsAsync(ScanRequest request, Integer projectId,
+                                                                  Integer scanId, String osaScanId, List<Filter> filters) throws MachinaException {
         try {
             CompletableFuture<ScanResults> future = new CompletableFuture<>();
-            ScanResults results = getScanResults(scanId, filters);
+            //TODO async these, and join and merge after
+            ScanResults results = cxService.getReportContentByScanId(scanId, filters);
+            if(cxProperties.getEnableOsa() && !ScanUtils.empty(osaScanId)){
+                log.info("Waiting for OSA Scan results for scan id {}", osaScanId);
+                results = osaService.waitForOsaScan(osaScanId, projectId, results, filters);
+            }
             Map<String, Object> emailCtx = new HashMap<>();
             BugTracker.Type bugTrackerType = request.getBugTracker().getType();
-            //Send email (if EMAIL was enabled and EMAL was not main feedback option
+            //Send email (if EMAIL was enabled and EMAIL was not main feedback option
             if (flowProperties.getMail() != null && flowProperties.getMail().isEnabled() &&
                     !bugTrackerType.equals(BugTracker.Type.NONE) &&
                     !bugTrackerType.equals(BugTracker.Type.EMAIL)) {
                 String namespace = request.getNamespace();
                 String repoName = request.getRepoName();
+                String concat = "Successfully completed processing for "
+                        .concat(namespace).concat("/").concat(repoName);
                 if (!ScanUtils.empty(namespace) && !ScanUtils.empty(request.getBranch())) {
-                    emailCtx.put("message", "Successfully completed processing for "
-                            .concat(namespace).concat("/").concat(repoName).concat(" - ")
+                    emailCtx.put("message", concat.concat(" - ")
                             .concat(request.getRepoUrl()));
                 } else if (!ScanUtils.empty(request.getApplication())) {
                     emailCtx.put("message", "Successfully completed processing for "
@@ -82,7 +94,7 @@ public class ResultsService {
                 }
                 emailCtx.put("repo", request.getRepoUrl());
                 emailCtx.put("repo_fullname", namespace.concat("/").concat(repoName));
-                emailService.sendmail(request.getEmail(), "Successfully completed processing for ".concat(namespace).concat("/").concat(repoName), emailCtx, "template-demo.html");
+                emailService.sendmail(request.getEmail(), concat, emailCtx, "template-demo.html");
                 log.info("Successfully completed automation for repository {} under namespace {}", repoName, namespace);
             }
             processResults(request, results);
@@ -91,6 +103,8 @@ public class ResultsService {
             return future;
         }catch (Exception e){
             log.error("Error occurred while processing results {}", ExceptionUtils.getMessage(e));
+            log.error(ExceptionUtils.getRootCauseMessage(e));
+            log.error(Arrays.toString(ExceptionUtils.getRootCauseStackTrace(e)));
             CompletableFuture<ScanResults> x = new CompletableFuture<>();
             x.completeExceptionally(e);
             return x;
@@ -98,43 +112,23 @@ public class ResultsService {
 
     }
 
-    private ScanResults getScanResults(Integer scanId, List<Filter> filters) throws MachinaException {
-        try {
-            Integer reportId = cxService.createScanReport(scanId);
-            Thread.sleep(SLEEP);
-            int timer = 0;
-            while (cxService.getReportStatus(reportId).equals(CxService.REPORT_STATUS_FINISHED)) {
-                Thread.sleep(SLEEP);
-                timer += SLEEP;
-                if (timer >= TIMEOUT) {
-                    log.error("Report Generation timeout.  {}", TIMEOUT);
-                    throw new MachinaException("Timeout exceeded during report generation");
-                }
-            }
-            Thread.sleep(SLEEP);
-            return cxService.getReportContent(reportId, filters);
-        } catch (InterruptedException e) {
-            log.error(ExceptionUtils.getStackTrace(e));
-            Thread.currentThread().interrupt();
-            throw new MachinaException("Interrupted Exception Occurred");
-        }
-    }
-
     void processResults(ScanRequest request, ScanResults results) throws MachinaException {
+        if(!cxProperties.getOffline()) {
+            getCxFields(request, results);
+        }
         switch (request.getBugTracker().getType()) {
             case NONE:
+            case wait:
+            case WAIT:
                 log.info("Issue tracking is turned off");
                 break;
             case JIRA:
                 log.info("Processing results with JIRA issue tracking");
-                if(!cxProperties.getOffline()) {
-                    getCxFields(request, results);
-                }
                 jiraService.process(results, request);
                 break;
             case GITHUBPULL:
                 gitService.processPull(request, results);
-                gitService.endBlockMerge(request, results.getLink());
+                gitService.endBlockMerge(request, results.getLink(), !results.getXIssues().isEmpty());
                 break;
             case GITLABCOMMIT:
                 gitLabService.processCommit(request, results);
@@ -184,6 +178,10 @@ public class ResultsService {
             default:
                 log.warn("No valid bug type was provided");
         }
+        log.info("####Checkmarx Scan Results Summary####");
+        log.info(results.getScanSummary().toString());
+        log.info("To veiw results: {}", results.getLink());
+        log.info("######################################");
     }
 
     /**
@@ -198,7 +196,7 @@ public class ResultsService {
                 return;
             }
             /*if so, then get them and add them to the request object*/
-            if(!ScanUtils.empty(results.getProjectId()) && !results.getProjectId().equals(UNKNOWN)){
+            if(!ScanUtils.empty(results.getProjectId()) && !results.getProjectId().equals(Constants.UNKNOWN)){
                 CxProject project = cxService.getProject(Integer.parseInt(results.getProjectId()));
                 Map<String, String> fields = new HashMap<>();
                 for(CxProject.CustomField field : project.getCustomFields()){

@@ -1,31 +1,34 @@
 package com.checkmarx.flow.service;
 
-import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.dto.RepoIssue;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.dto.ScanResults;
 import com.checkmarx.flow.exception.GitHubClientException;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.dto.ScanResults;
 import org.json.JSONObject;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+
 import java.beans.ConstructorProperties;
 import java.util.List;
 import java.util.Map;
 
 @Service
 public class GitHubService {
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(GitHubService.class);
+    private static final Logger log = LoggerFactory.getLogger(GitHubService.class);
     private final RestTemplate restTemplate;
     private final GitHubProperties properties;
     private final FlowProperties flowProperties;
 
     @ConstructorProperties({"restTemplate", "properties", "flowProperties"})
-    public GitHubService(RestTemplate restTemplate, GitHubProperties properties, FlowProperties flowProperties) {
+    public GitHubService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, GitHubProperties properties, FlowProperties flowProperties) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.flowProperties = flowProperties;
@@ -42,9 +45,9 @@ public class GitHubService {
         return null;
     }
 
-    void processPull(ScanRequest request,ScanResults results) throws GitHubClientException {
+    void processPull(ScanRequest request, ScanResults results) throws GitHubClientException {
         try {
-            String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties);
+            String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties, properties);
             log.debug("comment: {}", comment);
             sendMergeComment(request, comment);
         } catch (HttpClientErrorException e){
@@ -73,10 +76,14 @@ public class GitHubService {
         }
     }
 
-    void endBlockMerge(ScanRequest request, String url){
+    void endBlockMerge(ScanRequest request, String url, boolean findingsPresent){
+        String state = "success";
+        if(properties.isErrorMerge() && findingsPresent){
+            state = "failure";
+        }
         if(properties.isBlockMerge()) {
             HttpEntity httpEntity = new HttpEntity<>(
-                    getJSONStatus("success", url, "Checkmarx Scan Completed").toString(),
+                    getJSONStatus(state, url, "Checkmarx Scan Completed").toString(),
                     createAuthHeaders()
             );
             if(ScanUtils.empty(request.getAdditionalMetadata("statuses_url"))){

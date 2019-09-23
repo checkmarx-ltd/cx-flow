@@ -1,5 +1,6 @@
 .gradle
 /build/
+/bin/
 !gradle/wrapper/gradle-wrapper.jar
 
 ### STS ###
@@ -26,3 +27,7 @@
 /nbdist/
 /.nb-gradle/
 cx-flow.log*
+
+
+### VSCode ###
+.vscode

@@ -1,24 +1,28 @@
 package com.checkmarx.flow.service;
 
-import com.checkmarx.flow.config.GitLabProperties;
 import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.config.GitLabProperties;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.dto.ScanResults;
 import com.checkmarx.flow.dto.gitlab.Note;
 import com.checkmarx.flow.exception.GitLabClientException;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.dto.ScanResults;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+
 import java.beans.ConstructorProperties;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 
 @Service
@@ -29,13 +33,13 @@ public class GitLabService {
     public static final String MERGE_PATH = "/projects/{id}/merge_requests/{iid}";
     public static final String COMMIT_PATH = "/projects/{id}/repository/commits/{sha}/comments";
     private static final int UNKNOWN_INT = -1;
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(GitLabService.class);
+    private static final Logger log = LoggerFactory.getLogger(GitLabService.class);
     private final RestTemplate restTemplate;
     private final GitLabProperties properties;
     private final FlowProperties flowProperties;
 
     @ConstructorProperties({"restTemplate", "properties", "flowProperties"})
-    public GitLabService(RestTemplate restTemplate, GitLabProperties properties, FlowProperties flowProperties) {
+    public GitLabService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, GitLabProperties properties, FlowProperties flowProperties) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.flowProperties = flowProperties;
@@ -94,7 +98,7 @@ public class GitLabService {
 
     void processMerge(ScanRequest request,ScanResults results) throws GitLabClientException {
         try {
-            String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties);
+            String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties, properties);
             log.debug("comment: {}", comment);
             sendMergeComment(request, comment);
         } catch (HttpClientErrorException e){
@@ -111,9 +115,9 @@ public class GitLabService {
         restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
-    void processCommit(ScanRequest request,ScanResults results) throws GitLabClientException {
+    void processCommit(ScanRequest request, ScanResults results) throws GitLabClientException {
         try {
-            String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties);
+            String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties, properties);
             log.debug("comment: {}", comment);
             sendCommitComment(request, comment);
         } catch (HttpClientErrorException e){

@@ -41,7 +41,7 @@ public class EmailService {
      */
     public void sendmail(List<String> recipients, @NotNull String subject, @NotNull Map<String, Object> ctx, String template){
         if(ScanUtils.empty(recipients)){
-            log.warn("Email not sent - no recipients listed");
+            log.info("Email not sent - no recipients listed");
             return;
         }
         MimeMessagePreparator messagePreparator = mimeMessage -> {

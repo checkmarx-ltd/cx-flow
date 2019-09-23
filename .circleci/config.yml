@@ -1,0 +1,86 @@
+version: 2
+
+jobs:
+  build:
+    docker:
+      - image: circleci/openjdk:8-jdk
+    working_directory: ~/repo
+    environment:
+      MAVEN_OPTS: -Xmx3200m
+    steps:
+      - checkout
+      - restore_cache:
+          key: v1-gradle-wrapper-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}
+      - restore_cache:
+          key: v1-gradle-cache-{{ checksum "build.gradle" }}
+      - run: chmod u+x gradlew
+      - run: ./gradlew clean build
+      - run: ./gradlew -b build-11.gradle --build-cache assemble
+      - run: ./gradlew -q getVersion > build/libs/version.txt
+      - save_cache:
+          paths:
+            - ~/.gradle/wrapper
+          key: v1-gradle-wrapper-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}
+      - save_cache:
+          paths:
+            - ~/.gradle/caches
+          key: v1-gradle-cache-{{ checksum "build.gradle" }}
+      - store_artifacts:
+          path: build/libs
+      - persist_to_workspace:
+          root: .
+          paths:
+            - build/libs/*
+            - Dockerfile
+            - Dockerfile-11
+
+  docker-push:
+    docker:
+      - image: docker:18.06.3-ce-git
+        environment:
+          DOCKER_REPO: docker.io/checkmarxts/cxflow
+    steps:
+      - setup_remote_docker
+      - attach_workspace:
+          at: .
+      - deploy:
+          name: Publish application to docker hub
+          command: |
+            VERSION=$(cat ./build/libs/version.txt)
+            docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} docker.io
+            docker build -t ${DOCKER_REPO} .
+            docker build -t ${DOCKER_REPO}:${VERSION} .
+            docker build -f Dockerfile-11 -t ${DOCKER_REPO}:${VERSION}-11 .
+            docker push ${DOCKER_REPO}
+
+  publish-github-release:
+    docker:
+      - image: circleci/golang:1.9
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: "Publish Release on GitHub"
+          command: |
+            go get github.com/tcnksm/ghr
+            VERSION=$(cat ./build/libs/version.txt)
+            rm ./build/libs/version.txt
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -n ${VERSION} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./build/libs/
+
+workflows:
+  version: 2
+  build_deploy:
+    jobs:
+      - build
+      - docker-push:
+          filters:
+            branches:
+              only: develop
+          requires:
+            - build
+      - publish-github-release:
+          filters:
+            branches:
+              only: develop
+          requires:
+            - build

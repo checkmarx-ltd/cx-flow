@@ -1,18 +1,20 @@
 package com.checkmarx.flow.custom;
 
-import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.dto.ScanResults;
 import com.checkmarx.flow.dto.github.LabelsItem;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.dto.ScanResults;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -27,14 +29,14 @@ public class GitHubIssueTracker implements IssueTracker {
     private static final String TRANSITION_CLOSE = "closed";
     private static final String TRANSITION_OPEN = "open";
     private static final String ISSUES_PER_PAGE = "100";
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(GitHubIssueTracker.class);
+    private static final Logger log = LoggerFactory.getLogger(GitHubIssueTracker.class);
 
     private final RestTemplate restTemplate;
     private final GitHubProperties properties;
     private final FlowProperties flowProperties;
 
 
-    public GitHubIssueTracker(RestTemplate restTemplate, GitHubProperties properties, FlowProperties flowProperties) {
+    public GitHubIssueTracker(@Qualifier("flowRestTemplate") RestTemplate restTemplate, GitHubProperties properties, FlowProperties flowProperties) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.flowProperties = flowProperties;

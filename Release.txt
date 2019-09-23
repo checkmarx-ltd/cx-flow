@@ -1,3 +1,116 @@
+Release 1.4.3
+---------------------------------------------------------------------
+# FEATURES
+- Support Bitbucket Server pr:merged webhook event
+
+
+Release 1.4.2
+---------------------------------------------------------------------
+# CHANGES
+- Update SDK to 0.3.2
+
+# FIXES
+- Fix ADO Pull/Push test event validation
+- Fix to namespace bug identified for BitBucket Cloud
+- Fix to vulnerability counting in Violation Summary
+
+Release 1.4.1
+---------------------------------------------------------------------
+#FEATURES
+- Add ability to provide Azure DevOps / TFS Pull Request Feedback through command line with the adopull | ADOPULL bug-tracker
+- Azure DevOps, add command line --alt-project to select a project with a different name than the Cx project/
+- Azure DevOps, add command line --alt-fields to add additional fields to each project request. Format:
+	* <field-name1>:<field-value1>,<field-name2>:<field-value2>,...
+	* Example: System.AreaPath:/Teams/DevOps
+- Azure DevOps, add custom field alt-project to set alternate project inside of portal.
+---------------------------------------------------------------------
+Release 1.4.0
+---------------------------------------------------------------------
+# FEATURES
+- CIRCLE CI Pipeline Configuration | build and deploy (GitHub Releases)
+- Azure DevOps Pipeline Configuration
+- Generic REST API Endpoint to trigger scans and post results to a provided web end point (i.e. pre-signed S3 url)
+- Allow for parent/child issue association with JIRA issues
+- Support for Checkmarx 9.0
+- Externalize configuration for Report Polling
+- Externalize configuration for Scan Polling
+
+# CHANGES
+- Checkmarx logic has been pulled into an SDK - https://github.com/checkmarx-ts/checkmarx-spring-boot-java-sdk
+- Update JRJC Atlassian Java dependencies
+---------------------------------------------------------------------
+Release 1.3.2
+---------------------------------------------------------------------
+# FEATURES
+* Ability to fail the status of a merge request in GitHub if any of the filter criteria is met (any issues are presented in the pull feedback).
+** Following configuration can be enabled under the github block for this:
+github:
+...
+  block-merge: true
+...
+* Ability to exclude files from being zipped up during the CLI scan process using the cx-flow.zip-exclude cli option, or with the following
+  configuration block using csv of regular expressions:
+cx-flow:
+...
+  zip-exclude: .*.json$, bin\/.* #Regular expression CSV
+...
+* Ability to add a prefix/postfix to both JIRA Issue Summary and Issue Description using the following configurations under the jira block:
+jira
+...
+  issue-prefix: "<PREFIX>-"
+  issue-postfix: "-<POSTFIX>"
+  description-prefix: "<PRE>-"
+  description-postfix: "-<POST>"
+...
+# FIXES
+* Fix parsing issues with the timestamp returned by Checkmarx for the latest full scan.  Checkmarx was inconsistently providing a format that would change.  The
+timestamp is now trimmed to exclude the millisecond portion, which was the value
+---------------------------------------------------------------------
+Release 1.3.1
+---------------------------------------------------------------------
+# CHANGES
+* Allow for optional and configurable JIRA comment on updating existing issues
+# Features
+* Allow for configurable http connection and read timeout settings under the cx-flow configuration block:
+cx-flow:
+...
+  http-connection-timeout: xxx #milliseconds - default 30000
+  http-read-timeout: xxx #milliseconds - default 120000
+* Introduced CLI Summary Output:
+2019-06-23 17:19:36.869  INFO 3632 --- [  scan-results1] c.c.f.s.ResultsService                    [9zxIHPWA] : ####Checkmarx Scan Results Summary####
+2019-06-23 17:19:36.869  INFO 3632 --- [  scan-results1] c.c.f.s.ResultsService                    [9zxIHPWA] : high: 32, medium: 56, low: 328, info: 4
+2019-06-23 17:19:36.869  INFO 3632 --- [  scan-results1] c.c.f.s.ResultsService                    [9zxIHPWA] : To veiw results: http://WIN-8KCMUUB70RI/CxWebClient/ViewerMain.aspx?scanid=1010215&projectid=10076
+2019-06-23 17:19:36.869  INFO 3632 --- [  scan-results1] c.c.f.s.ResultsService                    [9zxIHPWA] : ######################################
+2019-06-23 17:19:36.869  INFO 3632 --- [  scan-results1] c.c.f.s.ResultsService                    [9zxIHPWA] : Process completed Succesfully
+* Introduced option for Checkmarx Summary, CxFlow Violation Summary, Detailed Summary options for Pull/Merge feedback.
+  The header value within the comment is also configurable.  This is to allow greater flexibility as to what is presented in pull/merge comments Optional as per each repo configuration block.  i.e.:
+github:
+  webhook-token: xxxx
+  token: xxxx
+  url: https://github.com
+  api-url: https://api.github.com/repos/
+  false-positive-label: false-positive
+  block-merge: true
+  cx-summary-header: Checkmarx Scan Summary
+  cx-summary: true #default false if not provided
+  flow-summary-header: Violation Summary
+  flow-summary: true #default true if not provided
+  detailed-header: Details
+  detailed: true #default true if not provided
+* CLI Enhancements
+** Allow for git clone scan initiation using --scan option along with --github|gitlab options (NOTE: Bitbucket is not complete, but will be for next release)
+** Addition of new bug-tracker option (NONE-WAIT | none-wait), which indicates no feedback channel, but to wait for scan completion.  NOTE: NONE initiates the scan but does not wait for scan completion (async).
+** Add global Checkmarx default file/folder exclusions to apply to all projects unless overridden through webhook url param / cli param
+checkmarx:
+  ...
+  exclude-files: "*.jpg, *.gif" #comma separated
+  exclude-folders: "node_modules/" #comma separated
+
+# FIXES
+* Fix for JiraService bean init failure when jira configuration block is excluded from application.yml
+* Exception is now thrown if the team is not found instead of attempting to create project under Id -1
+* Checkmarx rest api requires a leading slash for team paths, a leading backslash is added automatically if one is not present
+---------------------------------------------------------------------
 ---------------------------------------------------------------------
 Release 1.3.0
 ---------------------------------------------------------------------

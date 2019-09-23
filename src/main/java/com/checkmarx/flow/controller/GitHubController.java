@@ -1,17 +1,21 @@
 package com.checkmarx.flow.controller;
 
-import com.checkmarx.flow.config.CxProperties;
+import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.config.JiraProperties;
-import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.dto.*;
+import com.checkmarx.flow.dto.BugTracker;
+import com.checkmarx.flow.dto.EventResponse;
+import com.checkmarx.flow.dto.MachinaOverride;
+import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.github.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.HelperService;
-import com.checkmarx.flow.utils.Constants;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.config.Constants;
+import com.checkmarx.sdk.config.CxProperties;
+import com.checkmarx.sdk.dto.Filter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
@@ -19,6 +23,7 @@ import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import javax.annotation.PostConstruct;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -30,6 +35,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -183,6 +189,12 @@ public class GitHubController {
                 filters = ScanUtils.getFilters(flowProperties);
             }
 
+            if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
+                excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
+            }
+            if(excludeFolders == null && !ScanUtils.empty(cxProperties.getExcludeFolders())){
+                excludeFolders = Arrays.asList(cxProperties.getExcludeFolders().split(","));
+            }
             //build request object
             String gitUrl = repository.getCloneUrl();
             String token = properties.getToken();
@@ -335,6 +347,14 @@ public class GitHubController {
             else{
                 filters = ScanUtils.getFilters(flowProperties);
             }
+
+            if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
+                excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
+            }
+            if(excludeFolders == null && !ScanUtils.empty(cxProperties.getExcludeFolders())){
+                excludeFolders = Arrays.asList(cxProperties.getExcludeFolders().split(","));
+            }
+
             /*Determine emails*/
             List<String> emails = new ArrayList<>();
             for(Commit c: event.getCommits()){

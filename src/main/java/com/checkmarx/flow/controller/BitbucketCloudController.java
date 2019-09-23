@@ -1,16 +1,20 @@
 package com.checkmarx.flow.controller;
 
 import com.checkmarx.flow.config.BitBucketProperties;
-import com.checkmarx.flow.config.CxProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
-import com.checkmarx.flow.dto.*;
+import com.checkmarx.flow.dto.BugTracker;
+import com.checkmarx.flow.dto.EventResponse;
+import com.checkmarx.flow.dto.MachinaOverride;
+import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.bitbucket.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.HelperService;
-import com.checkmarx.flow.utils.Constants;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.config.Constants;
+import com.checkmarx.sdk.config.CxProperties;
+import com.checkmarx.sdk.dto.Filter;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
@@ -19,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.beans.ConstructorProperties;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -124,6 +129,13 @@ public class BitbucketCloudController {
                 filters = ScanUtils.getFilters(flowProperties);
             }
 
+            if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
+                excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
+            }
+            if(excludeFolders == null && !ScanUtils.empty(cxProperties.getExcludeFolders())){
+                excludeFolders = Arrays.asList(cxProperties.getExcludeFolders().split(","));
+            }
+
             String gitUrl = repository.getLinks().getHtml().getHref().concat(".git");
             String mergeEndpoint = pullRequest.getLinks().getComments().getHref();
 
@@ -141,7 +153,7 @@ public class BitbucketCloudController {
                     .product(p)
                     .project(project)
                     .team(team)
-                    .namespace(repository.getOwner().getUsername().replaceAll(" ","_"))
+                    .namespace(repository.getOwner().getDisplayName().replaceAll(" ","_"))
                     .repoName(repository.getName())
                     .repoUrl(gitUrl)
                     .repoUrlWithAuth(gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(properties.getToken()).concat("@")))
@@ -257,6 +269,14 @@ public class BitbucketCloudController {
             else{
                 filters = ScanUtils.getFilters(flowProperties);
             }
+
+            if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
+                excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
+            }
+            if(excludeFolders == null && !ScanUtils.empty(cxProperties.getExcludeFolders())){
+                excludeFolders = Arrays.asList(cxProperties.getExcludeFolders().split(","));
+            }
+
             /*Determine emails*/
             List<String> emails = new ArrayList<>();
 
@@ -285,7 +305,7 @@ public class BitbucketCloudController {
                     .product(p)
                     .project(project)
                     .team(team)
-                    .namespace(repository.getOwner().getUsername().replaceAll(" ","_"))
+                    .namespace(repository.getOwner().getDisplayName().replaceAll(" ","_"))
                     .repoName(repository.getName())
                     .repoUrl(gitUrl)
                     .repoUrlWithAuth(gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(properties.getToken()).concat("@")))
