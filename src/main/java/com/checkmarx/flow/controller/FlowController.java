@@ -2,17 +2,31 @@ package com.checkmarx.flow.controller;
 
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
-import com.checkmarx.flow.dto.*;
+import com.checkmarx.flow.dto.BugTracker;
+import com.checkmarx.flow.dto.EventResponse;
+import com.checkmarx.flow.dto.MachinaOverride;
+import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.HelperService;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.config.Constants;
+import com.checkmarx.sdk.config.CxProperties;
+import com.checkmarx.sdk.dto.Filter;
+import com.checkmarx.sdk.dto.ScanResults;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.beans.ConstructorProperties;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 
 /**
@@ -29,13 +43,16 @@ public class FlowController {
     private static final String TOKEN_HEADER = "x-cx-token";
 
     private final FlowProperties properties;
+    private final CxProperties cxProperties;
     private final FlowService scanService;
     private final HelperService helperService;
     private final JiraProperties jiraProperties;
 
-    @ConstructorProperties({"properties", "scanService", "helperService", "jiraProperties"})
-    public FlowController(FlowProperties properties, FlowService scanService, HelperService helperService, JiraProperties jiraProperties) {
+    @ConstructorProperties({"properties", "cxProperties", "scanService", "helperService", "jiraProperties"})
+    public FlowController(FlowProperties properties, CxProperties cxProperties, FlowService scanService,
+                          HelperService helperService, JiraProperties jiraProperties) {
         this.properties = properties;
+        this.cxProperties = cxProperties;
         this.scanService = scanService;
         this.helperService = helperService;
         this.jiraProperties = jiraProperties;
@@ -92,6 +109,127 @@ public class FlowController {
         log.debug("ScanResults {}", scanResults);
 
         return scanResults;
+    }
+
+    @PostMapping("/scan")
+    public ResponseEntity<EventResponse> initiateScan(
+            @RequestBody CxScanRequest scanRequest,
+            @RequestHeader(value = TOKEN_HEADER) String token
+    ){
+        String uid = helperService.getShortUid();
+        String errorMessage = "Error submitting Scan Request.";
+        MDC.put("cx", uid);
+        log.info("Processing Scan initiation request");
+
+        validateToken(token);
+
+        try {
+            log.trace(scanRequest.toString());
+            ScanRequest.Product product = ScanRequest.Product.CX;
+            String project = scanRequest.getProject();
+            String branch = scanRequest.getBranch();
+            String application = scanRequest.getApplication();
+            String team = scanRequest.getTeam();
+
+            if(ScanUtils.empty(application)){
+                application = project;
+            }
+            if(ScanUtils.empty(team)){
+                team = cxProperties.getTeam();
+            }
+            properties.setTrackApplicationOnly(scanRequest.isApplicationOnly());
+
+            if(ScanUtils.anyEmpty(project, branch, scanRequest.getGitUrl())){
+                log.error("{}  The project | branch | git_url was not provided", errorMessage);
+                ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
+                        .message(errorMessage)
+                        .success(false)
+                        .build());
+            }
+            String scanPreset = cxProperties.getScanPreset();
+            if(!ScanUtils.empty(scanRequest.getPreset())){
+                scanPreset = scanRequest.getPreset();
+            }
+            boolean inc = cxProperties.getIncremental();
+            if(scanRequest.isIncremental()){
+                inc = true;
+            }
+
+            BugTracker.Type bugType;
+            if(!ScanUtils.empty(scanRequest.getBug())){
+                bugType = ScanUtils.getBugTypeEnum(scanRequest.getBug(), properties.getBugTrackerImpl());
+            }
+            else {
+                bugType = ScanUtils.getBugTypeEnum(properties.getBugTracker(), properties.getBugTrackerImpl());
+            }
+
+            if(!ScanUtils.empty(scanRequest.getProduct())){
+                product = ScanRequest.Product.valueOf(scanRequest.getProduct().toUpperCase(Locale.ROOT));
+            }
+
+            List<Filter> filters = getFilters(properties.getFilterSeverity(), properties.getFilterCwe(), properties.getFilterCategory(), properties.getFilterStatus());
+            if(!ScanUtils.empty(scanRequest.getFilters())){
+                filters = scanRequest.getFilters();
+            }
+
+            String bug = properties.getBugTracker();
+            if(!ScanUtils.empty(scanRequest.getBug())){
+                bug = scanRequest.getBug();
+            }
+
+            BugTracker bt = ScanUtils.getBugTracker(scanRequest.getAssignee(), bugType, jiraProperties, bug);
+
+            List<String> excludeFiles = scanRequest.getExcludeFiles();
+            List<String> excludeFolders = scanRequest.getExcludeFolders();
+            if((excludeFiles == null) && !ScanUtils.empty(cxProperties.getExcludeFiles())){
+                excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
+            }
+            if(excludeFolders == null && !ScanUtils.empty(cxProperties.getExcludeFolders())){
+                excludeFolders = Arrays.asList(cxProperties.getExcludeFolders().split(","));
+            }
+
+            ScanRequest request = ScanRequest.builder()
+                    .application(application)
+                    .product(product)
+                    .project(project)
+                    .team(team)
+                    .namespace(scanRequest.getNamespace())
+                    .repoName(scanRequest.getRepoName())
+                    .repoUrl(scanRequest.getGitUrl())
+                    .repoUrlWithAuth(scanRequest.getGitUrl())
+                    .repoType(ScanRequest.Repository.NA)
+                    .branch(branch)
+                    .refs(Constants.CX_BRANCH_PREFIX.concat(branch))
+                    .email(null)
+                    .incremental(inc)
+                    .scanPreset(scanPreset)
+                    .excludeFolders(excludeFolders)
+                    .excludeFiles(excludeFiles)
+                    .bugTracker(bt)
+                    .filters(filters)
+                    .build();
+            request.setId(uid);
+
+            if(!ScanUtils.empty(scanRequest.getResultUrl())){
+                request.putAdditionalMetadata("result_url", scanRequest.getResultUrl());
+            }
+
+            scanService.initiateAutomation(request);
+
+        }catch (Exception e){
+            log.error("Error submitting Scan Request. {}", ExceptionUtils.getMessage(e));
+            ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
+                    .message(errorMessage)
+                    .success(false)
+                    .build());
+        }
+
+        return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
+                .message("Scan Request Successfully Submitted")
+                .success(true)
+                .build());
     }
 
     /**
@@ -151,5 +289,216 @@ public class FlowController {
         }
         return bugTracker;
     }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class CxScanRequest {
+        /*required*/
+        @JsonProperty("git_url")
+        public String gitUrl;
+        @JsonProperty("branch")
+        public String branch;
+        @JsonProperty("application")
+        public String application;
+        @JsonProperty("cx_project")
+        public String project;
+        /*optional*/
+        @JsonProperty("result_url")
+        public String resultUrl;
+        @JsonProperty("namespace")
+        public String namespace;
+        @JsonProperty("repo_name")
+        public String repoName;
+        @JsonProperty("cx_team")
+        public String team;
+        @JsonProperty("filters")
+        public List<Filter> filters;
+        @JsonProperty("cx_product")
+        public String product;
+        @JsonProperty("cx_preset")
+        public String preset;
+        @JsonProperty("cx_incremental")
+        public boolean incremental;
+        @JsonProperty("cx_configuration")
+        public String configuration;
+        @JsonProperty("cx_exclude_files")
+        public List<String> excludeFiles;
+        @JsonProperty("cx_exclude_folders")
+        public List<String> excludeFolders;
+        @JsonProperty("bug")
+        public String bug;
+        @JsonProperty("assignee")
+        public String assignee;
+        @JsonProperty("application_only")
+        public boolean applicationOnly = false;
+
+        public String getGitUrl() {
+            return gitUrl;
+        }
+
+        public void setGitUrl(String gitUrl) {
+            this.gitUrl = gitUrl;
+        }
+
+        public String getBranch() {
+            return branch;
+        }
+
+        public void setBranch(String branch) {
+            this.branch = branch;
+        }
+
+        public String getApplication() {
+            return application;
+        }
+
+        public void setApplication(String application) {
+            this.application = application;
+        }
+
+        public String getNamespace() {
+            return namespace;
+        }
+
+        public void setNamespace(String namespace) {
+            this.namespace = namespace;
+        }
+
+        public String getRepoName() {
+            return repoName;
+        }
+
+        public void setRepoName(String repoName) {
+            this.repoName = repoName;
+        }
+
+        public String getProject() {
+            return project;
+        }
+
+        public void setProject(String project) {
+            this.project = project;
+        }
+
+        public String getTeam() {
+            return team;
+        }
+
+        public void setTeam(String team) {
+            this.team = team;
+        }
+
+        public String getPreset() {
+            return preset;
+        }
+
+        public void setPreset(String preset) {
+            this.preset = preset;
+        }
+
+        public String getConfiguration() {
+            return configuration;
+        }
+
+        public void setConfiguration(String configuration) {
+            this.configuration = configuration;
+        }
+
+        public String getBug() {
+            return bug;
+        }
+
+        public void setBug(String bug) {
+            this.bug = bug;
+        }
+
+        public String getProduct() {
+            return product;
+        }
+
+        public void setProduct(String product) {
+            this.product = product;
+        }
+
+        public List<String> getExcludeFiles() {
+            return excludeFiles;
+        }
+
+        public void setExcludeFiles(List<String> excludeFiles) {
+            this.excludeFiles = excludeFiles;
+        }
+
+        public List<String> getExcludeFolders() {
+            return excludeFolders;
+        }
+
+        public void setExcludeFolders(List<String> excludeFolders) {
+            this.excludeFolders = excludeFolders;
+        }
+
+        public boolean isApplicationOnly() {
+            return applicationOnly;
+        }
+
+        public String getAssignee() {
+            return assignee;
+        }
+
+        public void setAssignee(String assignee) {
+            this.assignee = assignee;
+        }
+
+        public void setApplicationOnly(boolean applicationOnly) {
+            this.applicationOnly = applicationOnly;
+        }
+
+        public List<Filter> getFilters() {
+            return filters;
+        }
+
+        public void setFilters(List<Filter> filters) {
+            this.filters = filters;
+        }
+
+        public boolean isIncremental() {
+            return incremental;
+        }
+
+        public void setIncremental(boolean incremental) {
+            this.incremental = incremental;
+        }
+
+        public String getResultUrl() {
+            return resultUrl;
+        }
+
+        public void setResultUrl(String resultUrl) {
+            this.resultUrl = resultUrl;
+        }
+
+        @Override
+        public String toString() {
+            return "CxScanRequest{" +
+                    "gitUrl='" + gitUrl + '\'' +
+                    ", branch='" + branch + '\'' +
+                    ", application='" + application + '\'' +
+                    ", project='" + project + '\'' +
+                    ", resultUrl='" + resultUrl + '\'' +
+                    ", namespace='" + namespace + '\'' +
+                    ", repoName='" + repoName + '\'' +
+                    ", team='" + team + '\'' +
+                    ", filters=" + filters +
+                    ", product='" + product + '\'' +
+                    ", preset='" + preset + '\'' +
+                    ", incremental=" + incremental +
+                    ", configuration='" + configuration + '\'' +
+                    ", excludeFiles=" + excludeFiles +
+                    ", excludeFolders=" + excludeFolders +
+                    ", bug='" + bug + '\'' +
+                    ", assignee='" + assignee + '\'' +
+                    ", applicationOnly=" + applicationOnly +
+                    '}';
+        }
+    }
+
 
 }

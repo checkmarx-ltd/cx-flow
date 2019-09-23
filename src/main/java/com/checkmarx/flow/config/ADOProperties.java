@@ -4,15 +4,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
-import java.util.List;
-
 @Component
 @ConfigurationProperties(prefix = "azure")
 @Validated
-public class ADOProperties {
-    private String webhookToken;
-    private String token;
-    private String url;
+public class ADOProperties extends RepoProperties{
     private String issueType = "issue";
     private String issueBody = "Description";
     private String appTagPrefix = "app";
@@ -20,40 +15,9 @@ public class ADOProperties {
     private String repoTagPrefix = "repo";
     private String branchLabelPrefix = "branch";
     private String apiVersion = "5.0";
+    private String testRepository = "Fabrikam";
     private String openStatus;
     private String closedStatus;
-    private String falsePositiveLabel;
-    private boolean blockMerge = false;
-    private boolean blockMergeComplete = false;
-
-
-    public String getWebhookToken() {
-        return this.webhookToken;
-    }
-
-    public String getToken() {
-        return this.token;
-    }
-
-    public String getUrl() {
-        return this.url;
-    }
-
-    public String getFalsePositiveLabel() {
-        return this.falsePositiveLabel;
-    }
-
-    public void setWebhookToken(String webhookToken) {
-        this.webhookToken = webhookToken;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
-    }
 
     public String getApiVersion() {
         return apiVersion;
@@ -61,10 +25,6 @@ public class ADOProperties {
 
     public void setApiVersion(String apiVersion) {
         this.apiVersion = apiVersion;
-    }
-
-    public void setFalsePositiveLabel(String falsePositiveLabel) {
-        this.falsePositiveLabel = falsePositiveLabel;
     }
 
     public String getIssueType() {
@@ -131,19 +91,17 @@ public class ADOProperties {
         this.closedStatus = closedStatus;
     }
 
-    public boolean isBlockMerge() {
-        return blockMerge;
+    public String getTestRepository() {
+        return testRepository;
     }
 
-    public void setBlockMerge(boolean blockMerge) {
-        this.blockMerge = blockMerge;
+    public void setTestRepository(String testRepository) {
+        this.testRepository = testRepository;
     }
 
-    public boolean isBlockMergeComplete() {
-        return blockMergeComplete;
-    }
-
-    public void setBlockMergeComplete(boolean blockMergeComplete) {
-        this.blockMergeComplete = blockMergeComplete;
+    public String getMergeNoteUri(String namespace, String repo, String mergeId){
+        String format = "%s/%s/_apis/git/repositories/%s/pullRequests/%s/threads";
+        return String.format(format, getUrl(), namespace, repo, mergeId);
+        //http://localhost:8080/tfs/DefaultCollection/Checkmarx/_apis/git/repositories/Checkmarx/pullRequests/2/threads
     }
 }

@@ -19,6 +19,9 @@ public class JiraProperties {
     private String issueType;
     private String labelTracker = "labels";
     private String issuePrefix;
+    private String issuePostfix;
+    private String descriptionPrefix;
+    private String descriptionPostfix;
     private String appLabelPrefix = "app";
     private String ownerLabelPrefix = "owner";
     private String repoLabelPrefix = "repo";
@@ -30,9 +33,13 @@ public class JiraProperties {
     private String closeTransitionField;
     private String closeTransitionValue;
     private String closeTransition;
+    private boolean updateComment = false;
+    private String updateCommentValue = "Issue still remains";
     private List<String> openStatus;
     private List<String> closedStatus;
     private List<Field> fields;
+    private String ParentUrl = "";
+    private boolean child = false;
 
     public String getUrl() {
         return this.url;
@@ -198,7 +205,64 @@ public class JiraProperties {
         this.closedStatus = closedStatus;
     }
 
+    public boolean isUpdateComment() {
+        return updateComment;
+    }
+
+    public void setUpdateComment(boolean updateComment) {
+        this.updateComment = updateComment;
+    }
+
+    public String getUpdateCommentValue() {
+        return updateCommentValue;
+    }
+
+    public void setUpdateCommentValue(String updateCommentValue) {
+        this.updateCommentValue = updateCommentValue;
+    }
+
+    public String getIssuePostfix() {
+        return issuePostfix;
+    }
+
+    public void setIssuePostfix(String issuePostfix) {
+        this.issuePostfix = issuePostfix;
+    }
+
+    public String getDescriptionPrefix() {
+        return descriptionPrefix;
+    }
+
+    public void setDescriptionPrefix(String descriptionPrefix) {
+        this.descriptionPrefix = descriptionPrefix;
+    }
+
+    public String getDescriptionPostfix() {
+        return descriptionPostfix;
+    }
+
+    public void setDescriptionPostfix(String descriptionPostfix) {
+        this.descriptionPostfix = descriptionPostfix;
+    }
+
     public void setFields(List<Field> fields) {
         this.fields = fields;
     }
+
+    public String getParentUrl() {
+        return ParentUrl;
+    }
+
+    public void setParentUrl(String ParentUrl) {
+        this.ParentUrl = ParentUrl;
+    }
+
+    public boolean isChild() {
+        return child;
+    }
+
+    public void setChild(boolean child) {
+        this.child = child;
+    }
+    
 }

@@ -181,7 +181,9 @@ public class BugTracker {
         gitlabmerge("gitlabmerge"),
         EMAIL("EMAIL"),
         CUSTOM("CUSTOM"),
-        NONE("NONE");
+        NONE("NONE"),
+        WAIT("WAIT"),
+        wait("wait");
 
         private String type;
 

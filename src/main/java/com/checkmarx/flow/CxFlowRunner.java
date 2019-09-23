@@ -1,10 +1,16 @@
 package com.checkmarx.flow;
 
 import com.checkmarx.flow.config.*;
-import com.checkmarx.flow.dto.*;
+import com.checkmarx.flow.dto.BugTracker;
+import com.checkmarx.flow.dto.MachinaOverride;
+import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.HelperService;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.config.Constants;
+import com.checkmarx.sdk.config.CxProperties;
+import com.checkmarx.sdk.dto.Filter;
+import com.checkmarx.sdk.dto.ScanResults;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
@@ -12,10 +18,12 @@ import org.slf4j.MDC;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
-import java.beans.ConstructorProperties;
+
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
+
 import static java.lang.System.exit;
 
 @Component
@@ -27,20 +35,20 @@ public class CxFlowRunner implements ApplicationRunner {
     private final JiraProperties jiraProperties;
     private final GitHubProperties gitHubProperties;
     private final GitLabProperties gitLabProperties;
+    private final ADOProperties adoProperties;
     private final HelperService helperService;
     private final FlowService flowService;
 
-    @ConstructorProperties({"flowProperties", "cxProperties", "jiraProperties", "gitHubProperties",
-            "gitLabProperties", "flowService", "helperService"})
     public CxFlowRunner(FlowProperties flowProperties,
                         CxProperties cxProperties, JiraProperties jiraProperties,
                         GitHubProperties gitHubProperties, GitLabProperties gitLabProperties,
-                        FlowService flowService, HelperService helperService) {
+                        ADOProperties adoProperties, FlowService flowService, HelperService helperService) {
         this.flowProperties = flowProperties;
         this.cxProperties = cxProperties;
         this.jiraProperties = jiraProperties;
         this.gitHubProperties = gitHubProperties;
         this.gitLabProperties = gitLabProperties;
+        this.adoProperties = adoProperties;
         this.flowService = flowService;
         this.helperService = helperService;
     }
@@ -72,6 +80,8 @@ public class CxFlowRunner implements ApplicationRunner {
         String preset = null;
         String team;
         String cxProject;
+		String altProject;
+        String altFields;
         String config;
         List<String> severity;
         List<String> cwe;
@@ -119,6 +129,8 @@ public class CxFlowRunner implements ApplicationRunner {
         branch = getOptionValues(args,"branch");
         namespace = getOptionValues(args,"namespace");
         team = getOptionValues(args,"cx-team");
+		altProject = getOptionValues(args,"alt-project");
+        altFields = getOptionValues(args,"alt-fields");
         cxProject = getOptionValues(args,"cx-project");
         application = getOptionValues(args,"app");
         assignee = getOptionValues(args,"assignee");
@@ -150,7 +162,13 @@ public class CxFlowRunner implements ApplicationRunner {
         else{
             filters = ScanUtils.getFilters(flowProperties);
         }
-
+        //Adding default file/folder exclusions from properties if they are not provided as an override
+        if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
+            excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
+        }
+        if(excludeFolders == null && !ScanUtils.empty(cxProperties.getExcludeFolders())){
+            excludeFolders = Arrays.asList(cxProperties.getExcludeFolders().split(","));
+        }
         //set the default bug tracker as per yml
         BugTracker.Type bugType = null;
         if (ScanUtils.empty(bugTracker)) {
@@ -178,8 +196,16 @@ public class CxFlowRunner implements ApplicationRunner {
         }
 
         BugTracker bt = null;
-        String gitUrlAuth = null;
+        String gitAuthUrl = null;
         switch (bugType){
+            case WAIT:
+            case wait:
+                log.info("No bug tracker will be used...waiting for scan to complete");
+                bugType = BugTracker.Type.WAIT;
+                bt = BugTracker.builder()
+                        .type(bugType)
+                        .build();
+                break;
             case NONE:
                 log.info("No bug tracker will be used");
                 bugType = BugTracker.Type.NONE;
@@ -202,6 +228,20 @@ public class CxFlowRunner implements ApplicationRunner {
                         .openTransition(jiraProperties.getOpenTransition())
                         .fields(jiraProperties.getFields())
                         .build();
+                break;
+            case ADOPULL:
+            case adopull:
+                bugType = BugTracker.Type.ADOPULL;
+                bt = BugTracker.builder()
+                        .type(bugType)
+                        .build();
+                repoType = ScanRequest.Repository.ADO;
+
+                if(ScanUtils.empty(namespace) ||ScanUtils.empty(repoName)||ScanUtils.empty(mergeId)){
+                    log.error("Namespace/Repo/MergeId must be provided for ADOPULL bug tracking");
+                    exit(1);
+                }
+                mergeNoteUri = adoProperties.getMergeNoteUri(namespace, repoName, mergeId);
                 break;
             case GITHUBPULL:
             case githubpull:
@@ -249,7 +289,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 .repoName(repoName)
                 .mergeNoteUri(mergeNoteUri)
                 .repoUrl(repoUrl)
-                .repoUrlWithAuth(gitUrlAuth)
+                .repoUrlWithAuth(gitAuthUrl)
                 .repoType(repoType)
                 .branch(branch)
                 .refs(null)
@@ -260,6 +300,8 @@ public class CxFlowRunner implements ApplicationRunner {
                 .excludeFiles(excludeFiles)
                 .bugTracker(bt)
                 .filters(filters)
+				.altProject(altProject)
+                .altFields(altFields)
                 .build();
 
         request = ScanUtils.overrideMap(request, o);
@@ -303,7 +345,6 @@ public class CxFlowRunner implements ApplicationRunner {
 
                     cxParse(request, f);
                 }
-
             }
             else if(args.containsOption("batch")){
                 log.info("Executing batch process");
@@ -318,7 +359,46 @@ public class CxFlowRunner implements ApplicationRunner {
             }
             else if(args.containsOption("scan")){
                 log.info("Executing scan process");
-                cxScan(request, file);
+                //GitHub Scan with Git Clone
+                if(args.containsOption("github")){
+                    if(ScanUtils.empty(repoUrl) && !ScanUtils.anyEmpty(namespace, repoName)) {
+                        repoUrl = gitHubProperties.getGitUri(namespace, repoName);
+                    } else if(ScanUtils.empty(repoUrl)){
+                        log.error("Unable to determine git url for scanning, exiting...");
+                        exit(2);
+                    }
+                    String token = gitHubProperties.getToken();
+                    gitAuthUrl = repoUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(token).concat("@"));
+                    gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(token).concat("@"));
+
+                    cxScan(request, repoUrl, gitAuthUrl, branch, ScanRequest.Repository.GITHUB);
+                } //GitLab Scan with Git Clone
+                else if(args.containsOption("gitlab") &&  !ScanUtils.anyEmpty(namespace, repoName)){
+                    if(ScanUtils.empty(repoUrl) && !ScanUtils.anyEmpty(namespace, repoName)) {
+                        repoUrl = gitLabProperties.getGitUri(namespace, repoName);
+                    } else if(ScanUtils.empty(repoUrl)){
+                        log.error("Unable to determine git url for scanning, exiting...");
+                        exit(2);
+                    }
+                    String token = gitLabProperties.getToken();
+                    gitAuthUrl = repoUrl.replace(Constants.HTTPS, Constants.HTTPS_OAUTH2.concat(token).concat("@"));
+                    gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP_OAUTH2.concat(token).concat("@"));
+                    cxScan(request, repoUrl, gitAuthUrl, branch, ScanRequest.Repository.GITLAB);
+                }
+                else if(args.containsOption("bitbucket") && containsRepoArgs(namespace, repoName, branch)){
+                    log.warn("Bitbucket git clone scan not implemented");
+                }
+                else if(args.containsOption("ado") && containsRepoArgs(namespace, repoName, branch)){
+                    log.warn("Azure DevOps git clone scan not implemented");
+                }
+                else if(file != null) {
+                        cxScan(request, file);
+                    }
+                else{
+                        log.error("No valid option was provided for driving scan");
+                }
+
+
             }
         }catch (Exception e){
             log.error("An error occurred while processing request");
@@ -327,6 +407,12 @@ public class CxFlowRunner implements ApplicationRunner {
         }
         log.info("Completed Successfully");
         exit(0);
+    }
+
+    private boolean containsRepoArgs(String namespace, String repoName, String branch){
+        return (!ScanUtils.empty(namespace) &&
+                !ScanUtils.empty(repoName) &&
+                !ScanUtils.empty(branch));
     }
 
     private String getOptionValues(ApplicationArguments arg, String option){
@@ -338,6 +424,16 @@ public class CxFlowRunner implements ApplicationRunner {
         }
     }
 
+    private void cxScan(ScanRequest request, String gitUrl, String gitAuthUrl, String branch, ScanRequest.Repository repoType){
+        log.info("Initiating scan using Checkmarx git clone");
+        request.setRepoType(repoType);
+        log.info("Git url: {}", gitUrl);
+        request.setBranch(branch);
+        request.setRepoUrl(gitUrl);
+        request.setRepoUrlWithAuth(gitAuthUrl);
+        request.setRefs(Constants.CX_BRANCH_PREFIX.concat(branch));
+        flowService.cxFullScan(request);
+    }
     private void cxScan(ScanRequest request, String path){
         if(ScanUtils.empty(request.getProject())){
             log.error("Please provide --cx-project to define the project in Checkmarx");

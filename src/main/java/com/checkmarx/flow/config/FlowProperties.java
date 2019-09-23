@@ -3,6 +3,7 @@ package com.checkmarx.flow.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
+
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.List;
@@ -22,13 +23,17 @@ public class FlowProperties {
     private List<String> filterCategory;
     private List<String> filterStatus;
     private boolean trackApplicationOnly = false;
+    private boolean ApplicationRepoOnly = false;
     private String branchScript;
     private String mitreUrl;
     private String wikiUrl;
     private String codebashUrl;
+    private String zipExclude;
     private boolean breakBuild = false;
     private Integer webHookQueue = 100;
     private Integer scanResultQueue = 4;
+    private Integer httpConnectionTimeout = 30000;
+    private Integer httpReadTimeout = 120000;
     private Mail mail;
 
     public String getContact() {
@@ -176,6 +181,30 @@ public class FlowProperties {
         this.breakBuild = breakBuild;
     }
 
+    public String getZipExclude() {
+        return zipExclude;
+    }
+
+    public void setZipExclude(String zipExclude) {
+        this.zipExclude = zipExclude;
+    }
+
+    public Integer getHttpConnectionTimeout() {
+        return httpConnectionTimeout;
+    }
+
+    public void setHttpConnectionTimeout(Integer httpConnectionTimeout) {
+        this.httpConnectionTimeout = httpConnectionTimeout;
+    }
+
+    public Integer getHttpReadTimeout() {
+        return httpReadTimeout;
+    }
+
+    public void setHttpReadTimeout(Integer httpReadTimeout) {
+        this.httpReadTimeout = httpReadTimeout;
+    }
+
     public static class Mail {
         private String host;
         private Integer port = 25;
@@ -224,4 +253,13 @@ public class FlowProperties {
         }
 
     }
+
+    public boolean isApplicationRepoOnly() {
+        return ApplicationRepoOnly;
+    }
+
+    public void setApplicationRepoOnly(boolean ApplicationRepoOnly) {
+        this.ApplicationRepoOnly = ApplicationRepoOnly;
+    }
+    
 }

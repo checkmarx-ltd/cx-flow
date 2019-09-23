@@ -2,12 +2,12 @@ package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.custom.IssueTracker;
 import com.checkmarx.flow.dto.BugTracker;
-import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.dto.ScanResults;
 import com.checkmarx.flow.dto.Issue;
+import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.dto.ScanResults;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.springframework.beans.BeansException;
@@ -15,6 +15,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+
 import java.util.*;
 
 @Service
@@ -93,12 +94,7 @@ public class IssueService implements ApplicationContextAware {
             }
             xMap = this.getXIssueMap(tracker, results.getXIssues(), request);
             iMap = this.getIssueMap(tracker, issues, request);
-            if(iMap == null){
-                iMap = Collections.emptyMap();
-            }
-            if(xMap == null){
-                xMap = Collections.emptyMap();
-            }
+
             for (Map.Entry<String, ScanResults.XIssue> xIssue : xMap.entrySet()) {
                 try {
                     String fileUrl;

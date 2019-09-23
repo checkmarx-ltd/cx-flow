@@ -1,3 +1,6 @@
+## Release Notes
+Please read latest features and fixes from the Release.txt file
+
 ## Build
 `gradlew clean build`
 
@@ -72,6 +75,8 @@ java -jar ${AUTOMATION_JAR} \
 --project|	Indicates that this will be a project results request.
 --cx-team|	Team within Checkmarx
 --cx-project |	Project under the specify team that the latest results should be pulled for
+--alt-project | Project under Azure ADO that should recieve the workitem
+--alt-fields | Add additional fields to the workitem. Format is field-name1:field-value1,field-name2:field-value2,etc. Wrap in double quotes if any values contains spaces.
 --namespace	| Repository group (Gitlab)/organization (Github)/namesapce (BitBucket). Used as higher level grouping of repositories.  Used along with repo-name and branch for tracking purposes (Jira Only).  If these 3 are not present, then application attribute must be passed.  These values are stored in a Tracking label within Jira.  This value is also stored in the body of the issue.
 --repo-name	| Name of the repository.  Used along with repo-name and branch for tracking purposes (Jira Only).  If these 3 are not present, then application attribute must be passed (--app).  These values are stored in a Tracking label within Jira.  This value is also stored in the body of the issue.
 --branch |	Branch Used along with repo-name and branch for tracking purposes (Jira Only).  If these 3 are not present, then application attribute must be passed  (--app).  These values are stored in a Tracking label within Jira. This value is also stored in the body of the issue.

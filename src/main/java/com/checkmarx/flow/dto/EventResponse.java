@@ -1,11 +1,13 @@
 package com.checkmarx.flow.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import javax.validation.constraints.NotNull;
 import java.beans.ConstructorProperties;
 
-
+@JsonInclude(Include.NON_NULL)
 public class EventResponse {
 
     @JsonProperty("success")

@@ -1,15 +1,17 @@
 package com.checkmarx.flow.service;
 
-import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.ADOProperties;
+import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.dto.ScanResults;
 import com.checkmarx.flow.dto.azure.CreateWorkItemAttr;
 import com.checkmarx.flow.exception.ADOClientException;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.dto.ScanResults;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -17,18 +19,21 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+
 import java.beans.ConstructorProperties;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.List;
 
 @Service
 public class ADOService {
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(ADOService.class);
+    private static final Logger log = LoggerFactory.getLogger(ADOService.class);
     private final RestTemplate restTemplate;
     private final ADOProperties properties;
     private final FlowProperties flowProperties;
 
     @ConstructorProperties({"restTemplate", "properties", "flowProperties"})
-    public ADOService(RestTemplate restTemplate, ADOProperties properties, FlowProperties flowProperties) {
+    public ADOService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, ADOProperties properties, FlowProperties flowProperties) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.flowProperties = flowProperties;
@@ -49,9 +54,9 @@ public class ADOService {
         return httpHeaders;
     }
 
-    void processPull(ScanRequest request,ScanResults results) throws ADOClientException {
+    void processPull(ScanRequest request, ScanResults results) throws ADOClientException {
         try {
-            String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties);
+            String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties, properties);
             log.debug("comment: {}", comment);
             sendMergeComment(request, comment);
         } catch (HttpClientErrorException e){
@@ -61,20 +66,41 @@ public class ADOService {
     }
 
     void sendMergeComment(ScanRequest request, String comment){
-        HttpEntity httpEntity = new HttpEntity<>(getJSONThread(comment).toString(), createAuthHeaders());
         String mergeUrl = request.getMergeNoteUri();
         if(ScanUtils.empty(mergeUrl)){
             log.error("mergeUrl was not provided within the request object, which is required for commenting on pull request");
             return;
         }
         log.debug(mergeUrl);
-        restTemplate.exchange(mergeUrl.concat("?api-version=").concat(properties.getApiVersion()),
-                HttpMethod.POST, httpEntity, String.class);
+        String threadId = request.getAdditionalMetadata("ado_thread_id");
+        if(ScanUtils.empty(threadId)){
+            HttpEntity httpEntity = new HttpEntity<>(getJSONThread(comment).toString(), createAuthHeaders());
+            log.debug("Creating new thread for comments");
+            ResponseEntity<String> response = restTemplate.exchange(mergeUrl.concat("?api-version=").concat(properties.getApiVersion()),
+                    HttpMethod.POST, httpEntity, String.class);
+            if(response.getBody() != null) {
+                JSONObject json = new JSONObject(response.getBody());
+                int id = json.getInt("id");
+                request.putAdditionalMetadata("ado_thread_id", Integer.toString(id));
+                log.debug("Created new thread with Id {}", id);
+            }
+        }
+        else{
+            HttpEntity httpEntity = new HttpEntity<>(getJSONComment(comment).toString(), createAuthHeaders());
+            mergeUrl = mergeUrl.concat("/").concat(threadId).concat("/comments");
+            log.debug("Adding comment to thread Id {}", threadId);
+            restTemplate.exchange(mergeUrl.concat("?api-version=").concat(properties.getApiVersion()),
+                    HttpMethod.POST, httpEntity, String.class);
+        }
     }
 
     void startBlockMerge(ScanRequest request){
         if(properties.isBlockMerge()) {
             String url = request.getAdditionalMetadata("statuses_url");
+            if(url == null){
+                log.warn("No status url found, skipping status update");
+                return;
+            }
             HttpEntity httpEntity = new HttpEntity<>(
                     getJSONStatus("pending", url, "Checkmarx Scan Initiated").toString(),
                     createAuthHeaders()
@@ -99,8 +125,11 @@ public class ADOService {
     void endBlockMerge(ScanRequest request){
         if(properties.isBlockMerge()) {
             String url = request.getAdditionalMetadata("statuses_url");
-            String statusId = request.getAdditionalMetadata().get("status_id");
-
+            String statusId = request.getAdditionalMetadata("status_id");
+            if(statusId == null){
+                log.warn("No status Id found, skipping status update");
+                return;
+            }
             CreateWorkItemAttr item = new CreateWorkItemAttr();
             item.setOp("remove");
             item.setPath("/".concat(statusId));
@@ -170,7 +199,16 @@ public class ADOService {
         comment.put("commentType", 1);
         comments.put(comment);
         requestBody.put("comments", comments);
-        requestBody.put("status", 2);
+        requestBody.put("status", 1);
+
+        return requestBody;
+    }
+
+    private JSONObject getJSONComment(String description){
+        JSONObject requestBody = new JSONObject();
+        requestBody.put("content", description);
+        requestBody.put("parentCommentId", 1);
+        requestBody.put("commentType", 1);
 
         return requestBody;
     }
