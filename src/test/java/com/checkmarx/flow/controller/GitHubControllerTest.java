@@ -6,8 +6,9 @@ import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.sdk.config.CxProperties;
-import com.checkmarx.sdk.service.CxLegacyService;
-import com.checkmarx.sdk.service.CxService;
+import com.checkmarx.sdk.service.*;
+//import com.cx.restclient.CxOsaService;
+//import com.cx.restclient.httpClient.CxHttpClient;
 import org.junit.Test;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.web.client.RestTemplate;
@@ -35,12 +36,15 @@ public class GitHubControllerTest {
     private static final ADOService adoService = new ADOService(restTemplate, adoProperties, flowProperties);
     private static final EmailService emailService = new EmailService(flowProperties, new TemplateEngine(), new JavaMailSenderImpl());
     private static final CxLegacyService cxLegacyService = new CxLegacyService(cxProperties, new WebServiceTemplate());
-    private static final CxService cxService = new CxService(cxProperties, cxLegacyService, restTemplate);
+    private static final CxAuthClient authClient = new CxAuthService(cxProperties, cxLegacyService, restTemplate);
+    private static final CxService cxService = new CxService(authClient, cxProperties, cxLegacyService, restTemplate);
 
     private static final FlowService flowService = new FlowService(
             cxService,
+            null,
             new ResultsService(
                     cxService,
+                    null,
                     new JiraService(new JiraProperties(), flowProperties),
                     new IssueService(),
                     gitHubService,
