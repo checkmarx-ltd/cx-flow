@@ -276,26 +276,6 @@ public class ScanUtils {
         return bt;
     }
 
-    public static void zipDirectory(String sourceDirectoryPath, String zipPath) throws IOException {
-        Path zipFilePath = Files.createFile(Paths.get(zipPath));
-
-        try (ZipOutputStream zipOutputStream = new ZipOutputStream(Files.newOutputStream(zipFilePath))) {
-            Path sourceDirPath = Paths.get(sourceDirectoryPath);
-
-            Files.walk(sourceDirPath).filter(path -> !Files.isDirectory(path))
-                    .forEach(path -> {
-                        ZipEntry zipEntry = new ZipEntry(sourceDirPath.relativize(path).toString());
-                        try {
-                            zipOutputStream.putNextEntry(zipEntry);
-                            zipOutputStream.write(Files.readAllBytes(path));
-                            zipOutputStream.closeEntry();
-                        } catch (Exception e) {
-                            log.error(ExceptionUtils.getStackTrace(e));
-                        }
-                    });
-        }
-    }
-
     public static String getMDBody(ScanResults.XIssue issue, String branch, String fileUrl, FlowProperties flowProperties) {
         StringBuilder body = new StringBuilder();
         body.append(String.format(ISSUE_BODY, issue.getVulnerability(), issue.getFilename(), branch)).append(CRLF).append(CRLF);
