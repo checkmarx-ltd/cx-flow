@@ -124,7 +124,7 @@ public class HelperService {
     }
 
     private String getStringFromFile(String path) throws IOException {
-        return new String(Files.readAllBytes(Paths.get(path)));
+        return new String(Files.readAllBytes(Paths.get(path.intern())));
     }
 
     private boolean strMatches(String patternStr, String str){
