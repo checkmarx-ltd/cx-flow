@@ -182,7 +182,7 @@ csv:
       default-value: unknown
     - header: Primary URL
       name: static
-      default-value: ${tmp.url}
+      default-value: ABC
     - header: severity
       name: severity
     - header: Vulnerability ID
