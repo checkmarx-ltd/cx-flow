@@ -3,14 +3,14 @@ package com.checkmarx.flow.dto;
 import java.util.List;
 
 public class Sources {
-    List<Source> srouces;
+    List<Source> sources;
 
-    public List<Source> getSrouces() {
-        return srouces;
+    public List<Source> getSources() {
+        return sources;
     }
 
-    public void setSrouces(List<Source> srouces) {
-        this.srouces = srouces;
+    public void setSources(List<Source> sources) {
+        this.sources = sources;
     }
 
     public static class Source{
