@@ -30,7 +30,8 @@ public class GitHubService extends RepoService {
     private final RestTemplate restTemplate;
     private final GitHubProperties properties;
     private final FlowProperties flowProperties;
-    private static final String FILE_CONENT = "/{namespace}/{repo}/contents/{config}?ref={branch}";
+    private static final String FILE_CONTENT = "/{namespace}/{repo}/contents/{config}?ref={branch}";
+    private static final String REPO_CONTENT = "/{namespace}/{repo}/contents?ref={branch}";
 
     public GitHubService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, GitHubProperties properties, FlowProperties flowProperties) {
         this.restTemplate = restTemplate;
@@ -133,7 +134,7 @@ public class GitHubService extends RepoService {
         HttpHeaders headers = createAuthHeaders();
         try {
             ResponseEntity<String> response = restTemplate.exchange(
-                    properties.getApiUrl().concat(FILE_CONENT),
+                    properties.getApiUrl().concat(FILE_CONTENT),
                     HttpMethod.GET,
                     new HttpEntity(headers),
                     String.class,
