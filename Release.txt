@@ -1,3 +1,11 @@
+Release 1.4.5
+---------------------------------------------------------------------
+# FEATURES
+- Add support for an updated GitHub PR (synchronize action driven by commits to branch specified within the Pull Request).
+
+Release 1.4.4
+---------------------------------------------------------------------
+
 Release 1.4.3
 ---------------------------------------------------------------------
 # FEATURES
