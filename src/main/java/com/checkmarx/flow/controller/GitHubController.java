@@ -144,7 +144,8 @@ public class GitHubController {
         try {
             String action = event.getAction();
             if(!action.equalsIgnoreCase("opened") &&
-                    !action.equalsIgnoreCase("reopened")){
+                    !action.equalsIgnoreCase("reopened") &&
+                    !action.equalsIgnoreCase("synchronize")){
                 log.info("Pull requested not processed.  Status was not opened ({})", action);
                 return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
                         .message("No processing occurred for updates to Pull Request")
