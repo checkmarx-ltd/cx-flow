@@ -458,3 +458,7 @@ Executable JAR is compiled using Gradle (tested with version 4.10 and 5.0)
 
 **Java 11 JRE:**
 `gradle -b build-11.gradle --build-cache assemble`
+
+## Contributing
+
+See [Development Operations](https://checkmarx.atlassian.net/wiki/spaces/PTS/pages/1325007123/Development+Operations) (Checkmarx employees only)
