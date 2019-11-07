@@ -8,7 +8,7 @@ import com.checkmarx.sdk.utils.ScanUtils;
 
 public abstract class RepoService {
 
-    public abstract Sources getRepoContent();
+    public abstract Sources getRepoContent(ScanRequest request);
 
     public CxConfig getCxConfigOverride(ScanRequest request) throws CheckmarxException {
         return null;
