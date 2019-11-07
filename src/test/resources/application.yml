@@ -130,13 +130,14 @@ jira:
 
 github:
   webhook-token: 1234
-  token: xxx
   url: https://github.com
   api-url: https://api.github.com/repos/
   false-positive-label: false-positive
   block-merge: true
   error-merge: true
   cx-summary: true
+  auto-profile: true
+  profiling-depth: 2
 
 gitlab:
   webhook-token: 1234
