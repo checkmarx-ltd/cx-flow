@@ -28,10 +28,11 @@ apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
 
 group = 'com.checkmarx'
-version = '1.4.5'
+version = '1.4.6'
 sourceCompatibility = 1.8
 
 repositories {
+    mavenLocal()
 	mavenCentral()
     maven {
         url = 'https://packages.atlassian.com/mvn/maven-external'
@@ -42,7 +43,7 @@ dependencies {
 	compile('org.springframework.boot:spring-boot-starter-actuator')
 	compile('org.springframework.boot:spring-boot-starter-web')
     compile('org.springframework.boot:spring-boot-starter-aop')
-    compile('com.github.checkmarx-ts:cx-spring-boot-sdk:0.3.7')
+    compile('com.github.checkmarx-ts:cx-spring-boot-sdk:0.3.8')
     compile ('commons-codec:commons-codec:1.13')
     compile ('commons-io:commons-io:2.6')
     compile ('org.json:json:20190722')
