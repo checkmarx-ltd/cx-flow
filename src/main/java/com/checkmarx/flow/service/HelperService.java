@@ -1,18 +1,25 @@
 package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.dto.CxProfile;
+import com.checkmarx.flow.dto.MachinaOverride;
 import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.dto.Sources;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -25,11 +32,30 @@ public class HelperService {
     private final FlowProperties properties;
     private final CxProperties cxProperties;
     private final ExternalScriptService scriptService;
+    private List<CxProfile> profiles;
 
     public HelperService(FlowProperties properties, CxProperties cxProperties, ExternalScriptService scriptService) {
         this.properties = properties;
         this.cxProperties = cxProperties;
         this.scriptService = scriptService;
+    }
+
+    @PostConstruct
+    public void loadCxProfiles() {
+        if(properties.isAutoProfile() && !ScanUtils.empty(properties.getProfileConfig())) {
+            log.debug("Loading CxProfile: {}", properties.getProfileConfig());
+            File profileConfig = new File(properties.getProfileConfig());
+            ObjectMapper mapper = new ObjectMapper();
+            //if override is provided, check if chars are more than 20 in length, implying base64 encoded json
+            try {
+                CxProfile[] profiles = mapper.readValue(profileConfig, CxProfile[].class);
+                this.profiles = Arrays.asList(profiles);
+            }catch (IOException e){
+                log.warn("No CxProfile found - {}", properties.getProfileConfig());
+            }
+            log.info("Overriding attributes with Base64 encoded String");
+
+        }
     }
 
     public boolean isBranch2Scan(ScanRequest request, List<String> branches){
@@ -125,6 +151,11 @@ public class HelperService {
 
     private String getStringFromFile(String path) throws IOException {
         return new String(Files.readAllBytes(Paths.get(path.intern())));
+    }
+
+    public String getPresetFromSources(Sources sources){
+        log.info("");
+        return "";
     }
 
     private boolean strMatches(String patternStr, String str){

@@ -3,6 +3,7 @@ package com.checkmarx.flow.service;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.dto.Sources;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.flow.utils.ZipUtils;
@@ -168,9 +169,47 @@ public class FlowService {
             //only allow specific chars in project name in checkmarx
             projectName = projectName.replaceAll("[^a-zA-Z0-9-_.]+","-");
             log.info("Project Name being used {}", projectName);
-
+            Integer projectId = UNKNOWN_INT;
+            if(flowProperties.isAutoProfile()) {
+                boolean projectExists = false;
+                projectId = cxService.getProjectId(ownerId, projectName);
+                if(projectId != UNKNOWN_INT) {
+                    int presetId = cxService.getProjectPresetId(projectId);
+                    if(presetId != UNKNOWN_INT){
+                        projectExists = true;
+                        //TODO check if no override
+                        
+                    }
+                }
+                log.debug("Auto profiling is enabled");
+                if(!projectExists) { //TODO override?  Flag no profile based on url param or config as code
+                    log.info("Project is new, profiling source...");
+                    Sources sources = new Sources();
+                    switch (request.getRepoType()) {
+                        case GITHUB:
+                            sources = gitService.getRepoContent(request);
+                            break;
+                        case GITLAB:
+                            break;
+                        case BITBUCKET:
+                            break;
+                        case BITBUCKETSERVER:
+                            break;
+                        case ADO:
+                            break;
+                        default:
+                            break;
+                    }
+                    String preset = helperService.getPresetFromSources(sources);
+                    if (ScanUtils.empty(preset)) {
+                        request.setScanPreset(preset);
+                    }
+                }
+            }
             CxScanParams params = new CxScanParams()
+                    .teamId(ownerId)
                     .withTeamName(request.getTeam())
+                    .projectId(projectId)
                     .withProjectName(projectName)
                     .withGitUrl(request.getRepoUrlWithAuth())
                     .withIncremental(request.isIncremental())
@@ -215,8 +254,9 @@ public class FlowService {
             }
 
             cxService.waitForScanCompletion(scanId);
-            Integer projectId = cxService.getProjectId(ownerId, projectName); //get the project id of the updated or created project
-
+            if(projectId == UNKNOWN_INT) {
+                projectId = cxService.getProjectId(ownerId, projectName); //get the project id of the updated or created project
+            }
             String osaScanId = null;
             if(cxProperties.getEnableOsa()){
                 String path = cxProperties.getGitClonePath().concat("/").concat(UUID.randomUUID().toString());

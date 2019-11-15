@@ -1,15 +1,17 @@
 {
   "version": 1.0,
-  "project": "XYZ-${repo}-${branch}",
-  "team": "/a/b/c",
-  "url": "cx01.whatever.com",
+  "active": false,
+  "cxHost": "cx01.whatever.com",
   "credential": {
     "type": "prompt|plain|enc|external->vault/environment/parameter",
     "username": "ENC(XXXXXXX)",
     "password": "ENC(XXXXXXX)",
     "oidcClient": "ENC(XXXXXXXX)",
-    "oidcClientSecret": "ENC(XXXXXXX)"
+    "oidcClientSecret": "ENC(XXXXXXX)",
+    "scope": ""
   },
+  "project": "XYZ-${repo}-${branch}",
+  "team": "/a/b/c",
   "policy":"",
   "customFields":{
     "key":"value",
@@ -18,8 +20,8 @@
   "sast": {
     "preset": "",
     "engineConfiguration": "",
-    "incremental": "true|false",
-    "forceScan" : "true",
+    "incremental": true,
+    "forceScan" : true,
     "fileExcludes": "",
     "folderExcludes": ""
   },
@@ -39,7 +41,8 @@
           "username": "ENC(XXXXXXX)",
           "password": "ENC(XXXXXXX)",
           "oidcClient": "ENC(XXXXXXXX)",
-          "oidcClientSecret": "ENC(XXXXXXX)"
+          "oidcClientSecret": "ENC(XXXXXXX)",
+          "scope": ""
         },
         "project": "APPSEC",
         "issue_type": "Bug",
