@@ -22,6 +22,9 @@ public class FlowProperties {
     private List<String> filterCwe;
     private List<String> filterCategory;
     private List<String> filterStatus;
+    private boolean autoProfile = false;
+    private Integer getProfilingDepth = 1;
+    private String profileConfig = "cx-profile.json";
     private boolean trackApplicationOnly = false;
     private boolean ApplicationRepoOnly = false;
     private String branchScript;
@@ -205,6 +208,38 @@ public class FlowProperties {
         this.httpReadTimeout = httpReadTimeout;
     }
 
+    public boolean isApplicationRepoOnly() {
+        return ApplicationRepoOnly;
+    }
+
+    public void setApplicationRepoOnly(boolean ApplicationRepoOnly) {
+        this.ApplicationRepoOnly = ApplicationRepoOnly;
+    }
+
+    public boolean isAutoProfile() {
+        return autoProfile;
+    }
+
+    public void setAutoProfile(boolean autoProfile) {
+        this.autoProfile = autoProfile;
+    }
+
+    public Integer getGetProfilingDepth() {
+        return getProfilingDepth;
+    }
+
+    public void setGetProfilingDepth(Integer getProfilingDepth) {
+        this.getProfilingDepth = getProfilingDepth;
+    }
+
+    public String getProfileConfig() {
+        return profileConfig;
+    }
+
+    public void setProfileConfig(String profileConfig) {
+        this.profileConfig = profileConfig;
+    }
+
     public static class Mail {
         private String host;
         private Integer port = 25;
@@ -254,12 +289,4 @@ public class FlowProperties {
 
     }
 
-    public boolean isApplicationRepoOnly() {
-        return ApplicationRepoOnly;
-    }
-
-    public void setApplicationRepoOnly(boolean ApplicationRepoOnly) {
-        this.ApplicationRepoOnly = ApplicationRepoOnly;
-    }
-    
 }

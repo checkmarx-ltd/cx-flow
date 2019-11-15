@@ -6,8 +6,6 @@ public class RepoProperties {
     private String token;
     private String url;
     private String apiUrl;
-    private boolean autoProfile = false;
-    private Integer profilingDepth = 1;
     private String falsePositiveLabel = "false-positive";
     private String configAsCode = "cx.config";
     private String openTransition = "open";
@@ -157,19 +155,4 @@ public class RepoProperties {
         this.cxSummaryHeader = cxSummaryHeader;
     }
 
-    public boolean isAutoProfile() {
-        return autoProfile;
-    }
-
-    public void setAutoProfile(boolean autoProfile) {
-        this.autoProfile = autoProfile;
-    }
-
-    public Integer getProfilingDepth() {
-        return profilingDepth;
-    }
-
-    public void setProfilingDepth(Integer profilingDepth) {
-        this.profilingDepth = profilingDepth;
-    }
 }
