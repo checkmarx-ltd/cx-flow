@@ -1,0 +1,22 @@
+[{
+  "name:": "Xxx",
+  "preset": "Checkmarx Express",
+  "files": ["Web.config",".*web\\.xml"],
+  "weight": [
+    {"type":  "Java", "weight": 1},
+    {"type":  "C#", "weight": 1},
+    {"type":  "HTML", "weight": 1},
+    {"type":  "Kotlin", "weight": 1}
+  ]
+},
+{
+  "name:": "Xxx",
+  "preset": "Checkmarx Express",
+  "weight": [
+    {"type":  "Kotlin", "weight": 1}
+  ]
+},
+{
+  "name:": "DEFAULT",
+  "preset": "Checkmarx Express"
+}]

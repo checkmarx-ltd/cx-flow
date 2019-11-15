@@ -21,7 +21,6 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
-
 import javax.annotation.PostConstruct;
 import java.util.*;
 
@@ -138,6 +137,7 @@ public class GitHubService extends RepoService {
 
     @Override
     public Sources getRepoContent(ScanRequest request) {
+        log.debug("Auto profiling is enabled");
         Sources sources = getRepoLanguagePercentages(request);
         String endpoint = properties.getApiUrl().concat(REPO_CONTENT);
         endpoint = endpoint.replace("{namespace}", request.getNamespace());
@@ -221,7 +221,7 @@ public class GitHubService extends RepoService {
 
 
     private void scanGitContent(int depth, String endpoint, Sources sources){
-        if(depth >= properties.getProfilingDepth()){
+        if(depth >= flowProperties.getGetProfilingDepth()){
             return;
         }
         List<Content> contents = getRepoContent(endpoint);
@@ -275,4 +275,5 @@ public class GitHubService extends RepoService {
         }
         return null;
     }
+
 }
