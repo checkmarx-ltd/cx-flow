@@ -1,6 +1,6 @@
 buildscript {
 	ext {
-		springBootVersion = '2.1.9.RELEASE'
+		springBootVersion = '2.2.1.RELEASE'
         sonarqubeVersion = '2.8'
         atlassianVersion = "5.1.6"
         atlassianFugueVersion = "4.7.2"
