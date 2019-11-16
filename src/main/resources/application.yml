@@ -15,16 +15,18 @@ server:
 #        include: "shutdown,beans,env,info,health"
 
 logging:
-  file: cx-flow.log
   pattern:
     console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{15}){cyan}  [%clr(%X{cx}){blue}] %clr(:){faint} %m%n%wEx"
     file: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{15}){cyan}  [%clr(%X{cx}){blue}] %clr(:){faint} %m%n%wEx"
+  file:
+    name: cx-flow.log
 
 #  level:
 #    com:
 #      checkmarx:
 #        flow:
-#          service: TRACE
+#          service: info
+#          utils: info
 #    org:
 #      apache:
 #        http:
