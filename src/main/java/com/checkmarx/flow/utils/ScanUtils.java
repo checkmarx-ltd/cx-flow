@@ -357,7 +357,7 @@ public class ScanUtils {
         StringBuilder body = new StringBuilder();
         body.append("### Checkmarx scan completed").append(CRLF);
         body.append("[Full Scan Details](").append(results.getLink()).append(")").append(CRLF);
-        if(properties.isCxSummary()){
+        if(properties.isCxSummary() && !request.getProduct().equals(ScanRequest.Product.CXOSA)){
             if(!ScanUtils.empty(properties.getCxSummaryHeader())) {
                 body.append("#### ").append(properties.getCxSummaryHeader()).append(CRLF);
             }
@@ -375,8 +375,10 @@ public class ScanUtils {
             body.append("Severity|Count").append(CRLF);
             body.append("---|---").append(CRLF);
             Map<String, Integer> flow = (Map<String, Integer>) results.getAdditionalDetails().put(Constants.SUMMARY_KEY, summary);
-            for(Map.Entry<String, Integer> severity : flow.entrySet()){
-                body.append(severity.getKey()).append("|").append(severity.getValue().toString()).append(CRLF);
+            if(flow != null) {
+                for (Map.Entry<String, Integer> severity : flow.entrySet()) {
+                    body.append(severity.getKey()).append("|").append(severity.getValue().toString()).append(CRLF);
+                }
             }
             body.append(CRLF);
         }
