@@ -1,5 +1,6 @@
 logging:
-  file: cx-flow.log
+  file:
+    name: cx-flow.log
 
 cx-flow:
   # Agreed upon shared API token

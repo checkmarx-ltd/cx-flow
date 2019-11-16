@@ -11,14 +11,12 @@ import com.checkmarx.flow.dto.github.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.service.FlowService;
-import com.checkmarx.flow.service.GitHubService;
 import com.checkmarx.flow.service.HelperService;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
-import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.Filter;
-import com.checkmarx.sdk.exception.CheckmarxException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
@@ -63,18 +61,18 @@ public class GitHubController {
     private final JiraProperties jiraProperties;
     private final FlowService flowService;
     private final HelperService helperService;
-    private final GitHubService gitHubService;
     private Mac hmac;
 
+    @ConstructorProperties({"properties", "flowProperties", "cxProperties",
+            "jiraProperties", "flowService", "helperService"})
     public GitHubController(GitHubProperties properties, FlowProperties flowProperties, CxProperties cxProperties,
-                            JiraProperties jiraProperties, FlowService flowService, HelperService helperService, GitHubService gitHubService) {
+                            JiraProperties jiraProperties, FlowService flowService, HelperService helperService) {
         this.properties = properties;
         this.flowProperties = flowProperties;
         this.cxProperties = cxProperties;
         this.jiraProperties = jiraProperties;
         this.flowService = flowService;
         this.helperService = helperService;
-        this.gitHubService = gitHubService;
     }
 
     @PostConstruct
@@ -132,6 +130,7 @@ public class GitHubController {
         PullEvent event;
         ObjectMapper mapper = new ObjectMapper();
         MachinaOverride o = ScanUtils.getMachinaOverride(override);
+
         try {
             event = mapper.readValue(body, PullEvent.class);
         } catch (IOException e) {
@@ -237,7 +236,6 @@ public class GitHubController {
                     .filters(filters)
                     .build();
 
-            CxConfig configOverride = gitHubService.getCxConfigOverride(request);
             request = ScanUtils.overrideMap(request, o);
             request.putAdditionalMetadata("statuses_url", event.getPullRequest().getStatusesUrl());
             request.setId(uid);
@@ -247,9 +245,10 @@ public class GitHubController {
             }
 
 
-        }catch (IllegalArgumentException | CheckmarxException e){
-            String errorMessage = "Error submitting Scan Request.  Please check that Product or Bugtracker option is correct ".concat(product != null ? product : "").concat(" | ").concat(bug != null ? bug : "");
+        }catch (IllegalArgumentException e){
+            String errorMessage = "Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product != null ? product : "").concat(" | ").concat(bug != null ? bug : "");
             log.error(errorMessage);
+            ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
                     .message(errorMessage)
@@ -261,6 +260,7 @@ public class GitHubController {
                 .message("Scan Request Successfully Submitted")
                 .success(true)
                 .build());
+
     }
 
     /**
@@ -297,7 +297,7 @@ public class GitHubController {
 
         try {
             event = mapper.readValue(body, PushEvent.class);
-        } catch (NullPointerException | IOException e) {
+        } catch (NullPointerException | IOException | IllegalArgumentException e) {
             log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaRuntimeException();
         }

@@ -1,5 +1,6 @@
 buildscript {
 	ext {
+        CxSBSDK = "0.3.9"
 		springBootVersion = '2.2.1.RELEASE'
         sonarqubeVersion = '2.8'
         atlassianVersion = "5.1.6"
@@ -28,10 +29,11 @@ apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
 
 group = 'com.checkmarx'
-version = '1.5.0'
+version = '1.4.7'
 sourceCompatibility = 1.8
 
 repositories {
+    mavenLocal()
 	mavenCentral()
     maven {
         url = 'https://packages.atlassian.com/mvn/maven-external'
@@ -42,7 +44,7 @@ dependencies {
 	compile('org.springframework.boot:spring-boot-starter-actuator')
 	compile('org.springframework.boot:spring-boot-starter-web')
     compile('org.springframework.boot:spring-boot-starter-aop')
-    compile('com.github.checkmarx-ts:cx-spring-boot-sdk:0.4.0')
+    compile("com.github.checkmarx-ts:cx-spring-boot-sdk:${CxSBSDK}")
     compile ('commons-codec:commons-codec:1.13')
     compile ('commons-io:commons-io:2.6')
     compile ('org.json:json:20190722')
