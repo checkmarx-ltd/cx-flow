@@ -178,10 +178,12 @@ public class ResultsService {
             default:
                 log.warn("No valid bug type was provided");
         }
-        log.info("####Checkmarx Scan Results Summary####");
-        log.info(results.getScanSummary().toString());
-        log.info("To veiw results: {}", results.getLink());
-        log.info("######################################");
+        if(results != null && results.getScanSummary() != null) {
+            log.info("####Checkmarx Scan Results Summary####");
+            log.info(results.getScanSummary().toString());
+            log.info("To veiw results: {}", results.getLink());
+            log.info("######################################");
+        }
     }
 
     /**
