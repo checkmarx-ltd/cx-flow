@@ -29,7 +29,7 @@ apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
 
 group = 'com.checkmarx'
-version = '1.4.6'
+version = '1.4.7'
 sourceCompatibility = 1.8
 
 repositories {
