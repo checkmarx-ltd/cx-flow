@@ -1,6 +1,7 @@
 buildscript {
 	ext {
-		springBootVersion = '2.1.9.RELEASE'
+        CxSBSDK = "0.3.9"
+		springBootVersion = '2.2.1.RELEASE'
         sonarqubeVersion = '2.8'
         atlassianVersion = "5.1.6"
         atlassianFugueVersion = "4.7.2"
@@ -43,7 +44,7 @@ dependencies {
 	compile('org.springframework.boot:spring-boot-starter-actuator')
 	compile('org.springframework.boot:spring-boot-starter-web')
     compile('org.springframework.boot:spring-boot-starter-aop')
-    compile('com.github.checkmarx-ts:cx-spring-boot-sdk:0.3.8')
+    compile("com.github.checkmarx-ts:cx-spring-boot-sdk:${CxSBSDK}")
     compile ('commons-codec:commons-codec:1.13')
     compile ('commons-io:commons-io:2.6')
     compile ('org.json:json:20190722')
