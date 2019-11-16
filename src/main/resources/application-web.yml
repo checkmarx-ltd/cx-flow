@@ -1,13 +1,16 @@
 server:
-  port: ${PORT:8080}
+  port: ${PORT:8585}
 
 logging:
-  file: cx-flow.log
+  file:
+    name: cx-flow.log
 #  level:
 #    com:
 #      checkmarx:
 #        flow:
+#          cmd: TRACE
 #          service: TRACE
+#          controller: TRACE
 #    org:
 #      apache:
 #        http:
