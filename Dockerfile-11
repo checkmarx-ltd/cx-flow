@@ -1,6 +1,6 @@
 FROM openjdk:11
 VOLUME /tmp
-ADD build/libs/cx-flow-11-1.4.6.jar //
+ADD build/libs/cx-flow-11-1.4.7.jar //
 ENTRYPOINT ["/usr/local/openjdk-11/bin/java"]
-CMD ["-Xms512m", "-Xmx2048m","-Djava.security.egd=file:/dev/./urandom", "-Dspring.profiles.active=web", "-jar", "/cx-flow-11-1.4.6.jar"]
+CMD ["-Xms512m", "-Xmx2048m","-Djava.security.egd=file:/dev/./urandom", "-Dspring.profiles.active=web", "-jar", "/cx-flow-11-1.4.7.jar"]
 EXPOSE 8080:8080
