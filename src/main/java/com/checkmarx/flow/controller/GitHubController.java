@@ -16,6 +16,7 @@ import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.Filter;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
@@ -296,7 +297,7 @@ public class GitHubController {
 
         try {
             event = mapper.readValue(body, PushEvent.class);
-        } catch (NullPointerException | IOException e) {
+        } catch (NullPointerException | IOException | IllegalArgumentException e) {
             log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaRuntimeException();
         }
