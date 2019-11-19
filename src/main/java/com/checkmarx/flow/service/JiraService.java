@@ -845,7 +845,7 @@ public class JiraService {
     Map<String, List<String>> process(ScanResults results, ScanRequest request) throws JiraClientException {
         Map<String, ScanResults.XIssue> map;
         Map<String, Issue> jiraMap;
-        List<Issue> IssuesParent;
+        List<Issue> issuesParent;
         List<String> newIssues = new ArrayList<>();
         List<String> updatedIssues = new ArrayList<>();
         List<String> closedIssues = new ArrayList<>();
@@ -855,9 +855,9 @@ public class JiraService {
             bugTracker = Parent.getBugTracker();
             bugTracker.setProjectKey(ParentUrl);
             Parent.setBugTracker(bugTracker);
-            IssuesParent = this.getIssues(Parent);
+            issuesParent = this.getIssues(Parent);
         } else {
-            IssuesParent = this.getIssues(request);
+            issuesParent = this.getIssues(request);
 
         }
 
@@ -896,7 +896,7 @@ public class JiraService {
                     }
                 } else {
                     /*Create the new issue*/
-                    if (!jiraProperties.isChild() || !ParentCheck(xIssue.getKey(), IssuesParent)) {
+                    if (!jiraProperties.isChild() || !parentCheck(xIssue.getKey(), issuesParent)) {
 
                         if (jiraProperties.isChild()) {
                             log.info("Issue not found in parent creating issue for child");
@@ -940,9 +940,9 @@ public class JiraService {
         );
     }
 
-    boolean ParentCheck(String Key, List<Issue> Issues) {
+    boolean parentCheck(String Key, List<Issue> issues) {
         Map<String, Issue> jiraMap;
-        jiraMap = this.getJiraIssueMap(Issues);
+        jiraMap = this.getJiraIssueMap(issues);
         if (this.jiraProperties.isChild()) {
 
             if (jiraMap.containsKey(Key)) {
