@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.Map;
 
 public class Sources {
-    List<Source> sources;
-    Map<String, Integer> languageStats;
+    private List<Source> sources;
+    private Map<String, Integer> languageStats;
 
     public List<Source> getSources() {
         return sources;

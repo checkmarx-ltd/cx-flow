@@ -67,7 +67,7 @@ public class GitHubService extends RepoService {
             log.debug("comment: {}", comment);
             sendMergeComment(request, comment);
         } catch (HttpClientErrorException e){
-            log.error("Error occurred while creating Merge Request comment");
+            log.error("Error occurred while creating Merge Request comment: {}", ExceptionUtils.getRootCauseMessage(e));
             throw new GitHubClientException();
         }
     }
@@ -179,7 +179,6 @@ public class GitHubService extends RepoService {
                 for (Map.Entry<String,Long> entry : langs.entrySet()){
                     Long bytes = entry.getValue();
                     Double percentage = (Double.valueOf(bytes) / Double.valueOf(total) * 100);
-                    //Integer percentage = Math.toIntExact(Math.floorDiv(bytes, total)*100);
                     langsPercent.put(entry.getKey(), percentage.intValue());
                 }
                 sources.setLanguageStats(langsPercent);
@@ -269,8 +268,7 @@ public class GitHubService extends RepoService {
             log.info("No Config As code was found [{}]", properties.getConfigAsCode());
         }catch (HttpClientErrorException e){
             log.error(ExceptionUtils.getRootCauseMessage(e));
-        }
-        catch (Exception e){
+        }catch (Exception e){
             log.error(ExceptionUtils.getRootCauseMessage(e));
         }
         return null;
