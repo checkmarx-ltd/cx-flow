@@ -209,11 +209,11 @@ public class FlowProperties {
     }
 
     public boolean isApplicationRepoOnly() {
-        return ApplicationRepoOnly;
+        return applicationRepoOnly;
     }
 
-    public void setApplicationRepoOnly(boolean ApplicationRepoOnly) {
-        this.ApplicationRepoOnly = ApplicationRepoOnly;
+    public void setApplicationRepoOnly(boolean applicationRepoOnly) {
+        this.applicationRepoOnly = applicationRepoOnly;
     }
 
     public boolean isAutoProfile() {
