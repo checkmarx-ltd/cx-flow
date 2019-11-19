@@ -2,7 +2,6 @@ package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.CxProfile;
-import com.checkmarx.flow.dto.MachinaOverride;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.Sources;
 import com.checkmarx.flow.utils.ScanUtils;
@@ -13,7 +12,6 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
-
 import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
@@ -22,6 +20,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -48,13 +47,11 @@ public class HelperService {
             ObjectMapper mapper = new ObjectMapper();
             //if override is provided, check if chars are more than 20 in length, implying base64 encoded json
             try {
-                CxProfile[] profiles = mapper.readValue(profileConfig, CxProfile[].class);
-                this.profiles = Arrays.asList(profiles);
+                CxProfile[] cxProfiles = mapper.readValue(profileConfig, CxProfile[].class);
+                this.profiles = Arrays.asList(cxProfiles);
             }catch (IOException e){
                 log.warn("No CxProfile found - {}", properties.getProfileConfig());
             }
-            log.info("Overriding attributes with Base64 encoded String");
-
         }
     }
 
@@ -139,6 +136,7 @@ public class HelperService {
         }
         return null;  //null will indicate no override of team will take place
     }
+
     public String getShortUid(ScanRequest request){
         String uid = RandomStringUtils.random(Constants.SHORT_ID_LENGTH, true, true) ;
         request.setId(uid);
@@ -153,11 +151,105 @@ public class HelperService {
         return new String(Files.readAllBytes(Paths.get(path.intern())));
     }
 
+    /**
+     * Determine what preset to use based on Sources and Profile mappings
+     * @param sources
+     * @return
+     */
     public String getPresetFromSources(Sources sources){
-        log.info("");
-        return "";
+        if(sources == null || profiles == null){
+            return cxProperties.getScanPreset();
+        }
+
+        for(CxProfile p: profiles){
+            log.debug(p.toString());
+            if(p.getName().equalsIgnoreCase("default")){ //This should be the last profile
+                log.info("Using default preset {}", p.getPreset());
+                return p.getPreset();
+            }
+            if(checkProfile(p, sources)){
+                log.info("Using preset {} based on profile {}", p.getPreset(), p.getName());
+                return p.getPreset();
+            }
+        }
+        return null;
     }
 
+    private boolean checkProfile(CxProfile profile, Sources sources){
+        log.debug("Evaluating profile {}", profile.getName());
+        //check for matching files
+        if(!checkFileRegex(sources.getSources(), profile.getFiles())){
+            return false;
+        }
+        if(profile.getWeight() == null || profile.getWeight().isEmpty()){
+            return true;
+        }
+        if(sources.getLanguageStats() != null && !sources.getLanguageStats().isEmpty()) {
+            for (Map.Entry<String, Integer> langs : sources.getLanguageStats().entrySet()) {
+                if(!checkSourceWeight(langs, profile.getWeight())){
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private boolean checkSourceWeight(Map.Entry<String, Integer> language, List<CxProfile.Weight> weights){
+        if(language == null
+                || language.getKey().isEmpty()
+                || language.getValue() == null
+                || weights == null
+                || weights.isEmpty()
+        ){
+            return true;
+        }
+        for(CxProfile.Weight w: weights){
+            if(language.getKey().equalsIgnoreCase(w.getType()) && (language.getValue() < w.getWeight())){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Go through each possible pattern and determine if a match exists within the Sources list
+     * @param sources
+     * @param regex
+     * @return
+     */
+    private boolean checkFileRegex(List<Sources.Source> sources, List<String> regex){
+        if(sources == null || sources.isEmpty() || regex == null || regex.isEmpty()){
+            return true;
+        }
+        for(String r: regex){
+            if(!strListMatches(sources, r)){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Go through list of Sources (file names/paths) and determine if a match exists with a pattern
+     * @param sources
+     * @param patternStr
+     * @return
+     */
+    private boolean strListMatches(List<Sources.Source> sources, String patternStr){
+        for(Sources.Source s: sources) {
+            if (strMatches(patternStr, s.getPath())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Regex String match
+     * @param patternStr
+     * @param str
+     * @return
+     */
     private boolean strMatches(String patternStr, String str){
         Pattern pattern = Pattern.compile(patternStr);
         Matcher matcher = pattern.matcher(str);
