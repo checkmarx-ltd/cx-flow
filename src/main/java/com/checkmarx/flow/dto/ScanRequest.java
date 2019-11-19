@@ -33,6 +33,7 @@ public class ScanRequest {
     private List<String> email;
     private boolean incremental;
     private String scanPreset;
+    private boolean scanPresetOverride = false;
     private List<String> excludeFiles;
     private List<String> excludeFolders;
     private Repository repoType;
@@ -327,6 +328,14 @@ public class ScanRequest {
 
     public void setScanPreset(String scanPreset) {
         this.scanPreset = scanPreset;
+    }
+
+    public boolean isScanPresetOverride() {
+        return scanPresetOverride;
+    }
+
+    public void setScanPresetOverride(boolean scanPresetOverride) {
+        this.scanPresetOverride = scanPresetOverride;
     }
 
     public void setExcludeFiles(List<String> excludeFiles) {
