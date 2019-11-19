@@ -170,19 +170,20 @@ public class FlowService {
             projectName = projectName.replaceAll("[^a-zA-Z0-9-_.]+","-");
             log.info("Project Name being used {}", projectName);
             Integer projectId = UNKNOWN_INT;
-            if(flowProperties.isAutoProfile()) {
+            if(flowProperties.isAutoProfile() && !request.isScanPresetOverride()) {
                 boolean projectExists = false;
                 projectId = cxService.getProjectId(ownerId, projectName);
                 if(projectId != UNKNOWN_INT) {
                     int presetId = cxService.getProjectPresetId(projectId);
                     if(presetId != UNKNOWN_INT){
+                        String preset = cxService.getPresetName(presetId);
+                        request.setScanPreset(preset);
                         projectExists = true;
-                        //TODO check if no override
-                        
                     }
                 }
                 log.debug("Auto profiling is enabled");
-                if(!projectExists) { //TODO override?  Flag no profile based on url param or config as code
+                //TODO force profile with existing project/preset
+                if(!projectExists) {
                     log.info("Project is new, profiling source...");
                     Sources sources = new Sources();
                     switch (request.getRepoType()) {
@@ -201,7 +202,7 @@ public class FlowService {
                             break;
                     }
                     String preset = helperService.getPresetFromSources(sources);
-                    if (ScanUtils.empty(preset)) {
+                    if (!ScanUtils.empty(preset)) {
                         request.setScanPreset(preset);
                     }
                 }
@@ -211,9 +212,9 @@ public class FlowService {
                     .withTeamName(request.getTeam())
                     .projectId(projectId)
                     .withProjectName(projectName)
+                    .withScanPreset(request.getScanPreset())
                     .withGitUrl(request.getRepoUrlWithAuth())
                     .withIncremental(request.isIncremental())
-                    .withScanPreset(request.getScanPreset())
                     .withFileExclude(request.getExcludeFiles())
                     .withFolderExclude(request.getExcludeFolders());
             if(!com.checkmarx.sdk.utils.ScanUtils.empty(request.getBranch())){
