@@ -157,7 +157,7 @@ public class HelperService {
      * @return
      */
     public String getPresetFromSources(Sources sources){
-        if(sources == null || profiles == null){
+        if(sources == null || profiles == null || sources.getLanguageStats() == null || sources.getSources() == null){
             return cxProperties.getScanPreset();
         }
 

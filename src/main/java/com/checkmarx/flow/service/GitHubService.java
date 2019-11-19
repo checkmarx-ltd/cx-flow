@@ -84,7 +84,7 @@ public class GitHubService extends RepoService {
                     createAuthHeaders()
             );
             if(ScanUtils.empty(request.getAdditionalMetadata("statuses_url"))){
-                log.error("statuses_url was not provided within the request object, which is required for blocking / unblocking pull requests");
+                log.warn("statuses_url was not provided within the request object, which is required for blocking / unblocking pull requests");
                 return;
             }
             restTemplate.exchange(request.getAdditionalMetadata("statuses_url"),
@@ -138,6 +138,9 @@ public class GitHubService extends RepoService {
     @Override
     public Sources getRepoContent(ScanRequest request) {
         log.debug("Auto profiling is enabled");
+        if(ScanUtils.anyEmpty(request.getNamespace(), request.getRepoName(), request.getBranch())){
+            return null;
+        }
         Sources sources = getRepoLanguagePercentages(request);
         String endpoint = properties.getApiUrl().concat(REPO_CONTENT);
         endpoint = endpoint.replace("{namespace}", request.getNamespace());
@@ -182,7 +185,6 @@ public class GitHubService extends RepoService {
                     langsPercent.put(entry.getKey(), percentage.intValue());
                 }
                 sources.setLanguageStats(langsPercent);
-                return sources;
             }
         }catch (NullPointerException e){
             log.warn("Content not found in JSON response");
@@ -191,7 +193,7 @@ public class GitHubService extends RepoService {
         }catch (HttpClientErrorException e){
             log.error(ExceptionUtils.getRootCauseMessage(e));
         }
-        return null;
+        return sources;
     }
 
     private List<Content> getRepoContent(String endpoint) {
