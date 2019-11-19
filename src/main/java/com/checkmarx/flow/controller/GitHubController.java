@@ -205,9 +205,7 @@ public class GitHubController {
             gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(token).concat("@"));
 
             String scanPreset = cxProperties.getScanPreset();
-            if(!ScanUtils.empty(preset)){
-                scanPreset = preset;
-            }
+
             boolean inc = cxProperties.getIncremental();
             if(incremental != null){
                 inc = incremental;
@@ -235,6 +233,11 @@ public class GitHubController {
                     .bugTracker(bt)
                     .filters(filters)
                     .build();
+
+            if(!ScanUtils.empty(preset)){
+                request.setScanPreset(preset);
+                request.setScanPresetOverride(true);
+            }
 
             request = ScanUtils.overrideMap(request, o);
             request.putAdditionalMetadata("statuses_url", event.getPullRequest().getStatusesUrl());
@@ -379,9 +382,6 @@ public class GitHubController {
             gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(token).concat("@"));
 
             String scanPreset = cxProperties.getScanPreset();
-            if(!ScanUtils.empty(preset)){
-                scanPreset = preset;
-            }
 
             boolean inc = cxProperties.getIncremental();
             if(incremental != null){
@@ -408,6 +408,11 @@ public class GitHubController {
                     .bugTracker(bt)
                     .filters(filters)
                     .build();
+
+            if(!ScanUtils.empty(preset)){
+                request.setScanPreset(preset);
+                request.setScanPresetOverride(true);
+            }
 
             //if an override blob/file is provided, substitute these values
             request = ScanUtils.overrideMap(request, o);
