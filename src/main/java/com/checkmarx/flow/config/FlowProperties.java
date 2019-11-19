@@ -24,9 +24,9 @@ public class FlowProperties {
     private List<String> filterStatus;
     private boolean autoProfile = false;
     private Integer getProfilingDepth = 1;
-    private String profileConfig = "cx-profile.json";
+    private String profileConfig = "CxProfile.json";
     private boolean trackApplicationOnly = false;
-    private boolean ApplicationRepoOnly = false;
+    private boolean applicationRepoOnly = false;
     private String branchScript;
     private String mitreUrl;
     private String wikiUrl;
