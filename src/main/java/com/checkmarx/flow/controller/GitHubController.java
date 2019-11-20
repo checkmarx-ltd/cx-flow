@@ -11,6 +11,7 @@ import com.checkmarx.flow.dto.github.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.service.FlowService;
+import com.checkmarx.flow.service.GitHubService;
 import com.checkmarx.flow.service.HelperService;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
@@ -63,10 +64,14 @@ public class GitHubController {
     private final HelperService helperService;
     private Mac hmac;
 
-    @ConstructorProperties({"properties", "flowProperties", "cxProperties",
-            "jiraProperties", "flowService", "helperService"})
-    public GitHubController(GitHubProperties properties, FlowProperties flowProperties, CxProperties cxProperties,
-                            JiraProperties jiraProperties, FlowService flowService, HelperService helperService) {
+
+    public GitHubController(GitHubProperties properties,
+                            FlowProperties flowProperties,
+                            CxProperties cxProperties,
+                            JiraProperties jiraProperties,
+                            FlowService flowService,
+                            HelperService helperService,
+                            GitHubService gitHubService) {
         this.properties = properties;
         this.flowProperties = flowProperties;
         this.cxProperties = cxProperties;
