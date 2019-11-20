@@ -191,6 +191,7 @@ public class FlowService {
                             sources = gitService.getRepoContent(request);
                             break;
                         case GITLAB:
+                            sources = gitLabService.getRepoContent(request);
                             break;
                         case BITBUCKET:
                             break;
