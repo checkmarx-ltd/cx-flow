@@ -45,10 +45,13 @@ public class GitLabController {
     private final JiraProperties jiraProperties;
     private final FlowProperties flowProperties;
 
-    @ConstructorProperties({"flowService", "helperService", "properties",
-            "cxProperties", "jiraProperties", "flowProperties"})
-    public GitLabController(FlowService flowService, HelperService helperService, GitLabProperties properties,
-                            CxProperties cxProperties, JiraProperties jiraProperties, FlowProperties flowProperties) {
+    public GitLabController(FlowService flowService,
+                            HelperService helperService,
+                            GitLabProperties properties,
+                            CxProperties cxProperties,
+                            JiraProperties jiraProperties,
+                            FlowProperties flowProperties,
+                            GitLabService gitLabService) {
         this.flowService = flowService;
         this.helperService = helperService;
         this.properties = properties;
