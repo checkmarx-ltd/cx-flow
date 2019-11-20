@@ -3,11 +3,15 @@ package com.checkmarx.flow.service;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitLabProperties;
 import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.dto.Sources;
 import com.checkmarx.flow.dto.gitlab.Note;
 import com.checkmarx.flow.exception.GitLabClientException;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
+import com.checkmarx.sdk.exception.CheckmarxException;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -21,17 +25,19 @@ import org.springframework.web.client.RestTemplate;
 import java.beans.ConstructorProperties;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 @Service
-public class GitLabService {
+public class GitLabService extends RepoService {
 
     private static final String PROJECT = "/projects/{namespace}{x}{repo}";
     public static final String MERGE_NOTE_PATH = "/projects/{id}/merge_requests/{iid}/notes";
     public static final String MERGE_PATH = "/projects/{id}/merge_requests/{iid}";
     public static final String COMMIT_PATH = "/projects/{id}/repository/commits/{sha}/comments";
+    private static final String FILE_CONTENT = "/projects/{id}/repository/files/{config}?ref={branch}";
+    private static final String LANGUAGE_TYPES = "/projects/{id}/languages";
+    private static final String REPO_CONTENT = "/projects/{id}/repository/tree?ref={branch}";
     private static final int UNKNOWN_INT = -1;
     private static final Logger log = LoggerFactory.getLogger(GitLabService.class);
     private final RestTemplate restTemplate;
@@ -179,4 +185,119 @@ public class GitLabService {
         requestBody.put("title", title);
         return requestBody;
     }
+
+    @Override
+    public Sources getRepoContent(ScanRequest request) {
+        log.debug("Auto profiling is enabled");
+        if(ScanUtils.empty(request.getBranch()) || request.getRepoProjectId() == null){
+            return null;
+        }
+        Sources sources = getRepoLanguagePercentages(request);
+        scanGitContent(sources, request);
+        return sources;
+    }
+
+    private Sources getRepoLanguagePercentages(ScanRequest request) {
+        Sources sources = new Sources();
+        Map<String, Integer> langs = new HashMap<>();
+        HttpHeaders headers = createAuthHeaders();
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(
+                    properties.getApiUrl().concat(LANGUAGE_TYPES),
+                    HttpMethod.GET,
+                    new HttpEntity(headers),
+                    String.class,
+                    request.getRepoProjectId()
+            );
+            if(response.getBody() == null){
+                log.warn("HTTP Body is null for content api ");
+            }
+            else {
+                JSONObject json = new JSONObject(response.getBody());
+                Iterator<String> keys = json.keys();
+                while(keys.hasNext()) {
+                    String key = keys.next();
+                    double bytes = json.getDouble(key);
+                    langs.put(key, (int)Math.ceil(bytes));
+                }
+                sources.setLanguageStats(langs);
+            }
+        }catch (NullPointerException e){
+            log.warn("Content not found in JSON response");
+        }catch (HttpClientErrorException.NotFound e){
+            log.error(ExceptionUtils.getStackTrace(e));
+        }catch (HttpClientErrorException e){
+            log.error(ExceptionUtils.getRootCauseMessage(e));
+        }
+        return sources;
+    }
+
+    private void scanGitContent(Sources sources, ScanRequest request){
+        HttpHeaders headers = createAuthHeaders();
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(
+                    properties.getApiUrl().concat(REPO_CONTENT),
+                    HttpMethod.GET,
+                    new HttpEntity(headers),
+                    String.class,
+                    request.getRepoProjectId(),
+                    request.getBranch()
+            );
+            if(response.getBody() == null){
+                log.warn("HTTP Body is null for content api ");
+            }
+            JSONArray files = new JSONArray(response.getBody());
+            for(int i = 0; i < files.length(); i++){
+                JSONObject file = files.getJSONObject(i);
+                String f = file.getString("name");
+                String path = file.getString("path");
+                sources.addSource(path, f);
+            }
+        }catch (NullPointerException e){
+            log.warn("Content not found in JSON response");
+        }catch (HttpClientErrorException.NotFound e){
+            log.error(ExceptionUtils.getStackTrace(e));
+        }catch (HttpClientErrorException e){
+            log.error(ExceptionUtils.getRootCauseMessage(e));
+        }
+    }
+
+    @Override
+    public CxConfig getCxConfigOverride(ScanRequest request) throws CheckmarxException {
+        HttpHeaders headers = createAuthHeaders();
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(
+                    properties.getApiUrl().concat(FILE_CONTENT),
+                    HttpMethod.GET,
+                    new HttpEntity(headers),
+                    String.class,
+                    request.getRepoProjectId(),
+                    properties.getConfigAsCode(),
+                    request.getBranch()
+            );
+            if(response.getBody() == null){
+                log.warn("HTTP Body is null for content api ");
+            }
+            else {
+                JSONObject json = new JSONObject(response.getBody());
+                String content = json.getString("content");
+                if(ScanUtils.empty(content)){
+                    log.warn("Content not found in JSON response");
+                    return null;
+                }
+                String decodedContent = new String(Base64.getDecoder().decode(content.trim()));
+                return com.checkmarx.sdk.utils.ScanUtils.getConfigAsCode(decodedContent);
+            }
+        }catch (NullPointerException e){
+            log.warn("Content not found in JSON response");
+        }catch (HttpClientErrorException.NotFound e){
+            log.info("No Config As code was found [{}]", properties.getConfigAsCode());
+        }catch (HttpClientErrorException e){
+            log.error(ExceptionUtils.getRootCauseMessage(e));
+        }catch (Exception e){
+            log.error(ExceptionUtils.getRootCauseMessage(e));
+        }
+        return null;
+    }
+
 }
