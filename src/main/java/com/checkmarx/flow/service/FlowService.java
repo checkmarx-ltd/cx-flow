@@ -182,8 +182,7 @@ public class FlowService {
                     }
                 }
                 log.debug("Auto profiling is enabled");
-                //TODO force profile with existing project/preset
-                if(!projectExists) {
+                if(!projectExists || flowProperties.isAlwaysProfile()) {
                     log.info("Project is new, profiling source...");
                     Sources sources = new Sources();
                     switch (request.getRepoType()) {
