@@ -44,7 +44,7 @@ public class JiraService {
     private final FlowProperties flowProperties;
     private static final int MAX_JQL_RESULTS = 1000000;
     private final String ParentUrl;
-    private ScanRequest Parent;
+    private ScanRequest parent;
 
     @ConstructorProperties({"jiraProperties", "flowProperties"})
     public JiraService(JiraProperties jiraProperties, FlowProperties flowProperties) {
@@ -850,12 +850,12 @@ public class JiraService {
         List<String> updatedIssues = new ArrayList<>();
         List<String> closedIssues = new ArrayList<>();
         if (this.jiraProperties.isChild()) {
-            Parent = new ScanRequest(request);
+            parent = new ScanRequest(request);
             BugTracker bugTracker;
-            bugTracker = Parent.getBugTracker();
+            bugTracker = parent.getBugTracker();
             bugTracker.setProjectKey(ParentUrl);
-            Parent.setBugTracker(bugTracker);
-            issuesParent = this.getIssues(Parent);
+            parent.setBugTracker(bugTracker);
+            issuesParent = this.getIssues(parent);
         } else {
             issuesParent = this.getIssues(request);
 
