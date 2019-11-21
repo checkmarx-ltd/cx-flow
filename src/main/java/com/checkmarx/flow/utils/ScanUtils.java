@@ -251,6 +251,10 @@ public class ScanUtils {
                 request.setIncremental(override.getSast().getIncremental());
             }
 
+            if (override.getSast().getForceScan() != null) {
+                request.setForceScan(override.getSast().getForceScan());
+            }
+
             if (!ScanUtils.empty(override.getSast().getPreset())) {
                 request.setScanPreset(override.getSast().getPreset());
                 request.setScanPresetOverride(true);
