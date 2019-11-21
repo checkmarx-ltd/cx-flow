@@ -79,6 +79,10 @@ public class HelperService {
                 log.error(ExceptionUtils.getMessage(e));
             }
         }
+        /*Override branches if provided in the request*/
+        if(request.getActiveBranches() != null && !request.getActiveBranches().isEmpty()){
+            branches = request.getActiveBranches();
+        }
         //If the script fails above, default to base property check functionality (regex list)
         for( String b: branches){
             if(strMatches(b, branch)) return true;
