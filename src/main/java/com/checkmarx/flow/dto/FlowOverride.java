@@ -14,14 +14,6 @@ public class MachinaOverride {
     public String application;
     @JsonProperty("branches")
     public List<String> branches = null;
-    @JsonProperty("incremental")
-    public Boolean incremental;
-    @JsonProperty("scan_preset")
-    public String scanPreset;
-    @JsonProperty("exclude_folders")
-    public String excludeFolders;
-    @JsonProperty("exclude_files")
-    public String excludeFiles;
     @JsonProperty("emails")
     public List<String> emails = null;
     @JsonProperty("jira")

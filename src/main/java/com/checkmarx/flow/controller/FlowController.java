@@ -4,7 +4,7 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.EventResponse;
-import com.checkmarx.flow.dto.MachinaOverride;
+import com.checkmarx.flow.dto.FlowOverride;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.service.FlowService;
@@ -98,7 +98,7 @@ public class FlowController {
         scanRequest.setId(uid);
         // If an override blob/file is provided, substitute these values
         if (!ScanUtils.empty(override)) {
-            MachinaOverride ovr = ScanUtils.getMachinaOverride(override);
+            FlowOverride ovr = ScanUtils.getMachinaOverride(override);
             scanRequest = ScanUtils.overrideMap(scanRequest, ovr);
         }
 
