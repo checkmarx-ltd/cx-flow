@@ -185,8 +185,8 @@ public class HelperService {
             return true;
         }
         if(sources.getLanguageStats() != null && !sources.getLanguageStats().isEmpty()) {
-            for (Map.Entry<String, Integer> langs : sources.getLanguageStats().entrySet()) {
-                if(!checkSourceWeight(langs, profile.getWeight())){
+            for(CxProfile.Weight p: profile.getWeight()){
+                if(!checkSourceWeight(sources.getLanguageStats(), p)){
                     return false;
                 }
             }
@@ -194,21 +194,25 @@ public class HelperService {
         return true;
     }
 
-    private boolean checkSourceWeight(Map.Entry<String, Integer> language, List<CxProfile.Weight> weights){
-        if(language == null
-                || language.getKey().isEmpty()
-                || language.getValue() == null
-                || weights == null
-                || weights.isEmpty()
-        ){
+    private boolean checkSourceWeight(Map<String, Integer> languages, CxProfile.Weight weight){
+        if(weight == null){
             return true;
         }
-        for(CxProfile.Weight w: weights){
-            if(language.getKey().equalsIgnoreCase(w.getType()) && (language.getValue() < w.getWeight())){
-                return false;
+        else if(languages == null || languages.isEmpty() ){
+            return false;
+        }
+        boolean match = false;
+        for (Map.Entry<String, Integer> langs : languages.entrySet()) {
+            if(langs.getKey().equalsIgnoreCase(weight.getType())){
+                if(langs.getValue() < weight.getWeight()){
+                    return false;
+                }
+                else{
+                    match = true;
+                }
             }
         }
-        return true;
+        return match;
     }
 
     /**

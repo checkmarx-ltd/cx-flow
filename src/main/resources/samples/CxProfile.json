@@ -1,6 +1,6 @@
 [{
-  "name:": "Xxx",
-  "preset": "Checkmarx Express",
+  "name:": "C# Web",
+  "preset": "Checkmarx Default",
   "files": ["Web.config",".*web\\.xml"],
   "weight": [
     {"type":  "Java", "weight": 1},
@@ -9,14 +9,40 @@
     {"type":  "Kotlin", "weight": 1}
   ]
 },
-{
-  "name:": "Xxx",
-  "preset": "Checkmarx Express",
-  "weight": [
-    {"type":  "Kotlin", "weight": 1}
-  ]
-},
-{
-  "name:": "DEFAULT",
-  "preset": "Checkmarx Express"
-}]
+  {
+    "name:": "All",
+    "preset": "All",
+    "weight": [
+      {"type":  "Java", "weight": 50},
+      {"type":  "CSS", "weight": 88}
+    ]
+  },
+  {
+    "name:": "Java Web",
+    "preset": "Checkmarx Express",
+    "files": ["buildspec.yml"],
+    "weight": [
+      {"type":  "Java", "weight": 20},
+      {"type":  "CSS", "weight": 1},
+      {"type":  "HTML", "weight": 1}
+    ]
+  },
+  {
+    "name:": "Java Only",
+    "preset": "Checkmarx Express",
+    "weight": [
+      {"type":  "Java", "weight": 50}
+    ]
+  },
+  {
+    "name:": "C#",
+    "preset": "All",
+    "weight": [
+      {"type":  "C#", "weight": 20},
+      {"type":  "ASP", "weight": 20}
+    ]
+  },
+  {
+    "name:": "DEFAULT",
+    "preset": "Checkmarx Default"
+  }]
