@@ -246,7 +246,7 @@ public class GitHubController {
             }
             /*Check for Config as code (cx.config) and override*/
             CxConfig cxConfig =  gitHubService.getCxConfigOverride(request);
-            request = ScanUtils.overrideCxConfig(request, cxConfig);
+            request = ScanUtils.overrideCxConfig(request, cxConfig, flowProperties, jiraProperties);
 
             request.putAdditionalMetadata("statuses_url", event.getPullRequest().getStatusesUrl());
             request.setId(uid);
@@ -423,7 +423,7 @@ public class GitHubController {
 
             /*Check for Config as code (cx.config) and override*/
             CxConfig cxConfig =  gitHubService.getCxConfigOverride(request);
-            request = ScanUtils.overrideCxConfig(request, cxConfig);
+            request = ScanUtils.overrideCxConfig(request, cxConfig, flowProperties, jiraProperties);
 
             request.setId(uid);
 
