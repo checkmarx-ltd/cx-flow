@@ -2,7 +2,7 @@ package com.checkmarx.flow;
 
 import com.checkmarx.flow.config.*;
 import com.checkmarx.flow.dto.BugTracker;
-import com.checkmarx.flow.dto.MachinaOverride;
+import com.checkmarx.flow.dto.FlowOverride;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.HelperService;
@@ -91,7 +91,7 @@ public class CxFlowRunner implements ApplicationRunner {
         List<String> excludeFolders;
         ScanRequest.Repository repoType = ScanRequest.Repository.NA;
         boolean osa;
-        MachinaOverride o = null;
+        FlowOverride o = null;
         ObjectMapper mapper = new ObjectMapper();
         String uid = helperService.getShortUid();
         MDC.put("cx", uid);
@@ -113,7 +113,7 @@ public class CxFlowRunner implements ApplicationRunner {
         if (args.containsOption("config")) {
             config = args.getOptionValues("config").get(0);
             try {
-                o = mapper.readValue(new File(config), MachinaOverride.class);
+                o = mapper.readValue(new File(config), FlowOverride.class);
             } catch (IOException e) {
                 log.error("Error reading config file, ignoring...");
                 log.error(ExceptionUtils.getStackTrace(e));

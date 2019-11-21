@@ -44,6 +44,7 @@ public class GitLabController {
     private final CxProperties cxProperties;
     private final JiraProperties jiraProperties;
     private final FlowProperties flowProperties;
+    private final GitLabService gitLabService;
 
     public GitLabController(FlowService flowService,
                             HelperService helperService,
@@ -58,6 +59,7 @@ public class GitLabController {
         this.cxProperties = cxProperties;
         this.jiraProperties = jiraProperties;
         this.flowProperties = flowProperties;
+        this.gitLabService = gitLabService;
     }
 
     @GetMapping(value = "/test")
@@ -95,7 +97,7 @@ public class GitLabController {
         MDC.put("cx", uid);
         log.info("Processing GitLab MERGE request");
         validateGitLabRequest(token);
-        MachinaOverride o = ScanUtils.getMachinaOverride(override);
+        FlowOverride o = ScanUtils.getMachinaOverride(override);
 
         try {
             ObjectAttributes objectAttributes = body.getObjectAttributes();
@@ -195,7 +197,15 @@ public class GitLabController {
                     .filters(filters)
                     .build();
 
-            request = ScanUtils.overrideMap(request, o);
+            if(!ScanUtils.empty(preset)){
+                request.setScanPreset(preset);
+                request.setScanPresetOverride(true);
+            }
+
+            /*Check for Config as code (cx.config) and override*/
+            CxConfig cxConfig =  gitLabService.getCxConfigOverride(request);
+            request = ScanUtils.overrideCxConfig(request, cxConfig);
+
             request.putAdditionalMetadata("merge_id",objectAttributes.getIid().toString());
             request.putAdditionalMetadata("merge_title", objectAttributes.getTitle());
             if(proj.getId() != null) {
@@ -251,7 +261,7 @@ public class GitLabController {
         MDC.put("cx", uid);
         validateGitLabRequest(token);
 
-        MachinaOverride o = ScanUtils.getMachinaOverride(override);
+        FlowOverride o = ScanUtils.getMachinaOverride(override);
         String commitEndpoint = null;
         try {
             String app = body.getRepository().getName();
@@ -355,6 +365,11 @@ public class GitLabController {
                     .bugTracker(bt)
                     .filters(filters)
                     .build();
+
+            if(!ScanUtils.empty(preset)){
+                request.setScanPreset(preset);
+                request.setScanPresetOverride(true);
+            }
 
             request = ScanUtils.overrideMap(request, o);
             request.setId(uid);
