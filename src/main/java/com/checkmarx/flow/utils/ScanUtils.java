@@ -231,8 +231,8 @@ public class ScanUtils {
      * @param override
      * @return
      */
-    public static ScanRequest overrideCxConfig(ScanRequest request, CxConfig override){
-        if(override == null){
+    public static ScanRequest overrideCxConfig(ScanRequest request, CxConfig override, FlowProperties flowProperties, JiraProperties jiraProperties){
+        if(override == null || request == null || !override.getActive()){
             return request;
         }
         if (!ScanUtils.empty(override.getProject())) {
@@ -261,77 +261,109 @@ public class ScanUtils {
                 request.setExcludeFiles(Arrays.asList(override.getSast().getFileExcludes().split(",")));
             }
         }
-        if(override.getAdditionalProperties() != null) {
-            FlowOverride flowOverride = (FlowOverride) override.getAdditionalProperties().get("cxFlow");
-            BugTracker bt = request.getBugTracker();
-            /*Override only applicable to Simple JIRA bug*/
-            if (request.getBugTracker().getType().equals(BugTracker.Type.JIRA) && flowOverride.getJira() != null) {
-                FlowOverride.Jira jira = flowOverride.getJira();
-                if (!ScanUtils.empty(jira.getAssignee())) {
-                    bt.setAssignee(jira.getAssignee());
-                }//if empty value override with null
-                if (jira.getAssignee() != null && jira.getAssignee().isEmpty()) {
-                    bt.setAssignee(null);
-                }
-                if (!ScanUtils.empty(jira.getProject())) {
-                    bt.setProjectKey(jira.getProject());
-                }
-                if (!ScanUtils.empty(jira.getIssueType())) {
-                    bt.setIssueType(jira.getIssueType());
-                }
-                if (!ScanUtils.empty(jira.getOpenedStatus())) {
-                    bt.setOpenStatus(jira.getOpenedStatus());
-                }
-                if (!ScanUtils.empty(jira.getClosedStatus())) {
-                    bt.setClosedStatus(jira.getClosedStatus());
-                }
-                if (!ScanUtils.empty(jira.getOpenTransition())) {
-                    bt.setOpenTransition(jira.getOpenTransition());
-                }
-                if (!ScanUtils.empty(jira.getCloseTransition())) {
-                    bt.setCloseTransition(jira.getCloseTransition());
-                }
-                if (!ScanUtils.empty(jira.getCloseTransitionField())) {
-                    bt.setCloseTransitionField(jira.getCloseTransitionField());
-                }
-                if (!ScanUtils.empty(jira.getCloseTransitionValue())) {
-                    bt.setCloseTransitionValue(jira.getCloseTransitionValue());
-                }
-                if (jira.getFields() != null) { //if empty, assume no fields
-                    bt.setFields(jira.getFields());
-                }
-                if (jira.getPriorities() != null && !jira.getPriorities().isEmpty()) {
-                    bt.setPriorities(jira.getPriorities());
-                }
-            }
-            request.setBugTracker(bt);
+        try {
+            if (override.getAdditionalProperties() != null) {
+                Object flow = override.getAdditionalProperties().get("cxFlow");
+                ObjectMapper mapper = new ObjectMapper();
+                FlowOverride flowOverride = mapper.convertValue(flow, FlowOverride.class);
+                //FlowOverride flowOverride = (FlowOverride) override.getAdditionalProperties().get("cxFlow");
+                if (flowOverride != null) {
+                    BugTracker bt = request.getBugTracker();
+                    //initial bt as NONE
+                    if(bt == null) {
+                        bt = BugTracker.builder()
+                                .type(BugTracker.Type.NONE)
+                                .build();
+                    }
+                    String bug = flowOverride.getBugTracker();
+                    if(bug != null && !bug.equalsIgnoreCase(bt.getType().toString())) {
+                        BugTracker.Type bugType = ScanUtils.getBugTypeEnum(bug, flowProperties.getBugTrackerImpl());
+                        if (bugType.equals(BugTracker.Type.CUSTOM)) {
+                            bt = BugTracker.builder()
+                                    .type(bugType)
+                                    .customBean(bug)
+                                    .build();
+                        } else {
+                            bt = BugTracker.builder()
+                                    .type(bugType)
+                                    .build();
+                        }
 
-            if (!ScanUtils.empty(flowOverride.getApplication())) {
-                request.setApplication(flowOverride.getApplication());
-            }
+                    }
+                    /*Override only applicable to Simple JIRA bug*/
+                    if (bt.getType().equals(BugTracker.Type.JIRA) && flowOverride.getJira() != null) {
+                        FlowOverride.Jira jira = flowOverride.getJira();
+                        if (!ScanUtils.empty(jira.getAssignee())) {
+                            bt.setAssignee(jira.getAssignee());
+                        }//if empty value override with null
+                        if (jira.getAssignee() != null && jira.getAssignee().isEmpty()) {
+                            bt.setAssignee(null);
+                        }
+                        if (!ScanUtils.empty(jira.getProject())) {
+                            bt.setProjectKey(jira.getProject());
+                        }
+                        if (!ScanUtils.empty(jira.getIssueType())) {
+                            bt.setIssueType(jira.getIssueType());
+                        }
+                        if (!ScanUtils.empty(jira.getOpenedStatus())) {
+                            bt.setOpenStatus(jira.getOpenedStatus());
+                        }
+                        if (!ScanUtils.empty(jira.getClosedStatus())) {
+                            bt.setClosedStatus(jira.getClosedStatus());
+                        }
+                        if (!ScanUtils.empty(jira.getOpenTransition())) {
+                            bt.setOpenTransition(jira.getOpenTransition());
+                        }
+                        if (!ScanUtils.empty(jira.getCloseTransition())) {
+                            bt.setCloseTransition(jira.getCloseTransition());
+                        }
+                        if (!ScanUtils.empty(jira.getCloseTransitionField())) {
+                            bt.setCloseTransitionField(jira.getCloseTransitionField());
+                        }
+                        if (!ScanUtils.empty(jira.getCloseTransitionValue())) {
+                            bt.setCloseTransitionValue(jira.getCloseTransitionValue());
+                        }
+                        if (jira.getFields() != null) { //if empty, assume no fields
+                            bt.setFields(jira.getFields());
+                        }
+                        if (jira.getPriorities() != null && !jira.getPriorities().isEmpty()) {
+                            bt.setPriorities(jira.getPriorities());
+                        }
+                    }
 
-            if (!ScanUtils.empty(flowOverride.getBranches())) {
-                request.setActiveBranches(flowOverride.getBranches());
-            }
+                    request.setBugTracker(bt);
 
-            List<String> emails = flowOverride.getEmails();
-            if (emails != null) {
-                if (emails.isEmpty()) {
-                    request.setEmail(null);
-                } else {
-                    request.setEmail(emails);
+                    if (!ScanUtils.empty(flowOverride.getApplication())) {
+                        request.setApplication(flowOverride.getApplication());
+                    }
+
+                    if (!ScanUtils.empty(flowOverride.getBranches())) {
+                        request.setActiveBranches(flowOverride.getBranches());
+                    }
+
+                    List<String> emails = flowOverride.getEmails();
+                    if (emails != null) {
+                        if (emails.isEmpty()) {
+                            request.setEmail(null);
+                        } else {
+                            request.setEmail(emails);
+                        }
+                    }
+                    FlowOverride.Filters filtersObj = flowOverride.getFilters();
+
+                    if (filtersObj != null &&
+                            (!ScanUtils.empty(filtersObj.getSeverity()) || !ScanUtils.empty(filtersObj.getCwe()) ||
+                                    !ScanUtils.empty(filtersObj.getCategory()) || !ScanUtils.empty(filtersObj.getStatus()))) {
+                        List<Filter> filters = ScanUtils.getFilters(filtersObj.getSeverity(), filtersObj.getCwe(),
+                                filtersObj.getCategory(), filtersObj.getStatus());
+                        request.setFilters(filters);
+                    } else if (filtersObj != null) {
+                        request.setFilters(null);
+                    }
                 }
             }
-            FlowOverride.Filters filtersObj = flowOverride.getFilters();
-
-            if (filtersObj != null && (!ScanUtils.empty(filtersObj.getSeverity()) || !ScanUtils.empty(filtersObj.getCwe()) ||
-                    !ScanUtils.empty(filtersObj.getCategory()) || !ScanUtils.empty(filtersObj.getStatus()))) {
-                List<Filter> filters = ScanUtils.getFilters(filtersObj.getSeverity(), filtersObj.getCwe(),
-                        filtersObj.getCategory(), filtersObj.getStatus());
-                request.setFilters(filters);
-            } else if (filtersObj != null) {
-                request.setFilters(null);
-            }
+        }catch (IllegalArgumentException e){
+            log.warn("Issue parsing CxConfig cxFlow element: {}", ExceptionUtils.getRootCauseMessage(e));
         }
         return request;
     }

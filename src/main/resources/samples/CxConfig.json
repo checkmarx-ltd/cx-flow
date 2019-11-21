@@ -1,7 +1,7 @@
 {
   "version": 1.0,
   "active": false,
-  "cxHost": "cx01.whatever.com",
+  "host": "cx01.whatever.com",
   "credential": {
     "type": "prompt|plain|enc|external->vault/environment/parameter",
     "username": "ENC(XXXXXXX)",
