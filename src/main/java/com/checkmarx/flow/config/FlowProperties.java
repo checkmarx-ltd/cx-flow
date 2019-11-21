@@ -23,6 +23,7 @@ public class FlowProperties {
     private List<String> filterCategory;
     private List<String> filterStatus;
     private boolean autoProfile = false;
+    private boolean alwaysProfile = false;
     private Integer getProfilingDepth = 1;
     private String profileConfig = "CxProfile.json";
     private boolean trackApplicationOnly = false;
@@ -238,6 +239,14 @@ public class FlowProperties {
 
     public void setProfileConfig(String profileConfig) {
         this.profileConfig = profileConfig;
+    }
+
+    public boolean isAlwaysProfile() {
+        return alwaysProfile;
+    }
+
+    public void setAlwaysProfile(boolean alwaysProfile) {
+        this.alwaysProfile = alwaysProfile;
     }
 
     public static class Mail {

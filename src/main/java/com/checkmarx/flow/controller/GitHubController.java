@@ -62,6 +62,7 @@ public class GitHubController {
     private final JiraProperties jiraProperties;
     private final FlowService flowService;
     private final HelperService helperService;
+    private final GitHubService gitHubService;
     private Mac hmac;
 
 
@@ -78,6 +79,7 @@ public class GitHubController {
         this.jiraProperties = jiraProperties;
         this.flowService = flowService;
         this.helperService = helperService;
+        this.gitHubService = gitHubService;
     }
 
     @PostConstruct
@@ -134,7 +136,6 @@ public class GitHubController {
         log.info("Processing GitHub PULL request");
         PullEvent event;
         ObjectMapper mapper = new ObjectMapper();
-        MachinaOverride o = ScanUtils.getMachinaOverride(override);
 
         try {
             event = mapper.readValue(body, PullEvent.class);
@@ -243,8 +244,10 @@ public class GitHubController {
                 request.setScanPreset(preset);
                 request.setScanPresetOverride(true);
             }
+            /*Check for Config as code (cx.config) and override*/
+            CxConfig cxConfig =  gitHubService.getCxConfigOverride(request);
+            request = ScanUtils.overrideCxConfig(request, cxConfig);
 
-            request = ScanUtils.overrideMap(request, o);
             request.putAdditionalMetadata("statuses_url", event.getPullRequest().getStatusesUrl());
             request.setId(uid);
             //only initiate scan/automation if target branch is applicable
@@ -301,7 +304,6 @@ public class GitHubController {
         log.info("Processing GitHub PUSH request");
         PushEvent event;
         ObjectMapper mapper = new ObjectMapper();
-        MachinaOverride o = ScanUtils.getMachinaOverride(override);
 
         try {
             event = mapper.readValue(body, PushEvent.class);
@@ -419,8 +421,10 @@ public class GitHubController {
                 request.setScanPresetOverride(true);
             }
 
-            //if an override blob/file is provided, substitute these values
-            request = ScanUtils.overrideMap(request, o);
+            /*Check for Config as code (cx.config) and override*/
+            CxConfig cxConfig =  gitHubService.getCxConfigOverride(request);
+            request = ScanUtils.overrideCxConfig(request, cxConfig);
+
             request.setId(uid);
 
             //only initiate scan/automation if branch is applicable
