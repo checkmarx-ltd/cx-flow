@@ -215,6 +215,7 @@ public class FlowService {
                     .withScanPreset(request.getScanPreset())
                     .withGitUrl(request.getRepoUrlWithAuth())
                     .withIncremental(request.isIncremental())
+                    .withForceScan(request.isForceScan())
                     .withFileExclude(request.getExcludeFiles())
                     .withFolderExclude(request.getExcludeFolders());
             if(!com.checkmarx.sdk.utils.ScanUtils.empty(request.getBranch())){
