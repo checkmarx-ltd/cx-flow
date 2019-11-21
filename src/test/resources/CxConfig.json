@@ -1,0 +1,31 @@
+{
+  "version": 1.0,
+  "active": true,
+  "host": "cx01.whatever.com",
+  "credential": {
+    "type": "prompt|plain|enc|external->vault/environment/parameter",
+    "username": "ENC(XXXXXXX)",
+    "password": "ENC(XXXXXXX)",
+    "oidcClient": "ENC(XXXXXXXX)",
+    "oidcClientSecret": "ENC(XXXXXXX)",
+    "scope": ""
+  },
+  "project": "XYZ-${repo}-${branch}",
+  "team": "/a/b/c",
+  "policy":"",
+  "customFields":{
+    "key":"value",
+    "key2":"value"
+  },
+  "sast": {
+    "preset": "All",
+    "incremental": false,
+    "forceScan" : true,
+    "fileExcludes": "",
+    "folderExcludes": ""
+  },
+  "osa": {
+    "fileExcludes": "",
+    "folderExcludes": ""
+  }
+}
