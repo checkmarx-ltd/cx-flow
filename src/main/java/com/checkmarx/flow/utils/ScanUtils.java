@@ -253,6 +253,7 @@ public class ScanUtils {
 
             if (!ScanUtils.empty(override.getSast().getPreset())) {
                 request.setScanPreset(override.getSast().getPreset());
+                request.setScanPresetOverride(true);
             }
             if (override.getSast().getFolderExcludes() != null) {
                 request.setExcludeFolders(Arrays.asList(override.getSast().getFolderExcludes().split(",")));
