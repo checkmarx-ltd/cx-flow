@@ -31,6 +31,7 @@ public class ScanRequest {
     private Integer repoProjectId;
     private String refs;
     private List<String> email;
+    private boolean forceScan;
     private boolean incremental;
     private String scanPreset;
     private boolean scanPresetOverride = false;
@@ -44,11 +45,7 @@ public class ScanRequest {
     private List<Filter> filters;
     private Map<String, String> additionalMetadata;
 
-    @ConstructorProperties({"namespace", "application", "org", "team", "project", "cxFields", "site", "repoUrl",
-            "repoUrlWithAuth", "repoName", "branch", "mergeTargetBranch", "mergeNoteUri", "repoProjectId", "refs", "email",
-            "incremental", "scanPreset", "excludeFiles", "excludeFolders", "repoType", "product", "bugTracker",
-            "type", "activeBranches", "filters","altProject","altFields"})
-    ScanRequest(String namespace, String application, String org, String team, String project, Map<String, String> cxFields, String site, String repoUrl, String repoUrlWithAuth, String repoName, String branch, String mergeTargetBranch, String mergeNoteUri, Integer id, String refs, List<String> email, boolean incremental, String scanPreset, List<String> excludeFiles, List<String> excludeFolders, Repository repoType, Product product, BugTracker bugTracker, Type type, List<String> activeBranches, List<Filter> filters, String altProject,String altFields) {
+    ScanRequest(String namespace, String application, String org, String team, String project, Map<String, String> cxFields, String site, String repoUrl, String repoUrlWithAuth, String repoName, String branch, String mergeTargetBranch, String mergeNoteUri, Integer id, String refs, List<String> email, boolean incremental, String scanPreset, List<String> excludeFiles, List<String> excludeFolders, Repository repoType, Product product, BugTracker bugTracker, Type type, List<String> activeBranches, List<Filter> filters, String altProject,String altFields, boolean forceScan) {
         this.namespace = namespace;
         this.application = application;
         this.org = org;
@@ -78,6 +75,7 @@ public class ScanRequest {
         this.activeBranches = activeBranches;
         this.filters = filters;
 		this.altProject = altProject;
+		this.forceScan = forceScan;
     }
 
     public ScanRequest(ScanRequest other) {
@@ -110,6 +108,7 @@ public class ScanRequest {
         this.type = other.type;
         this.activeBranches = other.activeBranches;
         this.filters = other.filters;
+        this.forceScan = other.forceScan;
     }
 
     public static ScanRequestBuilder builder() {
@@ -354,13 +353,22 @@ public class ScanRequest {
         this.product = product;
     }
 
-	    public void setAltProject(String altProduct) {
+    public void setAltProject(String altProduct) {
         this.altProject = altProject;
     }
 
     public void setAltFields(String altFields) {
          this.altFields = altFields;
     }
+
+    public boolean isForceScan() {
+        return forceScan;
+    }
+
+    public void setForceScan(boolean forceScan) {
+        this.forceScan = forceScan;
+    }
+
     public void setBugTracker(BugTracker bugTracker) {
         this.bugTracker = bugTracker;
     }
@@ -473,6 +481,7 @@ public class ScanRequest {
         private String refs;
         private List<String> email;
         private boolean incremental;
+        private boolean forceScan = false;
         private String scanPreset;
         private List<String> excludeFiles;
         private List<String> excludeFolders;
@@ -579,6 +588,11 @@ public class ScanRequest {
             return this;
         }
 
+        public ScanRequestBuilder forceScan(final boolean forceScan) {
+            this.forceScan = forceScan;
+            return this;
+        }
+
         public ScanRequest.ScanRequestBuilder scanPreset(String scanPreset) {
             this.scanPreset = scanPreset;
             return this;
@@ -636,7 +650,7 @@ public class ScanRequest {
         }
 
         public ScanRequest build() {
-            return new ScanRequest(namespace, application, org, team, project, cxFields, site, repoUrl, repoUrlWithAuth, repoName, branch, mergeTargetBranch, mergeNoteUri, id, refs, email, incremental, scanPreset, excludeFiles, excludeFolders, repoType, product, bugTracker, type, activeBranches, filters, altProject, altFields);
+            return new ScanRequest(namespace, application, org, team, project, cxFields, site, repoUrl, repoUrlWithAuth, repoName, branch, mergeTargetBranch, mergeNoteUri, id, refs, email, incremental, scanPreset, excludeFiles, excludeFolders, repoType, product, bugTracker, type, activeBranches, filters, altProject, altFields, forceScan);
         }
 
         public String toString() {
