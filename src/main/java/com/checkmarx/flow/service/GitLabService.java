@@ -81,11 +81,6 @@ public class GitLabService extends RepoService {
         return UNKNOWN_INT;
     }
 
-
-    Map<String, List<String>> process(ScanResults results, ScanRequest request) throws GitLabClientException {
-        return null;
-    }
-
     /**
      * Creates authentication header for GitLab API Access
      * TODO swap out for Portal based customer storage and possibly OAuth
@@ -263,7 +258,7 @@ public class GitLabService extends RepoService {
     }
 
     @Override
-    public CxConfig getCxConfigOverride(ScanRequest request) throws CheckmarxException {
+    public CxConfig getCxConfigOverride(ScanRequest request) {
         HttpHeaders headers = createAuthHeaders();
         try {
             ResponseEntity<String> response = restTemplate.exchange(

@@ -57,10 +57,6 @@ public class GitHubService extends RepoService {
         return httpHeaders;
     }
 
-    Map<String, List<String>> process(ScanResults results, ScanRequest request) throws GitHubClientException {
-        return null;
-    }
-
     void processPull(ScanRequest request, ScanResults results) throws GitHubClientException {
         try {
             String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties, properties);
@@ -237,7 +233,7 @@ public class GitHubService extends RepoService {
     }
 
     @Override
-    public CxConfig getCxConfigOverride(ScanRequest request) throws CheckmarxException {
+    public CxConfig getCxConfigOverride(ScanRequest request) {
         //"/{namespace}/{repo}/contents/{config}?ref={branch}"
         HttpHeaders headers = createAuthHeaders();
         try {
