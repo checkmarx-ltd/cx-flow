@@ -9,8 +9,8 @@ import com.checkmarx.flow.dto.github.Content;
 import com.checkmarx.flow.exception.GitHubClientException;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
-import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.flow.utils.ScanUtils;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONObject;
@@ -257,7 +257,7 @@ public class GitHubService extends RepoService {
                     log.warn("Content not found in JSON response");
                     return null;
                 }
-                String decodedContent = new String(Base64.getDecoder().decode(content.trim()));
+                String decodedContent = new String(Base64.decodeBase64(content.trim()));
                 return com.checkmarx.sdk.utils.ScanUtils.getConfigAsCode(decodedContent);
             }
         }catch (NullPointerException e){
