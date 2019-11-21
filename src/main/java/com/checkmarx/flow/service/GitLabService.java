@@ -9,7 +9,7 @@ import com.checkmarx.flow.exception.GitLabClientException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
-import com.checkmarx.sdk.exception.CheckmarxException;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -21,7 +21,6 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
-
 import java.beans.ConstructorProperties;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -280,7 +279,7 @@ public class GitLabService extends RepoService {
                     log.warn("Content not found in JSON response");
                     return null;
                 }
-                String decodedContent = new String(Base64.getDecoder().decode(content.trim()));
+                String decodedContent = new String(Base64.decodeBase64(content.trim()));
                 return com.checkmarx.sdk.utils.ScanUtils.getConfigAsCode(decodedContent);
             }
         }catch (NullPointerException e){
