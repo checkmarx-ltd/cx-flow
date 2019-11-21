@@ -17,6 +17,8 @@ public class FlowOverride {
     public List<String> branches = null;
     @JsonProperty("emails")
     public List<String> emails = null;
+    @JsonProperty("bugTracker")
+    public String bugTracker;
     @JsonProperty("jira")
     public Jira jira;
     @JsonProperty("filters")
@@ -35,6 +37,14 @@ public class FlowOverride {
 
     public List<String> getEmails() {
         return this.emails;
+    }
+
+    public String getBugTracker() {
+        return bugTracker;
+    }
+
+    public void setBugTracker(String bugTracker) {
+        this.bugTracker = bugTracker;
     }
 
     public Jira getJira() {
