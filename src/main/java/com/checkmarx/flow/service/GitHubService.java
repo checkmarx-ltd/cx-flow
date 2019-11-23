@@ -218,7 +218,7 @@ public class GitHubService extends RepoService {
 
 
     private void scanGitContent(int depth, String endpoint, Sources sources){
-        if(depth >= flowProperties.getGetProfilingDepth()){
+        if(depth >= flowProperties.getProfilingDepth()){
             return;
         }
         List<Content> contents = getRepoContent(endpoint);
