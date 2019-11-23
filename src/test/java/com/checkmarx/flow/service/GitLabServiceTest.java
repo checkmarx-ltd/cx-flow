@@ -4,16 +4,14 @@ import com.checkmarx.flow.config.GitLabProperties;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.Sources;
 import com.checkmarx.sdk.dto.CxConfig;
-import com.checkmarx.sdk.exception.CheckmarxException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.annotation.IfProfileValue;
 import org.springframework.test.context.junit4.SpringRunner;
-
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
 
 @RunWith(SpringRunner.class)
 @Import(GitLabProperties.class)
@@ -63,6 +61,7 @@ public class GitLabServiceTest {
     public void sendCommitComment() {
     }
 
+    @IfProfileValue(name ="testprofile", value ="integration")
     @Test
     public void getSources() {
         ScanRequest request = ScanRequest.builder()
@@ -75,6 +74,7 @@ public class GitLabServiceTest {
         assertNotNull(sources);
     }
 
+    @IfProfileValue(name ="testprofile", value ="integration")
     @Test
     public void getCxConfig() {
         ScanRequest request = ScanRequest.builder()
@@ -83,11 +83,7 @@ public class GitLabServiceTest {
                 .branch("develop")
                 .build();
         request.setRepoProjectId(11842418);
-        try {
             CxConfig cxConfig = service.getCxConfigOverride(request);
             assertNotNull(cxConfig);
-        } catch (CheckmarxException e) {
-            fail("Unexpected CheckmarxException");
-        }
     }
 }

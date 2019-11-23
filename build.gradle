@@ -87,6 +87,18 @@ bootJar {
     mainClassName = "${mainClass}"
 }
 
+test {
+    useJUnit {
+        systemProperty "testprofile", "unit"
+    }
+}
+
+task integrationTest(type: Test) {
+    useJUnit {
+        systemProperty "testprofile", "integration"
+    }
+}
+
 task getVersion {
     doLast {
         println "${version}"
