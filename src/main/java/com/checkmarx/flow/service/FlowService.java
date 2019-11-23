@@ -193,10 +193,13 @@ public class FlowService {
                             sources = gitLabService.getRepoContent(request);
                             break;
                         case BITBUCKET:
+                            log.warn("Profiling is not available for BitBucket Cloud");
                             break;
                         case BITBUCKETSERVER:
+                            log.warn("Profiling is not available for BitBucket Server");
                             break;
                         case ADO:
+                            log.warn("Profiling is not available for Azure DevOps");
                             break;
                         default:
                             break;
