@@ -24,7 +24,7 @@ public class FlowProperties {
     private List<String> filterStatus;
     private boolean autoProfile = false;
     private boolean alwaysProfile = false;
-    private Integer getProfilingDepth = 1;
+    private Integer profilingDepth = 1;
     private String profileConfig = "CxProfile.json";
     private boolean trackApplicationOnly = false;
     private boolean applicationRepoOnly = false;
@@ -225,12 +225,12 @@ public class FlowProperties {
         this.autoProfile = autoProfile;
     }
 
-    public Integer getGetProfilingDepth() {
-        return getProfilingDepth;
+    public Integer getProfilingDepth() {
+        return profilingDepth;
     }
 
-    public void setGetProfilingDepth(Integer getProfilingDepth) {
-        this.getProfilingDepth = getProfilingDepth;
+    public void setProfilingDepth(Integer profilingDepth) {
+        this.profilingDepth = profilingDepth;
     }
 
     public String getProfileConfig() {
