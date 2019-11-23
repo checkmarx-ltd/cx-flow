@@ -268,5 +268,13 @@ public class HelperService {
         }
         return false;
     }
+
+    public List<CxProfile> getProfiles() {
+        return profiles;
+    }
+
+    public void setProfiles(List<CxProfile> profiles) {
+        this.profiles = profiles;
+    }
 }
 
