@@ -7,6 +7,7 @@ public class RepoProperties {
     private String url;
     private String apiUrl;
     private String falsePositiveLabel = "false-positive";
+    private String configAsCode = "cx.config";
     private String openTransition = "open";
     private String closeTransition = "closed";
     private boolean blockMerge = false;
@@ -56,6 +57,14 @@ public class RepoProperties {
 
     public void setApiUrl(String apiUrl) {
         this.apiUrl = apiUrl;
+    }
+
+    public String getConfigAsCode() {
+        return configAsCode;
+    }
+
+    public void setConfigAsCode(String configAsCode) {
+        this.configAsCode = configAsCode;
     }
 
     public String getFalsePositiveLabel() {
@@ -145,4 +154,5 @@ public class RepoProperties {
     public void setCxSummaryHeader(String cxSummaryHeader) {
         this.cxSummaryHeader = cxSummaryHeader;
     }
+
 }

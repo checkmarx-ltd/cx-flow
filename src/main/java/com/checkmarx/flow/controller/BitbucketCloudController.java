@@ -5,7 +5,7 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.EventResponse;
-import com.checkmarx.flow.dto.MachinaOverride;
+import com.checkmarx.flow.dto.FlowOverride;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.bitbucket.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
@@ -85,7 +85,7 @@ public class BitbucketCloudController {
         MDC.put("cx", uid);
         validateBitBucketRequest(token);
         log.info("Processing BitBucket MERGE request");
-        MachinaOverride o = ScanUtils.getMachinaOverride(override);
+        FlowOverride o = ScanUtils.getMachinaOverride(override);
 
         try {
             Repository repository = body.getRepository();
@@ -225,7 +225,7 @@ public class BitbucketCloudController {
         MDC.put("cx", uid);
         validateBitBucketRequest(token);
 
-        MachinaOverride o = ScanUtils.getMachinaOverride(override);
+        FlowOverride o = ScanUtils.getMachinaOverride(override);
 
         try {
             Repository repository = body.getRepository();

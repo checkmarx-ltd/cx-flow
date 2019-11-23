@@ -3,6 +3,7 @@ package com.checkmarx.flow.service;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.dto.Sources;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.flow.utils.ZipUtils;
@@ -168,13 +169,56 @@ public class FlowService {
             //only allow specific chars in project name in checkmarx
             projectName = projectName.replaceAll("[^a-zA-Z0-9-_.]+","-");
             log.info("Project Name being used {}", projectName);
-
+            Integer projectId = UNKNOWN_INT;
+            if(flowProperties.isAutoProfile() && !request.isScanPresetOverride()) {
+                boolean projectExists = false;
+                projectId = cxService.getProjectId(ownerId, projectName);
+                if(projectId != UNKNOWN_INT) {
+                    int presetId = cxService.getProjectPresetId(projectId);
+                    if(presetId != UNKNOWN_INT){
+                        String preset = cxService.getPresetName(presetId);
+                        request.setScanPreset(preset);
+                        projectExists = true;
+                    }
+                }
+                log.debug("Auto profiling is enabled");
+                if(!projectExists || flowProperties.isAlwaysProfile()) {
+                    log.info("Project is new, profiling source...");
+                    Sources sources = new Sources();
+                    switch (request.getRepoType()) {
+                        case GITHUB:
+                            sources = gitService.getRepoContent(request);
+                            break;
+                        case GITLAB:
+                            sources = gitLabService.getRepoContent(request);
+                            break;
+                        case BITBUCKET:
+                            log.warn("Profiling is not available for BitBucket Cloud");
+                            break;
+                        case BITBUCKETSERVER:
+                            log.warn("Profiling is not available for BitBucket Server");
+                            break;
+                        case ADO:
+                            log.warn("Profiling is not available for Azure DevOps");
+                            break;
+                        default:
+                            break;
+                    }
+                    String preset = helperService.getPresetFromSources(sources);
+                    if (!ScanUtils.empty(preset)) {
+                        request.setScanPreset(preset);
+                    }
+                }
+            }
             CxScanParams params = new CxScanParams()
+                    .teamId(ownerId)
                     .withTeamName(request.getTeam())
+                    .projectId(projectId)
                     .withProjectName(projectName)
+                    .withScanPreset(request.getScanPreset())
                     .withGitUrl(request.getRepoUrlWithAuth())
                     .withIncremental(request.isIncremental())
-                    .withScanPreset(request.getScanPreset())
+                    .withForceScan(request.isForceScan())
                     .withFileExclude(request.getExcludeFiles())
                     .withFolderExclude(request.getExcludeFolders());
             if(!com.checkmarx.sdk.utils.ScanUtils.empty(request.getBranch())){
@@ -215,8 +259,9 @@ public class FlowService {
             }
 
             cxService.waitForScanCompletion(scanId);
-            Integer projectId = cxService.getProjectId(ownerId, projectName); //get the project id of the updated or created project
-
+            if(projectId == UNKNOWN_INT) {
+                projectId = cxService.getProjectId(ownerId, projectName); //get the project id of the updated or created project
+            }
             String osaScanId = null;
             if(cxProperties.getEnableOsa()){
                 String path = cxProperties.getGitClonePath().concat("/").concat(UUID.randomUUID().toString());

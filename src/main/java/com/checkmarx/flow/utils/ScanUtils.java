@@ -6,6 +6,7 @@ import com.checkmarx.flow.config.RepoProperties;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.sdk.config.Constants;
+import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
@@ -15,7 +16,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.client.HttpClientErrorException;
 
 import javax.validation.constraints.NotNull;
 import java.io.File;
@@ -24,14 +24,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -151,14 +146,14 @@ public class ScanUtils {
      * @param override
      * @return
      */
-    public static ScanRequest overrideMap(ScanRequest request, MachinaOverride override){
+    public static ScanRequest overrideMap(ScanRequest request, FlowOverride override){
         if(override == null){
             return request;
         }
         BugTracker bt = request.getBugTracker();
         /*Override only applicable to Simple JIRA bug*/
         if(request.getBugTracker().getType().equals(BugTracker.Type.JIRA) && override.getJira()!=null) {
-            MachinaOverride.Jira jira = override.getJira();
+            FlowOverride.Jira jira = override.getJira();
             if(!ScanUtils.empty(jira.getAssignee())) {
                 bt.setAssignee(jira.getAssignee());
             }//if empty value override with null
@@ -206,20 +201,6 @@ public class ScanUtils {
             request.setActiveBranches(override.getBranches());
         }
 
-        if(override.getIncremental() != null) {
-            request.setIncremental(override.getIncremental());
-        }
-
-        if(!ScanUtils.empty(override.getScanPreset())) {
-            request.setScanPreset(override.getScanPreset());
-        }
-        if(override.getExcludeFolders() != null) {
-            request.setExcludeFolders(Arrays.asList(override.getExcludeFolders().split(",")));
-        }
-        if(override.getExcludeFiles() != null) {
-            request.setExcludeFiles(Arrays.asList(override.getExcludeFiles().split(",")));
-        }
-
         List<String> emails = override.getEmails();
         if(emails != null) {
             if (emails.isEmpty()) {
@@ -228,7 +209,7 @@ public class ScanUtils {
                 request.setEmail(emails);
             }
         }
-        MachinaOverride.Filters filtersObj = override.getFilters();
+        FlowOverride.Filters filtersObj = override.getFilters();
 
         if(filtersObj != null && (!ScanUtils.empty(filtersObj.getSeverity()) || !ScanUtils.empty(filtersObj.getCwe()) ||
                 !ScanUtils.empty(filtersObj.getCategory()) || !ScanUtils.empty(filtersObj.getStatus()))) {
@@ -240,6 +221,155 @@ public class ScanUtils {
             request.setFilters(null);
         }
 
+        return request;
+    }
+
+    /**
+     * Override scan request details as per file/blob (MachinaOverride)
+     *
+     * @param request
+     * @param override
+     * @return
+     */
+    public static ScanRequest overrideCxConfig(ScanRequest request, CxConfig override, FlowProperties flowProperties, JiraProperties jiraProperties){
+        if(override == null || request == null || !override.getActive()){
+            return request;
+        }
+        if (!ScanUtils.empty(override.getProject())) {
+            /*Replace ${repo} and ${branch}  with the actual reponame and branch - then strip out non-alphanumeric (-_ are allowed)*/
+            String project = override.getProject();
+            project = project.replaceAll("\\$\\{repo}", request.getRepoName());
+            project = project.replaceAll("\\$\\{branch}", request.getBranch());
+            project = project.replaceAll("[^a-zA-Z0-9-_.]+","-");
+            request.setProject(project);
+        }
+        if (!ScanUtils.empty(override.getTeam())) {
+            request.setTeam(override.getTeam());
+        }
+        if(override.getSast() != null) {
+            if (override.getSast().getIncremental() != null) {
+                request.setIncremental(override.getSast().getIncremental());
+            }
+
+            if (override.getSast().getForceScan() != null) {
+                request.setForceScan(override.getSast().getForceScan());
+            }
+
+            if (!ScanUtils.empty(override.getSast().getPreset())) {
+                request.setScanPreset(override.getSast().getPreset());
+                request.setScanPresetOverride(true);
+            }
+            if (override.getSast().getFolderExcludes() != null) {
+                request.setExcludeFolders(Arrays.asList(override.getSast().getFolderExcludes().split(",")));
+            }
+            if (override.getSast().getFileExcludes() != null) {
+                request.setExcludeFiles(Arrays.asList(override.getSast().getFileExcludes().split(",")));
+            }
+        }
+        try {
+            if (override.getAdditionalProperties() != null) {
+                Object flow = override.getAdditionalProperties().get("cxFlow");
+                ObjectMapper mapper = new ObjectMapper();
+                FlowOverride flowOverride = mapper.convertValue(flow, FlowOverride.class);
+                //FlowOverride flowOverride = (FlowOverride) override.getAdditionalProperties().get("cxFlow");
+                if (flowOverride != null) {
+                    BugTracker bt = request.getBugTracker();
+                    //initial bt as NONE
+                    if(bt == null) {
+                        bt = BugTracker.builder()
+                                .type(BugTracker.Type.NONE)
+                                .build();
+                    }
+                    String bug = flowOverride.getBugTracker();
+                    if(bug != null && !bug.equalsIgnoreCase(bt.getType().toString())) {
+                        BugTracker.Type bugType = ScanUtils.getBugTypeEnum(bug, flowProperties.getBugTrackerImpl());
+                        if (bugType.equals(BugTracker.Type.CUSTOM)) {
+                            bt = BugTracker.builder()
+                                    .type(bugType)
+                                    .customBean(bug)
+                                    .build();
+                        } else {
+                            bt = BugTracker.builder()
+                                    .type(bugType)
+                                    .build();
+                        }
+
+                    }
+                    /*Override only applicable to Simple JIRA bug*/
+                    if (bt.getType().equals(BugTracker.Type.JIRA) && flowOverride.getJira() != null) {
+                        FlowOverride.Jira jira = flowOverride.getJira();
+                        if (!ScanUtils.empty(jira.getAssignee())) {
+                            bt.setAssignee(jira.getAssignee());
+                        }//if empty value override with null
+                        if (jira.getAssignee() != null && jira.getAssignee().isEmpty()) {
+                            bt.setAssignee(null);
+                        }
+                        if (!ScanUtils.empty(jira.getProject())) {
+                            bt.setProjectKey(jira.getProject());
+                        }
+                        if (!ScanUtils.empty(jira.getIssueType())) {
+                            bt.setIssueType(jira.getIssueType());
+                        }
+                        if (!ScanUtils.empty(jira.getOpenedStatus())) {
+                            bt.setOpenStatus(jira.getOpenedStatus());
+                        }
+                        if (!ScanUtils.empty(jira.getClosedStatus())) {
+                            bt.setClosedStatus(jira.getClosedStatus());
+                        }
+                        if (!ScanUtils.empty(jira.getOpenTransition())) {
+                            bt.setOpenTransition(jira.getOpenTransition());
+                        }
+                        if (!ScanUtils.empty(jira.getCloseTransition())) {
+                            bt.setCloseTransition(jira.getCloseTransition());
+                        }
+                        if (!ScanUtils.empty(jira.getCloseTransitionField())) {
+                            bt.setCloseTransitionField(jira.getCloseTransitionField());
+                        }
+                        if (!ScanUtils.empty(jira.getCloseTransitionValue())) {
+                            bt.setCloseTransitionValue(jira.getCloseTransitionValue());
+                        }
+                        if (jira.getFields() != null) { //if empty, assume no fields
+                            bt.setFields(jira.getFields());
+                        }
+                        if (jira.getPriorities() != null && !jira.getPriorities().isEmpty()) {
+                            bt.setPriorities(jira.getPriorities());
+                        }
+                    }
+
+                    request.setBugTracker(bt);
+
+                    if (!ScanUtils.empty(flowOverride.getApplication())) {
+                        request.setApplication(flowOverride.getApplication());
+                    }
+
+                    if (!ScanUtils.empty(flowOverride.getBranches())) {
+                        request.setActiveBranches(flowOverride.getBranches());
+                    }
+
+                    List<String> emails = flowOverride.getEmails();
+                    if (emails != null) {
+                        if (emails.isEmpty()) {
+                            request.setEmail(null);
+                        } else {
+                            request.setEmail(emails);
+                        }
+                    }
+                    FlowOverride.Filters filtersObj = flowOverride.getFilters();
+
+                    if (filtersObj != null &&
+                            (!ScanUtils.empty(filtersObj.getSeverity()) || !ScanUtils.empty(filtersObj.getCwe()) ||
+                                    !ScanUtils.empty(filtersObj.getCategory()) || !ScanUtils.empty(filtersObj.getStatus()))) {
+                        List<Filter> filters = ScanUtils.getFilters(filtersObj.getSeverity(), filtersObj.getCwe(),
+                                filtersObj.getCategory(), filtersObj.getStatus());
+                        request.setFilters(filters);
+                    } else if (filtersObj != null) {
+                        request.setFilters(null);
+                    }
+                }
+            }
+        }catch (IllegalArgumentException e){
+            log.warn("Issue parsing CxConfig cxFlow element: {}", ExceptionUtils.getRootCauseMessage(e));
+        }
         return request;
     }
 
@@ -511,15 +641,15 @@ public class ScanUtils {
         return repoUrl.concat("/blob/").concat(request.getBranch()).concat("/").concat(filename);
     }
 
-    public static MachinaOverride getMachinaOverride(@RequestParam(value = "override", required = false) String override) {
-        MachinaOverride o = null;
+    public static FlowOverride getMachinaOverride(@RequestParam(value = "override", required = false) String override) {
+        FlowOverride o = null;
         try {
             ObjectMapper mapper = new ObjectMapper();
             //if override is provided, check if chars are more than 20 in length, implying base64 encoded json
             if(!ScanUtils.empty(override)){
                 if(override.length() > 20){
                     String oJson = new String(Base64.getDecoder().decode(override));
-                    o = mapper.readValue(oJson, MachinaOverride.class);
+                    o = mapper.readValue(oJson, FlowOverride.class);
                     log.info("Overriding attributes with Base64 encoded String");
                 }
                 else{

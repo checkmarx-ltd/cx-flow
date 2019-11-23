@@ -25,7 +25,6 @@ cx-flow:
   #track-application-only: true
   #zip-exclude: .*.json$, bin\/.*
 
-
 checkmarx:
   username:
   password: xxxx
@@ -156,7 +155,7 @@ csv:
       default-value: unknown
     - header: Primary URL
       name: static
-      default-value: ${tmp.url}
+      #default-value: ${tmp.url}
     - header: severity
       name: severity
     - header: Vulnerability ID
