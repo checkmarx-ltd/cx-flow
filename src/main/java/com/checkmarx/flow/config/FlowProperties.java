@@ -22,8 +22,12 @@ public class FlowProperties {
     private List<String> filterCwe;
     private List<String> filterCategory;
     private List<String> filterStatus;
+    private boolean autoProfile = false;
+    private boolean alwaysProfile = false;
+    private Integer profilingDepth = 1;
+    private String profileConfig = "CxProfile.json";
     private boolean trackApplicationOnly = false;
-    private boolean ApplicationRepoOnly = false;
+    private boolean applicationRepoOnly = false;
     private String branchScript;
     private String mitreUrl;
     private String wikiUrl;
@@ -205,6 +209,46 @@ public class FlowProperties {
         this.httpReadTimeout = httpReadTimeout;
     }
 
+    public boolean isApplicationRepoOnly() {
+        return applicationRepoOnly;
+    }
+
+    public void setApplicationRepoOnly(boolean applicationRepoOnly) {
+        this.applicationRepoOnly = applicationRepoOnly;
+    }
+
+    public boolean isAutoProfile() {
+        return autoProfile;
+    }
+
+    public void setAutoProfile(boolean autoProfile) {
+        this.autoProfile = autoProfile;
+    }
+
+    public Integer getProfilingDepth() {
+        return profilingDepth;
+    }
+
+    public void setProfilingDepth(Integer profilingDepth) {
+        this.profilingDepth = profilingDepth;
+    }
+
+    public String getProfileConfig() {
+        return profileConfig;
+    }
+
+    public void setProfileConfig(String profileConfig) {
+        this.profileConfig = profileConfig;
+    }
+
+    public boolean isAlwaysProfile() {
+        return alwaysProfile;
+    }
+
+    public void setAlwaysProfile(boolean alwaysProfile) {
+        this.alwaysProfile = alwaysProfile;
+    }
+
     public static class Mail {
         private String host;
         private Integer port = 25;
@@ -254,12 +298,4 @@ public class FlowProperties {
 
     }
 
-    public boolean isApplicationRepoOnly() {
-        return ApplicationRepoOnly;
-    }
-
-    public void setApplicationRepoOnly(boolean ApplicationRepoOnly) {
-        this.ApplicationRepoOnly = ApplicationRepoOnly;
-    }
-    
 }

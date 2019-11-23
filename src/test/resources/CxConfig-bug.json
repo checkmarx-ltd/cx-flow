@@ -1,0 +1,64 @@
+{
+  "version": 1.0,
+  "additionalProperties" : {
+    "cxFlow": {
+      "application": "test app",
+      "bugTracker": "JIRA",
+      "branches": ["develop", "master"],
+      "emails": ["xxxx@checkmarx.com"],
+      "jira": {
+        "url": "",
+        "credential": {
+          "type": "prompt|plain|enc|external->vault/environment/parameter",
+          "username": "ENC(XXXXXXX)",
+          "password": "ENC(XXXXXXX)",
+          "oidcClient": "ENC(XXXXXXXX)",
+          "oidcClientSecret": "ENC(XXXXXXX)",
+          "scope": ""
+        },
+        "project": "APPSEC",
+        "issue_type": "Bug",
+        "assignee": "admin",
+        "opened_status": ["Open","Reopen"],
+        "closed_status": ["Closed","Done"],
+        "open_transition": "Reopen Issue",
+        "close_transition": "Close Issue",
+        "close_transition_field": "resolution",
+        "close_transition_value": "Done",
+        "priorities": {
+          "High": "High",
+          "Medium": "High",
+          "Low": "High"
+        },
+        "fields": [
+          {
+            "type": "cx",
+            "name": "xxx",
+            "jira_field_name": "xxxx",
+            "jira_field_type": "text",
+            "jira_default_value": "xxx"
+          },
+          {
+            "type": "result",
+            "name": "xxx",
+            "jira_field_name": "xxxx",
+            "jira_field_type": "label"
+          },
+          {
+            "type": "static",
+            "name": "xxx",
+            "jira_field_name": "xxxx",
+            "jira_field_type": "label",
+            "jira_default_value": "xxx"
+          }
+        ]
+      },
+      "filters" : {
+        "severity": ["High", "Medium"],
+        "cwe": ["79", "89"],
+        "category": ["XSS_Reflected", "SQL_Injection"],
+        "status": ["Confirmed", "New"]
+      }
+    }
+  }
+}

@@ -1,5 +1,6 @@
 package com.checkmarx.flow.dto;
 
+import com.checkmarx.sdk.dto.Credential;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
@@ -8,28 +9,22 @@ import java.util.Map;
 /**
  * DTO representing the Override/Property file from within repository or provided as base64 encoded JSON blob query param
  */
-public class MachinaOverride {
+public class FlowOverride {
 
     @JsonProperty("application")
     public String application;
     @JsonProperty("branches")
     public List<String> branches = null;
-    @JsonProperty("incremental")
-    public Boolean incremental;
-    @JsonProperty("scan_preset")
-    public String scanPreset;
-    @JsonProperty("exclude_folders")
-    public String excludeFolders;
-    @JsonProperty("exclude_files")
-    public String excludeFiles;
     @JsonProperty("emails")
     public List<String> emails = null;
+    @JsonProperty("bugTracker")
+    public String bugTracker;
     @JsonProperty("jira")
     public Jira jira;
     @JsonProperty("filters")
     public Filters filters;
 
-    public MachinaOverride() {
+    public FlowOverride() {
     }
 
     public String getApplication() {
@@ -40,24 +35,16 @@ public class MachinaOverride {
         return this.branches;
     }
 
-    public Boolean getIncremental() {
-        return this.incremental;
-    }
-
-    public String getScanPreset() {
-        return this.scanPreset;
-    }
-
-    public String getExcludeFolders() {
-        return this.excludeFolders;
-    }
-
-    public String getExcludeFiles() {
-        return this.excludeFiles;
-    }
-
     public List<String> getEmails() {
         return this.emails;
+    }
+
+    public String getBugTracker() {
+        return bugTracker;
+    }
+
+    public void setBugTracker(String bugTracker) {
+        this.bugTracker = bugTracker;
     }
 
     public Jira getJira() {
@@ -76,22 +63,6 @@ public class MachinaOverride {
         this.branches = branches;
     }
 
-    public void setIncremental(Boolean incremental) {
-        this.incremental = incremental;
-    }
-
-    public void setScanPreset(String scanPreset) {
-        this.scanPreset = scanPreset;
-    }
-
-    public void setExcludeFolders(String excludeFolders) {
-        this.excludeFolders = excludeFolders;
-    }
-
-    public void setExcludeFiles(String excludeFiles) {
-        this.excludeFiles = excludeFiles;
-    }
-
     public void setEmails(List<String> emails) {
         this.emails = emails;
     }
@@ -106,7 +77,7 @@ public class MachinaOverride {
 
 
     public String toString() {
-        return "MachinaOverride(application=" + this.getApplication() + ", branches=" + this.getBranches() + ", incremental=" + this.getIncremental() + ", scanPreset=" + this.getScanPreset() + ", excludeFolders=" + this.getExcludeFolders() + ", excludeFiles=" + this.getExcludeFiles() + ", emails=" + this.getEmails() + ", jira=" + this.getJira() + ", filters=" + this.getFilters() + ")";
+        return "FlowOverride(application=" + this.getApplication() + ", branches=" + this.getBranches() + " emails=" + this.getEmails() + ", jira=" + this.getJira() + ", filters=" + this.getFilters() + ")";
     }
 
     public class Filters {
@@ -155,6 +126,10 @@ public class MachinaOverride {
 
     public class Jira {
 
+        @JsonProperty("url")
+        private String url;
+        @JsonProperty("credential")
+        private Credential credential;
         @JsonProperty("project")
         public String project;
         @JsonProperty("issue_type")
@@ -177,6 +152,22 @@ public class MachinaOverride {
         public Map<String, String> priorities;
         @JsonProperty("fields")
         public List<Field> fields;
+
+        public String getUrl() {
+            return url;
+        }
+
+        public void setUrl(String url) {
+            this.url = url;
+        }
+
+        public Credential getCredential() {
+            return credential;
+        }
+
+        public void setCredential(Credential credential) {
+            this.credential = credential;
+        }
 
         public String getProject() {
             return this.project;

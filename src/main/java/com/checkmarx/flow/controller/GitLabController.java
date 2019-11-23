@@ -5,7 +5,7 @@ import com.checkmarx.flow.config.GitLabProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.EventResponse;
-import com.checkmarx.flow.dto.MachinaOverride;
+import com.checkmarx.flow.dto.FlowOverride;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.gitlab.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
@@ -15,6 +15,7 @@ import com.checkmarx.flow.service.HelperService;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
+import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.Filter;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
@@ -22,7 +23,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.beans.ConstructorProperties;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -44,17 +44,22 @@ public class GitLabController {
     private final CxProperties cxProperties;
     private final JiraProperties jiraProperties;
     private final FlowProperties flowProperties;
+    private final GitLabService gitLabService;
 
-    @ConstructorProperties({"flowService", "helperService", "properties",
-            "cxProperties", "jiraProperties", "flowProperties"})
-    public GitLabController(FlowService flowService, HelperService helperService, GitLabProperties properties,
-                            CxProperties cxProperties, JiraProperties jiraProperties, FlowProperties flowProperties) {
+    public GitLabController(FlowService flowService,
+                            HelperService helperService,
+                            GitLabProperties properties,
+                            CxProperties cxProperties,
+                            JiraProperties jiraProperties,
+                            FlowProperties flowProperties,
+                            GitLabService gitLabService) {
         this.flowService = flowService;
         this.helperService = helperService;
         this.properties = properties;
         this.cxProperties = cxProperties;
         this.jiraProperties = jiraProperties;
         this.flowProperties = flowProperties;
+        this.gitLabService = gitLabService;
     }
 
     @GetMapping(value = "/test")
@@ -92,7 +97,7 @@ public class GitLabController {
         MDC.put("cx", uid);
         log.info("Processing GitLab MERGE request");
         validateGitLabRequest(token);
-        MachinaOverride o = ScanUtils.getMachinaOverride(override);
+        FlowOverride o = ScanUtils.getMachinaOverride(override);
 
         try {
             ObjectAttributes objectAttributes = body.getObjectAttributes();
@@ -192,7 +197,15 @@ public class GitLabController {
                     .filters(filters)
                     .build();
 
-            request = ScanUtils.overrideMap(request, o);
+            if(!ScanUtils.empty(preset)){
+                request.setScanPreset(preset);
+                request.setScanPresetOverride(true);
+            }
+
+            /*Check for Config as code (cx.config) and override*/
+            CxConfig cxConfig =  gitLabService.getCxConfigOverride(request);
+            request = ScanUtils.overrideCxConfig(request, cxConfig, flowProperties, jiraProperties);
+
             request.putAdditionalMetadata("merge_id",objectAttributes.getIid().toString());
             request.putAdditionalMetadata("merge_title", objectAttributes.getTitle());
             if(proj.getId() != null) {
@@ -248,7 +261,7 @@ public class GitLabController {
         MDC.put("cx", uid);
         validateGitLabRequest(token);
 
-        MachinaOverride o = ScanUtils.getMachinaOverride(override);
+        FlowOverride o = ScanUtils.getMachinaOverride(override);
         String commitEndpoint = null;
         try {
             String app = body.getRepository().getName();
@@ -353,7 +366,15 @@ public class GitLabController {
                     .filters(filters)
                     .build();
 
-            request = ScanUtils.overrideMap(request, o);
+            if(!ScanUtils.empty(preset)){
+                request.setScanPreset(preset);
+                request.setScanPresetOverride(true);
+            }
+
+            /*Check for Config as code (cx.config) and override*/
+            CxConfig cxConfig =  gitLabService.getCxConfigOverride(request);
+            request = ScanUtils.overrideCxConfig(request, cxConfig, flowProperties, jiraProperties);
+
             request.setId(uid);
             if(proj.getId() != null) {
                 request.setRepoProjectId(proj.getId());

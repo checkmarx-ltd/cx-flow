@@ -1,3 +1,12 @@
+Release 1.5.0
+---------------------------------------------------------------------
+# FEATURES
+- Add support for config as code.  The repository must contain the file - cx.config in the root directory
+    - Sample config files can be found in the test resources folder and source resources/samples folder
+- Add support for Auto profiling for GitHub and GitLab
+    - The type of languages and their percentages along with files in the top directory for GitLab, and for X layers deep (default 1) for GitHub.
+    - Sample config files (default is current execution directory CxProfile.json) can be found in the test resources folder and source resources/samples folder
+
 Release 1.4.6 | 1.4.7
 ---------------------------------------------------------------------
 - Bug Fixes
