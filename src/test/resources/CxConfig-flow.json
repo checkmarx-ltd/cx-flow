@@ -3,6 +3,11 @@
   "active": true,
   "project": "XYZ-${repo}-${branch}",
   "team": "/a/b/c",
+  "sast": {
+    "preset": "Checkmarx Express",
+    "incremental": false,
+    "forceScan" : true
+  },
   "additionalProperties" : {
     "cxFlow": {
       "application": "test app",

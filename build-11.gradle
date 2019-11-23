@@ -1,3 +1,5 @@
+import org.gradle.api.tasks.testing.Test
+
 buildscript {
 	ext {
         CxSBSDK = "0.4.0"
@@ -80,6 +82,18 @@ springBoot {
 
 configurations {
     archivesBaseName = 'cx-flow-11'
+}
+
+test {
+    useJUnit {
+        systemProperty "testprofile", "unit"
+    }
+}
+
+task integrationTest(type: Test) {
+    useJUnit {
+        systemProperty "testprofile", "integration"
+    }
 }
 
 bootJar {
