@@ -40,6 +40,7 @@ public class JiraProperties {
     private List<Field> fields;
     private String ParentUrl = "";
     private boolean child = false;
+    private Integer httpTimeout = 20000;
 
     public String getUrl() {
         return this.url;
@@ -264,5 +265,12 @@ public class JiraProperties {
     public void setChild(boolean child) {
         this.child = child;
     }
-    
+
+    public Integer getHttpTimeout() {
+        return httpTimeout;
+    }
+
+    public void setHttpTimeout(Integer httpTimeout) {
+        this.httpTimeout = httpTimeout;
+    }
 }

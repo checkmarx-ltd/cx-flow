@@ -6,7 +6,7 @@ import com.atlassian.jira.rest.client.api.domain.input.ComplexIssueInputFieldVal
 import com.atlassian.jira.rest.client.api.domain.input.FieldInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
 import com.atlassian.jira.rest.client.api.domain.input.TransitionInput;
-import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
+import com.atlassian.jira.rest.client.internal.async.CustomAsynchronousJiraRestClientFactory;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.dto.BugTracker;
@@ -22,7 +22,6 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
-
 import javax.annotation.PostConstruct;
 import java.beans.ConstructorProperties;
 import java.net.URI;
@@ -44,7 +43,6 @@ public class JiraService {
     private final FlowProperties flowProperties;
     private static final int MAX_JQL_RESULTS = 1000000;
     private final String ParentUrl;
-    private ScanRequest parent;
 
     @ConstructorProperties({"jiraProperties", "flowProperties"})
     public JiraService(JiraProperties jiraProperties, FlowProperties flowProperties) {
@@ -56,14 +54,13 @@ public class JiraService {
     @PostConstruct
     public void init() {
         if (jiraProperties != null && !ScanUtils.empty(jiraProperties.getUrl())) {
-            JiraRestClientFactory factory = new AsynchronousJiraRestClientFactory();
-
+            CustomAsynchronousJiraRestClientFactory factory = new CustomAsynchronousJiraRestClientFactory();
             try {
                 this.jiraURI = new URI(jiraProperties.getUrl());
             } catch (URISyntaxException e) {
                 log.error("Error constructing URI for JIRA");
             }
-            this.client = factory.createWithBasicHttpAuthentication(jiraURI, jiraProperties.getUsername(), jiraProperties.getToken());
+            this.client = factory.createWithBasicHttpAuthenticationCustom(jiraURI, jiraProperties.getUsername(), jiraProperties.getToken(), jiraProperties.getHttpTimeout());
             this.issueClient = this.client.getIssueClient();
             this.projectClient = this.client.getProjectClient();
             this.metaClient = this.client.getMetadataClient();
@@ -120,7 +117,16 @@ public class JiraService {
             throw new MachinaRuntimeException();
         }
         log.debug(jql);
-        Promise<SearchResult> searchJqlPromise = this.client.getSearchClient().searchJql(jql, MAX_JQL_RESULTS, 0, null);
+        HashSet<String> fields = new HashSet<String>();
+        fields.add("key");
+        fields.add("project");
+        fields.add("issuetype");
+        fields.add("summary");
+        fields.add("labels");
+        fields.add("created");
+        fields.add("updated");
+        fields.add("status");
+        Promise<SearchResult> searchJqlPromise = this.client.getSearchClient().searchJql(jql, MAX_JQL_RESULTS, 0, fields);
         for (Issue issue : searchJqlPromise.claim().getIssues()) {
             issues.add(issue);
         }
@@ -850,7 +856,7 @@ public class JiraService {
         List<String> updatedIssues = new ArrayList<>();
         List<String> closedIssues = new ArrayList<>();
         if (this.jiraProperties.isChild()) {
-            parent = new ScanRequest(request);
+            ScanRequest parent = new ScanRequest(request);
             BugTracker bugTracker;
             bugTracker = parent.getBugTracker();
             bugTracker.setProjectKey(ParentUrl);
