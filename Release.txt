@@ -1,3 +1,9 @@
+Release 1.5.1
+---------------------------------------------------------------------
+# FIXES
+- Adding truncation of code snippets from Checkmarx (0.4.1 SDK) to protect against cases where minified JS is scanned
+- Adding truncation of description of JIRA issue to ensure the max length is never exceeded
+
 Release 1.5.0
 ---------------------------------------------------------------------
 # FEATURES
