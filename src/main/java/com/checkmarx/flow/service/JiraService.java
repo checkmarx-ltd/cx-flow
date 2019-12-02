@@ -42,6 +42,7 @@ public class JiraService {
     private final JiraProperties jiraProperties;
     private final FlowProperties flowProperties;
     private static final int MAX_JQL_RESULTS = 1000000;
+    private static final int JIRA_MAX_DESCRIPTION = 32760;
     private final String ParentUrl;
 
     @ConstructorProperties({"jiraProperties", "flowProperties"})
@@ -845,7 +846,7 @@ public class JiraService {
         if (!ScanUtils.empty(jiraProperties.getDescriptionPostfix())) {
             body.append(jiraProperties.getDescriptionPostfix());
         }
-        return body.toString();
+        return StringUtils.truncate(body.toString(), JIRA_MAX_DESCRIPTION);
     }
 
     Map<String, List<String>> process(ScanResults results, ScanRequest request) throws JiraClientException {
