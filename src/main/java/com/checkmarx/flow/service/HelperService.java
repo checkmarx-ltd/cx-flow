@@ -8,6 +8,8 @@ import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.util.concurrent.SimpleTimeLimiter;
+import com.google.common.util.concurrent.TimeLimiter;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
@@ -21,6 +23,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -28,6 +31,7 @@ import java.util.regex.Pattern;
 public class HelperService {
 
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(HelperService.class);
+    private static final long REGEX_TIMEOUT = 10;
     private final FlowProperties properties;
     private final CxProperties cxProperties;
     private final ExternalScriptService scriptService;
@@ -259,14 +263,23 @@ public class HelperService {
      * @return
      */
     private boolean strMatches(String patternStr, String str){
-        Pattern pattern = Pattern.compile(patternStr);
-        Matcher matcher = pattern.matcher(str);
-        if(matcher.find()) {
-            int start = matcher.start();
-            int end = matcher.end();
-            return start == 0 && end == str.length();
+        TimeLimiter limiter = SimpleTimeLimiter.create(Executors.newCachedThreadPool());
+        try {
+            boolean result = limiter.callWithTimeout(() -> {
+                Pattern pattern = Pattern.compile(patternStr);
+                Matcher matcher = pattern.matcher(str);
+                if(matcher.find()) {
+                    int start = matcher.start();
+                    int end = matcher.end();
+                    return start == 0 && end == str.length();
+                }
+                return false;
+            }, REGEX_TIMEOUT, TimeUnit.SECONDS);
+            return result;
+        } catch (TimeoutException | InterruptedException | ExecutionException e) {
+            log.warn("Timeout occurred during REGEX matching, returning false");
+            return false;
         }
-        return false;
     }
 
     public List<CxProfile> getProfiles() {
