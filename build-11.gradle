@@ -2,8 +2,8 @@ import org.gradle.api.tasks.testing.Test
 
 buildscript {
 	ext {
-        CxSBSDK = "0.4.1"
-		springBootVersion = '2.2.1.RELEASE'
+        CxSBSDK = "0.4.2"
+		springBootVersion = '2.2.2.RELEASE'
         sonarqubeVersion = '2.8'
         atlassianVersion = "5.1.6"
         atlassianFugueVersion = "4.7.2"
@@ -19,7 +19,7 @@ buildscript {
         gradlePluginPortal()
 	}
 	dependencies {
-        classpath "com.github.ksoichiro:gradle-build-info-plugin:+"
+        classpath ("gradle.plugin.com.gorylenko.gradle-git-properties:gradle-git-properties:2.0.0")
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
         classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:${sonarqubeVersion}"
     }
@@ -31,7 +31,7 @@ apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
 
 group = 'com.checkmarx'
-version = '1.5.1'
+version = '1.5.2'
 sourceCompatibility = 1.8
 
 repositories {
@@ -61,8 +61,8 @@ dependencies {
     compile ("org.thymeleaf:thymeleaf:3.0.11.RELEASE")
     compile ("org.apache.httpcomponents:httpclient:4.5.10")
     compile ("org.codehaus.groovy:groovy-all:2.5.8")
-    compile ("org.apache.ivy:ivy:2.5.0-rc1")
-    compile ("org.eclipse.jgit:org.eclipse.jgit:5.5.0.201909110433-r")
+    compile ("org.apache.ivy:ivy:2.5.0")
+    compile ("org.eclipse.jgit:org.eclipse.jgit:5.5.1.201910021850-r")
     compile group: 'com.sun.xml.bind', name: 'jaxb-impl', version: '2.4.0-b180830.0438'
     compile group: 'javax.xml.ws', name: 'jaxws-api', version: '2.3.1'
     compile group: 'com.sun.xml.bind', name: 'jaxb-core', version: '2.3.0.1'
