@@ -207,7 +207,7 @@ public class JiraService {
                 }
             }
 
-            if (bugTracker.getPriorities().containsKey(severity)) {
+            if (bugTracker.getPriorities() != null && bugTracker.getPriorities().containsKey(severity)) {
                 issueBuilder.setFieldValue("priority", ComplexIssueInputFieldValue.with("name",
                         bugTracker.getPriorities().get(severity)));
             }
