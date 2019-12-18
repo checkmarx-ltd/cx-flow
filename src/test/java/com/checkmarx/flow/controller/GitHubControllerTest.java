@@ -46,7 +46,7 @@ public class GitHubControllerTest {
                     cxService,
                     null,
                     new JiraService(new JiraProperties(), flowProperties),
-                    new IssueService(properties),
+                    new IssueService(flowProperties),
                     gitHubService,
                     gitLabService,
                     bitBucketService,
