@@ -351,8 +351,8 @@ public class CxFlowRunner implements ApplicationRunner {
                 cxBatch(request);
             }
             else if(args.containsOption("project")){
-                if(ScanUtils.empty(team) || ScanUtils.empty(cxProject)){
-                    log.error("team and cx-project must be provided when --project option is used");
+                if(ScanUtils.empty(cxProject)){
+                    log.error("cx-project must be provided when --project option is used");
                     exit(2);
                 }
                 cxResults(request);

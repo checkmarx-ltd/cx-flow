@@ -139,8 +139,8 @@ public class CsvIssueTracker implements IssueTracker {
                     value = "";
                     List<String> lines = new ArrayList<>();
                     if (issue.getDetails() != null && !issue.getDetails().isEmpty()) {
-                        for (Map.Entry<Integer, String> entry : issue.getDetails().entrySet()) {
-                            if (entry.getKey() != null && entry.getValue() != null) {
+                        for (Map.Entry<Integer, ScanResults.IssueDetails> entry : issue.getDetails().entrySet()) {
+                            if (entry.getKey() != null && entry.getValue() != null && !entry.getValue().isFalsePositive() && !ScanUtils.empty(entry.getValue().getCodeSnippet())) {
                                 lines.add(entry.getKey().toString());
                             }
                         }

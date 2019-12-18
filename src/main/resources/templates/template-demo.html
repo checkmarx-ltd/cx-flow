@@ -460,7 +460,7 @@
                                       <td colspan="4"> No Issues Found </td>
                                     </tr>
                                     <tr th:each="issue : ${issues}">
-                                        <td><a th:href="${issue.link}" target="_blank">Link</a></td>
+                                        <td><a th:href="${issue.link}" rel="noopener noreferrer" target="_blank">Link</a></td>
                                         <td><span th:class="${issue.severity}" th:text="${issue.severity}"></span></td>
                                         <td><span th:text="${issue.vulnerability}"></span></td>
                                         <td><span th:text="${issue.filename}"></span></td>
