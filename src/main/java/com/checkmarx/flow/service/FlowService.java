@@ -210,6 +210,7 @@ public class FlowService {
                     }
                 }
             }
+            request.setProject(projectName);
             CxScanParams params = new CxScanParams()
                     .teamId(ownerId)
                     .withTeamName(request.getTeam())

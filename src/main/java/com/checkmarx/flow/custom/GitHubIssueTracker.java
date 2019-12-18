@@ -66,8 +66,7 @@ public class GitHubIssueTracker implements IssueTracker {
         log.info("Executing getIssues GitHub API call");
         List<Issue> issues = new ArrayList<>();
         HttpEntity httpEntity = new HttpEntity<>(createAuthHeaders());
-        String apiUrl = properties.getApiUrl().concat(request.getNamespace().concat("/").concat(request.getRepoName()))
-                .concat("/issues?state=all&per_page=").concat(ISSUES_PER_PAGE);
+        String apiUrl = properties.getApiUrl().concat("/").concat(request.getNamespace().concat("/")).concat(request.getRepoName()).concat("/issues?state=all&per_page=").concat(ISSUES_PER_PAGE);
         ResponseEntity<com.checkmarx.flow.dto.github.Issue[]> response = restTemplate.exchange(apiUrl,
                 HttpMethod.GET, httpEntity, com.checkmarx.flow.dto.github.Issue[].class);
         if(response.getBody() == null){
@@ -145,7 +144,7 @@ public class GitHubIssueTracker implements IssueTracker {
     @Override
     public Issue createIssue(ScanResults.XIssue resultIssue, ScanRequest request) throws MachinaException {
         log.debug("Executing createIssue GitHub API call");
-        String apiUrl = properties.getApiUrl().concat(request.getNamespace().concat("/").concat(request.getRepoName())).concat("/issues");
+        String apiUrl = properties.getApiUrl().concat("/").concat(request.getNamespace().concat("/").concat(request.getRepoName())).concat("/issues");
         ResponseEntity<com.checkmarx.flow.dto.github.Issue> response;
         try {
             HttpEntity<String> httpEntity = new HttpEntity<>(getJSONCreateIssue(resultIssue, request).toString(), createAuthHeaders());

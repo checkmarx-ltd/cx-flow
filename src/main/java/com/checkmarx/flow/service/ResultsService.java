@@ -180,6 +180,7 @@ public class ResultsService {
         }
         if(results != null && results.getScanSummary() != null) {
             log.info("####Checkmarx Scan Results Summary####");
+            log.info("Team: {}, Project: {}", request.getTeam(), request.getProject());
             log.info(results.getScanSummary().toString());
             log.info("To veiw results: {}", results.getLink());
             log.info("######################################");

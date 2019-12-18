@@ -1,5 +1,9 @@
 package com.checkmarx.flow.config;
 
+import org.apache.commons.lang3.StringUtils;
+
+import javax.annotation.PostConstruct;
+
 public class RepoProperties {
     private boolean enabled;
     private String webhookToken;
@@ -155,4 +159,12 @@ public class RepoProperties {
         this.cxSummaryHeader = cxSummaryHeader;
     }
 
+    @PostConstruct
+    private void postConstruct() {
+        if(this.apiUrl != null){
+            if(this.apiUrl.endsWith("/")){
+                this.setApiUrl(StringUtils.chop(apiUrl));
+            }
+        }
+    }
 }
