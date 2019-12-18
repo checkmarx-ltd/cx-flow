@@ -1,3 +1,37 @@
+Release 1.5.2
+---------------------------------------------------------------------
+# FEATURES
+- Adding the ability to track false positives in the feedback channels
+    - add the following block to the cx-flow config:   list-false-positives: true
+    - Change JIRA resolution code with additional property under jira config block:   close-false-positive-transition-value: Declined
+
+Release 1.5.1
+---------------------------------------------------------------------
+# FIXES
+- Adding truncation of code snippets from Checkmarx (0.4.1 SDK) to protect against cases where minified JS is scanned
+- Adding truncation of description of JIRA issue to ensure the max length is never exceeded
+
+Release 1.5.0
+---------------------------------------------------------------------
+# FEATURES
+- Add support for config as code.  The repository must contain the file - cx.config in the root directory
+    - Sample config files can be found in the test resources folder and source resources/samples folder
+- Add support for Auto profiling for GitHub and GitLab
+    - The type of languages and their percentages along with files in the top directory for GitLab, and for X layers deep (default 1) for GitHub.
+    - Sample config files (default is current execution directory CxProfile.json) can be found in the test resources folder and source resources/samples folder
+
+Release 1.4.6 | 1.4.7
+---------------------------------------------------------------------
+- Bug Fixes
+
+Release 1.4.5
+---------------------------------------------------------------------
+# FEATURES
+- Add support for an updated GitHub PR (synchronize action driven by commits to branch specified within the Pull Request).
+
+Release 1.4.4
+---------------------------------------------------------------------
+
 Release 1.4.3
 ---------------------------------------------------------------------
 # FEATURES

@@ -15,16 +15,18 @@ server:
 #        include: "shutdown,beans,env,info,health"
 
 logging:
-  file: cx-flow.log
   pattern:
-    console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{15}){cyan}  [%clr(%X{cx}){blue}] %clr(:){faint} %m%n%wEx"
-    file: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{15}){cyan}  [%clr(%X{cx}){blue}] %clr(:){faint} %m%n%wEx"
+    console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{15}){cyan}  [%clr(%X{cx}){blue}] %clr(:){faint} %replace(%m){'([\\|])','\\$1'}%n%wEx"
+    file: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{15}){cyan}  [%clr(%X{cx}){blue}] %clr(:){faint} %replace(%m){'([\\|])','\\$1'}%n%wEx"
+  file:
+    name: cx-flow.log
 
 #  level:
 #    com:
 #      checkmarx:
 #        flow:
-#          service: TRACE
+#          service: info
+#          utils: info
 #    org:
 #      apache:
 #        http:
@@ -80,13 +82,6 @@ checkmarx:
   #incremental: true
 #WSDL Config
   portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
-  sdk-url: ${checkmarx.base-url}/cxwebinterface/SDK/CxSDKWebService.asmx
-  portal-wsdl: ${checkmarx.base-url}/Portal/CxWebService.asmx?wsdl
-  sdk-wsdl: ${checkmarx.base-url}/SDK/CxSDKWebService.asmx?wsdl
-  jira-project-field:
-  jira-custom-field:
-  jira-issuetype-field:
-  jira-assignee-field:
   #team-script:
   #project-script:
 
