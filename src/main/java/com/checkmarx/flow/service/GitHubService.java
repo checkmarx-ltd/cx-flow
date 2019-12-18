@@ -40,17 +40,6 @@ public class GitHubService extends RepoService {
         this.flowProperties = flowProperties;
     }
 
-    @PostConstruct
-    private void postConstruct() {
-        if(properties == null) return;
-        String apiUrl = properties.getApiUrl();
-        if(apiUrl != null){
-            if(apiUrl.endsWith("/")){
-                properties.setApiUrl(StringUtils.chop(apiUrl));
-            }
-        }
-    }
-
     private HttpHeaders createAuthHeaders(){
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.set(HttpHeaders.AUTHORIZATION, "token ".concat(properties.getToken()));
