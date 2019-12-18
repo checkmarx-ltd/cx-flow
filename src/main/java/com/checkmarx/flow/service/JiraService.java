@@ -796,7 +796,9 @@ public class JiraService {
             body.append("[Guidance|").append(flowProperties.getWikiUrl()).append("]").append(ScanUtils.CRLF);
         }
         if (issue.getDetails() != null && !issue.getDetails().isEmpty()) {
-            body.append("Lines: ");
+            if(issue.getDetails().entrySet().stream().anyMatch(x -> x.getKey( ) != null && x.getValue() != null && !x.getValue().isFalsePositive())){
+                body.append("Lines: ");
+            }
             issue.getDetails().entrySet().stream()
                 .filter(x -> x.getKey( ) != null && x.getValue() != null && !x.getValue().isFalsePositive())
                 .sorted(Map.Entry.comparingByKey())
@@ -816,7 +818,9 @@ public class JiraService {
 
             if(flowProperties.isListFalsePositives()){//List the false positives / not exploitable
                 body.append(ScanUtils.CRLF);
-                body.append("Lines Marked Not Exploitable: ");
+                if(issue.getDetails().entrySet().stream().anyMatch(x -> x.getKey() != null && x.getValue() != null && x.getValue().isFalsePositive())){
+                    body.append("Lines Marked Not Exploitable: ");
+                }
                 issue.getDetails().entrySet().stream()
                     .filter(x -> x.getKey( ) != null && x.getValue() != null && x.getValue().isFalsePositive())
                     .sorted(Map.Entry.comparingByKey())
