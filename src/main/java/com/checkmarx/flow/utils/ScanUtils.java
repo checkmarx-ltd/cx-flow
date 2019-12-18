@@ -16,7 +16,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.springframework.web.bind.annotation.RequestParam;
-
 import javax.validation.constraints.NotNull;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -27,8 +26,11 @@ import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Map.Entry.comparingByKey;
 
 public class ScanUtils {
 
@@ -428,25 +430,43 @@ public class ScanUtils {
             body.append("[Checkmarx](").append(issue.getLink()).append(")").append(CRLF);
         }
         if(issue.getDetails() != null && !issue.getDetails().isEmpty()) {
-            body.append("Lines: ");
-            for (Map.Entry<Integer, String> entry : issue.getDetails().entrySet()) {
-                if (entry.getKey() != null) {  //[<line>](<url>)
-                    if(fileUrl != null) {
+            Map<Integer, ScanResults.IssueDetails> trueIssues = issue.getDetails().entrySet().stream()
+                    .filter(x -> x.getKey( ) != null && x.getValue() != null && !x.getValue().isFalsePositive())
+                    .sorted(comparingByKey())
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            Map<Integer, ScanResults.IssueDetails> fpIssues = issue.getDetails().entrySet().stream()
+                    .filter(x -> x.getKey( ) != null && x.getValue() != null && x.getValue().isFalsePositive())
+                    .sorted(comparingByKey())
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            if(!trueIssues.isEmpty()) {
+                body.append("Lines: ");
+                for (Map.Entry<Integer, ScanResults.IssueDetails> entry : trueIssues.entrySet()) {
+                    if (fileUrl != null) {  //[<line>](<url>)
                         body.append("[").append(entry.getKey()).append("](").append(fileUrl).append("#L").append(entry.getKey()).append(") ");
-                    }
-                    else{ //if the fileUrl is not provided, simply putting the line number (no link) - ADO for example
+                    } else { //if the fileUrl is not provided, simply putting the line number (no link) - ADO for example
                         body.append(entry.getKey()).append(" ");
                     }
                 }
+                body.append(CRLF).append(CRLF);
             }
-            body.append(CRLF).append(CRLF);
-
-            for (Map.Entry<Integer, String> entry : issue.getDetails().entrySet()) {
-                if (entry.getKey() != null && entry.getValue() != null) {
+            if(flowProperties.isListFalsePositives() && !fpIssues.isEmpty()) {//List the false positives / not exploitable
+                body.append(ScanUtils.CRLF);
+                body.append("Lines Marked Not Exploitable: ");
+                for (Map.Entry<Integer, ScanResults.IssueDetails> entry : fpIssues.entrySet()) {
+                    if (fileUrl != null) {  //[<line>](<url>)
+                        body.append("[").append(entry.getKey()).append("](").append(fileUrl).append("#L").append(entry.getKey()).append(") ");
+                    } else { //if the fileUrl is not provided, simply putting the line number (no link) - ADO for example
+                        body.append(entry.getKey()).append(" ");
+                    }
+                }
+                body.append(CRLF).append(CRLF);
+            }
+            for (Map.Entry<Integer, ScanResults.IssueDetails> entry : trueIssues.entrySet()) {
+                if (entry.getValue() != null && entry.getValue().getCodeSnippet() != null) {
                     body.append("---").append(CRLF);
                     body.append("[Code (Line #").append(entry.getKey()).append("):](").append(fileUrl).append("#L").append(entry.getKey()).append(")").append(CRLF);
                     body.append("```").append(CRLF);
-                    body.append(entry.getValue()).append(CRLF);
+                    body.append(entry.getValue().getCodeSnippet()).append(CRLF);
                     body.append("```").append(CRLF);
                 }
             }
@@ -523,36 +543,43 @@ public class ScanUtils {
             xMap = getXIssueMap(results.getXIssues(), request);
             log.info("Creating Merge/Pull Request Markdown comment");
 
+            Comparator<ScanResults.XIssue> issueComparator = Comparator
+                    .comparing(ScanResults.XIssue::getSeverity)
+                    .thenComparing(ScanResults.XIssue::getVulnerability);
             //SAST
-            for (Map.Entry<String, ScanResults.XIssue> xIssue : xMap.entrySet()) {
+            xMap.entrySet().stream()
+                .filter(x -> x.getValue() != null && x.getValue().getDetails() != null)
+                .sorted(Entry.comparingByValue(issueComparator))
+                .forEach( xIssue -> {
                 ScanResults.XIssue currentIssue = xIssue.getValue();
                 String fileUrl = ScanUtils.getFileUrl(request, currentIssue.getFilename());
-                if(currentIssue.getDetails() != null) {
-                    for (Map.Entry<Integer, String> entry : currentIssue.getDetails().entrySet()) {
-                        if (entry.getKey() != null) {  //[<line>](<url>)
-                            //Azure DevOps direct repo line url is unknown at this time.
-                            if (request.getRepoType().equals(ScanRequest.Repository.ADO)) {
-                                body.append(entry.getKey()).append(" ");
-                            } else {
-                                body.append("[").append(entry.getKey()).append("](").append(fileUrl);
-                                if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)) {
-                                    body.append("#lines-").append(entry.getKey()).append(") ");
-                                } else if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)) {
-                                    body.append("#").append(entry.getKey()).append(") ");
-                                } else {
-                                    body.append("#L").append(entry.getKey()).append(") ");
-                                }
-                            }
+                currentIssue.getDetails().entrySet().stream()
+                    .filter(x -> x.getKey( ) != null && x.getValue() != null && !x.getValue().isFalsePositive())
+                    .sorted(Entry.comparingByKey())
+                    .forEach( entry -> {
+                    //[<line>](<url>)
+                    //Azure DevOps direct repo line url is unknown at this time.
+                    if (request.getRepoType().equals(ScanRequest.Repository.ADO)) {
+                        body.append(entry.getKey()).append(" ");
+                    } else {
+                        body.append("[").append(entry.getKey()).append("](").append(fileUrl);
+                        if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)) {
+                            body.append("#lines-").append(entry.getKey()).append(") ");
+                        } else if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)) {
+                            body.append("#").append(entry.getKey()).append(") ");
+                        } else {
+                            body.append("#L").append(entry.getKey()).append(") ");
                         }
                     }
-                    body.append("|");
-                    body.append(currentIssue.getSeverity()).append("|");
-                    body.append(currentIssue.getVulnerability()).append("|");
-                    body.append(currentIssue.getFilename()).append("|");
-                    body.append("[Checkmarx](").append(currentIssue.getLink()).append(")");
-                    body.append(CRLF);
-                }
-            }
+                });
+                body.append("|");
+                body.append(currentIssue.getSeverity()).append("|");
+                body.append(currentIssue.getVulnerability()).append("|");
+                body.append(currentIssue.getFilename()).append("|");
+                body.append("[Checkmarx](").append(currentIssue.getLink()).append(")");
+                body.append(CRLF);
+
+            });
 
             if(results.getOsa() != null && results.getOsa()) {
                 body.append(CRLF);
@@ -560,21 +587,22 @@ public class ScanUtils {
                 body.append("---|---|---").append(CRLF);
 
                 //OSA
-                for (Map.Entry<String, ScanResults.XIssue> xIssue : xMap.entrySet()) {
+                xMap.entrySet().stream()
+                        .filter(x -> x.getValue() != null && x.getValue().getOsaDetails() != null)
+                        .sorted(Entry.comparingByValue(issueComparator))
+                        .forEach( xIssue -> {
                     ScanResults.XIssue currentIssue = xIssue.getValue();
-                    if(currentIssue.getOsaDetails() != null) {
-                        body.append("|");
-                        body.append(currentIssue.getFilename()).append("|");
-                        body.append(currentIssue.getSeverity()).append("|");
-                        for (ScanResults.OsaDetails o : currentIssue.getOsaDetails()) {
-                            body.append("[").append(o.getCve()).append("](")
-                                    .append("https://cve.mitre.org/cgi-bin/cvename.cgi?name=").append(o.getCve()).append(") ");
-                        }
-                        body.append("|");
-                        body.append(CRLF);
+                    body.append("|");
+                    body.append(currentIssue.getFilename()).append("|");
+                    body.append(currentIssue.getSeverity()).append("|");
+                    for (ScanResults.OsaDetails o : currentIssue.getOsaDetails()) {
+                        body.append("[").append(o.getCve()).append("](")
+                                .append("https://cve.mitre.org/cgi-bin/cvename.cgi?name=").append(o.getCve()).append(") ");
                     }
-                    //body.append("```").append(currentIssue.getDescription()).append("```").append(CRLF); Description is too long
-                }
+                    body.append("|");
+                    body.append(CRLF);
+                //body.append("```").append(currentIssue.getDescription()).append("```").append(CRLF); Description is too long
+                });
             }
         }
         return body.toString();
@@ -798,5 +826,4 @@ public class ScanUtils {
         if(index < 0) return ref;
         return ref.substring(index+1);
     }
-
 }
