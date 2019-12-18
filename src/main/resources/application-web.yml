@@ -58,15 +58,6 @@ checkmarx:
   scan-timeout: 120
 #WSDL Config
   portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
-  sdk-url: ${checkmarx.base-url}/cxwebinterface/SDK/CxSDKWebService.asmx
-  portal-wsdl: ${checkmarx.base-url}/Portal/CxWebService.asmx?wsdl
-  sdk-wsdl: ${checkmarx.base-url}/SDK/CxSDKWebService.asmx?wsdl
-  portal-package: checkmarx.wsdl.portal
-  preserve-xml: false
-  jira-project-field:
-  jira-custom-field:
-  jira-issuetype-field:
-  jira-assignee-field:
   #project-script: D:\\tmp\CxProject.groovy
   #team-script: D:\\tmp\CxTeam.groovy
   #exclude-files:
