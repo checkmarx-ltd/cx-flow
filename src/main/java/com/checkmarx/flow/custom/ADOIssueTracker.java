@@ -9,6 +9,7 @@ import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.dto.ScanResults;
+import org.apache.commons.text.StringEscapeUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service("Azure")
 public class ADOIssueTracker implements IssueTracker {
@@ -398,20 +400,33 @@ public class ADOIssueTracker implements IssueTracker {
             body.append("<div><a href=\'").append(issue.getLink()).append("\'>Checkmarx</a></div>");
         }
         if(issue.getDetails() != null && !issue.getDetails().isEmpty()) {
-            body.append("<div><b>Lines: </b>");
-            for (Map.Entry<Integer, String> entry : issue.getDetails().entrySet()) {
-                if (entry.getKey() != null) {  //[<line>](<url>)
-                        body.append(entry.getKey()).append(" ");
+            Map<Integer, ScanResults.IssueDetails> trueIssues = issue.getDetails().entrySet().stream()
+                    .filter(x -> x.getKey( ) != null && x.getValue() != null && !x.getValue().isFalsePositive())
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            Map<Integer, ScanResults.IssueDetails> fpIssues = issue.getDetails().entrySet().stream()
+                    .filter(x -> x.getKey( ) != null && x.getValue() != null && x.getValue().isFalsePositive())
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            if(!trueIssues.isEmpty()) {
+                body.append("<div><b>Lines: </b>");
+                for (Map.Entry<Integer, ScanResults.IssueDetails> entry : trueIssues.entrySet()) {
+                    body.append(entry.getKey()).append(" ");
                 }
+                body.append("</div>");
             }
-            body.append("</div>");
-
-            for (Map.Entry<Integer, String> entry : issue.getDetails().entrySet()) {
-                if (entry.getKey() != null && entry.getValue() != null) {
+            if(flowProperties.isListFalsePositives() && !fpIssues.isEmpty()) {//List the false positives / not exploitable
+                body.append("<div><b>Lines Marked Not Exploitable: </b>");
+                for (Map.Entry<Integer, ScanResults.IssueDetails> entry : fpIssues.entrySet()) {
+                    body.append(entry.getKey()).append(" ");
+                }
+                body.append("</div>");
+            }
+            for (Map.Entry<Integer, ScanResults.IssueDetails> entry : trueIssues.entrySet()) {
+                if (!ScanUtils.empty(entry.getValue().getCodeSnippet())) {
                     body.append("<hr/>");
                     body.append("<b>Line #").append(entry.getKey()).append("</b>");
                     body.append("<pre><code><div>");
-                    body.append(entry.getValue());
+                    String codeSnippet = entry.getValue().getCodeSnippet();
+                    body.append(StringEscapeUtils.escapeHtml4(codeSnippet));
                     body.append("</div></code></pre><div>");
                 }
             }

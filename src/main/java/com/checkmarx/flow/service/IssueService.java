@@ -1,5 +1,6 @@
 package com.checkmarx.flow.service;
 
+import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.custom.IssueTracker;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.Issue;
@@ -23,7 +24,7 @@ public class IssueService implements ApplicationContextAware {
 
     private ApplicationContext context;
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(IssueService.class);
-
+    private final FlowProperties properties;
 
     public ApplicationContext getContext() {
         return context;
@@ -34,6 +35,9 @@ public class IssueService implements ApplicationContextAware {
         this.context = context;
     }
 
+    public IssueService(FlowProperties properties) {
+        this.properties = properties;
+    }
 
     /**
      * Create a map of custom issues
@@ -103,9 +107,23 @@ public class IssueService implements ApplicationContextAware {
                     /*Issue already exists -> update and comment*/
                     if (iMap.containsKey(xIssue.getKey())) {
                         Issue i = iMap.get(xIssue.getKey());
+                        if(xIssue.getValue().isAllFalsePositive()) {
+                            //All issues are false positive, so issue should be closed
+                            Issue fpIssue;
+                            log.debug("All issues are false positives");
 
-                        /*Ignore any with label indicating false positive*/
-                        if (!i.getLabels().contains(fpLabel)) {
+                            if(properties.isListFalsePositives()) { //Update the ticket if flag is set
+                                log.debug("Issue is being updated to reflect false positive references.  Updating issue with key {}", xIssue.getKey());
+                                tracker.updateIssue(i, currentIssue, request);
+                            }
+                            if (tracker.isIssueOpened(i, request)) {
+                                /*Close the issue if in an open state*/
+                                tracker.closeIssue(i, request);
+                                closedIssues.add(i.getId());
+                            }
+
+                        }
+                        else if (!i.getLabels().contains(fpLabel)) { /*Ignore any with label indicating false positive*/
                             log.info("Issue still exists.  Updating issue with key {}", xIssue.getKey());
                             fileUrl = ScanUtils.getFileUrl(request, currentIssue.getFilename());
                             currentIssue.setGitUrl(fileUrl);

@@ -2,7 +2,8 @@ server:
   port: ${PORT:8585}
 
 logging:
-  file: cx-flow.log
+  file:
+    name: cx-flow.log
 #  level:
 #    com:
 #      checkmarx:
@@ -37,8 +38,10 @@ cx-flow:
   mitre-url: https://cwe.mitre.org/data/definitions/%s.html
   wiki-url: https://checkmarx.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
   codebash-url: https://cxa.codebashing.com/courses/
+  auto-profile: true
   #branch-script: D:\\tmp\Branch.groovy
   #zip-exclude: .*.json$, bin\/.*
+
 
 checkmarx:
   username: xxx
@@ -130,20 +133,16 @@ jira:
 
 github:
   webhook-token: 1234
-  token: xxx
   url: https://github.com
   api-url: https://api.github.com/repos/
-  false-positive-label: false-positive
   block-merge: true
   error-merge: true
   cx-summary: true
 
 gitlab:
   webhook-token: 1234
-  token: xxx
   url: https://gitlab.com
   api-url: https://gitlab.com/api/v4/
-  false-positive-label: false-positive
   block-merge: true
 
 bitbucket:
@@ -182,7 +181,7 @@ csv:
       default-value: unknown
     - header: Primary URL
       name: static
-      default-value: ${tmp.url}
+      default-value: ABC
     - header: severity
       name: severity
     - header: Vulnerability ID

@@ -23,7 +23,6 @@ public class JsonIssueTracker implements IssueTracker {
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(JsonIssueTracker.class);
     private final JsonProperties properties;
 
-    @ConstructorProperties({"properties"})
     public JsonIssueTracker(JsonProperties properties) {
         this.properties = properties;
     }

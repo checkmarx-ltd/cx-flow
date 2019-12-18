@@ -1,13 +1,16 @@
 server:
-  port: ${PORT:8080}
+  port: ${PORT:8585}
 
 logging:
-  file: cx-flow.log
+  file:
+    name: cx-flow.log
 #  level:
 #    com:
 #      checkmarx:
 #        flow:
+#          cmd: TRACE
 #          service: TRACE
+#          controller: TRACE
 #    org:
 #      apache:
 #        http:
@@ -37,6 +40,7 @@ cx-flow:
   mitre-url: https://cwe.mitre.org/data/definitions/%s.html
   wiki-url: https://checkmarx.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
   codebash-url: https://cxa.codebashing.com/courses/
+  auto-profile: true
   #branch-script: D:\\tmp\Branch.groovy
   #zip-exclude: .*.json$, bin\/.*
 
@@ -44,7 +48,7 @@ checkmarx:
   username: xxx
   password: xxx
   client-secret: 014DF517-39D1-4453-B7B3-9930C563627C
-  base-url: http://localhost:8100
+  base-url: https://localhost:8100
   url: ${checkmarx.base-url}/cxrestapi
   multi-tenant: true
   incremental: true
@@ -54,15 +58,6 @@ checkmarx:
   scan-timeout: 120
 #WSDL Config
   portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
-  sdk-url: ${checkmarx.base-url}/cxwebinterface/SDK/CxSDKWebService.asmx
-  portal-wsdl: ${checkmarx.base-url}/Portal/CxWebService.asmx?wsdl
-  sdk-wsdl: ${checkmarx.base-url}/SDK/CxSDKWebService.asmx?wsdl
-  portal-package: checkmarx.wsdl.portal
-  preserve-xml: false
-  jira-project-field:
-  jira-custom-field:
-  jira-issuetype-field:
-  jira-assignee-field:
   #project-script: D:\\tmp\CxProject.groovy
   #team-script: D:\\tmp\CxTeam.groovy
   #exclude-files:
@@ -133,7 +128,6 @@ github:
   token: xxx
   url: https://github.com
   api-url: https://api.github.com/repos/
-  false-positive-label: false-positive
   block-merge: true
   error-merge: true
   cx-summary: true
@@ -143,7 +137,6 @@ gitlab:
   token: xxx
   url: https://gitlab.com
   api-url: https://gitlab.com/api/v4/
-  false-positive-label: false-positive
   block-merge: true
 
 bitbucket:
@@ -151,7 +144,6 @@ bitbucket:
   token: xxx
   url: https://api.bitbucket.org
   api-path: /2.0
-  false-positive-label: false-positive
 
 azure:
   webhook-token: cxflow:1234
@@ -182,7 +174,7 @@ csv:
       default-value: unknown
     - header: Primary URL
       name: static
-      default-value: ${tmp.url}
+      #default-value: ${tmp.url}
     - header: severity
       name: severity
     - header: Vulnerability ID
