@@ -9,6 +9,7 @@ import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.dto.ScanResults;
+import org.apache.commons.text.StringEscapeUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -424,7 +425,8 @@ public class ADOIssueTracker implements IssueTracker {
                     body.append("<hr/>");
                     body.append("<b>Line #").append(entry.getKey()).append("</b>");
                     body.append("<pre><code><div>");
-                    body.append(entry.getValue().getCodeSnippet());
+                    String codeSnippet = entry.getValue().getCodeSnippet();
+                    body.append(StringEscapeUtils.escapeHtml4(codeSnippet));
                     body.append("</div></code></pre><div>");
                 }
             }
