@@ -32,6 +32,7 @@ public class JiraProperties {
     private String openTransition;
     private String closeTransitionField;
     private String closeTransitionValue;
+    private String closeFalsePositiveTransitionValue;
     private String closeTransition;
     private boolean updateComment = false;
     private String updateCommentValue = "Issue still remains";
@@ -108,6 +109,10 @@ public class JiraProperties {
 
     public String getCloseTransitionValue() {
         return this.closeTransitionValue;
+    }
+
+    public String getCloseFalsePositiveTransitionValue() {
+        return closeFalsePositiveTransitionValue;
     }
 
     public String getCloseTransition() {
@@ -192,6 +197,10 @@ public class JiraProperties {
 
     public void setCloseTransitionValue(String closeTransitionValue) {
         this.closeTransitionValue = closeTransitionValue;
+    }
+
+    public void setCloseFalsePositiveTransitionValue(String closeFalsePositiveTransitionValue) {
+        this.closeFalsePositiveTransitionValue = closeFalsePositiveTransitionValue;
     }
 
     public void setCloseTransition(String closeTransition) {
