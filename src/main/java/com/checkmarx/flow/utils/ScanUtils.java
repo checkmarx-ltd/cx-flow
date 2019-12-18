@@ -6,6 +6,7 @@ import com.checkmarx.flow.config.RepoProperties;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.sdk.config.Constants;
+import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
@@ -15,8 +16,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.client.HttpClientErrorException;
-
 import javax.validation.constraints.NotNull;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -24,16 +23,14 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Map.Entry.comparingByKey;
 
 public class ScanUtils {
 
@@ -151,14 +148,14 @@ public class ScanUtils {
      * @param override
      * @return
      */
-    public static ScanRequest overrideMap(ScanRequest request, MachinaOverride override){
+    public static ScanRequest overrideMap(ScanRequest request, FlowOverride override){
         if(override == null){
             return request;
         }
         BugTracker bt = request.getBugTracker();
         /*Override only applicable to Simple JIRA bug*/
         if(request.getBugTracker().getType().equals(BugTracker.Type.JIRA) && override.getJira()!=null) {
-            MachinaOverride.Jira jira = override.getJira();
+            FlowOverride.Jira jira = override.getJira();
             if(!ScanUtils.empty(jira.getAssignee())) {
                 bt.setAssignee(jira.getAssignee());
             }//if empty value override with null
@@ -206,20 +203,6 @@ public class ScanUtils {
             request.setActiveBranches(override.getBranches());
         }
 
-        if(override.getIncremental() != null) {
-            request.setIncremental(override.getIncremental());
-        }
-
-        if(!ScanUtils.empty(override.getScanPreset())) {
-            request.setScanPreset(override.getScanPreset());
-        }
-        if(override.getExcludeFolders() != null) {
-            request.setExcludeFolders(Arrays.asList(override.getExcludeFolders().split(",")));
-        }
-        if(override.getExcludeFiles() != null) {
-            request.setExcludeFiles(Arrays.asList(override.getExcludeFiles().split(",")));
-        }
-
         List<String> emails = override.getEmails();
         if(emails != null) {
             if (emails.isEmpty()) {
@@ -228,7 +211,7 @@ public class ScanUtils {
                 request.setEmail(emails);
             }
         }
-        MachinaOverride.Filters filtersObj = override.getFilters();
+        FlowOverride.Filters filtersObj = override.getFilters();
 
         if(filtersObj != null && (!ScanUtils.empty(filtersObj.getSeverity()) || !ScanUtils.empty(filtersObj.getCwe()) ||
                 !ScanUtils.empty(filtersObj.getCategory()) || !ScanUtils.empty(filtersObj.getStatus()))) {
@@ -240,6 +223,155 @@ public class ScanUtils {
             request.setFilters(null);
         }
 
+        return request;
+    }
+
+    /**
+     * Override scan request details as per file/blob (MachinaOverride)
+     *
+     * @param request
+     * @param override
+     * @return
+     */
+    public static ScanRequest overrideCxConfig(ScanRequest request, CxConfig override, FlowProperties flowProperties, JiraProperties jiraProperties){
+        if(override == null || request == null || !override.getActive()){
+            return request;
+        }
+        if (!ScanUtils.empty(override.getProject())) {
+            /*Replace ${repo} and ${branch}  with the actual reponame and branch - then strip out non-alphanumeric (-_ are allowed)*/
+            String project = override.getProject();
+            project = project.replaceAll("\\$\\{repo}", request.getRepoName());
+            project = project.replaceAll("\\$\\{branch}", request.getBranch());
+            project = project.replaceAll("[^a-zA-Z0-9-_.]+","-");
+            request.setProject(project);
+        }
+        if (!ScanUtils.empty(override.getTeam())) {
+            request.setTeam(override.getTeam());
+        }
+        if(override.getSast() != null) {
+            if (override.getSast().getIncremental() != null) {
+                request.setIncremental(override.getSast().getIncremental());
+            }
+
+            if (override.getSast().getForceScan() != null) {
+                request.setForceScan(override.getSast().getForceScan());
+            }
+
+            if (!ScanUtils.empty(override.getSast().getPreset())) {
+                request.setScanPreset(override.getSast().getPreset());
+                request.setScanPresetOverride(true);
+            }
+            if (override.getSast().getFolderExcludes() != null) {
+                request.setExcludeFolders(Arrays.asList(override.getSast().getFolderExcludes().split(",")));
+            }
+            if (override.getSast().getFileExcludes() != null) {
+                request.setExcludeFiles(Arrays.asList(override.getSast().getFileExcludes().split(",")));
+            }
+        }
+        try {
+            if (override.getAdditionalProperties() != null) {
+                Object flow = override.getAdditionalProperties().get("cxFlow");
+                ObjectMapper mapper = new ObjectMapper();
+                FlowOverride flowOverride = mapper.convertValue(flow, FlowOverride.class);
+                //FlowOverride flowOverride = (FlowOverride) override.getAdditionalProperties().get("cxFlow");
+                if (flowOverride != null) {
+                    BugTracker bt = request.getBugTracker();
+                    //initial bt as NONE
+                    if(bt == null) {
+                        bt = BugTracker.builder()
+                                .type(BugTracker.Type.NONE)
+                                .build();
+                    }
+                    String bug = flowOverride.getBugTracker();
+                    if(bug != null && !bug.equalsIgnoreCase(bt.getType().toString())) {
+                        BugTracker.Type bugType = ScanUtils.getBugTypeEnum(bug, flowProperties.getBugTrackerImpl());
+                        if (bugType.equals(BugTracker.Type.CUSTOM)) {
+                            bt = BugTracker.builder()
+                                    .type(bugType)
+                                    .customBean(bug)
+                                    .build();
+                        } else {
+                            bt = BugTracker.builder()
+                                    .type(bugType)
+                                    .build();
+                        }
+
+                    }
+                    /*Override only applicable to Simple JIRA bug*/
+                    if (bt.getType().equals(BugTracker.Type.JIRA) && flowOverride.getJira() != null) {
+                        FlowOverride.Jira jira = flowOverride.getJira();
+                        if (!ScanUtils.empty(jira.getAssignee())) {
+                            bt.setAssignee(jira.getAssignee());
+                        }//if empty value override with null
+                        if (jira.getAssignee() != null && jira.getAssignee().isEmpty()) {
+                            bt.setAssignee(null);
+                        }
+                        if (!ScanUtils.empty(jira.getProject())) {
+                            bt.setProjectKey(jira.getProject());
+                        }
+                        if (!ScanUtils.empty(jira.getIssueType())) {
+                            bt.setIssueType(jira.getIssueType());
+                        }
+                        if (!ScanUtils.empty(jira.getOpenedStatus())) {
+                            bt.setOpenStatus(jira.getOpenedStatus());
+                        }
+                        if (!ScanUtils.empty(jira.getClosedStatus())) {
+                            bt.setClosedStatus(jira.getClosedStatus());
+                        }
+                        if (!ScanUtils.empty(jira.getOpenTransition())) {
+                            bt.setOpenTransition(jira.getOpenTransition());
+                        }
+                        if (!ScanUtils.empty(jira.getCloseTransition())) {
+                            bt.setCloseTransition(jira.getCloseTransition());
+                        }
+                        if (!ScanUtils.empty(jira.getCloseTransitionField())) {
+                            bt.setCloseTransitionField(jira.getCloseTransitionField());
+                        }
+                        if (!ScanUtils.empty(jira.getCloseTransitionValue())) {
+                            bt.setCloseTransitionValue(jira.getCloseTransitionValue());
+                        }
+                        if (jira.getFields() != null) { //if empty, assume no fields
+                            bt.setFields(jira.getFields());
+                        }
+                        if (jira.getPriorities() != null && !jira.getPriorities().isEmpty()) {
+                            bt.setPriorities(jira.getPriorities());
+                        }
+                    }
+
+                    request.setBugTracker(bt);
+
+                    if (!ScanUtils.empty(flowOverride.getApplication())) {
+                        request.setApplication(flowOverride.getApplication());
+                    }
+
+                    if (!ScanUtils.empty(flowOverride.getBranches())) {
+                        request.setActiveBranches(flowOverride.getBranches());
+                    }
+
+                    List<String> emails = flowOverride.getEmails();
+                    if (emails != null) {
+                        if (emails.isEmpty()) {
+                            request.setEmail(null);
+                        } else {
+                            request.setEmail(emails);
+                        }
+                    }
+                    FlowOverride.Filters filtersObj = flowOverride.getFilters();
+
+                    if (filtersObj != null &&
+                            (!ScanUtils.empty(filtersObj.getSeverity()) || !ScanUtils.empty(filtersObj.getCwe()) ||
+                                    !ScanUtils.empty(filtersObj.getCategory()) || !ScanUtils.empty(filtersObj.getStatus()))) {
+                        List<Filter> filters = ScanUtils.getFilters(filtersObj.getSeverity(), filtersObj.getCwe(),
+                                filtersObj.getCategory(), filtersObj.getStatus());
+                        request.setFilters(filters);
+                    } else if (filtersObj != null) {
+                        request.setFilters(null);
+                    }
+                }
+            }
+        }catch (IllegalArgumentException e){
+            log.warn("Issue parsing CxConfig cxFlow element: {}", ExceptionUtils.getRootCauseMessage(e));
+        }
         return request;
     }
 
@@ -276,26 +408,6 @@ public class ScanUtils {
         return bt;
     }
 
-    public static void zipDirectory(String sourceDirectoryPath, String zipPath) throws IOException {
-        Path zipFilePath = Files.createFile(Paths.get(zipPath));
-
-        try (ZipOutputStream zipOutputStream = new ZipOutputStream(Files.newOutputStream(zipFilePath))) {
-            Path sourceDirPath = Paths.get(sourceDirectoryPath);
-
-            Files.walk(sourceDirPath).filter(path -> !Files.isDirectory(path))
-                    .forEach(path -> {
-                        ZipEntry zipEntry = new ZipEntry(sourceDirPath.relativize(path).toString());
-                        try {
-                            zipOutputStream.putNextEntry(zipEntry);
-                            zipOutputStream.write(Files.readAllBytes(path));
-                            zipOutputStream.closeEntry();
-                        } catch (Exception e) {
-                            log.error(ExceptionUtils.getStackTrace(e));
-                        }
-                    });
-        }
-    }
-
     public static String getMDBody(ScanResults.XIssue issue, String branch, String fileUrl, FlowProperties flowProperties) {
         StringBuilder body = new StringBuilder();
         body.append(String.format(ISSUE_BODY, issue.getVulnerability(), issue.getFilename(), branch)).append(CRLF).append(CRLF);
@@ -303,40 +415,58 @@ public class ScanUtils {
             body.append("*").append(issue.getDescription().trim()).append("*").append(CRLF).append(CRLF);
         }
         if(!ScanUtils.empty(issue.getSeverity())) {
-            body.append("Severity: ").append(issue.getSeverity()).append(CRLF);
+            body.append("Severity: ").append(issue.getSeverity()).append(CRLF).append(CRLF);
         }
         if(!ScanUtils.empty(issue.getCwe())) {
-            body.append("CWE:").append(issue.getCwe()).append(CRLF);
+            body.append("CWE:").append(issue.getCwe()).append(CRLF).append(CRLF);
             if(!empty(flowProperties.getMitreUrl())) {
-                body.append("[Vulnerability details and guidance](").append(String.format(flowProperties.getMitreUrl(), issue.getCwe())).append(")").append(CRLF);
+                body.append("[Vulnerability details and guidance](").append(String.format(flowProperties.getMitreUrl(), issue.getCwe())).append(")").append(CRLF).append(CRLF);
             }
         }
         if(!ScanUtils.empty(flowProperties.getWikiUrl())) {
-            body.append("[Internal Guidance](").append(flowProperties.getWikiUrl()).append(")").append(CRLF);
+            body.append("[Internal Guidance](").append(flowProperties.getWikiUrl()).append(")").append(CRLF).append(CRLF);
         }
         if(!ScanUtils.empty(issue.getLink())){
-            body.append("[Checkmarx](").append(issue.getLink()).append(")").append(CRLF);
+            body.append("[Checkmarx](").append(issue.getLink()).append(")").append(CRLF).append(CRLF);
         }
         if(issue.getDetails() != null && !issue.getDetails().isEmpty()) {
-            body.append("Lines: ");
-            for (Map.Entry<Integer, String> entry : issue.getDetails().entrySet()) {
-                if (entry.getKey() != null) {  //[<line>](<url>)
-                    if(fileUrl != null) {
+            Map<Integer, ScanResults.IssueDetails> trueIssues = issue.getDetails().entrySet().stream()
+                    .filter(x -> x.getKey( ) != null && x.getValue() != null && !x.getValue().isFalsePositive())
+                    .sorted(comparingByKey())
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            Map<Integer, ScanResults.IssueDetails> fpIssues = issue.getDetails().entrySet().stream()
+                    .filter(x -> x.getKey( ) != null && x.getValue() != null && x.getValue().isFalsePositive())
+                    .sorted(comparingByKey())
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            if(!trueIssues.isEmpty()) {
+                body.append("Lines: ");
+                for (Map.Entry<Integer, ScanResults.IssueDetails> entry : trueIssues.entrySet()) {
+                    if (fileUrl != null) {  //[<line>](<url>)
                         body.append("[").append(entry.getKey()).append("](").append(fileUrl).append("#L").append(entry.getKey()).append(") ");
-                    }
-                    else{ //if the fileUrl is not provided, simply putting the line number (no link) - ADO for example
+                    } else { //if the fileUrl is not provided, simply putting the line number (no link) - ADO for example
                         body.append(entry.getKey()).append(" ");
                     }
                 }
+                body.append(CRLF).append(CRLF);
             }
-            body.append(CRLF).append(CRLF);
-
-            for (Map.Entry<Integer, String> entry : issue.getDetails().entrySet()) {
-                if (entry.getKey() != null && entry.getValue() != null) {
+            if(flowProperties.isListFalsePositives() && !fpIssues.isEmpty()) {//List the false positives / not exploitable
+                body.append(ScanUtils.CRLF);
+                body.append("Lines Marked Not Exploitable: ");
+                for (Map.Entry<Integer, ScanResults.IssueDetails> entry : fpIssues.entrySet()) {
+                    if (fileUrl != null) {  //[<line>](<url>)
+                        body.append("[").append(entry.getKey()).append("](").append(fileUrl).append("#L").append(entry.getKey()).append(") ");
+                    } else { //if the fileUrl is not provided, simply putting the line number (no link) - ADO for example
+                        body.append(entry.getKey()).append(" ");
+                    }
+                }
+                body.append(CRLF).append(CRLF);
+            }
+            for (Map.Entry<Integer, ScanResults.IssueDetails> entry : trueIssues.entrySet()) {
+                if (entry.getValue() != null && entry.getValue().getCodeSnippet() != null) {
                     body.append("---").append(CRLF);
                     body.append("[Code (Line #").append(entry.getKey()).append("):](").append(fileUrl).append("#L").append(entry.getKey()).append(")").append(CRLF);
                     body.append("```").append(CRLF);
-                    body.append(entry.getValue()).append(CRLF);
+                    body.append(entry.getValue().getCodeSnippet()).append(CRLF);
                     body.append("```").append(CRLF);
                 }
             }
@@ -377,7 +507,7 @@ public class ScanUtils {
         StringBuilder body = new StringBuilder();
         body.append("### Checkmarx scan completed").append(CRLF);
         body.append("[Full Scan Details](").append(results.getLink()).append(")").append(CRLF);
-        if(properties.isCxSummary()){
+        if(properties.isCxSummary() && !request.getProduct().equals(ScanRequest.Product.CXOSA)){
             if(!ScanUtils.empty(properties.getCxSummaryHeader())) {
                 body.append("#### ").append(properties.getCxSummaryHeader()).append(CRLF);
             }
@@ -395,8 +525,10 @@ public class ScanUtils {
             body.append("Severity|Count").append(CRLF);
             body.append("---|---").append(CRLF);
             Map<String, Integer> flow = (Map<String, Integer>) results.getAdditionalDetails().put(Constants.SUMMARY_KEY, summary);
-            for(Map.Entry<String, Integer> severity : flow.entrySet()){
-                body.append(severity.getKey()).append("|").append(severity.getValue().toString()).append(CRLF);
+            if(flow != null) {
+                for (Map.Entry<String, Integer> severity : flow.entrySet()) {
+                    body.append(severity.getKey()).append("|").append(severity.getValue().toString()).append(CRLF);
+                }
             }
             body.append(CRLF);
         }
@@ -411,28 +543,36 @@ public class ScanUtils {
             xMap = getXIssueMap(results.getXIssues(), request);
             log.info("Creating Merge/Pull Request Markdown comment");
 
+            Comparator<ScanResults.XIssue> issueComparator = Comparator
+                    .comparing(ScanResults.XIssue::getSeverity)
+                    .thenComparing(ScanResults.XIssue::getVulnerability);
             //SAST
-            for (Map.Entry<String, ScanResults.XIssue> xIssue : xMap.entrySet()) {
+            xMap.entrySet().stream()
+                .filter(x -> x.getValue() != null && x.getValue().getDetails() != null)
+                .sorted(Entry.comparingByValue(issueComparator))
+                .forEach( xIssue -> {
                 ScanResults.XIssue currentIssue = xIssue.getValue();
                 String fileUrl = ScanUtils.getFileUrl(request, currentIssue.getFilename());
-                if(currentIssue.getDetails() != null) {
-                    for (Map.Entry<Integer, String> entry : currentIssue.getDetails().entrySet()) {
-                        if (entry.getKey() != null) {  //[<line>](<url>)
-                            //Azure DevOps direct repo line url is unknown at this time.
-                            if (request.getRepoType().equals(ScanRequest.Repository.ADO)) {
-                                body.append(entry.getKey()).append(" ");
-                            } else {
-                                body.append("[").append(entry.getKey()).append("](").append(fileUrl);
-                                if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)) {
-                                    body.append("#lines-").append(entry.getKey()).append(") ");
-                                } else if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)) {
-                                    body.append("#").append(entry.getKey()).append(") ");
-                                } else {
-                                    body.append("#L").append(entry.getKey()).append(") ");
-                                }
-                            }
+                currentIssue.getDetails().entrySet().stream()
+                    .filter(x -> x.getKey( ) != null && x.getValue() != null && !x.getValue().isFalsePositive())
+                    .sorted(Entry.comparingByKey())
+                    .forEach( entry -> {
+                    //[<line>](<url>)
+                    //Azure DevOps direct repo line url is unknown at this time.
+                    if (request.getRepoType().equals(ScanRequest.Repository.ADO)) {
+                        body.append(entry.getKey()).append(" ");
+                    } else {
+                        body.append("[").append(entry.getKey()).append("](").append(fileUrl);
+                        if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)) {
+                            body.append("#lines-").append(entry.getKey()).append(") ");
+                        } else if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)) {
+                            body.append("#").append(entry.getKey()).append(") ");
+                        } else {
+                            body.append("#L").append(entry.getKey()).append(") ");
                         }
                     }
+                });
+                if(currentIssue.getDetails().entrySet().stream().anyMatch(x -> x.getKey() != null && x.getValue() != null && !x.getValue().isFalsePositive())) {
                     body.append("|");
                     body.append(currentIssue.getSeverity()).append("|");
                     body.append(currentIssue.getVulnerability()).append("|");
@@ -440,7 +580,7 @@ public class ScanUtils {
                     body.append("[Checkmarx](").append(currentIssue.getLink()).append(")");
                     body.append(CRLF);
                 }
-            }
+            });
 
             if(results.getOsa() != null && results.getOsa()) {
                 body.append(CRLF);
@@ -448,21 +588,22 @@ public class ScanUtils {
                 body.append("---|---|---").append(CRLF);
 
                 //OSA
-                for (Map.Entry<String, ScanResults.XIssue> xIssue : xMap.entrySet()) {
+                xMap.entrySet().stream()
+                        .filter(x -> x.getValue() != null && x.getValue().getOsaDetails() != null)
+                        .sorted(Entry.comparingByValue(issueComparator))
+                        .forEach( xIssue -> {
                     ScanResults.XIssue currentIssue = xIssue.getValue();
-                    if(currentIssue.getOsaDetails() != null) {
-                        body.append("|");
-                        body.append(currentIssue.getFilename()).append("|");
-                        body.append(currentIssue.getSeverity()).append("|");
-                        for (ScanResults.OsaDetails o : currentIssue.getOsaDetails()) {
-                            body.append("[").append(o.getCve()).append("](")
-                                    .append("https://cve.mitre.org/cgi-bin/cvename.cgi?name=").append(o.getCve()).append(") ");
-                        }
-                        body.append("|");
-                        body.append(CRLF);
+                    body.append("|");
+                    body.append(currentIssue.getFilename()).append("|");
+                    body.append(currentIssue.getSeverity()).append("|");
+                    for (ScanResults.OsaDetails o : currentIssue.getOsaDetails()) {
+                        body.append("[").append(o.getCve()).append("](")
+                                .append("https://cve.mitre.org/cgi-bin/cvename.cgi?name=").append(o.getCve()).append(") ");
                     }
-                    //body.append("```").append(currentIssue.getDescription()).append("```").append(CRLF); Description is too long
-                }
+                    body.append("|");
+                    body.append(CRLF);
+                //body.append("```").append(currentIssue.getDescription()).append("```").append(CRLF); Description is too long
+                });
             }
         }
         return body.toString();
@@ -529,15 +670,15 @@ public class ScanUtils {
         return repoUrl.concat("/blob/").concat(request.getBranch()).concat("/").concat(filename);
     }
 
-    public static MachinaOverride getMachinaOverride(@RequestParam(value = "override", required = false) String override) {
-        MachinaOverride o = null;
+    public static FlowOverride getMachinaOverride(@RequestParam(value = "override", required = false) String override) {
+        FlowOverride o = null;
         try {
             ObjectMapper mapper = new ObjectMapper();
             //if override is provided, check if chars are more than 20 in length, implying base64 encoded json
             if(!ScanUtils.empty(override)){
                 if(override.length() > 20){
                     String oJson = new String(Base64.getDecoder().decode(override));
-                    o = mapper.readValue(oJson, MachinaOverride.class);
+                    o = mapper.readValue(oJson, FlowOverride.class);
                     log.info("Overriding attributes with Base64 encoded String");
                 }
                 else{
@@ -686,5 +827,4 @@ public class ScanUtils {
         if(index < 0) return ref;
         return ref.substring(index+1);
     }
-
 }

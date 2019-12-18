@@ -5,7 +5,7 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.EventResponse;
-import com.checkmarx.flow.dto.MachinaOverride;
+import com.checkmarx.flow.dto.FlowOverride;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.azure.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
@@ -96,7 +96,7 @@ public class ADOController {
                     .build());
         }
 
-        MachinaOverride o = ScanUtils.getMachinaOverride(override);
+        FlowOverride o = ScanUtils.getMachinaOverride(override);
 
         try {
             Resource resource = body.getResource();
@@ -275,7 +275,7 @@ public class ADOController {
         log.info("Processing Azure Push request");
         validateBasicAuth(auth);
 
-        MachinaOverride o = ScanUtils.getMachinaOverride(override);
+        FlowOverride o = ScanUtils.getMachinaOverride(override);
 
         try {
             Resource resource = body.getResource();

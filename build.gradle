@@ -1,8 +1,9 @@
 buildscript {
 	ext {
-        cxVersion = "8.90.5"
-        springBootVersion = '2.1.5.RELEASE'
-        sonarqubeVersion = '2.5'
+        CxSBSDK = "0.4.2"
+        //cxVersion = "8.90.5"
+        springBootVersion = '2.2.2.RELEASE'
+        sonarqubeVersion = '2.8'
         atlassianVersion = "5.1.6"
         atlassianFugueVersion = "4.7.2"
         mainClass='com.checkmarx.flow.CxFlowApplication'
@@ -36,7 +37,7 @@ apply plugin: 'io.spring.dependency-management'
 apply plugin: 'com.gorylenko.gradle-git-properties'
 
 group = 'com.checkmarx'
-version = '1.4.4'
+version = '1.5.2'
 sourceCompatibility = 1.8
 
 repositories {
@@ -54,23 +55,24 @@ dependencies {
     compile('org.springframework.boot:spring-boot-starter-actuator')
 	compile('org.springframework.boot:spring-boot-starter-web')
 	compile('org.springframework.boot:spring-boot-starter-aop')
-	compile('com.github.checkmarx-ts:cx-spring-boot-sdk:0.3.5')
-    compile ('commons-codec:commons-codec:1.11')
+    compile("com.github.checkmarx-ts:cx-spring-boot-sdk:${CxSBSDK}")
+    compile ("org.apache.commons:commons-text:1.8")
+    compile ('commons-codec:commons-codec:1.13')
     compile ('commons-io:commons-io:2.6')
-    compile ('org.json:json:20171018')
-    compile ('com.fasterxml.jackson.core:jackson-databind:2.9.8')
+    compile ('org.json:json:20190722')
+    compile ('com.fasterxml.jackson.core:jackson-databind')
     compile ('org.springframework.boot:spring-boot-starter-web-services')
     compile ('org.springframework.boot:spring-boot-starter-mail')
     compile ('org.springframework.boot:spring-boot-starter-thymeleaf')
-    compile ('com.github.ulisesbocchio:jasypt-spring-boot-starter:2.1.0')
+    compile ('com.github.ulisesbocchio:jasypt-spring-boot-starter:2.1.2')
     compile ("io.atlassian.fugue:fugue:${atlassianFugueVersion}")
     compile ("com.atlassian.jira:jira-rest-java-client-core:${atlassianVersion}")
     compile ("com.atlassian.jira:jira-rest-java-client-api:${atlassianVersion}")
-    compile ("org.apache.httpcomponents:httpclient:4.5.8")
-    compile ("org.thymeleaf:thymeleaf:3.0.9.RELEASE")
-    compile ("org.codehaus.groovy:groovy-all:2.5.7")
-    compile ("org.apache.ivy:ivy:2.5.0-rc1")
-    compile ("org.eclipse.jgit:org.eclipse.jgit:5.5.0.201909110433-r")
+    compile ("org.apache.httpcomponents:httpclient:4.5.10")
+    compile ("org.thymeleaf:thymeleaf:3.0.11.RELEASE")
+    compile ("org.codehaus.groovy:groovy-all:2.5.8")
+    compile ("org.apache.ivy:ivy:2.5.0")
+    compile ("org.eclipse.jgit:org.eclipse.jgit:5.5.1.201910021850-r")
     compileOnly ('org.springframework.boot:spring-boot-configuration-processor')
     runtime('org.springframework.boot:spring-boot-devtools')
     testCompile('org.springframework.boot:spring-boot-starter-test')
@@ -84,6 +86,18 @@ springBoot {
 
 bootJar {
     mainClassName = "${mainClass}"
+}
+
+test {
+    useJUnit {
+        systemProperty "testprofile", "unit"
+    }
+}
+
+task integrationTest(type: Test) {
+    useJUnit {
+        systemProperty "testprofile", "integration"
+    }
 }
 
 task getVersion {

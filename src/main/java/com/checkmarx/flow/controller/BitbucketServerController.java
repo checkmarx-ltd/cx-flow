@@ -5,7 +5,7 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.EventResponse;
-import com.checkmarx.flow.dto.MachinaOverride;
+import com.checkmarx.flow.dto.FlowOverride;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.bitbucketserver.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
@@ -187,7 +187,7 @@ public class BitbucketServerController {
         MDC.put("cx", uid);
         verifyHmacSignature(body, signature);
 
-        MachinaOverride o = ScanUtils.getMachinaOverride(override);
+        FlowOverride o = ScanUtils.getMachinaOverride(override);
         ObjectMapper mapper = new ObjectMapper();
         PullEvent event;
 
@@ -353,7 +353,7 @@ public class BitbucketServerController {
         MDC.put("cx", uid);
         verifyHmacSignature(body, signature);
 
-        MachinaOverride o = ScanUtils.getMachinaOverride(override);
+        FlowOverride o = ScanUtils.getMachinaOverride(override);
         ObjectMapper mapper = new ObjectMapper();
         PushEvent event;
 

@@ -33,7 +33,7 @@ public class GitLabIssueTracker implements IssueTracker {
     private static final String OPEN_STATE = "opened";
     private static final String ISSUES_PER_PAGE = "100";
     private static final String PROJECT_PATH = "/projects/{id}";
-    private static final String PROJECT = "projects/{namespace}{x}{repo}";
+    private static final String PROJECT = "/projects/{namespace}{x}{repo}";
     private static final String ISSUES_PATH = "/projects/{id}/issues?per_page=".concat(ISSUES_PER_PAGE);
     private static final String NEW_ISSUE_PATH = "/projects/{id}/issues";
     private static final String ISSUE_PATH = "/projects/{id}/issues/{iid}";

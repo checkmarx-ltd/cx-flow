@@ -32,6 +32,7 @@ public class JiraProperties {
     private String openTransition;
     private String closeTransitionField;
     private String closeTransitionValue;
+    private String closeFalsePositiveTransitionValue;
     private String closeTransition;
     private boolean updateComment = false;
     private String updateCommentValue = "Issue still remains";
@@ -40,6 +41,7 @@ public class JiraProperties {
     private List<Field> fields;
     private String ParentUrl = "";
     private boolean child = false;
+    private Integer httpTimeout = 20000;
 
     public String getUrl() {
         return this.url;
@@ -107,6 +109,10 @@ public class JiraProperties {
 
     public String getCloseTransitionValue() {
         return this.closeTransitionValue;
+    }
+
+    public String getCloseFalsePositiveTransitionValue() {
+        return closeFalsePositiveTransitionValue;
     }
 
     public String getCloseTransition() {
@@ -193,6 +199,10 @@ public class JiraProperties {
         this.closeTransitionValue = closeTransitionValue;
     }
 
+    public void setCloseFalsePositiveTransitionValue(String closeFalsePositiveTransitionValue) {
+        this.closeFalsePositiveTransitionValue = closeFalsePositiveTransitionValue;
+    }
+
     public void setCloseTransition(String closeTransition) {
         this.closeTransition = closeTransition;
     }
@@ -264,5 +274,12 @@ public class JiraProperties {
     public void setChild(boolean child) {
         this.child = child;
     }
-    
+
+    public Integer getHttpTimeout() {
+        return httpTimeout;
+    }
+
+    public void setHttpTimeout(Integer httpTimeout) {
+        this.httpTimeout = httpTimeout;
+    }
 }

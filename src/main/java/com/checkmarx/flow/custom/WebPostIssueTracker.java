@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
@@ -81,7 +82,7 @@ public class WebPostIssueTracker implements IssueTracker {
                 log.info("Saving file {} to signed web url", filename);
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_JSON);
-                HttpEntity<byte[]> entity = new HttpEntity<>(Files.readAllBytes(resultFile.toPath()), headers);
+                HttpEntity<byte[]> entity = new HttpEntity<>(Files.readAllBytes(Paths.get(resultFile.getCanonicalPath())), headers);
                 URI uri = new URI(resultUrl);
                 restTemplate.put(uri, entity);
                 log.info("Save successful");

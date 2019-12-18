@@ -6,7 +6,7 @@ import com.atlassian.jira.rest.client.api.domain.input.ComplexIssueInputFieldVal
 import com.atlassian.jira.rest.client.api.domain.input.FieldInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
 import com.atlassian.jira.rest.client.api.domain.input.TransitionInput;
-import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
+import com.atlassian.jira.rest.client.internal.async.CustomAsynchronousJiraRestClientFactory;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.dto.BugTracker;
@@ -22,7 +22,6 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
-
 import javax.annotation.PostConstruct;
 import java.beans.ConstructorProperties;
 import java.net.URI;
@@ -30,6 +29,8 @@ import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class JiraService {
@@ -43,8 +44,8 @@ public class JiraService {
     private final JiraProperties jiraProperties;
     private final FlowProperties flowProperties;
     private static final int MAX_JQL_RESULTS = 1000000;
+    private static final int JIRA_MAX_DESCRIPTION = 32760;
     private final String ParentUrl;
-    private ScanRequest Parent;
 
     @ConstructorProperties({"jiraProperties", "flowProperties"})
     public JiraService(JiraProperties jiraProperties, FlowProperties flowProperties) {
@@ -56,14 +57,13 @@ public class JiraService {
     @PostConstruct
     public void init() {
         if (jiraProperties != null && !ScanUtils.empty(jiraProperties.getUrl())) {
-            JiraRestClientFactory factory = new AsynchronousJiraRestClientFactory();
-
+            CustomAsynchronousJiraRestClientFactory factory = new CustomAsynchronousJiraRestClientFactory();
             try {
                 this.jiraURI = new URI(jiraProperties.getUrl());
             } catch (URISyntaxException e) {
                 log.error("Error constructing URI for JIRA");
             }
-            this.client = factory.createWithBasicHttpAuthentication(jiraURI, jiraProperties.getUsername(), jiraProperties.getToken());
+            this.client = factory.createWithBasicHttpAuthenticationCustom(jiraURI, jiraProperties.getUsername(), jiraProperties.getToken(), jiraProperties.getHttpTimeout());
             this.issueClient = this.client.getIssueClient();
             this.projectClient = this.client.getProjectClient();
             this.metaClient = this.client.getMetadataClient();
@@ -120,7 +120,16 @@ public class JiraService {
             throw new MachinaRuntimeException();
         }
         log.debug(jql);
-        Promise<SearchResult> searchJqlPromise = this.client.getSearchClient().searchJql(jql, MAX_JQL_RESULTS, 0, null);
+        HashSet<String> fields = new HashSet<String>();
+        fields.add("key");
+        fields.add("project");
+        fields.add("issuetype");
+        fields.add("summary");
+        fields.add("labels");
+        fields.add("created");
+        fields.add("updated");
+        fields.add("status");
+        Promise<SearchResult> searchJqlPromise = this.client.getSearchClient().searchJql(jql, MAX_JQL_RESULTS, 0, fields);
         for (Issue issue : searchJqlPromise.claim().getIssues()) {
             issues.add(issue);
         }
@@ -200,7 +209,7 @@ public class JiraService {
                 }
             }
 
-            if (bugTracker.getPriorities().containsKey(severity)) {
+            if (bugTracker.getPriorities() != null && bugTracker.getPriorities().containsKey(severity)) {
                 issueBuilder.setFieldValue("priority", ComplexIssueInputFieldValue.with("name",
                         bugTracker.getPriorities().get(severity)));
             }
@@ -410,16 +419,31 @@ public class JiraService {
                                 break;
                             case "loc":
                                 value = "";
-                                List<String> lines = new ArrayList<>();
-                                if (issue.getDetails() != null && !issue.getDetails().isEmpty()) {
-                                    for (Map.Entry<Integer, String> entry : issue.getDetails().entrySet()) {
-                                        if (entry.getKey() != null && entry.getValue() != null) {
-                                            lines.add(entry.getKey().toString());
-                                        }
-                                    }
+                                List<Integer> lines =issue.getDetails().entrySet()
+                                        .stream()
+                                        .filter( x -> x.getKey( ) != null && x.getValue() != null && !x.getValue().isFalsePositive())
+                                        .map(Map.Entry::getKey)
+                                        .collect(Collectors.toList());
+                                if(!lines.isEmpty()) {
                                     Collections.sort(lines);
                                     value = StringUtils.join(lines, ",");
                                     log.debug("loc: {}", value);
+                                }
+                                break;
+                            case "not-exploitable":
+                                value = "";
+                                List<Integer> fpLines;
+                                if (issue.getDetails() != null) {
+                                    fpLines = issue.getDetails().entrySet()
+                                            .stream()
+                                            .filter( x -> x.getKey( ) != null && x.getValue() != null && x.getValue().isFalsePositive())
+                                            .map(Map.Entry::getKey)
+                                            .collect(Collectors.toList());
+                                    if(!fpLines.isEmpty()) {
+                                        Collections.sort(fpLines);
+                                        value = StringUtils.join(fpLines, ",");
+                                        log.debug("loc: {}", value);
+                                    }
                                 }
                                 break;
                             case "site":
@@ -572,7 +596,7 @@ public class JiraService {
         return issue;
     }
 
-    private Issue transitionCloseIssue(String bugId, String transitionName, BugTracker bt) throws JiraClientException {
+    private Issue transitionCloseIssue(String bugId, String transitionName, BugTracker bt, boolean falsePositive) throws JiraClientException {
         Issue issue;
         try {
             issue = this.issueClient.getIssue(bugId).claim();
@@ -587,8 +611,12 @@ public class JiraService {
                     this.issueClient.transition(issue.getTransitionsUri(), new TransitionInput(transition.getId())).claim();
                 }//Input required for transition
                 else {
+                    String transitionValue = bt.getCloseTransitionValue();
+                    if(falsePositive && !ScanUtils.empty(jiraProperties.getCloseFalsePositiveTransitionValue())) { //Allow for a separate resolution status if any of the issues are false positive
+                        transitionValue = jiraProperties.getCloseFalsePositiveTransitionValue();  //TODO add to bt?
+                    }
                     this.issueClient.transition(issue.getTransitionsUri(), new TransitionInput(transition.getId(),
-                            Collections.singletonList(new FieldInput(bt.getCloseTransitionField(), ComplexIssueInputFieldValue.with("name", bt.getCloseTransitionValue()))))).claim();
+                        Collections.singletonList(new FieldInput(bt.getCloseTransitionField(), ComplexIssueInputFieldValue.with("name", transitionValue))))).claim();
                 }
             } else {
                 log.warn("Issue cannot't be transitioned to {}.  Transition is not applicable to issue {}.  Available transitions: {}",
@@ -768,10 +796,36 @@ public class JiraService {
             body.append("[Guidance|").append(flowProperties.getWikiUrl()).append("]").append(ScanUtils.CRLF);
         }
         if (issue.getDetails() != null && !issue.getDetails().isEmpty()) {
-            body.append("Lines: ");
-            for (Map.Entry<Integer, String> entry : issue.getDetails().entrySet()) {
+            if(issue.getDetails().entrySet().stream().anyMatch(x -> x.getKey( ) != null && x.getValue() != null && !x.getValue().isFalsePositive())){
+                body.append("Lines: ");
+            }
+            issue.getDetails().entrySet().stream()
+                .filter(x -> x.getKey( ) != null && x.getValue() != null && !x.getValue().isFalsePositive())
+                .sorted(Map.Entry.comparingByKey())
+                .forEach(entry -> {
                 if (!ScanUtils.empty(fileUrl)) {
-                    if (entry.getKey() != null) {
+                    if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)) {
+                        body.append("[").append(entry.getKey()).append("|").append(fileUrl).append("#").append(entry.getKey()).append("] ");
+                    } else if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)) { //BB Cloud
+                        body.append("[").append(entry.getKey()).append("|").append(fileUrl).append("#lines-").append(entry.getKey()).append("] ");
+                    } else {
+                        body.append("[").append(entry.getKey()).append("|").append(fileUrl).append("#L").append(entry.getKey()).append("] ");
+                    }
+                } else {
+                    body.append(entry.getKey()).append(" ");
+                }
+            });
+
+            if(flowProperties.isListFalsePositives()){//List the false positives / not exploitable
+                body.append(ScanUtils.CRLF);
+                if(issue.getDetails().entrySet().stream().anyMatch(x -> x.getKey() != null && x.getValue() != null && x.getValue().isFalsePositive())){
+                    body.append("Lines Marked Not Exploitable: ");
+                }
+                issue.getDetails().entrySet().stream()
+                    .filter(x -> x.getKey( ) != null && x.getValue() != null && x.getValue().isFalsePositive())
+                    .sorted(Map.Entry.comparingByKey())
+                    .forEach(entry -> {
+                    if (!ScanUtils.empty(fileUrl)) {
                         if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)) {
                             body.append("[").append(entry.getKey()).append("|").append(fileUrl).append("#").append(entry.getKey()).append("] ");
                         } else if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)) { //BB Cloud
@@ -779,17 +833,17 @@ public class JiraService {
                         } else {
                             body.append("[").append(entry.getKey()).append("|").append(fileUrl).append("#L").append(entry.getKey()).append("] ");
                         }
-                    }
-                } else {
-                    if (entry.getKey() != null) {
+                    } else {
                         body.append(entry.getKey()).append(" ");
                     }
-                }
+                });
             }
-
             body.append(ScanUtils.CRLF).append(ScanUtils.CRLF);
-            for (Map.Entry<Integer, String> entry : issue.getDetails().entrySet()) {
-                if (entry.getKey() != null && entry.getValue() != null) {
+            issue.getDetails().entrySet().stream()
+                .filter(x -> x.getKey( ) != null && x.getValue() != null && !x.getValue().isFalsePositive())
+                .sorted(Map.Entry.comparingByKey())
+                .forEach(entry -> {
+                if (!ScanUtils.empty(entry.getValue().getCodeSnippet())) {
                     body.append("----").append(ScanUtils.CRLF);
                     if (!ScanUtils.empty(fileUrl)) {
                         if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)) {
@@ -803,10 +857,10 @@ public class JiraService {
                         body.append("Line #").append(entry.getKey()).append(ScanUtils.CRLF);
                     }
                     body.append("{code}").append(ScanUtils.CRLF);
-                    body.append(entry.getValue()).append(ScanUtils.CRLF);
+                    body.append(entry.getValue().getCodeSnippet()).append(ScanUtils.CRLF);
                     body.append("{code}").append(ScanUtils.CRLF);
                 }
-            }
+            });
             body.append("----").append(ScanUtils.CRLF);
         }
 
@@ -839,34 +893,35 @@ public class JiraService {
         if (!ScanUtils.empty(jiraProperties.getDescriptionPostfix())) {
             body.append(jiraProperties.getDescriptionPostfix());
         }
-        return body.toString();
+        return StringUtils.truncate(body.toString(), JIRA_MAX_DESCRIPTION);
     }
 
     Map<String, List<String>> process(ScanResults results, ScanRequest request) throws JiraClientException {
         Map<String, ScanResults.XIssue> map;
         Map<String, Issue> jiraMap;
-        List<Issue> IssuesParent;
+        List<Issue> issuesParent;
         List<String> newIssues = new ArrayList<>();
         List<String> updatedIssues = new ArrayList<>();
         List<String> closedIssues = new ArrayList<>();
-        if (this.jiraProperties.isChild()) {
-            Parent = new ScanRequest(request);
-            BugTracker bugTracker;
-            bugTracker = Parent.getBugTracker();
-            bugTracker.setProjectKey(ParentUrl);
-            Parent.setBugTracker(bugTracker);
-            IssuesParent = this.getIssues(Parent);
-        } else {
-            IssuesParent = this.getIssues(request);
 
-        }
-
-        log.info("Processing Results and publishing findings to Jira");
         String application = request.getApplication();
         if (!ScanUtils.empty(application)) {
             application = application.replaceAll("[^a-zA-Z0-9-_.+]+", "_");
             request.setApplication(application);
         }
+
+        if (this.jiraProperties.isChild()) {
+            ScanRequest parent = new ScanRequest(request);
+            BugTracker bugTracker;
+            bugTracker = parent.getBugTracker();
+            bugTracker.setProjectKey(ParentUrl);
+            parent.setBugTracker(bugTracker);
+            issuesParent = this.getIssues(parent);
+        } else {
+            issuesParent = this.getIssues(request);
+        }
+
+        log.info("Processing Results and publishing findings to Jira");
 
         List<Issue> issues = this.getIssues(request);
         map = this.getIssueMap(results.getXIssues(), request);
@@ -879,9 +934,25 @@ public class JiraService {
                 /*Issue already exists -> update and comment*/
                 if (jiraMap.containsKey(xIssue.getKey())) {
                     Issue i = jiraMap.get(xIssue.getKey());
-
-                    /*Ignore any with label indicating false positive*/
-                    if (!i.getLabels().contains(jiraProperties.getFalsePositiveLabel())) {
+                    if(xIssue.getValue().isAllFalsePositive()) {
+                        //All issues are false positive, so issue should be closed
+                        log.debug("All issues are false positives");
+                        Issue fpIssue;
+                        if(flowProperties.isListFalsePositives()) { //Update the ticket if flag is set
+                            log.debug("Issue is being updated to reflect false positive references.  Updating issue with key {}", xIssue.getKey());
+                            fpIssue = this.updateIssue(i.getKey(), currentIssue, request);
+                        }
+                        else{ //otherwise simply get a reference to the issue
+                            fpIssue = this.getIssue(i.getKey());
+                        }
+                        if (request.getBugTracker().getOpenStatus().contains(fpIssue.getStatus().getName())) { //If the status is of open state, close it
+                            /*Close the issue*/
+                            log.info("Closing issue with key {}", fpIssue.getKey());
+                            this.transitionCloseIssue(fpIssue.getKey(), request.getBugTracker().getCloseTransition(), request.getBugTracker(), true);
+                            closedIssues.add(fpIssue.getKey());
+                        }
+                    }/*Ignore any with label indicating false positive*/
+                    else if (!i.getLabels().contains(jiraProperties.getFalsePositiveLabel()) ) {
                         log.debug("Issue still exists.  Updating issue with key {}", xIssue.getKey());
                         Issue updatedIssue = this.updateIssue(i.getKey(), currentIssue, request);
                         if (updatedIssue != null) {
@@ -896,7 +967,7 @@ public class JiraService {
                     }
                 } else {
                     /*Create the new issue*/
-                    if (!jiraProperties.isChild() || !ParentCheck(xIssue.getKey(), IssuesParent)) {
+                    if (!jiraProperties.isChild() || !parentCheck(xIssue.getKey(), issuesParent)) {
 
                         if (jiraProperties.isChild()) {
                             log.info("Issue not found in parent creating issue for child");
@@ -923,7 +994,7 @@ public class JiraService {
                         /*Close the issue*/
                         log.info("Closing issue with key {}", jiraIssue.getKey());
                         this.transitionCloseIssue(jiraIssue.getValue().getKey(),
-                                request.getBugTracker().getCloseTransition(), request.getBugTracker());
+                                request.getBugTracker().getCloseTransition(), request.getBugTracker(), false); //No false positives
                         closedIssues.add(jiraIssue.getValue().getKey());
                     }
                 }
@@ -940,9 +1011,9 @@ public class JiraService {
         );
     }
 
-    boolean ParentCheck(String Key, List<Issue> Issues) {
+    boolean parentCheck(String Key, List<Issue> issues) {
         Map<String, Issue> jiraMap;
-        jiraMap = this.getJiraIssueMap(Issues);
+        jiraMap = this.getJiraIssueMap(issues);
         if (this.jiraProperties.isChild()) {
 
             if (jiraMap.containsKey(Key)) {
