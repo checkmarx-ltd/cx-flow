@@ -415,19 +415,19 @@ public class ScanUtils {
             body.append("*").append(issue.getDescription().trim()).append("*").append(CRLF).append(CRLF);
         }
         if(!ScanUtils.empty(issue.getSeverity())) {
-            body.append("Severity: ").append(issue.getSeverity()).append(CRLF);
+            body.append("Severity: ").append(issue.getSeverity()).append(CRLF).append(CRLF);
         }
         if(!ScanUtils.empty(issue.getCwe())) {
-            body.append("CWE:").append(issue.getCwe()).append(CRLF);
+            body.append("CWE:").append(issue.getCwe()).append(CRLF).append(CRLF);
             if(!empty(flowProperties.getMitreUrl())) {
-                body.append("[Vulnerability details and guidance](").append(String.format(flowProperties.getMitreUrl(), issue.getCwe())).append(")").append(CRLF);
+                body.append("[Vulnerability details and guidance](").append(String.format(flowProperties.getMitreUrl(), issue.getCwe())).append(")").append(CRLF).append(CRLF);
             }
         }
         if(!ScanUtils.empty(flowProperties.getWikiUrl())) {
-            body.append("[Internal Guidance](").append(flowProperties.getWikiUrl()).append(")").append(CRLF);
+            body.append("[Internal Guidance](").append(flowProperties.getWikiUrl()).append(")").append(CRLF).append(CRLF);
         }
         if(!ScanUtils.empty(issue.getLink())){
-            body.append("[Checkmarx](").append(issue.getLink()).append(")").append(CRLF);
+            body.append("[Checkmarx](").append(issue.getLink()).append(")").append(CRLF).append(CRLF);
         }
         if(issue.getDetails() != null && !issue.getDetails().isEmpty()) {
             Map<Integer, ScanResults.IssueDetails> trueIssues = issue.getDetails().entrySet().stream()
@@ -572,13 +572,14 @@ public class ScanUtils {
                         }
                     }
                 });
-                body.append("|");
-                body.append(currentIssue.getSeverity()).append("|");
-                body.append(currentIssue.getVulnerability()).append("|");
-                body.append(currentIssue.getFilename()).append("|");
-                body.append("[Checkmarx](").append(currentIssue.getLink()).append(")");
-                body.append(CRLF);
-
+                if(currentIssue.getDetails().entrySet().stream().anyMatch(x -> x.getKey() != null && x.getValue() != null && !x.getValue().isFalsePositive())) {
+                    body.append("|");
+                    body.append(currentIssue.getSeverity()).append("|");
+                    body.append(currentIssue.getVulnerability()).append("|");
+                    body.append(currentIssue.getFilename()).append("|");
+                    body.append("[Checkmarx](").append(currentIssue.getLink()).append(")");
+                    body.append(CRLF);
+                }
             });
 
             if(results.getOsa() != null && results.getOsa()) {
