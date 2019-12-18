@@ -33,14 +33,6 @@ checkmarx:
   team: \CxServer\SP\Checkmarx
   url: ${checkmarx.base-url}/cxrestapi
   portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
-  sdk-url: ${checkmarx.base-url}/cxwebinterface/SDK/CxSDKWebService.asmx
-  portal-wsdl: ${checkmarx.base-url}/Portal/CxWebService.asmx?wsdl
-  sdk-wsdl: ${checkmarx.base-url}/SDK/CxSDKWebService.asmx?wsdl
-  preserve-xml: false
-  jira-project-field:
-  jira-custom-field:
-  jira-issuetype-field:
-  jira-assignee-field:
   scan-timeout: 120
   incremental: true
 
