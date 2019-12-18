@@ -1,3 +1,10 @@
+Release 1.5.2
+---------------------------------------------------------------------
+# FEATURES
+- Adding the ability to track false positives in the feedback channels
+    - add the following block to the cx-flow config:   list-false-positives: true
+    - Change JIRA resolution code with additional property under jira config block:   close-false-positive-transition-value: Declined
+
 Release 1.5.1
 ---------------------------------------------------------------------
 # FIXES
