@@ -169,6 +169,7 @@ public class FlowService {
             //only allow specific chars in project name in checkmarx
             projectName = projectName.replaceAll("[^a-zA-Z0-9-_.]+","-");
             log.info("Project Name being used {}", projectName);
+            request.setProject(project);
             Integer projectId = UNKNOWN_INT;
             if(flowProperties.isAutoProfile() && !request.isScanPresetOverride()) {
                 boolean projectExists = false;
