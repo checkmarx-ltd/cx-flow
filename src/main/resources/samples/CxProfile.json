@@ -3,7 +3,7 @@
   "preset": "Checkmarx Default",
   "files": ["Web.config",".*web\\.xml"],
   "weight": [
-    {"type":  "Java", "weight": 1},
+    {"type":  "Java", "weight": 50},
     {"type":  "C#", "weight": 1},
     {"type":  "HTML", "weight": 1},
     {"type":  "Kotlin", "weight": 1}
@@ -14,7 +14,7 @@
     "preset": "All",
     "weight": [
       {"type":  "Java", "weight": 50},
-      {"type":  "CSS", "weight": 88}
+      {"type":  "CSS", "weight": 10}
     ]
   },
   {
