@@ -38,6 +38,7 @@ public class FlowProperties {
     private Integer scanResultQueue = 4;
     private Integer httpConnectionTimeout = 30000;
     private Integer httpReadTimeout = 120000;
+    private boolean listFalsePositives = false;
     private Mail mail;
 
     public String getContact() {
@@ -247,6 +248,14 @@ public class FlowProperties {
 
     public void setAlwaysProfile(boolean alwaysProfile) {
         this.alwaysProfile = alwaysProfile;
+    }
+
+    public boolean isListFalsePositives() {
+        return listFalsePositives;
+    }
+
+    public void setListFalsePositives(boolean listFalsePositives) {
+        this.listFalsePositives = listFalsePositives;
     }
 
     public static class Mail {
