@@ -5,17 +5,19 @@ import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.EventResponse;
-import com.checkmarx.flow.dto.MachinaOverride;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.github.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.service.FlowService;
+import com.checkmarx.flow.service.GitHubService;
 import com.checkmarx.flow.service.HelperService;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
+import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.Filter;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
@@ -60,18 +62,24 @@ public class GitHubController {
     private final JiraProperties jiraProperties;
     private final FlowService flowService;
     private final HelperService helperService;
+    private final GitHubService gitHubService;
     private Mac hmac;
 
-    @ConstructorProperties({"properties", "flowProperties", "cxProperties",
-            "jiraProperties", "flowService", "helperService"})
-    public GitHubController(GitHubProperties properties, FlowProperties flowProperties, CxProperties cxProperties,
-                            JiraProperties jiraProperties, FlowService flowService, HelperService helperService) {
+
+    public GitHubController(GitHubProperties properties,
+                            FlowProperties flowProperties,
+                            CxProperties cxProperties,
+                            JiraProperties jiraProperties,
+                            FlowService flowService,
+                            HelperService helperService,
+                            GitHubService gitHubService) {
         this.properties = properties;
         this.flowProperties = flowProperties;
         this.cxProperties = cxProperties;
         this.jiraProperties = jiraProperties;
         this.flowService = flowService;
         this.helperService = helperService;
+        this.gitHubService = gitHubService;
     }
 
     @PostConstruct
@@ -128,7 +136,6 @@ public class GitHubController {
         log.info("Processing GitHub PULL request");
         PullEvent event;
         ObjectMapper mapper = new ObjectMapper();
-        MachinaOverride o = ScanUtils.getMachinaOverride(override);
 
         try {
             event = mapper.readValue(body, PullEvent.class);
@@ -142,7 +149,8 @@ public class GitHubController {
         try {
             String action = event.getAction();
             if(!action.equalsIgnoreCase("opened") &&
-                    !action.equalsIgnoreCase("reopened")){
+                    !action.equalsIgnoreCase("reopened") &&
+                    !action.equalsIgnoreCase("synchronize")){
                 log.info("Pull requested not processed.  Status was not opened ({})", action);
                 return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
                         .message("No processing occurred for updates to Pull Request")
@@ -203,9 +211,7 @@ public class GitHubController {
             gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(token).concat("@"));
 
             String scanPreset = cxProperties.getScanPreset();
-            if(!ScanUtils.empty(preset)){
-                scanPreset = preset;
-            }
+
             boolean inc = cxProperties.getIncremental();
             if(incremental != null){
                 inc = incremental;
@@ -234,7 +240,14 @@ public class GitHubController {
                     .filters(filters)
                     .build();
 
-            request = ScanUtils.overrideMap(request, o);
+            if(!ScanUtils.empty(preset)){
+                request.setScanPreset(preset);
+                request.setScanPresetOverride(true);
+            }
+            /*Check for Config as code (cx.config) and override*/
+            CxConfig cxConfig =  gitHubService.getCxConfigOverride(request);
+            request = ScanUtils.overrideCxConfig(request, cxConfig, flowProperties, jiraProperties);
+
             request.putAdditionalMetadata("statuses_url", event.getPullRequest().getStatusesUrl());
             request.setId(uid);
             //only initiate scan/automation if target branch is applicable
@@ -291,11 +304,10 @@ public class GitHubController {
         log.info("Processing GitHub PUSH request");
         PushEvent event;
         ObjectMapper mapper = new ObjectMapper();
-        MachinaOverride o = ScanUtils.getMachinaOverride(override);
 
         try {
             event = mapper.readValue(body, PushEvent.class);
-        } catch (NullPointerException | IOException e) {
+        } catch (NullPointerException | IOException | IllegalArgumentException e) {
             log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaRuntimeException();
         }
@@ -377,9 +389,6 @@ public class GitHubController {
             gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(token).concat("@"));
 
             String scanPreset = cxProperties.getScanPreset();
-            if(!ScanUtils.empty(preset)){
-                scanPreset = preset;
-            }
 
             boolean inc = cxProperties.getIncremental();
             if(incremental != null){
@@ -407,8 +416,15 @@ public class GitHubController {
                     .filters(filters)
                     .build();
 
-            //if an override blob/file is provided, substitute these values
-            request = ScanUtils.overrideMap(request, o);
+            if(!ScanUtils.empty(preset)){
+                request.setScanPreset(preset);
+                request.setScanPresetOverride(true);
+            }
+
+            /*Check for Config as code (cx.config) and override*/
+            CxConfig cxConfig =  gitHubService.getCxConfigOverride(request);
+            request = ScanUtils.overrideCxConfig(request, cxConfig, flowProperties, jiraProperties);
+
             request.setId(uid);
 
             //only initiate scan/automation if branch is applicable

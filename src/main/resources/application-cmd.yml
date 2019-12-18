@@ -1,5 +1,6 @@
 logging:
-  file: cx-flow.log
+  file:
+    name: cx-flow.log
 
 cx-flow:
   # Agreed upon shared API token
@@ -24,7 +25,6 @@ cx-flow:
   #track-application-only: true
   #zip-exclude: .*.json$, bin\/.*
 
-
 checkmarx:
   username:
   password: xxxx
@@ -33,14 +33,6 @@ checkmarx:
   team: \CxServer\SP\Checkmarx
   url: ${checkmarx.base-url}/cxrestapi
   portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
-  sdk-url: ${checkmarx.base-url}/cxwebinterface/SDK/CxSDKWebService.asmx
-  portal-wsdl: ${checkmarx.base-url}/Portal/CxWebService.asmx?wsdl
-  sdk-wsdl: ${checkmarx.base-url}/SDK/CxSDKWebService.asmx?wsdl
-  preserve-xml: false
-  jira-project-field:
-  jira-custom-field:
-  jira-issuetype-field:
-  jira-assignee-field:
   scan-timeout: 120
   incremental: true
 
@@ -155,7 +147,7 @@ csv:
       default-value: unknown
     - header: Primary URL
       name: static
-      default-value: ${tmp.url}
+      #default-value: ${tmp.url}
     - header: severity
       name: severity
     - header: Vulnerability ID
