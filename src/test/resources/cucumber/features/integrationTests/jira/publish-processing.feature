@@ -1,7 +1,8 @@
-@Jira @Integration
+@Target(Jira) @Integration
+@test_Not_implemented
 Feature: Check integration tests of publish processing
 
-  @Create_issue
+  @Target_new_Issue
   Scenario Outline: publish new issues to JIRA, one new issue is getting created per scan vulnerability type
     Given target is JIRA
     And   results contains <Number_of> vulnerabilities each having a different vulnerability type
@@ -16,7 +17,7 @@ Feature: Check integration tests of publish processing
       | ALL       |
 
 
-  @Create_issue
+  @Target_new_Issue
   Scenario Outline: publish new issue to JIRA which contains only one vulnerability type
     Given target is JIRA
     And   results contains <Number_Of> vulnerabilities with the same type
@@ -30,7 +31,7 @@ Feature: Check integration tests of publish processing
       | 3         | 1        |
 
 
-  @Create_issue
+  @Target_new_Issue
   Scenario Outline: publish new issues to JIRA and filtered by a single severity
     Given target is JIRA
     And   there are <Number_Of_Total> results from which <Number_Of> results match the filter
@@ -46,7 +47,7 @@ Feature: Check integration tests of publish processing
       | 10              | 10        |
 
 
-  @Create_issue
+  @Target_new_Issue
   Scenario Outline: sanity of publishing new issues to JIRA
     Given target is JIRA
     And   filter-severity is <Filter_Severity>
@@ -67,7 +68,7 @@ Feature: Check integration tests of publish processing
       | [High,Low]      | 10                           | 2                            | 9                              | 3                              | 4                           | 2                           | 20                           | 1                            | 10                            | 0                               | 4                            | 0                             |
 
 
-  @Update_issue
+  @Target_update_Issue
   Scenario: publish updated issue to JIRA
     # Note - to update an issue, the vulnerability & filename fields must match
     Given target is JIRA
@@ -76,7 +77,7 @@ Feature: Check integration tests of publish processing
     Then  original issues is updated both with 'last updated' value and with new body content
 
 
-  @Update_issue @Negative_test
+  @Target_update_Issue @Negative_test
   Scenario: publish updated issue to JIRA with missing parameters
     # Note - to update an issue, the vulnerability & filename fields must match
     Given target is JIRA
@@ -84,7 +85,7 @@ Feature: Check integration tests of publish processing
     When  publishing same issue with missing parameters
     Then  original issues is updated both with 'last updated' value and with new body content
 
-    @Close_issue
+    @Target_fix_Issue
     Scenario: publish closed issue to JIRA
       Given target is JIRA
       And   there is an existing issue
