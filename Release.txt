@@ -1,3 +1,8 @@
+Release 1.5.3
+---------------------------------------------------------------------
+# FEATURES
+- Adding Checkmarx Issue comments as a checkmarx custom field option ("comment" is the type)
+
 Release 1.5.2
 ---------------------------------------------------------------------
 # FEATURES
