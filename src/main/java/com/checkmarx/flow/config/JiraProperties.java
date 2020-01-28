@@ -40,6 +40,7 @@ public class JiraProperties {
     private List<String> closedStatus;
     private List<Field> fields;
     private String ParentUrl = "";
+    private String GrandParentUrl = "";
     private boolean child = false;
     private Integer httpTimeout = 20000;
 
@@ -273,6 +274,14 @@ public class JiraProperties {
 
     public void setChild(boolean child) {
         this.child = child;
+    }
+
+    public String getGrandParentUrl() {
+        return GrandParentUrl;
+    }
+
+    public void setGrandParentUrl(String GrandParentUrl) {
+        this.GrandParentUrl = GrandParentUrl;
     }
 
     public Integer getHttpTimeout() {
