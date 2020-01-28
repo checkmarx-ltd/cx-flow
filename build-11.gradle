@@ -2,7 +2,7 @@ import org.gradle.api.tasks.testing.Test
 
 buildscript {
 	ext {
-        CxSBSDK = "0.4.2"
+        CxSBSDK = "0.4.3"
 		springBootVersion = '2.2.4.RELEASE'
         sonarqubeVersion = '2.8'
         atlassianVersion = "5.1.6"
