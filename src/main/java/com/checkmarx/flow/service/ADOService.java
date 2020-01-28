@@ -6,6 +6,7 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.azure.CreateWorkItemAttr;
 import com.checkmarx.flow.exception.ADOClientException;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.ScanResults;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -20,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import java.beans.ConstructorProperties;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -31,12 +31,13 @@ public class ADOService {
     private final RestTemplate restTemplate;
     private final ADOProperties properties;
     private final FlowProperties flowProperties;
+    private final CxProperties cxProperties;
 
-    @ConstructorProperties({"restTemplate", "properties", "flowProperties"})
-    public ADOService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, ADOProperties properties, FlowProperties flowProperties) {
+    public ADOService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, ADOProperties properties, FlowProperties flowProperties, CxProperties cxProperties) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.flowProperties = flowProperties;
+        this.cxProperties = cxProperties;
     }
 
     private HttpHeaders createAuthHeaders(){
@@ -74,7 +75,7 @@ public class ADOService {
         log.debug(mergeUrl);
         String threadId = request.getAdditionalMetadata("ado_thread_id");
         if(ScanUtils.empty(threadId)){
-            HttpEntity httpEntity = new HttpEntity<>(getJSONThread(comment).toString(), createAuthHeaders());
+            HttpEntity<String> httpEntity = new HttpEntity<>(getJSONThread(comment).toString(), createAuthHeaders());
             log.debug("Creating new thread for comments");
             ResponseEntity<String> response = restTemplate.exchange(mergeUrl.concat("?api-version=").concat(properties.getApiVersion()),
                     HttpMethod.POST, httpEntity, String.class);
@@ -86,7 +87,7 @@ public class ADOService {
             }
         }
         else{
-            HttpEntity httpEntity = new HttpEntity<>(getJSONComment(comment).toString(), createAuthHeaders());
+            HttpEntity<String> httpEntity = new HttpEntity<>(getJSONComment(comment).toString(), createAuthHeaders());
             mergeUrl = mergeUrl.concat("/").concat(threadId).concat("/comments");
             log.debug("Adding comment to thread Id {}", threadId);
             restTemplate.exchange(mergeUrl.concat("?api-version=").concat(properties.getApiVersion()),
@@ -97,32 +98,19 @@ public class ADOService {
     void startBlockMerge(ScanRequest request){
         if(properties.isBlockMerge()) {
             String url = request.getAdditionalMetadata("statuses_url");
-            if(url == null){
+            if(ScanUtils.empty(url)){
                 log.warn("No status url found, skipping status update");
                 return;
             }
-            HttpEntity httpEntity = new HttpEntity<>(
-                    getJSONStatus("pending", url, "Checkmarx Scan Initiated").toString(),
-                    createAuthHeaders()
-            );
-            if(ScanUtils.empty(url)){
-                log.error("statuses_url was not provided within the request object, which is required for blocking / unblocking pull requests");
-                return;
+            int statusId = createStatus("pending","Checkmarx Scan Initiated", url,
+                    cxProperties.getBaseUrl().concat("/CxWebClient/UserQueue.aspx"));
+            if(statusId != -1) {
+                request.getAdditionalMetadata().put("status_id", Integer.toString(statusId));
             }
-            //TODO remove preview once applicable
-            log.info("Adding pending status to pull {}", url);
-            ResponseEntity response = restTemplate.exchange(url.concat("?api-version=").concat(properties.getApiVersion().concat("-preview")),
-                    HttpMethod.POST, httpEntity, String.class);
-            if(response.getBody() != null) {
-                JSONObject json = new JSONObject((String) response.getBody());
-                int id = json.getInt("id");
-                request.getAdditionalMetadata().put("status_id", Integer.toString(id));
-            }
-            log.debug(response.getStatusCode().toString());
         }
     }
 
-    void endBlockMerge(ScanRequest request){
+    void endBlockMerge(ScanRequest request, String scanUrl, boolean findingsPresent){
         if(properties.isBlockMerge()) {
             String url = request.getAdditionalMetadata("statuses_url");
             String statusId = request.getAdditionalMetadata("status_id");
@@ -148,24 +136,37 @@ public class ADOService {
             log.info("Removing pending status from pull {}", url);
             restTemplate.exchange(url.concat("?api-version=").concat(properties.getApiVersion().concat("-preview")),
                     HttpMethod.PATCH, httpEntity, Void.class);
+
+            if(properties.isErrorMerge() && findingsPresent){
+                log.debug("Creating status of failed to {}", url);
+                createStatus("failed", "Checkmarx Scan Completed", url, scanUrl);
+            }
+            else{
+                log.debug("Creating status of succeeded to {}", url);
+                createStatus("succeeded", "Checkmarx Scan Completed", url, scanUrl);
+            }
         }
     }
 
-    //TODO
-    void failBlockMerge(ScanRequest request, String url){
-
-        if(properties.isBlockMerge()) {
-            HttpEntity httpEntity = new HttpEntity<>(
-                    getJSONStatus("failed", url, "Checkmarx Issue Threshold exceeded").toString(),
-                    createAuthHeaders()
-            );
-            if(ScanUtils.empty(request.getAdditionalMetadata("statuses_url"))){
-                log.error("statuses_url was not provided within the request object, which is required for blocking / unblocking pull requests");
-                return;
+    int createStatus(String state, String description, String url, String sastUrl){
+        HttpEntity<String> httpEntity = new HttpEntity<>(
+                getJSONStatus(state, sastUrl, description).toString(),
+                createAuthHeaders()
+        );
+        //TODO remove preview once applicable
+        log.info("Adding pending status to pull {}", url);
+        ResponseEntity<String> response = restTemplate.exchange(url.concat("?api-version=").concat(properties.getApiVersion().concat("-preview")),
+                HttpMethod.POST, httpEntity, String.class);
+        log.debug(response.getStatusCode().toString());
+        try{
+            if(response.getBody() != null) {
+                JSONObject json = new JSONObject(response.getBody());
+                return json.getInt("id");
             }
-            restTemplate.exchange(request.getAdditionalMetadata("statuses_url"),
-                    HttpMethod.POST, httpEntity, String.class);
+        }catch (NullPointerException e){
+            log.error("Error retrieving status id");
         }
+        return -1;
     }
 
     private JSONObject getJSONStatus(String state, String url, String description){
