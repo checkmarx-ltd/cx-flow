@@ -980,6 +980,7 @@ public class JiraService {
                     }
                 } else {
                     /*Create the new issue*/
+                    if(!currentIssue.isAllFalsePositive()) {
                     if (!jiraProperties.isChild() || (!parentCheck(xIssue.getKey(), issuesParent) && !GrandparentCheck(xIssue.getKey(), issuesGrandParent))) {
 
                         if (jiraProperties.isChild()) {
@@ -990,6 +991,7 @@ public class JiraService {
                         String newIssue = this.createIssue(currentIssue, request);
                         newIssues.add(newIssue);
                         log.info("New issue created. #{}", newIssue);
+                       }
                     }
                 }
             } catch (RestClientException e) {
