@@ -148,7 +148,7 @@ public class ResultsService {
                 break;
             case ADOPULL:
                 adoService.processPull(request, results);
-                adoService.endBlockMerge(request);
+                adoService.endBlockMerge(request, results.getLink(), !results.getXIssues().isEmpty());
                 break;
             case EMAIL:
                 if(!flowProperties.getMail().isEnabled()) {
