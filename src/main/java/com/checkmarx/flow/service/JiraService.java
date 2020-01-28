@@ -980,7 +980,7 @@ public class JiraService {
                     }
                 } else {
                     /*Create the new issue*/
-                    if (!jiraProperties.isChild() || (!parentCheck(xIssue.getKey(), issuesParent) && !GramdparentCheck(xIssue.getKey(), issuesGrandParent))) {
+                    if (!jiraProperties.isChild() || (!parentCheck(xIssue.getKey(), issuesParent) && !GrandparentCheck(xIssue.getKey(), issuesGrandParent))) {
 
                         if (jiraProperties.isChild()) {
                             log.info("Issue not found in parent creating issue for child");
@@ -1038,7 +1038,7 @@ public class JiraService {
 
     }
     
-    boolean GramdparentCheck(String Key, List<Issue> issues) {
+    boolean GrandparentCheck(String Key, List<Issue> issues) {
         Map<String, Issue> jiraMap;
         jiraMap = this.getJiraIssueMap(issues);
         if (this.jiraProperties.isChild()) {
