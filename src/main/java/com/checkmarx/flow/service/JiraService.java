@@ -465,6 +465,18 @@ public class JiraService {
                                 log.debug("language: {}", issue.getLanguage());
                                 value = issue.getLanguage();
                                 break;
+                            case "comment":
+                                value = "";
+                                StringBuilder comments = new StringBuilder();
+                                String commentFmt = "Line [%s] - [%s]".concat(ScanUtils.CRLF);
+                                if (issue.getDetails() != null) {
+                                    issue.getDetails().entrySet()
+                                            .stream()
+                                            .filter( x -> x.getKey( ) != null && x.getValue() != null && x.getValue().getComment() != null)
+                                            .forEach( c -> comments.append(String.format(commentFmt, c.getKey(), c.getValue().getComment())));
+                                    value = comments.toString();
+                                }
+                                break;
                             default:
                                 log.warn("field value for {} not found", f.getName());
                                 value = "";
