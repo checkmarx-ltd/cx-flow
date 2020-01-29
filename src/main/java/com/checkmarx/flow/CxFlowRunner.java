@@ -36,19 +36,22 @@ public class CxFlowRunner implements ApplicationRunner {
     private final GitHubProperties gitHubProperties;
     private final GitLabProperties gitLabProperties;
     private final ADOProperties adoProperties;
+    private final RallyProperties rallyProperties;
     private final HelperService helperService;
     private final FlowService flowService;
 
     public CxFlowRunner(FlowProperties flowProperties,
                         CxProperties cxProperties, JiraProperties jiraProperties,
                         GitHubProperties gitHubProperties, GitLabProperties gitLabProperties,
-                        ADOProperties adoProperties, FlowService flowService, HelperService helperService) {
+                        ADOProperties adoProperties, RallyProperties rallyProperties,
+                        FlowService flowService, HelperService helperService) {
         this.flowProperties = flowProperties;
         this.cxProperties = cxProperties;
         this.jiraProperties = jiraProperties;
         this.gitHubProperties = gitHubProperties;
         this.gitLabProperties = gitLabProperties;
         this.adoProperties = adoProperties;
+        this.rallyProperties = rallyProperties;
         this.flowService = flowService;
         this.helperService = helperService;
     }
