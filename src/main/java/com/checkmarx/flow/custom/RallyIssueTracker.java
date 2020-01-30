@@ -5,7 +5,7 @@ import com.checkmarx.flow.config.RallyProperties;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.rally.CreateResultAction;
-import com.checkmarx.flow.dto.rally.NewDefect;
+import com.checkmarx.flow.dto.rally.QueryResult;
 import com.checkmarx.flow.dto.rally.Result;
 import com.checkmarx.flow.dto.rally.RallyQuery;
 import com.checkmarx.flow.exception.MachinaException;
@@ -24,14 +24,13 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 @Service("Rally")
 public class RallyIssueTracker implements IssueTracker {
 
     private static final String TRANSITION_CLOSE = "closed";
     private static final String TRANSITION_OPEN = "open";
-    private static final String ISSUES_PER_PAGE = "1";
+    private static final String ISSUES_PER_PAGE = "100";
     private static final Logger log = LoggerFactory.getLogger(RallyIssueTracker.class);
 
     private final RestTemplate restTemplate;
@@ -41,8 +40,7 @@ public class RallyIssueTracker implements IssueTracker {
     //
     /// RestAPI Endpoints
     //
-    //private static final String GET_ISSUES = "/defect?query=&fetch=true&start=1&pagesize=5";
-    private static final String GET_ISSUES = "/defect?query=&&start={page_index}&pagesize={issues_per_page}";
+    private static final String GET_ISSUES = "/defect?query=&fetch=true&start={page_index}&pagesize={issues_per_page}";
     private static final String CREATE_ISSUE = "/defect/create";
     private static final String GET_ISSUE = "/defect/{object_id}";
     private static final String UPDATE_ISSUE = "/defect/{object_id}";
@@ -79,8 +77,8 @@ public class RallyIssueTracker implements IssueTracker {
         HttpEntity httpEntity = new HttpEntity(createAuthHeaders());
         try {
             int pageIndex = 0;
-            RallyQuery rallyQuery;
-            ResponseEntity<RallyQuery> response;
+            QueryResult rallyQuery;
+            ResponseEntity<QueryResult> response;
             //
             /// Read the first list of defects from Rally, it will contain the totalResultCount we can use
             /// to figure out how many more pages of data needs to be pulled.
@@ -89,7 +87,7 @@ public class RallyIssueTracker implements IssueTracker {
                     properties.getApiUrl().concat(GET_ISSUES),
                     HttpMethod.GET,
                     httpEntity,
-                    RallyQuery.class,
+                    QueryResult.class,
                     pageIndex,
                     ISSUES_PER_PAGE
             );
@@ -108,11 +106,11 @@ public class RallyIssueTracker implements IssueTracker {
                             properties.getApiUrl().concat(GET_ISSUES),
                             HttpMethod.GET,
                             httpEntity,
-                            RallyQuery.class,
+                            QueryResult.class,
                             pageIndex,
                             ISSUES_PER_PAGE
                     );
-                    rallyQuery = response.getBody();
+                    //rallyQuery = response.getBody();
                 }
             }
             return issues;
@@ -132,7 +130,7 @@ public class RallyIssueTracker implements IssueTracker {
      * @param request CxFlow ScanRequest object with required scan info
      * @param issues will contain list of found issues
      */
-    private void readCxFlowIssues(RallyQuery rallyQuery,
+    private void readCxFlowIssues(QueryResult rallyQuery,
                                 ScanRequest request,
                                 List<Issue> issues) {
         for(Result issue: rallyQuery.getQueryResult().getResults()){
@@ -218,16 +216,10 @@ public class RallyIssueTracker implements IssueTracker {
     public Issue createIssue(ScanResults.XIssue resultIssue, ScanRequest request) throws MachinaException {
         log.debug("Executing createIssue Rally API call");
         try {
-            HttpEntity httpEntity = new HttpEntity(createAuthHeaders());
+            String json = getJSONCreateIssue(resultIssue, request);
+            HttpEntity httpEntity = new HttpEntity(json, createAuthHeaders());
             CreateResultAction createResultAction;
-            ResponseEntity<RallyQuery> response;
-            /*
-            NewDefect newDefect = new NewDefect();
-            newDefect.setName("CxFlow Generated Defect!!!");
-            newDefect.setProject("355514498680");
-            newDefect.setWorkspace("355514498248");
-             */
-            response = restTemplate.exchange(
+            ResponseEntity<CreateResultAction> response = restTemplate.exchange(
                     properties.getApiUrl().concat(CREATE_ISSUE),
                     HttpMethod.POST,
                     httpEntity,
@@ -253,20 +245,22 @@ public class RallyIssueTracker implements IssueTracker {
      *
      * @return JSON Object of create issue request
      */
-    /* TODO: update for Rally */
-    private JSONObject getJSONCreateIssue(ScanResults.XIssue resultIssue, ScanRequest request) {
+    private String getJSONCreateIssue(ScanResults.XIssue resultIssue, ScanRequest request) {
         JSONObject requestBody = new JSONObject();
+        JSONObject createBody = new JSONObject();
         String fileUrl = ScanUtils.getFileUrl(request, resultIssue.getFilename());
         String body = ScanUtils.getMDBody(resultIssue, request.getBranch(), fileUrl, flowProperties);
         String title = getXIssueKey(resultIssue, request);
-
         try {
-            requestBody.put("title", title);
-            requestBody.put("body", body);
+            requestBody.put("Name", title);
+            requestBody.put("Workspace", "355514498248");
+            requestBody.put("Project", "355514498680");
+            requestBody.put("Description", body);
+            createBody.put("Defect", requestBody);
         } catch (JSONException e) {
             log.error("Error creating JSON Create Issue Object - JSON Object will be empty");
         }
-        return requestBody;
+        return createBody.toString();
     }
 
 

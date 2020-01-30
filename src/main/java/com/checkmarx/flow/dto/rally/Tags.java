@@ -30,11 +30,11 @@ public class Tags {
     @JsonProperty("_type")
     private String type;
     @JsonProperty("_tagsNameArray")
-    private List<java.lang.Object> tagsNameArray = null;
+    private List<Object> tagsNameArray = null;
     @JsonProperty("Count")
     private Integer count;
     @JsonIgnore
-    private Map<String, java.lang.Object> additionalProperties = new HashMap<String, java.lang.Object>();
+    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     @JsonProperty("_rallyAPIMajor")
     public String getRallyAPIMajor() {
@@ -77,12 +77,12 @@ public class Tags {
     }
 
     @JsonProperty("_tagsNameArray")
-    public List<java.lang.Object> getTagsNameArray() {
+    public List<Object> getTagsNameArray() {
         return tagsNameArray;
     }
 
     @JsonProperty("_tagsNameArray")
-    public void setTagsNameArray(List<java.lang.Object> tagsNameArray) {
+    public void setTagsNameArray(List<Object> tagsNameArray) {
         this.tagsNameArray = tagsNameArray;
     }
 
@@ -97,12 +97,12 @@ public class Tags {
     }
 
     @JsonAnyGetter
-    public Map<String, java.lang.Object> getAdditionalProperties() {
+    public Map<String, Object> getAdditionalProperties() {
         return this.additionalProperties;
     }
 
     @JsonAnySetter
-    public void setAdditionalProperty(String name, java.lang.Object value) {
+    public void setAdditionalProperty(String name, Object value) {
         this.additionalProperties.put(name, value);
     }
 

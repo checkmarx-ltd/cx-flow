@@ -12,114 +12,23 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-        "_rallyAPIMajor",
-        "_rallyAPIMinor",
-        "Errors",
-        "Warnings",
-        "TotalResultCount",
-        "StartIndex",
-        "PageSize",
-        "Results"
+        "QueryResult"
 })
 public class QueryResult {
 
-    @JsonProperty("_rallyAPIMajor")
-    private String rallyAPIMajor;
-    @JsonProperty("_rallyAPIMinor")
-    private String rallyAPIMinor;
-    @JsonProperty("Errors")
-    private List<Object> errors = null;
-    @JsonProperty("Warnings")
-    private List<Object> warnings = null;
-    @JsonProperty("TotalResultCount")
-    private Integer totalResultCount;
-    @JsonProperty("StartIndex")
-    private Integer startIndex;
-    @JsonProperty("PageSize")
-    private Integer pageSize;
-    @JsonProperty("Results")
-    private List<Result> results = null;
+    @JsonProperty("QueryResult")
+    private QueryResult_ queryResult;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
-    @JsonProperty("_rallyAPIMajor")
-    public String getRallyAPIMajor() {
-        return rallyAPIMajor;
+    @JsonProperty("QueryResult")
+    public QueryResult_ getQueryResult() {
+        return queryResult;
     }
 
-    @JsonProperty("_rallyAPIMajor")
-    public void setRallyAPIMajor(String rallyAPIMajor) {
-        this.rallyAPIMajor = rallyAPIMajor;
-    }
-
-    @JsonProperty("_rallyAPIMinor")
-    public String getRallyAPIMinor() {
-        return rallyAPIMinor;
-    }
-
-    @JsonProperty("_rallyAPIMinor")
-    public void setRallyAPIMinor(String rallyAPIMinor) {
-        this.rallyAPIMinor = rallyAPIMinor;
-    }
-
-    @JsonProperty("Errors")
-    public List<Object> getErrors() {
-        return errors;
-    }
-
-    @JsonProperty("Errors")
-    public void setErrors(List<Object> errors) {
-        this.errors = errors;
-    }
-
-    @JsonProperty("Warnings")
-    public List<Object> getWarnings() {
-        return warnings;
-    }
-
-    @JsonProperty("Warnings")
-    public void setWarnings(List<Object> warnings) {
-        this.warnings = warnings;
-    }
-
-    @JsonProperty("TotalResultCount")
-    public Integer getTotalResultCount() {
-        return totalResultCount;
-    }
-
-    @JsonProperty("TotalResultCount")
-    public void setTotalResultCount(Integer totalResultCount) {
-        this.totalResultCount = totalResultCount;
-    }
-
-    @JsonProperty("StartIndex")
-    public Integer getStartIndex() {
-        return startIndex;
-    }
-
-    @JsonProperty("StartIndex")
-    public void setStartIndex(Integer startIndex) {
-        this.startIndex = startIndex;
-    }
-
-    @JsonProperty("PageSize")
-    public Integer getPageSize() {
-        return pageSize;
-    }
-
-    @JsonProperty("PageSize")
-    public void setPageSize(Integer pageSize) {
-        this.pageSize = pageSize;
-    }
-
-    @JsonProperty("Results")
-    public List<Result> getResults() {
-        return results;
-    }
-
-    @JsonProperty("Results")
-    public void setResults(List<Result> results) {
-        this.results = results;
+    @JsonProperty("QueryResult")
+    public void setQueryResult(QueryResult_ queryResult) {
+        this.queryResult = queryResult;
     }
 
     @JsonAnyGetter
