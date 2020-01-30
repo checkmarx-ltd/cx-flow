@@ -4,6 +4,8 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.RallyProperties;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.dto.rally.CreateResultAction;
+import com.checkmarx.flow.dto.rally.NewDefect;
 import com.checkmarx.flow.dto.rally.Result;
 import com.checkmarx.flow.dto.rally.RallyQuery;
 import com.checkmarx.flow.exception.MachinaException;
@@ -29,7 +31,7 @@ public class RallyIssueTracker implements IssueTracker {
 
     private static final String TRANSITION_CLOSE = "closed";
     private static final String TRANSITION_OPEN = "open";
-    private static final String ISSUES_PER_PAGE = "100";
+    private static final String ISSUES_PER_PAGE = "1";
     private static final Logger log = LoggerFactory.getLogger(RallyIssueTracker.class);
 
     private final RestTemplate restTemplate;
@@ -40,9 +42,9 @@ public class RallyIssueTracker implements IssueTracker {
     /// RestAPI Endpoints
     //
     //private static final String GET_ISSUES = "/defect?query=&fetch=true&start=1&pagesize=5";
-    private static final String GET_ISSUES = "/defect?query=&&start=1&pagesize={issues_per_page}";
+    private static final String GET_ISSUES = "/defect?query=&&start={page_index}&pagesize={issues_per_page}";
+    private static final String CREATE_ISSUE = "/defect/create";
     private static final String GET_ISSUE = "/defect/{object_id}";
-    private static final String CREATE_ISSUE = "/defect/{object_id}";
     private static final String UPDATE_ISSUE = "/defect/{object_id}";
 
     public RallyIssueTracker(@Qualifier("flowRestTemplate") RestTemplate restTemplate, RallyProperties properties, FlowProperties flowProperties) {
@@ -71,32 +73,48 @@ public class RallyIssueTracker implements IssueTracker {
      * @ full name (owner/repo format)
      */
     @Override
-    /* TODO: Update for Rally */
     public List<Issue> getIssues(ScanRequest request) {
         log.info("Executing getIssues Rally API call");
         List<Issue> issues = new ArrayList<>();
         HttpEntity httpEntity = new HttpEntity(createAuthHeaders());
         try {
-            ResponseEntity<RallyQuery> response = restTemplate.exchange(
+            int pageIndex = 0;
+            RallyQuery rallyQuery;
+            ResponseEntity<RallyQuery> response;
+            //
+            /// Read the first list of defects from Rally, it will contain the totalResultCount we can use
+            /// to figure out how many more pages of data needs to be pulled.
+            //
+            response = restTemplate.exchange(
                     properties.getApiUrl().concat(GET_ISSUES),
                     HttpMethod.GET,
                     httpEntity,
                     RallyQuery.class,
+                    pageIndex,
                     ISSUES_PER_PAGE
             );
-            RallyQuery q = response.getBody();
-            readCxFlowIssues(q, request, issues);
-        /* TODO: finish building code to look through existing issues.
-        String next = getNextURIFromHeaders(response.getHeaders(), "link", "next");
-        while (next != null) {
-            ResponseEntity<com.checkmarx.flow.dto.github.Issue[]> responsePage = restTemplate.exchange(next, HttpMethod.GET,
-                    httpEntity, com.checkmarx.flow.dto.github.Issue[].class);
-            if(responsePage.getBody() != null) {
-                readCxFlowIssues(response, request, issues);
+            rallyQuery = response.getBody();
+            //
+            /// Now decode the CxFlow defects and continue reading lists of defects until we've found the
+            // totalResultCount
+            //
+            int resultsFound = 0;
+            while(resultsFound < rallyQuery.getQueryResult().getTotalResultCount()) {
+                resultsFound += rallyQuery.getQueryResult().getPageSize();
+                readCxFlowIssues(rallyQuery, request, issues);
+                if(resultsFound < rallyQuery.getQueryResult().getTotalResultCount()) {
+                    pageIndex++;
+                    response = restTemplate.exchange(
+                            properties.getApiUrl().concat(GET_ISSUES),
+                            HttpMethod.GET,
+                            httpEntity,
+                            RallyQuery.class,
+                            pageIndex,
+                            ISSUES_PER_PAGE
+                    );
+                    rallyQuery = response.getBody();
+                }
             }
-            next = getNextURIFromHeaders(responsePage.getHeaders(), "link", "next");
-        }
-         */
             return issues;
         } catch(Exception e) {
             return new ArrayList<>();
@@ -110,19 +128,21 @@ public class RallyIssueTracker implements IssueTracker {
     /**
      * Examin Rally issue and add CxFlow issues to to issues list.
      *
-     * @param q contains RallyQuery with list of defects
+     * @param rallyQuery contains RallyQuery with list of defects
      * @param request CxFlow ScanRequest object with required scan info
      * @param issues will contain list of found issues
      */
-    private void readCxFlowIssues(RallyQuery q,
+    private void readCxFlowIssues(RallyQuery rallyQuery,
                                 ScanRequest request,
                                 List<Issue> issues) {
-        for(Result issue: q.getQueryResult().getResults()){
+        for(Result issue: rallyQuery.getQueryResult().getResults()){
             Issue i = mapToIssue(issue);
             if(i != null && i.getTitle().startsWith(request.getProduct().getProduct())){
                 issues.add(i);
+            } else {
+                // TODO: this else statement is a hack remove it after testing
+                issues.add(i);
             }
-            issues.add(i);
         }
     }
 
@@ -157,14 +177,14 @@ public class RallyIssueTracker implements IssueTracker {
     }
 
     /**
-     * Retrieve DTO representation of GitHub Issue
+     * Retrieve DTO representation of Rally defect
      *
-     * @param issueUrl URL for specific GitHub Issue
-     * @return GitHub Issue
+     * @param issueUrl URL for specific Rally defect
+     * @return Rally Issue
      */
     /* TODO: Update for Rally */
     private Issue getIssue(String issueUrl) {
-        log.info("Executing getIssue GitHub API call");
+        log.info("Executing getIssue Rally API call");
         HttpEntity httpEntity = new HttpEntity<>(createAuthHeaders());
         ResponseEntity<com.checkmarx.flow.dto.rally.Issue> response =
                 restTemplate.exchange(issueUrl, HttpMethod.GET, httpEntity, com.checkmarx.flow.dto.rally.Issue.class);
@@ -196,27 +216,59 @@ public class RallyIssueTracker implements IssueTracker {
     /* TODO: Update for Rally */
     @Override
     public Issue createIssue(ScanResults.XIssue resultIssue, ScanRequest request) throws MachinaException {
-        log.debug("Executing createIssue GitHub API call");
-        String apiUrl = properties.getApiUrl().concat("/").concat(request.getNamespace().concat("/").concat(request.getRepoName())).concat("/issues");
-        ResponseEntity<com.checkmarx.flow.dto.rally.Issue> response;
+        log.debug("Executing createIssue Rally API call");
         try {
-            HttpEntity<String> httpEntity = new HttpEntity<>(getJSONCreateIssue(resultIssue, request).toString(), createAuthHeaders());
-            response = restTemplate.exchange(apiUrl, HttpMethod.POST, httpEntity, com.checkmarx.flow.dto.rally.Issue.class);
-        }
-        catch (HttpClientErrorException e){
-            log.error("Error occurred while creating GitHub Issue");
+            HttpEntity httpEntity = new HttpEntity(createAuthHeaders());
+            CreateResultAction createResultAction;
+            ResponseEntity<RallyQuery> response;
+            /*
+            NewDefect newDefect = new NewDefect();
+            newDefect.setName("CxFlow Generated Defect!!!");
+            newDefect.setProject("355514498680");
+            newDefect.setWorkspace("355514498248");
+             */
+            response = restTemplate.exchange(
+                    properties.getApiUrl().concat(CREATE_ISSUE),
+                    HttpMethod.POST,
+                    httpEntity,
+                    CreateResultAction.class);
+            return null;
+            //return mapToIssue(response.getBody());
+            // OLD CODE
+            //HttpEntity<String> httpEntity = new HttpEntity<>(getJSONCreateIssue(resultIssue, request).toString(), createAuthHeaders());
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while creating Rally Issue");
             log.error(ExceptionUtils.getStackTrace(e));
-            if(e.getStatusCode().equals(HttpStatus.GONE)){
+            if (e.getStatusCode().equals(HttpStatus.GONE)) {
                 log.error("Issues are not enabled for this repository");
                 throw new MachinaRuntimeException();
-            }
-            else{
+            } else {
                 throw new MachinaRuntimeException();
             }
         }
-        // TODO: fix this for Rally Support
-        return null; //mapToIssue(response.getBody());
     }
+
+    /**
+     * Create JSON http request body for an create/update Issue POST request to GitHub
+     *
+     * @return JSON Object of create issue request
+     */
+    /* TODO: update for Rally */
+    private JSONObject getJSONCreateIssue(ScanResults.XIssue resultIssue, ScanRequest request) {
+        JSONObject requestBody = new JSONObject();
+        String fileUrl = ScanUtils.getFileUrl(request, resultIssue.getFilename());
+        String body = ScanUtils.getMDBody(resultIssue, request.getBranch(), fileUrl, flowProperties);
+        String title = getXIssueKey(resultIssue, request);
+
+        try {
+            requestBody.put("title", title);
+            requestBody.put("body", body);
+        } catch (JSONException e) {
+            log.error("Error creating JSON Create Issue Object - JSON Object will be empty");
+        }
+        return requestBody;
+    }
+
 
     /**
      *
@@ -282,27 +334,6 @@ public class RallyIssueTracker implements IssueTracker {
             requestBody.put("state", TRANSITION_OPEN);
         } catch (JSONException e) {
             log.error("Error creating JSON Update Object - JSON object will be empty");
-        }
-        return requestBody;
-    }
-
-    /**
-     * Create JSON http request body for an create/update Issue POST request to GitHub
-     *
-     * @return JSON Object of create issue request
-     */
-    /* TODO: update for Rally */
-    private JSONObject getJSONCreateIssue(ScanResults.XIssue resultIssue, ScanRequest request) {
-        JSONObject requestBody = new JSONObject();
-        String fileUrl = ScanUtils.getFileUrl(request, resultIssue.getFilename());
-        String body = ScanUtils.getMDBody(resultIssue, request.getBranch(), fileUrl, flowProperties);
-        String title = getXIssueKey(resultIssue, request);
-
-        try {
-            requestBody.put("title", title);
-            requestBody.put("body", body);
-        } catch (JSONException e) {
-            log.error("Error creating JSON Create Issue Object - JSON Object will be empty");
         }
         return requestBody;
     }
