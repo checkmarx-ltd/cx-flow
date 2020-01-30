@@ -1,7 +1,6 @@
 package com.checkmarx.flow.dto.rally;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
@@ -15,11 +14,11 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
         "_rallyAPIMajor",
         "_rallyAPIMinor",
         "_ref",
-        "_type",
-        "_tagsNameArray",
-        "Count"
+        "_refObjectUUID",
+        "_refObjectName",
+        "_type"
 })
-public class Milestones {
+public class SubmittedBy {
 
     @JsonProperty("_rallyAPIMajor")
     private String rallyAPIMajor;
@@ -27,12 +26,12 @@ public class Milestones {
     private String rallyAPIMinor;
     @JsonProperty("_ref")
     private String ref;
+    @JsonProperty("_refObjectUUID")
+    private String refObjectUUID;
+    @JsonProperty("_refObjectName")
+    private String refObjectName;
     @JsonProperty("_type")
     private String type;
-    @JsonProperty("_tagsNameArray")
-    private List<Object> tagsNameArray = null;
-    @JsonProperty("Count")
-    private Integer count;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
@@ -66,6 +65,26 @@ public class Milestones {
         this.ref = ref;
     }
 
+    @JsonProperty("_refObjectUUID")
+    public String getRefObjectUUID() {
+        return refObjectUUID;
+    }
+
+    @JsonProperty("_refObjectUUID")
+    public void setRefObjectUUID(String refObjectUUID) {
+        this.refObjectUUID = refObjectUUID;
+    }
+
+    @JsonProperty("_refObjectName")
+    public String getRefObjectName() {
+        return refObjectName;
+    }
+
+    @JsonProperty("_refObjectName")
+    public void setRefObjectName(String refObjectName) {
+        this.refObjectName = refObjectName;
+    }
+
     @JsonProperty("_type")
     public String getType() {
         return type;
@@ -74,26 +93,6 @@ public class Milestones {
     @JsonProperty("_type")
     public void setType(String type) {
         this.type = type;
-    }
-
-    @JsonProperty("_tagsNameArray")
-    public List<Object> getTagsNameArray() {
-        return tagsNameArray;
-    }
-
-    @JsonProperty("_tagsNameArray")
-    public void setTagsNameArray(List<Object> tagsNameArray) {
-        this.tagsNameArray = tagsNameArray;
-    }
-
-    @JsonProperty("Count")
-    public Integer getCount() {
-        return count;
-    }
-
-    @JsonProperty("Count")
-    public void setCount(Integer count) {
-        this.count = count;
     }
 
     @JsonAnyGetter
