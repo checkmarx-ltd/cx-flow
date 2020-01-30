@@ -30,7 +30,7 @@ public class Changesets {
     @JsonProperty("Count")
     private Integer count;
     @JsonIgnore
-    private Map<String, java.lang.Object> additionalProperties = new HashMap<String, java.lang.Object>();
+    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     @JsonProperty("_rallyAPIMajor")
     public String getRallyAPIMajor() {
@@ -83,12 +83,12 @@ public class Changesets {
     }
 
     @JsonAnyGetter
-    public Map<String, java.lang.Object> getAdditionalProperties() {
+    public Map<String, Object> getAdditionalProperties() {
         return this.additionalProperties;
     }
 
     @JsonAnySetter
-    public void setAdditionalProperty(String name, java.lang.Object value) {
+    public void setAdditionalProperty(String name, Object value) {
         this.additionalProperties.put(name, value);
     }
 
