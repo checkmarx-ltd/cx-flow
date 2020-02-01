@@ -923,7 +923,7 @@ public class JiraService {
             issuesParent = this.getIssues(parent);
             if (GrandParentUrl.length() == 0) {
                  log.info("Grandparent feild is empty");
-                issuesGrandParent = this.getIssues(request);
+                issuesGrandParent = null;
             } else {
                 BugTracker bugTrackerGrandParenet;
                 bugTrackerGrandParenet = Grandparent.getBugTracker();
@@ -932,8 +932,8 @@ public class JiraService {
                 issuesGrandParent = this.getIssues(Grandparent);
             }
         } else {
-            issuesParent = this.getIssues(request);
-            issuesGrandParent = this.getIssues(request);
+            issuesParent = null;
+            issuesGrandParent = null;
         }
 
         log.info("Processing Results and publishing findings to Jira");
@@ -1027,6 +1027,7 @@ public class JiraService {
     }
     
     boolean parentCheck(String Key, List<Issue> issues) {
+        if (issues == null){
         Map<String, Issue> jiraMap;
         jiraMap = this.getJiraIssueMap(issues);
         if (this.jiraProperties.isChild()) {
@@ -1034,13 +1035,16 @@ public class JiraService {
             if (jiraMap.containsKey(Key)) {
                 log.info("Issue ("+jiraMap.get(Key).getKey()+") found in parent("+ParentUrl+") not creating issue for child Issue");
                 return true;
+              }
             }
-        }
+        return false;
+          }
         return false;
 
     }
     
     boolean GrandparentCheck(String Key, List<Issue> issues) {
+        if (issues == null){
         Map<String, Issue> jiraMap;
         jiraMap = this.getJiraIssueMap(issues);
         if (this.jiraProperties.isChild()) {
@@ -1048,9 +1052,10 @@ public class JiraService {
             if (jiraMap.containsKey(Key)) {
                 log.info("Issue ("+jiraMap.get(Key).getKey()+") found in GrandParent("+GrandParentUrl+") not creating issue for childIssue");
                 return true;
+              }
             }
-        }
         return false;
-
+          }
+        return false;
     }
 }
