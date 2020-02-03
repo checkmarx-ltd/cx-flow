@@ -8,6 +8,22 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "rally")
 @Validated
 public class RallyProperties extends RepoProperties {
-    // There's nothing here by design!
-    public int testVal = 3;
+    private String rallyWorkspaceId;
+    private String rallyProjectId;
+
+    public String getRallyWorkspaceId() {
+        return rallyWorkspaceId;
+    }
+
+    public void setRallyWorkspaceId(String rallyWorkspaceId) {
+        this.rallyWorkspaceId = rallyWorkspaceId;
+    }
+
+    public String getRallyProjectId() {
+        return rallyProjectId;
+    }
+
+    public void setRallyProjectId(String rallyProjectId) {
+        this.rallyProjectId = rallyProjectId;
+    }
 }

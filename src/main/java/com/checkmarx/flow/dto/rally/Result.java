@@ -112,7 +112,7 @@ public class Result {
     @JsonProperty("_CreatedAt")
     private String createdAt;
     @JsonProperty("ObjectID")
-    private Integer objectID;
+    private Long objectID;
     @JsonProperty("ObjectUUID")
     private String objectUUID;
     @JsonProperty("VersionId")
@@ -166,13 +166,13 @@ public class Result {
     @JsonProperty("LastRun")
     private Object lastRun;
     @JsonProperty("PassingTestCaseCount")
-    private Integer passingTestCaseCount;
+    private Long passingTestCaseCount;
     @JsonProperty("ScheduleState")
     private String scheduleState;
     @JsonProperty("ScheduleStatePrefix")
     private String scheduleStatePrefix;
     @JsonProperty("TestCaseCount")
-    private Integer testCaseCount;
+    private Long testCaseCount;
     @JsonProperty("AcceptedDate")
     private Object acceptedDate;
     @JsonProperty("AffectsDoc")
@@ -204,7 +204,7 @@ public class Result {
     @JsonProperty("Iteration")
     private Object iteration;
     @JsonProperty("OpenedDate")
-    private Object openedDate;
+    private String openedDate;
     @JsonProperty("Package")
     private Object _package;
     @JsonProperty("PlanEstimate")
@@ -341,12 +341,12 @@ public class Result {
     }
 
     @JsonProperty("ObjectID")
-    public Integer getObjectID() {
+    public Long getObjectID() {
         return objectID;
     }
 
     @JsonProperty("ObjectID")
-    public void setObjectID(Integer objectID) {
+    public void setObjectID(Long objectID) {
         this.objectID = objectID;
     }
 
@@ -611,12 +611,12 @@ public class Result {
     }
 
     @JsonProperty("PassingTestCaseCount")
-    public Integer getPassingTestCaseCount() {
+    public Long getPassingTestCaseCount() {
         return passingTestCaseCount;
     }
 
     @JsonProperty("PassingTestCaseCount")
-    public void setPassingTestCaseCount(Integer passingTestCaseCount) {
+    public void setPassingTestCaseCount(Long passingTestCaseCount) {
         this.passingTestCaseCount = passingTestCaseCount;
     }
 
@@ -641,12 +641,12 @@ public class Result {
     }
 
     @JsonProperty("TestCaseCount")
-    public Integer getTestCaseCount() {
+    public Long getTestCaseCount() {
         return testCaseCount;
     }
 
     @JsonProperty("TestCaseCount")
-    public void setTestCaseCount(Integer testCaseCount) {
+    public void setTestCaseCount(Long testCaseCount) {
         this.testCaseCount = testCaseCount;
     }
 
@@ -801,12 +801,12 @@ public class Result {
     }
 
     @JsonProperty("OpenedDate")
-    public Object getOpenedDate() {
+    public String getOpenedDate() {
         return openedDate;
     }
 
     @JsonProperty("OpenedDate")
-    public void setOpenedDate(Object openedDate) {
+    public void setOpenedDate(String openedDate) {
         this.openedDate = openedDate;
     }
 

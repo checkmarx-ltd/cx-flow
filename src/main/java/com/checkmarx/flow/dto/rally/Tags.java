@@ -30,11 +30,11 @@ public class Tags {
     @JsonProperty("_type")
     private String type;
     @JsonProperty("_tagsNameArray")
-    private List<Object> tagsNameArray = null;
+    private List<java.lang.Object> tagsNameArray = null;
     @JsonProperty("Count")
-    private Integer count;
+    private Long count;
     @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+    private Map<String, java.lang.Object> additionalProperties = new HashMap<String, java.lang.Object>();
 
     @JsonProperty("_rallyAPIMajor")
     public String getRallyAPIMajor() {
@@ -77,32 +77,32 @@ public class Tags {
     }
 
     @JsonProperty("_tagsNameArray")
-    public List<Object> getTagsNameArray() {
+    public List<java.lang.Object> getTagsNameArray() {
         return tagsNameArray;
     }
 
     @JsonProperty("_tagsNameArray")
-    public void setTagsNameArray(List<Object> tagsNameArray) {
+    public void setTagsNameArray(List<java.lang.Object> tagsNameArray) {
         this.tagsNameArray = tagsNameArray;
     }
 
     @JsonProperty("Count")
-    public Integer getCount() {
+    public Long getCount() {
         return count;
     }
 
     @JsonProperty("Count")
-    public void setCount(Integer count) {
+    public void setCount(Long count) {
         this.count = count;
     }
 
     @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
+    public Map<String, java.lang.Object> getAdditionalProperties() {
         return this.additionalProperties;
     }
 
     @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
+    public void setAdditionalProperty(String name, java.lang.Object value) {
         this.additionalProperties.put(name, value);
     }
 
