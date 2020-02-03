@@ -27,11 +27,11 @@ public class QueryResult_ {
     @JsonProperty("Warnings")
     private List<String> warnings = null;
     @JsonProperty("TotalResultCount")
-    private Integer totalResultCount;
+    private Long totalResultCount;
     @JsonProperty("StartIndex")
-    private Integer startIndex;
+    private Long startIndex;
     @JsonProperty("PageSize")
-    private Integer pageSize;
+    private Long pageSize;
     @JsonProperty("Results")
     private List<Result> results = null;
     @JsonIgnore
@@ -78,32 +78,32 @@ public class QueryResult_ {
     }
 
     @JsonProperty("TotalResultCount")
-    public Integer getTotalResultCount() {
+    public Long getTotalResultCount() {
         return totalResultCount;
     }
 
     @JsonProperty("TotalResultCount")
-    public void setTotalResultCount(Integer totalResultCount) {
+    public void setTotalResultCount(Long totalResultCount) {
         this.totalResultCount = totalResultCount;
     }
 
     @JsonProperty("StartIndex")
-    public Integer getStartIndex() {
+    public Long getStartIndex() {
         return startIndex;
     }
 
     @JsonProperty("StartIndex")
-    public void setStartIndex(Integer startIndex) {
+    public void setStartIndex(Long startIndex) {
         this.startIndex = startIndex;
     }
 
     @JsonProperty("PageSize")
-    public Integer getPageSize() {
+    public Long getPageSize() {
         return pageSize;
     }
 
     @JsonProperty("PageSize")
-    public void setPageSize(Integer pageSize) {
+    public void setPageSize(Long pageSize) {
         this.pageSize = pageSize;
     }
 

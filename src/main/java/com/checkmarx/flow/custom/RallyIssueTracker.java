@@ -1,3 +1,9 @@
+/** Code Review Notes (remove when review complete)
+ * - I force the issue to state 'Open' when its created, is that OK? The default is 'Submitted'
+ * - Rally support a state 'Fixed' but I'm only checking for 'Closed', is that OK?
+ * - I figured out I didn't need a separate Update and Create issue for generating
+ * - JSON objects
+ */
 package com.checkmarx.flow.custom;
 
 import com.checkmarx.flow.config.FlowProperties;
@@ -21,15 +27,17 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service("Rally")
 public class RallyIssueTracker implements IssueTracker {
 
-    private static final String TRANSITION_CLOSE = "closed";
-    private static final String TRANSITION_OPEN = "open";
+    private static final String TRANSITION_CLOSE = "Closed";
+    private static final String TRANSITION_OPEN = "Open";
     private static final String ISSUES_PER_PAGE = "100";
     private static final Logger log = LoggerFactory.getLogger(RallyIssueTracker.class);
 
@@ -42,8 +50,6 @@ public class RallyIssueTracker implements IssueTracker {
     //
     private static final String GET_ISSUES = "/defect?query=&fetch=true&start={page_index}&pagesize={issues_per_page}";
     private static final String CREATE_ISSUE = "/defect/create";
-    private static final String GET_ISSUE = "/defect/{object_id}";
-    private static final String UPDATE_ISSUE = "/defect/{object_id}";
 
     public RallyIssueTracker(@Qualifier("flowRestTemplate") RestTemplate restTemplate, RallyProperties properties, FlowProperties flowProperties) {
         this.restTemplate = restTemplate;
@@ -110,17 +116,13 @@ public class RallyIssueTracker implements IssueTracker {
                             pageIndex,
                             ISSUES_PER_PAGE
                     );
-                    //rallyQuery = response.getBody();
+                    rallyQuery = response.getBody();
                 }
             }
             return issues;
-        } catch(Exception e) {
+        } catch(RestClientException e) {
             return new ArrayList<>();
         }
-        /*
-                request.getNamespace(),
-                request.getRepoName()
-        */
     }
 
     /**
@@ -137,15 +139,12 @@ public class RallyIssueTracker implements IssueTracker {
             Issue i = mapToIssue(issue);
             if(i != null && i.getTitle().startsWith(request.getProduct().getProduct())){
                 issues.add(i);
-            } else {
-                // TODO: this else statement is a hack remove it after testing
-                issues.add(i);
             }
         }
     }
 
     /**
-     * Converts a Rally defect result to a CxFlow issu.
+     * Converts a Rally defect result to a CxFlow issue.
      *
      * @param rallyDefect contains the Rally defect object
      * @return CxFlow issue with rally defect data encoded into it
@@ -155,22 +154,46 @@ public class RallyIssueTracker implements IssueTracker {
             return null;
         }
         Issue i = new Issue();
-        // TODO: Fix getBody() issue
-        //i.setBody(issue.getBody());
+        i.setBody(rallyDefect.getDescription());
         i.setTitle(rallyDefect.getRefObjectName());
         i.setId(String.valueOf(rallyDefect.getRefObjectUUID()));
+        i.setUrl(rallyDefect.getRef());
+        i.setState(rallyDefect.getState());
         List<String> labels = new ArrayList<>();
+        // TODO: decide if I can just use tags to track the issues
         /*
         for(LabelsItem l: issue.getLabels()){
             labels.add(l.getName());
         }
         */
         i.setLabels(labels);
-        // TODO: fix getUrl() issue
-        //i.setUrl(issue.getUrl());
-        // TODO: fix state information
-        //i.setState(rallyDefect.getState());
-        i.setState("Open");
+        return i;
+    }
+
+    /**
+     * Converts a Rally defect represented as a HashMap to a CxFlow issue.
+     *
+     * @param rallyDefect contains the Rally defect object
+     * @return CxFlow issue with rally defect data encoded into it
+     */
+    private Issue mapHashManToIssue(Map<String, Object> rallyDefect){
+        if(rallyDefect == null){
+            return null;
+        }
+        Issue i = new Issue();
+        i.setBody((String)rallyDefect.get("Description"));
+        i.setTitle((String)rallyDefect.get("_refObjectName"));
+        i.setId((String)rallyDefect.get("_refObjectUUID"));
+        i.setUrl((String)rallyDefect.get("_ref"));
+        i.setState((String)rallyDefect.get("State"));
+        //List<String> labels = new ArrayList<>();
+        // TODO: decide if I can just use tags to track the issues
+        /*
+        for(LabelsItem l: issue.getLabels()){
+            labels.add(l.getName());
+        }
+        */
+        //i.setLabels(labels);
         return i;
     }
 
@@ -205,38 +228,34 @@ public class RallyIssueTracker implements IssueTracker {
     }
 
     /**
+     * Creates new Rally defect.
      *
      * @param resultIssue
      * @param request
      * @return
      * @throws MachinaException
      */
-    /* TODO: Update for Rally */
     @Override
     public Issue createIssue(ScanResults.XIssue resultIssue, ScanRequest request) throws MachinaException {
         log.debug("Executing createIssue Rally API call");
         try {
             String json = getJSONCreateIssue(resultIssue, request);
             HttpEntity httpEntity = new HttpEntity(json, createAuthHeaders());
-            CreateResultAction createResultAction;
-            ResponseEntity<CreateResultAction> response = restTemplate.exchange(
+            CreateResultAction cra;
+            ResponseEntity<CreateResultAction> response;
+            response = restTemplate.exchange(
                     properties.getApiUrl().concat(CREATE_ISSUE),
                     HttpMethod.POST,
                     httpEntity,
                     CreateResultAction.class);
-            return null;
-            //return mapToIssue(response.getBody());
-            // OLD CODE
-            //HttpEntity<String> httpEntity = new HttpEntity<>(getJSONCreateIssue(resultIssue, request).toString(), createAuthHeaders());
+            cra = response.getBody();
+            Map<String, Object> m = (Map<String, Object>)cra.getAdditionalProperties().get("CreateResult");
+            m = (Map<String, Object>)m.get("Object");
+            return mapHashManToIssue(m);
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while creating Rally Issue");
             log.error(ExceptionUtils.getStackTrace(e));
-            if (e.getStatusCode().equals(HttpStatus.GONE)) {
-                log.error("Issues are not enabled for this repository");
-                throw new MachinaRuntimeException();
-            } else {
-                throw new MachinaRuntimeException();
-            }
+            throw new MachinaRuntimeException();
         }
     }
 
@@ -253,16 +272,16 @@ public class RallyIssueTracker implements IssueTracker {
         String title = getXIssueKey(resultIssue, request);
         try {
             requestBody.put("Name", title);
-            requestBody.put("Workspace", "355514498248");
-            requestBody.put("Project", "355514498680");
+            requestBody.put("Workspace", properties.getRallyWorkspaceId());
+            requestBody.put("Project", properties.getRallyProjectId());
+            requestBody.put("State", TRANSITION_OPEN);
             requestBody.put("Description", body);
             createBody.put("Defect", requestBody);
         } catch (JSONException e) {
-            log.error("Error creating JSON Create Issue Object - JSON Object will be empty");
+            log.error("Error creating JSON Issue Object - JSON Object will be empty");
         }
         return createBody.toString();
     }
-
 
     /**
      *
@@ -286,50 +305,30 @@ public class RallyIssueTracker implements IssueTracker {
      * @return
      * @throws MachinaException
      */
-    /* TODO: Update for Rally */
     @Override
     public Issue updateIssue(Issue issue, ScanResults.XIssue resultIssue, ScanRequest request) throws MachinaException {
         log.info("Executing updateIssue Rally API call");
-        HttpEntity httpEntity = new HttpEntity<>(getJSONUpdateIssue(resultIssue, request).toString(), createAuthHeaders());
+        String json = getJSONCreateIssue(resultIssue, request);
+        HttpEntity httpEntity = new HttpEntity<>(json, createAuthHeaders());
         ResponseEntity<com.checkmarx.flow.dto.rally.Issue> response;
         try {
-            response = restTemplate.exchange(issue.getUrl(), HttpMethod.POST, httpEntity, com.checkmarx.flow.dto.rally.Issue.class);
+            response = restTemplate.exchange(
+                    issue.getUrl(),
+                    HttpMethod.POST,
+                    httpEntity,
+                    com.checkmarx.flow.dto.rally.Issue.class);
             // TODO: fix getUrl() so addComment works.
-            //this.addComment(Objects.requireNonNull(response.getBody()).getUrl(),"Issue still exists. ");
+            //this.addComment(issue.getUrl(),"Issue still exists. ");
             // TODO: fix this for Rally support
+            //rallyQuery.getQueryResult().getResults()
             return null; //mapToIssue(response.getBody());
         } catch (HttpClientErrorException e) {
-            log.error("Error updating issue.  This is likely due to the fact that another user has closed this issue.  Adding comment");
-            if(e.getStatusCode().equals(HttpStatus.GONE)){
-                throw new MachinaRuntimeException();
-            }
+            log.error("Error updating issue.  This is likely due to the fact that another user has closed this issue. Adding comment");
+            // throw new MachinaRuntimeException();
+            // TODO: do des this work correctly?
             this.addComment(issue.getUrl(), "This issue still exists.  Please add label 'false-positive' to remove from scope of SAST results");
         }
         return this.getIssue(issue.getUrl());
-    }
-
-    /**
-     * Create JSON http request body for an create/update Issue POST request to GitHub
-     *
-     * @param resultIssue
-     * @param request
-     * @return
-     */
-    /* TODO: Update for Rally */
-    private JSONObject getJSONUpdateIssue(ScanResults.XIssue resultIssue, ScanRequest request) {
-        JSONObject requestBody = new JSONObject();
-        String fileUrl = ScanUtils.getFileUrl(request, resultIssue.getFilename());
-        String body = ScanUtils.getMDBody(resultIssue, request.getBranch(), fileUrl, flowProperties);
-        String title = getXIssueKey(resultIssue, request);
-
-        try {
-            requestBody.put("title", title);
-            requestBody.put("body", body);
-            requestBody.put("state", TRANSITION_OPEN);
-        } catch (JSONException e) {
-            log.error("Error creating JSON Update Object - JSON object will be empty");
-        }
-        return requestBody;
     }
 
     @Override
@@ -368,9 +367,16 @@ public class RallyIssueTracker implements IssueTracker {
         return issue.getState().equals(TRANSITION_OPEN);
     }
 
+    /**
+     * Called after all defects have been processed.
+     *
+     * @param request
+     * @param results
+     * @throws MachinaException
+     */
     @Override
     public void complete(ScanRequest request, ScanResults results) throws MachinaException {
-        log.info("Finalizing GitHub Processing");
+        log.info("Finalizing Rally Defect Processing");
     }
 
     /**
@@ -379,6 +385,7 @@ public class RallyIssueTracker implements IssueTracker {
      * @param comment Comment to append to an issue
      * @return JSON Object for comment request
      */
+    // TODO: finish Rally comment
     private JSONObject getJSONComment(String comment) {
         JSONObject requestBody = new JSONObject();
         try {
