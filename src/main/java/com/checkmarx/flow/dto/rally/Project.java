@@ -33,7 +33,7 @@ public class Project {
     @JsonProperty("_type")
     private String type;
     @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+    private Map<String, java.lang.Object> additionalProperties = new HashMap<String, java.lang.Object>();
 
     @JsonProperty("_rallyAPIMajor")
     public String getRallyAPIMajor() {
@@ -96,12 +96,12 @@ public class Project {
     }
 
     @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
+    public Map<String, java.lang.Object> getAdditionalProperties() {
         return this.additionalProperties;
     }
 
     @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
+    public void setAdditionalProperty(String name, java.lang.Object value) {
         this.additionalProperties.put(name, value);
     }
 
