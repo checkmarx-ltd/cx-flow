@@ -3,6 +3,10 @@
  * - Rally support a state 'Fixed' but I'm only checking for 'Closed', is that OK?
  * - I figured out I didn't need a separate Update and Create issue for generating
  * - JSON objects
+ * - The closest thing to comments are dicussions, so that where I put the defect comments?
+ * - I have update return the Issue passed into it, not sure why. The Rally API doesn't return anything other that
+ *   a 200 when the update is successful.
+ * - getIssue() is called when an update fail, why? Is it kludge?
  */
 package com.checkmarx.flow.custom;
 
@@ -11,9 +15,9 @@ import com.checkmarx.flow.config.RallyProperties;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.rally.CreateResultAction;
+import com.checkmarx.flow.dto.rally.DefectQuery;
 import com.checkmarx.flow.dto.rally.QueryResult;
 import com.checkmarx.flow.dto.rally.Result;
-import com.checkmarx.flow.dto.rally.RallyQuery;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.utils.ScanUtils;
@@ -50,6 +54,7 @@ public class RallyIssueTracker implements IssueTracker {
     //
     private static final String GET_ISSUES = "/defect?query=&fetch=true&start={page_index}&pagesize={issues_per_page}";
     private static final String CREATE_ISSUE = "/defect/create";
+    private static final String CREATE_DISCUSSION = "/conversationpost/create";
 
     public RallyIssueTracker(@Qualifier("flowRestTemplate") RestTemplate restTemplate, RallyProperties properties, FlowProperties flowProperties) {
         this.restTemplate = restTemplate;
@@ -137,6 +142,9 @@ public class RallyIssueTracker implements IssueTracker {
                                 List<Issue> issues) {
         for(Result issue: rallyQuery.getQueryResult().getResults()){
             Issue i = mapToIssue(issue);
+
+            // TODO: remove this after review, I was just testing getIssue() here.
+            getIssue(i.getUrl());
             if(i != null && i.getTitle().startsWith(request.getProduct().getProduct())){
                 issues.add(i);
             }
@@ -160,7 +168,7 @@ public class RallyIssueTracker implements IssueTracker {
         i.setUrl(rallyDefect.getRef());
         i.setState(rallyDefect.getState());
         List<String> labels = new ArrayList<>();
-        // TODO: decide if I can just use tags to track the issues
+        // TODO: decide if I need use tags
         /*
         for(LabelsItem l: issue.getLabels()){
             labels.add(l.getName());
@@ -187,7 +195,7 @@ public class RallyIssueTracker implements IssueTracker {
         i.setUrl((String)rallyDefect.get("_ref"));
         i.setState((String)rallyDefect.get("State"));
         //List<String> labels = new ArrayList<>();
-        // TODO: decide if I can just use tags to track the issues
+        // TODO: decide if I need use tags
         /*
         for(LabelsItem l: issue.getLabels()){
             labels.add(l.getName());
@@ -203,28 +211,34 @@ public class RallyIssueTracker implements IssueTracker {
      * @param issueUrl URL for specific Rally defect
      * @return Rally Issue
      */
-    /* TODO: Update for Rally */
     private Issue getIssue(String issueUrl) {
         log.info("Executing getIssue Rally API call");
         HttpEntity httpEntity = new HttpEntity<>(createAuthHeaders());
-        ResponseEntity<com.checkmarx.flow.dto.rally.Issue> response =
-                restTemplate.exchange(issueUrl, HttpMethod.GET, httpEntity, com.checkmarx.flow.dto.rally.Issue.class);
-
-        // TODO fix this for Rally Support
-        return null; //mapToIssue(response.getBody());
+        ResponseEntity<DefectQuery> response = restTemplate.exchange(
+                issueUrl,
+                HttpMethod.GET,
+                httpEntity,
+                DefectQuery.class);
+        //return mapToIssue(response.getBody());
+        return null;
     }
 
     /**
-     * Add a comment to an existing Rally Issue
+     * Add a comment to an existing Rally Issue (technically adding a 'discussion')
      *
      * @param issueUrl URL for specific Rally Issue
      * @param comment  Comment to append to the Rally Issue
      */
-    /* TODO: Update for Rally */
     private void addComment(String issueUrl, String comment) {
-        log.debug("Executing add comment GitHub API call");
-        HttpEntity<String> httpEntity = new HttpEntity<>(getJSONComment(comment).toString(), createAuthHeaders());
-        restTemplate.exchange(issueUrl.concat("/comments"), HttpMethod.POST, httpEntity, String.class);
+        log.debug("Executing add comment Rally API call");
+        String defID = issueUrl.substring(issueUrl.lastIndexOf("/") + 1);
+        String json = getJSONComment(comment, defID);
+        HttpEntity httpEntity = new HttpEntity(json, createAuthHeaders());
+        restTemplate.exchange(
+                properties.getApiUrl().concat(CREATE_DISCUSSION),
+                HttpMethod.POST,
+                httpEntity,
+                String.class);
     }
 
     /**
@@ -284,17 +298,22 @@ public class RallyIssueTracker implements IssueTracker {
     }
 
     /**
+     * Closes an open issue.
      *
      * @param issue
      * @param request
      * @throws MachinaException
      */
-    /* TODO: Update for Rally */
     @Override
     public void closeIssue(Issue issue, ScanRequest request) throws MachinaException {
-        log.info("Executing closeIssue GitHub API call");
-        HttpEntity httpEntity = new HttpEntity<>(getJSONCloseIssue().toString(), createAuthHeaders());
-        restTemplate.exchange(issue.getUrl(), HttpMethod.POST, httpEntity, Issue.class);
+        log.info("Executing closeIssue Rally API call");
+        String json = getJSONCloseIssue();
+        HttpEntity httpEntity = new HttpEntity(json, createAuthHeaders());
+        restTemplate.exchange(
+                issue.getUrl(),
+                HttpMethod.POST,
+                httpEntity,
+                Issue.class);
     }
 
     /**
@@ -317,15 +336,13 @@ public class RallyIssueTracker implements IssueTracker {
                     HttpMethod.POST,
                     httpEntity,
                     com.checkmarx.flow.dto.rally.Issue.class);
-            // TODO: fix getUrl() so addComment works.
-            //this.addComment(issue.getUrl(),"Issue still exists. ");
-            // TODO: fix this for Rally support
-            //rallyQuery.getQueryResult().getResults()
-            return null; //mapToIssue(response.getBody());
+            this.addComment(issue.getUrl(),"Issue still exists. ");
+            return issue;
         } catch (HttpClientErrorException e) {
             log.error("Error updating issue.  This is likely due to the fact that another user has closed this issue. Adding comment");
-            // throw new MachinaRuntimeException();
-            // TODO: do des this work correctly?
+            if(e.getStatusCode().equals(HttpStatus.GONE)) {
+                throw new MachinaRuntimeException();
+            }
             this.addComment(issue.getUrl(), "This issue still exists.  Please add label 'false-positive' to remove from scope of SAST results");
         }
         return this.getIssue(issue.getUrl());
@@ -380,33 +397,35 @@ public class RallyIssueTracker implements IssueTracker {
     }
 
     /**
-     * Create JSON http request body for adding a comment to an Issue in GitHub
+     * Create JSON http request body for adding a comment/discussion to an Issue in Rally
      *
      * @param comment Comment to append to an issue
-     * @return JSON Object for comment request
+     * @return String representation of the add comment request
      */
-    // TODO: finish Rally comment
-    private JSONObject getJSONComment(String comment) {
+    private String getJSONComment(String comment, String issueID) {
         JSONObject requestBody = new JSONObject();
+        JSONObject createBody = new JSONObject();
         try {
-            requestBody.put("body", comment);
+            requestBody.put("Artifact", "/defect/".concat(issueID));
+            requestBody.put("Text", comment);
+            createBody.put("ConversationPost", requestBody);
         } catch (JSONException e) {
             log.error("Error creating JSON Comment Object - JSON object will be empty");
         }
-        return requestBody;
+        return createBody.toString();
     }
 
     /**
      * @return JSON Object for close issue request
      */
-    private JSONObject getJSONCloseIssue() {
+    private String getJSONCloseIssue() {
         JSONObject requestBody = new JSONObject();
         try {
             requestBody.put("state", TRANSITION_CLOSE);
         } catch (JSONException e) {
             log.error("Error creating JSON Close Issue Object - JSON object will be empty");
         }
-        return requestBody;
+        return requestBody.toString();
     }
 
     /**
