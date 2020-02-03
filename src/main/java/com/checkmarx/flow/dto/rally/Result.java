@@ -140,7 +140,7 @@ public class Result {
     @JsonProperty("LastUpdateDate")
     private String lastUpdateDate;
     @JsonProperty("LatestDiscussionAgeInMinutes")
-    private Object latestDiscussionAgeInMinutes;
+    private String latestDiscussionAgeInMinutes;
     @JsonProperty("Milestones")
     private Milestones milestones;
     @JsonProperty("Name")
@@ -481,12 +481,12 @@ public class Result {
     }
 
     @JsonProperty("LatestDiscussionAgeInMinutes")
-    public Object getLatestDiscussionAgeInMinutes() {
+    public String getLatestDiscussionAgeInMinutes() {
         return latestDiscussionAgeInMinutes;
     }
 
     @JsonProperty("LatestDiscussionAgeInMinutes")
-    public void setLatestDiscussionAgeInMinutes(Object latestDiscussionAgeInMinutes) {
+    public void setLatestDiscussionAgeInMinutes(String latestDiscussionAgeInMinutes) {
         this.latestDiscussionAgeInMinutes = latestDiscussionAgeInMinutes;
     }
 
