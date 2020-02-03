@@ -30,6 +30,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class JiraService {
@@ -44,15 +45,15 @@ public class JiraService {
     private final FlowProperties flowProperties;
     private static final int MAX_JQL_RESULTS = 1000000;
     private static final int JIRA_MAX_DESCRIPTION = 32760;
-    private final String parentUrl;
-    private final String grandParentUrl;
+    private final String ParentUrl;
+    private final String GrandParentUrl;
 
     @ConstructorProperties({"jiraProperties", "flowProperties"})
     public JiraService(JiraProperties jiraProperties, FlowProperties flowProperties) {
         this.jiraProperties = jiraProperties;
         this.flowProperties = flowProperties;
-        parentUrl = jiraProperties.getParentUrl();
-        grandParentUrl = jiraProperties.getGrandParentUrl();
+        ParentUrl = jiraProperties.getParentUrl();
+        GrandParentUrl = jiraProperties.getGrandParentUrl();
     }
 
     @PostConstruct
@@ -914,25 +915,25 @@ public class JiraService {
 
         if (this.jiraProperties.isChild()) {
             ScanRequest parent = new ScanRequest(request);
-            ScanRequest grandparent = new ScanRequest(request);
+            ScanRequest Grandparent = new ScanRequest(request);
             BugTracker bugTracker;
             bugTracker = parent.getBugTracker();
-            bugTracker.setProjectKey(parentUrl);
+            bugTracker.setProjectKey(ParentUrl);
             parent.setBugTracker(bugTracker);
             issuesParent = this.getIssues(parent);
-            if (grandParentUrl.length() == 0) {
+            if (GrandParentUrl.length() == 0) {
                  log.info("Grandparent feild is empty");
-                issuesGrandParent = this.getIssues(request);
+                issuesGrandParent = null;
             } else {
                 BugTracker bugTrackerGrandParenet;
-                bugTrackerGrandParenet = grandparent.getBugTracker();
-                bugTrackerGrandParenet.setProjectKey(grandParentUrl);
-                grandparent.setBugTracker(bugTrackerGrandParenet);
-                issuesGrandParent = this.getIssues(grandparent);
+                bugTrackerGrandParenet = Grandparent.getBugTracker();
+                bugTrackerGrandParenet.setProjectKey(GrandParentUrl);
+                Grandparent.setBugTracker(bugTrackerGrandParenet);
+                issuesGrandParent = this.getIssues(Grandparent);
             }
         } else {
-            issuesParent = this.getIssues(request);
-            issuesGrandParent = this.getIssues(request);
+            issuesParent = null;
+            issuesGrandParent = null;
         }
 
         log.info("Processing Results and publishing findings to Jira");
@@ -980,18 +981,17 @@ public class JiraService {
                 } else {
                     /*Create the new issue*/
                     if(!currentIssue.isAllFalsePositive()) {
-                        if (!jiraProperties.isChild() || (!parentCheck(xIssue.getKey(), issuesParent)
-                                && !grandparentCheck(xIssue.getKey(), issuesGrandParent))) {
+                    if (!jiraProperties.isChild() || (!parentCheck(xIssue.getKey(), issuesParent) && !GrandparentCheck(xIssue.getKey(), issuesGrandParent))) {
 
-                            if (jiraProperties.isChild()) {
-                                log.info("Issue not found in parent creating issue for child");
-                            }
-
-                            log.debug("Creating new issue with key {}", xIssue.getKey());
-                            String newIssue = this.createIssue(currentIssue, request);
-                            newIssues.add(newIssue);
-                            log.info("New issue created. #{}", newIssue);
+                        if (jiraProperties.isChild()) {
+                            log.info("Issue not found in parent creating issue for child");
                         }
+
+                        log.debug("Creating new issue with key {}", xIssue.getKey());
+                        String newIssue = this.createIssue(currentIssue, request);
+                        newIssues.add(newIssue);
+                        log.info("New issue created. #{}", newIssue);
+                       }
                     }
                 }
             } catch (RestClientException e) {
@@ -1027,30 +1027,35 @@ public class JiraService {
     }
     
     boolean parentCheck(String Key, List<Issue> issues) {
+        if (issues == null){
         Map<String, Issue> jiraMap;
         jiraMap = this.getJiraIssueMap(issues);
         if (this.jiraProperties.isChild()) {
 
             if (jiraMap.containsKey(Key)) {
-                log.info("Issue ("+jiraMap.get(Key).getKey()+") found in parent("+ parentUrl +") not creating issue for child Issue");
+                log.info("Issue ("+jiraMap.get(Key).getKey()+") found in parent("+ParentUrl+") not creating issue for child Issue");
                 return true;
+              }
             }
-        }
+        return false;
+          }
         return false;
 
     }
     
-    boolean grandparentCheck(String Key, List<Issue> issues) {
+    boolean GrandparentCheck(String Key, List<Issue> issues) {
+        if (issues == null){
         Map<String, Issue> jiraMap;
         jiraMap = this.getJiraIssueMap(issues);
         if (this.jiraProperties.isChild()) {
 
             if (jiraMap.containsKey(Key)) {
-                log.info("Issue ("+jiraMap.get(Key).getKey()+") found in GrandParent("+ grandParentUrl +") not creating issue for childIssue");
+                log.info("Issue ("+jiraMap.get(Key).getKey()+") found in GrandParent("+GrandParentUrl+") not creating issue for childIssue");
                 return true;
+              }
             }
-        }
         return false;
-
+          }
+        return false;
     }
 }
