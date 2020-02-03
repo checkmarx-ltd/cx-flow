@@ -1,6 +1,7 @@
 package com.checkmarx.flow.dto.rally;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
@@ -91,9 +92,10 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
         "TestCaseStatus",
         "TestCases",
         "VerifiedInBuild",
-        "_type"
+        "Errors",
+        "Warnings"
 })
-public class Object {
+public class Defect {
 
     @JsonProperty("_rallyAPIMajor")
     private String rallyAPIMajor;
@@ -112,7 +114,7 @@ public class Object {
     @JsonProperty("_CreatedAt")
     private String createdAt;
     @JsonProperty("ObjectID")
-    private Integer objectID;
+    private Long objectID;
     @JsonProperty("ObjectUUID")
     private String objectUUID;
     @JsonProperty("VersionId")
@@ -140,7 +142,7 @@ public class Object {
     @JsonProperty("LastUpdateDate")
     private String lastUpdateDate;
     @JsonProperty("LatestDiscussionAgeInMinutes")
-    private String latestDiscussionAgeInMinutes;
+    private Long latestDiscussionAgeInMinutes;
     @JsonProperty("Milestones")
     private Milestones milestones;
     @JsonProperty("Name")
@@ -148,7 +150,7 @@ public class Object {
     @JsonProperty("Notes")
     private String notes;
     @JsonProperty("Owner")
-    private java.lang.Object owner;
+    private Object owner;
     @JsonProperty("Project")
     private Project project;
     @JsonProperty("Ready")
@@ -162,19 +164,19 @@ public class Object {
     @JsonProperty("FlowStateChangedDate")
     private String flowStateChangedDate;
     @JsonProperty("LastBuild")
-    private java.lang.Object lastBuild;
+    private Object lastBuild;
     @JsonProperty("LastRun")
-    private java.lang.Object lastRun;
+    private Object lastRun;
     @JsonProperty("PassingTestCaseCount")
-    private Integer passingTestCaseCount;
+    private Long passingTestCaseCount;
     @JsonProperty("ScheduleState")
     private String scheduleState;
     @JsonProperty("ScheduleStatePrefix")
     private String scheduleStatePrefix;
     @JsonProperty("TestCaseCount")
-    private Integer testCaseCount;
+    private Long testCaseCount;
     @JsonProperty("AcceptedDate")
-    private java.lang.Object acceptedDate;
+    private Object acceptedDate;
     @JsonProperty("AffectsDoc")
     private Boolean affectsDoc;
     @JsonProperty("Attachments")
@@ -182,11 +184,11 @@ public class Object {
     @JsonProperty("Blocked")
     private Boolean blocked;
     @JsonProperty("BlockedReason")
-    private java.lang.Object blockedReason;
+    private Object blockedReason;
     @JsonProperty("Blocker")
-    private java.lang.Object blocker;
+    private Object blocker;
     @JsonProperty("ClosedDate")
-    private java.lang.Object closedDate;
+    private Object closedDate;
     @JsonProperty("DefectSuites")
     private DefectSuites defectSuites;
     @JsonProperty("DragAndDropRank")
@@ -196,45 +198,45 @@ public class Object {
     @JsonProperty("Environment")
     private String environment;
     @JsonProperty("FixedInBuild")
-    private java.lang.Object fixedInBuild;
+    private Object fixedInBuild;
     @JsonProperty("FoundInBuild")
-    private java.lang.Object foundInBuild;
+    private Object foundInBuild;
     @JsonProperty("InProgressDate")
-    private java.lang.Object inProgressDate;
+    private Object inProgressDate;
     @JsonProperty("Iteration")
-    private java.lang.Object iteration;
+    private Object iteration;
     @JsonProperty("OpenedDate")
-    private java.lang.Object openedDate;
+    private Object openedDate;
     @JsonProperty("Package")
-    private java.lang.Object _package;
+    private Object _package;
     @JsonProperty("PlanEstimate")
-    private java.lang.Object planEstimate;
+    private Object planEstimate;
     @JsonProperty("Priority")
     private String priority;
     @JsonProperty("Recycled")
     private Boolean recycled;
     @JsonProperty("Release")
-    private java.lang.Object release;
+    private Object release;
     @JsonProperty("ReleaseNote")
     private Boolean releaseNote;
     @JsonProperty("Requirement")
-    private java.lang.Object requirement;
+    private Object requirement;
     @JsonProperty("Resolution")
     private String resolution;
     @JsonProperty("SalesforceCaseID")
-    private java.lang.Object salesforceCaseID;
+    private Object salesforceCaseID;
     @JsonProperty("SalesforceCaseNumber")
-    private java.lang.Object salesforceCaseNumber;
+    private Object salesforceCaseNumber;
     @JsonProperty("Severity")
     private String severity;
     @JsonProperty("State")
     private String state;
     @JsonProperty("SubmittedBy")
-    private java.lang.Object submittedBy;
+    private Object submittedBy;
     @JsonProperty("TargetBuild")
-    private java.lang.Object targetBuild;
+    private Object targetBuild;
     @JsonProperty("TargetDate")
-    private java.lang.Object targetDate;
+    private Object targetDate;
     @JsonProperty("TaskActualTotal")
     private Double taskActualTotal;
     @JsonProperty("TaskEstimateTotal")
@@ -246,19 +248,21 @@ public class Object {
     @JsonProperty("Tasks")
     private Tasks tasks;
     @JsonProperty("TestCase")
-    private java.lang.Object testCase;
+    private Object testCase;
     @JsonProperty("TestCaseResult")
-    private java.lang.Object testCaseResult;
+    private Object testCaseResult;
     @JsonProperty("TestCaseStatus")
     private String testCaseStatus;
     @JsonProperty("TestCases")
     private TestCases testCases;
     @JsonProperty("VerifiedInBuild")
-    private java.lang.Object verifiedInBuild;
-    @JsonProperty("_type")
-    private String type;
+    private Object verifiedInBuild;
+    @JsonProperty("Errors")
+    private List<Object> errors = null;
+    @JsonProperty("Warnings")
+    private List<Object> warnings = null;
     @JsonIgnore
-    private Map<String, java.lang.Object> additionalProperties = new HashMap<String, java.lang.Object>();
+    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     @JsonProperty("_rallyAPIMajor")
     public String getRallyAPIMajor() {
@@ -341,12 +345,12 @@ public class Object {
     }
 
     @JsonProperty("ObjectID")
-    public Integer getObjectID() {
+    public Long getObjectID() {
         return objectID;
     }
 
     @JsonProperty("ObjectID")
-    public void setObjectID(Integer objectID) {
+    public void setObjectID(Long objectID) {
         this.objectID = objectID;
     }
 
@@ -481,12 +485,12 @@ public class Object {
     }
 
     @JsonProperty("LatestDiscussionAgeInMinutes")
-    public String getLatestDiscussionAgeInMinutes() {
+    public Long getLatestDiscussionAgeInMinutes() {
         return latestDiscussionAgeInMinutes;
     }
 
     @JsonProperty("LatestDiscussionAgeInMinutes")
-    public void setLatestDiscussionAgeInMinutes(String latestDiscussionAgeInMinutes) {
+    public void setLatestDiscussionAgeInMinutes(Long latestDiscussionAgeInMinutes) {
         this.latestDiscussionAgeInMinutes = latestDiscussionAgeInMinutes;
     }
 
@@ -521,12 +525,12 @@ public class Object {
     }
 
     @JsonProperty("Owner")
-    public java.lang.Object getOwner() {
+    public Object getOwner() {
         return owner;
     }
 
     @JsonProperty("Owner")
-    public void setOwner(java.lang.Object owner) {
+    public void setOwner(Object owner) {
         this.owner = owner;
     }
 
@@ -591,32 +595,32 @@ public class Object {
     }
 
     @JsonProperty("LastBuild")
-    public java.lang.Object getLastBuild() {
+    public Object getLastBuild() {
         return lastBuild;
     }
 
     @JsonProperty("LastBuild")
-    public void setLastBuild(java.lang.Object lastBuild) {
+    public void setLastBuild(Object lastBuild) {
         this.lastBuild = lastBuild;
     }
 
     @JsonProperty("LastRun")
-    public java.lang.Object getLastRun() {
+    public Object getLastRun() {
         return lastRun;
     }
 
     @JsonProperty("LastRun")
-    public void setLastRun(java.lang.Object lastRun) {
+    public void setLastRun(Object lastRun) {
         this.lastRun = lastRun;
     }
 
     @JsonProperty("PassingTestCaseCount")
-    public Integer getPassingTestCaseCount() {
+    public Long getPassingTestCaseCount() {
         return passingTestCaseCount;
     }
 
     @JsonProperty("PassingTestCaseCount")
-    public void setPassingTestCaseCount(Integer passingTestCaseCount) {
+    public void setPassingTestCaseCount(Long passingTestCaseCount) {
         this.passingTestCaseCount = passingTestCaseCount;
     }
 
@@ -641,22 +645,22 @@ public class Object {
     }
 
     @JsonProperty("TestCaseCount")
-    public Integer getTestCaseCount() {
+    public Long getTestCaseCount() {
         return testCaseCount;
     }
 
     @JsonProperty("TestCaseCount")
-    public void setTestCaseCount(Integer testCaseCount) {
+    public void setTestCaseCount(Long testCaseCount) {
         this.testCaseCount = testCaseCount;
     }
 
     @JsonProperty("AcceptedDate")
-    public java.lang.Object getAcceptedDate() {
+    public Object getAcceptedDate() {
         return acceptedDate;
     }
 
     @JsonProperty("AcceptedDate")
-    public void setAcceptedDate(java.lang.Object acceptedDate) {
+    public void setAcceptedDate(Object acceptedDate) {
         this.acceptedDate = acceptedDate;
     }
 
@@ -691,32 +695,32 @@ public class Object {
     }
 
     @JsonProperty("BlockedReason")
-    public java.lang.Object getBlockedReason() {
+    public Object getBlockedReason() {
         return blockedReason;
     }
 
     @JsonProperty("BlockedReason")
-    public void setBlockedReason(java.lang.Object blockedReason) {
+    public void setBlockedReason(Object blockedReason) {
         this.blockedReason = blockedReason;
     }
 
     @JsonProperty("Blocker")
-    public java.lang.Object getBlocker() {
+    public Object getBlocker() {
         return blocker;
     }
 
     @JsonProperty("Blocker")
-    public void setBlocker(java.lang.Object blocker) {
+    public void setBlocker(Object blocker) {
         this.blocker = blocker;
     }
 
     @JsonProperty("ClosedDate")
-    public java.lang.Object getClosedDate() {
+    public Object getClosedDate() {
         return closedDate;
     }
 
     @JsonProperty("ClosedDate")
-    public void setClosedDate(java.lang.Object closedDate) {
+    public void setClosedDate(Object closedDate) {
         this.closedDate = closedDate;
     }
 
@@ -761,72 +765,72 @@ public class Object {
     }
 
     @JsonProperty("FixedInBuild")
-    public java.lang.Object getFixedInBuild() {
+    public Object getFixedInBuild() {
         return fixedInBuild;
     }
 
     @JsonProperty("FixedInBuild")
-    public void setFixedInBuild(java.lang.Object fixedInBuild) {
+    public void setFixedInBuild(Object fixedInBuild) {
         this.fixedInBuild = fixedInBuild;
     }
 
     @JsonProperty("FoundInBuild")
-    public java.lang.Object getFoundInBuild() {
+    public Object getFoundInBuild() {
         return foundInBuild;
     }
 
     @JsonProperty("FoundInBuild")
-    public void setFoundInBuild(java.lang.Object foundInBuild) {
+    public void setFoundInBuild(Object foundInBuild) {
         this.foundInBuild = foundInBuild;
     }
 
     @JsonProperty("InProgressDate")
-    public java.lang.Object getInProgressDate() {
+    public Object getInProgressDate() {
         return inProgressDate;
     }
 
     @JsonProperty("InProgressDate")
-    public void setInProgressDate(java.lang.Object inProgressDate) {
+    public void setInProgressDate(Object inProgressDate) {
         this.inProgressDate = inProgressDate;
     }
 
     @JsonProperty("Iteration")
-    public java.lang.Object getIteration() {
+    public Object getIteration() {
         return iteration;
     }
 
     @JsonProperty("Iteration")
-    public void setIteration(java.lang.Object iteration) {
+    public void setIteration(Object iteration) {
         this.iteration = iteration;
     }
 
     @JsonProperty("OpenedDate")
-    public java.lang.Object getOpenedDate() {
+    public Object getOpenedDate() {
         return openedDate;
     }
 
     @JsonProperty("OpenedDate")
-    public void setOpenedDate(java.lang.Object openedDate) {
+    public void setOpenedDate(Object openedDate) {
         this.openedDate = openedDate;
     }
 
     @JsonProperty("Package")
-    public java.lang.Object getPackage() {
+    public Object getPackage() {
         return _package;
     }
 
     @JsonProperty("Package")
-    public void setPackage(java.lang.Object _package) {
+    public void setPackage(Object _package) {
         this._package = _package;
     }
 
     @JsonProperty("PlanEstimate")
-    public java.lang.Object getPlanEstimate() {
+    public Object getPlanEstimate() {
         return planEstimate;
     }
 
     @JsonProperty("PlanEstimate")
-    public void setPlanEstimate(java.lang.Object planEstimate) {
+    public void setPlanEstimate(Object planEstimate) {
         this.planEstimate = planEstimate;
     }
 
@@ -851,12 +855,12 @@ public class Object {
     }
 
     @JsonProperty("Release")
-    public java.lang.Object getRelease() {
+    public Object getRelease() {
         return release;
     }
 
     @JsonProperty("Release")
-    public void setRelease(java.lang.Object release) {
+    public void setRelease(Object release) {
         this.release = release;
     }
 
@@ -871,12 +875,12 @@ public class Object {
     }
 
     @JsonProperty("Requirement")
-    public java.lang.Object getRequirement() {
+    public Object getRequirement() {
         return requirement;
     }
 
     @JsonProperty("Requirement")
-    public void setRequirement(java.lang.Object requirement) {
+    public void setRequirement(Object requirement) {
         this.requirement = requirement;
     }
 
@@ -891,22 +895,22 @@ public class Object {
     }
 
     @JsonProperty("SalesforceCaseID")
-    public java.lang.Object getSalesforceCaseID() {
+    public Object getSalesforceCaseID() {
         return salesforceCaseID;
     }
 
     @JsonProperty("SalesforceCaseID")
-    public void setSalesforceCaseID(java.lang.Object salesforceCaseID) {
+    public void setSalesforceCaseID(Object salesforceCaseID) {
         this.salesforceCaseID = salesforceCaseID;
     }
 
     @JsonProperty("SalesforceCaseNumber")
-    public java.lang.Object getSalesforceCaseNumber() {
+    public Object getSalesforceCaseNumber() {
         return salesforceCaseNumber;
     }
 
     @JsonProperty("SalesforceCaseNumber")
-    public void setSalesforceCaseNumber(java.lang.Object salesforceCaseNumber) {
+    public void setSalesforceCaseNumber(Object salesforceCaseNumber) {
         this.salesforceCaseNumber = salesforceCaseNumber;
     }
 
@@ -931,32 +935,32 @@ public class Object {
     }
 
     @JsonProperty("SubmittedBy")
-    public java.lang.Object getSubmittedBy() {
+    public Object getSubmittedBy() {
         return submittedBy;
     }
 
     @JsonProperty("SubmittedBy")
-    public void setSubmittedBy(java.lang.Object submittedBy) {
+    public void setSubmittedBy(Object submittedBy) {
         this.submittedBy = submittedBy;
     }
 
     @JsonProperty("TargetBuild")
-    public java.lang.Object getTargetBuild() {
+    public Object getTargetBuild() {
         return targetBuild;
     }
 
     @JsonProperty("TargetBuild")
-    public void setTargetBuild(java.lang.Object targetBuild) {
+    public void setTargetBuild(Object targetBuild) {
         this.targetBuild = targetBuild;
     }
 
     @JsonProperty("TargetDate")
-    public java.lang.Object getTargetDate() {
+    public Object getTargetDate() {
         return targetDate;
     }
 
     @JsonProperty("TargetDate")
-    public void setTargetDate(java.lang.Object targetDate) {
+    public void setTargetDate(Object targetDate) {
         this.targetDate = targetDate;
     }
 
@@ -1011,22 +1015,22 @@ public class Object {
     }
 
     @JsonProperty("TestCase")
-    public java.lang.Object getTestCase() {
+    public Object getTestCase() {
         return testCase;
     }
 
     @JsonProperty("TestCase")
-    public void setTestCase(java.lang.Object testCase) {
+    public void setTestCase(Object testCase) {
         this.testCase = testCase;
     }
 
     @JsonProperty("TestCaseResult")
-    public java.lang.Object getTestCaseResult() {
+    public Object getTestCaseResult() {
         return testCaseResult;
     }
 
     @JsonProperty("TestCaseResult")
-    public void setTestCaseResult(java.lang.Object testCaseResult) {
+    public void setTestCaseResult(Object testCaseResult) {
         this.testCaseResult = testCaseResult;
     }
 
@@ -1051,32 +1055,42 @@ public class Object {
     }
 
     @JsonProperty("VerifiedInBuild")
-    public java.lang.Object getVerifiedInBuild() {
+    public Object getVerifiedInBuild() {
         return verifiedInBuild;
     }
 
     @JsonProperty("VerifiedInBuild")
-    public void setVerifiedInBuild(java.lang.Object verifiedInBuild) {
+    public void setVerifiedInBuild(Object verifiedInBuild) {
         this.verifiedInBuild = verifiedInBuild;
     }
 
-    @JsonProperty("_type")
-    public String getType() {
-        return type;
+    @JsonProperty("Errors")
+    public List<Object> getErrors() {
+        return errors;
     }
 
-    @JsonProperty("_type")
-    public void setType(String type) {
-        this.type = type;
+    @JsonProperty("Errors")
+    public void setErrors(List<Object> errors) {
+        this.errors = errors;
+    }
+
+    @JsonProperty("Warnings")
+    public List<Object> getWarnings() {
+        return warnings;
+    }
+
+    @JsonProperty("Warnings")
+    public void setWarnings(List<Object> warnings) {
+        this.warnings = warnings;
     }
 
     @JsonAnyGetter
-    public Map<String, java.lang.Object> getAdditionalProperties() {
+    public Map<String, Object> getAdditionalProperties() {
         return this.additionalProperties;
     }
 
     @JsonAnySetter
-    public void setAdditionalProperty(String name, java.lang.Object value) {
+    public void setAdditionalProperty(String name, Object value) {
         this.additionalProperties.put(name, value);
     }
 
