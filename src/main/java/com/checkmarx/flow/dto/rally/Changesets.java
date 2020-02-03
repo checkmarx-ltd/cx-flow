@@ -28,7 +28,7 @@ public class Changesets {
     @JsonProperty("_type")
     private String type;
     @JsonProperty("Count")
-    private Integer count;
+    private Long count;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
@@ -73,12 +73,12 @@ public class Changesets {
     }
 
     @JsonProperty("Count")
-    public Integer getCount() {
+    public Long getCount() {
         return count;
     }
 
     @JsonProperty("Count")
-    public void setCount(Integer count) {
+    public void setCount(Long count) {
         this.count = count;
     }
 

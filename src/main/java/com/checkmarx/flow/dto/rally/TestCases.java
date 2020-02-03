@@ -28,9 +28,9 @@ public class TestCases {
     @JsonProperty("_type")
     private String type;
     @JsonProperty("Count")
-    private Integer count;
+    private Long count;
     @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+    private Map<String, java.lang.Object> additionalProperties = new HashMap<String, java.lang.Object>();
 
     @JsonProperty("_rallyAPIMajor")
     public String getRallyAPIMajor() {
@@ -73,22 +73,22 @@ public class TestCases {
     }
 
     @JsonProperty("Count")
-    public Integer getCount() {
+    public Long getCount() {
         return count;
     }
 
     @JsonProperty("Count")
-    public void setCount(Integer count) {
+    public void setCount(Long count) {
         this.count = count;
     }
 
     @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
+    public Map<String, java.lang.Object> getAdditionalProperties() {
         return this.additionalProperties;
     }
 
     @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
+    public void setAdditionalProperty(String name, java.lang.Object value) {
         this.additionalProperties.put(name, value);
     }
 
