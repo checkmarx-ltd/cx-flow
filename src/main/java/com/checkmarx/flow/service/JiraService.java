@@ -45,15 +45,15 @@ public class JiraService {
     private final FlowProperties flowProperties;
     private static final int MAX_JQL_RESULTS = 1000000;
     private static final int JIRA_MAX_DESCRIPTION = 32760;
-    private final String ParentUrl;
-    private final String GrandParentUrl;
+    private final String parentUrl;
+    private final String grandParentUrl;
 
     @ConstructorProperties({"jiraProperties", "flowProperties"})
     public JiraService(JiraProperties jiraProperties, FlowProperties flowProperties) {
         this.jiraProperties = jiraProperties;
         this.flowProperties = flowProperties;
-        ParentUrl = jiraProperties.getParentUrl();
-        GrandParentUrl = jiraProperties.getGrandParentUrl();
+        parentUrl = jiraProperties.getParentUrl();
+        grandParentUrl = jiraProperties.getGrandParentUrl();
     }
 
     @PostConstruct
@@ -915,21 +915,21 @@ public class JiraService {
 
         if (this.jiraProperties.isChild()) {
             ScanRequest parent = new ScanRequest(request);
-            ScanRequest Grandparent = new ScanRequest(request);
+            ScanRequest grandparent = new ScanRequest(request);
             BugTracker bugTracker;
             bugTracker = parent.getBugTracker();
-            bugTracker.setProjectKey(ParentUrl);
+            bugTracker.setProjectKey(parentUrl);
             parent.setBugTracker(bugTracker);
             issuesParent = this.getIssues(parent);
-            if (GrandParentUrl.length() == 0) {
+            if (grandParentUrl.length() == 0) {
                  log.info("Grandparent feild is empty");
                 issuesGrandParent = null;
             } else {
                 BugTracker bugTrackerGrandParenet;
-                bugTrackerGrandParenet = Grandparent.getBugTracker();
-                bugTrackerGrandParenet.setProjectKey(GrandParentUrl);
-                Grandparent.setBugTracker(bugTrackerGrandParenet);
-                issuesGrandParent = this.getIssues(Grandparent);
+                bugTrackerGrandParenet = grandparent.getBugTracker();
+                bugTrackerGrandParenet.setProjectKey(grandParentUrl);
+                grandparent.setBugTracker(bugTrackerGrandParenet);
+                issuesGrandParent = this.getIssues(grandparent);
             }
         } else {
             issuesParent = null;
@@ -1026,36 +1026,33 @@ public class JiraService {
         );
     }
     
-    boolean parentCheck(String Key, List<Issue> issues) {
-        if (issues == null){
-        Map<String, Issue> jiraMap;
-        jiraMap = this.getJiraIssueMap(issues);
-        if (this.jiraProperties.isChild()) {
-
-            if (jiraMap.containsKey(Key)) {
-                log.info("Issue ("+jiraMap.get(Key).getKey()+") found in parent("+ParentUrl+") not creating issue for child Issue");
-                return true;
-              }
+    boolean parentCheck(String key, List<Issue> issues) {
+        if (issues != null){
+            Map<String, Issue> jiraMap;
+            jiraMap = this.getJiraIssueMap(issues);
+            if (this.jiraProperties.isChild()) {
+                if (jiraMap.containsKey(key)) {
+                    log.info("Issue ({}) found in parent ({}) not creating issue for child issue", jiraMap.get(key).getKey(), parentUrl);
+                    return true;
+                  }
             }
+            return false;
+        }
         return false;
-          }
-        return false;
-
     }
     
-    boolean GrandparentCheck(String Key, List<Issue> issues) {
-        if (issues == null){
-        Map<String, Issue> jiraMap;
-        jiraMap = this.getJiraIssueMap(issues);
-        if (this.jiraProperties.isChild()) {
-
-            if (jiraMap.containsKey(Key)) {
-                log.info("Issue ("+jiraMap.get(Key).getKey()+") found in GrandParent("+GrandParentUrl+") not creating issue for childIssue");
-                return true;
-              }
+    boolean grandparentCheck(String key, List<Issue> issues) {
+        if (issues != null){
+            Map<String, Issue> jiraMap;
+            jiraMap = this.getJiraIssueMap(issues);
+            if (this.jiraProperties.isChild()) {
+                if (jiraMap.containsKey(key)) {
+                    log.info("Issue ({}) found in grandParent ({}) not creating issue for child issue", jiraMap.get(key).getKey(), grandParentUrl);
+                    return true;
+                  }
             }
-        return false;
-          }
+            return false;
+        }
         return false;
     }
 }
