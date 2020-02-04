@@ -983,17 +983,16 @@ public class JiraService {
                 } else {
                     /*Create the new issue*/
                     if(!currentIssue.isAllFalsePositive()) {
-                    if (!jiraProperties.isChild() || (!parentCheck(xIssue.getKey(), issuesParent) && !GrandparentCheck(xIssue.getKey(), issuesGrandParent))) {
+                        if (!jiraProperties.isChild() || (!parentCheck(xIssue.getKey(), issuesParent) && !grandparentCheck(xIssue.getKey(), issuesGrandParent))) {
+                            if (jiraProperties.isChild()) {
+                                log.info("Issue not found in parent creating issue for child");
+                            }
 
-                        if (jiraProperties.isChild()) {
-                            log.info("Issue not found in parent creating issue for child");
+                            log.debug("Creating new issue with key {}", xIssue.getKey());
+                            String newIssue = this.createIssue(currentIssue, request);
+                            newIssues.add(newIssue);
+                            log.info("New issue created. #{}", newIssue);
                         }
-
-                        log.debug("Creating new issue with key {}", xIssue.getKey());
-                        String newIssue = this.createIssue(currentIssue, request);
-                        newIssues.add(newIssue);
-                        log.info("New issue created. #{}", newIssue);
-                       }
                     }
                 }
             } catch (RestClientException e) {
