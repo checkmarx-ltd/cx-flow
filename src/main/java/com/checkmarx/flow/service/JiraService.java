@@ -30,7 +30,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 public class JiraService {
@@ -95,7 +94,8 @@ public class JiraService {
                     jiraProperties.getLabelTracker(),
                     jiraProperties.getBranchLabelPrefix(), request.getBranch()
             );
-        }/*Only application and repo provided */ else if (!ScanUtils.empty(request.getApplication()) && !ScanUtils.empty(request.getRepoName())) {
+        }/*Only application and repo provided */
+        else if (!ScanUtils.empty(request.getApplication()) && !ScanUtils.empty(request.getRepoName())) {
 
             jql = String.format("project = %s and issueType = \"%s\" and (\"%s\" = \"%s\" and \"%s\" = \"%s:%s\" and \"%s\" = \"%s:%s\")",
                     bugTracker.getProjectKey(),
@@ -108,7 +108,8 @@ public class JiraService {
                     jiraProperties.getRepoLabelPrefix(), request.getRepoName()
             );
 
-        }/*Only application provided*/ else if (!ScanUtils.empty(request.getApplication())) {
+        }/*Only application provided*/
+        else if (!ScanUtils.empty(request.getApplication())) {
             jql = String.format("project = %s and issueType = \"%s\" and (\"%s\" = \"%s\" and \"%s\" = \"%s:%s\")",
                     bugTracker.getProjectKey(),
                     bugTracker.getIssueType(),
@@ -965,7 +966,8 @@ public class JiraService {
                             this.transitionCloseIssue(fpIssue.getKey(), request.getBugTracker().getCloseTransition(), request.getBugTracker(), true);
                             closedIssues.add(fpIssue.getKey());
                         }
-                    }/*Ignore any with label indicating false positive*/ else if (!i.getLabels().contains(jiraProperties.getFalsePositiveLabel())) {
+                    }/*Ignore any with label indicating false positive*/
+                    else if (!i.getLabels().contains(jiraProperties.getFalsePositiveLabel())) {
                         log.debug("Issue still exists.  Updating issue with key {}", xIssue.getKey());
                         Issue updatedIssue = this.updateIssue(i.getKey(), currentIssue, request);
                         if (updatedIssue != null) {
