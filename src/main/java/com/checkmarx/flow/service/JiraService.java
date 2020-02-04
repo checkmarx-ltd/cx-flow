@@ -468,11 +468,11 @@ public class JiraService {
                             case "comment":
                                 value = "";
                                 StringBuilder comments = new StringBuilder();
-                                String commentFmt = "Line [%s] - [%s]".concat(ScanUtils.CRLF);
+                                String commentFmt = "[Line %s]: [%s]".concat(ScanUtils.CRLF);
                                 if (issue.getDetails() != null) {
                                     issue.getDetails().entrySet()
                                             .stream()
-                                            .filter( x -> x.getKey( ) != null && x.getValue() != null && x.getValue().getComment() != null)
+                                            .filter( x -> x.getKey( ) != null && x.getValue() != null && x.getValue().getComment() != null && !x.getValue().getComment().isEmpty())
                                             .forEach( c -> comments.append(String.format(commentFmt, c.getKey(), c.getValue().getComment())));
                                     value = comments.toString();
                                 }
