@@ -137,13 +137,15 @@ public class IssueService implements ApplicationContextAware {
                         }
                     } else {
                         /*Create the new issue*/
-                        fileUrl = ScanUtils.getFileUrl(request, currentIssue.getFilename());
-                        xIssue.getValue().setGitUrl(fileUrl);
-                        log.info("Creating new issue with key {}", xIssue.getKey());
-                        Issue newIssue = tracker.createIssue(xIssue.getValue(), request);
-                        if(newIssue != null) {
-                            newIssues.add(newIssue.getId());
-                            log.info("New issue created. #{}", newIssue.getId());
+                        if(!xIssue.getValue().isAllFalsePositive()) {
+                            fileUrl = ScanUtils.getFileUrl(request, currentIssue.getFilename());
+                            xIssue.getValue().setGitUrl(fileUrl);
+                            log.info("Creating new issue with key {}", xIssue.getKey());
+                            Issue newIssue = tracker.createIssue(xIssue.getValue(), request);
+                            if (newIssue != null) {
+                                newIssues.add(newIssue.getId());
+                                log.info("New issue created. #{}", newIssue.getId());
+                            }
                         }
                     }
                 } catch (HttpClientErrorException e) {
