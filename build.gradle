@@ -1,8 +1,8 @@
 buildscript {
 	ext {
-        CxSBSDK = "0.4.2"
+        CxSBSDK = "0.4.5"
         //cxVersion = "8.90.5"
-        springBootVersion = '2.2.2.RELEASE'
+        springBootVersion = '2.2.4.RELEASE'
         sonarqubeVersion = '2.8'
         atlassianVersion = "5.1.6"
         atlassianFugueVersion = "4.7.2"
@@ -37,7 +37,7 @@ apply plugin: 'io.spring.dependency-management'
 apply plugin: 'com.gorylenko.gradle-git-properties'
 
 group = 'com.checkmarx'
-version = '1.5.2'
+version = '1.5.3'
 sourceCompatibility = 1.8
 
 repositories {
