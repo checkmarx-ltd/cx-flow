@@ -1,5 +1,12 @@
 /** Code Review Notes (remove when review complete)
+ * See why markdown isn't showing up correctly in Rally??
+ * Follow Azure and Jira for tag examples, you won't need to put CX title
+ *     - Map the labels to the tags in Rally
+ *
+ * - try this command line tests
+ *
  * - I force the issue to state 'Open' when its created, is that OK? The default is 'Submitted'
+ *     - Give them an option to decide if submitted or open on create (see azure)
  * - Rally support a state 'Fixed' but I'm only checking for 'Closed', is that OK?
  * - I figured out I didn't need a separate Update and Create issue for generating
  * - JSON objects
@@ -14,6 +21,7 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.RallyProperties;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.dto.rally.CreateResult;
 import com.checkmarx.flow.dto.rally.CreateResultAction;
 import com.checkmarx.flow.dto.rally.DefectQuery;
 import com.checkmarx.flow.dto.rally.QueryResult;
@@ -23,6 +31,7 @@ import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -55,6 +64,12 @@ public class RallyIssueTracker implements IssueTracker {
     private static final String GET_ISSUES = "/defect?query=&fetch=true&start={page_index}&pagesize={issues_per_page}";
     private static final String CREATE_ISSUE = "/defect/create";
     private static final String CREATE_DISCUSSION = "/conversationpost/create";
+    private static final String CREATE_TAG = "/tag/create";
+
+    //
+    /// Tracks Required Rally Tag ID's
+    //
+    private String rallyAppTag = "";
 
     public RallyIssueTracker(@Qualifier("flowRestTemplate") RestTemplate restTemplate, RallyProperties properties, FlowProperties flowProperties) {
         this.restTemplate = restTemplate;
@@ -67,12 +82,13 @@ public class RallyIssueTracker implements IssueTracker {
         log.info("Initializing Rally processing");
         if(ScanUtils.empty(request.getNamespace()) ||
                 ScanUtils.empty(request.getRepoName()) ||
-                ScanUtils.empty(request.getBranch())){
+                ScanUtils.empty(request.getBranch())) {
             throw new MachinaException("Namespace / RepoName / Branch are required");
         }
-        if(ScanUtils.empty(properties.getApiUrl())){
+        if(ScanUtils.empty(properties.getApiUrl())) {
             throw new MachinaException("Rally API Url must be provided in property config");
         }
+        createRallyTags();
     }
 
     /**
@@ -144,6 +160,7 @@ public class RallyIssueTracker implements IssueTracker {
             Issue i = mapToIssue(issue);
 
             // TODO: remove this after review, I was just testing getIssue() here.
+            // TODO: replace this with code to read the label information
             getIssue(i.getUrl());
             if(i != null && i.getTitle().startsWith(request.getProduct().getProduct())){
                 issues.add(i);
@@ -194,14 +211,15 @@ public class RallyIssueTracker implements IssueTracker {
         i.setId((String)rallyDefect.get("_refObjectUUID"));
         i.setUrl((String)rallyDefect.get("_ref"));
         i.setState((String)rallyDefect.get("State"));
-        //List<String> labels = new ArrayList<>();
+        List<String> labels = new ArrayList<>();
+        //rallyDefect.get
         // TODO: decide if I need use tags
         /*
         for(LabelsItem l: issue.getLabels()){
             labels.add(l.getName());
         }
         */
-        //i.setLabels(labels);
+        i.setLabels(labels);
         return i;
     }
 
@@ -264,6 +282,8 @@ public class RallyIssueTracker implements IssueTracker {
                     CreateResultAction.class);
             cra = response.getBody();
             Map<String, Object> m = (Map<String, Object>)cra.getAdditionalProperties().get("CreateResult");
+            // TODO: Map Rally tag to this new issue
+            //addRallyTags(m);
             m = (Map<String, Object>)m.get("Object");
             return mapHashManToIssue(m);
         } catch (HttpClientErrorException e) {
@@ -281,6 +301,11 @@ public class RallyIssueTracker implements IssueTracker {
     private String getJSONCreateIssue(ScanResults.XIssue resultIssue, ScanRequest request) {
         JSONObject requestBody = new JSONObject();
         JSONObject createBody = new JSONObject();
+        JSONObject cxFlowTag  = new JSONObject();
+        //cxFlowTag.put("_ref", "/tag/367406838020");
+        cxFlowTag.put("_ref", this.rallyAppTag);
+        JSONArray tagsList = new JSONArray();
+        tagsList.put(cxFlowTag);
         String fileUrl = ScanUtils.getFileUrl(request, resultIssue.getFilename());
         String body = ScanUtils.getMDBody(resultIssue, request.getBranch(), fileUrl, flowProperties);
         String title = getXIssueKey(resultIssue, request);
@@ -290,9 +315,94 @@ public class RallyIssueTracker implements IssueTracker {
             requestBody.put("Project", properties.getRallyProjectId());
             requestBody.put("State", TRANSITION_OPEN);
             requestBody.put("Description", body);
+            requestBody.put("Tags", tagsList);
             createBody.put("Defect", requestBody);
         } catch (JSONException e) {
             log.error("Error creating JSON Issue Object - JSON Object will be empty");
+        }
+        return createBody.toString();
+    }
+
+    private void createRallyTags() {
+        log.info("Creating required Rally tags");
+        this.rallyAppTag = createRallyTag("New Rally Tag From CxFlow");
+    }
+
+    /**
+     * Creates or locates existing Rally tag and return it's reference.
+     *
+     * @param name The name of the Rally Tag to create or locate
+     * @return String containing the reference, this should never be null!
+     */
+    private String createRallyTag(String name) {
+        log.info("Creating Rally Tag: ".concat(name));
+        HttpEntity httpEntity = new HttpEntity(getJSONCreateTag(name), createAuthHeaders());
+        CreateResultAction cra;
+        ResponseEntity<CreateResultAction> response;
+        response = restTemplate.exchange(
+                properties.getApiUrl().concat(CREATE_TAG),
+                HttpMethod.POST,
+                httpEntity,
+                CreateResultAction.class);
+        cra = response.getBody();
+        Map<String, Object> m = (Map<String, Object>)cra.getAdditionalProperties().get("CreateResult");
+        m = (Map<String, Object>)m.get("Object");
+        return (String)m.get("_ref");
+    }
+
+    /**
+     * Creates JSON object to create new Rally Tag.
+     *
+     * @return JSON Object to create a new tag
+     */
+    private String getJSONCreateTag(String name) {
+        JSONObject requestBody = new JSONObject();
+        JSONObject createBody = new JSONObject();
+        try {
+            requestBody.put("Name", name);
+            createBody.put("Tag", requestBody);
+        } catch (JSONException e) {
+            log.error("Error creating JSON Create Tag object - JSON object will be empty");
+        }
+        return createBody.toString();
+    }
+
+    /**
+     * Add required Rally tags to the current issue.
+     *
+     * @param rallyDefect contains the Rally defect object
+     */
+    private void addRallyTags(Map<String, Object> rallyDefect){
+        if(rallyDefect == null){
+            return;
+        }
+        String ref = (String)rallyDefect.get("Description");
+        log.info("Mapping Rally tags to new issue");
+        HttpEntity httpEntity = new HttpEntity(getJSONAddTags(), createAuthHeaders());
+        CreateResult cra;
+        ResponseEntity<CreateResult> response;
+        response = restTemplate.exchange(
+                ref,
+                HttpMethod.POST,
+                httpEntity,
+                CreateResult.class);
+        cra = response.getBody();
+        Map<String, Object> m = (Map<String, Object>)cra.getAdditionalProperties().get("CreateResult");
+    }
+
+    /**
+     * Creates JSON object to add tags to Rally Issue
+     *
+     * @return JSON Object to add the tags
+     */
+    private String getJSONAddTags() {
+        JSONObject requestBody = new JSONObject();
+        JSONObject createBody = new JSONObject();
+        try {
+            //requestBody.put("Name", name);
+            createBody.put("Tag", requestBody);
+        } catch (JSONException e) {
+            log.error("Error creating JSON Create Tag object - JSON object will be empty");
         }
         return createBody.toString();
     }
