@@ -3,7 +3,6 @@ package com.checkmarx.flow.cucumber.integration.end2end.github2jira;
 import io.cucumber.java.en.Given;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -68,7 +67,7 @@ import javax.annotation.PostConstruct;
 @SpringBootTest(classes = { CxFlowApplication.class })
 public class GitHubToJiraSteps {
 
-    private static final String HOOK_TAGET_URL = "https://0492fab2.ngrok.io";
+    private static final String HOOK_TAGET_URL = "http://752954d6.ngrok.io"; // TODO: move to properties
     private static final String srcFile = "GitHubToJiraSteps.src";
 
     private String COMMIT_FILE_PATH;
@@ -92,8 +91,8 @@ public class GitHubToJiraSteps {
 
     @PostConstruct
     public void init() {
-        String namespace = "cxflowtestuser";
-        String repo = "testRepo2";
+        String namespace = "ofersk"; //TODO: move to properties
+        String repo = "testing";    //TODO: move to properties
         String filePath = "src/main/java/sample/encode.frm";
         COMMIT_FILE_PATH = String.format("%s/%s/%s/contents/%s", gitHubProperties.getApiUrl(), namespace, repo,
                 filePath);
@@ -153,7 +152,7 @@ public class GitHubToJiraSteps {
         String data = null;
         try {
             data = generateHookData(HOOK_TAGET_URL, gitHubProperties.getWebhookToken());
-            System.out.println(data);
+            // System.out.println(data);
         } catch (Exception e) {
             fail("can not create web hook, check parameters");
         }
@@ -179,15 +178,15 @@ public class GitHubToJiraSteps {
             String content = getFileInBase64();
             ObjectMapper mapper = new ObjectMapper();
             ObjectNode jo = mapper.createObjectNode();
-            jo.put("message", "my commit message");
+            jo.put("message", "GitHubToJira test message");
             ObjectNode committer = mapper.createObjectNode();
-            committer.put("name", "NimrodGolan");
-            committer.put("email", "nimrod.golan@checkmarx.com");
+            committer.put("name", "cxflowtestuser");
+            committer.put("email", "cxflowtestuser@checkmarx.com");
             jo.set("committer", committer);
             jo.put("content", content);
 
             data = mapper.writeValueAsString(jo);
-            System.out.println(data);
+            // System.out.println(data);
         } catch (Exception e) {
             fail("faild to create file for push");
         }
@@ -200,27 +199,28 @@ public class GitHubToJiraSteps {
         } catch (Exception e) {
             fail("faild to push a file: " + e.getMessage());
         }
-        System.out.println("pushed a new file");
+        // System.out.println("pushed a new file");
     }
 
     @Then("target issues are updated")
     public void validateScanStarted() {
         String severities = "(" + flowProperties.getFilterSeverity().stream().collect(Collectors.joining(",")) + ")";
-        String jql = String.format("project = %s and priority  in \"%s\"", jiraProperties.getProject(), severities);
+        String jql = String.format("project = %s and priority  in %s", jiraProperties.getProject(), severities);
         HashSet<String> fields = new HashSet<String>();
         fields.addAll(
                 Arrays.asList("key", "project", "issuetype", "summary", "labels", "created", "updated", "status"));
 
         SearchResult result = null;
-        int maxRetries = 5;
+        int retries = 0;
         do {
-            if (--maxRetries <= 0) {
+            if (++retries >= 20) {
                 fail("failed to find update in Jira after expected time");
             }
+            // System.out.println("Starting iteration #" + retries);
             Promise<SearchResult> temp = searchClient.searchJql(jql, 10, 0, fields);
             try {
                 result = temp.get(500, TimeUnit.MILLISECONDS);
-                TimeUnit.SECONDS.sleep(30);
+                TimeUnit.SECONDS.sleep(5);
             } catch (Exception e) {
                 result = null;
                 continue;
@@ -241,32 +241,8 @@ public class GitHubToJiraSteps {
         final HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("Authorization", this.Authorization);
-        System.out.println(headers);
         return headers;
     }
-
-    // private void setCurrentAuth(String auth) {
-    // this.Authorization = auth;
-    // }
-
-    // private String getObjectSha(String uri, String node) {
-    // String sha = null;
-    // try {
-    // JSONObject data = getJSONObject(uri);
-    // sha = data.getJSONObject(node).getString("sha");
-    // } catch (JSONException e) {
-    // fail("can't get sha of " + node + ": " + e.getMessage());
-    // }
-    // return sha;
-    // }
-
-    // private JSONObject getJSONObject(String uri) {
-    // String body = getRaw(uri);
-    // if (body == null) {
-    // return null;
-    // }
-    // return new JSONObject(body);
-    // }
 
     private JSONArray getJSONArray(String uri) {
         String body = getRaw(uri);
@@ -337,7 +313,7 @@ public class GitHubToJiraSteps {
             jo.put("sha", createdFileSha);
 
             data = mapper.writeValueAsString(jo);
-            System.out.println(data);
+            // System.out.println(data);
         } catch (Exception e) {
             fail("faild to delete file of push");
         }
@@ -352,7 +328,7 @@ public class GitHubToJiraSteps {
     }
 
     private String getFileInBase64() throws IOException {
-        File file = ResourceUtils.getFile("classpath:"+srcFile);
+        File file = ResourceUtils.getFile("classpath:\\cucumber\\data\\input-files-toscan\\"+srcFile);
         String content = new String (Files.readAllBytes(file.toPath()),Charset.forName("UTF-8"));
         String encodedString = Base64.getEncoder().encodeToString(content.getBytes());
         return encodedString;
