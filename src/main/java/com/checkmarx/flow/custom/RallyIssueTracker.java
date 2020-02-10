@@ -21,7 +21,6 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.RallyProperties;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.dto.rally.CreateResult;
 import com.checkmarx.flow.dto.rally.CreateResultAction;
 import com.checkmarx.flow.dto.rally.DefectQuery;
 import com.checkmarx.flow.dto.rally.QueryResult;
@@ -61,15 +60,15 @@ public class RallyIssueTracker implements IssueTracker {
     //
     /// RestAPI Endpoints
     //
-    private static final String GET_ISSUES = "/defect?query=&fetch=true&start={page_index}&pagesize={issues_per_page}";
+    private static final String GET_ISSUES = "/defect?query={query}&fetch=true&start={page_index}&pagesize={issues_per_page}";
     private static final String CREATE_ISSUE = "/defect/create";
     private static final String CREATE_DISCUSSION = "/conversationpost/create";
     private static final String CREATE_TAG = "/tag/create";
 
     //
-    /// Tracks Required Rally Tag ID's
+    /// Tracks the list of Rally tags to append to new Issues
     //
-    private String rallyAppTag = "";
+    JSONArray tagsList = new JSONArray();
 
     public RallyIssueTracker(@Qualifier("flowRestTemplate") RestTemplate restTemplate, RallyProperties properties, FlowProperties flowProperties) {
         this.restTemplate = restTemplate;
@@ -88,7 +87,7 @@ public class RallyIssueTracker implements IssueTracker {
         if(ScanUtils.empty(properties.getApiUrl())) {
             throw new MachinaException("Rally API Url must be provided in property config");
         }
-        createRallyTags();
+        createRallyTags(request);
     }
 
     /**
@@ -115,6 +114,7 @@ public class RallyIssueTracker implements IssueTracker {
                     HttpMethod.GET,
                     httpEntity,
                     QueryResult.class,
+                    "(Tags.name = \"repo:checkmarxTest\")",
                     pageIndex,
                     ISSUES_PER_PAGE
             );
@@ -126,7 +126,12 @@ public class RallyIssueTracker implements IssueTracker {
             int resultsFound = 0;
             while(resultsFound < rallyQuery.getQueryResult().getTotalResultCount()) {
                 resultsFound += rallyQuery.getQueryResult().getPageSize();
-                readCxFlowIssues(rallyQuery, request, issues);
+                // Create CxFlow issues from Rally issues
+                for(Result issue: rallyQuery.getQueryResult().getResults()){
+                    Issue i = mapToIssue(issue);
+                    issues.add(i);
+                }
+                // If there are more issues on the server, fetch them
                 if(resultsFound < rallyQuery.getQueryResult().getTotalResultCount()) {
                     pageIndex++;
                     response = restTemplate.exchange(
@@ -134,6 +139,7 @@ public class RallyIssueTracker implements IssueTracker {
                             HttpMethod.GET,
                             httpEntity,
                             QueryResult.class,
+                            "(Tags.name = \"repo:checkmarxTest\")",
                             pageIndex,
                             ISSUES_PER_PAGE
                     );
@@ -143,28 +149,6 @@ public class RallyIssueTracker implements IssueTracker {
             return issues;
         } catch(RestClientException e) {
             return new ArrayList<>();
-        }
-    }
-
-    /**
-     * Examin Rally issue and add CxFlow issues to to issues list.
-     *
-     * @param rallyQuery contains RallyQuery with list of defects
-     * @param request CxFlow ScanRequest object with required scan info
-     * @param issues will contain list of found issues
-     */
-    private void readCxFlowIssues(QueryResult rallyQuery,
-                                ScanRequest request,
-                                List<Issue> issues) {
-        for(Result issue: rallyQuery.getQueryResult().getResults()){
-            Issue i = mapToIssue(issue);
-
-            // TODO: remove this after review, I was just testing getIssue() here.
-            // TODO: replace this with code to read the label information
-            getIssue(i.getUrl());
-            if(i != null && i.getTitle().startsWith(request.getProduct().getProduct())){
-                issues.add(i);
-            }
         }
     }
 
@@ -185,12 +169,6 @@ public class RallyIssueTracker implements IssueTracker {
         i.setUrl(rallyDefect.getRef());
         i.setState(rallyDefect.getState());
         List<String> labels = new ArrayList<>();
-        // TODO: decide if I need use tags
-        /*
-        for(LabelsItem l: issue.getLabels()){
-            labels.add(l.getName());
-        }
-        */
         i.setLabels(labels);
         return i;
     }
@@ -212,13 +190,6 @@ public class RallyIssueTracker implements IssueTracker {
         i.setUrl((String)rallyDefect.get("_ref"));
         i.setState((String)rallyDefect.get("State"));
         List<String> labels = new ArrayList<>();
-        //rallyDefect.get
-        // TODO: decide if I need use tags
-        /*
-        for(LabelsItem l: issue.getLabels()){
-            labels.add(l.getName());
-        }
-        */
         i.setLabels(labels);
         return i;
     }
@@ -282,8 +253,6 @@ public class RallyIssueTracker implements IssueTracker {
                     CreateResultAction.class);
             cra = response.getBody();
             Map<String, Object> m = (Map<String, Object>)cra.getAdditionalProperties().get("CreateResult");
-            // TODO: Map Rally tag to this new issue
-            //addRallyTags(m);
             m = (Map<String, Object>)m.get("Object");
             return mapHashManToIssue(m);
         } catch (HttpClientErrorException e) {
@@ -301,11 +270,6 @@ public class RallyIssueTracker implements IssueTracker {
     private String getJSONCreateIssue(ScanResults.XIssue resultIssue, ScanRequest request) {
         JSONObject requestBody = new JSONObject();
         JSONObject createBody = new JSONObject();
-        JSONObject cxFlowTag  = new JSONObject();
-        //cxFlowTag.put("_ref", "/tag/367406838020");
-        cxFlowTag.put("_ref", this.rallyAppTag);
-        JSONArray tagsList = new JSONArray();
-        tagsList.put(cxFlowTag);
         String fileUrl = ScanUtils.getFileUrl(request, resultIssue.getFilename());
         String body = ScanUtils.getMDBody(resultIssue, request.getBranch(), fileUrl, flowProperties);
         String title = getXIssueKey(resultIssue, request);
@@ -315,7 +279,7 @@ public class RallyIssueTracker implements IssueTracker {
             requestBody.put("Project", properties.getRallyProjectId());
             requestBody.put("State", TRANSITION_OPEN);
             requestBody.put("Description", body);
-            requestBody.put("Tags", tagsList);
+            requestBody.put("Tags", this.tagsList);
             createBody.put("Defect", requestBody);
         } catch (JSONException e) {
             log.error("Error creating JSON Issue Object - JSON Object will be empty");
@@ -323,9 +287,35 @@ public class RallyIssueTracker implements IssueTracker {
         return createBody.toString();
     }
 
-    private void createRallyTags() {
-        log.info("Creating required Rally tags");
-        this.rallyAppTag = createRallyTag("New Rally Tag From CxFlow");
+    /**
+     * Create the Rally Tags required to properly mark new Rally Issues for CxFlow tracking.
+     */
+    private void createRallyTags(ScanRequest request) {
+        log.info("Creating Rally tags list");
+        String application = request.getApplication();
+        String namespace = request.getNamespace();
+        String repoName = request.getRepoName();
+        String branch = request.getBranch();
+        String appTag = properties.getAppLabelPrefix().concat(":").concat(application);
+        String ownerTag = properties.getOwnerLabelPrefix().concat(":").concat(namespace);
+        String repoTag = properties.getRepoLabelPrefix().concat(":").concat(repoName);
+        String branchTag = properties.getBranchLabelPrefix().concat(":").concat(branch);
+        // Always add the product tag
+        tagsList.put(createRallyTag(request.getProduct().getProduct()));
+        // Now figure out if we're tracking by 'application' or 'repo'
+        if (!flowProperties.isTrackApplicationOnly()
+                && !ScanUtils.empty(namespace)
+                && !ScanUtils.empty(repoName)
+                && !ScanUtils.empty(branch)) {
+            tagsList.put(createRallyTag(ownerTag));
+            tagsList.put(createRallyTag(repoTag));
+            tagsList.put(createRallyTag(branchTag));
+        } else if (!ScanUtils.empty(application) && !ScanUtils.empty(repoName)) {
+            tagsList.put(createRallyTag(appTag));
+            tagsList.put(createRallyTag(repoTag));
+        } else {
+            tagsList.put(createRallyTag(appTag));
+        }
     }
 
     /**
@@ -334,7 +324,7 @@ public class RallyIssueTracker implements IssueTracker {
      * @param name The name of the Rally Tag to create or locate
      * @return String containing the reference, this should never be null!
      */
-    private String createRallyTag(String name) {
+    private JSONObject createRallyTag(String name) {
         log.info("Creating Rally Tag: ".concat(name));
         HttpEntity httpEntity = new HttpEntity(getJSONCreateTag(name), createAuthHeaders());
         CreateResultAction cra;
@@ -347,7 +337,9 @@ public class RallyIssueTracker implements IssueTracker {
         cra = response.getBody();
         Map<String, Object> m = (Map<String, Object>)cra.getAdditionalProperties().get("CreateResult");
         m = (Map<String, Object>)m.get("Object");
-        return (String)m.get("_ref");
+        JSONObject cxFlowTag  = new JSONObject();
+        cxFlowTag.put("_ref", (String)m.get("_ref"));
+        return cxFlowTag;
     }
 
     /**
@@ -360,46 +352,6 @@ public class RallyIssueTracker implements IssueTracker {
         JSONObject createBody = new JSONObject();
         try {
             requestBody.put("Name", name);
-            createBody.put("Tag", requestBody);
-        } catch (JSONException e) {
-            log.error("Error creating JSON Create Tag object - JSON object will be empty");
-        }
-        return createBody.toString();
-    }
-
-    /**
-     * Add required Rally tags to the current issue.
-     *
-     * @param rallyDefect contains the Rally defect object
-     */
-    private void addRallyTags(Map<String, Object> rallyDefect){
-        if(rallyDefect == null){
-            return;
-        }
-        String ref = (String)rallyDefect.get("Description");
-        log.info("Mapping Rally tags to new issue");
-        HttpEntity httpEntity = new HttpEntity(getJSONAddTags(), createAuthHeaders());
-        CreateResult cra;
-        ResponseEntity<CreateResult> response;
-        response = restTemplate.exchange(
-                ref,
-                HttpMethod.POST,
-                httpEntity,
-                CreateResult.class);
-        cra = response.getBody();
-        Map<String, Object> m = (Map<String, Object>)cra.getAdditionalProperties().get("CreateResult");
-    }
-
-    /**
-     * Creates JSON object to add tags to Rally Issue
-     *
-     * @return JSON Object to add the tags
-     */
-    private String getJSONAddTags() {
-        JSONObject requestBody = new JSONObject();
-        JSONObject createBody = new JSONObject();
-        try {
-            //requestBody.put("Name", name);
             createBody.put("Tag", requestBody);
         } catch (JSONException e) {
             log.error("Error creating JSON Create Tag object - JSON object will be empty");
@@ -471,10 +423,10 @@ public class RallyIssueTracker implements IssueTracker {
     @Override
     public String getXIssueKey(ScanResults.XIssue issue, ScanRequest request) {
         if(flowProperties.isTrackApplicationOnly() || ScanUtils.empty(request.getBranch())){
-            return String.format(ScanUtils.ISSUE_KEY_2, request.getProduct().getProduct(), issue.getVulnerability(), issue.getFilename());
+            return String.format("%s @ %s", issue.getVulnerability(), issue.getFilename());
         }
         else {
-            return String.format(ScanUtils.ISSUE_KEY, request.getProduct().getProduct(), issue.getVulnerability(), issue.getFilename(), request.getBranch());
+            return String.format("%s @ %s [%s]", issue.getVulnerability(), issue.getFilename(), request.getBranch());
         }
     }
 
