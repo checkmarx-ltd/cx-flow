@@ -1,0 +1,208 @@
+server:
+  port: ${PORT:8585}
+
+logging:
+  file:
+    name: cx-flow.log
+#  level:
+#    com:
+#      checkmarx:
+#        flow:
+#          service: TRACE
+#    org:
+#      apache:
+#        http:
+#          wire: TRACE
+#      springframework:
+#        web:
+#          client:
+#            RestTemplate: TRACE
+
+cx-flow:
+  # Agreed upon shared API token
+  token: xxxx
+  bug-tracker: Json
+  bug-tracker-impl:
+    - CxXml
+    - Json
+    - GitLab
+    - GitHub
+    - Csv
+    - Azure
+  branches:
+    - develop
+    - master
+    - security
+  filter-severity:
+    - High
+  mitre-url: https://cwe.mitre.org/data/definitions/%s.html
+  wiki-url: https://checkmarx.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
+  codebash-url: https://cxa.codebashing.com/courses/
+  auto-profile: false
+  #branch-script: D:\\tmp\Branch.groovy
+  #zip-exclude: .*.json$, bin\/.*
+
+
+checkmarx:
+  username: admin@cx
+  password: Cx123456!
+  client-secret: 014DF517-39D1-4453-B7B3-9930C563627C
+  base-url: http://10.32.4.83
+  url: ${checkmarx.base-url}/cxrestapi
+  multi-tenant: false
+  incremental: false
+  scan-preset: Checkmarx Default
+  configuration: Default Configuration
+  team: \CxServer\SP
+  scan-timeout: 1800
+  #WSDL Config
+  portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
+  sdk-url: ${checkmarx.base-url}/cxwebinterface/SDK/CxSDKWebService.asmx
+  portal-wsdl: ${checkmarx.base-url}/Portal/CxWebService.asmx?wsdl
+  sdk-wsdl: ${checkmarx.base-url}/SDK/CxSDKWebService.asmx?wsdl
+  portal-package: checkmarx.wsdl.portal
+  preserve-xml: false
+  jira-project-field:
+  jira-custom-field:
+  jira-issuetype-field:
+  jira-assignee-field:
+  #project-script: D:\\tmp\CxProject.groovy
+  #team-script: D:\\tmp\CxTeam.groovy
+  #exclude-files:
+  #exclude-folders:
+
+jira:
+  url: https://custodela.atlassian.net
+  username: xxxx
+  token: xxxx
+  project: APPSEC
+  issue-type: Application Security Bug
+  priorities:
+    High: High
+    Medium: Medium
+    Low: Low
+    Informational: Lowest
+  open-transition: In Progress
+  close-transition: Done
+  open-status:
+    - To Do
+    - In Progress
+  closed-status:
+    - Done
+  fields:
+    - type: result
+      name: system-date
+      skip-update: true
+      offset: 60
+      jira-field-name: Due Date #Due date (cloud)
+      jira-field-type: text
+    - type: result
+      name: application
+      jira-field-name: Application
+      jira-field-type: label
+    - type: result
+      name: category
+      jira-field-name: Category
+      jira-field-type: label
+    - type: result
+      name: cwe
+      jira-field-name: CWEs
+      jira-field-type: label
+    - type: result
+      name: severity
+      jira-field-name: Severity
+      jira-field-type: single-select
+    - type: result
+      name: loc
+      jira-field-name: Line Numbers
+      jira-field-type: label
+    - type: static
+      name: identified-by
+      jira-field-name: Identified By
+      jira-field-type: single-select
+      jira-default-value: Automation
+    - type: static
+      name: dependencies
+      jira-field-name: Dependencies
+      jira-field-type: multi-select
+      jira-default-value: Java, AngularJS
+  #issue-prefix: "<PREFIX>-"
+  #issue-postfix: "-<POSTFIX>"
+  #description-prefix: "<PRE>-"
+  #description-postfix: "<POST>-"
+
+github:
+  webhook-token: 1234
+  token: e0a1cb5c35a0f582da9370e9d30d36ff318f8d2b
+  url: https://github.com/cxflowtestuser/Code_Injection
+  api-url: https://api.github.com/repos/
+  block-merge: true
+  error-merge: true
+  cx-summary: true
+
+gitlab:
+  webhook-token: 1234
+  url: https://gitlab.com
+  api-url: https://gitlab.com/api/v4/
+  block-merge: true
+
+bitbucket:
+  webhook-token: 1234
+  token: xxx
+  url: https://api.bitbucket.org
+  api-path: /2.0
+  false-positive-label: false-positive
+
+azure:
+  webhook-token: cxflow:1234
+  token: xxxx
+  url: https://dev.azure.com/XXXXXX
+  issue-type: issue
+  api-version: 5.0
+  false-positive-label: false-positive
+  block-merge: true
+  closed-status: Closed
+  open-status: Active
+
+json:
+  file-name-format: "[NAMESPACE]-[REPO]-[BRANCH]-[TIME].json"
+  data-folder: "C:\\tmp"
+
+cx-xml:
+  file-name-format: "[NAMESPACE]-[REPO]-[BRANCH]-[TIME].xml"
+  data-folder: "C:\\tmp"
+
+csv:
+  file-name-format: "[TEAM]-[PROJECT]-[TIME].csv"
+  data-folder: "C:\\tmp"
+  include-header: true
+  fields:
+    - header: Customer field (Application)
+      name: application
+      default-value: unknown
+    - header: Primary URL
+      name: static
+      default-value: ABC
+    - header: severity
+      name: severity
+    - header: Vulnerability ID
+      name: summary
+      prefix: "[APP]:"
+    - header: file
+      name: filename
+    - header: Vulnerability ID
+      name: summary
+    - header: Vulnerability Name
+      name: category
+    - header: Category ID
+      name: cwe
+    - header: Description
+      name: summary
+      prefix: "*"
+      postfix: "*"
+    - header: Severity
+      name: severity
+    - header: recommendation
+      name: recommendation
+    - header: Similarity ID
+      name: similarity-id
