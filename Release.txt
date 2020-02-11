@@ -1,11 +1,3 @@
-Release 1.5.3
----------------------------------------------------------------------
-# FEATURES
-- Adding Checkmarx Issue comments as a checkmarx custom field option ("comment" is the type)
-- Adding support for linking Parent/GrandParent/Child issues for issue hierchy linkage
-- Adding the ability to break build status within Azure DevOps Pull Requests
-  - Using azure.error-merge: true in conjunction with auzure.block-merge: true
-
 Release 1.5.2
 ---------------------------------------------------------------------
 # FEATURES
