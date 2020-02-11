@@ -151,8 +151,7 @@ public class GitHubIssueTracker implements IssueTracker {
             response = restTemplate.exchange(apiUrl, HttpMethod.POST, httpEntity, com.checkmarx.flow.dto.github.Issue.class);
         }
         catch (HttpClientErrorException e){
-            log.error("Error occurred while creating GitHub Issue");
-            log.error(ExceptionUtils.getStackTrace(e));
+            log.error("Error occurred while creating GitHub Issue", e);
             if(e.getStatusCode().equals(HttpStatus.GONE)){
                 log.error("Issues are not enabled for this repository");
                 throw new MachinaRuntimeException();
@@ -181,7 +180,7 @@ public class GitHubIssueTracker implements IssueTracker {
             this.addComment(Objects.requireNonNull(response.getBody()).getUrl(),"Issue still exists. ");
             return mapToIssue(response.getBody());
         } catch (HttpClientErrorException e) {
-            log.error("Error updating issue.  This is likely due to the fact that another user has closed this issue.  Adding comment");
+            log.error("Error updating issue.  This is likely due to the fact that another user has closed this issue.  Adding comment", e);
             if(e.getStatusCode().equals(HttpStatus.GONE)){
                 throw new MachinaRuntimeException();
             }
@@ -205,7 +204,7 @@ public class GitHubIssueTracker implements IssueTracker {
             requestBody.put("body", body);
             requestBody.put("state", TRANSITION_OPEN);
         } catch (JSONException e) {
-            log.error("Error creating JSON Update Object - JSON object will be empty");
+            log.error("Error creating JSON Update Object - JSON object will be empty", e);
         }
         return requestBody;
     }
@@ -225,7 +224,7 @@ public class GitHubIssueTracker implements IssueTracker {
             requestBody.put("title", title);
             requestBody.put("body", body);
         } catch (JSONException e) {
-            log.error("Error creating JSON Create Issue Object - JSON Object will be empty");
+            log.error("Error creating JSON Create Issue Object - JSON Object will be empty", e);
         }
         return requestBody;
     }
@@ -282,7 +281,7 @@ public class GitHubIssueTracker implements IssueTracker {
         try {
             requestBody.put("body", comment);
         } catch (JSONException e) {
-            log.error("Error creating JSON Comment Object - JSON object will be empty");
+            log.error("Error creating JSON Comment Object - JSON object will be empty", e);
         }
         return requestBody;
     }
@@ -295,7 +294,7 @@ public class GitHubIssueTracker implements IssueTracker {
         try {
             requestBody.put("state", TRANSITION_CLOSE);
         } catch (JSONException e) {
-            log.error("Error creating JSON Close Issue Object - JSON object will be empty");
+            log.error("Error creating JSON Close Issue Object - JSON object will be empty", e);
         }
         return requestBody;
     }
