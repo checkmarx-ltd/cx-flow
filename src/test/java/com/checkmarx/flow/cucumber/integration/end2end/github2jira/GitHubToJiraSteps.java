@@ -128,7 +128,7 @@ public class GitHubToJiraSteps {
         }
     }
 
-    @Given("source is Githb")
+    @Given("source is GitHub")
     public void setSourceToGithb() {
         Authorization = "token " + gitHubProperties.getToken();
     }
@@ -156,7 +156,6 @@ public class GitHubToJiraSteps {
         String data = null;
         try {
             data = generateHookData(hookTargetURL, gitHubProperties.getWebhookToken());
-            // System.out.println(data);
         } catch (Exception e) {
             fail("can not create web hook, check parameters");
         }
@@ -190,7 +189,6 @@ public class GitHubToJiraSteps {
             jo.put("content", content);
 
             data = mapper.writeValueAsString(jo);
-            // System.out.println(data);
         } catch (Exception e) {
             fail("faild to create file for push");
         }
@@ -203,7 +201,6 @@ public class GitHubToJiraSteps {
         } catch (Exception e) {
             fail("faild to push a file: " + e.getMessage());
         }
-        // System.out.println("pushed a new file");
     }
 
     @Then("target issues are updated")
@@ -220,7 +217,6 @@ public class GitHubToJiraSteps {
             if (++retries >= 20) {
                 fail("failed to find update in Jira after expected time");
             }
-            // System.out.println("Starting iteration #" + retries);
             Promise<SearchResult> temp = searchClient.searchJql(jql, 10, 0, fields);
             try {
                 result = temp.get(500, TimeUnit.MILLISECONDS);
@@ -316,7 +312,6 @@ public class GitHubToJiraSteps {
             jo.put("sha", createdFileSha);
 
             data = mapper.writeValueAsString(jo);
-            // System.out.println(data);
         } catch (Exception e) {
             fail("faild to delete file of push");
         }

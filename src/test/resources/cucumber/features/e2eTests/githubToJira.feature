@@ -4,7 +4,7 @@
 Feature: Cxflow end-2-end tests
 
   Scenario: Check cxflow end-2-end SAST flow between GitHub webhook and JIRA
-    Given source is Githb
+    Given source is GitHub
     And target is Jira
     And CxFlow is running as a service
     And webhook is configured for push event
