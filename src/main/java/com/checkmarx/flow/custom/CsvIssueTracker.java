@@ -58,8 +58,7 @@ public class CsvIssueTracker implements IssueTracker {
                 Files.write(Paths.get(request.getFilename()), headers.getBytes());
             }
         } catch (IOException e){
-            log.error("Issue deleting existing file or writing initial {}", filename);
-            log.error(ExceptionUtils.getStackTrace(e));
+            log.error("Issue deleting existing file or writing initial {}", filename, e);
         }
     }
 
@@ -214,7 +213,7 @@ public class CsvIssueTracker implements IssueTracker {
         try {
             Files.write(Paths.get(request.getFilename()), csv.getBytes(), StandardOpenOption.APPEND);
         }catch (IOException e){
-            log.error("Error writing to file {}, value {}", request.getFilename(), csv);
+            log.error("Error writing to file {}, value {}", request.getFilename(), csv, e);
         }
         return null;
     }

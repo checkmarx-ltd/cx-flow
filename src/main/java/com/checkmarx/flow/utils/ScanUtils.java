@@ -370,7 +370,7 @@ public class ScanUtils {
                 }
             }
         }catch (IllegalArgumentException e){
-            log.warn("Issue parsing CxConfig cxFlow element: {}", ExceptionUtils.getRootCauseMessage(e));
+            log.warn("Issue parsing CxConfig cxFlow element", e);
         }
         return request;
     }
@@ -686,7 +686,7 @@ public class ScanUtils {
                 }
             }
         } catch (IOException e) {
-            log.error(ExceptionUtils.getStackTrace(e));
+            log.error("Error occurred", e);
             throw new MachinaRuntimeException();
         }
         return o;
@@ -800,7 +800,7 @@ public class ScanUtils {
             os.close();
         }
         catch (IOException e) {
-            log.error("Error while writing file {} - {}", filename, ExceptionUtils.getMessage(e));
+            log.error("Error while writing file {}", filename, e);
         }
     }
     /**
