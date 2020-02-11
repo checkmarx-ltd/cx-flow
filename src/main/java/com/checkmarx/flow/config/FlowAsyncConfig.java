@@ -24,7 +24,7 @@ public class FlowAsyncConfig implements AsyncConfigurer {
     }
 
     @Bean("scanRequest")
-    public TaskExecutor scanRequestTaskExecutor() {
+    public ThreadPoolTaskExecutor scanRequestTaskExecutor() {
         int capacity = QUEUE_CAPACITY;
         if(properties.getScanResultQueue() != null){
             capacity = properties.getScanResultQueue();
@@ -40,7 +40,7 @@ public class FlowAsyncConfig implements AsyncConfigurer {
     }
 
     @Bean("webHook")
-    public TaskExecutor webHookTaskExecutor() {
+    public ThreadPoolTaskExecutor webHookTaskExecutor() {
         int capacity = QUEUE_CAPACITY;
         if(properties.getWebHookQueue() != null){
             capacity = properties.getWebHookQueue();

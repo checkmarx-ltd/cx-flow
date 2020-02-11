@@ -218,7 +218,7 @@ public class GitLabController {
 
         }catch (IllegalArgumentException e){
             String errorMessage = "Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product != null ? product : "").concat(" | ").concat(bug != null ? bug : "");
-            log.error(errorMessage);
+            log.error(errorMessage, e);
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
@@ -385,7 +385,7 @@ public class GitLabController {
 
         }catch (IllegalArgumentException e){
             String errorMessage = "Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product != null ? product : "").concat(" | ").concat(bug != null ? bug : "");
-            log.error(errorMessage);
+            log.error(errorMessage, e);
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
