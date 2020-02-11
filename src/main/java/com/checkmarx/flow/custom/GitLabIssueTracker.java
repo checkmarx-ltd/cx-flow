@@ -101,12 +101,14 @@ public class GitLabIssueTracker implements IssueTracker {
             JSONObject obj = new JSONObject(response.getBody());
             return obj.getInt("id");
         }catch (HttpClientErrorException e){
-            log.error("Error calling gitlab project api {}", e.getResponseBodyAsString(), e);
+            log.error("Error calling gitlab project api {}", e.getResponseBodyAsString());
+            log.error(ExceptionUtils.getStackTrace(e));
         }catch (JSONException e){
             log.error("Error parsing gitlab project response.", e);
+            log.error(ExceptionUtils.getStackTrace(e));
         }
         catch (URISyntaxException e){
-            log.error("Incorrect URI", e);
+            log.error("Incorrect URI {}", ExceptionUtils.getStackTrace(e));
         }
         return UNKNOWN_INT;
     }
@@ -208,7 +210,8 @@ public class GitLabIssueTracker implements IssueTracker {
             response = restTemplate.exchange(endpoint, HttpMethod.POST, httpEntity, com.checkmarx.flow.dto.gitlab.Issue.class, request.getRepoProjectId());
         }
         catch (HttpClientErrorException e){
-            log.error("Error occurred while creating GitLab Issue", e);
+            log.error("Error occurred while creating GitLab Issue");
+            log.error(ExceptionUtils.getStackTrace(e));
             if(e.getStatusCode().equals(HttpStatus.GONE)){
                 throw new MachinaException("Issues are not enabled for this repository");
             }
@@ -286,7 +289,7 @@ public class GitLabIssueTracker implements IssueTracker {
         try {
             requestBody.put("state_event", TRANSITION_CLOSE);
         } catch (JSONException e) {
-            log.error("Error creating JSON Close Issue Object - JSON object will be empty", e);
+            log.error("Error creating JSON Close Issue Object - JSON object will be empty");
         }
         return requestBody;
     }
@@ -306,7 +309,7 @@ public class GitLabIssueTracker implements IssueTracker {
             requestBody.put("description", body);
             requestBody.put("state_event", TRANSITION_OPEN);
         } catch (JSONException e) {
-            log.error("Error creating JSON Update Object - JSON object will be empty", e);
+            log.error("Error creating JSON Update Object - JSON object will be empty");
         }
         return requestBody;
     }
@@ -326,7 +329,7 @@ public class GitLabIssueTracker implements IssueTracker {
             requestBody.put("title", title);
             requestBody.put("description", body);
         } catch (JSONException e) {
-            log.error("Error creating JSON Create Issue Object - JSON Object will be empty", e);
+            log.error("Error creating JSON Create Issue Object - JSON Object will be empty");
         }
         return requestBody;
     }

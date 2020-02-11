@@ -43,7 +43,8 @@ public class CxXMLIssueTracker implements IssueTracker {
             Files.deleteIfExists(Paths.get(filename));
             Files.createFile(Paths.get(filename));
         } catch (IOException e){
-            log.error("Issue deleting existing file {}", filename, e);
+            log.error("Issue deleting existing file {}", filename);
+            log.error(ExceptionUtils.getStackTrace(e));
         }
     }
 
@@ -54,7 +55,8 @@ public class CxXMLIssueTracker implements IssueTracker {
                 Files.write(Paths.get(request.getFilename()), results.getOutput().getBytes());
             }
         } catch (IOException e) {
-            log.error("Issue occurred while writing file {}", request.getFilename(), e);
+            log.error("Issue occurred while writing file {}", request.getFilename());
+            log.error(ExceptionUtils.getStackTrace(e));
         }
     }
 

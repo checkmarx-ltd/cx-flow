@@ -56,7 +56,8 @@ public class WebPostIssueTracker implements IssueTracker {
                 Files.deleteIfExists(Paths.get(filename));
                 Files.createFile(Paths.get(filename));
             } catch (IOException e) {
-                log.error("Issue deleting existing file {}", filename, e);
+                log.error("Issue deleting existing file {}", filename);
+                log.error(ExceptionUtils.getStackTrace(e));
             }
         } else {
             log.error("Filename or Request is not set");
@@ -91,13 +92,14 @@ public class WebPostIssueTracker implements IssueTracker {
             }
 
         } catch (IOException e) {
-            log.error("Issue occurred while writing file {}", request.getFilename(), e);
+            log.error("Issue occurred while writing file {}", request.getFilename());
+            log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaException();
         }catch (URISyntaxException e){
-            log.error("Error occurred: {}", ExceptionUtils.getMessage(e), e);
+            log.error("Error occurred: {}", ExceptionUtils.getMessage(e));
             throw new MachinaException();
         }catch (HttpClientErrorException e){
-            log.error("HttpClientErrorException occurred: {}", ExceptionUtils.getMessage(e), e);
+            log.error("HttpClientErrorException occurred: {}", ExceptionUtils.getMessage(e));
             throw new MachinaException();
         }
     }

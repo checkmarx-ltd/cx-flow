@@ -57,6 +57,9 @@ checkmarx:
   incremental: true
   #WSDL Config
   portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
+  sdk-url: ${checkmarx.base-url}/cxwebinterface/SDK/CxSDKWebService.asmx
+  portal-wsdl: ${checkmarx.base-url}/Portal/CxWebService.asmx?wsdl
+  sdk-wsdl: ${checkmarx.base-url}/SDK/CxSDKWebService.asmx?wsdl
   #project-script: D:\\tmp\CxProject.groovy
   #team-script: D:\\tmp\CxTeam.groovy
   #exclude-files:

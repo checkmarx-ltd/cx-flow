@@ -29,7 +29,7 @@ public class ExternalScriptService {
             GroovyShell shell = new GroovyShell(binding);
             return shell.evaluate(script);
         }catch (GroovyRuntimeException e){
-            log.error("Error occurred while executing external script, returning null - {}", ExceptionUtils.getMessage(e), e);
+            log.error("Error occurred while executing external script, returning null - {}", ExceptionUtils.getMessage(e));
             return null;
         }
     }

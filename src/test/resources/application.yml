@@ -21,7 +21,7 @@ logging:
 cx-flow:
   # Agreed upon shared API token
   token: xxxx
-  bug-tracker: Json
+  bug-tracker: JIRA
   bug-tracker-impl:
     - CxXml
     - Json
@@ -38,7 +38,7 @@ cx-flow:
   mitre-url: https://cwe.mitre.org/data/definitions/%s.html
   wiki-url: https://checkmarx.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
   codebash-url: https://cxa.codebashing.com/courses/
-  auto-profile: false
+  auto-profile: true
   #branch-script: D:\\tmp\Branch.groovy
   #zip-exclude: .*.json$, bin\/.*
 
@@ -165,15 +165,15 @@ azure:
 
 json:
   file-name-format: "[NAMESPACE]-[REPO]-[BRANCH]-[TIME].json"
-  data-folder: "C:\\tmp"
+  data-folder: "D:\\tmp"
 
 cx-xml:
   file-name-format: "[NAMESPACE]-[REPO]-[BRANCH]-[TIME].xml"
-  data-folder: "C:\\tmp"
+  data-folder: "D:\\tmp"
 
 csv:
   file-name-format: "[TEAM]-[PROJECT]-[TIME].csv"
-  data-folder: "C:\\tmp"
+  data-folder: "D:\\tmp"
   include-header: true
   fields:
     - header: Customer field (Application)

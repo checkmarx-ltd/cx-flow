@@ -194,7 +194,8 @@ public class BitbucketServerController {
         try {
             event = mapper.readValue(body, PullEvent.class);
         } catch (IOException e) {
-            throw new MachinaRuntimeException(e);
+            log.error(ExceptionUtils.getStackTrace(e));
+            throw new MachinaRuntimeException();
         }
 
         log.info("Processing BitBucket MERGE request");
@@ -297,7 +298,7 @@ public class BitbucketServerController {
             try {
                 request.putAdditionalMetadata("BITBUCKET_BROWSE", fromRefRepository.getLinks().getSelf().get(0).getHref());
             } catch (NullPointerException e) {
-                log.warn("Not able to determine file url for browsing", e);
+                log.warn("Not able to determine file url for browsing");
             }
             //only initiate scan/automation if target branch is applicable
             if (helperService.isBranch2Scan(request, branches)) {
@@ -307,7 +308,7 @@ public class BitbucketServerController {
 
         } catch (IllegalArgumentException e) {
             String errorMessage = "Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product != null ? product : "").concat(" | ").concat(bug != null ? bug : "");
-            log.error(errorMessage,e );
+            log.error(errorMessage);
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
@@ -359,7 +360,8 @@ public class BitbucketServerController {
         try {
             event = mapper.readValue(body, PushEvent.class);
         } catch (IOException e) {
-            throw new MachinaRuntimeException(e);
+            log.error(ExceptionUtils.getStackTrace(e));
+            throw new MachinaRuntimeException();
         }
 
         try {
@@ -453,7 +455,7 @@ public class BitbucketServerController {
             try {
                 request.putAdditionalMetadata("BITBUCKET_BROWSE", repository.getLinks().getSelf().get(0).getHref());
             }catch (NullPointerException e){
-                log.warn("Not able to determine file url for browsing", e);
+                log.warn("Not able to determine file url for browsing");
             }
             request = ScanUtils.overrideMap(request, o);
             request.setId(uid);
@@ -465,7 +467,7 @@ public class BitbucketServerController {
 
         }catch (IllegalArgumentException e){
             String errorMessage = "Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product != null ? product : "").concat(" | ").concat(bug != null ? bug : "");
-            log.error(errorMessage, e);
+            log.error(errorMessage);
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()

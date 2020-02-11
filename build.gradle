@@ -1,8 +1,8 @@
 buildscript {
 	ext {
-        CxSBSDK = "0.4.5"
+        CxSBSDK = "0.4.2"
         //cxVersion = "8.90.5"
-        springBootVersion = '2.2.4.RELEASE'
+        springBootVersion = '2.2.2.RELEASE'
         sonarqubeVersion = '2.8'
         atlassianVersion = "5.1.6"
         atlassianFugueVersion = "4.7.2"
@@ -22,8 +22,6 @@ buildscript {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
         classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:${sonarqubeVersion}"
     }
-
-
    /*gradle.projectsEvaluated {
         tasks.withType(JavaCompile) {
             options.compilerArgs << "-Xlint:unchecked"
@@ -39,10 +37,8 @@ apply plugin: 'io.spring.dependency-management'
 apply plugin: 'com.gorylenko.gradle-git-properties'
 
 group = 'com.checkmarx'
-version = '1.5.3'
+version = '1.5.2'
 sourceCompatibility = 1.8
-def cucumberVersion = '4.7.4'
-def junitVersion = '5.5.0'
 
 repositories {
     jcenter()
@@ -79,17 +75,8 @@ dependencies {
     compile ("org.eclipse.jgit:org.eclipse.jgit:5.5.1.201910021850-r")
     compileOnly ('org.springframework.boot:spring-boot-configuration-processor')
     runtime('org.springframework.boot:spring-boot-devtools')
-    testImplementation('org.springframework.boot:spring-boot-starter-test')
+    testCompile('org.springframework.boot:spring-boot-starter-test')
     compileJava.dependsOn(processResources)
-    testImplementation("io.cucumber:cucumber-java:${cucumberVersion}")
-    testImplementation("io.cucumber:cucumber-junit:${cucumberVersion}")
-    testImplementation("io.cucumber:cucumber-spring:${cucumberVersion}")
-    testImplementation( "org.junit.jupiter:junit-jupiter-api:${junitVersion}")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
-    testImplementation("com.github.java-json-tools:json-patch:1.11")
-    testRuntimeOnly("org.junit.vintage:junit-vintage-engine:${junitVersion}")
-    testCompile("org.mockito:mockito-core:+")
-    compile("org.projectlombok:lombok:1.18.10")
 }
 
 springBoot {
@@ -118,8 +105,3 @@ task getVersion {
         println "${version}"
     }
 }
-
-test {
-    useJUnitPlatform()
-}
-

@@ -2,7 +2,6 @@
 /build/
 /bin/
 !gradle/wrapper/gradle-wrapper.jar
-application-secrets.yml
 
 ### STS ###
 .apt_generated

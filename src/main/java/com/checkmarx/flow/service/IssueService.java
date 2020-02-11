@@ -137,19 +137,17 @@ public class IssueService implements ApplicationContextAware {
                         }
                     } else {
                         /*Create the new issue*/
-                        if(!xIssue.getValue().isAllFalsePositive()) {
-                            fileUrl = ScanUtils.getFileUrl(request, currentIssue.getFilename());
-                            xIssue.getValue().setGitUrl(fileUrl);
-                            log.info("Creating new issue with key {}", xIssue.getKey());
-                            Issue newIssue = tracker.createIssue(xIssue.getValue(), request);
-                            if (newIssue != null) {
-                                newIssues.add(newIssue.getId());
-                                log.info("New issue created. #{}", newIssue.getId());
-                            }
+                        fileUrl = ScanUtils.getFileUrl(request, currentIssue.getFilename());
+                        xIssue.getValue().setGitUrl(fileUrl);
+                        log.info("Creating new issue with key {}", xIssue.getKey());
+                        Issue newIssue = tracker.createIssue(xIssue.getValue(), request);
+                        if(newIssue != null) {
+                            newIssues.add(newIssue.getId());
+                            log.info("New issue created. #{}", newIssue.getId());
                         }
                     }
                 } catch (HttpClientErrorException e) {
-                    log.error("Error occurred while processing issue with key {}", xIssue.getKey(), e);
+                    log.error("Error occurred while processing issue with key {} {}", xIssue.getKey(), e);
                 }
             }
 
@@ -165,7 +163,7 @@ public class IssueService implements ApplicationContextAware {
                         log.info("Closing issue #{} with key {}", issue.getId(), key);
                     }
                 } catch (HttpClientErrorException e) {
-                    log.error("Error occurred while processing issue with key {}", key, e);
+                    log.error("Error occurred while processing issue with key {} {}", key, e);
                 }
             }
 
@@ -178,10 +176,12 @@ public class IssueService implements ApplicationContextAware {
 
             return issuesMap;
         } catch (BeansException e){
-            log.error("Specified bug tracker bean was not found or properly loaded.", e);
+            log.error("Specified bug tracker bean was not found or properly loaded.");
+            log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaRuntimeException();
         } catch (ClassCastException e){
-            log.error("Bean must implement the IssueTracker Interface", e);
+            log.error("Bean must implement the IssueTracker Interface");
+            log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaRuntimeException();
         }
     }

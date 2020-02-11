@@ -46,7 +46,8 @@ public class JsonIssueTracker implements IssueTracker {
                     Files.deleteIfExists(Paths.get(filename));
                     Files.createFile(Paths.get(filename));
                 } catch (IOException e) {
-                    log.error("Issue deleting existing file {}", filename, e);
+                    log.error("Issue deleting existing file {}", filename);
+                    log.error(ExceptionUtils.getStackTrace(e));
                 }
             } else {
                 log.error("Filename or Request is not set");
@@ -71,7 +72,8 @@ public class JsonIssueTracker implements IssueTracker {
             }
 
         } catch (IOException e) {
-            log.error("Issue occurred while writing file {}", request.getFilename(), e);
+            log.error("Issue occurred while writing file {}", request.getFilename());
+            log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaException();
         }
     }

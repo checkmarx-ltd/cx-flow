@@ -102,7 +102,9 @@ public class ResultsService {
             future.complete(results);
             return future;
         }catch (Exception e){
-            log.error("Error occurred while processing results.", e);
+            log.error("Error occurred while processing results {}", ExceptionUtils.getMessage(e));
+            log.error(ExceptionUtils.getRootCauseMessage(e));
+            log.error(Arrays.toString(ExceptionUtils.getRootCauseStackTrace(e)));
             CompletableFuture<ScanResults> x = new CompletableFuture<>();
             x.completeExceptionally(e);
             return x;
@@ -146,7 +148,7 @@ public class ResultsService {
                 break;
             case ADOPULL:
                 adoService.processPull(request, results);
-                adoService.endBlockMerge(request, results.getLink(), !results.getXIssues().isEmpty());
+                adoService.endBlockMerge(request);
                 break;
             case EMAIL:
                 if(!flowProperties.getMail().isEnabled()) {
@@ -222,7 +224,7 @@ public class ResultsService {
                 }
             }
         }catch (InvalidCredentialsException e){
-            log.warn("Error retrieving Checkmarx Project details for {}, no custom fields will be available", results.getProjectId(), e);
+            log.warn("Error retrieving Checkmarx Project details for {}, no custom fields will be available", results.getProjectId());
             throw new MachinaException("Error logging into Checkmarx");
         }
     }
