@@ -44,6 +44,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -56,6 +57,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -67,7 +69,6 @@ import javax.annotation.PostConstruct;
 @SpringBootTest(classes = { CxFlowApplication.class })
 public class GitHubToJiraSteps {
 
-    private static final String HOOK_TAGET_URL = "http://752954d6.ngrok.io"; // TODO: move to properties
     private static final String srcFile = "GitHubToJiraSteps.src";
 
     private String COMMIT_FILE_PATH;
@@ -88,12 +89,15 @@ public class GitHubToJiraSteps {
     private Integer hookId = null;
     private String createdFileSha = null;
     private String Authorization = null;
+    private String hookTargetURL = null;
 
     @PostConstruct
     public void init() {
-        String namespace = "ofersk"; //TODO: move to properties
-        String repo = "testing";    //TODO: move to properties
-        String filePath = "src/main/java/sample/encode.frm";
+        Properties properties = getProperties();
+        String namespace = properties.getProperty("namespace");
+        String repo = properties.getProperty("repo");
+        String filePath = properties.getProperty("fileCreatePath");
+        hookTargetURL = properties.getProperty("target");
         COMMIT_FILE_PATH = String.format("%s/%s/%s/contents/%s", gitHubProperties.getApiUrl(), namespace, repo,
                 filePath);
         REPO_HOOKS_BASE_URL = String.format("%s/%s/%s/hooks", gitHubProperties.getApiUrl(), namespace, repo);
@@ -151,7 +155,7 @@ public class GitHubToJiraSteps {
 
         String data = null;
         try {
-            data = generateHookData(HOOK_TAGET_URL, gitHubProperties.getWebhookToken());
+            data = generateHookData(hookTargetURL, gitHubProperties.getWebhookToken());
             // System.out.println(data);
         } catch (Exception e) {
             fail("can not create web hook, check parameters");
@@ -233,7 +237,6 @@ public class GitHubToJiraSteps {
         while (itr.hasNext()) {
             this.issueCreatedKeys.add(itr.next().getKey());
         }
-         
 
     }
 
@@ -328,9 +331,22 @@ public class GitHubToJiraSteps {
     }
 
     private String getFileInBase64() throws IOException {
-        File file = ResourceUtils.getFile("classpath:\\cucumber\\data\\input-files-toscan\\"+srcFile);
-        String content = new String (Files.readAllBytes(file.toPath()),Charset.forName("UTF-8"));
+        File file = ResourceUtils.getFile("classpath:\\cucumber\\data\\input-files-toscan\\" + srcFile);
+        String content = new String(Files.readAllBytes(file.toPath()), Charset.forName("UTF-8"));
         String encodedString = Base64.getEncoder().encodeToString(content.getBytes());
         return encodedString;
+    }
+
+    private Properties getProperties() {
+        Properties prop = new Properties();
+        try {
+            File file = ResourceUtils.getFile("classpath:\\cucumber\\features\\e2eTests\\githubHookProperties.properties");
+            prop.load(Files.newInputStream(file.toPath()));
+        } catch ( FileNotFoundException e) {
+            fail("property file not found " + e.getMessage());
+        } catch (IOException e) {
+            fail("could not read properties file " + e.getMessage());
+        }
+        return prop;
     }
 }
