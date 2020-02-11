@@ -1,5 +1,6 @@
 @EndToEnd
 @Integration
+@Skip
 Feature: Cxflow end-2-end tests
 
   Scenario: Check cxflow end-2-end SAST flow between GitHub webhook and JIRA
