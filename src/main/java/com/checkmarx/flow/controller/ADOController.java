@@ -225,7 +225,7 @@ public class ADOController {
             }
 
         }catch (IllegalArgumentException e){
-            log.error("Error submitting Scan Request. Product option incorrect {}", product, e);
+            log.error("Error submitting Scan Request. Product option incorrect {}", product);
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
@@ -408,7 +408,7 @@ public class ADOController {
             }
 
         }catch (IllegalArgumentException e){
-            log.error("Error submitting Scan Request. Product option incorrect {}", product, e);
+            log.error("Error submitting Scan Request. Product option incorrect {}", product);
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 
            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()

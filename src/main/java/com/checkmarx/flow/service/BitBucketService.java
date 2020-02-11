@@ -53,7 +53,7 @@ public class BitBucketService {
             log.debug("comment: {}", comment);
             sendMergeComment(request, comment);
         } catch (HttpClientErrorException e){
-            log.error("Error occurred while creating Merge Request comment", e);
+            log.error("Error occurred while creating Merge Request comment");
             throw new BitBucketClientException();
         }
     }
@@ -64,7 +64,7 @@ public class BitBucketService {
             log.debug("comment: {}", comment);
             sendServerMergeComment(request, comment);
         } catch (HttpClientErrorException e){
-            log.error("Error occurred while creating Merge Request comment", e);
+            log.error("Error occurred while creating Merge Request comment");
             throw new BitBucketClientException();
         }
     }
@@ -85,7 +85,7 @@ public class BitBucketService {
             log.debug("comment: {}", comment);
             sendCommitComment(request, comment);
         } catch (HttpClientErrorException e){
-            log.error("Error occurred while creating Commit comment", e);
+            log.error("Error occurred while creating Commit comment");
             throw new BitBucketClientException();
         }
     }

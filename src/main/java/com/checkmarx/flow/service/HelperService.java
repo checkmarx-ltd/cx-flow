@@ -50,7 +50,7 @@ public class HelperService {
                 CxProfile[] cxProfiles = mapper.readValue(profileConfig, CxProfile[].class);
                 this.profiles = Arrays.asList(cxProfiles);
             }catch (IOException e){
-                log.warn("No CxProfile found - {}", properties.getProfileConfig(), e);
+                log.warn("No CxProfile found - {}", properties.getProfileConfig());
             }
         }
     }
@@ -75,7 +75,8 @@ public class HelperService {
                     return ((boolean) result);
                 }
             }catch (IOException e){
-                log.error("Error reading script file {}", scriptFile, e);
+                log.error("Error reading script file {}", scriptFile);
+                log.error(ExceptionUtils.getMessage(e));
             }
         }
         /*Override branches if provided in the request*/
@@ -105,7 +106,8 @@ public class HelperService {
                     return ((String) result);
                 }
             }catch (IOException e){
-                log.error("Error reading script file for checkmarx team {}", scriptFile, e);
+                log.error("Error reading script file for checkmarx team {}", scriptFile);
+                log.error(ExceptionUtils.getMessage(e));
             }
         }
         else if(!ScanUtils.empty(team)){
@@ -129,7 +131,8 @@ public class HelperService {
                     return ((String) result);
                 }
             }catch (IOException e){
-                log.error("Error reading script file for checkmarx project {}", scriptFile, e);
+                log.error("Error reading script file for checkmarx project {}", scriptFile);
+                log.error(ExceptionUtils.getMessage(e));
             }
         }
         else if(!ScanUtils.empty(project)){

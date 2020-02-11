@@ -140,7 +140,8 @@ public class GitHubController {
         try {
             event = mapper.readValue(body, PullEvent.class);
         } catch (IOException e) {
-            throw new MachinaRuntimeException(e);
+            log.error(ExceptionUtils.getStackTrace(e));
+            throw new MachinaRuntimeException();
         }
         //verify message signature
         verifyHmacSignature(body, signature);
@@ -257,7 +258,7 @@ public class GitHubController {
 
         }catch (IllegalArgumentException e){
             String errorMessage = "Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product != null ? product : "").concat(" | ").concat(bug != null ? bug : "");
-            log.error(errorMessage, e);
+            log.error(errorMessage);
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
@@ -307,7 +308,8 @@ public class GitHubController {
         try {
             event = mapper.readValue(body, PushEvent.class);
         } catch (NullPointerException | IOException | IllegalArgumentException e) {
-            throw new MachinaRuntimeException(e);
+            log.error(ExceptionUtils.getStackTrace(e));
+            throw new MachinaRuntimeException();
         }
 
         if(flowProperties == null || cxProperties == null){
@@ -432,7 +434,7 @@ public class GitHubController {
 
         }catch (IllegalArgumentException e){
             String errorMessage = "Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product != null ? product : "").concat(" | ").concat(bug != null ? bug : "");
-            log.error(errorMessage, e);
+            log.error(errorMessage);
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
@@ -455,7 +457,7 @@ public class GitHubController {
             try {
                 init();
             } catch (NoSuchAlgorithmException | InvalidKeyException e) {
-                log.error(e.getMessage(), e);
+                log.error(ExceptionUtils.getStackTrace(e));
             }
         }
         if(hmac != null) {

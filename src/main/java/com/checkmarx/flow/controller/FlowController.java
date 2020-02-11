@@ -218,7 +218,7 @@ public class FlowController {
             scanService.initiateAutomation(request);
 
         }catch (Exception e){
-            log.error("Error submitting Scan Request. {}", ExceptionUtils.getMessage(e), e);
+            log.error("Error submitting Scan Request. {}", ExceptionUtils.getMessage(e));
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
                     .message(errorMessage)

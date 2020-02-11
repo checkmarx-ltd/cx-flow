@@ -43,7 +43,6 @@ cx-flow:
   auto-profile: true
   #branch-script: D:\\tmp\Branch.groovy
   #zip-exclude: .*.json$, bin\/.*
-  list-false-positives: true
 
 checkmarx:
   username: xxx
@@ -123,9 +122,6 @@ jira:
   #issue-postfix: "-<POSTFIX>"
   #description-prefix: "<PRE>-"
   #description-postfix: "<POST>-"
-  close-transition-field: resolution
-  close-transition-value: Done
-  close-false-positive-transition-value: False Positive
 
 github:
   webhook-token: 1234
@@ -157,7 +153,6 @@ azure:
   api-version: 5.0
   false-positive-label: false-positive
   block-merge: true
-  error-merge: true
   closed-status: Closed
   open-status: Active
 
