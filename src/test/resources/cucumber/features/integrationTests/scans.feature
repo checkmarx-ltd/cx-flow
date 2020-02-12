@@ -10,7 +10,17 @@ And java -jar cx-flow-1.5.2.jar --scan --f="C:\Users\orlyk\Desktop\projects_to_s
 # |   8.9   |      HTTPS       |
 # |   9.0   |      HTTP        |
 # |   9.0   |      HTTPS       |
+
+  Scenario Outline: empty
+    Given github repository which contains project CodeInjection
+    When nothing "<nothing>"
+    Then do nothing
+    Examples:
+    |nothing|
+    |nothing| 
   
+    
+  @Skip
   Scenario Outline:   test which project name will be used or created for scan with parameters: cx-project,branch,repo-name,namespace,app,multi-tenant=false. Using github as a respoiroty.
     Given github repository which contains project CodeInjection
     When project is: "<cx-project>" and branch="<branch>"
@@ -28,7 +38,7 @@ And java -jar cx-flow-1.5.2.jar --scan --f="C:\Users\orlyk\Desktop\projects_to_s
       |               | master |            | MyNamespace | MyApp | MyApp                         | \CxServer\SP |
       |               | master | MyRepoName | MyNamespace |       | MyNamespace-MyRepoName-master | \CxServer\SP |
 
-  @MultiTenant
+  @Skip 
   Scenario Outline:  test team name for different scan parameters: cx-project,branch,repo-name,namespace,app,multi-tenant=true. Using github as a respoiroty.
     Given github repository which contains project CodeInjection
     When project is: "<cx-project>" and branch="<branch>"
@@ -46,7 +56,7 @@ And java -jar cx-flow-1.5.2.jar --scan --f="C:\Users\orlyk\Desktop\projects_to_s
       |               | master | MyRepoName |             |       | \CxServer\SP             | MyRepoName-master |
 
 
-  @Skip
+  @Skip @File
   Scenario Outline:  test which project name will be used or created for scan with parameters: cx-project,branch,repo-name,namespace,app,multi-tenant. Using file system as a respoiroty.
     Given scan of a file
     When project is: "<cx-project>" and source is supplied as a file (--f)
@@ -62,7 +72,7 @@ And java -jar cx-flow-1.5.2.jar --scan --f="C:\Users\orlyk\Desktop\projects_to_s
       |                  | CodeInjection | MyNamespace | MyApp | true         | CodeInjection  |
       |                  | CodeInjection | MyNamespace |       | false        | CodeInjection  |
 
-  @Skip
+  @Skip @File
   Scenario Outline:  test which project name will be used or created for scan with parameters: cx-project,branch,repo-name,namespace,app,multi-tenant. Using file system as a respoiroty.
     Given scan of a file
     When project is: "<cx-project>" and source is supplied as a file (--f)
@@ -79,17 +89,6 @@ And java -jar cx-flow-1.5.2.jar --scan --f="C:\Users\orlyk\Desktop\projects_to_s
       |                  | CodeInjection | MyNamespace |       | false        | exception - team \CxServer\MyNamespace doesn't exist |
 
   @Skip
-  Scenario Outline:  test how excluding folders and files will change scan result
-    When project is: "<cx-project>" and source type is file (--f)
-    And exclude-folders is: "<exclude-folders>" and exclude-files is "<exclude-files>"
-    Then The request sent to SAST will contain results number <number>
-
-    Examples:
-      | cx-project | exclude-folders | exclude-files | number |
-      | Bookstore  |                 |               |        |
-      | Bookstore  |                 |               |        |
-      | Bookstore  |                 |               |        |
-
   Scenario Outline: test scan with different vulnerabilities numbers and severities
     Given there is a SAST environment configured and running
     When  running a scan for repository "<repo_url>"
@@ -101,8 +100,7 @@ And java -jar cx-flow-1.5.2.jar --scan --f="C:\Users\orlyk\Desktop\projects_to_s
       | https://github.com/cxflowtestuser/VB_3845.git                  | 2    | 3      | 0   |
       | https://github.com/cxflowtestuser/amplify-multienv-example.git | 0    | 0      | 1   |
 
-
-  @Filters
+  @Skip
   Scenario Outline:  retrieve SAST results with the following filters: --filter-severity, --filter-category, --filter-status, --filter-cwe
     Given there is a SAST environment configured and running
     And running a scan for repository "<repoUrl>"
@@ -154,7 +152,7 @@ And java -jar cx-flow-1.5.2.jar --scan --f="C:\Users\orlyk\Desktop\projects_to_s
       | CodeInjection1 | unexisting   | Checkmarx Default | team not found in SAST |
       | CodeInjection1 | not_provided | Checkmarx Default | team is mandatory      |
 
-  @ExcludeFolders
+  @Skip
   Scenario Outline:  test how excluding folders and files will change scan result
     Given there is a SAST environment configured and running
     When running a scan for repository "<repoUrl>"
