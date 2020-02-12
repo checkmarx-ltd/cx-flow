@@ -44,16 +44,16 @@ cx-flow:
 
 
 checkmarx:
-  username: xxx
-  password: xxx
+  username: admin@cx
+  password: Cx123456!
   client-secret: 014DF517-39D1-4453-B7B3-9930C563627C
-  base-url: http://localhost:8100
+  base-url: http://orlyarm3.dm.cx
   url: ${checkmarx.base-url}/cxrestapi
-  multi-tenant: true
-  incremental: true
+  multi-tenant: false
+  incremental: false
   scan-preset: Checkmarx Default
   configuration: Default Configuration
-  team: \CxServer\SP\Checkmarx
+  team: \CxServer
   scan-timeout: 120
   #WSDL Config
   portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
@@ -72,9 +72,9 @@ checkmarx:
   #exclude-folders:
 
 jira:
-  url: https://custodela.atlassian.net
-  username: xxxx
-  token: xxxx
+  url: http://localhost:8080
+  username: udiraz
+  token: udiraz
   project: APPSEC
   issue-type: Application Security Bug
   priorities:
@@ -133,7 +133,8 @@ jira:
 
 github:
   webhook-token: 1234
-  url: https://github.com
+  token: 5a7427bbd226a946fd3e22be6581b3062e88eed4
+  url: https://github.com/NimrodGolan/testRepo
   api-url: https://api.github.com/repos/
   block-merge: true
   error-merge: true
