@@ -32,6 +32,10 @@ import static org.junit.Assert.*;
 @ActiveProfiles("scan")
 public class ScanSteps extends AbstractScanSteps {
 
+    @When("nothing {string}")
+    public void whenDoNothing(String str){}
+    
+    
     @And("The request sent to SAST will contain exclude-folder {string} and exclude files {string}")
     public void setExcludeFolders(String excludeFolders, String excludeFiles) {
         if(!excludeFiles.equals("")){
