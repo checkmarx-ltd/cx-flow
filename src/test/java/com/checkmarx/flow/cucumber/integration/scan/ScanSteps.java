@@ -173,15 +173,16 @@ public class ScanSteps extends AbstractScanSteps {
     @Then ("The request sent to SAST reporitory will contain scan result with project name={string} and team {string}")
     public void runVerifyProjectName(String OutProjectName,String outputTeamName ) throws ExitThrowable {
         ScanDTO scanDTO = callSast();
-        clearAfterTest(scanDTO);
-        
+
         assertTrue(results.getProject().equalsIgnoreCase(OutProjectName));
 
         try {
-            String expectedTeamId = cxClient.getTeamId(outputTeamName);
-            assertTrue(scanDTO.getTeamId().equalsIgnoreCase(expectedTeamId));
+            assertTrue(scanDTO.getTeamId().equals(cxClient.getTeamId(outputTeamName)));
         } catch (CheckmarxException e) {
             fail(e.getMessage());
+        }
+        finally {
+            clearAfterTest(scanDTO);
         }
 
     }

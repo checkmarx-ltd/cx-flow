@@ -9,6 +9,6 @@ import org.springframework.test.context.ActiveProfiles;
 @CucumberOptions(plugin = { "pretty", "summary", "html:build/cucumber/integration/scan"},
         features = "src/test/resources/cucumber/features",
         glue = { "com.checkmarx.flow.cucumber.common.steps", "com.checkmarx.flow.cucumber.integration.scan" },
-        tags = "@ScanFeature and @IntegrationTest and not @MultiTenant and not @Filters and not @ExcludeFolders and not @Skip")
+        tags = "@ScanFeature and @IntegrationTest and not @Skip")
 public class RunScanSteps {
 }
