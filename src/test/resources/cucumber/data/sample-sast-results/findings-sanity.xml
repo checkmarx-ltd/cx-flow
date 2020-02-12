@@ -1,0 +1,810 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CxXMLResults InitiatorName="admin admin" Owner="admin@cx" ScanId="1000284" ProjectId="266" ProjectName="jrecruiter_24486_lines" TeamFullPathOnReportDate="CxServer" DeepLink="http://SAST90MARGARITA/CxWebClient/ViewerMain.aspx?scanid=1000284&amp;projectid=266" ScanStart="Sunday, February 2, 2020 2:20:04 PM" Preset="Checkmarx Default" ScanTime="00h:04m:14s" LinesOfCodeScanned="42215" FilesScanned="366" ReportCreationTime="Sunday, February 2, 2020 2:34:49 PM" Team="CxServer" CheckmarxVersion="9.0.0.32148" ScanComments="" ScanType="Full" SourceOrigin="LocalPath" Visibility="Private">
+    <Query id="5330" cweId="79" name="Angular_Client_DOM_XSS" group="JavaScript_High_Risk" Severity="High" Language="JavaScript" LanguageHash="0935562945055365" LanguageChangeDate="2020-01-12T00:00:00.0000000" SeverityIndex="3" QueryPath="JavaScript\Cx\JavaScript High Risk\Angular Client DOM XSS Version:1" QueryVersionCode="117537447">
+        <Result NodeId="10002840001" FileName="jrecruiter/jrecruiter-flex/html-template/history/history.js" Status="New" Line="222" Column="56" FalsePositive="False" Severity="High" AssignToUser="" state="0" Remark="" DeepLink="http://SAST90MARGARITA/CxWebClient/ViewerMain.aspx?scanid=1000284&amp;projectid=266&amp;pathid=1" SeverityIndex="3">
+            <Path ResultId="1000284" PathId="1" SimilarityId="1486780725">
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>222</Line>
+                    <Column>56</Column>
+                    <NodeId>1</NodeId>
+                    <Name>toString</Name>
+                    <Type></Type>
+                    <Length>1</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>222</Number>
+                            <Code>                    var file = window.location.pathname.toString();</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>222</Line>
+                    <Column>25</Column>
+                    <NodeId>2</NodeId>
+                    <Name>file</Name>
+                    <Type></Type>
+                    <Length>4</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>222</Number>
+                            <Code>                    var file = window.location.pathname.toString();</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>223</Line>
+                    <Column>43</Column>
+                    <NodeId>3</NodeId>
+                    <Name>file</Name>
+                    <Type></Type>
+                    <Length>4</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>223</Number>
+                            <Code>                    file = file.substring(file.lastIndexOf("/")+1);</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>223</Line>
+                    <Column>28</Column>
+                    <NodeId>4</NodeId>
+                    <Name>file</Name>
+                    <Type></Type>
+                    <Length>4</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>223</Number>
+                            <Code>                    file = file.substring(file.lastIndexOf("/")+1);</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>223</Line>
+                    <Column>32</Column>
+                    <NodeId>5</NodeId>
+                    <Name>substring</Name>
+                    <Type></Type>
+                    <Length>1</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>223</Number>
+                            <Code>                    file = file.substring(file.lastIndexOf("/")+1);</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>223</Line>
+                    <Column>21</Column>
+                    <NodeId>6</NodeId>
+                    <Name>file</Name>
+                    <Type></Type>
+                    <Length>4</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>223</Number>
+                            <Code>                    file = file.substring(file.lastIndexOf("/")+1);</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>224</Line>
+                    <Column>86</Column>
+                    <NodeId>7</NodeId>
+                    <Name>file</Name>
+                    <Type></Type>
+                    <Length>4</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>224</Number>
+                            <Code>                    getFormElement().innerHTML = '&lt;form name="historyForm" action="'+file+'#' + flexAppUrl + '" method="GET"&gt;&lt;/form&gt;';</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>224</Line>
+                    <Column>38</Column>
+                    <NodeId>8</NodeId>
+                    <Name>innerHTML</Name>
+                    <Type></Type>
+                    <Length>9</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>224</Number>
+                            <Code>                    getFormElement().innerHTML = '&lt;form name="historyForm" action="'+file+'#' + flexAppUrl + '" method="GET"&gt;&lt;/form&gt;';</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+    </Query>
+    <Query id="2415" categories="PCI DSS v3.2;PCI DSS (3.2) - 6.5.7 - Cross-site scripting (XSS),OWASP Top 10 2013;A3-Cross-Site Scripting (XSS),FISMA 2014;Access Control,NIST SP 800-53;SI-15 Information Output Filtering (P0),OWASP Top 10 2017;A7-Cross-Site Scripting (XSS)" cweId="79" name="Client_DOM_XSS" group="JavaScript_High_Risk" Severity="High" Language="JavaScript" LanguageHash="0935562945055365" LanguageChangeDate="2020-01-12T00:00:00.0000000" SeverityIndex="3" QueryPath="JavaScript\Cx\JavaScript High Risk\Client DOM XSS Version:1" QueryVersionCode="77094737">
+        <Result NodeId="10002840002" FileName="jrecruiter/jrecruiter-flex/html-template/history/history.js" Status="New" Line="222" Column="56" FalsePositive="False" Severity="High" AssignToUser="" state="0" Remark="" DeepLink="http://SAST90MARGARITA/CxWebClient/ViewerMain.aspx?scanid=1000284&amp;projectid=266&amp;pathid=2" SeverityIndex="3">
+            <Path ResultId="1000284" PathId="2" SimilarityId="1486692256">
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>222</Line>
+                    <Column>56</Column>
+                    <NodeId>1</NodeId>
+                    <Name>toString</Name>
+                    <Type></Type>
+                    <Length>1</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>222</Number>
+                            <Code>                    var file = window.location.pathname.toString();</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>222</Line>
+                    <Column>25</Column>
+                    <NodeId>2</NodeId>
+                    <Name>file</Name>
+                    <Type></Type>
+                    <Length>4</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>222</Number>
+                            <Code>                    var file = window.location.pathname.toString();</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>223</Line>
+                    <Column>43</Column>
+                    <NodeId>3</NodeId>
+                    <Name>file</Name>
+                    <Type></Type>
+                    <Length>4</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>223</Number>
+                            <Code>                    file = file.substring(file.lastIndexOf("/")+1);</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>223</Line>
+                    <Column>28</Column>
+                    <NodeId>4</NodeId>
+                    <Name>file</Name>
+                    <Type></Type>
+                    <Length>4</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>223</Number>
+                            <Code>                    file = file.substring(file.lastIndexOf("/")+1);</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>223</Line>
+                    <Column>32</Column>
+                    <NodeId>5</NodeId>
+                    <Name>substring</Name>
+                    <Type></Type>
+                    <Length>1</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>223</Number>
+                            <Code>                    file = file.substring(file.lastIndexOf("/")+1);</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>223</Line>
+                    <Column>21</Column>
+                    <NodeId>6</NodeId>
+                    <Name>file</Name>
+                    <Type></Type>
+                    <Length>4</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>223</Number>
+                            <Code>                    file = file.substring(file.lastIndexOf("/")+1);</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>224</Line>
+                    <Column>86</Column>
+                    <NodeId>7</NodeId>
+                    <Name>file</Name>
+                    <Type></Type>
+                    <Length>4</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>224</Number>
+                            <Code>                    getFormElement().innerHTML = '&lt;form name="historyForm" action="'+file+'#' + flexAppUrl + '" method="GET"&gt;&lt;/form&gt;';</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>224</Line>
+                    <Column>38</Column>
+                    <NodeId>8</NodeId>
+                    <Name>innerHTML</Name>
+                    <Type></Type>
+                    <Length>9</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>224</Number>
+                            <Code>                    getFormElement().innerHTML = '&lt;form name="historyForm" action="'+file+'#' + flexAppUrl + '" method="GET"&gt;&lt;/form&gt;';</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+    </Query>
+    <Query id="3771" categories="OWASP Top 10 2013;A6-Sensitive Data Exposure,FISMA 2014;Media Protection,NIST SP 800-53;SC-4 Information in Shared Resources (P1),OWASP Top 10 2017;A3-Sensitive Data Exposure" cweId="244" name="Heap_Inspection" group="Java_Medium_Threat" Severity="Medium" Language="Java" LanguageHash="1621858418163027" LanguageChangeDate="2020-01-12T00:00:00.0000000" SeverityIndex="2" QueryPath="Java\Cx\Java Medium Threat\Heap Inspection Version:1" QueryVersionCode="94850879">
+        <Result NodeId="10002840009" FileName="jrecruiter/jrecruiter-core/src/main/java/org/jrecruiter/common/ApiKeysHolder.java" Status="New" Line="16" Column="20" FalsePositive="False" Severity="Medium" AssignToUser="" state="0" Remark="" DeepLink="http://SAST90MARGARITA/CxWebClient/ViewerMain.aspx?scanid=1000284&amp;projectid=266&amp;pathid=9" SeverityIndex="2">
+            <Path ResultId="1000284" PathId="9" SimilarityId="-1299780026">
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-core/src/main/java/org/jrecruiter/common/ApiKeysHolder.java</FileName>
+                    <Line>16</Line>
+                    <Column>20</Column>
+                    <NodeId>1</NodeId>
+                    <Name>twitterPassword</Name>
+                    <Type></Type>
+                    <Length>15</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>16</Number>
+                            <Code>    private String twitterPassword;</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+        <Result NodeId="10002840011" FileName="jrecruiter/jrecruiter-core/src/main/java/org/jrecruiter/common/PasswordGenerator.java" Status="New" Line="36" Column="16" FalsePositive="False" Severity="Medium" AssignToUser="" state="0" Remark="" DeepLink="http://SAST90MARGARITA/CxWebClient/ViewerMain.aspx?scanid=1000284&amp;projectid=266&amp;pathid=11" SeverityIndex="2">
+            <Path ResultId="1000284" PathId="11" SimilarityId="1589410074">
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-core/src/main/java/org/jrecruiter/common/PasswordGenerator.java</FileName>
+                    <Line>36</Line>
+                    <Column>16</Column>
+                    <NodeId>1</NodeId>
+                    <Name>password</Name>
+                    <Type></Type>
+                    <Length>8</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>36</Number>
+                            <Code>        String password = null;</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+        <Result NodeId="10002840012" FileName="jrecruiter/jrecruiter-core/src/main/java/org/jrecruiter/model/User.java" Status="New" Line="85" Column="20" FalsePositive="False" Severity="Medium" AssignToUser="" state="0" Remark="" DeepLink="http://SAST90MARGARITA/CxWebClient/ViewerMain.aspx?scanid=1000284&amp;projectid=266&amp;pathid=12" SeverityIndex="2">
+            <Path ResultId="1000284" PathId="12" SimilarityId="1959296414">
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-core/src/main/java/org/jrecruiter/model/User.java</FileName>
+                    <Line>85</Line>
+                    <Column>20</Column>
+                    <NodeId>1</NodeId>
+                    <Name>password</Name>
+                    <Type></Type>
+                    <Length>8</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>85</Number>
+                            <Code>    private String password;</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+        <Result NodeId="10002840013" FileName="jrecruiter/jrecruiter-core/src/main/java/org/jrecruiter/service/impl/UserServiceImpl.java" Status="New" Line="191" Column="22" FalsePositive="False" Severity="Medium" AssignToUser="" state="0" Remark="" DeepLink="http://SAST90MARGARITA/CxWebClient/ViewerMain.aspx?scanid=1000284&amp;projectid=266&amp;pathid=13" SeverityIndex="2">
+            <Path ResultId="1000284" PathId="13" SimilarityId="199041860">
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-core/src/main/java/org/jrecruiter/service/impl/UserServiceImpl.java</FileName>
+                    <Line>191</Line>
+                    <Column>22</Column>
+                    <NodeId>1</NodeId>
+                    <Name>password</Name>
+                    <Type></Type>
+                    <Length>8</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>191</Number>
+                            <Code>        final String password = PasswordGenerator.generatePassword();</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+        <Result NodeId="10002840014" FileName="jrecruiter/jrecruiter-web/src/main/java/org/jrecruiter/web/actions/admin/EditUserAction1.java" Status="New" Line="36" Column="20" FalsePositive="False" Severity="Medium" AssignToUser="" state="0" Remark="" DeepLink="http://SAST90MARGARITA/CxWebClient/ViewerMain.aspx?scanid=1000284&amp;projectid=266&amp;pathid=14" SeverityIndex="2">
+            <Path ResultId="1000284" PathId="14" SimilarityId="-1694049186">
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-web/src/main/java/org/jrecruiter/web/actions/admin/EditUserAction.java</FileName>
+                    <Line>36</Line>
+                    <Column>20</Column>
+                    <NodeId>1</NodeId>
+                    <Name>password</Name>
+                    <Type></Type>
+                    <Length>8</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>36</Number>
+                            <Code>    private String password;</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+        <Result NodeId="10002840015" FileName="jrecruiter/jrecruiter-web/src/main/java/org/jrecruiter/web/actions/admin/EditUserAction.java" Status="New" Line="37" Column="20" FalsePositive="False" Severity="Medium" AssignToUser="" state="0" Remark="" DeepLink="http://SAST90MARGARITA/CxWebClient/ViewerMain.aspx?scanid=1000284&amp;projectid=266&amp;pathid=15" SeverityIndex="2">
+            <Path ResultId="1000284" PathId="15" SimilarityId="-731010306">
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-web/src/main/java/org/jrecruiter/web/actions/admin/EditUserAction.java</FileName>
+                    <Line>37</Line>
+                    <Column>20</Column>
+                    <NodeId>1</NodeId>
+                    <Name>password2</Name>
+                    <Type></Type>
+                    <Length>9</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>37</Number>
+                            <Code>    private String password2;</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+        <Result NodeId="10002840019" FileName="jrecruiter/jrecruiter-web/src/main/java/org/jrecruiter/web/actions/registration/SignupAction.java" Status="New" Line="47" Column="20" FalsePositive="False" Severity="Medium" AssignToUser="" state="0" Remark="" DeepLink="http://SAST90MARGARITA/CxWebClient/ViewerMain.aspx?scanid=1000284&amp;projectid=266&amp;pathid=19" SeverityIndex="2">
+            <Path ResultId="1000284" PathId="19" SimilarityId="-1023766626">
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-web/src/main/java/org/jrecruiter/web/actions/registration/SignupAction.java</FileName>
+                    <Line>47</Line>
+                    <Column>20</Column>
+                    <NodeId>1</NodeId>
+                    <Name>password2</Name>
+                    <Type></Type>
+                    <Length>9</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>47</Number>
+                            <Code>    private String password2;</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+        <Result NodeId="10002840021" FileName="jrecruiter/jrecruiter-web/src/main/java/org/jrecruiter/web/forms/ConfigurationForm.java" Status="New" Line="23" Column="20" FalsePositive="False" Severity="Medium" AssignToUser="" state="0" Remark="" DeepLink="http://SAST90MARGARITA/CxWebClient/ViewerMain.aspx?scanid=1000284&amp;projectid=266&amp;pathid=21" SeverityIndex="2">
+            <Path ResultId="1000284" PathId="21" SimilarityId="1049553878">
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-web/src/main/java/org/jrecruiter/web/forms/ConfigurationForm.java</FileName>
+                    <Line>23</Line>
+                    <Column>20</Column>
+                    <NodeId>1</NodeId>
+                    <Name>passwordTemplate</Name>
+                    <Type></Type>
+                    <Length>16</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>23</Number>
+                            <Code>    private String passwordTemplate;</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+        <Result NodeId="10002840022" FileName="jrecruiter/jrecruiter-web/src/main/java/org/jrecruiter/web/forms/UserForm.java" Status="New" Line="21" Column="17" FalsePositive="False" Severity="Medium" AssignToUser="" state="0" Remark="" DeepLink="http://SAST90MARGARITA/CxWebClient/ViewerMain.aspx?scanid=1000284&amp;projectid=266&amp;pathid=22" SeverityIndex="2">
+            <Path ResultId="1000284" PathId="22" SimilarityId="-1447603522">
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-web/src/main/java/org/jrecruiter/web/forms/UserForm.java</FileName>
+                    <Line>21</Line>
+                    <Column>17</Column>
+                    <NodeId>1</NodeId>
+                    <Name>password2</Name>
+                    <Type></Type>
+                    <Length>9</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>21</Number>
+                            <Code>	private String password2;</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+        <Result NodeId="10002840023" FileName="jrecruiter/jrecruiter-core/src/main/java/org/jrecruiter/common/PasswordGenerator1.java" Status="New" Line="34" Column="29" FalsePositive="False" Severity="Medium" AssignToUser="" state="0" Remark="" DeepLink="http://SAST90MARGARITA/CxWebClient/ViewerMain.aspx?scanid=1000284&amp;projectid=266&amp;pathid=23" SeverityIndex="2">
+            <Path ResultId="1000284" PathId="23" SimilarityId="1197809152">
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-core/src/main/java/org/jrecruiter/common/PasswordGenerator.java</FileName>
+                    <Line>34</Line>
+                    <Column>29</Column>
+                    <NodeId>1</NodeId>
+                    <Name>passwords</Name>
+                    <Type></Type>
+                    <Length>9</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>34</Number>
+                            <Code>        final List &lt;String&gt; passwords = generator.process(ar);</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+    </Query>
+    <Query id="1068" categories="FISMA 2014;Configuration Management,NIST SP 800-53;SI-15 Information Output Filtering (P0)" cweId="116" name="Escape_False" group="Java_Low_Visibility" Severity="Low" Language="Java" LanguageHash="1621858418163027" LanguageChangeDate="2020-01-12T00:00:00.0000000" SeverityIndex="1" QueryPath="Java\Cx\Java Low Visibility\Escape False Version:1" QueryVersionCode="61276916">
+        <Result NodeId="10002840069" FileName="ajaxFileUpload/src/main/webapp/upload1.jsp" Status="New" Line="25" Column="422" FalsePositive="False" Severity="Low" AssignToUser="" state="0" Remark="" DeepLink="http://SAST90MARGARITA/CxWebClient/ViewerMain.aspx?scanid=1000284&amp;projectid=266&amp;pathid=69" SeverityIndex="1">
+            <Path ResultId="1000284" PathId="69" SimilarityId="925484513">
+                <PathNode>
+                    <FileName>ajaxFileUpload/src/main/webapp/upload.jsp</FileName>
+                    <Line>25</Line>
+                    <Column>422</Column>
+                    <NodeId>1</NodeId>
+                    <Name>escapeXml</Name>
+                    <Type></Type>
+                    <Length>1</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>25</Number>
+                            <Code>	                &lt;div class="message"&gt;${message}&lt;/div&gt;</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+        <Result NodeId="10002840070" FileName="ajaxFileUpload/src/main/webapp/upload.jsp" Status="New" Line="40" Column="564" FalsePositive="False" Severity="Low" AssignToUser="" state="0" Remark="" DeepLink="http://SAST90MARGARITA/CxWebClient/ViewerMain.aspx?scanid=1000284&amp;projectid=266&amp;pathid=70" SeverityIndex="1">
+            <Path ResultId="1000284" PathId="70" SimilarityId="479706497">
+                <PathNode>
+                    <FileName>ajaxFileUpload/src/main/webapp/upload.jsp</FileName>
+                    <Line>40</Line>
+                    <Column>564</Column>
+                    <NodeId>1</NodeId>
+                    <Name>escapeXml</Name>
+                    <Type></Type>
+                    <Length>1</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>40</Number>
+                            <Code>		                                    &lt;input 	type="file" name="${status.expression}"</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+        <Result NodeId="10002840085" FileName="jrecruiter/jrecruiter-web/src/main/webapp/WEB-INF/jsp/admin/index.jsp" Status="New" Line="81" Column="539" FalsePositive="False" Severity="Low" AssignToUser="" state="0" Remark="" DeepLink="http://SAST90MARGARITA/CxWebClient/ViewerMain.aspx?scanid=1000284&amp;projectid=266&amp;pathid=85" SeverityIndex="1">
+            <Path ResultId="1000284" PathId="85" SimilarityId="-1804645695">
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-web/src/main/webapp/WEB-INF/jsp/admin/index.jsp</FileName>
+                    <Line>81</Line>
+                    <Column>539</Column>
+                    <NodeId>1</NodeId>
+                    <Name>escapeXml</Name>
+                    <Type></Type>
+                    <Length>1</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>81</Number>
+                            <Code>        $("#systemInformationBox").dialog('open').load('${systemInformationUrl}');</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+        <Result NodeId="10002840087" FileName="jrecruiter/jrecruiter-web/src/main/webapp/WEB-INF/jsp/admin/joblistTable.jsp" Status="New" Line="20" Column="252" FalsePositive="False" Severity="Low" AssignToUser="" state="0" Remark="" DeepLink="http://SAST90MARGARITA/CxWebClient/ViewerMain.aspx?scanid=1000284&amp;projectid=266&amp;pathid=87" SeverityIndex="1">
+            <Path ResultId="1000284" PathId="87" SimilarityId="517819649">
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-web/src/main/webapp/WEB-INF/jsp/admin/joblistTable.jsp</FileName>
+                    <Line>20</Line>
+                    <Column>252</Column>
+                    <NodeId>1</NodeId>
+                    <Name>escapeXml</Name>
+                    <Type></Type>
+                    <Length>9</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>20</Number>
+                            <Code>                     &lt;input type="checkbox" name="jobsToDelete[${rowcount}]" value="${job.id}" class="checkbox"&gt;&lt;/input&gt;</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+        <Result NodeId="10002840088" FileName="jrecruiter/jrecruiter-web/src/main/webapp/WEB-INF/jsp/admin/loggingLogFileTable.jsp" Status="New" Line="15" Column="45" FalsePositive="False" Severity="Low" AssignToUser="" state="0" Remark="" DeepLink="http://SAST90MARGARITA/CxWebClient/ViewerMain.aspx?scanid=1000284&amp;projectid=266&amp;pathid=88" SeverityIndex="1">
+            <Path ResultId="1000284" PathId="88" SimilarityId="13997857">
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-web/src/main/webapp/WEB-INF/jsp/admin/loggingLogFileTable.jsp</FileName>
+                    <Line>15</Line>
+                    <Column>45</Column>
+                    <NodeId>1</NodeId>
+                    <Name>escapeXml</Name>
+                    <Type></Type>
+                    <Length>9</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>15</Number>
+                            <Code>				&lt;a href="&lt;s:property value="%{downLoadUrl}"/&gt;"&gt;&lt;img</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+        <Result NodeId="10002840090" FileName="jrecruiter/jrecruiter-web/src/main/webapp/WEB-INF/jsp/admin/logging.jsp" Status="New" Line="45" Column="537" FalsePositive="False" Severity="Low" AssignToUser="" state="0" Remark="" DeepLink="http://SAST90MARGARITA/CxWebClient/ViewerMain.aspx?scanid=1000284&amp;projectid=266&amp;pathid=90" SeverityIndex="1">
+            <Path ResultId="1000284" PathId="90" SimilarityId="1632918913">
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-web/src/main/webapp/WEB-INF/jsp/admin/logging.jsp</FileName>
+                    <Line>45</Line>
+                    <Column>537</Column>
+                    <NodeId>1</NodeId>
+                    <Name>escapeXml</Name>
+                    <Type></Type>
+                    <Length>1</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>45</Number>
+                            <Code>	&lt;h3&gt;Configured Loggers | &lt;a href="${showAllLoggersUrl}"&gt;All</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+        <Result NodeId="10002840091" FileName="jrecruiter/jrecruiter-web/src/main/webapp/WEB-INF/jsp/admin/restore.jsp" Status="New" Line="5" Column="473" FalsePositive="False" Severity="Low" AssignToUser="" state="0" Remark="" DeepLink="http://SAST90MARGARITA/CxWebClient/ViewerMain.aspx?scanid=1000284&amp;projectid=266&amp;pathid=91" SeverityIndex="1">
+            <Path ResultId="1000284" PathId="91" SimilarityId="-1341952159">
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-web/src/main/webapp/WEB-INF/jsp/admin/restore.jsp</FileName>
+                    <Line>5</Line>
+                    <Column>473</Column>
+                    <NodeId>1</NodeId>
+                    <Name>escapeXml</Name>
+                    <Type></Type>
+                    <Length>1</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>5</Number>
+                            <Code>    &lt;form method="post" action="${ctx}/s/admin/restore" enctype="multipart/form-data"&gt;</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+        <Result NodeId="10002840092" FileName="jrecruiter/jrecruiter-web/src/main/webapp/WEB-INF/jsp/admin/show-statistics.jsp" Status="New" Line="18" Column="525" FalsePositive="False" Severity="Low" AssignToUser="" state="0" Remark="" DeepLink="http://SAST90MARGARITA/CxWebClient/ViewerMain.aspx?scanid=1000284&amp;projectid=266&amp;pathid=92" SeverityIndex="1">
+            <Path ResultId="1000284" PathId="92" SimilarityId="1957009209">
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-web/src/main/webapp/WEB-INF/jsp/admin/show-statistics.jsp</FileName>
+                    <Line>18</Line>
+                    <Column>525</Column>
+                    <NodeId>1</NodeId>
+                    <Name>escapeXml</Name>
+                    <Type></Type>
+                    <Length>1</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>18</Number>
+                            <Code>        &lt;img src="${chartJobsHitsAllUrl}" alt="Job statistics graph - Hits" title="Job statistics graph - Hits"/&gt;</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+        <Result NodeId="10002840094" FileName="jrecruiter/jrecruiter-web/src/main/webapp/WEB-INF/jsp/admin/user-list-table.jsp" Status="New" Line="20" Column="158" FalsePositive="False" Severity="Low" AssignToUser="" state="0" Remark="" DeepLink="http://SAST90MARGARITA/CxWebClient/ViewerMain.aspx?scanid=1000284&amp;projectid=266&amp;pathid=94" SeverityIndex="1">
+            <Path ResultId="1000284" PathId="94" SimilarityId="-453466899">
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-web/src/main/webapp/WEB-INF/jsp/admin/user-list-table.jsp</FileName>
+                    <Line>20</Line>
+                    <Column>158</Column>
+                    <NodeId>1</NodeId>
+                    <Name>escapeXml</Name>
+                    <Type></Type>
+                    <Length>9</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>20</Number>
+                            <Code>                &lt;input type="checkbox" name="userIds[${rowcount-1}]" value="${user.id}" class="checkbox"/&gt;</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+        <Result NodeId="10002840095" FileName="jrecruiter/jrecruiter-web/src/main/webapp/WEB-INF/jsp/contact.jsp" Status="New" Line="3" Column="469" FalsePositive="False" Severity="Low" AssignToUser="" state="0" Remark="" DeepLink="http://SAST90MARGARITA/CxWebClient/ViewerMain.aspx?scanid=1000284&amp;projectid=266&amp;pathid=95" SeverityIndex="1">
+            <Path ResultId="1000284" PathId="95" SimilarityId="2036101707">
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-web/src/main/webapp/WEB-INF/jsp/contact.jsp</FileName>
+                    <Line>3</Line>
+                    <Column>469</Column>
+                    <NodeId>1</NodeId>
+                    <Name>escapeXml</Name>
+                    <Type></Type>
+                    <Length>1</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>3</Number>
+                            <Code>&lt;img src="${ctx}/images/developers/gunnar_hillert.png" alt="Gunnar Hillert" title="Gunnar Hillert" style="float: right; margin-left: 1em;"/&gt;</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+        <Result NodeId="10002840097" FileName="jrecruiter/jrecruiter-web/src/main/webapp/WEB-INF/jsp/decorators/default.jsp" Status="New" Line="98" Column="426" FalsePositive="False" Severity="Low" AssignToUser="" state="0" Remark="" DeepLink="http://SAST90MARGARITA/CxWebClient/ViewerMain.aspx?scanid=1000284&amp;projectid=266&amp;pathid=97" SeverityIndex="1">
+            <Path ResultId="1000284" PathId="97" SimilarityId="-1886671651">
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-web/src/main/webapp/WEB-INF/jsp/decorators/default.jsp</FileName>
+                    <Line>98</Line>
+                    <Column>426</Column>
+                    <NodeId>1</NodeId>
+                    <Name>escapeXml</Name>
+                    <Type></Type>
+                    <Length>1</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>98</Number>
+                            <Code>                $("#baseModal").dialog('open').load('${contactUrl}', '#baseModal .contents');</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+        <Result NodeId="10002840098" FileName="jrecruiter/jrecruiter-web/src/main/webapp/WEB-INF/jsp/error/404.jsp" Status="New" Line="64" Column="423" FalsePositive="False" Severity="Low" AssignToUser="" state="0" Remark="" DeepLink="http://SAST90MARGARITA/CxWebClient/ViewerMain.aspx?scanid=1000284&amp;projectid=266&amp;pathid=98" SeverityIndex="1">
+            <Path ResultId="1000284" PathId="98" SimilarityId="1607929439">
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-web/src/main/webapp/WEB-INF/jsp/error/404.jsp</FileName>
+                    <Line>64</Line>
+                    <Column>423</Column>
+                    <NodeId>1</NodeId>
+                    <Name>escapeXml</Name>
+                    <Type></Type>
+                    <Length>1</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>64</Number>
+                            <Code>            $('.outer-header').add_layer("url('${ctx}/images/icons/beta_2.0_badge.png') no-repeat 90% 50%");</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+        <Result NodeId="10002840099" FileName="jrecruiter/jrecruiter-web/src/main/webapp/WEB-INF/jsp/error/error.jsp" Status="New" Line="70" Column="423" FalsePositive="False" Severity="Low" AssignToUser="" state="0" Remark="" DeepLink="http://SAST90MARGARITA/CxWebClient/ViewerMain.aspx?scanid=1000284&amp;projectid=266&amp;pathid=99" SeverityIndex="1">
+            <Path ResultId="1000284" PathId="99" SimilarityId="89782527">
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-web/src/main/webapp/WEB-INF/jsp/error/error.jsp</FileName>
+                    <Line>70</Line>
+                    <Column>423</Column>
+                    <NodeId>1</NodeId>
+                    <Name>escapeXml</Name>
+                    <Type></Type>
+                    <Length>1</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>70</Number>
+                            <Code>            $('.outer-header').add_layer("url('${ctx}/images/icons/beta_2.0_badge.png') no-repeat 90% 50%");</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+        <Result NodeId="10002840100" FileName="jrecruiter/jrecruiter-web/src/main/webapp/WEB-INF/jsp/index1.jsp" Status="New" Line="19" Column="501" FalsePositive="False" Severity="Low" AssignToUser="" state="0" Remark="" DeepLink="http://SAST90MARGARITA/CxWebClient/ViewerMain.aspx?scanid=1000284&amp;projectid=266&amp;pathid=100" SeverityIndex="1">
+            <Path ResultId="1000284" PathId="100" SimilarityId="-446782187">
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-web/src/main/webapp/WEB-INF/jsp/index.jsp</FileName>
+                    <Line>19</Line>
+                    <Column>501</Column>
+                    <NodeId>1</NodeId>
+                    <Name>escapeXml</Name>
+                    <Type></Type>
+                    <Length>1</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>19</Number>
+                            <Code>        &lt;a  id="showJobsButton" href="${showJobsUrl}" class="button"&gt;&lt;span class="showJobs"&gt;&amp;nbsp;&lt;/span&gt;&lt;spring:message code="jsp.index.showJobs"/&gt;&lt;/a&gt;</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+        <Result NodeId="10002840105" FileName="jrecruiter/jrecruiter-web/src/main/webapp/WEB-INF/jsp/job-detail.jsp" Status="New" Line="14" Column="472" FalsePositive="False" Severity="Low" AssignToUser="" state="0" Remark="" DeepLink="http://SAST90MARGARITA/CxWebClient/ViewerMain.aspx?scanid=1000284&amp;projectid=266&amp;pathid=105" SeverityIndex="1">
+            <Path ResultId="1000284" PathId="105" SimilarityId="-1955741759">
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-web/src/main/webapp/WEB-INF/jsp/job-detail.jsp</FileName>
+                    <Line>14</Line>
+                    <Column>472</Column>
+                    <NodeId>1</NodeId>
+                    <Name>escapeXml</Name>
+                    <Type></Type>
+                    <Length>1</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>14</Number>
+                            <Code>    &lt;div style="float: right; width: 200px; text-align: right;"&gt;Statistics: ${job.statistic.counter} hit(s)&lt;/div&gt;</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+        <Result NodeId="10002840128" FileName="jrecruiter/jrecruiter-web/src/main/webapp/WEB-INF/jsp/jobsTable.jsp" Status="New" Line="22" Column="541" FalsePositive="False" Severity="Low" AssignToUser="" state="0" Remark="" DeepLink="http://SAST90MARGARITA/CxWebClient/ViewerMain.aspx?scanid=1000284&amp;projectid=266&amp;pathid=128" SeverityIndex="1">
+            <Path ResultId="1000284" PathId="128" SimilarityId="665643311">
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-web/src/main/webapp/WEB-INF/jsp/jobsTable.jsp</FileName>
+                    <Line>22</Line>
+                    <Column>541</Column>
+                    <NodeId>1</NodeId>
+                    <Name>escapeXml</Name>
+                    <Type></Type>
+                    <Length>1</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>22</Number>
+                            <Code>                        &lt;img alt="&lt;spring:message code="jsp.show.jobs.table.icon.alt.map" /&gt;" title="&lt;spring:message code="jsp.show.jobs.table.icon.title.map" /&gt;" src="${ctx}/images/icons/crystal/globe.png" style="border-width: 0;"/&gt;</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+        <Result NodeId="10002840130" FileName="jrecruiter/jrecruiter-web/src/main/webapp/WEB-INF/jsp/login.jsp" Status="New" Line="47" Column="517" FalsePositive="False" Severity="Low" AssignToUser="" state="0" Remark="" DeepLink="http://SAST90MARGARITA/CxWebClient/ViewerMain.aspx?scanid=1000284&amp;projectid=266&amp;pathid=130" SeverityIndex="1">
+            <Path ResultId="1000284" PathId="130" SimilarityId="1070597243">
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-web/src/main/webapp/WEB-INF/jsp/login.jsp</FileName>
+                    <Line>47</Line>
+                    <Column>517</Column>
+                    <NodeId>1</NodeId>
+                    <Name>escapeXml</Name>
+                    <Type></Type>
+                    <Length>1</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>47</Number>
+                            <Code>                              &lt;a href="${signupUrl}"&gt;&lt;spring:message code="jsp.login.addUser"/&gt;&lt;/a&gt;</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+        <Result NodeId="10002840134" FileName="jrecruiter/jrecruiter-web/src/main/webapp/WEB-INF/jsp/registration/signup.jsp" Status="New" Line="61" Column="569" FalsePositive="False" Severity="Low" AssignToUser="" state="0" Remark="" DeepLink="http://SAST90MARGARITA/CxWebClient/ViewerMain.aspx?scanid=1000284&amp;projectid=266&amp;pathid=134" SeverityIndex="1">
+            <Path ResultId="1000284" PathId="134" SimilarityId="-448303807">
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-web/src/main/webapp/WEB-INF/jsp/registration/signup.jsp</FileName>
+                    <Line>61</Line>
+                    <Column>569</Column>
+                    <NodeId>1</NodeId>
+                    <Name>escapeXml</Name>
+                    <Type></Type>
+                    <Length>1</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>61</Number>
+                            <Code>                &lt;iframe src="http://api.recaptcha.net/noscript?k=${apiKeysHolder.reCaptchaKey}"</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+        <Result NodeId="10002840135" FileName="jrecruiter/jrecruiter-web/src/main/webapp/WEB-INF/jsp/search.jsp" Status="New" Line="26" Column="645" FalsePositive="False" Severity="Low" AssignToUser="" state="0" Remark="" DeepLink="http://SAST90MARGARITA/CxWebClient/ViewerMain.aspx?scanid=1000284&amp;projectid=266&amp;pathid=135" SeverityIndex="1">
+            <Path ResultId="1000284" PathId="135" SimilarityId="-783352191">
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-web/src/main/webapp/WEB-INF/jsp/search.jsp</FileName>
+                    <Line>26</Line>
+                    <Column>645</Column>
+                    <NodeId>1</NodeId>
+                    <Name>escapeXml</Name>
+                    <Type></Type>
+                    <Length>1</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>26</Number>
+                            <Code>                            &lt;a title="Job Detail - ${job.jobTitle}" href="${jobDetailUrl}"&gt;</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+    </Query>
+</CxXMLResults>
