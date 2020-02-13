@@ -82,13 +82,13 @@ jira:
     Medium: Medium
     Low: Low
     Informational: Lowest
-  open-transition: In Progress
+  open-transition: To Do
   close-transition: Done
   open-status:
     - To Do
     - In Progress
   closed-status:
-    - Done
+    - DONE
   fields:
     - type: result
       name: system-date
