@@ -11,16 +11,16 @@ And java -jar cx-flow-1.5.2.jar --scan --f="C:\Users\orlyk\Desktop\projects_to_s
 # |   9.0   |      HTTP        |
 # |   9.0   |      HTTPS       |
 
-  Scenario Outline: empty
-    Given github repository which contains project CodeInjection
-    When nothing "<nothing>"
-    Then do nothing
-    Examples:
-    |nothing|
-    |nothing| 
+#  Scenario Outline: empty
+#    Given github repository which contains project CodeInjection
+#    When nothing "<nothing>"
+#    Then do nothing
+#    Examples:
+#    |nothing|
+#    |nothing| 
   
     
-  @Skip
+  
   Scenario Outline:   test which project name will be used or created for scan with parameters: cx-project,branch,repo-name,namespace,app,multi-tenant=false. Using github as a respoiroty.
     Given github repository which contains project CodeInjection
     When project is: "<cx-project>" and branch="<branch>"
@@ -38,7 +38,7 @@ And java -jar cx-flow-1.5.2.jar --scan --f="C:\Users\orlyk\Desktop\projects_to_s
       |               | master |            | MyNamespace | MyApp | MyApp                         | \CxServer\SP |
       |               | master | MyRepoName | MyNamespace |       | MyNamespace-MyRepoName-master | \CxServer\SP |
 
-  @Skip 
+
   Scenario Outline:  test team name for different scan parameters: cx-project,branch,repo-name,namespace,app,multi-tenant=true. Using github as a respoiroty.
     Given github repository which contains project CodeInjection
     When project is: "<cx-project>" and branch="<branch>"
@@ -87,8 +87,8 @@ And java -jar cx-flow-1.5.2.jar --scan --f="C:\Users\orlyk\Desktop\projects_to_s
       | \CxServer\MyTeam | CodeInjection |             |       | true         | \CxServer\MyTeam                                     |
       |                  | CodeInjection | MyNamespace | MyApp | true         | \CxServer\MyNamespace                                |
       |                  | CodeInjection | MyNamespace |       | false        | exception - team \CxServer\MyNamespace doesn't exist |
-
-  @Skip
+    
+    
   Scenario Outline: test scan with different vulnerabilities numbers and severities
     Given there is a SAST environment configured and running
     When  running a scan for repository "<repo_url>"
@@ -100,7 +100,7 @@ And java -jar cx-flow-1.5.2.jar --scan --f="C:\Users\orlyk\Desktop\projects_to_s
       | https://github.com/cxflowtestuser/VB_3845.git                  | 2    | 3      | 0   |
       | https://github.com/cxflowtestuser/amplify-multienv-example.git | 0    | 0      | 1   |
 
-  @Skip
+  
   Scenario Outline:  retrieve SAST results with the following filters: --filter-severity, --filter-category, --filter-status, --filter-cwe
     Given there is a SAST environment configured and running
     And running a scan for repository "<repoUrl>"
@@ -152,7 +152,6 @@ And java -jar cx-flow-1.5.2.jar --scan --f="C:\Users\orlyk\Desktop\projects_to_s
       | CodeInjection1 | unexisting   | Checkmarx Default | team not found in SAST |
       | CodeInjection1 | not_provided | Checkmarx Default | team is mandatory      |
 
-  @Skip
   Scenario Outline:  test how excluding folders and files will change scan result
     Given there is a SAST environment configured and running
     When running a scan for repository "<repoUrl>"
@@ -163,7 +162,7 @@ And java -jar cx-flow-1.5.2.jar --scan --f="C:\Users\orlyk\Desktop\projects_to_s
     Examples:
       | repoUrl                                                        | exclude-folders | exclude-files           | loc   | high | medium | low |
       | https://github.com/cxflowtestuser/amplify-multienv-example.git |                 |                         | 13712 | 0    | 0      | 1   |
-      | https://github.com/cxflowtestuser/amplify-multienv-example.git | src             |                         | 11538 | 0    | 0      | 1   |
+      #| https://github.com/cxflowtestuser/amplify-multienv-example.git | src             |                         | 11538 | 0    | 0      | 1   |
       | https://github.com/cxflowtestuser/amplify-multienv-example.git | public          |                         | 13656 | 0    | 0      | 0   |
       | https://github.com/cxflowtestuser/amplify-multienv-example.git | public,src      |                         | 11482 | 0    | 0      | 0   |
       | https://github.com/cxflowtestuser/amplify-multienv-example.git | src             | index.html              | 11497 | 0    | 0      | 0   |
