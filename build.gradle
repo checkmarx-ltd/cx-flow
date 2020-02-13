@@ -104,12 +104,19 @@ bootJar {
 test {
     useJUnit {
         systemProperty "testprofile", "unit"
+        if (System.properties['testprofile'] != 'integration') {
+            exclude 'com/checkmarx/flow/cucumber/integration/**'
+        }else{
+            exclude 'com/checkmarx/**'
+            include 'com/checkmarx/flow/cucumber/integration/**'
+        }
     }
 }
 
 task integrationTest(type: Test) {
     useJUnit {
         systemProperty "testprofile", "integration"
+        
     }
 }
 
