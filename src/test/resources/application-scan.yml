@@ -47,7 +47,7 @@ checkmarx:
   username: admin@cx
   password: Cx123456!
   client-secret: 014DF517-39D1-4453-B7B3-9930C563627C
-  base-url: http://10.32.4.83
+  base-url: https://sast.cx.tikal.io/
   url: ${checkmarx.base-url}/cxrestapi
   multi-tenant: false
   incremental: false
