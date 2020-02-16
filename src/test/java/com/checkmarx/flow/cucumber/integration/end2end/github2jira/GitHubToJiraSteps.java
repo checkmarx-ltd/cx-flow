@@ -187,7 +187,7 @@ public class GitHubToJiraSteps {
             Committer committer = new Committer();
             committer.setName("CxFlowTestUser");
             committer.setEmail("CxFlowTestUser@checkmarx.com");
-            jo.put("committer", mapper.writer().writeValueAsString(committer));
+            jo.putPOJO("committer", committer);
             jo.put("content", content);
             data = mapper.writeValueAsString(jo);
         } catch (Exception e) {
@@ -302,7 +302,7 @@ public class GitHubToJiraSteps {
             Committer committer = new Committer();
             committer.setName("CxFlowTestUser");
             committer.setEmail("CxFlowTestUser@checkmarx.com");
-            jo.put("committer", mapper.writer().writeValueAsString(committer));
+            jo.putPOJO("committer", committer);
             jo.put("sha", createdFileSha);
 
             data = mapper.writeValueAsString(jo);
