@@ -82,13 +82,12 @@ Feature: Parsing SAST results
     Then CxFlow report is generated with 2 issues
     And issue severities are: High, Critical
 
-    @Skip
   Scenario: Verify that generated reports match corresponding reference reports
     Given reference CxFlow reports are available for specific inputs
     When parsing each of these inputs
     Then the generated CxFlow report matches a corresponding reference report
 
-
+  @NegativeTest
   Scenario Outline: Trying to run parsing with an invalid command line
     When running CxFlow with command line: "<command line>"
     Then CxFlow exits with exit code <exit code>
