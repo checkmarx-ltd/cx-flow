@@ -29,7 +29,7 @@ import static org.junit.Assert.*;
 
 
 @SpringBootTest(classes = { CxFlowApplication.class })
-@ActiveProfiles("scan")
+@ActiveProfiles({ "scan", "secrets" })
 public class ScanSteps extends AbstractScanSteps {
 
 //    @When("nothing {string}")
