@@ -16,6 +16,9 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.dto.BugTracker.Type;
+import com.checkmarx.flow.dto.github.Committer;
+import com.checkmarx.flow.dto.github.Config;
+import com.checkmarx.flow.dto.github.Hook;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -37,7 +40,6 @@ import io.cucumber.java.en.And;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import org.json.JSONArray;
@@ -153,7 +155,7 @@ public class GitHubToJiraSteps {
             fail("repository alredy has hooks configured");
         }
 
-        String data = null;
+        Hook data = null;
         try {
             data = generateHookData(hookTargetURL, gitHubProperties.getWebhookToken());
         } catch (Exception e) {
@@ -161,7 +163,7 @@ public class GitHubToJiraSteps {
         }
 
         final HttpHeaders headers = getHeaders();
-        final HttpEntity<String> request = new HttpEntity<>(data, headers);
+        final HttpEntity<Hook> request = new HttpEntity<>(data, headers);
         try {
             final ResponseEntity<String> response = restTemplate.postForEntity(REPO_HOOKS_BASE_URL, request,
                     String.class);
@@ -182,12 +184,11 @@ public class GitHubToJiraSteps {
             ObjectMapper mapper = new ObjectMapper();
             ObjectNode jo = mapper.createObjectNode();
             jo.put("message", "GitHubToJira test message");
-            ObjectNode committer = mapper.createObjectNode();
-            committer.put("name", "cxflowtestuser");
-            committer.put("email", "cxflowtestuser@checkmarx.com");
-            jo.set("committer", committer);
+            Committer committer = new Committer();
+            committer.setName("CxFlowTestUser");
+            committer.setEmail("CxFlowTestUser@checkmarx.com");
+            jo.put("committer", mapper.writer().writeValueAsString(committer));
             jo.put("content", content);
-
             data = mapper.writeValueAsString(jo);
         } catch (Exception e) {
             fail("faild to create file for push");
@@ -269,25 +270,18 @@ public class GitHubToJiraSteps {
         return response.getStatusCode();
     }
 
-    private String generateHookData(String url, String secret) throws JsonProcessingException {
-        String data;
-        ObjectMapper mapper = new ObjectMapper();
-        ObjectNode jo = mapper.createObjectNode();
-        jo.put("name", "web");
-        jo.put("active", true);
-        ArrayNode arrayNode = mapper.createArrayNode();
-        arrayNode.add("push");
-        arrayNode.add("pull_request");
-        jo.set("events", arrayNode);
-        ObjectNode configJo = mapper.createObjectNode();
-        configJo.put("url", url);
-        configJo.put("content_type", "json");
-        configJo.put("insecure_ssl", "0");
-        configJo.put("secret", secret);
-        jo.set("config", configJo);
-
-        data = mapper.writeValueAsString(jo);
-        return data;
+    private Hook generateHookData(String url, String secret) throws JsonProcessingException {
+        Hook hook = new Hook();
+        hook.setName("web");
+        hook.setActive(true);
+        hook.setEvents(Arrays.asList("push", "pull_request"));
+        Config config = new Config();
+        config.setUrl(url);
+        config.setContentType("json");
+        config.setInsecureSsl("0");
+        config.setSecret(secret);
+        hook.setConfig(config);
+        return hook;
     }
 
     private void deleteHook(Integer hookId) {
@@ -305,10 +299,10 @@ public class GitHubToJiraSteps {
             ObjectMapper mapper = new ObjectMapper();
             ObjectNode jo = mapper.createObjectNode();
             jo.put("message", "deleting test commited file");
-            ObjectNode committer = mapper.createObjectNode();
-            committer.put("name", "NimrodGolan");
-            committer.put("email", "nimrod.golan@checkmarx.com");
-            jo.set("committer", committer);
+            Committer committer = new Committer();
+            committer.setName("CxFlowTestUser");
+            committer.setEmail("CxFlowTestUser@checkmarx.com");
+            jo.put("committer", mapper.writer().writeValueAsString(committer));
             jo.put("sha", createdFileSha);
 
             data = mapper.writeValueAsString(jo);
