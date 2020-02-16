@@ -87,7 +87,7 @@ Feature: Parsing SAST results
     When parsing each of these inputs
     Then the generated CxFlow report matches a corresponding reference report
 
-
+  @NegativeTest
   Scenario Outline: Trying to run parsing with an invalid command line
     When running CxFlow with command line: "<command line>"
     Then CxFlow exits with exit code <exit code>
