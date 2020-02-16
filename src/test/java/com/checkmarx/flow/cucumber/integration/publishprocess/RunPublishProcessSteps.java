@@ -289,23 +289,22 @@ public class RunPublishProcessSteps {
     }
 
     private int getOpenIssues(Map<String, Integer> issues) {
-        int result = 0;
-        for (String key: issues.keySet()) {
-            if (jiraProperties.getOpenStatus().contains(key)) {
-                result += issues.get(key);
-            }
-        }
-        return result;
+        return getIssuesPerStatuses(issues, jiraProperties.getOpenStatus());
     }
 
     private int getClosedIssues(Map<String, Integer> issues) {
+        return getIssuesPerStatuses(issues,jiraProperties.getClosedStatus());
+    }
+
+    private int getIssuesPerStatuses(Map<String, Integer> issues, List<String> statuses) {
         int result = 0;
         for (String key: issues.keySet()) {
-            if (jiraProperties.getClosedStatus().contains(key)) {
+            if (statuses.stream().map(String::toLowerCase).collect(Collectors.toList()).contains(key.toLowerCase())) {
                 result += issues.get(key);
             }
         }
         return result;
+
     }
 
 

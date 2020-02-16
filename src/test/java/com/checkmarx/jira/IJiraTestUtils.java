@@ -34,5 +34,4 @@ public interface IJiraTestUtils {
     Long getFirstIssueId(String projectKey);
 
     Map<String, Integer> getIssuesByStatus(String projectKey);
-
 }
