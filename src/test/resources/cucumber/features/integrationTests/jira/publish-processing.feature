@@ -1,5 +1,6 @@
 @Target(Jira) @Integration
 @test_Not_implemented
+@JiraIntegrationTests
 Feature: Check integration tests of publish processing
 
   @Target_new_Issue
@@ -91,3 +92,12 @@ Feature: Check integration tests of publish processing
       And   there is an existing issue
       When  all issue's vulnerabilities are false-positive
       Then  the issue should be closed
+
+  @Integration @Negative_test @Error_Handling @UnReachableService
+  Scenario: Perform a GET REST call to unreachable JIRA environment
+    Given target is JIRA
+    And JIRA is configured with invalid URL
+    When preparing a getIssues call to deliver
+    Then the call execution should throw a JiraClientRunTimeException
+
+

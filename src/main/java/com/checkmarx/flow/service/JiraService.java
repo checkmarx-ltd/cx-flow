@@ -1062,4 +1062,8 @@ public class JiraService {
         }
         return false;
     }
+
+    public URI getJiraURI() {
+        return jiraURI;
+    }
 }
