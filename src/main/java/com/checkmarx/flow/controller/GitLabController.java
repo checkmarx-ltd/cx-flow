@@ -174,7 +174,7 @@ public class GitLabController {
                 inc = incremental;
             }
             ScanRequest request = ScanRequest.builder()
-                    .id(proj.getId())
+                    .id(String.valueOf(proj.getId()))
                     .application(app)
                     .product(p)
                     .project(project)
@@ -344,7 +344,7 @@ public class GitLabController {
             }
 
             ScanRequest request = ScanRequest.builder()
-                    .id(body.getProjectId())
+                    .id(String.valueOf(body.getProjectId()))
                     .application(app)
                     .product(p)
                     .project(project)
