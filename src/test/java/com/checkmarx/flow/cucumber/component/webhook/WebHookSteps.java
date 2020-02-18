@@ -40,11 +40,12 @@ import java.util.stream.Collectors;
 public class WebHookSteps {
     private static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
     private static final String WEBHOOK_REQUEST_RESOURCE_PATH = "sample-webhook-requests/from-github.json";
+
     private static final int MAX_TOTAL_REQUESTS = 20;
 
     private static final Logger logger = LoggerFactory.getLogger(WebHookSteps.class);
     private static final Duration maxAwaitTimeForAllRequests = Duration.ofSeconds(2 * MAX_TOTAL_REQUESTS);
-
+    private static final Duration maxWarmUpRequestDuration = Duration.ofSeconds(5);
     private final List<CompletableFuture<Long>> requestSendingTasks = new ArrayList<>();
 
     @Autowired
@@ -55,8 +56,8 @@ public class WebHookSteps {
 
     @Given("CxFlow is running as a service")
     public void runAsService() {
-        ConfigurableApplicationContext context = SpringApplication.run(CxFlowApplication.class, "--web");
-        cxFlowPort = context.getEnvironment().getProperty("server.port");
+        ConfigurableApplicationContext appContext = SpringApplication.run(CxFlowApplication.class, "--web");
+        cxFlowPort = appContext.getEnvironment().getProperty("server.port");
     }
 
     @When("GitHub sends WebHook requests to CxFlow {int} times per second")
@@ -64,16 +65,25 @@ public class WebHookSteps {
         final int MILLISECONDS_IN_SECOND = 1000;
 
         webHookRequest = prepareWebHookRequest();
-
+        sendWarmUpRequest();
         Duration intervalBetweenRequests = Duration.ofMillis(MILLISECONDS_IN_SECOND / timesPerSecond);
+
         logger.info("Starting to send WebHook requests with the interval of {} ms.", intervalBetweenRequests.toMillis());
         for (int i = 0; i < MAX_TOTAL_REQUESTS; i++) {
-            logger.info("Sending request #{}.", i + 1);
-            startRequestSendingTaskAsync();
             chillOutFor(intervalBetweenRequests);
+            CompletableFuture<Long> task = startRequestSendingTaskAsync(i);
+            requestSendingTasks.add(task);
         }
 
         waitForAllTasksToComplete(requestSendingTasks);
+    }
+
+    private void sendWarmUpRequest() {
+        // First request can take much longer time than subsequent requests due to web server "warm up"
+        // => first request should not be included into the measurement.
+        logger.info("Sending a warm-up request.");
+        CompletableFuture<Void> task = CompletableFuture.runAsync(this::sendWebHookRequest);
+        Awaitility.await().atMost(maxWarmUpRequestDuration).until(task::isDone);
     }
 
     private HttpEntity<String> prepareWebHookRequest() {
@@ -99,9 +109,9 @@ public class WebHookSteps {
                 .until(() -> true);
     }
 
-    private void startRequestSendingTaskAsync() {
-        CompletableFuture<Long> task = CompletableFuture.supplyAsync(this::sendRequestAndMeasureDuration);
-        requestSendingTasks.add(task);
+    private CompletableFuture<Long> startRequestSendingTaskAsync(int index) {
+        logger.info("Sending request #{}.", index + 1);
+        return CompletableFuture.supplyAsync(this::sendRequestAndMeasureDuration);
     }
 
     private long sendRequestAndMeasureDuration() throws RuntimeException {
@@ -144,6 +154,7 @@ public class WebHookSteps {
         Awaitility.await()
                 .atMost(maxAwaitTimeForAllRequests)
                 .until(combinedTask::isDone);
+        logger.info("All requests completed.");
         Assert.assertFalse("Some of the requests failed.", combinedTask.isCompletedExceptionally());
     }
 
@@ -153,7 +164,7 @@ public class WebHookSteps {
                 .map(WebHookSteps::toExecutionTimeMs)
                 .collect(Collectors.toList());
 
-        logger.info("Durations: {}", Arrays.toString(taskDurations.toArray()));
+        logger.info("Durations, ms: {}", Arrays.toString(taskDurations.toArray()));
 
         boolean allRequestsCompletedSuccessfully = taskDurations.stream().allMatch(Objects::nonNull);
         Assert.assertTrue("Some of the requests failed.", allRequestsCompletedSuccessfully);

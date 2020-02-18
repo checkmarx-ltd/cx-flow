@@ -8,5 +8,5 @@ import org.junit.runner.RunWith;
 @CucumberOptions(
         features = "src/test/resources/cucumber/features/componentTests/webhook.feature",
         tags = "@WebHookFeature and not @Skip")
-public class WebhookTestRunner {
+public class WebHookTestRunner {
 }
