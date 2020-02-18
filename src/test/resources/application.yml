@@ -133,6 +133,7 @@ jira:
 
 github:
   webhook-token: 1234
+  token: xxxx
   url: https://github.com
   api-url: https://api.github.com/repos/
   block-merge: true

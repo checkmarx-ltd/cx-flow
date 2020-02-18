@@ -2,68 +2,109 @@ package com.checkmarx.flow.cucumber.component.webhook;
 
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.GitHubProperties;
-import cucumber.api.PendingException;
+import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.awaitility.Awaitility;
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import javax.xml.bind.DatatypeConverter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
+@SpringBootTest
 public class WebHookSteps {
-    private final static Logger logger = LoggerFactory.getLogger(WebHookSteps.class);
-    private final List<CompletableFuture<Long>> requestSendingTasks = new ArrayList<>();
-    private final GitHubProperties properties;
+    private static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
+    private static final String WEBHOOK_REQUEST_RESOURCE_PATH = "sample-webhook-requests/from-github.json";
+    private static final int MAX_TOTAL_REQUESTS = 20;
 
-    public WebHookSteps(GitHubProperties properties) {
-        this.properties = properties;
-    }
+    private static final Logger logger = LoggerFactory.getLogger(WebHookSteps.class);
+    private static final Duration maxAwaitTimeForAllRequests = Duration.ofSeconds(2 * MAX_TOTAL_REQUESTS);
+
+    private final List<CompletableFuture<Long>> requestSendingTasks = new ArrayList<>();
+
+    @Autowired
+    private GitHubProperties properties;
+
+    private HttpEntity<String> webHookRequest;
+    private String cxFlowPort;
 
     @Given("CxFlow is running as a service")
     public void runAsService() {
-        SpringApplication.run(CxFlowApplication.class, "--web");
+        ConfigurableApplicationContext context = SpringApplication.run(CxFlowApplication.class, "--web");
+        cxFlowPort = context.getEnvironment().getProperty("server.port");
     }
 
     @When("GitHub sends WebHook requests to CxFlow {int} times per second")
     public void githubSendsWebHookRequests(int timesPerSecond) {
-        final int MAX_TOTAL_REQUESTS = 10,
-                MILLISECONDS_IN_SECOND = 1000;
+        final int MILLISECONDS_IN_SECOND = 1000;
 
-        int intervalBetweenRequestsMs = MILLISECONDS_IN_SECOND / timesPerSecond;
+        webHookRequest = prepareWebHookRequest();
 
-        logger.info("Starting to send WebHook requests with the interval of {} ms.", intervalBetweenRequestsMs);
+        Duration intervalBetweenRequests = Duration.ofMillis(MILLISECONDS_IN_SECOND / timesPerSecond);
+        logger.info("Starting to send WebHook requests with the interval of {} ms.", intervalBetweenRequests.toMillis());
         for (int i = 0; i < MAX_TOTAL_REQUESTS; i++) {
             logger.info("Sending request #{}.", i + 1);
             startRequestSendingTaskAsync();
-            chillOutFor(intervalBetweenRequestsMs);
+            chillOutFor(intervalBetweenRequests);
         }
 
         waitForAllTasksToComplete(requestSendingTasks);
     }
 
-    private static void chillOutFor(int durationMs) {
+    private HttpEntity<String> prepareWebHookRequest() {
+        InputStream input = TestUtils.getResourceAsStream(WEBHOOK_REQUEST_RESOURCE_PATH);
+        String body;
+        try {
+            body = IOUtils.toString(input, DEFAULT_CHARSET);
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to read resource stream.", e);
+        }
+
+        MultiValueMap<String, String> headers = new HttpHeaders();
+        headers.add("X-GitHub-Event", "push");
+        headers.add("X-Hub-Signature", getSignature(body));
+        return new HttpEntity<>(body, headers);
+    }
+
+    private static void chillOutFor(Duration duration) {
         // Using Awaitility, because SonarLint considers Thread.sleep a code smell.
         Awaitility.with()
-                .pollDelay(durationMs, TimeUnit.MILLISECONDS)
+                .pollDelay(duration)
                 .await()
                 .until(() -> true);
     }
 
     private void startRequestSendingTaskAsync() {
-        CompletableFuture<Long> task = CompletableFuture.supplyAsync(this::getRequestExecutionTimeMs);
+        CompletableFuture<Long> task = CompletableFuture.supplyAsync(this::sendRequestAndMeasureDuration);
         requestSendingTasks.add(task);
     }
 
-    private long getRequestExecutionTimeMs() {
+    private long sendRequestAndMeasureDuration() throws RuntimeException {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
         sendWebHookRequest();
@@ -71,36 +112,67 @@ public class WebHookSteps {
     }
 
     private void sendWebHookRequest() {
-        throw new PendingException();
+        RestTemplate client = new RestTemplate();
+        String url = "http://localhost:" + cxFlowPort;
+        client.exchange(url, HttpMethod.POST, webHookRequest, String.class);
     }
 
-    private void waitForAllTasksToComplete(List<CompletableFuture<Long>> tasks) {
+    private String getSignature(String requestBody) {
+        final String HMAC_ALGORITHM = "HmacSHA1";
+        String result = null;
+        try {
+            byte[] bodyBytes = requestBody.getBytes(DEFAULT_CHARSET);
+
+            byte[] tokenBytes = properties.getWebhookToken().getBytes(DEFAULT_CHARSET);
+            SecretKeySpec secret = new SecretKeySpec(tokenBytes, HMAC_ALGORITHM);
+
+            Mac hmacCalculator = Mac.getInstance(HMAC_ALGORITHM);
+            hmacCalculator.init(secret);
+
+            byte[] hmacBytes = hmacCalculator.doFinal(bodyBytes);
+            result = "sha1=" + DatatypeConverter.printHexBinary(hmacBytes);
+        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+            logger.error("Error generating HMAC signature.", e);
+        }
+        return result;
+    }
+
+    private static void waitForAllTasksToComplete(List<CompletableFuture<Long>> tasks) {
         logger.info("Waiting for all the requests to complete.");
-        CompletableFuture[] futureArray = tasks.toArray(new CompletableFuture[0]);
-        CompletableFuture<Void> combinedTask = CompletableFuture.allOf(futureArray);
-        Assert.assertFalse(combinedTask.isCompletedExceptionally());
+        CompletableFuture[] taskArray = tasks.toArray(new CompletableFuture[0]);
+        CompletableFuture<Void> combinedTask = CompletableFuture.allOf(taskArray);
+        Awaitility.await()
+                .atMost(maxAwaitTimeForAllRequests)
+                .until(combinedTask::isDone);
+        Assert.assertFalse("Some of the requests failed.", combinedTask.isCompletedExceptionally());
     }
 
     @Then("each of the requests is answered in at most {int} ms")
     public void eachOfTheRequestsIsAnsweredInAtMostMs(long expectedMaxDurationMs) {
-        Optional<Long> actualMaxDurationMs = requestSendingTasks.stream()
+        List<Long> taskDurations = requestSendingTasks.stream()
                 .map(WebHookSteps::toExecutionTimeMs)
-                .max(Long::compare);
+                .collect(Collectors.toList());
 
+        logger.info("Durations: {}", Arrays.toString(taskDurations.toArray()));
+
+        boolean allRequestsCompletedSuccessfully = taskDurations.stream().allMatch(Objects::nonNull);
+        Assert.assertTrue("Some of the requests failed.", allRequestsCompletedSuccessfully);
+
+        Optional<Long> actualMaxDurationMs = taskDurations.stream().max(Long::compare);
         Assert.assertTrue(actualMaxDurationMs.isPresent());
 
         String message = String.format("Actual duration (%d ms) is greater than the expected max duration (%d ms).",
                 actualMaxDurationMs.get(),
                 expectedMaxDurationMs);
-
         Assert.assertTrue(message, actualMaxDurationMs.get() <= expectedMaxDurationMs);
     }
 
-    private static long toExecutionTimeMs(CompletableFuture<Long> task) {
+    private static Long toExecutionTimeMs(CompletableFuture<Long> task) {
         try {
             return task.get();
         } catch (Exception e) {
-            return Integer.MAX_VALUE;
+            logger.error("Task {} didn't complete successfully.", task);
+            return null;
         }
     }
 }
