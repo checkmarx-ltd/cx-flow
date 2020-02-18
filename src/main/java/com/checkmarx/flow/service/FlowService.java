@@ -2,8 +2,10 @@ package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.BugTracker;
+import com.checkmarx.flow.dto.ScanDetails;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.Sources;
+import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.flow.utils.ZipUtils;
@@ -30,7 +32,8 @@ import java.util.concurrent.CompletableFuture;
 
 import static com.checkmarx.sdk.config.Constants.UNKNOWN;
 import static com.checkmarx.sdk.config.Constants.UNKNOWN_INT;
-import static java.lang.System.exit;
+
+import static com.checkmarx.flow.exception.ExitThrowable.exit;
 
 @Service
 public class FlowService {
@@ -89,7 +92,7 @@ public class FlowService {
                 log.warn("Unknown Product type of {}, exiting", request.getProduct());
             }
         } catch (MachinaException e){
-            log.error("Machina Exception has occurred.  {}", ExceptionUtils.getStackTrace(e));
+            log.error("Machina Exception has occurred.", e);
             emailCtx.put("message", "Error occurred during scan/bug tracking process for "
                     .concat(request.getNamespace()).concat("/").concat(request.getRepoName()).concat(" - ")
                     .concat(request.getRepoUrl()).concat("  Error: ").concat(e.getMessage()));
@@ -98,194 +101,262 @@ public class FlowService {
         }
     }
 
-    private CompletableFuture<ScanResults> executeCxScanFlow(ScanRequest request, File cxFile) throws MachinaException {
-        try {
-            String ownerId;
-            String projectName;
-            String repoName = request.getRepoName();
-            String branch = request.getBranch();
-            String namespace = request.getNamespace();
-
-            /*Check if team is provided*/
-            String team = helperService.getCxTeam(request);
-            if(!ScanUtils.empty(team)){
-                if(!team.startsWith(cxProperties.getTeamPathSeparator()))
-                    team = cxProperties.getTeamPathSeparator().concat(team);
-                log.info("Overriding team with {}", team);
-                ownerId = cxService.getTeamId(team);
-            }
-            else{
-                team = cxProperties.getTeam();
-                if(!team.startsWith(cxProperties.getTeamPathSeparator()))
-                    team = cxProperties.getTeamPathSeparator().concat(team);
-                log.info("Using team {}", team);
-                ownerId = cxService.getTeamId(team);
-
-                if(cxProperties.isMultiTenant() &&
-                        !ScanUtils.empty(namespace)){
-                    String fullTeamName = cxProperties.getTeam().concat(cxProperties.getTeamPathSeparator()).concat(namespace);
-                    request.setTeam(fullTeamName);
-                    String tmpId = cxService.getTeamId(fullTeamName);
-                    if(tmpId.equals(UNKNOWN)){
-                        ownerId = cxService.createTeam(ownerId, namespace);
-                    }
-                    else{
-                        ownerId = tmpId;
-                    }
-                }
-                else{
-                    request.setTeam(team);
-                }
-            }
-
-            /*Determine project name*/
-            String project = helperService.getCxProject(request);
-            if(!ScanUtils.empty(project)){
-                projectName = project;
-            }
-            else if(cxProperties.isMultiTenant() && !ScanUtils.empty(repoName)){
-                projectName = repoName;
-                if(!ScanUtils.empty(branch)){
-                    projectName = projectName.concat("-").concat(branch);
-                }
-            }
-            else{
-                if(!ScanUtils.empty(namespace) && !ScanUtils.empty(repoName) && !ScanUtils.empty(branch)) {
-                    projectName = namespace.concat("-").concat(repoName).concat("-").concat(branch);
-                }
-                else if(!ScanUtils.empty(request.getApplication())) {
-                    projectName = request.getApplication();
-                }
-                else{
-                    log.error("Namespace (--namespace)/RepoName(--repo-name)/Branch(--branch) OR Application (--app) must be provided if the Project is not provided (--cx-project)");
-                    throw new MachinaException("Namespace (--namespace)/RepoName(--repo-name)/Branch(--branch) OR Application (--app) must be provided if the Project is not provided (--cx-project)") ;
-                }
-            }
-
-            //Kick out if the team is unknown
-            if(ownerId.equals(UNKNOWN)){
-                throw new MachinaException("Parent team could not be established.  Please ensure correct team is provided");
-            }
-            //only allow specific chars in project name in checkmarx
-            projectName = projectName.replaceAll("[^a-zA-Z0-9-_.]+","-");
-            log.info("Project Name being used {}", projectName);
-            Integer projectId = UNKNOWN_INT;
-            if(flowProperties.isAutoProfile() && !request.isScanPresetOverride()) {
-                boolean projectExists = false;
-                projectId = cxService.getProjectId(ownerId, projectName);
-                if(projectId != UNKNOWN_INT) {
-                    int presetId = cxService.getProjectPresetId(projectId);
-                    if(presetId != UNKNOWN_INT){
-                        String preset = cxService.getPresetName(presetId);
-                        request.setScanPreset(preset);
-                        projectExists = true;
-                    }
-                }
-                log.debug("Auto profiling is enabled");
-                if(!projectExists || flowProperties.isAlwaysProfile()) {
-                    log.info("Project is new, profiling source...");
-                    Sources sources = new Sources();
-                    switch (request.getRepoType()) {
-                        case GITHUB:
-                            sources = gitService.getRepoContent(request);
-                            break;
-                        case GITLAB:
-                            sources = gitLabService.getRepoContent(request);
-                            break;
-                        case BITBUCKET:
-                            log.warn("Profiling is not available for BitBucket Cloud");
-                            break;
-                        case BITBUCKETSERVER:
-                            log.warn("Profiling is not available for BitBucket Server");
-                            break;
-                        case ADO:
-                            log.warn("Profiling is not available for Azure DevOps");
-                            break;
-                        default:
-                            break;
-                    }
-                    String preset = helperService.getPresetFromSources(sources);
-                    if (!ScanUtils.empty(preset)) {
-                        request.setScanPreset(preset);
-                    }
-                }
-            }
-            request.setProject(projectName);
-            CxScanParams params = new CxScanParams()
-                    .teamId(ownerId)
-                    .withTeamName(request.getTeam())
-                    .projectId(projectId)
-                    .withProjectName(projectName)
-                    .withScanPreset(request.getScanPreset())
-                    .withGitUrl(request.getRepoUrlWithAuth())
-                    .withIncremental(request.isIncremental())
-                    .withForceScan(request.isForceScan())
-                    .withFileExclude(request.getExcludeFiles())
-                    .withFolderExclude(request.getExcludeFolders());
-            if(!com.checkmarx.sdk.utils.ScanUtils.empty(request.getBranch())){
-                params.withBranch(Constants.CX_BRANCH_PREFIX.concat(request.getBranch()));
-            }
-            if(cxFile != null){
-                params.setSourceType(CxScanParams.Type.FILE);
-                params.setFilePath(cxFile.getAbsolutePath());
-            }
-            BugTracker.Type bugTrackerType = request.getBugTracker().getType();
-            if(bugTrackerType.equals(BugTracker.Type.GITLABMERGE)){
-                gitLabService.sendMergeComment(request, SCAN_MESSAGE);
-                gitLabService.startBlockMerge(request);
-            }
-            else if(bugTrackerType.equals(BugTracker.Type.GITLABCOMMIT)){
-                gitLabService.sendCommitComment(request, SCAN_MESSAGE);
-            }
-            else if(bugTrackerType.equals(BugTracker.Type.GITHUBPULL)){
-                gitService.sendMergeComment(request, SCAN_MESSAGE);
-                gitService.startBlockMerge(request, cxProperties.getUrl());
-            }
-            else if(bugTrackerType.equals(BugTracker.Type.BITBUCKETPULL)){
-                bbService.sendMergeComment(request, SCAN_MESSAGE);
-            }
-            else if(bugTrackerType.equals(BugTracker.Type.BITBUCKETSERVERPULL)){
-                bbService.sendServerMergeComment(request, SCAN_MESSAGE);
-            }
-            else if(bugTrackerType.equals(BugTracker.Type.ADOPULL)){
-                adoService.sendMergeComment(request, SCAN_MESSAGE);
-                adoService.startBlockMerge(request);
-            }
-
-            Integer scanId = cxService.createScan(params,"CxFlow Automated Scan");
-
-            if(bugTrackerType.equals(BugTracker.Type.NONE)){
-                log.info("Not waiting for scan completion as Bug Tracker type is NONE");
-                return CompletableFuture.completedFuture(null);
-            }
-
-            cxService.waitForScanCompletion(scanId);
-            if(projectId == UNKNOWN_INT) {
-                projectId = cxService.getProjectId(ownerId, projectName); //get the project id of the updated or created project
-            }
-            String osaScanId = null;
-            if(cxProperties.getEnableOsa()){
-                String path = cxProperties.getGitClonePath().concat("/").concat(UUID.randomUUID().toString());
-                File pathFile = new File(path);
-
-                Git git = Git.cloneRepository()
-                        .setURI(request.getRepoUrlWithAuth())
-                        .setBranch(request.getBranch())
-                        .setBranchesToClone(Collections.singleton(Constants.CX_BRANCH_PREFIX.concat(request.getBranch()) ))
-                        .setDirectory(pathFile)
-                        .call();
-                osaScanId = osaService.createScan(projectId, path);
-            }
-            return resultsService.processScanResultsAsync(request, projectId, scanId, osaScanId, request.getFilters());
-        }catch (CheckmarxException | GitAPIException e){
-            log.error(ExceptionUtils.getStackTrace(e));
-            log.error(ExceptionUtils.getRootCauseMessage(e));
-            Thread.currentThread().interrupt();
-            throw new MachinaException("Checkmarx Error Occurred");
+    public CompletableFuture<ScanResults> executeCxScanFlow(ScanRequest request, File cxFile) throws MachinaException {
+        ScanDetails scanDetails = executeCxScan(request,cxFile);
+        if(scanDetails.processResults()) {
+            return resultsService.processScanResultsAsync(request, scanDetails.getProjectId(), scanDetails.getScanId(), scanDetails.getOsaScanId(), request.getFilters());
+        }else{
+            return scanDetails.getResults();
         }
     }
 
-    public void cxFullScan(ScanRequest request, String path){
+
+    public ScanDetails executeCxScan(ScanRequest request, File cxFile) throws MachinaException {
+
+        String osaScanId = null;
+        Integer scanId = null;
+        Integer projectId = null;
+
+        try {
+
+
+            /*Check if team is provided*/
+            String ownerId = determineTeamAndOwnerID(request);
+
+            /*Determine project name*/
+            String projectName = determineProjectName(request);
+
+            log.debug("Auto profiling is enabled");
+            projectId = determinePresetAndProjectId(request, ownerId, projectName);
+
+            request.setProject(projectName);
+
+            CxScanParams params = prepareScanParamsObject(request, cxFile, ownerId, projectName, projectId);
+
+            BugTracker.Type bugTrackerType = triggerBugTrackerEvent(request);
+
+            scanId = cxService.createScan(params,"CxFlow Automated Scan");
+
+
+            if(bugTrackerType.equals(BugTracker.Type.NONE)){
+
+                log.info("Not waiting for scan completion as Bug Tracker type is NONE");
+                CompletableFuture<ScanResults> results = CompletableFuture.completedFuture(null);
+                //return CompletableFuture.completedFuture(null);
+                new ScanDetails(projectId, scanId, results, false);
+
+            } else {
+
+                cxService.waitForScanCompletion(scanId);
+                if (projectId == UNKNOWN_INT) {
+                    projectId = cxService.getProjectId(ownerId, projectName); //get the project id of the updated or created project
+                }
+                osaScanId = createOsaScan(request, projectId);
+                //resultsService.processScanResultsAsync(request, projectId, scanId, osaScanId, request.getFilters());
+            }
+
+
+        }catch (CheckmarxException | GitAPIException e){
+            log.error(ExceptionUtils.getMessage(e), e);
+            Thread.currentThread().interrupt();
+            throw new MachinaException("Checkmarx Error Occurred");
+        }
+
+        return new ScanDetails(projectId, scanId, osaScanId);
+    }
+
+    private CxScanParams prepareScanParamsObject(ScanRequest request, File cxFile, String ownerId, String projectName, Integer projectId) {
+        CxScanParams params = new CxScanParams()
+                .teamId(ownerId)
+                .withTeamName(request.getTeam())
+                .projectId(projectId)
+                .withProjectName(projectName)
+                .withScanPreset(request.getScanPreset())
+                .withGitUrl(request.getRepoUrlWithAuth())
+                .withIncremental(request.isIncremental())
+                .withForceScan(request.isForceScan())
+                .withFileExclude(request.getExcludeFiles())
+                .withFolderExclude(request.getExcludeFolders());
+        if(!com.checkmarx.sdk.utils.ScanUtils.empty(request.getBranch())){
+            params.withBranch(Constants.CX_BRANCH_PREFIX.concat(request.getBranch()));
+        }
+        if(cxFile != null){
+            params.setSourceType(CxScanParams.Type.FILE);
+            params.setFilePath(cxFile.getAbsolutePath());
+        }
+        return params;
+    }
+
+    private Integer determinePresetAndProjectId(ScanRequest request, String ownerId, String projectName ) {
+
+        Boolean projectExists = false;
+        Integer projectId = UNKNOWN_INT;
+        if(flowProperties.isAutoProfile() && !request.isScanPresetOverride()) {
+
+            projectId = cxService.getProjectId(ownerId, projectName);
+            if (projectId != UNKNOWN_INT) {
+                int presetId = cxService.getProjectPresetId(projectId);
+                if (presetId != UNKNOWN_INT) {
+                    String preset = cxService.getPresetName(presetId);
+                    request.setScanPreset(preset);
+                    projectExists = true;
+                }
+            }
+        }
+        if(!projectExists || flowProperties.isAlwaysProfile()) {
+            log.info("Project is new, profiling source...");
+            Sources sources = new Sources();
+            switch (request.getRepoType()) {
+                case GITHUB:
+                    sources = gitService.getRepoContent(request);
+                    break;
+                case GITLAB:
+                    sources = gitLabService.getRepoContent(request);
+                    break;
+                case BITBUCKET:
+                    log.warn("Profiling is not available for BitBucket Cloud");
+                    break;
+                case BITBUCKETSERVER:
+                    log.warn("Profiling is not available for BitBucket Server");
+                    break;
+                case ADO:
+                    log.warn("Profiling is not available for Azure DevOps");
+                    break;
+                default:
+                    break;
+            }
+            String preset = helperService.getPresetFromSources(sources);
+            if (!ScanUtils.empty(preset)) {
+                request.setScanPreset(preset);
+            }
+
+        }
+        return projectId;
+    }
+
+    private BugTracker.Type triggerBugTrackerEvent(ScanRequest request) {
+        BugTracker.Type bugTrackerType = request.getBugTracker().getType();
+        if(bugTrackerType.equals(BugTracker.Type.GITLABMERGE)){
+            gitLabService.sendMergeComment(request, SCAN_MESSAGE);
+            gitLabService.startBlockMerge(request);
+        }
+        else if(bugTrackerType.equals(BugTracker.Type.GITLABCOMMIT)){
+            gitLabService.sendCommitComment(request, SCAN_MESSAGE);
+        }
+        else if(bugTrackerType.equals(BugTracker.Type.GITHUBPULL)){
+            gitService.sendMergeComment(request, SCAN_MESSAGE);
+            gitService.startBlockMerge(request, cxProperties.getUrl());
+        }
+        else if(bugTrackerType.equals(BugTracker.Type.BITBUCKETPULL)){
+            bbService.sendMergeComment(request, SCAN_MESSAGE);
+        }
+        else if(bugTrackerType.equals(BugTracker.Type.BITBUCKETSERVERPULL)){
+            bbService.sendServerMergeComment(request, SCAN_MESSAGE);
+        }
+        else if(bugTrackerType.equals(BugTracker.Type.ADOPULL)){
+            adoService.sendMergeComment(request, SCAN_MESSAGE);
+            adoService.startBlockMerge(request);
+        }
+        return bugTrackerType;
+    }
+
+    private String determineTeamAndOwnerID(ScanRequest request) throws CheckmarxException, MachinaException {
+
+        String ownerId;
+        String namespace = request.getNamespace();
+
+        String team = helperService.getCxTeam(request);
+        if(!ScanUtils.empty(team)){
+            if(!team.startsWith(cxProperties.getTeamPathSeparator()))
+                team = cxProperties.getTeamPathSeparator().concat(team);
+            log.info("Overriding team with {}", team);
+            ownerId = cxService.getTeamId(team);
+        }
+        else{
+            team = cxProperties.getTeam();
+            if(!team.startsWith(cxProperties.getTeamPathSeparator()))
+                team = cxProperties.getTeamPathSeparator().concat(team);
+            log.info("Using team {}", team);
+            ownerId = cxService.getTeamId(team);
+
+            if(cxProperties.isMultiTenant() &&
+                    !ScanUtils.empty(namespace)){
+                String fullTeamName = cxProperties.getTeam().concat(cxProperties.getTeamPathSeparator()).concat(namespace);
+                request.setTeam(fullTeamName);
+                String tmpId = cxService.getTeamId(fullTeamName);
+                if(tmpId.equals(UNKNOWN)){
+                    ownerId = cxService.createTeam(ownerId, namespace);
+                }
+                else{
+                    ownerId = tmpId;
+                }
+            }
+            else{
+                request.setTeam(team);
+            }
+        }
+
+        //Kick out if the team is unknown
+        if(ownerId.equals(UNKNOWN)){
+            throw new MachinaException("Parent team could not be established.  Please ensure correct team is provided");
+        }
+        return ownerId;
+    }
+
+    private String determineProjectName(ScanRequest request) throws MachinaException {
+        String projectName;
+        String repoName = request.getRepoName();
+        String branch = request.getBranch();
+        String namespace = request.getNamespace();
+
+        String project = helperService.getCxProject(request);
+        if(!ScanUtils.empty(project)){
+            projectName = project;
+        }
+        else if(cxProperties.isMultiTenant() && !ScanUtils.empty(repoName)){
+            projectName = repoName;
+            if(!ScanUtils.empty(branch)){
+                projectName = projectName.concat("-").concat(branch);
+            }
+        }
+        else{
+            if(!ScanUtils.empty(namespace) && !ScanUtils.empty(repoName) && !ScanUtils.empty(branch)) {
+                projectName = namespace.concat("-").concat(repoName).concat("-").concat(branch);
+            }
+            else if(!ScanUtils.empty(request.getApplication())) {
+                projectName = request.getApplication();
+            }
+            else{
+                log.error("Namespace (--namespace)/RepoName(--repo-name)/Branch(--branch) OR Application (--app) must be provided if the Project is not provided (--cx-project)");
+                throw new MachinaException("Namespace (--namespace)/RepoName(--repo-name)/Branch(--branch) OR Application (--app) must be provided if the Project is not provided (--cx-project)") ;
+            }
+        }
+
+        //only allow specific chars in project name in checkmarx
+        projectName = projectName.replaceAll("[^a-zA-Z0-9-_.]+","-");
+        log.info("Project Name being used {}", projectName);
+
+        return projectName;
+    }
+
+    private String createOsaScan(ScanRequest request, Integer projectId) throws GitAPIException, CheckmarxException {
+        String osaScanId = null;
+        if(cxProperties.getEnableOsa()){
+            String path = cxProperties.getGitClonePath().concat("/").concat(UUID.randomUUID().toString());
+            File pathFile = new File(path);
+
+            Git git = Git.cloneRepository()
+                    .setURI(request.getRepoUrlWithAuth())
+                    .setBranch(request.getBranch())
+                    .setBranchesToClone(Collections.singleton(Constants.CX_BRANCH_PREFIX.concat(request.getBranch()) ))
+                    .setDirectory(pathFile)
+                    .call();
+            osaScanId = osaService.createScan(projectId, path);
+        }
+        return osaScanId;
+    }
+
+    public void cxFullScan(ScanRequest request, String path) throws ExitThrowable {
 
         try {
             String cxZipFile = FileSystems.getDefault().getPath("cx.".concat(UUID.randomUUID().toString()).concat(".zip")).toAbsolutePath().toString();
@@ -303,16 +374,15 @@ public class FlowService {
                 exit(10);
             }
         } catch (IOException e) {
-            log.error(ExceptionUtils.getStackTrace(e));
-            log.error("Error occurred while attempting to zip path {}", path);
+            log.error("Error occurred while attempting to zip path {}", path, e);
             exit(3);
         } catch (MachinaException e){
-            log.error(ExceptionUtils.getStackTrace(e));
+            log.error("Error occurred", e);
             exit(3);
         }
     }
 
-    public void cxFullScan(ScanRequest request){
+    public void cxFullScan(ScanRequest request) throws ExitThrowable {
 
         try {
             CompletableFuture<ScanResults> future = executeCxScanFlow(request, null);
@@ -323,13 +393,13 @@ public class FlowService {
                 exit(10);
             }
         } catch (MachinaException e){
-            log.error(ExceptionUtils.getStackTrace(e));
+            log.error("Error occurred", e);
             exit(3);
         }
     }
 
 
-    public void cxParseResults(ScanRequest request, File file){
+    public void cxParseResults(ScanRequest request, File file) throws ExitThrowable {
         try {
             ScanResults results = cxService.getReportContent(file, request.getFilters());
             resultsService.processResults(request, results);
@@ -338,13 +408,12 @@ public class FlowService {
                 exit(10);
             }
         } catch (MachinaException | CheckmarxException e) {
-            log.error(ExceptionUtils.getStackTrace(e));
-            log.error("Error occurred while processing results file");
+            log.error("Error occurred while processing results file", e);
             exit(3);
         }
     }
 
-    public void cxOsaParseResults(ScanRequest request, File file, File libs){
+    public void cxOsaParseResults(ScanRequest request, File file, File libs) throws ExitThrowable {
         try {
             ScanResults results = cxService.getOsaReportContent(file, libs, request.getFilters());
             resultsService.processResults(request, results);
@@ -353,8 +422,7 @@ public class FlowService {
                 exit(10);
             }
         } catch (MachinaException | CheckmarxException e) {
-            log.error(ExceptionUtils.getStackTrace(e));
-            log.error("Error occurred while processing results file(s)");
+            log.error("Error occurred while processing results file(s)", e);
             exit(3);
         }
     }
@@ -402,8 +470,7 @@ public class FlowService {
             }
 
         } catch (MachinaException | CheckmarxException e) {
-            log.debug(ExceptionUtils.getStackTrace(e));
-            log.error("Error occurred while processing results for {}{}", request.getTeam(), request.getProject());
+            log.error("Error occurred while processing results for {}{}", request.getTeam(), request.getProject(), e);
             CompletableFuture<ScanResults> x = new CompletableFuture<>();
             x.completeExceptionally(e);
             return x;
@@ -454,7 +521,7 @@ public class FlowService {
      *
      * @param originalRequest
      */
-    public void cxBatch(ScanRequest originalRequest) {
+    public void cxBatch(ScanRequest originalRequest) throws ExitThrowable {
         try {
             List<CxProject> projects;
             List<CompletableFuture<ScanResults>> processes = new ArrayList<>();
@@ -483,8 +550,7 @@ public class FlowService {
             processes.forEach(CompletableFuture::join);
 
         } catch ( CheckmarxException e) {
-            log.error(ExceptionUtils.getStackTrace(e));
-            log.error("Error occurred while processing projects in batch mode");
+            log.error("Error occurred while processing projects in batch mode", e);
             exit(3);
         }
     }

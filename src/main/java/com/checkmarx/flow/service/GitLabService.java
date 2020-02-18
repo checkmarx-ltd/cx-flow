@@ -66,15 +66,12 @@ public class GitLabService extends RepoService {
             JSONObject obj = new JSONObject(response.getBody());
             return obj.getInt("id");
         }catch (HttpClientErrorException e){
-            log.error("Error calling gitlab project api {}", e.getResponseBodyAsString());
-            log.error(ExceptionUtils.getStackTrace(e));
+            log.error("Error calling gitlab project api {}", e.getResponseBodyAsString(), e);
         }catch (JSONException e){
             log.error("Error parsing gitlab project response.", e);
-            log.error(ExceptionUtils.getStackTrace(e));
         }
         catch (URISyntaxException e){
-            log.error("Incorrect URI");
-            log.error(ExceptionUtils.getStackTrace(e));
+            log.error("Incorrect URI", e);
         }
 
         return UNKNOWN_INT;
@@ -102,7 +99,7 @@ public class GitLabService extends RepoService {
             log.debug("comment: {}", comment);
             sendMergeComment(request, comment);
         } catch (HttpClientErrorException e){
-            log.error("Error occurred while creating Merge Request comment");
+            log.error("Error occurred while creating Merge Request comment", e);
             throw new GitLabClientException();
         }
     }
@@ -121,7 +118,7 @@ public class GitLabService extends RepoService {
             log.debug("comment: {}", comment);
             sendCommitComment(request, comment);
         } catch (HttpClientErrorException e){
-            log.error("Error occurred while creating Commit comment");
+            log.error("Error occurred while creating Commit comment", e);
             throw new GitLabClientException();
         }
     }
@@ -217,11 +214,11 @@ public class GitLabService extends RepoService {
                 sources.setLanguageStats(langs);
             }
         }catch (NullPointerException e){
-            log.warn("Content not found in JSON response");
+            log.warn("Content not found in JSON response", e);
         }catch (HttpClientErrorException.NotFound e){
-            log.error(ExceptionUtils.getStackTrace(e));
+            log.error("Error occurred", e);
         }catch (HttpClientErrorException e){
-            log.error(ExceptionUtils.getRootCauseMessage(e));
+            log.error("Error occurred", e);
         }
         return sources;
     }
@@ -248,11 +245,11 @@ public class GitLabService extends RepoService {
                 sources.addSource(path, f);
             }
         }catch (NullPointerException e){
-            log.warn("Content not found in JSON response");
+            log.warn("Content not found in JSON response", e);
         }catch (HttpClientErrorException.NotFound e){
-            log.error(ExceptionUtils.getStackTrace(e));
+            log.error("Error occurred", e);
         }catch (HttpClientErrorException e){
-            log.error(ExceptionUtils.getRootCauseMessage(e));
+            log.error("Error occurred", e);
         }
     }
 
@@ -283,13 +280,13 @@ public class GitLabService extends RepoService {
                 return com.checkmarx.sdk.utils.ScanUtils.getConfigAsCode(decodedContent);
             }
         }catch (NullPointerException e){
-            log.warn("Content not found in JSON response");
+            log.warn("Content not found in JSON response", e);
         }catch (HttpClientErrorException.NotFound e){
-            log.info("No Config As code was found [{}]", properties.getConfigAsCode());
+            log.info("No Config As code was found [{}]", properties.getConfigAsCode(), e);
         }catch (HttpClientErrorException e){
-            log.error(ExceptionUtils.getRootCauseMessage(e));
+            log.error("Error occurred", e);
         }catch (Exception e){
-            log.error(ExceptionUtils.getRootCauseMessage(e));
+            log.error("Error occurred", e);
         }
         return null;
     }
