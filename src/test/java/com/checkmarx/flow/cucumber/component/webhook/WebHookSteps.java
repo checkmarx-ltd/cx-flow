@@ -40,12 +40,12 @@ import java.util.stream.Collectors;
 public class WebHookSteps {
     private static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
     private static final String WEBHOOK_REQUEST_RESOURCE_PATH = "sample-webhook-requests/from-github.json";
-
-    private static final int MAX_TOTAL_REQUESTS = 20;
+    private static final int TOTAL_REQUEST_COUNT = 20;
 
     private static final Logger logger = LoggerFactory.getLogger(WebHookSteps.class);
-    private static final Duration maxAwaitTimeForAllRequests = Duration.ofSeconds(2 * MAX_TOTAL_REQUESTS);
+    private static final Duration maxAwaitTimeForAllRequests = Duration.ofSeconds(10);
     private static final Duration maxWarmUpRequestDuration = Duration.ofSeconds(5);
+
     private final List<CompletableFuture<Long>> requestSendingTasks = new ArrayList<>();
 
     @Autowired
@@ -66,10 +66,13 @@ public class WebHookSteps {
 
         webHookRequest = prepareWebHookRequest();
         sendWarmUpRequest();
-        Duration intervalBetweenRequests = Duration.ofMillis(MILLISECONDS_IN_SECOND / timesPerSecond);
 
-        logger.info("Starting to send WebHook requests with the interval of {} ms.", intervalBetweenRequests.toMillis());
-        for (int i = 0; i < MAX_TOTAL_REQUESTS; i++) {
+        Duration intervalBetweenRequests = Duration.ofMillis(MILLISECONDS_IN_SECOND / timesPerSecond);
+        logger.info("Starting to send {} WebHook requests with the interval of {} ms.",
+                TOTAL_REQUEST_COUNT,
+                intervalBetweenRequests.toMillis());
+
+        for (int i = 0; i < TOTAL_REQUEST_COUNT; i++) {
             chillOutFor(intervalBetweenRequests);
             CompletableFuture<Long> task = startRequestSendingTaskAsync(i);
             requestSendingTasks.add(task);
@@ -78,9 +81,11 @@ public class WebHookSteps {
         waitForAllTasksToComplete(requestSendingTasks);
     }
 
+    /**
+     * First request can take much longer time than subsequent requests due to web server "warm up",
+     * therefore first request should not be included into the measurement.
+     */
     private void sendWarmUpRequest() {
-        // First request can take much longer time than subsequent requests due to web server "warm up"
-        // => first request should not be included into the measurement.
         logger.info("Sending a warm-up request.");
         CompletableFuture<Void> task = CompletableFuture.runAsync(this::sendWebHookRequest);
         Awaitility.await().atMost(maxWarmUpRequestDuration).until(task::isDone);
@@ -147,14 +152,14 @@ public class WebHookSteps {
         return result;
     }
 
-    private static void waitForAllTasksToComplete(List<CompletableFuture<Long>> tasks) {
+    private void waitForAllTasksToComplete(List<CompletableFuture<Long>> tasks) {
         logger.info("Waiting for all the requests to complete.");
         CompletableFuture[] taskArray = tasks.toArray(new CompletableFuture[0]);
         CompletableFuture<Void> combinedTask = CompletableFuture.allOf(taskArray);
         Awaitility.await()
                 .atMost(maxAwaitTimeForAllRequests)
                 .until(combinedTask::isDone);
-        logger.info("All requests completed.");
+        logger.info("All of the requests finished execution.");
         Assert.assertFalse("Some of the requests failed.", combinedTask.isCompletedExceptionally());
     }
 
@@ -172,7 +177,7 @@ public class WebHookSteps {
         Optional<Long> actualMaxDurationMs = taskDurations.stream().max(Long::compare);
         Assert.assertTrue(actualMaxDurationMs.isPresent());
 
-        String message = String.format("Actual duration (%d ms) is greater than the expected max duration (%d ms).",
+        String message = String.format("Actual max duration (%d ms) is greater than the expected max duration (%d ms).",
                 actualMaxDurationMs.get(),
                 expectedMaxDurationMs);
         Assert.assertTrue(message, actualMaxDurationMs.get() <= expectedMaxDurationMs);
