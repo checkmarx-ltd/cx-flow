@@ -329,8 +329,7 @@ public class JiraTestUtils implements IJiraTestUtils {
     private Issue getFirstIssue(String projectKey) {
         SearchResult result = search(String.format("project = \"%s\"", projectKey));
         if (result.getTotal() == 0) {
-            // TODO throw some exception that nakes sense
-            return null;
+             throw new JiraUtilsException("No issues found in JIRA. At least one issue is expected");
         }
         return result.getIssues().iterator().next();
     }
