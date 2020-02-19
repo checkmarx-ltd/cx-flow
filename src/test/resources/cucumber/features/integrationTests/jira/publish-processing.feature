@@ -2,8 +2,7 @@
 @Integration
 @PublishProcessing
 @JiraIntegrationTests
-Feature: parse, and then publish processing
-  given SAST XML results, calling flowService, to parse and publish results. findings should open an issue in Jira.
+Feature: parse, and then publish processing given SAST XML results, findings should open an issue in Jira.
 
   @Integration
   Scenario Outline: publish new issues to JIRA, one new issue is getting created per scan vulnerability type
@@ -20,9 +19,9 @@ Feature: parse, and then publish processing
 
   @Integration
     @Create_issue
-  Scenario Outline: publish new issue to JIRA which contains only one vulnerability type
+  Scenario Outline: publish new issue to JIRA which contains only one vulnerability type in one source file
     Given target is JIRA
-    And   results contains <Number_Of> findings with the same type
+    And   results contains <Number_Of> findings with the same type in one source file
     When  publishing results to JIRA
     Then  verify <Total_Of> new issues got created
     And verify <Number_Of> findings in body

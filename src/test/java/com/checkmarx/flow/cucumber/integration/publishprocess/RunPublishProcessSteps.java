@@ -94,8 +94,8 @@ public class RunPublishProcessSteps {
 
     @Before("@PublishProcessing")
     public void cleanJiraProject() throws IOException {
-        jiraUtils.ensureProjectExists(jiraProperties.getProject());
-        //jiraUtils.ensureIssueTypeExists(jiraProperties.getIssueType());
+/*        jiraUtils.ensureProjectExists(jiraProperties.getProject());
+        jiraUtils.ensureIssueTypeExists(jiraProperties.getIssueType());*/
         jiraUtils.cleanProject(jiraProperties.getProject());
     }
 
@@ -184,7 +184,7 @@ public class RunPublishProcessSteps {
         findingsType = FindingsType.DIFFERENT_TYPE;
     }
 
-    @When("results contains {int} findings with the same type")
+    @When("results contains {int} findings with the same type in one source file")
     public void getFindingsFileWithSameTypeVulnerabilities(int findings) {
         numOfFindings = findings;
         findingsType = FindingsType.SAME_TYPE;
@@ -217,7 +217,7 @@ public class RunPublishProcessSteps {
 
     private void assertSameVulnerability() {
         String newVulnerability = jiraUtils.getIssueVulnerability(jiraProperties.getProject());
-        Assert.assertEquals("Filename has changed during update", issueUpdateVulnerabilityType, newVulnerability);
+        Assert.assertEquals("Vulnerability type has changed during update", issueUpdateVulnerabilityType, newVulnerability);
     }
 
     private void assertSameFilename() {
@@ -279,12 +279,12 @@ public class RunPublishProcessSteps {
     @Then("there should be one closed and one open issue")
     public void assertOneClosedAndOneOpenIssue() {
         Map<String, Integer> issuesPerStatus = jiraUtils.getIssuesByStatus(jiraProperties.getProject());
-        Integer closed = getClosedIssues(issuesPerStatus);
-        Integer open  = getOpenIssues(issuesPerStatus);
+        int closed = getClosedIssues(issuesPerStatus);
+        int open  = getOpenIssues(issuesPerStatus);
         Assert.assertNotNull(closed);
         Assert.assertNotNull(open);
-        Assert.assertEquals("Closed issues number is incorrect", Integer.valueOf(1), closed);
-        Assert.assertEquals("Open issues number is incorrect", Integer.valueOf(1), open);
+        Assert.assertEquals("Closed issues number is incorrect", 1, closed);
+        Assert.assertEquals("Open issues number is incorrect", 1, open);
 
     }
 
