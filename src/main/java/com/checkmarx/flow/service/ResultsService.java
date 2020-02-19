@@ -1,10 +1,13 @@
 package com.checkmarx.flow.service;
 
+import com.atlassian.jira.rest.client.api.RestClientException;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.Field;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.InvalidCredentialsException;
+import com.checkmarx.flow.exception.JiraClientException;
+import com.checkmarx.flow.exception.JiraClientRunTimeException;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
@@ -14,12 +17,11 @@ import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxProject;
 import com.checkmarx.sdk.service.CxClient;
 import com.checkmarx.sdk.service.CxOsaClient;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
+import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -121,8 +123,7 @@ public class ResultsService {
                 log.info("Issue tracking is turned off");
                 break;
             case JIRA:
-                log.info("Processing results with JIRA issue tracking");
-                jiraService.process(results, request);
+                handleJiraCase(request, results);
                 break;
             case GITHUBPULL:
                 gitService.processPull(request, results);
@@ -182,6 +183,19 @@ public class ResultsService {
             log.info(results.getScanSummary().toString());
             log.info("To veiw results: {}", results.getLink());
             log.info("######################################");
+        }
+    }
+
+    private void handleJiraCase(ScanRequest request, ScanResults results) throws JiraClientException {
+        try {
+            log.info("Processing results with JIRA issue tracking");
+            jiraService.process(results, request);
+        } catch (RestClientException e) {
+            if (e.getStatusCode().isPresent() && e.getStatusCode().get() ==  HttpStatus.NOT_FOUND.value()) {
+                throw new JiraClientRunTimeException("Jira service is not accessible for URL: " + jiraService.getJiraURI(), e);
+            } else {
+                throw  e;
+            }
         }
     }
 
