@@ -6,12 +6,11 @@ import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.awaitility.Awaitility;
 import org.junit.Assert;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -37,12 +36,12 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @SpringBootTest
+@Slf4j
 public class WebHookSteps {
     private static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
     private static final String WEBHOOK_REQUEST_RESOURCE_PATH = "sample-webhook-requests/from-github.json";
     private static final int TOTAL_REQUEST_COUNT = 20;
 
-    private static final Logger logger = LoggerFactory.getLogger(WebHookSteps.class);
     private static final Duration maxAwaitTimeForAllRequests = Duration.ofSeconds(10);
     private static final Duration maxWarmUpRequestDuration = Duration.ofSeconds(5);
 
@@ -68,7 +67,7 @@ public class WebHookSteps {
         sendWarmUpRequest();
 
         Duration intervalBetweenRequests = Duration.ofMillis(MILLISECONDS_IN_SECOND / timesPerSecond);
-        logger.info("Starting to send {} WebHook requests with the interval of {} ms.",
+        log.info("Starting to send {} WebHook requests with the interval of {} ms.",
                 TOTAL_REQUEST_COUNT,
                 intervalBetweenRequests.toMillis());
 
@@ -86,7 +85,7 @@ public class WebHookSteps {
      * therefore first request should not be included into the measurement.
      */
     private void sendWarmUpRequest() {
-        logger.info("Sending a warm-up request.");
+        log.info("Sending a warm-up request.");
         CompletableFuture<Void> task = CompletableFuture.runAsync(this::sendWebHookRequest);
         Awaitility.await().atMost(maxWarmUpRequestDuration).until(task::isDone);
     }
@@ -115,7 +114,7 @@ public class WebHookSteps {
     }
 
     private CompletableFuture<Long> startRequestSendingTaskAsync(int index) {
-        logger.info("Sending request #{}.", index + 1);
+        log.info("Sending request #{}.", index + 1);
         return CompletableFuture.supplyAsync(this::sendRequestAndMeasureDuration);
     }
 
@@ -147,19 +146,19 @@ public class WebHookSteps {
             byte[] hmacBytes = hmacCalculator.doFinal(bodyBytes);
             result = "sha1=" + DatatypeConverter.printHexBinary(hmacBytes);
         } catch (NoSuchAlgorithmException | InvalidKeyException e) {
-            logger.error("Error generating HMAC signature.", e);
+            log.error("Error generating HMAC signature.", e);
         }
         return result;
     }
 
     private void waitForAllTasksToComplete(List<CompletableFuture<Long>> tasks) {
-        logger.info("Waiting for all the requests to complete.");
+        log.info("Waiting for all the requests to complete.");
         CompletableFuture[] taskArray = tasks.toArray(new CompletableFuture[0]);
         CompletableFuture<Void> combinedTask = CompletableFuture.allOf(taskArray);
         Awaitility.await()
                 .atMost(maxAwaitTimeForAllRequests)
                 .until(combinedTask::isDone);
-        logger.info("All of the requests finished execution.");
+        log.info("All of the requests finished execution.");
         Assert.assertFalse("Some of the requests failed.", combinedTask.isCompletedExceptionally());
     }
 
@@ -169,7 +168,7 @@ public class WebHookSteps {
                 .map(WebHookSteps::toExecutionTimeMs)
                 .collect(Collectors.toList());
 
-        logger.info("Durations, ms: {}", Arrays.toString(taskDurations.toArray()));
+        log.info("Durations, ms: {}", Arrays.toString(taskDurations.toArray()));
 
         boolean allRequestsCompletedSuccessfully = taskDurations.stream().allMatch(Objects::nonNull);
         Assert.assertTrue("Some of the requests failed.", allRequestsCompletedSuccessfully);
@@ -187,7 +186,7 @@ public class WebHookSteps {
         try {
             return task.get();
         } catch (Exception e) {
-            logger.error("Task {} didn't complete successfully.", task);
+            log.error("Task {} didn't complete successfully.", task);
             return null;
         }
     }
