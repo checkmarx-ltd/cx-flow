@@ -1,7 +1,8 @@
 @ScanFeature @IntegrationTest
-Feature: Check Integration tests command line functionality - scan. Example:
-And java -jar cx-flow-1.5.2.jar --scan --github --cx-project="CodeInjection" --repo-url="https://github.com/username/Inj.git"  --namespace="MyNamespace" --app="MyApp" --branch="master" --spring.config.location="C:\MyProjects\cx-flow-runtime\application.yml"
-And java -jar cx-flow-1.5.2.jar --scan --f="C:\Users\orlyk\Desktop\projects_to_scan\Code_Injection\Code_Injection" --cx-team="CxServer" --cx-project="CodeInjection1" --app="ABC" --cx-team="/CxServer" --spring.config.location="C:\MyProjects\cx-flow-runtime\application.yml"
+Feature: Check Integration tests command line functionality - scan. 
+# Examples:
+# And java -jar cx-flow-1.5.2.jar --scan --github --cx-project="CodeInjection" --repo-url="https://github.com/username/Inj.git"  --namespace="MyNamespace" --app="MyApp" --branch="master" --spring.config.location="C:\MyProjects\cx-flow-runtime\application.yml"
+# And java -jar cx-flow-1.5.2.jar --scan --f="C:\Users\orlyk\Desktop\projects_to_scan\Code_Injection\Code_Injection" --cx-team="CxServer" --cx-project="CodeInjection1" --app="ABC" --cx-team="/CxServer" --spring.config.location="C:\MyProjects\cx-flow-runtime\application.yml"
 
 
 ## TODO Should be tested with the following environment types:
@@ -100,7 +101,7 @@ And java -jar cx-flow-1.5.2.jar --scan --f="C:\Users\orlyk\Desktop\projects_to_s
       | https://github.com/cxflowtestuser/VB_3845.git                  | 2    | 3      | 0   |
       | https://github.com/cxflowtestuser/amplify-multienv-example.git | 0    | 0      | 1   |
 
-  
+  @Filters
   Scenario Outline:  retrieve SAST results with the following filters: --filter-severity, --filter-category, --filter-status, --filter-cwe
     Given there is a SAST environment configured and running
     And running a scan for repository "<repoUrl>"
@@ -162,6 +163,7 @@ And java -jar cx-flow-1.5.2.jar --scan --f="C:\Users\orlyk\Desktop\projects_to_s
     Examples:
       | repoUrl                                                        | exclude-folders | exclude-files           | loc   | high | medium | low |
       | https://github.com/cxflowtestuser/amplify-multienv-example.git |                 |                         | 13712 | 0    | 0      | 1   |
+      #TODO - fix bug - this flow works on armorly3
       #| https://github.com/cxflowtestuser/amplify-multienv-example.git | src             |                         | 11538 | 0    | 0      | 1   |
       | https://github.com/cxflowtestuser/amplify-multienv-example.git | public          |                         | 13656 | 0    | 0      | 0   |
       | https://github.com/cxflowtestuser/amplify-multienv-example.git | public,src      |                         | 11482 | 0    | 0      | 0   |
