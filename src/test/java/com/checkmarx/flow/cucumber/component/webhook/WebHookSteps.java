@@ -1,8 +1,8 @@
 package com.checkmarx.flow.cucumber.component.webhook;
 
-import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
+import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -12,7 +12,6 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.awaitility.Awaitility;
 import org.junit.Assert;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.SpringApplication;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.http.HttpEntity;
@@ -40,22 +39,25 @@ import java.util.stream.Collectors;
 public class WebHookSteps {
     private static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
     private static final String WEBHOOK_REQUEST_RESOURCE_PATH = "sample-webhook-requests/from-github.json";
-    private static final int TOTAL_REQUEST_COUNT = 20;
-
-    private static final Duration maxAwaitTimeForAllRequests = Duration.ofSeconds(10);
-    private static final Duration maxWarmUpRequestDuration = Duration.ofSeconds(5);
 
     private final List<CompletableFuture<Long>> requestSendingTasks = new ArrayList<>();
 
     @Autowired
-    private GitHubProperties properties;
+    private GitHubProperties gitHubProperties;
 
     private HttpEntity<String> webHookRequest;
     private String cxFlowPort;
 
+    Properties testProperties;
+
+    @Before("@WebHookFeature")
+    public void loadProperties() throws IOException {
+        testProperties = TestUtils.getPropertiesFromResource("cucumber/features/componentTests/webhook.properties");
+    }
+
     @Given("CxFlow is running as a service")
     public void runAsService() {
-        ConfigurableApplicationContext appContext = SpringApplication.run(CxFlowApplication.class, "--web");
+        ConfigurableApplicationContext appContext = TestUtils.runCxFlowAsService();
         cxFlowPort = appContext.getEnvironment().getProperty("server.port");
     }
 
@@ -66,12 +68,13 @@ public class WebHookSteps {
         webHookRequest = prepareWebHookRequest();
         sendWarmUpRequest();
 
+        int totalRequestCount = Integer.parseUnsignedInt(testProperties.getProperty("totalRequestCount"));
         Duration intervalBetweenRequests = Duration.ofMillis(MILLISECONDS_IN_SECOND / timesPerSecond);
         log.info("Starting to send {} WebHook requests with the interval of {} ms.",
-                TOTAL_REQUEST_COUNT,
+                totalRequestCount,
                 intervalBetweenRequests.toMillis());
 
-        for (int i = 0; i < TOTAL_REQUEST_COUNT; i++) {
+        for (int i = 0; i < totalRequestCount; i++) {
             chillOutFor(intervalBetweenRequests);
             CompletableFuture<Long> task = startRequestSendingTaskAsync(i);
             requestSendingTasks.add(task);
@@ -86,8 +89,9 @@ public class WebHookSteps {
      */
     private void sendWarmUpRequest() {
         log.info("Sending a warm-up request.");
+        Duration timeout = Duration.parse(testProperties.getProperty("maxWarmUpRequestDuration"));
         CompletableFuture<Void> task = CompletableFuture.runAsync(this::sendWebHookRequest);
-        Awaitility.await().atMost(maxWarmUpRequestDuration).until(task::isDone);
+        Awaitility.await().atMost(timeout).until(task::isDone);
     }
 
     private HttpEntity<String> prepareWebHookRequest() {
@@ -137,7 +141,7 @@ public class WebHookSteps {
         try {
             byte[] bodyBytes = requestBody.getBytes(DEFAULT_CHARSET);
 
-            byte[] tokenBytes = properties.getWebhookToken().getBytes(DEFAULT_CHARSET);
+            byte[] tokenBytes = gitHubProperties.getWebhookToken().getBytes(DEFAULT_CHARSET);
             SecretKeySpec secret = new SecretKeySpec(tokenBytes, HMAC_ALGORITHM);
 
             Mac hmacCalculator = Mac.getInstance(HMAC_ALGORITHM);
@@ -153,13 +157,13 @@ public class WebHookSteps {
 
     private void waitForAllTasksToComplete(List<CompletableFuture<Long>> tasks) {
         log.info("Waiting for all the requests to complete.");
+        Duration timeout = Duration.parse(testProperties.getProperty("maxAwaitTimeForAllRequests"));
         CompletableFuture[] taskArray = tasks.toArray(new CompletableFuture[0]);
         CompletableFuture<Void> combinedTask = CompletableFuture.allOf(taskArray);
         Awaitility.await()
-                .atMost(maxAwaitTimeForAllRequests)
+                .atMost(timeout)
                 .until(combinedTask::isDone);
         log.info("All of the requests finished execution.");
-        Assert.assertFalse("Some of the requests failed.", combinedTask.isCompletedExceptionally());
     }
 
     @Then("each of the requests is answered in at most {int} ms")
@@ -174,7 +178,7 @@ public class WebHookSteps {
         Assert.assertTrue("Some of the requests failed.", allRequestsCompletedSuccessfully);
 
         Optional<Long> actualMaxDurationMs = taskDurations.stream().max(Long::compare);
-        Assert.assertTrue(actualMaxDurationMs.isPresent());
+        Assert.assertTrue("Actual max duration is not defined.", actualMaxDurationMs.isPresent());
 
         String message = String.format("Actual max duration (%d ms) is greater than the expected max duration (%d ms).",
                 actualMaxDurationMs.get(),
