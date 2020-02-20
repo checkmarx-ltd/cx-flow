@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.springframework.web.bind.annotation.RequestParam;
 import javax.validation.constraints.NotNull;
@@ -656,6 +657,104 @@ public class ScanUtils {
             xMap.put(key, issue);
         }
         return xMap;
+    }
+
+    /**
+     * = Generates an HTML message describing the discovered issue.
+     *
+     * @param issue The issue to add the comment too
+     * @param branch The repo branch name
+     * @return string with the HTML message
+     */
+    public static String getHTMLBody(ScanResults.XIssue issue, String branch, FlowProperties flowProperties) {
+        StringBuilder body = new StringBuilder();
+        body.append("<div>");
+        body.append(String.format(ISSUE_BODY, issue.getVulnerability(), issue.getFilename(), branch)).append(CRLF);
+        if(!ScanUtils.empty(issue.getDescription())) {
+            body.append("<div><i>").append(issue.getDescription().trim()).append("</i></div>");
+        }
+        body.append(CRLF);
+        if(!ScanUtils.empty(issue.getSeverity())) {
+            body.append("<div><b>Severity:</b> ").append(issue.getSeverity()).append("</div>");
+        }
+        if(!ScanUtils.empty(issue.getCwe())) {
+            body.append("<div><b>CWE:</b>").append(issue.getCwe()).append("</div>");
+            if(!ScanUtils.empty(flowProperties.getMitreUrl())) {
+                body.append("<div><a href=\'").append(
+                        String.format(
+                                flowProperties.getMitreUrl(),
+                                issue.getCwe()
+                        )
+                ).append("\'>Vulnerability details and guidance</a></div>");
+            }
+        }
+        if(!ScanUtils.empty(flowProperties.getWikiUrl())) {
+            body.append("<div><a href=\'").append(flowProperties.getWikiUrl()).append("\'>Internal Guidance</a></div>");
+        }
+        if(!ScanUtils.empty(issue.getLink())){
+            body.append("<div><a href=\'").append(issue.getLink()).append("\'>Checkmarx</a></div>");
+        }
+        if(issue.getDetails() != null && !issue.getDetails().isEmpty()) {
+            Map<Integer, ScanResults.IssueDetails> trueIssues = issue.getDetails().entrySet().stream()
+                    .filter(x -> x.getKey( ) != null && x.getValue() != null && !x.getValue().isFalsePositive())
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            Map<Integer, ScanResults.IssueDetails> fpIssues = issue.getDetails().entrySet().stream()
+                    .filter(x -> x.getKey( ) != null && x.getValue() != null && x.getValue().isFalsePositive())
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            if(!trueIssues.isEmpty()) {
+                body.append("<div><b>Lines: </b>");
+                for (Map.Entry<Integer, ScanResults.IssueDetails> entry : trueIssues.entrySet()) {
+                    body.append(entry.getKey()).append(" ");
+                }
+                body.append("</div>");
+            }
+            if(flowProperties.isListFalsePositives() && !fpIssues.isEmpty()) {//List the false positives / not exploitable
+                body.append("<div><b>Lines Marked Not Exploitable: </b>");
+                for (Map.Entry<Integer, ScanResults.IssueDetails> entry : fpIssues.entrySet()) {
+                    body.append(entry.getKey()).append(" ");
+                }
+                body.append("</div>");
+            }
+            for (Map.Entry<Integer, ScanResults.IssueDetails> entry : trueIssues.entrySet()) {
+                if (!ScanUtils.empty(entry.getValue().getCodeSnippet())) {
+                    body.append("<hr/>");
+                    body.append("<b>Line #").append(entry.getKey()).append("</b>");
+                    body.append("<pre><code><div>");
+                    String codeSnippet = entry.getValue().getCodeSnippet();
+                    body.append(StringEscapeUtils.escapeHtml4(codeSnippet));
+                    body.append("</div></code></pre><div>");
+                }
+            }
+            body.append("<hr/>");
+        }
+        if(issue.getOsaDetails()!=null){
+            for(ScanResults.OsaDetails o: issue.getOsaDetails()){
+                body.append(CRLF);
+                if(!ScanUtils.empty(o.getCve())) {
+                    body.append("<b>").append(o.getCve()).append("</b>").append(CRLF);
+                }
+                body.append("<pre><code><div>");
+                if(!ScanUtils.empty(o.getSeverity())) {
+                    body.append("Severity: ").append(o.getSeverity()).append(CRLF);
+                }
+                if(!ScanUtils.empty(o.getVersion())) {
+                    body.append("Version: ").append(o.getVersion()).append(CRLF);
+                }
+                if(!ScanUtils.empty(o.getDescription())) {
+                    body.append("Description: ").append(o.getDescription()).append(CRLF);
+                }
+                if(!ScanUtils.empty(o.getRecommendation())){
+                    body.append("Recommendation: ").append(o.getRecommendation()).append(CRLF);
+                }
+                if(!ScanUtils.empty(o.getUrl())) {
+                    body.append("URL: ").append(o.getUrl());
+                }
+                body.append("</div></code></pre><div>");
+                body.append(CRLF);
+            }
+        }
+        body.append("</div>");
+        return body.toString();
     }
 
     /**
