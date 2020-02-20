@@ -47,7 +47,7 @@ public class TestUtils {
     }
 
     public static Properties getPropertiesFromResource(String path) throws IOException {
-        File file = ResourceUtils.getFile("classpath:\\" + path);
+        File file = ResourceUtils.getFile("classpath:" + path);
         Properties result = new Properties();
         result.load(Files.newInputStream(file.toPath()));
         return result;
