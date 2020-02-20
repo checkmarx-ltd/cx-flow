@@ -133,11 +133,15 @@ jira:
 
 github:
   webhook-token: 1234
+  token: xxxx
   url: https://github.com
   api-url: https://api.github.com/repos/
   block-merge: true
   error-merge: true
   cx-summary: true
+  # null value prevents CxFlow from trying to download config override from GitHub.
+  # Added to get more stable results for "high load" scenario in webhook feature.
+  config-as-code: null
 
 gitlab:
   webhook-token: 1234

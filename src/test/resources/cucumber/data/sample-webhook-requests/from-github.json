@@ -1,0 +1,15 @@
+{
+  "ref": "refs/heads/develop",
+  "commits": [
+  ],
+  "repository": {
+    "name": "MyExample",
+    "owner": {
+      "name": "MyOwner"
+    },
+    "clone_url": "https://github.com/example/MyExample.git"
+  },
+  "pusher": {
+    "name": "Jack Mort"
+  }
+}

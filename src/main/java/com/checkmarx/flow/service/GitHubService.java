@@ -7,9 +7,9 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.Sources;
 import com.checkmarx.flow.dto.github.Content;
 import com.checkmarx.flow.exception.GitHubClientException;
+import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
-import com.checkmarx.flow.utils.ScanUtils;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -17,16 +17,25 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
-import javax.annotation.PostConstruct;
+
 import java.util.*;
 
 @Service
 public class GitHubService extends RepoService {
     private static final Logger log = LoggerFactory.getLogger(GitHubService.class);
+
+    private static final String HTTP_BODY_IS_NULL = "HTTP Body is null for content api ";
+    private static final String CONTENT_NOT_FOUND_IN_RESPONSE = "Content not found in JSON response";
+    private static final String STATUSES_URL_KEY = "statuses_url";
+    private static final String STATUSES_URL_NOT_PROVIDED = "statuses_url was not provided within the request object, which is required for blocking / unblocking pull requests";
+
     private final RestTemplate restTemplate;
     private final GitHubProperties properties;
     private final FlowProperties flowProperties;
@@ -68,11 +77,11 @@ public class GitHubService extends RepoService {
                     getJSONStatus("pending", url, "Checkmarx Scan Initiated").toString(),
                     createAuthHeaders()
             );
-            if(ScanUtils.empty(request.getAdditionalMetadata("statuses_url"))){
-                log.warn("statuses_url was not provided within the request object, which is required for blocking / unblocking pull requests");
+            if(ScanUtils.empty(request.getAdditionalMetadata(STATUSES_URL_KEY))){
+                log.warn(STATUSES_URL_NOT_PROVIDED);
                 return;
             }
-            restTemplate.exchange(request.getAdditionalMetadata("statuses_url"),
+            restTemplate.exchange(request.getAdditionalMetadata(STATUSES_URL_KEY),
                     HttpMethod.POST, httpEntity, String.class);
         }
     }
@@ -87,11 +96,11 @@ public class GitHubService extends RepoService {
                     getJSONStatus(state, url, "Checkmarx Scan Completed").toString(),
                     createAuthHeaders()
             );
-            if(ScanUtils.empty(request.getAdditionalMetadata("statuses_url"))){
-                log.error("statuses_url was not provided within the request object, which is required for blocking / unblocking pull requests");
+            if(ScanUtils.empty(request.getAdditionalMetadata(STATUSES_URL_KEY))){
+                log.error(STATUSES_URL_NOT_PROVIDED);
                 return;
             }
-            restTemplate.exchange(request.getAdditionalMetadata("statuses_url"),
+            restTemplate.exchange(request.getAdditionalMetadata(STATUSES_URL_KEY),
                     HttpMethod.POST, httpEntity, String.class);
         }
     }
@@ -102,11 +111,11 @@ public class GitHubService extends RepoService {
                     getJSONStatus("failure", url, "Checkmarx Issue Threshold Met").toString(),
                     createAuthHeaders()
             );
-            if(ScanUtils.empty(request.getAdditionalMetadata("statuses_url"))){
-                log.error("statuses_url was not provided within the request object, which is required for blocking / unblocking pull requests");
+            if(ScanUtils.empty(request.getAdditionalMetadata(STATUSES_URL_KEY))){
+                log.error(STATUSES_URL_NOT_PROVIDED);
                 return;
             }
-            restTemplate.exchange(request.getAdditionalMetadata("statuses_url"),
+            restTemplate.exchange(request.getAdditionalMetadata(STATUSES_URL_KEY),
                     HttpMethod.POST, httpEntity, String.class);
         }
     }
@@ -152,7 +161,7 @@ public class GitHubService extends RepoService {
                     request.getBranch()
             );
             if(response.getBody() == null){
-                log.warn("HTTP Body is null for content api ");
+                log.warn(HTTP_BODY_IS_NULL);
             }
             else {
                 JSONObject json = new JSONObject(response.getBody());
@@ -172,7 +181,7 @@ public class GitHubService extends RepoService {
                 sources.setLanguageStats(langsPercent);
             }
         }catch (NullPointerException e){
-            log.warn("Content not found in JSON response");
+            log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
         }catch (HttpClientErrorException.NotFound e){
             log.error(ExceptionUtils.getStackTrace(e));
         }catch (HttpClientErrorException e){
@@ -192,11 +201,11 @@ public class GitHubService extends RepoService {
                     Content[].class
             );
             if(response.getBody() == null){
-                log.warn("HTTP Body is null for content api ");
+                log.warn(HTTP_BODY_IS_NULL);
             }
             return Arrays.asList(response.getBody());
         }catch (NullPointerException e){
-            log.warn("Content not found in JSON response");
+            log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
         }catch (HttpClientErrorException.NotFound e){
             log.error(ExceptionUtils.getStackTrace(e));
         }catch (HttpClientErrorException e){
@@ -223,42 +232,46 @@ public class GitHubService extends RepoService {
 
     @Override
     public CxConfig getCxConfigOverride(ScanRequest request) {
-        //"/{namespace}/{repo}/contents/{config}?ref={branch}"
-        HttpHeaders headers = createAuthHeaders();
-        try {
-            ResponseEntity<String> response = restTemplate.exchange(
-                    properties.getApiUrl().concat(FILE_CONTENT),
-                    HttpMethod.GET,
-                    new HttpEntity(headers),
-                    String.class,
-                    request.getNamespace(),
-                    request.getRepoName(),
-                    properties.getConfigAsCode(),
-                    request.getBranch()
-            );
-            if(response.getBody() == null){
-                log.warn("HTTP Body is null for content api ");
+        CxConfig result = null;
+        if (StringUtils.isNotBlank(properties.getConfigAsCode())) {
+            try {
+                result = loadCxConfigFromGitHub(properties.getConfigAsCode(), request);
+            } catch (NullPointerException e) {
+                log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
+            } catch (HttpClientErrorException.NotFound e) {
+                log.info("No Config As code was found [{}]", properties.getConfigAsCode());
+            } catch (Exception e) {
+                log.error(ExceptionUtils.getRootCauseMessage(e));
             }
-            else {
-                JSONObject json = new JSONObject(response.getBody());
-                String content = json.getString("content");
-                if(ScanUtils.empty(content)){
-                    log.warn("Content not found in JSON response");
-                    return null;
-                }
-                String decodedContent = new String(Base64.decodeBase64(content.trim()));
-                return com.checkmarx.sdk.utils.ScanUtils.getConfigAsCode(decodedContent);
-            }
-        }catch (NullPointerException e){
-            log.warn("Content not found in JSON response");
-        }catch (HttpClientErrorException.NotFound e){
-            log.info("No Config As code was found [{}]", properties.getConfigAsCode());
-        }catch (HttpClientErrorException e){
-            log.error(ExceptionUtils.getRootCauseMessage(e));
-        }catch (Exception e){
-            log.error(ExceptionUtils.getRootCauseMessage(e));
         }
-        return null;
+        return result;
     }
 
+    private CxConfig loadCxConfigFromGitHub(String filename, ScanRequest request) {
+        HttpHeaders headers = createAuthHeaders();
+        String urlTemplate = properties.getApiUrl().concat(FILE_CONTENT);
+        ResponseEntity<String> response = restTemplate.exchange(
+                urlTemplate,
+                HttpMethod.GET,
+                new HttpEntity(headers),
+                String.class,
+                request.getNamespace(),
+                request.getRepoName(),
+                filename,
+                request.getBranch()
+        );
+        if (response.getBody() == null) {
+            log.warn(HTTP_BODY_IS_NULL);
+            return null;
+        } else {
+            JSONObject json = new JSONObject(response.getBody());
+            String content = json.getString("content");
+            if (ScanUtils.empty(content)) {
+                log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
+                return null;
+            }
+            String decodedContent = new String(Base64.decodeBase64(content.trim()));
+            return com.checkmarx.sdk.utils.ScanUtils.getConfigAsCode(decodedContent);
+        }
+    }
 }
