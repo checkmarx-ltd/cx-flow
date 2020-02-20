@@ -5,6 +5,8 @@
  *
  * - try this command line tests
  *
+ * - Generate the description as HTML
+ *
  * - I force the issue to state 'Open' when its created, is that OK? The default is 'Submitted'
  *     - Give them an option to decide if submitted or open on create (see azure)
  * - Rally support a state 'Fixed' but I'm only checking for 'Closed', is that OK?
