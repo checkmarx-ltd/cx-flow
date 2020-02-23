@@ -94,8 +94,8 @@ public class RunPublishProcessSteps {
 
     @Before("@PublishProcessing")
     public void cleanJiraProject() throws IOException {
-/*        jiraUtils.ensureProjectExists(jiraProperties.getProject());
-        jiraUtils.ensureIssueTypeExists(jiraProperties.getIssueType());*/
+        jiraUtils.ensureProjectExists(jiraProperties.getProject());
+        //jiraUtils.ensureIssueTypeExists(jiraProperties.getIssueType());
         jiraUtils.cleanProject(jiraProperties.getProject());
     }
 
@@ -104,7 +104,7 @@ public class RunPublishProcessSteps {
         bugTracker = BugTracker.Type.JIRA;
     }
 
-    @Given("there are {int} results from which {int} results match the filter")
+    @Given("there are {int} findings from which {int} results match the filter")
     public void setResultsAndFilters(int totalResults, int matchingResults) {
         findingsType = FindingsType.DIFFERENT_SEVERITIES;
         numOfFindings = matchingResults;
@@ -138,7 +138,7 @@ public class RunPublishProcessSteps {
         TimeUnit.SECONDS.sleep(2);
     }
 
-    @Given("SAST results contain 1 finding")
+    @Given("SAST results contain 1 finding, with the same vulnerability type and filename")
     public void setFilenameForUpdate() {
         updating = true;
     }
@@ -227,7 +227,7 @@ public class RunPublishProcessSteps {
 
     @Then("JIRA still contains 1 issue")
     public void validateJirahasOneIssue() {
-        Assert.assertEquals("JIRA contains more than one issue", 1, jiraUtils.getNumberOfIssuesInProject(jiraProperties.getProject()));
+        Assert.assertEquals("JIRA should contain exactly one issue", 1, jiraUtils.getNumberOfIssuesInProject(jiraProperties.getProject()));
     }
 
     @Then("issue ID hasn't changed")
