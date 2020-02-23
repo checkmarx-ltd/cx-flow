@@ -72,7 +72,7 @@ checkmarx:
   #exclude-folders:
 
 jira:
-  url: https://custodela.atlassian.net
+  url: http://localhost:8080
   username: xxxx
   token: xxxx
   project: APPSEC
@@ -88,7 +88,7 @@ jira:
     - To Do
     - In Progress
   closed-status:
-    - Done
+    - DONE
   fields:
     - type: result
       name: system-date
