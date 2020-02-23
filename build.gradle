@@ -4,7 +4,7 @@ buildscript {
         //cxVersion = "8.90.5"
         springBootVersion = '2.2.4.RELEASE'
         sonarqubeVersion = '2.8'
-        atlassianVersion = "5.1.6"
+        atlassianVersion = "5.2.0"
         atlassianFugueVersion = "4.7.2"
         mainClass='com.checkmarx.flow.CxFlowApplication'
     }
