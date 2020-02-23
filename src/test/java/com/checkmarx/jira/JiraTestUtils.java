@@ -52,7 +52,7 @@ public class JiraTestUtils implements IJiraTestUtils {
             try {
                 jiraURI = new URI(jiraProperties.getUrl());
             } catch (URISyntaxException e) {
-                //log.error("Error constructing URI for JIRA", e);
+                log.error("Error constructing URI for JIRA", e);
             }
             this.client = factory.createWithBasicHttpAuthenticationCustom(jiraURI, jiraProperties.getUsername(), jiraProperties.getToken(), jiraProperties.getHttpTimeout());
 
@@ -70,7 +70,7 @@ public class JiraTestUtils implements IJiraTestUtils {
 
     @Override
     public void cleanProject(String projectKey) {
-        SearchResult searchResult = search(String.format("project = \"%s\"", projectKey));
+        SearchResult searchResult = searchForAllIssues(projectKey);
         for (Issue issue: searchResult.getIssues()) {
             deleteIssue(issue.getKey());
         }
@@ -78,14 +78,14 @@ public class JiraTestUtils implements IJiraTestUtils {
 
     @Override
     public int getNumberOfIssuesInProject(String projectKey) {
-        SearchResult result = search(String.format("project = \"%s\"", projectKey));
+        SearchResult result = searchForAllIssues(projectKey);
         return result.getTotal();
     }
 
     @Override
     public Map<Filter.Severity, Integer> getIssuesPerSeverity(String projectKey) {
         Map<Filter.Severity, Integer> result= new HashMap<>();
-        SearchResult searchResults = search(String.format("project = \"%s\"", projectKey));
+        SearchResult searchResults = searchForAllIssues(projectKey);
         for (Issue issue: searchResults.getIssues()) {
             String severity = getIssueSeverity(issue.getDescription()).toUpperCase();
             Filter.Severity filterSeverity = Filter.Severity.valueOf(severity.toUpperCase());
@@ -104,7 +104,33 @@ public class JiraTestUtils implements IJiraTestUtils {
         return getIssueBodyPart(issueDescription,"Severity:");
     }
 
+
+
+
     private String getIssueBodyPart(String issueDescription, String field) {
+        // HEre's an example for Issue descriptionm for reference:
+/*
+Angular_Client_DOM_XSS issue exists @ jrecruiter/jrecruiter-flex/html-template/history/history.js in branch master
+Namespace: compTest
+Repository: repo
+Branch: master
+Repository Url: http://localhost/repo.git
+Application: App1
+Cx-Project: CodeInjection1
+Cx-Team: CxServer
+Severity: High
+CWE: 79
+
+Addition Info
+
+Checkmarx
+Mitre Details
+Training
+Guidance
+Lines: 222
+
+Line #222:
+*/
         String[] lines = issueDescription.split(System.lineSeparator());
         for (String line: lines) {
             if (line.contains(field)) {
@@ -122,7 +148,6 @@ public class JiraTestUtils implements IJiraTestUtils {
         return firstLineParts[4];
     }
 
-    // TODO UDI: check if this is realy the vulnerability field !
     @Override
     public String getIssueVulnerability(String projectKey) {
         Issue issue = getFirstIssue(projectKey);
@@ -134,7 +159,7 @@ public class JiraTestUtils implements IJiraTestUtils {
 
     @Override
     public int getFirstIssueNumOfFindings(String projectKey) {
-        SearchResult result = search(String.format("project = \"%s\"", projectKey));
+        SearchResult result = searchForAllIssues(projectKey);
         if (result.getTotal() ==0) {
             return 0;
         }
@@ -191,7 +216,7 @@ public class JiraTestUtils implements IJiraTestUtils {
     @Override
     public Map<String, Integer> getIssuesByStatus(String projectKey) {
         Map<String, Integer> result = new HashMap<>();
-        SearchResult searchResults = search(String.format("project = \"%s\"", projectKey));
+        SearchResult searchResults = searchForAllIssues(projectKey);
         for (Issue issue: searchResults.getIssues()) {
             if (result.containsKey(issue.getStatus().getName())) {
                 result.put(issue.getStatus().getName(), result.get(issue.getStatus().getName()) + 1);
@@ -327,10 +352,14 @@ public class JiraTestUtils implements IJiraTestUtils {
     }
 
     private Issue getFirstIssue(String projectKey) {
-        SearchResult result = search(String.format("project = \"%s\"", projectKey));
+        SearchResult result = searchForAllIssues(projectKey);
         if (result.getTotal() == 0) {
              throw new JiraUtilsException("No issues found in JIRA. At least one issue is expected");
         }
         return result.getIssues().iterator().next();
+    }
+
+    private SearchResult searchForAllIssues(String projectKey) {
+        return search(String.format("project = \"%s\"", projectKey));
     }
 }
