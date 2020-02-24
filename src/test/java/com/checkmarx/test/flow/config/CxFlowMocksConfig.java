@@ -6,11 +6,18 @@ import com.checkmarx.sdk.service.CxClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.web.client.RestTemplate;
 
 import static org.mockito.Mockito.mock;
 
 @Configuration
 public class CxFlowMocksConfig {
+
+    @Primary
+    @Bean
+    public RestTemplate getRestTemplate() {
+        return mock(RestTemplate.class);
+    }
 
     @Primary
     @Bean

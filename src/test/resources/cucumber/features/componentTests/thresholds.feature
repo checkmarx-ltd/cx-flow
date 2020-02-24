@@ -1,16 +1,15 @@
 @ThresholdsFeature
 Feature: CxFlow should fail builds and pull requests if the number of findings with certain severity is above threshold
 
-  @Skip
   Scenario Outline: CxFlow should approve or fail GitHub pull request, depending on whether threshold is exceeded
-    Given threshold for findings of "high" severity is <high threshold>
-    And threshold for findings of "medium" severity is <medium threshold>
-    And threshold for findings of "low" severity is <low threshold>
+    Given threshold for findings of "high" severity is "<high threshold>"
+    And threshold for findings of "medium" severity is "<medium threshold>"
+    And threshold for findings of "low" severity is "<low threshold>"
     When GitHub notifies CxFlow that a pull request was created
     And <high findings> of "high" severity are found
     And <medium findings> of "medium" severity are found
     And <low findings> of "low" severity are found
-    Then CxFlow <approves or fails> the pull request
+    Then CxFlow "<approves or fails>" the pull request
 
     Examples:
       | high threshold | medium threshold | low threshold | high findings | medium findings | low findings | approves or fails |
