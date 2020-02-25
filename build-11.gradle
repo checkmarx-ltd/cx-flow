@@ -96,7 +96,7 @@ springBoot {
 }
 
 configurations {
-    archivesBaseName = 'cx-flow-11'
+    libsDirName = 'libs/java11'
 }
 
 test {

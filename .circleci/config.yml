@@ -58,9 +58,14 @@ jobs:
           command: |
             VERSION=$(cat ./build/libs/version.txt)
             docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} docker.io
-            docker build -t ${DOCKER_REPO} .
-            docker build -t ${DOCKER_REPO}:${VERSION} .
-            docker build -f Dockerfile-11 -t ${DOCKER_REPO}:${VERSION}-11 .
+            docker build --target java8 \
+              -t ${DOCKER_REPO}:${VERSION}-8 \
+              -t ${DOCKER_REPO}:${VERSION} \
+              -t ${DOCKER_REPO} \
+              .
+            docker build --target java11 \
+              -t ${DOCKER_REPO}:${VERSION}-11 \
+              .
             docker push ${DOCKER_REPO}
 
   publish-github-release:
