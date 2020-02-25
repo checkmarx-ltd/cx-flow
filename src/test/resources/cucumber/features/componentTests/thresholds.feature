@@ -22,7 +22,8 @@ Feature: CxFlow should fail builds and pull requests if the number of findings w
       | <omitted>      | 8                | 15            | 20         | 6            | 8         | approves          |
       | 3              | <omitted>        | 15            | 2          | 6            | 8         | approves          |
       | 3              | 8                | <omitted>     | 2          | 6            | 10        | approves          |
-      | <omitted>      | <omitted>        | <omitted>     | 2          | 6            | 10        | approves          |
+      | <omitted>      | <omitted>        | <omitted>     | 0          | 6            | 10        | fails             |
+      | <omitted>      | <omitted>        | <omitted>     | 0          | 0            | 0         | approves          |
       # <omitted> - threshold value is not specified in config, or specified with an empty value, or with a null value.
       # All of these cases will result in the same config object.
 

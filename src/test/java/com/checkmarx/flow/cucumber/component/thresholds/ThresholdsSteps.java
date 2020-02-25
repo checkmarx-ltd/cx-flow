@@ -8,6 +8,7 @@ import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.service.GitHubService;
+import com.checkmarx.flow.service.MergeResultEvaluator;
 import com.checkmarx.flow.service.ResultsService;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.Filter;
@@ -53,6 +54,7 @@ public class ThresholdsSteps {
 
     private final CxClient cxClientMock;
     private final RestTemplate restTemplateMock;
+    private final MergeResultEvaluator mergeResultEvaluator;
     private final FlowProperties flowProperties;
     private final CxProperties cxProperties;
     private final GitHubProperties gitHubProperties;
@@ -62,7 +64,7 @@ public class ThresholdsSteps {
     private Boolean pullRequestWasApproved;
 
     public ThresholdsSteps(CxClient cxClientMock, RestTemplate restTemplateMock, FlowProperties flowProperties,
-                           CxProperties cxProperties, GitHubProperties gitHubProperties) {
+                           CxProperties cxProperties, GitHubProperties gitHubProperties, MergeResultEvaluator mergeResultEvaluator) {
         this.cxClientMock = cxClientMock;
         this.restTemplateMock = restTemplateMock;
 
@@ -74,6 +76,8 @@ public class ThresholdsSteps {
         gitHubProperties.setCxSummary(false);
         gitHubProperties.setFlowSummary(false);
         this.gitHubProperties = gitHubProperties;
+
+        this.mergeResultEvaluator = mergeResultEvaluator;
     }
 
     @Before("@ThresholdsFeature")
@@ -168,19 +172,12 @@ public class ThresholdsSteps {
             ScanResultsAnswerer answerer = new ScanResultsAnswerer();
             when(cxClientMock.getReportContentByScanId(anyInt(), any())).thenAnswer(answerer);
         } catch (CheckmarxException e) {
-            log.error("Error initializing mock.", e);
+            Assert.fail("Error initializing mock." + e);
         }
     }
 
-    private GitHubService createGitService(FlowProperties flowProperties) {
-        gitHubProperties.setCxSummary(false);
-        gitHubProperties.setFlowSummary(false);
-
-        return new GitHubService(restTemplateMock, gitHubProperties, flowProperties);
-    }
-
     private ResultsService createResultsService() {
-        GitHubService gitService = createGitService(flowProperties);
+        GitHubService gitService = new GitHubService(restTemplateMock, gitHubProperties, flowProperties, mergeResultEvaluator);
 
         return new ResultsService(
                 cxClientMock,
@@ -196,6 +193,10 @@ public class ThresholdsSteps {
                 flowProperties);
     }
 
+    /**
+     * Intercepts requests that CxFlow sends to GitHub.
+     * This allows to detect whether CxFlow has approved or failed a pull request.
+     */
     private class HttpRequestInterceptor implements Answer<ResponseEntity<String>> {
         @Override
         public ResponseEntity<String> answer(InvocationOnMock invocation) {
@@ -226,6 +227,9 @@ public class ThresholdsSteps {
         }
     }
 
+    /**
+     * Returns scan results as if they were produced by SAST.
+     */
     private class ScanResultsAnswerer implements Answer<ScanResults> {
         @Override
         public ScanResults answer(InvocationOnMock invocation) {

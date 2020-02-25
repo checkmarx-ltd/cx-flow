@@ -127,7 +127,7 @@ public class ResultsService {
                 break;
             case GITHUBPULL:
                 gitService.processPull(request, results);
-                gitService.endBlockMerge(request, results.getLink(), !results.getXIssues().isEmpty());
+                gitService.endBlockMerge(request, results);
                 break;
             case GITLABCOMMIT:
                 gitLabService.processCommit(request, results);

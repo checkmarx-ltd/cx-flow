@@ -39,14 +39,20 @@ public class GitHubService extends RepoService {
     private final RestTemplate restTemplate;
     private final GitHubProperties properties;
     private final FlowProperties flowProperties;
+    private final MergeResultEvaluator mergeResultEvaluator;
+
     private static final String FILE_CONTENT = "/{namespace}/{repo}/contents/{config}?ref={branch}";
     private static final String LANGUAGE_TYPES = "/{namespace}/{repo}/languages";
     private static final String REPO_CONTENT = "/{namespace}/{repo}/contents?ref={branch}";
 
-    public GitHubService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, GitHubProperties properties, FlowProperties flowProperties) {
+    public GitHubService(@Qualifier("flowRestTemplate") RestTemplate restTemplate,
+                         GitHubProperties properties,
+                         FlowProperties flowProperties,
+                         MergeResultEvaluator mergeResultEvaluator) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.flowProperties = flowProperties;
+        this.mergeResultEvaluator = mergeResultEvaluator;
     }
 
     private HttpHeaders createAuthHeaders(){
@@ -86,14 +92,11 @@ public class GitHubService extends RepoService {
         }
     }
 
-    void endBlockMerge(ScanRequest request, String url, boolean findingsPresent){
-        String state = "success";
-        if(properties.isErrorMerge() && findingsPresent){
-            state = "failure";
-        }
+    void endBlockMerge(ScanRequest request, ScanResults results){
         if(properties.isBlockMerge()) {
-            HttpEntity httpEntity = new HttpEntity<>(
-                    getJSONStatus(state, url, "Checkmarx Scan Completed").toString(),
+            String state = mergeResultEvaluator.isMergeAllowed(results, properties) ? "success" : "failure";
+            HttpEntity<String> httpEntity = new HttpEntity<>(
+                    getJSONStatus(state, results.getLink(), "Checkmarx Scan Completed").toString(),
                     createAuthHeaders()
             );
             if(ScanUtils.empty(request.getAdditionalMetadata(STATUSES_URL_KEY))){
