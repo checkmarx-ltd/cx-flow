@@ -1,7 +1,6 @@
 @ThresholdsFeature
 Feature: CxFlow should fail builds and pull requests if the number of findings with certain severity is above threshold
 
-  @Skip
   Scenario Outline: CxFlow should approve or fail GitHub pull request, depending on whether threshold is exceeded
   GitHub notifies CxFlow that a pull request was created. CxFlow then executes a SAST scan.
     Given threshold for findings of "high" severity is "<high threshold>"
@@ -20,11 +19,15 @@ Feature: CxFlow should fail builds and pull requests if the number of findings w
       | 3              | 8                | 15            | 3          | 8            | 15        | approves          |
       | 3              | 8                | 15            | 0          | 0            | 0         | approves          |
       | 0              | 0                | 0             | 0          | 0            | 1         | fails             |
-      | <missing>      | 8                | 15            | 20         | 6            | 8         | approves          |
-      | 3              | <null>           | 15            | 2          | 6            | 8         | approves          |
-      | 3              | 8                | <empty>       | 2          | 6            | 10        | approves          |
-      # <missing> - threshold value is not specified in config
-      # <empty> - threshold value is an empty string
+      | <omitted>      | 8                | 15            | 20         | 6            | 8         | approves          |
+      | 3              | <omitted>        | 15            | 2          | 6            | 8         | approves          |
+      | 3              | 8                | <omitted>     | 2          | 6            | 10        | approves          |
+      | <omitted>      | <omitted>        | <omitted>     | 2          | 6            | 10        | approves          |
+      # <omitted> - threshold value is not specified in config, or specified with an empty value, or with a null value.
+      # All of these cases will result in the same config object.
+
+  @Skip
+  Scenario: the whole 'thresholds' section is omitted
 
   @Skip
   Scenario: Invalid threshold values

@@ -1,7 +1,6 @@
 package com.checkmarx.test.flow.config;
 
 import com.checkmarx.flow.service.FlowService;
-import com.checkmarx.flow.service.ResultsService;
 import com.checkmarx.sdk.service.CxClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
