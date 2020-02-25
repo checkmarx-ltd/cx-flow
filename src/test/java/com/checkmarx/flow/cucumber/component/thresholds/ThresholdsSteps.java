@@ -1,5 +1,7 @@
 package com.checkmarx.flow.cucumber.component.thresholds;
 
+import com.checkmarx.flow.CxFlowApplication;
+import com.checkmarx.flow.config.FindingSeverity;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.dto.BugTracker;
@@ -33,10 +35,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -44,7 +43,7 @@ import java.util.concurrent.TimeoutException;
 
 import static org.mockito.Mockito.*;
 
-@SpringBootTest(classes = {CxFlowMocksConfig.class})
+@SpringBootTest(classes = {CxFlowMocksConfig.class, CxFlowApplication.class})
 @Slf4j
 public class ThresholdsSteps {
     private static final String PULL_REQUEST_STATUSES_URL = "statuses url stub";
@@ -54,14 +53,27 @@ public class ThresholdsSteps {
 
     private final CxClient cxClientMock;
     private final RestTemplate restTemplateMock;
+    private final FlowProperties flowProperties;
+    private final CxProperties cxProperties;
+    private final GitHubProperties gitHubProperties;
     private final CxScanSummary scanSummaryToInject = new CxScanSummary();
 
     private ResultsService resultsService;
     private Boolean pullRequestWasApproved;
 
-    public ThresholdsSteps(CxClient cxClientMock, RestTemplate restTemplateMock) {
+    public ThresholdsSteps(CxClient cxClientMock, RestTemplate restTemplateMock, FlowProperties flowProperties,
+                           CxProperties cxProperties, GitHubProperties gitHubProperties) {
         this.cxClientMock = cxClientMock;
         this.restTemplateMock = restTemplateMock;
+
+        flowProperties.setThresholds(new HashMap<>());
+        this.flowProperties = flowProperties;
+
+        this.cxProperties = cxProperties;
+
+        gitHubProperties.setCxSummary(false);
+        gitHubProperties.setFlowSummary(false);
+        this.gitHubProperties = gitHubProperties;
     }
 
     @Before("@ThresholdsFeature")
@@ -72,8 +84,12 @@ public class ThresholdsSteps {
     }
 
     @Given("threshold for findings of {string} severity is {string}")
-    public void thresholdForFindingsOfSeverityIs(String severity, String threshold) {
-
+    public void thresholdForFindingsOfSeverityIs(String severityName, String threshold) {
+        if (!threshold.equals("<omitted>")) {
+            FindingSeverity severity = FindingSeverity.valueOf(severityName.toUpperCase(Locale.ROOT));
+            int numericThreshold = Integer.parseInt(threshold);
+            flowProperties.getThresholds().put(severity, numericThreshold);
+        }
     }
 
     @And("^(?:SAST detects )?(.*) findings of \"(.+)\" severity$")
@@ -102,10 +118,10 @@ public class ThresholdsSteps {
     private void processScanResultsInCxFlow() {
         try {
             ScanRequest scanRequest = createScanRequest();
-            List<Filter> filters = createFilters();
+            List<Filter> allowAnySeverity = new ArrayList<>();
 
             CompletableFuture<ScanResults> task = resultsService.processScanResultsAsync(
-                    scanRequest, 0, 0, null, filters);
+                    scanRequest, 0, 0, null, allowAnySeverity);
 
             task.get(1, TimeUnit.MINUTES);
         } catch (MachinaException | InterruptedException | ExecutionException | TimeoutException e) {
@@ -125,10 +141,6 @@ public class ThresholdsSteps {
         }
     }
 
-    private ArrayList<Filter> createFilters() {
-        return new ArrayList<>();
-    }
-
     private ScanRequest createScanRequest() {
         ScanRequest scanRequest = new ScanRequest();
         BugTracker issueTracker = BugTracker.builder().type(BugTracker.Type.GITHUBPULL).build();
@@ -143,12 +155,12 @@ public class ThresholdsSteps {
     }
 
     private void initMock(RestTemplate restTemplateMock) {
-        Answer<ResponseEntity<String>> answerer = new RestTemplateAnswerer();
+        Answer<ResponseEntity<String>> interceptor = new HttpRequestInterceptor();
 
         ResponseEntity<String> sendingPostRequest = restTemplateMock.exchange(
                 anyString(), eq(HttpMethod.POST), any(HttpEntity.class), ArgumentMatchers.<Class<String>>any());
 
-        when(sendingPostRequest).thenAnswer(answerer);
+        when(sendingPostRequest).thenAnswer(interceptor);
     }
 
     private void initMock(CxClient cxClientMock) {
@@ -161,23 +173,13 @@ public class ThresholdsSteps {
     }
 
     private GitHubService createGitService(FlowProperties flowProperties) {
-        GitHubProperties gitHubProperties = new GitHubProperties();
         gitHubProperties.setCxSummary(false);
         gitHubProperties.setFlowSummary(false);
-        gitHubProperties.setToken("token");
-        gitHubProperties.setErrorMerge(true);
-        gitHubProperties.setBlockMerge(true);
 
         return new GitHubService(restTemplateMock, gitHubProperties, flowProperties);
     }
 
     private ResultsService createResultsService() {
-        CxProperties cxProperties = new CxProperties();
-        cxProperties.setEnableOsa(false);
-
-        FlowProperties flowProperties = new FlowProperties();
-        flowProperties.setMail(null);
-
         GitHubService gitService = createGitService(flowProperties);
 
         return new ResultsService(
@@ -194,7 +196,7 @@ public class ThresholdsSteps {
                 flowProperties);
     }
 
-    private class RestTemplateAnswerer implements Answer<ResponseEntity<String>> {
+    private class HttpRequestInterceptor implements Answer<ResponseEntity<String>> {
         @Override
         public ResponseEntity<String> answer(InvocationOnMock invocation) {
             String url = invocation.getArgument(0);
@@ -236,6 +238,7 @@ public class ThresholdsSteps {
         private List<ScanResults.XIssue> createIssues() {
             List<ScanResults.XIssue> issues = new ArrayList<>();
 
+            // If scan summary has any findings, add a single issue to scan results for more consistent CxFlow behavior.
             boolean anyIssuesExpected = scanSummaryToInject.getHighSeverity() > 0 ||
                     scanSummaryToInject.getMediumSeverity() > 0 ||
                     scanSummaryToInject.getLowSeverity() > 0;
