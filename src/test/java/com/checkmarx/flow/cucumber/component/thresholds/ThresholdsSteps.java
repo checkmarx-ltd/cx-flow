@@ -50,7 +50,7 @@ public class ThresholdsSteps {
     private static final String PULL_REQUEST_STATUSES_URL = "statuses url stub";
     private static final String MERGE_NOTE_URL = "merge note url stub";
 
-    private static final ObjectMapper mapper = new ObjectMapper();
+    private static final ObjectMapper jsonMapper = new ObjectMapper();
 
     private final CxClient cxClientMock;
     private final RestTemplate restTemplateMock;
@@ -96,6 +96,11 @@ public class ThresholdsSteps {
         }
     }
 
+    @Given("the whole 'thresholds' section is omitted from config")
+    public void theWholeThresholdsSectionIsOmittedFromConfig() {
+        flowProperties.setThresholds(null);
+    }
+
     @And("^(?:SAST detects )?(.*) findings of \"(.+)\" severity$")
     public void highFindingsOfSeverityAreFound(int expectedFindingCount, String severity) {
         switch (severity) {
@@ -124,11 +129,13 @@ public class ThresholdsSteps {
             ScanRequest scanRequest = createScanRequest();
             List<Filter> allowAnySeverity = new ArrayList<>();
 
+            log.info("Using thresholds: {}", jsonMapper.writeValueAsString(flowProperties.getThresholds()));
+
             CompletableFuture<ScanResults> task = resultsService.processScanResultsAsync(
                     scanRequest, 0, 0, null, allowAnySeverity);
 
             task.get(1, TimeUnit.MINUTES);
-        } catch (MachinaException | InterruptedException | ExecutionException | TimeoutException e) {
+        } catch (MachinaException | InterruptedException | ExecutionException | TimeoutException | JsonProcessingException e) {
             String message = "Error processing scan results.";
             log.error(message, e);
             Assert.fail(message);
@@ -213,7 +220,7 @@ public class ThresholdsSteps {
             String body = interceptedRequest.getBody();
             Assert.assertNotNull("Status request body is null.", body);
             try {
-                JsonNode requestJson = mapper.readTree(body);
+                JsonNode requestJson = jsonMapper.readTree(body);
                 String state = requestJson.get("state").textValue();
                 if (state.equals("success")) {
                     result = true;
