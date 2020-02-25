@@ -32,7 +32,6 @@ jobs:
           paths:
             - build/libs/*
             - Dockerfile
-            - Dockerfile-11
       - run:
           name: Save test results
           command: |
