@@ -27,9 +27,20 @@ Feature: CxFlow should fail builds and pull requests if the number of findings w
       # <omitted> - threshold value is not specified in config, or specified with an empty value, or with a null value.
       # All of these cases will result in the same config object.
 
-  @Skip
-  Scenario: the whole 'thresholds' section is omitted
 
-  @Skip
-  Scenario: Invalid threshold values
-  CxFlow should throw errors if an invalid value is specified for some of the thresholds
+  Scenario Outline: Thresholds section is omitted
+  If the 'thresholds' section is omitted, CxFlow should fail a pull request if there is at least 1 finding.
+    Given the whole 'thresholds' section is omitted from config
+    When SAST detects <high count> findings of "high" severity
+    And <medium count> findings of "medium" severity
+    And <low count> findings of "low" severity
+    Then CxFlow "<approves or fails>" the pull request
+
+    Examples:
+      | high count | medium count | low count | approves or fails |
+      | 0          | 0            | 0         | approves          |
+      | 2          | 0            | 0         | fails             |
+      | 0          | 4            | 0         | fails             |
+      | 0          | 0            | 1         | fails             |
+      | 2          | 4            | 7         | fails             |
+
