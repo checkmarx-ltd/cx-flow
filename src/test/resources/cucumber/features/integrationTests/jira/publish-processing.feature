@@ -1,4 +1,3 @@
-@Jira
 @Integration
 @PublishProcessing
 @JiraIntegrationTests
@@ -104,12 +103,18 @@ Feature: parse, and then publish processing given SAST XML results, findings sho
     Then there should be one closed and one open issue
 
 
-
-  @Negative_test
-  @Error_Handling
-  @UnReachableService
+  @Integration @Negative_test @Error_Handling
   Scenario: Perform a GET REST call to unreachable JIRA environment
     Given target is JIRA
     And JIRA is configured with invalid URL
     When preparing a getIssues call to deliver
-    Then the call execution should throw a JiraClientRunTimeException
+    Then the call execution should throw a JiraClientRunTimeException since JIRA is un-accessible
+
+
+  @Integration @Negative_test @Error_Handling
+  Scenario: Fail to publish tickets to JIRA environment
+    Given target is JIRA
+    And Cx-Flow is configured with invalid project key
+    When preparing results to deliver
+    Then the call execution should throw a JiraClientRunTimeException since an error occurred when published new tickets
+
