@@ -191,12 +191,50 @@ public class ResultsService {
             log.info("Processing results with JIRA issue tracking");
             jiraService.process(results, request);
         } catch (RestClientException e) {
+            Map<String, ScanResults.XIssue> nonPublishedScanResultsMap = jiraService.getNonPublishedScanResults();
             if (e.getStatusCode().isPresent() && e.getStatusCode().get() ==  HttpStatus.NOT_FOUND.value()) {
                 throw new JiraClientRunTimeException("Jira service is not accessible for URL: " + jiraService.getJiraURI(), e);
+            } else if (e.getStatusCode().isPresent() &&
+                    e.getStatusCode().get() ==  HttpStatus.BAD_REQUEST.value() &&
+                    nonPublishedScanResultsMap.size() > 0) {
+                throwExceptionWhenPublishingErrorOccurred(e, nonPublishedScanResultsMap);
+
             } else {
                 throw  e;
             }
+        } catch (JiraClientException e) {
+            Map<String, ScanResults.XIssue> nonPublishedScanResultsMap = jiraService.getNonPublishedScanResults();
+            if (nonPublishedScanResultsMap.size() > 0) {
+                throwExceptionWhenPublishingErrorOccurred(e, nonPublishedScanResultsMap);
+            } else {
+                throw e;
+            }
         }
+    }
+
+    private void throwExceptionWhenPublishingErrorOccurred(Exception e, Map<String, ScanResults.XIssue> nonPublishedScanResultsMap) {
+        throw new JiraClientRunTimeException("Wasn't been able to publish the next issues into JIRA:\n"
+                + printNonPublishedScanResults(nonPublishedScanResultsMap) + "\nwith the following reason: " + e.getMessage());
+    }
+
+    private String printNonPublishedScanResults(Map<String, ScanResults.XIssue> nonPublishedScanResultsMap) {
+        StringBuilder sb = new StringBuilder();
+
+        if (nonPublishedScanResultsMap.size() > 0) {
+            sb.append("=====================================================\n");
+            int count = 0;
+
+            for (Map.Entry<String, ScanResults.XIssue> currentEntry : nonPublishedScanResultsMap.entrySet()) {
+                count++;
+                sb.append(count).append(". ").append(currentEntry.getKey()).append("\n");
+                sb.append("Severity: ").append(currentEntry.getValue().getSeverity()).append("\n");
+                sb.append("Similarity id: ").append(currentEntry.getValue().getSimilarityId()).append("\n");
+                sb.append("Cwe: ").append(currentEntry.getValue().getCwe()).append("\n");
+                sb.append("Link: ").append(currentEntry.getValue().getLink()).append("\n").append("==============\n");
+            }
+        }
+        sb.append("=====================================================");
+        return sb.toString();
     }
 
     /**
