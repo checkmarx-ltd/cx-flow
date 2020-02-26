@@ -129,13 +129,11 @@ public class ThresholdsSteps {
             ScanRequest scanRequest = createScanRequest();
             List<Filter> allowAnySeverity = new ArrayList<>();
 
-            log.info("Using thresholds: {}", jsonMapper.writeValueAsString(flowProperties.getThresholds()));
-
             CompletableFuture<ScanResults> task = resultsService.processScanResultsAsync(
                     scanRequest, 0, 0, null, allowAnySeverity);
 
             task.get(1, TimeUnit.MINUTES);
-        } catch (MachinaException | InterruptedException | ExecutionException | TimeoutException | JsonProcessingException e) {
+        } catch (MachinaException | InterruptedException | ExecutionException | TimeoutException e) {
             String message = "Error processing scan results.";
             log.error(message, e);
             Assert.fail(message);
