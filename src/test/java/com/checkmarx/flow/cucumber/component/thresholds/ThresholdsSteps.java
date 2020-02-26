@@ -96,6 +96,11 @@ public class ThresholdsSteps {
         }
     }
 
+    @Given("the whole 'thresholds' section is omitted from config")
+    public void theWholeThresholdsSectionIsOmittedFromConfig() {
+        flowProperties.setThresholds(null);
+    }
+
     @And("^(?:SAST detects )?(.*) findings of \"(.+)\" severity$")
     public void highFindingsOfSeverityAreFound(int expectedFindingCount, String severity) {
         switch (severity) {
