@@ -67,19 +67,19 @@ public class JiraUnreachableSteps {
     }
 
     @When("preparing a getIssues call to deliver")
-    public void performARestCall() {
+    public void preparingScanRequest() {
         basicScanRequest = getBasicScanRequest();
     }
 
-    @Then("the call execution should throw a JiraClientRunTimeException")
+    @Then("the call execution should throw a JiraClientRunTimeException since JIRA is un-accessible")
     public void verifyExceptionWhenJiraIsUnreachable() {
         Assertions.assertThrows(JiraClientRunTimeException.class,
-                () -> flowService.cxParseResults(basicScanRequest, getFileFromResourcePath(FINDING_PATH)),
+                () -> flowService.cxParseResults(basicScanRequest, getFileFromResourcePath()),
                 "Expected to get Jira un-accessible exception error");
     }
 
-    private File getFileFromResourcePath(String path) throws IOException {
-        return new ClassPathResource(path).getFile();
+    private File getFileFromResourcePath() throws IOException {
+        return new ClassPathResource(JiraUnreachableSteps.FINDING_PATH).getFile();
     }
 
     private ScanRequest getBasicScanRequest() {
