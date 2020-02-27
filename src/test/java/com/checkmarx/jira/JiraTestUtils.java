@@ -11,7 +11,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.apache.tools.ant.taskdefs.condition.IsSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,11 +23,7 @@ import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.*;
 
 
 @TestComponent
@@ -68,6 +63,10 @@ public class JiraTestUtils implements IJiraTestUtils {
         return  client.getSearchClient().searchJql(jql).claim();
     }
 
+    private SearchResult search(String jql, int startAtIndex) {
+        return  client.getSearchClient().searchJql(jql, null, startAtIndex, null).claim();
+    }
+
     @Override
     public void cleanProject(String projectKey) {
         SearchResult searchResult = searchForAllIssues(projectKey);
@@ -80,6 +79,17 @@ public class JiraTestUtils implements IJiraTestUtils {
     public int getNumberOfIssuesInProject(String projectKey) {
         SearchResult result = searchForAllIssues(projectKey);
         return result.getTotal();
+    }
+
+    private Set<Issue> geAllIssuesInProject(String projectKey) {
+        Set<Issue> result = new HashSet<>();
+        SearchResult searchResult = search(getSearchAllProjectJql(projectKey));
+        searchResult.getIssues().forEach(result::add);
+        while (result.size() < searchResult.getTotal()) {
+            searchResult = search(getSearchAllProjectJql(projectKey), result.size());
+            searchResult.getIssues().forEach(result::add);
+        }
+        return result;
     }
 
     @Override
@@ -104,7 +114,16 @@ public class JiraTestUtils implements IJiraTestUtils {
         return getIssueBodyPart(issueDescription,"Severity:");
     }
 
-
+    @Override
+    public int getNumberOfVulnerabilites(String projectKey) {
+        Set<Issue> isseus = geAllIssuesInProject(projectKey);
+        int total = 0;
+        for (Issue issue: isseus) {
+            int vulNum =  getVulnerabilitesCount(issue);
+            total += vulNum == 0 ? 1 : vulNum;
+        }
+        return total;
+    }
 
 
     private String getIssueBodyPart(String issueDescription, String field) {
@@ -163,11 +182,15 @@ Line #222:
         if (result.getTotal() ==0) {
             return 0;
         }
-        Issue i = result.getIssues().iterator().next();
+        Issue issue = result.getIssues().iterator().next();
+        return getVulnerabilitesCount(issue);
+    }
+
+    private int getVulnerabilitesCount(Issue issue) {
         int lastIndex = 0;
         int count = 0;
         while (lastIndex != -1) {
-            lastIndex = i.getDescription().indexOf(JIRA_DESCRIPTION_FINDING_LINE, lastIndex);
+            lastIndex = issue.getDescription().indexOf(JIRA_DESCRIPTION_FINDING_LINE, lastIndex);
             if (lastIndex != -1) {
                 count++;
                 lastIndex += JIRA_DESCRIPTION_FINDING_LINE.length();
@@ -175,6 +198,7 @@ Line #222:
         }
         return count;
     }
+
     @Override
     public void ensureProjectExists(String key) throws IOException {
         log.info("Making sure '{}' project exists in Jira.", key);
@@ -360,6 +384,10 @@ Line #222:
     }
 
     private SearchResult searchForAllIssues(String projectKey) {
-        return search(String.format("project = \"%s\"", projectKey));
+        return search(getSearchAllProjectJql(projectKey));
+    }
+
+    private String getSearchAllProjectJql(String projectKey) {
+        return String.format("project = \"%s\"", projectKey);
     }
 }

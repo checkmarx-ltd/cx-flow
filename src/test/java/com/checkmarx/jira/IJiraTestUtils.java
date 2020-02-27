@@ -15,6 +15,8 @@ public interface IJiraTestUtils {
 
     Map<Filter.Severity, Integer> getIssuesPerSeverity(String projectKey);
 
+    int getNumberOfVulnerabilites(String projectKey);
+
     String getIssueFilename(String projectKey);
 
     String getIssueVulnerability(String projectKey);
