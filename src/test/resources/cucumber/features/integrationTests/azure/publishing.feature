@@ -1,9 +1,9 @@
-@TFS
+@AzureDevOps
 @PublishProcessing
 @Integration
 @Skip
-Feature: Parsing SAST report and publishing items to TFS
-  Background: Issue tracker is TFS
+Feature: Parsing SAST report and publishing items to Azure DevOps
+  Background: Issue tracker is Azure DevOps
 
   @Create_issue
   Scenario Outline: Creating a single issue after merging several findings
@@ -29,40 +29,40 @@ Feature: Parsing SAST report and publishing items to TFS
 
   @Update_issue
   Scenario: Updating an existing issue
-    Given TFS contains 1 open issue with vulnerability type T, filename F, description D1 and 'last updated' time U1
+    Given Azure DevOps contains 1 open issue with vulnerability type T, filename F, description D1 and 'last updated' time U1
     And SAST report contains 1 finding with vulnerability type T, filename F, description D2, and not marked as false positive
     When publishing the report
-    Then TFS contains 1 open issue with vulnerability type T, filename F, description D2 and 'last updated' time U2
+    Then Azure DevOps contains 1 open issue with vulnerability type T, filename F, description D2 and 'last updated' time U2
     And U2 is greater than U1
 
   @Close_issue
   Scenario: Closing an existing issue if its finding no longer exists
-    Given TFS contains 1 open issue with vulnerability type T and filename F
+    Given Azure DevOps contains 1 open issue with vulnerability type T and filename F
     And SAST report doesn't contain any findings with vulnerability type T and filename F
     When publishing the report
-    Then TFS contains 1 closed issue with vulnerability type T and filename F
+    Then Azure DevOps contains 1 closed issue with vulnerability type T and filename F
 
   @Close_issue
   Scenario: Closing an existing issue if all its findings are false positive
-    Given TFS contains 1 open issue with vulnerability type T and filename F
+    Given Azure DevOps contains 1 open issue with vulnerability type T and filename F
     And SAST report contains 2 findings with vulnerability type T, filename F and marked as false positive
     When publishing the report
-    Then TFS contains 1 closed issue with vulnerability type T and filename F
+    Then Azure DevOps contains 1 closed issue with vulnerability type T and filename F
 
   @Close_issue
   Scenario: Closing only relevant issues
     # Closing an issue if it doesn't appear in CxFlow report.
-    Given TFS contains 2 issues with filenames F1 and F2
+    Given Azure DevOps contains 2 issues with filenames F1 and F2
     And SAST report contains 1 finding with filename F1, not marked as false positive
     When publishing the report
-    Then TFS contains 1 open issue with filename F1
+    Then Azure DevOps contains 1 open issue with filename F1
     And 1 closed issue with filename F2
 
   @NegativeTest
   @Error_Handling
   @UnReachableService
-  Scenario: TFS is unreachable
-    Given invalid TFS URL is provided in configuration
+  Scenario: Azure DevOps is unreachable
+    Given invalid Azure DevOps URL is provided in configuration
     When publishing a SAST report
     # TODO: which exception?
     Then CxFlow should throw an exception

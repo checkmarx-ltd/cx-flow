@@ -1,4 +1,4 @@
-package com.checkmarx.flow.cucumber.integration.tfs.publishing;
+package com.checkmarx.flow.cucumber.integration.azure.publishing;
 
 import io.cucumber.junit.Cucumber;
 import io.cucumber.junit.CucumberOptions;
