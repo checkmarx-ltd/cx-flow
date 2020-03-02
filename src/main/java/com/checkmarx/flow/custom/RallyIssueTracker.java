@@ -93,7 +93,6 @@ public class RallyIssueTracker implements IssueTracker {
             /// to figure out how many more pages of data needs to be pulled.
             //
             String query = createRallyTagQuery(request);
-            System.out.println("The Query: " + query);
             response = restTemplate.exchange(
                     properties.getApiUrl().concat(GET_ISSUES),
                     HttpMethod.GET,
@@ -144,12 +143,25 @@ public class RallyIssueTracker implements IssueTracker {
      * @return String with Rally query
      */
     private String createRallyTagQuery(ScanRequest request) {
-        String query = "(";
-        query += String.format("(Tags.name = \"%s:%s\") AND ", properties.getAppLabelPrefix(), request.getApplication());
-        query += String.format("(Tags.name = \"%s:%s\") AND ", properties.getOwnerLabelPrefix(), request.getNamespace());
-        query += String.format("(Tags.name = \"%s:%s\") AND ", properties.getRepoLabelPrefix(), request.getRepoName());
-        query += String.format("(Tags.name = \"%s:%s\")", properties.getBranchLabelPrefix(), request.getBranch());
-        query += ")";
+        String query = "";
+        String application = request.getApplication();
+        String repoName = request.getRepoName();
+        String namespace = request.getNamespace();
+        String branch = request.getBranch();
+        if(!flowProperties.isTrackApplicationOnly()) {
+            // This is the best layer of control
+            query += "((";
+            query += String.format("(Tags.Name = \"%s:%s\") AND ", properties.getOwnerLabelPrefix(), namespace);
+            query += String.format("(Tags.Name = \"%s:%s\")) AND ", properties.getRepoLabelPrefix(), repoName);
+            query += String.format("(Tags.Name = \"%s:%s\")", properties.getBranchLabelPrefix(), branch);
+            query += ")";
+        } else if (!ScanUtils.empty(application)) {
+            // We are only track in application name, this isn't as a good as the repo + branch
+            query += String.format("(Tags.Name = \"%s:%s\")", properties.getAppLabelPrefix(), application);
+        } else {
+            // In this event all we can do track if this is a Cx application tag, this weak though
+            query += String.format("(Tags.Name = \"%s\")", request.getProduct().getProduct());
+        }
         return query;
     }
 
@@ -311,9 +323,8 @@ public class RallyIssueTracker implements IssueTracker {
             tagsList.put(createRallyTag(ownerTag));
             tagsList.put(createRallyTag(repoTag));
             tagsList.put(createRallyTag(branchTag));
-        } else if (!ScanUtils.empty(application) && !ScanUtils.empty(repoName)) {
+        } else if (!ScanUtils.empty(application)) {
             tagsList.put(createRallyTag(appTag));
-            tagsList.put(createRallyTag(repoTag));
         } else {
             tagsList.put(createRallyTag(appTag));
         }
@@ -394,7 +405,7 @@ public class RallyIssueTracker implements IssueTracker {
         HttpEntity httpEntity = new HttpEntity<>(json, createAuthHeaders());
         ResponseEntity<com.checkmarx.flow.dto.rally.Issue> response;
         try {
-            response = restTemplate.exchange(
+            restTemplate.exchange(
                     issue.getUrl(),
                     HttpMethod.POST,
                     httpEntity,
@@ -482,13 +493,15 @@ public class RallyIssueTracker implements IssueTracker {
      * @return JSON Object for close issue request
      */
     private String getJSONCloseIssue() {
+        JSONObject createBody = new JSONObject();
         JSONObject requestBody = new JSONObject();
         try {
-            requestBody.put("state", TRANSITION_CLOSE);
+            requestBody.put("State", TRANSITION_CLOSE);
+            createBody.put("Defect", requestBody);
         } catch (JSONException e) {
             log.error("Error creating JSON Close Issue Object - JSON object will be empty");
         }
-        return requestBody.toString();
+        return createBody.toString();
     }
 
     /**
