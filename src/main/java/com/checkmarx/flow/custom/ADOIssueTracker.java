@@ -248,7 +248,7 @@ public class ADOIssueTracker implements IssueTracker {
         CreateWorkItemAttr description = new CreateWorkItemAttr();
         description.setOp("add");
         description.setPath(Constants.ADO_FIELD.concat(FIELD_PREFIX.concat(issueBody)));
-        description.setValue(ScanUtils.getHTMLBody(resultIssue, request.getBranch(), flowProperties));
+        description.setValue(ScanUtils.getHTMLBody(resultIssue, request, flowProperties));
         CreateWorkItemAttr tagsBlock = new CreateWorkItemAttr();
         tagsBlock.setOp("add");
         tagsBlock.setPath(Constants.ADO_FIELD.concat(TAGS_FIELD));
@@ -312,7 +312,7 @@ public class ADOIssueTracker implements IssueTracker {
         CreateWorkItemAttr description = new CreateWorkItemAttr();
         description.setOp("add");
         description.setPath(Constants.ADO_FIELD.concat(FIELD_PREFIX.concat(issueBody)));
-        description.setValue(ScanUtils.getHTMLBody(resultIssue, request.getBranch(), flowProperties));
+        description.setValue(ScanUtils.getHTMLBody(resultIssue, request, flowProperties));
 
         List<CreateWorkItemAttr> body = new ArrayList<>(Arrays.asList(state, description));
 
