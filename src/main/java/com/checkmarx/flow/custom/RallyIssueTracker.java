@@ -1,22 +1,3 @@
-/** Code Review Notes (remove when review complete)
- * See why markdown isn't showing up correctly in Rally??
- * Follow Azure and Jira for tag examples, you won't need to put CX title
- *     - Map the labels to the tags in Rally
- *
- * - try this command line tests
- *
- * - Generate the description as HTML
- *
- * - I force the issue to state 'Open' when its created, is that OK? The default is 'Submitted'
- *     - Give them an option to decide if submitted or open on create (see azure)
- * - Rally support a state 'Fixed' but I'm only checking for 'Closed', is that OK?
- * - I figured out I didn't need a separate Update and Create issue for generating
- * - JSON objects
- * - The closest thing to comments are dicussions, so that where I put the defect comments?
- * - I have update return the Issue passed into it, not sure why. The Rally API doesn't return anything other that
- *   a 200 when the update is successful.
- * - getIssue() is called when an update fail, why? Is it kludge?
- */
 package com.checkmarx.flow.custom;
 
 import com.checkmarx.flow.config.FlowProperties;
@@ -111,12 +92,14 @@ public class RallyIssueTracker implements IssueTracker {
             /// Read the first list of defects from Rally, it will contain the totalResultCount we can use
             /// to figure out how many more pages of data needs to be pulled.
             //
+            String query = createRallyTagQuery(request);
+            System.out.println("The Query: " + query);
             response = restTemplate.exchange(
                     properties.getApiUrl().concat(GET_ISSUES),
                     HttpMethod.GET,
                     httpEntity,
                     QueryResult.class,
-                    "(Tags.name = \"repo:checkmarxTest\")",
+                    query,
                     pageIndex,
                     ISSUES_PER_PAGE
             );
@@ -141,7 +124,7 @@ public class RallyIssueTracker implements IssueTracker {
                             HttpMethod.GET,
                             httpEntity,
                             QueryResult.class,
-                            "(Tags.name = \"repo:checkmarxTest\")",
+                            query,
                             pageIndex,
                             ISSUES_PER_PAGE
                     );
@@ -152,6 +135,22 @@ public class RallyIssueTracker implements IssueTracker {
         } catch(RestClientException e) {
             return new ArrayList<>();
         }
+    }
+
+    /**
+     * Creates a Rally query to find defects with tags matching the current job.
+     *
+     * @param request contains the current CxFlow ScanRequest
+     * @return String with Rally query
+     */
+    private String createRallyTagQuery(ScanRequest request) {
+        String query = "(";
+        query += String.format("(Tags.name = \"%s:%s\") AND ", properties.getAppLabelPrefix(), request.getApplication());
+        query += String.format("(Tags.name = \"%s:%s\") AND ", properties.getOwnerLabelPrefix(), request.getNamespace());
+        query += String.format("(Tags.name = \"%s:%s\") AND ", properties.getRepoLabelPrefix(), request.getRepoName());
+        query += String.format("(Tags.name = \"%s:%s\")", properties.getBranchLabelPrefix(), request.getBranch());
+        query += ")";
+        return query;
     }
 
     /**
@@ -210,7 +209,6 @@ public class RallyIssueTracker implements IssueTracker {
                 HttpMethod.GET,
                 httpEntity,
                 DefectQuery.class);
-        //return mapToIssue(response.getBody());
         return null;
     }
 
@@ -273,7 +271,8 @@ public class RallyIssueTracker implements IssueTracker {
         JSONObject requestBody = new JSONObject();
         JSONObject createBody = new JSONObject();
         String fileUrl = ScanUtils.getFileUrl(request, resultIssue.getFilename());
-        String body = ScanUtils.getMDBody(resultIssue, request.getBranch(), fileUrl, flowProperties);
+        String body = ScanUtils.getHTMLBody(resultIssue, request, flowProperties);
+        //String body = ScanUtils.getHTMLBody(resultIssue, request.getBranch(), fileUrl, flowProperties);
         String title = getXIssueKey(resultIssue, request);
         try {
             requestBody.put("Name", title);
