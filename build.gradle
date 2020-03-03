@@ -4,7 +4,7 @@ buildscript {
         //cxVersion = "8.90.5"
         springBootVersion = '2.2.4.RELEASE'
         sonarqubeVersion = '2.8'
-        atlassianVersion = "5.1.6"
+        atlassianVersion = "5.2.0"
         atlassianFugueVersion = "4.7.2"
         mainClass='com.checkmarx.flow.CxFlowApplication'
     }
@@ -22,12 +22,18 @@ buildscript {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
         classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:${sonarqubeVersion}"
     }
+
+
    /*gradle.projectsEvaluated {
         tasks.withType(JavaCompile) {
             options.compilerArgs << "-Xlint:unchecked"
         }
     }
     */
+}
+
+plugins {
+    id 'io.franzbecker.gradle-lombok' version '3.3.0'
 }
 
 apply plugin: 'java'
@@ -39,6 +45,8 @@ apply plugin: 'com.gorylenko.gradle-git-properties'
 group = 'com.checkmarx'
 version = '1.5.3'
 sourceCompatibility = 1.8
+def cucumberVersion = '4.7.4'
+def junitVersion = '5.5.0'
 
 repositories {
     jcenter()
@@ -59,6 +67,7 @@ dependencies {
     compile ("org.apache.commons:commons-text:1.8")
     compile ('commons-codec:commons-codec:1.13')
     compile ('commons-io:commons-io:2.6')
+    compile ('org.apache.commons:commons-lang3:3.9')
     compile ('org.json:json:20190722')
     compile ('com.fasterxml.jackson.core:jackson-databind')
     compile ('org.springframework.boot:spring-boot-starter-web-services')
@@ -75,8 +84,18 @@ dependencies {
     compile ("org.eclipse.jgit:org.eclipse.jgit:5.5.1.201910021850-r")
     compileOnly ('org.springframework.boot:spring-boot-configuration-processor')
     runtime('org.springframework.boot:spring-boot-devtools')
-    testCompile('org.springframework.boot:spring-boot-starter-test')
+    testImplementation('org.springframework.boot:spring-boot-starter-test')
     compileJava.dependsOn(processResources)
+    testImplementation("io.cucumber:cucumber-java:${cucumberVersion}")
+    testImplementation("io.cucumber:cucumber-junit:${cucumberVersion}")
+    testImplementation("io.cucumber:cucumber-spring:${cucumberVersion}")
+    testImplementation( "org.junit.jupiter:junit-jupiter-api:${junitVersion}")
+    testImplementation('org.awaitility:awaitility:4.0.2')
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
+    testImplementation("com.github.java-json-tools:json-patch:1.11")
+    testRuntimeOnly("org.junit.vintage:junit-vintage-engine:${junitVersion}")
+    testCompile("org.mockito:mockito-core:+")
+    compile("org.projectlombok:lombok:1.18.10")
 }
 
 springBoot {
@@ -91,12 +110,19 @@ bootJar {
 test {
     useJUnit {
         systemProperty "testprofile", "unit"
+        if (System.properties['testprofile'] != 'integration') {
+            exclude 'com/checkmarx/flow/cucumber/integration/**'
+        }else{
+            exclude 'com/checkmarx/**'
+            include 'com/checkmarx/flow/cucumber/integration/**'
+        }
     }
 }
 
 task integrationTest(type: Test) {
     useJUnit {
         systemProperty "testprofile", "integration"
+
     }
 }
 
@@ -105,3 +131,8 @@ task getVersion {
         println "${version}"
     }
 }
+
+test {
+    useJUnitPlatform()
+}
+

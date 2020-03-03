@@ -149,7 +149,7 @@ public class IssueService implements ApplicationContextAware {
                         }
                     }
                 } catch (HttpClientErrorException e) {
-                    log.error("Error occurred while processing issue with key {} {}", xIssue.getKey(), e);
+                    log.error("Error occurred while processing issue with key {}", xIssue.getKey(), e);
                 }
             }
 
@@ -165,7 +165,7 @@ public class IssueService implements ApplicationContextAware {
                         log.info("Closing issue #{} with key {}", issue.getId(), key);
                     }
                 } catch (HttpClientErrorException e) {
-                    log.error("Error occurred while processing issue with key {} {}", key, e);
+                    log.error("Error occurred while processing issue with key {}", key, e);
                 }
             }
 
@@ -178,12 +178,10 @@ public class IssueService implements ApplicationContextAware {
 
             return issuesMap;
         } catch (BeansException e){
-            log.error("Specified bug tracker bean was not found or properly loaded.");
-            log.error(ExceptionUtils.getStackTrace(e));
+            log.error("Specified bug tracker bean was not found or properly loaded.", e);
             throw new MachinaRuntimeException();
         } catch (ClassCastException e){
-            log.error("Bean must implement the IssueTracker Interface");
-            log.error(ExceptionUtils.getStackTrace(e));
+            log.error("Bean must implement the IssueTracker Interface", e);
             throw new MachinaRuntimeException();
         }
     }
