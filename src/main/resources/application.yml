@@ -102,6 +102,11 @@ jira:
   closed-status:
     - Closed
     - Resolved
+  status-category-open-name:
+    - To Do
+    - In Progress
+  statusCategoryClosedName:
+    - Done
 #  fields:
 
 github:

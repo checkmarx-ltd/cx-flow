@@ -243,7 +243,7 @@ public class RunPublishProcessSteps {
 
     @Then("the issue should be closed")
     public void assertIssueIsClosed() {
-        Assert.assertTrue("Issue is not in closed status", jiraProperties.getCloseTransition().contains(jiraUtils.getIssueStatus(jiraProperties.getProject())));
+        Assert.assertTrue("Issue is not in closed status", jiraProperties.getClosedStatus().contains(jiraUtils.getIssueStatus(jiraProperties.getProject())));
     }
 
     @Then("original issues is updated both with 'last updated' value and with new body content")

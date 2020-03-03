@@ -12,6 +12,7 @@ import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.JiraClientException;
+import com.checkmarx.flow.exception.JiraClientRunTimeException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
@@ -68,8 +69,54 @@ public class JiraService {
             this.issueClient = this.client.getIssueClient();
             this.projectClient = this.client.getProjectClient();
             this.metaClient = this.client.getMetadataClient();
+            configJira();
         }
     }
+
+    private void prepareJiraOpenClosedStatuses() {
+        if (jiraProperties.getClosedStatus() == null) {
+            jiraProperties.setClosedStatus(new ArrayList<>());
+        }
+        if (jiraProperties.getOpenStatus() == null) {
+            jiraProperties.setOpenStatus(new ArrayList<>());
+        }
+    }
+
+
+    private void configJira() {
+        prepareJiraOpenClosedStatuses();
+        if (jiraProperties.getClosedStatus().isEmpty()) {
+            Iterable<Status> statuses = client.getMetadataClient().getStatuses().claim();
+            for(Status status: statuses) {
+                if(isStatusClosed(status)) {
+                    jiraProperties.getClosedStatus().add(status.getName());
+                }
+            }
+        }
+
+        if (jiraProperties.getOpenStatus().isEmpty()) {
+            Iterable<Status> statuses = client.getMetadataClient().getStatuses().claim();
+            for(Status status: statuses) {
+                if(isStatusOpen(status)) {
+                    jiraProperties.getOpenStatus().add(status.getName());
+                }
+            }
+        }
+        if (jiraProperties.getClosedStatus().isEmpty() || jiraProperties.getOpenStatus().isEmpty()) {
+            throw new JiraClientRunTimeException("Could not find JIRA issues closed statuses.");
+        }
+
+    }
+
+    private boolean isStatusClosed(Status status) {
+        return jiraProperties.getStatusCategoryClosedName().contains(status.getStatusCategory().getName());
+    }
+
+    private boolean isStatusOpen(Status status) {
+        return jiraProperties.getStatusCategoryOpenName().contains(status.getStatusCategory().getName());
+    }
+
+
 
     private List<Issue> getIssues(ScanRequest request) {
         log.info("Executing getIssues API call");

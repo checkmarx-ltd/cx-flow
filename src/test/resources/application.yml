@@ -84,11 +84,19 @@ jira:
     Informational: Lowest
   open-transition: In Progress
   close-transition: Done
-  open-status:
-    - To Do
-    - In Progress
-  closed-status:
-    - DONE
+
+  #  open-status:
+  #    - To Do
+  #    - In Progress
+  #  closed-status:
+  #    - DONE
+  #  status-category-open-name:
+  #    - To Do
+  #    - In Progress
+  #  statusCategoryClosedName:
+  #    - Done
+
+
   fields:
     - type: result
       name: system-date
