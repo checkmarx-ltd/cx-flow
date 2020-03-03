@@ -38,6 +38,7 @@ public class PublishingSteps {
 
         adoClient = new AzureDevopsClient(adoProperties);
         adoClient.ensureProjectExists(projectName);
+        adoClient.deleteProjectIssues(projectName);
     }
 
     @Given("Azure DevOps doesn't contain any issues")

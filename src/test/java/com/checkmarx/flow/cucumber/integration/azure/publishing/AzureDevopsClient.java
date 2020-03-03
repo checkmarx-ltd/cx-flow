@@ -4,6 +4,7 @@ import com.checkmarx.flow.config.ADOProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
 import org.awaitility.Awaitility;
@@ -26,6 +27,9 @@ public class AzureDevopsClient {
     private static final String BASIC_PROJECT_TEMPLATE_ID = "b8a3a935-7e91-48b8-a94c-606d37c3e9f2";
     private static final Duration WAITING_TIMEOUT = Duration.ofMinutes(1);
     private static final Duration POLL_INTERVAL = Duration.ofSeconds(1);
+
+    public static final String API_SEGMENT = "_apis";
+    public static final String API_VERSION_PARAM = "api-version";
 
     private static final String PROJECT_CREATION_REQUEST_TEMPLATE =
             ("{" +
@@ -59,6 +63,25 @@ public class AzureDevopsClient {
     }
 
     public int getIssueCount(String projectName) throws IOException {
+        return getProjectIssues(projectName).size();
+    }
+
+    public void deleteProjectIssues(String projectName) throws IOException {
+        ArrayNode issues = getProjectIssues(projectName);
+        for (JsonNode issue : issues) {
+            String issueId = issue.get("id").asText();
+            deleteIssue(projectName, issueId);
+        }
+    }
+
+    private void deleteIssue(String projectName, String issueId) {
+        log.info("Deleting ADO issue, ID: {}", issueId);
+        String url = getIssueDeletionUrl(projectName, issueId);
+        HttpEntity<?> request = getRequestEntity(null);
+        restClient.exchange(url, HttpMethod.DELETE, request, String.class);
+    }
+
+    private ArrayNode getProjectIssues(String projectName) throws IOException {
         ObjectNode requestBody = objectMapper.createObjectNode();
 
         // WIQL language is read-only, so potential parameter injection shouldn't do any harm.
@@ -72,7 +95,7 @@ public class AzureDevopsClient {
         ResponseEntity<ObjectNode> response = restClient.exchange(url, HttpMethod.POST, request, ObjectNode.class);
 
         ObjectNode responseBody = extractBody(response);
-        return responseBody.get("workItems").size();
+        return (ArrayNode) responseBody.get("workItems");
     }
 
     private ObjectNode extractBody(HttpEntity<ObjectNode> response) throws IOException {
@@ -132,7 +155,7 @@ public class AzureDevopsClient {
         return status.equals("succeeded");
     }
 
-    private <T> HttpEntity<T> getRequestEntity(T body) {
+    private <T> HttpEntity<T> getRequestEntity(@Nullable T body) {
         HttpHeaders headers = new HttpHeaders();
 
         List<MediaType> mediaTypes = new ArrayList<>();
@@ -148,12 +171,19 @@ public class AzureDevopsClient {
 
     private String getResourceUrl(String resourceName, @Nullable String id) {
         return UriComponentsBuilder.fromHttpUrl(adoProperties.getUrl())
-                .pathSegment("_apis")
+                .pathSegment(API_SEGMENT)
                 .path(resourceName)
                 .pathSegment(id)
-                .queryParam("api-version", adoProperties.getApiVersion())
+                .queryParam(API_VERSION_PARAM, adoProperties.getApiVersion())
                 .toUriString();
+    }
 
+    private String getIssueDeletionUrl(String projectName, String issueId) {
+        return UriComponentsBuilder.fromHttpUrl(adoProperties.getUrl())
+                .path("/{project}/{api}/wit/workitems/{id}")
+                .query("{version-param}={version}&destroy=true")
+                .buildAndExpand(projectName, API_SEGMENT, issueId, API_VERSION_PARAM, adoProperties.getApiVersion())
+                .toUriString();
     }
 
     private Predicate<JsonNode> withSame(String projectName) {
