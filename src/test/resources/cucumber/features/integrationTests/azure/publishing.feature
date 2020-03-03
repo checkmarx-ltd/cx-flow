@@ -1,32 +1,39 @@
 @AzureDevOps
 @PublishProcessing
 @Integration
-@Skip
 Feature: Parsing SAST report and publishing items to Azure DevOps
+
   Background: Issue tracker is Azure DevOps
 
   @Create_issue
   Scenario Outline: Creating a single issue after merging several findings
-    Given SAST report contains <finding count> findings with the same vulnerability type and in the same file
+    Given Azure DevOps doesn't contain any issues
+    And SAST report contains <finding count> findings with the same vulnerability type and in the same file
     When publishing the report
-    Then <issue count> issues are created
+    Then Azure DevOps contains <issue count> issues
     Examples:
       | finding count | issue count |
       | 0             | 0           |
       | 1             | 1           |
       | 3             | 1           |
 
+  @Skip
   @Create_issue
   Scenario Outline: Creating separate issues from several findings
-    Given SAST report contains <number of> findings, each with a different vulnerability type
+    Given Azure DevOps doesn't contain any issues
+    And SAST report contains <number of> findings, each with a different vulnerability type and filename, and not marked as false positive
     When publishing the report
-    Then <number of> issues are created
+    Then Azure DevOps contains <number of> issues
     Examples:
       | number of |
       | 0         |
       | 1         |
       | 3         |
 
+  @Skip
+  Scenario: Don't create a new issue if all findings are false positive
+
+  @Skip
   @Update_issue
   Scenario: Updating an existing issue
     Given Azure DevOps contains 1 open issue with vulnerability type T, filename F, description D1 and 'last updated' time U1
@@ -35,6 +42,7 @@ Feature: Parsing SAST report and publishing items to Azure DevOps
     Then Azure DevOps contains 1 open issue with vulnerability type T, filename F, description D2 and 'last updated' time U2
     And U2 is greater than U1
 
+  @Skip
   @Close_issue
   Scenario: Closing an existing issue if its finding no longer exists
     Given Azure DevOps contains 1 open issue with vulnerability type T and filename F
@@ -42,6 +50,7 @@ Feature: Parsing SAST report and publishing items to Azure DevOps
     When publishing the report
     Then Azure DevOps contains 1 closed issue with vulnerability type T and filename F
 
+  @Skip
   @Close_issue
   Scenario: Closing an existing issue if all its findings are false positive
     Given Azure DevOps contains 1 open issue with vulnerability type T and filename F
@@ -49,15 +58,17 @@ Feature: Parsing SAST report and publishing items to Azure DevOps
     When publishing the report
     Then Azure DevOps contains 1 closed issue with vulnerability type T and filename F
 
+  @Skip
   @Close_issue
   Scenario: Closing only relevant issues
     # Closing an issue if it doesn't appear in CxFlow report.
-    Given Azure DevOps contains 2 issues with filenames F1 and F2
+    Given Azure DevOps contains 2 open issues with filenames F1 and F2
     And SAST report contains 1 finding with filename F1, not marked as false positive
     When publishing the report
     Then Azure DevOps contains 1 open issue with filename F1
     And 1 closed issue with filename F2
 
+  @Skip
   @NegativeTest
   @Error_Handling
   @UnReachableService
