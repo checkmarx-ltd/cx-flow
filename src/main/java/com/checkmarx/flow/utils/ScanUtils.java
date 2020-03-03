@@ -666,7 +666,8 @@ public class ScanUtils {
      * @param branch The repo branch name
      * @return string with the HTML message
      */
-    public static String getHTMLBody(ScanResults.XIssue issue, String branch, FlowProperties flowProperties) {
+    public static String getHTMLBody(ScanResults.XIssue issue, ScanRequest request, FlowProperties flowProperties) {
+        String branch = request.getBranch();
         StringBuilder body = new StringBuilder();
         body.append("<div>");
         body.append(String.format(ISSUE_BODY, issue.getVulnerability(), issue.getFilename(), branch)).append(CRLF);
