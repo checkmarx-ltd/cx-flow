@@ -2,10 +2,10 @@ import org.gradle.api.tasks.testing.Test
 
 buildscript {
 	ext {
-        CxSBSDK = "0.4.5"
+        CxSBSDK = "0.4.6"
 		springBootVersion = '2.2.4.RELEASE'
         sonarqubeVersion = '2.8'
-        atlassianVersion = "5.1.6"
+        atlassianVersion = "5.2.0"
         atlassianFugueVersion = "4.7.2"
         mainClass='com.checkmarx.flow.CxFlowApplication'
     }
@@ -25,6 +25,10 @@ buildscript {
     }
 }
 
+plugins {
+    id 'io.franzbecker.gradle-lombok' version '3.3.0'
+}
+
 apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'org.springframework.boot'
@@ -33,6 +37,8 @@ apply plugin: 'io.spring.dependency-management'
 group = 'com.checkmarx'
 version = '1.5.3'
 sourceCompatibility = 1.8
+def cucumberVersion = '4.7.4'
+def junitVersion = '5.5.0'
 
 repositories {
     mavenLocal()
@@ -72,6 +78,14 @@ dependencies {
 
     runtime('org.springframework.boot:spring-boot-devtools')
     testCompile('org.springframework.boot:spring-boot-starter-test')
+    testImplementation("io.cucumber:cucumber-java:${cucumberVersion}")
+    testImplementation("io.cucumber:cucumber-junit:${cucumberVersion}")
+    testImplementation("io.cucumber:cucumber-spring:${cucumberVersion}")
+    testImplementation( "org.junit.jupiter:junit-jupiter-api:${junitVersion}")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
+    testRuntimeOnly("org.junit.vintage:junit-vintage-engine:${junitVersion}")
+    testCompile("org.mockito:mockito-core:+")
+    compile("org.projectlombok:lombok:1.18.10")
 
     compileJava.dependsOn(processResources)
 }
@@ -82,7 +96,7 @@ springBoot {
 }
 
 configurations {
-    archivesBaseName = 'cx-flow-11'
+    libsDirName = 'libs/java11'
 }
 
 test {

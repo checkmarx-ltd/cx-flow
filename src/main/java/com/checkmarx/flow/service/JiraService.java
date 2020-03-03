@@ -62,7 +62,7 @@ public class JiraService {
             try {
                 this.jiraURI = new URI(jiraProperties.getUrl());
             } catch (URISyntaxException e) {
-                log.error("Error constructing URI for JIRA");
+                log.error("Error constructing URI for JIRA", e);
             }
             this.client = factory.createWithBasicHttpAuthenticationCustom(jiraURI, jiraProperties.getUsername(), jiraProperties.getToken(), jiraProperties.getHttpTimeout());
             this.issueClient = this.client.getIssueClient();
@@ -207,8 +207,7 @@ public class JiraService {
                     User userAssignee = getAssignee(assignee);
                     issueBuilder.setAssignee(userAssignee);
                 } catch (RestClientException e) {
-                    log.error("Error occurred while assigning to user {}", assignee);
-                    log.error(ExceptionUtils.getStackTrace(e));
+                    log.error("Error occurred while assigning to user {}", assignee, e);
                 }
             }
 
@@ -255,8 +254,7 @@ public class JiraService {
             log.debug("JIRA issue {} created", basicIssue.getKey());
             return basicIssue.getKey();
         } catch (RestClientException e) {
-            log.error("Error occurred while creating JIRA issue. {}", e.getMessage());
-            log.error(ExceptionUtils.getStackTrace(e));
+            log.error("Error occurred while creating JIRA issue.", e);
             throw new JiraClientException();
         }
     }
@@ -286,7 +284,7 @@ public class JiraService {
         try {
             this.issueClient.updateIssue(bugId, issueBuilder.build()).claim();
         } catch (RestClientException e) {
-            log.error(ExceptionUtils.getStackTrace(e));
+            log.error("Error occurred", e);
             throw new JiraClientException();
         }
 
@@ -604,7 +602,6 @@ public class JiraService {
                         transitionName, bugId, transitions.toString());
             }
         } catch (RestClientException e) {
-            log.error(ExceptionUtils.getStackTrace(e));
             log.error("There was a problem transitioning issue {}. ", bugId, e);
             throw new JiraClientException();
         }
@@ -638,7 +635,6 @@ public class JiraService {
                         transitionName, bugId, transitions.toString());
             }
         } catch (RestClientException e) {
-            log.error(ExceptionUtils.getStackTrace(e));
             log.error("There was a problem transitioning issue {}. ", bugId, e);
             throw new JiraClientException("");
         }
@@ -664,7 +660,7 @@ public class JiraService {
             Issue issue = this.issueClient.getIssue(bugId).claim();
             this.issueClient.addComment(issue.getCommentsUri(), Comment.valueOf(comment)).claim();
         } catch (RestClientException e) {
-            log.error(ExceptionUtils.getStackTrace(e));
+            log.error("Error occurred", e);
         }
     }
 
@@ -1009,7 +1005,6 @@ public class JiraService {
                 }
             } catch (RestClientException e) {
                 log.error("Error occurred while processing issue with key {}", xIssue.getKey(), e);
-                log.error(ExceptionUtils.getStackTrace(e));
                 throw new JiraClientException();
             }
         }
@@ -1027,8 +1022,7 @@ public class JiraService {
                     }
                 }
             } catch (HttpClientErrorException e) {
-                log.error("Error occurred while processing issue with key {} {}", jiraIssue.getKey(), e);
-                log.error(ExceptionUtils.getStackTrace(e));
+                log.error("Error occurred while processing issue with key {}", jiraIssue.getKey(), e);
             }
         }
 
@@ -1067,5 +1061,9 @@ public class JiraService {
             return false;
         }
         return false;
+    }
+
+    public URI getJiraURI() {
+        return jiraURI;
     }
 }
