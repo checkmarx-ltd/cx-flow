@@ -191,16 +191,18 @@ public class ResultsService {
             log.info("Processing results with JIRA issue tracking");
             jiraService.process(results, request);
         } catch (RestClientException e) {
-            Map<String, ScanResults.XIssue> nonPublishedScanResultsMap = jiraService.getNonPublishedScanResults();
             if (e.getStatusCode().isPresent() && e.getStatusCode().get() ==  HttpStatus.NOT_FOUND.value()) {
                 throw new JiraClientRunTimeException("Jira service is not accessible for URL: " + jiraService.getJiraURI(), e);
-            } else if (e.getStatusCode().isPresent() &&
-                    e.getStatusCode().get() ==  HttpStatus.BAD_REQUEST.value() &&
-                    nonPublishedScanResultsMap.size() > 0) {
-                throwExceptionWhenPublishingErrorOccurred(e, nonPublishedScanResultsMap);
-
             } else {
-                throw  e;
+                Map<String, ScanResults.XIssue> nonPublishedScanResultsMap = jiraService.getNonPublishedScanResults();
+                if (e.getStatusCode().isPresent() &&
+                        e.getStatusCode().get() ==  HttpStatus.BAD_REQUEST.value() &&
+                        nonPublishedScanResultsMap.size() > 0) {
+                    throwExceptionWhenPublishingErrorOccurred(e, nonPublishedScanResultsMap);
+
+                } else {
+                    throw  e;
+                }
             }
         } catch (JiraClientException e) {
             Map<String, ScanResults.XIssue> nonPublishedScanResultsMap = jiraService.getNonPublishedScanResults();
@@ -213,8 +215,11 @@ public class ResultsService {
     }
 
     private void throwExceptionWhenPublishingErrorOccurred(Exception e, Map<String, ScanResults.XIssue> nonPublishedScanResultsMap) {
-        throw new JiraClientRunTimeException("Wasn't been able to publish the next issues into JIRA:\n"
-                + printNonPublishedScanResults(nonPublishedScanResultsMap) + "\nwith the following reason: " + e.getMessage());
+        String errorMessage = "Wasn't able to publish the following issues into JIRA:\n" +
+                printNonPublishedScanResults(nonPublishedScanResultsMap) +
+                "\nwith the following reason: " + e.getMessage();
+
+        throw new JiraClientRunTimeException(errorMessage);
     }
 
     private String printNonPublishedScanResults(Map<String, ScanResults.XIssue> nonPublishedScanResultsMap) {

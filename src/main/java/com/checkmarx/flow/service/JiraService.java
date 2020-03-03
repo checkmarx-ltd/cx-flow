@@ -916,7 +916,7 @@ public class JiraService {
         List<String> updatedIssues = new ArrayList<>();
         List<String> closedIssues = new ArrayList<>();
 
-        getAndModifiedRequestApplication(request);
+        getAndModifyRequestApplication(request);
 
         if (this.jiraProperties.isChild()) {
             ScanRequest parent = new ScanRequest(request);
@@ -945,8 +945,7 @@ public class JiraService {
 
         map = this.getIssueMap(results.getXIssues(), request);
         setMapWithScanResults(map, nonPublishedScanResultsMap);
-        List<Issue> issues = this.getIssues(request);
-        jiraMap = this.getJiraIssueMap(issues);
+        jiraMap = this.getJiraIssueMap(this.getIssues(request));
 
         for (Map.Entry<String, ScanResults.XIssue> xIssue : map.entrySet()) {
             try {
@@ -963,7 +962,7 @@ public class JiraService {
                         closeIssueInCaseOfIssueIsInOpenState(request, closedIssues, fpIssue);
                     }/*Ignore any with label indicating false positive*/
                     else if (!issue.getLabels().contains(jiraProperties.getFalsePositiveLabel())) {
-                        updateIssue(request, updatedIssues, xIssue, currentIssue, issue);
+                        updateIssueAndAddToNewIssuesList(request, updatedIssues, xIssue, currentIssue, issue);
                     } else {
                         log.info("Skipping issue marked as false-positive or has False Positive state with key {}", xIssue.getKey());
                     }
@@ -973,7 +972,7 @@ public class JiraService {
                         if (jiraProperties.isChild()) {
                             log.info("Issue not found in parent creating issue for child");
                         }
-                        createIssue(request, newIssues, xIssue, currentIssue);
+                        createIssueAndAddToNewIssuesList(request, newIssues, xIssue, currentIssue);
                     }
                 }
             } catch (RestClientException e) {
@@ -1011,14 +1010,14 @@ public class JiraService {
         }
     }
 
-    private void createIssue(ScanRequest request, List<String> newIssues, Map.Entry<String, ScanResults.XIssue> xIssue, ScanResults.XIssue currentIssue) throws JiraClientException {
+    private void createIssueAndAddToNewIssuesList(ScanRequest request, List<String> newIssues, Map.Entry<String, ScanResults.XIssue> xIssue, ScanResults.XIssue currentIssue) throws JiraClientException {
         log.debug("Creating new issue with key {}", xIssue.getKey());
         String newIssue = this.createIssue(currentIssue, request);
         newIssues.add(newIssue);
         log.info("New issue created. #{}", newIssue);
     }
 
-    private void updateIssue(ScanRequest request, List<String> updatedIssues, Map.Entry<String, ScanResults.XIssue> xIssue, ScanResults.XIssue currentIssue, Issue issue) throws JiraClientException {
+    private void updateIssueAndAddToNewIssuesList(ScanRequest request, List<String> updatedIssues, Map.Entry<String, ScanResults.XIssue> xIssue, ScanResults.XIssue currentIssue, Issue issue) throws JiraClientException {
         log.debug("Issue still exists.  Updating issue with key {}", xIssue.getKey());
         Issue updatedIssue = this.updateIssue(issue.getKey(), currentIssue, request);
         if (updatedIssue != null) {
@@ -1050,7 +1049,7 @@ public class JiraService {
         return fpIssue;
     }
 
-    private void getAndModifiedRequestApplication(ScanRequest request) {
+    private void getAndModifyRequestApplication(ScanRequest request) {
         String application = request.getApplication();
         if (!ScanUtils.empty(application)) {
             application = application.replaceAll("[^a-zA-Z0-9-_.+]+", "_");
@@ -1093,7 +1092,7 @@ public class JiraService {
     }
 
     private void setMapWithScanResults(Map<String, ScanResults.XIssue> sourceMap, Map<String, ScanResults.XIssue> destinationMap) {
-        if (sourceMap != null && sourceMap.size() > 0) {
+        if (sourceMap != null && !sourceMap.isEmpty()) {
             destinationMap.putAll(sourceMap);
         }
     }
