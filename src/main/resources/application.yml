@@ -38,8 +38,8 @@ logging:
 
 cx-flow:
   # Agreed upon shared API token
-  token: xxxx
-  bug-tracker: JIRA
+  token: fastcat
+  bug-tracker: Rally
   bug-tracker-impl:
     - CxXml
     - Json
@@ -47,69 +47,83 @@ cx-flow:
     - GitHub
     - Csv
     - Azure
+    - Rally
   branches:
     - develop
     - master
     - security
   filter-severity:
+    - Medium
     - High
   filter-category:
   filter-cwe:
   filter-status:
-# track-application-only: false
+  track-application-only: true
   mitre-url: https://cwe.mitre.org/data/definitions/%s.html
-#  break-build: true
-#  wiki-url: https://custodela.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
-#  codebash-url: https://cxa.codebashing.com/courses/
-#  mail:
- #    host: smtp.gmail.com
- #    port: 587
- #    username: xxx
- #    password: xxx
- #    enabled:
+  #  break-build: true
+  #  wiki-url: https://custodela.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
+  #  codebash-url: https://cxa.codebashing.com/courses/
+  #  mail:
+  #    host: smtp.gmail.com
+  #    port: 587
+  #    username: xxx
+  #    password: xxx
+  #    enabled:
+  list-false-positives: true
 
 checkmarx:
-  username: xxxxx
-  password: xxxxx
-  client-secret: 014DF517-39D1-4453-B7B3-9930C563627C
-  base-url: http://cx.local
+  username: XXXXXXXX
+  password: XXXXXXX
+  client-secret: XXXXXXXX
+  base-url: http://localhost
   multi-tenant: true
   configuration: Default Configuration
   scan-preset: Checkmarx Default
-  team: \CxServer\SP\Checkmarx
+  team: \CxServer\SP\Company\Users
   url: ${checkmarx.base-url}/cxrestapi
   #preserve-xml: true
   #incremental: true
-#WSDL Config
+  #WSDL Config
   portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
   #team-script:
   #project-script:
 
+rally:
+  token: XXXXXXXX
+  rally-project-id: XXXXX
+  rally-workspace-id: XXXXXX
+  url: https://rallydev.com
+  api-url: https://rally1.rallydev.com/slm/webservice/v2.0
+
 jira:
-  url: https://xxxxx.atlassian.net
+  url: https://xxxx.atlassian.net
   username: xxxx
   token: xxxx
-  project: APPSEC
+  project: SS
   issue-type: Application Security Bug
   priorities:
-    X: Y # Map Checkmarx severity : to JIRA Priority
-  open-transition: Reopen Issue
-  close-transition: Close Issue
+    Critical: Highest
+    High: High
+    Medium: Medium
+    Low: Low
+    informational: Lowest
+  open-transition: In Review
+  close-transition: Done
   open-status:
-    - Open
+    - To Do
     - In Progress
-    - Reopened
+    - In Review
   closed-status:
-    - Closed
-    - Resolved
-#  fields:
+    - Done
+  #fields:
+
 
 github:
-  webhook-token: xxxx
-  token: xxxx
+  webhook-token: fastcat
+  token: XXXXXXXXX
   url: https://github.com
   api-url: https://api.github.com/repos/
-  false-positive-label: false-positive
+  false-positive-slabel: false-positive
   block-merge: true
 
 gitlab:
