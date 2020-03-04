@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CxXMLResults InitiatorName="admin admin" Owner="admin@cx" ScanId="1000284" ProjectId="266" ProjectName="jrecruiter_24486_lines" TeamFullPathOnReportDate="CxServer" DeepLink="http://SAST90MARGARITA/CxWebClient/ViewerMain.aspx?scanid=1000284&amp;projectid=266" ScanStart="Sunday, February 2, 2020 2:20:04 PM" Preset="Checkmarx Default" ScanTime="00h:04m:14s" LinesOfCodeScanned="42215" FilesScanned="366" ReportCreationTime="Sunday, February 2, 2020 2:34:49 PM" Team="CxServer" CheckmarxVersion="9.0.0.32148" ScanComments="" ScanType="Full" SourceOrigin="LocalPath" Visibility="Private">
+    <Query id="5330" cweId="79" name="Angular_Client_DOM_XSS" group="JavaScript_High_Risk" Severity="Medium" Language="JavaScript" LanguageHash="0935562945055365" LanguageChangeDate="2020-01-12T00:00:00.0000000" SeverityIndex="2" QueryPath="JavaScript\Cx\JavaScript High Risk\Angular Client DOM XSS Version:1" QueryVersionCode="117537447">
+        <Result NodeId="10002840001" FileName="jrecruiter/jrecruiter-flex/html-template/history/history.js" Status="New" Line="222" Column="56" FalsePositive="True" Severity="Medium" AssignToUser="" state="0" Remark="" DeepLink="http://SAST90MARGARITA/CxWebClient/ViewerMain.aspx?scanid=1000284&amp;projectid=266&amp;pathid=1" SeverityIndex="3">
+            <Path ResultId="1000284" PathId="1" SimilarityId="1486780725">
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>222</Line>
+                    <Column>56</Column>
+                    <NodeId>1</NodeId>
+                    <Name>toString</Name>
+                    <Type></Type>
+                    <Length>1</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>222</Number>
+                            <Code>                    var file = window.location.pathname.toString();</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>222</Line>
+                    <Column>25</Column>
+                    <NodeId>2</NodeId>
+                    <Name>file</Name>
+                    <Type></Type>
+                    <Length>4</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>222</Number>
+                            <Code>                    var file = window.location.pathname.toString();</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>223</Line>
+                    <Column>43</Column>
+                    <NodeId>3</NodeId>
+                    <Name>file</Name>
+                    <Type></Type>
+                    <Length>4</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>223</Number>
+                            <Code>                    file = file.substring(file.lastIndexOf("/")+1);</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>223</Line>
+                    <Column>28</Column>
+                    <NodeId>4</NodeId>
+                    <Name>file</Name>
+                    <Type></Type>
+                    <Length>4</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>223</Number>
+                            <Code>                    file = file.substring(file.lastIndexOf("/")+1);</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>223</Line>
+                    <Column>32</Column>
+                    <NodeId>5</NodeId>
+                    <Name>substring</Name>
+                    <Type></Type>
+                    <Length>1</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>223</Number>
+                            <Code>                    file = file.substring(file.lastIndexOf("/")+1);</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>223</Line>
+                    <Column>21</Column>
+                    <NodeId>6</NodeId>
+                    <Name>file</Name>
+                    <Type></Type>
+                    <Length>4</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>223</Number>
+                            <Code>                    file = file.substring(file.lastIndexOf("/")+1);</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>224</Line>
+                    <Column>86</Column>
+                    <NodeId>7</NodeId>
+                    <Name>file</Name>
+                    <Type></Type>
+                    <Length>4</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>224</Number>
+                            <Code>                    getFormElement().innerHTML = '&lt;form name="historyForm" action="'+file+'#' + flexAppUrl + '" method="GET"&gt;&lt;/form&gt;';</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>224</Line>
+                    <Column>38</Column>
+                    <NodeId>8</NodeId>
+                    <Name>innerHTML</Name>
+                    <Type></Type>
+                    <Length>9</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>224</Number>
+                            <Code>                    getFormElement().innerHTML = '&lt;form name="historyForm" action="'+file+'#' + flexAppUrl + '" method="GET"&gt;&lt;/form&gt;';</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+    </Query>
+</CxXMLResults>

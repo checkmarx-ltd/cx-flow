@@ -274,7 +274,7 @@ public class ADOIssueTracker implements IssueTracker {
             String url = new JSONObject(response.getBody()).getJSONObject("_links").getJSONObject("self").getString("href");
             return getIssue(url, issueBody);
         }catch (NullPointerException e){
-            log.warn("Error occurred while retrieving new WorkItem url.  Returning null");
+            log.warn("Error occurred while retrieving new WorkItem url.  Returning null", e);
             return null;
         }
     }

@@ -21,7 +21,7 @@ logging:
 cx-flow:
   # Agreed upon shared API token
   token: xxxx
-  bug-tracker: JIRA
+  bug-tracker: Json
   bug-tracker-impl:
     - CxXml
     - Json
@@ -38,7 +38,7 @@ cx-flow:
   mitre-url: https://cwe.mitre.org/data/definitions/%s.html
   wiki-url: https://checkmarx.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
   codebash-url: https://cxa.codebashing.com/courses/
-  auto-profile: true
+  auto-profile: false
   #branch-script: D:\\tmp\Branch.groovy
   #zip-exclude: .*.json$, bin\/.*
 
@@ -72,7 +72,7 @@ checkmarx:
   #exclude-folders:
 
 jira:
-  url: https://custodela.atlassian.net
+  url: http://localhost:8080
   username: xxxx
   token: xxxx
   project: APPSEC
@@ -88,7 +88,7 @@ jira:
     - To Do
     - In Progress
   closed-status:
-    - Done
+    - DONE
   fields:
     - type: result
       name: system-date
@@ -133,11 +133,15 @@ jira:
 
 github:
   webhook-token: 1234
+  token: xxxx
   url: https://github.com
   api-url: https://api.github.com/repos/
   block-merge: true
   error-merge: true
   cx-summary: true
+  # null value prevents CxFlow from trying to download config override from GitHub.
+  # Added to get more stable results for "high load" scenario in webhook feature.
+  config-as-code: null
 
 gitlab:
   webhook-token: 1234
@@ -165,15 +169,15 @@ azure:
 
 json:
   file-name-format: "[NAMESPACE]-[REPO]-[BRANCH]-[TIME].json"
-  data-folder: "D:\\tmp"
+  data-folder: "C:\\tmp"
 
 cx-xml:
   file-name-format: "[NAMESPACE]-[REPO]-[BRANCH]-[TIME].xml"
-  data-folder: "D:\\tmp"
+  data-folder: "C:\\tmp"
 
 csv:
   file-name-format: "[TEAM]-[PROJECT]-[TIME].csv"
-  data-folder: "D:\\tmp"
+  data-folder: "C:\\tmp"
   include-header: true
   fields:
     - header: Customer field (Application)

@@ -174,7 +174,7 @@ public class GitLabController {
                 inc = incremental;
             }
             ScanRequest request = ScanRequest.builder()
-                    .id(proj.getId())
+                    .id(String.valueOf(proj.getId()))
                     .application(app)
                     .product(p)
                     .project(project)
@@ -218,7 +218,7 @@ public class GitLabController {
 
         }catch (IllegalArgumentException e){
             String errorMessage = "Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product != null ? product : "").concat(" | ").concat(bug != null ? bug : "");
-            log.error(errorMessage);
+            log.error(errorMessage, e);
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
@@ -344,7 +344,7 @@ public class GitLabController {
             }
 
             ScanRequest request = ScanRequest.builder()
-                    .id(body.getProjectId())
+                    .id(String.valueOf(body.getProjectId()))
                     .application(app)
                     .product(p)
                     .project(project)
@@ -385,7 +385,7 @@ public class GitLabController {
 
         }catch (IllegalArgumentException e){
             String errorMessage = "Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product != null ? product : "").concat(" | ").concat(bug != null ? bug : "");
-            log.error(errorMessage);
+            log.error(errorMessage, e);
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()

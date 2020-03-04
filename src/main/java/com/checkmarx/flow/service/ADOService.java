@@ -61,7 +61,7 @@ public class ADOService {
             log.debug("comment: {}", comment);
             sendMergeComment(request, comment);
         } catch (HttpClientErrorException e){
-            log.error("Error occurred while creating Merge Request comment");
+            log.error("Error occurred while creating Merge Request comment", e);
             throw new ADOClientException();
         }
     }

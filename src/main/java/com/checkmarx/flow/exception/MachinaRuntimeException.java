@@ -6,4 +6,11 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(value = HttpStatus.BAD_REQUEST, reason = "Error has occurred")
 public class MachinaRuntimeException extends RuntimeException {
+
+    public MachinaRuntimeException() {
+    }
+
+    public MachinaRuntimeException(Throwable cause) {
+        super(cause);
+    }
 }
