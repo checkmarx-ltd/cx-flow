@@ -3,14 +3,16 @@ package com.checkmarx.flow.service;
 import com.checkmarx.flow.config.FindingSeverity;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.RepoProperties;
+import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.dto.ScanResults;
-import com.checkmarx.sdk.dto.cx.CxScanSummary;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.EnumUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.EnumMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -34,7 +36,7 @@ public class MergeResultEvaluatorImpl implements MergeResultEvaluator {
         Map<FindingSeverity, Integer> thresholds = getEffectiveThresholds();
         writeToLog(thresholds);
 
-        return !isAnyThresholdExceeded(scanResults.getScanSummary(), thresholds);
+        return !isAnyThresholdExceeded(scanResults, thresholds);
     }
 
     private Map<FindingSeverity, Integer> getEffectiveThresholds() {
@@ -61,18 +63,53 @@ public class MergeResultEvaluatorImpl implements MergeResultEvaluator {
                 && thresholds.values().stream().anyMatch(Objects::nonNull);
     }
 
-    private static boolean isAnyThresholdExceeded(CxScanSummary summary, Map<FindingSeverity, Integer> thresholds) {
-        return summary != null &&
-                (isExceeded(thresholds, FindingSeverity.HIGH, summary.getHighSeverity()) ||
-                        isExceeded(thresholds, FindingSeverity.MEDIUM, summary.getMediumSeverity()) ||
-                        isExceeded(thresholds, FindingSeverity.LOW, summary.getLowSeverity()));
+    private static boolean isAnyThresholdExceeded(ScanResults scanResults, Map<FindingSeverity, Integer> thresholds) {
+        boolean result = false;
+        for (Map.Entry<FindingSeverity, Integer> entry : getFindingCountPerSeverity(scanResults)) {
+            if (exceedsThreshold(entry, thresholds)) {
+                result = true;
+                break;
+            }
+        }
+        return result;
     }
 
-    private static boolean isExceeded(Map<FindingSeverity, Integer> thresholds,
-                                      FindingSeverity severityLevel,
-                                      Integer findingCount) {
-        Integer threshold = thresholds.get(severityLevel);
-        return threshold != null && findingCount != null && findingCount > threshold;
+    private static Iterable<Map.Entry<FindingSeverity, Integer>> getFindingCountPerSeverity(ScanResults scanResults) {
+        Map<FindingSeverity, Integer> result = new EnumMap<>(FindingSeverity.class);
+
+        // Cannot use scanResults.getScanSummary(), because it doesn't take CxFlow filtering into account.
+        if (scanResults != null && scanResults.getAdditionalDetails() != null) {
+            Object rawSummary = scanResults.getAdditionalDetails().get(Constants.SUMMARY_KEY);
+            if (rawSummary instanceof Map) {
+                Map<?, ?> cxFlowSummary = (Map<?, ?>) rawSummary;
+                for (Map.Entry<?, ?> entry : cxFlowSummary.entrySet()) {
+                    setFindingCount(result, entry);
+                }
+            }
+        }
+        return result.entrySet();
+    }
+
+    private static void setFindingCount(Map<FindingSeverity, Integer> target, Map.Entry<?, ?> entry) {
+        String rawSeverity = entry.getKey().toString().toUpperCase(Locale.ROOT);
+        if (EnumUtils.isValidEnum(FindingSeverity.class, rawSeverity) &&
+                entry.getValue() instanceof Integer) {
+            FindingSeverity severity = FindingSeverity.valueOf(rawSeverity);
+            Integer findingCount = (Integer) entry.getValue();
+            target.put(severity, findingCount);
+        }
+    }
+
+    private static boolean exceedsThreshold(Map.Entry<FindingSeverity, Integer> findingCountEntry,
+                                            Map<FindingSeverity, Integer> thresholds) {
+        boolean result = false;
+        if (findingCountEntry != null && thresholds != null) {
+            FindingSeverity severity = findingCountEntry.getKey();
+            Integer threshold = thresholds.get(severity);
+            Integer findingCount = findingCountEntry.getValue();
+            result = threshold != null && findingCount != null && findingCount > threshold;
+        }
+        return result;
     }
 
     private static Map<FindingSeverity, Integer> failIfResultHasAnyFindings() {

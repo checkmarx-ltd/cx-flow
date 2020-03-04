@@ -3,12 +3,13 @@ Feature: CxFlow should fail builds and pull requests if the number of findings w
 
   Scenario Outline: CxFlow should approve or fail GitHub pull request, depending on whether threshold is exceeded
   GitHub notifies CxFlow that a pull request was created. CxFlow then executes a SAST scan.
-    Given threshold for findings of "high" severity is "<high threshold>"
-    And threshold for findings of "medium" severity is "<medium threshold>"
-    And threshold for findings of "low" severity is "<low threshold>"
-    When SAST detects <high count> findings of "high" severity
-    And <medium count> findings of "medium" severity
-    And <low count> findings of "low" severity
+    Given threshold for findings of "High" severity is "<high threshold>"
+    And threshold for findings of "Medium" severity is "<medium threshold>"
+    And threshold for findings of "Low" severity is "<low threshold>"
+    And no severity filter is specified
+    When SAST detects <high count> findings of "High" severity
+    And <medium count> findings of "Medium" severity
+    And <low count> findings of "Low" severity
     Then CxFlow "<approves or fails>" the pull request
 
     Examples:
@@ -31,9 +32,10 @@ Feature: CxFlow should fail builds and pull requests if the number of findings w
   Scenario Outline: Thresholds section is omitted
   If the 'thresholds' section is omitted, CxFlow should fail a pull request if there is at least 1 finding.
     Given the whole 'thresholds' section is omitted from config
-    When SAST detects <high count> findings of "high" severity
-    And <medium count> findings of "medium" severity
-    And <low count> findings of "low" severity
+    And no severity filter is specified
+    When SAST detects <high count> findings of "High" severity
+    And <medium count> findings of "Medium" severity
+    And <low count> findings of "Low" severity
     Then CxFlow "<approves or fails>" the pull request
 
     Examples:
@@ -44,3 +46,13 @@ Feature: CxFlow should fail builds and pull requests if the number of findings w
       | 0          | 0            | 1         | fails             |
       | 2          | 4            | 7         | fails             |
 
+  Scenario: Combining filters with threshold checks
+  CxFlow should check thresholds after the execution of filters.
+    Given threshold for findings of "High" severity is "3"
+    And threshold for findings of "Medium" severity is "5"
+    And threshold for findings of "Low" severity is "10"
+    And severity filter is set to "High"
+    When SAST detects 2 findings of "High" severity
+    And 14 findings of "Medium" severity
+    And 23 findings of "Low" severity
+    Then CxFlow "approves" the pull request

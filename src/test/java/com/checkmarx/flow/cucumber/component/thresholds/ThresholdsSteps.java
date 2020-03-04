@@ -10,10 +10,10 @@ import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.service.GitHubService;
 import com.checkmarx.flow.service.MergeResultEvaluator;
 import com.checkmarx.flow.service.ResultsService;
+import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
-import com.checkmarx.sdk.dto.cx.CxScanSummary;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
 import com.checkmarx.test.flow.config.CxFlowMocksConfig;
@@ -36,12 +36,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest(classes = {CxFlowMocksConfig.class, CxFlowApplication.class})
@@ -58,13 +62,15 @@ public class ThresholdsSteps {
     private final FlowProperties flowProperties;
     private final CxProperties cxProperties;
     private final GitHubProperties gitHubProperties;
-    private final CxScanSummary scanSummaryToInject = new CxScanSummary();
+    private ScanResults scanResultsToInject;
 
     private ResultsService resultsService;
     private Boolean pullRequestWasApproved;
+    private Filter filter;
 
     public ThresholdsSteps(CxClient cxClientMock, RestTemplate restTemplateMock, FlowProperties flowProperties,
                            CxProperties cxProperties, GitHubProperties gitHubProperties, MergeResultEvaluator mergeResultEvaluator) {
+
         this.cxClientMock = cxClientMock;
         this.restTemplateMock = restTemplateMock;
 
@@ -84,13 +90,14 @@ public class ThresholdsSteps {
     public void prepareServices() {
         initMock(cxClientMock);
         initMock(restTemplateMock);
+        scanResultsToInject = createFakeScanResults();
         resultsService = createResultsService();
     }
 
     @Given("threshold for findings of {string} severity is {string}")
     public void thresholdForFindingsOfSeverityIs(String severityName, String threshold) {
         if (!threshold.equals("<omitted>")) {
-            FindingSeverity severity = FindingSeverity.valueOf(severityName.toUpperCase(Locale.ROOT));
+            FindingSeverity severity = parseFindingSeverity(severityName);
             int numericThreshold = Integer.parseInt(threshold);
             flowProperties.getThresholds().put(severity, numericThreshold);
         }
@@ -101,18 +108,26 @@ public class ThresholdsSteps {
         flowProperties.setThresholds(null);
     }
 
+    @And("severity filter is set to {string}")
+    public void severityFilterIsSetTo(String severity) {
+        filter = new Filter(Filter.Type.SEVERITY, severity);
+    }
+
+    @And("no severity filter is specified")
+    public void noSeverityFilterIsSpecified() {
+        filter = null;
+    }
+
     @And("^(?:SAST detects )?(.*) findings of \"(.+)\" severity$")
-    public void highFindingsOfSeverityAreFound(int expectedFindingCount, String severity) {
-        switch (severity) {
-            case "high":
-                scanSummaryToInject.setHighSeverity(expectedFindingCount);
-                break;
-            case "medium":
-                scanSummaryToInject.setMediumSeverity(expectedFindingCount);
-                break;
-            case "low":
-                scanSummaryToInject.setLowSeverity(expectedFindingCount);
-                break;
+    public void sastDetectsFindings(int expectedFindingCount, String severity) {
+        addFindingsTo(scanResultsToInject, expectedFindingCount, severity);
+    }
+
+    private void addFindingsTo(ScanResults target, int count, String severityName) {
+        if (filter == null || filter.getValue().equalsIgnoreCase(severityName)) {
+            Object summary = target.getAdditionalDetails().get(Constants.SUMMARY_KEY);
+            assertTrue(summary instanceof Map);
+            ((Map) summary).put(severityName, count);
         }
     }
 
@@ -127,10 +142,9 @@ public class ThresholdsSteps {
     private void processScanResultsInCxFlow() {
         try {
             ScanRequest scanRequest = createScanRequest();
-            List<Filter> allowAnySeverity = new ArrayList<>();
 
             CompletableFuture<ScanResults> task = resultsService.processScanResultsAsync(
-                    scanRequest, 0, 0, null, allowAnySeverity);
+                    scanRequest, 0, 0, null, null);
 
             task.get(1, TimeUnit.MINUTES);
         } catch (MachinaException | InterruptedException | ExecutionException | TimeoutException e) {
@@ -182,7 +196,10 @@ public class ThresholdsSteps {
     }
 
     private ResultsService createResultsService() {
-        GitHubService gitService = new GitHubService(restTemplateMock, gitHubProperties, flowProperties, mergeResultEvaluator);
+        GitHubService gitService = new GitHubService(restTemplateMock,
+                gitHubProperties,
+                flowProperties,
+                mergeResultEvaluator);
 
         return new ResultsService(
                 cxClientMock,
@@ -196,6 +213,18 @@ public class ThresholdsSteps {
                 null,
                 cxProperties,
                 flowProperties);
+    }
+
+    private static ScanResults createFakeScanResults() {
+        ScanResults result = new ScanResults();
+
+        Map<String, Object> details = new HashMap<>();
+        details.put(Constants.SUMMARY_KEY, new HashMap<>());
+        result.setAdditionalDetails(details);
+
+        result.setXIssues(new ArrayList<>());
+
+        return result;
     }
 
     /**
@@ -232,32 +261,17 @@ public class ThresholdsSteps {
         }
     }
 
+    private static FindingSeverity parseFindingSeverity(String severityName) {
+        return FindingSeverity.valueOf(severityName.toUpperCase(Locale.ROOT));
+    }
+
     /**
      * Returns scan results as if they were produced by SAST.
      */
     private class ScanResultsAnswerer implements Answer<ScanResults> {
         @Override
         public ScanResults answer(InvocationOnMock invocation) {
-            ScanResults scanResultsStub = new ScanResults();
-            scanResultsStub.setXIssues(createIssues());
-            scanResultsStub.setScanSummary(scanSummaryToInject);
-            return scanResultsStub;
-        }
-
-        private List<ScanResults.XIssue> createIssues() {
-            List<ScanResults.XIssue> issues = new ArrayList<>();
-
-            // If scan summary has any findings, add a single issue to scan results for more consistent CxFlow behavior.
-            boolean anyIssuesExpected = scanSummaryToInject.getHighSeverity() > 0 ||
-                    scanSummaryToInject.getMediumSeverity() > 0 ||
-                    scanSummaryToInject.getLowSeverity() > 0;
-
-            if (anyIssuesExpected) {
-                Map<Integer, ScanResults.IssueDetails> details = new HashMap<>();
-                ScanResults.XIssue issue = ScanResults.XIssue.builder().details(details).build();
-                issues.add(issue);
-            }
-            return issues;
+            return scanResultsToInject;
         }
     }
 }
