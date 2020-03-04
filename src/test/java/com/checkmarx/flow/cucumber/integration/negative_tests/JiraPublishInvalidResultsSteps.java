@@ -1,6 +1,5 @@
 package com.checkmarx.flow.cucumber.integration.negative_tests;
 
-import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.dto.BugTracker;
@@ -12,23 +11,20 @@ import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
-import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.junit.jupiter.api.Assertions;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
 
 import java.io.File;
 import java.io.IOException;
 
-@SpringBootTest(classes = { CxFlowApplication.class })
-public class JiraUnreachableSteps {
+public class JiraPublishInvalidResultsSteps {
 
-    private static final String INVALID_URL = "https://cxflow-jira-not-accessible.atlassian.net/";
-    private static final String FINDING_PATH = "cucumber/data/sample-sast-results/1-finding.xml";
-    private static final String PROJECT_KEY = "AT1";
+    private static final String JIRA_URL = "https://cxflow.atlassian.net/";
+    private static final String FINDING_PATH = "cucumber/data/sample-sast-results/2-findings-different-vuln-type-same-file.xml";
+    private static final String INVALID_PROJECT_KEY = "INVALID-PROJECT-KEY";
 
     private ScanRequest basicScanRequest;
 
@@ -54,32 +50,31 @@ public class JiraUnreachableSteps {
         cxProperties.setOffline(true);
     }
 
-    @Given("target is JIRA")
-    public void setTargetToJira() {
+
+    @And("Cx-Flow is configured with invalid project key")
+    public void setInvalidProjectKey() {
+        jiraProperties.setUrl(JIRA_URL);
+        jiraService.init();
+
         bugTracker = getBasicBugTrackerToJira();
         flowProperties.setBugTracker(bugTracker.getType().name());
+        bugTracker.setProjectKey(INVALID_PROJECT_KEY);
     }
 
-    @And("JIRA is configured with invalid URL")
-    public void setUrlToInvalid() {
-        jiraProperties.setUrl(INVALID_URL);
-        jiraService.init();
-    }
-
-    @When("preparing a getIssues call to deliver")
-    public void preparingScanRequest() {
+    @When("preparing results to deliver")
+    public void prepareResultsToDeliver() {
         basicScanRequest = getBasicScanRequest();
     }
 
-    @Then("the call execution should throw a JiraClientRunTimeException since JIRA is un-accessible")
-    public void verifyExceptionWhenJiraIsUnreachable() {
+    @Then("the call execution should throw a JiraClientRunTimeException since an error occurred when published new tickets")
+    public void verifyExceptionWhenPublishInvalidResults() {
         Assertions.assertThrows(JiraClientRunTimeException.class,
                 () -> flowService.cxParseResults(basicScanRequest, getFileFromResourcePath()),
-                "Expected to get Jira un-accessible exception error");
+                "Expected to get Jira un-published tickets exception error");
     }
 
     private File getFileFromResourcePath() throws IOException {
-        return new ClassPathResource(JiraUnreachableSteps.FINDING_PATH).getFile();
+        return new ClassPathResource(JiraPublishInvalidResultsSteps.FINDING_PATH).getFile();
     }
 
     private ScanRequest getBasicScanRequest() {
@@ -105,7 +100,6 @@ public class JiraUnreachableSteps {
     private BugTracker getBasicBugTrackerToJira() {
         return BugTracker.builder()
                 .issueType(jiraProperties.getIssueType())
-                .projectKey(PROJECT_KEY)
                 .type(BugTracker.Type.JIRA)
                 .issueType("Bug")
                 .build();
