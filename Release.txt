@@ -1,3 +1,10 @@
+Release 1.5.4
+---------------------------------------------------------------------
+# FEATURES
+- Adding Support for Rally Defect Tracker
+# FIXES
+- Fixing false positive tracking issue with counting number of ocurrances resulting in issues not closing
+
 Release 1.5.3
 ---------------------------------------------------------------------
 # FEATURES
