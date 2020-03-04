@@ -38,6 +38,8 @@ public class GitHubService extends RepoService {
 
     public static final String MERGE_SUCCESS_DESCRIPTION = "Checkmarx Scan Completed";
     public static final String MERGE_FAILURE_DESCRIPTION = "Checkmarx Scan completed. Vulnerability scan failed";
+    public static final String MERGE_SUCCESS = "success";
+    public static final String MERGE_FAILURE = "failure";
 
     private final RestTemplate restTemplate;
     private final GitHubProperties properties;
@@ -111,10 +113,10 @@ public class GitHubService extends RepoService {
         String state;
         String description;
         if (mergeResultEvaluator.isMergeAllowed(results, properties)) {
-            state = "success";
+            state = MERGE_SUCCESS;
             description = MERGE_SUCCESS_DESCRIPTION;
         } else {
-            state = "failure";
+            state = MERGE_FAILURE;
             description = MERGE_FAILURE_DESCRIPTION;
         }
 
@@ -125,7 +127,7 @@ public class GitHubService extends RepoService {
     void failBlockMerge(ScanRequest request, String url){
         if(properties.isBlockMerge()) {
             HttpEntity<?> httpEntity = new HttpEntity<>(
-                    getJSONStatus("failure", url, "Checkmarx Issue Threshold Met").toString(),
+                    getJSONStatus(MERGE_FAILURE, url, "Checkmarx Issue Threshold Met").toString(),
                     createAuthHeaders()
             );
             if(ScanUtils.empty(request.getAdditionalMetadata(STATUSES_URL_KEY))){
