@@ -38,8 +38,8 @@ logging:
 
 cx-flow:
   # Agreed upon shared API token
-  token: fastcat
-  bug-tracker: Rally
+  token: xxxx
+  bug-tracker: JIRA
   bug-tracker-impl:
     - CxXml
     - Json
@@ -53,77 +53,71 @@ cx-flow:
     - master
     - security
   filter-severity:
-    - Medium
     - High
   filter-category:
   filter-cwe:
   filter-status:
-  track-application-only: true
+# track-application-only: false
   mitre-url: https://cwe.mitre.org/data/definitions/%s.html
-  #  break-build: true
-  #  wiki-url: https://custodela.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
-  #  codebash-url: https://cxa.codebashing.com/courses/
-  #  mail:
-  #    host: smtp.gmail.com
-  #    port: 587
-  #    username: xxx
-  #    password: xxx
-  #    enabled:
-  list-false-positives: true
+#  break-build: true
+#  wiki-url: https://custodela.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
+#  codebash-url: https://cxa.codebashing.com/courses/
+#  mail:
+ #    host: smtp.gmail.com
+ #    port: 587
+ #    username: xxx
+ #    password: xxx
+ #    enabled:
 
 checkmarx:
-  username: XXXXXXXX
-  password: XXXXXXX
-  client-secret: XXXXXXXX
-  base-url: http://localhost
+  username: xxxxx
+  password: xxxxx
+  client-secret: 014DF517-39D1-4453-B7B3-9930C563627C
+  base-url: http://cx.local
   multi-tenant: true
   configuration: Default Configuration
   scan-preset: Checkmarx Default
-  team: \CxServer\SP\Company\Users
+  team: \CxServer\SP\Checkmarx
   url: ${checkmarx.base-url}/cxrestapi
   #preserve-xml: true
   #incremental: true
-  #WSDL Config
+#WSDL Config
   portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
   #team-script:
   #project-script:
 
+jira:
+  url: https://xxxxx.atlassian.net
+  username: xxxx
+  token: xxxx
+  project: APPSEC
+  issue-type: Application Security Bug
+  priorities:
+    X: Y # Map Checkmarx severity : to JIRA Priority
+  open-transition: Reopen Issue
+  close-transition: Close Issue
+  open-status:
+    - Open
+    - In Progress
+    - Reopened
+  closed-status:
+    - Closed
+    - Resolved
+#  fields:
+
 rally:
-  token: XXXXXXXX
-  rally-project-id: XXXXX
-  rally-workspace-id: XXXXXX
+  token: xxxx
+  rally-project-id: xxxx
+  rally-workspace-id: xxxx
   url: https://rallydev.com
   api-url: https://rally1.rallydev.com/slm/webservice/v2.0
 
-jira:
-  url: https://xxxx.atlassian.net
-  username: xxxx
-  token: xxxx
-  project: SS
-  issue-type: Application Security Bug
-  priorities:
-    Critical: Highest
-    High: High
-    Medium: Medium
-    Low: Low
-    informational: Lowest
-  open-transition: In Review
-  close-transition: Done
-  open-status:
-    - To Do
-    - In Progress
-    - In Review
-  closed-status:
-    - Done
-  #fields:
-
-
 github:
-  webhook-token: fastcat
-  token: XXXXXXXXX
+  webhook-token: xxxx
+  token: xxxx
   url: https://github.com
   api-url: https://api.github.com/repos/
-  false-positive-slabel: false-positive
+  false-positive-label: false-positive
   block-merge: true
 
 gitlab:
