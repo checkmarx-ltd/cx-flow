@@ -47,6 +47,7 @@ cx-flow:
     - GitHub
     - Csv
     - Azure
+    - Rally
   branches:
     - develop
     - master
@@ -103,6 +104,13 @@ jira:
     - Closed
     - Resolved
 #  fields:
+
+rally:
+  token: xxxx
+  rally-project-id: xxxx
+  rally-workspace-id: xxxx
+  url: https://rallydev.com
+  api-url: https://rally1.rallydev.com/slm/webservice/v2.0
 
 github:
   webhook-token: xxxx
