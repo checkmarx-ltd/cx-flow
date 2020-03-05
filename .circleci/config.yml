@@ -45,8 +45,6 @@ jobs:
   docker-push:
     docker:
       - image: docker:18.06.3-ce-git
-        environment:
-          DOCKER_REPO: docker.io/checkmarxts/cxflow
     steps:
       - setup_remote_docker
       - attach_workspace:

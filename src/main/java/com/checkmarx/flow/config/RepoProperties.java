@@ -103,6 +103,9 @@ public class RepoProperties {
         this.blockMerge = blockMerge;
     }
 
+    /**
+     * Indicates if threshold checking functionality is enabled.
+     */
     public boolean isErrorMerge() {
         return errorMerge;
     }

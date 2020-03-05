@@ -3,6 +3,8 @@ package com.checkmarx.flow.cucumber.common.utils;
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.CxFlowRunner;
 import com.checkmarx.flow.cucumber.component.parse.TestContext;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.DefaultApplicationArguments;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -18,12 +20,27 @@ import java.util.Properties;
 import java.util.Stack;
 
 public class TestUtils {
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+
     public static InputStream getResourceAsStream(String relativePath) {
         String srcResourcePath = Paths.get(TestContext.CUCUMBER_DATA_DIR, relativePath)
                 .toString();
 
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         return classLoader.getResourceAsStream(srcResourcePath);
+    }
+
+    public static Properties getPropertiesFromResource(String path) throws IOException {
+        File file = ResourceUtils.getFile("classpath:" + path);
+        Properties result = new Properties();
+        result.load(Files.newInputStream(file.toPath()));
+        return result;
+    }
+
+    public static JsonNode parseJsonFromResources(String pathRelativeToData) throws IOException {
+        String resourcePath = Paths.get(TestContext.CUCUMBER_DATA_DIR, pathRelativeToData).toString();
+        File file = ResourceUtils.getFile("classpath:" + resourcePath);
+        return objectMapper.readTree(file);
     }
 
     private interface Revertible {
@@ -44,12 +61,5 @@ public class TestUtils {
 
     public static ConfigurableApplicationContext runCxFlowAsService() {
         return SpringApplication.run(CxFlowApplication.class, "--web");
-    }
-
-    public static Properties getPropertiesFromResource(String path) throws IOException {
-        File file = ResourceUtils.getFile("classpath:" + path);
-        Properties result = new Properties();
-        result.load(Files.newInputStream(file.toPath()));
-        return result;
     }
 }

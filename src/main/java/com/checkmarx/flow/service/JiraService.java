@@ -18,7 +18,6 @@ import com.checkmarx.sdk.dto.ScanResults;
 import com.google.common.collect.ImmutableMap;
 import io.atlassian.util.concurrent.Promise;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -46,6 +45,7 @@ public class JiraService {
     private static final int JIRA_MAX_DESCRIPTION = 32760;
     private final String parentUrl;
     private final String grandParentUrl;
+    private Map<String, ScanResults.XIssue> nonPublishedScanResultsMap = new HashMap<>();
 
     @ConstructorProperties({"jiraProperties", "flowProperties"})
     public JiraService(JiraProperties jiraProperties, FlowProperties flowProperties) {
@@ -916,11 +916,7 @@ public class JiraService {
         List<String> updatedIssues = new ArrayList<>();
         List<String> closedIssues = new ArrayList<>();
 
-        String application = request.getApplication();
-        if (!ScanUtils.empty(application)) {
-            application = application.replaceAll("[^a-zA-Z0-9-_.+]+", "_");
-            request.setApplication(application);
-        }
+        getAndModifyRequestApplication(request);
 
         if (this.jiraProperties.isChild()) {
             ScanRequest parent = new ScanRequest(request);
@@ -931,7 +927,7 @@ public class JiraService {
             parent.setBugTracker(bugTracker);
             issuesParent = this.getIssues(parent);
             if (grandParentUrl.length() == 0) {
-                 log.info("Grandparent feild is empty");
+                 log.info("Grandparent field is empty");
                 issuesGrandParent = null;
             } else {
                 BugTracker bugTrackerGrandParenet;
@@ -947,9 +943,9 @@ public class JiraService {
 
         log.info("Processing Results and publishing findings to Jira");
 
-        List<Issue> issues = this.getIssues(request);
         map = this.getIssueMap(results.getXIssues(), request);
-        jiraMap = this.getJiraIssueMap(issues);
+        setMapWithScanResults(map, nonPublishedScanResultsMap);
+        jiraMap = this.getJiraIssueMap(this.getIssues(request));
 
         for (Map.Entry<String, ScanResults.XIssue> xIssue : map.entrySet()) {
             try {
@@ -957,74 +953,38 @@ public class JiraService {
 
                 /*Issue already exists -> update and comment*/
                 if (jiraMap.containsKey(xIssue.getKey())) {
-                    Issue i = jiraMap.get(xIssue.getKey());
+                    Issue issue = jiraMap.get(xIssue.getKey());
                     if (xIssue.getValue().isAllFalsePositive()) {
                         //All issues are false positive, so issue should be closed
                         log.debug("All issues are false positives");
                         Issue fpIssue;
-                        if (flowProperties.isListFalsePositives()) { //Update the ticket if flag is set
-                            log.debug("Issue is being updated to reflect false positive references.  Updating issue with key {}", xIssue.getKey());
-                            fpIssue = this.updateIssue(i.getKey(), currentIssue, request);
-                        } else { //otherwise simply get a reference to the issue
-                            fpIssue = this.getIssue(i.getKey());
-                        }
-                        if (request.getBugTracker().getOpenStatus().contains(fpIssue.getStatus().getName())) { //If the status is of open state, close it
-                            /*Close the issue*/
-                            log.info("Closing issue with key {}", fpIssue.getKey());
-                            this.transitionCloseIssue(fpIssue.getKey(), request.getBugTracker().getCloseTransition(), request.getBugTracker(), true);
-                            closedIssues.add(fpIssue.getKey());
-                        }
+                        fpIssue = checkForFalsePositiveIssuesInList(request, xIssue, currentIssue, issue);
+                        closeIssueInCaseOfIssueIsInOpenState(request, closedIssues, fpIssue);
                     }/*Ignore any with label indicating false positive*/
-                    else if (!i.getLabels().contains(jiraProperties.getFalsePositiveLabel())) {
-                        log.debug("Issue still exists.  Updating issue with key {}", xIssue.getKey());
-                        Issue updatedIssue = this.updateIssue(i.getKey(), currentIssue, request);
-                        if (updatedIssue != null) {
-                            log.debug("Update completed for issue #{}", updatedIssue.getKey());
-                            updatedIssues.add(updatedIssue.getKey());
-                            if (jiraProperties.isUpdateComment() && !ScanUtils.empty(jiraProperties.getUpdateCommentValue())) {
-                                addCommentToBug(i.getKey(), jiraProperties.getUpdateCommentValue());
-                            }
-                        }
+                    else if (!issue.getLabels().contains(jiraProperties.getFalsePositiveLabel())) {
+                        updateIssueAndAddToNewIssuesList(request, updatedIssues, xIssue, currentIssue, issue);
                     } else {
                         log.info("Skipping issue marked as false-positive or has False Positive state with key {}", xIssue.getKey());
                     }
                 } else {
                     /*Create the new issue*/
-                    if(!currentIssue.isAllFalsePositive()) {
-                        if (!jiraProperties.isChild() || (!parentCheck(xIssue.getKey(), issuesParent) && !grandparentCheck(xIssue.getKey(), issuesGrandParent))) {
-                            if (jiraProperties.isChild()) {
-                                log.info("Issue not found in parent creating issue for child");
-                            }
-
-                            log.debug("Creating new issue with key {}", xIssue.getKey());
-                            String newIssue = this.createIssue(currentIssue, request);
-                            newIssues.add(newIssue);
-                            log.info("New issue created. #{}", newIssue);
+                    if (!currentIssue.isAllFalsePositive() && (!jiraProperties.isChild() || (!parentCheck(xIssue.getKey(), issuesParent) && !grandparentCheck(xIssue.getKey(), issuesGrandParent)))) {
+                        if (jiraProperties.isChild()) {
+                            log.info("Issue not found in parent creating issue for child");
                         }
+                        createIssueAndAddToNewIssuesList(request, newIssues, xIssue, currentIssue);
                     }
                 }
             } catch (RestClientException e) {
                 log.error("Error occurred while processing issue with key {}", xIssue.getKey(), e);
                 throw new JiraClientException();
             }
+            log.debug("Issue: {} successfully updated. Removing it from dynamic scan results map", xIssue.getValue());
+            nonPublishedScanResultsMap.remove(xIssue.getKey());
         }
 
         /*Check if an issue exists in Jira but not within results and close if not*/
-        for (Map.Entry<String, Issue> jiraIssue : jiraMap.entrySet()) {
-            try {
-                if (!map.containsKey(jiraIssue.getKey())) {
-                    if (request.getBugTracker().getOpenStatus().contains(jiraIssue.getValue().getStatus().getName())) {
-                        /*Close the issue*/
-                        log.info("Closing issue with key {}", jiraIssue.getKey());
-                        this.transitionCloseIssue(jiraIssue.getValue().getKey(),
-                                request.getBugTracker().getCloseTransition(), request.getBugTracker(), false); //No false positives
-                        closedIssues.add(jiraIssue.getValue().getKey());
-                    }
-                }
-            } catch (HttpClientErrorException e) {
-                log.error("Error occurred while processing issue with key {}", jiraIssue.getKey(), e);
-            }
-        }
+        closeIssueInCaseNotWithinResults(request, map, jiraMap, closedIssues);
 
         return ImmutableMap.of(
                 "new", newIssues,
@@ -1032,16 +992,82 @@ public class JiraService {
                 "closed", closedIssues
         );
     }
+
+    private void closeIssueInCaseNotWithinResults(ScanRequest request, Map<String, ScanResults.XIssue> map, Map<String, Issue> jiraMap, List<String> closedIssues) throws JiraClientException {
+        for (Map.Entry<String, Issue> jiraIssue : jiraMap.entrySet()) {
+            try {
+                if (!map.containsKey(jiraIssue.getKey()) && (request.getBugTracker().getOpenStatus().contains(jiraIssue.getValue().getStatus().getName()))) {
+                    /*Close the issue*/
+                    log.info("Closing issue with key {}", jiraIssue.getKey());
+                    this.transitionCloseIssue(jiraIssue.getValue().getKey(),
+                            request.getBugTracker().getCloseTransition(), request.getBugTracker(), false); //No false positives
+                    closedIssues.add(jiraIssue.getValue().getKey());
+
+                }
+            } catch (HttpClientErrorException e) {
+                log.error("Error occurred while processing issue with key {}", jiraIssue.getKey(), e);
+            }
+        }
+    }
+
+    private void createIssueAndAddToNewIssuesList(ScanRequest request, List<String> newIssues, Map.Entry<String, ScanResults.XIssue> xIssue, ScanResults.XIssue currentIssue) throws JiraClientException {
+        log.debug("Creating new issue with key {}", xIssue.getKey());
+        String newIssue = this.createIssue(currentIssue, request);
+        newIssues.add(newIssue);
+        log.info("New issue created. #{}", newIssue);
+    }
+
+    private void updateIssueAndAddToNewIssuesList(ScanRequest request, List<String> updatedIssues, Map.Entry<String, ScanResults.XIssue> xIssue, ScanResults.XIssue currentIssue, Issue issue) throws JiraClientException {
+        log.debug("Issue still exists.  Updating issue with key {}", xIssue.getKey());
+        Issue updatedIssue = this.updateIssue(issue.getKey(), currentIssue, request);
+        if (updatedIssue != null) {
+            log.debug("Update completed for issue #{}", updatedIssue.getKey());
+            updatedIssues.add(updatedIssue.getKey());
+            if (jiraProperties.isUpdateComment() && !ScanUtils.empty(jiraProperties.getUpdateCommentValue())) {
+                addCommentToBug(issue.getKey(), jiraProperties.getUpdateCommentValue());
+            }
+        }
+    }
+
+    private void closeIssueInCaseOfIssueIsInOpenState(ScanRequest request, List<String> closedIssues, Issue fpIssue) throws JiraClientException {
+        if (request.getBugTracker().getOpenStatus().contains(fpIssue.getStatus().getName())) { //If the status is of open state, close it
+            /*Close the issue*/
+            log.info("Closing issue with key {}", fpIssue.getKey());
+            this.transitionCloseIssue(fpIssue.getKey(), request.getBugTracker().getCloseTransition(), request.getBugTracker(), true);
+            closedIssues.add(fpIssue.getKey());
+        }
+    }
+
+    private Issue checkForFalsePositiveIssuesInList(ScanRequest request, Map.Entry<String, ScanResults.XIssue> xIssue, ScanResults.XIssue currentIssue, Issue issue) throws JiraClientException {
+        Issue fpIssue;
+        if (flowProperties.isListFalsePositives()) { //Update the ticket if flag is set
+            log.debug("Issue is being updated to reflect false positive references.  Updating issue with key {}", xIssue.getKey());
+            fpIssue = this.updateIssue(issue.getKey(), currentIssue, request);
+        } else { //otherwise simply get a reference to the issue
+            fpIssue = this.getIssue(issue.getKey());
+        }
+        return fpIssue;
+    }
+
+    private void getAndModifyRequestApplication(ScanRequest request) {
+        String application = request.getApplication();
+        if (!ScanUtils.empty(application)) {
+            application = application.replaceAll("[^a-zA-Z0-9-_.+]+", "_");
+            request.setApplication(application);
+        }
+    }
+
+    Map<String, ScanResults.XIssue> getNonPublishedScanResults() {
+        return nonPublishedScanResultsMap;
+    }
     
     boolean parentCheck(String key, List<Issue> issues) {
         if (issues != null){
             Map<String, Issue> jiraMap;
             jiraMap = this.getJiraIssueMap(issues);
-            if (this.jiraProperties.isChild()) {
-                if (jiraMap.containsKey(key)) {
-                    log.info("Issue ({}) found in parent ({}) not creating issue for child issue", jiraMap.get(key).getKey(), parentUrl);
-                    return true;
-                  }
+            if (this.jiraProperties.isChild() && (jiraMap.containsKey(key))) {
+                log.info("Issue ({}) found in parent ({}) not creating issue for child issue", jiraMap.get(key).getKey(), parentUrl);
+                return true;
             }
             return false;
         }
@@ -1052,11 +1078,9 @@ public class JiraService {
         if (issues != null){
             Map<String, Issue> jiraMap;
             jiraMap = this.getJiraIssueMap(issues);
-            if (this.jiraProperties.isChild()) {
-                if (jiraMap.containsKey(key)) {
-                    log.info("Issue ({}) found in grandParent ({}) not creating issue for child issue", jiraMap.get(key).getKey(), grandParentUrl);
-                    return true;
-                  }
+            if (this.jiraProperties.isChild() && (jiraMap.containsKey(key))) {
+                log.info("Issue ({}) found in grandParent ({}) not creating issue for child issue", jiraMap.get(key).getKey(), grandParentUrl);
+                return true;
             }
             return false;
         }
@@ -1065,5 +1089,11 @@ public class JiraService {
 
     public URI getJiraURI() {
         return jiraURI;
+    }
+
+    private void setMapWithScanResults(Map<String, ScanResults.XIssue> sourceMap, Map<String, ScanResults.XIssue> destinationMap) {
+        if (sourceMap != null && !sourceMap.isEmpty()) {
+            destinationMap.putAll(sourceMap);
+        }
     }
 }
