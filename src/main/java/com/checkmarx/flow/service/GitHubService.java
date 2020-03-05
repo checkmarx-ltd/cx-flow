@@ -36,17 +36,28 @@ public class GitHubService extends RepoService {
     private static final String STATUSES_URL_KEY = "statuses_url";
     private static final String STATUSES_URL_NOT_PROVIDED = "statuses_url was not provided within the request object, which is required for blocking / unblocking pull requests";
 
+    public static final String MERGE_SUCCESS_DESCRIPTION = "Checkmarx Scan Completed";
+    public static final String MERGE_FAILURE_DESCRIPTION = "Checkmarx Scan completed. Vulnerability scan failed";
+    public static final String MERGE_SUCCESS = "success";
+    public static final String MERGE_FAILURE = "failure";
+
     private final RestTemplate restTemplate;
     private final GitHubProperties properties;
     private final FlowProperties flowProperties;
+    private final MergeResultEvaluator mergeResultEvaluator;
+
     private static final String FILE_CONTENT = "/{namespace}/{repo}/contents/{config}?ref={branch}";
     private static final String LANGUAGE_TYPES = "/{namespace}/{repo}/languages";
     private static final String REPO_CONTENT = "/{namespace}/{repo}/contents?ref={branch}";
 
-    public GitHubService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, GitHubProperties properties, FlowProperties flowProperties) {
+    public GitHubService(@Qualifier("flowRestTemplate") RestTemplate restTemplate,
+                         GitHubProperties properties,
+                         FlowProperties flowProperties,
+                         MergeResultEvaluator mergeResultEvaluator) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.flowProperties = flowProperties;
+        this.mergeResultEvaluator = mergeResultEvaluator;
     }
 
     private HttpHeaders createAuthHeaders(){
@@ -67,13 +78,13 @@ public class GitHubService extends RepoService {
     }
 
     void sendMergeComment(ScanRequest request, String comment){
-        HttpEntity httpEntity = new HttpEntity<>(RepoIssue.getJSONComment("body",comment).toString(), createAuthHeaders());
+        HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONComment("body",comment).toString(), createAuthHeaders());
         restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
     void startBlockMerge(ScanRequest request, String url){
         if(properties.isBlockMerge()) {
-            HttpEntity httpEntity = new HttpEntity<>(
+            HttpEntity<?> httpEntity = new HttpEntity<>(
                     getJSONStatus("pending", url, "Checkmarx Scan Initiated").toString(),
                     createAuthHeaders()
             );
@@ -86,16 +97,9 @@ public class GitHubService extends RepoService {
         }
     }
 
-    void endBlockMerge(ScanRequest request, String url, boolean findingsPresent){
-        String state = "success";
-        if(properties.isErrorMerge() && findingsPresent){
-            state = "failure";
-        }
+    void endBlockMerge(ScanRequest request, ScanResults results){
         if(properties.isBlockMerge()) {
-            HttpEntity httpEntity = new HttpEntity<>(
-                    getJSONStatus(state, url, "Checkmarx Scan Completed").toString(),
-                    createAuthHeaders()
-            );
+            HttpEntity<String> httpEntity = getStatusRequestEntity(results);
             if(ScanUtils.empty(request.getAdditionalMetadata(STATUSES_URL_KEY))){
                 log.error(STATUSES_URL_NOT_PROVIDED);
                 return;
@@ -105,10 +109,25 @@ public class GitHubService extends RepoService {
         }
     }
 
+    private HttpEntity<String> getStatusRequestEntity(ScanResults results) {
+        String state;
+        String description;
+        if (mergeResultEvaluator.isMergeAllowed(results, properties)) {
+            state = MERGE_SUCCESS;
+            description = MERGE_SUCCESS_DESCRIPTION;
+        } else {
+            state = MERGE_FAILURE;
+            description = MERGE_FAILURE_DESCRIPTION;
+        }
+
+        JSONObject requestBody = getJSONStatus(state, results.getLink(), description);
+        return new HttpEntity<>(requestBody.toString(), createAuthHeaders());
+    }
+
     void failBlockMerge(ScanRequest request, String url){
         if(properties.isBlockMerge()) {
-            HttpEntity httpEntity = new HttpEntity<>(
-                    getJSONStatus("failure", url, "Checkmarx Issue Threshold Met").toString(),
+            HttpEntity<?> httpEntity = new HttpEntity<>(
+                    getJSONStatus(MERGE_FAILURE, url, "Checkmarx Issue Threshold Met").toString(),
                     createAuthHeaders()
             );
             if(ScanUtils.empty(request.getAdditionalMetadata(STATUSES_URL_KEY))){
@@ -154,7 +173,7 @@ public class GitHubService extends RepoService {
             ResponseEntity<String> response = restTemplate.exchange(
                     properties.getApiUrl().concat(LANGUAGE_TYPES),
                     HttpMethod.GET,
-                    new HttpEntity(headers),
+                    new HttpEntity<>(headers),
                     String.class,
                     request.getNamespace(),
                     request.getRepoName(),
@@ -166,17 +185,17 @@ public class GitHubService extends RepoService {
             else {
                 JSONObject json = new JSONObject(response.getBody());
                 Iterator<String> keys = json.keys();
-                Long total = 0L;
+                long total = 0L;
                 while(keys.hasNext()) {
                     String key = keys.next();
-                    Long bytes = json.getLong(key);
+                    long bytes = json.getLong(key);
                     langs.put(key, bytes);
                     total += bytes;
                 }
                 for (Map.Entry<String,Long> entry : langs.entrySet()){
                     Long bytes = entry.getValue();
-                    Double percentage = (Double.valueOf(bytes) / Double.valueOf(total) * 100);
-                    langsPercent.put(entry.getKey(), percentage.intValue());
+                    double percentage = (Double.valueOf(bytes) / Double.valueOf(total) * 100);
+                    langsPercent.put(entry.getKey(), (int) percentage);
                 }
                 sources.setLanguageStats(langsPercent);
             }
@@ -197,7 +216,7 @@ public class GitHubService extends RepoService {
             ResponseEntity<Content[]> response = restTemplate.exchange(
                     endpoint,
                     HttpMethod.GET,
-                    new HttpEntity(headers),
+                    new HttpEntity<>(headers),
                     Content[].class
             );
             if(response.getBody() == null){
@@ -253,7 +272,7 @@ public class GitHubService extends RepoService {
         ResponseEntity<String> response = restTemplate.exchange(
                 urlTemplate,
                 HttpMethod.GET,
-                new HttpEntity(headers),
+                new HttpEntity<>(headers),
                 String.class,
                 request.getNamespace(),
                 request.getRepoName(),

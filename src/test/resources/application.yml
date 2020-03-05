@@ -39,6 +39,10 @@ cx-flow:
   wiki-url: https://checkmarx.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
   codebash-url: https://cxa.codebashing.com/courses/
   auto-profile: false
+  thresholds:
+    high: 1
+    medium: 2
+    low: 3
   #branch-script: D:\\tmp\Branch.groovy
   #zip-exclude: .*.json$, bin\/.*
 
