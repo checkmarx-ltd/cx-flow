@@ -132,7 +132,7 @@ public class LoadingSastResultsSteps {
     }
 
     private static Path getResourceDir(String subdir) throws URISyntaxException {
-        Path pathRelativeToResources = Paths.get(TestContext.CUCUMBER_DATA_DIR, subdir);
+        Path pathRelativeToResources = Paths.get(Constants.CUCUMBER_DATA_DIR, subdir);
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         URL resourceDir = classLoader.getResource(pathRelativeToResources.toString());
         return resourceDir != null ? Paths.get(resourceDir.toURI()) : null;

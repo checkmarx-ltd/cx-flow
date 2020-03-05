@@ -8,14 +8,14 @@ Feature: Parsing SAST report and publishing items to Azure DevOps
   @Create_issue
   Scenario Outline: Creating a single issue after merging several findings
     Given Azure DevOps doesn't contain any issues
-    And SAST report contains <finding count> findings with the same vulnerability type and in the same file
+    And SAST report contains <finding count> findings with the same vulnerability type and in the same file, and not marked as false positive
     When publishing the report
     Then Azure DevOps contains <issue count> issues
     Examples:
       | finding count | issue count |
       | 0             | 0           |
       | 1             | 1           |
-      | 3             | 1           |
+      | 2             | 1           |
 
   @Skip
   @Create_issue
