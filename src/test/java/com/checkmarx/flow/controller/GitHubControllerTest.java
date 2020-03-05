@@ -27,9 +27,10 @@ public class GitHubControllerTest {
     private static final GitHubProperties gitHubProperties = new GitHubProperties();
     private static final GitLabProperties gitLabProperties = new GitLabProperties();
     private static final BitBucketProperties bitBucketProperties = new BitBucketProperties();
+    private static final MergeResultEvaluator mergeResultEvaluator = new MergeResultEvaluatorImpl(flowProperties);
     private static final BitBucketService bitBucketService =new BitBucketService(restTemplate,bitBucketProperties , flowProperties);
     private static final GitLabService gitLabService = new GitLabService(restTemplate, gitLabProperties, flowProperties);
-    private static final GitHubService gitHubService = new GitHubService(restTemplate, gitHubProperties, flowProperties);
+    private static final GitHubService gitHubService = new GitHubService(restTemplate, gitHubProperties, flowProperties, mergeResultEvaluator);
     private static final ExternalScriptService scriptService = new ExternalScriptService();
     private static final HelperService helperService = new HelperService(flowProperties, cxProperties, scriptService);
     private static final ADOProperties adoProperties = new ADOProperties();

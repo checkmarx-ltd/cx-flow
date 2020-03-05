@@ -1,5 +1,6 @@
 package com.checkmarx.flow.cucumber.component.parse.matchscenario;
 
+import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 import com.checkmarx.flow.cucumber.component.parse.TestContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -7,7 +8,6 @@ import com.github.fge.jsonpatch.diff.JsonDiff;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Paths;
 
 public class CxFlowReportComparer {
@@ -32,7 +32,8 @@ public class CxFlowReportComparer {
     private Mismatch compareWithReferenceReport(String baseName) throws IOException {
         String completeName = String.format("%s.%s", baseName, TestContext.CXFLOW_REPORT_EXTENSION);
 
-        JsonNode referenceReport = parseJsonFromResources(completeName);
+        String pathRelativeToData = Paths.get(TestContext.CXFLOW_REPORTS_DIR, completeName).toString();
+        JsonNode referenceReport = TestUtils.parseJsonFromResources(pathRelativeToData);
         JsonNode actualReport = parseJsonFromFile(completeName);
         JsonNode differences = JsonDiff.asJson(referenceReport, actualReport);
         Mismatch mismatch = null;
@@ -50,20 +51,5 @@ public class CxFlowReportComparer {
         return result;
     }
 
-    private JsonNode parseJsonFromResources(String filename) throws IOException {
-        String resourcePath = Paths.get(TestContext.CUCUMBER_DATA_DIR,
-                TestContext.CXFLOW_REPORTS_DIR,
-                filename).toString();
 
-        JsonNode result;
-        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        try (InputStream resourceStream = classLoader.getResourceAsStream(resourcePath)) {
-            if (resourceStream != null) {
-                result = objectMapper.readTree(resourceStream);
-            } else {
-                throw new IOException("Unable to load resource: " + resourcePath);
-            }
-        }
-        return result;
-    }
 }
