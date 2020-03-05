@@ -17,21 +17,21 @@ Feature: Parsing SAST report and publishing items to Azure DevOps
       | 1             | 1           |
       | 2             | 1           |
 
-  @Skip
   @Create_issue
-  Scenario Outline: Creating separate issues from several findings
+  Scenario: Creating separate issues from several findings
+    # There is no need to check the cases with 0 or 1 findings: they are already covered in the previous scenario.
     Given Azure DevOps doesn't contain any issues
-    And SAST report contains <number of> findings, each with a different vulnerability type and filename, and not marked as false positive
+    And SAST report contains 2 findings, each with a different vulnerability type and filename, and not marked as false positive
     When publishing the report
-    Then Azure DevOps contains <number of> issues
-    Examples:
-      | number of |
-      | 0         |
-      | 1         |
-      | 3         |
+    Then Azure DevOps contains 2 issues
 
-  @Skip
+  @Create_issue
+  @NegativeTest
   Scenario: Don't create a new issue if all findings are false positive
+    Given Azure DevOps doesn't contain any issues
+    And SAST report contains 3 findings, all marked as false positive
+    When publishing the report
+    Then Azure DevOps still doesn't contain any issues
 
   @Skip
   @Update_issue

@@ -55,13 +55,13 @@ public class PublishingSteps {
         adoClient.deleteProjectIssues(projectName);
     }
 
-    @Given("Azure DevOps doesn't contain any issues")
+    @Given("Azure DevOps(?: still)? doesn't contain any issues")
     public void azureDevOpsDoesnTContainAnyIssues() throws IOException {
         verifyIssueCount(0);
     }
 
     @And("SAST report contains {int} findings with the same vulnerability type and in the same file, and not marked as false positive")
-    public void sastReportContainsFindingCount(int findingCount) {
+    public void sastReportContainsFindingsSameVulnAndFile(int findingCount) {
         switch (findingCount) {
             case 0:
                 sastReportFilename = "empty-results.xml";
@@ -73,7 +73,7 @@ public class PublishingSteps {
                 sastReportFilename = "2-findings-same-vuln-type-same-file.xml";
                 break;
             default:
-                fail("Unexpected finding count: " + findingCount);
+                throwFindingCountError(findingCount);
                 break;
         }
     }
@@ -102,6 +102,29 @@ public class PublishingSteps {
     @Then("Azure DevOps contains {int} issues")
     public void azureDevOpsContainsIssueCountIssues(int expectedCount) throws IOException {
         verifyIssueCount(expectedCount);
+    }
+
+    @And("SAST report contains {int} findings, each with a different vulnerability type and filename, and not marked as false positive")
+    public void sastReportContainsNumberOfFindingsDifferentVulnAndFile(int findingCount) {
+        if (findingCount == 2) {
+            sastReportFilename = "2-findings-different-vuln-type-different-files.xml";
+        }
+        else {
+            throwFindingCountError(findingCount);
+        }
+    }
+
+    @And("SAST report contains {int} findings, all marked as false positive")
+    public void sastReportContainsFindingsAllMarkedAsFalsePositive(int findingCount) {
+        if (findingCount == 3) {
+            sastReportFilename = "3-findings-all-false-positive.xml";
+        } else {
+            throwFindingCountError(findingCount);
+        }
+    }
+
+    private void throwFindingCountError(int findingCount) {
+        fail("Unexpected finding count: " + findingCount);
     }
 
     private void verifyIssueCount(int expectedCount) throws IOException {
