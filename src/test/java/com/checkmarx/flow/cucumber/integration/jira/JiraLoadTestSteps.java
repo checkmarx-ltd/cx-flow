@@ -56,7 +56,7 @@ public class JiraLoadTestSteps {
     @Before("@JiraLoadTests")
     public void cleanJiraProject() throws IOException {
         jiraUtils.ensureProjectExists(jiraProperties.getProject());
-        //jiraUtils.ensureIssueTypeExists(jiraProperties.getIssueType());
+        jiraUtils.ensureIssueTypeExists(jiraProperties.getIssueType());
         jiraUtils.cleanProject(jiraProperties.getProject());
     }
 
@@ -66,7 +66,7 @@ public class JiraLoadTestSteps {
         if (findings != 1000 || issues != 1000) {
             throw new IllegalArgumentException(String.format("No XML files are defined for the paramters given. Findings: %d, Issues: %d", findings, issues));
         }
-        filename = "cucumber/data/sample-sast-results/very-large.xml";
+        filename = "cucumber/data/sample-sast-results/300-findings.xml";
     }
 
     @When("results are parsed and published {int} times, and time is recorded for each sample")
@@ -79,7 +79,6 @@ public class JiraLoadTestSteps {
 
     @Then("{int} percents of publish request should take less than {int} seconds")
     public void validateDurations(int percentsThreshold, int durationThreshold) {
-        int total = jiraUtils.getNumberOfVulnerabilites(jiraProperties.getProject());
         log.info("Durations: ");
         durations.stream().forEach(l -> log.info(l + ", "));
         // We put in a member because we will need this number in a future step.
@@ -104,7 +103,7 @@ public class JiraLoadTestSteps {
 
     private void verifyNumberOfIssues() {
         int numOfIssues = jiraUtils.getNumberOfIssuesInProject(jiraProperties.getProject());
-        Assert.assertEquals("The number of issues in JIRA is wrong", 154, numOfIssues);
+        Assert.assertEquals("The number of issues in JIRA is wrong", 385, numOfIssues);
     }
 
     private void internalPublishResults() throws ExitThrowable, IOException {
