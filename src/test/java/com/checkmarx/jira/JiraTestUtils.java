@@ -69,16 +69,15 @@ public class JiraTestUtils implements IJiraTestUtils {
 
     @Override
     public void cleanProject(String projectKey) {
-        SearchResult searchResult = searchForAllIssues(projectKey);
-        for (Issue issue: searchResult.getIssues()) {
+        Set<Issue> issues = geAllIssuesInProject(projectKey);
+        for (Issue issue: issues) {
             deleteIssue(issue.getKey());
         }
     }
 
     @Override
     public int getNumberOfIssuesInProject(String projectKey) {
-        SearchResult result = searchForAllIssues(projectKey);
-        return result.getTotal();
+        return geAllIssuesInProject(projectKey).size();
     }
 
     private Set<Issue> geAllIssuesInProject(String projectKey) {

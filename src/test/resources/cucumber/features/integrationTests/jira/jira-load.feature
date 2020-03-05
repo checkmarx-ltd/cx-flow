@@ -12,4 +12,4 @@ Feature: Load testing for JIRA
 
     Examples:
     | Num_Of_Findings |  Num_Of_Issues  | Percents_Threshold  | Primary_Duration_Threshold  |   Secondary_Duration_Threshold  | samples |
-    | 1000            | 1000            | 95                  | 15000                       | 20000                        | 3     |
+    | 1000            | 1000            | 95                  | 15000                       | 20000                        | 1     |
