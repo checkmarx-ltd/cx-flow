@@ -7,6 +7,7 @@ import org.springframework.validation.annotation.Validated;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Map;
 
 @Component
 @ConfigurationProperties(prefix = "cx-flow")
@@ -40,6 +41,7 @@ public class FlowProperties {
     private Integer httpReadTimeout = 120000;
     private boolean listFalsePositives = false;
     private Mail mail;
+    private Map<FindingSeverity,Integer> thresholds;
 
     public String getContact() {
         return this.contact;
@@ -256,6 +258,14 @@ public class FlowProperties {
 
     public void setListFalsePositives(boolean listFalsePositives) {
         this.listFalsePositives = listFalsePositives;
+    }
+
+    public Map<FindingSeverity, Integer> getThresholds() {
+        return thresholds;
+    }
+
+    public void setThresholds(Map<FindingSeverity, Integer> thresholds) {
+        this.thresholds = thresholds;
     }
 
     public static class Mail {
