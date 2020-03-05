@@ -1,6 +1,7 @@
 package com.checkmarx.flow.cucumber.component.parse;
 
 import com.checkmarx.flow.CxFlowApplication;
+import com.checkmarx.flow.cucumber.common.Constants;
 import com.google.common.collect.Sets;
 import cucumber.api.PendingException;
 import io.cucumber.java.en.And;
@@ -100,7 +101,7 @@ public class LoadingSastResultsSteps {
     }
 
     private List<String> getSastResultsHavingReferenceReports() throws IOException, URISyntaxException {
-        Set<String> sampleSastResults = getResourceFilenames(TestContext.SAMPLE_SAST_RESULTS_DIR,
+        Set<String> sampleSastResults = getResourceFilenames(Constants.SAMPLE_SAST_RESULTS_DIR,
                 TestContext.SAST_RESULT_EXTENSION);
 
         Set<String> referenceCxFlowReports = getResourceFilenames(TestContext.CXFLOW_REPORTS_DIR,

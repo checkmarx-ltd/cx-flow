@@ -1,5 +1,6 @@
 package com.checkmarx.flow.cucumber.component.parse;
 
+import com.checkmarx.flow.cucumber.common.Constants;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.utils.TestsParseUtils;
@@ -84,13 +85,8 @@ public class RunningCxFlowSteps {
     }
 
     private Path copyInputResourceToWorkDir(String inputFilename) throws IOException {
-        String srcResourcePath = Paths.get(TestContext.CUCUMBER_DATA_DIR,
-                TestContext.SAMPLE_SAST_RESULTS_DIR,
-                inputFilename).toString();
-
-        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-
-        try (InputStream srcStream = classLoader.getResourceAsStream(srcResourcePath)) {
+        String srcResourcePath = Paths.get(Constants.SAMPLE_SAST_RESULTS_DIR, inputFilename).toString();
+        try (InputStream srcStream = TestUtils.getResourceAsStream(srcResourcePath)) {
             if (srcStream == null) {
                 throw new IOException("Unable to get resource: " + srcResourcePath);
             }

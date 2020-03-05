@@ -1,5 +1,7 @@
 package com.checkmarx.flow.cucumber.component.parse;
 
+import com.checkmarx.flow.cucumber.common.Constants;
+import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -37,13 +39,8 @@ public class SastResultParser {
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             DocumentBuilder documentBuilder = factory.newDocumentBuilder();
-
-            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-
-            Path srcResourcePath = Paths.get(TestContext.CUCUMBER_DATA_DIR,
-                    TestContext.SAMPLE_SAST_RESULTS_DIR,
-                    filename);
-            try (InputStream srcStream = classLoader.getResourceAsStream(srcResourcePath.toString())) {
+            Path srcResourcePath = Paths.get(Constants.SAMPLE_SAST_RESULTS_DIR, filename);
+            try (InputStream srcStream = TestUtils.getResourceAsStream(srcResourcePath.toString())) {
                 if (srcStream != null) {
                     result = documentBuilder.parse(srcStream);
                 }
