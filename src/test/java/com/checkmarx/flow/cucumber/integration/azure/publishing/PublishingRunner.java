@@ -6,7 +6,7 @@ import org.junit.runner.RunWith;
 
 @RunWith(Cucumber.class)
 @CucumberOptions(
-        features = "src/test/resources/cucumber/features/integrationTests/jira/publish-processing.feature",
+        features = "src/test/resources/cucumber/features/integrationTests/azure/publishing.feature",
         tags = "not @Skip")
 public class PublishingRunner {
 }

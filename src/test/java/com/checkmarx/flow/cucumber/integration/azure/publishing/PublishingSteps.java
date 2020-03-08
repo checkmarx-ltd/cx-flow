@@ -16,19 +16,19 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.web.util.HtmlUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Properties;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 @SpringBootTest(classes = {CxFlowApplication.class})
 public class PublishingSteps {
     private static final String PROPERTIES_FILE_PATH = "cucumber/features/integrationTests/azure/publishing.properties";
-    private static final String DEFAULT_BRANCH = "master";
 
     @Autowired
     private FlowService flowService;
@@ -40,6 +40,7 @@ public class PublishingSteps {
     private CxProperties cxProperties;
 
     private AzureDevopsClient adoClient;
+
     private String projectName;
     private String sastReportFilename;
 
@@ -55,7 +56,7 @@ public class PublishingSteps {
         adoClient.deleteProjectIssues(projectName);
     }
 
-    @Given("Azure DevOps(?: still)? doesn't contain any issues")
+    @Given("Azure DevOps doesn't contain any issues")
     public void azureDevOpsDoesnTContainAnyIssues() throws IOException {
         verifyIssueCount(0);
     }
@@ -89,7 +90,7 @@ public class PublishingSteps {
                 .bugTracker(bugTracker)
                 .namespace(projectName)
                 .repoName(projectName)
-                .branch(DEFAULT_BRANCH)
+                .branch(AzureDevopsClient.DEFAULT_BRANCH)
                 .product(ScanRequest.Product.CX)
                 .build();
 
@@ -108,8 +109,7 @@ public class PublishingSteps {
     public void sastReportContainsNumberOfFindingsDifferentVulnAndFile(int findingCount) {
         if (findingCount == 2) {
             sastReportFilename = "2-findings-different-vuln-type-different-files.xml";
-        }
-        else {
+        } else {
             throwFindingCountError(findingCount);
         }
     }
@@ -130,5 +130,40 @@ public class PublishingSteps {
     private void verifyIssueCount(int expectedCount) throws IOException {
         int actualCount = adoClient.getIssueCount(projectName);
         assertEquals("Incorrect number of issues.", expectedCount, actualCount);
+    }
+
+    @Given("Azure DevOps initially contains {int} open issue with title: {string} and description containing link: {string}")
+    public void azureDevOpsInitiallyContainsIssue(int issueCount, String title, String link) {
+        Issue issue = Issue.builder()
+                .title(title)
+                .description(link)
+                .projectName(projectName)
+                .state(adoProperties.getOpenStatus())
+                .build();
+
+        for (int i = 0; i < issueCount; i++) {
+            adoClient.createIssue(issue);
+        }
+    }
+
+    @Given("Azure DevOps contains {int} open issue with title: {string} and description containing link: {string}")
+    public void azureDevOpsContainsIssue(int issueCount, String title, String link) throws IOException {
+        List<Issue> issues = adoClient.getIssues(projectName);
+        assertEquals("Unexpected issue count after publishing.", issueCount, issues.size());
+        String linkInHtmlAttribute = HtmlUtils.htmlEscape(link);
+        for (Issue issue : issues) {
+            assertEquals("Invalid issue state.", adoProperties.getOpenStatus(), issue.getState());
+            assertEquals("Invalid issue title.", title, issue.getTitle());
+
+            String description = issue.getDescription();
+            assertNotNull("Issue is missing description.", description);
+            assertTrue("Description doesn't contain the link: " + link, description.contains(linkInHtmlAttribute));
+        }
+    }
+
+
+    @And("SAST report contains {int} finding with vulnerability type {string}, filename {string}, link {string}, and not marked as false positive")
+    public void sastReportContainsFinding(int findingCount, String vulnerabilityType, String filename, String link) {
+        sastReportFilename = "1-finding.xml";
     }
 }

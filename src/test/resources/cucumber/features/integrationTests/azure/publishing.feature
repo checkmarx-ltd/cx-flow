@@ -31,16 +31,18 @@ Feature: Parsing SAST report and publishing items to Azure DevOps
     Given Azure DevOps doesn't contain any issues
     And SAST report contains 3 findings, all marked as false positive
     When publishing the report
-    Then Azure DevOps still doesn't contain any issues
+    Then Azure DevOps doesn't contain any issues
 
-  @Skip
   @Update_issue
-  Scenario: Updating an existing issue
-    Given Azure DevOps contains 1 open issue with vulnerability type T, filename F, description D1 and 'last updated' time U1
-    And SAST report contains 1 finding with vulnerability type T, filename F, description D2, and not marked as false positive
+  Scenario Outline: Updating an existing issue
+    Given Azure DevOps initially contains 1 open issue with title: "<title>" and description containing link: "<link1>"
+    And SAST report contains 1 finding with vulnerability type "<vulnerability>", filename "<filename>", link "<link2>", and not marked as false positive
     When publishing the report
-    Then Azure DevOps contains 1 open issue with vulnerability type T, filename F, description D2 and 'last updated' time U2
-    And U2 is greater than U1
+    Then Azure DevOps contains 1 open issue with title: "<title>" and description containing link: "<link2>"
+
+    Examples:
+      | title                                                  | vulnerability             | filename       | link1              | link2                                                                       |
+      | CX Reflected_XSS_All_Clients @ DOS_Login.java [master] | Reflected_XSS_All_Clients | DOS_Login.java | http://initial.url | http://CX-FLOW-CLEAN/CxWebClient/ViewerMain.aspx?scanid=1000026&projectid=6 |
 
   @Skip
   @Close_issue
@@ -61,12 +63,15 @@ Feature: Parsing SAST report and publishing items to Azure DevOps
   @Skip
   @Close_issue
   Scenario: Closing only relevant issues
-    # Closing an issue if it doesn't appear in CxFlow report.
+  Make sure CxFlow only closes issues that do not appear in SAST report. Issues that do appear in SAST report
+  should be left open.
     Given Azure DevOps contains 2 open issues with filenames F1 and F2
     And SAST report contains 1 finding with filename F1, not marked as false positive
     When publishing the report
     Then Azure DevOps contains 1 open issue with filename F1
     And 1 closed issue with filename F2
+
+  # Reopening issues?
 
   @Skip
   @NegativeTest

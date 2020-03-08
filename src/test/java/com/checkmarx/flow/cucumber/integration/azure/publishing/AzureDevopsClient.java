@@ -1,12 +1,13 @@
 package com.checkmarx.flow.cucumber.integration.azure.publishing;
 
 import com.checkmarx.flow.config.ADOProperties;
+import com.checkmarx.flow.dto.azure.CreateWorkItemAttr;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.awaitility.Awaitility;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
@@ -17,19 +18,24 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Spliterator;
+import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 @Component
 @Slf4j
 public class AzureDevopsClient {
-    private static final String BASIC_PROJECT_TEMPLATE_ID = "b8a3a935-7e91-48b8-a94c-606d37c3e9f2";
+    // Affects the list of valid issue states. CxFlow assumes this template by default.
+    private static final String AGILE_PROJECT_TEMPLATE_ID = "adcc42ab-9882-485e-a3ed-7678f01f66bc";
+
     private static final Duration WAITING_TIMEOUT = Duration.ofMinutes(1);
     private static final Duration POLL_INTERVAL = Duration.ofSeconds(1);
 
-    public static final String API_SEGMENT = "_apis";
-    public static final String API_VERSION_PARAM = "api-version";
+    static final String DEFAULT_BRANCH = "master";
 
     private static final String PROJECT_CREATION_REQUEST_TEMPLATE =
             ("{" +
@@ -40,12 +46,14 @@ public class AzureDevopsClient {
                     "      'sourceControlType': 'Git'   " +
                     "    },                             " +
                     "    'processTemplate': {           " +
-                    "      'templateTypeId': '" + BASIC_PROJECT_TEMPLATE_ID + "'" +
+                    "      'templateTypeId': '" + AGILE_PROJECT_TEMPLATE_ID + "'" +
                     "    }" +
                     "  }" +
                     "}").replace("'", "\"");
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
+
+    private final String apiVersionParam;
 
     private final RestTemplate restClient = new RestTemplate();
 
@@ -53,6 +61,7 @@ public class AzureDevopsClient {
 
     public AzureDevopsClient(ADOProperties adoProperties) {
         this.adoProperties = adoProperties;
+        apiVersionParam = "api-version=" + adoProperties.getApiVersion();
     }
 
     public void ensureProjectExists(String projectName) throws IOException {
@@ -63,15 +72,26 @@ public class AzureDevopsClient {
     }
 
     public int getIssueCount(String projectName) throws IOException {
-        return getProjectIssues(projectName).size();
+        return getProjectIssueIds(projectName).size();
     }
 
     public void deleteProjectIssues(String projectName) throws IOException {
-        ArrayNode issues = getProjectIssues(projectName);
-        for (JsonNode issue : issues) {
-            String issueId = issue.get("id").asText();
+        List<String> issueIds = getProjectIssueIds(projectName);
+        for (String issueId : issueIds) {
             deleteIssue(projectName, issueId);
         }
+    }
+
+    public void createIssue(Issue issue) {
+        log.info("Creating ADO issue: {}.", issue);
+        String url = getIssueCreationUrl(issue.getProjectName());
+        HttpEntity<?> request = getIssueCreationRequestEntity(issue);
+        restClient.exchange(url, HttpMethod.POST, request, String.class);
+    }
+
+    public List<Issue> getIssues(String projectName) throws IOException {
+        List<String> issueIds = getProjectIssueIds(projectName);
+        return getProjectIssuesByIds(issueIds, projectName);
     }
 
     private void deleteIssue(String projectName, String issueId) {
@@ -81,7 +101,7 @@ public class AzureDevopsClient {
         restClient.exchange(url, HttpMethod.DELETE, request, String.class);
     }
 
-    private ArrayNode getProjectIssues(String projectName) throws IOException {
+    private List<String> getProjectIssueIds(String projectName) throws IOException {
         ObjectNode requestBody = objectMapper.createObjectNode();
 
         // WIQL language is read-only, so potential parameter injection shouldn't do any harm.
@@ -95,7 +115,10 @@ public class AzureDevopsClient {
         ResponseEntity<ObjectNode> response = restClient.exchange(url, HttpMethod.POST, request, ObjectNode.class);
 
         ObjectNode responseBody = extractBody(response);
-        return (ArrayNode) responseBody.get("workItems");
+
+        return StreamSupport.stream(responseBody.get("workItems").spliterator(), false)
+                .map(issue -> issue.get("id").asText())
+                .collect(Collectors.toList());
     }
 
     private ObjectNode extractBody(HttpEntity<ObjectNode> response) throws IOException {
@@ -136,6 +159,18 @@ public class AzureDevopsClient {
         return operationId;
     }
 
+    private List<Issue> getProjectIssuesByIds(List<String> issueIds, String projectName) throws IOException {
+        String url = getIssueByIdsUrl(issueIds, projectName);
+        HttpEntity<?> request = getRequestEntity(null);
+
+        ResponseEntity<ObjectNode> response = restClient.exchange(url, HttpMethod.GET, request, ObjectNode.class);
+
+        Spliterator<JsonNode> spliterator = extractBody(response).get("value").spliterator();
+        return StreamSupport.stream(spliterator, false)
+                .map(toTypedIssue())
+                .collect(Collectors.toList());
+    }
+
     private void waitUntilProjectIsCreated(String operationId) {
         Awaitility.await()
                 .atMost(WAITING_TIMEOUT)
@@ -155,6 +190,15 @@ public class AzureDevopsClient {
         return status.equals("succeeded");
     }
 
+    private Function<JsonNode, Issue> toTypedIssue() {
+        return rawIssue -> Issue.builder()
+                .id(rawIssue.get("id").asText())
+                .description(rawIssue.at("/fields/System.Description").textValue())
+                .title(rawIssue.at("/fields/System.Title").textValue())
+                .state(rawIssue.at("/fields/System.State").textValue())
+                .build();
+    }
+
     private <T> HttpEntity<T> getRequestEntity(@Nullable T body) {
         HttpHeaders headers = new HttpHeaders();
 
@@ -164,25 +208,98 @@ public class AzureDevopsClient {
 
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        headers.setBasicAuth("", adoProperties.getToken());
+        setAuthentication(headers);
 
         return new HttpEntity<>(body, headers);
     }
 
+    private HttpEntity<?> getIssueCreationRequestEntity(Issue issue) {
+        CreateWorkItemAttr title = getNewIssueTitle(issue);
+        CreateWorkItemAttr description = getNewIssueDescription(issue);
+        CreateWorkItemAttr state = getNewIssueState(issue);
+        CreateWorkItemAttr tags = getNewIssueTags(issue);
+        List<CreateWorkItemAttr> body = Arrays.asList(title, description, state, tags);
+
+        HttpHeaders headers = getNewIssueHeaders();
+
+        return new HttpEntity<>(body, headers);
+    }
+
+    private CreateWorkItemAttr getNewIssueTags(Issue issue) {
+        CreateWorkItemAttr result = new CreateWorkItemAttr();
+        result.setOp("add");
+        result.setPath("/fields/Tags");
+
+        String tags = String.format("CX,owner:%1$s,repo:%1$s,branch:%2$s", issue.getProjectName(), DEFAULT_BRANCH);
+        result.setValue(tags);
+        return result;
+    }
+
+    private CreateWorkItemAttr getNewIssueState(Issue issue) {
+        CreateWorkItemAttr state = new CreateWorkItemAttr();
+        state.setOp("add");
+        state.setPath("/fields/System.State");
+        state.setValue(issue.getState());
+        return state;
+    }
+
+    private HttpHeaders getNewIssueHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set(HttpHeaders.CONTENT_TYPE, "application/json-patch+json");
+        setAuthentication(headers);
+        return headers;
+    }
+
+    private CreateWorkItemAttr getNewIssueDescription(Issue issue) {
+        CreateWorkItemAttr description = new CreateWorkItemAttr();
+        description.setOp("add");
+        description.setPath("/fields/System.Description");
+        description.setValue(issue.getDescription());
+        return description;
+    }
+
+    private CreateWorkItemAttr getNewIssueTitle(Issue issue) {
+        CreateWorkItemAttr title = new CreateWorkItemAttr();
+        title.setOp("add");
+        title.setPath("/fields/System.Title");
+        title.setValue(issue.getTitle());
+        return title;
+    }
+
+    private void setAuthentication(HttpHeaders headers) {
+        headers.setBasicAuth("", adoProperties.getToken());
+    }
+
     private String getResourceUrl(String resourceName, @Nullable String id) {
         return UriComponentsBuilder.fromHttpUrl(adoProperties.getUrl())
-                .pathSegment(API_SEGMENT)
-                .path(resourceName)
-                .pathSegment(id)
-                .queryParam(API_VERSION_PARAM, adoProperties.getApiVersion())
+                .path("/_apis/{resource}/{id}")
+                .query(apiVersionParam)
+                .buildAndExpand(resourceName, id)
                 .toUriString();
     }
 
     private String getIssueDeletionUrl(String projectName, String issueId) {
         return UriComponentsBuilder.fromHttpUrl(adoProperties.getUrl())
-                .path("/{project}/{api}/wit/workitems/{id}")
-                .query("{version-param}={version}&destroy=true")
-                .buildAndExpand(projectName, API_SEGMENT, issueId, API_VERSION_PARAM, adoProperties.getApiVersion())
+                .path("/{project}/_apis/wit/workitems/{id}")
+                .query("{version}&destroy=true")
+                .buildAndExpand(projectName, issueId, apiVersionParam)
+                .toUriString();
+    }
+
+    private String getIssueCreationUrl(String projectName) {
+        return UriComponentsBuilder.fromHttpUrl(adoProperties.getUrl())
+                .path("/{project}/_apis/wit/workitems/${issue-type}")
+                .query(apiVersionParam)
+                .buildAndExpand(projectName, adoProperties.getIssueType())
+                .toUriString();
+    }
+
+    private String getIssueByIdsUrl(List<String> issueIds, String projectName) {
+        String joinedIds = StringUtils.join(issueIds,',');
+        return UriComponentsBuilder.fromHttpUrl(adoProperties.getUrl())
+                .path("/{project}/_apis/wit/workitems")
+                .query("{version}&ids={ids}&fields=System.Description,System.Title,System.State")
+                .buildAndExpand(projectName, apiVersionParam, joinedIds)
                 .toUriString();
     }
 
