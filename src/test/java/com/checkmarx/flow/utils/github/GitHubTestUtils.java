@@ -62,7 +62,7 @@ public class GitHubTestUtils implements GitHubTestUtilsImpl {
 
     @Override
     public void closeAllIssues(List<Issue> issuesList, ScanRequest request) {
-        if (!issuesList.isEmpty()) {
+        if (issuesList !=null) {
             issuesList.forEach(issue ->
                     closeIssue(issue, request));
         }

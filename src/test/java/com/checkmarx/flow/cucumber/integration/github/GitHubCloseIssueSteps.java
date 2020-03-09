@@ -25,6 +25,9 @@ public class GitHubCloseIssueSteps extends GitHubCommonSteps {
     private static final String INPUT_VUL = "2-high-findings-same-vuln-same-file-with-not-ex-status.xml";
     private static final String INPUT_VUL_RESOLVED = "2-high-findings-same-vuln-same-file-resolved.xml";
     private static final String REPO_NAME = "VB_3845";
+    private static final String BRANCH_NAME = "master";
+    private static final String TEAM_NAME = "CxServer";
+    private static final String NAMESPACE = "cxflowtestuser";
 
     private ScanRequest scanRequest;
     private Filter filter;
@@ -51,15 +54,15 @@ public class GitHubCloseIssueSteps extends GitHubCommonSteps {
         flowService.cxParseResults(scanRequest, getFileFromResourcePath(INPUT_BASE_PATH + INPUT_VUL));
         List<Issue> openIssuesList = gitHubTestUtils.filterIssuesByState(gitHubTestUtils.getIssues(scanRequest), "open");
 
-        Assert.assertTrue("Expected to find open issues, but found none", !openIssuesList.isEmpty());
+        Assert.assertFalse("Expected to find open issues, but found none", openIssuesList.isEmpty());
     }
 
-    @When("resolving the issue's all vulnerabilities")
+    @When("resolving all vulnerabilities for an issue")
     public void resolveIssueVulnerabilities() throws IOException, ExitThrowable {
         flowService.cxParseResults(scanRequest, getFileFromResourcePath(INPUT_BASE_PATH + INPUT_VUL_RESOLVED));
     }
 
-    @Then("the issues should mark as closed")
+    @Then("the issues should be mark as closed")
     public void validateIssueIsClosed() {
         List<Issue> openIssuesList = gitHubTestUtils.filterIssuesByState(gitHubTestUtils.getIssues(scanRequest), "open");
 
@@ -68,21 +71,17 @@ public class GitHubCloseIssueSteps extends GitHubCommonSteps {
 
     private ScanRequest getBasicScanRequest() {
         return ScanRequest.builder()
-                .application("TestApp")
                 .product(ScanRequest.Product.CX)
-                .project(REPO_NAME + "-master")
-                .team("CxServer")
-                .namespace("cxflowtestuser")
+                .project(REPO_NAME + "-" + BRANCH_NAME)
+                .team(TEAM_NAME)
+                .namespace(NAMESPACE)
                 .repoName(REPO_NAME)
-                .repoUrl("http://localhost/repo.git")
-                .repoUrlWithAuth("http://localhost/repo.git")
                 .repoType(ScanRequest.Repository.GITHUB)
-                .branch("master")
+                .branch(BRANCH_NAME)
                 .bugTracker(getCustomBugTrackerToGit())
-                .refs(Constants.CX_BRANCH_PREFIX.concat("master"))
+                .refs(Constants.CX_BRANCH_PREFIX.concat(BRANCH_NAME))
                 .email(null)
                 .incremental(false)
-                .scanPreset("Checkmarx Default")
                 .filters(Collections.singletonList(filter))
                 .build();
     }
