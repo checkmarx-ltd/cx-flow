@@ -18,7 +18,6 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Spliterator;
 import java.util.function.Function;
@@ -85,7 +84,13 @@ public class AzureDevopsClient {
     public void createIssue(Issue issue) {
         log.info("Creating ADO issue: {}.", issue);
         String url = getIssueCreationUrl(issue.getProjectName());
-        HttpEntity<?> request = getIssueCreationRequestEntity(issue);
+
+        IssueCreationRequestBuilder bodyBuilder = new IssueCreationRequestBuilder();
+        List<CreateWorkItemAttr> body = bodyBuilder.getHttpEntityBody(issue);
+
+        HttpHeaders headers = getNewIssueHeaders();
+        HttpEntity<?> request = new HttpEntity<>(body, headers);
+
         restClient.exchange(url, HttpMethod.POST, request, String.class);
     }
 
@@ -213,57 +218,11 @@ public class AzureDevopsClient {
         return new HttpEntity<>(body, headers);
     }
 
-    private HttpEntity<?> getIssueCreationRequestEntity(Issue issue) {
-        CreateWorkItemAttr title = getNewIssueTitle(issue);
-        CreateWorkItemAttr description = getNewIssueDescription(issue);
-        CreateWorkItemAttr state = getNewIssueState(issue);
-        CreateWorkItemAttr tags = getNewIssueTags(issue);
-        List<CreateWorkItemAttr> body = Arrays.asList(title, description, state, tags);
-
-        HttpHeaders headers = getNewIssueHeaders();
-
-        return new HttpEntity<>(body, headers);
-    }
-
-    private CreateWorkItemAttr getNewIssueTags(Issue issue) {
-        CreateWorkItemAttr result = new CreateWorkItemAttr();
-        result.setOp("add");
-        result.setPath("/fields/Tags");
-
-        String tags = String.format("CX,owner:%1$s,repo:%1$s,branch:%2$s", issue.getProjectName(), DEFAULT_BRANCH);
-        result.setValue(tags);
-        return result;
-    }
-
-    private CreateWorkItemAttr getNewIssueState(Issue issue) {
-        CreateWorkItemAttr state = new CreateWorkItemAttr();
-        state.setOp("add");
-        state.setPath("/fields/System.State");
-        state.setValue(issue.getState());
-        return state;
-    }
-
     private HttpHeaders getNewIssueHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.set(HttpHeaders.CONTENT_TYPE, "application/json-patch+json");
         setAuthentication(headers);
         return headers;
-    }
-
-    private CreateWorkItemAttr getNewIssueDescription(Issue issue) {
-        CreateWorkItemAttr description = new CreateWorkItemAttr();
-        description.setOp("add");
-        description.setPath("/fields/System.Description");
-        description.setValue(issue.getDescription());
-        return description;
-    }
-
-    private CreateWorkItemAttr getNewIssueTitle(Issue issue) {
-        CreateWorkItemAttr title = new CreateWorkItemAttr();
-        title.setOp("add");
-        title.setPath("/fields/System.Title");
-        title.setValue(issue.getTitle());
-        return title;
     }
 
     private void setAuthentication(HttpHeaders headers) {
