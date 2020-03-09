@@ -44,7 +44,7 @@ jobs:
           path: ~/test-results
       - store_artifacts:
           path: ~/test-results/junit
-      - sonarcloud/scan
+#      - sonarcloud/scan
 
   docker-push:
     docker:
