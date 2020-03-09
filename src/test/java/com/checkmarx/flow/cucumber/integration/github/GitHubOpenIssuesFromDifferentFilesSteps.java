@@ -22,6 +22,9 @@ public class GitHubOpenIssuesFromDifferentFilesSteps extends GitHubCommonSteps {
 
     private static final String INPUT_BASE_PATH = "cucumber/data/sample-sast-results/github-results-samples/";
     private static final String REPO_NAME = "VB_3845";
+    private static final String BRANCH_NAME = "master";
+    private static final String TEAM_NAME = "CxServer";
+    private static final String NAMESPACE = "cxflowtestuser";
 
     private Filter filter;
     private ScanRequest scanRequest;
@@ -58,21 +61,17 @@ public class GitHubOpenIssuesFromDifferentFilesSteps extends GitHubCommonSteps {
 
     private ScanRequest getBasicScanRequest() {
         return ScanRequest.builder()
-                .application("TestApp")
                 .product(ScanRequest.Product.CX)
-                .project(REPO_NAME + "-master")
-                .team("CxServer")
-                .namespace("cxflowtestuser")
+                .project(REPO_NAME + "-" + BRANCH_NAME)
+                .team(TEAM_NAME)
+                .namespace(NAMESPACE)
                 .repoName(REPO_NAME)
-                .repoUrl("http://localhost/repo.git")
-                .repoUrlWithAuth("http://localhost/repo.git")
                 .repoType(ScanRequest.Repository.GITHUB)
-                .branch("master")
+                .branch(BRANCH_NAME)
                 .bugTracker(getCustomBugTrackerToGit())
-                .refs(Constants.CX_BRANCH_PREFIX.concat("master"))
+                .refs(Constants.CX_BRANCH_PREFIX.concat(BRANCH_NAME))
                 .email(null)
                 .incremental(false)
-                .scanPreset("Checkmarx Default")
                 .filters(Collections.singletonList(filter))
                 .build();
     }

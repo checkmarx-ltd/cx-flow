@@ -25,6 +25,9 @@ public class GitHubResolveIssueVulnerabilitiesSteps extends GitHubCommonSteps {
     private static final String INPUT_VUL_BEFORE_FIX = "5-findings-different-vuln-same-file.xml";
     private static final String INPUT_VUL_AFTER_FIX = "2-high-findings-same-vuln-same-file-with-not-ex-status.xml";
     private static final String REPO_NAME = "VB_3845";
+    private static final String BRANCH_NAME = "master";
+    private static final String TEAM_NAME = "CxServer";
+    private static final String NAMESPACE = "cxflowtestuser";
     private static final int EXPECTED_CODE_LINES_BEFORE_FIX = 2;
     private static final int EXPECTED_CODE_LINES_after_FIX = 1;
 
@@ -75,21 +78,17 @@ public class GitHubResolveIssueVulnerabilitiesSteps extends GitHubCommonSteps {
 
     private ScanRequest getBasicScanRequest() {
         return ScanRequest.builder()
-                .application("TestApp")
                 .product(ScanRequest.Product.CX)
-                .project(REPO_NAME + "-master")
-                .team("CxServer")
-                .namespace("cxflowtestuser")
+                .project(REPO_NAME + "-" + BRANCH_NAME)
+                .team(TEAM_NAME)
+                .namespace(NAMESPACE)
                 .repoName(REPO_NAME)
-                .repoUrl("http://localhost/repo.git")
-                .repoUrlWithAuth("http://localhost/repo.git")
                 .repoType(ScanRequest.Repository.GITHUB)
-                .branch("master")
+                .branch(BRANCH_NAME)
                 .bugTracker(getCustomBugTrackerToGit())
-                .refs(Constants.CX_BRANCH_PREFIX.concat("master"))
+                .refs(Constants.CX_BRANCH_PREFIX.concat(BRANCH_NAME))
                 .email(null)
                 .incremental(false)
-                .scanPreset("Checkmarx Default")
                 .filters(Collections.singletonList(filter))
                 .build();
     }

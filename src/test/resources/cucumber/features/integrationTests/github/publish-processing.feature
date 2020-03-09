@@ -36,8 +36,8 @@ Feature: parse and then publish processing given SAST XML results, findings shou
   Scenario: publish results and check GitHub issue is getting closed
     Given target is GitHub
     And for a given issue, with a given vulnerabilities
-    When resolving the issue's all vulnerabilities
-    Then the issues should mark as closed
+    When resolving all vulnerabilities for an issue
+    Then the issues should be mark as closed
 
 
 
