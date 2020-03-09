@@ -86,7 +86,8 @@ workflows:
   version: 2.1
   build_deploy:
     jobs:
-      - build
+      - build:
+          context: sonarcloud
       - docker-push:
           filters:
             branches:
