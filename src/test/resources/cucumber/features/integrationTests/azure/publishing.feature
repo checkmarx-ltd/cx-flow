@@ -44,13 +44,16 @@ Feature: Parsing SAST report and publishing items to Azure DevOps
       | title                                                  | vulnerability             | filename       | link1              | link2                                                                       |
       | CX Reflected_XSS_All_Clients @ DOS_Login.java [master] | Reflected_XSS_All_Clients | DOS_Login.java | http://initial.url | http://CX-FLOW-CLEAN/CxWebClient/ViewerMain.aspx?scanid=1000026&projectid=6 |
 
-  @Skip
   @Close_issue
-  Scenario: Closing an existing issue if its finding no longer exists
-    Given Azure DevOps contains 1 open issue with vulnerability type T and filename F
-    And SAST report doesn't contain any findings with vulnerability type T and filename F
+  Scenario Outline: Closing an existing issue if its finding no longer exists in SAST report
+    Given Azure DevOps initially contains 1 open issue with title: "<title>"
+    And SAST report contains 1 finding with vulnerability type "Reflected_XSS_All_Clients" and filename "DOS_Login.java"
     When publishing the report
-    Then Azure DevOps contains 1 closed issue with vulnerability type T and filename F
+    Then Azure DevOps contains 2 issues
+    And an issue with the title "<title>" is in "Closed" state
+    Examples:
+      | title                                        |
+      | CX Mega_Vulnerability @ Gotcha.java [master] |
 
   @Skip
   @Close_issue
