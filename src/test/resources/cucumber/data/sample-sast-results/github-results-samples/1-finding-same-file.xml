@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CxXMLResults InitiatorName="admin admin" Owner="admin@cx" ScanId="1010021" ProjectId="10003" ProjectName="Nimrod_1" TeamFullPathOnReportDate="CxServer" DeepLink="http://WIN2K12-TEMP/CxWebClient/ViewerMain.aspx?scanid=1010021&amp;projectid=10003" ScanStart="Thursday, March 5, 2020 3:49:30 PM" Preset="Checkmarx Default" ScanTime="00h:00m:56s" LinesOfCodeScanned="8" FilesScanned="1" ReportCreationTime="Thursday, March 5, 2020 3:52:57 PM" Team="CxServer" CheckmarxVersion="8.9.0.210" ScanComments="" ScanType="Full" SourceOrigin="LocalPath" Visibility="Public">
+    <Query id="1109" categories="PCI DSS v3.2;PCI DSS (3.2) - 6.5.1 - Injection flaws - particularly SQL injection,OWASP Top 10 2013;A1-Injection,FISMA 2014;System And Information Integrity,NIST SP 800-53;SI-10 Information Input Validation (P1),OWASP Top 10 2017;A1-Injection" cweId="77" name="Command_Injection" group="VB6_High_Risk" Severity="High" Language="VB6" LanguageHash="1327402671945948" LanguageChangeDate="2019-04-11T00:00:00.0000000" SeverityIndex="3" QueryPath="VB6\Cx\VB6 High Risk\Command Injection Version:0" QueryVersionCode="1109">
+        <Result NodeId="10100210001" FileName="HighRisk/Command_Injection.bas" Status="New" Line="6" Column="13" FalsePositive="False" Severity="High" AssignToUser="" state="0" Remark="" DeepLink="http://WIN2K12-TEMP/CxWebClient/ViewerMain.aspx?scanid=1010021&amp;projectid=10003&amp;pathid=1" SeverityIndex="3">
+            <Path ResultId="1010021" PathId="1" SimilarityId="1488024225">
+                <PathNode>
+                    <FileName>HighRisk/Command_Injection.bas</FileName>
+                    <Line>6</Line>
+                    <Column>13</Column>
+                    <NodeId>1</NodeId>
+                    <Name>text</Name>
+                    <Type></Type>
+                    <Length>1</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>6</Number>
+                            <Code>str = window.Text()    </Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>HighRisk/Command_Injection.bas</FileName>
+                    <Line>6</Line>
+                    <Column>1</Column>
+                    <NodeId>2</NodeId>
+                    <Name>str</Name>
+                    <Type></Type>
+                    <Length>3</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>6</Number>
+                            <Code>str = window.Text()    </Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>HighRisk/Command_Injection.bas</FileName>
+                    <Line>7</Line>
+                    <Column>22</Column>
+                    <NodeId>3</NodeId>
+                    <Name>str</Name>
+                    <Type></Type>
+                    <Length>3</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>7</Number>
+                            <Code>dblNotePadID = Shell(str, vbNormalFocus)</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>HighRisk/Command_Injection.bas</FileName>
+                    <Line>7</Line>
+                    <Column>16</Column>
+                    <NodeId>4</NodeId>
+                    <Name>shell</Name>
+                    <Type></Type>
+                    <Length>5</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>7</Number>
+                            <Code>dblNotePadID = Shell(str, vbNormalFocus)</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+    </Query>
+</CxXMLResults>
