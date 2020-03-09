@@ -1,0 +1,389 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CxXMLResults InitiatorName="admin admin" Owner="admin@cx" ScanId="1010013" ProjectId="10002" ProjectName="VB_3845-master" TeamFullPathOnReportDate="CxServer\SP\Company\cxflowtestuser" DeepLink="http://WIN2K12-TEMP/CxWebClient/ViewerMain.aspx?scanid=1010013&amp;projectid=10002" ScanStart="Tuesday, March 3, 2020 8:15:12 AM" Preset="Checkmarx Default" ScanTime="00h:01m:04s" LinesOfCodeScanned="112" FilesScanned="1" ReportCreationTime="Wednesday, March 4, 2020 3:31:38 PM" Team="cxflowtestuser" CheckmarxVersion="8.9.0.210" ScanComments="; ; ; ; ; ; ; ; ; ; ; ; CxFlow Automated Scan" ScanType="Full" SourceOrigin="GIT" Visibility="Public">
+    <Query id="1112" categories="PCI DSS v3.2;PCI DSS (3.2) - 6.5.1 - Injection flaws - particularly SQL injection,OWASP Top 10 2013;A1-Injection,FISMA 2014;System And Information Integrity,NIST SP 800-53;SI-10 Information Input Validation (P1),OWASP Top 10 2017;A1-Injection" cweId="89" name="SQL_Injection" group="VB6_High_Risk" Severity="High" Language="VB6" LanguageHash="1327402671945948" LanguageChangeDate="2019-04-11T00:00:00.0000000" SeverityIndex="3" QueryPath="VB6\Cx\VB6 High Risk\SQL Injection Version:1" QueryVersionCode="61764942">
+        <Result NodeId="10100130002" FileName="encode.frm" Status="Recurrent" Line="41" Column="28" FalsePositive="True" Severity="High" AssignToUser="" state="1" Remark="admin admin VB_3845-master, [Tuesday, March 3, 2020 3:41:51 PM]: Changed status to Not Exploitable&#xD;&#xA;admin admin VB_3845-master, [Tuesday, March 3, 2020 8:32:49 AM]: Changed status to To Verify&#xD;&#xA;admin admin VB_3845-master, [Tuesday, March 3, 2020 8:18:29 AM]: Changed status to Not Exploitable&#xD;&#xA;admin admin VB_3845-master, [Tuesday, March 3, 2020 8:18:22 AM]: Changed status to Not Exploitable" DeepLink="http://WIN2K12-TEMP/CxWebClient/ViewerMain.aspx?scanid=1010013&amp;projectid=10002&amp;pathid=2" SeverityIndex="3">
+            <Path ResultId="1010013" PathId="2" SimilarityId="-1269824577">
+                <PathNode>
+                    <FileName>encode.frm</FileName>
+                    <Line>41</Line>
+                    <Column>28</Column>
+                    <NodeId>1</NodeId>
+                    <Name>text</Name>
+                    <Type></Type>
+                    <Length>1</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>41</Number>
+                            <Code>    user_name = txtUserName.Text</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>encode.frm</FileName>
+                    <Line>41</Line>
+                    <Column>5</Column>
+                    <NodeId>2</NodeId>
+                    <Name>user_name</Name>
+                    <Type></Type>
+                    <Length>9</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>41</Number>
+                            <Code>    user_name = txtUserName.Text</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>encode.frm</FileName>
+                    <Line>46</Line>
+                    <Column>30</Column>
+                    <NodeId>3</NodeId>
+                    <Name>user_name</Name>
+                    <Type></Type>
+                    <Length>9</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>46</Number>
+                            <Code>        "WHERE UserName='" &amp; user_name &amp; "'" &amp; _</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>encode.frm</FileName>
+                    <Line>45</Line>
+                    <Column>5</Column>
+                    <NodeId>4</NodeId>
+                    <Name>query</Name>
+                    <Type></Type>
+                    <Length>5</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>45</Number>
+                            <Code>    query = "SELECT COUNT (*) FROM Passwords " &amp; _</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>encode.frm</FileName>
+                    <Line>52</Line>
+                    <Column>33</Column>
+                    <NodeId>5</NodeId>
+                    <Name>query</Name>
+                    <Type></Type>
+                    <Length>5</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>52</Number>
+                            <Code>    Set rs = m_DB.OpenRecordset(query, dbOpenSnapshot)</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>encode.frm</FileName>
+                    <Line>52</Line>
+                    <Column>18</Column>
+                    <NodeId>6</NodeId>
+                    <Name>openrecordset</Name>
+                    <Type></Type>
+                    <Length>1</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>52</Number>
+                            <Code>    Set rs = m_DB.OpenRecordset(query, dbOpenSnapshot)</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+        <Result NodeId="10100130003" FileName="encode.frm" Status="Recurrent" Line="42" Column="27" FalsePositive="True" Severity="High" AssignToUser="" state="1" Remark="admin admin VB_3845-master, [Tuesday, March 3, 2020 3:41:51 PM]: Changed status to Not Exploitable&#xD;&#xA;admin admin VB_3845-master, [Tuesday, March 3, 2020 8:32:49 AM]: Changed status to To Verify&#xD;&#xA;admin admin VB_3845-master, [Tuesday, March 3, 2020 8:18:29 AM]: Changed status to Not Exploitable" DeepLink="http://WIN2K12-TEMP/CxWebClient/ViewerMain.aspx?scanid=1010013&amp;projectid=10002&amp;pathid=3" SeverityIndex="3">
+            <Path ResultId="1010013" PathId="3" SimilarityId="1818213932">
+                <PathNode>
+                    <FileName>encode.frm</FileName>
+                    <Line>42</Line>
+                    <Column>27</Column>
+                    <NodeId>1</NodeId>
+                    <Name>text</Name>
+                    <Type></Type>
+                    <Length>1</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>42</Number>
+                            <Code>    password = txtPassword.Text</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>encode.frm</FileName>
+                    <Line>42</Line>
+                    <Column>5</Column>
+                    <NodeId>2</NodeId>
+                    <Name>password</Name>
+                    <Type></Type>
+                    <Length>8</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>42</Number>
+                            <Code>    password = txtPassword.Text</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>encode.frm</FileName>
+                    <Line>47</Line>
+                    <Column>30</Column>
+                    <NodeId>3</NodeId>
+                    <Name>password</Name>
+                    <Type></Type>
+                    <Length>8</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>47</Number>
+                            <Code>        "  AND Password='" &amp; password &amp; "'"</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>encode.frm</FileName>
+                    <Line>45</Line>
+                    <Column>5</Column>
+                    <NodeId>4</NodeId>
+                    <Name>query</Name>
+                    <Type></Type>
+                    <Length>5</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>45</Number>
+                            <Code>    query = "SELECT COUNT (*) FROM Passwords " &amp; _</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>encode.frm</FileName>
+                    <Line>52</Line>
+                    <Column>33</Column>
+                    <NodeId>5</NodeId>
+                    <Name>query</Name>
+                    <Type></Type>
+                    <Length>5</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>52</Number>
+                            <Code>    Set rs = m_DB.OpenRecordset(query, dbOpenSnapshot)</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>encode.frm</FileName>
+                    <Line>52</Line>
+                    <Column>18</Column>
+                    <NodeId>6</NodeId>
+                    <Name>openrecordset</Name>
+                    <Type></Type>
+                    <Length>1</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>52</Number>
+                            <Code>    Set rs = m_DB.OpenRecordset(query, dbOpenSnapshot)</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+    </Query>
+    <Query id="2122" categories="OWASP Top 10 2013;A6-Sensitive Data Exposure,FISMA 2014;Identification And Authentication,NIST SP 800-53;SC-4 Information in Shared Resources (P1),OWASP Top 10 2017;A3-Sensitive Data Exposure" cweId="359" name="Privacy_Violation" group="VB6_Medium_Threat" Severity="Medium" Language="VB6" LanguageHash="1327402671945948" LanguageChangeDate="2019-04-11T00:00:00.0000000" SeverityIndex="2" QueryPath="VB6\Cx\VB6 Medium Threat\Privacy Violation Version:1" QueryVersionCode="73499627">
+        <Result NodeId="10100130004" FileName="encode.frm" Status="Recurrent" Line="11" Column="5" FalsePositive="False" Severity="Medium" AssignToUser="" state="0" Remark="" DeepLink="http://WIN2K12-TEMP/CxWebClient/ViewerMain.aspx?scanid=1010013&amp;projectid=10002&amp;pathid=4" SeverityIndex="2">
+            <Path ResultId="1010013" PathId="4" SimilarityId="2038636427">
+                <PathNode>
+                    <FileName>encode.frm</FileName>
+                    <Line>11</Line>
+                    <Column>5</Column>
+                    <NodeId>1</NodeId>
+                    <Name>password</Name>
+                    <Type></Type>
+                    <Length>8</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>11</Number>
+                            <Code>    password = Replace$(txtPassword.Text, "'", "''")</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>encode.frm</FileName>
+                    <Line>16</Line>
+                    <Column>30</Column>
+                    <NodeId>2</NodeId>
+                    <Name>password</Name>
+                    <Type></Type>
+                    <Length>8</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>16</Number>
+                            <Code>        "  AND Password='" &amp; password &amp; "'"</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>encode.frm</FileName>
+                    <Line>14</Line>
+                    <Column>5</Column>
+                    <NodeId>3</NodeId>
+                    <Name>query</Name>
+                    <Type></Type>
+                    <Length>5</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>14</Number>
+                            <Code>    query = "SELECT COUNT (*) FROM Passwords " &amp; _</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>encode.frm</FileName>
+                    <Line>17</Line>
+                    <Column>21</Column>
+                    <NodeId>4</NodeId>
+                    <Name>query</Name>
+                    <Type></Type>
+                    <Length>5</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>17</Number>
+                            <Code>    txtQuery.Text = query</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>encode.frm</FileName>
+                    <Line>17</Line>
+                    <Column>13</Column>
+                    <NodeId>5</NodeId>
+                    <Name>text</Name>
+                    <Type></Type>
+                    <Length>1</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>17</Number>
+                            <Code>    txtQuery.Text = query</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+        <Result NodeId="10100130005" FileName="encode.frm" Status="Recurrent" Line="42" Column="5" FalsePositive="False" Severity="Medium" AssignToUser="" state="0" Remark="" DeepLink="http://WIN2K12-TEMP/CxWebClient/ViewerMain.aspx?scanid=1010013&amp;projectid=10002&amp;pathid=5" SeverityIndex="2">
+            <Path ResultId="1010013" PathId="5" SimilarityId="-603017501">
+                <PathNode>
+                    <FileName>encode.frm</FileName>
+                    <Line>42</Line>
+                    <Column>5</Column>
+                    <NodeId>1</NodeId>
+                    <Name>password</Name>
+                    <Type></Type>
+                    <Length>8</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>42</Number>
+                            <Code>    password = txtPassword.Text</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>encode.frm</FileName>
+                    <Line>47</Line>
+                    <Column>30</Column>
+                    <NodeId>2</NodeId>
+                    <Name>password</Name>
+                    <Type></Type>
+                    <Length>8</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>47</Number>
+                            <Code>        "  AND Password='" &amp; password &amp; "'"</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>encode.frm</FileName>
+                    <Line>45</Line>
+                    <Column>5</Column>
+                    <NodeId>3</NodeId>
+                    <Name>query</Name>
+                    <Type></Type>
+                    <Length>5</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>45</Number>
+                            <Code>    query = "SELECT COUNT (*) FROM Passwords " &amp; _</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>encode.frm</FileName>
+                    <Line>48</Line>
+                    <Column>21</Column>
+                    <NodeId>4</NodeId>
+                    <Name>query</Name>
+                    <Type></Type>
+                    <Length>5</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>48</Number>
+                            <Code>    txtQuery.Text = query</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>encode.frm</FileName>
+                    <Line>48</Line>
+                    <Column>13</Column>
+                    <NodeId>5</NodeId>
+                    <Name>text</Name>
+                    <Type></Type>
+                    <Length>1</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>48</Number>
+                            <Code>    txtQuery.Text = query</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+    </Query>
+    <Query id="1117" categories="OWASP Top 10 2013;A2-Broken Authentication and Session Management,OWASP Top 10 2017;A2-Broken Authentication" cweId="547" name="Hardcoded_password_in_Connection_String" group="VB6_Medium_Threat" Severity="Medium" Language="VB6" LanguageHash="1327402671945948" LanguageChangeDate="2019-04-11T00:00:00.0000000" SeverityIndex="2" QueryPath="VB6\Cx\VB6 Medium Threat\Hardcoded password in Connection String Version:0" QueryVersionCode="1117">
+        <Result NodeId="10100130001" FileName="encode.frm" Status="Recurrent" Line="67" Column="11" FalsePositive="False" Severity="Medium" AssignToUser="" state="0" Remark="" DeepLink="http://WIN2K12-TEMP/CxWebClient/ViewerMain.aspx?scanid=1010013&amp;projectid=10002&amp;pathid=1" SeverityIndex="2">
+            <Path ResultId="1010013" PathId="1" SimilarityId="1613817459">
+                <PathNode>
+                    <FileName>encode.frm</FileName>
+                    <Line>67</Line>
+                    <Column>11</Column>
+                    <NodeId>1</NodeId>
+                    <Name>""connection string""</Name>
+                    <Type></Type>
+                    <Length>19</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>67</Number>
+                            <Code>conn.Open "connection string"</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>encode.frm</FileName>
+                    <Line>67</Line>
+                    <Column>5</Column>
+                    <NodeId>2</NodeId>
+                    <Name>open</Name>
+                    <Type></Type>
+                    <Length>1</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>67</Number>
+                            <Code>conn.Open "connection string"</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+    </Query>
+</CxXMLResults>
