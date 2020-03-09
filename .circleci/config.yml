@@ -5,6 +5,7 @@ orbs:
 
 jobs:
   build:
+    context: sonarcloud
     docker:
       - image: circleci/openjdk:8-jdk
     working_directory: ~/repo
