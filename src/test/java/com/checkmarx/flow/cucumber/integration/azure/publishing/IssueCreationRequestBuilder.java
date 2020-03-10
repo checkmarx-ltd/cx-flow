@@ -1,5 +1,6 @@
 package com.checkmarx.flow.cucumber.integration.azure.publishing;
 
+import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.azure.CreateWorkItemAttr;
 
 import java.util.Arrays;
@@ -26,7 +27,7 @@ class IssueCreationRequestBuilder {
         CreateWorkItemAttr description = new CreateWorkItemAttr();
         description.setOp("add");
         description.setPath("/fields/System.Description");
-        description.setValue(issue.getDescription());
+        description.setValue(issue.getBody());
         return description;
     }
 
@@ -43,7 +44,8 @@ class IssueCreationRequestBuilder {
         result.setOp("add");
         result.setPath("/fields/Tags");
 
-        String tags = String.format("CX,owner:%1$s,repo:%1$s,branch:%2$s", issue.getProjectName(), AzureDevopsClient.DEFAULT_BRANCH);
+        String projectName = issue.getMetadata().get(AzureDevopsClient.PROJECT_NAME_KEY);
+        String tags = String.format("CX,owner:%1$s,repo:%1$s,branch:%2$s", projectName, AzureDevopsClient.DEFAULT_BRANCH);
         result.setValue(tags);
         return result;
     }

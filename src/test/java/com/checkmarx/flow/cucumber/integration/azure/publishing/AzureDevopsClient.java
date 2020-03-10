@@ -1,6 +1,7 @@
 package com.checkmarx.flow.cucumber.integration.azure.publishing;
 
 import com.checkmarx.flow.config.ADOProperties;
+import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.azure.CreateWorkItemAttr;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -30,6 +31,8 @@ import java.util.stream.StreamSupport;
 public class AzureDevopsClient {
     // Affects the list of valid issue states. CxFlow assumes this template by default.
     private static final String AGILE_PROJECT_TEMPLATE_ID = "adcc42ab-9882-485e-a3ed-7678f01f66bc";
+
+    static final String PROJECT_NAME_KEY = "projectName";
 
     private static final Duration WAITING_TIMEOUT = Duration.ofMinutes(1);
     private static final Duration POLL_INTERVAL = Duration.ofSeconds(1);
@@ -81,9 +84,10 @@ public class AzureDevopsClient {
         }
     }
 
-    public void createIssue(Issue issue) {
-        log.info("Creating ADO issue: {}.", issue);
-        String url = getIssueCreationUrl(issue.getProjectName());
+    public void createIssue(Issue issue) throws IOException {
+        log.info("Creating ADO issue: {}.", objectMapper.writeValueAsString(issue));
+        String projectName = issue.getMetadata().get(AzureDevopsClient.PROJECT_NAME_KEY);
+        String url = getIssueCreationUrl(projectName);
 
         IssueCreationRequestBuilder bodyBuilder = new IssueCreationRequestBuilder();
         List<CreateWorkItemAttr> body = bodyBuilder.getHttpEntityBody(issue);
@@ -107,6 +111,8 @@ public class AzureDevopsClient {
     }
 
     private List<String> getProjectIssueIds(String projectName) throws IOException {
+        log.info("Getting project issue IDs.");
+
         ObjectNode requestBody = objectMapper.createObjectNode();
 
         // WIQL language is read-only, so potential parameter injection shouldn't do any harm.
@@ -142,11 +148,15 @@ public class AzureDevopsClient {
         ResponseEntity<ObjectNode> response = restClient.exchange(url, HttpMethod.GET, request, ObjectNode.class);
         ObjectNode body = extractBody(response);
 
-        return StreamSupport.stream(body.get("value").spliterator(), false)
+        boolean result = StreamSupport.stream(body.get("value").spliterator(), false)
                 .anyMatch(withSame(projectName));
+
+        log.info(result ? "Project {} already exists" : "Project {} doesn't exist.", projectName);
+        return result;
     }
 
     private String queueProjectCreation(String projectName) throws IOException {
+        log.info("Queueing project creation: {}", projectName);
         ObjectNode body;
         try {
             body = (ObjectNode) objectMapper.readTree(PROJECT_CREATION_REQUEST_TEMPLATE);
@@ -165,6 +175,7 @@ public class AzureDevopsClient {
     }
 
     private List<Issue> getProjectIssuesByIds(List<String> issueIds, String projectName) throws IOException {
+        log.info("Getting issues by IDs: {}", objectMapper.writeValueAsString(issueIds));
         String url = getIssueByIdsUrl(issueIds, projectName);
         HttpEntity<?> request = getRequestEntity(null);
 
@@ -190,18 +201,20 @@ public class AzureDevopsClient {
         ResponseEntity<ObjectNode> response = restClient.exchange(url, HttpMethod.GET, request, ObjectNode.class);
 
         String status = extractBody(response).get("status").textValue();
-        log.info("Status: {}.", status);
+        log.info("Project creation status: {}.", status);
 
         return status.equals("succeeded");
     }
 
     private Function<JsonNode, Issue> toTypedIssue() {
-        return rawIssue -> Issue.builder()
-                .id(rawIssue.get("id").asText())
-                .description(rawIssue.at("/fields/System.Description").textValue())
-                .title(rawIssue.at("/fields/System.Title").textValue())
-                .state(rawIssue.at("/fields/System.State").textValue())
-                .build();
+        return rawIssue -> {
+            Issue result = new Issue();
+            result.setId(rawIssue.get("id").asText());
+            result.setBody(rawIssue.at("/fields/System.Description").textValue());
+            result.setTitle(rawIssue.at("/fields/System.Title").textValue());
+            result.setState(rawIssue.at("/fields/System.State").textValue());
+            return result;
+        };
     }
 
     private <T> HttpEntity<T> getRequestEntity(@Nullable T body) {
@@ -254,7 +267,7 @@ public class AzureDevopsClient {
     }
 
     private String getIssueByIdsUrl(List<String> issueIds, String projectName) {
-        String joinedIds = StringUtils.join(issueIds,',');
+        String joinedIds = StringUtils.join(issueIds, ',');
         return UriComponentsBuilder.fromHttpUrl(adoProperties.getUrl())
                 .path("/{project}/_apis/wit/workitems")
                 .query("{version}&ids={ids}&fields=System.Description,System.Title,System.State")

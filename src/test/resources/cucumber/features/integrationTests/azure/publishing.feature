@@ -55,13 +55,16 @@ Feature: Parsing SAST report and publishing items to Azure DevOps
       | title                                        |
       | CX Mega_Vulnerability @ Gotcha.java [master] |
 
-  @Skip
+
   @Close_issue
-  Scenario: Closing an existing issue if all its findings are false positive
-    Given Azure DevOps contains 1 open issue with vulnerability type T and filename F
-    And SAST report contains 2 findings with vulnerability type T, filename F and marked as false positive
+  Scenario Outline: Closing an existing issue if all its findings are false positive
+    Given Azure DevOps initially contains 1 open issue with title: "<title>"
+    And SAST report contains 2 findings with vulnerability type "<vulnerability>", filename "<filename>" and marked as false positive
     When publishing the report
-    Then Azure DevOps contains 1 closed issue with vulnerability type T and filename F
+    Then Azure DevOps contains 1 issue with the title "<title>" and "Closed" state
+    Examples:
+      | title                                     | vulnerability | filename      |
+      | CX SQL_Injection @ TestFile.java [master] | SQL_Injection | DOS_Login.java |
 
   @Skip
   @Close_issue
