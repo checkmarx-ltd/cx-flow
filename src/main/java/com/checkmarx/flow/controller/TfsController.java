@@ -205,14 +205,11 @@ public class TfsController {
         request.setId(uid);
         //only initiate scan/automation if target branch is applicable
         List<String> branches = new ArrayList<>();
-        branch.ifPresentOrElse(
-            branches::addAll,
-            () -> {
-                if(!ScanUtils.empty(flowProperties.getBranches())) {
-                    branches.addAll(flowProperties.getBranches());
-                }
-            }
-        );
+        if (branch.isPresent()) {
+            branches.addAll(branch.get());
+        } else if(!ScanUtils.empty(flowProperties.getBranches())) {
+            branches.addAll(flowProperties.getBranches());
+        }
         
         if(helperService.isBranch2Scan(request, branches)){
             flowService.initiateAutomation(request);
