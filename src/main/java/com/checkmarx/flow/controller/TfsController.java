@@ -195,7 +195,8 @@ public class TfsController {
         if ("pull".equals(action)) {     
             request.putAdditionalMetadata("statuses_url", resource.getUrl().concat("/statuses"));
         }
-        String baseUrl = body.getResourceContainers().getAccount().getBaseUrl();
+        //String baseUrl = body.getResourceContainers().getAccount().getBaseUrl();
+        String baseUrl = body.getResourceContainers().getCollection().getBaseUrl();
         request.putAdditionalMetadata(Constants.ADO_BASE_URL_KEY,baseUrl);
         request.putAdditionalMetadata(Constants.ADO_ISSUE_KEY, adoIssueType.orElse(properties.getIssueType()));
         request.putAdditionalMetadata(Constants.ADO_ISSUE_BODY_KEY, adoIssueBody.orElse(properties.getIssueBody()));
@@ -236,7 +237,7 @@ public class TfsController {
     }
 
     private String getAction(HttpServletRequest request) {
-        String pathInfo = request.getPathInfo();
+        String pathInfo = request.getRequestURI();
         return pathInfo.substring(pathInfo.length()-4);
     }
 
@@ -255,7 +256,9 @@ public class TfsController {
 
     private List<String> createExludeList(Optional<List<String>> list , String defaultString) {
         return list.orElse(
-            Arrays.asList(StringUtils.split(defaultString, ","))
+                defaultString == null ?
+                        Collections.EMPTY_LIST
+                        : Arrays.asList(StringUtils.split(defaultString, ","))
         );
     }
 
