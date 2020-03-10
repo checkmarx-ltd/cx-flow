@@ -5,6 +5,8 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.Field;
 import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.dto.report.GetRequestWritable;
+import com.checkmarx.flow.dto.report.ScanRequestWritable;
 import com.checkmarx.flow.exception.InvalidCredentialsException;
 import com.checkmarx.flow.exception.JiraClientException;
 import com.checkmarx.flow.exception.JiraClientRunTimeException;
@@ -69,6 +71,9 @@ public class ResultsService {
                 log.info("Waiting for OSA Scan results for scan id {}", osaScanId);
                 results = osaService.waitForOsaScan(osaScanId, projectId, results, filters);
             }
+
+
+            
             Map<String, Object> emailCtx = new HashMap<>();
             BugTracker.Type bugTrackerType = request.getBugTracker().getType();
             //Send email (if EMAIL was enabled and EMAIL was not main feedback option
@@ -102,8 +107,12 @@ public class ResultsService {
             processResults(request, results);
             log.info("Process completed Succesfully");
             future.complete(results);
+
+            new GetRequestWritable(scanId,request).write();
+            
             return future;
         }catch (Exception e){
+            
             log.error("Error occurred while processing results.", e);
             CompletableFuture<ScanResults> x = new CompletableFuture<>();
             x.completeExceptionally(e);
@@ -113,6 +122,7 @@ public class ResultsService {
     }
 
     void processResults(ScanRequest request, ScanResults results) throws MachinaException {
+        
         if(!cxProperties.getOffline()) {
             getCxFields(request, results);
         }

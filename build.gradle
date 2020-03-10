@@ -15,6 +15,7 @@ buildscript {
         maven {
             url = 'https://packages.atlassian.com/mvn/maven-external'
         }
+        
         gradlePluginPortal()
 	}
 	dependencies {
@@ -96,6 +97,10 @@ dependencies {
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:${junitVersion}")
     testCompile("org.mockito:mockito-core:+")
     compile("org.projectlombok:lombok:1.18.10")
+    compile("ch.qos.logback:logback-classic:1.2.3")
+    compile("ch.qos.logback.contrib:logback-json-classic:0.1.5")
+    compile("ch.qos.logback.contrib:logback-jackson:0.1.5")
+    compile("net.logstash.logback:logstash-logback-encoder:5.2")
 }
 
 springBoot {
