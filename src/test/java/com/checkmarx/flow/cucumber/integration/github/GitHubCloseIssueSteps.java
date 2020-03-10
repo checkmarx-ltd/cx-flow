@@ -25,12 +25,6 @@ public class GitHubCloseIssueSteps extends GitHubCommonSteps {
     private static final String INPUT_VUL = "2-high-findings-same-vuln-same-file-with-not-ex-status.xml";
     private static final String INPUT_VUL_RESOLVED = "2-high-findings-same-vuln-same-file-resolved.xml";
     private static final String REPO_NAME = "VB_3845";
-    private static final String BRANCH_NAME = "master";
-    private static final String TEAM_NAME = "CxServer";
-    private static final String NAMESPACE = "cxflowtestuser";
-
-    private ScanRequest scanRequest;
-    private Filter filter;
 
     @Before("@GitHubCloseIssue")
     public void init() {
@@ -72,14 +66,14 @@ public class GitHubCloseIssueSteps extends GitHubCommonSteps {
     private ScanRequest getBasicScanRequest() {
         return ScanRequest.builder()
                 .product(ScanRequest.Product.CX)
-                .project(REPO_NAME + "-" + BRANCH_NAME)
-                .team(TEAM_NAME)
-                .namespace(NAMESPACE)
+                .project(REPO_NAME + "-" + MASTER_BRANCH_NAME)
+                .team(DEFAULT_TEAM_NAME)
+                .namespace(DEFAULT_TEST_NAMESPACE)
                 .repoName(REPO_NAME)
                 .repoType(ScanRequest.Repository.GITHUB)
-                .branch(BRANCH_NAME)
+                .branch(MASTER_BRANCH_NAME)
                 .bugTracker(getCustomBugTrackerToGit())
-                .refs(Constants.CX_BRANCH_PREFIX.concat(BRANCH_NAME))
+                .refs(Constants.CX_BRANCH_PREFIX.concat(MASTER_BRANCH_NAME))
                 .email(null)
                 .incremental(false)
                 .filters(Collections.singletonList(filter))

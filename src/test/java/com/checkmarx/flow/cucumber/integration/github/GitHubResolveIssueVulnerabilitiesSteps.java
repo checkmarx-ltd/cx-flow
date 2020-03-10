@@ -24,15 +24,10 @@ public class GitHubResolveIssueVulnerabilitiesSteps extends GitHubCommonSteps {
     private static final String INPUT_BASE_PATH = "cucumber/data/sample-sast-results/github-results-samples/";
     private static final String INPUT_VUL_BEFORE_FIX = "5-findings-different-vuln-same-file.xml";
     private static final String INPUT_VUL_AFTER_FIX = "2-high-findings-same-vuln-same-file-with-not-ex-status.xml";
+
     private static final String REPO_NAME = "VB_3845";
-    private static final String BRANCH_NAME = "master";
-    private static final String TEAM_NAME = "CxServer";
-    private static final String NAMESPACE = "cxflowtestuser";
     private static final int EXPECTED_CODE_LINES_BEFORE_FIX = 2;
     private static final int EXPECTED_CODE_LINES_after_FIX = 1;
-
-    private ScanRequest scanRequest;
-    private Filter filter;
 
     @Before("@GitHubResolveIssueVulnerabilities")
     public void init() {
@@ -50,7 +45,7 @@ public class GitHubResolveIssueVulnerabilitiesSteps extends GitHubCommonSteps {
         gitHubTestUtils.closeAllIssues(openIssues, scanRequest);
     }
 
-    @And("for a given type, there is an open issue with multiple vulnerabilities")
+    @And("for a given type, there is an opened issue with multiple vulnerabilities")
     public void setOpenIssueWithVulnerabilities() throws IOException, ExitThrowable {
         scanRequest = getBasicScanRequest();
         flowService.cxParseResults(scanRequest, getFileFromResourcePath(INPUT_BASE_PATH + INPUT_VUL_BEFORE_FIX));
@@ -79,14 +74,14 @@ public class GitHubResolveIssueVulnerabilitiesSteps extends GitHubCommonSteps {
     private ScanRequest getBasicScanRequest() {
         return ScanRequest.builder()
                 .product(ScanRequest.Product.CX)
-                .project(REPO_NAME + "-" + BRANCH_NAME)
-                .team(TEAM_NAME)
-                .namespace(NAMESPACE)
+                .project(REPO_NAME + "-" + MASTER_BRANCH_NAME)
+                .team(DEFAULT_TEAM_NAME)
+                .namespace(DEFAULT_TEST_NAMESPACE)
                 .repoName(REPO_NAME)
                 .repoType(ScanRequest.Repository.GITHUB)
-                .branch(BRANCH_NAME)
+                .branch(MASTER_BRANCH_NAME)
                 .bugTracker(getCustomBugTrackerToGit())
-                .refs(Constants.CX_BRANCH_PREFIX.concat(BRANCH_NAME))
+                .refs(Constants.CX_BRANCH_PREFIX.concat(MASTER_BRANCH_NAME))
                 .email(null)
                 .incremental(false)
                 .filters(Collections.singletonList(filter))
