@@ -1,5 +1,10 @@
 version: 2.1
 
+executors:
+  docker:
+    docker:
+      - image: circleci/golang:1.9
+
 jobs:
   build:
     docker:
@@ -52,19 +57,20 @@ jobs:
           command: ./gradlew clean compileJava compileTestJava
       - sonarcloud/scan
 
-  docker-push:
-    docker:
-      - image: docker:18.06.3-ce-git
+  docker-build:
+    executor: docker
     steps:
       - setup_remote_docker
       - attach_workspace:
           at: .
       - deploy:
-          name: Publish application to docker hub
+          name: Docker Build
           command: |
             VERSION=$(cat ./build/libs/version.txt)
+            SHA1_SHORT=${CIRCLE_SHA1::7}
             docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} docker.io
             docker build --target java8 \
+              -t ${DOCKER_REPO}:${SHA1_SHORT} \
               -t ${DOCKER_REPO}:${VERSION}-8 \
               -t ${DOCKER_REPO}:${VERSION} \
               -t ${DOCKER_REPO} \
@@ -72,6 +78,40 @@ jobs:
             docker build --target java11 \
               -t ${DOCKER_REPO}:${VERSION}-11 \
               .
+            docker push ${DOCKER_REPO}:${SHA1_SHORT}
+      - run:
+          name: Archive Docker images
+          command: |
+            VERSION=$(cat ./build/libs/version.txt)
+            docker save -o image-11.tar ${DOCKER_REPO}:${VERSION}-11
+            docker save -o image-8.tar ${DOCKER_REPO}:${VERSION}-8
+            docker save -o image.tar ${DOCKER_REPO}:${VERSION}
+            docker save -o latest.tar ${DOCKER_REPO}:latest
+      - persist_to_workspace:
+          root: .
+          paths:
+            - ./image-11.tar
+            - ./image-8.tar
+            - ./image.tar
+            - ./latest.tar
+
+  docker-push:
+    executor: docker
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - setup_remote_docker
+      - run:
+          name: Load archived Docker images
+          command: |
+            docker load -i /tmp/workspace/image-11.tar
+            docker load -i /tmp/workspace/image-8.tar
+            docker load -i /tmp/workspace/image.tar
+            docker load -i /tmp/workspace/latest.tar
+      - run:
+          name: Publish Docker images to Docker Hub
+          command: |
+            docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} docker.io
             docker push ${DOCKER_REPO}
 
   publish-github-release:
@@ -103,12 +143,19 @@ workflows:
               only: develop
           requires:
             - build
-      - docker-push:
+      - docker-build:
           filters:
             branches:
               only: develop
           requires:
             - build
+      - docker-push:
+          filters:
+            branches:
+              only: master
+          requires:
+            - build
+            - docker-build
       - publish-github-release:
           filters:
             branches:
