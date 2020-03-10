@@ -22,12 +22,6 @@ public class GitHubOpenIssuesFromDifferentFilesSteps extends GitHubCommonSteps {
 
     private static final String INPUT_BASE_PATH = "cucumber/data/sample-sast-results/github-results-samples/";
     private static final String REPO_NAME = "VB_3845";
-    private static final String BRANCH_NAME = "master";
-    private static final String TEAM_NAME = "CxServer";
-    private static final String NAMESPACE = "cxflowtestuser";
-
-    private Filter filter;
-    private ScanRequest scanRequest;
 
     @Before("@GitHubCreateIssuesFromDifferentFiles")
     public void init() {
@@ -45,13 +39,13 @@ public class GitHubOpenIssuesFromDifferentFilesSteps extends GitHubCommonSteps {
         gitHubTestUtils.closeAllIssues(openIssues, scanRequest);
     }
 
-    @When("publishing results from different files for input {string}")
+    @When("publishing results from {string}")
     public void publishResults(String input) throws IOException, ExitThrowable {
         scanRequest = getBasicScanRequest();
         flowService.cxParseResults(scanRequest, getFileFromResourcePath(INPUT_BASE_PATH + input));
     }
 
-    @Then("{int} new issues should be open")
+    @Then("{int} new issues should be opened")
     public void validateOpenIssues(int expectedNumberOfIssues) {
         List<Issue> actualOpenIssues = gitHubTestUtils.filterIssuesByState(gitHubTestUtils.getIssues(scanRequest), "open");
 
@@ -62,14 +56,14 @@ public class GitHubOpenIssuesFromDifferentFilesSteps extends GitHubCommonSteps {
     private ScanRequest getBasicScanRequest() {
         return ScanRequest.builder()
                 .product(ScanRequest.Product.CX)
-                .project(REPO_NAME + "-" + BRANCH_NAME)
-                .team(TEAM_NAME)
-                .namespace(NAMESPACE)
+                .project(REPO_NAME + "-" + MASTER_BRANCH_NAME)
+                .team(DEFAULT_TEAM_NAME)
+                .namespace(DEFAULT_TEST_NAMESPACE)
                 .repoName(REPO_NAME)
                 .repoType(ScanRequest.Repository.GITHUB)
-                .branch(BRANCH_NAME)
+                .branch(MASTER_BRANCH_NAME)
                 .bugTracker(getCustomBugTrackerToGit())
-                .refs(Constants.CX_BRANCH_PREFIX.concat(BRANCH_NAME))
+                .refs(Constants.CX_BRANCH_PREFIX.concat(MASTER_BRANCH_NAME))
                 .email(null)
                 .incremental(false)
                 .filters(Collections.singletonList(filter))
