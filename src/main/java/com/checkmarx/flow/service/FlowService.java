@@ -53,6 +53,7 @@ public class FlowService {
     private final ResultsService resultsService;
     private final HelperService helperService;
     private static final String ERROR_BREAK_MSG = "Exiting with Error code 10 due to issues present";
+    private String sourcesPath = null;
 
     public FlowService(CxClient cxService, CxOsaClient osaService, ResultsService resultsService, GitHubService gitService,
                        GitLabService gitLabService, BitBucketService bbService, ADOService adoService,
@@ -141,8 +142,9 @@ public class FlowService {
 
                 log.info("Not waiting for scan completion as Bug Tracker type is NONE");
                 CompletableFuture<ScanResults> results = CompletableFuture.completedFuture(null);
+                logRequest(request, scanId);
                 //return CompletableFuture.completedFuture(null);
-                new ScanDetails(projectId, scanId, results, false);
+                return new ScanDetails(projectId, scanId, results, false);
 
             } else {
 
@@ -151,6 +153,7 @@ public class FlowService {
                     projectId = cxService.getProjectId(ownerId, projectName); //get the project id of the updated or created project
                 }
                 osaScanId = createOsaScan(request, projectId);
+                logRequest(request, osaScanId);
                 //resultsService.processScanResultsAsync(request, projectId, scanId, osaScanId, request.getFilters());
             }
 
@@ -158,12 +161,24 @@ public class FlowService {
         }catch (CheckmarxException | GitAPIException e){
             log.error(ExceptionUtils.getMessage(e), e);
             Thread.currentThread().interrupt();
+            new ScanRequestWritable(scanId, request, sourcesPath, Status.FAILURE.build(e.getMessage())).write();
             throw new MachinaException("Checkmarx Error Occurred");
         }
 
+        logRequest(request, scanId);
+        
         return new ScanDetails(projectId, scanId, osaScanId);
     }
 
+    private void logRequest(ScanRequest request, Integer scanId) throws MachinaException {
+        new ScanRequestWritable(scanId, request, sourcesPath, Status.SUCCESS).write();
+    }
+
+    private void logRequest(ScanRequest request, String scanId) throws MachinaException {
+        new ScanRequestWritable(scanId, request, sourcesPath, Status.SUCCESS).write();
+    }
+
+    
     private CxScanParams prepareScanParamsObject(ScanRequest request, File cxFile, String ownerId, String projectName, Integer projectId) {
         CxScanParams params = new CxScanParams()
                 .teamId(ownerId)
@@ -369,6 +384,7 @@ public class FlowService {
     public void cxFullScan(ScanRequest request, String path) throws ExitThrowable {
 
         try {
+            this.sourcesPath = path;
             String cxZipFile = FileSystems.getDefault().getPath("cx.".concat(UUID.randomUUID().toString()).concat(".zip")).toAbsolutePath().toString();
             ZipUtils.zipFile(path, cxZipFile, flowProperties.getZipExclude());
             File f = new File(cxZipFile);
