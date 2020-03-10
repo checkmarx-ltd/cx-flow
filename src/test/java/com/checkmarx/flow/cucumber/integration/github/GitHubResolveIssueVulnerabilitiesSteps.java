@@ -26,8 +26,6 @@ public class GitHubResolveIssueVulnerabilitiesSteps extends GitHubCommonSteps {
     private static final String INPUT_VUL_AFTER_FIX = "2-high-findings-same-vuln-same-file-with-not-ex-status.xml";
 
     private static final String REPO_NAME = "VB_3845";
-    private static final int EXPECTED_CODE_LINES_BEFORE_FIX = 2;
-    private static final int EXPECTED_CODE_LINES_after_FIX = 1;
 
     @Before("@GitHubResolveIssueVulnerabilities")
     public void init() {
@@ -54,7 +52,7 @@ public class GitHubResolveIssueVulnerabilitiesSteps extends GitHubCommonSteps {
         int issueLinesCount = gitHubTestUtils.getIssueLinesCount(openIssues.get(0));
 
         Assert.assertEquals("Expected issue's code lines before fix aren't as expected",
-                EXPECTED_CODE_LINES_BEFORE_FIX, issueLinesCount);
+                2, issueLinesCount);
     }
 
     @When("resolving a vulnerability")
@@ -68,7 +66,7 @@ public class GitHubResolveIssueVulnerabilitiesSteps extends GitHubCommonSteps {
         int issueLinesCount = gitHubTestUtils.getIssueLinesCount(openIssues.get(0));
 
         Assert.assertEquals("Expected issue's code lines after fix aren't as expected",
-                EXPECTED_CODE_LINES_after_FIX, issueLinesCount);
+                1, issueLinesCount);
     }
 
     private ScanRequest getBasicScanRequest() {
@@ -86,15 +84,5 @@ public class GitHubResolveIssueVulnerabilitiesSteps extends GitHubCommonSteps {
                 .incremental(false)
                 .filters(Collections.singletonList(filter))
                 .build();
-    }
-
-    @Override
-    protected BugTracker getCustomBugTrackerToGit() {
-        return super.getCustomBugTrackerToGit();
-    }
-
-    @Override
-    protected File getFileFromResourcePath(String path) throws IOException {
-        return super.getFileFromResourcePath(path);
     }
 }

@@ -69,14 +69,4 @@ public class GitHubOpenIssuesFromDifferentFilesSteps extends GitHubCommonSteps {
                 .filters(Collections.singletonList(filter))
                 .build();
     }
-
-    @Override
-    protected BugTracker getCustomBugTrackerToGit() {
-        return super.getCustomBugTrackerToGit();
-    }
-
-    @Override
-    protected File getFileFromResourcePath(String path) throws IOException {
-        return super.getFileFromResourcePath(path);
-    }
 }
