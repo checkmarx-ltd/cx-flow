@@ -1,8 +1,5 @@
 version: 2.1
 
-orbs:
-  sonarcloud: sonarsource/sonarcloud@1.0.1
-
 jobs:
   build:
     docker:
@@ -44,7 +41,7 @@ jobs:
           path: ~/test-results
       - store_artifacts:
           path: ~/test-results/junit
-#      - sonarcloud/scan
+      - sonarcloud/scan
 
   docker-push:
     docker:
@@ -82,8 +79,11 @@ jobs:
             rm ./build/libs/version.txt
             ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -n ${VERSION} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./build/libs/
 
+orbs:
+  sonarcloud: sonarsource/sonarcloud@1.0.1
+
 workflows:
-  version: 2.1
+  version: 2
   build_deploy:
     jobs:
       - build:
