@@ -11,7 +11,6 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.sdk.config.CxProperties;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
@@ -31,6 +30,7 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -39,6 +39,9 @@ public class PublishingSteps {
     private static final String PROPERTIES_FILE_PATH = "cucumber/features/integrationTests/azure/publishing.properties";
 
     private static final String REPORT_WITH_ONE_FINDING = "1-finding.xml";
+
+    // Description cannot be null or empty during issue creation.
+    private static final String DESCRIPTION_STUB = "any description";
 
     @Autowired
     private FlowService flowService;
@@ -54,6 +57,7 @@ public class PublishingSteps {
 
     private String projectName;
     private String sastReportFilename;
+    private List<Issue> issuesAfterPublish;
 
     @Before
     public void prepareEnvironment() throws IOException {
@@ -68,28 +72,40 @@ public class PublishingSteps {
 
     @Given("Azure DevOps initially contains {int} open issue with title: {string}")
     public void azureDevOpsInitiallyContainsIssue(int issueCount, String title) throws IOException {
-        createIssues(issueCount, title, "any description");
+        for (int i = 0; i < issueCount; i++) {
+            createIssue(title, DESCRIPTION_STUB);
+        }
     }
 
     @Given("Azure DevOps initially contains {int} open issue with title: {string} and description containing link: {string}")
     public void azureDevOpsInitiallyContainsIssue(int issueCount, String title, String link) throws IOException {
-        createIssues(issueCount, title, link);
+        for (int i = 0; i < issueCount; i++) {
+            createIssue(title, link);
+        }
+    }
+
+    @Given("Azure DevOps initially contains 2 open issues with titles {string} and {string}")
+    public void azureDevOpsInitiallyContainsOpenIssues(String title1, String title2) throws IOException {
+        createIssue(title1, DESCRIPTION_STUB);
+        createIssue(title2, DESCRIPTION_STUB);
     }
 
     @Given("Azure DevOps doesn't contain any issues")
     public void azureDevOpsDoesnTContainAnyIssues() throws IOException {
-        verifyIssueCount(0);
+        List<Issue> issues = getIssues();
+        verifyIssueCount(issues, 0);
     }
 
     @Then("Azure DevOps contains {int} issues")
     public void azureDevOpsContainsIssueCountIssues(int expectedCount) throws IOException {
-        verifyIssueCount(expectedCount);
+        List<Issue> issues = getIssues();
+        verifyIssueCount(issues, expectedCount);
     }
 
     @Given("Azure DevOps contains {int} open issue with title: {string} and description containing link: {string}")
     public void azureDevOpsContainsIssue(int issueCount, String title, String link) throws IOException {
-        List<Issue> issues = adoClient.getIssues(projectName);
-        assertEquals(issueCount, issues.size(), "Unexpected issue count after publishing.");
+        List<Issue> issues = getIssues();
+        verifyIssueCount(issues, issueCount);
         String linkInHtmlAttribute = HtmlUtils.htmlEscape(link);
         for (Issue issue : issues) {
             assertEquals(adoProperties.getOpenStatus(), issue.getState(), "Invalid issue state.");
@@ -103,25 +119,10 @@ public class PublishingSteps {
 
     @Then("Azure DevOps contains {int} issue with the title {string} and {string} state")
     public void azureDevOpsContainsClosedIssueWithTheTitle(int issueCount, String title, String state) throws IOException {
-        verifyIssueCount(issueCount);
-        List<Issue> issues = adoClient.getIssues(projectName);
+        List<Issue> issues = getIssues();
+        verifyIssueCount(issues, issueCount);
         boolean allIssuesAreCorrect = issues.stream().allMatch(issueHas(title, state));
         assertTrue(allIssuesAreCorrect, getIssueError(issues));
-    }
-
-    @And("an issue with the title {string} is in {string} state")
-    public void anIssueWithTheTitleIsInState(String title, String state) throws IOException {
-        List<Issue> issues = adoClient.getIssues(projectName);
-
-        Optional<Issue> targetIssue = issues.stream()
-                .filter(issue -> StringUtils.equals(issue.getTitle(), title))
-                .findFirst();
-
-        assertTrue(targetIssue.isPresent(), "Unable to find an issue with the title: " + title);
-
-        String actualState = targetIssue.get().getState();
-        String message = String.format("Unexpected issue state (issue ID: %s).", targetIssue.get().getId());
-        assertEquals(state, actualState, message);
     }
 
     @When("publishing the report")
@@ -173,7 +174,7 @@ public class PublishingSteps {
         sastReportFilename = "3-findings-all-false-positive.xml";
     }
 
-    @And("SAST report contains 1 finding with vulnerability type {string} and filename {string}")
+    @And("SAST report contains 1 finding with vulnerability type {string} and filename {string}, not marked as false positive")
     public void sastReportContainsFinding(String vulnerabilityType, String filename) {
         sastReportFilename = REPORT_WITH_ONE_FINDING;
     }
@@ -188,12 +189,34 @@ public class PublishingSteps {
         sastReportFilename = "2-findings-same-vuln-type-same-file-false-positive.xml";
     }
 
-    private void verifyIssueCount(int expectedCount) throws IOException {
-        int actualCount = adoClient.getIssueCount(projectName);
-        assertEquals(expectedCount, actualCount, "Incorrect number of issues.");
+    @And("^(?:one of the issues|the other issue) has the title: \"(.*)\" and is in \"(.*)\" state$")
+    public void oneOfTheIssuesHasTheTitleAndIsInState(String title, String state) {
+        List<Issue> matchingIssues = issuesAfterPublish.stream()
+                .filter(issue -> issue.getTitle().equals(title) &&
+                        issue.getState().equals(state))
+                .collect(Collectors.toList());
+
+        verifyIssueCount(matchingIssues, 1);
     }
 
-    private void createIssues(int issueCount, String title, String description) throws IOException {
+    @And("an issue with the title {string} is in {string} state")
+    public void anIssueWithTheTitleIsInState(String title, String state) {
+        Optional<Issue> targetIssue = issuesAfterPublish.stream()
+                .filter(issue -> StringUtils.equals(issue.getTitle(), title))
+                .findFirst();
+
+        assertTrue(targetIssue.isPresent(), "Unable to find an issue with the title: " + title);
+
+        String actualState = targetIssue.get().getState();
+        String message = String.format("Unexpected issue state (issue ID: %s).", targetIssue.get().getId());
+        assertEquals(state, actualState, message);
+    }
+
+    private void verifyIssueCount(List<Issue> issues, int expectedCount) {
+        assertEquals(expectedCount, issues.size(), "Incorrect number of issues.");
+    }
+
+    private void createIssue(String title, String description) throws IOException {
         Issue issue = new Issue();
         issue.setTitle(title);
         issue.setBody(description);
@@ -203,9 +226,7 @@ public class PublishingSteps {
         metadata.put(AzureDevopsClient.PROJECT_NAME_KEY, projectName);
         issue.setMetadata(metadata);
 
-        for (int i = 0; i < issueCount; i++) {
-            adoClient.createIssue(issue);
-        }
+        adoClient.createIssue(issue);
     }
 
     private static Supplier<String> getIssueError(List<Issue> issues) {
@@ -222,5 +243,10 @@ public class PublishingSteps {
     private static Predicate<? super Issue> issueHas(String title, String state) {
         return issue -> issue.getTitle().equals(title) &&
                 issue.getState().equals(state);
+    }
+
+    private List<Issue> getIssues() throws IOException {
+        issuesAfterPublish = adoClient.getIssues(projectName);
+        return issuesAfterPublish;
     }
 }

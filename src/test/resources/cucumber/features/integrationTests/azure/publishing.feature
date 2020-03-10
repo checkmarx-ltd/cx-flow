@@ -47,7 +47,7 @@ Feature: Parsing SAST report and publishing items to Azure DevOps
   @Close_issue
   Scenario Outline: Closing an existing issue if its finding no longer exists in SAST report
     Given Azure DevOps initially contains 1 open issue with title: "<title>"
-    And SAST report contains 1 finding with vulnerability type "Reflected_XSS_All_Clients" and filename "DOS_Login.java"
+    And SAST report contains 1 finding with vulnerability type "Reflected_XSS_All_Clients" and filename "DOS_Login.java", not marked as false positive
     When publishing the report
     Then Azure DevOps contains 2 issues
     And an issue with the title "<title>" is in "Closed" state
@@ -63,19 +63,22 @@ Feature: Parsing SAST report and publishing items to Azure DevOps
     When publishing the report
     Then Azure DevOps contains 1 issue with the title "<title>" and "Closed" state
     Examples:
-      | title                                     | vulnerability | filename      |
+      | title                                     | vulnerability | filename       |
       | CX SQL_Injection @ TestFile.java [master] | SQL_Injection | DOS_Login.java |
 
-  @Skip
   @Close_issue
-  Scenario: Closing only relevant issues
+  Scenario Outline: Closing only relevant issues
   Make sure CxFlow only closes issues that do not appear in SAST report. Issues that do appear in SAST report
   should be left open.
-    Given Azure DevOps contains 2 open issues with filenames F1 and F2
-    And SAST report contains 1 finding with filename F1, not marked as false positive
+    Given Azure DevOps initially contains 2 open issues with titles "<title1>" and "<title2>"
+    And SAST report contains 1 finding with vulnerability type "<vulnerability1>" and filename "<filename1>", not marked as false positive
     When publishing the report
-    Then Azure DevOps contains 1 open issue with filename F1
-    And 1 closed issue with filename F2
+    Then Azure DevOps contains 2 issues
+    And one of the issues has the title: "<title1>" and is in "Active" state
+    And the other issue has the title: "<title2>" and is in "Closed" state
+    Examples:
+      | title1                                                 | title2                                    | vulnerability1            | filename1      |
+      | CX Reflected_XSS_All_Clients @ DOS_Login.java [master] | CX SQL_Injection @ TestFile.java [master] | Reflected_XSS_All_Clients | DOS_Login.java |
 
   # Reopening issues?
 

@@ -175,6 +175,11 @@ public class AzureDevopsClient {
     }
 
     private List<Issue> getProjectIssuesByIds(List<String> issueIds, String projectName) throws IOException {
+        if (issueIds.isEmpty()) {
+            log.info("No issues found.");
+            return new ArrayList<>();
+        }
+
         log.info("Getting issues by IDs: {}", objectMapper.writeValueAsString(issueIds));
         String url = getIssueByIdsUrl(issueIds, projectName);
         HttpEntity<?> request = getRequestEntity(null);
