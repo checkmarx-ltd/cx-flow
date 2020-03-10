@@ -98,6 +98,9 @@ workflows:
       - build
       - sonar:
           context: sonarcloud
+          filters:
+            branches:
+              only: develop
           requires:
             - build
       - docker-push:
