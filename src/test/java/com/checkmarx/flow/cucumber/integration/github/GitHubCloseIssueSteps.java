@@ -1,6 +1,5 @@
 package com.checkmarx.flow.cucumber.integration.github;
 
-import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.ExitThrowable;
@@ -14,7 +13,6 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.junit.Assert;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
