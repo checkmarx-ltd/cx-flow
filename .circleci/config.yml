@@ -41,6 +41,15 @@ jobs:
           path: ~/test-results
       - store_artifacts:
           path: ~/test-results/junit
+
+  sonar:
+    docker:
+      - image: circleci/openjdk:8-jdk
+    steps:
+      - checkout
+      - run:
+          name: Compile
+          command: ./gradlew clean compileJava compileTestJava
       - sonarcloud/scan
 
   docker-push:
@@ -86,8 +95,11 @@ workflows:
   version: 2
   build_deploy:
     jobs:
-      - build:
+      - build
+      - sonar:
           context: sonarcloud
+          requires:
+            - build
       - docker-push:
           filters:
             branches:
