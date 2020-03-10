@@ -5,6 +5,12 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.Field;
 import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.dto.report.GetRequestWritable;
+import com.checkmarx.flow.dto.report.ScanRequestWritable;
+import com.checkmarx.flow.exception.InvalidCredentialsException;
+import com.checkmarx.flow.exception.JiraClientException;
+import com.checkmarx.flow.exception.JiraClientRunTimeException;
+import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.exception.*;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
@@ -102,8 +108,12 @@ public class ResultsService {
             processResults(request, results);
             log.info("Process completed Succesfully");
             future.complete(results);
+
+            new GetRequestWritable(scanId,request).write();
+            
             return future;
         }catch (Exception e){
+            
             log.error("Error occurred while processing results.", e);
             CompletableFuture<ScanResults> x = new CompletableFuture<>();
             x.completeExceptionally(e);
