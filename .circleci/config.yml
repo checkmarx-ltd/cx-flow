@@ -159,6 +159,6 @@ workflows:
       - publish-github-release:
           filters:
             branches:
-              only: develop
+              only: master
           requires:
             - build
