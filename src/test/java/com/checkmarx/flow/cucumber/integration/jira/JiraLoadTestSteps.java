@@ -20,10 +20,12 @@ import org.junit.Assert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import javax.validation.constraints.AssertTrue;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @SpringBootTest(classes = {CxFlowApplication.class, JiraTestUtils.class, PublishUtils.class})
@@ -47,6 +49,10 @@ public class JiraLoadTestSteps {
 
     int percentsThrshold;
 
+    int numOfIssues;
+
+    int durationPrimaryThreshold;
+
     @Before("@JiraLoadTests")
     public void setOfflineMode() {
         cxProperties.setOffline(true);
@@ -55,18 +61,16 @@ public class JiraLoadTestSteps {
 
     @Before("@JiraLoadTests")
     public void cleanJiraProject() throws IOException {
-        jiraUtils.ensureProjectExists(jiraProperties.getProject());
-        jiraUtils.ensureIssueTypeExists(jiraProperties.getIssueType());
+//        jiraUtils.ensureProjectExists(jiraProperties.getProject());
+//        jiraUtils.ensureIssueTypeExists(jiraProperties.getIssueType());
         jiraUtils.cleanProject(jiraProperties.getProject());
     }
 
 
-    @Given("SAST results with {int} findings, that should result in {int} JIRS issues")
-    public void prepareFile(int findings, int issues) {
-        if (findings != 1000 || issues != 1000) {
-            throw new IllegalArgumentException(String.format("No XML files are defined for the paramters given. Findings: %d, Issues: %d", findings, issues));
-        }
-        filename = "cucumber/data/sample-sast-results/300-findings.xml";
+    @Given("SAST results with that should result in {int} JIRS issues")
+    public void prepareFile(int issues) {
+        filename = String.format("cucumber/data/sample-sast-results/%d-findings.xml", issues);
+        numOfIssues = issues;
     }
 
     @When("results are parsed and published {int} times, and time is recorded for each sample")
@@ -83,18 +87,20 @@ public class JiraLoadTestSteps {
         durations.stream().forEach(l -> log.info(l + ", "));
         // We put in a member because we will need this number in a future step.
         this.percentsThrshold = percentsThreshold;
+        this.durationPrimaryThreshold = durationThreshold;
         validateDuration(durations, percentsThreshold, durationThreshold, "Primary validation failed.");
     }
 
     @Then("the other tests should take less than {int} seconds")
     public void validateSecondaryDurations(int durationThreshold) {
-        validateDuration(durations, 100- this.percentsThrshold, durationThreshold, "Secondary validation failed.");
+        List<Long> failedDurations = durations.stream().filter(l -> l > durationThreshold).collect(Collectors.toList());
+        Assert.assertTrue("Secondary duration validation failed.", failedDurations.size() == 0);
     }
 
     private void validateDuration(List<Long> duration, int percentageThrshold, long durationThreshold, String message) {
         Long passed = duration.stream().filter(l -> l <= durationThreshold).count();
         int passPercentage = (int) ((passed * 100 )/ duration.size() );
-        log.info("&&&&&&&&&&&&&&&&&&&&&&&&&&& Passed: " + passed + " Total: " + duration.size());
+        log.info("Passed: " + passed + " Total: " + duration.size());
         Assert.assertTrue(message + "Percentage Thrashold: " + percentageThrshold + ", Passed: " + passPercentage ,passPercentage >=percentageThrshold);
     }
 
@@ -102,8 +108,8 @@ public class JiraLoadTestSteps {
 
 
     private void verifyNumberOfIssues() {
-        int numOfIssues = jiraUtils.getNumberOfIssuesInProject(jiraProperties.getProject());
-        Assert.assertEquals("The number of issues in JIRA is wrong", 385, numOfIssues);
+        int actualNumOfIssues = jiraUtils.getNumberOfIssuesInProject(jiraProperties.getProject());
+        Assert.assertEquals("The number of issues in JIRA is wrong", numOfIssues, actualNumOfIssues);
     }
 
     private void internalPublishResults() throws ExitThrowable, IOException {
