@@ -80,7 +80,9 @@ Feature: Parsing SAST report and publishing items to Azure DevOps
       | title1                                                 | title2                                    | vulnerability1            | filename1      |
       | CX Reflected_XSS_All_Clients @ DOS_Login.java [master] | CX SQL_Injection @ TestFile.java [master] | Reflected_XSS_All_Clients | DOS_Login.java |
 
-  # Reopening issues?
+  @Skip
+  Scenario: Reopening closed issues
+  CxFlow should reopen previously closed issue if a corresponding finding is present in SAST report.
 
   @Skip
   @NegativeTest

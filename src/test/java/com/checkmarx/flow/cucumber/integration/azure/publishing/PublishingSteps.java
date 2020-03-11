@@ -125,7 +125,7 @@ public class PublishingSteps {
         assertTrue(allIssuesAreCorrect, getIssueError(issues));
     }
 
-    @When("publishing the report")
+    @When("^publishing (?:the|a SAST) report$")
     public void publishingTheReport() throws IOException, ExitThrowable {
         BugTracker bugTracker = BugTracker.builder()
                 .type(BugTracker.Type.CUSTOM)
@@ -248,5 +248,15 @@ public class PublishingSteps {
     private List<Issue> getIssues() throws IOException {
         issuesAfterPublish = adoClient.getIssues(projectName);
         return issuesAfterPublish;
+    }
+
+    @Given("invalid Azure DevOps URL is provided in configuration")
+    public void invalidAzureDevOpsURLIsProvidedInConfiguration() {
+        adoProperties.setUrl("http://invalid.url");
+    }
+
+    @Then("CxFlow should throw an exception")
+    public void cxflowShouldThrowAnException() {
+
     }
 }
