@@ -9,7 +9,7 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class ScanRequestWritable extends Writable{
+public class ScanReport extends Report {
 
     public static final String OPERATION = "Scan Request";
     public static final String INCREMENTAL = "Inc";
@@ -19,12 +19,12 @@ public class ScanRequestWritable extends Writable{
     private String repoType;
     private String scanType;
 
-    public ScanRequestWritable(Integer sastScanId, ScanRequest request, String sourcesPath, Status status) {
+    public ScanReport(Integer sastScanId, ScanRequest request, String sourcesPath, Status status) {
         super(sastScanId,request);
         setFields(request, sourcesPath, status);
     }
 
-    public ScanRequestWritable(String osaScanId, ScanRequest request, String sourcesPath, Status status) {
+    public ScanReport(String osaScanId, ScanRequest request, String sourcesPath, Status status) {
         super(osaScanId,request);
         setFields(request, sourcesPath, status);
     }

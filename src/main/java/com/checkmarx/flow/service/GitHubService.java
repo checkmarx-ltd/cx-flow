@@ -3,9 +3,11 @@ package com.checkmarx.flow.service;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.dto.RepoIssue;
+import com.checkmarx.flow.dto.ScanDetails;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.Sources;
 import com.checkmarx.flow.dto.github.Content;
+import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.exception.GitHubClientException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.CxConfig;
@@ -97,22 +99,25 @@ public class GitHubService extends RepoService {
         }
     }
 
-    void endBlockMerge(ScanRequest request, ScanResults results){
+    void endBlockMerge(ScanRequest request, ScanResults results, ScanDetails scanDetails){
+        PullRequestReport pullRequestReport = new PullRequestReport(scanDetails ,request);
         if(properties.isBlockMerge()) {
-            HttpEntity<String> httpEntity = getStatusRequestEntity(results);
+            HttpEntity<String> httpEntity = getStatusRequestEntity(results, pullRequestReport);
             if(ScanUtils.empty(request.getAdditionalMetadata(STATUSES_URL_KEY))){
                 log.error(STATUSES_URL_NOT_PROVIDED);
                 return;
             }
             restTemplate.exchange(request.getAdditionalMetadata(STATUSES_URL_KEY),
                     HttpMethod.POST, httpEntity, String.class);
+            
         }
+        pullRequestReport.log();
     }
 
-    private HttpEntity<String> getStatusRequestEntity(ScanResults results) {
+    private HttpEntity<String> getStatusRequestEntity(ScanResults results, PullRequestReport pullRequestReport) {
         String state;
         String description;
-        if (mergeResultEvaluator.isMergeAllowed(results, properties)) {
+        if (mergeResultEvaluator.isMergeAllowed(results, properties, pullRequestReport)) {
             state = MERGE_SUCCESS;
             description = MERGE_SUCCESS_DESCRIPTION;
         } else {
@@ -120,6 +125,7 @@ public class GitHubService extends RepoService {
             description = MERGE_FAILURE_DESCRIPTION;
         }
 
+        pullRequestReport.setPullRequestStatus(state);
         JSONObject requestBody = getJSONStatus(state, results.getLink(), description);
         return new HttpEntity<>(requestBody.toString(), createAuthHeaders());
     }

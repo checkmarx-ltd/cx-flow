@@ -4,9 +4,9 @@ import com.atlassian.jira.rest.client.api.RestClientException;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.Field;
+import com.checkmarx.flow.dto.ScanDetails;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.dto.report.GetRequestWritable;
-import com.checkmarx.flow.dto.report.ScanRequestWritable;
+import com.checkmarx.flow.dto.report.GetResultsReport;
 import com.checkmarx.flow.exception.InvalidCredentialsException;
 import com.checkmarx.flow.exception.JiraClientException;
 import com.checkmarx.flow.exception.JiraClientRunTimeException;
@@ -67,9 +67,13 @@ public class ResultsService {
             CompletableFuture<ScanResults> future = new CompletableFuture<>();
             //TODO async these, and join and merge after
             ScanResults results = cxService.getReportContentByScanId(scanId, filters);
+            new GetResultsReport(scanId,request).log();
+            
             if(cxProperties.getEnableOsa() && !ScanUtils.empty(osaScanId)){
                 log.info("Waiting for OSA Scan results for scan id {}", osaScanId);
                 results = osaService.waitForOsaScan(osaScanId, projectId, results, filters);
+
+                new GetResultsReport(osaScanId,request).log();
             }
 
 
@@ -104,11 +108,9 @@ public class ResultsService {
                 emailService.sendmail(request.getEmail(), concat, emailCtx, "template-demo.html");
                 log.info("Successfully completed automation for repository {} under namespace {}", repoName, namespace);
             }
-            processResults(request, results);
+            processResults(request, results, new ScanDetails(projectId, scanId, osaScanId));
             log.info("Process completed Succesfully");
             future.complete(results);
-
-            new GetRequestWritable(scanId,request).write();
             
             return future;
         }catch (Exception e){
@@ -121,7 +123,7 @@ public class ResultsService {
 
     }
 
-    void processResults(ScanRequest request, ScanResults results) throws MachinaException {
+    void processResults(ScanRequest request, ScanResults results, ScanDetails scanDetails) throws MachinaException {
         
         if(!cxProperties.getOffline()) {
             getCxFields(request, results);
@@ -137,7 +139,7 @@ public class ResultsService {
                 break;
             case GITHUBPULL:
                 gitService.processPull(request, results);
-                gitService.endBlockMerge(request, results);
+                gitService.endBlockMerge(request, results, scanDetails);
                 break;
             case GITLABCOMMIT:
                 gitLabService.processCommit(request, results);

@@ -5,10 +5,11 @@ import com.checkmarx.sdk.dto.ScanResults;
 import java.util.concurrent.CompletableFuture;
 
 public class ScanDetails {
+    public static final String EMPTY_OSA_SCAN_ID = "";
     private CompletableFuture<ScanResults> results = null;
     private Integer projectId;
     private Integer scanId;
-    private String osaScanId = "";
+    private String osaScanId = EMPTY_OSA_SCAN_ID;
     private boolean processResults = true;
 
     public ScanDetails(Integer projectId, Integer scanId, String osaScanId) {
@@ -40,6 +41,9 @@ public class ScanDetails {
         return processResults;
     }
 
+    public boolean isOsaScan(){
+        return EMPTY_OSA_SCAN_ID.equals(osaScanId);
+    }
 
     public CompletableFuture<ScanResults> getResults() {
         return results;

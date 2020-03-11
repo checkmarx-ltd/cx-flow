@@ -2,7 +2,7 @@ package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.*;
-import com.checkmarx.flow.dto.report.ScanRequestWritable;
+import com.checkmarx.flow.dto.report.ScanReport;
 import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.utils.ScanUtils;
@@ -54,6 +54,7 @@ public class FlowService {
     private static final Long SLEEP = 20000L;
     private static final String ERROR_BREAK_MSG = "Exiting with Error code 10 due to issues present";
     private String sourcesPath = null;
+    private ScanDetails scanDetails = null;
 
     public FlowService(CxClient cxService, CxOsaClient osaService, ResultsService resultsService, GitHubService gitService,
                        GitLabService gitLabService, BitBucketService bbService, ADOService adoService,
@@ -161,21 +162,22 @@ public class FlowService {
         }catch (CheckmarxException | GitAPIException e){
             log.error(ExceptionUtils.getMessage(e), e);
             Thread.currentThread().interrupt();
-            new ScanRequestWritable(scanId, request, sourcesPath, Status.FAILURE.build(e.getMessage())).write();
+            new ScanReport(scanId, request, sourcesPath, Status.FAILURE.build(e.getMessage())).log();
             throw new MachinaException("Checkmarx Error Occurred");
         }
 
         logRequest(request, scanId);
         
-        return new ScanDetails(projectId, scanId, osaScanId);
+        this.scanDetails = new ScanDetails(projectId, scanId, osaScanId);
+        return scanDetails;
     }
 
-    private void logRequest(ScanRequest request, Integer scanId) throws MachinaException {
-        new ScanRequestWritable(scanId, request, sourcesPath, Status.SUCCESS).write();
+    private void logRequest(ScanRequest request, Integer scanId)  {
+        new ScanReport(scanId, request, sourcesPath, Status.SUCCESS).log();
     }
 
-    private void logRequest(ScanRequest request, String scanId) throws MachinaException {
-        new ScanRequestWritable(scanId, request, sourcesPath, Status.SUCCESS).write();
+    private void logRequest(ScanRequest request, String scanId)  {
+        new ScanReport(scanId, request, sourcesPath, Status.SUCCESS).log();
     }
 
     
@@ -417,7 +419,7 @@ public class FlowService {
     public void cxParseResults(ScanRequest request, File file) throws ExitThrowable {
         try {
             ScanResults results = cxService.getReportContent(file, request.getFilters());
-            resultsService.processResults(request, results);
+            resultsService.processResults(request, results, scanDetails);
             if(flowProperties.isBreakBuild() && results !=null && results.getXIssues()!=null && !results.getXIssues().isEmpty()){
                 log.error(ERROR_BREAK_MSG);
                 exit(10);
@@ -431,7 +433,7 @@ public class FlowService {
     public void cxOsaParseResults(ScanRequest request, File file, File libs) throws ExitThrowable {
         try {
             ScanResults results = cxService.getOsaReportContent(file, libs, request.getFilters());
-            resultsService.processResults(request, results);
+            resultsService.processResults(request, results, scanDetails);
             if(flowProperties.isBreakBuild() && results !=null && results.getXIssues()!=null && !results.getXIssues().isEmpty()){
                 log.error(ERROR_BREAK_MSG);
                 exit(10);

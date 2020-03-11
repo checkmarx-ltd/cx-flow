@@ -3,6 +3,7 @@ package com.checkmarx.flow.service;
 import com.checkmarx.flow.config.FindingSeverity;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.RepoProperties;
+import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -28,15 +29,16 @@ public class MergeResultEvaluatorImpl implements MergeResultEvaluator {
     }
 
     @Override
-    public boolean isMergeAllowed(ScanResults scanResults, RepoProperties repoProperties) {
+    public boolean isMergeAllowed(ScanResults scanResults, RepoProperties repoProperties, PullRequestReport pullRequestReport) {
         if (!repoProperties.isErrorMerge()) {
             return true;
         }
-
+        
         Map<FindingSeverity, Integer> thresholds = getEffectiveThresholds();
         writeToLog(thresholds);
-
-        return !isAnyThresholdExceeded(scanResults, thresholds);
+        pullRequestReport.setThresholds(thresholds);
+        
+        return !isAnyThresholdExceeded(scanResults, thresholds, pullRequestReport);
     }
 
     private Map<FindingSeverity, Integer> getEffectiveThresholds() {
@@ -63,9 +65,12 @@ public class MergeResultEvaluatorImpl implements MergeResultEvaluator {
                 && thresholds.values().stream().anyMatch(Objects::nonNull);
     }
 
-    private static boolean isAnyThresholdExceeded(ScanResults scanResults, Map<FindingSeverity, Integer> thresholds) {
+    public static boolean isAnyThresholdExceeded(ScanResults scanResults, Map<FindingSeverity, Integer> thresholds, PullRequestReport pullRequestReport) {
         boolean result = false;
-        for (Map.Entry<FindingSeverity, Integer> entry : getFindingCountPerSeverity(scanResults)) {
+        Iterable<Map.Entry<FindingSeverity, Integer>> findingsPerSeverity = getFindingCountPerSeverity(scanResults);
+        
+        pullRequestReport.setFindingsPerSeverity(findingsPerSeverity);
+        for (Map.Entry<FindingSeverity, Integer> entry : findingsPerSeverity) {
             if (exceedsThreshold(entry, thresholds)) {
                 result = true;
                 break;
@@ -74,7 +79,7 @@ public class MergeResultEvaluatorImpl implements MergeResultEvaluator {
         return result;
     }
 
-    private static Iterable<Map.Entry<FindingSeverity, Integer>> getFindingCountPerSeverity(ScanResults scanResults) {
+    public static Iterable<Map.Entry<FindingSeverity, Integer>> getFindingCountPerSeverity(ScanResults scanResults) {
         Map<FindingSeverity, Integer> result = new EnumMap<>(FindingSeverity.class);
 
         // Cannot use scanResults.getScanSummary(), because it doesn't take CxFlow filtering into account.
