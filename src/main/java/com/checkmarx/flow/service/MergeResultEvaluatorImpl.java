@@ -3,6 +3,7 @@ package com.checkmarx.flow.service;
 import com.checkmarx.flow.config.FindingSeverity;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.RepoProperties;
+import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -25,7 +26,7 @@ public class MergeResultEvaluatorImpl implements MergeResultEvaluator {
     }
 
     @Override
-    public boolean isMergeAllowed(ScanResults scanResults, RepoProperties repoProperties) {
+    public boolean isMergeAllowed(ScanResults scanResults, RepoProperties repoProperties, PullRequestReport pullRequestReport) {
         if (!repoProperties.isErrorMerge()) {
             log.info("Merge is allowed, because error-merge is set to false.");
             return true;
@@ -34,8 +35,9 @@ public class MergeResultEvaluatorImpl implements MergeResultEvaluator {
         log.debug("Checking if pull request merge is allowed.");
         Map<FindingSeverity, Integer> thresholds = getEffectiveThresholds();
         writeMapToLog(thresholds, "Using thresholds");
-
-        boolean isAllowed = !isAnyThresholdExceeded(scanResults, thresholds);
+        pullRequestReport.setThresholds(thresholds);
+        
+        boolean isAllowed = !isAnyThresholdExceeded(scanResults, thresholds, pullRequestReport);
         log.info(isAllowed ? "Merge is allowed, because no thresholds were exceeded." :
                 "Merge is not allowed, because some of the thresholds were exceeded.");
 
@@ -57,9 +59,11 @@ public class MergeResultEvaluatorImpl implements MergeResultEvaluator {
                 && thresholds.values().stream().anyMatch(Objects::nonNull);
     }
 
-    private static boolean isAnyThresholdExceeded(ScanResults scanResults, Map<FindingSeverity, Integer> thresholds) {
+    private static boolean isAnyThresholdExceeded(ScanResults scanResults, Map<FindingSeverity, Integer> thresholds, PullRequestReport pullRequestReport) {
         boolean result = false;
-        for (Map.Entry<FindingSeverity, Integer> entry : getFindingCountPerSeverity(scanResults)) {
+        Iterable<Map.Entry<FindingSeverity, Integer>> findingsPerSeverity = getFindingCountPerSeverity(scanResults);
+        pullRequestReport.setFindingsPerSeverity(findingsPerSeverity);
+        for (Map.Entry<FindingSeverity, Integer> entry : findingsPerSeverity) {
             if (exceedsThreshold(entry, thresholds)) {
                 result = true;
                 // Don't break here, because we want to log validation for all the thresholds.
