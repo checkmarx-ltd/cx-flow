@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.awaitility.Awaitility;
 import org.springframework.http.*;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -33,11 +34,12 @@ public class AzureDevopsClient {
     private static final String AGILE_PROJECT_TEMPLATE_ID = "adcc42ab-9882-485e-a3ed-7678f01f66bc";
 
     static final String PROJECT_NAME_KEY = "projectName";
+    private static final String ID_KEY = "id";
+    static final String DEFAULT_BRANCH = "master";
 
     private static final Duration WAITING_TIMEOUT = Duration.ofMinutes(1);
     private static final Duration POLL_INTERVAL = Duration.ofSeconds(1);
 
-    static final String DEFAULT_BRANCH = "master";
 
     private static final String PROJECT_CREATION_REQUEST_TEMPLATE =
             ("{" +
@@ -64,6 +66,9 @@ public class AzureDevopsClient {
     public AzureDevopsClient(ADOProperties adoProperties) {
         this.adoProperties = adoProperties;
         apiVersionParam = "api-version=" + adoProperties.getApiVersion();
+
+        HttpComponentsClientHttpRequestFactory factorySupportingPatch = new HttpComponentsClientHttpRequestFactory();
+        restClient.setRequestFactory(factorySupportingPatch);
     }
 
     public void ensureProjectExists(String projectName) throws IOException {
@@ -73,10 +78,6 @@ public class AzureDevopsClient {
         }
     }
 
-    public int getIssueCount(String projectName) throws IOException {
-        return getProjectIssueIds(projectName).size();
-    }
-
     public void deleteProjectIssues(String projectName) throws IOException {
         List<String> issueIds = getProjectIssueIds(projectName);
         for (String issueId : issueIds) {
@@ -84,18 +85,32 @@ public class AzureDevopsClient {
         }
     }
 
-    public void createIssue(Issue issue) throws IOException {
+    public String createIssue(Issue issue) throws IOException {
         log.info("Creating ADO issue: {}.", objectMapper.writeValueAsString(issue));
         String projectName = issue.getMetadata().get(AzureDevopsClient.PROJECT_NAME_KEY);
         String url = getIssueCreationUrl(projectName);
 
-        IssueCreationRequestBuilder bodyBuilder = new IssueCreationRequestBuilder();
-        List<CreateWorkItemAttr> body = bodyBuilder.getHttpEntityBody(issue);
+        IssueRequestBuilder requestBuilder = new IssueRequestBuilder();
+        List<CreateWorkItemAttr> body = requestBuilder.getEntityBodyForCreation(issue);
 
-        HttpHeaders headers = getNewIssueHeaders();
+        HttpHeaders headers = getIssueHeaders();
         HttpEntity<?> request = new HttpEntity<>(body, headers);
 
-        restClient.exchange(url, HttpMethod.POST, request, String.class);
+        ResponseEntity<ObjectNode> response = restClient.exchange(url, HttpMethod.POST, request, ObjectNode.class);
+        return getNewIssueId(response);
+    }
+
+    public void updateIssueState(Issue issue, String newState) {
+        log.info("Setting state to {} for issue {}.", newState, issue.getId());
+        String url = getIssueUpdateUrl(issue);
+
+        IssueRequestBuilder requestBuilder = new IssueRequestBuilder();
+        List<CreateWorkItemAttr> body = requestBuilder.getEntityBodyForUpdate(newState);
+
+        HttpHeaders headers = getIssueHeaders();
+        HttpEntity<?> request = new HttpEntity<>(body, headers);
+
+        restClient.exchange(url, HttpMethod.PATCH, request, String.class);
     }
 
     public List<Issue> getIssues(String projectName) throws IOException {
@@ -128,8 +143,15 @@ public class AzureDevopsClient {
         ObjectNode responseBody = extractBody(response);
 
         return StreamSupport.stream(responseBody.get("workItems").spliterator(), false)
-                .map(issue -> issue.get("id").asText())
+                .map(issue -> issue.get(ID_KEY).asText())
                 .collect(Collectors.toList());
+    }
+
+    private String getNewIssueId(ResponseEntity<ObjectNode> response) throws IOException {
+        if (response.getBody() == null) {
+            throw new IOException("Response body is missing.");
+        }
+        return response.getBody().get(ID_KEY).asText();
     }
 
     private ObjectNode extractBody(HttpEntity<ObjectNode> response) throws IOException {
@@ -169,7 +191,7 @@ public class AzureDevopsClient {
         String url = getResourceUrl("projects", null);
         HttpEntity<?> entity = getRequestEntity(body);
         ResponseEntity<ObjectNode> response = restClient.exchange(url, HttpMethod.POST, entity, ObjectNode.class);
-        String operationId = extractBody(response).get("id").textValue();
+        String operationId = extractBody(response).get(ID_KEY).textValue();
         log.info("Queued project creation: operation ID {}.", operationId);
         return operationId;
     }
@@ -214,7 +236,7 @@ public class AzureDevopsClient {
     private Function<JsonNode, Issue> toTypedIssue() {
         return rawIssue -> {
             Issue result = new Issue();
-            result.setId(rawIssue.get("id").asText());
+            result.setId(rawIssue.get(ID_KEY).asText());
             result.setBody(rawIssue.at("/fields/System.Description").textValue());
             result.setTitle(rawIssue.at("/fields/System.Title").textValue());
             result.setState(rawIssue.at("/fields/System.State").textValue());
@@ -236,7 +258,7 @@ public class AzureDevopsClient {
         return new HttpEntity<>(body, headers);
     }
 
-    private HttpHeaders getNewIssueHeaders() {
+    private HttpHeaders getIssueHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.set(HttpHeaders.CONTENT_TYPE, "application/json-patch+json");
         setAuthentication(headers);
@@ -268,6 +290,15 @@ public class AzureDevopsClient {
                 .path("/{project}/_apis/wit/workitems/${issue-type}")
                 .query(apiVersionParam)
                 .buildAndExpand(projectName, adoProperties.getIssueType())
+                .toUriString();
+    }
+
+    private String getIssueUpdateUrl(Issue issue) {
+        String projectName = issue.getMetadata().get(AzureDevopsClient.PROJECT_NAME_KEY);
+        return UriComponentsBuilder.fromHttpUrl(adoProperties.getUrl())
+                .path("/{project}/_apis/wit/workitems/{id}")
+                .query(apiVersionParam)
+                .buildAndExpand(projectName, issue.getId())
                 .toUriString();
     }
 

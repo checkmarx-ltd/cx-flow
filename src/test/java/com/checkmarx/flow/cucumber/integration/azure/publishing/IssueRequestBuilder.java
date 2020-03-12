@@ -4,15 +4,20 @@ import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.azure.CreateWorkItemAttr;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
-class IssueCreationRequestBuilder {
-    public List<CreateWorkItemAttr> getHttpEntityBody(Issue issue) {
+class IssueRequestBuilder {
+    public List<CreateWorkItemAttr> getEntityBodyForCreation(Issue issue) {
         CreateWorkItemAttr title = getTitle(issue);
         CreateWorkItemAttr description = getDescription(issue);
-        CreateWorkItemAttr state = getState(issue);
+        CreateWorkItemAttr state = getState(issue.getState());
         CreateWorkItemAttr tags = getTags(issue);
         return Arrays.asList(title, description, state, tags);
+    }
+
+    public List<CreateWorkItemAttr> getEntityBodyForUpdate(String newState) {
+        return Collections.singletonList(getState(newState));
     }
 
     private CreateWorkItemAttr getTitle(Issue issue) {
@@ -31,11 +36,11 @@ class IssueCreationRequestBuilder {
         return description;
     }
 
-    private CreateWorkItemAttr getState(Issue issue) {
+    private CreateWorkItemAttr getState(String stateValue) {
         CreateWorkItemAttr state = new CreateWorkItemAttr();
         state.setOp("add");
         state.setPath("/fields/System.State");
-        state.setValue(issue.getState());
+        state.setValue(stateValue);
         return state;
     }
 

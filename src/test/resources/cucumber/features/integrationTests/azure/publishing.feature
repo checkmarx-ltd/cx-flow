@@ -44,9 +44,21 @@ Feature: Parsing SAST report and publishing items to Azure DevOps
       | title                                                  | vulnerability             | filename       | link1              | link2                                                                       |
       | CX Reflected_XSS_All_Clients @ DOS_Login.java [master] | Reflected_XSS_All_Clients | DOS_Login.java | http://initial.url | http://CX-FLOW-CLEAN/CxWebClient/ViewerMain.aspx?scanid=1000026&projectid=6 |
 
+  @Update_issue
+  Scenario Outline: Reopening closed issues
+  CxFlow should reopen a previously closed issue if a corresponding finding is present in SAST report.
+    Given Azure DevOps initially contains 1 "closed" issue with title: "<title>"
+    And SAST report contains 1 finding with vulnerability type "<vulnerability>" and filename "<filename>", not marked as false positive
+    When publishing the report
+    Then Azure DevOps contains 1 issue with the title "<title>" and "Active" state
+
+    Examples:
+      | title                                                  | vulnerability             | filename       |
+      | CX Reflected_XSS_All_Clients @ DOS_Login.java [master] | Reflected_XSS_All_Clients | DOS_Login.java |
+
   @Close_issue
   Scenario Outline: Closing an existing issue if its finding no longer exists in SAST report
-    Given Azure DevOps initially contains 1 open issue with title: "<title>"
+    Given Azure DevOps initially contains 1 "open" issue with title: "<title>"
     And SAST report contains 1 finding with vulnerability type "Reflected_XSS_All_Clients" and filename "DOS_Login.java", not marked as false positive
     When publishing the report
     Then Azure DevOps contains 2 issues
@@ -58,7 +70,7 @@ Feature: Parsing SAST report and publishing items to Azure DevOps
 
   @Close_issue
   Scenario Outline: Closing an existing issue if all its findings are false positive
-    Given Azure DevOps initially contains 1 open issue with title: "<title>"
+    Given Azure DevOps initially contains 1 "open" issue with title: "<title>"
     And SAST report contains 2 findings with vulnerability type "<vulnerability>", filename "<filename>" and marked as false positive
     When publishing the report
     Then Azure DevOps contains 1 issue with the title "<title>" and "Closed" state
@@ -80,11 +92,6 @@ Feature: Parsing SAST report and publishing items to Azure DevOps
       | title1                                                 | title2                                    | vulnerability1            | filename1      |
       | CX Reflected_XSS_All_Clients @ DOS_Login.java [master] | CX SQL_Injection @ TestFile.java [master] | Reflected_XSS_All_Clients | DOS_Login.java |
 
-  @Skip
-  Scenario: Reopening closed issues
-  CxFlow should reopen previously closed issue if a corresponding finding is present in SAST report.
-
-  @Skip
   @NegativeTest
   @Error_Handling
   @UnReachableService

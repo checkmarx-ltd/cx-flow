@@ -78,17 +78,25 @@ public class PublishingSteps {
         adoClient.deleteProjectIssues(projectName);
     }
 
-    @Given("Azure DevOps initially contains {int} open issue with title: {string}")
-    public void azureDevOpsInitiallyContainsIssue(int issueCount, String title) throws IOException {
+    @Given("Azure DevOps initially contains {int} {string} issue with title: {string}")
+    public void azureDevOpsInitiallyContainsIssueWithState(int issueCount, String stateDescription, String title) throws IOException {
+        String desiredState = stateDescription.equals("open") ? adoProperties.getOpenStatus() : adoProperties.getClosedStatus();
+        String stateAllowedForCreation = adoProperties.getOpenStatus();
+
+        boolean needToUpdateAfterCreation = !desiredState.equals(stateAllowedForCreation);
         for (int i = 0; i < issueCount; i++) {
-            createIssue(title, DESCRIPTION_STUB);
+            Issue issue = createIssue(title, DESCRIPTION_STUB);
+            if (needToUpdateAfterCreation) {
+                adoClient.updateIssueState(issue, desiredState);
+            }
         }
     }
 
     @Given("Azure DevOps initially contains {int} open issue with title: {string} and description containing link: {string}")
     public void azureDevOpsInitiallyContainsIssue(int issueCount, String title, String link) throws IOException {
+        String description = String.format("Description containing %s link", link);
         for (int i = 0; i < issueCount; i++) {
-            createIssue(title, link);
+            createIssue(title, description);
         }
     }
 
@@ -244,7 +252,7 @@ public class PublishingSteps {
         assertEquals(expectedCount, issues.size(), "Incorrect number of issues.");
     }
 
-    private void createIssue(String title, String description) throws IOException {
+    private Issue createIssue(String title, String description) throws IOException {
         Issue issue = new Issue();
         issue.setTitle(title);
         issue.setBody(description);
@@ -254,7 +262,9 @@ public class PublishingSteps {
         metadata.put(AzureDevopsClient.PROJECT_NAME_KEY, projectName);
         issue.setMetadata(metadata);
 
-        adoClient.createIssue(issue);
+        String id = adoClient.createIssue(issue);
+        issue.setId(id);
+        return issue;
     }
 
     private static Supplier<String> getIssueError(List<Issue> issues) {
