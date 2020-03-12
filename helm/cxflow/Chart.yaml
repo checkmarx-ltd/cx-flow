@@ -1,0 +1,16 @@
+apiVersion: v2
+appVersion: latest
+description: A Helm chart for Kubernetes
+name: cxflow
+type: application
+version: 0.1.0
+
+dependencies:
+  - name: aws-alb-ingress-controller
+    version: ~0.1.13
+    repository: http://storage.googleapis.com/kubernetes-charts-incubator
+    enabled: true
+  - name: external-dns
+    version: ~2.19.1
+    repository: https://kubernetes-charts.storage.googleapis.com/
+    enabled: true
