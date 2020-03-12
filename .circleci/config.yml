@@ -94,6 +94,59 @@ jobs:
             - ./image-8.tar
             - ./image.tar
             - ./latest.tar
+  
+  install-chart:
+    executor: aws-eks/python3
+    parameters:
+      cluster-name:
+        description: |
+          Name of the EKS cluster.
+        type: string
+      chart:
+        description: |
+          Specify for installation a chart reference.
+        type: string
+      namespace:
+        default: 'default'
+        description: |
+          The kubernetes namespace that should be used.
+        type: string
+      release-name:
+        default: ''
+        description: |
+          Specify a name for the release.
+        type: string
+      version:
+        default: v3.1.1
+        description: the helm client version to install
+        type: string
+    steps:
+      - checkout
+      - aws-eks/update-kubeconfig-with-authenticator:
+          cluster-name: << parameters.cluster-name >>
+          install-kubectl: true
+      - run:
+          name: Create namespace
+          command: |
+            export NAMESPACE_EXISTS=$(kubectl get namespaces | grep cxflow-$CIRCLE_BRANCH)
+            if [[ ${NAMESPACE_EXISTS} ]]; then echo "Namespace already exists"; else kubectl create namespace cxflow-$CIRCLE_BRANCH; fi
+      - run:
+          name: Change appVersion
+          command: |
+            sed -i "s/appVersion:[[:space:]]*.*/appVersion: ${CIRCLE_SHA1::7}/g" ./helm/cxflow/Chart.yaml
+      - helm/install-helm-client:
+          version: << parameters.version >>
+      - run:
+          name: Install cxflow service on cluster 
+          command: |
+            helm upgrade --install --atomic --namespace << parameters.namespace >> << parameters.release-name >> \
+              --set cxflow.checkmarxUsername=${CHECKMARX_USERNAME} \
+              --set cxflow.checkmarxPassword=${CHECKMARX_PASSWORD} \
+              --set cxflow.githubToken=${GITHUB_TOKEN} \
+              --set cxflow.githubWebhookToken=${GITHUB_WEBHOOK_TOKEN} \
+              --set cxflow.checkmarxClientSecret=${CHECKMARX_CLIENT_SECRET} \
+              --set cxflow.jiraToken=${JIRA_TOKEN} \
+              << parameters.chart >>
 
   docker-push:
     executor: docker
@@ -130,6 +183,9 @@ jobs:
 
 orbs:
   sonarcloud: sonarsource/sonarcloud@1.0.1
+  aws-eks: circleci/aws-eks@0.2.6
+  kubernetes: circleci/kubernetes@0.4.0
+  helm: circleci/helm@0.2.3
 
 workflows:
   version: 2
@@ -149,6 +205,18 @@ workflows:
               only: develop
           requires:
             - build
+      - install-chart:
+          cluster-name: platform
+          chart: ./helm/cxflow
+          namespace: cxflow-$CIRCLE_BRANCH
+          release-name: cxflow-$CIRCLE_BRANCH
+          version: v3.1.1
+          filters:
+            branches:
+              only: develop
+          requires:
+            - build
+            - docker-build
       - docker-push:
           filters:
             branches:
