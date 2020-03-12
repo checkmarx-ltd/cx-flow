@@ -1,4 +1,9 @@
-version: 2
+version: 2.1
+
+executors:
+  docker:
+    docker:
+      - image: circleci/golang:1.9
 
 jobs:
   build:
@@ -13,7 +18,6 @@ jobs:
           key: v1-gradle-wrapper-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}
       - restore_cache:
           key: v1-gradle-cache-{{ checksum "build.gradle" }}
-      - run: chmod u+x gradlew
       - run: ./gradlew clean build
       - run: ./gradlew -b build-11.gradle --build-cache assemble
       - run: ./gradlew -q getVersion > build/libs/version.txt
@@ -32,25 +36,135 @@ jobs:
           paths:
             - build/libs/*
             - Dockerfile
-            - Dockerfile-11
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/test-results/junit/
+            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/test-results
+      - store_artifacts:
+          path: ~/test-results/junit
 
-  docker-push:
+  sonar:
     docker:
-      - image: docker:18.06.3-ce-git
-        environment:
-          DOCKER_REPO: docker.io/checkmarxts/cxflow
+      - image: circleci/openjdk:8-jdk
+    steps:
+      - checkout
+      - run:
+          name: Compile
+          command: ./gradlew clean compileJava compileTestJava
+      - sonarcloud/scan
+
+  docker-build:
+    executor: docker
     steps:
       - setup_remote_docker
       - attach_workspace:
           at: .
       - deploy:
-          name: Publish application to docker hub
+          name: Docker Build
           command: |
             VERSION=$(cat ./build/libs/version.txt)
+            SHA1_SHORT=${CIRCLE_SHA1::7}
             docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} docker.io
-            docker build -t ${DOCKER_REPO} .
-            docker build -t ${DOCKER_REPO}:${VERSION} .
-            docker build -f Dockerfile-11 -t ${DOCKER_REPO}:${VERSION}-11 .
+            docker build --target java8 \
+              -t ${DOCKER_REPO}:${SHA1_SHORT} \
+              -t ${DOCKER_REPO}:${VERSION}-8 \
+              -t ${DOCKER_REPO}:${VERSION} \
+              -t ${DOCKER_REPO} \
+              .
+            docker build --target java11 \
+              -t ${DOCKER_REPO}:${VERSION}-11 \
+              .
+            docker push ${DOCKER_REPO}:${SHA1_SHORT}
+      - run:
+          name: Archive Docker images
+          command: |
+            VERSION=$(cat ./build/libs/version.txt)
+            docker save -o image-11.tar ${DOCKER_REPO}:${VERSION}-11
+            docker save -o image-8.tar ${DOCKER_REPO}:${VERSION}-8
+            docker save -o image.tar ${DOCKER_REPO}:${VERSION}
+            docker save -o latest.tar ${DOCKER_REPO}:latest
+      - persist_to_workspace:
+          root: .
+          paths:
+            - ./image-11.tar
+            - ./image-8.tar
+            - ./image.tar
+            - ./latest.tar
+  
+  install-chart:
+    executor: aws-eks/python3
+    parameters:
+      cluster-name:
+        description: |
+          Name of the EKS cluster.
+        type: string
+      chart:
+        description: |
+          Specify for installation a chart reference.
+        type: string
+      namespace:
+        default: 'default'
+        description: |
+          The kubernetes namespace that should be used.
+        type: string
+      release-name:
+        default: ''
+        description: |
+          Specify a name for the release.
+        type: string
+      version:
+        default: v3.1.1
+        description: the helm client version to install
+        type: string
+    steps:
+      - checkout
+      - aws-eks/update-kubeconfig-with-authenticator:
+          cluster-name: << parameters.cluster-name >>
+          install-kubectl: true
+      - run:
+          name: Create namespace
+          command: |
+            export NAMESPACE_EXISTS=$(kubectl get namespaces | grep cxflow-$CIRCLE_BRANCH)
+            if [[ ${NAMESPACE_EXISTS} ]]; then echo "Namespace already exists"; else kubectl create namespace cxflow-$CIRCLE_BRANCH; fi
+      - run:
+          name: Change appVersion
+          command: |
+            sed -i "s/appVersion:[[:space:]]*.*/appVersion: ${CIRCLE_SHA1::7}/g" ./helm/cxflow/Chart.yaml
+      - helm/install-helm-client:
+          version: << parameters.version >>
+      - run:
+          name: Install cxflow service on cluster 
+          command: |
+            helm upgrade --install --atomic --namespace << parameters.namespace >> << parameters.release-name >> \
+              --set cxflow.checkmarxUsername=${CHECKMARX_USERNAME} \
+              --set cxflow.checkmarxPassword=${CHECKMARX_PASSWORD} \
+              --set cxflow.githubToken=${GITHUB_TOKEN} \
+              --set cxflow.githubWebhookToken=${GITHUB_WEBHOOK_TOKEN} \
+              --set cxflow.checkmarxClientSecret=${CHECKMARX_CLIENT_SECRET} \
+              --set cxflow.jiraToken=${JIRA_TOKEN} \
+              << parameters.chart >>
+
+  docker-push:
+    executor: docker
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - setup_remote_docker
+      - run:
+          name: Load archived Docker images
+          command: |
+            docker load -i /tmp/workspace/image-11.tar
+            docker load -i /tmp/workspace/image-8.tar
+            docker load -i /tmp/workspace/image.tar
+            docker load -i /tmp/workspace/latest.tar
+      - run:
+          name: Publish Docker images to Docker Hub
+          command: |
+            docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} docker.io
             docker push ${DOCKER_REPO}
 
   publish-github-release:
@@ -67,20 +181,52 @@ jobs:
             rm ./build/libs/version.txt
             ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -n ${VERSION} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./build/libs/
 
+orbs:
+  sonarcloud: sonarsource/sonarcloud@1.0.1
+  aws-eks: circleci/aws-eks@0.2.6
+  kubernetes: circleci/kubernetes@0.4.0
+  helm: circleci/helm@0.2.3
+
 workflows:
   version: 2
   build_deploy:
     jobs:
       - build
-      - docker-push:
+      - sonar:
+          context: sonarcloud
           filters:
             branches:
               only: develop
           requires:
             - build
-      - publish-github-release:
+      - docker-build:
           filters:
             branches:
               only: develop
+          requires:
+            - build
+      - install-chart:
+          cluster-name: platform
+          chart: ./helm/cxflow
+          namespace: cxflow-$CIRCLE_BRANCH
+          release-name: cxflow-$CIRCLE_BRANCH
+          version: v3.1.1
+          filters:
+            branches:
+              only: develop
+          requires:
+            - build
+            - docker-build
+      - docker-push:
+          filters:
+            branches:
+              only: master
+          requires:
+            - build
+            - docker-build
+      - publish-github-release:
+          filters:
+            branches:
+              only: master
           requires:
             - build

@@ -39,6 +39,10 @@ cx-flow:
   wiki-url: https://checkmarx.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
   codebash-url: https://cxa.codebashing.com/courses/
   auto-profile: false
+  thresholds:
+    high: 1
+    medium: 2
+    low: 3
   #branch-script: D:\\tmp\Branch.groovy
   #zip-exclude: .*.json$, bin\/.*
 
@@ -72,7 +76,7 @@ checkmarx:
   #exclude-folders:
 
 jira:
-  url: https://custodela.atlassian.net
+  url: http://localhost:8080
   username: xxxx
   token: xxxx
   project: APPSEC
@@ -88,7 +92,7 @@ jira:
     - To Do
     - In Progress
   closed-status:
-    - Done
+    - DONE
   fields:
     - type: result
       name: system-date
@@ -133,11 +137,15 @@ jira:
 
 github:
   webhook-token: 1234
+  token: xxxx
   url: https://github.com
   api-url: https://api.github.com/repos/
   block-merge: true
   error-merge: true
   cx-summary: true
+  # null value prevents CxFlow from trying to download config override from GitHub.
+  # Added to get more stable results for "high load" scenario in webhook feature.
+  config-as-code: null
 
 gitlab:
   webhook-token: 1234

@@ -127,7 +127,7 @@ public class ResultsService {
                 break;
             case GITHUBPULL:
                 gitService.processPull(request, results);
-                gitService.endBlockMerge(request, results.getLink(), !results.getXIssues().isEmpty());
+                gitService.endBlockMerge(request, results);
                 break;
             case GITLABCOMMIT:
                 gitLabService.processCommit(request, results);
@@ -194,9 +194,52 @@ public class ResultsService {
             if (e.getStatusCode().isPresent() && e.getStatusCode().get() ==  HttpStatus.NOT_FOUND.value()) {
                 throw new JiraClientRunTimeException("Jira service is not accessible for URL: " + jiraService.getJiraURI(), e);
             } else {
-                throw  e;
+                Map<String, ScanResults.XIssue> nonPublishedScanResultsMap = jiraService.getNonPublishedScanResults();
+                if (e.getStatusCode().isPresent() &&
+                        e.getStatusCode().get() ==  HttpStatus.BAD_REQUEST.value() &&
+                        nonPublishedScanResultsMap.size() > 0) {
+                    throwExceptionWhenPublishingErrorOccurred(e, nonPublishedScanResultsMap);
+
+                } else {
+                    throw  e;
+                }
+            }
+        } catch (JiraClientException e) {
+            Map<String, ScanResults.XIssue> nonPublishedScanResultsMap = jiraService.getNonPublishedScanResults();
+            if (nonPublishedScanResultsMap.size() > 0) {
+                throwExceptionWhenPublishingErrorOccurred(e, nonPublishedScanResultsMap);
+            } else {
+                throw e;
             }
         }
+    }
+
+    private void throwExceptionWhenPublishingErrorOccurred(Exception e, Map<String, ScanResults.XIssue> nonPublishedScanResultsMap) {
+        String errorMessage = "Wasn't able to publish the following issues into JIRA:\n" +
+                printNonPublishedScanResults(nonPublishedScanResultsMap) +
+                "\nwith the following reason: " + e.getMessage();
+
+        throw new JiraClientRunTimeException(errorMessage);
+    }
+
+    private String printNonPublishedScanResults(Map<String, ScanResults.XIssue> nonPublishedScanResultsMap) {
+        StringBuilder sb = new StringBuilder();
+
+        if (nonPublishedScanResultsMap.size() > 0) {
+            sb.append("=====================================================\n");
+            int count = 0;
+
+            for (Map.Entry<String, ScanResults.XIssue> currentEntry : nonPublishedScanResultsMap.entrySet()) {
+                count++;
+                sb.append(count).append(". ").append(currentEntry.getKey()).append("\n");
+                sb.append("Severity: ").append(currentEntry.getValue().getSeverity()).append("\n");
+                sb.append("Similarity id: ").append(currentEntry.getValue().getSimilarityId()).append("\n");
+                sb.append("Cwe: ").append(currentEntry.getValue().getCwe()).append("\n");
+                sb.append("Link: ").append(currentEntry.getValue().getLink()).append("\n").append("==============\n");
+            }
+        }
+        sb.append("=====================================================");
+        return sb.toString();
     }
 
     /**

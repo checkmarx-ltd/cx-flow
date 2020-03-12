@@ -1,10 +1,7 @@
 package com.checkmarx.flow.cucumber.integration.end2end.github2jira;
 
+import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 import io.cucumber.java.en.Given;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.atlassian.jira.rest.client.api.SearchRestClient;
@@ -23,7 +20,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.SpringApplication;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -65,6 +61,8 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 /**
  * Check cxflow end-2-end SAST flow between GitHub webhook and JIRA
  */
@@ -94,12 +92,12 @@ public class GitHubToJiraSteps {
     private String hookTargetURL = null;
 
     @PostConstruct
-    public void init() {
-        Properties properties = getProperties();
-        String namespace = properties.getProperty("namespace");
-        String repo = properties.getProperty("repo");
-        String filePath = properties.getProperty("fileCreatePath");
-        hookTargetURL = properties.getProperty("target");
+    public void init() throws IOException {
+        Properties properties = TestUtils.getPropertiesFromResource("cucumber\\features\\e2eTests\\githubHookProperties.properties");
+        String namespace = Optional.ofNullable(System.getenv("HOOK_NAMESPACE")).orElse(properties.getProperty("namespace"));
+        String repo = Optional.ofNullable(System.getenv("HOOK_REPO")).orElse(properties.getProperty("repo"));
+        String filePath = properties.getProperty("fileCreatePath").replace("{fileCreatePath}", "src\\main\\java\\sample\\encode.frm");
+        hookTargetURL = Optional.ofNullable(System.getenv("HOOK_TARGET")).orElse(properties.getProperty("target"));
         COMMIT_FILE_PATH = String.format("%s/%s/%s/contents/%s", gitHubProperties.getApiUrl(), namespace, repo,
                 filePath);
         REPO_HOOKS_BASE_URL = String.format("%s/%s/%s/hooks", gitHubProperties.getApiUrl(), namespace, repo);
@@ -142,7 +140,7 @@ public class GitHubToJiraSteps {
 
     @And("CxFlow is running as a service")
     public void runAsService() {
-        SpringApplication.run(CxFlowApplication.class, new String[] { "--web" });
+        TestUtils.runCxFlowAsService();
     }
 
     @And("webhook is configured for push event")

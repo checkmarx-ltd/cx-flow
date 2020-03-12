@@ -29,6 +29,5 @@ application-secrets.yml
 /.nb-gradle/
 cx-flow.log*
 
-
 ### VSCode ###
 .vscode
