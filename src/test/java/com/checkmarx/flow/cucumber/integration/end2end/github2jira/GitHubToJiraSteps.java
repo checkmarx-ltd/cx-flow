@@ -94,11 +94,10 @@ public class GitHubToJiraSteps {
     @PostConstruct
     public void init() throws IOException {
         Properties properties = TestUtils.getPropertiesFromResource("cucumber\\features\\e2eTests\\githubHookProperties.properties");
-
-        String namespace = properties.getProperty("namespace");
-        String repo = properties.getProperty("repo");
-        String filePath = properties.getProperty("fileCreatePath");
-        hookTargetURL = properties.getProperty("target");
+        String namespace = Optional.ofNullable(System.getenv("HOOK_NAMESPACE")).orElse(properties.getProperty("namespace"));
+        String repo = Optional.ofNullable(System.getenv("HOOK_REPO")).orElse(properties.getProperty("repo"));
+        String filePath = properties.getProperty("fileCreatePath").replace("{fileCreatePath}", "src\\main\\java\\sample\\encode.frm");
+        hookTargetURL = Optional.ofNullable(System.getenv("HOOK_TARGET")).orElse(properties.getProperty("target"));
         COMMIT_FILE_PATH = String.format("%s/%s/%s/contents/%s", gitHubProperties.getApiUrl(), namespace, repo,
                 filePath);
         REPO_HOOKS_BASE_URL = String.format("%s/%s/%s/hooks", gitHubProperties.getApiUrl(), namespace, repo);
