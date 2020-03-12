@@ -91,5 +91,4 @@ Feature: Parsing SAST report and publishing items to Azure DevOps
   Scenario: Azure DevOps is unreachable
     Given invalid Azure DevOps URL is provided in configuration
     When publishing a SAST report
-    # TODO: which exception?
-    Then CxFlow should throw an exception
+    Then CxFlow should throw "org.springframework.web.client.ResourceAccessException"

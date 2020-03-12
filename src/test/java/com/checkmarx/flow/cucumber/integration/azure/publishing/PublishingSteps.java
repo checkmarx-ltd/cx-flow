@@ -16,6 +16,7 @@ import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -35,6 +36,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(classes = {CxFlowApplication.class})
+@Slf4j
 public class PublishingSteps {
     private static final String PROPERTIES_FILE_PATH = "cucumber/features/integrationTests/azure/publishing.properties";
 
@@ -57,7 +59,13 @@ public class PublishingSteps {
 
     private String projectName;
     private String sastReportFilename;
+
+    // Used to avoid duplicate ADO requests in different steps.
     private List<Issue> issuesAfterPublish;
+
+    // For the 'unreachable' scenario.
+    private boolean expectingException;
+    private Throwable lastCxFlowException;
 
     @Before
     public void prepareEnvironment() throws IOException {
@@ -126,24 +134,21 @@ public class PublishingSteps {
     }
 
     @When("^publishing (?:the|a SAST) report$")
-    public void publishingTheReport() throws IOException, ExitThrowable {
-        BugTracker bugTracker = BugTracker.builder()
-                .type(BugTracker.Type.CUSTOM)
-                .customBean("Azure")
-                .build();
+    public void publishingTheReport() throws Exception, ExitThrowable {
+        ScanRequest request = prepareScanRequest();
 
-        ScanRequest request = ScanRequest.builder()
-                .bugTracker(bugTracker)
-                .namespace(projectName)
-                .repoName(projectName)
-                .branch(AzureDevopsClient.DEFAULT_BRANCH)
-                .product(ScanRequest.Product.CX)
-                .build();
+        String sastReportPath = Paths.get(Constants.SAMPLE_SAST_RESULTS_DIR, sastReportFilename).toString();
+        File sastReport = TestUtils.getFileFromResource(sastReportPath);
 
-        String path = Paths.get(Constants.SAMPLE_SAST_RESULTS_DIR, sastReportFilename).toString();
-        File sastReport = TestUtils.getFileFromResource(path);
-
-        flowService.cxParseResults(request, sastReport);
+        try {
+            flowService.cxParseResults(request, sastReport);
+        } catch (Throwable e) {
+            if (expectingException) {
+                lastCxFlowException = e;
+            } else {
+                throw e;
+            }
+        }
     }
 
     @And("SAST report contains {int} findings with the same vulnerability type and in the same file, and not marked as false positive")
@@ -212,6 +217,29 @@ public class PublishingSteps {
         assertEquals(state, actualState, message);
     }
 
+    @Given("invalid Azure DevOps URL is provided in configuration")
+    public void invalidAzureDevOpsURLIsProvidedInConfiguration() {
+        adoProperties.setUrl("http://invalid.url");
+        expectingException = true;
+        sastReportFilename = REPORT_WITH_ONE_FINDING;
+    }
+
+    @Then("CxFlow should throw {string}")
+    public void cxflowShouldThrowAnException(String exceptionClassName) {
+        assertNotNull(lastCxFlowException, "Expected CxFlow to throw an exception.");
+
+        Class<?> expectedExceptionClass = null;
+        try {
+            expectedExceptionClass = Class.forName(exceptionClassName);
+        } catch (ClassNotFoundException e) {
+            fail("Invalid class name: " + exceptionClassName);
+        }
+        Class<? extends Throwable> actualExceptionClass = lastCxFlowException.getClass();
+        log.info("Caught a {}: {}", actualExceptionClass.getName(), lastCxFlowException.getMessage());
+
+        assertEquals(expectedExceptionClass, actualExceptionClass, "Unexpected exception type.");
+    }
+
     private void verifyIssueCount(List<Issue> issues, int expectedCount) {
         assertEquals(expectedCount, issues.size(), "Incorrect number of issues.");
     }
@@ -250,13 +278,18 @@ public class PublishingSteps {
         return issuesAfterPublish;
     }
 
-    @Given("invalid Azure DevOps URL is provided in configuration")
-    public void invalidAzureDevOpsURLIsProvidedInConfiguration() {
-        adoProperties.setUrl("http://invalid.url");
-    }
+    private ScanRequest prepareScanRequest() {
+        BugTracker bugTracker = BugTracker.builder()
+                .type(BugTracker.Type.CUSTOM)
+                .customBean("Azure")
+                .build();
 
-    @Then("CxFlow should throw an exception")
-    public void cxflowShouldThrowAnException() {
-
+        return ScanRequest.builder()
+                .bugTracker(bugTracker)
+                .namespace(projectName)
+                .repoName(projectName)
+                .branch(AzureDevopsClient.DEFAULT_BRANCH)
+                .product(ScanRequest.Product.CX)
+                .build();
     }
 }
