@@ -202,7 +202,7 @@ workflows:
       - docker-build:
           filters:
             branches:
-              only: develop
+              only: ${RELEASE_BRANCH}
           requires:
             - build
       - install-chart:
@@ -213,20 +213,20 @@ workflows:
           version: v3.1.1
           filters:
             branches:
-              only: develop
+              only: master
           requires:
             - build
             - docker-build
       - docker-push:
           filters:
             branches:
-              only: master
+              only: ${RELEASE_BRANCH}
           requires:
             - build
             - docker-build
       - publish-github-release:
           filters:
             branches:
-              only: master
+              only: ${RELEASE_BRANCH}
           requires:
             - build
