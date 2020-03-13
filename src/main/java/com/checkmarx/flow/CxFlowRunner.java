@@ -419,7 +419,7 @@ public class CxFlowRunner implements ApplicationRunner {
             exit(10);
         }
         log.info("Completed Successfully");
-//        exit(0);
+        exit(0);
     }
 
     private boolean containsRepoArgs(String namespace, String repoName, String branch){
