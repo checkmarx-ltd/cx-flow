@@ -200,20 +200,20 @@ workflows:
           requires:
             - build
       - docker-build:
-          filters:
-            branches:
-              only: develop
+          # filters:
+          #   branches:
+          #     only: develop
           requires:
             - build
       - install-chart:
-          cluster-name: platform
+          cluster-name: eks-cxflow-ci
           chart: ./helm/cxflow
           namespace: cxflow-$CIRCLE_BRANCH
           release-name: cxflow-$CIRCLE_BRANCH
           version: v3.1.1
-          filters:
-            branches:
-              only: develop
+          # filters:
+          #   branches:
+          #     only: develop
           requires:
             - build
             - docker-build
