@@ -206,6 +206,7 @@ workflows:
           requires:
             - build
       - install-chart:
+          context: devops2_context
           cluster-name: eks-cxflow-ci
           chart: ./helm/cxflow
           namespace: cxflow-$CIRCLE_BRANCH
