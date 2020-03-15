@@ -38,7 +38,7 @@ ingress:
   annotations:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:148244689188:certificate/b6f613f2-6a9e-4ca7-9dfa-60f22f74f33a
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:eu-west-1:983555762431:certificate/85997194-c948-4a86-9978-ba555d8f9354
     alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-2016-08
     alb.ingress.kubernetes.io/target-type: instance
     alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
