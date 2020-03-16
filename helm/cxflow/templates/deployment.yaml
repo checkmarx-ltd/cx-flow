@@ -49,7 +49,7 @@ spec:
                   name: {{ .Release.Name }}-secret
                   key: checkmarx-username
             - name: CX_FLOW_BUG_TRACKER
-              value: GitHub
+              value: JIRA
             - name: GITHUB_TOKEN
               valueFrom:
                 secretKeyRef:

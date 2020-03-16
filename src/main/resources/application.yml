@@ -43,6 +43,7 @@ cx-flow:
   bug-tracker-impl:
     - CxXml
     - Json
+    - JIRA
     - GitLab
     - GitHub
     - Csv
