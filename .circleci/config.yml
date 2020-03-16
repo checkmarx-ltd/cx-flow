@@ -95,7 +95,7 @@ jobs:
             - ./image.tar
             - ./latest.tar
   
-  install-chart:
+  deploy-cxflow:
     executor: aws-eks/python3
     parameters:
       cluster-name:
@@ -200,21 +200,20 @@ workflows:
           requires:
             - build
       - docker-build:
-          # filters:
-          #   branches:
-          #     only: develop
+          filters:
+            branches:
+              only: develop
           requires:
             - build
-      - install-chart:
-          context: devops2_context
+      - deploy-cxflow:
           cluster-name: eks-cxflow-ci
           chart: ./helm/cxflow
           namespace: cxflow-$CIRCLE_BRANCH
           release-name: cxflow-$CIRCLE_BRANCH
           version: v3.1.1
-          # filters:
-          #   branches:
-          #     only: develop
+          filters:
+            branches:
+              only: develop
           requires:
             - build
             - docker-build
