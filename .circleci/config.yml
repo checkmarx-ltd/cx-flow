@@ -95,7 +95,7 @@ jobs:
             - ./image.tar
             - ./latest.tar
   
-  install-chart:
+  deploy-cxflow:
     executor: aws-eks/python3
     parameters:
       cluster-name:
@@ -147,6 +147,31 @@ jobs:
               --set cxflow.checkmarxClientSecret=${CHECKMARX_CLIENT_SECRET} \
               --set cxflow.jiraToken=${JIRA_TOKEN} \
               << parameters.chart >>
+
+  tests:
+    docker:
+      - image: "circleci/openjdk:8-jdk"
+    steps:
+      - checkout
+      - run:
+          name: Run Component Tests
+          command: ./gradlew componentTest --info
+    #  - run:
+    #      name: Run Integration Tests
+    #      command: ./gradlew integrationTest --info
+      - run:
+          name: Run e2eTests Tests
+          command: ./gradlew e2eTests --info
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/test-results/junit/
+            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/test-results
+      - store_artifacts:
+          path: ~/test-results/junit
 
   docker-push:
     executor: docker
@@ -205,7 +230,7 @@ workflows:
               only: develop
           requires:
             - build
-      - install-chart:
+      - deploy-cxflow:
           cluster-name: platform
           chart: ./helm/cxflow
           namespace: cxflow-$CIRCLE_BRANCH
@@ -217,6 +242,12 @@ workflows:
           requires:
             - build
             - docker-build
+      - tests:
+          filters:
+            branches:
+              only: develop
+            requires:
+              - deploy-cxflow
       - docker-push:
           filters:
             branches:

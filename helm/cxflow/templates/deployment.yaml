@@ -74,7 +74,7 @@ spec:
                   key: jira-token
             - name: JIRA_URL
               value: {{ .Values.cxflow.jiraUrl }}
-            - name: JIRA_USER_NAME
+            - name: JIRA_USERNAME
               value: {{ .Values.cxflow.jiraUserName }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
