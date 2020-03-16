@@ -238,25 +238,25 @@ workflows:
           version: v3.1.1
           filters:
             branches:
-              only: develop
+              only: ${DEPLOY_BRANCH}
           requires:
             - build
             - docker-build
       - test:
           filters:
             branches:
-              only: develop
+              only: ${TEST_BRANCH}
           requires:
             - deploy-cxflow
       - docker-push:
           filters:
             branches:
-              only: develop
+              only: ${RELEASE_BRANCH}
           requires:
             - test
       - publish-github-release:
           filters:
             branches:
-              only: develop
+              only: ${RELEASE_BRANCH}
           requires:
             - test
