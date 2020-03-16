@@ -21,7 +21,7 @@ logging:
 cx-flow:
   # Agreed upon shared API token
   token: xxxx
-  bug-tracker: JIRA
+  bug-tracker: Json
   bug-tracker-impl:
     - CxXml
     - Json
