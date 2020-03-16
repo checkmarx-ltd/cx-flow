@@ -163,7 +163,8 @@ task componentTest(type: Test) {
 task e2eTests(type: Test) {
     useJUnitPlatform() {
         systemProperty "testprofile", "e2e"
-        if (System.properties['testprofile'] != 'integration' | System.properties['testprofile'] != 'unit'|System.properties['testprofile'] != 'component') {exclude 'com/checkmarx/flow/cucumber/component/**'
+        if (System.properties['testprofile'] != 'integration' | System.properties['testprofile'] != 'unit'|System.properties['testprofile'] != 'component') {
+            exclude 'com/checkmarx/flow/cucumber/component/**'
             exclude 'com/checkmarx/flow/integration/**'
             exclude 'com/checkmarx/flow/cucumber/integration/publishprocess/**'
             exclude 'com/checkmarx/flow/cucumber/integration/negative_tests/**'
@@ -176,6 +177,7 @@ task e2eTests(type: Test) {
             exclude 'com/checkmarx/flow/utils/**'
             exclude 'com/checkmarx/flow/cucumber/integration/publishprocess/*'
             exclude 'com/checkmarx/flow/cucumber/integration/scan/*'
+            exclude 'com/checkmarx/flow/cucumber/integration/github/publishprocess/*'
         } else {
             //exclude 'com/checkmarx/**'
             include 'com/checkmarx/flow/cucumber/integration/end2end/github2jira/**'
