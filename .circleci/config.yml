@@ -148,7 +148,7 @@ jobs:
               --set cxflow.jiraToken=${JIRA_TOKEN} \
               << parameters.chart >>
 
-  tests:
+  test:
     docker:
       - image: "circleci/openjdk:8-jdk"
     steps:
@@ -167,7 +167,6 @@ jobs:
           command: |
             mkdir -p ~/test-results/junit/
             find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ \;
-          when: always
       - store_test_results:
           path: ~/test-results
       - store_artifacts:
@@ -242,12 +241,12 @@ workflows:
           requires:
             - build
             - docker-build
-      - tests:
+      - test:
           filters:
             branches:
               only: develop
-            requires:
-              - deploy-cxflow
+          requires:
+            - deploy-cxflow
       - docker-push:
           filters:
             branches:
