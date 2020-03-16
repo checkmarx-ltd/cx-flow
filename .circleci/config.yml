@@ -251,13 +251,12 @@ workflows:
       - docker-push:
           filters:
             branches:
-              only: master
+              only: develop
           requires:
-            - build
-            - docker-build
+            - test
       - publish-github-release:
           filters:
             branches:
-              only: master
+              only: develop
           requires:
-            - build
+            - test
