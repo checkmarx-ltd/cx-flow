@@ -182,7 +182,11 @@ workflows:
           filters:
             branches:
               only: ${RELEASE_BRANCH}
+          requires:
+            - docker-build
       - publish-github-release:
           filters:
             branches:
-              only: ${RELEASE_BRANCH}
+              only: develop
+          requires:
+            - build
