@@ -25,6 +25,7 @@ cx-flow:
   bug-tracker-impl:
     - CxXml
     - Json
+    - JIRA
     - GitLab
     - GitHub
     - Csv
@@ -80,7 +81,7 @@ jira:
   username: xxxx
   token: xxxx
   project: APPSEC
-  issue-type: Application Security Bug
+  issue-type: Bug
   priorities:
     High: High
     Medium: Medium

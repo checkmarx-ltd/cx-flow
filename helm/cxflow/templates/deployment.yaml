@@ -49,7 +49,7 @@ spec:
                   name: {{ .Release.Name }}-secret
                   key: checkmarx-username
             - name: CX_FLOW_BUG_TRACKER
-              value: GitHub
+              value: JIRA
             - name: GITHUB_TOKEN
               valueFrom:
                 secretKeyRef:
@@ -74,7 +74,7 @@ spec:
                   key: jira-token
             - name: JIRA_URL
               value: {{ .Values.cxflow.jiraUrl }}
-            - name: JIRA_USER_NAME
+            - name: JIRA_USERNAME
               value: {{ .Values.cxflow.jiraUserName }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
