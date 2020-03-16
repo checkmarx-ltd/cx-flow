@@ -165,23 +165,23 @@ workflows:
           context: sonarcloud
           filters:
             branches:
-              only: ${RELEASE_BRANCH}
+              only: develop
           requires:
             - build
       - docker-build:
           filters:
             branches:
-              only: ${RELEASE_BRANCH}
+              only: develop
           requires:
             - build
       - test:
           filters:
             branches:
-              only: ${TEST_BRANCH}
+              only: staging
       - docker-push:
           filters:
             branches:
-              only: ${RELEASE_BRANCH}
+              only: develop
           requires:
             - docker-build
       - publish-github-release:
