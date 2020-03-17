@@ -191,23 +191,33 @@ public class ResultsService {
             log.info("Processing results with JIRA issue tracking");
             jiraService.process(results, request);
         } catch (RestClientException e) {
-            if (e.getStatusCode().isPresent() && e.getStatusCode().get() ==  HttpStatus.NOT_FOUND.value()) {
-                throw new JiraClientRunTimeException("Jira service is not accessible for URL: " + jiraService.getJiraURI(), e);
-            } else {
-                Map<String, ScanResults.XIssue> nonPublishedScanResultsMap = jiraService.getNonPublishedScanResults();
-                if (e.getStatusCode().isPresent() &&
-                        e.getStatusCode().get() ==  HttpStatus.BAD_REQUEST.value() &&
-                        nonPublishedScanResultsMap.size() > 0) {
-                    throwExceptionWhenPublishingErrorOccurred(e, nonPublishedScanResultsMap);
-
-                } else {
-                    throw  e;
-                }
-            }
+            handleJiraRestClientException(e);
         } catch (JiraClientException e) {
+            handleJiraClientException(e);
+        }
+    }
+
+    private void handleJiraClientException(JiraClientException e) throws JiraClientException {
+        Map<String, ScanResults.XIssue> nonPublishedScanResultsMap = jiraService.getNonPublishedScanResults();
+        if (nonPublishedScanResultsMap.size() > 0) {
+            throwExceptionWhenPublishingErrorOccurred(e, nonPublishedScanResultsMap);
+        } else {
+            throw e;
+        }
+    }
+
+    private void handleJiraRestClientException(RestClientException e) {
+        if (e.getStatusCode().isPresent() && e.getStatusCode().get() == HttpStatus.NOT_FOUND.value()) {
+            throw new JiraClientRunTimeException("Jira service is not accessible for URL: " + jiraService.getJiraURI() + "\n" + e.getMessage());
+        } else if (e.getStatusCode().isPresent() && e.getStatusCode().get() == HttpStatus.FORBIDDEN.value()) {
+            throw new JiraClientRunTimeException("Access is forbidden. Please check your basic auth Token \n" + e.getMessage());
+        } else {
             Map<String, ScanResults.XIssue> nonPublishedScanResultsMap = jiraService.getNonPublishedScanResults();
-            if (nonPublishedScanResultsMap.size() > 0) {
+            if (e.getStatusCode().isPresent() &&
+                    e.getStatusCode().get() == HttpStatus.BAD_REQUEST.value() &&
+                    nonPublishedScanResultsMap.size() > 0) {
                 throwExceptionWhenPublishingErrorOccurred(e, nonPublishedScanResultsMap);
+
             } else {
                 throw e;
             }
@@ -217,7 +227,7 @@ public class ResultsService {
     private void throwExceptionWhenPublishingErrorOccurred(Exception e, Map<String, ScanResults.XIssue> nonPublishedScanResultsMap) {
         String errorMessage = "Wasn't able to publish the following issues into JIRA:\n" +
                 printNonPublishedScanResults(nonPublishedScanResultsMap) +
-                "\nwith the following reason: " + e.getMessage();
+                "\nduo to the following reason: " + e.getMessage();
 
         throw new JiraClientRunTimeException(errorMessage);
     }

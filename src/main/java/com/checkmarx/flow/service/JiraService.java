@@ -152,8 +152,9 @@ public class JiraService {
                 return it;
             }
         }
-        log.error("Issue type {} not found for project key {}", projectKey, issueTypes);
-        throw new JiraClientException("Issue type not found");
+        String error = "The defined issue type '" + type + "' was not found. Please make sure it's one of the following: [Bug, Epic, Subtask, Story, Task];";
+        log.error("Issue type {} was not found for project key {}", type, projectKey);
+        throw new JiraClientException(error);
     }
 
     private String createIssue(ScanResults.XIssue issue, ScanRequest request) throws JiraClientException {
