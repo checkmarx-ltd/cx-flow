@@ -148,7 +148,7 @@ jobs:
               --set cxflow.jiraToken=${JIRA_TOKEN} \
               << parameters.chart >>
 
-  test:
+  component-tests:
     docker:
       - image: "circleci/openjdk:8-jdk"
     steps:
@@ -156,9 +156,23 @@ jobs:
       - run:
           name: Run Component Tests
           command: ./gradlew componentTest --info
-    #  - run:
-    #      name: Run Integration Tests
-    #      command: ./gradlew integrationTest --info
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/test-results/junit/
+            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/test-results
+      - store_artifacts:
+          path: ~/test-results/junit
+
+
+  e2e-tests:
+    docker:
+      - image: "circleci/openjdk:8-jdk"
+    steps:
+      - checkout
       - run:
           name: Run e2eTests Tests
           command: ./gradlew e2eTests --info
@@ -173,7 +187,7 @@ jobs:
       - store_artifacts:
           path: ~/test-results/junit
 
-  docker-push:
+  docker-push-stable:
     executor: docker
     steps:
       - attach_workspace:
@@ -242,13 +256,16 @@ workflows:
           requires:
             - build
             - docker-build
-      - test:
+      - component-tests:
+          requires:
+            - build
+      - e2e-tests:
           filters:
             branches:
               only: develop
           requires:
             - deploy-cxflow
-      - docker-push:
+      - docker-push-stable:
           filters:
             branches:
               only: develop
