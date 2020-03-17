@@ -47,6 +47,10 @@ public class JiraService {
     private final String grandParentUrl;
     private Map<String, ScanResults.XIssue> nonPublishedScanResultsMap = new HashMap<>();
 
+    private static final String LABEL_TAG = "labels";
+    private static final String SECURITY_TAG = "security";
+    private static final String VALUE_TAG = "value";
+
     @ConstructorProperties({"jiraProperties", "flowProperties"})
     public JiraService(JiraProperties jiraProperties, FlowProperties flowProperties) {
         this.jiraProperties = jiraProperties;
@@ -123,12 +127,12 @@ public class JiraService {
             throw new MachinaRuntimeException();
         }
         log.debug(jql);
-        HashSet<String> fields = new HashSet<String>();
+        HashSet<String> fields = new HashSet<>();
         fields.add("key");
         fields.add("project");
         fields.add("issuetype");
         fields.add("summary");
-        fields.add("labels");
+        fields.add(LABEL_TAG);
         fields.add("created");
         fields.add("updated");
         fields.add("status");
@@ -237,12 +241,12 @@ public class JiraService {
                 labels.add(jiraProperties.getAppLabelPrefix().concat(":").concat(application));
             }
             log.debug("Adding tracker labels: {} - {}", jiraProperties.getLabelTracker(), labels);
-            if (!jiraProperties.getLabelTracker().equals("labels")) {
+            if (!jiraProperties.getLabelTracker().equals(LABEL_TAG)) {
                 String customField = getCustomFieldByName(projectKey,
                         bugTracker.getIssueType(), jiraProperties.getLabelTracker());
                 issueBuilder.setFieldValue(customField, labels);
             } else {
-                issueBuilder.setFieldValue("labels", labels);
+                issueBuilder.setFieldValue(LABEL_TAG, labels);
             }
 
             log.debug("Creating JIRA issue");
@@ -501,12 +505,12 @@ public class JiraService {
 
                     List<String> list;
                     switch (jiraFieldType) {
-                        case "security":
+                        case SECURITY_TAG:
                             log.debug("Security field");
                             SecurityLevel securityLevel = getSecurityLevel(projectKey, issueTypeStr, value);
                             if (securityLevel != null) {
                                 log.warn("JIRA Security level was not found: {}", value);
-                                issueBuilder.setFieldValue("security", securityLevel);
+                                issueBuilder.setFieldValue(SECURITY_TAG, securityLevel);
                             }
                             break;
                         case "text":
@@ -532,18 +536,18 @@ public class JiraService {
                             break;
                         case "single-select":
                             log.debug("single select field");
-                            issueBuilder.setFieldValue(customField, ComplexIssueInputFieldValue.with("value", value));
+                            issueBuilder.setFieldValue(customField, ComplexIssueInputFieldValue.with(VALUE_TAG, value));
                             break;
                         case "radio":
                             log.debug("radio field");
-                            issueBuilder.setFieldValue(customField, ComplexIssueInputFieldValue.with("value", value));
+                            issueBuilder.setFieldValue(customField, ComplexIssueInputFieldValue.with(VALUE_TAG, value));
                             break;
                         case "multi-select":
                             log.debug("multi select field");
                             String[] selected = StringUtils.split(value, ",");
                             List<ComplexIssueInputFieldValue> fields = new ArrayList<>();
                             for (String s : selected) {
-                                ComplexIssueInputFieldValue fieldValue = ComplexIssueInputFieldValue.with("value", s.trim());
+                                ComplexIssueInputFieldValue fieldValue = ComplexIssueInputFieldValue.with(VALUE_TAG, s.trim());
                                 fields.add(fieldValue);
                             }
                             issueBuilder.setFieldValue(customField, fields);
@@ -564,7 +568,7 @@ public class JiraService {
         CimProject cim = metadata.iterator().next();
 
         Map<String, CimFieldInfo> fields = cim.getIssueTypes().iterator().next().getFields();
-        CimFieldInfo security = fields.get("security");
+        CimFieldInfo security = fields.get(SECURITY_TAG);
         if (security != null) {
             Iterable<Object> allowedValues = security.getAllowedValues();
             if (allowedValues != null) {
