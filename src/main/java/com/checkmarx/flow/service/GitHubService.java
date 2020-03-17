@@ -25,6 +25,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.DefaultUriBuilderFactory;
 
 import java.util.*;
 
@@ -175,16 +176,17 @@ public class GitHubService extends RepoService {
         Map<String, Long> langs = new HashMap<>();
         Map<String, Integer> langsPercent = new HashMap<>();
         HttpHeaders headers = createAuthHeaders();
+
+        String urlTemplate = properties.getApiUrl().concat(LANGUAGE_TYPES);
+        String url = new DefaultUriBuilderFactory()
+                .expand(urlTemplate, request.getNamespace(), request.getRepoName())
+                .toString();
+
+        log.info("Getting repo languages from {}", url);
         try {
             ResponseEntity<String> response = restTemplate.exchange(
-                    properties.getApiUrl().concat(LANGUAGE_TYPES),
-                    HttpMethod.GET,
-                    new HttpEntity<>(headers),
-                    String.class,
-                    request.getNamespace(),
-                    request.getRepoName(),
-                    request.getBranch()
-            );
+                    url, HttpMethod.GET, new HttpEntity<>(headers), String.class);
+
             if(response.getBody() == null){
                 log.warn(HTTP_BODY_IS_NULL);
             }
@@ -205,7 +207,7 @@ public class GitHubService extends RepoService {
                 }
                 sources.setLanguageStats(langsPercent);
             }
-        }catch (NullPointerException e){
+        } catch (NullPointerException e) {
             log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
         }catch (HttpClientErrorException.NotFound e){
             String error = "Got 404 'Not Found' error. GitHub endpoint: " + getGitHubEndPoint(request) + " is invalid.";
@@ -217,6 +219,7 @@ public class GitHubService extends RepoService {
     }
 
     private List<Content> getRepoContent(String endpoint) {
+        log.info("Getting repo content from {}", endpoint);
         //"/{namespace}/{repo}/languages"
         HttpHeaders headers = createAuthHeaders();
         try {
@@ -230,12 +233,10 @@ public class GitHubService extends RepoService {
                 log.warn(HTTP_BODY_IS_NULL);
             }
             return Arrays.asList(response.getBody());
-        }catch (NullPointerException e){
+        } catch (NullPointerException e) {
             log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
-        }catch (HttpClientErrorException.NotFound e){
-            log.error(ExceptionUtils.getStackTrace(e));
-        }catch (HttpClientErrorException e){
-            log.error(ExceptionUtils.getRootCauseMessage(e));
+        } catch (HttpClientErrorException e) {
+            log.error("Error getting repo content.", e);
         }
         return Collections.emptyList();
     }
