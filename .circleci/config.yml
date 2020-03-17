@@ -270,10 +270,10 @@ workflows:
             branches:
               only: develop
           requires:
-            - test
+            - e2e-tests
       - publish-github-release:
           filters:
             branches:
               only: develop
           requires:
-            - test
+            - e2e-tests
