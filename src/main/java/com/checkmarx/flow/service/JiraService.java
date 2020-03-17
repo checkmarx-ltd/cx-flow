@@ -148,17 +148,24 @@ public class JiraService {
     }
 
     private IssueType getIssueType(String projectKey, String type) throws RestClientException, JiraClientException {
+        List<String> issueTypesList = new ArrayList<>();
+
         Project project = this.projectClient.getProject(projectKey).claim();
         Iterator<IssueType> issueTypes = project.getIssueTypes().iterator();
+
         while (issueTypes.hasNext()) {
             IssueType it = issueTypes.next();
+            issueTypesList.add(it.getName());
             if (it.getName().equals(type)) {
                 return it;
             }
         }
-        String error = "The defined issue type '" + type + "' was not found. Please make sure it's one of the following: [Bug, Epic, Subtask, Story, Task];";
-        log.error("Issue type {} was not found for project key {}", type, projectKey);
+        String error = "The defined issue type '" + type + "' was not found. Please make sure it's one of the following issues types: [" + getIssueTypesFromList(issueTypesList) + "]";
         throw new JiraClientException(error);
+    }
+
+    private String getIssueTypesFromList(List<String> issueTypesList) {
+        return String.join(", ", issueTypesList);
     }
 
     private String createIssue(ScanResults.XIssue issue, ScanRequest request) throws JiraClientException {
