@@ -127,7 +127,7 @@ public class JiraService {
             throw new MachinaRuntimeException();
         }
         log.debug(jql);
-        HashSet<String> fields = new HashSet<>();
+        HashSet<String> fields = new HashSet<String>();
         fields.add("key");
         fields.add("project");
         fields.add("issuetype");
