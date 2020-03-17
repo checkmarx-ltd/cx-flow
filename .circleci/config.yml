@@ -231,7 +231,7 @@ workflows:
           requires:
             - build
       - deploy-cxflow:
-          cluster-name: platform
+          cluster-name: eks-cxflow-ci
           chart: ./helm/cxflow
           namespace: cxflow-$CIRCLE_BRANCH
           release-name: cxflow-$CIRCLE_BRANCH
