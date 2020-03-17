@@ -29,6 +29,9 @@ import java.util.concurrent.CompletableFuture;
 
 @Service
 public class ResultsService {
+    private static final String SUCCESSFULLY_COMPLETED_MESSAGE = "Successfully completed processing for ";
+    private static final String MESSAGE_TAG = "message";
+
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(ResultsService.class);
     private final CxClient cxService;
     private final CxOsaClient osaService;
@@ -77,13 +80,13 @@ public class ResultsService {
                     !bugTrackerType.equals(BugTracker.Type.EMAIL)) {
                 String namespace = request.getNamespace();
                 String repoName = request.getRepoName();
-                String concat = "Successfully completed processing for "
+                String concat = SUCCESSFULLY_COMPLETED_MESSAGE
                         .concat(namespace).concat("/").concat(repoName);
                 if (!ScanUtils.empty(namespace) && !ScanUtils.empty(request.getBranch())) {
-                    emailCtx.put("message", concat.concat(" - ")
+                    emailCtx.put(MESSAGE_TAG, concat.concat(" - ")
                             .concat(request.getRepoUrl()));
                 } else if (!ScanUtils.empty(request.getApplication())) {
-                    emailCtx.put("message", "Successfully completed processing for "
+                    emailCtx.put(MESSAGE_TAG, SUCCESSFULLY_COMPLETED_MESSAGE
                             .concat(request.getApplication()));
                 }
                 emailCtx.put("heading", "Scan Successfully Completed");
@@ -154,7 +157,7 @@ public class ResultsService {
                     Map<String, Object> emailCtx = new HashMap<>();
                     String namespace = request.getNamespace();
                     String repoName = request.getRepoName();
-                    emailCtx.put("message", "Checkmarx Scan Results "
+                    emailCtx.put(MESSAGE_TAG, "Checkmarx Scan Results "
                             .concat(namespace).concat("/").concat(repoName).concat(" - ")
                             .concat(request.getRepoUrl()));
                     emailCtx.put("heading", "Scan Successfully Completed");
@@ -167,7 +170,7 @@ public class ResultsService {
                     }
                     emailCtx.put("repo", request.getRepoUrl());
                     emailCtx.put("repo_fullname", namespace.concat("/").concat(repoName));
-                    emailService.sendmail(request.getEmail(), "Successfully completed processing for ".concat(namespace).concat("/").concat(repoName), emailCtx, "template-demo.html");
+                    emailService.sendmail(request.getEmail(), SUCCESSFULLY_COMPLETED_MESSAGE.concat(namespace).concat("/").concat(repoName), emailCtx, "template-demo.html");
                 }
                 break;
             case CUSTOM:
