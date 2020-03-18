@@ -99,15 +99,22 @@ public class GitHubService extends RepoService {
         }
     }
 
-    void endBlockMerge(ScanRequest request, ScanResults results){
-        if(properties.isBlockMerge()) {
-            HttpEntity<String> httpEntity = getStatusRequestEntity(results);
-            if(ScanUtils.empty(request.getAdditionalMetadata(STATUSES_URL_KEY))){
+    void endBlockMerge(ScanRequest request, ScanResults results) {
+        if (properties.isBlockMerge()) {
+            log.debug("Unblocking the pull request.");
+            String statusApiUrl = request.getAdditionalMetadata(STATUSES_URL_KEY);
+            if (ScanUtils.empty(statusApiUrl)) {
                 log.error(STATUSES_URL_NOT_PROVIDED);
                 return;
             }
-            restTemplate.exchange(request.getAdditionalMetadata(STATUSES_URL_KEY),
-                    HttpMethod.POST, httpEntity, String.class);
+
+            HttpEntity<String> httpEntity = getStatusRequestEntity(results);
+
+            log.debug("Updating pull request status: {}", statusApiUrl);
+            log.trace("API request: {}", httpEntity.getBody());
+            restTemplate.exchange(statusApiUrl, HttpMethod.POST, httpEntity, String.class);
+        } else {
+            log.debug("Pull request blocking is disabled in configuration, no need to unblock.");
         }
     }
 
@@ -141,7 +148,7 @@ public class GitHubService extends RepoService {
         }
     }
 
-    private JSONObject getJSONStatus(String state, String url, String description){
+    private static JSONObject getJSONStatus(String state, String url, String description){
         JSONObject requestBody = new JSONObject();
         requestBody.put("state", state);
         requestBody.put("target_url", url);
