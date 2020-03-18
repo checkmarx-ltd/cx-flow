@@ -276,7 +276,7 @@ public class FlowService {
             team = cxProperties.getTeam();
             if(!team.startsWith(cxProperties.getTeamPathSeparator()))
                 team = cxProperties.getTeamPathSeparator().concat(team);
-            log.info("Using team {}", team);
+            log.info("Using Checkmarx existing team: {}", team);
             ownerId = cxService.getTeamId(team);
 
             if(cxProperties.isMultiTenant() &&

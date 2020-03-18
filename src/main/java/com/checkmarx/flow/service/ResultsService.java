@@ -176,9 +176,9 @@ public class ResultsService {
         }
         if(results != null && results.getScanSummary() != null) {
             log.info("####Checkmarx Scan Results Summary####");
-            log.info("Team: {}, Project: {}", request.getTeam(), request.getProject());
-            log.info(results.getScanSummary().toString());
-            log.info("To veiw results: {}", results.getLink());
+            log.info("Team: {}, Project: {}, Scan-Id: {}", request.getTeam(), request.getProject(), results.getAdditionalDetails().get("scanId"));
+            log.info(String.format("The vulnerabilities found for the scan are: %s", results.getScanSummary().toString()));
+            log.info("To view results use following link: {}", results.getLink());
             log.info("######################################");
         }
     }
@@ -198,7 +198,7 @@ public class ResultsService {
 
     private void handleJiraCase(ScanRequest request, ScanResults results) throws JiraClientException {
         try {
-            log.info("Processing results with JIRA issue tracking");
+            log.info("======== Processing results with JIRA issue tracking ========");
             jiraService.process(results, request);
         } catch (RestClientException e) {
             handleJiraRestClientException(e);
