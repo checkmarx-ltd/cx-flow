@@ -287,7 +287,7 @@ public class JiraService {
                     bugTracker.getPriorities().get(severity)));
         }
 
-        log.info("Updating issue #{}", bugId);
+        log.info("Updating JIRA issue #{}", bugId);
 
         mapCustomFields(request, issue, issueBuilder, true);
 
