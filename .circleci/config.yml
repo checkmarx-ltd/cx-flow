@@ -171,11 +171,15 @@ jobs:
   e2e-tests:
     docker:
       - image: "circleci/openjdk:8-jdk"
+    environment:
+      HOOK_TARGET: ${HOOK_TARGET}
+      HOOK_REPO: ${HOOK_REPO}
+      HOOK_NAMESPACE: ${HOOK_NAMESPACE}
     steps:
       - checkout
       - run:
-          name: Run e2eTests Tests
-          command: ./gradlew e2eTests --info
+          name: Run E2E Tests
+          command: ./gradlew e2eTests --info -Dgithub-webhook-token=${GITHUB_WEBHOOK_TOKEN} -Dgithub-token=${GITHUB_TOKEN} -Djira-token=${JIRA_TOKEN}
       - run:
           name: Save test results
           command: |
