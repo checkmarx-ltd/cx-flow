@@ -100,7 +100,7 @@ public class GitHubToJiraSteps {
         String repo = Optional.ofNullable(System.getenv("HOOK_REPO")).orElse(properties.getProperty("repo"));
         String filePath = Optional.ofNullable(properties.getProperty("fileCreatePath"))
             .orElse("{fileCreatePath}")
-            .replace("{fileCreatePath}", crumbsToPath("src","main","java","sample","encode.frm"));
+            .replace("{fileCreatePath}", crumbsToPath(false , "src","main","java","sample","encode.frm"));
         hookTargetURL = Optional.ofNullable(System.getenv("HOOK_TARGET")).orElse(properties.getProperty("target"));
         COMMIT_FILE_PATH = String.format("%s/%s/%s/contents/%s", gitHubProperties.getApiUrl(), namespace, repo,
                 filePath);
@@ -350,18 +350,26 @@ public class GitHubToJiraSteps {
         try (InputStream is = getClass().getClassLoader().getResourceAsStream(path)) {
             prop.load(is);
         } catch ( FileNotFoundException e) {
-            fail("property file not found " + e.getMessage());
+            // fail("property file not found " + e.getMessage());
         } catch (IOException e) {
-            fail("could not read properties file " + e.getMessage());
+            // fail("could not read properties file " + e.getMessage());
         }
         return prop;
     }
 
-    private String crumbsToPath(String... crumbs) {
-        StringJoiner joiner = new StringJoiner(File.separator,File.separator,"");
+    
+    private String crumbsToPath(Boolean includeFirst , String... crumbs) {
+        StringJoiner joiner = new StringJoiner(
+            File.separator,
+            includeFirst ? File.separator : ""
+            ,"");
         for (String crumb : crumbs) {
             joiner.add(crumb);
         }
         return joiner.toString();
+    }
+
+    private String crumbsToPath(String... crumbs) {
+        return crumbsToPath(true , crumbs);
     }
 }
