@@ -209,7 +209,7 @@ public class GitHubService extends RepoService {
             log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
         }catch (HttpClientErrorException.NotFound e){
             String error = "Got 404 'Not Found' error. GitHub endpoint: " + getGitHubEndPoint(request) + " is invalid.";
-            throw new GitHubClientRunTimeException(error);
+            throw new GitHubClientRunTimeException(error, e);
         }catch (HttpClientErrorException e){
             log.error(ExceptionUtils.getRootCauseMessage(e));
         }
