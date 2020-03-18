@@ -348,11 +348,13 @@ public class GitHubToJiraSteps {
             "githubHookProperties.properties"
         );
         try (InputStream is = getClass().getClassLoader().getResourceAsStream(path)) {
-            prop.load(is);
+            if(is != null) {
+                prop.load(is);
+            }
         } catch ( FileNotFoundException e) {
-            // fail("property file not found " + e.getMessage());
+            fail("property file not found " + e.getMessage());
         } catch (IOException e) {
-            // fail("could not read properties file " + e.getMessage());
+            fail("could not read properties file " + e.getMessage());
         }
         return prop;
     }
