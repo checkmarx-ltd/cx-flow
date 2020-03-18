@@ -174,13 +174,7 @@ jobs:
       - checkout
       - run:
           name: Run E2E Tests
-          command: ./gradlew e2eTests --info \
-            -Dgithub-webhook-token=${GITHUB_WEBHOOK_TOKEN} \
-            -Dgithub-token=${GITHUB_TOKEN} \
-            -Djira-token=${JIRA_TOKEN} \
-            -Dtarget=${HOOK_TARGET} \
-            -Drepo=${HOOK_REPO} \
-            -Dnamespace=${HOOK_NAMESPACE}
+          command: ./gradlew e2eTests --info -Dgithub-webhook-token=${GITHUB_WEBHOOK_TOKEN} -Dgithub-token=${GITHUB_TOKEN} -Djira-token=${JIRA_TOKEN} -Dtarget=${HOOK_TARGET} -Drepo=${HOOK_REPO} -Dnamespace=${HOOK_NAMESPACE}
       - run:
           name: Save test results
           command: |
