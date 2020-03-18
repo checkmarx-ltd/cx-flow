@@ -5,10 +5,7 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.Field;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.exception.InvalidCredentialsException;
-import com.checkmarx.flow.exception.JiraClientException;
-import com.checkmarx.flow.exception.JiraClientRunTimeException;
-import com.checkmarx.flow.exception.MachinaException;
+import com.checkmarx.flow.exception.*;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
@@ -21,6 +18,7 @@ import org.slf4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.HashMap;
 import java.util.List;
@@ -171,8 +169,7 @@ public class ResultsService {
                 }
                 break;
             case CUSTOM:
-                log.info("Issue tracking is custom bean implementation");
-                issueService.process(results, request);
+                handleCustomIssueCase(request, results);
                 break;
             default:
                 log.warn("No valid bug type was provided");
@@ -183,6 +180,19 @@ public class ResultsService {
             log.info(results.getScanSummary().toString());
             log.info("To veiw results: {}", results.getLink());
             log.info("######################################");
+        }
+    }
+
+    private void handleCustomIssueCase(ScanRequest request, ScanResults results) throws MachinaException {
+        try {
+            log.info("Issue tracking is custom bean implementation");
+            issueService.process(results, request);
+        } catch (HttpClientErrorException e) {
+            if (e.getRawStatusCode() == HttpStatus.UNAUTHORIZED.value()) {
+                throw new GitHubClientRunTimeException("GitHub token is invalid\n" + e.getMessage());
+            } else {
+                throw e;
+            }
         }
     }
 

@@ -7,6 +7,7 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.Sources;
 import com.checkmarx.flow.dto.github.Content;
 import com.checkmarx.flow.exception.GitHubClientException;
+import com.checkmarx.flow.exception.GitHubClientRunTimeException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
@@ -155,12 +156,17 @@ public class GitHubService extends RepoService {
             return null;
         }
         Sources sources = getRepoLanguagePercentages(request);
+        String endpoint = getGitHubEndPoint(request);
+        scanGitContent(0, endpoint, sources);
+        return sources;
+    }
+
+    private String getGitHubEndPoint(ScanRequest request) {
         String endpoint = properties.getApiUrl().concat(REPO_CONTENT);
         endpoint = endpoint.replace("{namespace}", request.getNamespace());
         endpoint = endpoint.replace("{repo}", request.getRepoName());
         endpoint = endpoint.replace("{branch}", request.getBranch());
-        scanGitContent(0, endpoint, sources);
-        return sources;
+        return endpoint;
     }
 
     private Sources getRepoLanguagePercentages(ScanRequest request) {
@@ -202,7 +208,8 @@ public class GitHubService extends RepoService {
         }catch (NullPointerException e){
             log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
         }catch (HttpClientErrorException.NotFound e){
-            log.error(ExceptionUtils.getStackTrace(e));
+            String error = "Got 404 'Not Found' error. GitHub endpoint: " + getGitHubEndPoint(request) + " is invalid.";
+            throw new GitHubClientRunTimeException(error);
         }catch (HttpClientErrorException e){
             log.error(ExceptionUtils.getRootCauseMessage(e));
         }
