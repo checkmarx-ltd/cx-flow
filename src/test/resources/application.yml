@@ -93,9 +93,8 @@ jira:
   #  status-category-open-name:
   #    - To Do
   #    - In Progress
-  #  statusCategoryClosedName:
-  #    - Done
-
+  # status-category-closed-name:
+  #  - Done
 
   fields:
     - type: result
