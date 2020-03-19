@@ -27,7 +27,7 @@ public class MergeResultEvaluatorImpl implements MergeResultEvaluator {
     @Override
     public boolean isMergeAllowed(ScanResults scanResults, RepoProperties repoProperties) {
         if (!repoProperties.isErrorMerge()) {
-            log.debug("Merge is allowed, because error-merge is set to false.");
+            log.info("Merge is allowed, because error-merge is set to false.");
             return true;
         }
 
@@ -36,7 +36,7 @@ public class MergeResultEvaluatorImpl implements MergeResultEvaluator {
         writeMapToLog(thresholds, "Using thresholds");
 
         boolean isAllowed = !isAnyThresholdExceeded(scanResults, thresholds);
-        log.debug(isAllowed ? "Merge is allowed, because no thresholds were exceeded." :
+        log.info(isAllowed ? "Merge is allowed, because no thresholds were exceeded." :
                 "Merge is not allowed, because some of the thresholds were exceeded.");
 
         return isAllowed;
