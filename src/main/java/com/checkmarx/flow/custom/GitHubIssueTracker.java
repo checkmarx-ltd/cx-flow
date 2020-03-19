@@ -77,7 +77,7 @@ public class GitHubIssueTracker implements IssueTracker {
                 HttpMethod.GET, httpEntity, com.checkmarx.flow.dto.github.Issue[].class);
 
         if (response.getBody() == null) {
-            log.debug("No issues found.");
+            log.info("No issues found.");
             return new ArrayList<>();
         }
 
