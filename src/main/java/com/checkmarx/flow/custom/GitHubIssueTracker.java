@@ -44,7 +44,7 @@ public class GitHubIssueTracker implements IssueTracker {
 
     @Override
     public void init(ScanRequest request, ScanResults results) throws MachinaException {
-        log.info("Initializing GitHub processing");
+        log.info("======== Initializing GitHub processing ========");
         if(ScanUtils.empty(request.getNamespace()) ||
                 ScanUtils.empty(request.getRepoName()) ||
                 ScanUtils.empty(request.getBranch())){
@@ -267,7 +267,7 @@ public class GitHubIssueTracker implements IssueTracker {
 
     @Override
     public void complete(ScanRequest request, ScanResults results) throws MachinaException {
-        log.info("Finalizing GitHub Processing");
+        log.info("======== Finalizing GitHub Processing ========");
     }
 
     /**
