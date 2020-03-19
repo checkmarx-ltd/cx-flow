@@ -17,6 +17,7 @@ import com.checkmarx.sdk.service.CxClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -27,6 +28,7 @@ import static org.junit.Assert.fail;
 public  abstract class AbstractScanSteps {
 
 
+    private static final String DEAFAULT_TEAM_NAME = "\\CxServer\\SP";
     @Autowired
     protected FlowProperties flowProperties;
     @Autowired
@@ -56,7 +58,10 @@ public  abstract class AbstractScanSteps {
     protected List<Filter> filters = new LinkedList<>();
     protected List<String> excludeFoldersList = new LinkedList<>();
     protected List<String> excludeFilesList = new LinkedList<>();
-    
+
+    protected File fileRepo = null;
+    protected boolean errorExpected = false;
+
     protected void setGithubAuthURL() {
         String url = gitHubProperties.getUrl();
         String[] urlSegments = url.split("github");
@@ -70,23 +75,26 @@ public  abstract class AbstractScanSteps {
         ScanRequest request = generateRequest();
         
         try {
-            scanDetails =  flowService.executeCxScan(request,null);
+
+            scanDetails = flowService.executeCxScan(request, fileRepo);
             CompletableFuture<ScanResults> future = new CompletableFuture<>();
             //TODO async these, and join and merge after
             results = cxClient.getReportContentByScanId(scanDetails.getScanId(), request.getFilters());
             future.complete(results);
             results = future.join();
-            
-
-            if(flowProperties.isBreakBuild() && results !=null && results.getXIssues()!=null && !results.getXIssues().isEmpty()){
-                fail("break build");
+            errorExpected = false;
+            return retainOutputValues();
+        } 
+        catch (Exception e) {
+            if(!errorExpected) {
+                fail(e.getMessage());
             }
-        } catch (MachinaException | CheckmarxException e) {
-            fail(e.getMessage());
+            return null;
         }
-        return retainOutputValues();
+        
     }
 
+    
     private ScanRequest generateRequest() {
 
         ScanRequest request = ScanRequest.builder()
@@ -108,6 +116,9 @@ public  abstract class AbstractScanSteps {
                 .scanPreset(this.preset)
                 .bugTracker(BugTracker.builder().type(BugTracker.Type.CUSTOM).customBean("").build())
                 .build();
+
+        cxProperties.setScanTimeout(1800);
+        cxProperties.setConfiguration("Default Configuration");
         
         if(!filters.isEmpty()){
             request.setFilters(filters);
@@ -117,6 +128,9 @@ public  abstract class AbstractScanSteps {
         }
         if(!excludeFoldersList.isEmpty()){
             request.setExcludeFolders(excludeFoldersList);
+        }
+        if(cxProperties.getIncremental()){
+            request.setIncremental(true);
         }
         return request;
     }
@@ -128,5 +142,11 @@ public  abstract class AbstractScanSteps {
         ScanDTO scanDTO = new ScanDTO(scanDetails.getProjectId(), scanDetails.getScanId(), cxProject.getTeamId());
         return scanDTO;
 
+    }
+    
+    protected void setDeafultTeam(){
+        this.teamName = DEAFAULT_TEAM_NAME;
+        cxProperties.setTeam(DEAFAULT_TEAM_NAME);
+  
     }
 }

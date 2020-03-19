@@ -9,11 +9,11 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class ScanReport extends Report {
+public class ScanReport extends AnalyticsReport {
 
-    public static final String OPERATION = "Scan Request";
-    public static final String INCREMENTAL = "Inc";
-    public static final String FULL = "Full";
+    private static final String OPERATION = "Scan Request";
+    private static final String INCREMENTAL = "Inc";
+    private static final String FULL = "Full";
     private String scanStatus;
     private String branch;
     private String repoType;
@@ -45,7 +45,8 @@ public class ScanReport extends Report {
         this.scanStatus = status.getMessage();
     }
 
-
+    //adding underscore to prevent getOperation() to be called during logging of this object in log()
+    //since we don't want the OPERATION to be a part of the logged object
     @Override
     public String _getOperation() {
         return OPERATION;

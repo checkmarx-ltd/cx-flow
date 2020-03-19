@@ -2,12 +2,14 @@ package com.checkmarx.flow.dto.report;
 
 import com.checkmarx.flow.dto.ScanRequest;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 
 @Data
-public class GetResultsReport extends Report {
+@EqualsAndHashCode(callSuper = true)
+public class GetResultsReport extends AnalyticsReport {
 
-    public static final String OPERATION = "Get Request";
+    private static final String OPERATION = "Get Request";
 
     public GetResultsReport(Integer sastScanId, ScanRequest request) {
         super(sastScanId,request);
@@ -16,7 +18,9 @@ public class GetResultsReport extends Report {
     public GetResultsReport(String osaSanId, ScanRequest request) {
         super(osaSanId,request);
     }
-    
+
+    //adding underscore to prevent getOperation() to be called during logging of this object in log()
+    //since we don't want the OPERATION to be a part of the logged object
     @Override
     public String _getOperation() {
         return OPERATION;

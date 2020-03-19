@@ -102,16 +102,14 @@ public class GitHubService extends RepoService {
     }
 
     void endBlockMerge(ScanRequest request, ScanResults results, ScanDetails scanDetails){
-        PullRequestReport pullRequestReport = new PullRequestReport(scanDetails ,request);
-        if (properties.isBlockMerge()) {
-            log.debug("Unblocking the pull request.");
-            String statusApiUrl = request.getAdditionalMetadata(STATUSES_URL_KEY);
-            if (ScanUtils.empty(statusApiUrl)) {
-                log.error(STATUSES_URL_NOT_PROVIDED);
-                return;
-            }
+         if(properties.isBlockMerge()) {
+             String statusApiUrl = request.getAdditionalMetadata(STATUSES_URL_KEY);
+             if (ScanUtils.empty(statusApiUrl)) {
+                 log.error(STATUSES_URL_NOT_PROVIDED);
+                 return;
+             }
 
-            HttpEntity<String> httpEntity = getStatusRequestEntity(results, pullRequestReport);
+            HttpEntity<String> httpEntity = getStatusRequestEntity(results, new PullRequestReport(scanDetails ,request));
 
 
             log.debug("Updating pull request status: {}", statusApiUrl);
@@ -120,7 +118,6 @@ public class GitHubService extends RepoService {
         } else {
             log.debug("Pull request blocking is disabled in configuration, no need to unblock.");
         }
-        pullRequestReport.log();
     }
 
     private HttpEntity<String> getStatusRequestEntity(ScanResults results, PullRequestReport pullRequestReport) {

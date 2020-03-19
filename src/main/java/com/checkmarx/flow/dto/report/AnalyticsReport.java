@@ -10,7 +10,7 @@ import static net.logstash.logback.marker.Markers.*;
 
 @Data
 @Slf4j
-public abstract class Report {
+public abstract class AnalyticsReport {
 
     public static final Logger jsonlogger = LoggerFactory.getLogger("jsonLogger");
 
@@ -22,14 +22,19 @@ public abstract class Report {
     protected String repoUrl;
     protected String scanType;
     
-    public Report(String scanId, ScanRequest request) {
+    public AnalyticsReport(String scanId, ScanRequest request) {
         this.scanId = scanId;
         this.repoUrl = request.getRepoUrl();
         scanType = OSA;
     }
 
-    public Report(Integer scanId, ScanRequest request) {
-        this.scanId = scanId.toString();
+    public AnalyticsReport(Integer scanId, ScanRequest request) {
+        if(scanId!=null) {
+            this.scanId = scanId.toString();
+        }else{
+            this.scanId = null;
+        }
+                
         this.repoUrl = request.getRepoUrl();
         scanType = SAST;
     }
@@ -37,6 +42,8 @@ public abstract class Report {
     public void log() {
         jsonlogger.info(append(_getOperation(), this), "");
     }
-    
+
+    //adding underscore to prevent getOperation() to be called during logging of this object in log()
+    //since we don't want the OPERATION to be a part of the logged object
     public abstract String _getOperation();
 }

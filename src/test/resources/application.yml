@@ -4,6 +4,7 @@ server:
 logging:
   file:
     name: cx-flow.log
+    path: c:/temp/
 #  level:
 #    com:
 #      checkmarx:
