@@ -120,7 +120,6 @@ public class FlowService {
 
         try {
 
-
             /*Check if team is provided*/
             String ownerId = determineTeamAndOwnerID(request);
 
@@ -143,7 +142,7 @@ public class FlowService {
 
                 log.info("Not waiting for scan completion as Bug Tracker type is NONE");
                 CompletableFuture<ScanResults> results = CompletableFuture.completedFuture(null);
-                logRequest(request, scanId);
+                logRequest(request, scanId, cxFile, Status.SUCCESS);
                 //return CompletableFuture.completedFuture(null);
                 return new ScanDetails(projectId, scanId, results, false);
 
@@ -154,31 +153,54 @@ public class FlowService {
                     projectId = cxService.getProjectId(ownerId, projectName); //get the project id of the updated or created project
                 }
                 osaScanId = createOsaScan(request, projectId);
-                logRequest(request, osaScanId);
+                if(osaScanId != null) {
+                    logRequest(request, osaScanId, cxFile, Status.SUCCESS);
+                }
                 //resultsService.processScanResultsAsync(request, projectId, scanId, osaScanId, request.getFilters());
             }
 
 
-        }catch (CheckmarxException | GitAPIException e){
+        }catch (Exception e){
             log.error(ExceptionUtils.getMessage(e), e);
             Thread.currentThread().interrupt();
-            new ScanReport(scanId, request, sourcesPath, Status.FAILURE.build(e.getMessage())).log();
+            logRequest(request, scanId, cxFile, Status.FAILURE.build(e.getMessage()));
             throw new MachinaException("Checkmarx Error Occurred");
         }
 
-        logRequest(request, scanId);
+        logRequest(request, scanId, cxFile, Status.SUCCESS);
         
         this.scanDetails = new ScanDetails(projectId, scanId, osaScanId);
         return scanDetails;
     }
 
-    private void logRequest(ScanRequest request, Integer scanId)  {
-        new ScanReport(scanId, request, sourcesPath, Status.SUCCESS).log();
+    
+    private void logRequest(ScanRequest request, Integer scanId, File  cxFile, Status status)  {
+        new ScanReport(scanId, request, getRepoUrl(request, cxFile), status).log();
     }
 
-    private void logRequest(ScanRequest request, String scanId)  {
-        new ScanReport(scanId, request, sourcesPath, Status.SUCCESS).log();
+
+    private void logRequest(ScanRequest request, String scanId, File  cxFile, Status status)  {
+        new ScanReport(scanId, request, getRepoUrl(request, cxFile), status).log();
     }
+    
+    private String getRepoUrl(ScanRequest request, File cxFile) {
+        String repoUrl = null;
+
+        if(sourcesPath != null){
+            //the folder to scan is supplied via -f flag in command line and it is located in the filesystem
+            repoUrl = repoUrl;
+        }else if(cxFile != null){
+            //in general cxFile is a zip created by cxFlow using the folder supplied y -f 
+            //the use case when sourcePath is empty but cxFile is set is only for the test flow
+            repoUrl = cxFile.getAbsolutePath();
+        }else{
+            //sources to scan are in the remote repository (GitHib, TFS ... etc)
+            repoUrl = request.getRepoUrl();
+        }
+        return repoUrl;
+    }
+
+
 
     
     private CxScanParams prepareScanParamsObject(ScanRequest request, File cxFile, String ownerId, String projectName, Integer projectId) {
@@ -314,7 +336,7 @@ public class FlowService {
 
         //Kick out if the team is unknown
         if(ownerId.equals(UNKNOWN)){
-            throw new MachinaException("Parent team could not be established.  Please ensure correct team is provided");
+            throw new CheckmarxException("Parent team could not be established.  Please ensure correct team is provided");
         }
         return ownerId;
     }

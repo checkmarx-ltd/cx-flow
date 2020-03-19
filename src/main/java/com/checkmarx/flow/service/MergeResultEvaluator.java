@@ -5,5 +5,5 @@ import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.sdk.dto.ScanResults;
 
 public interface MergeResultEvaluator {
-    boolean isMergeAllowed(ScanResults results, RepoProperties repoPropertie, PullRequestReport pullRequestReport);
+    boolean isMergeAllowed(ScanResults results, RepoProperties repoProperties, PullRequestReport pullRequestReport);
 }

@@ -65,7 +65,7 @@ public class MergeResultEvaluatorImpl implements MergeResultEvaluator {
                 && thresholds.values().stream().anyMatch(Objects::nonNull);
     }
 
-    public static boolean isAnyThresholdExceeded(ScanResults scanResults, Map<FindingSeverity, Integer> thresholds, PullRequestReport pullRequestReport) {
+    private static boolean isAnyThresholdExceeded(ScanResults scanResults, Map<FindingSeverity, Integer> thresholds, PullRequestReport pullRequestReport) {
         boolean result = false;
         Iterable<Map.Entry<FindingSeverity, Integer>> findingsPerSeverity = getFindingCountPerSeverity(scanResults);
         
@@ -79,7 +79,7 @@ public class MergeResultEvaluatorImpl implements MergeResultEvaluator {
         return result;
     }
 
-    public static Iterable<Map.Entry<FindingSeverity, Integer>> getFindingCountPerSeverity(ScanResults scanResults) {
+    private static Iterable<Map.Entry<FindingSeverity, Integer>> getFindingCountPerSeverity(ScanResults scanResults) {
         Map<FindingSeverity, Integer> result = new EnumMap<>(FindingSeverity.class);
 
         // Cannot use scanResults.getScanSummary(), because it doesn't take CxFlow filtering into account.

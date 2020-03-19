@@ -100,9 +100,8 @@ public class GitHubService extends RepoService {
     }
 
     void endBlockMerge(ScanRequest request, ScanResults results, ScanDetails scanDetails){
-        PullRequestReport pullRequestReport = new PullRequestReport(scanDetails ,request);
         if(properties.isBlockMerge()) {
-            HttpEntity<String> httpEntity = getStatusRequestEntity(results, pullRequestReport);
+            HttpEntity<String> httpEntity = getStatusRequestEntity(results, new PullRequestReport(scanDetails ,request));
             if(ScanUtils.empty(request.getAdditionalMetadata(STATUSES_URL_KEY))){
                 log.error(STATUSES_URL_NOT_PROVIDED);
                 return;
@@ -111,7 +110,6 @@ public class GitHubService extends RepoService {
                     HttpMethod.POST, httpEntity, String.class);
             
         }
-        pullRequestReport.log();
     }
 
     private HttpEntity<String> getStatusRequestEntity(ScanResults results, PullRequestReport pullRequestReport) {
@@ -126,6 +124,8 @@ public class GitHubService extends RepoService {
         }
 
         pullRequestReport.setPullRequestStatus(state);
+        pullRequestReport.log();
+        
         JSONObject requestBody = getJSONStatus(state, results.getLink(), description);
         return new HttpEntity<>(requestBody.toString(), createAuthHeaders());
     }

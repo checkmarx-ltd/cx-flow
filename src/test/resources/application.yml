@@ -1,22 +1,41 @@
 server:
-  port: ${PORT:8585}
+  port: 8083
+
+#management:
+#  endpoint:
+#    shutdown:
+#      enabled: true
+#    beans:
+#      enabled: true
+#    env:
+#      enabled: true
+#  endpoints:
+#    web:
+#      exposure:
+#        include: "shutdown,beans,env,info,health"
 
 logging:
+  pattern:
+    console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{15}){cyan}  [%clr(%X{cx}){blue}] %clr(:){faint} %m%n%wEx"
+    file: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{15}){cyan}  [%clr(%X{cx}){blue}] %clr(:){faint} %m%n%wEx"
   file:
     name: cx-flow.log
-#  level:
-#    com:
-#      checkmarx:
-#        flow:
-#          service: TRACE
-#    org:
-#      apache:
-#        http:
-#          wire: TRACE
-#      springframework:
-#        web:
-#          client:
-#            RestTemplate: TRACE
+  path: c:/temp/
+  level:
+    com:
+      checkmarx:
+        flow:
+          service: info
+          utils: info
+  #    org:
+  #      apache:
+  #        http:
+  #          wire: TRACE
+  #      springframework:
+  #        web:
+  #          client:
+  #            RestTemplate: TRACE
+
 
 cx-flow:
   # Agreed upon shared API token
@@ -35,52 +54,50 @@ cx-flow:
     - security
   filter-severity:
     - High
+  filter-category:
+  filter-cwe:
+  filter-status:
+  # track-application-only: false
   mitre-url: https://cwe.mitre.org/data/definitions/%s.html
-  wiki-url: https://checkmarx.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
-  codebash-url: https://cxa.codebashing.com/courses/
-  auto-profile: false
-  thresholds:
-    high: 1
-    medium: 2
-    low: 3
-  #branch-script: D:\\tmp\Branch.groovy
-  #zip-exclude: .*.json$, bin\/.*
-
+  #  break-build: true
+  #  wiki-url: https://custodela.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
+  #  codebash-url: https://cxa.codebashing.com/courses/
+  #  mail:
+  #    host: smtp.gmail.com
+  #    port: 587
+  #    username: xxx
+  #    password: xxx
+  #    enabled:
 
 checkmarx:
-  username: xxx
-  password: xxx
+  username: admin@cx
+  password: Cx123456!
   client-secret: 014DF517-39D1-4453-B7B3-9930C563627C
-  base-url: http://localhost:8100
+  base-url: http://10.32.0.11
+  team: \CxServer\SP
   url: ${checkmarx.base-url}/cxrestapi
   multi-tenant: true
-  incremental: true
-  scan-preset: Checkmarx Default
-  configuration: Default Configuration
-  team: \CxServer\SP\Checkmarx
-  scan-timeout: 120
+  #preserve-xml: true
+  #incremental: true
   #WSDL Config
   portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
   sdk-url: ${checkmarx.base-url}/cxwebinterface/SDK/CxSDKWebService.asmx
   portal-wsdl: ${checkmarx.base-url}/Portal/CxWebService.asmx?wsdl
   sdk-wsdl: ${checkmarx.base-url}/SDK/CxSDKWebService.asmx?wsdl
-  portal-package: checkmarx.wsdl.portal
-  preserve-xml: false
+  #preserve-xml: false
   jira-project-field:
   jira-custom-field:
   jira-issuetype-field:
   jira-assignee-field:
-  #project-script: D:\\tmp\CxProject.groovy
-  #team-script: D:\\tmp\CxTeam.groovy
-  #exclude-files:
-  #exclude-folders:
+  #team-script:
+  #project-script:
 
 jira:
-  url: http://localhost:8080
+  url: http://localhost:8180
   username: xxxx
   token: xxxx
   project: APPSEC
-  issue-type: Application Security Bug
+  issue-type: Bug
   priorities:
     High: High
     Medium: Medium
@@ -91,8 +108,9 @@ jira:
   open-status:
     - To Do
     - In Progress
+    - Reopened
   closed-status:
-    - DONE
+    - Done
   fields:
     - type: result
       name: system-date
@@ -126,6 +144,11 @@ jira:
       jira-field-type: single-select
       jira-default-value: Automation
     - type: static
+      name: state
+      jira-field-name: State
+      jira-field-type: radio
+      jira-default-value: Active
+    - type: static
       name: dependencies
       jira-field-name: Dependencies
       jira-field-type: multi-select
@@ -137,59 +160,46 @@ jira:
 
 github:
   webhook-token: 1234
-  token: xxxx
-  url: https://github.com
+  token: e0a1cb5c35a0f582da9370e9d30d36ff318f8d2b
+  url: https://github.com/cxflowtestuser/Code_Injection
   api-url: https://api.github.com/repos/
-  block-merge: true
-  error-merge: true
-  cx-summary: true
-  # null value prevents CxFlow from trying to download config override from GitHub.
-  # Added to get more stable results for "high load" scenario in webhook feature.
-  config-as-code: null
-
+  
 gitlab:
   webhook-token: 1234
+  token: xxx
   url: https://gitlab.com
   api-url: https://gitlab.com/api/v4/
+  false-positive-label: false-positive
   block-merge: true
 
-bitbucket:
-  webhook-token: 1234
-  token: xxx
-  url: https://api.bitbucket.org
-  api-path: /2.0
-  false-positive-label: false-positive
-
 azure:
-  webhook-token: cxflow:1234
+  webhook-token: xxxx
   token: xxxx
-  url: https://dev.azure.com/XXXXXX
+  url: https://dev.azure.com
   issue-type: issue
   api-version: 5.0
   false-positive-label: false-positive
-  block-merge: true
-  closed-status: Closed
-  open-status: Active
+  #block-merge: true
 
 json:
-  file-name-format: "[NAMESPACE]-[REPO]-[BRANCH]-[TIME].json"
-  data-folder: "C:\\tmp"
+  file-name-format: "[TEAM]-[PROJECT]-[TIME].json"
+  data-folder: "C:\\CxReports\\cxflow"
 
 cx-xml:
-  file-name-format: "[NAMESPACE]-[REPO]-[BRANCH]-[TIME].xml"
-  data-folder: "C:\\tmp"
+  file-name-format: "[TEAM]-[PROJECT]-[TIME].xml"
+  data-folder: "C:\\CxReports\\cxflow"
 
 csv:
   file-name-format: "[TEAM]-[PROJECT]-[TIME].csv"
-  data-folder: "C:\\tmp"
+  data-folder: "C:\\CxReports\\cxflow"
   include-header: true
   fields:
-    - header: Customer field (Application)
+    - header: Application
       name: application
       default-value: unknown
-    - header: Primary URL
-      name: static
-      default-value: ABC
+      #- header: Primary URL
+      #name: static
+      #default-value: ${tmp.url}
     - header: severity
       name: severity
     - header: Vulnerability ID
@@ -204,9 +214,9 @@ csv:
     - header: Category ID
       name: cwe
     - header: Description
-      name: summary
-      prefix: "*"
-      postfix: "*"
+      name: description
+      #prefix: "*"
+      #postfix: "*"
     - header: Severity
       name: severity
     - header: recommendation
