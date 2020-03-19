@@ -19,10 +19,10 @@ import com.checkmarx.sdk.dto.ScanResults;
 import com.google.common.collect.ImmutableMap;
 import io.atlassian.util.concurrent.Promise;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+
 import javax.annotation.PostConstruct;
 import java.beans.ConstructorProperties;
 import java.net.URI;
@@ -84,6 +84,15 @@ public class JiraService {
 
 
     private void configJira() {
+        if (flowProperties.getBugTracker().equalsIgnoreCase("JIRA") ||
+            flowProperties.getBugTrackerImpl().stream().map(String::toLowerCase)
+                    .collect(Collectors.toList()).contains("jira"))
+        {
+            configurOpenClosedStatuses();
+        }
+    }
+
+    private void configurOpenClosedStatuses() {
         prepareJiraOpenClosedStatuses();
         if (jiraProperties.getClosedStatus().isEmpty()) {
             Iterable<Status> statuses = client.getMetadataClient().getStatuses().claim();
@@ -105,7 +114,6 @@ public class JiraService {
         if (jiraProperties.getClosedStatus().isEmpty() || jiraProperties.getOpenStatus().isEmpty()) {
             throw new JiraClientRunTimeException("Could not find JIRA issues closed statuses.");
         }
-
     }
 
     private boolean isStatusClosed(Status status) {

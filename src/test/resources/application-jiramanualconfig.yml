@@ -1,0 +1,65 @@
+  jira:
+      url: https://cxflow.atlassian.net/
+      username: cxflowtestuser@checkmarx.com
+      token: vFqIzQka0hLXvFj3Z8gVE4C6
+      project: UACT
+      issue-type: Application Security Bug
+      #issue-type: Bug
+      priorities:
+          High: High
+          Medium: Medium
+          Low: Low
+          Informational: Lowest
+      open-transition: In Progress
+      close-transition: Done
+      open-status:
+          - To Do TEST-OPEN
+          - In Progress TEST-OPEN
+      closed-status:
+          - DONE TEST-CLOSED
+      fields:
+          - type: result
+            name: system-date
+            skip-update: true
+            offset: 60
+            jira-field-name: Due Date #Due date (cloud)
+            jira-field-type: text
+          - type: result
+            name: application
+            jira-field-name: Application
+            jira-field-type: label
+          - type: result
+            name: category
+            jira-field-name: Category
+            jira-field-type: label
+          - type: result
+            name: cwe
+            jira-field-name: CWEs
+            jira-field-type: label
+          - type: result
+            name: severity
+            jira-field-name: Severity
+            jira-field-type: single-select
+            options:
+                - High
+                - Medium
+                - Low
+          - type: result
+            name: loc
+            jira-field-name: Line Numbers
+            jira-field-type: label
+          - type: static
+            name: identified-by
+            jira-field-name: Identified By
+            jira-field-type: single-select
+            jira-default-value: Automation
+          - type: static
+            name: dependencies
+            jira-field-name: Dependencies
+            jira-field-type: multi-select
+            jira-default-value: Java, AngularJS
+      #issue-prefix: "<PREFIX>-"
+      #issue-postfix: "-<POSTFIX>"
+      #description-prefix: "<PRE>-"
+      #description-postfix: "<POST>-"
+
