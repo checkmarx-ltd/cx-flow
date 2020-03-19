@@ -13,4 +13,8 @@ public class MachinaRuntimeException extends RuntimeException {
     public MachinaRuntimeException(Throwable cause) {
         super(cause);
     }
+
+    public MachinaRuntimeException(String message) {
+        super(message);
+    }
 }

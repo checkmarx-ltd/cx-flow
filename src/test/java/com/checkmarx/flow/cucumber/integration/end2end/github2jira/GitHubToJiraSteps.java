@@ -27,7 +27,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.ResourceUtils;
 import org.springframework.web.client.RestTemplate;
 
 import io.atlassian.util.concurrent.Promise;
@@ -41,13 +40,15 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -56,6 +57,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.StringJoiner;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -93,10 +95,12 @@ public class GitHubToJiraSteps {
 
     @PostConstruct
     public void init() throws IOException {
-        Properties properties = TestUtils.getPropertiesFromResource("cucumber\\features\\e2eTests\\githubHookProperties.properties");
+        Properties properties = getProperties();
         String namespace = Optional.ofNullable(System.getenv("HOOK_NAMESPACE")).orElse(properties.getProperty("namespace"));
         String repo = Optional.ofNullable(System.getenv("HOOK_REPO")).orElse(properties.getProperty("repo"));
-        String filePath = properties.getProperty("fileCreatePath").replace("{fileCreatePath}", "src\\main\\java\\sample\\encode.frm");
+        String filePath = Optional.ofNullable(properties.getProperty("fileCreatePath"))
+            .orElse("{fileCreatePath}")
+            .replace("{fileCreatePath}", "src//main//java//sample//encode.frm");
         hookTargetURL = Optional.ofNullable(System.getenv("HOOK_TARGET")).orElse(properties.getProperty("target"));
         COMMIT_FILE_PATH = String.format("%s/%s/%s/contents/%s", gitHubProperties.getApiUrl(), namespace, repo,
                 filePath);
@@ -318,22 +322,56 @@ public class GitHubToJiraSteps {
     }
 
     private String getFileInBase64() throws IOException {
-        File file = ResourceUtils.getFile("classpath:\\cucumber\\data\\input-files-toscan\\" + srcFile);
-        String content = new String(Files.readAllBytes(file.toPath()), Charset.forName("UTF-8"));
-        String encodedString = Base64.getEncoder().encodeToString(content.getBytes());
-        return encodedString;
+        String path = crumbsToPath(
+            "cucumber",
+            "data",
+            "input-files-toscan",
+            srcFile);
+        try (InputStream is = getClass().getClassLoader().getResourceAsStream(path)) {
+            try (
+                    InputStreamReader isr = new InputStreamReader(is , Charset.forName("UTF-8"));
+                    BufferedReader reader = new BufferedReader(isr)
+                ) {
+                String content =  reader.lines().collect(Collectors.joining(System.lineSeparator()));
+                String encodedString = Base64.getEncoder().encodeToString(content.getBytes());
+                return encodedString;
+            }
+        }
     }
 
     private Properties getProperties() {
         Properties prop = new Properties();
-        try {
-            File file = ResourceUtils.getFile("classpath:\\cucumber\\features\\e2eTests\\githubHookProperties.properties");
-            prop.load(Files.newInputStream(file.toPath()));
+        String path = crumbsToPath(
+            "cucumber",
+            "features",
+            "e2eTests",
+            "githubHookProperties.properties"
+        );
+        try (InputStream is = getClass().getClassLoader().getResourceAsStream(path)) {
+            if(is != null) {
+                prop.load(is);
+            }
         } catch ( FileNotFoundException e) {
             fail("property file not found " + e.getMessage());
         } catch (IOException e) {
             fail("could not read properties file " + e.getMessage());
         }
         return prop;
+    }
+
+    
+    private String crumbsToPath(Boolean includeFirst , String... crumbs) {
+        StringJoiner joiner = new StringJoiner(
+            File.separator,
+            includeFirst ? File.separator : ""
+            ,"");
+        for (String crumb : crumbs) {
+            joiner.add(crumb);
+        }
+        return joiner.toString();
+    }
+
+    private String crumbsToPath(String... crumbs) {
+        return crumbsToPath(true , crumbs);
     }
 }

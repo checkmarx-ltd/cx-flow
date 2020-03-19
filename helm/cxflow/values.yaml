@@ -14,7 +14,8 @@ cxflow:
   jiraToken: ""
   jiraUrl: https://cxflow.atlassian.net/
   jiraUserName: cxflowtestuser@checkmarx.com
-  checkmarxBaseUrl: https://sast.cx.tikal.io
+  bugTracker: JIRA
+  checkmarxBaseUrl: https://sast.cxflow-ci.com
 
 imagePullSecrets: []
 nameOverride: ""
@@ -38,26 +39,26 @@ ingress:
   annotations:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:148244689188:certificate/b6f613f2-6a9e-4ca7-9dfa-60f22f74f33a
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:eu-west-1:983555762431:certificate/85997194-c948-4a86-9978-ba555d8f9354
     alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-2016-08
     alb.ingress.kubernetes.io/target-type: instance
     alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
     alb.ingress.kubernetes.io/healthcheck-path: /actuator
     alb.ingress.kubernetes.io/inbound-cidrs: 0.0.0.0/0
   hosts:
-    - host: cxflow.platform.cx.tikal.io
+    - host: cxflow.cxflow-ci.com
       paths:
         - /*
 
 aws-alb-ingress-controller:
-   clusterName: platform
+   clusterName: eks-cxflow-ci
    autoDiscoverAwsRegion: true
    autoDiscoverAwsVpcID: true
 external-dns:
    provider: aws
    aws.zoneType: public
-   txtOwnerId: ZJDOQ7MAK697O
-   domainFilters[0]: platform.cx.tikal.io.
+   txtOwnerId: ZY6LMJ2B7RNVS
+   domainFilters[0]: cxflow-ci.com.
    policy: sync
 
 resources: {}
