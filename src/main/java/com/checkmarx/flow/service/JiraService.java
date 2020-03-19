@@ -29,7 +29,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 @Service
 public class JiraService {
@@ -149,22 +148,26 @@ public class JiraService {
     }
 
     private IssueType getIssueType(String projectKey, String type) throws RestClientException, JiraClientException {
+        List<String> issueTypesList = new ArrayList<>();
+
         Project project = this.projectClient.getProject(projectKey).claim();
         Iterator<IssueType> issueTypes = project.getIssueTypes().iterator();
 
         while (issueTypes.hasNext()) {
             IssueType it = issueTypes.next();
+            issueTypesList.add(it.getName());
             if (it.getName().equals(type)) {
                 return it;
             }
         }
 
-        List<String> existingIssueTypes = StreamSupport.stream(project.getIssueTypes().spliterator(), false)
-                .map(IssueType::getName)
-                .collect(Collectors.toList());
-        String error = String.format("The defined issue type '%s' was not found. Please make sure it's one of the following issues types: [%s]", type, existingIssueTypes.toString());
+        String error = String.format("The defined issue type '%s' was not found. Please make sure it's one of the following issues types: [%s]", type, getIssueTypesFromList(issueTypesList));
 
         throw new JiraClientException(error);
+    }
+
+    private String getIssueTypesFromList(List<String> issueTypesList) {
+        return String.join(", ", issueTypesList);
     }
 
     private String createIssue(ScanResults.XIssue issue, ScanRequest request) throws JiraClientException {
