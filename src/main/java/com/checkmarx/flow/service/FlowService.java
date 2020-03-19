@@ -276,12 +276,13 @@ public class FlowService {
             team = cxProperties.getTeam();
             if(!team.startsWith(cxProperties.getTeamPathSeparator()))
                 team = cxProperties.getTeamPathSeparator().concat(team);
-            log.info("Using Checkmarx existing team: {}", team);
+            log.info("Using Checkmarx team: {}", team);
             ownerId = cxService.getTeamId(team);
 
             if(cxProperties.isMultiTenant() &&
                     !ScanUtils.empty(namespace)){
                 String fullTeamName = cxProperties.getTeam().concat(cxProperties.getTeamPathSeparator()).concat(namespace);
+                log.info("Using multi tenant team name: {}", fullTeamName);
                 request.setTeam(fullTeamName);
                 String tmpId = cxService.getTeamId(fullTeamName);
                 if(tmpId.equals(UNKNOWN)){

@@ -169,7 +169,7 @@ public class ResultsService {
                 }
                 break;
             case CUSTOM:
-                handleCustomIssueCase(request, results);
+                handleCustomIssueTracker(request, results);
                 break;
             default:
                 log.warn("No valid bug type was provided");
@@ -183,13 +183,13 @@ public class ResultsService {
         }
     }
 
-    private void handleCustomIssueCase(ScanRequest request, ScanResults results) throws MachinaException {
+    private void handleCustomIssueTracker(ScanRequest request, ScanResults results) throws MachinaException {
         try {
             log.info("Issue tracking is custom bean implementation");
             issueService.process(results, request);
         } catch (HttpClientErrorException e) {
             if (e.getRawStatusCode() == HttpStatus.UNAUTHORIZED.value()) {
-                throw new GitHubClientRunTimeException("GitHub token is invalid\n" + e.getMessage());
+                throw new MachinaRuntimeException("Token is invalid. Please make sure your custom tokens are correct.\n" + e.getMessage());
             } else {
                 throw e;
             }
@@ -218,9 +218,9 @@ public class ResultsService {
 
     private void handleJiraRestClientException(RestClientException e) {
         if (e.getStatusCode().isPresent() && e.getStatusCode().get() == HttpStatus.NOT_FOUND.value()) {
-            throw new JiraClientRunTimeException("Jira service is not accessible for URL: " + jiraService.getJiraURI() + "\n" + e.getMessage());
+            throw new JiraClientRunTimeException("Jira service is not accessible for URL: " + jiraService.getJiraURI() + "\n", e);
         } else if (e.getStatusCode().isPresent() && e.getStatusCode().get() == HttpStatus.FORBIDDEN.value()) {
-            throw new JiraClientRunTimeException("Access is forbidden. Please check your basic auth Token \n" + e.getMessage());
+            throw new JiraClientRunTimeException("Access is forbidden. Please check your basic auth Token \n", e);
         } else {
             Map<String, ScanResults.XIssue> nonPublishedScanResultsMap = jiraService.getNonPublishedScanResults();
             if (e.getStatusCode().isPresent() &&
@@ -237,7 +237,7 @@ public class ResultsService {
     private void throwExceptionWhenPublishingErrorOccurred(Exception e, Map<String, ScanResults.XIssue> nonPublishedScanResultsMap) {
         String errorMessage = "Wasn't able to publish the following issues into JIRA:\n" +
                 printNonPublishedScanResults(nonPublishedScanResultsMap) +
-                "\nduo to the following reason: " + e.getMessage();
+                "\ndue to the following reason: " + e.getMessage();
 
         throw new JiraClientRunTimeException(errorMessage);
     }
