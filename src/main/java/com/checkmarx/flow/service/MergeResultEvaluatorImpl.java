@@ -130,7 +130,7 @@ public class MergeResultEvaluatorImpl implements MergeResultEvaluator {
             boolean exceedsThreshold, FindingSeverity severity, Integer threshold, int findingCount) {
 
         if (threshold == null) {
-            log.debug("Threshold for the {} severity is not defined, skipping.", severity.name());
+            log.info("Threshold for the {} severity is not defined, skipping.", severity.name());
         } else {
             String message;
             if (exceedsThreshold) {
@@ -138,7 +138,7 @@ public class MergeResultEvaluatorImpl implements MergeResultEvaluator {
             } else {
                 message = "Finding count ({}) does not exceed the threshold ({}) for the {} severity.";
             }
-            log.debug(message, findingCount, threshold, severity.name());
+            log.info(message, findingCount, threshold, severity.name());
         }
     }
 
