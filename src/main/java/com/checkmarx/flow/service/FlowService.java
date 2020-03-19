@@ -313,7 +313,7 @@ public class FlowService {
 
         //Kick out if the team is unknown
         if (ownerId.equals(UNKNOWN)) {
-            throw new MachinaException(getTeamErrorMessage());
+            throw new CheckmarxException(getTeamErrorMessage());
         }
         return ownerId;
     }

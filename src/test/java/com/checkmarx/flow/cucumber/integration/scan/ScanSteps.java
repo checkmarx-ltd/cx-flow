@@ -5,6 +5,10 @@ import com.checkmarx.flow.CxFlowApplication;
 
 import com.checkmarx.flow.cucumber.integration.scan.AbstractScanSteps;
 
+import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.dto.Status;
+import com.checkmarx.flow.dto.report.GetResultsReport;
+import com.checkmarx.flow.dto.report.ScanReport;
 import com.checkmarx.flow.exception.ExitThrowable;
 
 import com.checkmarx.sdk.config.CxProperties;
@@ -12,19 +16,28 @@ import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxProject;
 import com.checkmarx.sdk.exception.CheckmarxException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cucumber.java.After;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 
+import jdk.internal.loader.ClassLoaders;
+import org.json.JSONObject;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.util.ClassUtils;
+import org.springframework.util.ResourceUtils;
 
+import java.io.*;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
+import static java.lang.System.gc;
 import static org.junit.Assert.*;
 
 
@@ -35,7 +48,7 @@ public class ScanSteps extends AbstractScanSteps {
 //    @When("nothing {string}")
 //    public void whenDoNothing(String str){}
     
-    
+
     @And("The request sent to SAST will contain exclude-folder {string} and exclude files {string}")
     public void setExcludeFolders(String excludeFolders, String excludeFiles) {
         if(!excludeFiles.equals("")){
@@ -118,12 +131,34 @@ public class ScanSteps extends AbstractScanSteps {
     public void setGithubRepo(String repoUrl){
         this.repoUrl = repoUrl;
         this.gitHubProperties.setUrl(repoUrl);
+        this.gitHubProperties.setApiUrl(repoUrl + "repos/");
         this.branch = "master";
         String [] repoUrlSegments = repoUrl.split("/");
         this.application = repoUrlSegments[repoUrlSegments.length-1].replaceAll(".git","");
         setGithubAuthURL();
     }
 
+    
+    @Then ("SAST output will contain high severity number {int} and medium severity number {int} and low severity number {int} and  SAST team name will be {string}")
+    public void verifyOutputSeverityAndTeam(Integer high, Integer medium, Integer low, String outputTeamName){
+        ScanDTO scanDTO = callSast();
+        if(errorExpected){
+           return;
+        }
+        try {
+            assertTrue(scanDTO.getTeamId().equals(cxClient.getTeamId(outputTeamName)));
+            assertEquals(results.getScanSummary().getHighSeverity(), high);
+            assertEquals(results.getScanSummary().getMediumSeverity(), medium);
+            assertEquals(results.getScanSummary().getLowSeverity(), low);
+            
+        } catch (CheckmarxException e) {
+            fail(e.getMessage());
+        }
+        finally {
+            clearAfterTest(scanDTO);
+        }
+    }
+            
     @Then ("SAST output will contain high severity number {int} and medium severity number {int} and low severity number {int}")
     public void verifyOutputSeverityI(Integer high, Integer medium, Integer low){
         ScanDTO scanDTO = callSast();
@@ -133,16 +168,133 @@ public class ScanSteps extends AbstractScanSteps {
         assertEquals(results.getScanSummary().getMediumSeverity(), medium);
         assertEquals(results.getScanSummary().getLowSeverity(), low);
         
+    }
+    
+    @And ("parameter path is populated in application.xml and scanType is {string} and branch {string}")
+    public void setScanTypeAndBranch(String scanType, String branch){
+        
+        if(scanType.equals("Inc")){
+            cxProperties.setIncremental(true);
+        }
+
+        this.branch = branch;
+        
+        setDeafultTeam();
         
     }
 
+
+    @And ("parameter path is populated in application.xml and scanType is {string} and team is {string}")
+    public void setScanTypeAndTeam(String scanType, String team){
+
+        if(scanType.equals("Inc")){
+            cxProperties.setIncremental(true);
+        }
+
+        if(team.equals("invalidTeam")){
+            super.errorExpected = true;
+        }
+        cxProperties.setTeam(team);
+        this.teamName = team;
+
+    }
+
+    
+    @And ("output json logger will have Scan request and Get request for {string}")
+    public void verifyJsonLogger(String repoUrl) {
+        verifyJsonLoggerAndScanStatus(repoUrl, Status.SUCCESS.getMessage());
+    }
+    
+    @And ("output json logger will have Scan request and Get request for {string} and scan status will be {string}")
+    public void verifyJsonLoggerAndScanStatus(String repoUrl, String scanStatus){
+
+        FileInputStream inputStream = null;
+        BufferedReader streamReader = null;
+        File file = null;
+        JsonNode node = null;
+        ObjectMapper objectMapper = new ObjectMapper();
+        String logAbsolutePath = System.getProperty("LOG_PATH") + File.separator +"CxFlowReport.json";
+        try {
+            
+  
+            inputStream = new FileInputStream(logAbsolutePath);
+            streamReader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
+
+            boolean moreLines = true;
+            String scanRequest = streamReader.readLine();
+            String nextScanRequest = null;
+            while(moreLines) {
+                nextScanRequest = streamReader.readLine();
+                if(nextScanRequest!=null){
+                    scanRequest = nextScanRequest;
+                }else{
+                    moreLines = false;
+                }
+            }
+            node = objectMapper.readTree(scanRequest).get("Scan Request");
+
+            if(this.repoType.equals(ScanRequest.Repository.GITHUB)) {
+                assertEquals(node.get("repoType").textValue(), (ScanRequest.Repository.GITHUB.toString()));
+                assertEquals(node.get("branch").textValue(), this.branch);
+                assertEquals(node.get("repoUrl").textValue(), repoUrl);
+            }else{
+                assertEquals(node.get("repoType").textValue(),"NA");
+                if(!errorExpected){
+                    assertEquals(node.get("repoUrl").textValue(), fileRepo.getPath());
+                }
+            }
+
+            //assertEquals(node.get("scanStatus").textValue(), Status.SUCCESS.getMessage());
+            assertEquals(node.get("scanStatus").textValue(), scanStatus);
+            assertEquals(node.get("scanType").textValue(), cxProperties.getIncremental() ? "Inc" : "Full");
+            assertNotEquals(node.get("scanId").textValue(), "null");
+
+            
+        }catch (IOException e) {
+                fail(e.getMessage());
+                
+        }
+        finally{
+            try {
+                inputStream.close();
+                streamReader.close();
+                objectMapper = null;
+                node=null;
+                //delete file contents
+                new FileOutputStream(logAbsolutePath).close();
+                errorExpected = false;
+            } catch (Exception e) {
+                fail(e.getMessage());
+            }
+            
+            
+        }
+        
+    }
+
+    @And ("running a scan for folder {string}") 
+    public void setFileReporitory(String fileName) {
+        try {
+
+            super.fileRepo = ResourceUtils.getFile("classpath:\\cucumber\\data\\input-files-toscan\\VB_3845\\encode.zip");
+            this.application = "VB_3845";
+            repoType = ScanRequest.Repository.NA;
+            
+        } catch (FileNotFoundException e) {
+           fail(e.getMessage());
+        }
+    }
+    
     @Given("github repository which contains project CodeInjection")
     public void setGitHubRepository(){
         setGithubAuthURL();
     }
 
     @And("team in application.yml is \\CxServer\\SP")
-    public void nothingToDoAnd(){}
+    public void setTeam()
+    {
+        setDeafultTeam();
+    }
 
     @When("project is: {string} and branch={string}")
     public void setProjectAndBranch(String projectName, String branchName){

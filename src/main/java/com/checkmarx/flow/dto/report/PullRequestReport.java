@@ -11,7 +11,7 @@ import static net.logstash.logback.marker.Markers.append;
 import static net.logstash.logback.marker.Markers.appendEntries;
 
 
-public class PullRequestReport extends Report {
+public class PullRequestReport extends AnalyticsReport {
 
     public static final String OPERATION = "Pull Request";
 
@@ -38,8 +38,10 @@ public class PullRequestReport extends Report {
     
     public void setPullRequestStatus(String status){
         this.pullRequestStatus = status;
-    } 
-            
+    }
+
+    //adding underscore to prevent getOperation() to be called during logging of this object in log()
+    //since we don't want the OPERATION to be a part of the logged object 
     @Override
     public String _getOperation() {
         return OPERATION;
