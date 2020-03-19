@@ -17,9 +17,7 @@ import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.Filter;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
@@ -30,7 +28,6 @@ import javax.annotation.PostConstruct;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
-import java.beans.ConstructorProperties;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -464,7 +461,7 @@ public class GitHubController {
                 String computedSignature = "sha1=" + DatatypeConverter.printHexBinary(sig);
                 if (!computedSignature.equalsIgnoreCase(signature)) {
                     log.error("Message was not signed with signature provided.");
-                    throw new InvalidTokenException();
+                    throw new InvalidTokenException("Invalid Credentials: Make sure webhook token is correct");
                 }
                 log.info("Signature verified");
             } else{
