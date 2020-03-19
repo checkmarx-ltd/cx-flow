@@ -1,7 +1,7 @@
   jira:
-      url: https://cxflow.atlassian.net/
-      username: cxflowtestuser@checkmarx.com
-      token: vFqIzQka0hLXvFj3Z8gVE4C6
+      url: http://localhost:8080
+      username: xxxx
+      token: xxxx
       project: UACT
       issue-type: Application Security Bug
       #issue-type: Bug
