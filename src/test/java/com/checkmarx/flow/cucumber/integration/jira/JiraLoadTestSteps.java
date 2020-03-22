@@ -47,11 +47,7 @@ public class JiraLoadTestSteps {
 
     List<Long> durations = new ArrayList<>(100);
 
-    int percentsThrshold;
-
     int numOfIssues;
-
-    int durationPrimaryThreshold;
 
     @Before("@JiraLoadTests")
     public void setOfflineMode() {
@@ -82,23 +78,21 @@ public class JiraLoadTestSteps {
     }
 
     @Then("{int} percents of publish request should take less than {int} seconds")
-    public void validateDurations(int percentsThreshold, int durationThreshold) {
+    public void validateDurations(int percentsThreshold, int durationThresholdSeconds) {
+        // translate to millis
         log.info("Durations: ");
         durations.stream().forEach(l -> log.info(l + ", "));
-        // We put in a member because we will need this number in a future step.
-        this.percentsThrshold = percentsThreshold;
-        this.durationPrimaryThreshold = durationThreshold;
-        validateDuration(durations, percentsThreshold, durationThreshold, "Primary validation failed.");
+        validateDuration(durations, percentsThreshold, durationThresholdSeconds, "Primary validation failed.");
     }
 
     @Then("the other tests should take less than {int} seconds")
-    public void validateSecondaryDurations(int durationThreshold) {
-        List<Long> failedDurations = durations.stream().filter(l -> l > durationThreshold).collect(Collectors.toList());
+    public void validateSecondaryDurations(int durationThresholdSeconds) {
+        List<Long> failedDurations = durations.stream().filter(l -> l > (durationThresholdSeconds * 1000)).collect(Collectors.toList());
         Assert.assertTrue("Secondary duration validation failed.", failedDurations.size() == 0);
     }
 
-    private void validateDuration(List<Long> duration, int percentageThrshold, long durationThreshold, String message) {
-        Long passed = duration.stream().filter(l -> l <= durationThreshold).count();
+    private void validateDuration(List<Long> duration, int percentageThrshold, long durationThresholdSeconds, String message) {
+        Long passed = duration.stream().filter(l -> l <= durationThresholdSeconds * 1000).count();
         int passPercentage = (int) ((passed * 100 )/ duration.size() );
         log.info("Passed: " + passed + " Total: " + duration.size());
         Assert.assertTrue(message + "Percentage Thrashold: " + percentageThrshold + ", Passed: " + passPercentage ,passPercentage >=percentageThrshold);
