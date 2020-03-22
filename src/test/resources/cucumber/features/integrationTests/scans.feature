@@ -25,8 +25,8 @@ Feature: Check Integration tests command line functionality - scan.
   Scenario Outline:   test which project name will be used or created for scan with parameters: cx-project,branch,repo-name,namespace,app,multi-tenant=false. Using github as a respoiroty.
     Given github repository which contains project CodeInjection
     When project is: "<cx-project>" and branch="<branch>"
-    And namespace is: "<namespace>" and application is "<app>"
     And repo-name is "<repo-name>" and --repo-url is supplied and --github flag is supplied
+    And namespace is: "<namespace>" and application is "<app>"
     And team in application.yml is \CxServer\SP
     And multi-tenant=false
     Then The request sent to SAST reporitory will contain scan result with project name="<OutProjectName>" and team "<teamOut>"
@@ -44,8 +44,8 @@ Feature: Check Integration tests command line functionality - scan.
   Scenario Outline:  test team name for different scan parameters: cx-project,branch,repo-name,namespace,app,multi-tenant=true. Using github as a respoiroty.
     Given github repository which contains project CodeInjection
     When project is: "<cx-project>" and branch="<branch>"
-    And namespace is: "<namespace>" and application is "<app>"
     And repo-name is "<repo-name>" and --repo-url is supplied and --github flag is supplied
+    And namespace is: "<namespace>" and application is "<app>"
     And team in application.yml is \CxServer\SP
     And multi-tenant=true
     Then The request sent to SAST reporitory will contain scan result with project name="<OutProjectName>" and team "<teamOut>"
@@ -165,14 +165,14 @@ Feature: Check Integration tests command line functionality - scan.
   @Json @File 
   Scenario Outline: test scan for file system repository with different vulnerabilities and verify the json scan report
     Given there is a SAST environment configured and running
-    When running a scan for folder "<folder>"
+    When running a scan for a specified folder
     And parameter path is populated in application.xml and scanType is "<scanType>" and team is "<team>"
     Then SAST output will contain high severity number <high> and medium severity number <medium> and low severity number <low> and  SAST team name will be "<team>"
     And output json logger will have Scan request "<folder>" and scan status will be "<LoggerScanStatus>"
 
     Examples:
-      | folder                                   | high | medium | low | scanType | team         | LoggerScanStatus                         |
-      | cucumber\data\input-files-toscan\VB_3845 | 2    | 3      | 0   | Full     | \CxServer\SP | SUCCESS                                                                       |
-      | cucumber\data\input-files-toscan\VB_3845 | 2    | 3      | 0   | Inc      | \CxServer\SP | SUCCESS                                                                       |
-      | cucumber\data\input-files-toscan\VB_3845 | 2    | 3      | 0   | Inc      | invalidTeam  | Parent team could not be established.  Please ensure correct team is provided |
+      | high | medium | low | scanType | team         | LoggerScanStatus                                                              |
+      | 2    | 3      | 0   | Full     | \CxServer\SP | SUCCESS                                                                       |
+      | 2    | 3      | 0   | Inc      | \CxServer\SP | SUCCESS                                                                       |
+      | 2    | 3      | 0   | Inc      | invalidTeam  | Parent team could not be established.  Please ensure correct team is provided |
 
