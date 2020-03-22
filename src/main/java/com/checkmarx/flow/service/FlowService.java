@@ -52,7 +52,6 @@ public class FlowService {
     private final FlowProperties flowProperties;
     private final ResultsService resultsService;
     private final HelperService helperService;
-    private static final Long SLEEP = 20000L;
     private static final String ERROR_BREAK_MSG = "Exiting with Error code 10 due to issues present";
 
     public FlowService(CxClient cxService, CxOsaClient osaService, ResultsService resultsService, GitHubService gitService,
@@ -114,8 +113,8 @@ public class FlowService {
     public ScanDetails executeCxScan(ScanRequest request, File cxFile) throws MachinaException {
 
         String osaScanId = null;
-        Integer scanId = null;
-        Integer projectId = null;
+        Integer scanId;
+        Integer projectId;
 
         try {
 
@@ -298,10 +297,20 @@ public class FlowService {
         }
 
         //Kick out if the team is unknown
-        if(ownerId.equals(UNKNOWN)){
-            throw new MachinaException("Parent team could not be established.  Please ensure correct team is provided");
+        if (ownerId.equals(UNKNOWN)) {
+            throw new MachinaException(getTeamErrorMessage());
         }
         return ownerId;
+    }
+
+    private String getTeamErrorMessage() {
+        return "Parent team could not be established. Please ensure correct team is provided.\n" +
+                "Some hints:\n" +
+                "\t- team name is case-sensitive\n" +
+                "\t- trailing slash is not allowed\n" +
+                "\t- team name separator depends on Checkmarx product version specified in CxFlow configuration:\n" +
+                String.format("\t\tCheckmarx version: %s%n", cxProperties.getVersion()) +
+                String.format("\t\tSeparator that should be used: %s%n", cxProperties.getTeamPathSeparator());
     }
 
     private String determineProjectName(ScanRequest request) throws MachinaException {
@@ -519,8 +528,6 @@ public class FlowService {
 
     /**
      * Process Projects in batch mode - JIRA ONLY
-     *
-     * @param originalRequest
      */
     public void cxBatch(ScanRequest originalRequest) throws ExitThrowable {
         try {
