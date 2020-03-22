@@ -17,7 +17,7 @@ public class ScanReport extends AnalyticsReport {
     private String scanStatus;
     private String branch;
     private String repoType;
-    private String scanType;
+
 
     public ScanReport(Integer sastScanId, ScanRequest request, String sourcesPath, Status status) {
         super(sastScanId,request);
