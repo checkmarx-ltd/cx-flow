@@ -1,7 +1,6 @@
 package com.checkmarx.flow.dto.report;
 
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.exception.MachinaException;
 import groovy.util.logging.Slf4j;
 import lombok.Data;
 import org.slf4j.Logger;
@@ -13,8 +12,7 @@ import static net.logstash.logback.marker.Markers.*;
 public abstract class AnalyticsReport {
 
     public static final Logger jsonlogger = LoggerFactory.getLogger("jsonLogger");
-
-    //public static final Logger log = org.slf4j.LoggerFactory.getLogger(Writable.class);
+    
     public static final String SAST = "SAST";
     public static final String OSA = "OSA";
 
