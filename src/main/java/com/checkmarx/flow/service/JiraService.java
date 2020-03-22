@@ -127,7 +127,7 @@ public class JiraService {
             throw new MachinaRuntimeException();
         }
         log.debug(jql);
-        HashSet<String> fields = new HashSet<String>();
+        HashSet<String> fields = new HashSet<>();
         fields.add("key");
         fields.add("project");
         fields.add("issuetype");
@@ -308,10 +308,6 @@ public class JiraService {
     /**
      * Map custom JIRA fields to specific values (Custom Cx fields, Issue result
      * fields, static fields
-     *
-     * @param request
-     * @param issue
-     * @param issueBuilder
      */
     private void mapCustomFields(ScanRequest request, ScanResults.XIssue issue, IssueInputBuilder issueBuilder, boolean update) {
         BugTracker bugTracker = request.getBugTracker();
@@ -593,13 +589,10 @@ public class JiraService {
     }
 
     /**
-     * Tranistions an issue based on the issue id and transition name
+     * Transitions an issue based on the issue id and transition name
      *
      * TODO handle re-open transition fields
      *
-     * @param bugId
-     * @param transitionName
-     * @return
      */
     private Issue transitionIssue(String bugId, String transitionName) throws JiraClientException {
         Issue issue;
@@ -655,20 +648,10 @@ public class JiraService {
         return issue;
     }
 
-    /**
-     *
-     * @param assignee
-     * @return
-     */
     private User getAssignee(String assignee) {
         return client.getUserClient().getUser(assignee).claim();
     }
 
-    /**
-     *
-     * @param bugId
-     * @param comment
-     */
     private void addCommentToBug(String bugId, String comment) {
         try {
             Issue issue = this.issueClient.getIssue(bugId).claim();
@@ -681,10 +664,6 @@ public class JiraService {
     /**
      * Returns Jira Transition object based on transition name from a list of
      * transitions
-     *
-     * @param transitions
-     * @param transitionName
-     * @return
      */
     private Transition getTransitionByName(Iterable<Transition> transitions, String transitionName) {
         for (Transition transition : transitions) {
@@ -695,13 +674,6 @@ public class JiraService {
         return null;
     }
 
-    /**
-     *
-     * @param project
-     * @param issueType
-     * @param fieldName
-     * @return
-     */
     private String getCustomFieldByName(String project, String issueType, String fieldName) {
         log.debug("Getting custom field {}", fieldName);
         GetCreateIssueMetadataOptions options;

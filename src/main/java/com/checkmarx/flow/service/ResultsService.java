@@ -28,6 +28,8 @@ import java.util.concurrent.CompletableFuture;
 @Service
 public class ResultsService {
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(ResultsService.class);
+    public static final String COMPLETED_PROCESSING = "Successfully completed processing for ";
+    public static final String MESSAGE_KEY = "message";
     private final CxClient cxService;
     private final CxOsaClient osaService;
     private final JiraService jiraService;
@@ -75,13 +77,13 @@ public class ResultsService {
                     !bugTrackerType.equals(BugTracker.Type.EMAIL)) {
                 String namespace = request.getNamespace();
                 String repoName = request.getRepoName();
-                String concat = "Successfully completed processing for "
+                String concat = COMPLETED_PROCESSING
                         .concat(namespace).concat("/").concat(repoName);
                 if (!ScanUtils.empty(namespace) && !ScanUtils.empty(request.getBranch())) {
-                    emailCtx.put("message", concat.concat(" - ")
+                    emailCtx.put(MESSAGE_KEY, concat.concat(" - ")
                             .concat(request.getRepoUrl()));
                 } else if (!ScanUtils.empty(request.getApplication())) {
-                    emailCtx.put("message", "Successfully completed processing for "
+                    emailCtx.put(MESSAGE_KEY, COMPLETED_PROCESSING
                             .concat(request.getApplication()));
                 }
                 emailCtx.put("heading", "Scan Successfully Completed");
@@ -152,7 +154,7 @@ public class ResultsService {
                     Map<String, Object> emailCtx = new HashMap<>();
                     String namespace = request.getNamespace();
                     String repoName = request.getRepoName();
-                    emailCtx.put("message", "Checkmarx Scan Results "
+                    emailCtx.put(MESSAGE_KEY, "Checkmarx Scan Results "
                             .concat(namespace).concat("/").concat(repoName).concat(" - ")
                             .concat(request.getRepoUrl()));
                     emailCtx.put("heading", "Scan Successfully Completed");
@@ -165,7 +167,7 @@ public class ResultsService {
                     }
                     emailCtx.put("repo", request.getRepoUrl());
                     emailCtx.put("repo_fullname", namespace.concat("/").concat(repoName));
-                    emailService.sendmail(request.getEmail(), "Successfully completed processing for ".concat(namespace).concat("/").concat(repoName), emailCtx, "template-demo.html");
+                    emailService.sendmail(request.getEmail(), COMPLETED_PROCESSING.concat(namespace).concat("/").concat(repoName), emailCtx, "template-demo.html");
                 }
                 break;
             case CUSTOM:
@@ -234,12 +236,12 @@ public class ResultsService {
         }
     }
 
-    private void throwExceptionWhenPublishingErrorOccurred(Exception e, Map<String, ScanResults.XIssue> nonPublishedScanResultsMap) {
+    private void throwExceptionWhenPublishingErrorOccurred(Exception cause, Map<String, ScanResults.XIssue> nonPublishedScanResultsMap) {
         String errorMessage = "Wasn't able to publish the following issues into JIRA:\n" +
                 printNonPublishedScanResults(nonPublishedScanResultsMap) +
-                "\ndue to the following reason: " + e.getMessage();
+                "\ndue to the following reason: " + cause.getMessage();
 
-        throw new JiraClientRunTimeException(errorMessage);
+        throw new JiraClientRunTimeException(errorMessage, cause);
     }
 
     private String printNonPublishedScanResults(Map<String, ScanResults.XIssue> nonPublishedScanResultsMap) {
@@ -262,11 +264,6 @@ public class ResultsService {
         return sb.toString();
     }
 
-    /**
-     *
-     * @param request
-     * @param results
-     */
     private void getCxFields(ScanRequest request, ScanResults results) throws MachinaException{
         try{
             /*Are cx fields required?*/
@@ -306,9 +303,6 @@ public class ResultsService {
 
     /**
      * Check if even 1 cx field is required, which means Checkmarx project needs to be retrieved
-     *
-     * @param fields
-     * @return
      */
     private boolean requiresCxCustomFields(List<Field> fields){
         if(fields == null){
