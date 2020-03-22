@@ -114,7 +114,6 @@ public class ScanSteps extends AbstractScanSteps {
         clearAfterTest(scanDTO);
         
         List<ScanResults.XIssue> issues = results.getXIssues();
-
         int countResults = 0;
         
         for (ScanResults.XIssue issue: issues){
@@ -147,9 +146,9 @@ public class ScanSteps extends AbstractScanSteps {
         }
         try {
             assertTrue(scanDTO.getTeamId().equals(cxClient.getTeamId(outputTeamName)));
-            assertEquals(results.getScanSummary().getHighSeverity(), high);
-            assertEquals(results.getScanSummary().getMediumSeverity(), medium);
-            assertEquals(results.getScanSummary().getLowSeverity(), low);
+            assertEquals(high, results.getScanSummary().getHighSeverity());
+            assertEquals(medium, results.getScanSummary().getMediumSeverity());
+            assertEquals(low, results.getScanSummary().getLowSeverity());
             
         } catch (CheckmarxException e) {
             fail(e.getMessage());
@@ -163,11 +162,10 @@ public class ScanSteps extends AbstractScanSteps {
     public void verifyOutputSeverityI(Integer high, Integer medium, Integer low){
         ScanDTO scanDTO = callSast();
         clearAfterTest(scanDTO);
-        
-        assertEquals(results.getScanSummary().getHighSeverity(), high);
-        assertEquals(results.getScanSummary().getMediumSeverity(), medium);
-        assertEquals(results.getScanSummary().getLowSeverity(), low);
-        
+
+        assertEquals(high, results.getScanSummary().getHighSeverity());
+        assertEquals(medium, results.getScanSummary().getMediumSeverity());
+        assertEquals(low, results.getScanSummary().getLowSeverity());
     }
     
     @And ("parameter path is populated in application.xml and scanType is {string} and branch {string}")
@@ -200,12 +198,12 @@ public class ScanSteps extends AbstractScanSteps {
     }
 
     
-    @And ("output json logger will have Scan request and Get request for {string}")
+    @And ("output json logger will have Scan request {string}")
     public void verifyJsonLogger(String repoUrl) {
         verifyJsonLoggerAndScanStatus(repoUrl, Status.SUCCESS.getMessage());
     }
     
-    @And ("output json logger will have Scan request and Get request for {string} and scan status will be {string}")
+    @And ("output json logger will have Scan request {string} and scan status will be {string}")
     public void verifyJsonLoggerAndScanStatus(String repoUrl, String scanStatus){
 
         FileInputStream inputStream = null;
@@ -234,20 +232,19 @@ public class ScanSteps extends AbstractScanSteps {
             node = objectMapper.readTree(scanRequest).get("Scan Request");
 
             if(this.repoType.equals(ScanRequest.Repository.GITHUB)) {
-                assertEquals(node.get("repoType").textValue(), (ScanRequest.Repository.GITHUB.toString()));
-                assertEquals(node.get("branch").textValue(), this.branch);
-                assertEquals(node.get("repoUrl").textValue(), repoUrl);
+                assertEquals( (ScanRequest.Repository.GITHUB.toString()),node.get("repoType").textValue());
+                assertEquals(this.branch, node.get("branch").textValue());
+                assertEquals(repoUrl, node.get("repoUrl").textValue());
             }else{
-                assertEquals(node.get("repoType").textValue(),"NA");
+                assertEquals("NA",node.get("repoType").textValue());
                 if(!errorExpected){
-                    assertEquals(node.get("repoUrl").textValue(), fileRepo.getPath());
+                    assertEquals(fileRepo.getPath(),node.get("repoUrl").textValue());
                 }
             }
-
-            //assertEquals(node.get("scanStatus").textValue(), Status.SUCCESS.getMessage());
-            assertEquals(node.get("scanStatus").textValue(), scanStatus);
-            assertEquals(node.get("scanType").textValue(), cxProperties.getIncremental() ? "Inc" : "Full");
-            assertNotEquals(node.get("scanId").textValue(), "null");
+            
+            assertEquals(scanStatus, node.get("scanStatus").textValue());
+            assertEquals(cxProperties.getIncremental() ? "Inc" : "Full", node.get("scanType").textValue());
+            assertNotEquals("null", node.get("scanId").textValue() );
 
             
         }catch (IOException e) {

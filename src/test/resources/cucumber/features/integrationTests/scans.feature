@@ -153,7 +153,7 @@ Feature: Check Integration tests command line functionality - scan.
     When  running a scan for repository "<repo_url>"
     And parameter path is populated in application.xml and scanType is "<scanType>" and branch "<branch>"
     Then  SAST output will contain high severity number <high> and medium severity number <medium> and low severity number <low>
-    And output json logger will have Scan request and Get request for "<repo_url>"
+    And output json logger will have Scan request "<repo_url>"
 
     Examples:
       | repo_url                                                       | high | medium | low | scanType | branch                 |
@@ -163,12 +163,12 @@ Feature: Check Integration tests command line functionality - scan.
 
 
   @Json @File 
-  Scenario Outline: test scan for file repository with different vulnerabilities and verify the json scan report
+  Scenario Outline: test scan for file system repository with different vulnerabilities and verify the json scan report
     Given there is a SAST environment configured and running
     When running a scan for folder "<folder>"
     And parameter path is populated in application.xml and scanType is "<scanType>" and team is "<team>"
     Then SAST output will contain high severity number <high> and medium severity number <medium> and low severity number <low> and  SAST team name will be "<team>"
-    And output json logger will have Scan request and Get request for "<folder>" and scan status will be "<LoggerScanStatus>"
+    And output json logger will have Scan request "<folder>" and scan status will be "<LoggerScanStatus>"
 
     Examples:
       | folder                                   | high | medium | low | scanType | team         | LoggerScanStatus                         |
