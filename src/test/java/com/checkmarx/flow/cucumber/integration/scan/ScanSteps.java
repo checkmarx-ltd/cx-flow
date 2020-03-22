@@ -269,8 +269,8 @@ public class ScanSteps extends AbstractScanSteps {
         
     }
 
-    @And ("running a scan for folder {string}") 
-    public void setFileReporitory(String fileName) {
+    @And ("running a scan for a specified folder") 
+    public void setFileReporitory() {
         try {
 
             super.fileRepo = ResourceUtils.getFile("classpath:\\cucumber\\data\\input-files-toscan\\VB_3845\\encode.zip");
@@ -320,6 +320,7 @@ public class ScanSteps extends AbstractScanSteps {
     @And ("repo-name is {string} and --repo-url is supplied and --github flag is supplied")
     public void setRepoName(String repoName){
         this.repoName = repoName;
+        setGithubRepo("https://github.com/cxflowtestuser/Code_Injection");
     }
 
 
@@ -330,7 +331,7 @@ public class ScanSteps extends AbstractScanSteps {
         assertTrue(results.getProject().equalsIgnoreCase(OutProjectName));
 
         try {
-            assertTrue(scanDTO.getTeamId().equals(cxClient.getTeamId(outputTeamName)));
+            assertEquals(cxClient.getTeamId(outputTeamName), scanDTO.getTeamId());
         } catch (CheckmarxException e) {
             fail(e.getMessage());
         }
