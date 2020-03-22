@@ -72,6 +72,7 @@ public class AzureDevopsClient {
     }
 
     public void ensureProjectExists(String projectName) throws IOException {
+        // Don't delete and recreate the project, because it will slow the tests too much.
         if (!projectExists(projectName)) {
             String operationId = queueProjectCreation(projectName);
             waitUntilProjectIsCreated(operationId);
@@ -79,6 +80,8 @@ public class AzureDevopsClient {
     }
 
     public void deleteProjectIssues(String projectName) throws IOException {
+        log.info("Deleting all issues in the {} project", projectName);
+
         List<String> issueIds = getProjectIssueIds(projectName);
         for (String issueId : issueIds) {
             deleteIssue(projectName, issueId);
@@ -142,16 +145,23 @@ public class AzureDevopsClient {
 
         ObjectNode responseBody = extractBody(response);
 
-        return StreamSupport.stream(responseBody.get("workItems").spliterator(), false)
+        List<String> result = StreamSupport.stream(responseBody.get("workItems").spliterator(), false)
                 .map(issue -> issue.get(ID_KEY).asText())
                 .collect(Collectors.toList());
+
+        log.info("Issues found: {}", result.size());
+        return result;
     }
 
     private String getNewIssueId(ResponseEntity<ObjectNode> response) throws IOException {
         if (response.getBody() == null) {
             throw new IOException("Response body is missing.");
         }
-        return response.getBody().get(ID_KEY).asText();
+
+        String result = response.getBody().get(ID_KEY).asText();
+        log.info("New issue ID: {}", result);
+
+        return result;
     }
 
     private ObjectNode extractBody(HttpEntity<ObjectNode> response) throws IOException {
@@ -164,6 +174,7 @@ public class AzureDevopsClient {
     }
 
     private boolean projectExists(String projectName) throws IOException {
+        log.info("Checking if project {} exists", projectName);
         HttpEntity<?> request = getRequestEntity(null);
 
         String url = getResourceUrl("projects", null);
@@ -198,7 +209,6 @@ public class AzureDevopsClient {
 
     private List<Issue> getProjectIssuesByIds(List<String> issueIds, String projectName) throws IOException {
         if (issueIds.isEmpty()) {
-            log.info("No issues found.");
             return new ArrayList<>();
         }
 
@@ -215,6 +225,7 @@ public class AzureDevopsClient {
     }
 
     private void waitUntilProjectIsCreated(String operationId) {
+        log.info("Waiting until project is created.");
         Awaitility.await()
                 .atMost(WAITING_TIMEOUT)
                 .pollDelay(POLL_INTERVAL)
