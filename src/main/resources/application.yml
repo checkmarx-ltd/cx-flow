@@ -95,18 +95,18 @@ jira:
     X: Y # Map Checkmarx severity : to JIRA Priority
   open-transition: Reopen Issue
   close-transition: Close Issue
-  open-status:
-    - Open
-    - In Progress
-    - Reopened
-  closed-status:
-    - Closed
-    - Resolved
-  status-category-open-name:
-    - To Do
-    - In Progress
-  statusCategoryClosedName:
-    - Done
+#  open-status:
+#    - Open
+#    - In Progress
+#    - Reopened
+#  closed-status:
+#    - Closed
+#    - Resolved
+#  status-category-open-name:
+#    - To Do
+#    - In Progress
+#  statusCategoryClosedName:
+#    - Done
 #  fields:
 
 github:
