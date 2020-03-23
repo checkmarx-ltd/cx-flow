@@ -5,8 +5,10 @@ import com.checkmarx.flow.exception.MachinaException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 
+@EqualsAndHashCode(callSuper = true)
 @Data
 public class GetRequestWritable extends Writable{
 
