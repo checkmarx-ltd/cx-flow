@@ -1,10 +1,8 @@
 package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.dto.BugTracker;
-import com.checkmarx.flow.dto.ScanDetails;
-import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.dto.Sources;
+import com.checkmarx.flow.dto.*;
+import com.checkmarx.flow.dto.report.ScanRequestWritable;
 import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.utils.ScanUtils;
@@ -114,8 +112,8 @@ public class FlowService {
     public ScanDetails executeCxScan(ScanRequest request, File cxFile) throws MachinaException {
 
         String osaScanId = null;
-        Integer scanId;
-        Integer projectId;
+        Integer scanId = null;
+        Integer projectId = null;
 
         try {
 
