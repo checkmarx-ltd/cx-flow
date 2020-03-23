@@ -91,6 +91,12 @@ dependencies {
     testImplementation("io.cucumber:cucumber-spring:${cucumberVersion}")
     testImplementation( "org.junit.jupiter:junit-jupiter-api:${junitVersion}")
     testImplementation('org.awaitility:awaitility:4.0.2')
+    testImplementation('com.microsoft.azure:azure:1.31.1')
+
+    testImplementation('com.microsoft.rest:client-runtime:1.7.1')
+    testImplementation('com.microsoft.azure:azure-client-runtime:1.7.1')
+    testImplementation('com.microsoft.azure:azure-client-authentication:1.7.1')
+
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
     testImplementation("com.github.java-json-tools:json-patch:1.11")
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:${junitVersion}")

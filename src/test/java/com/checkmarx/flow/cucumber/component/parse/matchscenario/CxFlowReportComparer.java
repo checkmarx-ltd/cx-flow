@@ -8,6 +8,7 @@ import com.github.fge.jsonpatch.diff.JsonDiff;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Paths;
 
 public class CxFlowReportComparer {

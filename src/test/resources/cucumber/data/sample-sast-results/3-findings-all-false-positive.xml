@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CxXMLResults InitiatorName="admin admin" Owner="admin@cx" ScanId="1000284" ProjectId="266" ProjectName="jrecruiter_24486_lines" TeamFullPathOnReportDate="CxServer" DeepLink="http://SAST90MARGARITA/CxWebClient/ViewerMain.aspx?scanid=1000284&amp;projectid=266" ScanStart="Sunday, February 2, 2020 2:20:04 PM" Preset="Checkmarx Default" ScanTime="00h:04m:14s" LinesOfCodeScanned="42215" FilesScanned="366" ReportCreationTime="Sunday, February 2, 2020 2:34:49 PM" Team="CxServer" CheckmarxVersion="9.0.0.32148" ScanComments="" ScanType="Full" SourceOrigin="LocalPath" Visibility="Private">
+    <Query id="5330" cweId="79" name="Angular_Client_DOM_XSS" group="JavaScript_High_Risk" Severity="High" Language="JavaScript" LanguageHash="0935562945055365" LanguageChangeDate="2020-01-12T00:00:00.0000000" SeverityIndex="3" QueryPath="JavaScript\Cx\JavaScript High Risk\Angular Client DOM XSS Version:1" QueryVersionCode="117537447">
+        <Result NodeId="10002840001" FileName="jrecruiter/jrecruiter-flex/html-template/history/history.js" Status="New" Line="222" Column="56" FalsePositive="True" Severity="High" AssignToUser="" state="0" Remark="" DeepLink="http://SAST90MARGARITA/CxWebClient/ViewerMain.aspx?scanid=1000284&amp;projectid=266&amp;pathid=1" SeverityIndex="3">
+            <Path ResultId="1000284" PathId="1" SimilarityId="1486780725">
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>222</Line>
+                    <Column>56</Column>
+                    <NodeId>1</NodeId>
+                    <Name>toString</Name>
+                    <Type></Type>
+                    <Length>1</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>222</Number>
+                            <Code>                    var file = window.location.pathname.toString();</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>222</Line>
+                    <Column>25</Column>
+                    <NodeId>2</NodeId>
+                    <Name>file</Name>
+                    <Type></Type>
+                    <Length>4</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>222</Number>
+                            <Code>                    var file = window.location.pathname.toString();</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>223</Line>
+                    <Column>43</Column>
+                    <NodeId>3</NodeId>
+                    <Name>file</Name>
+                    <Type></Type>
+                    <Length>4</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>223</Number>
+                            <Code>                    file = file.substring(file.lastIndexOf("/")+1);</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>223</Line>
+                    <Column>28</Column>
+                    <NodeId>4</NodeId>
+                    <Name>file</Name>
+                    <Type></Type>
+                    <Length>4</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>223</Number>
+                            <Code>                    file = file.substring(file.lastIndexOf("/")+1);</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>223</Line>
+                    <Column>32</Column>
+                    <NodeId>5</NodeId>
+                    <Name>substring</Name>
+                    <Type></Type>
+                    <Length>1</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>223</Number>
+                            <Code>                    file = file.substring(file.lastIndexOf("/")+1);</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>223</Line>
+                    <Column>21</Column>
+                    <NodeId>6</NodeId>
+                    <Name>file</Name>
+                    <Type></Type>
+                    <Length>4</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>223</Number>
+                            <Code>                    file = file.substring(file.lastIndexOf("/")+1);</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>224</Line>
+                    <Column>86</Column>
+                    <NodeId>7</NodeId>
+                    <Name>file</Name>
+                    <Type></Type>
+                    <Length>4</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>224</Number>
+                            <Code>                    getFormElement().innerHTML = '&lt;form name="historyForm" action="'+file+'#' + flexAppUrl + '" method="GET"&gt;&lt;/form&gt;';</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>224</Line>
+                    <Column>38</Column>
+                    <NodeId>8</NodeId>
+                    <Name>innerHTML</Name>
+                    <Type></Type>
+                    <Length>9</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>224</Number>
+                            <Code>                    getFormElement().innerHTML = '&lt;form name="historyForm" action="'+file+'#' + flexAppUrl + '" method="GET"&gt;&lt;/form&gt;';</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+    </Query>
+    <Query id="2415" categories="PCI DSS v3.2;PCI DSS (3.2) - 6.5.7 - Cross-site scripting (XSS),OWASP Top 10 2013;A3-Cross-Site Scripting (XSS),FISMA 2014;Access Control,NIST SP 800-53;SI-15 Information Output Filtering (P0),OWASP Top 10 2017;A7-Cross-Site Scripting (XSS)" cweId="79" name="Client_DOM_XSS" group="JavaScript_High_Risk" Severity="High" Language="JavaScript" LanguageHash="0935562945055365" LanguageChangeDate="2020-01-12T00:00:00.0000000" SeverityIndex="3" QueryPath="JavaScript\Cx\JavaScript High Risk\Client DOM XSS Version:1" QueryVersionCode="77094737">
+        <Result NodeId="10002840002" FileName="jrecruiter/jrecruiter-flex/html-template/history/history.js" Status="New" Line="222" Column="56" FalsePositive="True" Severity="High" AssignToUser="" state="0" Remark="" DeepLink="http://SAST90MARGARITA/CxWebClient/ViewerMain.aspx?scanid=1000284&amp;projectid=266&amp;pathid=2" SeverityIndex="3">
+            <Path ResultId="1000284" PathId="2" SimilarityId="1486692256">
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>222</Line>
+                    <Column>56</Column>
+                    <NodeId>1</NodeId>
+                    <Name>toString</Name>
+                    <Type></Type>
+                    <Length>1</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>222</Number>
+                            <Code>                    var file = window.location.pathname.toString();</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>222</Line>
+                    <Column>25</Column>
+                    <NodeId>2</NodeId>
+                    <Name>file</Name>
+                    <Type></Type>
+                    <Length>4</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>222</Number>
+                            <Code>                    var file = window.location.pathname.toString();</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>223</Line>
+                    <Column>43</Column>
+                    <NodeId>3</NodeId>
+                    <Name>file</Name>
+                    <Type></Type>
+                    <Length>4</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>223</Number>
+                            <Code>                    file = file.substring(file.lastIndexOf("/")+1);</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>223</Line>
+                    <Column>28</Column>
+                    <NodeId>4</NodeId>
+                    <Name>file</Name>
+                    <Type></Type>
+                    <Length>4</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>223</Number>
+                            <Code>                    file = file.substring(file.lastIndexOf("/")+1);</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>223</Line>
+                    <Column>32</Column>
+                    <NodeId>5</NodeId>
+                    <Name>substring</Name>
+                    <Type></Type>
+                    <Length>1</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>223</Number>
+                            <Code>                    file = file.substring(file.lastIndexOf("/")+1);</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>223</Line>
+                    <Column>21</Column>
+                    <NodeId>6</NodeId>
+                    <Name>file</Name>
+                    <Type></Type>
+                    <Length>4</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>223</Number>
+                            <Code>                    file = file.substring(file.lastIndexOf("/")+1);</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>224</Line>
+                    <Column>86</Column>
+                    <NodeId>7</NodeId>
+                    <Name>file</Name>
+                    <Type></Type>
+                    <Length>4</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>224</Number>
+                            <Code>                    getFormElement().innerHTML = '&lt;form name="historyForm" action="'+file+'#' + flexAppUrl + '" method="GET"&gt;&lt;/form&gt;';</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>jrecruiter/jrecruiter-flex/html-template/history/history.js</FileName>
+                    <Line>224</Line>
+                    <Column>38</Column>
+                    <NodeId>8</NodeId>
+                    <Name>innerHTML</Name>
+                    <Type></Type>
+                    <Length>9</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>224</Number>
+                            <Code>                    getFormElement().innerHTML = '&lt;form name="historyForm" action="'+file+'#' + flexAppUrl + '" method="GET"&gt;&lt;/form&gt;';</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+    </Query>
+    <Query id="3618" categories="FISMA 2014;System And Information Integrity,NIST SP 800-53;SI-10 Information Input Validation (P1),OWASP Mobile Top 10 2016;M7-Client Code Quality" cweId="73" name="Input_Path_Not_Canonicalized" group="Java_Medium_Threat" Severity="Medium" Language="Java" LanguageHash="1621858418163027" LanguageChangeDate="2020-01-12T00:00:00.0000000" SeverityIndex="2" QueryPath="Java\Cx\Java Medium Threat\Input Path Not Canonicalized Version:1" QueryVersionCode="92755391">
+        <Result NodeId="10002840027" FileName="ajaxFileUpload/src/main/java/com/hillert/upload/service/impl/UploadServiceImpl.java" Status="New" Line="42" Column="54" FalsePositive="True" Severity="Medium" AssignToUser="" state="0" Remark="" DeepLink="http://SAST90MARGARITA/CxWebClient/ViewerMain.aspx?scanid=1000284&amp;projectid=266&amp;pathid=27" SeverityIndex="2">
+            <Path ResultId="1000284" PathId="27" SimilarityId="-1746678137">
+                <PathNode>
+                    <FileName>ajaxFileUpload/src/main/java/com/hillert/upload/service/impl/UploadServiceImpl.java</FileName>
+                    <Line>42</Line>
+                    <Column>54</Column>
+                    <NodeId>1</NodeId>
+                    <Name>getProperty</Name>
+                    <Type></Type>
+                    <Length>1</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>42</Number>
+                            <Code>        final File file = new File(System.getProperty("java.io.tmpdir")</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>ajaxFileUpload/src/main/java/com/hillert/upload/service/impl/UploadServiceImpl.java</FileName>
+                    <Line>42</Line>
+                    <Column>27</Column>
+                    <NodeId>2</NodeId>
+                    <Name>File</Name>
+                    <Type></Type>
+                    <Length>3</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>42</Number>
+                            <Code>        final File file = new File(System.getProperty("java.io.tmpdir")</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>ajaxFileUpload/src/main/java/com/hillert/upload/service/impl/UploadServiceImpl.java</FileName>
+                    <Line>42</Line>
+                    <Column>20</Column>
+                    <NodeId>3</NodeId>
+                    <Name>file</Name>
+                    <Type></Type>
+                    <Length>4</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>42</Number>
+                            <Code>        final File file = new File(System.getProperty("java.io.tmpdir")</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>ajaxFileUpload/src/main/java/com/hillert/upload/service/impl/UploadServiceImpl.java</FileName>
+                    <Line>47</Line>
+                    <Column>44</Column>
+                    <NodeId>4</NodeId>
+                    <Name>file</Name>
+                    <Type></Type>
+                    <Length>4</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>47</Number>
+                            <Code>            fileOut = new FileOutputStream(file);</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>ajaxFileUpload/src/main/java/com/hillert/upload/service/impl/UploadServiceImpl.java</FileName>
+                    <Line>47</Line>
+                    <Column>23</Column>
+                    <NodeId>5</NodeId>
+                    <Name>FileOutputStream</Name>
+                    <Type></Type>
+                    <Length>3</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>47</Number>
+                            <Code>            fileOut = new FileOutputStream(file);</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>ajaxFileUpload/src/main/java/com/hillert/upload/service/impl/UploadServiceImpl.java</FileName>
+                    <Line>47</Line>
+                    <Column>13</Column>
+                    <NodeId>6</NodeId>
+                    <Name>fileOut</Name>
+                    <Type></Type>
+                    <Length>7</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>47</Number>
+                            <Code>            fileOut = new FileOutputStream(file);</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+    </Query>
+</CxXMLResults>
