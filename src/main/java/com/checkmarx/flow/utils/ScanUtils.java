@@ -525,7 +525,7 @@ public class ScanUtils {
             }
             body.append("Severity|Count").append(CRLF);
             body.append("---|---").append(CRLF);
-            Map<String, Integer> flow = (Map<String, Integer>) results.getAdditionalDetails().put(Constants.SUMMARY_KEY, summary);
+            Map<String, Integer> flow = (Map<String, Integer>) results.getAdditionalDetails().get(Constants.SUMMARY_KEY);
             if(flow != null) {
                 for (Map.Entry<String, Integer> severity : flow.entrySet()) {
                     body.append(severity.getKey()).append("|").append(severity.getValue().toString()).append(CRLF);
