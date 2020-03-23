@@ -268,11 +268,11 @@ workflows:
           filters:
             branches:
               only: develop
-            requires:
-              - e2e-tests
+          requires:
+            - e2e-tests
       - publish-github-release:
           filters:
             branches:
               only: develop
-            requires:
-              - e2e-tests
+          requires:
+            - e2e-tests
