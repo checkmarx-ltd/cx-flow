@@ -176,6 +176,7 @@ task e2eTests(type: Test) {
             exclude 'com/checkmarx/flow/cucumber/integration/publishprocess/**'
             exclude 'com/checkmarx/flow/cucumber/integration/github/**'
             exclude 'com/checkmarx/flow/cucumber/integration/azure/**'
+            exclude 'com/checkmarx/flow/cucumber/integration/jira/**'
             exclude 'com/checkmarx/flow/cucumber/integration/negative_tests/**'
             exclude 'com/checkmarx/flow/test/flow**'
             exclude 'com/checkmarx/flow/exception/**'
