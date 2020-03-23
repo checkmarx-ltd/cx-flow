@@ -264,15 +264,15 @@ workflows:
       #         only: develop
       #     requires:
       #       - deploy-cxflow
-      - docker-push-stable:
-          filters:
-            branches:
-              only: develop
-          # requires:
-          #   - e2e-tests
-      - publish-github-release:
-          filters:
-            branches:
-              only: develop
-          # requires:
-          #   - e2e-tests
+      # - docker-push-stable:
+      #     filters:
+      #       branches:
+      #         only: develop
+      #       requires:
+      #         - e2e-tests
+      # - publish-github-release:
+      #     filters:
+      #       branches:
+      #         only: develop
+      #       requires:
+      #         - e2e-tests
