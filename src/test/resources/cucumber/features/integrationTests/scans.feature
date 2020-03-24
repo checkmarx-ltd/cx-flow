@@ -20,8 +20,32 @@ Feature: Check Integration tests command line functionality - scan.
 #    |nothing|
 #    |nothing|
 
+  @Filters
+  Scenario Outline:  retrieve SAST results with the following filters: --filter-severity, --filter-category, --filter-status, --filter-cwe
+    Given there is a SAST environment configured and running
+    And running a scan for repository "<repoUrl>"
+    And filter-severity is "<filter-severity>" and filter-category is "<filter-category>" and filter-cwe "<filter-cwe>" and filter-status "<filter-status>"
+    Then output file will contain vulnerabilities <number>
+    Examples:
+      | repoUrl                                              | filter-severity | filter-category                             | filter-status | filter-cwe | number |
+      | https://github.com/cxflowtestuser/VB_3845.git        | High            |                                             |               |            | 2      |
+      | https://github.com/cxflowtestuser/VB_3845.git        | Medium          |                                             |               |            | 3      |
+      | https://github.com/cxflowtestuser/VB_3845.git        | High,Medium     |                                             |               |            | 5      |
+      | https://github.com/cxflowtestuser/VB_3845.git        |                 |                                             |               |            | 5      |
+      | https://github.com/cxflowtestuser/VB_3845.git        |                 | SQL_Injection                               |               | 89         | 2      |
+      | https://github.com/cxflowtestuser/Code_Injection.git | Medium          | CGI_Reflected_XSS_All_Clients               |               |            | 1      |
+      | https://github.com/cxflowtestuser/Code_Injection.git | High            | CGI_Reflected_XSS_All_Clients               |               | 79         | 0      |
+      | https://github.com/cxflowtestuser/Code_Injection.git |                 |                                             |               | 89         | 0      |
+      | https://github.com/cxflowtestuser/Code_Injection.git | Medium          | CGI_Reflected_XSS_All_Clients,SQL_Injection |               | 79         | 1      |
+      | https://github.com/cxflowtestuser/VB_3845.git        |                 |                                             | Urgent        |            | 0      |
+      ## TODO following 2 tests on filter-status are failing. Need to fix 
+      #| https://github.com/cxflowtestuser/VB_3845.git        | High            |                                             | To Verify,Urgent |            | 2      |
+      #| https://github.com/cxflowtestuser/VB_3845.git        |                 | CGI_Reflected_XSS_All_Clients               | To Verify        | 79         | 1      |
+      ## 79 = XSS_Reflected , 89 = SQL_Injection
+      | https://github.com/cxflowtestuser/BookStoreJava      |                 |                                             |               | 79,89      | 5      |
 
- @TeamAndProjectName
+
+  @TeamAndProjectName
   Scenario Outline:   test which project name will be used or created for scan with parameters: cx-project,branch,repo-name,namespace,app,multi-tenant=false. Using github as a respoiroty.
     Given github repository which contains project CodeInjection
     When project is: "<cx-project>" and branch="<branch>"
@@ -75,30 +99,7 @@ Feature: Check Integration tests command line functionality - scan.
       |                  | CodeInjection | MyNamespace |       | false        | CodeInjection  | exception - team \CxServer\MyNamespace doesn't exist |
     
 
-  @Filters
-  Scenario Outline:  retrieve SAST results with the following filters: --filter-severity, --filter-category, --filter-status, --filter-cwe
-    Given there is a SAST environment configured and running
-    And running a scan for repository "<repoUrl>"
-    And filter-severity is "<filter-severity>" and filter-category is "<filter-category>" and filter-cwe "<filter-cwe>" and filter-status "<filter-status>"
-    Then output file will contain vulnerabilities <number>
-    Examples:
-      | repoUrl                                              | filter-severity | filter-category                             | filter-status | filter-cwe | number |
-      | https://github.com/cxflowtestuser/VB_3845.git        | High            |                                             |               |            | 2      |
-      | https://github.com/cxflowtestuser/VB_3845.git        | Medium          |                                             |               |            | 3      |
-      | https://github.com/cxflowtestuser/VB_3845.git        | High,Medium     |                                             |               |            | 5      |
-      | https://github.com/cxflowtestuser/VB_3845.git        |                 |                                             |               |            | 5      |
-      | https://github.com/cxflowtestuser/VB_3845.git        |                 | SQL_Injection                               |               | 89         | 2      |
-      | https://github.com/cxflowtestuser/Code_Injection.git | Medium          | CGI_Reflected_XSS_All_Clients               |               |            | 1      |
-      | https://github.com/cxflowtestuser/Code_Injection.git | High            | CGI_Reflected_XSS_All_Clients               |               | 79         | 0      |
-      | https://github.com/cxflowtestuser/Code_Injection.git |                 |                                             |               | 89         | 0      |
-      | https://github.com/cxflowtestuser/Code_Injection.git | Medium          | CGI_Reflected_XSS_All_Clients,SQL_Injection |               | 79         | 1      |
-      | https://github.com/cxflowtestuser/VB_3845.git        |                 |                                             | Urgent        |            | 0      |
-      ## TODO following 2 tests on filter-status are failing. Need to fix 
-      #| https://github.com/cxflowtestuser/VB_3845.git        | High            |                                             | To Verify,Urgent |            | 2      |
-      #| https://github.com/cxflowtestuser/VB_3845.git        |                 | CGI_Reflected_XSS_All_Clients               | To Verify        | 79         | 1      |
-      ## 79 = XSS_Reflected , 89 = SQL_Injection
-      | https://github.com/cxflowtestuser/BookStoreJava      |                 |                                             |               | 79,89      | 5      |
-
+ 
 
   @Parallel @Skip
   Scenario Outline: Run multiple different scans in parallel, each with different expected output
@@ -157,7 +158,7 @@ Feature: Check Integration tests command line functionality - scan.
 
     Examples:
       | repo_url                                                       | high | medium | low | scanType | branch                 |
-      | https://github.com/cxflowtestuser/Code_Injection.git           | 0    | 1      | 1   | Inc      | master                 |
+      | https://github.com/cxflowtestuser/Code_Injection.git           | 0    | 1      | 1   | Full      | master                 |
       | https://github.com/cxflowtestuser/VB_3845.git                  | 2    | 3      | 0   | Inc      | cxflowtestuser-patch-1 |
       | https://github.com/cxflowtestuser/amplify-multienv-example.git | 0    | 0      | 1   | Full     | master                 |
 
@@ -174,5 +175,5 @@ Feature: Check Integration tests command line functionality - scan.
       | high | medium | low | scanType | team         | LoggerScanStatus                                                              |
       | 2    | 3      | 0   | Full     | \CxServer\SP | SUCCESS                                                                       |
       | 2    | 3      | 0   | Inc      | \CxServer\SP | SUCCESS                                                                       |
-      | 2    | 3      | 0   | Inc      | invalidTeam  | Parent team could not be established.  Please ensure correct team is provided |
+      | 2    | 3      | 0   | Inc      | invalidTeam  | Parent team could not be established. Please ensure correct team is provided |
 

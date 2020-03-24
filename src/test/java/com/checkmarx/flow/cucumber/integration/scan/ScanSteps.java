@@ -1,43 +1,31 @@
 package com.checkmarx.flow.cucumber.integration.scan;
 
-import com.atlassian.httpclient.api.Common;
 import com.checkmarx.flow.CxFlowApplication;
-
-import com.checkmarx.flow.cucumber.integration.scan.AbstractScanSteps;
 
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.Status;
-import com.checkmarx.flow.dto.report.GetResultsReport;
-import com.checkmarx.flow.dto.report.ScanReport;
 import com.checkmarx.flow.exception.ExitThrowable;
 
-import com.checkmarx.sdk.config.CxProperties;
+import com.checkmarx.flow.utils.AesEncodingUtils;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
-import com.checkmarx.sdk.dto.cx.CxProject;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.cucumber.java.After;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 
-import jdk.internal.loader.ClassLoaders;
-import org.json.JSONObject;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.util.ClassUtils;
 import org.springframework.util.ResourceUtils;
 
 import java.io.*;
-import java.net.URL;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-import static java.lang.System.gc;
 import static org.junit.Assert.*;
 
 
@@ -234,20 +222,20 @@ public class ScanSteps extends AbstractScanSteps {
             if(this.repoType.equals(ScanRequest.Repository.GITHUB)) {
                 assertEquals( (ScanRequest.Repository.GITHUB.toString()),node.get("repoType").textValue());
                 assertEquals(this.branch, node.get("branch").textValue());
-                assertEquals(repoUrl, node.get("repoUrl").textValue());
+                assertEquals(repoUrl, AesEncodingUtils.decode(node.get("repoUrl").textValue().trim()));
             }else{
                 assertEquals("NA",node.get("repoType").textValue());
                 if(!errorExpected){
-                    assertEquals(fileRepo.getPath(),node.get("repoUrl").textValue());
+                    assertEquals(fileRepo.getPath(), AesEncodingUtils.decode(node.get("repoUrl").textValue().trim()));
                 }
             }
             
-            assertEquals(scanStatus, node.get("scanStatus").textValue());
+            assertTrue(node.get("scanStatus").textValue().startsWith(scanStatus));
             assertEquals(cxProperties.getIncremental() ? "Inc" : "Full", node.get("scanType").textValue());
             assertNotEquals("null", node.get("scanId").textValue() );
 
             
-        }catch (IOException e) {
+        }catch (IOException | CheckmarxException e) {
                 fail(e.getMessage());
                 
         }
