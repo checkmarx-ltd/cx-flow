@@ -258,12 +258,12 @@ workflows:
       - component-tests:
           requires:
             - build
-      - e2e-tests
-          # filters:
-          #   branches:
-          #     only: develop
-          # requires:
-          #   - deploy-cxflow
+      - e2e-tests:
+          filters:
+            branches:
+              only: develop
+          requires:
+            - deploy-cxflow
       - docker-push-stable:
           filters:
             branches:
