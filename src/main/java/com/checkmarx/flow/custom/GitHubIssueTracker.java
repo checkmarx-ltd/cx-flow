@@ -4,11 +4,13 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.dto.github.IssueStatus;
 import com.checkmarx.flow.dto.github.LabelsItem;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
+import com.google.common.collect.Sets;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -19,9 +21,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service("GitHub")
 public class GitHubIssueTracker implements IssueTracker {
@@ -185,13 +188,30 @@ public class GitHubIssueTracker implements IssueTracker {
         ResponseEntity<com.checkmarx.flow.dto.github.Issue> response;
         try {
             response = restTemplate.exchange(issue.getUrl(), HttpMethod.POST, httpEntity, com.checkmarx.flow.dto.github.Issue.class);
-            this.addComment(Objects.requireNonNull(response.getBody()).getUrl(),"Issue still exists. ");
+            addCommentToAnUpdatedIssue(Objects.requireNonNull(response.getBody()).getUrl(), createNewIssueStatus(issue, resultIssue, response.getBody()));
             return mapToIssue(response.getBody());
         } catch (HttpClientErrorException e) {
             handleIssueUpdateError(e);
             this.addComment(issue.getUrl(), "This issue still exists.  Please add label 'false-positive' to remove from scope of SAST results");
         }
         return this.getIssue(issue.getUrl());
+    }
+
+    private IssueStatus createNewIssueStatus(Issue issueBeforeFixing, ScanResults.XIssue resultIssue, com.checkmarx.flow.dto.github.Issue issueAfterFixing) {
+        Map<Integer, ScanResults.IssueDetails> sastFalsePositiveIssuesFromResult = getSASTFalsePositiveIssuesFromResult(resultIssue);
+        Map<String, String> sastResolvedIssuesFromResults = getSASTResolvedIssuesFromResults(issueBeforeFixing.getBody(), resultIssue);
+
+        IssueStatus issueStatus = IssueStatus.builder()
+                .sastResolvedIssuesFromResults(sastResolvedIssuesFromResults)
+                .openFalsePositiveLinesAsADescription(getNewFalsePositiveLines(sastFalsePositiveIssuesFromResult))
+                .totalOpenLinesForIssueBeforeFixing((extractGitHubIssueVulnerabilityCodeLines(issueAfterFixing.getBody()).size()))
+                .totalResolvedFalsePositiveLines(sastFalsePositiveIssuesFromResult.size())
+                .totalResolvedLinesFromResults(sastResolvedIssuesFromResults.size())
+                .build();
+
+        issueStatus.setTotalLinesToFixLeft(issueStatus.getTotalOpenLinesForIssueBeforeFixing());
+
+        return issueStatus;
     }
 
     private void handleIssueUpdateError(HttpClientErrorException e) {
@@ -203,6 +223,37 @@ public class GitHubIssueTracker implements IssueTracker {
         if (e.getStatusCode().equals(HttpStatus.GONE) || isForbidden) {
             throw new MachinaRuntimeException(e);
         }
+    }
+
+    private void addCommentToAnUpdatedIssue(String issueUrl, IssueStatus issueStatus) {
+        StringBuilder commentFormat = setIssueUpdatedDescription(issueStatus);
+        this.addComment(issueUrl, commentFormat.toString());
+    }
+
+    private StringBuilder setIssueUpdatedDescription(IssueStatus issueStatus) {
+        StringBuilder commentFormat = new StringBuilder();
+        commentFormat.append("Issue is still exists.\n");
+
+        if (!issueStatus.getSastResolvedIssuesFromResults().isEmpty()) {
+            commentFormat.append("The following code lines snippets were resolved from the issue:\n\n");
+            issueStatus.getSastResolvedIssuesFromResults().forEach((key, value) -> commentFormat.append("`Code line: ").append(key).append("`")
+                    .append("\n`Snippet: ").append(value).append("`").append("\n"));
+        }
+
+        if (!issueStatus.getOpenFalsePositiveLinesAsADescription().isEmpty()) {
+            commentFormat.append("\n");
+            commentFormat.append(issueStatus.getOpenFalsePositiveLinesAsADescription()).append("\n\n");
+        }
+
+        commentFormat.append("\n### **SUMMARY**\n\n");
+        if ((issueStatus.getTotalResolvedLinesFromResults() + issueStatus.getTotalResolvedFalsePositiveLines()) == 0) { // No Resolved vulnerabilities
+            commentFormat.append("Issue have total **").append(issueStatus.getTotalOpenLinesForIssueBeforeFixing()).append("** vulnerabilities left to be fix (Please scroll to the top for more information)");
+        } else {
+            commentFormat.append("- Total of vulnerabilities resolved on the last scan: **").append(issueStatus.getTotalResolvedLinesFromResults()).append("**");
+            commentFormat.append("\n- Total of vulnerabilities set as 'false positive' on the last scan: **").append(issueStatus.getTotalResolvedFalsePositiveLines()).append("**");
+            commentFormat.append("\n- Total of vulnerabilities left to fix for this issue: **").append(issueStatus.getTotalLinesToFixLeft()).append("**").append(" (Please scroll to the top for more information)");
+        }
+        return commentFormat;
     }
 
     /**
@@ -352,4 +403,87 @@ public class GitHubIssueTracker implements IssueTracker {
         return linkRelation.substring(positionOfEquals + 2, linkRelation.length() - 1).trim();
     }
 
+    private Map<Integer, ScanResults.IssueDetails> getSASTFalsePositiveIssuesFromResult(ScanResults.XIssue resultIssue) {
+        Map<Integer, ScanResults.IssueDetails> sastIssuesDetails = resultIssue.getDetails();
+        if (sastIssuesDetails != null) {
+            return sastIssuesDetails.entrySet()
+                    .stream()
+                    .filter(detailsEntry -> detailsEntry.getValue().isFalsePositive())
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        } else {
+            return new HashMap<>();
+        }
+    }
+
+    private String getNewFalsePositiveLines(Map<Integer, ScanResults.IssueDetails> newFalsePositiveIssuesMap) {
+        StringBuilder sb = new StringBuilder();
+
+        if (!newFalsePositiveIssuesMap.isEmpty()) {
+            sb.append("Following code lines were resolved by being defined as false-positive:\n\n");
+
+            newFalsePositiveIssuesMap.forEach((key, value) -> {
+                sb.append("`Code line: ").append(key).append("`").append("\n");
+                sb.append("`Snippet: ").append(value.getCodeSnippet().trim()).append("`").append("\n");
+            });
+        }
+        return sb.toString();
+    }
+
+    private Map<String, String> getSASTResolvedIssuesFromResults(String issueBody, ScanResults.XIssue resultIssue) {
+        Sets.SetView<String> differentCodeLinesSet;
+
+        Set<String> currentIssueCodeLines = extractGitHubIssueVulnerabilityCodeLines(issueBody);
+        Set<String> currentSASTResultCodeLines = extractSASTResultCodeLines(resultIssue);
+        if (currentIssueCodeLines.size() != currentSASTResultCodeLines.size()) {
+            differentCodeLinesSet = Sets.difference(currentIssueCodeLines, currentSASTResultCodeLines);// leaves only the different code lines which resolved
+            return extractGitHubIssueVulnerabilityCodeSnippet(differentCodeLinesSet, issueBody);
+        } else {
+            return new HashMap<>();
+        }
+
+    }
+
+    private Set<String> extractSASTResultCodeLines(ScanResults.XIssue resultIssue) {
+        return resultIssue.getDetails().entrySet()
+                .stream()
+                .map(e -> e.getKey().toString())
+                .collect(Collectors.toSet());
+    }
+
+    private Map<String, String> extractGitHubIssueVulnerabilityCodeSnippet(Set<String> resolvedIssueCodeLines, String issueBody) {
+        String codeSnippetForCodeLinePattern = "\\(Line #%s\\).*\\W\\`{3}\\W+(.*)(?=\\W+\\`{3})";
+        Map<String, String> sastResolvedIssuesMap = new HashMap<>();
+
+        for (String currentResolvedIssue : resolvedIssueCodeLines) {
+            String currentCodeLinePattern = String.format(codeSnippetForCodeLinePattern, currentResolvedIssue);
+
+            Pattern pattern = Pattern.compile(currentCodeLinePattern, Pattern.UNIX_LINES);
+            Matcher matcher = pattern.matcher(issueBody);
+
+            while (matcher.find()) {
+                sastResolvedIssuesMap.put(currentResolvedIssue, matcher.group(1));
+            }
+        }
+        return sastResolvedIssuesMap;
+    }
+
+    private Set<String> extractGitHubIssueVulnerabilityCodeLines(String issueBody) {
+        final String allNumbersAfterLinePattern = "Line #[0-9]+";
+        final String allNumbersPattern = "[0-9]+";
+
+        final Pattern allNumAfterLinePattern = Pattern.compile(allNumbersAfterLinePattern, Pattern.MULTILINE);
+        final Matcher allNumAfterLineMatcher = allNumAfterLinePattern.matcher(issueBody);
+
+        Set<String> codeLinesSet = new HashSet<>();
+
+        while(allNumAfterLineMatcher.find()) {
+            Pattern allNumPattern = Pattern.compile(allNumbersPattern, Pattern.MULTILINE);
+            Matcher allNumMatcher = allNumPattern.matcher(allNumAfterLineMatcher.group());
+
+            if (allNumMatcher.find()) {
+                codeLinesSet.add(allNumMatcher.group());
+            }
+        }
+        return codeLinesSet;
+    }
 }
