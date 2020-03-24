@@ -27,7 +27,7 @@ public class PullRequestReport extends AnalyticsReport {
         repoUrl = request.getRepoUrl();
         if(scanDetails.isOsaScan()){
             scanId = scanDetails.getOsaScanId();
-            scanType = OSA;
+            scanInitiator = OSA;
         }
     }
 

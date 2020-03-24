@@ -13,10 +13,16 @@ public class GetResultsReport extends AnalyticsReport {
 
     public GetResultsReport(Integer sastScanId, ScanRequest request) {
         super(sastScanId,request);
+        if(request.getRepoUrl() != null) {
+            setEncodedRepoUrl(request.getRepoUrl(), "");
+        }
     }
 
     public GetResultsReport(String osaSanId, ScanRequest request) {
         super(osaSanId,request);
+        if(request.getRepoUrl() != null) {
+            setEncodedRepoUrl(request.getRepoUrl(), "");
+        }
     }
 
     //adding underscore to prevent getOperation() to be called during logging of this object in log()

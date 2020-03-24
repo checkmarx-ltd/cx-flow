@@ -96,7 +96,7 @@ public  abstract class AbstractScanSteps {
 
     
     private ScanRequest generateRequest() {
-
+        
         ScanRequest request = ScanRequest.builder()
                 .application(this.application)
                 .product(this.product)
@@ -132,6 +132,7 @@ public  abstract class AbstractScanSteps {
         if(cxProperties.getIncremental()){
             request.setIncremental(true);
         }
+        cxProperties.setScanPolling(300);
         return request;
     }
 

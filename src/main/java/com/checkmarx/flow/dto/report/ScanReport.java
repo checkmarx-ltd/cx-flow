@@ -5,8 +5,6 @@ import com.checkmarx.flow.dto.Status;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-
-
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class ScanReport extends AnalyticsReport {
@@ -17,7 +15,7 @@ public class ScanReport extends AnalyticsReport {
     private String scanStatus;
     private String branch;
     private String repoType;
-
+    protected String scanType;
 
     public ScanReport(Integer sastScanId, ScanRequest request, String sourcesPath, Status status) {
         super(sastScanId,request);
@@ -32,18 +30,16 @@ public class ScanReport extends AnalyticsReport {
     private void setFields(ScanRequest request, String sourcesPath, Status status) {
         this.branch = request.getBranch();
         this.repoType = request.getRepoType().getRepository();
-
-        if(sourcesPath != null) {
-            repoUrl = sourcesPath;
-        }
+        this.scanStatus = setEncodedRepoUrl(sourcesPath, status.getMessage());
 
         if(request.isIncremental()){
             this.scanType = INCREMENTAL;
         }else{
             this.scanType = FULL;
         }
-        this.scanStatus = status.getMessage();
     }
+
+
 
     //adding underscore to prevent getOperation() to be called during logging of this object in log()
     //since we don't want the OPERATION to be a part of the logged object
@@ -51,4 +47,5 @@ public class ScanReport extends AnalyticsReport {
     public String _getOperation() {
         return OPERATION;
     }
+    
 }
