@@ -238,9 +238,9 @@ workflows:
           requires:
             - build
       - docker-build:
-#          filters:
-#            branches:
-#              only: develop
+          filters:
+            branches:
+              only: develop
           requires:
             - build
       - deploy-cxflow:
@@ -249,9 +249,9 @@ workflows:
           namespace: cxflow-$CIRCLE_BRANCH
           release-name: cxflow-$CIRCLE_BRANCH
           version: v3.1.1
-#          filters:
-#            branches:
-#              only: develop
+          filters:
+            branches:
+              only: develop
           requires:
             - build
             - docker-build
@@ -259,9 +259,9 @@ workflows:
           requires:
             - build
       - e2e-tests:
-#          filters:
-#            branches:
-#              only: develop
+          filters:
+            branches:
+              only: develop
           requires:
             - deploy-cxflow
       - docker-push-stable:
