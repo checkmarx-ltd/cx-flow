@@ -232,7 +232,7 @@ public class GitHubIssueTracker implements IssueTracker {
 
     private StringBuilder setIssueUpdatedDescription(IssueStatus issueStatus) {
         StringBuilder commentFormat = new StringBuilder();
-        commentFormat.append("Issue is still exists.\n");
+        commentFormat.append("Issue still exists.\n");
 
         if (!issueStatus.getSastResolvedIssuesFromResults().isEmpty()) {
             commentFormat.append("The following code lines snippets were resolved from the issue:\n\n");
