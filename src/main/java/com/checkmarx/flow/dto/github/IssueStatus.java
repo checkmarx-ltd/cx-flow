@@ -14,7 +14,7 @@ import java.util.Map;
 public class IssueStatus {
 
     private String openFalsePositiveLinesAsADescription;
-    private Map<String, String> sastResolvedIssuesFromResults;
+    private Map<String, String> sastResolvedIssuesFromResults; // key is code line, e.g. '60' and value is the code snippet, e.g. 'password = txtPassword.Text'
     private int totalOpenLinesForIssueBeforeFixing;
     private int totalResolvedFalsePositiveLines;
     private int totalResolvedLinesFromResults;
