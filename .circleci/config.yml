@@ -249,9 +249,9 @@ workflows:
           namespace: cxflow-$CIRCLE_BRANCH
           release-name: cxflow-$CIRCLE_BRANCH
           version: v3.1.1
-          filters:
-            branches:
-              only: develop
+#          filters:
+#            branches:
+#              only: develop
           requires:
             - build
             - docker-build
