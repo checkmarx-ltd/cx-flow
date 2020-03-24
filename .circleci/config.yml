@@ -238,9 +238,9 @@ workflows:
           requires:
             - build
       - docker-build:
-          filters:
-            branches:
-              only: develop
+#          filters:
+#            branches:
+#              only: develop
           requires:
             - build
       - deploy-cxflow:
