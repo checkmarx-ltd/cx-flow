@@ -323,10 +323,11 @@ public class GitHubToJiraSteps {
 
     private String getFileInBase64() throws IOException {
         String path = crumbsToPath(
-            "cucumber",
-            "data",
-            "input-files-toscan",
-            srcFile);
+                false,
+                "cucumber",
+                "data",
+                "input-files-toscan",
+                srcFile);
         try (InputStream is = getClass().getClassLoader().getResourceAsStream(path)) {
             try (
                     InputStreamReader isr = new InputStreamReader(is , Charset.forName("UTF-8"));
