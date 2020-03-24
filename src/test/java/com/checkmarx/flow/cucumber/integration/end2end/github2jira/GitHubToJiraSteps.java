@@ -100,7 +100,7 @@ public class GitHubToJiraSteps {
         String repo = Optional.ofNullable(System.getenv("HOOK_REPO")).orElse(properties.getProperty("repo"));
         String filePath = Optional.ofNullable(properties.getProperty("fileCreatePath"))
             .orElse("{fileCreatePath}")
-            .replace("{fileCreatePath}", crumbsToPath(false , "src","main","java","sample","encode.frm"));
+            .replace("{fileCreatePath}", "src/main/java/sample/encode.frm");
         hookTargetURL = Optional.ofNullable(System.getenv("HOOK_TARGET")).orElse(properties.getProperty("target"));
         COMMIT_FILE_PATH = String.format("%s/%s/%s/contents/%s", gitHubProperties.getApiUrl(), namespace, repo,
                 filePath);
@@ -323,12 +323,10 @@ public class GitHubToJiraSteps {
 
     private String getFileInBase64() throws IOException {
         String path = crumbsToPath(
-                false,
-                "cucumber",
-                "data",
-                "input-files-toscan",
-                srcFile
-        );
+            "cucumber",
+            "data",
+            "input-files-toscan",
+            srcFile);
         try (InputStream is = getClass().getClassLoader().getResourceAsStream(path)) {
             try (
                     InputStreamReader isr = new InputStreamReader(is , Charset.forName("UTF-8"));
