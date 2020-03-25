@@ -132,7 +132,7 @@ public  abstract class AbstractScanSteps {
         if(cxProperties.getIncremental()){
             request.setIncremental(true);
         }
-        cxProperties.setScanPolling(300);
+      
         return request;
     }
 
