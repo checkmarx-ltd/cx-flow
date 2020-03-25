@@ -51,11 +51,12 @@ public class AesEncodingUtils {
                 byte[] decordedValue = Base64.decode(encodedData);
                 byte[] decValue = c.doFinal(decordedValue);
                 return new String(decValue);
+            }else{
+                return null;
             }
         } catch (Exception e) {
             throw new CheckmarxException("Error decoding : " + e.getMessage());
         }
-        return null;
     }
 
     /**
