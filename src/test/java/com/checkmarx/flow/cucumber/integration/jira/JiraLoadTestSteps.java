@@ -10,6 +10,7 @@ import com.checkmarx.jira.JiraTestUtils;
 import com.checkmarx.jira.PublishUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
+import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
@@ -54,11 +55,15 @@ public class JiraLoadTestSteps {
         cxProperties.setOffline(true);
     }
 
+    @After("@JiraLoadTests")
+    public void cleanUp() {
+        jiraUtils.cleanProject(jiraProperties.getProject());
+    }
 
     @Before("@JiraLoadTests")
     public void cleanJiraProject() throws IOException {
-//        jiraUtils.ensureProjectExists(jiraProperties.getProject());
-//        jiraUtils.ensureIssueTypeExists(jiraProperties.getIssueType());
+        jiraUtils.ensureProjectExists(jiraProperties.getProject());
+        jiraUtils.ensureIssueTypeExists(jiraProperties.getIssueType());
         jiraUtils.cleanProject(jiraProperties.getProject());
     }
 
