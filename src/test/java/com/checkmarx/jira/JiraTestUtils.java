@@ -1,7 +1,9 @@
 package com.checkmarx.jira;
 
 import com.atlassian.jira.rest.client.api.JiraRestClient;
+import com.atlassian.jira.rest.client.api.domain.BasicProject;
 import com.atlassian.jira.rest.client.api.domain.Issue;
+import com.atlassian.jira.rest.client.api.domain.IssueType;
 import com.atlassian.jira.rest.client.api.domain.SearchResult;
 import com.atlassian.jira.rest.client.internal.async.CustomAsynchronousJiraRestClientFactory;
 import com.checkmarx.flow.config.JiraProperties;
@@ -202,14 +204,43 @@ Line #222:
     public void ensureProjectExists(String key) throws IOException {
         log.info("Making sure '{}' project exists in Jira.", key);
         ResourceCreationConfig config = getProjectCreationConfig(key);
-        tryCreateResource(config);
+        if (isProjectExits(key)) {
+            log.info("Project {} already exists.", key);
+            return;
+        }
+        ceateResource(config);
     }
+
+    private boolean isIssueTypeExits(String issueType) {
+        Iterable<IssueType> issueTypes =  client.getMetadataClient().getIssueTypes().claim();
+        for (IssueType it: issueTypes) {
+            if (it.getName().equals(issueType)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isProjectExits(String issueType) {
+        Iterable<BasicProject> projects =  client.getProjectClient().getAllProjects().claim();
+        for (BasicProject bp: projects) {
+            if (bp.getKey().equals(issueType)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     @Override
     public void ensureIssueTypeExists(String issueType) throws IOException {
         log.info("Making sure '{}' issue type exists in Jira.", issueType);
+        if (isIssueTypeExits(issueType)) {
+            log.info("Issue Type {} alreadt exists", issueType);
+            return;
+        }
         ResourceCreationConfig config = getIssueCreationConfig(issueType);
-        tryCreateResource(config);
+        ceateResource(config);
     }
 
     @Override
@@ -270,24 +301,15 @@ Line #222:
         return config;
     }
 
-    private void tryCreateResource(ResourceCreationConfig config)
+    private void ceateResource(ResourceCreationConfig config)
             throws IOException {
-        boolean alreadyExists = false, createdSuccessfully = false;
-        try {
-            ResponseEntity<JsonNode> response = sendCreationRequest(config);
-            createdSuccessfully = isResourceCreatedSuccessfully(response);
-        } catch (Exception e) {
-            alreadyExists = doesResourceAlreadyExist(e, config);
-        }
-
+        boolean createdSuccessfully = false;
+        ResponseEntity<JsonNode> response = sendCreationRequest(config);
+        createdSuccessfully = isResourceCreatedSuccessfully(response);
         if (createdSuccessfully) {
             log.info("{} created successfully.", config.resourceName);
-        } else if (alreadyExists) {
-            log.info("{} already exists", config.resourceName);
-        }
-
-        if (!createdSuccessfully && !alreadyExists) {
-            throw new IOException("Unable to create " + config.resourceName);
+        } else  {
+            throw new JiraUtilsException("Unable to create " + config.resourceName);
         }
     }
 
@@ -324,10 +346,14 @@ Line #222:
         return result;
     }
 
-    private ResponseEntity<JsonNode> sendCreationRequest(ResourceCreationConfig config)
-            throws URISyntaxException {
-        URI fullUri = new URI(jiraProperties.getUrl())
-                .resolve("/rest/api/2/" + config.resourceName);
+    private ResponseEntity<JsonNode> sendCreationRequest(ResourceCreationConfig config) {
+        URI fullUri = null;
+        try {
+            fullUri = new URI(jiraProperties.getUrl())
+                    .resolve("/rest/api/2/" + config.resourceName);
+        } catch (URISyntaxException e) {
+            throw new JiraUtilsException(String.format("Could not create resource: %s", config.resourceName), e);
+        }
 
         HttpEntity<ObjectNode> request = new HttpEntity<>(config.body, config.headers);
 
@@ -340,7 +366,7 @@ Line #222:
                 " 'projectTypeKey': 'software'," +
                 " 'projectTemplateKey': 'com.pyxis.greenhopper.jira:gh-scrum-template'," +
                 " 'description': 'Automation'," +
-                " 'lead': 'admin'," +
+                " 'leadAccountId': '5e3815a9e697e80e5b414719'," +
                 " 'assigneeType': 'PROJECT_LEAD'," +
                 " 'avatarId': 10200" +
                 " }")
