@@ -230,13 +230,13 @@ workflows:
   build_deploy:
     jobs:
       - build
-      - sonar:
-          context: sonarcloud
-          filters:
-            branches:
-              only: develop
-          requires:
-            - build
+#      - sonar:
+#          context: sonarcloud
+#          filters:
+#            branches:
+#              only: develop
+#          requires:
+#            - build
       - docker-build:
           filters:
             branches:
