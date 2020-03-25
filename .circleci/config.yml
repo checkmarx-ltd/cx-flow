@@ -212,7 +212,7 @@ jobs:
       - attach_workspace:
           at: .
       - run:
-          name: "Publish Release on GitHub"
+          name: Publish Release on GitHub
           command: |
             go get github.com/tcnksm/ghr
             VERSION=$(cat ./build/libs/version.txt)
