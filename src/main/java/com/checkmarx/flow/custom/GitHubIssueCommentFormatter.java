@@ -7,8 +7,7 @@ import com.google.common.collect.Sets;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -21,9 +20,8 @@ import java.util.stream.Collectors;
 @Data
 @Builder
 @AllArgsConstructor
+@Slf4j
 public class GitHubIssueCommentFormatter {
-
-    private static final Logger log = LoggerFactory.getLogger(GitHubIssueCommentFormatter.class);
 
     private String issueUrl;
     private ScanResults.XIssue resultIssue;
@@ -33,7 +31,8 @@ public class GitHubIssueCommentFormatter {
     private IssueStatus issueStatus;
     private StringBuilder issueDescription;
 
-    IssueStatus createNewIssueStatus(Issue issueBeforeUpdate, ScanResults.XIssue resultIssue, com.checkmarx.flow.dto.github.Issue issueAfterUpdate) {
+    IssueStatus createNewIssueStatus(Issue issueBeforeUpdate, ScanResults.XIssue resultIssue,
+                                     com.checkmarx.flow.dto.github.Issue issueAfterUpdate) {
         Map<Integer, ScanResults.IssueDetails> sastFalsePositiveIssuesFromResultMap = getSASTFalsePositiveIssuesFromResult(resultIssue);
         Map<String, String> sastResolvedIssuesFromResultsMap = getSASTResolvedIssuesFromResults(issueBeforeUpdate.getBody(), resultIssue);
 
@@ -73,7 +72,8 @@ public class GitHubIssueCommentFormatter {
         }
 
         commentFormat.append("\n### **SUMMARY**\n\n");
-        if ((issueStatus.getTotalResolvedLinesFromResults() + issueStatus.getTotalResolvedFalsePositiveLines()) == 0) { // No Resolved vulnerabilities
+        // No Resolved vulnerabilities
+        if ((issueStatus.getTotalResolvedLinesFromResults() + issueStatus.getTotalResolvedFalsePositiveLines()) == 0) {
             commentFormat.append("Issue has total **")
                     .append(issueStatus.getTotalOpenLinesForIssueBeforeFixing())
                     .append("** vulnerabilities left to be fix (Please scroll to the top for more information)");
@@ -124,7 +124,8 @@ public class GitHubIssueCommentFormatter {
         Set<String> currentIssueCodeLines = extractGitHubIssueVulnerabilityCodeLines(issueBody);
         Set<String> currentSASTResultCodeLines = extractSASTResultCodeLines(resultIssue);
         if (currentIssueCodeLines.size() != currentSASTResultCodeLines.size()) {
-            differentCodeLinesSet = Sets.difference(currentIssueCodeLines, currentSASTResultCodeLines);// leaves only the different code lines which resolved
+            // leaves only the different code lines which resolved
+            differentCodeLinesSet = Sets.difference(currentIssueCodeLines, currentSASTResultCodeLines);
             return extractGitHubIssueVulnerabilityCodeSnippet(differentCodeLinesSet, issueBody);
         } else {
             return new HashMap<>();
