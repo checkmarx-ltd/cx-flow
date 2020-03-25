@@ -13,7 +13,8 @@ public abstract class AnalyticsReport {
 
     protected static final Logger jsonlogger = LoggerFactory.getLogger("jsonLogger");
     protected static final Logger log = org.slf4j.LoggerFactory.getLogger(AnalyticsReport.class);
-    
+
+    protected static final String NOT_APPLICABLE = "NA";
     public static final String SAST = "SAST";
     public static final String OSA = "OSA";
 
@@ -24,13 +25,16 @@ public abstract class AnalyticsReport {
     public AnalyticsReport(String scanId, ScanRequest request) {
         this.scanId = scanId;
         scanInitiator = OSA;
+        if(scanId==null){
+            this.scanId = NOT_APPLICABLE;
+        }
     }
 
     public AnalyticsReport(Integer scanId, ScanRequest request) {
         if(scanId!=null) {
             this.scanId = scanId.toString();
         }else{
-            this.scanId = null;
+            this.scanId = NOT_APPLICABLE;
         }
         scanInitiator = SAST;
     }
@@ -52,7 +56,7 @@ public abstract class AnalyticsReport {
             return outputMsg;
 
         } catch (CheckmarxException e) {
-            this.repoUrl = null;
+            this.repoUrl = NOT_APPLICABLE;
             outputMsg = "Unable to encode repoUrl " + e.getMessage();
             log.error(outputMsg);
             return outputMsg;

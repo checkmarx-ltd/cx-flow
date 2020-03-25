@@ -30,6 +30,9 @@ public class ScanReport extends AnalyticsReport {
     private void setFields(ScanRequest request, String sourcesPath, Status status) {
         this.branch = request.getBranch();
         this.repoType = request.getRepoType().getRepository();
+        if(branch == null){
+            branch = NOT_APPLICABLE;
+        }
         this.scanStatus = setEncodedRepoUrl(sourcesPath, status.getMessage());
 
         if(request.isIncremental()){

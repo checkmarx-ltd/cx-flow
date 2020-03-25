@@ -47,14 +47,8 @@ public class PullRequestReport extends AnalyticsReport {
         return OPERATION;
     }
 
-    public void setFindingsPerSeverity(Iterable<Map.Entry<FindingSeverity, Integer>> findingsPerSeverity) {
-
-        Map<FindingSeverity, Integer> findingsMap = new HashMap<>();
-        
-        for (Map.Entry<FindingSeverity, Integer> entry: findingsPerSeverity) {
-            findingsMap.put(entry.getKey(),entry.getValue() );
-        }
-        this.findingsPerSeverity = findingsMap;
+    public void setFindingsPerSeverity(Map<FindingSeverity, Integer> findingsPerSeverity) {
+        this.findingsPerSeverity = findingsPerSeverity;
     }
 
     public void setThresholds(Map<FindingSeverity, Integer> thresholds) {

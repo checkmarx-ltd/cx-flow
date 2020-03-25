@@ -226,7 +226,7 @@ public class ScanSteps extends AbstractScanSteps {
             
             assertTrue(node.get("scanStatus").textValue().startsWith(scanStatus));
             assertEquals(cxProperties.getIncremental() ? "Inc" : "Full", node.get("scanType").textValue());
-            assertNotEquals("null", node.get("scanId").textValue() );
+            assertNotEquals("NA", node.get("scanId").textValue() );
 
             
         }catch (IOException | CheckmarxException e) {
