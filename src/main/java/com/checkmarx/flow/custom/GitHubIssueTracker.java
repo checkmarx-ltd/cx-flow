@@ -4,6 +4,7 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.dto.github.IssueStatus;
 import com.checkmarx.flow.dto.github.LabelsItem;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
@@ -195,7 +196,8 @@ public class GitHubIssueTracker implements IssueTracker {
         return this.getIssue(issue.getUrl());
     }
 
-    private GitHubIssueCommentFormatter createNewCommentFormatter(Issue issue, ScanResults.XIssue resultIssue, ResponseEntity<com.checkmarx.flow.dto.github.Issue> response) {
+    private GitHubIssueCommentFormatter createNewCommentFormatter(Issue issue, ScanResults.XIssue resultIssue,
+                                                                  ResponseEntity<com.checkmarx.flow.dto.github.Issue> response) {
         GitHubIssueCommentFormatter commentFormatter = GitHubIssueCommentFormatter.builder()
                 .issueUrl(Objects.requireNonNull(response.getBody()).getUrl())
                 .resultIssue(resultIssue)
@@ -203,8 +205,10 @@ public class GitHubIssueTracker implements IssueTracker {
                 .gitHubIssueAfterUpdate(response.getBody())
                 .build();
 
-        commentFormatter.setIssueStatus(commentFormatter.createNewIssueStatus(issue, resultIssue, response.getBody()));
-        commentFormatter.setIssueDescription(commentFormatter.getUpdatedIssueComment(commentFormatter.getIssueStatus()));
+        IssueStatus newIssueStatus = commentFormatter.createNewIssueStatus(issue, resultIssue, response.getBody());
+        commentFormatter.setIssueStatus(newIssueStatus);
+        StringBuilder updatedIssueComment = commentFormatter.getUpdatedIssueComment(commentFormatter.getIssueStatus());
+        commentFormatter.setIssueDescription(updatedIssueComment);
 
         return commentFormatter;
     }
