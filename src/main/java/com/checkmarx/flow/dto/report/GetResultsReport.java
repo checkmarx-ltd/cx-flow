@@ -18,8 +18,8 @@ public class GetResultsReport extends AnalyticsReport {
         }
     }
 
-    public GetResultsReport(String osaSanId, ScanRequest request) {
-        super(osaSanId,request);
+    public GetResultsReport(String osaScanId, ScanRequest request) {
+        super(osaScanId,request);
         if(request.getRepoUrl() != null) {
             setEncodedRepoUrl(request.getRepoUrl(), "");
         }
