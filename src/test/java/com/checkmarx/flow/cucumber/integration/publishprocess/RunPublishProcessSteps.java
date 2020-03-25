@@ -3,6 +3,7 @@ package com.checkmarx.flow.cucumber.integration.publishprocess;
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.jira.IPublishUtils;
 import com.checkmarx.jira.PublishUtils;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
@@ -27,7 +28,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-@SpringBootTest(classes = {CxFlowApplication.class, JiraTestUtils.class})
+@SpringBootTest(classes = {CxFlowApplication.class, JiraTestUtils.class, PublishUtils.class})
 public class RunPublishProcessSteps {
 
     private BugTracker.Type bugTracker;
@@ -44,19 +45,13 @@ public class RunPublishProcessSteps {
     private IJiraTestUtils jiraUtils;
 
     @Autowired
-    private FlowService flowService;
-
-    @Autowired
-    private FlowProperties flowProperties;
-
-    @Autowired
     private CxProperties cxProperties;
 
     @Autowired
     private JiraProperties jiraProperties;
 
     @Autowired
-    private PublishUtils publishUtils;
+    private IPublishUtils publishUtils;
 
     private FindingsType findingsType;
 

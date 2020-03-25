@@ -10,13 +10,12 @@ import com.checkmarx.sdk.config.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestComponent;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
 
 @TestComponent
-public class PublishUtils {
+public class PublishUtils implements IPublishUtils {
 
     @Autowired
     private JiraProperties jiraProperties;
@@ -27,10 +26,12 @@ public class PublishUtils {
     @Autowired
     private FlowService flowService;
 
+    @Override
     public File getFileFromResourcePath(String path) throws IOException {
         return new ClassPathResource(path).getFile();
     }
 
+    @Override
     public BugTracker createJiraBugTracker() {
         return BugTracker.builder()
                 .issueType(jiraProperties.getIssueType())
@@ -44,12 +45,14 @@ public class PublishUtils {
                 .build();
     }
 
+    @Override
     public void publishRequest(ScanRequest request, File file, BugTracker.Type bugTrackerType) throws ExitThrowable {
         request.setBugTracker(createJiraBugTracker());
         flowProperties.setBugTracker(bugTrackerType.name());
         flowService.cxParseResults(request, file);
     }
 
+    @Override
     public ScanRequest getScanRequestWithDefaults() {
         return ScanRequest.builder()
                 .application("App1")
