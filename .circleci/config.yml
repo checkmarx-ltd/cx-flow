@@ -253,7 +253,6 @@ workflows:
             branches:
               only: develop
           requires:
-            - build
             - docker-build
       - component-tests:
           requires:
