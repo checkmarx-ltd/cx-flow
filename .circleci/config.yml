@@ -170,11 +170,13 @@ jobs:
   e2e-tests:
     docker:
       - image: "circleci/openjdk:8-jdk"
+    environment:
+      JIRA_PROJECT: E2E
     steps:
       - checkout 
       - run:
           name: Run E2E Tests
-          command: ./gradlew clean e2eTests --info -Dgithub-webhook-token=${GITHUB_WEBHOOK_TOKEN} -Dgithub-token=${GITHUB_TOKEN} -Djira-token=${JIRA_TOKEN} -Dtarget=${HOOK_TARGET} -Drepo=${HOOK_REPO} -Dnamespace=${HOOK_NAMESPACE} -Dcheckmarx-username=${CHECKMARX_USERNAME} -Dcheckmarx-password=${CHECKMARX_PASSWORD} -Dcheckmarx-client-secret=${CHECKMARX_CLIENT_SECRET} -Djira-url=${JIRA_URL} -Dcheckmarx-base-url=${BASE_URL} -Djira-username=${JIRA_USERNAME}
+          command: ./gradlew clean e2eTests --info -Dgithub-webhook-token=${GITHUB_WEBHOOK_TOKEN} -Dgithub-token=${GITHUB_TOKEN} -Djira-token=${JIRA_TOKEN} -Dtarget=${HOOK_TARGET} -Drepo=${HOOK_REPO} -Dnamespace=${HOOK_NAMESPACE} -Dcheckmarx-username=${CHECKMARX_USERNAME} -Dcheckmarx-password=${CHECKMARX_PASSWORD} -Dcheckmarx-client-secret=${CHECKMARX_CLIENT_SECRET} -Djira-url=${JIRA_URL} -Dcheckmarx-base-url=${BASE_URL} -Djira-username=${JIRA_USERNAME} -Djira-project=${JIRA_PROJECT}
       - run:
           name: Save test results
           command: |
