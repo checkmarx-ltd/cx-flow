@@ -3,8 +3,7 @@ package com.checkmarx.flow.dto.report;
 import com.checkmarx.flow.config.FindingSeverity;
 import com.checkmarx.flow.dto.ScanDetails;
 import com.checkmarx.flow.dto.ScanRequest;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,28 +11,21 @@ import java.util.Map;
 import static net.logstash.logback.marker.Markers.append;
 import static net.logstash.logback.marker.Markers.appendEntries;
 
-@Data
-@EqualsAndHashCode(callSuper = true)
+
+@Getter
 public class PullRequestReport extends AnalyticsReport {
 
     public static final String OPERATION = "Pull Request";
 
     private String pullRequestStatus;
 
-    private Integer findingsHigh = 0;
-    private Integer findingsMedium = 0;
-    private Integer findingsLow = 0;
-    private Integer findingsInfo = 0;
-    
-    private Integer thresholdsHigh = 0;
-    private Integer thresholdsMedium = 0;
-    private Integer thresholdsLow = 0;
-    private Integer thresholdsInfo;
+    private Map<FindingSeverity, Integer> findingsPerSeverity = null;
+    private Map<FindingSeverity, Integer> thresholds = null;
 
 
     public PullRequestReport(ScanDetails scanDetails, ScanRequest request) {
         super(scanDetails.getScanId(), request);
-        
+
         repoUrl = request.getRepoUrl();
         if(scanDetails.isOsaScan()){
             scanId = scanDetails.getOsaScanId();
@@ -42,10 +34,6 @@ public class PullRequestReport extends AnalyticsReport {
     }
 
 
-    public String getPullRequestStatus() {
-        return pullRequestStatus;
-    }
-    
     public void setPullRequestStatus(String status){
         this.pullRequestStatus = status;
     }
@@ -57,19 +45,23 @@ public class PullRequestReport extends AnalyticsReport {
         return OPERATION;
     }
 
-    public void setFindingsPerSeverity(Map<FindingSeverity, Integer> findingsPerSeverity) {
-        this.findingsHigh= findingsPerSeverity.get(FindingSeverity.HIGH);
-        this.findingsMedium= findingsPerSeverity.get(FindingSeverity.MEDIUM);
-        this.findingsLow= findingsPerSeverity.get(FindingSeverity.LOW);
-        this.findingsInfo= findingsPerSeverity.get(FindingSeverity.INFO);
-        
+    public void setFindingsPerSeverity(Iterable<Map.Entry<FindingSeverity, Integer>> findingsPerSeverity) {
+
+        Map<FindingSeverity, Integer> findingsMap = new HashMap<>();
+
+        for (Map.Entry<FindingSeverity, Integer> entry: findingsPerSeverity) {
+            findingsMap.put(entry.getKey(),entry.getValue() );
+        }
+        this.findingsPerSeverity = findingsMap;
     }
 
     public void setThresholds(Map<FindingSeverity, Integer> thresholds) {
-        this.thresholdsHigh = thresholds.get(FindingSeverity.HIGH);
-        this.thresholdsMedium = thresholds.get(FindingSeverity.MEDIUM);
-        this.thresholdsLow = thresholds.get(FindingSeverity.LOW);
-        this.thresholdsInfo = thresholds.get(FindingSeverity.LOW);
-        
+        this.thresholds = thresholds;
+    }
+
+    @Override
+    public void log()  {
+        jsonlogger.info(append(_getOperation() , this), "");
+
     }
 }

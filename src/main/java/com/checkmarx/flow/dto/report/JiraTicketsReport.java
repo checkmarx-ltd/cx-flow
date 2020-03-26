@@ -14,10 +14,7 @@ import java.util.List;
 public class JiraTicketsReport extends AnalyticsReport{
 
     public static final String OPERATION = "Jira Tickets Creation";
-    private static final CharSequence DELIMITER = ",";
-    private String closedJiraIssues;
-    private String updatedJiraIssues;
-    private String newJiraIssues;
+    private ImmutableMap<String, List<String>> jiraTickets;
 
     public JiraTicketsReport(Integer sastScanId, ScanRequest request, ScanResults results) {
         super(sastScanId,request);
@@ -38,9 +35,7 @@ public class JiraTicketsReport extends AnalyticsReport{
     }
 
     public JiraTicketsReport build(ImmutableMap<String, List<String>> ticketsMap) {
-        this.newJiraIssues = String.join(DELIMITER,ticketsMap.get(JiraConstants.NEW_TICKET));
-        this.updatedJiraIssues = String.join(DELIMITER,ticketsMap.get(JiraConstants.UPDATED_TICKET));
-        this.closedJiraIssues = String.join(DELIMITER,ticketsMap.get(JiraConstants.UPDATED_TICKET));
+        this.jiraTickets = ticketsMap;
         return this;
     }
 
