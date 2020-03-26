@@ -9,7 +9,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class ScanReport extends AnalyticsReport {
 
-    private static final String OPERATION = "Scan Request";
+    public static final String OPERATION = "Scan Request";
     private static final String INCREMENTAL = "Inc";
     private static final String FULL = "Full";
     private String scanStatus;

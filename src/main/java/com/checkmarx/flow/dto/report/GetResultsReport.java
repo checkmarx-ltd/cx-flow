@@ -15,7 +15,7 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = true)
 public class GetResultsReport extends AnalyticsReport {
     
-    private static final String OPERATION = "Get Request";
+    public static final String OPERATION = "Get Request";
     private Integer highSeveryResults = 0;
     private Integer mediumSeveryResults= 0;
     private Integer lowSeveryResults = 0;
@@ -28,13 +28,13 @@ public class GetResultsReport extends AnalyticsReport {
     public GetResultsReport(Integer sastScanId, ScanRequest request, ScanResults results) {
         super(sastScanId,request);
         setResults(results);
-        setRepoUrl(request);
+        setEncodedRepoUrl(request.getRepoUrl());
     }
 
     public GetResultsReport(String osaScanId, ScanRequest request, ScanResults results) {
         super(osaScanId,request);
         setResults(results);
-        setRepoUrl(request);
+        setEncodedRepoUrl(request.getRepoUrl());
     }
 
     private void setResults(ScanResults results) {
@@ -59,14 +59,6 @@ public class GetResultsReport extends AnalyticsReport {
         }
     }
     
-    private void setRepoUrl(ScanRequest request) {
-        if(request.getRepoUrl() != null) {
-            setEncodedRepoUrl(request.getRepoUrl(), "");
-        }else{
-            repoUrl = NOT_APPLICABLE;
-        }
-    }
-
     //adding underscore to prevent getOperation() to be called during logging of this object in log()
     //since we don't want the OPERATION to be a part of the logged object
     @Override

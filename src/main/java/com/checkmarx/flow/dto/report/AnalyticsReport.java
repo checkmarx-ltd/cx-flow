@@ -47,12 +47,19 @@ public abstract class AnalyticsReport {
     //since we don't want the OPERATION to be a part of the logged object
     protected abstract String _getOperation();
 
+    protected String setEncodedRepoUrl(String sourcesPath){
+        return setEncodedRepoUrl(sourcesPath, "");
+    }
+    
     protected String setEncodedRepoUrl(String sourcesPath, String outputMsg) {
-        if(sourcesPath != null) {
-            repoUrl = sourcesPath;
-        }
         try {
-            this.repoUrl = AesEncodingUtils.encode(repoUrl);
+            if(sourcesPath != null) {
+                repoUrl = sourcesPath;
+                this.repoUrl = AesEncodingUtils.encode(repoUrl);
+            }else{
+                repoUrl = NOT_APPLICABLE;
+            }
+            
             return outputMsg;
 
         } catch (CheckmarxException e) {

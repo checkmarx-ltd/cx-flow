@@ -148,7 +148,9 @@ Feature: Check Integration tests command line functionality - scan.
 
 
 
-  @Json 
+ 
+  
+  @AnalyticsJson
   Scenario Outline: test scan with different vulnerabilities numbers and verify the json scan report
     Given there is a SAST environment configured and running
     When  running a scan for repository "<repo_url>"
@@ -158,12 +160,12 @@ Feature: Check Integration tests command line functionality - scan.
 
     Examples:
       | repo_url                                                       | high | medium | low | scanType | branch                 |
-      | https://github.com/cxflowtestuser/Code_Injection.git           | 0    | 1      | 1   | Full      | master                 |
+      | https://github.com/cxflowtestuser/Code_Injection.git           | 0    | 1      | 1   | Full     | master                 |
       | https://github.com/cxflowtestuser/VB_3845.git                  | 2    | 3      | 0   | Inc      | cxflowtestuser-patch-1 |
       | https://github.com/cxflowtestuser/amplify-multienv-example.git | 0    | 0      | 1   | Full     | master                 |
 
 
-  @Json @File 
+  @AnalyticsJson @File
   Scenario Outline: test scan for file system repository with different vulnerabilities and verify the json scan report
     Given there is a SAST environment configured and running
     When running a scan for a specified folder
@@ -176,4 +178,3 @@ Feature: Check Integration tests command line functionality - scan.
       | 2    | 3      | 0   | Full     | \CxServer\SP | SUCCESS                                                                       |
       | 2    | 3      | 0   | Inc      | \CxServer\SP | SUCCESS                                                                       |
       | 2    | 3      | 0   | Inc      | invalidTeam  | Parent team could not be established. Please ensure correct team is provided |
-

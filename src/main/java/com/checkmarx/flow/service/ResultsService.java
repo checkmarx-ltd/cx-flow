@@ -135,7 +135,7 @@ public class ResultsService {
                 log.info("Issue tracking is turned off");
                 break;
             case JIRA:
-                handleJiraCase(request, results);
+                handleJiraCase(request, results, scanDetails);
                 break;
             case GITHUBPULL:
                 gitService.processPull(request, results);
@@ -210,10 +210,10 @@ public class ResultsService {
         }
     }
 
-    private void handleJiraCase(ScanRequest request, ScanResults results) throws JiraClientException {
+    private void handleJiraCase(ScanRequest request, ScanResults results, ScanDetails scanDetails) throws JiraClientException {
         try {
             log.info("======== Processing results with JIRA issue tracking ========");
-            jiraService.process(results, request);
+            jiraService.process(results, request, scanDetails);
         } catch (RestClientException e) {
             handleJiraRestClientException(e);
         } catch (JiraClientException e) {

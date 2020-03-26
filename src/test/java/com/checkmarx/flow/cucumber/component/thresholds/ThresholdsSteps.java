@@ -14,6 +14,7 @@ import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
+import com.checkmarx.sdk.dto.cx.CxScanSummary;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
 import com.checkmarx.test.flow.config.CxFlowMocksConfig;
@@ -217,7 +218,9 @@ public class ThresholdsSteps {
 
     private static ScanResults createFakeScanResults() {
         ScanResults result = new ScanResults();
-
+        
+        result.setScanSummary(new CxScanSummary());
+        
         Map<String, Object> details = new HashMap<>();
         details.put(Constants.SUMMARY_KEY, new HashMap<>());
         result.setAdditionalDetails(details);
