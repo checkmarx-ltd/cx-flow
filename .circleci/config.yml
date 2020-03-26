@@ -152,6 +152,10 @@ jobs:
               --set cxflow.checkmarxClientSecret=${CHECKMARX_CLIENT_SECRET} \
               --set cxflow.jiraToken=${JIRA_TOKEN} \
               << parameters.chart >>
+      - run:
+          name: Show running pods
+          command: |
+            kubectl get pods -n cxflow-$CIRCLE_BRANCH
 
   component-tests:
     docker:
