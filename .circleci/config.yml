@@ -177,15 +177,13 @@ jobs:
   e2e-tests:
     docker:
       - image: "circleci/openjdk:8-jdk"
-    environment:
-      HOOK_TARGET: https://cxflow-$CIRCLE_BRANCH.$EXTERNAL_DNS_DOMAIN
     steps:
       - checkout 
       - run:
           name: Run E2E Tests
           command: |
             echo "HOOK_TARGET: ${HOOK_TARGET}"
-            ./gradlew clean e2eTests --info -Dtarget=${HOOK_TARGET} -Drepo=${HOOK_REPO} -Dnamespace=${HOOK_NAMESPACE}
+            ./gradlew clean e2eTests --info -Dtarget="https://cxflow-${CIRCLE_BRANCH}.${EXTERNAL_DNS_DOMAIN}" -Drepo=${HOOK_REPO} -Dnamespace=${HOOK_NAMESPACE}
       - run:
           name: Save test results
           command: |
@@ -251,20 +249,24 @@ workflows:
       - docker-build:
           requires:
             - build
+          filters:
+            branches:
+              only: develop
       - deploy-cxflow:
           cluster-name: eks-cxflow-ci
           chart: ./helm/cxflow
           namespace: cxflow-$CIRCLE_BRANCH
           release-name: cxflow-$CIRCLE_BRANCH
           version: v3.1.1
+          filters:
+            branches:
+              only: develop
           requires:
             - docker-build
       - component-tests:
           requires:
             - build
-      - e2e-tests:
-          requires:
-            - deploy-cxflow
+      - e2e-tests
       - docker-push-stable:
           filters:
             branches:
