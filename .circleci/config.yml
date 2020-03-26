@@ -14,6 +14,11 @@ jobs:
       MAVEN_OPTS: -Xmx3200m
     steps:
       - checkout
+      - run:
+          name: Echo env variables
+          command: |
+            echo "CIRCLE_PULL_REQUEST: ${CIRCLE_PULL_REQUEST}"
+            echo "CIRCLE_PULL_REQUESTS: ${CIRCLE_PULL_REQUESTS}"
       - restore_cache:
           key: v1-gradle-wrapper-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}
       - restore_cache:
