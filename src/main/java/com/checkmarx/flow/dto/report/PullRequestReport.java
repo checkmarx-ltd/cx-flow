@@ -19,7 +19,7 @@ public class PullRequestReport extends AnalyticsReport {
 
     private String pullRequestStatus;
 
-    private Map<FindingSeverity, Integer> findingsPerSeverity = null;
+    private Map<FindingSeverity, Integer> findingsMap = null;
     private Map<FindingSeverity, Integer> thresholds = null;
 
 
@@ -45,14 +45,8 @@ public class PullRequestReport extends AnalyticsReport {
         return OPERATION;
     }
 
-    public void setFindingsPerSeverity(Iterable<Map.Entry<FindingSeverity, Integer>> findingsPerSeverity) {
-
-        Map<FindingSeverity, Integer> findingsMap = new HashMap<>();
-
-        for (Map.Entry<FindingSeverity, Integer> entry: findingsPerSeverity) {
-            findingsMap.put(entry.getKey(),entry.getValue() );
-        }
-        this.findingsPerSeverity = findingsMap;
+    public void setFindingsPerSeverity(Map<FindingSeverity, Integer> findingsMap) {
+        this.findingsMap = findingsMap;
     }
 
     public void setThresholds(Map<FindingSeverity, Integer> thresholds) {
