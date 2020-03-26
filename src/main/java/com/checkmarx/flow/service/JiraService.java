@@ -989,6 +989,8 @@ public class JiraService {
         }
         else if(scanDetails.getOsaScanId() != null) {
             new JiraTicketsReport(scanDetails.getOsaScanId(), request, results).build(ticketsMap).log();
+        }else{
+            new JiraTicketsReport(request, results).build(ticketsMap).log();
         }
     }
 

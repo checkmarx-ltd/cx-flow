@@ -125,6 +125,10 @@ public class ResultsService {
     }
 
     void processResults(ScanRequest request, ScanResults results, ScanDetails scanDetails) throws MachinaException {
+        
+        if(scanDetails == null){
+            scanDetails = new ScanDetails();
+        }
         if(!cxProperties.getOffline()) {
             getCxFields(request, results);
         }

@@ -16,6 +16,13 @@ public class JiraTicketsReport extends AnalyticsReport{
     public static final String OPERATION = "Jira Tickets Creation";
     private ImmutableMap<String, List<String>> jiraTickets;
 
+    public JiraTicketsReport(ScanRequest request, ScanResults results) {
+        this.scanId = NOT_APPLICABLE;
+        scanInitiator = NOT_APPLICABLE;
+        projectName = request.getProject();
+        setEncodedRepoUrl(request.getRepoUrl());
+    }
+    
     public JiraTicketsReport(Integer sastScanId, ScanRequest request, ScanResults results) {
         super(sastScanId,request);
         setEncodedRepoUrl(request.getRepoUrl());

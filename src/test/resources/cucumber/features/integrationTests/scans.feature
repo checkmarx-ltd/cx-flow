@@ -160,10 +160,10 @@ Feature: Check Integration tests command line functionality - scan.
 
     Examples:
       | repo_url                                                       | high | medium | low | scanType | branch                 |
+      | https://github.com/cxflowtestuser/amplify-multienv-example.git | 0    | 0      | 1   | Full     | master                 |
       | https://github.com/cxflowtestuser/Code_Injection.git           | 0    | 1      | 1   | Full     | master                 |
       | https://github.com/cxflowtestuser/VB_3845.git                  | 2    | 3      | 0   | Inc      | cxflowtestuser-patch-1 |
-      | https://github.com/cxflowtestuser/amplify-multienv-example.git | 0    | 0      | 1   | Full     | master                 |
-
+  
 
   @AnalyticsJson @File
   Scenario Outline: test scan for file system repository with different vulnerabilities and verify the json scan report

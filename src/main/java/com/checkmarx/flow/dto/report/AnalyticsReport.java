@@ -17,10 +17,14 @@ public abstract class AnalyticsReport {
     protected static final String NOT_APPLICABLE = "NA";
     public static final String SAST = "SAST";
     public static final String OSA = "OSA";
-
+    
+    protected String projectName = NOT_APPLICABLE;
     protected String repoUrl = null;
     protected String scanInitiator;
     protected String scanId;
+
+
+    public AnalyticsReport(){}
     
     public AnalyticsReport(String scanId, ScanRequest request) {
         this.scanId = scanId;
@@ -28,6 +32,7 @@ public abstract class AnalyticsReport {
         if(scanId==null){
             this.scanId = NOT_APPLICABLE;
         }
+        this.projectName = request.getProject();
     }
 
     public AnalyticsReport(Integer scanId, ScanRequest request) {
@@ -36,6 +41,7 @@ public abstract class AnalyticsReport {
         }else{
             this.scanId = NOT_APPLICABLE;
         }
+        this.projectName = request.getProject();
         scanInitiator = SAST;
     }
     
