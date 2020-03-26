@@ -76,6 +76,8 @@ spec:
               value: {{ .Values.cxflow.jiraUrl }}
             - name: JIRA_USERNAME
               value: {{ .Values.cxflow.jiraUserName }}
+            - name: JIRA_PROJECT
+              value: {{ .Values.cxflow.jiraProject }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
