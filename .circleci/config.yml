@@ -178,7 +178,7 @@ jobs:
     docker:
       - image: "circleci/openjdk:8-jdk"
     environment:
-      HOOK_TARGET: cxflow-$CIRCLE_BRANCH.$EXTERNAL_DNS_DOMAIN
+      HOOK_TARGET: https://cxflow-$CIRCLE_BRANCH.$EXTERNAL_DNS_DOMAIN
     steps:
       - checkout 
       - run:
@@ -262,7 +262,9 @@ workflows:
       - component-tests:
           requires:
             - build
-      - e2e-tests
+      - e2e-tests:
+          requires:
+            - deploy-cxflow
       - docker-push-stable:
           filters:
             branches:
