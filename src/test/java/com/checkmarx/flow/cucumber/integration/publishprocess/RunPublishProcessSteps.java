@@ -3,13 +3,14 @@ package com.checkmarx.flow.cucumber.integration.publishprocess;
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.jira.IPublishUtils;
+import com.checkmarx.jira.PublishUtils;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.jira.IJiraTestUtils;
 import com.checkmarx.jira.JiraTestUtils;
-import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.Filter;
 import io.cucumber.java.Before;
@@ -19,7 +20,6 @@ import io.cucumber.java.en.When;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.io.ClassPathResource;
 import org.junit.Assert;
 
 import java.io.File;
@@ -28,7 +28,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-@SpringBootTest(classes = {CxFlowApplication.class, JiraTestUtils.class})
+@SpringBootTest(classes = {CxFlowApplication.class, JiraTestUtils.class, PublishUtils.class})
 public class RunPublishProcessSteps {
 
     private BugTracker.Type bugTracker;
@@ -45,16 +45,13 @@ public class RunPublishProcessSteps {
     private IJiraTestUtils jiraUtils;
 
     @Autowired
-    private FlowService flowService;
-
-    @Autowired
-    private FlowProperties flowProperties;
-
-    @Autowired
     private CxProperties cxProperties;
 
     @Autowired
     private JiraProperties jiraProperties;
+
+    @Autowired
+    private IPublishUtils publishUtils;
 
     private FindingsType findingsType;
 
@@ -173,9 +170,7 @@ public class RunPublishProcessSteps {
     }
 
     private void innerPublishRequest(ScanRequest request, File file) throws ExitThrowable {
-        request.setBugTracker(createJiraBugTracker());
-        flowProperties.setBugTracker(bugTracker.name());
-        flowService.cxParseResults(request, file);
+    publishUtils.publishRequest(request, file, bugTracker);
     }
 
     @When("results contain {} findings each having a different vulnerability type in one source file")
@@ -196,6 +191,7 @@ public class RunPublishProcessSteps {
         File file = getFileFromResourcePath("cucumber/data/sample-sast-results/1-finding-closed.xml");
         innerPublishRequest(request,file);
     }
+
 
     @When("there are two existing issues")
     public void publishTwoIssues() throws IOException, ExitThrowable {
@@ -321,24 +317,7 @@ public class RunPublishProcessSteps {
         Assert.assertEquals("Wrong number of findigs", findings, actualFindings);
     }
 
-    private ScanRequest getScanRequestWithDefaults() {
-        return ScanRequest.builder()
-                .application("App1")
-                .product(ScanRequest.Product.CX)
-                .project("CodeInjection1")
-                .team("CxServer")
-                .namespace("compTest")
-                .repoName("repo")
-                .repoUrl("http://localhost/repo.git")
-                .repoUrlWithAuth("http://localhost/repo.git")
-                .repoType(ScanRequest.Repository.NA)
-                .branch("master")
-                .refs(Constants.CX_BRANCH_PREFIX.concat("master"))
-                .email(null)
-                .incremental(false)
-                .scanPreset("Checkmarx Default")
-                .build();
-    }
+
 
     private File getDifferentVulnerabilityTypeFindings() throws IOException {
         return getFileFromResourcePath(String.format(DIFFERENT_VULNERABILITIES_FILENAME_TEMPLATE, numOfFindings));
@@ -368,6 +347,15 @@ public class RunPublishProcessSteps {
         String[] filterValArr = filterValue.split(",");
         return Arrays.stream(filterValArr).map(filterVal -> new Filter(type, filterVal)).collect(Collectors.toList());
     }
+
+    private File getFileFromResourcePath(String path) throws IOException{
+        return publishUtils.getFileFromResourcePath(path);
+    }
+
+    private ScanRequest getScanRequestWithDefaults() {
+        return publishUtils.getScanRequestWithDefaults();
+    }
+
 
 
     private File getFileForPublish() throws IOException {
@@ -399,22 +387,6 @@ public class RunPublishProcessSteps {
         }
     }
 
-    public File getFileFromResourcePath(String path) throws IOException {
-        return new ClassPathResource(path).getFile();
-    }
-
-    private BugTracker createJiraBugTracker() {
-        return BugTracker.builder()
-                .issueType(jiraProperties.getIssueType())
-                .projectKey(jiraProperties.getProject())
-                .type(BugTracker.Type.JIRA)
-                .closedStatus(jiraProperties.getClosedStatus())
-                .openTransition(jiraProperties.getOpenTransition())
-                .priorities(jiraProperties.getPriorities())
-                .openStatus(jiraProperties.getOpenStatus())
-                .closeTransition(jiraProperties.getCloseTransition())
-                .build();
-    }
 
 
 

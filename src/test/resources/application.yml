@@ -4,6 +4,7 @@ server:
 logging:
   file:
     name: cx-flow.log
+    path: c:/temp/
 #  level:
 #    com:
 #      checkmarx:
@@ -164,9 +165,11 @@ bitbucket:
 azure:
   webhook-token: cxflow:1234
   token: xxxx
-  url: https://dev.azure.com/XXXXXX
+  url: https://dev.azure.com/cxflowtestuser
   issue-type: issue
-  api-version: 5.0
+  # This version corresponds to TFS 2018 Update 2 and higher (including cloud)
+  # For details, see https://docs.microsoft.com/en-us/rest/api/azure/devops/?view=azure-devops-rest-5.1#api-and-tfs-version-mapping
+  api-version: 4.1
   false-positive-label: false-positive
   block-merge: true
   closed-status: Closed

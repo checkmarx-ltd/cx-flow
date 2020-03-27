@@ -4,12 +4,12 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.dto.github.IssueStatus;
 import com.checkmarx.flow.dto.github.LabelsItem;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -19,6 +19,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -44,7 +45,7 @@ public class GitHubIssueTracker implements IssueTracker {
 
     @Override
     public void init(ScanRequest request, ScanResults results) throws MachinaException {
-        log.info("Initializing GitHub processing");
+        log.info("======== Initializing GitHub processing ========");
         if(ScanUtils.empty(request.getNamespace()) ||
                 ScanUtils.empty(request.getRepoName()) ||
                 ScanUtils.empty(request.getBranch())){
@@ -63,29 +64,41 @@ public class GitHubIssueTracker implements IssueTracker {
      */
     @Override
     public List<Issue> getIssues(ScanRequest request) {
-        log.info("Executing getIssues GitHub API call");
+        String apiUrl = String.format("%s/%s/%s/issues?state=all&per_page=%s",
+                properties.getApiUrl(),
+                request.getNamespace(),
+                request.getRepoName(),
+                ISSUES_PER_PAGE);
+
+        log.info("Executing getIssues GitHub API call: {}", apiUrl);
         List<Issue> issues = new ArrayList<>();
-        HttpEntity httpEntity = new HttpEntity<>(createAuthHeaders());
-        String apiUrl = properties.getApiUrl().concat("/").concat(request.getNamespace().concat("/")).concat(request.getRepoName()).concat("/issues?state=all&per_page=").concat(ISSUES_PER_PAGE);
+        HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders());
+
         ResponseEntity<com.checkmarx.flow.dto.github.Issue[]> response = restTemplate.exchange(apiUrl,
                 HttpMethod.GET, httpEntity, com.checkmarx.flow.dto.github.Issue[].class);
-        if(response.getBody() == null){
+
+        if (response.getBody() == null) {
+            log.info("No issues found.");
             return new ArrayList<>();
         }
-        for(com.checkmarx.flow.dto.github.Issue issue: response.getBody()){
+
+        for (com.checkmarx.flow.dto.github.Issue issue : response.getBody()) {
             Issue i = mapToIssue(issue);
-            if(i != null && i.getTitle().startsWith(request.getProduct().getProduct())){
+            if (i != null && i.getTitle().startsWith(request.getProduct().getProduct())) {
                 issues.add(i);
             }
         }
+
         String next = getNextURIFromHeaders(response.getHeaders(), "link", "next");
         while (next != null) {
+            log.debug("Getting issue from {}", next);
             ResponseEntity<com.checkmarx.flow.dto.github.Issue[]> responsePage = restTemplate.exchange(next, HttpMethod.GET,
                     httpEntity, com.checkmarx.flow.dto.github.Issue[].class);
-            if(responsePage.getBody() != null) {
-                for(com.checkmarx.flow.dto.github.Issue issue: response.getBody()){
+
+            if (responsePage.getBody() != null) {
+                for (com.checkmarx.flow.dto.github.Issue issue : response.getBody()) {
                     Issue i = mapToIssue(issue);
-                    if(i != null && i.getTitle().startsWith(request.getProduct().getProduct())){
+                    if (i != null && i.getTitle().startsWith(request.getProduct().getProduct())) {
                         issues.add(i);
                     }
                 }
@@ -136,7 +149,7 @@ public class GitHubIssueTracker implements IssueTracker {
      * @param comment  Comment to append to the GitHub Issue
      */
     private void addComment(String issueUrl, String comment) {
-        log.debug("Executing add comment GitHub API call");
+        log.debug("Executing add comment GitHub API call with following comment {}", comment);
         HttpEntity<String> httpEntity = new HttpEntity<>(getJSONComment(comment).toString(), createAuthHeaders());
         restTemplate.exchange(issueUrl.concat("/comments"), HttpMethod.POST, httpEntity, String.class);
     }
@@ -149,16 +162,12 @@ public class GitHubIssueTracker implements IssueTracker {
         try {
             HttpEntity<String> httpEntity = new HttpEntity<>(getJSONCreateIssue(resultIssue, request).toString(), createAuthHeaders());
             response = restTemplate.exchange(apiUrl, HttpMethod.POST, httpEntity, com.checkmarx.flow.dto.github.Issue.class);
-        }
-        catch (HttpClientErrorException e){
+        } catch (HttpClientErrorException e) {
             log.error("Error occurred while creating GitHub Issue", e);
-            if(e.getStatusCode().equals(HttpStatus.GONE)){
+            if (e.getStatusCode().equals(HttpStatus.GONE)) {
                 log.error("Issues are not enabled for this repository");
-                throw new MachinaRuntimeException();
             }
-            else{
-                throw new MachinaRuntimeException();
-            }
+            throw new MachinaRuntimeException(e);
         }
         return mapToIssue(response.getBody());
     }
@@ -177,16 +186,42 @@ public class GitHubIssueTracker implements IssueTracker {
         ResponseEntity<com.checkmarx.flow.dto.github.Issue> response;
         try {
             response = restTemplate.exchange(issue.getUrl(), HttpMethod.POST, httpEntity, com.checkmarx.flow.dto.github.Issue.class);
-            this.addComment(Objects.requireNonNull(response.getBody()).getUrl(),"Issue still exists. ");
+            GitHubIssueCommentFormatter newCommentFormatter = createNewCommentFormatter(issue, resultIssue, response);
+            this.addComment(newCommentFormatter.getIssueUrl(), newCommentFormatter.getIssueDescription().toString());
             return mapToIssue(response.getBody());
         } catch (HttpClientErrorException e) {
-            log.error("Error updating issue.  This is likely due to the fact that another user has closed this issue.  Adding comment", e);
-            if(e.getStatusCode().equals(HttpStatus.GONE)){
-                throw new MachinaRuntimeException();
-            }
+            handleIssueUpdateError(e);
             this.addComment(issue.getUrl(), "This issue still exists.  Please add label 'false-positive' to remove from scope of SAST results");
         }
         return this.getIssue(issue.getUrl());
+    }
+
+    private GitHubIssueCommentFormatter createNewCommentFormatter(Issue issue, ScanResults.XIssue resultIssue,
+                                                                  ResponseEntity<com.checkmarx.flow.dto.github.Issue> response) {
+        GitHubIssueCommentFormatter commentFormatter = GitHubIssueCommentFormatter.builder()
+                .issueUrl(Objects.requireNonNull(response.getBody()).getUrl())
+                .resultIssue(resultIssue)
+                .gitHubIssueBeforeUpdate(issue)
+                .gitHubIssueAfterUpdate(response.getBody())
+                .build();
+
+        IssueStatus newIssueStatus = commentFormatter.createNewIssueStatus(issue, resultIssue, response.getBody());
+        commentFormatter.setIssueStatus(newIssueStatus);
+        StringBuilder updatedIssueComment = commentFormatter.getUpdatedIssueComment(commentFormatter.getIssueStatus());
+        commentFormatter.setIssueDescription(updatedIssueComment);
+
+        return commentFormatter;
+    }
+
+    private void handleIssueUpdateError(HttpClientErrorException e) {
+        log.error("Error updating issue. This is likely due to the fact that another user has closed this issue. Adding comment", e);
+        boolean isForbidden = e.getStatusCode().equals(HttpStatus.FORBIDDEN);
+        if (isForbidden) {
+            log.error("Please check the scopes of your personal access token and make sure you have the necessary permissions for the repo.");
+        }
+        if (e.getStatusCode().equals(HttpStatus.GONE) || isForbidden) {
+            throw new MachinaRuntimeException(e);
+        }
     }
 
     /**
@@ -267,7 +302,7 @@ public class GitHubIssueTracker implements IssueTracker {
 
     @Override
     public void complete(ScanRequest request, ScanResults results) throws MachinaException {
-        log.info("Finalizing GitHub Processing");
+        log.info("======== Finalizing GitHub Processing ========");
     }
 
     /**
@@ -335,5 +370,4 @@ public class GitHubIssueTracker implements IssueTracker {
         int positionOfEquals = linkRelation.indexOf('=');
         return linkRelation.substring(positionOfEquals + 2, linkRelation.length() - 1).trim();
     }
-
 }

@@ -47,6 +47,10 @@ public class JiraService {
     private final String grandParentUrl;
     private Map<String, ScanResults.XIssue> nonPublishedScanResultsMap = new HashMap<>();
 
+    private static final String LABEL_FIELD_TYPE = "labels";
+    private static final String SECURITY_FIELD_TYPE = "security";
+    private static final String VALUE_FIELD_TYPE = "value";
+
     @ConstructorProperties({"jiraProperties", "flowProperties"})
     public JiraService(JiraProperties jiraProperties, FlowProperties flowProperties) {
         this.jiraProperties = jiraProperties;
@@ -123,12 +127,12 @@ public class JiraService {
             throw new MachinaRuntimeException();
         }
         log.debug(jql);
-        HashSet<String> fields = new HashSet<String>();
+        HashSet<String> fields = new HashSet<>();
         fields.add("key");
         fields.add("project");
         fields.add("issuetype");
         fields.add("summary");
-        fields.add("labels");
+        fields.add(LABEL_FIELD_TYPE);
         fields.add("created");
         fields.add("updated");
         fields.add("status");
@@ -144,16 +148,26 @@ public class JiraService {
     }
 
     private IssueType getIssueType(String projectKey, String type) throws RestClientException, JiraClientException {
+        List<String> issueTypesList = new ArrayList<>();
+
         Project project = this.projectClient.getProject(projectKey).claim();
         Iterator<IssueType> issueTypes = project.getIssueTypes().iterator();
+
         while (issueTypes.hasNext()) {
             IssueType it = issueTypes.next();
+            issueTypesList.add(it.getName());
             if (it.getName().equals(type)) {
                 return it;
             }
         }
-        log.error("Issue type {} not found for project key {}", projectKey, issueTypes);
-        throw new JiraClientException("Issue type not found");
+
+        String error = String.format("The defined issue type '%s' was not found. Please make sure it's one of the following issues types: [%s]", type, getIssueTypesFromList(issueTypesList));
+
+        throw new JiraClientException(error);
+    }
+
+    private String getIssueTypesFromList(List<String> issueTypesList) {
+        return String.join(", ", issueTypesList);
     }
 
     private String createIssue(ScanResults.XIssue issue, ScanRequest request) throws JiraClientException {
@@ -236,12 +250,12 @@ public class JiraService {
                 labels.add(jiraProperties.getAppLabelPrefix().concat(":").concat(application));
             }
             log.debug("Adding tracker labels: {} - {}", jiraProperties.getLabelTracker(), labels);
-            if (!jiraProperties.getLabelTracker().equals("labels")) {
+            if (!jiraProperties.getLabelTracker().equals(LABEL_FIELD_TYPE)) {
                 String customField = getCustomFieldByName(projectKey,
                         bugTracker.getIssueType(), jiraProperties.getLabelTracker());
                 issueBuilder.setFieldValue(customField, labels);
             } else {
-                issueBuilder.setFieldValue("labels", labels);
+                issueBuilder.setFieldValue(LABEL_FIELD_TYPE, labels);
             }
 
             log.debug("Creating JIRA issue");
@@ -275,7 +289,7 @@ public class JiraService {
                     bugTracker.getPriorities().get(severity)));
         }
 
-        log.info("Updating issue #{}", bugId);
+        log.info("Updating JIRA issue #{}", bugId);
 
         mapCustomFields(request, issue, issueBuilder, true);
 
@@ -294,10 +308,6 @@ public class JiraService {
     /**
      * Map custom JIRA fields to specific values (Custom Cx fields, Issue result
      * fields, static fields
-     *
-     * @param request
-     * @param issue
-     * @param issueBuilder
      */
     private void mapCustomFields(ScanRequest request, ScanResults.XIssue issue, IssueInputBuilder issueBuilder, boolean update) {
         BugTracker bugTracker = request.getBugTracker();
@@ -500,12 +510,12 @@ public class JiraService {
 
                     List<String> list;
                     switch (jiraFieldType) {
-                        case "security":
+                        case SECURITY_FIELD_TYPE:
                             log.debug("Security field");
                             SecurityLevel securityLevel = getSecurityLevel(projectKey, issueTypeStr, value);
                             if (securityLevel != null) {
                                 log.warn("JIRA Security level was not found: {}", value);
-                                issueBuilder.setFieldValue("security", securityLevel);
+                                issueBuilder.setFieldValue(SECURITY_FIELD_TYPE, securityLevel);
                             }
                             break;
                         case "text":
@@ -531,18 +541,18 @@ public class JiraService {
                             break;
                         case "single-select":
                             log.debug("single select field");
-                            issueBuilder.setFieldValue(customField, ComplexIssueInputFieldValue.with("value", value));
+                            issueBuilder.setFieldValue(customField, ComplexIssueInputFieldValue.with(VALUE_FIELD_TYPE, value));
                             break;
                         case "radio":
                             log.debug("radio field");
-                            issueBuilder.setFieldValue(customField, ComplexIssueInputFieldValue.with("value", value));
+                            issueBuilder.setFieldValue(customField, ComplexIssueInputFieldValue.with(VALUE_FIELD_TYPE, value));
                             break;
                         case "multi-select":
                             log.debug("multi select field");
                             String[] selected = StringUtils.split(value, ",");
                             List<ComplexIssueInputFieldValue> fields = new ArrayList<>();
                             for (String s : selected) {
-                                ComplexIssueInputFieldValue fieldValue = ComplexIssueInputFieldValue.with("value", s.trim());
+                                ComplexIssueInputFieldValue fieldValue = ComplexIssueInputFieldValue.with(VALUE_FIELD_TYPE, s.trim());
                                 fields.add(fieldValue);
                             }
                             issueBuilder.setFieldValue(customField, fields);
@@ -563,7 +573,7 @@ public class JiraService {
         CimProject cim = metadata.iterator().next();
 
         Map<String, CimFieldInfo> fields = cim.getIssueTypes().iterator().next().getFields();
-        CimFieldInfo security = fields.get("security");
+        CimFieldInfo security = fields.get(SECURITY_FIELD_TYPE);
         if (security != null) {
             Iterable<Object> allowedValues = security.getAllowedValues();
             if (allowedValues != null) {
@@ -579,13 +589,10 @@ public class JiraService {
     }
 
     /**
-     * Tranistions an issue based on the issue id and transition name
+     * Transitions an issue based on the issue id and transition name
      *
      * TODO handle re-open transition fields
      *
-     * @param bugId
-     * @param transitionName
-     * @return
      */
     private Issue transitionIssue(String bugId, String transitionName) throws JiraClientException {
         Issue issue;
@@ -641,20 +648,10 @@ public class JiraService {
         return issue;
     }
 
-    /**
-     *
-     * @param assignee
-     * @return
-     */
     private User getAssignee(String assignee) {
         return client.getUserClient().getUser(assignee).claim();
     }
 
-    /**
-     *
-     * @param bugId
-     * @param comment
-     */
     private void addCommentToBug(String bugId, String comment) {
         try {
             Issue issue = this.issueClient.getIssue(bugId).claim();
@@ -667,10 +664,6 @@ public class JiraService {
     /**
      * Returns Jira Transition object based on transition name from a list of
      * transitions
-     *
-     * @param transitions
-     * @param transitionName
-     * @return
      */
     private Transition getTransitionByName(Iterable<Transition> transitions, String transitionName) {
         for (Transition transition : transitions) {
@@ -681,13 +674,6 @@ public class JiraService {
         return null;
     }
 
-    /**
-     *
-     * @param project
-     * @param issueType
-     * @param fieldName
-     * @return
-     */
     private String getCustomFieldByName(String project, String issueType, String fieldName) {
         log.debug("Getting custom field {}", fieldName);
         GetCreateIssueMetadataOptions options;

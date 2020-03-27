@@ -1,6 +1,6 @@
 buildscript {
 	ext {
-        CxSBSDK = "0.4.8"
+        CxSBSDK = "0.4.9"
         //cxVersion = "8.90.5"
         springBootVersion = '2.2.4.RELEASE'
         sonarqubeVersion = '2.8'
@@ -15,6 +15,7 @@ buildscript {
         maven {
             url = 'https://packages.atlassian.com/mvn/maven-external'
         }
+        
         gradlePluginPortal()
 	}
 	dependencies {
@@ -91,11 +92,21 @@ dependencies {
     testImplementation("io.cucumber:cucumber-spring:${cucumberVersion}")
     testImplementation( "org.junit.jupiter:junit-jupiter-api:${junitVersion}")
     testImplementation('org.awaitility:awaitility:4.0.2')
+    testImplementation('com.microsoft.azure:azure:1.31.1')
+
+    testImplementation('com.microsoft.rest:client-runtime:1.7.1')
+    testImplementation('com.microsoft.azure:azure-client-runtime:1.7.1')
+    testImplementation('com.microsoft.azure:azure-client-authentication:1.7.1')
+
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
     testImplementation("com.github.java-json-tools:json-patch:1.11")
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:${junitVersion}")
     testCompile("org.mockito:mockito-core:+")
     compile("org.projectlombok:lombok:1.18.10")
+    compile("ch.qos.logback:logback-classic:1.2.3")
+    compile("ch.qos.logback.contrib:logback-json-classic:0.1.5")
+    compile("ch.qos.logback.contrib:logback-jackson:0.1.5")
+    compile("net.logstash.logback:logstash-logback-encoder:5.2")
 }
 
 springBoot {
@@ -163,9 +174,14 @@ task componentTest(type: Test) {
 task e2eTests(type: Test) {
     useJUnitPlatform() {
         systemProperty "testprofile", "e2e"
-        if (System.properties['testprofile'] != 'integration' | System.properties['testprofile'] != 'unit'|System.properties['testprofile'] != 'component') {exclude 'com/checkmarx/flow/cucumber/component/**'
+        if (System.properties['testprofile'] != 'integration' | System.properties['testprofile'] != 'unit'|System.properties['testprofile'] != 'component')
+        {
+            exclude 'com/checkmarx/flow/cucumber/component/**'
             exclude 'com/checkmarx/flow/integration/**'
             exclude 'com/checkmarx/flow/cucumber/integration/publishprocess/**'
+            exclude 'com/checkmarx/flow/cucumber/integration/github/**'
+            exclude 'com/checkmarx/flow/cucumber/integration/azure/**'
+            exclude 'com/checkmarx/flow/cucumber/integration/jira/**'
             exclude 'com/checkmarx/flow/cucumber/integration/negative_tests/**'
             exclude 'com/checkmarx/flow/test/flow**'
             exclude 'com/checkmarx/flow/exception/**'
@@ -174,6 +190,9 @@ task e2eTests(type: Test) {
             exclude 'com/checkmarx/flow/filter/**'
             exclude 'com/checkmarx/flow/service/**'
             exclude 'com/checkmarx/flow/utils/**'
+            exclude 'com.checkmarx.flow.CxFlowApplicationTest'
+            exclude 'com/checkmarx/flow/cucumber/integration/publishprocess/*'
+            exclude 'com/checkmarx/flow/cucumber/integration/scan/*'
         } else {
             //exclude 'com/checkmarx/**'
             include 'com/checkmarx/flow/cucumber/integration/end2end/github2jira/**'

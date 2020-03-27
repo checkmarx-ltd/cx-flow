@@ -1,10 +1,8 @@
 package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.dto.BugTracker;
-import com.checkmarx.flow.dto.ScanDetails;
-import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.dto.Sources;
+import com.checkmarx.flow.dto.*;
+import com.checkmarx.flow.dto.report.ScanReport;
 import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.utils.ScanUtils;
@@ -52,8 +50,9 @@ public class FlowService {
     private final FlowProperties flowProperties;
     private final ResultsService resultsService;
     private final HelperService helperService;
-    private static final Long SLEEP = 20000L;
     private static final String ERROR_BREAK_MSG = "Exiting with Error code 10 due to issues present";
+    private String sourcesPath = null;
+    private ScanDetails scanDetails = null;
 
     public FlowService(CxClient cxService, CxOsaClient osaService, ResultsService resultsService, GitHubService gitService,
                        GitLabService gitLabService, BitBucketService bbService, ADOService adoService,
@@ -142,8 +141,9 @@ public class FlowService {
 
                 log.info("Not waiting for scan completion as Bug Tracker type is NONE");
                 CompletableFuture<ScanResults> results = CompletableFuture.completedFuture(null);
+                logRequest(request, scanId, cxFile, Status.SUCCESS);
                 //return CompletableFuture.completedFuture(null);
-                new ScanDetails(projectId, scanId, results, false);
+                return new ScanDetails(projectId, scanId, results, false);
 
             } else {
 
@@ -152,6 +152,9 @@ public class FlowService {
                     projectId = cxService.getProjectId(ownerId, projectName); //get the project id of the updated or created project
                 }
                 osaScanId = createOsaScan(request, projectId);
+                if(osaScanId != null) {
+                    logRequest(request, osaScanId, cxFile, Status.SUCCESS);
+                }
                 //resultsService.processScanResultsAsync(request, projectId, scanId, osaScanId, request.getFilters());
             }
 
@@ -159,11 +162,45 @@ public class FlowService {
         }catch (CheckmarxException | GitAPIException e){
             log.error(ExceptionUtils.getMessage(e), e);
             Thread.currentThread().interrupt();
+            logRequest(request, scanId, cxFile, Status.FAILURE.build(e.getMessage()));
             throw new MachinaException("Checkmarx Error Occurred");
         }
 
-        return new ScanDetails(projectId, scanId, osaScanId);
+        logRequest(request, scanId, cxFile, Status.SUCCESS);
+
+        this.scanDetails = new ScanDetails(projectId, scanId, osaScanId);
+        return scanDetails;
     }
+
+
+    private void logRequest(ScanRequest request, Integer scanId, File  cxFile, Status status)  {
+        new ScanReport(scanId, request, getRepoUrl(request, cxFile), status).log();
+    }
+
+
+    private void logRequest(ScanRequest request, String scanId, File  cxFile, Status status)  {
+        new ScanReport(scanId, request, getRepoUrl(request, cxFile), status).log();
+    }
+
+    private String getRepoUrl(ScanRequest request, File cxFile) {
+        String repoUrl = null;
+
+        if(sourcesPath != null){
+            //the folder to scan is supplied via -f flag in command line and it is located in the filesystem
+            repoUrl = sourcesPath;
+        }else if(cxFile != null){
+            //in general cxFile is a zip created by cxFlow using the folder supplied y -f 
+            //the use case when sourcePath is empty but cxFile is set is only for the test flow
+            repoUrl = cxFile.getAbsolutePath();
+        }else{
+            //sources to scan are in the remote repository (GitHib, TFS ... etc)
+            repoUrl = request.getRepoUrl();
+        }
+        return repoUrl;
+    }
+
+
+
 
     private CxScanParams prepareScanParamsObject(ScanRequest request, File cxFile, String ownerId, String projectName, Integer projectId) {
         CxScanParams params = new CxScanParams()
@@ -276,12 +313,13 @@ public class FlowService {
             team = cxProperties.getTeam();
             if(!team.startsWith(cxProperties.getTeamPathSeparator()))
                 team = cxProperties.getTeamPathSeparator().concat(team);
-            log.info("Using team {}", team);
+            log.info("Using Checkmarx team: {}", team);
             ownerId = cxService.getTeamId(team);
 
             if(cxProperties.isMultiTenant() &&
                     !ScanUtils.empty(namespace)){
                 String fullTeamName = cxProperties.getTeam().concat(cxProperties.getTeamPathSeparator()).concat(namespace);
+                log.info("Using multi tenant team name: {}", fullTeamName);
                 request.setTeam(fullTeamName);
                 String tmpId = cxService.getTeamId(fullTeamName);
                 if(tmpId.equals(UNKNOWN)){
@@ -297,10 +335,20 @@ public class FlowService {
         }
 
         //Kick out if the team is unknown
-        if(ownerId.equals(UNKNOWN)){
-            throw new MachinaException("Parent team could not be established.  Please ensure correct team is provided");
+        if (ownerId.equals(UNKNOWN)) {
+            throw new CheckmarxException(getTeamErrorMessage());
         }
         return ownerId;
+    }
+
+    private String getTeamErrorMessage() {
+        return "Parent team could not be established. Please ensure correct team is provided.\n" +
+                "Some hints:\n" +
+                "\t- team name is case-sensitive\n" +
+                "\t- trailing slash is not allowed\n" +
+                "\t- team name separator depends on Checkmarx product version specified in CxFlow configuration:\n" +
+                String.format("\t\tCheckmarx version: %s%n", cxProperties.getVersion()) +
+                String.format("\t\tSeparator that should be used: %s%n", cxProperties.getTeamPathSeparator());
     }
 
     private String determineProjectName(ScanRequest request) throws MachinaException {
@@ -359,6 +407,7 @@ public class FlowService {
     public void cxFullScan(ScanRequest request, String path) throws ExitThrowable {
 
         try {
+            this.sourcesPath = path;
             String cxZipFile = FileSystems.getDefault().getPath("cx.".concat(UUID.randomUUID().toString()).concat(".zip")).toAbsolutePath().toString();
             ZipUtils.zipFile(path, cxZipFile, flowProperties.getZipExclude());
             File f = new File(cxZipFile);
@@ -402,7 +451,7 @@ public class FlowService {
     public void cxParseResults(ScanRequest request, File file) throws ExitThrowable {
         try {
             ScanResults results = cxService.getReportContent(file, request.getFilters());
-            resultsService.processResults(request, results);
+            resultsService.processResults(request, results, scanDetails);
             if(flowProperties.isBreakBuild() && results !=null && results.getXIssues()!=null && !results.getXIssues().isEmpty()){
                 log.error(ERROR_BREAK_MSG);
                 exit(10);
@@ -416,7 +465,7 @@ public class FlowService {
     public void cxOsaParseResults(ScanRequest request, File file, File libs) throws ExitThrowable {
         try {
             ScanResults results = cxService.getOsaReportContent(file, libs, request.getFilters());
-            resultsService.processResults(request, results);
+            resultsService.processResults(request, results, scanDetails);
             if(flowProperties.isBreakBuild() && results !=null && results.getXIssues()!=null && !results.getXIssues().isEmpty()){
                 log.error(ERROR_BREAK_MSG);
                 exit(10);
@@ -518,8 +567,6 @@ public class FlowService {
 
     /**
      * Process Projects in batch mode - JIRA ONLY
-     *
-     * @param originalRequest
      */
     public void cxBatch(ScanRequest originalRequest) throws ExitThrowable {
         try {

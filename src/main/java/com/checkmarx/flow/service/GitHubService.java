@@ -3,10 +3,13 @@ package com.checkmarx.flow.service;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.dto.RepoIssue;
+import com.checkmarx.flow.dto.ScanDetails;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.Sources;
 import com.checkmarx.flow.dto.github.Content;
+import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.exception.GitHubClientException;
+import com.checkmarx.flow.exception.GitHubClientRunTimeException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
@@ -24,6 +27,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.DefaultUriBuilderFactory;
 
 import java.util.*;
 
@@ -97,22 +101,29 @@ public class GitHubService extends RepoService {
         }
     }
 
-    void endBlockMerge(ScanRequest request, ScanResults results){
-        if(properties.isBlockMerge()) {
-            HttpEntity<String> httpEntity = getStatusRequestEntity(results);
-            if(ScanUtils.empty(request.getAdditionalMetadata(STATUSES_URL_KEY))){
-                log.error(STATUSES_URL_NOT_PROVIDED);
-                return;
-            }
-            restTemplate.exchange(request.getAdditionalMetadata(STATUSES_URL_KEY),
-                    HttpMethod.POST, httpEntity, String.class);
+    void endBlockMerge(ScanRequest request, ScanResults results, ScanDetails scanDetails){
+         if(properties.isBlockMerge()) {
+             String statusApiUrl = request.getAdditionalMetadata(STATUSES_URL_KEY);
+             if (ScanUtils.empty(statusApiUrl)) {
+                 log.error(STATUSES_URL_NOT_PROVIDED);
+                 return;
+             }
+
+            HttpEntity<String> httpEntity = getStatusRequestEntity(results, new PullRequestReport(scanDetails ,request));
+
+
+            log.debug("Updating pull request status: {}", statusApiUrl);
+            log.trace("API request: {}", httpEntity.getBody());
+            restTemplate.exchange(statusApiUrl, HttpMethod.POST, httpEntity, String.class);
+        } else {
+            log.debug("Pull request blocking is disabled in configuration, no need to unblock.");
         }
     }
 
-    private HttpEntity<String> getStatusRequestEntity(ScanResults results) {
+    private HttpEntity<String> getStatusRequestEntity(ScanResults results, PullRequestReport pullRequestReport) {
         String state;
         String description;
-        if (mergeResultEvaluator.isMergeAllowed(results, properties)) {
+        if (mergeResultEvaluator.isMergeAllowed(results, properties, pullRequestReport)) {
             state = MERGE_SUCCESS;
             description = MERGE_SUCCESS_DESCRIPTION;
         } else {
@@ -120,6 +131,7 @@ public class GitHubService extends RepoService {
             description = MERGE_FAILURE_DESCRIPTION;
         }
 
+        pullRequestReport.setPullRequestStatus(state);
         JSONObject requestBody = getJSONStatus(state, results.getLink(), description);
         return new HttpEntity<>(requestBody.toString(), createAuthHeaders());
     }
@@ -139,7 +151,7 @@ public class GitHubService extends RepoService {
         }
     }
 
-    private JSONObject getJSONStatus(String state, String url, String description){
+    private static JSONObject getJSONStatus(String state, String url, String description){
         JSONObject requestBody = new JSONObject();
         requestBody.put("state", state);
         requestBody.put("target_url", url);
@@ -155,12 +167,17 @@ public class GitHubService extends RepoService {
             return null;
         }
         Sources sources = getRepoLanguagePercentages(request);
+        String endpoint = getGitHubEndPoint(request);
+        scanGitContent(0, endpoint, sources);
+        return sources;
+    }
+
+    private String getGitHubEndPoint(ScanRequest request) {
         String endpoint = properties.getApiUrl().concat(REPO_CONTENT);
         endpoint = endpoint.replace("{namespace}", request.getNamespace());
         endpoint = endpoint.replace("{repo}", request.getRepoName());
         endpoint = endpoint.replace("{branch}", request.getBranch());
-        scanGitContent(0, endpoint, sources);
-        return sources;
+        return endpoint;
     }
 
     private Sources getRepoLanguagePercentages(ScanRequest request) {
@@ -169,16 +186,17 @@ public class GitHubService extends RepoService {
         Map<String, Long> langs = new HashMap<>();
         Map<String, Integer> langsPercent = new HashMap<>();
         HttpHeaders headers = createAuthHeaders();
+
+        String urlTemplate = properties.getApiUrl().concat(LANGUAGE_TYPES);
+        String url = new DefaultUriBuilderFactory()
+                .expand(urlTemplate, request.getNamespace(), request.getRepoName())
+                .toString();
+
+        log.info("Getting repo languages from {}", url);
         try {
             ResponseEntity<String> response = restTemplate.exchange(
-                    properties.getApiUrl().concat(LANGUAGE_TYPES),
-                    HttpMethod.GET,
-                    new HttpEntity<>(headers),
-                    String.class,
-                    request.getNamespace(),
-                    request.getRepoName(),
-                    request.getBranch()
-            );
+                    url, HttpMethod.GET, new HttpEntity<>(headers), String.class);
+
             if(response.getBody() == null){
                 log.warn(HTTP_BODY_IS_NULL);
             }
@@ -199,10 +217,11 @@ public class GitHubService extends RepoService {
                 }
                 sources.setLanguageStats(langsPercent);
             }
-        }catch (NullPointerException e){
+        } catch (NullPointerException e) {
             log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
         }catch (HttpClientErrorException.NotFound e){
-            log.error(ExceptionUtils.getStackTrace(e));
+            String error = "Got 404 'Not Found' error. GitHub endpoint: " + getGitHubEndPoint(request) + " is invalid.";
+            throw new GitHubClientRunTimeException(error, e);
         }catch (HttpClientErrorException e){
             log.error(ExceptionUtils.getRootCauseMessage(e));
         }
@@ -210,6 +229,7 @@ public class GitHubService extends RepoService {
     }
 
     private List<Content> getRepoContent(String endpoint) {
+        log.info("Getting repo content from {}", endpoint);
         //"/{namespace}/{repo}/languages"
         HttpHeaders headers = createAuthHeaders();
         try {
@@ -223,12 +243,10 @@ public class GitHubService extends RepoService {
                 log.warn(HTTP_BODY_IS_NULL);
             }
             return Arrays.asList(response.getBody());
-        }catch (NullPointerException e){
+        } catch (NullPointerException e) {
             log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
-        }catch (HttpClientErrorException.NotFound e){
-            log.error(ExceptionUtils.getStackTrace(e));
-        }catch (HttpClientErrorException e){
-            log.error(ExceptionUtils.getRootCauseMessage(e));
+        } catch (HttpClientErrorException e) {
+            throw new GitHubClientRunTimeException("Error getting repo content.", e);
         }
         return Collections.emptyList();
     }

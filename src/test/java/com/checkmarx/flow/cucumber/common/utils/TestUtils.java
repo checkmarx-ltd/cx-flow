@@ -2,12 +2,14 @@ package com.checkmarx.flow.cucumber.common.utils;
 
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.CxFlowRunner;
-import com.checkmarx.flow.cucumber.component.parse.TestContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.checkmarx.flow.cucumber.common.Constants;
 import org.springframework.boot.DefaultApplicationArguments;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.ResourceUtils;
 
 import java.io.File;
@@ -23,11 +25,18 @@ public class TestUtils {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     public static InputStream getResourceAsStream(String relativePath) {
-        String srcResourcePath = Paths.get(TestContext.CUCUMBER_DATA_DIR, relativePath)
-                .toString();
-
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        return classLoader.getResourceAsStream(srcResourcePath);
+        String fullResourcePath = toFullResourcePath(relativePath);
+        return classLoader.getResourceAsStream(fullResourcePath);
+    }
+
+    public static File getFileFromResource(String relativePath) throws IOException {
+        String fullResourcePath = toFullResourcePath(relativePath);
+        return new ClassPathResource(fullResourcePath).getFile();
+    }
+
+    private static String toFullResourcePath(String relativePath) {
+        return Paths.get(Constants.CUCUMBER_DATA_DIR, relativePath).toString();
     }
 
     public static Properties getPropertiesFromResource(String path) throws IOException {
@@ -38,7 +47,7 @@ public class TestUtils {
     }
 
     public static JsonNode parseJsonFromResources(String pathRelativeToData) throws IOException {
-        String resourcePath = Paths.get(TestContext.CUCUMBER_DATA_DIR, pathRelativeToData).toString();
+        String resourcePath = Paths.get(Constants.CUCUMBER_DATA_DIR, pathRelativeToData).toString();
         File file = ResourceUtils.getFile("classpath:" + resourcePath);
         return objectMapper.readTree(file);
     }

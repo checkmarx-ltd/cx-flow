@@ -1,6 +1,7 @@
 package com.checkmarx.flow.cucumber.component.parse;
 
 import com.checkmarx.flow.CxFlowApplication;
+import com.checkmarx.flow.cucumber.common.Constants;
 import com.google.common.collect.Sets;
 import cucumber.api.PendingException;
 import io.cucumber.java.en.And;
@@ -19,18 +20,22 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Implementation of steps that specify the location of SAST results.
  */
 @SpringBootTest(classes = {CxFlowApplication.class})
 public class LoadingSastResultsSteps {
-    private static final Map<String, String> sastFilenamesByDescription = new HashMap<String, String>() {{
-        put("2 findings with the same vulnerability type and in the same file", "2-findings-same-vuln-type-same-file.xml");
-        put("2 findings with the same vulnerability type and in different files", "2-findings-same-vuln-type-different-files.xml");
-        put("2 findings with different vulnerability types and in the same file", "2-findings-different-vuln-type-same-file.xml");
-        put("2 findings with different vulnerability types and in different files", "2-findings-different-vuln-type-different-files.xml");
-    }};
+    private static final Map<String, String> sastFilenamesByDescription;
+    static {
+        Map<String, String> temp = new HashMap<String, String>();
+        temp.put("2 findings with the same vulnerability type and in the same file", "2-findings-same-vuln-type-same-file.xml");
+        temp.put("2 findings with the same vulnerability type and in different files", "2-findings-same-vuln-type-different-files.xml");
+        temp.put("2 findings with different vulnerability types and in the same file", "2-findings-different-vuln-type-same-file.xml");
+        temp.put("2 findings with different vulnerability types and in different files", "2-findings-different-vuln-type-different-files.xml");
+        sastFilenamesByDescription = Collections.unmodifiableMap(temp);
+    };
 
     private final TestContext testContext;
 
@@ -100,7 +105,7 @@ public class LoadingSastResultsSteps {
     }
 
     private List<String> getSastResultsHavingReferenceReports() throws IOException, URISyntaxException {
-        Set<String> sampleSastResults = getResourceFilenames(TestContext.SAMPLE_SAST_RESULTS_DIR,
+        Set<String> sampleSastResults = getResourceFilenames(Constants.SAMPLE_SAST_RESULTS_DIR,
                 TestContext.SAST_RESULT_EXTENSION);
 
         Set<String> referenceCxFlowReports = getResourceFilenames(TestContext.CXFLOW_REPORTS_DIR,
@@ -123,15 +128,18 @@ public class LoadingSastResultsSteps {
 
     private static Set<String> getBaseFilenames(String extension, Path resourceDir) throws IOException {
         int DIRECTORY_SCAN_DEPTH = 1;
-        return Files.find(resourceDir,
+        try (Stream<Path> files = Files.find(resourceDir,
                 DIRECTORY_SCAN_DEPTH,
-                onlyFilesWithExtension(extension))
-                .map(path -> FilenameUtils.getBaseName(path.getFileName().toString()))
-                .collect(Collectors.toSet());
+                onlyFilesWithExtension(extension));
+        ) {
+            return files
+                    .map(path -> FilenameUtils.getBaseName(path.getFileName().toString()))
+                    .collect(Collectors.toSet());
+        }
     }
 
     private static Path getResourceDir(String subdir) throws URISyntaxException {
-        Path pathRelativeToResources = Paths.get(TestContext.CUCUMBER_DATA_DIR, subdir);
+        Path pathRelativeToResources = Paths.get(Constants.CUCUMBER_DATA_DIR, subdir);
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         URL resourceDir = classLoader.getResource(pathRelativeToResources.toString());
         return resourceDir != null ? Paths.get(resourceDir.toURI()) : null;

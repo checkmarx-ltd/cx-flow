@@ -4,11 +4,14 @@ import com.atlassian.jira.rest.client.api.RestClientException;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.Field;
+import com.checkmarx.flow.dto.ScanDetails;
 import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.dto.report.GetResultsReport;
 import com.checkmarx.flow.exception.InvalidCredentialsException;
 import com.checkmarx.flow.exception.JiraClientException;
 import com.checkmarx.flow.exception.JiraClientRunTimeException;
 import com.checkmarx.flow.exception.MachinaException;
+import com.checkmarx.flow.exception.*;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
@@ -21,6 +24,7 @@ import org.slf4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.HashMap;
 import java.util.List;
@@ -30,6 +34,8 @@ import java.util.concurrent.CompletableFuture;
 @Service
 public class ResultsService {
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(ResultsService.class);
+    public static final String COMPLETED_PROCESSING = "Successfully completed processing for ";
+    public static final String MESSAGE_KEY = "message";
     private final CxClient cxService;
     private final CxOsaClient osaService;
     private final JiraService jiraService;
@@ -65,9 +71,13 @@ public class ResultsService {
             CompletableFuture<ScanResults> future = new CompletableFuture<>();
             //TODO async these, and join and merge after
             ScanResults results = cxService.getReportContentByScanId(scanId, filters);
+            new GetResultsReport(scanId,request).log();
+            
             if(cxProperties.getEnableOsa() && !ScanUtils.empty(osaScanId)){
                 log.info("Waiting for OSA Scan results for scan id {}", osaScanId);
                 results = osaService.waitForOsaScan(osaScanId, projectId, results, filters);
+
+                new GetResultsReport(osaScanId,request).log();
             }
             Map<String, Object> emailCtx = new HashMap<>();
             BugTracker.Type bugTrackerType = request.getBugTracker().getType();
@@ -77,13 +87,13 @@ public class ResultsService {
                     !bugTrackerType.equals(BugTracker.Type.EMAIL)) {
                 String namespace = request.getNamespace();
                 String repoName = request.getRepoName();
-                String concat = "Successfully completed processing for "
+                String concat = COMPLETED_PROCESSING
                         .concat(namespace).concat("/").concat(repoName);
                 if (!ScanUtils.empty(namespace) && !ScanUtils.empty(request.getBranch())) {
-                    emailCtx.put("message", concat.concat(" - ")
+                    emailCtx.put(MESSAGE_KEY, concat.concat(" - ")
                             .concat(request.getRepoUrl()));
                 } else if (!ScanUtils.empty(request.getApplication())) {
-                    emailCtx.put("message", "Successfully completed processing for "
+                    emailCtx.put(MESSAGE_KEY, COMPLETED_PROCESSING
                             .concat(request.getApplication()));
                 }
                 emailCtx.put("heading", "Scan Successfully Completed");
@@ -99,11 +109,13 @@ public class ResultsService {
                 emailService.sendmail(request.getEmail(), concat, emailCtx, "template-demo.html");
                 log.info("Successfully completed automation for repository {} under namespace {}", repoName, namespace);
             }
-            processResults(request, results);
+            processResults(request, results, new ScanDetails(projectId, scanId, osaScanId));
             log.info("Process completed Succesfully");
             future.complete(results);
+            
             return future;
         }catch (Exception e){
+            
             log.error("Error occurred while processing results.", e);
             CompletableFuture<ScanResults> x = new CompletableFuture<>();
             x.completeExceptionally(e);
@@ -112,7 +124,7 @@ public class ResultsService {
 
     }
 
-    void processResults(ScanRequest request, ScanResults results) throws MachinaException {
+    void processResults(ScanRequest request, ScanResults results, ScanDetails scanDetails) throws MachinaException {
         if(!cxProperties.getOffline()) {
             getCxFields(request, results);
         }
@@ -127,7 +139,7 @@ public class ResultsService {
                 break;
             case GITHUBPULL:
                 gitService.processPull(request, results);
-                gitService.endBlockMerge(request, results);
+                gitService.endBlockMerge(request, results, scanDetails);
                 break;
             case GITLABCOMMIT:
                 gitLabService.processCommit(request, results);
@@ -154,7 +166,7 @@ public class ResultsService {
                     Map<String, Object> emailCtx = new HashMap<>();
                     String namespace = request.getNamespace();
                     String repoName = request.getRepoName();
-                    emailCtx.put("message", "Checkmarx Scan Results "
+                    emailCtx.put(MESSAGE_KEY, "Checkmarx Scan Results "
                             .concat(namespace).concat("/").concat(repoName).concat(" - ")
                             .concat(request.getRepoUrl()));
                     emailCtx.put("heading", "Scan Successfully Completed");
@@ -167,59 +179,81 @@ public class ResultsService {
                     }
                     emailCtx.put("repo", request.getRepoUrl());
                     emailCtx.put("repo_fullname", namespace.concat("/").concat(repoName));
-                    emailService.sendmail(request.getEmail(), "Successfully completed processing for ".concat(namespace).concat("/").concat(repoName), emailCtx, "template-demo.html");
+                    emailService.sendmail(request.getEmail(), COMPLETED_PROCESSING.concat(namespace).concat("/").concat(repoName), emailCtx, "template-demo.html");
                 }
                 break;
             case CUSTOM:
-                log.info("Issue tracking is custom bean implementation");
-                issueService.process(results, request);
+                handleCustomIssueTracker(request, results);
                 break;
             default:
                 log.warn("No valid bug type was provided");
         }
         if(results != null && results.getScanSummary() != null) {
             log.info("####Checkmarx Scan Results Summary####");
-            log.info("Team: {}, Project: {}", request.getTeam(), request.getProject());
-            log.info(results.getScanSummary().toString());
-            log.info("To veiw results: {}", results.getLink());
+            log.info("Team: {}, Project: {}, Scan-Id: {}", request.getTeam(), request.getProject(), results.getAdditionalDetails().get("scanId"));
+            log.info(String.format("The vulnerabilities found for the scan are: %s", results.getScanSummary().toString()));
+            log.info("To view results use following link: {}", results.getLink());
             log.info("######################################");
         }
     }
 
-    private void handleJiraCase(ScanRequest request, ScanResults results) throws JiraClientException {
+    private void handleCustomIssueTracker(ScanRequest request, ScanResults results) throws MachinaException {
         try {
-            log.info("Processing results with JIRA issue tracking");
-            jiraService.process(results, request);
-        } catch (RestClientException e) {
-            if (e.getStatusCode().isPresent() && e.getStatusCode().get() ==  HttpStatus.NOT_FOUND.value()) {
-                throw new JiraClientRunTimeException("Jira service is not accessible for URL: " + jiraService.getJiraURI(), e);
-            } else {
-                Map<String, ScanResults.XIssue> nonPublishedScanResultsMap = jiraService.getNonPublishedScanResults();
-                if (e.getStatusCode().isPresent() &&
-                        e.getStatusCode().get() ==  HttpStatus.BAD_REQUEST.value() &&
-                        nonPublishedScanResultsMap.size() > 0) {
-                    throwExceptionWhenPublishingErrorOccurred(e, nonPublishedScanResultsMap);
-
-                } else {
-                    throw  e;
-                }
-            }
-        } catch (JiraClientException e) {
-            Map<String, ScanResults.XIssue> nonPublishedScanResultsMap = jiraService.getNonPublishedScanResults();
-            if (nonPublishedScanResultsMap.size() > 0) {
-                throwExceptionWhenPublishingErrorOccurred(e, nonPublishedScanResultsMap);
+            log.info("Issue tracking is custom bean implementation");
+            issueService.process(results, request);
+        } catch (HttpClientErrorException e) {
+            if (e.getRawStatusCode() == HttpStatus.UNAUTHORIZED.value()) {
+                throw new MachinaRuntimeException("Token is invalid. Please make sure your custom tokens are correct.\n" + e.getMessage());
             } else {
                 throw e;
             }
         }
     }
 
-    private void throwExceptionWhenPublishingErrorOccurred(Exception e, Map<String, ScanResults.XIssue> nonPublishedScanResultsMap) {
+    private void handleJiraCase(ScanRequest request, ScanResults results) throws JiraClientException {
+        try {
+            log.info("======== Processing results with JIRA issue tracking ========");
+            jiraService.process(results, request);
+        } catch (RestClientException e) {
+            handleJiraRestClientException(e);
+        } catch (JiraClientException e) {
+            handleJiraClientException(e);
+        }
+    }
+
+    private void handleJiraClientException(JiraClientException e) throws JiraClientException {
+        Map<String, ScanResults.XIssue> nonPublishedScanResultsMap = jiraService.getNonPublishedScanResults();
+        if (nonPublishedScanResultsMap.size() > 0) {
+            throwExceptionWhenPublishingErrorOccurred(e, nonPublishedScanResultsMap);
+        } else {
+            throw e;
+        }
+    }
+
+    private void handleJiraRestClientException(RestClientException e) {
+        if (e.getStatusCode().isPresent() && e.getStatusCode().get() == HttpStatus.NOT_FOUND.value()) {
+            throw new JiraClientRunTimeException("Jira service is not accessible for URL: " + jiraService.getJiraURI() + "\n", e);
+        } else if (e.getStatusCode().isPresent() && e.getStatusCode().get() == HttpStatus.FORBIDDEN.value()) {
+            throw new JiraClientRunTimeException("Access is forbidden. Please check your basic auth Token \n", e);
+        } else {
+            Map<String, ScanResults.XIssue> nonPublishedScanResultsMap = jiraService.getNonPublishedScanResults();
+            if (e.getStatusCode().isPresent() &&
+                    e.getStatusCode().get() == HttpStatus.BAD_REQUEST.value() &&
+                    nonPublishedScanResultsMap.size() > 0) {
+                throwExceptionWhenPublishingErrorOccurred(e, nonPublishedScanResultsMap);
+
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    private void throwExceptionWhenPublishingErrorOccurred(Exception cause, Map<String, ScanResults.XIssue> nonPublishedScanResultsMap) {
         String errorMessage = "Wasn't able to publish the following issues into JIRA:\n" +
                 printNonPublishedScanResults(nonPublishedScanResultsMap) +
-                "\nwith the following reason: " + e.getMessage();
+                "\ndue to the following reason: " + cause.getMessage();
 
-        throw new JiraClientRunTimeException(errorMessage);
+        throw new JiraClientRunTimeException(errorMessage, cause);
     }
 
     private String printNonPublishedScanResults(Map<String, ScanResults.XIssue> nonPublishedScanResultsMap) {
@@ -242,11 +276,6 @@ public class ResultsService {
         return sb.toString();
     }
 
-    /**
-     *
-     * @param request
-     * @param results
-     */
     private void getCxFields(ScanRequest request, ScanResults results) throws MachinaException{
         try{
             /*Are cx fields required?*/
@@ -286,9 +315,6 @@ public class ResultsService {
 
     /**
      * Check if even 1 cx field is required, which means Checkmarx project needs to be retrieved
-     *
-     * @param fields
-     * @return
      */
     private boolean requiresCxCustomFields(List<Field> fields){
         if(fields == null){

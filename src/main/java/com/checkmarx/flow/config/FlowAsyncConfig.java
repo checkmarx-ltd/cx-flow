@@ -5,7 +5,6 @@ import org.slf4j.Logger;
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
@@ -61,8 +60,7 @@ public class FlowAsyncConfig implements AsyncConfigurer {
             for (Object param : objects) {
                 log.error("Parameter value - {}", param);
             }
-            log.error("Root Cause: {}", ExceptionUtils.getRootCauseMessage(throwable));
-            log.error("Root Cause StackTrace: {}", (Object[]) ExceptionUtils.getRootCauseStackTrace(throwable));
+            log.error("Error details:", throwable);
         };
     }
 }
