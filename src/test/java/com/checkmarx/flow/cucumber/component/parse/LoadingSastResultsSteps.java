@@ -20,6 +20,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Implementation of steps that specify the location of SAST results.
@@ -127,11 +128,14 @@ public class LoadingSastResultsSteps {
 
     private static Set<String> getBaseFilenames(String extension, Path resourceDir) throws IOException {
         int DIRECTORY_SCAN_DEPTH = 1;
-        return Files.find(resourceDir,
+        try (Stream<Path> files = Files.find(resourceDir,
                 DIRECTORY_SCAN_DEPTH,
-                onlyFilesWithExtension(extension))
-                .map(path -> FilenameUtils.getBaseName(path.getFileName().toString()))
-                .collect(Collectors.toSet());
+                onlyFilesWithExtension(extension));
+        ) {
+            return files
+                    .map(path -> FilenameUtils.getBaseName(path.getFileName().toString()))
+                    .collect(Collectors.toSet());
+        }
     }
 
     private static Path getResourceDir(String subdir) throws URISyntaxException {

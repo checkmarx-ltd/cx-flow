@@ -193,19 +193,13 @@ public class ScanSteps extends AbstractScanSteps {
     
     @And ("output json logger will have Scan request {string} and scan status will be {string}")
     public void verifyJsonLoggerAndScanStatus(String repoUrl, String scanStatus){
-
-        FileInputStream inputStream = null;
-        BufferedReader streamReader = null;
-        File file = null;
         JsonNode node = null;
         ObjectMapper objectMapper = new ObjectMapper();
         String logAbsolutePath = System.getProperty("LOG_PATH") + File.separator +"CxFlowReport.json";
-        try {
-            
-  
-            inputStream = new FileInputStream(logAbsolutePath);
-            streamReader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
-
+        try (
+                FileInputStream inputStream = new FileInputStream(logAbsolutePath);
+                BufferedReader streamReader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"))
+            ) {
             boolean moreLines = true;
             String scanRequest = streamReader.readLine();
             String nextScanRequest = null;
@@ -240,19 +234,9 @@ public class ScanSteps extends AbstractScanSteps {
                 
         }
         finally{
-            try {
-                inputStream.close();
-                streamReader.close();
-                objectMapper = null;
-                node=null;
-                //delete file contents
-                new FileOutputStream(logAbsolutePath).close();
-                errorExpected = false;
-            } catch (Exception e) {
-                fail(e.getMessage());
-            }
-            
-            
+            objectMapper = null;
+            node=null;
+            errorExpected = false;
         }
         
     }
