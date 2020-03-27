@@ -306,10 +306,9 @@ workflows:
           requires:
             - e2e-tests
       - cleanup:
-          parameters:
-            cluster-name: eks-cxflow-ci
-            namespace: cxflow-${CIRCLE_SHA1::7}
-            release-name: cxflow-${CIRCLE_SHA1::7}
-            version: v3.1.1
+          cluster-name: eks-cxflow-ci
+          namespace: cxflow-${CIRCLE_SHA1::7}
+          release-name: cxflow-${CIRCLE_SHA1::7}
+          version: v3.1.1
           requires:
             - e2e-tests
