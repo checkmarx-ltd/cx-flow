@@ -153,6 +153,10 @@ public class GitHubToJiraSteps {
 
         JSONArray hooks = getJSONArray(REPO_HOOKS_BASE_URL);
 
+        if (hooks == null) {
+            fail("could not create webhook configuration");
+        }
+
         if (!hooks.isEmpty()) {
             fail("repository alredy has hooks configured");
         }
@@ -323,10 +327,11 @@ public class GitHubToJiraSteps {
 
     private String getFileInBase64() throws IOException {
         String path = crumbsToPath(
-            "cucumber",
-            "data",
-            "input-files-toscan",
-            srcFile);
+                false,
+                "cucumber",
+                "data",
+                "input-files-toscan",
+                srcFile);
         try (InputStream is = getClass().getClassLoader().getResourceAsStream(path)) {
             try (
                     InputStreamReader isr = new InputStreamReader(is , Charset.forName("UTF-8"));
