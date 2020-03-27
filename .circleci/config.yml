@@ -197,6 +197,15 @@ jobs:
   
   cleanup:
     executor: aws-eks/python3
+    parameters:
+      cluster-name:
+        type: string
+      namespace:
+        type: string
+      release-name:
+        type: string
+      version:
+        type: string
     steps:
       - aws-eks/update-kubeconfig-with-authenticator:
           cluster-name: << parameters.cluster-name >>
