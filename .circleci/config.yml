@@ -190,6 +190,25 @@ jobs:
           path: ~/test-results
       - store_artifacts:
           path: ~/test-results/junit
+  
+  integration-tests:
+    docker:
+      - image: "circleci/openjdk:8-jdk"
+    steps:
+      - checkout 
+      - run:
+          name: Run Integration Tests
+          command: ./gradlew clean integrationTest --info
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/test-results/junit/
+            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/test-results
+      - store_artifacts:
+          path: ~/test-results/junit
 
   docker-push-stable:
     executor: docker
@@ -266,6 +285,9 @@ workflows:
           filters:
             branches:
               only: develop
+          requires:
+            - deploy-cxflow
+      - integration-tests:
           requires:
             - deploy-cxflow
       - docker-push-stable:
