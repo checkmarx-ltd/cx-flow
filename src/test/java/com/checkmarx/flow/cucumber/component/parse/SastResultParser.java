@@ -12,6 +12,9 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -25,6 +28,7 @@ public class SastResultParser {
 
     public Map<String, Element> getPathMapByFilename(String filename) {
         Document sastResult = parse(filename);
+        assertNotNull(sastResult , "error parsing SAST result file");
         NodeList resultElements = sastResult.getElementsByTagName("Result");
 
         return IntStream.range(0, resultElements.getLength())
