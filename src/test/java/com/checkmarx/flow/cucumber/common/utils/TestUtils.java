@@ -2,13 +2,12 @@ package com.checkmarx.flow.cucumber.common.utils;
 
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.CxFlowRunner;
+import com.checkmarx.flow.cucumber.common.Constants;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.checkmarx.flow.cucumber.common.Constants;
 import org.springframework.boot.DefaultApplicationArguments;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.ResourceUtils;
 

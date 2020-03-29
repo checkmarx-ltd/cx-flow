@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class WebHookSteps {
     private static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
-    private static final String WEBHOOK_REQUEST_RESOURCE_PATH = "sample-webhook-requests/from-github.json";
+    private static final String WEBHOOK_REQUEST_RESOURCE_PATH = "sample-webhook-requests/github-push-minimal.json";
 
     private final List<CompletableFuture<Long>> requestSendingTasks = new ArrayList<>();
 
