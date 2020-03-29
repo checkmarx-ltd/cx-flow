@@ -296,9 +296,11 @@ workflows:
               only: develop
           requires:
             - e2e-tests
+            - integration-tests
       - publish-github-release:
           filters:
             branches:
               only: develop
           requires:
             - e2e-tests
+            - integration-tests
