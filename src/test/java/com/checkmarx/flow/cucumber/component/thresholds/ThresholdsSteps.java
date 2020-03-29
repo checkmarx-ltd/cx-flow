@@ -172,9 +172,9 @@ public class ThresholdsSteps {
         scanRequest.setMergeNoteUri(MERGE_NOTE_URL);
         scanRequest.setProduct(ScanRequest.Product.CX);
 
-        scanRequest.setAdditionalMetadata(new HashMap<String, String>() {{
-            put("statuses_url", PULL_REQUEST_STATUSES_URL);
-        }});
+        Map<String, String> additionalMetadata = new HashMap<String, String>();
+        additionalMetadata.put("statuses_url", PULL_REQUEST_STATUSES_URL);
+        scanRequest.setAdditionalMetadata(additionalMetadata);
         return scanRequest;
     }
 
