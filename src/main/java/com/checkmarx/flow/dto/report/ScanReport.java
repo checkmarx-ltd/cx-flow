@@ -9,7 +9,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class ScanReport extends AnalyticsReport {
 
-    private static final String OPERATION = "Scan Request";
+    public static final String OPERATION = "Scan Request";
     private static final String INCREMENTAL = "Inc";
     private static final String FULL = "Full";
     private String scanStatus;
@@ -30,6 +30,9 @@ public class ScanReport extends AnalyticsReport {
     private void setFields(ScanRequest request, String sourcesPath, Status status) {
         this.branch = request.getBranch();
         this.repoType = request.getRepoType().getRepository();
+        if(branch == null){
+            branch = NOT_APPLICABLE;
+        }
         this.scanStatus = setEncodedRepoUrl(sourcesPath, status.getMessage());
 
         if(request.isIncremental()){
