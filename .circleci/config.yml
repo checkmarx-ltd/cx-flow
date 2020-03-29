@@ -281,24 +281,33 @@ workflows:
       - docker-build:
           requires:
             - build
-          # filters:
-          #   branches:
-          #     only: develop
+          filters:
+            branches:
+              only: 
+                - develop
+                - /pr-.*/
       - deploy-cxflow:
           cluster-name: eks-cxflow-ci
           chart: ./helm/cxflow
           namespace: cxflow-${CIRCLE_SHA1::7}
           release-name: cxflow-${CIRCLE_SHA1::7}
           version: v3.1.1
-          # filters:
-          #   branches:
-          #     only: develop
+          filters:
+            branches:
+              only: 
+                - develop
+                - /pr-.*/
           requires:
             - docker-build
       - component-tests:
           requires:
             - build
       - e2e-tests:
+          filters:
+            branches:
+              only: 
+                - develop
+                - /pr-.*/
           requires:
             - deploy-cxflow
       - docker-push-stable:
@@ -318,5 +327,11 @@ workflows:
           namespace: cxflow-${CIRCLE_SHA1::7}
           release-name: cxflow-${CIRCLE_SHA1::7}
           version: v3.1.1
+          when: always
+          filters:
+            branches:
+              only: 
+                - develop
+                - /pr-.*/
           requires:
             - e2e-tests
