@@ -216,7 +216,8 @@ jobs:
           name: Save application logs
           command: |
             export POD_NAME=$(kubectl get pods -o custom-columns=:metadata.name -n << parameters.namespace >> | head -n2 | tr -d '\n')
-            kubectl logs ${POD_NAME} -n << parameters.namespace >> > /tmp/${POD_NAME}.log
+            mkdir -p ~/application-logs/
+            kubectl logs ${POD_NAME} -n << parameters.namespace >> > ~/application-logs/${POD_NAME}.log
       - run:
           name: Delete cxflow deployment
           command: helm uninstall << parameters.release-name >> --namespace << parameters.namespace >>
@@ -224,7 +225,7 @@ jobs:
           name: Delete namespace
           command: kubectl delete namespace << parameters.namespace >>
       - store_artifacts:
-          path: /tmp/${POD_NAME}.log
+          path: ~/application-logs/${POD_NAME}.log
       
   docker-push-stable:
     executor: docker
