@@ -195,6 +195,25 @@ jobs:
       - store_artifacts:
           path: ~/test-results/junit
   
+  integration-tests:
+    docker:
+      - image: "circleci/openjdk:8-jdk"
+    steps:
+      - checkout 
+      - run:
+          name: Run Integration Tests
+          command: ./gradlew clean integrationTest --info
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/test-results/junit/
+            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/test-results
+      - store_artifacts:
+          path: ~/test-results/junit
+  
   cleanup:
     executor: aws-eks/python3
     parameters:
@@ -271,13 +290,13 @@ workflows:
   build_deploy:
     jobs:
       - build
-      - sonar:
-          context: sonarcloud
-          filters:
-            branches:
-              only: develop
-          requires:
-            - build
+      # - sonar:
+      #     context: sonarcloud
+      #     filters:
+      #       branches:
+      #         only: develop
+      #     requires:
+      #       - build
       - docker-build:
           requires:
             - build
@@ -310,12 +329,16 @@ workflows:
                 - /pr-.*/
           requires:
             - deploy-cxflow
+      - integration-tests:
+          requires:
+            - deploy-cxflow
       - docker-push-stable:
           filters:
             branches:
               only: develop
           requires:
             - e2e-tests
+            - integration-tests
       - publish-github-release:
           filters:
             branches:
@@ -335,3 +358,4 @@ workflows:
                 - /pr-.*/
           requires:
             - e2e-tests
+            - integration-tests
