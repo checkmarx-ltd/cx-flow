@@ -12,6 +12,9 @@ import java.util.Map;
 
 import com.checkmarx.flow.dto.Status;
 
+/**
+ * Corresponds to an event when a pull request is failed or approved depending on scan results.
+ */
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -28,7 +31,7 @@ public class PullRequestReport extends AnalyticsReport {
 
     public PullRequestReport(ScanDetails scanDetails, ScanRequest request) {
         super(scanDetails.getScanId(), request);
-        
+
         setEncodedRepoUrl(request.getRepoUrl());
         if(scanDetails.isOsaScan()){
             scanId = scanDetails.getOsaScanId();
@@ -55,5 +58,5 @@ public class PullRequestReport extends AnalyticsReport {
     public void setThresholds(Map<FindingSeverity, Integer> thresholds) {
         this.thresholds = thresholds;
     }
-    
+
 }
