@@ -130,13 +130,6 @@ test {
     }
 }
 
-task integrationTest(type: Test) {
-    useJUnit {
-        systemProperty "testprofile", "integration"
-
-    }
-}
-
 task getVersion {
     doLast {
         println "${version}"

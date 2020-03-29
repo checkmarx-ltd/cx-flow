@@ -287,7 +287,9 @@ workflows:
               only: develop
           requires:
             - deploy-cxflow
-      - integration-tests
+      - integration-tests:
+          requires:
+            - build
       - docker-push-stable:
           filters:
             branches:
