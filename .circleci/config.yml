@@ -225,7 +225,7 @@ jobs:
           name: Delete namespace
           command: kubectl delete namespace << parameters.namespace >>
       - store_artifacts:
-          path: ~/application-logs/${POD_NAME}.log
+          path: ~/application-logs
       
   docker-push-stable:
     executor: docker
