@@ -2,11 +2,14 @@ package com.checkmarx.flow.dto.report;
 
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.Status;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.*;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class ScanReport extends AnalyticsReport {
 
     public static final String OPERATION = "Scan Request";
