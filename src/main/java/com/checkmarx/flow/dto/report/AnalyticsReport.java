@@ -3,12 +3,19 @@ package com.checkmarx.flow.dto.report;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.utils.AesEncodingUtils;
 import com.checkmarx.sdk.exception.CheckmarxException;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.AllArgsConstructor;
+
 import lombok.Data;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import static net.logstash.logback.marker.Markers.*;
 
 @Data
+@AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public abstract class AnalyticsReport {
 
     protected static final Logger jsonlogger = LoggerFactory.getLogger("jsonLogger");

@@ -1,35 +1,36 @@
 package com.checkmarx.flow.cucumber.common;
 
+import com.checkmarx.flow.dto.report.AnalyticsReport;
 import com.checkmarx.sdk.exception.CheckmarxException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.*;
 
+import static org.springframework.boot.logging.LoggingSystemProperties.LOG_PATH;
+
 public class JsonLoggerTestUtils {
-    private JsonNode node;
+
+    public static final String CX_FLOW_REPORT_JSON = "CxFlowReport.json";
+    private final String logPath;
     private String logAbsolutePath;
 
-    public JsonNode getNode() {
-        return node;
+    public JsonLoggerTestUtils(){
+        logPath = LOG_PATH;
+        logAbsolutePath = System.getProperty(logPath) + File.separator + CX_FLOW_REPORT_JSON;
     }
 
-    public String getLogAbsolutePath() {
-        return logAbsolutePath;
-    }
 
-    public JsonNode getOperationNode(String operation) throws CheckmarxException {
-        FileInputStream inputStream = null;
-        BufferedReader streamReader = null;
-        File file = null;
-        node = null;
+    public AnalyticsReport getOperationNode(String operation , Class reportClass) throws CheckmarxException {
+
+
         ObjectMapper objectMapper = new ObjectMapper();
-        logAbsolutePath = System.getProperty("LOG_PATH") + File.separator + "CxFlowReport.json";
-        try {
+        try (
 
-            inputStream = new FileInputStream(logAbsolutePath);
-            streamReader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
-
+                FileInputStream inputStream = new FileInputStream(logAbsolutePath);
+                BufferedReader streamReader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
+        ){
             boolean moreLines = true;
             String scanRequest = streamReader.readLine();
             String nextScanRequest = null;
@@ -41,20 +42,51 @@ public class JsonLoggerTestUtils {
                     moreLines = false;
                 }
             }
-            node = objectMapper.readTree(scanRequest).get(operation);
-            return node;
+
+            String node = objectMapper.readTree(scanRequest).get(operation).toString();
+
+            objectMapper.configure(DeserializationFeature.FAIL_ON_NUMBERS_FOR_ENUMS, false);
+            AnalyticsReport reportObject =  (AnalyticsReport)objectMapper.readValue(node, reportClass);
+
+
+            return reportObject;
 
         } catch (IOException e) {
             throw new CheckmarxException(e.getMessage());
-        } finally {
-            try {
-                inputStream.close();
-                streamReader.close();
-                objectMapper = null;
-            } catch (Exception e) {
-                throw new CheckmarxException(e.getMessage());
+        }
+
+    }
+
+
+
+    public JsonLoggerTestUtils(String logPath){
+        this.logPath = logPath;
+        logAbsolutePath = System.getProperty(logPath) + File.separator + "CxFlowReport.json";
+    }
+    public JsonNode getOperationNode(String operation) throws CheckmarxException {
+
+        ObjectMapper objectMapper = new ObjectMapper();
+         try (
+
+            FileInputStream inputStream = new FileInputStream(logAbsolutePath);
+            BufferedReader streamReader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
+        ){
+            boolean moreLines = true;
+            String scanRequest = streamReader.readLine();
+            String nextScanRequest = null;
+            while (moreLines) {
+                nextScanRequest = streamReader.readLine();
+                if (nextScanRequest != null) {
+                    scanRequest = nextScanRequest;
+                } else {
+                    moreLines = false;
+                }
             }
 
+            return objectMapper.readTree(scanRequest).get(operation);
+
+        } catch (IOException e) {
+            throw new CheckmarxException(e.getMessage());
         }
         
     }
@@ -62,10 +94,13 @@ public class JsonLoggerTestUtils {
 
     public void deleteLoggerContents() throws CheckmarxException {
         //delete file contents
-        try {
-            new FileOutputStream(logAbsolutePath).close();
-        } catch (IOException e) {
+        try (
+                FileOutputStream file = new FileOutputStream(logAbsolutePath);
+        )
+        {}
+        catch (IOException e) {
             throw new CheckmarxException(e.getMessage());
-        }
+        } 
     }
+    
 }
