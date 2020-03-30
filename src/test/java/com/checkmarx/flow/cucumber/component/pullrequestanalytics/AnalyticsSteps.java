@@ -19,7 +19,6 @@ import com.checkmarx.sdk.dto.cx.CxScanSummary;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
 import com.checkmarx.test.flow.config.CxFlowMocksConfig;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
@@ -28,11 +27,10 @@ import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.mockito.ArgumentMatchers;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -40,7 +38,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -50,53 +51,40 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
 @Slf4j
+@RequiredArgsConstructor
 @SpringBootTest(classes = {CxFlowMocksConfig.class, CxFlowApplication.class})
 public class AnalyticsSteps {
     private static final String PULL_REQUEST_STATUSES_URL = "statuses url stub";
     private static final String MERGE_NOTE_URL = "merge note url stub";
 
-    private static final ObjectMapper mapper = new ObjectMapper();
-
-    private JsonLoggerTestUtils testUtils = new JsonLoggerTestUtils();
     private static final ObjectMapper jsonReader = new ObjectMapper();
-    private final FlowProperties flowProperties;
-    private ResultsService resultsService;
-    private final MergeResultEvaluator mergeResultEvaluator;
-    private final CxProperties cxProperties;
+
     private final GitHubProperties gitHubProperties;
+    private final FlowProperties flowProperties;
+    private final MergeResultEvaluator mergeResultEvaluator;
 
     private final CxClient cxClientMock;
+    private final CxProperties cxProperties;
     private final RestTemplate restTemplateMock;
 
     private static class State {
-        public Boolean pullRequestWasApproved;
         public ScanResults scanResultsToInject;
         public int fakeScanId;
         public ScanRequest scanRequest;
-        public JsonNode lastAnalyticsEvent;
+        public JsonNode lastAnalyticsReport;
         public List<Filter> filters;
         Map<FindingSeverity, Integer> findingsPerSeverity;
     }
 
     private final State state = new State();
 
-    public AnalyticsSteps(FlowProperties flowProperties, ResultsService resultsService, CxClient cxClientMock, RestTemplate restTemplateMock, GitHubProperties gitHubProperties, MergeResultEvaluator mergeResultEvaluator, CxProperties cxProperties) {
-        this.flowProperties = flowProperties;
-        this.resultsService = resultsService;
-        this.cxClientMock = cxClientMock;
-        this.restTemplateMock = restTemplateMock;
-        this.gitHubProperties = gitHubProperties;
-        this.mergeResultEvaluator = mergeResultEvaluator;
-        this.cxProperties = cxProperties;
-    }
+    private ResultsService resultsService;
 
     @Before("@PullRequestAnalyticsFeature")
-    public void prepareServices() throws CheckmarxException {
+    public void prepareServices() {
         initMock(cxClientMock);
         initMock(restTemplateMock);
         resultsService = createResultsService();
-
-        testUtils.deleteLoggerContents();
     }
 
     @Given("thresholds are configured as HIGH: {int}, MEDIUM: {int}, LOW: {int}")
@@ -126,38 +114,40 @@ public class AnalyticsSteps {
     @Then("in analytics report, the operation is {string}")
     public void inAnalyticsReportTheOperationIs(String operation) throws CheckmarxException {
         JsonLoggerTestUtils utils = new JsonLoggerTestUtils();
-        state.lastAnalyticsEvent = utils.getOperationNode(operation);
-        boolean nodeExists = state.lastAnalyticsEvent != null && !state.lastAnalyticsEvent.isNull();
-        Assert.assertTrue(String.format("Event node not found for the '%s' operation", operation), nodeExists);
+        state.lastAnalyticsReport = utils.getOperationNode(operation);
+        utils.deleteLoggerContents();
+
+        boolean nodeExists = state.lastAnalyticsReport != null && !state.lastAnalyticsReport.isNull();
+        Assert.assertTrue(String.format("JSON node not found for the '%s' operation", operation), nodeExists);
     }
 
     @And("pullRequestStatus is {string}")
     public void pullrequeststatusIs(String expectedStatus) {
-        String actualStatus = state.lastAnalyticsEvent.get("pullRequestStatus").textValue();
+        String actualStatus = state.lastAnalyticsReport.get("pullRequestStatus").textValue();
         Assert.assertEquals("Unexpected pull request status.", expectedStatus, actualStatus);
     }
 
     @And("repoUrl is encrypted as {string}")
-    public void repourlIsEncryptedAs(String expectedRepoUrl) {
-        String actualRepoUrl = state.lastAnalyticsEvent.get("repoUrl").textValue();
+    public void repoUrlIsEncryptedAs(String expectedRepoUrl) {
+        String actualRepoUrl = state.lastAnalyticsReport.get("repoUrl").textValue();
         Assert.assertEquals("Incorrect encrypted repo URL.", expectedRepoUrl, actualRepoUrl);
     }
 
     @And("scanInitiator is {string}, scanId is {int}, pullRequestStatus is {string}")
     public void scanInitiatorIs(String initiator, int scanId, String status) {
-        String actualInitiator = state.lastAnalyticsEvent.get("scanInitiator").textValue();
+        String actualInitiator = state.lastAnalyticsReport.get("scanInitiator").textValue();
         Assert.assertEquals("Unexpected initiator.", initiator, actualInitiator);
 
-        int actualScanId = state.lastAnalyticsEvent.get("scanInitiator").intValue();
+        int actualScanId = state.lastAnalyticsReport.get("scanInitiator").intValue();
         Assert.assertEquals("Unexpected scan ID.", scanId, actualScanId);
 
-        String actualStatus = state.lastAnalyticsEvent.get("pullRequestStatus").textValue();
+        String actualStatus = state.lastAnalyticsReport.get("pullRequestStatus").textValue();
         Assert.assertEquals("Unexpected pull request status.", status, actualStatus);
     }
 
     @And("findingsPerSeverity are HIGH: {int}, MEDIUM: {int}, LOW: {int}")
     public void findingsPerSeverity(int high, int medium, int low) {
-        JsonNode actualNode = state.lastAnalyticsEvent.get("findingsPerSeverity");
+        JsonNode actualNode = state.lastAnalyticsReport.get("findingsPerSeverity");
         Assert.assertEquals("Invalid node type.", JsonNodeType.OBJECT, actualNode.getNodeType());
 
         Map<FindingSeverity, Integer> expectedMap = toSeverityMap(high, medium, low);
@@ -168,6 +158,13 @@ public class AnalyticsSteps {
 
     @And("thresholds are HIGH: {int}, MEDIUM: {int}, LOW: {int}")
     public void thresholdsAre(int high, int medium, int low) {
+        JsonNode actualThresholds = state.lastAnalyticsReport.get("thresholds");
+        Map<FindingSeverity, Integer> expectedCounts = toSeverityMap(high, medium, low);
+        for (FindingSeverity severity : FindingSeverity.values()) {
+            Integer expected = expectedCounts.get(severity);
+            Integer actual = actualThresholds.get(severity.toString()).asInt(-1);
+            Assert.assertEquals("Incorrect thresholds in log.", expected, actual);
+        }
     }
 
     private static Map<FindingSeverity, Integer> toSeverityMap(int high, int medium, int low) {
@@ -180,8 +177,6 @@ public class AnalyticsSteps {
 
     private void processScanResultsInCxFlow() {
         try {
-//            ScanRequest scanRequest = createScanRequest(null);
-
             CompletableFuture<ScanResults> task = resultsService.processScanResultsAsync(
                     state.scanRequest, 0, 0, null, state.filters);
 
@@ -209,12 +204,10 @@ public class AnalyticsSteps {
 
 
     private void initMock(RestTemplate restTemplateMock) {
-        Answer<ResponseEntity<String>> interceptor = new HttpRequestInterceptor();
-
         ResponseEntity<String> sendingPostRequest = restTemplateMock.exchange(
                 anyString(), eq(HttpMethod.POST), any(HttpEntity.class), ArgumentMatchers.<Class<String>>any());
 
-        when(sendingPostRequest).thenAnswer(interceptor);
+        when(sendingPostRequest).thenAnswer(invocation -> new ResponseEntity<>(HttpStatus.OK));
     }
 
     private void initMock(CxClient cxClientMock) {
@@ -247,54 +240,22 @@ public class AnalyticsSteps {
     }
 
     private static ScanResults createFakeScanResults(Map<FindingSeverity, Integer> findingsPerSeverity) {
-        ScanResults result = new ScanResults();
-
         CxScanSummary summary = new CxScanSummary();
         summary.setHighSeverity(findingsPerSeverity.get(FindingSeverity.HIGH));
         summary.setMediumSeverity(findingsPerSeverity.get(FindingSeverity.MEDIUM));
         summary.setLowSeverity(findingsPerSeverity.get(FindingSeverity.LOW));
-        result.setScanSummary(summary);
+        summary.setInfoSeverity(0);
+
+        HashMap<String, Object> flowSummary = new HashMap<>();
+        findingsPerSeverity.forEach((severity, count) -> flowSummary.put(severity.toString(), count));
 
         Map<String, Object> details = new HashMap<>();
-        details.put(Constants.SUMMARY_KEY, new HashMap<>());
-        result.setAdditionalDetails(details);
+        details.put(Constants.SUMMARY_KEY, flowSummary);
 
-        result.setXIssues(new ArrayList<>());
-
-        return result;
-    }
-
-    /**
-     * Intercepts requests that CxFlow sends to GitHub.
-     * This allows to detect whether CxFlow has approved or failed a pull request.
-     */
-    private class HttpRequestInterceptor implements Answer<ResponseEntity<String>> {
-        @Override
-        public ResponseEntity<String> answer(InvocationOnMock invocation) {
-            String url = invocation.getArgument(0);
-            if (url.equals(PULL_REQUEST_STATUSES_URL)) {
-                HttpEntity<String> interceptedRequest = invocation.getArgument(2);
-                state.pullRequestWasApproved = wasApproved(interceptedRequest);
-            }
-            return new ResponseEntity<>(HttpStatus.OK);
-        }
-
-        private Boolean wasApproved(HttpEntity<String> interceptedRequest) {
-            Boolean result = null;
-            String body = interceptedRequest.getBody();
-            Assert.assertNotNull("Status request body is null.", body);
-            try {
-                JsonNode requestJson = mapper.readTree(body);
-                String state = requestJson.get("state").textValue();
-                if (state.equals("success")) {
-                    result = true;
-                } else if (state.equals("failure")) {
-                    result = false;
-                }
-            } catch (JsonProcessingException e) {
-                Assert.fail("Error parsing request. " + e);
-            }
-            return result;
-        }
+        return ScanResults.builder()
+                .scanSummary(summary)
+                .additionalDetails(details)
+                .xIssues(new ArrayList<>())
+                .build();
     }
 }
