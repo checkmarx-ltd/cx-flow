@@ -9,12 +9,14 @@ import lombok.AllArgsConstructor;
 
 import lombok.Data;
 
+import lombok.NoArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import static net.logstash.logback.marker.Markers.*;
 
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public abstract class AnalyticsReport {
 
@@ -29,9 +31,7 @@ public abstract class AnalyticsReport {
     protected String repoUrl = null;
     protected String scanInitiator;
     protected String scanId;
-
-
-    public AnalyticsReport(){}
+    
     
     public AnalyticsReport(String scanId, ScanRequest request) {
         this.scanId = scanId;
