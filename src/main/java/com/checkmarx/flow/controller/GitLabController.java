@@ -206,6 +206,7 @@ public class GitLabController {
             CxConfig cxConfig =  gitLabService.getCxConfigOverride(request);
             request = ScanUtils.overrideCxConfig(request, cxConfig, flowProperties, jiraProperties);
 
+            request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body.toString());
             request.putAdditionalMetadata("merge_id",objectAttributes.getIid().toString());
             request.putAdditionalMetadata("merge_title", objectAttributes.getTitle());
             if(proj.getId() != null) {
@@ -375,6 +376,7 @@ public class GitLabController {
             CxConfig cxConfig =  gitLabService.getCxConfigOverride(request);
             request = ScanUtils.overrideCxConfig(request, cxConfig, flowProperties, jiraProperties);
 
+            request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body.toString());
             request.setId(uid);
             if(proj.getId() != null) {
                 request.setRepoProjectId(proj.getId());
