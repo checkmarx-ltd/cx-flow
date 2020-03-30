@@ -5,6 +5,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -43,6 +44,9 @@ public class JiraProperties {
     private String grandParentUrl = "";
     private boolean child = false;
     private Integer httpTimeout = 20000;
+    private List<String> statusCategoryOpenName = Arrays.asList("To Do", "In Progress");
+    private List<String> statusCategoryClosedName = Arrays.asList("Done");
+
 
     public String getUrl() {
         return this.url;
@@ -291,4 +295,21 @@ public class JiraProperties {
     public void setHttpTimeout(Integer httpTimeout) {
         this.httpTimeout = httpTimeout;
     }
+
+    public List<String> getStatusCategoryOpenName() {
+        return statusCategoryOpenName;
+    }
+
+    public void setStatusCategoryOpenName(List<String> statusCategoryOpenName) {
+        this.statusCategoryOpenName = statusCategoryOpenName;
+    }
+
+    public List<String> getStatusCategoryClosedName() {
+        return statusCategoryClosedName;
+    }
+
+    public void setStatusCategoryClosedName(List<String> statusCategoryClosedName) {
+        this.statusCategoryClosedName = statusCategoryClosedName;
+    }
+
 }
