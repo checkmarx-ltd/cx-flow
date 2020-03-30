@@ -155,8 +155,9 @@ public class MergeResultEvaluatorImpl implements MergeResultEvaluator {
             if (rawSummary instanceof Map) {
                 result = (Map<?, ?>) rawSummary;
             } else {
+                String summaryClass = rawSummary != null ? rawSummary.getClass().getName() : null;
                 log.warn("Wrong summary type in scan results. Expected {}, got {}.",
-                        Map.class.getName(), rawSummary.getClass().getName());
+                        Map.class.getName(), summaryClass);
             }
         } else {
             log.warn("Additional details are missing in scan results.");
