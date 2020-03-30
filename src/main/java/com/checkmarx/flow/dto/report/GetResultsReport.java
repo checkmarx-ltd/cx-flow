@@ -4,27 +4,27 @@ import com.checkmarx.flow.config.FindingSeverity;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.service.MergeResultEvaluatorImpl;
 import com.checkmarx.sdk.dto.ScanResults;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 import java.util.HashMap;
 import java.util.Map;
 
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 @EqualsAndHashCode(callSuper = true)
 public class GetResultsReport extends AnalyticsReport {
     
     public static final String OPERATION = "Get Request";
-    private Integer highSeveryResults = 0;
-    private Integer mediumSeveryResults= 0;
-    private Integer lowSeveryResults = 0;
-    private Integer highSeveryCxFlowResults = 0;
-    private Integer infoSeveryResults = 0;
-    private Integer mediumSeveryCxFlowResults = 0;
-    private Integer lowSeveryCxFlowResults = 0;
-    private Integer infoSeveryCxFlowResults = 0;
-
+    private Map<FindingSeverity, Integer>  scanSummary = new HashMap<>();
+    private Map<FindingSeverity, Integer> cxFlowResults = new HashMap<>();
+    
     public GetResultsReport(Integer sastScanId, ScanRequest request, ScanResults results) {
         super(sastScanId,request);
         setResults(results);
@@ -38,24 +38,27 @@ public class GetResultsReport extends AnalyticsReport {
     }
 
     private void setResults(ScanResults results) {
-        this.highSeveryResults = results.getScanSummary().getHighSeverity();
-        this.mediumSeveryResults = results.getScanSummary().getHighSeverity();
-        this.lowSeveryResults = results.getScanSummary().getLowSeverity();
-        this.infoSeveryResults = results.getScanSummary().getInfoSeverity();
-        
-        Map<FindingSeverity, Integer> cxFlowResults = MergeResultEvaluatorImpl.getFindingCountPerSeverity(results);
 
-        if(cxFlowResults.get(FindingSeverity.HIGH) !=null) {
-            this.highSeveryCxFlowResults = cxFlowResults.get(FindingSeverity.HIGH);
+        this.scanSummary.put(FindingSeverity.HIGH,results.getScanSummary().getHighSeverity());
+        this.scanSummary.put(FindingSeverity.MEDIUM,results.getScanSummary().getMediumSeverity());
+        this.scanSummary.put(FindingSeverity.LOW,results.getScanSummary().getLowSeverity());
+        this.scanSummary.put(FindingSeverity.INFO, results.getScanSummary().getInfoSeverity());
+
+
+        Map<FindingSeverity, Integer> cxFlowResultsIn = MergeResultEvaluatorImpl.getFindingCountPerSeverity(results);
+
+        
+        if(cxFlowResultsIn.get(FindingSeverity.HIGH) !=null) {
+            this.cxFlowResults.put(FindingSeverity.HIGH, cxFlowResultsIn.get(FindingSeverity.HIGH));
         }
-        if(cxFlowResults.get(FindingSeverity.MEDIUM) != null) {
-            this.mediumSeveryCxFlowResults = cxFlowResults.get(FindingSeverity.MEDIUM);
+        if(cxFlowResultsIn.get(FindingSeverity.MEDIUM) != null) {
+            this.cxFlowResults.put(FindingSeverity.MEDIUM, cxFlowResultsIn.get(FindingSeverity.MEDIUM));
         }
-        if(cxFlowResults.get(FindingSeverity.LOW) != null) {
-            this.lowSeveryCxFlowResults = cxFlowResults.get(FindingSeverity.LOW);
+        if(cxFlowResultsIn.get(FindingSeverity.LOW) != null) {
+            this.cxFlowResults.put(FindingSeverity.LOW, cxFlowResultsIn.get(FindingSeverity.LOW));
         }
-        if(cxFlowResults.get(FindingSeverity.INFO) != null) {
-            this.infoSeveryCxFlowResults = cxFlowResults.get(FindingSeverity.INFO);
+        if(cxFlowResultsIn.get(FindingSeverity.INFO) != null) {
+            this.cxFlowResults.put(FindingSeverity.INFO, cxFlowResultsIn.get(FindingSeverity.INFO));
         }
     }
     
