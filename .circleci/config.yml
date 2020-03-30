@@ -128,8 +128,8 @@ jobs:
       - run:
           name: Create namespace
           command: |
-            export NAMESPACE_EXISTS=$(kubectl get namespaces | grep cxflow-$CIRCLE_BRANCH)
-            if [[ ${NAMESPACE_EXISTS} ]]; then echo "Namespace already exists"; else kubectl create namespace cxflow-$CIRCLE_BRANCH; fi
+            export NAMESPACE_EXISTS=$(kubectl get namespaces | grep << parameters.namespace >>)
+            if [[ ${NAMESPACE_EXISTS} ]]; then echo "Namespace already exists"; else kubectl create namespace << parameters.namespace >>; fi
       - run:
           name: Change appVersion
           command: |
@@ -147,6 +147,8 @@ jobs:
               --set cxflow.checkmarxClientSecret=${CHECKMARX_CLIENT_SECRET} \
               --set cxflow.jiraToken=${JIRA_TOKEN} \
               --set cxflow.jiraProject=${JIRA_PROJECT} \
+              --set ingress.hosts[0].host=<< parameters.release-name >>.${EXTERNAL_DNS_DOMAIN} \
+              --set ingress.hosts[0].paths[0]="/*" \
               << parameters.chart >>
       - run:
           name: Show running pods
@@ -179,7 +181,9 @@ jobs:
       - checkout 
       - run:
           name: Run E2E Tests
-          command: ./gradlew clean e2eTests -Dtarget=${HOOK_TARGET} -Drepo=${HOOK_REPO} -Dnamespace=${HOOK_NAMESPACE}
+          command: |
+            export HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
+            ./gradlew clean e2eTests --info -Dtarget=${HOOK_TARGET} -Drepo=${HOOK_REPO} -Dnamespace=${HOOK_NAMESPACE}
       - run:
           name: Save test results
           command: |
@@ -209,7 +213,39 @@ jobs:
           path: ~/test-results
       - store_artifacts:
           path: ~/test-results/junit
-
+  
+  cleanup:
+    executor: aws-eks/python3
+    parameters:
+      cluster-name:
+        type: string
+      namespace:
+        type: string
+      release-name:
+        type: string
+      version:
+        type: string
+    steps:
+      - aws-eks/update-kubeconfig-with-authenticator:
+          cluster-name: << parameters.cluster-name >>
+          install-kubectl: true
+      - helm/install-helm-client:
+          version: << parameters.version >>
+      - run:
+          name: Save application logs
+          command: |
+            export POD_NAME=$(kubectl get pods -o custom-columns=:metadata.name -n << parameters.namespace >> | head -n2 | tr -d '\n')
+            mkdir -p ~/application-logs/
+            kubectl logs ${POD_NAME} -n << parameters.namespace >> > ~/application-logs/${POD_NAME}.log
+      - run:
+          name: Delete cxflow deployment
+          command: helm uninstall << parameters.release-name >> --namespace << parameters.namespace >>
+      - run:
+          name: Delete namespace
+          command: kubectl delete namespace << parameters.namespace >>
+      - store_artifacts:
+          path: ~/application-logs
+      
   docker-push-stable:
     executor: docker
     steps:
@@ -262,20 +298,24 @@ workflows:
       #     requires:
       #       - build
       - docker-build:
-          filters:
-            branches:
-              only: develop
           requires:
             - build
+          filters:
+            branches:
+              only: 
+                - develop
+                - /pr-.*/
       - deploy-cxflow:
           cluster-name: eks-cxflow-ci
           chart: ./helm/cxflow
-          namespace: cxflow-$CIRCLE_BRANCH
-          release-name: cxflow-$CIRCLE_BRANCH
+          namespace: cxflow-${CIRCLE_SHA1::7}
+          release-name: cxflow-${CIRCLE_SHA1::7}
           version: v3.1.1
           filters:
             branches:
-              only: develop
+              only: 
+                - develop
+                - /pr-.*/
           requires:
             - docker-build
       - component-tests:
@@ -284,7 +324,9 @@ workflows:
       - e2e-tests:
           filters:
             branches:
-              only: develop
+              only: 
+                - develop
+                - /pr-.*/
           requires:
             - deploy-cxflow
       - integration-tests:
@@ -301,6 +343,19 @@ workflows:
           filters:
             branches:
               only: develop
+          requires:
+            - e2e-tests
+            - integration-tests
+      - cleanup:
+          cluster-name: eks-cxflow-ci
+          namespace: cxflow-${CIRCLE_SHA1::7}
+          release-name: cxflow-${CIRCLE_SHA1::7}
+          version: v3.1.1
+          filters:
+            branches:
+              only: 
+                - develop
+                - /pr-.*/
           requires:
             - e2e-tests
             - integration-tests
