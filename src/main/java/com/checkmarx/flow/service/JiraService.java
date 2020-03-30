@@ -985,12 +985,12 @@ public class JiraService {
 
     private void logJiraTickets(ScanResults results, ScanRequest request, ScanDetails scanDetails, ImmutableMap<String, List<String>> ticketsMap) {
         if(scanDetails.getScanId() != null) {
-            new JiraTicketsReport(scanDetails.getScanId(), request, results).build(ticketsMap).log();
+            new JiraTicketsReport(scanDetails.getScanId(), request).build(ticketsMap).log();
         }
         else if(scanDetails.getOsaScanId() != null) {
-            new JiraTicketsReport(scanDetails.getOsaScanId(), request, results).build(ticketsMap).log();
+            new JiraTicketsReport(scanDetails.getOsaScanId(), request).build(ticketsMap).log();
         }else{
-            new JiraTicketsReport(request, results).build(ticketsMap).log();
+            new JiraTicketsReport(request).build(ticketsMap).log();
         }
     }
 
