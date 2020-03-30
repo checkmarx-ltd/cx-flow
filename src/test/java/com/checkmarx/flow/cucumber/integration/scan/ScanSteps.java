@@ -200,8 +200,8 @@ public class ScanSteps extends AbstractScanSteps {
         JsonNode node;
         try {
 
-            //AnalyticsReport report = testUtils.getOperationNode(ScanReport.OPERATION, ScanReport.class);
-            node = testUtils.getOperationNode(ScanReport.OPERATION);
+           // AnalyticsReport report = testUtils.getReportNode(ScanReport.OPERATION, ScanReport.class);
+            node = testUtils.getReportNode(ScanReport.OPERATION);
             
             if (this.repoType.equals(ScanRequest.Repository.GITHUB)) {
                 assertEquals((ScanRequest.Repository.GITHUB.toString()), node.get("repoType").textValue());
