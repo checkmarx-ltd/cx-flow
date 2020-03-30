@@ -1,8 +1,6 @@
 package com.checkmarx.flow.dto.report;
 
-import com.checkmarx.flow.constants.JiraConstants;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.sdk.dto.ScanResults;
 import com.google.common.collect.ImmutableMap;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -16,19 +14,19 @@ public class JiraTicketsReport extends AnalyticsReport{
     public static final String OPERATION = "Jira Tickets Creation";
     private ImmutableMap<String, List<String>> jiraTickets;
 
-    public JiraTicketsReport(ScanRequest request, ScanResults results) {
+    public JiraTicketsReport(ScanRequest request) {
         this.scanId = NOT_APPLICABLE;
         scanInitiator = NOT_APPLICABLE;
         projectName = request.getProject();
         setEncodedRepoUrl(request.getRepoUrl());
     }
     
-    public JiraTicketsReport(Integer sastScanId, ScanRequest request, ScanResults results) {
+    public JiraTicketsReport(Integer sastScanId, ScanRequest request) {
         super(sastScanId,request);
         setEncodedRepoUrl(request.getRepoUrl());
     }
 
-    public JiraTicketsReport(String osaScanId, ScanRequest request, ScanResults results) {
+    public JiraTicketsReport(String osaScanId, ScanRequest request) {
         super(osaScanId,request);
         setEncodedRepoUrl(request.getRepoUrl());
     }
