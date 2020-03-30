@@ -44,6 +44,7 @@ public class ScanUtils {
     public static final String JIRA_ISSUE_KEY_2 = "%s%s @ %s%s";
     public static final String JIRA_ISSUE_BODY = "*%s* issue exists @ *%s* in branch *%s*";
     public static final String JIRA_ISSUE_BODY_2 = "*%s* issue exists @ *%s*";
+    public static final String WEB_HOOK_PAYLOAD = "web-hook-payload";
 
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(ScanUtils.class);
 
