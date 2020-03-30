@@ -7,6 +7,7 @@ import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.cucumber.common.JsonLoggerTestUtils;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.service.GitHubService;
 import com.checkmarx.flow.service.MergeResultEvaluator;
@@ -19,9 +20,7 @@ import com.checkmarx.sdk.dto.cx.CxScanSummary;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
 import com.checkmarx.test.flow.config.CxFlowMocksConfig;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.JsonNodeType;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
@@ -71,7 +70,7 @@ public class AnalyticsSteps {
         public ScanResults scanResultsToInject;
         public int fakeScanId;
         public ScanRequest scanRequest;
-        public JsonNode lastAnalyticsReport;
+        public PullRequestReport lastAnalyticsReport;
         public List<Filter> filters;
         Map<FindingSeverity, Integer> findingsPerSeverity;
     }
@@ -114,57 +113,52 @@ public class AnalyticsSteps {
     @Then("in analytics report, the operation is {string}")
     public void inAnalyticsReportTheOperationIs(String operation) throws CheckmarxException {
         JsonLoggerTestUtils utils = new JsonLoggerTestUtils();
-        state.lastAnalyticsReport = utils.getOperationNode(operation);
+        state.lastAnalyticsReport = (PullRequestReport) utils.getReportNode(operation, PullRequestReport.class);
         utils.deleteLoggerContents();
 
-        boolean nodeExists = state.lastAnalyticsReport != null && !state.lastAnalyticsReport.isNull();
-        Assert.assertTrue(String.format("JSON node not found for the '%s' operation", operation), nodeExists);
+        Assert.assertNotEquals(String.format("JSON node not found for the '%s' operation", operation),
+                null,
+                state.lastAnalyticsReport);
     }
 
     @And("pullRequestStatus is {string}")
     public void pullrequeststatusIs(String expectedStatus) {
-        String actualStatus = state.lastAnalyticsReport.get("pullRequestStatus").textValue();
+        String actualStatus = state.lastAnalyticsReport.getPullRequestStatus();
         Assert.assertEquals("Unexpected pull request status.", expectedStatus, actualStatus);
     }
 
     @And("repoUrl is encrypted as {string}")
     public void repoUrlIsEncryptedAs(String expectedRepoUrl) {
-        String actualRepoUrl = state.lastAnalyticsReport.get("repoUrl").textValue();
-        Assert.assertEquals("Incorrect encrypted repo URL.", expectedRepoUrl, actualRepoUrl);
+        Assert.assertEquals("Incorrect encrypted repo URL.", expectedRepoUrl, state.lastAnalyticsReport.getRepoUrl());
     }
 
-    @And("scanInitiator is {string}, scanId is {int}, pullRequestStatus is {string}")
-    public void scanInitiatorIs(String initiator, int scanId, String status) {
-        String actualInitiator = state.lastAnalyticsReport.get("scanInitiator").textValue();
-        Assert.assertEquals("Unexpected initiator.", initiator, actualInitiator);
+    @And("scanInitiator is {string}, scanId is {string}, pullRequestStatus is {string}")
+    public void scanInitiatorIs(String initiator, String scanId, String status) {
+        Assert.assertEquals("Unexpected initiator.", initiator, state.lastAnalyticsReport.getScanInitiator());
+        Assert.assertEquals("Unexpected scan ID.", scanId, state.lastAnalyticsReport.getScanId());
 
-        int actualScanId = state.lastAnalyticsReport.get("scanInitiator").intValue();
-        Assert.assertEquals("Unexpected scan ID.", scanId, actualScanId);
-
-        String actualStatus = state.lastAnalyticsReport.get("pullRequestStatus").textValue();
-        Assert.assertEquals("Unexpected pull request status.", status, actualStatus);
+        Assert.assertEquals("Unexpected pull request status.",
+                status,
+                state.lastAnalyticsReport.getPullRequestStatus());
     }
 
-    @And("findingsPerSeverity are HIGH: {int}, MEDIUM: {int}, LOW: {int}")
+    @And("findingsMap is HIGH: {int}, MEDIUM: {int}, LOW: {int}")
     public void findingsPerSeverity(int high, int medium, int low) {
-        JsonNode actualNode = state.lastAnalyticsReport.get("findingsPerSeverity");
-        Assert.assertEquals("Invalid node type.", JsonNodeType.OBJECT, actualNode.getNodeType());
-
         Map<FindingSeverity, Integer> expectedMap = toSeverityMap(high, medium, low);
-        JsonNode expectedNode = jsonReader.valueToTree(expectedMap);
-
-        Assert.assertEquals("Incorrect value of findingsPerSeverity object.", expectedNode, actualNode);
+        assertMapsAreEqual(expectedMap, state.lastAnalyticsReport.getFindingsMap(), "Incorrect findingsMap");
     }
 
     @And("thresholds are HIGH: {int}, MEDIUM: {int}, LOW: {int}")
     public void thresholdsAre(int high, int medium, int low) {
-        JsonNode actualThresholds = state.lastAnalyticsReport.get("thresholds");
-        Map<FindingSeverity, Integer> expectedCounts = toSeverityMap(high, medium, low);
-        for (FindingSeverity severity : FindingSeverity.values()) {
-            Integer expected = expectedCounts.get(severity);
-            Integer actual = actualThresholds.get(severity.toString()).asInt(-1);
-            Assert.assertEquals("Incorrect thresholds in log.", expected, actual);
-        }
+        Map<FindingSeverity, Integer> actualThresholds = state.lastAnalyticsReport.getThresholds();
+        Map<FindingSeverity, Integer> expectedThresholds = toSeverityMap(high, medium, low);
+        assertMapsAreEqual(expectedThresholds, actualThresholds, "Incorrect thresholds");
+    }
+
+    private static void assertMapsAreEqual(Map<FindingSeverity, Integer> expected,
+                                           Map<FindingSeverity, Integer> actual,
+                                           String errorMessage) {
+        Assert.assertEquals(errorMessage, jsonReader.valueToTree(expected), jsonReader.valueToTree(actual));
     }
 
     private static Map<FindingSeverity, Integer> toSeverityMap(int high, int medium, int low) {
