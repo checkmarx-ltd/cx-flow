@@ -1,14 +1,20 @@
 package com.checkmarx.flow.dto.report;
 
 import com.checkmarx.flow.dto.ScanRequest;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.common.collect.ImmutableMap;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class JiraTicketsReport extends AnalyticsReport{
 
     public static final String OPERATION = "Jira Tickets Creation";
