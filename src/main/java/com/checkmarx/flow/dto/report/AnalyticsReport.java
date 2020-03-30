@@ -1,6 +1,7 @@
 package com.checkmarx.flow.dto.report;
 
 import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.dto.Status;
 import com.checkmarx.flow.utils.AesEncodingUtils;
 import com.checkmarx.sdk.exception.CheckmarxException;
 
@@ -60,11 +61,11 @@ public abstract class AnalyticsReport {
     //since we don't want the OPERATION to be a part of the logged object
     protected abstract String _getOperation();
 
-    protected String setEncodedRepoUrl(String sourcesPath){
-        return setEncodedRepoUrl(sourcesPath, "");
+    protected Status setEncodedRepoUrl(String sourcesPath){
+        return setEncodedRepoUrl(sourcesPath, Status.SUCCESS);
     }
     
-    protected String setEncodedRepoUrl(String sourcesPath, String outputMsg) {
+    protected Status setEncodedRepoUrl(String sourcesPath, Status outputMsg) {
         try {
             if(sourcesPath != null) {
                 repoUrl = sourcesPath;
@@ -77,9 +78,10 @@ public abstract class AnalyticsReport {
 
         } catch (CheckmarxException e) {
             this.repoUrl = NOT_APPLICABLE;
-            outputMsg = "Unable to encode repoUrl " + e.getMessage();
-            log.error(outputMsg);
-            return outputMsg;
+            Status errStatus = Status.FAILURE.build("Unable to encode repoUrl " + e.getMessage());
+            
+            log.error(errStatus.getMessage());
+            return errStatus;
         }
     }
 }

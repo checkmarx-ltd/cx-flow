@@ -200,7 +200,7 @@ public class ScanSteps extends AbstractScanSteps {
         JsonNode node;
         try {
 
-           // AnalyticsReport report = testUtils.getReportNode(ScanReport.OPERATION, ScanReport.class);
+            //AnalyticsReport report = testUtils.getReportNode(ScanReport.OPERATION, ScanReport.class);
             node = testUtils.getReportNode(ScanReport.OPERATION);
             
             if (this.repoType.equals(ScanRequest.Repository.GITHUB)) {
@@ -214,7 +214,7 @@ public class ScanSteps extends AbstractScanSteps {
                 }
             }
 
-            assertTrue(node.get("scanStatus").textValue().startsWith(scanStatus));
+            assertTrue(node.get("scanStatus").get("message").textValue().startsWith(scanStatus));
             assertEquals(cxProperties.getIncremental() ? "Inc" : "Full", node.get("scanType").textValue());
             if(!errorExpected) {
                 assertNotEquals("NA", node.get("scanId").textValue());
