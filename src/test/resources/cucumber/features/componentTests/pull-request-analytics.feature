@@ -9,8 +9,8 @@ Feature: Analytics report should be logged correctly when CxFlow approves or fai
     Then in analytics report, the operation is "Pull Request"
     And pullRequestStatus is "<status>"
     And repoUrl is encrypted as "0iM+sQuMxUSLLz1yHxqZugoiOtt7BJThuArY+G37SqXRzGQabQH/iqaHm9xpn8Sx"
-    And scanInitiator is "CX", scanId is <scan ID>, pullRequestStatus is "<status>"
-    And findingsPerSeverity are HIGH: <f_high>, MEDIUM: <f_medium>, LOW: <f_low>
+    And scanInitiator is "CX", scanId is "<scan ID>", pullRequestStatus is "<status>"
+    And findingsMap is HIGH: <f_high>, MEDIUM: <f_medium>, LOW: <f_low>
     And thresholds are HIGH: <thr_high>, MEDIUM: <thr_medium>, LOW: <thr_low>
 
     Examples:
