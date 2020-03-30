@@ -85,7 +85,7 @@ public class JsonLoggerTestUtils {
                 }
             }
 
-            return objectMapper.readTree(scanRequest).get(operation);
+            return objectMapper.readTree(scanRequest).get(nodeName);
 
         } catch (IOException e) {
             throw new CheckmarxException(e.getMessage());
