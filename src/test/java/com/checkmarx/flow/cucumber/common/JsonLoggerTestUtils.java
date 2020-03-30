@@ -7,20 +7,25 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.*;
+import java.nio.file.Paths;
 
 import static org.springframework.boot.logging.LoggingSystemProperties.LOG_PATH;
 
 public class JsonLoggerTestUtils {
 
     public static final String CX_FLOW_REPORT_JSON = "CxFlowReport.json";
-    private final String logPath;
+    private String logPath;
     private String logAbsolutePath;
 
     public JsonLoggerTestUtils(){
         logPath = LOG_PATH;
-        logAbsolutePath = System.getProperty(logPath) + File.separator + CX_FLOW_REPORT_JSON;
+        logAbsolutePath = Paths.get(System.getProperty("LOG_PATH"), CX_FLOW_REPORT_JSON).toString();
     }
 
+    public JsonLoggerTestUtils(String logPath){
+        this.logPath = logPath;
+        logAbsolutePath = System.getProperty(logPath) + File.separator + "CxFlowReport.json";
+    }
 
     public AnalyticsReport getOperationNode(String operation , Class reportClass) throws CheckmarxException {
 
@@ -59,10 +64,7 @@ public class JsonLoggerTestUtils {
 
 
 
-    public JsonLoggerTestUtils(String logPath){
-        this.logPath = logPath;
-        logAbsolutePath = System.getProperty(logPath) + File.separator + "CxFlowReport.json";
-    }
+
     public JsonNode getOperationNode(String operation) throws CheckmarxException {
 
         ObjectMapper objectMapper = new ObjectMapper();
