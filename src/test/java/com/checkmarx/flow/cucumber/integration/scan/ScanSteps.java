@@ -5,6 +5,7 @@ import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.cucumber.common.JsonLoggerTestUtils;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.Status;
+import com.checkmarx.flow.dto.report.AnalyticsReport;
 import com.checkmarx.flow.dto.report.ScanReport;
 import com.checkmarx.flow.exception.ExitThrowable;
 
@@ -198,8 +199,10 @@ public class ScanSteps extends AbstractScanSteps {
         JsonLoggerTestUtils testUtils = new JsonLoggerTestUtils();
         JsonNode node;
         try {
-            node = testUtils.getOperationNode(ScanReport.OPERATION);
 
+            //AnalyticsReport report = testUtils.getOperationNode(ScanReport.OPERATION, ScanReport.class);
+            node = testUtils.getOperationNode(ScanReport.OPERATION);
+            
             if (this.repoType.equals(ScanRequest.Repository.GITHUB)) {
                 assertEquals((ScanRequest.Repository.GITHUB.toString()), node.get("repoType").textValue());
                 assertEquals(this.branch, node.get("branch").textValue());
@@ -213,7 +216,9 @@ public class ScanSteps extends AbstractScanSteps {
 
             assertTrue(node.get("scanStatus").textValue().startsWith(scanStatus));
             assertEquals(cxProperties.getIncremental() ? "Inc" : "Full", node.get("scanType").textValue());
-            assertNotEquals("NA", node.get("scanId").textValue());
+            if(!errorExpected) {
+                assertNotEquals("NA", node.get("scanId").textValue());
+            }
 
         } catch (CheckmarxException e) {
             fail(e.getMessage());
@@ -246,6 +251,12 @@ public class ScanSteps extends AbstractScanSteps {
         setGithubAuthURL();
     }
 
+    @And("team in application.yml is {string}")
+    public void setTeam(String team) {
+        this.teamName = team;
+        cxProperties.setTeam(team);
+    }
+    
     @And("team in application.yml is \\CxServer\\SP")
     public void setTeam() {
         setDeafultTeam();
