@@ -345,12 +345,12 @@ workflows:
               only: develop
           requires:
             - e2e-tests
+            - integration-tests
       - cleanup:
           cluster-name: eks-cxflow-ci
           namespace: cxflow-${CIRCLE_SHA1::7}
           release-name: cxflow-${CIRCLE_SHA1::7}
           version: v3.1.1
-          when: always
           filters:
             branches:
               only: 
