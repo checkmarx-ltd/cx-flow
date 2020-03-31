@@ -139,7 +139,7 @@ jobs:
       - run:
           name: Install cxflow service on cluster 
           command: |
-            helm upgrade --install --atomic --namespace << parameters.namespace >> << parameters.release-name >> \
+            helm upgrade --install --atomic --debug --namespace << parameters.namespace >> << parameters.release-name >> \
               --set cxflow.checkmarxUsername=${CHECKMARX_USERNAME} \
               --set cxflow.checkmarxPassword=${CHECKMARX_PASSWORD} \
               --set cxflow.githubToken=${GITHUB_TOKEN} \
