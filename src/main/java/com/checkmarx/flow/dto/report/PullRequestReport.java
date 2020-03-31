@@ -10,9 +10,7 @@ import lombok.NoArgsConstructor;
 
 import java.util.Map;
 
-import static net.logstash.logback.marker.Markers.append;
-import static net.logstash.logback.marker.Markers.appendEntries;
-
+import com.checkmarx.flow.dto.Status;
 
 @Getter
 @NoArgsConstructor
@@ -22,7 +20,7 @@ public class PullRequestReport extends AnalyticsReport {
 
     public static final String OPERATION = "Pull Request";
 
-    private String pullRequestStatus;
+    private Status pullRequestStatus;
 
     private Map<FindingSeverity, Integer> findingsMap = null;
     private Map<FindingSeverity, Integer> thresholds = null;
@@ -30,8 +28,8 @@ public class PullRequestReport extends AnalyticsReport {
 
     public PullRequestReport(ScanDetails scanDetails, ScanRequest request) {
         super(scanDetails.getScanId(), request);
-
-        repoUrl = request.getRepoUrl();
+        
+        setEncodedRepoUrl(request.getRepoUrl());
         if(scanDetails.isOsaScan()){
             scanId = scanDetails.getOsaScanId();
             scanInitiator = OSA;
@@ -39,7 +37,7 @@ public class PullRequestReport extends AnalyticsReport {
     }
 
 
-    public void setPullRequestStatus(String status){
+    public void setPullRequestStatus(Status status){
         this.pullRequestStatus = status;
     }
 
@@ -57,10 +55,5 @@ public class PullRequestReport extends AnalyticsReport {
     public void setThresholds(Map<FindingSeverity, Integer> thresholds) {
         this.thresholds = thresholds;
     }
-
-    @Override
-    public void log()  {
-        jsonlogger.info(append(_getOperation() , this), "");
-
-    }
+    
 }

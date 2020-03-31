@@ -15,7 +15,7 @@ public class ScanReport extends AnalyticsReport {
     public static final String OPERATION = "Scan Request";
     private static final String INCREMENTAL = "Inc";
     private static final String FULL = "Full";
-    private String scanStatus;
+    private Status scanStatus;
     private String branch;
     private String repoType;
     protected String scanType;
@@ -36,13 +36,14 @@ public class ScanReport extends AnalyticsReport {
         if(branch == null){
             branch = NOT_APPLICABLE;
         }
-        this.scanStatus = setEncodedRepoUrl(sourcesPath, status.getMessage());
+        setEncodedRepoUrl(sourcesPath);
 
         if(request.isIncremental()){
             this.scanType = INCREMENTAL;
         }else{
             this.scanType = FULL;
         }
+        this.scanStatus = status;
     }
 
 

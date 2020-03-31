@@ -10,12 +10,12 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.Key;
 
-public class AesEncodingUtils {
+public class AesEncryptionUtils {
     private static final String ALGO = "AES";
     private static final byte[] keyValue =
             new byte[]{'T', 'x', '8', '2', '^', 'F', 'x', 'l', '2', 'p', 'P', 'o', 'W', 'K', '%', 'm'};
 
-    private AesEncodingUtils(){}
+    private AesEncryptionUtils(){}
     
     /**
      * Encrypt a string with AES algorithm.
@@ -23,7 +23,7 @@ public class AesEncodingUtils {
      * @param data is a string
      * @return the encrypted string
      */
-    public static String encode(String data) throws CheckmarxException {
+    public static String encrypt(String data) throws CheckmarxException {
         try {
             Key key = generateKey();
             Cipher c = Cipher.getInstance(ALGO);
@@ -42,7 +42,7 @@ public class AesEncodingUtils {
      * @param encodedData is a string
      * @return the decrypted string
      */
-    public static String decode(String encodedData) throws CheckmarxException {
+    public static String decrypt(String encodedData) throws CheckmarxException {
         try {
             if (!Strings.isNullOrEmpty(encodedData)) {
                 Key key = generateKey();

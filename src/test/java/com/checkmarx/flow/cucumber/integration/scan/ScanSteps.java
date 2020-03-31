@@ -5,11 +5,10 @@ import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.cucumber.common.JsonLoggerTestUtils;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.Status;
-import com.checkmarx.flow.dto.report.AnalyticsReport;
 import com.checkmarx.flow.dto.report.ScanReport;
 import com.checkmarx.flow.exception.ExitThrowable;
 
-import com.checkmarx.flow.utils.AesEncodingUtils;
+import com.checkmarx.flow.utils.AesEncryptionUtils;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.exception.CheckmarxException;
@@ -200,21 +199,21 @@ public class ScanSteps extends AbstractScanSteps {
         JsonNode node;
         try {
 
-           // AnalyticsReport report = testUtils.getReportNode(ScanReport.OPERATION, ScanReport.class);
+            //AnalyticsReport report = testUtils.getReportNode(ScanReport.OPERATION, ScanReport.class);
             node = testUtils.getReportNode(ScanReport.OPERATION);
             
             if (this.repoType.equals(ScanRequest.Repository.GITHUB)) {
                 assertEquals((ScanRequest.Repository.GITHUB.toString()), node.get("repoType").textValue());
                 assertEquals(this.branch, node.get("branch").textValue());
-                assertEquals(repoUrl, AesEncodingUtils.decode(node.get("repoUrl").textValue().trim()));
+                assertEquals(repoUrl, AesEncryptionUtils.decrypt(node.get("repoUrl").textValue().trim()));
             } else {
                 assertEquals("NA", node.get("repoType").textValue());
                 if (!errorExpected) {
-                    assertEquals(fileRepo.getPath(), AesEncodingUtils.decode(node.get("repoUrl").textValue().trim()));
+                    assertEquals(fileRepo.getPath(), AesEncryptionUtils.decrypt(node.get("repoUrl").textValue().trim()));
                 }
             }
 
-            assertTrue(node.get("scanStatus").textValue().startsWith(scanStatus));
+            assertTrue(node.get("scanStatus").get("message").textValue().startsWith(scanStatus));
             assertEquals(cxProperties.getIncremental() ? "Inc" : "Full", node.get("scanType").textValue());
             if(!errorExpected) {
                 assertNotEquals("NA", node.get("scanId").textValue());
