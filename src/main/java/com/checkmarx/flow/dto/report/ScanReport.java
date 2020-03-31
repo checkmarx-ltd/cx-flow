@@ -36,13 +36,14 @@ public class ScanReport extends AnalyticsReport {
         if(branch == null){
             branch = NOT_APPLICABLE;
         }
-        this.scanStatus = setEncodedRepoUrl(sourcesPath, status);
+        setEncodedRepoUrl(sourcesPath);
 
         if(request.isIncremental()){
             this.scanType = INCREMENTAL;
         }else{
             this.scanType = FULL;
         }
+        this.scanStatus = status;
     }
 
 

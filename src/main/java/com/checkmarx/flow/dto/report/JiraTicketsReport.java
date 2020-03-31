@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.util.HashMap;
 import java.util.List;
 
 @Data
@@ -18,7 +19,7 @@ import java.util.List;
 public class JiraTicketsReport extends AnalyticsReport{
 
     public static final String OPERATION = "Jira Tickets Creation";
-    private ImmutableMap<String, List<String>> jiraTickets;
+    private HashMap<String, List<String>> jiraTickets = new HashMap<>();
 
     public JiraTicketsReport(ScanRequest request) {
         this.scanId = NOT_APPLICABLE;
@@ -46,7 +47,7 @@ public class JiraTicketsReport extends AnalyticsReport{
     }
 
     public JiraTicketsReport build(ImmutableMap<String, List<String>> ticketsMap) {
-        this.jiraTickets = ticketsMap;
+        this.jiraTickets.putAll(ticketsMap);
         return this;
     }
 

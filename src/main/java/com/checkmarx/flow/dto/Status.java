@@ -2,8 +2,10 @@ package com.checkmarx.flow.dto;
 
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+@Getter
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class Status{
@@ -27,9 +29,4 @@ public class Status{
         return this;
     }
     
-    public String getMessage(){
-        return message;
-    }
-    
-    public Short getCode() { return code;}
 }
