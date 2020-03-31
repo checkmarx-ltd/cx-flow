@@ -291,9 +291,11 @@ workflows:
     jobs:
       - sonar:
           context: sonarcloud
-          # filters:
-          #   branches:
-          #     only: develop
+          filters:
+            branches:
+              only: 
+                - develop
+                - /pr-.*/
   build_deploy:
     jobs:
       - build
