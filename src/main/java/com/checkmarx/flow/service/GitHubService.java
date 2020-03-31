@@ -118,20 +118,23 @@ public class GitHubService extends RepoService {
     }
 
     private HttpEntity<String> getStatusRequestEntity(ScanResults results, PullRequestReport pullRequestReport) {
-        String state;
+        OperationStatus status;
+        String statusForApi;
         String description;
         if (mergeResultEvaluator.isMergeAllowed(results, properties, pullRequestReport)) {
-            state = MERGE_SUCCESS;
+            status = OperationStatus.SUCCESS;
+            statusForApi = MERGE_SUCCESS;
             description = MERGE_SUCCESS_DESCRIPTION;
-            pullRequestReport.setPullRequestStatus(Status.SUCCESS);
         } else {
-            state = MERGE_FAILURE;
+            status = OperationStatus.FAILURE;
+            statusForApi = MERGE_FAILURE;
             description = MERGE_FAILURE_DESCRIPTION;
-            pullRequestReport.setPullRequestStatus(Status.FAILURE.build(MERGE_FAILURE_DESCRIPTION));
         }
-
+        OperationResult requestResult = new OperationResult(status, description);
+        pullRequestReport.setPullRequestResult(requestResult);
         pullRequestReport.log();
-        JSONObject requestBody = getJSONStatus(state, results.getLink(), description);
+
+        JSONObject requestBody = getJSONStatus(statusForApi, results.getLink(), description);
         return new HttpEntity<>(requestBody.toString(), createAuthHeaders());
     }
 

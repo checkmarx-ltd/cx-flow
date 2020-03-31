@@ -10,7 +10,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.Map;
 
 
@@ -20,53 +20,51 @@ import java.util.Map;
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 @EqualsAndHashCode(callSuper = true)
 public class GetResultsReport extends AnalyticsReport {
-    
+
     public static final String OPERATION = "Get Request";
-    private Map<FindingSeverity, Integer>  scanSummary = new HashMap<>();
-    private Map<FindingSeverity, Integer> cxFlowResults = new HashMap<>();
-    
+    private Map<FindingSeverity, Integer> scanSummary = new EnumMap<>(FindingSeverity.class);
+    private Map<FindingSeverity, Integer> cxFlowResults = new EnumMap<>(FindingSeverity.class);
+
     public GetResultsReport(Integer sastScanId, ScanRequest request, ScanResults results) {
-        super(sastScanId,request);
+        super(sastScanId, request);
         setResults(results);
-        setEncodedRepoUrl(request.getRepoUrl());
+        setEncryptedRepoUrl(request.getRepoUrl());
     }
 
     public GetResultsReport(String osaScanId, ScanRequest request, ScanResults results) {
-        super(osaScanId,request);
+        super(osaScanId, request);
         setResults(results);
-        setEncodedRepoUrl(request.getRepoUrl());
+        setEncryptedRepoUrl(request.getRepoUrl());
     }
 
     private void setResults(ScanResults results) {
 
-        this.scanSummary.put(FindingSeverity.HIGH,results.getScanSummary().getHighSeverity());
-        this.scanSummary.put(FindingSeverity.MEDIUM,results.getScanSummary().getMediumSeverity());
-        this.scanSummary.put(FindingSeverity.LOW,results.getScanSummary().getLowSeverity());
+        this.scanSummary.put(FindingSeverity.HIGH, results.getScanSummary().getHighSeverity());
+        this.scanSummary.put(FindingSeverity.MEDIUM, results.getScanSummary().getMediumSeverity());
+        this.scanSummary.put(FindingSeverity.LOW, results.getScanSummary().getLowSeverity());
         this.scanSummary.put(FindingSeverity.INFO, results.getScanSummary().getInfoSeverity());
 
 
         Map<FindingSeverity, Integer> cxFlowResultsIn = MergeResultEvaluatorImpl.getFindingCountPerSeverity(results);
 
-        
-        if(cxFlowResultsIn.get(FindingSeverity.HIGH) !=null) {
+
+        if (cxFlowResultsIn.get(FindingSeverity.HIGH) != null) {
             this.cxFlowResults.put(FindingSeverity.HIGH, cxFlowResultsIn.get(FindingSeverity.HIGH));
         }
-        if(cxFlowResultsIn.get(FindingSeverity.MEDIUM) != null) {
+        if (cxFlowResultsIn.get(FindingSeverity.MEDIUM) != null) {
             this.cxFlowResults.put(FindingSeverity.MEDIUM, cxFlowResultsIn.get(FindingSeverity.MEDIUM));
         }
-        if(cxFlowResultsIn.get(FindingSeverity.LOW) != null) {
+        if (cxFlowResultsIn.get(FindingSeverity.LOW) != null) {
             this.cxFlowResults.put(FindingSeverity.LOW, cxFlowResultsIn.get(FindingSeverity.LOW));
         }
-        if(cxFlowResultsIn.get(FindingSeverity.INFO) != null) {
+        if (cxFlowResultsIn.get(FindingSeverity.INFO) != null) {
             this.cxFlowResults.put(FindingSeverity.INFO, cxFlowResultsIn.get(FindingSeverity.INFO));
         }
     }
-    
-    //adding underscore to prevent getOperation() to be called during logging of this object in log()
-    //since we don't want the OPERATION to be a part of the logged object
+
     @Override
-    public String _getOperation() {
+    protected String _getOperation() {
         return OPERATION;
     }
-    
+
 }

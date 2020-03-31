@@ -141,7 +141,7 @@ public class FlowService {
 
                 log.info("Not waiting for scan completion as Bug Tracker type is NONE");
                 CompletableFuture<ScanResults> results = CompletableFuture.completedFuture(null);
-                logRequest(request, scanId, cxFile, Status.SUCCESS);
+                logRequest(request, scanId, cxFile, OperationResult.successful());
                 //return CompletableFuture.completedFuture(null);
                 return new ScanDetails(projectId, scanId, results, false);
 
@@ -153,7 +153,7 @@ public class FlowService {
                 }
                 osaScanId = createOsaScan(request, projectId);
                 if(osaScanId != null) {
-                    logRequest(request, osaScanId, cxFile, Status.SUCCESS);
+                    logRequest(request, osaScanId, cxFile, OperationResult.successful());
                 }
                 //resultsService.processScanResultsAsync(request, projectId, scanId, osaScanId, request.getFilters());
             }
@@ -162,24 +162,27 @@ public class FlowService {
         }catch (CheckmarxException | GitAPIException e){
             log.error(ExceptionUtils.getMessage(e), e);
             Thread.currentThread().interrupt();
-            logRequest(request, scanId, cxFile, Status.FAILURE.build(e.getMessage()));
+            OperationResult scanCreationFailure = new OperationResult(OperationStatus.FAILURE, e.getMessage());
+            logRequest(request, scanId, cxFile, scanCreationFailure);
             throw new MachinaException("Checkmarx Error Occurred");
         }
 
-        logRequest(request, scanId, cxFile, Status.SUCCESS);
+        logRequest(request, scanId, cxFile, OperationResult.successful());
 
         this.scanDetails = new ScanDetails(projectId, scanId, osaScanId);
         return scanDetails;
     }
 
 
-    private void logRequest(ScanRequest request, Integer scanId, File  cxFile, Status status)  {
-        new ScanReport(scanId, request, getRepoUrl(request, cxFile), status).log();
+    private void logRequest(ScanRequest request, Integer scanId, File  cxFile, OperationResult scanCreationResult)  {
+        ScanReport report = new ScanReport(scanId, request, getRepoUrl(request, cxFile), scanCreationResult);
+        report.log();
     }
 
 
-    private void logRequest(ScanRequest request, String scanId, File  cxFile, Status status)  {
-        new ScanReport(scanId, request, getRepoUrl(request, cxFile), status).log();
+    private void logRequest(ScanRequest request, String scanId, File  cxFile,  OperationResult scanCreationResult)  {
+        ScanReport report = new ScanReport(scanId, request, getRepoUrl(request, cxFile), scanCreationResult);
+        report.log();
     }
 
     private String getRepoUrl(ScanRequest request, File cxFile) {
