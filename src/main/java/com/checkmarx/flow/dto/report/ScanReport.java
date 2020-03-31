@@ -1,58 +1,55 @@
 package com.checkmarx.flow.dto.report;
 
+import com.checkmarx.flow.dto.OperationResult;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.dto.Status;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-@AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class ScanReport extends AnalyticsReport {
 
     public static final String OPERATION = "Scan Request";
     private static final String INCREMENTAL = "Inc";
     private static final String FULL = "Full";
-    private Status scanStatus;
     private String branch;
     private String repoType;
     protected String scanType;
 
-    public ScanReport(Integer sastScanId, ScanRequest request, String sourcesPath, Status status) {
-        super(sastScanId,request);
-        setFields(request, sourcesPath, status);
+    private OperationResult scanResult;
+
+    public ScanReport(Integer sastScanId, ScanRequest request, String sourcesPath, OperationResult result) {
+        super(sastScanId, request);
+        setFields(request, sourcesPath, result);
     }
 
-    public ScanReport(String osaScanId, ScanRequest request, String sourcesPath, Status status) {
-        super(osaScanId,request);
-        setFields(request, sourcesPath, status);
+    public ScanReport(String osaScanId, ScanRequest request, String sourcesPath, OperationResult result) {
+        super(osaScanId, request);
+        setFields(request, sourcesPath, result);
     }
-    
-    private void setFields(ScanRequest request, String sourcesPath, Status status) {
+
+    private void setFields(ScanRequest request, String repoUrl, OperationResult result) {
         this.branch = request.getBranch();
         this.repoType = request.getRepoType().getRepository();
-        if(branch == null){
+        if (branch == null) {
             branch = NOT_APPLICABLE;
         }
-        setEncodedRepoUrl(sourcesPath);
+        setEncryptedRepoUrl(repoUrl);
 
-        if(request.isIncremental()){
+        if (request.isIncremental()) {
             this.scanType = INCREMENTAL;
-        }else{
+        } else {
             this.scanType = FULL;
         }
-        this.scanStatus = status;
+        this.scanResult = result;
     }
 
-
-
-    //adding underscore to prevent getOperation() to be called during logging of this object in log()
-    //since we don't want the OPERATION to be a part of the logged object
     @Override
-    public String _getOperation() {
+    protected String _getOperation() {
         return OPERATION;
     }
-    
 }

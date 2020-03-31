@@ -9,7 +9,7 @@ Feature: Analytics report should be logged correctly when CxFlow approves or fai
     Then in analytics report, the operation is "Pull Request"
     And pullRequestStatus is "<status>"
     And repoUrl is encrypted as "0iM+sQuMxUSLLz1yHxqZugoiOtt7BJThuArY+G37SqXRzGQabQH/iqaHm9xpn8Sx"
-    And scanInitiator is "CX", scanId is "<scan ID>", pullRequestStatus is "<status>"
+    And scanInitiator is "SAST", scanId is "<scan ID>"
     And findingsMap is HIGH: <f_high>, MEDIUM: <f_medium>, LOW: <f_low>
     And thresholds are HIGH: <thr_high>, MEDIUM: <thr_medium>, LOW: <thr_low>
 
@@ -18,23 +18,25 @@ Feature: Analytics report should be logged correctly when CxFlow approves or fai
       | 3452124 | 2        | 5          | 10      | 4      | 2        | 12    | FAILURE |
       | 937582  | 2        | 5          | 10      | 1      | 3        | 8     | SUCCESS |
 
-# Example of analytics log record for a pull request:
 # {
-#     "timestamp": "2020-03-26 15:12:19.967",
+#     "timestamp": "2020-03-31 13:26:05.533",
 #     "Pull Request": {
-#         "repoUrl": "0iM+sQuMxUSLLz1yHxqZup7bXXzEyALQr+XClITaj2TbuhbwilUhQlt0SgjfDOBj",
+#         "projectName": null,
+#         "repoUrl": "0iM+sQuMxUSLLz1yHxqZugoiOtt7BJThuArY+G37SqXRzGQabQH/iqaHm9xpn8Sx",
 #         "scanInitiator": "SAST",
-#         "scanId": 82919892,
-#         "pullRequestStatus": "failure",
-#         "findingsPerSeverity": {
-#             "MEDIUM": 42,
-#             "LOW": 4,
-#             "HIGH": 2
+#         "scanId": "937582",
+#         "pullRequestStatus": {
+#             "message": "SUCCESS"
+#         },
+#         "findingsMap": {
+#             "HIGH": 1,
+#             "MEDIUM": 3,
+#             "LOW": 8
 #         },
 #         "thresholds": {
-#             "MEDIUM": 3,
-#             "LOW": 8,
-#             "HIGH": 1
+#             "LOW": 10,
+#             "HIGH": 2,
+#             "MEDIUM": 5
 #         }
 #     }
 # }

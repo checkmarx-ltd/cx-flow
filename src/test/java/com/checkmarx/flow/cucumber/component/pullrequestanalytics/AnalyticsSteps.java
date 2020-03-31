@@ -6,6 +6,7 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.cucumber.common.JsonLoggerTestUtils;
 import com.checkmarx.flow.dto.BugTracker;
+import com.checkmarx.flow.dto.OperationResult;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.exception.MachinaException;
@@ -123,8 +124,8 @@ public class AnalyticsSteps {
 
     @And("pullRequestStatus is {string}")
     public void pullrequeststatusIs(String expectedStatus) {
-        String actualStatus = state.lastAnalyticsReport.getPullRequestStatus();
-        Assert.assertEquals("Unexpected pull request status.", expectedStatus, actualStatus);
+        OperationResult result = state.lastAnalyticsReport.getPullRequestResult();
+        Assert.assertEquals("Unexpected pull request status.", expectedStatus, result.getStatus().toString());
     }
 
     @And("repoUrl is encrypted as {string}")
@@ -132,33 +133,24 @@ public class AnalyticsSteps {
         Assert.assertEquals("Incorrect encrypted repo URL.", expectedRepoUrl, state.lastAnalyticsReport.getRepoUrl());
     }
 
-    @And("scanInitiator is {string}, scanId is {string}, pullRequestStatus is {string}")
-    public void scanInitiatorIs(String initiator, String scanId, String status) {
+    @And("scanInitiator is {string}, scanId is {string}")
+    public void scanInitiatorIs(String initiator, String scanId) {
         Assert.assertEquals("Unexpected initiator.", initiator, state.lastAnalyticsReport.getScanInitiator());
         Assert.assertEquals("Unexpected scan ID.", scanId, state.lastAnalyticsReport.getScanId());
-
-        Assert.assertEquals("Unexpected pull request status.",
-                status,
-                state.lastAnalyticsReport.getPullRequestStatus());
     }
 
     @And("findingsMap is HIGH: {int}, MEDIUM: {int}, LOW: {int}")
     public void findingsPerSeverity(int high, int medium, int low) {
         Map<FindingSeverity, Integer> expectedMap = toSeverityMap(high, medium, low);
-        assertMapsAreEqual(expectedMap, state.lastAnalyticsReport.getFindingsMap(), "Incorrect findingsMap");
+        Map<FindingSeverity, Integer> actualMap = state.lastAnalyticsReport.getFindingsPerSeverity();
+        Assert.assertEquals("Incorrect finding map", expectedMap, actualMap);
     }
 
     @And("thresholds are HIGH: {int}, MEDIUM: {int}, LOW: {int}")
     public void thresholdsAre(int high, int medium, int low) {
         Map<FindingSeverity, Integer> actualThresholds = state.lastAnalyticsReport.getThresholds();
         Map<FindingSeverity, Integer> expectedThresholds = toSeverityMap(high, medium, low);
-        assertMapsAreEqual(expectedThresholds, actualThresholds, "Incorrect thresholds");
-    }
-
-    private static void assertMapsAreEqual(Map<FindingSeverity, Integer> expected,
-                                           Map<FindingSeverity, Integer> actual,
-                                           String errorMessage) {
-        Assert.assertEquals(errorMessage, jsonReader.valueToTree(expected), jsonReader.valueToTree(actual));
+        Assert.assertEquals("Incorrect thresholds", expectedThresholds, actualThresholds);
     }
 
     private static Map<FindingSeverity, Integer> toSeverityMap(int high, int medium, int low) {
@@ -172,7 +164,7 @@ public class AnalyticsSteps {
     private void processScanResultsInCxFlow() {
         try {
             CompletableFuture<ScanResults> task = resultsService.processScanResultsAsync(
-                    state.scanRequest, 0, 0, null, state.filters);
+                    state.scanRequest, 0, state.fakeScanId, null, state.filters);
 
             task.get(1, TimeUnit.MINUTES);
         } catch (MachinaException | InterruptedException | ExecutionException | TimeoutException e) {
