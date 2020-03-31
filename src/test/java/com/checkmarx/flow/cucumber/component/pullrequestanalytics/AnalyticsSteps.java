@@ -53,8 +53,8 @@ import static org.mockito.Mockito.when;
 @RequiredArgsConstructor
 @SpringBootTest(classes = {CxFlowMocksConfig.class, CxFlowApplication.class})
 public class AnalyticsSteps {
-    private static final String PULL_REQUEST_STATUSES_URL = "statuses url stub";
-    private static final String MERGE_NOTE_URL = "merge note url stub";
+    private static final String PULL_REQUEST_STATUSES_URL = "http://statuses.url.stub";
+    private static final String MERGE_NOTE_URL = "http://merge.note.url.stub";
 
     private static final ObjectMapper jsonReader = new ObjectMapper();
 
@@ -76,14 +76,16 @@ public class AnalyticsSteps {
     }
 
     private final State state = new State();
+    private final JsonLoggerTestUtils loggerUtils = new JsonLoggerTestUtils();
 
     private ResultsService resultsService;
 
     @Before("@PullRequestAnalyticsFeature")
-    public void prepareServices() {
+    public void prepareServices() throws CheckmarxException {
         initMock(cxClientMock);
         initMock(restTemplateMock);
         resultsService = createResultsService();
+        loggerUtils.deleteLoggerContents();
     }
 
     @Given("thresholds are configured as HIGH: {int}, MEDIUM: {int}, LOW: {int}")
@@ -112,9 +114,7 @@ public class AnalyticsSteps {
 
     @Then("in analytics report, the operation is {string}")
     public void inAnalyticsReportTheOperationIs(String operation) throws CheckmarxException {
-        JsonLoggerTestUtils utils = new JsonLoggerTestUtils();
-        state.lastAnalyticsReport = (PullRequestReport) utils.getReportNode(operation, PullRequestReport.class);
-        utils.deleteLoggerContents();
+        state.lastAnalyticsReport = (PullRequestReport) loggerUtils.getReportNode(operation, PullRequestReport.class);
 
         Assert.assertNotEquals(String.format("JSON node not found for the '%s' operation", operation),
                 null,
