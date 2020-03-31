@@ -118,3 +118,17 @@ Feature: parse, and then publish processing given SAST XML results, findings sho
     When preparing results to deliver
     Then the call execution should throw a JiraClientRunTimeException since an error occurred when published new tickets
 
+  @Analytics @Jira_Analytics @Jira_Analytics_Open_Issue_Command_Line
+  Scenario: Open a new ticket in Jira via command line and validate matching data in the analytics json file
+    Given bug tracker is Jira
+    When opening a new Jira issue via the command line
+    Then a matching ticket creation data should be recorded in the analytics json file
+
+  @Analytics @Jira_Analytics @Jira_Analytics_Update_Issue_Command_Line
+  Scenario: Update a current ticket in Jira via command line and validate matching data in the analytics json file
+    Given bug tracker is Jira
+    When updating a new Jira issue via the command line
+    Then a matching ticket updating data should be recorded in the analytics json file
+
+
+
