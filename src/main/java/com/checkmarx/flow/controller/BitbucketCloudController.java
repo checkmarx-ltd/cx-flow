@@ -172,6 +172,7 @@ public class BitbucketCloudController {
                     .build();
 
             request = ScanUtils.overrideMap(request, o);
+            request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body.toString());
             request.setId(uid);
 
             if(helperService.isBranch2Scan(request, branches)){
@@ -322,6 +323,7 @@ public class BitbucketCloudController {
                     .build();
 
             request = ScanUtils.overrideMap(request, o);
+            request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body.toString());
             request.setId(uid);
 
             if(helperService.isBranch2Scan(request, branches)){
