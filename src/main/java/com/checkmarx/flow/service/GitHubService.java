@@ -123,13 +123,14 @@ public class GitHubService extends RepoService {
         if (mergeResultEvaluator.isMergeAllowed(results, properties, pullRequestReport)) {
             state = MERGE_SUCCESS;
             description = MERGE_SUCCESS_DESCRIPTION;
-            pullRequestReport.setPullRequestStatus(Status.SUCCESS.getMessage());
+            pullRequestReport.setPullRequestStatus(Status.SUCCESS);
         } else {
             state = MERGE_FAILURE;
             description = MERGE_FAILURE_DESCRIPTION;
-            pullRequestReport.setPullRequestStatus(Status.FAILURE.build(MERGE_FAILURE_DESCRIPTION).getMessage());
+            pullRequestReport.setPullRequestStatus(Status.FAILURE.build(MERGE_FAILURE_DESCRIPTION));
         }
-        
+
+        pullRequestReport.log();
         JSONObject requestBody = getJSONStatus(state, results.getLink(), description);
         return new HttpEntity<>(requestBody.toString(), createAuthHeaders());
     }

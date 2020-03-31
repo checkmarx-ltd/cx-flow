@@ -46,7 +46,7 @@ public class ScanDetails {
     }
 
     public boolean isOsaScan(){
-        return osaScanId == null;
+        return osaScanId != null;
     }
 
     public CompletableFuture<ScanResults> getResults() {
