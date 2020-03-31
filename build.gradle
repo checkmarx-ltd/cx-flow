@@ -35,6 +35,7 @@ buildscript {
 
 plugins {
     id 'io.franzbecker.gradle-lombok' version '3.3.0'
+    id "ua.eshepelyuk.ManifestClasspath" version "1.0.0"
 }
 
 apply plugin: 'java'
