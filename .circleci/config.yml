@@ -287,16 +287,16 @@ orbs:
 
 workflows:
   version: 2
+  sonar:
+    jobs:
+      - sonar:
+          context: sonarcloud
+          # filters:
+          #   branches:
+          #     only: develop
   build_deploy:
     jobs:
       - build
-      # - sonar:
-      #     context: sonarcloud
-      #     filters:
-      #       branches:
-      #         only: develop
-      #     requires:
-      #       - build
       - docker-build:
           requires:
             - build
