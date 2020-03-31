@@ -6,12 +6,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.boot.test.context.TestComponent;
 
 import java.io.*;
 import java.nio.file.Paths;
 
 import static org.springframework.boot.logging.LoggingSystemProperties.LOG_PATH;
 
+@TestComponent
 public class JsonLoggerTestUtils {
 
     public static final String CX_FLOW_REPORT_JSON = "CxFlowReport.json";

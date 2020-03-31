@@ -50,6 +50,10 @@ public class JiraService {
     private final String grandParentUrl;
     private Map<String, ScanResults.XIssue> nonPublishedScanResultsMap = new HashMap<>();
 
+    private List<String> currentNewIssuesList = new ArrayList<>();
+    private List<String> currentUpdatedIssuesList = new ArrayList<>();
+    private List<String> currentClosedIssuesList = new ArrayList<>();
+
     private static final String LABEL_FIELD_TYPE = "labels";
     private static final String SECURITY_FIELD_TYPE = "security";
     private static final String VALUE_FIELD_TYPE = "value";
@@ -1035,8 +1039,24 @@ public class JiraService {
                 JiraConstants.CLOSED_TICKET, closedIssues);
 
         logJiraTickets(results, request, scanDetails, ticketsMap);
+
+        setCurrentNewIssuesList(newIssues);
+        setCurrentUpdatedIssuesList(updatedIssues);
+        setCurrentClosedIssuesList(closedIssues);
         
         return ticketsMap;
+    }
+
+    public List<String> getCurrentNewIssuesList() {
+        return currentNewIssuesList;
+    }
+
+    public List<String> getCurrentUpdatedIssuesList() {
+        return currentUpdatedIssuesList;
+    }
+
+    public List<String> getCurrentClosedIssuesList() {
+        return currentClosedIssuesList;
     }
 
     private void logJiraTickets(ScanResults results, ScanRequest request, ScanDetails scanDetails, ImmutableMap<String, List<String>> ticketsMap) {
@@ -1152,5 +1172,20 @@ public class JiraService {
         if (sourceMap != null && !sourceMap.isEmpty()) {
             destinationMap.putAll(sourceMap);
         }
+    }
+
+    private void setCurrentNewIssuesList(List<String> currentNewIssuesList) {
+        this.currentNewIssuesList.clear();
+        this.currentNewIssuesList.addAll(currentNewIssuesList);
+    }
+
+    private void setCurrentUpdatedIssuesList(List<String> currentUpdatedIssuesList) {
+        this.currentUpdatedIssuesList.clear();
+        this.currentUpdatedIssuesList.addAll(currentUpdatedIssuesList);
+    }
+
+    private void setCurrentClosedIssuesList(List<String> currentClosedIssuesList) {
+        this.currentClosedIssuesList.clear();
+        this.currentClosedIssuesList.addAll(currentClosedIssuesList);
     }
 }
