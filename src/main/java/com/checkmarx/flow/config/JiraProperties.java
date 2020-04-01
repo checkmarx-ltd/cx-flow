@@ -60,6 +60,9 @@ public class JiraProperties {
         return this.token;
     }
 
+    /**
+     * Jira project key (not to be confused with project name).
+     */
     public String getProject() {
         return this.project;
     }
@@ -268,10 +271,17 @@ public class JiraProperties {
         return parentUrl;
     }
 
-    public void setParentUrl(String ParentUrl) {
-        this.parentUrl = ParentUrl;
+    public void setParentUrl(String parentUrl) {
+        this.parentUrl = parentUrl;
     }
 
+    /**
+     * Affects the way how CxFlow checks if an issue already exists in Jira.
+     * @return
+     *      false: only search among issues specified by {@link #getUrl()} (top level issues).<br>
+     *      true: in addition to the top level, also search among issues specified by {@link #getParentUrl()} and
+     *      {@link #getGrandParentUrl()}, i.e. 3 levels deep.
+     */
     public boolean isChild() {
         return child;
     }
@@ -284,8 +294,8 @@ public class JiraProperties {
         return grandParentUrl;
     }
 
-    public void setGrandParentUrl(String GrandParentUrl) {
-        this.grandParentUrl = GrandParentUrl;
+    public void setGrandParentUrl(String grandParentUrl) {
+        this.grandParentUrl = grandParentUrl;
     }
 
     public Integer getHttpTimeout() {
