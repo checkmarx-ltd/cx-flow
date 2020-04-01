@@ -394,11 +394,11 @@ Line #222:
     // Added to avoid passing too many method args.
     private class ResourceCreationConfig {
         public final HttpHeaders headers = getHeaders();
-        public ObjectNode body;
-        public String resourceName;
-        public String errorFieldName;
-        public String errorFieldValue;
-        public HttpStatus expectedErrorStatus;
+        private ObjectNode body;
+        private String resourceName;
+        private String errorFieldName;
+        private String errorFieldValue;
+        private HttpStatus expectedErrorStatus;
     }
 
     private Issue getFirstIssue(String projectKey) {

@@ -153,11 +153,9 @@ public class GitHubToJiraSteps {
 
         JSONArray hooks = getJSONArray(REPO_HOOKS_BASE_URL);
 
-        if (hooks == null) {
-            fail("could not create webhook configuration");
-        }
+        assertNotNull(hooks , "could not create webhook configuration");
 
-        if (!hooks.isEmpty()) {
+        if (!hooks.isEmpty()) {//NOSONAR
             fail("repository alredy has hooks configured");
         }
 
