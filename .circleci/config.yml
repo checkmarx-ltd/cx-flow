@@ -48,8 +48,8 @@ jobs:
           path: ~/test-results/junit
 
   sonar:
-    docker:
-      - image: circleci/openjdk:8-jdk
+    machine:
+      image: ubuntu-1604:201903-01
     steps:
       - checkout
       - run:
@@ -296,6 +296,7 @@ workflows:
               only: 
                 - develop
                 - /pr-.*/
+                - sonar
   build_deploy:
     jobs:
       - build
