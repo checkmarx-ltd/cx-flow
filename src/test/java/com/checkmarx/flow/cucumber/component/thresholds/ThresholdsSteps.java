@@ -80,7 +80,6 @@ public class ThresholdsSteps {
         this.cxProperties = cxProperties;
 
         gitHubProperties.setCxSummary(false);
-        gitHubProperties.setFlowSummary(false);
         this.gitHubProperties = gitHubProperties;
 
         this.mergeResultEvaluator = mergeResultEvaluator;
