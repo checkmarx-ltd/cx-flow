@@ -3,8 +3,8 @@ package com.checkmarx.flow.cucumber.integration.scan;
 import com.checkmarx.flow.CxFlowApplication;
 
 import com.checkmarx.flow.cucumber.common.JsonLoggerTestUtils;
+import com.checkmarx.flow.dto.OperationStatus;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.dto.Status;
 import com.checkmarx.flow.dto.report.ScanReport;
 import com.checkmarx.flow.exception.ExitThrowable;
 
@@ -189,7 +189,7 @@ public class ScanSteps extends AbstractScanSteps {
 
     @And("output json logger will have Scan request {string}")
     public void verifyJsonLogger(String repoUrl) {
-        verifyJsonLoggerAndScanStatus(repoUrl, Status.SUCCESS.getMessage());
+        verifyJsonLoggerAndScanStatus(repoUrl, OperationStatus.SUCCESS.toString());
     }
 
     @And("output json logger will have Scan request {string} and scan status will be {string}")
@@ -223,7 +223,7 @@ public class ScanSteps extends AbstractScanSteps {
             fail(e.getMessage());
         } finally {
             try {
-                testUtils.deleteLoggerContents();
+                testUtils.clearLogContents();
                 errorExpected = false;
             } catch (Exception e) {
                 fail(e.getMessage());

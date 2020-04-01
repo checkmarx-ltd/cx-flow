@@ -219,9 +219,9 @@ public class ThresholdsSteps {
 
     private static ScanResults createFakeScanResults() {
         ScanResults result = new ScanResults();
-        
+
         result.setScanSummary(new CxScanSummary());
-        
+
         Map<String, Object> details = new HashMap<>();
         details.put(Constants.SUMMARY_KEY, new HashMap<>());
         result.setAdditionalDetails(details);

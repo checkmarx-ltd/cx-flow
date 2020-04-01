@@ -132,6 +132,12 @@ public class FlowProperties {
         this.filterStatus = filterStatus;
     }
 
+    /**
+     * Defines how uniqueness is determined while correlating CxFlow issues with bug tracker issues.
+     * @return
+     * true: issues will be tracked according to the application name. The application name defaults to the repo name
+     * but can be overridden in the WebHook flow.<br>
+     * false: issues will be tracked by a combination of namespace/repo name/branch.  */
     public boolean isTrackApplicationOnly() {
         return trackApplicationOnly;
     }
