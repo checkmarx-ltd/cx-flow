@@ -30,7 +30,7 @@ public class SastResultParser {
     public Map<String, Element> getPathMapByFilename(String filename) {
         Document sastResult = parse(filename);
         assertNotNull(sastResult , "error parsing SAST result file");
-        NodeList resultElements = sastResult.getElementsByTagName("Result");
+        NodeList resultElements = sastResult.getElementsByTagName("Result");//NOSONAR
 
         return IntStream.range(0, resultElements.getLength())
                 .mapToObj(index -> (Element) resultElements.item(index))

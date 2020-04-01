@@ -152,6 +152,7 @@ public class ThresholdsSteps {
             String message = "Error processing scan results.";
             log.error(message, e);
             Assert.fail(message);
+            Thread.currentThread().interrupt();
         }
     }
 
