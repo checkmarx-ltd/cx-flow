@@ -11,7 +11,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.security.Key;
 
 public class AesEncryptionUtils {
-    private static final String ALGO = "AES";
+    private static final String ALGO = "AES/GCM/NoPadding";
     private static final byte[] keyValue =
             new byte[]{'T', 'x', '8', '2', '^', 'F', 'x', 'l', '2', 'p', 'P', 'o', 'W', 'K', '%', 'm'};
 
