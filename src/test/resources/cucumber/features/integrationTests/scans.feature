@@ -174,7 +174,7 @@ Feature: Check Integration tests command line functionality - scan.
     And output json logger will have Scan request "<folder>" and scan status will be "<LoggerScanStatus>"
 
     Examples:
-      | high | medium | low | scanType | team         | LoggerScanStatus                                                              |
-      | 2    | 3      | 0   | Full     | \CxServer\SP | SUCCESS                                                                       |
-      | 2    | 3      | 0   | Inc      | \CxServer\SP | SUCCESS                                                                       |
-      | 2    | 3      | 0   | Inc      | invalidTeam  | Parent team could not be established. Please ensure correct team is provided |
+      | high | medium | low | scanType | team         | LoggerScanStatus |
+      | 2    | 3      | 0   | Full     | \CxServer\SP | SUCCESS          |
+      | 2    | 3      | 0   | Inc      | \CxServer\SP | SUCCESS          |
+      | 2    | 3      | 0   | Inc      | invalidTeam  | FAILURE          |

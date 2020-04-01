@@ -11,6 +11,9 @@ import lombok.NoArgsConstructor;
 import java.util.HashMap;
 import java.util.List;
 
+/**
+ * Logged after CxFlow has modified (created/updated/closed) Jira tickets.
+ */
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
@@ -25,24 +28,22 @@ public class JiraTicketsReport extends AnalyticsReport{
         this.scanId = NOT_APPLICABLE;
         scanInitiator = NOT_APPLICABLE;
         projectName = request.getProject();
-        setEncodedRepoUrl(request.getRepoUrl());
+        setEncryptedRepoUrl(request.getRepoUrl());
     }
     
     public JiraTicketsReport(Integer sastScanId, ScanRequest request) {
         super(sastScanId,request);
-        setEncodedRepoUrl(request.getRepoUrl());
+        setEncryptedRepoUrl(request.getRepoUrl());
     }
 
     public JiraTicketsReport(String osaScanId, ScanRequest request) {
         super(osaScanId,request);
-        setEncodedRepoUrl(request.getRepoUrl());
+        setEncryptedRepoUrl(request.getRepoUrl());
     }
     
 
-    //adding underscore to prevent getOperation() to be called during logging of this object in log()
-    //since we don't want the OPERATION to be a part of the logged object
     @Override
-    public String _getOperation() {
+    protected String _getOperation() {
         return OPERATION;
     }
 

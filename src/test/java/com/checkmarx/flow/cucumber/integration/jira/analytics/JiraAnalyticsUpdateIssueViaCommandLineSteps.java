@@ -35,9 +35,9 @@ public class JiraAnalyticsUpdateIssueViaCommandLineSteps extends JiraAnalyticsCo
     }
 
     @After("@Jira_Analytics_Update_Issue_Command_Line")
-    public void tearDown() throws CheckmarxException {
+    public void tearDown() throws IOException {
         jiraUtils.cleanProject(PROJECT_KEY);
-        jsonLoggerTestUtils.deleteLoggerContents();
+        jsonLoggerTestUtils.clearLogContents();
     }
 
     @When("updating a new Jira issue via the command line")
