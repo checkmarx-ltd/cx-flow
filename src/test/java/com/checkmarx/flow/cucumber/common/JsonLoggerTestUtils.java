@@ -94,10 +94,11 @@ public class JsonLoggerTestUtils {
         // To be able to delete the file, we'll need to use AsyncAppender to logger config.
         // But it would be an overkill to use it just because of tests.
         try (FileOutputStream ignored = new FileOutputStream(logAbsolutePath)) {
+            // Nothing to do here.
         }
     }
 
-    public static void main1(String[] args) {
+    public static void main(String[] args) {
 
         JsonLoggerTestUtils utils;
         AnalyticsReport reportObject = null;

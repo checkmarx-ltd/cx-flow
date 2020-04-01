@@ -39,10 +39,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -58,8 +55,6 @@ public class AnalyticsSteps {
     private static final String PULL_REQUEST_STATUSES_URL = "http://statuses.url.stub";
     private static final String MERGE_NOTE_URL = "http://merge.note.url.stub";
 
-    private static final ObjectMapper jsonReader = new ObjectMapper();
-
     private final GitHubProperties gitHubProperties;
     private final FlowProperties flowProperties;
     private final MergeResultEvaluator mergeResultEvaluator;
@@ -69,11 +64,11 @@ public class AnalyticsSteps {
     private final RestTemplate restTemplateMock;
 
     private static class State {
-        public ScanResults scanResultsToInject;
-        public int fakeScanId;
-        public ScanRequest scanRequest;
-        public PullRequestReport lastAnalyticsReport;
-        public List<Filter> filters;
+        ScanResults scanResultsToInject;
+        int fakeScanId;
+        ScanRequest scanRequest;
+        PullRequestReport lastAnalyticsReport;
+        List<Filter> filters;
         Map<FindingSeverity, Integer> findingsPerSeverity;
     }
 
@@ -107,7 +102,7 @@ public class AnalyticsSteps {
     }
 
     @And("SAST returns scan ID: {int} and finding count per severity: HIGH: {int}, MEDIUM: {int}, LOW: {int}")
-    public void sastReturnsScanID(int scanId, int high, int medium, int low) {
+    public void sastReturnsScanID(int scanId, int high, int medium, int low) throws InterruptedException {
         state.fakeScanId = scanId;
         state.findingsPerSeverity = toSeverityMap(high, medium, low);
         state.scanResultsToInject = createFakeScanResults(state.findingsPerSeverity);
@@ -155,20 +150,20 @@ public class AnalyticsSteps {
     }
 
     private static Map<FindingSeverity, Integer> toSeverityMap(int high, int medium, int low) {
-        return new HashMap<FindingSeverity, Integer>() {{
-            put(FindingSeverity.HIGH, high);
-            put(FindingSeverity.MEDIUM, medium);
-            put(FindingSeverity.LOW, low);
-        }};
+        HashMap<FindingSeverity, Integer> result = new HashMap<>();
+        result.put(FindingSeverity.HIGH, high);
+        result.put(FindingSeverity.MEDIUM, medium);
+        result.put(FindingSeverity.LOW, low);
+        return result;
     }
 
-    private void processScanResultsInCxFlow() {
+    private void processScanResultsInCxFlow() throws InterruptedException {
         try {
             CompletableFuture<ScanResults> task = resultsService.processScanResultsAsync(
                     state.scanRequest, 0, state.fakeScanId, null, state.filters);
 
             task.get(1, TimeUnit.MINUTES);
-        } catch (MachinaException | InterruptedException | ExecutionException | TimeoutException e) {
+        } catch (MachinaException | ExecutionException | TimeoutException e) {
             String message = "Error processing scan results.";
             log.error(message, e);
             Assert.fail(message);
@@ -183,9 +178,10 @@ public class AnalyticsSteps {
         scanRequest.setProduct(ScanRequest.Product.CX);
         scanRequest.setRepoUrl(repoUrl);
 
-        scanRequest.setAdditionalMetadata(new HashMap<String, String>() {{
-            put("statuses_url", PULL_REQUEST_STATUSES_URL);
-        }});
+        HashMap<String, String> metadata = new HashMap<>();
+        metadata.put("statuses_url", PULL_REQUEST_STATUSES_URL);
+        scanRequest.setAdditionalMetadata(metadata);
+
         return scanRequest;
     }
 
