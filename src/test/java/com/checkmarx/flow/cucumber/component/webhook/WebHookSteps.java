@@ -177,13 +177,13 @@ public class WebHookSteps {
         boolean allRequestsCompletedSuccessfully = taskDurations.stream().allMatch(Objects::nonNull);
         Assert.assertTrue("Some of the requests failed.", allRequestsCompletedSuccessfully);
 
-        Optional<Long> actualMaxDurationMs = taskDurations.stream().max(Long::compare);
-        Assert.assertTrue("Actual max duration is not defined.", actualMaxDurationMs.isPresent());
-
+        Long actualMaxDurationMs = taskDurations.stream().max(Long::compare)
+            .orElseThrow(() -> new AssertionError("Actual max duration is not defined."));
+        
         String message = String.format("Actual max duration (%d ms) is greater than the expected max duration (%d ms).",
-                actualMaxDurationMs.get(),
+                actualMaxDurationMs,
                 expectedMaxDurationMs);
-        Assert.assertTrue(message, actualMaxDurationMs.get() <= expectedMaxDurationMs);
+        Assert.assertTrue(message, actualMaxDurationMs <= expectedMaxDurationMs);
     }
 
     private static Long toExecutionTimeMs(CompletableFuture<Long> task) {
