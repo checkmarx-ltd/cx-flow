@@ -98,14 +98,15 @@ public class JiraTestUtils implements IJiraTestUtils {
         Map<Filter.Severity, Integer> result= new HashMap<>();
         SearchResult searchResults = searchForAllIssues(projectKey);
         for (Issue issue: searchResults.getIssues()) {
-            String severity = getIssueSeverity(issue.getDescription()).toUpperCase();
+            String severity = getIssueSeverity(issue.getDescription());
+            if (severity == null) {
+                continue;
+            }
             Filter.Severity filterSeverity = Filter.Severity.valueOf(severity.toUpperCase());
-            if (severity != null) {
-                if (result.containsKey(filterSeverity)) {
-                    result.put(filterSeverity,result.get(filterSeverity) + 1 );
-                } else {
-                    result.put(filterSeverity, 1);
-                }
+            if (result.containsKey(filterSeverity)) {
+                result.put(filterSeverity,result.get(filterSeverity) + 1 );
+            } else {
+                result.put(filterSeverity, 1);
             }
         }
         return result;

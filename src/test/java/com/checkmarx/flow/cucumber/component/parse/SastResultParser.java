@@ -9,6 +9,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -42,6 +43,8 @@ public class SastResultParser {
         Document result = null;
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, ""); // Compliant
+            factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, ""); // compliant
             DocumentBuilder documentBuilder = factory.newDocumentBuilder();
             Path srcResourcePath = Paths.get(Constants.SAMPLE_SAST_RESULTS_DIR, filename);
             try (InputStream srcStream = TestUtils.getResourceAsStream(srcResourcePath.toString())) {
