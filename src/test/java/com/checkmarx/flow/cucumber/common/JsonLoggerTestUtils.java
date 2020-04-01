@@ -127,9 +127,9 @@ public class JsonLoggerTestUtils {
                 }
             }
             if (reportObject == null) {
-                jsonNode = objectMapper.readTree(lastLine).get(GetResultsReport.OPERATION);
+                jsonNode = objectMapper.readTree(lastLine).get(ScanResultsReport.OPERATION);
                 if (jsonNode != null) {
-                    reportObject = utils.getAnalyticsReport(GetResultsReport.class, objectMapper, jsonNode);
+                    reportObject = utils.getAnalyticsReport(ScanResultsReport.class, objectMapper, jsonNode);
                 }
             }
             if (reportObject == null) {

@@ -160,11 +160,12 @@ public class FlowService {
 
 
         }catch (CheckmarxException | GitAPIException e){
-            log.error(ExceptionUtils.getMessage(e), e);
+            String extendedMessage = ExceptionUtils.getMessage(e);
+            log.error(extendedMessage, e);
             Thread.currentThread().interrupt();
             OperationResult scanCreationFailure = new OperationResult(OperationStatus.FAILURE, e.getMessage());
             logRequest(request, scanId, cxFile, scanCreationFailure);
-            throw new MachinaException("Checkmarx Error Occurred");
+            throw new MachinaException("Checkmarx Error Occurred: " + extendedMessage);
         }
 
         logRequest(request, scanId, cxFile, OperationResult.successful());

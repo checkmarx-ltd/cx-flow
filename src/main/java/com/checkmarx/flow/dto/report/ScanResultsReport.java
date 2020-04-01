@@ -21,19 +21,19 @@ import java.util.Map;
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 @EqualsAndHashCode(callSuper = true)
-public class GetResultsReport extends AnalyticsReport {
+public class ScanResultsReport extends AnalyticsReport {
 
-    public static final String OPERATION = "Get Request";
+    public static final String OPERATION = "Scan Results";
     private Map<FindingSeverity, Integer> scanSummary = new EnumMap<>(FindingSeverity.class);
     private Map<FindingSeverity, Integer> cxFlowResults = new EnumMap<>(FindingSeverity.class);
 
-    public GetResultsReport(Integer sastScanId, ScanRequest request, ScanResults results) {
+    public ScanResultsReport(Integer sastScanId, ScanRequest request, ScanResults results) {
         super(sastScanId, request);
         setResults(results);
         setEncryptedRepoUrl(request.getRepoUrl());
     }
 
-    public GetResultsReport(String osaScanId, ScanRequest request, ScanResults results) {
+    public ScanResultsReport(String osaScanId, ScanRequest request, ScanResults results) {
         super(osaScanId, request);
         setResults(results);
         setEncryptedRepoUrl(request.getRepoUrl());
