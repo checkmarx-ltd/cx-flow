@@ -81,7 +81,6 @@ public class ThresholdsSteps {
         this.cxProperties = cxProperties;
 
         gitHubProperties.setCxSummary(false);
-        gitHubProperties.setFlowSummary(false);
         this.gitHubProperties = gitHubProperties;
 
         this.mergeResultEvaluator = mergeResultEvaluator;
@@ -172,7 +171,7 @@ public class ThresholdsSteps {
         scanRequest.setMergeNoteUri(MERGE_NOTE_URL);
         scanRequest.setProduct(ScanRequest.Product.CX);
 
-        Map<String, String> additionalMetadata = new HashMap<String, String>();
+        Map<String, String> additionalMetadata = new HashMap<>();
         additionalMetadata.put("statuses_url", PULL_REQUEST_STATUSES_URL);
         scanRequest.setAdditionalMetadata(additionalMetadata);
         return scanRequest;
