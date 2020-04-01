@@ -1038,7 +1038,7 @@ public class JiraService {
                 JiraConstants.UPDATED_TICKET, updatedIssues,
                 JiraConstants.CLOSED_TICKET, closedIssues);
 
-        logJiraTickets(results, request, scanDetails, ticketsMap);
+        logJiraTickets(request, scanDetails, ticketsMap);
 
         setCurrentNewIssuesList(newIssues);
         setCurrentUpdatedIssuesList(updatedIssues);
@@ -1059,13 +1059,12 @@ public class JiraService {
         return currentClosedIssuesList;
     }
 
-    private void logJiraTickets(ScanResults results, ScanRequest request, ScanDetails scanDetails, ImmutableMap<String, List<String>> ticketsMap) {
-        if(scanDetails.getScanId() != null) {
+    private void logJiraTickets(ScanRequest request, ScanDetails scanDetails, ImmutableMap<String, List<String>> ticketsMap) {
+        if (scanDetails.getScanId() != null) {
             new JiraTicketsReport(scanDetails.getScanId(), request).build(ticketsMap).log();
-        }
-        else if(scanDetails.getOsaScanId() != null) {
+        } else if (scanDetails.getOsaScanId() != null) {
             new JiraTicketsReport(scanDetails.getOsaScanId(), request).build(ticketsMap).log();
-        }else{
+        } else {
             new JiraTicketsReport(request).build(ticketsMap).log();
         }
     }

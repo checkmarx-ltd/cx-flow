@@ -11,6 +11,9 @@ import lombok.NoArgsConstructor;
 import java.util.HashMap;
 import java.util.List;
 
+/**
+ * Logged after CxFlow has modified (created/updated/closed) Jira tickets.
+ */
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor

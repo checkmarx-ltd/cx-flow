@@ -7,6 +7,9 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+/**
+ * Corresponds to an event when a vulnerability scan has been started.
+ */
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
