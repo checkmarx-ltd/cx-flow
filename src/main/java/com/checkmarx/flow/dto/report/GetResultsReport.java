@@ -13,7 +13,9 @@ import lombok.NoArgsConstructor;
 import java.util.EnumMap;
 import java.util.Map;
 
-
+/**
+ * Created after vulnerability scan has finished.
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
