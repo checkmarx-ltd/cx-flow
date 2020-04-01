@@ -307,6 +307,9 @@ workflows:
               only: 
                 - develop
                 - /pr-.*/
+      - component-tests:
+          requires:
+            - build
       - deploy-cxflow:
           cluster-name: eks-cxflow-ci
           chart: ./helm/cxflow
@@ -320,9 +323,7 @@ workflows:
                 - /pr-.*/
           requires:
             - docker-build
-      - component-tests:
-          requires:
-            - build
+            - component-tests
       - e2e-tests:
           filters:
             branches:
