@@ -35,9 +35,9 @@ public class JiraAnalyticsOpenIssueViaCommandLineSteps extends JiraAnalyticsComm
     }
 
     @After("@Jira_Analytics_Open_Issue_Command_Line")
-    public void tearDown() throws CheckmarxException {
+    public void tearDown() throws IOException {
         jiraUtils.cleanProject(PROJECT_KEY);
-        jsonLoggerTestUtils.deleteLoggerContents();
+        jsonLoggerTestUtils.clearLogContents();
     }
 
     @Given("bug tracker is Jira")

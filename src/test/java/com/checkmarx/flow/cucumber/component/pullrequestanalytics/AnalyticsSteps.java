@@ -38,6 +38,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -82,11 +83,11 @@ public class AnalyticsSteps {
     private ResultsService resultsService;
 
     @Before("@PullRequestAnalyticsFeature")
-    public void prepareServices() throws CheckmarxException {
+    public void prepareServices() throws IOException {
         initMock(cxClientMock);
         initMock(restTemplateMock);
         resultsService = createResultsService();
-        loggerUtils.deleteLoggerContents();
+        loggerUtils.clearLogContents();
     }
 
     @Given("thresholds are configured as HIGH: {int}, MEDIUM: {int}, LOW: {int}")
