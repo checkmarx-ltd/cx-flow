@@ -9,32 +9,28 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.test.context.TestComponent;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
-
-import static org.springframework.boot.logging.LoggingSystemProperties.LOG_PATH;
 
 @TestComponent
 public class JsonLoggerTestUtils {
 
     public static final String CX_FLOW_REPORT_JSON = "CxFlowReport.json";
-    private String logPath;
     private String logAbsolutePath;
 
-    public JsonLoggerTestUtils(){
-        logPath = LOG_PATH;
+    public JsonLoggerTestUtils() {
         logAbsolutePath = Paths.get(System.getProperty("LOG_PATH"), CX_FLOW_REPORT_JSON).toString();
     }
 
-    public JsonLoggerTestUtils(String logPath){
-        this.logPath = logPath;
+    public JsonLoggerTestUtils(String logPath) {
         logAbsolutePath = Paths.get(logPath, CX_FLOW_REPORT_JSON).toString();
     }
 
-    public AnalyticsReport getReportNode(String nodeName , Class reportClass) throws CheckmarxException {
-        
-        ObjectMapper objectMapper = new ObjectMapper(); 
+    public AnalyticsReport getReportNode(String nodeName, Class reportClass) throws CheckmarxException {
+
+        ObjectMapper objectMapper = new ObjectMapper();
         JsonNode node = getReportNode(nodeName, objectMapper);
-        
+
         return getAnalyticsReport(reportClass, objectMapper, node);
 
     }
@@ -44,7 +40,7 @@ public class JsonLoggerTestUtils {
         objectMapper.configure(DeserializationFeature.FAIL_ON_NUMBERS_FOR_ENUMS, false);
 
         try {
-            return (AnalyticsReport)objectMapper.readValue(node.toString(), reportClass);
+            return (AnalyticsReport) objectMapper.readValue(node.toString(), reportClass);
         } catch (IOException e) {
             throw new CheckmarxException(e.getMessage());
         }
@@ -69,13 +65,12 @@ public class JsonLoggerTestUtils {
     private String getLastLine() throws CheckmarxException {
 
         try (
-
                 FileInputStream inputStream = new FileInputStream(logAbsolutePath);
-                BufferedReader streamReader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
-        ){
+                BufferedReader streamReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))
+        ) {
             boolean moreLines = true;
             String lastLine = streamReader.readLine();
-            String nextScanRequest = null;
+            String nextScanRequest;
             while (moreLines) {
                 nextScanRequest = streamReader.readLine();
                 if (nextScanRequest != null) {
@@ -93,36 +88,32 @@ public class JsonLoggerTestUtils {
 
     }
 
-    
 
-    public void deleteLoggerContents() throws CheckmarxException {
-        //delete file contents
-        try (
-                FileOutputStream file = new FileOutputStream(logAbsolutePath);
-        )
-        {}
-        catch (IOException e) {
-            throw new CheckmarxException(e.getMessage());
-        } 
+    public void clearLogContents() throws IOException {
+        // Unable to delete the file itself, because it is locked by the logger.
+        // To be able to delete the file, we'll need to use AsyncAppender to logger config.
+        // But it would be an overkill to use it just because of tests.
+        try (FileOutputStream ignored = new FileOutputStream(logAbsolutePath)) {
+        }
     }
-    
-    public static void main(String[] args){
+
+    public static void main1(String[] args) {
 
         JsonLoggerTestUtils utils;
         AnalyticsReport reportObject = null;
-        
-        if(args != null && args.length > 0){
-             utils = new JsonLoggerTestUtils(args[0]);
-        }else {
-             utils = new JsonLoggerTestUtils();
+
+        if (args != null && args.length > 0) {
+            utils = new JsonLoggerTestUtils(args[0]);
+        } else {
+            utils = new JsonLoggerTestUtils();
         }
-        
+
         try {
 
             String lastLine = utils.getLastLine();
             ObjectMapper objectMapper = new ObjectMapper();
 
-            JsonNode jsonNode = null;
+            JsonNode jsonNode;
             jsonNode = objectMapper.readTree(lastLine).get(JiraTicketsReport.OPERATION);
 
             if (jsonNode != null) {
@@ -137,22 +128,22 @@ public class JsonLoggerTestUtils {
             if (reportObject == null) {
                 jsonNode = objectMapper.readTree(lastLine).get(GetResultsReport.OPERATION);
                 if (jsonNode != null) {
-                     reportObject = utils.getAnalyticsReport(GetResultsReport.class, objectMapper, jsonNode);
+                    reportObject = utils.getAnalyticsReport(GetResultsReport.class, objectMapper, jsonNode);
                 }
             }
             if (reportObject == null) {
                 jsonNode = objectMapper.readTree(lastLine).get(PullRequestReport.OPERATION);
 
                 if (jsonNode != null) {
-                     reportObject = utils.getAnalyticsReport(PullRequestReport.class, objectMapper, jsonNode);
+                    reportObject = utils.getAnalyticsReport(PullRequestReport.class, objectMapper, jsonNode);
                 }
             }
-            
+
             System.out.println(reportObject);
-            
+
         } catch (CheckmarxException | JsonProcessingException e) {
             e.printStackTrace();
         }
     }
-    
+
 }

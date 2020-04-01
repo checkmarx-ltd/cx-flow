@@ -223,7 +223,7 @@ public class ScanSteps extends AbstractScanSteps {
             fail(e.getMessage());
         } finally {
             try {
-                testUtils.deleteLoggerContents();
+                testUtils.clearLogContents();
                 errorExpected = false;
             } catch (Exception e) {
                 fail(e.getMessage());
