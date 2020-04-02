@@ -2,7 +2,6 @@ package com.checkmarx.flow.dto.report;
 
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.utils.AesEncryptionUtils;
-import com.checkmarx.sdk.exception.CheckmarxException;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -11,7 +10,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+
 import static net.logstash.logback.marker.Markers.append;
+
 
 @Data
 @AllArgsConstructor
@@ -66,13 +68,12 @@ public abstract class AnalyticsReport {
     protected void setEncryptedRepoUrl(String repoUrl) {
         try {
             if (repoUrl != null) {
-                this.repoUrl = repoUrl;
                 this.repoUrl = AesEncryptionUtils.encrypt(this.repoUrl);
             } else {
                 this.repoUrl = NOT_APPLICABLE;
             }
 
-        } catch (CheckmarxException e) {
+        } catch (IOException e) {
             this.repoUrl = NOT_APPLICABLE;
 
             log.error("Unable to encrypt repoUrl " + e.getMessage());
