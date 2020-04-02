@@ -68,7 +68,7 @@ public abstract class AnalyticsReport {
     protected void setEncryptedRepoUrl(String repoUrl) {
         try {
             if (repoUrl != null) {
-                this.repoUrl = AesEncryptionUtils.encrypt(this.repoUrl);
+                this.repoUrl = AesEncryptionUtils.encrypt(repoUrl);
             } else {
                 this.repoUrl = NOT_APPLICABLE;
             }

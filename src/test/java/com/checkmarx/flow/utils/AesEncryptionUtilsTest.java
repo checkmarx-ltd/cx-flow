@@ -35,7 +35,7 @@ class AesEncryptionUtilsTest {
         String cryptoText = "5euNblM8scCHnrmHpYuXszzdp6PG93Ac45tYup1F+YeWSU3q/uVRGZHs1CJIOb4my9164zSJGveixvkVWFU8Wg==";
         String expectedPlainText = "I've been waiting so long.";
         String decrypted = AesEncryptionUtils.decrypt(cryptoText);
-        assertEquals(expectedPlainText, decrypted, "Unexpected plain text text.");
+        assertEquals(expectedPlainText, decrypted, "Unexpected plain text.");
     }
 
     @Test
