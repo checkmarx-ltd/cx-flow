@@ -13,6 +13,7 @@ import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.service.GitHubService;
 import com.checkmarx.flow.service.MergeResultEvaluator;
 import com.checkmarx.flow.service.ResultsService;
+import com.checkmarx.flow.utils.AesEncryptionUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.Filter;
@@ -124,9 +125,11 @@ public class AnalyticsSteps {
         Assert.assertEquals("Unexpected pull request status.", expectedStatus, result.getStatus().toString());
     }
 
-    @And("repoUrl is encrypted as {string}")
-    public void repoUrlIsEncryptedAs(String expectedRepoUrl) {
-        Assert.assertEquals("Incorrect encrypted repo URL.", expectedRepoUrl, state.lastAnalyticsReport.getRepoUrl());
+    @And("repoUrl contains encrypted {string}")
+    public void repoUrlIsEncryptedRepoUrl(String expectedRepoUrl) throws IOException {
+        String encryptedRepoUrl = state.lastAnalyticsReport.getRepoUrl();
+        String decryptedRepoUrl = AesEncryptionUtils.decrypt(encryptedRepoUrl);
+        Assert.assertEquals("Incorrect encrypted repo URL.", expectedRepoUrl, decryptedRepoUrl);
     }
 
     @And("scanInitiator is {string}, scanId is {string}")

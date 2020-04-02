@@ -219,7 +219,7 @@ public class ScanSteps extends AbstractScanSteps {
                 assertNotEquals("NA", node.get("scanId").textValue());
             }
 
-        } catch (CheckmarxException e) {
+        } catch (IOException | CheckmarxException e) {
             fail(e.getMessage());
         } finally {
             try {
