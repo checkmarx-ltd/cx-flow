@@ -201,6 +201,7 @@ public class TfsController {
         request.putAdditionalMetadata(Constants.ADO_ISSUE_BODY_KEY, adoIssueBody.orElse(properties.getIssueBody()));
         request.putAdditionalMetadata(Constants.ADO_OPENED_STATE_KEY, adoOpenedState.orElse(properties.getOpenStatus()));
         request.putAdditionalMetadata(Constants.ADO_CLOSED_STATE_KEY, adoClosedState.orElse(properties.getClosedStatus()));
+        request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body.toString());
         request.setId(uid);
         //only initiate scan/automation if target branch is applicable
         List<String> branches = new ArrayList<>();
