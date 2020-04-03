@@ -293,6 +293,7 @@ public class BitbucketServerController {
                     .build();
 
             request = ScanUtils.overrideMap(request, o);
+            request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body);
             request.setId(uid);
             try {
                 request.putAdditionalMetadata("BITBUCKET_BROWSE", fromRefRepository.getLinks().getSelf().get(0).getHref());
@@ -456,6 +457,7 @@ public class BitbucketServerController {
                 log.warn("Not able to determine file url for browsing", e);
             }
             request = ScanUtils.overrideMap(request, o);
+            request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body);
             request.setId(uid);
             //only initiate scan/automation if target branch is applicable
             if(helperService.isBranch2Scan(request, branches)){

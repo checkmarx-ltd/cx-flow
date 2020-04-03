@@ -33,10 +33,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 /**
  * Class used to manage Controller for GitHub WebHooks
@@ -244,6 +241,7 @@ public class GitHubController {
             CxConfig cxConfig =  gitHubService.getCxConfigOverride(request);
             request = ScanUtils.overrideCxConfig(request, cxConfig, flowProperties, jiraProperties);
 
+            request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body);
             request.putAdditionalMetadata("statuses_url", event.getPullRequest().getStatusesUrl());
             request.setId(uid);
             //only initiate scan/automation if target branch is applicable
@@ -420,6 +418,7 @@ public class GitHubController {
             CxConfig cxConfig =  gitHubService.getCxConfigOverride(request);
             request = ScanUtils.overrideCxConfig(request, cxConfig, flowProperties, jiraProperties);
 
+            request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body);
             request.setId(uid);
 
             //only initiate scan/automation if branch is applicable
