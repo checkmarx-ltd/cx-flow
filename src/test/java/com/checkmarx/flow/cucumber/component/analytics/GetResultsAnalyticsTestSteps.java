@@ -6,7 +6,7 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.cucumber.common.JsonLoggerTestUtils;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.dto.report.GetResultsReport;
+import com.checkmarx.flow.dto.report.ScanResultsReport;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.ResultsService;
@@ -110,17 +110,17 @@ public class GetResultsAnalyticsTestSteps {
 
 
 
-    private Integer getFindingsNum(GetResultsReport report, FindingSeverity severity) {
+    private Integer getFindingsNum(ScanResultsReport report, FindingSeverity severity) {
         return report.getScanSummary().get(severity);
     }
 
-    private Integer getScanResultsBySeverity(GetResultsReport report, FindingSeverity severity) {
+    private Integer getScanResultsBySeverity(ScanResultsReport report, FindingSeverity severity) {
         return report.getCxFlowResults().get(severity);
     }
 
-    private GetResultsReport getLatestReport() throws CheckmarxException {
+    private ScanResultsReport getLatestReport() throws CheckmarxException {
         JsonLoggerTestUtils  testUtils = new JsonLoggerTestUtils();
-        GetResultsReport report = (GetResultsReport)testUtils.getReportNode(GetResultsReport.OPERATION, GetResultsReport.class);
+        ScanResultsReport report = (ScanResultsReport)testUtils.getReportNode(ScanResultsReport.OPERATION, ScanResultsReport.class);
         return report;
     }
 
@@ -216,13 +216,13 @@ public class GetResultsAnalyticsTestSteps {
     }
     @Then("we should see the expected number of tickets in analytics")
     public void verifyReport() throws CheckmarxException {
-        GetResultsReport report = getLatestReport();
+        ScanResultsReport report = getLatestReport();
         assertScanSummary(report);
         assertScanResults(report);
         Assert.assertEquals("Scan ID does not match !", Integer.valueOf(SCAN_ID), Integer.valueOf(report.getScanId()));
     }
 
-    private void assertScanResults(GetResultsReport report) {
+    private void assertScanResults(ScanResultsReport report) {
         Assert.assertEquals("Error getting high severity flow results", getFlowSummaryField("High") , getScanResultsBySeverity(report, FindingSeverity.HIGH));
         Assert.assertEquals("Error getting medium severity flow results", getFlowSummaryField("Medium") , getScanResultsBySeverity(report, FindingSeverity.MEDIUM));
         Assert.assertEquals("Error getting low severity flow results", getFlowSummaryField("Low") , getScanResultsBySeverity(report, FindingSeverity.LOW));
@@ -233,7 +233,7 @@ public class GetResultsAnalyticsTestSteps {
         return (Integer) ((Map) scanResultsToInject.getAdditionalDetails().get("flow-summary")).get(field);
     }
 
-    private void assertScanSummary(GetResultsReport report) {
+    private void assertScanSummary(ScanResultsReport report) {
         Assert.assertEquals("Error getting high severity results summary", scanResultsToInject.getScanSummary().getHighSeverity(), getFindingsNum(report, FindingSeverity.HIGH));
         Assert.assertEquals("Error getting low severity results summary", scanResultsToInject.getScanSummary().getLowSeverity(), getFindingsNum(report, FindingSeverity.LOW));
         Assert.assertEquals("Error getting info severity results summary", scanResultsToInject.getScanSummary().getInfoSeverity(), getFindingsNum(report, FindingSeverity.INFO));
