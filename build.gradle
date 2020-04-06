@@ -187,7 +187,7 @@ task e2eTests(type: Test) {
             exclude 'com/checkmarx/flow/utils/**'
             exclude 'com.checkmarx.flow.CxFlowApplicationTest'
             exclude 'com/checkmarx/flow/cucumber/integration/publishprocess/*'
-            exclude 'com/checkmarx/flow/cucumber/integration/scan/*'
+            exclude 'com/checkmarx/flow/cucumber/integration/scan/**'
         } else {
             //exclude 'com/checkmarx/**'
             include 'com/checkmarx/flow/cucumber/integration/end2end/github2jira/**'
