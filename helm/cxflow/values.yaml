@@ -17,6 +17,7 @@ cxflow:
   jiraProject: E2E
   bugTracker: JIRA
   checkmarxBaseUrl: https://sast.cxflow-ci.com
+  azureToken: ""
 
 imagePullSecrets: []
 nameOverride: ""

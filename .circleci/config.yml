@@ -147,6 +147,7 @@ jobs:
               --set cxflow.checkmarxClientSecret=${CHECKMARX_CLIENT_SECRET} \
               --set cxflow.jiraToken=${JIRA_TOKEN} \
               --set cxflow.jiraProject=${JIRA_PROJECT} \
+              --set cxflow.azureToken=${AZURE_TOKEN} \
               --set ingress.hosts[0].host=<< parameters.release-name >>.${EXTERNAL_DNS_DOMAIN} \
               --set ingress.hosts[0].paths[0]="/*" \
               << parameters.chart >>
@@ -202,7 +203,9 @@ jobs:
       - checkout 
       - run:
           name: Run Integration Tests
-          command: ./gradlew clean integrationTest --info
+          command: |
+            export HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
+            ./gradlew clean integrationTest --info -Dtarget=${HOOK_TARGET} -Drepo=${HOOK_REPO} -Dnamespace=${HOOK_NAMESPACE}
       - run:
           name: Save test results
           command: |
