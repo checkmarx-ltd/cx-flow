@@ -175,14 +175,14 @@ public class GetResultsAnalyticsTestSteps {
         scanRequest.setBugTracker(issueTracker);
         scanRequest.setMergeNoteUri(MERGE_NOTE_URL);
         scanRequest.setProduct(ScanRequest.Product.CX);
-        scanRequest.setAdditionalMetadata(new HashMap<String, String>() {{
-            put("statuses_url", PULL_REQUEST_STATUSES_URL);
-        }});
+        Map<String,String> additionalMetaData = new HashMap<>();
+        additionalMetaData.put("statuses_url", PULL_REQUEST_STATUSES_URL);
+        scanRequest.setAdditionalMetadata(additionalMetaData);
         return scanRequest;
     }
 
     @When("doing get results operation on a scan with {int} {int} {int} {int} results")
-    public void getResults(int high, int medium, int low, int info)  {
+    public void getResults(int high, int medium, int low, int info) throws InterruptedException {
         try {
             ScanRequest scanRequest = createScanRequest();
             setFindingsSummary(high, medium, low, info);
@@ -191,7 +191,7 @@ public class GetResultsAnalyticsTestSteps {
             CompletableFuture<ScanResults> task = resultsService.processScanResultsAsync(
                     scanRequest, PROJECT_ID, SCAN_ID, null, null);
             task.get(1, TimeUnit.MINUTES);
-        } catch (MachinaException | InterruptedException | ExecutionException | TimeoutException e) {
+        } catch (MachinaException | ExecutionException | TimeoutException e) {
             String message = "Error processing scan results.";
             log.error(message, e);
             Assert.fail(message);
@@ -199,7 +199,7 @@ public class GetResultsAnalyticsTestSteps {
     }
 
     @When("doing get results operation on a scan with {int} {int} {int} {int} results and filter is {string}")
-    public void getResultsWithFilter(int high, int medium, int low, int info, String filter)  {
+    public void getResultsWithFilter(int high, int medium, int low, int info, String filter) throws InterruptedException  {
         try {
             ScanRequest scanRequest = createScanRequest();
             setFindingsSummary(high, medium, low, info, filter);
@@ -208,7 +208,7 @@ public class GetResultsAnalyticsTestSteps {
             CompletableFuture<ScanResults> task = resultsService.processScanResultsAsync(
                     scanRequest, PROJECT_ID, SCAN_ID, null, null);
             task.get(1, TimeUnit.MINUTES);
-        } catch (MachinaException | InterruptedException | ExecutionException | TimeoutException e) {
+        } catch (MachinaException | ExecutionException | TimeoutException e) {
             String message = "Error processing scan results.";
             log.error(message, e);
             Assert.fail(message);
