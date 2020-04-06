@@ -1,5 +1,5 @@
 buildscript {
-	ext {
+    ext {
         CxSBSDK = "0.4.9"
         //cxVersion = "8.90.5"
         springBootVersion = '2.2.4.RELEASE'
@@ -8,29 +8,29 @@ buildscript {
         atlassianFugueVersion = "4.7.2"
         mainClass='com.checkmarx.flow.CxFlowApplication'
     }
-	repositories {
+    repositories {
         jcenter()
         mavenLocal()
-		mavenCentral()
+        mavenCentral()
         maven {
             url = 'https://packages.atlassian.com/mvn/maven-external'
         }
-        
+
         gradlePluginPortal()
-	}
-	dependencies {
+    }
+    dependencies {
         classpath ("gradle.plugin.com.gorylenko.gradle-git-properties:gradle-git-properties:2.0.0")
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
         classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:${sonarqubeVersion}"
     }
 
 
-   /*gradle.projectsEvaluated {
-        tasks.withType(JavaCompile) {
-            options.compilerArgs << "-Xlint:unchecked"
-        }
-    }
-    */
+    /*gradle.projectsEvaluated {
+         tasks.withType(JavaCompile) {
+             options.compilerArgs << "-Xlint:unchecked"
+         }
+     }
+     */
 }
 
 plugins {
@@ -63,8 +63,8 @@ repositories {
 
 dependencies {
     compile('org.springframework.boot:spring-boot-starter-actuator')
-	compile('org.springframework.boot:spring-boot-starter-web')
-	compile('org.springframework.boot:spring-boot-starter-aop')
+    compile('org.springframework.boot:spring-boot-starter-web')
+    compile('org.springframework.boot:spring-boot-starter-aop')
     compile("com.github.checkmarx-ts:cx-spring-boot-sdk:${CxSBSDK}")
     compile ("org.apache.commons:commons-text:1.8")
     compile ('commons-codec:commons-codec:1.13')
@@ -154,7 +154,7 @@ task componentTest(type: Test) {
             exclude 'com/checkmarx/flow/filter/**'
             exclude 'com/checkmarx/flow/service/**'
             exclude 'com/checkmarx/flow/utils/**'
-           exclude 'com/checkmarx/flow/cucumber/integration/end2end/github2jira**'
+            exclude 'com/checkmarx/flow/cucumber/integration/end2end/github2jira**'
 
         } else {
             include 'com/checkmarx/flow/cucumber/component/**'
@@ -217,8 +217,8 @@ task integrationTest(type: Test) {
             exclude 'com/checkmarx/flow/cucumber/component/**'
             exclude 'com/checkmarx/flow/cucumber/integration/scan'
             exclude 'com/checkmarx/flow/cucumber/integration/jira/JiraLoadTestRunner.java'
-        } 
-     
+        }
+
         testLogging {
             events "passed", "skipped", "failed"
         }
