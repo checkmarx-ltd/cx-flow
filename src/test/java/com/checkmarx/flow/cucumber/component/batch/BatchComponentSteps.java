@@ -25,7 +25,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
-@SpringBootTest(classes = { CxFlowMocksConfig.class, CxFlowApplication.class })
+@SpringBootTest(classes = {CxFlowMocksConfig.class, CxFlowApplication.class})
 public class BatchComponentSteps {
     private final FlowProperties flowProperties;
     private final CxProperties cxProperties;
@@ -71,7 +71,9 @@ public class BatchComponentSteps {
 
     @When("scan project in batch mode")
     public void scanProjectInBatchMode() throws Exception {
-        TestUtils.runCxFlow(cxFlowRunner,"--blocksysexit --batch --project --cx-project=" + this.projectName + " --cx-team=" + this.teamName);
+        TestUtils.runCxFlow(cxFlowRunner, "--" + CxFlowRunner.THROW_INSTEAD_OF_EXIT_OPTION +
+                " --batch --project --cx-project=" + this.projectName +
+                " --cx-team=" + this.teamName);
     }
 
     @Then("Json file is created in path: {string}")
