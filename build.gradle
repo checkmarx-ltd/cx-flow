@@ -142,21 +142,6 @@ test {
     useJUnitPlatform()
 
 }
-task doFirst{
-    System.setProperty 'GITHUB_WEBHOOK_TOKEN','1234'
-    System.setProperty 'GITHUB_TOKEN','a2698acf14cfe0283789d1ef1473ae15012a28ab'
-    System.setProperty 'JIRA_TOKEN','vFqIzQka0hLXvFj3Z8gVE4C6'
-    System.setProperty 'HOOK_TARGET','https://sast.cx.tikal.io'
-    System.setProperty 'HOOK_REPO','jiraTest'
-    System.setProperty 'HOOK_NAMESPACE','cxflowtestuser'
-    // System.setProperty 'LOGGING_FILE_PATH','c:\\temp'
-    System.setProperty 'AZURE_TOKEN','7j7jytg5fgeaw2iki6x5yfkgsw6g2k5dxerqtsoqws2pllnmervq'
-    System.setProperty 'CHECKMARX_USERNAME','admin@cx'
-    System.setProperty 'CHECKMARX_PASSWORD','Cx123456!'
-    System.setProperty 'CHECKMARX_CLIENT_SECRET','014DF517-39D1-4453-B7B3-9930C563627C'
-    System.setProperty ("JIRA_PROJECT","E2E")
-    // System.setProperty 'spring.profiles.active', 'secrets'
-}
 
 task componentTest(type: Test) {
 
