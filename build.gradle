@@ -6,7 +6,7 @@ buildscript {
         sonarqubeVersion = '2.8'
         atlassianVersion = "5.2.0"
         atlassianFugueVersion = "4.7.2"
-        mainClass='com.checkmarx.flow.CxFlowApplication'
+        mainClass = 'com.checkmarx.flow.CxFlowApplication'
     }
     repositories {
         jcenter()
@@ -19,7 +19,7 @@ buildscript {
         gradlePluginPortal()
     }
     dependencies {
-        classpath ("gradle.plugin.com.gorylenko.gradle-git-properties:gradle-git-properties:2.0.0")
+        classpath("gradle.plugin.com.gorylenko.gradle-git-properties:gradle-git-properties:2.0.0")
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
         classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:${sonarqubeVersion}"
     }
@@ -66,32 +66,33 @@ dependencies {
     compile('org.springframework.boot:spring-boot-starter-web')
     compile('org.springframework.boot:spring-boot-starter-aop')
     compile("com.github.checkmarx-ts:cx-spring-boot-sdk:${CxSBSDK}")
-    compile ("org.apache.commons:commons-text:1.8")
-    compile ('commons-codec:commons-codec:1.13')
-    compile ('commons-io:commons-io:2.6')
-    compile ('org.apache.commons:commons-lang3:3.9')
-    compile ('org.json:json:20190722')
-    compile ('com.fasterxml.jackson.core:jackson-databind')
-    compile ('org.springframework.boot:spring-boot-starter-web-services')
-    compile ('org.springframework.boot:spring-boot-starter-mail')
-    compile ('org.springframework.boot:spring-boot-starter-thymeleaf')
-    compile ('com.github.ulisesbocchio:jasypt-spring-boot-starter:2.1.2')
-    compile ("io.atlassian.fugue:fugue:${atlassianFugueVersion}")
-    compile ("com.atlassian.jira:jira-rest-java-client-core:${atlassianVersion}")
-    compile ("com.atlassian.jira:jira-rest-java-client-api:${atlassianVersion}")
-    compile ("org.apache.httpcomponents:httpclient:4.5.10")
-    compile ("org.thymeleaf:thymeleaf:3.0.11.RELEASE")
-    compile ("org.codehaus.groovy:groovy-all:2.5.8")
-    compile ("org.apache.ivy:ivy:2.5.0")
-    compile ("org.eclipse.jgit:org.eclipse.jgit:5.5.1.201910021850-r")
-    compileOnly ('org.springframework.boot:spring-boot-configuration-processor')
+    compile("org.apache.commons:commons-text:1.8")
+    compile('commons-codec:commons-codec:1.13')
+    compile('commons-io:commons-io:2.6')
+    compile('org.apache.commons:commons-lang3:3.9')
+    compile('org.json:json:20190722')
+    compile('com.fasterxml.jackson.core:jackson-databind')
+    compile('org.springframework.boot:spring-boot-starter-web-services')
+    compile('org.springframework.boot:spring-boot-starter-mail')
+    compile('org.springframework.boot:spring-boot-starter-thymeleaf')
+    compile('com.github.ulisesbocchio:jasypt-spring-boot-starter:2.1.2')
+    compile("io.atlassian.fugue:fugue:${atlassianFugueVersion}")
+    compile("com.atlassian.jira:jira-rest-java-client-core:${atlassianVersion}")
+    compile("com.atlassian.jira:jira-rest-java-client-api:${atlassianVersion}")
+    compile("org.apache.httpcomponents:httpclient:4.5.10")
+    compile("org.thymeleaf:thymeleaf:3.0.11.RELEASE")
+    compile("org.codehaus.groovy:groovy-all:2.5.8")
+    compile("org.apache.ivy:ivy:2.5.0")
+    compile("org.jasypt:jasypt:1.9.3")
+    compile("org.eclipse.jgit:org.eclipse.jgit:5.5.1.201910021850-r")
+    compileOnly('org.springframework.boot:spring-boot-configuration-processor')
     runtime('org.springframework.boot:spring-boot-devtools')
     testImplementation('org.springframework.boot:spring-boot-starter-test')
     compileJava.dependsOn(processResources)
     testImplementation("io.cucumber:cucumber-java:${cucumberVersion}")
     testImplementation("io.cucumber:cucumber-junit:${cucumberVersion}")
     testImplementation("io.cucumber:cucumber-spring:${cucumberVersion}")
-    testImplementation( "org.junit.jupiter:junit-jupiter-api:${junitVersion}")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
     testImplementation('org.awaitility:awaitility:4.0.2')
     testImplementation('com.microsoft.azure:azure:1.31.1')
 
@@ -108,7 +109,6 @@ dependencies {
     compile("ch.qos.logback.contrib:logback-json-classic:0.1.5")
     compile("ch.qos.logback.contrib:logback-jackson:0.1.5")
     compile("net.logstash.logback:logstash-logback-encoder:5.2")
-    compile("org.jasypt:jasypt:1.9.3")
 }
 
 springBoot {
@@ -125,7 +125,7 @@ test {
         systemProperty "testprofile", "unit"
         if (System.properties['testprofile'] != 'integration') {
             exclude 'com/checkmarx/flow/cucumber/integration/**'
-        }else{
+        } else {
             exclude 'com/checkmarx/**'
             include 'com/checkmarx/flow/cucumber/integration/**'
         }
@@ -140,9 +140,26 @@ task getVersion {
 
 test {
     useJUnitPlatform()
+
+}
+task doFirst{
+    System.setProperty 'GITHUB_WEBHOOK_TOKEN','1234'
+    System.setProperty 'GITHUB_TOKEN','a2698acf14cfe0283789d1ef1473ae15012a28ab'
+    System.setProperty 'JIRA_TOKEN','vFqIzQka0hLXvFj3Z8gVE4C6'
+    System.setProperty 'HOOK_TARGET','https://sast.cx.tikal.io'
+    System.setProperty 'HOOK_REPO','jiraTest'
+    System.setProperty 'HOOK_NAMESPACE','cxflowtestuser'
+    // System.setProperty 'LOGGING_FILE_PATH','c:\\temp'
+    System.setProperty 'AZURE_TOKEN','7j7jytg5fgeaw2iki6x5yfkgsw6g2k5dxerqtsoqws2pllnmervq'
+    System.setProperty 'CHECKMARX_USERNAME','admin@cx'
+    System.setProperty 'CHECKMARX_PASSWORD','Cx123456!'
+    System.setProperty 'CHECKMARX_CLIENT_SECRET','014DF517-39D1-4453-B7B3-9930C563627C'
+    System.setProperty ("JIRA_PROJECT","E2E")
+    // System.setProperty 'spring.profiles.active', 'secrets'
 }
 
 task componentTest(type: Test) {
+
     useJUnitPlatform() {
         systemProperty "testprofile", "component"
         if (System.properties['testprofile'] != 'integration' | System.properties['testprofile'] != 'unit') {
@@ -169,8 +186,8 @@ task componentTest(type: Test) {
 task e2eTests(type: Test) {
     useJUnitPlatform() {
         systemProperty "testprofile", "e2e"
-        if (System.properties['testprofile'] != 'integration' | System.properties['testprofile'] != 'unit'|System.properties['testprofile'] != 'component')
-        {
+        if (System.properties['testprofile'] != 'integration' | System.properties['testprofile'] != 'unit' | System.properties['testprofile'] != 'component') {
+            include 'com/checkmarx/flow/cucumber/end2End/github2jira/**'
             exclude 'com/checkmarx/flow/cucumber/component/**'
             exclude 'com/checkmarx/flow/integration/**'
             exclude 'com/checkmarx/flow/cucumber/integration/publishprocess/**'
@@ -187,7 +204,7 @@ task e2eTests(type: Test) {
             exclude 'com/checkmarx/flow/utils/**'
             exclude 'com.checkmarx.flow.CxFlowApplicationTest'
             exclude 'com/checkmarx/flow/cucumber/integration/publishprocess/*'
-            exclude 'com/checkmarx/flow/cucumber/integration/scan/**'
+            exclude 'com/checkmarx/flow/cucumber/integration/scan/*'
         } else {
             //exclude 'com/checkmarx/**'
             include 'com/checkmarx/flow/cucumber/integration/end2end/github2jira/**'
@@ -203,8 +220,14 @@ task integrationTest(type: Test) {
     useJUnitPlatform() {
         systemProperty "testprofile", "integration"
         if (System.properties['testprofile'] != 'unit' | System.properties['testprofile'] != 'component' | System.properties['testprofile'] != 'e2e') {
-            include 'com/checkmarx/flow/cucumber/integration/negative_tests/*'
-            exclude 'com/checkmarx/flow/cucumber/integration/github/*'
+            include 'com/checkmarx/flow/cucumber/integration/negative_tests/**'
+            include 'com/checkmarx/flow/cucumber/integration/jira/manualconfig/**'
+            include 'com/checkmarx/flow/cucumber/integration/jira/autoconfig/*'
+            include 'com/checkmarx/flow/cucumber/integration/github/**'
+            include 'com/checkmarx/flow/cucumber/integration/azure/publishing/**'
+            include 'com/checkmarx/flow/cucumber/integration/jira/analytics/*'
+            exclude 'com/checkmarx/flow/cucumber/integration/end2end/github2jira/**'
+            exclude 'com/checkmarx/flow/cucumber/integration/publishprocess/**'
             exclude 'com/checkmarx/flow/test/flow**'
             exclude 'com/checkmarx/flow/exception/**'
             exclude 'com/checkmarx/flow/custom/**'
@@ -213,12 +236,40 @@ task integrationTest(type: Test) {
             exclude 'com/checkmarx/flow/service/**'
             exclude 'com/checkmarx/flow/utils/**'
             exclude 'com/checkmarx/flow/CxFlowApplicationTest'
-            exclude 'com/checkmarx/flow/cucumber/integration/end2end/github2jira/'
             exclude 'com/checkmarx/flow/cucumber/component/**'
-            exclude 'com/checkmarx/flow/cucumber/integration/scan'
+            exclude 'com/checkmarx/flow/cucumber/integration/scan/**'
             exclude 'com/checkmarx/flow/cucumber/integration/jira/JiraLoadTestRunner.java'
         }
+        testLogging {
+            events "passed", "skipped", "failed"
+        }
+    }
+}
 
+task integrationTest1(type: Test) {
+    useJUnitPlatform() {
+        systemProperty "testprofile", "integration"
+        if (System.properties['testprofile'] != 'unit' | System.properties['testprofile'] != 'component' | System.properties['testprofile'] != 'e2e') {
+            include 'com/checkmarx/flow/cucumber/integration/negative_tests/**'
+            include 'com/checkmarx/flow/cucumber/integration/jira/manualconfig/**'
+            include 'com/checkmarx/flow/cucumber/integration/jira/autoconfig/*'
+            include 'com/checkmarx/flow/cucumber/integration/github/**'
+            include 'com/checkmarx/flow/cucumber/integration/azure/publishing/**'
+            exclude 'com/checkmarx/flow/cucumber/integration/jira/analytics/*'
+            exclude 'com/checkmarx/flow/cucumber/integration/end2end/github2jira/**'
+            exclude 'com/checkmarx/flow/cucumber/integration/publishprocess/**'
+            exclude 'com/checkmarx/flow/test/flow**'
+            exclude 'com/checkmarx/flow/exception/**'
+            exclude 'com/checkmarx/flow/custom/**'
+            exclude 'com/checkmarx/flow/controller**'
+            exclude 'com/checkmarx/flow/filter/**'
+            exclude 'com/checkmarx/flow/service/**'
+            exclude 'com/checkmarx/flow/utils/**'
+            exclude 'com/checkmarx/flow/CxFlowApplicationTest'
+            exclude 'com/checkmarx/flow/cucumber/component/**'
+            exclude 'com/checkmarx/flow/cucumber/integration/scan/**'
+            exclude 'com/checkmarx/flow/cucumber/integration/jira/JiraLoadTestRunner.java'
+        }
         testLogging {
             events "passed", "skipped", "failed"
         }
