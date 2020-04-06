@@ -1,7 +1,9 @@
 package com.checkmarx.flow.cucumber.component.parse;
 
+import com.checkmarx.flow.CxFlowRunner;
 import com.checkmarx.flow.cucumber.common.Constants;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
+import com.checkmarx.flow.dto.ExitCode;
 import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.utils.TestsParseUtils;
 import io.cucumber.java.en.Then;
@@ -31,20 +33,20 @@ public class RunningCxFlowSteps {
     }
 
     @When("parsing the input")
-    public void runParse() throws InvocationTargetException, IOException {
+    public void runParse() throws IOException {
         runCxFlow(testContext.getInputFilename(), null, null);
     }
 
     @When("parsing the input with severity filter: {}")
     public void parsingTheResultsWithSeverityFilter(String severities)
-            throws InvocationTargetException, IOException {
+            throws IOException {
 
         String filterArgs = getCommandLineFilterArgs(severities);
         runCxFlow(testContext.getInputFilename(), null, filterArgs);
     }
 
     @When("parsing each of these inputs")
-    public void parsingEachOfTheseResults() throws InvocationTargetException, IOException {
+    public void parsingEachOfTheseResults() throws IOException {
         for (String baseFilename : testContext.getBaseFilenames()) {
             String inputFilename = String.format("%s.%s", baseFilename, TestContext.SAST_RESULT_EXTENSION);
             String outputFilename = String.format("%s.%s", baseFilename, TestContext.CXFLOW_REPORT_EXTENSION);
@@ -98,7 +100,7 @@ public class RunningCxFlowSteps {
     }
 
     private void runCxFlow(String inputFilename, @Nullable String outputFilename, @Nullable String customCommandLineArgs)
-            throws InvocationTargetException, IOException {
+            throws IOException {
         Path inputFilePath = copyInputResourceToWorkDir(inputFilename);
 
         if (outputFilename == null) {
@@ -106,10 +108,21 @@ public class RunningCxFlowSteps {
         }
         testContext.setOutputFilename(outputFilename);
 
-        String commandLineArgs = String.format("--parse --offline --app=ABC --f=%s %s",
+        String commandLineArgs = String.format("--parse --offline --%s --app=ABC --f=%s %s",
+                CxFlowRunner.THROW_INSTEAD_OF_EXIT_OPTION,
                 inputFilePath,
                 customCommandLineArgs);
 
-        TestUtils.runCxFlow(testContext.getCxFlowRunner(), commandLineArgs);
+        try {
+            TestUtils.runCxFlow(testContext.getCxFlowRunner(), commandLineArgs);
+        } catch (InvocationTargetException e) {
+            Assert.assertTrue("CxFlow unexpectedly completed with an error.", cxFlowCompletedSuccessfully(e));
+        }
+    }
+
+    private static boolean cxFlowCompletedSuccessfully(InvocationTargetException e) {
+        Throwable cause = e.getCause();
+        return (cause instanceof ExitThrowable) &&
+                ((ExitThrowable) cause).getExitCode() == ExitCode.SUCCESS.getValue();
     }
 }

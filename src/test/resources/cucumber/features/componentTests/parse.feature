@@ -96,4 +96,3 @@ Feature: Parsing SAST results
       | --parse --offline --blocksysexit --app=MyApp                                       | 10        |
       | --parse --offline --blocksysexit --app=MyApp --f=m:\nonexistent\file-0192019593560 | 2         |
       | --parse --offline --blocksysexit --f=c:\dontCareIfFileExists                       | 1         |
-  # blocksysexit makes it possible to evaluate exit code in tests.
