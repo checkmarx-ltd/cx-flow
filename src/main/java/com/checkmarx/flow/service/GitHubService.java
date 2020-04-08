@@ -2,10 +2,7 @@ package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
-import com.checkmarx.flow.dto.RepoIssue;
-import com.checkmarx.flow.dto.ScanDetails;
-import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.dto.Sources;
+import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.github.Content;
 import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.exception.GitHubClientException;
@@ -121,18 +118,23 @@ public class GitHubService extends RepoService {
     }
 
     private HttpEntity<String> getStatusRequestEntity(ScanResults results, PullRequestReport pullRequestReport) {
-        String state;
+        OperationStatus status;
+        String statusForApi;
         String description;
         if (mergeResultEvaluator.isMergeAllowed(results, properties, pullRequestReport)) {
-            state = MERGE_SUCCESS;
+            status = OperationStatus.SUCCESS;
+            statusForApi = MERGE_SUCCESS;
             description = MERGE_SUCCESS_DESCRIPTION;
         } else {
-            state = MERGE_FAILURE;
+            status = OperationStatus.FAILURE;
+            statusForApi = MERGE_FAILURE;
             description = MERGE_FAILURE_DESCRIPTION;
         }
+        OperationResult requestResult = new OperationResult(status, description);
+        pullRequestReport.setPullRequestResult(requestResult);
+        pullRequestReport.log();
 
-        pullRequestReport.setPullRequestStatus(state);
-        JSONObject requestBody = getJSONStatus(state, results.getLink(), description);
+        JSONObject requestBody = getJSONStatus(statusForApi, results.getLink(), description);
         return new HttpEntity<>(requestBody.toString(), createAuthHeaders());
     }
 

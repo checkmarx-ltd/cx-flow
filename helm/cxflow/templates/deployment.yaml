@@ -76,6 +76,13 @@ spec:
               value: {{ .Values.cxflow.jiraUrl }}
             - name: JIRA_USERNAME
               value: {{ .Values.cxflow.jiraUserName }}
+            - name: JIRA_PROJECT
+              value: {{ .Values.cxflow.jiraProject }}
+            - name: AZURE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secret
+                  key: azure-token
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

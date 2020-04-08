@@ -7,11 +7,15 @@ import com.atlassian.jira.rest.client.api.domain.input.FieldInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
 import com.atlassian.jira.rest.client.api.domain.input.TransitionInput;
 import com.atlassian.jira.rest.client.internal.async.CustomAsynchronousJiraRestClientFactory;
+import com.checkmarx.flow.constants.JiraConstants;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.dto.BugTracker;
+import com.checkmarx.flow.dto.ScanDetails;
 import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.dto.report.JiraTicketsReport;
 import com.checkmarx.flow.exception.JiraClientException;
+import com.checkmarx.flow.exception.JiraClientRunTimeException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
@@ -21,6 +25,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+
 import javax.annotation.PostConstruct;
 import java.beans.ConstructorProperties;
 import java.net.URI;
@@ -41,11 +46,13 @@ public class JiraService {
     private URI jiraURI;
     private final JiraProperties jiraProperties;
     private final FlowProperties flowProperties;
-    private static final int MAX_JQL_RESULTS = 1000000;
-    private static final int JIRA_MAX_DESCRIPTION = 32760;
     private final String parentUrl;
     private final String grandParentUrl;
     private Map<String, ScanResults.XIssue> nonPublishedScanResultsMap = new HashMap<>();
+
+    private List<String> currentNewIssuesList = new ArrayList<>();
+    private List<String> currentUpdatedIssuesList = new ArrayList<>();
+    private List<String> currentClosedIssuesList = new ArrayList<>();
 
     private static final String LABEL_FIELD_TYPE = "labels";
     private static final String SECURITY_FIELD_TYPE = "security";
@@ -72,8 +79,62 @@ public class JiraService {
             this.issueClient = this.client.getIssueClient();
             this.projectClient = this.client.getProjectClient();
             this.metaClient = this.client.getMetadataClient();
+            configJira();
         }
     }
+
+    private void prepareJiraOpenClosedStatuses() {
+        if (jiraProperties.getClosedStatus() == null) {
+            jiraProperties.setClosedStatus(new ArrayList<>());
+        }
+        if (jiraProperties.getOpenStatus() == null) {
+            jiraProperties.setOpenStatus(new ArrayList<>());
+        }
+    }
+
+
+    private void configJira() {
+        if (flowProperties.getBugTracker().equalsIgnoreCase("JIRA") ||
+            flowProperties.getBugTrackerImpl().stream().map(String::toLowerCase)
+                    .collect(Collectors.toList()).contains("jira"))
+        {
+            configurOpenClosedStatuses();
+        }
+    }
+
+    private void configurOpenClosedStatuses() {
+        prepareJiraOpenClosedStatuses();
+        if (jiraProperties.getClosedStatus().isEmpty()) {
+            Iterable<Status> statuses = client.getMetadataClient().getStatuses().claim();
+            for(Status status: statuses) {
+                if(isStatusClosed(status)) {
+                    jiraProperties.getClosedStatus().add(status.getName());
+                }
+            }
+        }
+
+        if (jiraProperties.getOpenStatus().isEmpty()) {
+            Iterable<Status> statuses = client.getMetadataClient().getStatuses().claim();
+            for(Status status: statuses) {
+                if(isStatusOpen(status)) {
+                    jiraProperties.getOpenStatus().add(status.getName());
+                }
+            }
+        }
+        if (jiraProperties.getClosedStatus().isEmpty() || jiraProperties.getOpenStatus().isEmpty()) {
+            throw new JiraClientRunTimeException("Could not find JIRA issues closed statuses.");
+        }
+    }
+
+    private boolean isStatusClosed(Status status) {
+        return jiraProperties.getStatusCategoryClosedName().contains(status.getStatusCategory().getName());
+    }
+
+    private boolean isStatusOpen(Status status) {
+        return jiraProperties.getStatusCategoryOpenName().contains(status.getStatusCategory().getName());
+    }
+
+
 
     private List<Issue> getIssues(ScanRequest request) {
         log.info("Executing getIssues API call");
@@ -136,7 +197,7 @@ public class JiraService {
         fields.add("created");
         fields.add("updated");
         fields.add("status");
-        Promise<SearchResult> searchJqlPromise = this.client.getSearchClient().searchJql(jql, MAX_JQL_RESULTS, 0, fields);
+        Promise<SearchResult> searchJqlPromise = this.client.getSearchClient().searchJql(jql, JiraConstants.MAX_JQL_RESULTS, 0, fields);
         for (Issue issue : searchJqlPromise.claim().getIssues()) {
             issues.add(issue);
         }
@@ -890,10 +951,10 @@ public class JiraService {
         if (!ScanUtils.empty(jiraProperties.getDescriptionPostfix())) {
             body.append(jiraProperties.getDescriptionPostfix());
         }
-        return StringUtils.truncate(body.toString(), JIRA_MAX_DESCRIPTION);
+        return StringUtils.truncate(body.toString(), JiraConstants.JIRA_MAX_DESCRIPTION);
     }
 
-    Map<String, List<String>> process(ScanResults results, ScanRequest request) throws JiraClientException {
+    Map<String, List<String>> process(ScanResults results, ScanRequest request, ScanDetails scanDetails) throws JiraClientException {
         Map<String, ScanResults.XIssue> map;
         Map<String, Issue> jiraMap;
         List<Issue> issuesParent;
@@ -972,11 +1033,40 @@ public class JiraService {
         /*Check if an issue exists in Jira but not within results and close if not*/
         closeIssueInCaseNotWithinResults(request, map, jiraMap, closedIssues);
 
-        return ImmutableMap.of(
-                "new", newIssues,
-                "updated", updatedIssues,
-                "closed", closedIssues
-        );
+        ImmutableMap<String, List<String>> ticketsMap = ImmutableMap.of(
+                JiraConstants.NEW_TICKET, newIssues,
+                JiraConstants.UPDATED_TICKET, updatedIssues,
+                JiraConstants.CLOSED_TICKET, closedIssues);
+
+        logJiraTickets(request, scanDetails, ticketsMap);
+
+        setCurrentNewIssuesList(newIssues);
+        setCurrentUpdatedIssuesList(updatedIssues);
+        setCurrentClosedIssuesList(closedIssues);
+        
+        return ticketsMap;
+    }
+
+    public List<String> getCurrentNewIssuesList() {
+        return currentNewIssuesList;
+    }
+
+    public List<String> getCurrentUpdatedIssuesList() {
+        return currentUpdatedIssuesList;
+    }
+
+    public List<String> getCurrentClosedIssuesList() {
+        return currentClosedIssuesList;
+    }
+
+    private void logJiraTickets(ScanRequest request, ScanDetails scanDetails, ImmutableMap<String, List<String>> ticketsMap) {
+        if (scanDetails.getScanId() != null) {
+            new JiraTicketsReport(scanDetails.getScanId(), request).build(ticketsMap).log();
+        } else if (scanDetails.getOsaScanId() != null) {
+            new JiraTicketsReport(scanDetails.getOsaScanId(), request).build(ticketsMap).log();
+        } else {
+            new JiraTicketsReport(request).build(ticketsMap).log();
+        }
     }
 
     private void closeIssueInCaseNotWithinResults(ScanRequest request, Map<String, ScanResults.XIssue> map, Map<String, Issue> jiraMap, List<String> closedIssues) throws JiraClientException {
@@ -1081,5 +1171,20 @@ public class JiraService {
         if (sourceMap != null && !sourceMap.isEmpty()) {
             destinationMap.putAll(sourceMap);
         }
+    }
+
+    private void setCurrentNewIssuesList(List<String> currentNewIssuesList) {
+        this.currentNewIssuesList.clear();
+        this.currentNewIssuesList.addAll(currentNewIssuesList);
+    }
+
+    private void setCurrentUpdatedIssuesList(List<String> currentUpdatedIssuesList) {
+        this.currentUpdatedIssuesList.clear();
+        this.currentUpdatedIssuesList.addAll(currentUpdatedIssuesList);
+    }
+
+    private void setCurrentClosedIssuesList(List<String> currentClosedIssuesList) {
+        this.currentClosedIssuesList.clear();
+        this.currentClosedIssuesList.addAll(currentClosedIssuesList);
     }
 }

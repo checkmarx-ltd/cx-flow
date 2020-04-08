@@ -218,6 +218,7 @@ public class ADOController {
             request.putAdditionalMetadata(Constants.ADO_ISSUE_BODY_KEY, adoIssueBody);
             request.putAdditionalMetadata(Constants.ADO_OPENED_STATE_KEY, adoOpenedState);
             request.putAdditionalMetadata(Constants.ADO_CLOSED_STATE_KEY, adoClosedState);
+            request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body.toString());
             request.setId(uid);
             //only initiate scan/automation if target branch is applicable
             if(helperService.isBranch2Scan(request, branches)){
@@ -398,6 +399,7 @@ public class ADOController {
             request.putAdditionalMetadata(Constants.ADO_ISSUE_BODY_KEY, adoIssueBody);
             request.putAdditionalMetadata(Constants.ADO_OPENED_STATE_KEY, adoOpenedState);
             request.putAdditionalMetadata(Constants.ADO_CLOSED_STATE_KEY, adoClosedState);
+            request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body.toString());
             //if an override blob/file is provided, substitute these values
             request = ScanUtils.overrideMap(request, o);
 

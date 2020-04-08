@@ -61,9 +61,9 @@ public class MergeResultEvaluatorImpl implements MergeResultEvaluator {
 
     private static boolean isAnyThresholdExceeded(ScanResults scanResults, Map<FindingSeverity, Integer> thresholds, PullRequestReport pullRequestReport) {
         boolean result = false;
-        Iterable<Map.Entry<FindingSeverity, Integer>> findingsPerSeverity = getFindingCountPerSeverity(scanResults);
+        Map<FindingSeverity, Integer> findingsPerSeverity = getFindingCountPerSeverity(scanResults);
         pullRequestReport.setFindingsPerSeverity(findingsPerSeverity);
-        for (Map.Entry<FindingSeverity, Integer> entry : findingsPerSeverity) {
+        for (Map.Entry<FindingSeverity, Integer> entry : findingsPerSeverity.entrySet()) {
             if (exceedsThreshold(entry, thresholds)) {
                 result = true;
                 // Don't break here, because we want to log validation for all the thresholds.
@@ -72,7 +72,7 @@ public class MergeResultEvaluatorImpl implements MergeResultEvaluator {
         return result;
     }
 
-    private static Iterable<Map.Entry<FindingSeverity, Integer>> getFindingCountPerSeverity(ScanResults scanResults) {
+    public static Map<FindingSeverity, Integer>  getFindingCountPerSeverity(ScanResults scanResults) {
         log.debug("Calculating finding counts per severity, after the filters were applied.");
         Map<FindingSeverity, Integer> result = new EnumMap<>(FindingSeverity.class);
 
@@ -84,7 +84,7 @@ public class MergeResultEvaluatorImpl implements MergeResultEvaluator {
         }
 
         writeMapToLog(result, "Finding counts");
-        return result.entrySet();
+        return result;
     }
 
     private static void setFindingCount(Map<FindingSeverity, Integer> target, Map.Entry<?, ?> entry) {
@@ -155,8 +155,9 @@ public class MergeResultEvaluatorImpl implements MergeResultEvaluator {
             if (rawSummary instanceof Map) {
                 result = (Map<?, ?>) rawSummary;
             } else {
+                String summaryClass = rawSummary != null ? rawSummary.getClass().getName() : null;
                 log.warn("Wrong summary type in scan results. Expected {}, got {}.",
-                        Map.class.getName(), rawSummary.getClass().getName());
+                        Map.class.getName(), summaryClass);
             }
         } else {
             log.warn("Additional details are missing in scan results.");

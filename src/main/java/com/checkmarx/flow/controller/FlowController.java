@@ -211,6 +211,7 @@ public class FlowController {
                     .build();
             request.setId(uid);
 
+            request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, scanRequest.toString());
             if(!ScanUtils.empty(scanRequest.getResultUrl())){
                 request.putAdditionalMetadata("result_url", scanRequest.getResultUrl());
             }

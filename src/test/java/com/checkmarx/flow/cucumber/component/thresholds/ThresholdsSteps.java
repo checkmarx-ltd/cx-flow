@@ -14,6 +14,7 @@ import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
+import com.checkmarx.sdk.dto.cx.CxScanSummary;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
 import com.checkmarx.test.flow.config.CxFlowMocksConfig;
@@ -80,7 +81,6 @@ public class ThresholdsSteps {
         this.cxProperties = cxProperties;
 
         gitHubProperties.setCxSummary(false);
-        gitHubProperties.setFlowSummary(false);
         this.gitHubProperties = gitHubProperties;
 
         this.mergeResultEvaluator = mergeResultEvaluator;
@@ -151,6 +151,7 @@ public class ThresholdsSteps {
             String message = "Error processing scan results.";
             log.error(message, e);
             Assert.fail(message);
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -171,9 +172,9 @@ public class ThresholdsSteps {
         scanRequest.setMergeNoteUri(MERGE_NOTE_URL);
         scanRequest.setProduct(ScanRequest.Product.CX);
 
-        scanRequest.setAdditionalMetadata(new HashMap<String, String>() {{
-            put("statuses_url", PULL_REQUEST_STATUSES_URL);
-        }});
+        Map<String, String> additionalMetadata = new HashMap<String, String>();
+        additionalMetadata.put("statuses_url", PULL_REQUEST_STATUSES_URL);
+        scanRequest.setAdditionalMetadata(additionalMetadata);
         return scanRequest;
     }
 
@@ -217,6 +218,8 @@ public class ThresholdsSteps {
 
     private static ScanResults createFakeScanResults() {
         ScanResults result = new ScanResults();
+
+        result.setScanSummary(new CxScanSummary());
 
         Map<String, Object> details = new HashMap<>();
         details.put(Constants.SUMMARY_KEY, new HashMap<>());
