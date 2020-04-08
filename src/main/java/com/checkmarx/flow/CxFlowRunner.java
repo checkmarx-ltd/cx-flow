@@ -2,6 +2,7 @@ package com.checkmarx.flow;
 
 import com.checkmarx.flow.config.*;
 import com.checkmarx.flow.dto.BugTracker;
+import com.checkmarx.flow.dto.ExitCode;
 import com.checkmarx.flow.dto.FlowOverride;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.ExitThrowable;
@@ -17,7 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.boot.DefaultApplicationArguments;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
@@ -33,6 +33,16 @@ import static com.checkmarx.flow.exception.ExitThrowable.exit;
 public class CxFlowRunner implements ApplicationRunner {
 
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(CxFlowRunner.class);
+
+    /**
+     * Command line option that causes CxFlow to throw an exception instead of exiting.
+     * Introduced for testing to prevent sudden test interruption and allow to evaluate exit codes.
+     */
+    public static final String THROW_INSTEAD_OF_EXIT_OPTION = "blocksysexit";
+
+    public static final String PARSE_OPTION = "parse";
+    public static final String BATCH_OPTION = "batch";
+
     private final FlowProperties flowProperties;
     private final CxProperties cxProperties;
     private final JiraProperties jiraProperties;
@@ -69,13 +79,13 @@ public class CxFlowRunner implements ApplicationRunner {
                     commandLineRunner(args);
                 }
             } catch (ExitThrowable ee) {
-                if (args.containsOption("blocksysexit")) {
+                log.info("Finished with exit code: " + ee.getExitCode());
+                if (args.containsOption(THROW_INSTEAD_OF_EXIT_OPTION)) {
                     throw new InvocationTargetException(ee);
                 }
-                log.info("Finished with exit code: " + ee.getExitCode());
                 System.exit(ee.getExitCode());
             } finally {
-                if (executors != null && (args.containsOption("scan") || args.containsOption("parse") || args.containsOption("batch"))) {
+                if (executors != null && (args.containsOption("scan") || args.containsOption(PARSE_OPTION) || args.containsOption(BATCH_OPTION))) {
                     executors.forEach(ThreadPoolTaskExecutor::shutdown);
                 }
             }
@@ -95,7 +105,7 @@ public class CxFlowRunner implements ApplicationRunner {
         List<String> emails;
         String file;
         String libFile;
-        String preset = null;
+        String preset;
         String team;
         String cxProject;
 		String altProject;
@@ -115,13 +125,13 @@ public class CxFlowRunner implements ApplicationRunner {
         MDC.put("cx", uid);
 
         if(args.containsOption("branch-create")){
-            exit(0);
+            exit(ExitCode.SUCCESS);
         }
         if(args.containsOption("branch-delete")){
-            exit(0);
+            exit(ExitCode.SUCCESS);
         }
 
-        if(!args.containsOption("scan") && !args.containsOption("parse") && !args.containsOption("batch") && !args.containsOption("project")){
+        if(!args.containsOption("scan") && !args.containsOption(PARSE_OPTION) && !args.containsOption(BATCH_OPTION) && !args.containsOption("project")){
             log.error("--scan | --parse | --batch | --project option must be specified");
             exit(1);
         }
@@ -165,7 +175,7 @@ public class CxFlowRunner implements ApplicationRunner {
         boolean bbs = args.containsOption("bbs"); //BitBucket Server
 
         if(((ScanUtils.empty(namespace) && ScanUtils.empty(repoName) && ScanUtils.empty(branch)) &&
-                ScanUtils.empty(application)) && !args.containsOption("batch")) {
+                ScanUtils.empty(application)) && !args.containsOption(BATCH_OPTION)) {
             log.error("Namespace/Repo/Branch or Application (app) must be provided");
             exit(1);
         }
@@ -339,7 +349,7 @@ public class CxFlowRunner implements ApplicationRunner {
         }
 
         try {
-            if(args.containsOption("parse")){
+            if(args.containsOption(PARSE_OPTION)){
 
                 File f = new File(file);
                 if(!f.exists()){
@@ -362,7 +372,7 @@ public class CxFlowRunner implements ApplicationRunner {
                     cxParse(request, f);
                 }
             }
-            else if(args.containsOption("batch")){
+            else if(args.containsOption(BATCH_OPTION)){
                 log.info("Executing batch process");
                 cxBatch(request);
             }
@@ -419,7 +429,7 @@ public class CxFlowRunner implements ApplicationRunner {
             exit(10);
         }
         log.info("Completed Successfully");
-        exit(0);
+        exit(ExitCode.SUCCESS);
     }
 
     private boolean containsRepoArgs(String namespace, String repoName, String branch){

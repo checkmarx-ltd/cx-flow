@@ -1,4 +1,4 @@
-package com.checkmarx.flow.cucumber.integration.jira;
+package com.checkmarx.flow.cucumber.integration.jira.load;
 
 
 import io.cucumber.junit.Cucumber;

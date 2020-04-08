@@ -64,22 +64,22 @@ Feature: Check Integration tests command line functionality - scan.
       |               | master | MyRepoName | MyNamespace |       | MyNamespace-MyRepoName-master | \CxServer\SP |
 
 
-  @TeamAndProjectName
+  @TeamAndProjectName @MultiTenant
   Scenario Outline:  test team name for different scan parameters: cx-project,branch,repo-name,namespace,app,multi-tenant=true. Using github as a respoiroty.
     Given github repository which contains project CodeInjection
     When project is: "<cx-project>" and branch="<branch>"
     And repo-name is "<repo-name>" and --repo-url is supplied and --github flag is supplied
     And namespace is: "<namespace>" and application is "<app>"
-    And team in application.yml is \CxServer\SP
+    And team in application.yml is "<inputTeam>"
     And multi-tenant=true
     Then The request sent to SAST reporitory will contain scan result with project name="<OutProjectName>" and team "<teamOut>"
 
     Examples:
-      | cx-project    | branch | repo-name  | namespace   | app   | teamOut                  | OutProjectName    |
-      | CodeInjection | master |            |             | MyApp | \CxServer\SP             | CodeInjection     |
-      | CodeInjection | master |            | MyNamespace | MyApp | \CxServer\SP\MyNamespace | CodeInjection     |
-      |               | master | MyRepoName |             | MyApp | \CxServer\SP             | MyRepoName-master |
-      |               | master | MyRepoName |             |       | \CxServer\SP             | MyRepoName-master |
+      | cx-project    | branch | repo-name  | namespace   | app   | inputTeam    | teamOut                  | OutProjectName    |
+      | CodeInjection | master |            |             | MyApp | \CxServer\SP | \CxServer\SP             | CodeInjection     |
+      #| CodeInjection | master |            | MyNamespace | MyApp |              | \CxServer\SP\MyNamespace | CodeInjection     |
+      |               | master | MyRepoName |             | MyApp |              | \CxServer\SP             | MyRepoName-master |
+      #|               | master | MyRepoName |             |       | \CxServer\SP | \CxServer\SP             | MyRepoName-master |
 
 
   @Skip @TeamAndProjectName @File
@@ -148,7 +148,9 @@ Feature: Check Integration tests command line functionality - scan.
 
 
 
-  @Json 
+ 
+  
+  @AnalyticsJson 
   Scenario Outline: test scan with different vulnerabilities numbers and verify the json scan report
     Given there is a SAST environment configured and running
     When  running a scan for repository "<repo_url>"
@@ -158,12 +160,12 @@ Feature: Check Integration tests command line functionality - scan.
 
     Examples:
       | repo_url                                                       | high | medium | low | scanType | branch                 |
-      | https://github.com/cxflowtestuser/Code_Injection.git           | 0    | 1      | 1   | Full      | master                 |
-      | https://github.com/cxflowtestuser/VB_3845.git                  | 2    | 3      | 0   | Inc      | cxflowtestuser-patch-1 |
       | https://github.com/cxflowtestuser/amplify-multienv-example.git | 0    | 0      | 1   | Full     | master                 |
+      | https://github.com/cxflowtestuser/Code_Injection.git           | 0    | 1      | 1   | Full     | master                 |
+      | https://github.com/cxflowtestuser/VB_3845.git                  | 2    | 3      | 0   | Inc      | cxflowtestuser-patch-1 |
+  
 
-
-  @Json @File 
+  @AnalyticsJson @File
   Scenario Outline: test scan for file system repository with different vulnerabilities and verify the json scan report
     Given there is a SAST environment configured and running
     When running a scan for a specified folder
@@ -172,8 +174,7 @@ Feature: Check Integration tests command line functionality - scan.
     And output json logger will have Scan request "<folder>" and scan status will be "<LoggerScanStatus>"
 
     Examples:
-      | high | medium | low | scanType | team         | LoggerScanStatus                                                              |
-      | 2    | 3      | 0   | Full     | \CxServer\SP | SUCCESS                                                                       |
-      | 2    | 3      | 0   | Inc      | \CxServer\SP | SUCCESS                                                                       |
-      | 2    | 3      | 0   | Inc      | invalidTeam  | Parent team could not be established. Please ensure correct team is provided |
-
+      | high | medium | low | scanType | team         | LoggerScanStatus |
+      | 2    | 3      | 0   | Full     | \CxServer\SP | SUCCESS          |
+      | 2    | 3      | 0   | Inc      | \CxServer\SP | SUCCESS          |
+      | 2    | 3      | 0   | Inc      | invalidTeam  | FAILURE          |

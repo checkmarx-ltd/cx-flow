@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class WebHookSteps {
     private static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
-    private static final String WEBHOOK_REQUEST_RESOURCE_PATH = "sample-webhook-requests/from-github.json";
+    private static final String WEBHOOK_REQUEST_RESOURCE_PATH = "sample-webhook-requests/github-push-minimal.json";
 
     private final List<CompletableFuture<Long>> requestSendingTasks = new ArrayList<>();
 
@@ -177,13 +177,13 @@ public class WebHookSteps {
         boolean allRequestsCompletedSuccessfully = taskDurations.stream().allMatch(Objects::nonNull);
         Assert.assertTrue("Some of the requests failed.", allRequestsCompletedSuccessfully);
 
-        Optional<Long> actualMaxDurationMs = taskDurations.stream().max(Long::compare);
-        Assert.assertTrue("Actual max duration is not defined.", actualMaxDurationMs.isPresent());
-
+        Long actualMaxDurationMs = taskDurations.stream().max(Long::compare)
+            .orElseThrow(() -> new AssertionError("Actual max duration is not defined."));
+        
         String message = String.format("Actual max duration (%d ms) is greater than the expected max duration (%d ms).",
-                actualMaxDurationMs.get(),
+                actualMaxDurationMs,
                 expectedMaxDurationMs);
-        Assert.assertTrue(message, actualMaxDurationMs.get() <= expectedMaxDurationMs);
+        Assert.assertTrue(message, actualMaxDurationMs <= expectedMaxDurationMs);
     }
 
     private static Long toExecutionTimeMs(CompletableFuture<Long> task) {

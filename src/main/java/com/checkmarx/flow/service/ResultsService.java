@@ -6,7 +6,7 @@ import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.Field;
 import com.checkmarx.flow.dto.ScanDetails;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.dto.report.GetResultsReport;
+import com.checkmarx.flow.dto.report.ScanResultsReport;
 import com.checkmarx.flow.exception.InvalidCredentialsException;
 import com.checkmarx.flow.exception.JiraClientException;
 import com.checkmarx.flow.exception.JiraClientRunTimeException;
@@ -71,13 +71,13 @@ public class ResultsService {
             CompletableFuture<ScanResults> future = new CompletableFuture<>();
             //TODO async these, and join and merge after
             ScanResults results = cxService.getReportContentByScanId(scanId, filters);
-            new GetResultsReport(scanId,request).log();
+            new ScanResultsReport(scanId,request, results).log();
             
             if(cxProperties.getEnableOsa() && !ScanUtils.empty(osaScanId)){
                 log.info("Waiting for OSA Scan results for scan id {}", osaScanId);
                 results = osaService.waitForOsaScan(osaScanId, projectId, results, filters);
 
-                new GetResultsReport(osaScanId,request).log();
+                new ScanResultsReport(osaScanId,request, results).log();
             }
             Map<String, Object> emailCtx = new HashMap<>();
             BugTracker.Type bugTrackerType = request.getBugTracker().getType();
@@ -125,6 +125,10 @@ public class ResultsService {
     }
 
     void processResults(ScanRequest request, ScanResults results, ScanDetails scanDetails) throws MachinaException {
+        
+        if(scanDetails == null){
+            scanDetails = new ScanDetails();
+        }
         if(!cxProperties.getOffline()) {
             getCxFields(request, results);
         }
@@ -135,7 +139,7 @@ public class ResultsService {
                 log.info("Issue tracking is turned off");
                 break;
             case JIRA:
-                handleJiraCase(request, results);
+                handleJiraCase(request, results, scanDetails);
                 break;
             case GITHUBPULL:
                 gitService.processPull(request, results);
@@ -210,10 +214,10 @@ public class ResultsService {
         }
     }
 
-    private void handleJiraCase(ScanRequest request, ScanResults results) throws JiraClientException {
+    private void handleJiraCase(ScanRequest request, ScanResults results, ScanDetails scanDetails) throws JiraClientException {
         try {
             log.info("======== Processing results with JIRA issue tracking ========");
-            jiraService.process(results, request);
+            jiraService.process(results, request, scanDetails);
         } catch (RestClientException e) {
             handleJiraRestClientException(e);
         } catch (JiraClientException e) {
