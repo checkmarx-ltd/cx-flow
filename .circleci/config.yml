@@ -139,7 +139,7 @@ jobs:
       - run:
           name: Install cxflow service on cluster 
           command: |
-            helm upgrade --install --atomic --debug --namespace << parameters.namespace >> << parameters.release-name >> \
+            helm upgrade --install --atomic --namespace << parameters.namespace >> << parameters.release-name >> \
               --set cxflow.checkmarxUsername=${CHECKMARX_USERNAME} \
               --set cxflow.checkmarxPassword=${CHECKMARX_PASSWORD} \
               --set cxflow.githubToken=${GITHUB_TOKEN} \
@@ -237,7 +237,7 @@ jobs:
       - run:
           name: Save application logs
           command: |
-            export POD_NAME=$(kubectl get pods -o custom-columns=:metadata.name -n << parameters.namespace >> | head -n2 | tr -d '\n')
+            export POD_NAME=$(kubectl get pods -o custom-columns=:metadata.name -n << parameters.namespace >> | grep -v ingress | grep -v external-dns | tr -d '\n')
             mkdir -p ~/application-logs/
             kubectl logs ${POD_NAME} -n << parameters.namespace >> > ~/application-logs/${POD_NAME}.log
       - run:
