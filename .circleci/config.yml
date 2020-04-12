@@ -154,6 +154,7 @@ jobs:
       - run:
           name: Show running pods
           command: |
+            sleep 60
             kubectl get pods -n << parameters.namespace >>
 
   component-tests:
