@@ -1,10 +1,12 @@
-package com.checkmarx.flow.cucumber.integration.azure.publishing;
+package com.checkmarx.flow.cucumber.integration.azure.publishing.issueprocessing;
 
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.ADOProperties;
 import com.checkmarx.flow.cucumber.common.Constants;
 import com.checkmarx.flow.cucumber.common.utils.JsonUtils;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
+import com.checkmarx.flow.cucumber.integration.azure.publishing.AzureDevopsClient;
+import com.checkmarx.flow.cucumber.integration.azure.publishing.Utils;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
@@ -38,8 +40,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest(classes = {CxFlowApplication.class})
 @Slf4j
 public class PublishingSteps {
-    private static final String PROPERTIES_FILE_PATH = "cucumber/features/integrationTests/azure/publishing.properties";
-
     private static final String REPORT_WITH_ONE_FINDING = "1-finding.xml";
 
     // Description cannot be null or empty during issue creation.
@@ -69,11 +69,9 @@ public class PublishingSteps {
 
     @Before
     public void prepareEnvironment() throws IOException {
-        Properties testProperties = TestUtils.getPropertiesFromResource(PROPERTIES_FILE_PATH);
-        projectName = testProperties.getProperty("projectName");
-
         cxProperties.setOffline(true);
 
+        projectName = Utils.getProjectName();
         adoClient.ensureProjectExists(projectName);
         adoClient.deleteProjectIssues(projectName);
     }
@@ -291,7 +289,7 @@ public class PublishingSteps {
     private ScanRequest prepareScanRequest() {
         BugTracker bugTracker = BugTracker.builder()
                 .type(BugTracker.Type.CUSTOM)
-                .customBean("Azure")
+                .customBean(Utils.ISSUE_TRACKER_NAME)
                 .build();
 
         return ScanRequest.builder()

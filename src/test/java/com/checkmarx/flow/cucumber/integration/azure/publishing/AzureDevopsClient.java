@@ -33,9 +33,9 @@ public class AzureDevopsClient {
     // Affects the list of valid issue states. CxFlow assumes this template by default.
     private static final String AGILE_PROJECT_TEMPLATE_ID = "adcc42ab-9882-485e-a3ed-7678f01f66bc";
 
-    static final String PROJECT_NAME_KEY = "projectName";
+    public static final String PROJECT_NAME_KEY = "projectName";
     private static final String ID_KEY = "id";
-    static final String DEFAULT_BRANCH = "master";
+    public static final String DEFAULT_BRANCH = "master";
 
     private static final Duration WAITING_TIMEOUT = Duration.ofMinutes(1);
     private static final Duration POLL_INTERVAL = Duration.ofSeconds(1);

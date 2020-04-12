@@ -50,7 +50,7 @@ public class WebHookSteps {
 
     Properties testProperties;
 
-    @Before("@WebHookFeature")
+    @Before("@WebHook")
     public void loadProperties() throws IOException {
         testProperties = TestUtils.getPropertiesFromResource("cucumber/features/componentTests/webhook.properties");
     }
