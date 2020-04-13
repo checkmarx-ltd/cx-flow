@@ -19,4 +19,6 @@ public interface GitHubTestUtilsImpl {
     void closeIssue(Issue issue, ScanRequest request) throws MachinaException;
 
     void closeAllIssues(List<Issue> issuesList, ScanRequest request) throws MachinaException;
+
+    String createSignature(String requestBody);
 }

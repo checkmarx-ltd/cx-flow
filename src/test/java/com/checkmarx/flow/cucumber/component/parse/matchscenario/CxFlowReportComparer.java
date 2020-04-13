@@ -1,5 +1,6 @@
 package com.checkmarx.flow.cucumber.component.parse.matchscenario;
 
+import com.checkmarx.flow.cucumber.common.Constants;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 import com.checkmarx.flow.cucumber.component.parse.TestContext;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -8,7 +9,6 @@ import com.github.fge.jsonpatch.diff.JsonDiff;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Paths;
 
 public class CxFlowReportComparer {
@@ -33,7 +33,7 @@ public class CxFlowReportComparer {
     private Mismatch compareWithReferenceReport(String baseName) throws IOException {
         String completeName = String.format("%s.%s", baseName, TestContext.CXFLOW_REPORT_EXTENSION);
 
-        String pathRelativeToData = Paths.get(TestContext.CXFLOW_REPORTS_DIR, completeName).toString();
+        String pathRelativeToData = Paths.get(Constants.CXFLOW_REPORTS_DIR, completeName).toString();
         JsonNode referenceReport = TestUtils.parseJsonFromResources(pathRelativeToData);
         JsonNode actualReport = parseJsonFromFile(completeName);
         JsonNode differences = JsonDiff.asJson(referenceReport, actualReport);

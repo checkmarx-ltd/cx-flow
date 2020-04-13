@@ -5,6 +5,7 @@ import com.checkmarx.flow.CxFlowRunner;
 import com.checkmarx.flow.cucumber.common.Constants;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.io.IOUtils;
 import org.springframework.boot.DefaultApplicationArguments;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -15,11 +16,14 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Properties;
-import java.util.Stack;
 
+/**
+ * relativePath's in the methods of this class are relative to Cucumber data dir in resources.
+ */
 public class TestUtils {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -34,6 +38,11 @@ public class TestUtils {
         return new ClassPathResource(fullResourcePath).getFile();
     }
 
+    public static String getResourceAsString(String relativePath) throws IOException {
+        InputStream resourceStream = getResourceAsStream(relativePath);
+        return IOUtils.toString(resourceStream, StandardCharsets.UTF_8);
+    }
+
     private static String toFullResourcePath(String relativePath) {
         return Paths.get(Constants.CUCUMBER_DATA_DIR, relativePath).toString();
     }
@@ -45,22 +54,10 @@ public class TestUtils {
         return result;
     }
 
-    public static JsonNode parseJsonFromResources(String pathRelativeToData) throws IOException {
-        String resourcePath = Paths.get(Constants.CUCUMBER_DATA_DIR, pathRelativeToData).toString();
+    public static JsonNode parseJsonFromResources(String relativePath) throws IOException {
+        String resourcePath = Paths.get(Constants.CUCUMBER_DATA_DIR, relativePath).toString();
         File file = ResourceUtils.getFile("classpath:" + resourcePath);
         return objectMapper.readTree(file);
-    }
-
-    private interface Revertible {
-        void revert();
-    }
-
-    private static final Stack<Revertible> propertiesChanges = new Stack<>();
-
-    public static void changePropertiesBack() {
-        while (!propertiesChanges.isEmpty()) {
-            propertiesChanges.pop().revert();
-        }
     }
 
     public static void runCxFlow(CxFlowRunner runner, String args) throws InvocationTargetException {

@@ -29,13 +29,13 @@ import java.util.stream.Stream;
 public class LoadingSastResultsSteps {
     private static final Map<String, String> sastFilenamesByDescription;
     static {
-        Map<String, String> temp = new HashMap<String, String>();
+        Map<String, String> temp = new HashMap<>();
         temp.put("2 findings with the same vulnerability type and in the same file", "2-findings-same-vuln-type-same-file.xml");
         temp.put("2 findings with the same vulnerability type and in different files", "2-findings-same-vuln-type-different-files.xml");
         temp.put("2 findings with different vulnerability types and in the same file", "2-findings-different-vuln-type-same-file.xml");
         temp.put("2 findings with different vulnerability types and in different files", "2-findings-different-vuln-type-different-files.xml");
         sastFilenamesByDescription = Collections.unmodifiableMap(temp);
-    };
+    }
 
     private final TestContext testContext;
 
@@ -108,7 +108,7 @@ public class LoadingSastResultsSteps {
         Set<String> sampleSastResults = getResourceFilenames(Constants.SAMPLE_SAST_RESULTS_DIR,
                 TestContext.SAST_RESULT_EXTENSION);
 
-        Set<String> referenceCxFlowReports = getResourceFilenames(TestContext.CXFLOW_REPORTS_DIR,
+        Set<String> referenceCxFlowReports = getResourceFilenames(Constants.CXFLOW_REPORTS_DIR,
                 TestContext.CXFLOW_REPORT_EXTENSION);
 
         Sets.SetView<String> result = Sets.intersection(sampleSastResults, referenceCxFlowReports);
@@ -130,7 +130,7 @@ public class LoadingSastResultsSteps {
         int DIRECTORY_SCAN_DEPTH = 1;
         try (Stream<Path> files = Files.find(resourceDir,
                 DIRECTORY_SCAN_DEPTH,
-                onlyFilesWithExtension(extension));
+                onlyFilesWithExtension(extension))
         ) {
             return files
                     .map(path -> FilenameUtils.getBaseName(path.getFileName().toString()))

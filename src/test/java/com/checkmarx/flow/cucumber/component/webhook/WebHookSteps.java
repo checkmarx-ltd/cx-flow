@@ -1,13 +1,14 @@
 package com.checkmarx.flow.cucumber.component.webhook;
 
-import com.checkmarx.flow.config.GitHubProperties;
+import com.checkmarx.flow.cucumber.common.Constants;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
+import com.checkmarx.flow.utils.github.GitHubTestUtils;
+import com.checkmarx.flow.utils.github.GitHubTestUtilsImpl;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.awaitility.Awaitility;
 import org.junit.Assert;
@@ -20,30 +21,22 @@ import org.springframework.http.HttpMethod;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-@SpringBootTest
+@SpringBootTest(classes = GitHubTestUtils.class)
 @Slf4j
 public class WebHookSteps {
-    private static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
-    private static final String WEBHOOK_REQUEST_RESOURCE_PATH = "sample-webhook-requests/github-push-minimal.json";
+    private static final String WEBHOOK_REQUEST_RESOURCE_PATH = Constants.WEBHOOK_REQUEST_DIR +
+            "/github-push-minimal.json";
 
     private final List<CompletableFuture<Long>> requestSendingTasks = new ArrayList<>();
 
     @Autowired
-    private GitHubProperties gitHubProperties;
+    private GitHubTestUtilsImpl testUtils;
 
     private HttpEntity<String> webHookRequest;
     private String cxFlowPort;
@@ -95,17 +88,16 @@ public class WebHookSteps {
     }
 
     private HttpEntity<String> prepareWebHookRequest() {
-        InputStream input = TestUtils.getResourceAsStream(WEBHOOK_REQUEST_RESOURCE_PATH);
         String body;
         try {
-            body = IOUtils.toString(input, DEFAULT_CHARSET);
+            body = TestUtils.getResourceAsString(WEBHOOK_REQUEST_RESOURCE_PATH);
         } catch (IOException e) {
             throw new RuntimeException("Unable to read resource stream.", e);
         }
 
         MultiValueMap<String, String> headers = new HttpHeaders();
         headers.add("X-GitHub-Event", "push");
-        headers.add("X-Hub-Signature", getSignature(body));
+        headers.add("X-Hub-Signature", testUtils.createSignature(body));
         return new HttpEntity<>(body, headers);
     }
 
@@ -135,26 +127,6 @@ public class WebHookSteps {
         client.exchange(url, HttpMethod.POST, webHookRequest, String.class);
     }
 
-    private String getSignature(String requestBody) {
-        final String HMAC_ALGORITHM = "HmacSHA1";
-        String result = null;
-        try {
-            byte[] bodyBytes = requestBody.getBytes(DEFAULT_CHARSET);
-
-            byte[] tokenBytes = gitHubProperties.getWebhookToken().getBytes(DEFAULT_CHARSET);
-            SecretKeySpec secret = new SecretKeySpec(tokenBytes, HMAC_ALGORITHM);
-
-            Mac hmacCalculator = Mac.getInstance(HMAC_ALGORITHM);
-            hmacCalculator.init(secret);
-
-            byte[] hmacBytes = hmacCalculator.doFinal(bodyBytes);
-            result = "sha1=" + DatatypeConverter.printHexBinary(hmacBytes);
-        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
-            log.error("Error generating HMAC signature.", e);
-        }
-        return result;
-    }
-
     private void waitForAllTasksToComplete(List<CompletableFuture<Long>> tasks) {
         log.info("Waiting for all the requests to complete.");
         Duration timeout = Duration.parse(testProperties.getProperty("maxAwaitTimeForAllRequests"));
@@ -178,8 +150,8 @@ public class WebHookSteps {
         Assert.assertTrue("Some of the requests failed.", allRequestsCompletedSuccessfully);
 
         Long actualMaxDurationMs = taskDurations.stream().max(Long::compare)
-            .orElseThrow(() -> new AssertionError("Actual max duration is not defined."));
-        
+                .orElseThrow(() -> new AssertionError("Actual max duration is not defined."));
+
         String message = String.format("Actual max duration (%d ms) is greater than the expected max duration (%d ms).",
                 actualMaxDurationMs,
                 expectedMaxDurationMs);

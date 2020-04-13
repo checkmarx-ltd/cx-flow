@@ -8,12 +8,10 @@ import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.report.ScanResultsReport;
 import com.checkmarx.flow.exception.MachinaException;
-import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.ResultsService;
 import com.checkmarx.jira.PublishUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
-import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
 import com.checkmarx.sdk.exception.CheckmarxException;
@@ -26,7 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.ArrayList;
@@ -120,8 +117,7 @@ public class GetResultsAnalyticsTestSteps {
 
     private ScanResultsReport getLatestReport() throws CheckmarxException {
         JsonLoggerTestUtils  testUtils = new JsonLoggerTestUtils();
-        ScanResultsReport report = (ScanResultsReport)testUtils.getReportNode(ScanResultsReport.OPERATION, ScanResultsReport.class);
-        return report;
+        return (ScanResultsReport)testUtils.getReportNode(ScanResultsReport.OPERATION, ScanResultsReport.class);
     }
 
     private void setFindingsSummary(int high, int medium, int low, int info, String filter) {

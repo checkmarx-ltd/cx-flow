@@ -16,7 +16,6 @@ import java.util.UUID;
 public class TestContext {
     public static final String SAST_RESULT_EXTENSION = "xml";
     public static final String CXFLOW_REPORT_EXTENSION = "json";
-    public static final String CXFLOW_REPORTS_DIR = "cxflow-reference-reports";
 
     private final CxFlowRunner cxFlowRunner;
 
