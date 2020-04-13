@@ -1,7 +1,7 @@
 package com.checkmarx.flow.config;
 
 import com.checkmarx.flow.utils.ScanUtils;
-import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
@@ -29,7 +29,7 @@ public class FlowConfig {
         RestTemplate restTemplate = new RestTemplate();
 
         HttpComponentsClientHttpRequestFactory requestFactory = new
-                HttpComponentsClientHttpRequestFactory(HttpClients.createDefault());
+                HttpComponentsClientHttpRequestFactory(HttpClientBuilder.create().useSystemProperties().build());
         requestFactory.setConnectTimeout(properties.getHttpConnectionTimeout());
         requestFactory.setReadTimeout(properties.getHttpReadTimeout());
         restTemplate.setRequestFactory(requestFactory);
