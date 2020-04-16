@@ -33,9 +33,4 @@ public class CxFlowMocksConfig {
         return mock(FlowService.class);
     }
 
-    @Primary
-    @Bean
-    public HelperService getHelperService() { return mock(HelperService.class);
-    }
-
 }
