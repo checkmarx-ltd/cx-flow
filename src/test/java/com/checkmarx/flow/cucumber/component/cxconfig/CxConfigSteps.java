@@ -96,7 +96,7 @@ public class CxConfigSteps {
         this.gitHubProperties.setFlowSummary(false);
         this.gitHubProperties.setUrl("https://github.com/cxflowtestuser/CxConfigTests");
         this.gitHubProperties.setWebhookToken("1234");
-        this.gitHubProperties.setToken("bc1356073b4ed9222b310ac2e3796582d673973a");
+        this.gitHubProperties.setToken("0a441e03837ea5b0d5557b0720c4af595a49d4b7");
         this.gitHubProperties.setConfigAsCode("cx.config");
         this.gitHubProperties.setApiUrl("https://api.github.com/repos");
                                          
@@ -105,8 +105,6 @@ public class CxConfigSteps {
     @Before("@CxConfigFeature")
     public void prepareServices() {
         initCxClientMock();
-        //initMock(restTemplateMock);
-        //initMock(flowService);
         scanResultsToInject = createFakeScanResults();
         initServices();
         initHelperServiceMock();
