@@ -1,6 +1,8 @@
 package com.checkmarx.test.flow.config;
 
+import com.checkmarx.flow.controller.GitHubController;
 import com.checkmarx.flow.service.FlowService;
+import com.checkmarx.flow.service.HelperService;
 import com.checkmarx.sdk.service.CxClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -8,6 +10,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.web.client.RestTemplate;
 
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 
 @Configuration
 public class CxFlowMocksConfig {
@@ -29,4 +32,10 @@ public class CxFlowMocksConfig {
     public FlowService getFlowService() {
         return mock(FlowService.class);
     }
+
+    @Primary
+    @Bean
+    public HelperService getHelperService() { return mock(HelperService.class);
+    }
+
 }
