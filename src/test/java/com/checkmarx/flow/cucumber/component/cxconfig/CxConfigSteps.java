@@ -96,8 +96,7 @@ public class CxConfigSteps {
         this.gitHubProperties.setFlowSummary(false);
         this.gitHubProperties.setUrl("https://github.com/cxflowtestuser/CxConfigTests");
         this.gitHubProperties.setWebhookToken("1234");
-        //this.gitHubProperties.setToken("e0a1cb5c35a0f582da9370e9d30d36ff318f8d2b");
-        this.gitHubProperties.setToken("371307d132cd3327d4fb6b8fe4d8aee94a6538a2");
+        this.gitHubProperties.setToken("bc1356073b4ed9222b310ac2e3796582d673973a");
         this.gitHubProperties.setConfigAsCode("cx.config");
         this.gitHubProperties.setApiUrl("https://api.github.com/repos");
                                          
