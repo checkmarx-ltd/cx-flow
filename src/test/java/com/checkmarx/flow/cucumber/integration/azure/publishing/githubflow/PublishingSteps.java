@@ -2,7 +2,6 @@ package com.checkmarx.flow.cucumber.integration.azure.publishing.githubflow;
 
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.cucumber.common.Constants;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 import com.checkmarx.flow.cucumber.integration.azure.publishing.AzureDevopsClient;
 import com.checkmarx.flow.cucumber.integration.azure.publishing.PublishingStepsBase;
@@ -18,14 +17,12 @@ import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionTimeoutException;
 import org.junit.Assert;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.web.server.PortInUseException;
 import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 
@@ -33,9 +30,6 @@ import java.util.ArrayList;
 @SpringBootTest(classes = {CxFlowApplication.class, GitHubTestUtils.class})
 @RequiredArgsConstructor
 public class PublishingSteps extends PublishingStepsBase {
-    public static final String PULL_REQUEST_EVENT = "pull request";
-    public static final String PUSH_REQUEST_EVENT = "push";
-
     private final FlowProperties flowProperties;
     private final AzureDevopsClient adoClient;
 
@@ -49,7 +43,13 @@ public class PublishingSteps extends PublishingStepsBase {
     public void init() throws IOException {
         projectName = getProjectName();
         adoClient.ensureProjectExists(projectName);
-        cxFlowPort = TestUtils.runCxFlowAsService();
+
+        try {
+            cxFlowPort = TestUtils.runCxFlowAsService();
+        } catch (PortInUseException e) {
+            // TODO: find a proper way to stop cxflow service.
+            log.info("CxFlow is already running.");
+        }
     }
 
     @Given("issue tracker is ADO")
@@ -70,12 +70,26 @@ public class PublishingSteps extends PublishingStepsBase {
     // TODO: share with WebHookSteps.
     @When("GitHub notifies CxFlow about a {string}")
     public void githubNotifiesCxFlowAboutEvent(String eventName) throws IOException {
-        String path = determineRequestFilePath(eventName);
-        webhookRequestToSend = prepareWebHookRequest(path, eventName);
+        GitHubTestUtils.EventType eventType = determineEventType(eventName);
+        String path = determineRequestFilePath(eventType);
+        webhookRequestToSend = testUtils.prepareWebhookRequest(path, eventType);
+    }
+
+    private static GitHubTestUtils.EventType determineEventType(String eventName) throws IOException {
+        GitHubTestUtils.EventType result;
+        if (eventName.equals("pull request")) {
+            result = GitHubTestUtils.EventType.PULL_REQUEST;
+        } else if (eventName.equals("push")) {
+            result = GitHubTestUtils.EventType.PUSH;
+        }
+        else {
+            throw new IOException("Bad event name.");
+        }
+        return result;
     }
 
     @And("SAST scan returns a report with 1 finding")
-    public void sastScanReturnsAReportWithFinding() throws IOException {
+    public void sastScanReturnsAReportWithFinding() {
         sendWebHookRequest(webhookRequestToSend);
         log.info("sastScanReturnsAReportWithFinding");
     }
@@ -102,34 +116,12 @@ public class PublishingSteps extends PublishingStepsBase {
         client.exchange(url, HttpMethod.POST, request, String.class);
     }
 
-    private String determineRequestFilePath(String eventName) throws IOException {
-        String filename;
-        if (eventName.equals(PULL_REQUEST_EVENT)) {
-            filename = "github-pull-request-full.json";
-        } else if (eventName.equals(PUSH_REQUEST_EVENT)) {
-            filename = "github-push.json";
-        } else {
-            throw new IOException("Bad event name.");
-        }
-        return Paths.get(Constants.WEBHOOK_REQUEST_DIR, filename).toString();
+    private String determineRequestFilePath(GitHubTestUtils.EventType eventType) {
+        return eventType == GitHubTestUtils.EventType.PULL_REQUEST ?
+                "github-pull-request-full.json" : "github-push.json";
     }
 
     private boolean adoContainsIssues(int count) throws IOException {
         return adoClient.getIssueCount(projectName) == count;
-    }
-
-    private HttpEntity<String> prepareWebHookRequest(String path, String eventName) {
-        String body;
-        try {
-            body = TestUtils.getResourceAsString(path);
-        } catch (IOException e) {
-            throw new RuntimeException("Unable to read resource stream.", e);
-        }
-
-        String eventHeader = (eventName.equals(PUSH_REQUEST_EVENT) ? "push" : "pull_request");
-        MultiValueMap<String, String> headers = new HttpHeaders();
-        headers.add("X-GitHub-Event", eventHeader);
-        headers.add("X-Hub-Signature", testUtils.createSignature(body));
-        return new HttpEntity<>(body, headers);
     }
 }

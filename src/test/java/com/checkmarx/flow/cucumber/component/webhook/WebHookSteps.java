@@ -1,6 +1,6 @@
 package com.checkmarx.flow.cucumber.component.webhook;
 
-import com.checkmarx.flow.cucumber.common.Constants;
+import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 import com.checkmarx.flow.utils.github.GitHubTestUtils;
 import com.checkmarx.flow.utils.github.GitHubTestUtilsImpl;
@@ -14,11 +14,8 @@ import org.awaitility.Awaitility;
 import org.junit.Assert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
@@ -27,11 +24,10 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-@SpringBootTest(classes = GitHubTestUtils.class)
+@SpringBootTest(classes = { CxFlowApplication.class, GitHubTestUtils.class})
 @Slf4j
 public class WebHookSteps {
-    private static final String WEBHOOK_REQUEST_RESOURCE_PATH = Constants.WEBHOOK_REQUEST_DIR +
-            "/github-push-minimal.json";
+    private static final String REQUEST_FILENAME = "github-push-minimal.json";
 
     private final List<CompletableFuture<Long>> requestSendingTasks = new ArrayList<>();
 
@@ -57,7 +53,7 @@ public class WebHookSteps {
     public void githubSendsWebHookRequests(int timesPerSecond) {
         final int MILLISECONDS_IN_SECOND = 1000;
 
-        webHookRequest = prepareWebHookRequest();
+        webHookRequest = testUtils.prepareWebhookRequest(REQUEST_FILENAME, GitHubTestUtils.EventType.PUSH);
         sendWarmUpRequest();
 
         int totalRequestCount = Integer.parseUnsignedInt(testProperties.getProperty("totalRequestCount"));
@@ -84,20 +80,6 @@ public class WebHookSteps {
         Duration timeout = Duration.parse(testProperties.getProperty("maxWarmUpRequestDuration"));
         CompletableFuture<Void> task = CompletableFuture.runAsync(this::sendWebHookRequest);
         Awaitility.await().atMost(timeout).until(task::isDone);
-    }
-
-    private HttpEntity<String> prepareWebHookRequest() {
-        String body;
-        try {
-            body = TestUtils.getResourceAsString(WEBHOOK_REQUEST_RESOURCE_PATH);
-        } catch (IOException e) {
-            throw new RuntimeException("Unable to read resource stream.", e);
-        }
-
-        MultiValueMap<String, String> headers = new HttpHeaders();
-        headers.add("X-GitHub-Event", "push");
-        headers.add("X-Hub-Signature", testUtils.createSignature(body));
-        return new HttpEntity<>(body, headers);
     }
 
     private static void chillOutFor(Duration duration) {

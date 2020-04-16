@@ -1,18 +1,27 @@
 package com.checkmarx.flow.utils.github;
 
 import com.checkmarx.flow.config.GitHubProperties;
+import com.checkmarx.flow.cucumber.common.Constants;
+import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 import com.checkmarx.flow.custom.GitHubIssueTracker;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaException;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestComponent;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.util.MultiValueMap;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
@@ -99,5 +108,30 @@ public class GitHubTestUtils implements GitHubTestUtilsImpl {
             log.error("Error generating GitHub signature.", e);
         }
         return result;
+    }
+
+    @Override
+    public HttpEntity<String> prepareWebhookRequest(String filename, EventType eventType){
+        String body;
+        try {
+            String path = Paths.get(Constants.WEBHOOK_REQUEST_DIR, filename).toString();
+            body = TestUtils.getResourceAsString(path);
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to read resource stream.", e);
+        }
+
+        MultiValueMap<String, String> headers = new HttpHeaders();
+        headers.add("X-GitHub-Event", eventType.getValue());
+        headers.add("X-Hub-Signature", createSignature(body));
+        return new HttpEntity<>(body, headers);
+    }
+
+    @RequiredArgsConstructor
+    @Getter
+    public enum EventType {
+        PUSH("push"),
+        PULL_REQUEST("pull_request");
+
+        private final String value;
     }
 }

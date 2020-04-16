@@ -3,6 +3,7 @@ package com.checkmarx.flow.utils.github;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaException;
+import org.springframework.http.HttpEntity;
 
 import java.util.List;
 
@@ -21,4 +22,6 @@ public interface GitHubTestUtilsImpl {
     void closeAllIssues(List<Issue> issuesList, ScanRequest request) throws MachinaException;
 
     String createSignature(String requestBody);
+
+    HttpEntity<String> prepareWebhookRequest(String filename, GitHubTestUtils.EventType eventType);
 }
