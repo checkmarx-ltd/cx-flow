@@ -121,6 +121,10 @@ public class AzureDevopsClient {
         return getProjectIssuesByIds(issueIds, projectName);
     }
 
+    public int getIssueCount(String projectName) throws IOException {
+        return getProjectIssueIds(projectName).size();
+    }
+
     private void deleteIssue(String projectName, String issueId) {
         log.info("Deleting ADO issue, ID: {}", issueId);
         String url = getIssueDeletionUrl(projectName, issueId);

@@ -64,7 +64,11 @@ public class TestUtils {
         runner.run(new DefaultApplicationArguments(args.split(" ")));
     }
 
-    public static ConfigurableApplicationContext runCxFlowAsService() {
-        return SpringApplication.run(CxFlowApplication.class, "--web");
+    /**
+     * @return the port on which CxFlow web service is running.
+     */
+    public static String runCxFlowAsService() {
+        ConfigurableApplicationContext context = SpringApplication.run(CxFlowApplication.class, "--web");
+        return context.getEnvironment().getProperty("server.port");
     }
 }
