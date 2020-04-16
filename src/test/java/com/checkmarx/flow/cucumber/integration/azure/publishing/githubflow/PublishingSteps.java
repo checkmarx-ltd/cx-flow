@@ -17,7 +17,6 @@ import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionTimeoutException;
 import org.junit.Assert;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.server.PortInUseException;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.web.client.RestTemplate;
@@ -44,12 +43,7 @@ public class PublishingSteps extends PublishingStepsBase {
         projectName = getProjectName();
         adoClient.ensureProjectExists(projectName);
 
-        try {
-            cxFlowPort = TestUtils.runCxFlowAsService();
-        } catch (PortInUseException e) {
-            // TODO: find a proper way to stop cxflow service.
-            log.info("CxFlow is already running.");
-        }
+        cxFlowPort = TestUtils.runCxFlowAsService();
     }
 
     @Given("issue tracker is ADO")
@@ -81,8 +75,7 @@ public class PublishingSteps extends PublishingStepsBase {
             result = GitHubTestUtils.EventType.PULL_REQUEST;
         } else if (eventName.equals("push")) {
             result = GitHubTestUtils.EventType.PUSH;
-        }
-        else {
+        } else {
             throw new IOException("Bad event name.");
         }
         return result;

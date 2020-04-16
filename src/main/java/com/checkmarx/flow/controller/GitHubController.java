@@ -156,10 +156,11 @@ public class GitHubController {
                 app = application;
             }
 
-            BugTracker.Type bugType = BugTracker.Type.GITHUBPULL;
-            if(!ScanUtils.empty(bug)){
-                bugType = ScanUtils.getBugTypeEnum(bug, flowProperties.getBugTrackerImpl());
+            BugTracker.Type bugType;
+            if (ScanUtils.empty(bug)) {
+                bug = flowProperties.getBugTracker();
             }
+            bugType = ScanUtils.getBugTypeEnum(bug, flowProperties.getBugTrackerImpl());
 
             if(appOnlyTracking != null){
                 flowProperties.setTrackApplicationOnly(appOnlyTracking);
