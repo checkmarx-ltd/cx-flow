@@ -54,6 +54,9 @@ public class JiraService {
     private List<String> currentUpdatedIssuesList = new ArrayList<>();
     private List<String> currentClosedIssuesList = new ArrayList<>();
 
+    //Map used to store/retrieve custom field values
+    private Map<String, String> customFields = new HashMap<>();
+
     private static final String LABEL_FIELD_TYPE = "labels";
     private static final String SECURITY_FIELD_TYPE = "security";
     private static final String VALUE_FIELD_TYPE = "value";
@@ -99,6 +102,7 @@ public class JiraService {
                     .collect(Collectors.toList()).contains("jira"))
         {
             configurOpenClosedStatuses();
+            loadCustomFields();
         }
     }
 
@@ -312,8 +316,7 @@ public class JiraService {
             }
             log.debug("Adding tracker labels: {} - {}", jiraProperties.getLabelTracker(), labels);
             if (!jiraProperties.getLabelTracker().equals(LABEL_FIELD_TYPE)) {
-                String customField = getCustomFieldByName(projectKey,
-                        bugTracker.getIssueType(), jiraProperties.getLabelTracker());
+                String customField = getCustomFieldByName(jiraProperties.getLabelTracker());
                 issueBuilder.setFieldValue(customField, labels);
             } else {
                 issueBuilder.setFieldValue(LABEL_FIELD_TYPE, labels);
@@ -383,7 +386,7 @@ public class JiraService {
 
         for (com.checkmarx.flow.dto.Field f : bugTracker.getFields()) {
 
-            String customField = getCustomFieldByName(projectKey, issueTypeStr, f.getJiraFieldName());
+            String customField = getCustomFieldByName(f.getJiraFieldName());
             String value;
             if (update && f.isSkipUpdate()) {
                 log.debug("Skip update to field {}", f.getName());
@@ -735,22 +738,22 @@ public class JiraService {
         return null;
     }
 
-    private String getCustomFieldByName(String project, String issueType, String fieldName) {
-        log.debug("Getting custom field {}", fieldName);
+    private void loadCustomFields() {
+        log.debug("Loading all custom fields");
         GetCreateIssueMetadataOptions options;
         options = new GetCreateIssueMetadataOptionsBuilder()
                 .withExpandedIssueTypesFields()
-                .withIssueTypeNames(issueType)
-                .withProjectKeys(project)
                 .build();
         Iterable<CimProject> metadata = this.issueClient.getCreateIssueMetadata(options).claim();
         CimProject cim = metadata.iterator().next();
         for (CimFieldInfo info : cim.getIssueTypes().iterator().next().getFields().values()) {
-            if (info.getName() != null && info.getName().equals(fieldName)) {
-                return info.getId();
-            }
+            this.customFields.put(info.getName(), info.getId());
         }
-        return null;
+    }
+
+    private String getCustomFieldByName(String fieldName) {
+        log.debug("Getting custom field {}", fieldName);
+        return this.customFields.get(fieldName);
     }
 
     public void getCustomFields() {
