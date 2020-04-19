@@ -177,7 +177,7 @@ public class ADOIssueTracker implements IssueTracker {
     }
 
     private Issue getIssue(String uri, String issueBody){
-        HttpEntity httpEntity = new HttpEntity<>(createAuthHeaders());
+        HttpEntity<Void> httpEntity = new HttpEntity<>(createAuthHeaders());
         log.debug("Getting issue at uri {}", uri);
         ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, httpEntity, String.class);
         String r = response.getBody();
@@ -263,16 +263,16 @@ public class ADOIssueTracker implements IssueTracker {
     private URI getApiEndpoint(ScanRequest request) throws MachinaException {
         log.debug("Determining target ADO project.");
         String adoProject = request.getProject();
-        log.debug("Looking in main project field: {}", adoProject);
+        log.debug("Checking main project field: {}", adoProject);
 
         if (StringUtils.isEmpty(adoProject)) {
             adoProject = request.getAltProject();
-            log.debug("Looking in alt-project: {}", adoProject);
+            log.debug("Checking alt-project: {}", adoProject);
         }
 
         if (StringUtils.isEmpty(adoProject) && request.getCxFields() != null) {
             adoProject = request.getCxFields().get(ADO_PROJECT);
-            log.debug("Looking in the '{}' custom field: {}", ADO_PROJECT, adoProject);
+            log.debug("Checking the '{}' custom field: {}", ADO_PROJECT, adoProject);
         }
 
         if (StringUtils.isEmpty(adoProject)) {

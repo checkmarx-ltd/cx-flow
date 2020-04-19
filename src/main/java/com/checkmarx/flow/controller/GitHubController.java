@@ -173,23 +173,9 @@ public class GitHubController {
             PullRequest pullRequest = event.getPullRequest();
             String currentBranch = pullRequest.getHead().getRef();
             String targetBranch = pullRequest.getBase().getRef();
-            List<String> branches = new ArrayList<>();
-            List<Filter> filters;
-            if(!ScanUtils.empty(branch)){
-                branches.addAll(branch);
-            }
-            else if(!ScanUtils.empty(flowProperties.getBranches())){
-                branches.addAll(flowProperties.getBranches());
-            }
-
+            List<String> branches = getBranches(branch);
             BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
-            /*Determine filters, if any*/
-            if(!ScanUtils.empty(severity) || !ScanUtils.empty(cwe) || !ScanUtils.empty(category) || !ScanUtils.empty(status)){
-                filters = ScanUtils.getFilters(severity, cwe, category, status);
-            }
-            else{
-                filters = ScanUtils.getFilters(flowProperties);
-            }
+            List<Filter> filters = getFilters(severity, cwe, category, status);
 
             if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
                 excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
@@ -336,23 +322,10 @@ public class GitHubController {
 
             //determine branch (without refs)
             String currentBranch = ScanUtils.getBranchFromRef(event.getRef());
-            List<String> branches = new ArrayList<>();
-            List<Filter> filters;
-            if(!ScanUtils.empty(branch)){
-                branches.addAll(branch);
-            }
-            else if(!ScanUtils.empty(flowProperties.getBranches())){
-                branches.addAll(flowProperties.getBranches());
-            }
+            List<String> branches = getBranches(branch);
 
             BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
-            /*Determine filters, if any*/
-            if(!ScanUtils.empty(severity) || !ScanUtils.empty(cwe) || !ScanUtils.empty(category) || !ScanUtils.empty(status)){
-                filters = ScanUtils.getFilters(severity, cwe, category, status);
-            }
-            else{
-                filters = ScanUtils.getFilters(flowProperties);
-            }
+            List<Filter> filters = getFilters(severity, cwe, category, status);
 
             if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
                 excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
@@ -443,6 +416,29 @@ public class GitHubController {
                 .success(true)
                 .build());
 
+    }
+
+    /**
+     * Determine filters, if any. The arguments are overrides that may be specified in the query string.
+     */
+    private List<Filter> getFilters(List<String> severity, List<String> cwe, List<String> category, List<String> status) {
+        List<Filter> filters;
+        if (!ScanUtils.empty(severity) || !ScanUtils.empty(cwe) || !ScanUtils.empty(category) || !ScanUtils.empty(status)) {
+            filters = ScanUtils.getFilters(severity, cwe, category, status);
+        } else {
+            filters = ScanUtils.getFilters(flowProperties);
+        }
+        return filters;
+    }
+
+    private List<String> getBranches(List<String> branchesFromQuery) {
+        List<String> result = new ArrayList<>();
+        if (!ScanUtils.empty(branchesFromQuery)) {
+            result.addAll(branchesFromQuery);
+        } else if (!ScanUtils.empty(flowProperties.getBranches())) {
+            result.addAll(flowProperties.getBranches());
+        }
+        return result;
     }
 
     /** Validates the received body using the Github hook secret. */
