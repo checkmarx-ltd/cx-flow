@@ -445,7 +445,7 @@ public class GitHubController {
     }
 
     /** Validates the received body using the Github hook secret. */
-    private void verifyHmacSignature(String message, String signature) {
+    public void verifyHmacSignature(String message, String signature) {
         if(hmac == null) {
             log.error("Hmac was not initialized. Trying to initialize...");
             try {
