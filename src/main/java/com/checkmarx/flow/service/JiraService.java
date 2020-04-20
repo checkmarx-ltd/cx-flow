@@ -746,9 +746,12 @@ public class JiraService {
                 .build();
         Iterable<CimProject> metadata = this.issueClient.getCreateIssueMetadata(options).claim();
         CimProject cim = metadata.iterator().next();
-        for (CimFieldInfo info : cim.getIssueTypes().iterator().next().getFields().values()) {
-            this.customFields.put(info.getName(), info.getId());
-        }
+        cim.getIssueTypes().forEach( issueTypes -> {
+            issueTypes.getFields().forEach((id, value) -> {
+                String name = value.getName();
+                this.customFields.put(name, id);
+            });
+        });
     }
 
     private String getCustomFieldByName(String fieldName) {
