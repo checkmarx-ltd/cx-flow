@@ -23,6 +23,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 
@@ -89,12 +90,24 @@ public class GitHubService extends RepoService {
                     getJSONStatus("pending", url, "Checkmarx Scan Initiated").toString(),
                     createAuthHeaders()
             );
-            if(ScanUtils.empty(request.getAdditionalMetadata(STATUSES_URL_KEY))){
-                log.warn(STATUSES_URL_NOT_PROVIDED);
+            String statusApiUrl = request.getAdditionalMetadata(STATUSES_URL_KEY);
+            if (ScanUtils.empty(statusApiUrl)) {
+                log.error(STATUSES_URL_NOT_PROVIDED);
                 return;
             }
-            restTemplate.exchange(request.getAdditionalMetadata(STATUSES_URL_KEY),
-                    HttpMethod.POST, httpEntity, String.class);
+            log.debug("Setting pull request status: {}", statusApiUrl);
+            log.trace("API request: {}", httpEntity.getBody());
+            try {
+                ResponseEntity<String> responseEntity = restTemplate.exchange(statusApiUrl, HttpMethod.POST, httpEntity, String.class);
+                log.debug("API response code: {}", responseEntity.getStatusCode().toString());
+                log.trace("API response: {}", responseEntity.toString());
+            } catch (RestClientException e) {
+                String msg = "failed to set merge status to pending";
+                if (log.isDebugEnabled()) {
+                    msg += String.format("; request details: %s", request.toString());
+                }
+                log.warn(msg, e);
+            }
         }
     }
 
@@ -111,7 +124,17 @@ public class GitHubService extends RepoService {
 
             log.debug("Updating pull request status: {}", statusApiUrl);
             log.trace("API request: {}", httpEntity.getBody());
-            restTemplate.exchange(statusApiUrl, HttpMethod.POST, httpEntity, String.class);
+            try {
+                ResponseEntity<String> responseEntity = restTemplate.exchange(statusApiUrl, HttpMethod.POST, httpEntity, String.class);
+                log.debug("API response code: {}", responseEntity.getStatusCode().toString());
+                log.trace("API response: {}", responseEntity.toString());
+            } catch (RestClientException e) {
+                String msg = "failed to update merge status for completed scan";
+                if (log.isDebugEnabled()) {
+                    msg += String.format("; request details: %s", request.toString());
+                }
+                log.warn(msg, e);
+            }
         } else {
             log.debug("Pull request blocking is disabled in configuration, no need to unblock.");
         }
@@ -144,12 +167,24 @@ public class GitHubService extends RepoService {
                     getJSONStatus(MERGE_FAILURE, url, "Checkmarx Issue Threshold Met").toString(),
                     createAuthHeaders()
             );
-            if(ScanUtils.empty(request.getAdditionalMetadata(STATUSES_URL_KEY))){
+            String statusApiUrl = request.getAdditionalMetadata(STATUSES_URL_KEY);
+            if (ScanUtils.empty(statusApiUrl)) {
                 log.error(STATUSES_URL_NOT_PROVIDED);
                 return;
             }
-            restTemplate.exchange(request.getAdditionalMetadata(STATUSES_URL_KEY),
-                    HttpMethod.POST, httpEntity, String.class);
+            log.debug("Setting pull request status: {}", statusApiUrl);
+            log.trace("API request: {}", httpEntity.getBody());
+            try {
+                ResponseEntity<String> responseEntity = restTemplate.exchange(statusApiUrl, HttpMethod.POST, httpEntity, String.class);
+                log.debug("API response code: {}", responseEntity.getStatusCode().toString());
+                log.trace("API response: {}", responseEntity.toString());
+            } catch (RestClientException e) {
+                String msg = "failed to set merge status to failure";
+                if (log.isDebugEnabled()) {
+                    msg += String.format("; request details: %s", request.toString());
+                }
+                log.warn(msg, e);
+            }
         }
     }
 
