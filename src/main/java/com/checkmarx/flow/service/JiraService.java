@@ -201,10 +201,17 @@ public class JiraService {
         fields.add("created");
         fields.add("updated");
         fields.add("status");
-        Promise<SearchResult> searchJqlPromise = this.client.getSearchClient().searchJql(jql, JiraConstants.MAX_JQL_RESULTS, 0, fields);
-        for (Issue issue : searchJqlPromise.claim().getIssues()) {
-            issues.add(issue);
-        }
+        int startAt = 0;
+
+        SearchResult searchResults;
+        //Retrieve JQL results through pagination (jira.max-jql-results per page -> default 50)
+        do {
+            searchResults = this.client.getSearchClient().searchJql(jql, jiraProperties.getMaxJqlResults(), startAt, fields).claim();
+            for (Issue issue : searchResults.getIssues()) {
+                issues.add(issue);
+            }
+            startAt += jiraProperties.getMaxJqlResults();
+        }while(startAt < searchResults.getTotal() );
         return issues;
     }
 
