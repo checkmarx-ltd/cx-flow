@@ -52,13 +52,15 @@ import static org.mockito.Mockito.*;
 public class CxConfigSteps {
     private static final String PULL_REQUEST_STATUSES_URL = "statuses url stub";
     private static final String MERGE_NOTE_URL = "merge note url stub";
-
-    private static final ObjectMapper mapper = new ObjectMapper();
+    public static final String XSS_REFLECTED = "XSS_REFLECTED";
+    public static final String SQL_INJECTION = "SQL_INJECTION";
+    public static final String CWE_79 = "79";
+    public static final String CWE_89 = "89";
 
     private final CxClient cxClientMock;
     private final GitHubService gitHubService;
     private GitHubController gitHubControllerSpy;
-    
+    private final ObjectMapper mapper = new ObjectMapper();
     private final MergeResultEvaluator mergeResultEvaluator;
     private final FlowProperties flowProperties;
     private final CxProperties cxProperties;
@@ -67,7 +69,7 @@ public class CxConfigSteps {
     private ScanResults scanResultsToInject;
 
     private ResultsService resultsService;
-    private Boolean pullRequestWasApproved;
+    private Boolean isPullRequestApproved;
 
     private FlowService flowService;
     private String branch;
@@ -76,22 +78,22 @@ public class CxConfigSteps {
     public CxConfigSteps( FlowProperties flowProperties, GitHubService gitHubService,
                          CxProperties cxProperties, GitHubProperties gitHubProperties, MergeResultEvaluator mergeResultEvaluator, FlowService flowService) {
 
-        this.cxClientMock = mock(CxClient.class);;
+        this.cxClientMock = mock(CxClient.class);
 
         flowProperties.setThresholds(new HashMap<>());
         this.flowProperties = flowProperties;
         
         this.cxProperties = cxProperties;
         this.mergeResultEvaluator = mergeResultEvaluator;
-        this.helperService = mock(HelperService.class);;
+        this.helperService = mock(HelperService.class);
         this.flowService = flowService;
         this.gitHubService = gitHubService;
         
         this.gitHubProperties = gitHubProperties;
-        initGitHubProperties(gitHubProperties);
+        initGitHubProperties();
     }
 
-    private void initGitHubProperties(GitHubProperties gitHubProperties) {
+    private void initGitHubProperties() {
         this.gitHubProperties.setCxSummary(false);
         this.gitHubProperties.setFlowSummary(false);
         this.gitHubProperties.setUrl("https://github.com/cxflowtestuser/CxConfigTests");
@@ -118,8 +120,7 @@ public class CxConfigSteps {
 
     @And("github branch is {string} with cx.config")
     public void setBranchAppSet(String branch){
-        this.branch = branch;
-        buildPullRequest();
+        setBranch(branch);
     }
     public void buildPullRequest() {
         PullEvent pullEvent = new PullEvent();
@@ -143,8 +144,6 @@ public class CxConfigSteps {
         pullRequest.setStatusesUrl("");
         
         pullEvent.setPullRequest(pullRequest);
-
-       ObjectMapper mapper = new ObjectMapper();
        
         try {
             String pullEventStr = mapper.writeValueAsString(pullEvent);
@@ -299,15 +298,15 @@ public class CxConfigSteps {
             case "test8":
                 //Filter cwe: "79", "89"
                 asExpected = filterCwe.size() ==2 &&
-                        filterCwe.contains("79") &&
-                        filterCwe.contains("89") &&
+                        filterCwe.contains(CWE_79) &&
+                        filterCwe.contains(CWE_89) &&
                         filterCatergory.isEmpty() && filterSeverity.isEmpty();
                 break;
             case "test9":
                 // filter category: "XSS_Reflected", "SQL_Injection"
                 asExpected = filterCatergory.size() ==2 &&
-                        filterCatergory.contains("XSS_REFLECTED") &&
-                        filterCatergory.contains("SQL_INJECTION") &&
+                        filterCatergory.contains(XSS_REFLECTED) &&
+                        filterCatergory.contains(SQL_INJECTION) &&
                         filterCwe.isEmpty() && filterSeverity.isEmpty();
                 break;
             case "test10":
@@ -315,8 +314,8 @@ public class CxConfigSteps {
                 // filter category:   "XSS_Reflected", "SQL_Injection"
                     
                 asExpected = filterCwe.size() ==2 &&
-                            filterCwe.contains("79") &&
-                            filterCwe.contains("89") &&
+                            filterCwe.contains(CWE_79) &&
+                            filterCwe.contains(CWE_89) &&
                             filterCatergory.size() ==2 &&
                             filterCatergory.contains("XSS_REFLECTED") &&
                             filterCatergory.contains("SQL_INJECTION") &&
@@ -381,7 +380,7 @@ public class CxConfigSteps {
                 break;
             case "test4":
             case "test5":
-                if(thresholdsOverrideTest){
+                if(Boolean.TRUE.equals(thresholdsOverrideTest)){
                     asExpected = flowProperties.getThresholds().get(FindingSeverity.HIGH) == 2 &&
                             flowProperties.getThresholds().get(FindingSeverity.MEDIUM) == 5 &&
                             flowProperties.getThresholds().get(FindingSeverity.LOW) == 10;
@@ -417,23 +416,24 @@ public class CxConfigSteps {
     }
 
     private void verifyPullRequestState(boolean expectingApproval) {
-        Assert.assertNotNull("pullRequestWasApproved is not initialized.", pullRequestWasApproved);
+        Assert.assertNotNull("pullRequestWasApproved is not initialized", isPullRequestApproved);
 
         if (expectingApproval) {
-            Assert.assertTrue("Expected pull request to be approved, but it was failed.", pullRequestWasApproved);
+            Assert.assertTrue("Expecting pull request to be approved, but it was failed", isPullRequestApproved);
         } else {
-            Assert.assertFalse("Expected pull request to be failed, but it was approved.", pullRequestWasApproved);
+            Assert.assertFalse("Expecting pull request to be failed, but it was approved", isPullRequestApproved);
         }
     }
 
     private ScanRequest createScanRequest() {
         ScanRequest scanRequest = new ScanRequest();
-        BugTracker issueTracker = BugTracker.builder().type(BugTracker.Type.GITHUBPULL).build();
-        scanRequest.setBugTracker(issueTracker);
-        scanRequest.setMergeNoteUri(MERGE_NOTE_URL);
+
         scanRequest.setProduct(ScanRequest.Product.CX);
 
-        HashMap<String, String> additionalMetdata = new HashMap<String, String>();
+        scanRequest.setBugTracker(BugTracker.builder().type(BugTracker.Type.GITHUBPULL).build());
+        scanRequest.setMergeNoteUri(MERGE_NOTE_URL);
+        
+        HashMap<String, String> additionalMetdata = new HashMap<>();
         additionalMetdata.put("statuses_url", PULL_REQUEST_STATUSES_URL);
         
         scanRequest.setAdditionalMetadata(additionalMetdata);
@@ -548,7 +548,7 @@ public class CxConfigSteps {
             String url = invocation.getArgument(0);
             if (url.equals(PULL_REQUEST_STATUSES_URL)) {
                 HttpEntity<String> interceptedRequest = invocation.getArgument(2);
-                pullRequestWasApproved = wasApproved(interceptedRequest);
+                isPullRequestApproved = wasApproved(interceptedRequest);
             }
             return new ResponseEntity<>(HttpStatus.OK);
         }
@@ -571,12 +571,7 @@ public class CxConfigSteps {
             return result;
         }
     }
-
-
-    private static FindingSeverity parseFindingSeverity(String severityName) {
-        return FindingSeverity.valueOf(severityName.toUpperCase(Locale.ROOT));
-    }
-
+    
     /**
      * Returns scan results as if they were produced by SAST.
      */
