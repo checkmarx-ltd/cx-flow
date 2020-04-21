@@ -59,6 +59,8 @@ public class AzureDevopsClient {
     private final ADOProperties adoProperties;
 
     private String projectName;
+
+    // 'Namespace' in terms of CxFlow = 'organization' in terms of ADO.
     private String organizationName;
 
     public AzureDevopsClient(ADOProperties adoProperties) {
@@ -91,7 +93,7 @@ public class AzureDevopsClient {
         String url = getIssueCreationUrl();
 
         IssueRequestBuilder requestBuilder = new IssueRequestBuilder();
-        List<CreateWorkItemAttr> body = requestBuilder.getEntityBodyForCreation(issue, projectName);
+        List<CreateWorkItemAttr> body = requestBuilder.getEntityBodyForCreation(issue, projectName, organizationName);
 
         HttpHeaders headers = getIssueHeaders();
         HttpEntity<?> request = new HttpEntity<>(body, headers);

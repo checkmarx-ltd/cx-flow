@@ -26,6 +26,7 @@ import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionTimeoutException;
 import org.junit.Assert;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,7 +39,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
 @Slf4j
-@SpringBootTest(classes = {CxFlowApplication.class, GitHubTestUtils.class, CxClientMockInjector.class})
+@SpringBootTest(classes = {CxFlowApplication.class, GitHubTestUtils.class})
 @RequiredArgsConstructor
 public class PublishingSteps extends PublishingStepsBase {
     private final FlowProperties flowProperties;
@@ -48,6 +49,7 @@ public class PublishingSteps extends PublishingStepsBase {
     private final CxProperties cxProperties;
     private final HelperService helperService;
     private final GitHubService gitHubService;
+    @MockBean
     private final CxClient cxClientMock;
     private final ResultsService resultsService;
     private final ADOService adoService;

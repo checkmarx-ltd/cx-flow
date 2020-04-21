@@ -27,7 +27,6 @@ import org.springframework.web.util.HtmlUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -56,7 +55,6 @@ public class PublishingSteps extends PublishingStepsBase {
     @Autowired
     private AzureDevopsClient adoClient;
 
-    private String projectName;
     private String sastReportFilename;
 
     // Used to avoid duplicate ADO requests in different steps.
@@ -69,8 +67,6 @@ public class PublishingSteps extends PublishingStepsBase {
     @Before
     public void prepareEnvironment() throws IOException {
         cxProperties.setOffline(true);
-
-        projectName = getProjectName();
         adoClient.ensureProjectExists();
         adoClient.deleteProjectIssues();
     }
@@ -288,8 +284,9 @@ public class PublishingSteps extends PublishingStepsBase {
 
         return ScanRequest.builder()
                 .bugTracker(bugTracker)
-                .namespace(projectName)
-                .repoName(projectName)
+                .namespace(getOrganizationName())
+                .project(getProjectName())
+                .repoName(getProjectName())
                 .branch(AzureDevopsClient.DEFAULT_BRANCH)
                 .product(ScanRequest.Product.CX)
                 .build();
