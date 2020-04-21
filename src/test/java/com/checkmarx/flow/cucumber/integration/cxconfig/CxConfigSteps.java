@@ -113,15 +113,23 @@ public class CxConfigSteps {
     }
 
     @Given("github branch is {string} and threshods section is not set application.yml")
-    public void setBranch(String branch){
+    public void setBranchAndCreatePullReqeust(String branch){
         this.branch = branch;
         buildPullRequest();
     }
 
     @And("github branch is {string} with cx.config")
     public void setBranchAppSet(String branch){
-        setBranch(branch);
+        setBranchAndCreatePullReqeust(branch);
     }
+
+    @Given("github branch is {string} with invalid cx.config")
+    public void setBranchInvalid(String branch){
+        //set filter from application.yml
+        setCurrentFilter("severity");
+        setBranchAndCreatePullReqeust(branch);
+    }
+    
     public void buildPullRequest() {
         PullEvent pullEvent = new PullEvent();
         Repository repo = new Repository();
@@ -193,7 +201,7 @@ public class CxConfigSteps {
     
     
     @Given("application.xml contains filters section with filter type {string}")
-    public void severityFilterIsSetTo(String filterType) {
+    public void setFilter(String filterType) {
         if(!StringUtils.isEmptyOrNull(filterType)) {
             String[] filterTypeArr ;
             if(filterType.contains(",")) {
@@ -257,9 +265,13 @@ public class CxConfigSteps {
 
     @Then("CxFlow will return results as per the filter in cx.config")
     public void validateFilter() {
-        validateRequestFilterByConfig();
+        validateRequestFilter();
     }
 
+    @Then("CxFlow will ignore the cxconfig and take all the values from application.yml")
+    public void validateFilterFromApp() {
+        validateRequestFilter();
+    }
     private List<String> getFilter(List<Filter> filters, Filter.Type type) {
 
         List<String> filterByType = new ArrayList<>();
@@ -279,7 +291,7 @@ public class CxConfigSteps {
         
         return filterByType;
     }
-    private void validateRequestFilterByConfig() {
+    private void validateRequestFilter() {
         
         List<String> filterSeverity = getFilter(request.getFilters(), Filter.Type.SEVERITY);
         List<String> filterCwe = getFilter(request.getFilters(), Filter.Type.CWE);
@@ -288,8 +300,7 @@ public class CxConfigSteps {
         boolean asExpected = false;
         switch(branch){
             case "test7":
-                //Filter Severity High and Medium: 
-
+                //Filter Severity High and Medium:
                 asExpected = filterSeverity.size() ==2 &&
                         filterSeverity.contains(FindingSeverity.HIGH.toString()) &&
                         filterSeverity.contains(FindingSeverity.MEDIUM.toString()) &&
@@ -317,8 +328,8 @@ public class CxConfigSteps {
                             filterCwe.contains(CWE_79) &&
                             filterCwe.contains(CWE_89) &&
                             filterCatergory.size() ==2 &&
-                            filterCatergory.contains("XSS_REFLECTED") &&
-                            filterCatergory.contains("SQL_INJECTION") &&
+                            filterCatergory.contains(XSS_REFLECTED) &&
+                            filterCatergory.contains(SQL_INJECTION) &&
                             filterSeverity.isEmpty();
                 break;
             case "test11":
@@ -329,9 +340,16 @@ public class CxConfigSteps {
                                 filterSeverity.contains(FindingSeverity.HIGH.toString()) &&
                                 filterSeverity.contains(FindingSeverity.MEDIUM.toString()) &&
                                 filterCatergory.size() == 2 &&
-                                filterCatergory.contains("XSS_REFLECTED") &&
-                                filterCatergory.contains("SQL_INJECTION") &&
+                                filterCatergory.contains(XSS_REFLECTED) &&
+                                filterCatergory.contains(SQL_INJECTION) &&
                                 filterCwe.isEmpty();        
+                break;
+            case "test12":
+                //Filter Severity High and Low as set by application.yml, cxconfig is ignored due to errors
+                asExpected = filterSeverity.size() ==2 &&
+                        filterSeverity.contains(FindingSeverity.HIGH.toString()) &&
+                        filterSeverity.contains(FindingSeverity.LOW.toString()) &&
+                        filterCwe.isEmpty() && filterCatergory.isEmpty();
                 break;
             default:
                 fail("Invalid Branch");
