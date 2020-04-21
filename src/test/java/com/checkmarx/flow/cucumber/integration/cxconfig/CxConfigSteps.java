@@ -194,22 +194,22 @@ public class CxConfigSteps {
     
     
     @Given("application.xml contains filters section with filter type {string}")
-    public void severityFilterIsSetTo(String severity) {
-        if(!StringUtils.isEmptyOrNull(severity)) {
-            String[] severityArr ;
-            if(severity.contains(",")) {
-                severityArr = severity.trim().split(",");
+    public void severityFilterIsSetTo(String filterType) {
+        if(!StringUtils.isEmptyOrNull(filterType)) {
+            String[] filterTypeArr ;
+            if(filterType.contains(",")) {
+                filterTypeArr = filterType.trim().split(",");
             }else{
-                severityArr = new String[1];
-                severityArr[0] = severity;
+                filterTypeArr = new String[1];
+                filterTypeArr[0] = filterType;
             }
-            for (String currSeverity: severityArr) {
-                setCurrentSeverity(currSeverity);
+            for (String currfilterType: filterTypeArr) {
+                setCurrentFilter(currfilterType);
             }
         }
     }
 
-    private void setCurrentSeverity(String currSeverity) {
+    private void setCurrentFilter(String currSeverity) {
         
         switch(currSeverity){
             case("severity"):
@@ -245,7 +245,7 @@ public class CxConfigSteps {
     }
 
     @Then("CxFlow {string} the pull request")
-    public void cxflowApprovesOrFailsThePullRequest(String approvesOrFails) {
+    public void cxflowApprovesOrFailsThePullRequest(String approvesOrFails) throws InterruptedException {
         
         validateRequestByConfig(Boolean.FALSE);
         
@@ -348,7 +348,7 @@ public class CxConfigSteps {
    
 
     @Then("CxFlow {string} the pull request and cx.config truncates the data in application.yml")
-    public void cxflowApprovesOrFailsThePullRequestOverride(String approvesOrFails) {
+    public void cxflowApprovesOrFailsThePullRequestOverride(String approvesOrFails) throws InterruptedException {
 
         validateRequestByConfig(Boolean.TRUE);
 
@@ -401,7 +401,7 @@ public class CxConfigSteps {
   
     }
 
-    private void processScanResultsInCxFlow() {
+    private void processScanResultsInCxFlow() throws InterruptedException{
         try {
             ScanRequest scanRequest = createScanRequest();
 
@@ -409,7 +409,7 @@ public class CxConfigSteps {
                     scanRequest, 0, 0, null, null);
 
             task.get(1, TimeUnit.MINUTES);
-        } catch (MachinaException | InterruptedException | ExecutionException | TimeoutException e) {
+        } catch (MachinaException | ExecutionException | TimeoutException e) {
             String message = "Error processing scan results.";
             log.error(message, e);
             Assert.fail(message);
@@ -433,9 +433,11 @@ public class CxConfigSteps {
         scanRequest.setMergeNoteUri(MERGE_NOTE_URL);
         scanRequest.setProduct(ScanRequest.Product.CX);
 
-        scanRequest.setAdditionalMetadata(new HashMap<String, String>() {{
-            put("statuses_url", PULL_REQUEST_STATUSES_URL);
-        }});
+        HashMap<String, String> additionalMetdata = new HashMap<String, String>();
+        additionalMetdata.put("statuses_url", PULL_REQUEST_STATUSES_URL);
+        
+        scanRequest.setAdditionalMetadata(additionalMetdata);
+        
         return scanRequest;
     }
 
