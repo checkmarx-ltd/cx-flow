@@ -11,24 +11,40 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.Set;
 import java.util.StringJoiner;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
+import com.atlassian.jira.rest.client.api.JiraRestClient;
+import com.atlassian.jira.rest.client.api.SearchRestClient;
+import com.atlassian.jira.rest.client.api.domain.Issue;
+import com.atlassian.jira.rest.client.api.domain.SearchResult;
+import com.atlassian.jira.rest.client.internal.async.CustomAsynchronousJiraRestClientFactory;
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
+import com.checkmarx.flow.dto.github.Committer;
 import com.checkmarx.flow.dto.github.Config;
 import com.checkmarx.flow.dto.github.Hook;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -42,6 +58,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
+import io.atlassian.util.concurrent.Promise;
 import io.cucumber.java.After;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
@@ -57,6 +74,7 @@ public class GenericEndToEndSteps {
             @Autowired
             private GitHubProperties gitHubProperties;
             private Integer hookId;
+            private String createdFileSha;
 
             @Override
             Boolean hasWebHook() {
@@ -136,6 +154,66 @@ public class GenericEndToEndSteps {
                     restTemplate.exchange(url + "/" + hookId, HttpMethod.DELETE, requestEntity, Object.class);
                 });
             }
+
+            @Override
+            void pushFile(String content) {
+                ObjectMapper mapper = new ObjectMapper();
+                ObjectNode jo = mapper.createObjectNode();
+                jo.put("message", "GitHubToJira test message");
+                Committer committer = new Committer();
+                committer.setName("CxFlowTestUser");
+                committer.setEmail("CxFlowTestUser@checkmarx.com");
+                jo.putPOJO("committer", committer);
+                jo.put("content", content);
+                String data;
+                try {
+                    data = mapper.writeValueAsString(jo);
+                } catch (JsonProcessingException e) {
+                    String msg = "faild to create file for push";
+                    log.error(msg);
+                    fail(msg);
+                    data = null;
+                }
+                final HttpHeaders headers = getHeaders();
+                final HttpEntity<String> request = new HttpEntity<>(data, headers);
+                RestTemplate restTemplate = new RestTemplate();
+                try {
+                    String path = String.format("%s/%s/%s/contents/%s", gitHubProperties.getApiUrl(), namespace, repo, filePath);
+                    ResponseEntity<String> response = restTemplate.exchange(path, HttpMethod.PUT, request,
+                            String.class);
+                    createdFileSha = new JSONObject(response.getBody()).getJSONObject("content").getString("sha");
+                } catch (Exception e) {
+                    fail("faild to push a file: " + e.getMessage());
+                }
+
+            }
+
+            @Override
+            void deleteFile() {
+                RestTemplate restTemplate = new RestTemplate();
+                final HttpHeaders headers = getHeaders();
+                String data = null;
+                try {
+                    ObjectMapper mapper = new ObjectMapper();
+                    ObjectNode jo = mapper.createObjectNode();
+                    jo.put("message", "deleting test commited file");
+                    Committer committer = new Committer();
+                    committer.setName("CxFlowTestUser");
+                    committer.setEmail("CxFlowTestUser@checkmarx.com");
+                    jo.putPOJO("committer", committer);
+                    jo.put("sha", createdFileSha);
+
+                    data = mapper.writeValueAsString(jo);
+                } catch (Exception e) {
+                    String msg = "faild to delete file of push";
+                    log.error(msg);
+                    fail(msg);
+                }
+
+                HttpEntity<String> requestEntity = new HttpEntity<>(data, headers);
+                String path = String.format("%s/%s/%s/contents/%s", gitHubProperties.getApiUrl(), namespace, repo, filePath);
+                restTemplate.exchange(path, HttpMethod.DELETE, requestEntity, String.class);
+            }
         },
         ADO {
             @Override
@@ -154,8 +232,22 @@ public class GenericEndToEndSteps {
                 // TODO Auto-generated method stub
 
             }
+
+            @Override
+            void pushFile(String content) {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            void deleteFile() {
+                // TODO Auto-generated method stub
+
+            }
         };
 
+        /* where to push the file */
+        static final String filePath = "src/main/java/sample/encode.frm";
         static Repository setTo(String toRepository) {
             log.info("setting repository to {}", toRepository);
             return valueOf(toRepository);
@@ -174,34 +266,101 @@ public class GenericEndToEndSteps {
 
         abstract void deleteHook();
         
-        public void deleteFile() {
-        }
-
-        public void pushFile() {
-        }
+        abstract void pushFile(String content);
+        
+        abstract void deleteFile();
 
     }
 
     private enum BugTracker {
-        JIRA;
+        JIRA {
+            @Autowired
+            private JiraProperties jiraProperties;
+            private List<String> issueCreatedKeys = new ArrayList<>();
+            private JiraRestClient client;
+            private SearchRestClient searchClient;
+
+            @Override
+            void init() {
+                CustomAsynchronousJiraRestClientFactory factory = new CustomAsynchronousJiraRestClientFactory();
+                URI jiraURI;
+                try {
+                    jiraURI = new URI(jiraProperties.getUrl());
+                } catch (URISyntaxException e) {
+                    fail("Error constructing URI for JIRA");
+                    jiraURI = null;
+                }
+                client = factory.createWithBasicHttpAuthenticationCustom(jiraURI, jiraProperties.getUsername(),
+                        jiraProperties.getToken(), jiraProperties.getHttpTimeout());
+                searchClient = client.getSearchClient();
+            }
+            
+            @Override
+            void verifyIssueCreated(String severities) {
+                String jql = String.format("project = %s and priority  in %s", jiraProperties.getProject(), severities);
+                log.info("filtering issue with jql: {}", jql);
+                Set<String> fields = new HashSet<String>();
+                fields.addAll(
+                        Arrays.asList("key", "project", "issuetype", "summary", "labels", "created", "updated", "status"));
+                SearchResult result = null;
+                Boolean found = false;
+                for (int retries = 0; retries<20 ; retries++) {
+                    Promise<SearchResult> temp = searchClient.searchJql(jql, 10, 0, fields);
+                    try {
+                        TimeUnit.SECONDS.sleep(5);
+                    } catch (InterruptedException e) {
+                        log.info("starting attempt {}", retries+1);
+                    }
+                    try {
+                        result = temp.get(500, TimeUnit.MILLISECONDS);
+                    } catch (Exception e) {
+                        log.info("failed attempt {}", retries+1);
+                    }
+
+                    if (result != null && result.getTotal() > 0) {
+                        found = true;
+                        Iterator<Issue> itr = result.getIssues().iterator();
+                        assertTrue(itr.hasNext(), "Jira is missing the issues");
+                        while (itr.hasNext()) {
+                            this.issueCreatedKeys.add(itr.next().getKey());
+                        }
+                        break;
+                    }
+                }
+
+                if (!found) {
+                    String msg = "failed to find update in Jira after expected time";
+                    log.error(msg);
+                    fail(msg);
+                }
+            }
+
+            @Override
+            void deleteIssues() {
+                for (String issueKey : issueCreatedKeys) {
+                    client.getIssueClient().deleteIssue(issueKey, false);
+                }
+            }
+        };
+
+        BugTracker() {
+            init();
+        }
+        
+        abstract void init();
 
         static BugTracker setTo(String bugTracker) {
             log.info("setting bug-tracker to {}", bugTracker);
             return valueOf(bugTracker);
         }
 
-        public void deleteIssues() {
-        }
+        abstract void verifyIssueCreated(String severities);
+
+        abstract void deleteIssues();
     }
 
     @Autowired
     private FlowProperties flowProperties;
-
-    /**************
-     * bug-trackers
-     **************/
-    @Autowired
-    private JiraProperties jiraProperties;
 
     private Repository repository;
     private BugTracker bugTracker;
@@ -209,7 +368,6 @@ public class GenericEndToEndSteps {
     private static String namespace = null;
     private static String repo = null;
     private String hookTargetURL = null;
-    private String filePath = "src/main/java/sample/encode.frm";
     
     @PostConstruct
     public void init() throws IOException {
@@ -255,17 +413,19 @@ public class GenericEndToEndSteps {
 
     @When("pushing a change")
     public void pushChange() {
-        String content;
+        String content = null;
         try {
             content = getFileInBase64();
         } catch (IOException e) {
             fail("can not read source file");
         }
-        repository.pushFile();
+        repository.pushFile(content);
     }
 
     @Then("Then bug-tracker issues are updated")
     public void validateIssueOnBugTracker() {
+        String severities = "(" + flowProperties.getFilterSeverity().stream().collect(Collectors.joining(",")) + ")";
+        bugTracker.verifyIssueCreated(severities);
     }
 
     @After
