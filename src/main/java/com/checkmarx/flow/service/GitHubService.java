@@ -53,7 +53,8 @@ public class GitHubService extends RepoService {
     private static final String REPO_CONTENT = "/{namespace}/{repo}/contents?ref={branch}";
 
     private static final String API_REQUEST = "API request: {}";
-    private static final String API_RESPONSE = "API response code: {}";
+    private static final String API_RESPONSE = "API response: {}";
+    private static final String API_RESPONSE_CODE = "API response code: {}";
     private static final String REQUEST_DETAILS = "; request details: %s";
 
     public GitHubService(@Qualifier("flowRestTemplate") RestTemplate restTemplate,
@@ -100,18 +101,22 @@ public class GitHubService extends RepoService {
                 return;
             }
             log.debug("Setting pull request status: {}", statusApiUrl);
-            log.trace(API_REQUEST, httpEntity.getBody());
-            try {
-                ResponseEntity<String> responseEntity = restTemplate.exchange(statusApiUrl, HttpMethod.POST, httpEntity, String.class);
-                log.debug("API response code: {}", responseEntity.getStatusCode().toString());
-                log.trace(API_RESPONSE, responseEntity.toString());
-            } catch (RestClientException e) {
-                String msg = "failed to set merge status to pending";
-                if (log.isDebugEnabled()) {
-                    msg += String.format(REQUEST_DETAILS, request.toString());
-                }
-                log.warn(msg, e);
+            statusExchange(request, httpEntity, statusApiUrl, "failed to set merge status to pending");
+        }
+    }
+
+    private void statusExchange(ScanRequest request, HttpEntity<?> httpEntity, String statusApiUrl, String message) {
+        log.trace(API_REQUEST, httpEntity.getBody());
+        try {
+            ResponseEntity<String> responseEntity = restTemplate.exchange(statusApiUrl, HttpMethod.POST, httpEntity, String.class);
+            log.debug(API_RESPONSE_CODE, responseEntity.getStatusCode().toString());
+            log.trace(API_RESPONSE, responseEntity.toString());
+        } catch (RestClientException e) {
+            String msg = message;
+            if (log.isDebugEnabled()) {
+                msg += String.format(REQUEST_DETAILS, request.toString());
             }
+            log.warn(msg, e);
         }
     }
 
@@ -127,18 +132,7 @@ public class GitHubService extends RepoService {
 
 
             log.debug("Updating pull request status: {}", statusApiUrl);
-            log.trace(API_REQUEST, httpEntity.getBody());
-            try {
-                ResponseEntity<String> responseEntity = restTemplate.exchange(statusApiUrl, HttpMethod.POST, httpEntity, String.class);
-                log.debug("API response code: {}", responseEntity.getStatusCode().toString());
-                log.trace(API_RESPONSE, responseEntity.toString());
-            } catch (RestClientException e) {
-                String msg = "failed to update merge status for completed scan";
-                if (log.isDebugEnabled()) {
-                    msg += String.format(REQUEST_DETAILS, request.toString());
-                }
-                log.warn(msg, e);
-            }
+             statusExchange(request, httpEntity, statusApiUrl, "failed to update merge status for completed scan");
         } else {
             log.debug("Pull request blocking is disabled in configuration, no need to unblock.");
         }
@@ -177,18 +171,7 @@ public class GitHubService extends RepoService {
                 return;
             }
             log.debug("Setting pull request status: {}", statusApiUrl);
-            log.trace(API_REQUEST, httpEntity.getBody());
-            try {
-                ResponseEntity<String> responseEntity = restTemplate.exchange(statusApiUrl, HttpMethod.POST, httpEntity, String.class);
-                log.debug("API response code: {}", responseEntity.getStatusCode().toString());
-                log.trace(API_RESPONSE, responseEntity.toString());
-            } catch (RestClientException e) {
-                String msg = "failed to set merge status to failure";
-                if (log.isDebugEnabled()) {
-                    msg += String.format(REQUEST_DETAILS, request.toString());
-                }
-                log.warn(msg, e);
-            }
+            statusExchange(request, httpEntity, statusApiUrl, "failed to set merge status to failure");
         }
     }
 
