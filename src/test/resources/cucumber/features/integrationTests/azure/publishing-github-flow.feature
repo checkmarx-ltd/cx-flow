@@ -13,9 +13,10 @@ Feature: GitHub webhook requests should support publishing issues to Azure DevOp
     And CxFlow filters are disabled
     When GitHub notifies CxFlow about a "<webhook event>"
     And SAST scan returns a report with 1 finding
-    Then after CxFlow publishes the report, ADO contains 1 issue
+    And CxFlow publishes the report
+    Then ADO contains 1 issue
 
     Examples:
       | webhook event |
       | pull request  |
-#      | push          |
+      | push          |

@@ -38,6 +38,13 @@ import java.util.ArrayList;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
+/**
+ * The following occurs here:
+ *      - create a CxClient mock that always returns 1 finding
+ *      - create an instance of GitHub controller
+ *      - call pull or push method on the controller instance
+ *      - poll ADO API until it has 1 issue (or fail after a timeout).
+ */
 @Slf4j
 @SpringBootTest(classes = {CxFlowApplication.class, GitHubTestUtils.class})
 @RequiredArgsConstructor
@@ -97,8 +104,8 @@ public class PublishingSteps extends PublishingStepsBase {
         scanResultsToInject = new ScanResultsBuilder().getScanResultsWithSingleFinding(getProjectName());
     }
 
-    @Then("after CxFlow publishes the report, ADO contains {int} issue")
-    public void adoContainsIssue(int issueCount) {
+    @And("CxFlow publishes the report")
+    public void cxFlowPublishesReport() {
         GitHubController gitHubController = getGitHubControllerInstance();
         String signature = testUtils.createSignature(webhookRequestBody);
         if (currentGitHubEventType == GitHubTestUtils.EventType.PULL_REQUEST) {
@@ -106,11 +113,10 @@ public class PublishingSteps extends PublishingStepsBase {
         } else {
             submitPush(gitHubController, signature);
         }
-
-        waitUntilAdoContainsIssueCount(issueCount);
     }
 
-    private void waitUntilAdoContainsIssueCount(int expectedIssueCount) {
+    @Then("ADO contains {int} issue")
+    public void adoContainsIssueCount(int expectedIssueCount) {
         Duration timeout = Duration.ofMinutes(1);
         Duration pollInterval = Duration.ofSeconds(5);
         try {
