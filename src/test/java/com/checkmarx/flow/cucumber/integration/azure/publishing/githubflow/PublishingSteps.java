@@ -2,10 +2,18 @@ package com.checkmarx.flow.cucumber.integration.azure.publishing.githubflow;
 
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.config.GitHubProperties;
+import com.checkmarx.flow.controller.GitHubController;
+import com.checkmarx.flow.cucumber.common.Constants;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 import com.checkmarx.flow.cucumber.integration.azure.publishing.AzureDevopsClient;
 import com.checkmarx.flow.cucumber.integration.azure.publishing.PublishingStepsBase;
+import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.github.GitHubTestUtils;
+import com.checkmarx.sdk.config.CxProperties;
+import com.checkmarx.sdk.dto.ScanResults;
+import com.checkmarx.sdk.exception.CheckmarxException;
+import com.checkmarx.sdk.service.CxClient;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
@@ -13,37 +21,51 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionTimeoutException;
 import org.junit.Assert;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.web.client.RestTemplate;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.when;
+
 @Slf4j
-@SpringBootTest(classes = {CxFlowApplication.class, GitHubTestUtils.class})
+@SpringBootTest(classes = {CxFlowApplication.class, GitHubTestUtils.class, CxClientMockInjector.class})
 @RequiredArgsConstructor
 public class PublishingSteps extends PublishingStepsBase {
     private final FlowProperties flowProperties;
     private final AzureDevopsClient adoClient;
-
-    private String projectName;
-    private String cxFlowPort;
     private final GitHubTestUtils testUtils;
+    private final GitHubProperties gitHubProperties;
+    private final CxProperties cxProperties;
+    private final HelperService helperService;
+    private final GitHubService gitHubService;
+    private final CxClient cxClientMock;
+    private final ResultsService resultsService;
+    private final ADOService adoService;
+    private final EmailService emailService;
 
-    private HttpEntity<String> webhookRequestToSend;
+    private ScanResults scanResultsToInject;
+    private String webhookRequestBody;
+    private GitHubTestUtils.EventType currentGitHubEventType;
 
     @Before
-    public void init() throws IOException {
-        projectName = getProjectName();
-        adoClient.ensureProjectExists(projectName);
+    public void init() throws IOException, CheckmarxException {
+        adoClient.ensureProjectExists();
 
-        cxFlowPort = TestUtils.runCxFlowAsService();
+        when(cxClientMock.getReportContentByScanId(anyInt(), any()))
+                .thenAnswer(invocation -> scanResultsToInject);
+
+        when(cxClientMock.getTeamId(anyString()))
+                .thenReturn("dummyTeamId");
     }
 
     @Given("issue tracker is ADO")
@@ -53,7 +75,7 @@ public class PublishingSteps extends PublishingStepsBase {
 
     @And("ADO doesn't contain any issues")
     public void adoDoesnTContainAnyIssues() throws IOException {
-        adoClient.deleteProjectIssues(projectName);
+        adoClient.deleteProjectIssues();
     }
 
     @And("CxFlow filters are disabled")
@@ -61,60 +83,98 @@ public class PublishingSteps extends PublishingStepsBase {
         flowProperties.setFilterSeverity(new ArrayList<>());
     }
 
-    // TODO: share with WebHookSteps.
     @When("GitHub notifies CxFlow about a {string}")
     public void githubNotifiesCxFlowAboutEvent(String eventName) throws IOException {
-        GitHubTestUtils.EventType eventType = determineEventType(eventName);
-        String path = determineRequestFilePath(eventType);
-        webhookRequestToSend = testUtils.prepareWebhookRequest(path, eventType);
+        currentGitHubEventType = determineEventType(eventName);
+        String filename = determineRequestFilename(currentGitHubEventType);
+        webhookRequestBody = loadWebhookRequestBody(filename);
     }
 
-    private static GitHubTestUtils.EventType determineEventType(String eventName) throws IOException {
+    @And("SAST scan returns a report with 1 finding")
+    public void sastScanReturnsAReportWithFinding() {
+        scanResultsToInject = new ScanResultsBuilder().getScanResultsWithSingleFinding(getProjectName());
+    }
+
+    @Then("after CxFlow publishes the report, ADO contains {int} issue")
+    public void adoContainsIssue(int issueCount) {
+        GitHubController gitHubController = getGitHubControllerInstance();
+        String signature = testUtils.createSignature(webhookRequestBody);
+        if (currentGitHubEventType == GitHubTestUtils.EventType.PULL_REQUEST) {
+            submitPullRequest(gitHubController, signature);
+        } else {
+            submitPush(gitHubController, signature);
+        }
+
+        waitUntilAdoContainsIssueCount(issueCount);
+    }
+
+    private void waitUntilAdoContainsIssueCount(int expectedIssueCount) {
+        Duration timeout = Duration.ofMinutes(1);
+        Duration pollInterval = Duration.ofSeconds(5);
+        try {
+            Awaitility.await().atMost(timeout)
+                    .pollInterval(pollInterval)
+                    .until(() -> adoClient.getIssueCount() == expectedIssueCount);
+        } catch (ConditionTimeoutException e) {
+            String message = String.format("Waited for %s but didn't get the expected ADO issue count (%d).",
+                    timeout, expectedIssueCount);
+
+            Assert.fail(message);
+        }
+    }
+
+    private void submitPush(GitHubController gitHubController, String signature) {
+        gitHubController.pushRequest(webhookRequestBody, signature,
+                null, null, null, null, null, null, null,
+                null, null, null, null, null, null,
+                null, null, null, null);
+    }
+
+    private void submitPullRequest(GitHubController gitHubController, String signature) {
+        gitHubController.pullRequest(webhookRequestBody, signature,
+                null, null, null, null, null, null, null,
+                null, null, null, null, null, null,
+                null, null, null, null);
+    }
+
+    private GitHubController getGitHubControllerInstance() {
+        FlowService flowService = new FlowService(
+                cxClientMock,
+                null,
+                resultsService,
+                gitHubService,
+                null,
+                null,
+                adoService,
+                emailService,
+                helperService,
+                cxProperties,
+                flowProperties);
+
+        return new GitHubController(gitHubProperties, flowProperties, cxProperties,
+                null, flowService, helperService, gitHubService);
+    }
+
+    private static GitHubTestUtils.EventType determineEventType(String eventName) {
         GitHubTestUtils.EventType result;
         if (eventName.equals("pull request")) {
             result = GitHubTestUtils.EventType.PULL_REQUEST;
         } else if (eventName.equals("push")) {
             result = GitHubTestUtils.EventType.PUSH;
         } else {
-            throw new IOException("Bad event name.");
+            throw new IllegalArgumentException("Bad event name.");
         }
         return result;
     }
 
-    @And("SAST scan returns a report with 1 finding")
-    public void sastScanReturnsAReportWithFinding() {
-        sendWebHookRequest(webhookRequestToSend);
-        log.info("sastScanReturnsAReportWithFinding");
+    private static String loadWebhookRequestBody(String filename) throws IOException {
+        String path = Paths.get(Constants.WEBHOOK_REQUEST_DIR, filename).toString();
+        File requestFile = TestUtils.getFileFromResource(path);
+        return FileUtils.readFileToString(requestFile, StandardCharsets.UTF_8);
     }
 
-    @Then("after CxFlow publishes the report, ADO contains {int} issue")
-    public void adoContainsIssue(int issueCount) {
-        Duration timeout = Duration.ofMinutes(5),
-                pollInterval = Duration.ofSeconds(10);
-        try {
-            Awaitility.await().atMost(timeout)
-                    .pollInterval(pollInterval)
-                    .until(() -> adoContainsIssues(issueCount));
-        } catch (ConditionTimeoutException e) {
-            String message = String.format("Waited for %s but didn't get the expected ADO issue count (%d).",
-                    timeout, issueCount);
-
-            Assert.fail(message);
-        }
-    }
-
-    private void sendWebHookRequest(HttpEntity<String> request) {
-        RestTemplate client = new RestTemplate();
-        String url = "http://localhost:" + cxFlowPort;
-        client.exchange(url, HttpMethod.POST, request, String.class);
-    }
-
-    private String determineRequestFilePath(GitHubTestUtils.EventType eventType) {
+    private static String determineRequestFilename(GitHubTestUtils.EventType eventType) {
         return eventType == GitHubTestUtils.EventType.PULL_REQUEST ?
-                "github-pull-request-full.json" : "github-push.json";
-    }
-
-    private boolean adoContainsIssues(int count) throws IOException {
-        return adoClient.getIssueCount(projectName) == count;
+                "github-pull-request.json" : "github-push.json";
     }
 }

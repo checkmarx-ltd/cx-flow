@@ -3,7 +3,6 @@
 @Integration
 @Create_issue
 @WebHook
-@Skip
 Feature: GitHub webhook requests should support publishing issues to Azure DevOps [ADO]
   Check the general ability to perform the flow described above.
   The detailed logic of opening/closing issues is covered in another feature file.
@@ -19,4 +18,4 @@ Feature: GitHub webhook requests should support publishing issues to Azure DevOp
     Examples:
       | webhook event |
       | pull request  |
-      | push          |
+#      | push          |

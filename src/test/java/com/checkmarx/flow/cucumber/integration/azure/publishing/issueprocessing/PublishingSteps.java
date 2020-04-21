@@ -71,8 +71,8 @@ public class PublishingSteps extends PublishingStepsBase {
         cxProperties.setOffline(true);
 
         projectName = getProjectName();
-        adoClient.ensureProjectExists(projectName);
-        adoClient.deleteProjectIssues(projectName);
+        adoClient.ensureProjectExists();
+        adoClient.deleteProjectIssues();
     }
 
     @Given("Azure DevOps initially contains {int} {string} issue with title: {string}")
@@ -254,11 +254,6 @@ public class PublishingSteps extends PublishingStepsBase {
         issue.setTitle(title);
         issue.setBody(description);
         issue.setState(adoProperties.getOpenStatus());
-
-        HashMap<String, String> metadata = new HashMap<>();
-        metadata.put(AzureDevopsClient.PROJECT_NAME_KEY, projectName);
-        issue.setMetadata(metadata);
-
         String id = adoClient.createIssue(issue);
         issue.setId(id);
         return issue;
@@ -281,7 +276,7 @@ public class PublishingSteps extends PublishingStepsBase {
     }
 
     private List<Issue> getIssues() throws IOException {
-        issuesAfterPublish = adoClient.getIssues(projectName);
+        issuesAfterPublish = adoClient.getIssues();
         return issuesAfterPublish;
     }
 
