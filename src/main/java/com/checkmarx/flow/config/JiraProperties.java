@@ -44,6 +44,7 @@ public class JiraProperties {
     private String grandParentUrl = "";
     private boolean child = false;
     private Integer httpTimeout = 20000;
+    private Integer maxJqlResults = 50;
     private List<String> statusCategoryOpenName = Arrays.asList("To Do", "In Progress");
     private List<String> statusCategoryClosedName = Arrays.asList("Done");
 
@@ -304,6 +305,14 @@ public class JiraProperties {
 
     public void setHttpTimeout(Integer httpTimeout) {
         this.httpTimeout = httpTimeout;
+    }
+
+    public Integer getMaxJqlResults() {
+        return maxJqlResults;
+    }
+
+    public void setMaxJqlResults(Integer maxJqlResults) {
+        this.maxJqlResults = maxJqlResults;
     }
 
     public List<String> getStatusCategoryOpenName() {
