@@ -4,6 +4,7 @@ import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.FindingSeverity;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
+import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.controller.GitHubController;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
@@ -71,12 +72,14 @@ public class CxConfigSteps {
     private ResultsService resultsService;
     private Boolean isPullRequestApproved;
 
-    private FlowService flowService;
+    private final FlowService flowService;
     private String branch;
     private ScanRequest request;
+    private final JiraProperties jiraProperties;
 
     public CxConfigSteps( FlowProperties flowProperties, GitHubService gitHubService,
-                         CxProperties cxProperties, GitHubProperties gitHubProperties, MergeResultEvaluator mergeResultEvaluator, FlowService flowService) {
+                         CxProperties cxProperties, GitHubProperties gitHubProperties, JiraProperties jiraProperties,
+                          MergeResultEvaluator mergeResultEvaluator, FlowService flowService) {
 
         this.cxClientMock = mock(CxClient.class);
 
@@ -84,6 +87,7 @@ public class CxConfigSteps {
         this.flowProperties = flowProperties;
         
         this.cxProperties = cxProperties;
+        this.jiraProperties = jiraProperties;
         this.mergeResultEvaluator = mergeResultEvaluator;
         this.helperService = mock(HelperService.class);
         this.flowService = flowService;
@@ -490,7 +494,7 @@ public class CxConfigSteps {
         this.gitHubControllerSpy = spy(new GitHubController(gitHubProperties,
                 flowProperties,
                 cxProperties,
-                null,
+                jiraProperties,
                 flowService,
                 helperService,
                 gitHubService));
