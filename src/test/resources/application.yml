@@ -5,10 +5,11 @@ logging:
   file:
     name: cx-flow.log
     path: c:/temp/
-  level:
-    com:
-      checkmarx:
-        flow: TRACE
+#  level:
+#    com:
+#      checkmarx:
+#        flow:
+#          service: TRACE
 #    org:
 #      apache:
 #        http:
