@@ -274,14 +274,15 @@ public class GenericEndToEndSteps {
 
     private enum BugTracker {
         JIRA {
-            @Autowired
             private JiraProperties jiraProperties;
             private List<String> issueCreatedKeys = new ArrayList<>();
             private JiraRestClient client;
             private SearchRestClient searchClient;
+            
 
             @Override
-            void init() {
+            void init(Object jp) {
+                this.jiraProperties = (JiraProperties) jp;
                 CustomAsynchronousJiraRestClientFactory factory = new CustomAsynchronousJiraRestClientFactory();
                 URI jiraURI;
                 try {
@@ -343,24 +344,23 @@ public class GenericEndToEndSteps {
             }
         };
 
-        BugTracker() {
-            init();
-        }
-        
-        abstract void init();
-
         static BugTracker setTo(String bugTracker) {
             log.info("setting bug-tracker to {}", bugTracker);
-            return valueOf(bugTracker);
+            BugTracker bt = valueOf(bugTracker);
+            return bt;
         }
 
         abstract void verifyIssueCreated(String severities);
 
         abstract void deleteIssues();
+
+        abstract void init(Object jiraProperties);
     }
 
     @Autowired
     private FlowProperties flowProperties;
+    @Autowired
+    private JiraProperties jiraProperties;
 
     private Repository repository;
     private BugTracker bugTracker;
@@ -389,13 +389,26 @@ public class GenericEndToEndSteps {
         }
     }
 
-    @Given("repository is {string}")
+    @Given("repository is GitHub")
+    public void setRepository() {
+        setRepository("GitHub");
+    }
+
+    // @Given("repository is {string}")
     public void setRepository(String repository) {
         this.repository = Repository.setTo(repository);
     }
 
+    @And("bug-tracker is JIRA")
+    public void setBugTrackerJira() {
+        setBugTracker("JIRA");
+    }
+
     @And("bug-tracker is {string}")
     public void setBugTracker(String bugTracker) {
+        if (BugTracker.JIRA.name() == bugTracker) {
+            BugTracker.JIRA.init(jiraProperties);
+        }
         this.bugTracker = BugTracker.setTo(bugTracker);
         flowProperties.setBugTracker(bugTracker);
     }
@@ -445,7 +458,7 @@ public class GenericEndToEndSteps {
             .toString();
         try (InputStream is = getClass().getClassLoader().getResourceAsStream(path)) {
             prop.load(is);
-        } catch (FileNotFoundException e) {
+        } catch (NullPointerException | FileNotFoundException e) {
             log.info("to run this test you need a file called {}", path);
             log.info("the file should have the following properties: \nnamespace\nrepo\ntarget");
             fail("property file not found (" + path + ") " + e.getMessage());
