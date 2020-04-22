@@ -16,8 +16,10 @@ public class LoggingAop {
             "execution(* com.checkmarx.flow.service.FlowService.executeCxScanFlow(com.checkmarx.flow.dto.ScanRequest, ..)) ||" +
             "execution(* com.checkmarx.flow.service.*.process(.., com.checkmarx.flow.dto.ScanRequest, ..))) && (args(.., request) || args(request, ..))")
     public void beforeAdvice(JoinPoint joinPoint, ScanRequest request) {
-        String id = request.getId();
-        MDC.put("cx", id);
+        if(request != null) {
+            String id = request.getId();
+            MDC.put("cx", id);
+        }
     }
     @After(value = "execution(* com.checkmarx.flow.service.ResultsService.processScanResultsAsync(.., com.checkmarx.flow.dto.ScanRequest, ..)) &&  (args(.., request) || args(request, ..))")
     public void afterAdvice(JoinPoint joinPoint, ScanRequest request) {

@@ -211,6 +211,7 @@ task integrationTest(type: Test) {
             exclude 'com/checkmarx/flow/cucumber/integration/github/**'
             include 'com/checkmarx/flow/cucumber/integration/azure/publishing/**'
             include 'com/checkmarx/flow/cucumber/integration/jira/analytics/*'
+            include 'com/checkmarx/flow/cucumber/integration/cxconfig/*'
             exclude 'com/checkmarx/flow/cucumber/integration/end2end/github2jira/**'
             exclude 'com/checkmarx/flow/cucumber/integration/publishprocess/**'
             exclude 'com/checkmarx/flow/test/flow**'

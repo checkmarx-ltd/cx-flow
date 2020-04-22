@@ -2,6 +2,8 @@ package com.checkmarx.flow.dto;
 
 import com.checkmarx.sdk.dto.Credential;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 import java.util.Map;
@@ -23,7 +25,9 @@ public class FlowOverride {
     public Jira jira;
     @JsonProperty("filters")
     public Filters filters;
-
+    @JsonProperty("thresholds")
+    public Thresholds thresholds;
+    
     public FlowOverride() {
     }
 
@@ -75,11 +79,29 @@ public class FlowOverride {
         this.filters = filters;
     }
 
+    public void setThresholds(Thresholds thresholds) { this.thresholds = thresholds;}
+
+    public Thresholds getThresholds() { return this.thresholds;}
 
     public String toString() {
-        return "FlowOverride(application=" + this.getApplication() + ", branches=" + this.getBranches() + " emails=" + this.getEmails() + ", jira=" + this.getJira() + ", filters=" + this.getFilters() + ")";
+        return "FlowOverride(application=" + this.getApplication() + ", branches=" + this.getBranches() + " emails=" + this.getEmails() + ", jira=" + this.getJira() + ", filters=" + this.getFilters() + "thresholds=" + this.getThresholds() + ")";
     }
 
+
+
+    @Getter
+    @Setter
+    public class Thresholds {
+        @JsonProperty("HIGH")
+        public Integer high = null;
+        @JsonProperty("MEDIUM")
+        public Integer medium = null;
+        @JsonProperty("LOW")
+        public Integer low = null;
+        @JsonProperty("INFO")
+        public Integer info = null;
+    }
+    
     public class Filters {
 
         @JsonProperty("severity")

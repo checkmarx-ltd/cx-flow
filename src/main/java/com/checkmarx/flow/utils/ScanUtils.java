@@ -1,5 +1,6 @@
 package com.checkmarx.flow.utils;
 
+import com.checkmarx.flow.config.FindingSeverity;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.config.RepoProperties;
@@ -13,7 +14,6 @@ import com.checkmarx.sdk.dto.cx.CxScanSummary;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -369,6 +369,18 @@ public class ScanUtils {
                     } else if (filtersObj != null) {
                         request.setFilters(null);
                     }
+
+                    FlowOverride.Thresholds thresholds = flowOverride.getThresholds();
+
+                    if (thresholds != null &&
+                            !(thresholds.getHigh()==null && thresholds.getMedium()==null &&
+                                    thresholds.getLow()==null && thresholds.getInfo()==null)) {
+                                
+                            Map<FindingSeverity,Integer> thresholdsMap = ScanUtils.getThresholdsMap(thresholds);
+                            if(!thresholdsMap.isEmpty()) {
+                                flowProperties.setThresholds(thresholdsMap);
+                            }
+                    } 
                 }
             }
         }catch (IllegalArgumentException e){
@@ -376,6 +388,25 @@ public class ScanUtils {
         }
         return request;
     }
+
+    private static Map<FindingSeverity, Integer> getThresholdsMap(FlowOverride.Thresholds thresholds) {
+
+        Map<FindingSeverity, Integer> map = new HashMap<>();
+       if(thresholds.getHigh()!=null){
+           map.put(FindingSeverity.HIGH, thresholds.getHigh());
+       }
+        if(thresholds.getMedium()!=null){
+            map.put(FindingSeverity.MEDIUM, thresholds.getMedium());
+        }
+        if(thresholds.getLow()!=null){
+            map.put(FindingSeverity.LOW, thresholds.getLow());
+        }
+        if(thresholds.getInfo()!=null){
+            map.put(FindingSeverity.INFO, thresholds.getInfo());
+        }
+        
+        return  map;
+     }
 
     public static BugTracker getBugTracker(@RequestParam(value = "assignee", required = false) String assignee,
                                            BugTracker.Type bugType, JiraProperties jiraProperties, String bugTracker) {

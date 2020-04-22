@@ -75,14 +75,14 @@ public class JiraService {
             CustomAsynchronousJiraRestClientFactory factory = new CustomAsynchronousJiraRestClientFactory();
             try {
                 this.jiraURI = new URI(jiraProperties.getUrl());
-            } catch (URISyntaxException e) {
+                this.client = factory.createWithBasicHttpAuthenticationCustom(jiraURI, jiraProperties.getUsername(), jiraProperties.getToken(), jiraProperties.getHttpTimeout());
+                this.issueClient = this.client.getIssueClient();
+                this.projectClient = this.client.getProjectClient();
+                this.metaClient = this.client.getMetadataClient();
+                configJira();
+            } catch (URISyntaxException | RestClientException e) {
                 log.error("Error constructing URI for JIRA", e);
             }
-            this.client = factory.createWithBasicHttpAuthenticationCustom(jiraURI, jiraProperties.getUsername(), jiraProperties.getToken(), jiraProperties.getHttpTimeout());
-            this.issueClient = this.client.getIssueClient();
-            this.projectClient = this.client.getProjectClient();
-            this.metaClient = this.client.getMetadataClient();
-            configJira();
         }
     }
 
