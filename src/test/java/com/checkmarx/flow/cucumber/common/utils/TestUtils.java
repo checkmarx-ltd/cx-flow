@@ -27,6 +27,10 @@ import java.util.Properties;
 public class TestUtils {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
+    private TestUtils() {
+        // Instances should not be created.
+    }
+
     public static InputStream getResourceAsStream(String relativePath) {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         String fullResourcePath = toFullResourcePath(relativePath);
