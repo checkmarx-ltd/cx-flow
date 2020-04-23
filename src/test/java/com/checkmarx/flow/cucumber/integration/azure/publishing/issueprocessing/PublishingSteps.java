@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(classes = {CxFlowApplication.class})
+@SpringBootTest(classes = {CxFlowApplication.class, AzureDevopsClient.class})
 @Slf4j
 public class PublishingSteps extends PublishingStepsBase {
     private static final String REPORT_WITH_ONE_FINDING = "1-finding.xml";

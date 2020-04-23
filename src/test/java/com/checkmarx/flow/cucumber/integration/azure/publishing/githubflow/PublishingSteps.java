@@ -40,13 +40,13 @@ import static org.mockito.Mockito.when;
 
 /**
  * The following occurs here:
- *      - create a CxClient mock that always returns 1 finding
- *      - create an instance of GitHub controller
- *      - call pull or push method on the controller instance
- *      - poll ADO API until it has 1 issue (or fail after a timeout).
+ * - create a CxClient mock that always returns 1 finding
+ * - create an instance of GitHub controller
+ * - call pull or push method on the controller instance
+ * - poll ADO API until it has 1 issue (or fail after a timeout).
  */
 @Slf4j
-@SpringBootTest(classes = {CxFlowApplication.class, GitHubTestUtils.class})
+@SpringBootTest(classes = {CxFlowApplication.class, GitHubTestUtils.class, AzureDevopsClient.class})
 @RequiredArgsConstructor
 public class PublishingSteps extends PublishingStepsBase {
     private final FlowProperties flowProperties;
