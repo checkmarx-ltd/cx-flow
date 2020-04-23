@@ -9,6 +9,7 @@ import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.dto.ScanResults;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -17,6 +18,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.DefaultUriBuilderFactory;
+
+import java.net.URI;
 import java.util.*;
 
 @Service("Azure")
@@ -25,16 +29,12 @@ public class ADOIssueTracker implements IssueTracker {
     private static final String STATE_FIELD = "System.State";
     private static final String TITLE_FIELD = "System.Title";
     private static final String TAGS_FIELD = "System.Tags";
-    private static final String AREA_PATH_FIELD = "System.AreaPath";
     private static final String FIELD_PREFIX="System.";
     private static final String PROPOSED_STATE="Proposed";
-    private static final String ISSUE_BODY = "<b>%s</b> issue exists @ <b>%s</b> in branch <b>%s</b>";
-    public static final String CRLF = "<div><br></div>";
-	private static final String ADO_PROJECT="alt-project";
-    private static final String WORKITEMS="%s{p}/_apis/wit/wiql?api-version=%s";
-    private static final String CREATEWORKITEMS="%s{p}/_apis/wit/workitems/$%s?api-version=%s";
-    private static final String WORKITEMS_CLI="%s%s/{p}/_apis/wit/wiql?api-version=%s";
-    private static final String CREATEWORKITEMS_CLI="%s%s/{p}/_apis/wit/workitems/$%s?api-version=%s";
+    private static final String ADO_PROJECT="alt-project";
+    private static final String CREATE_WORK_ITEM_URL_TEMPLATE =
+            "%s/{namespace}/{project}/_apis/wit/workitems/${work-item-type}?api-version={version}";
+    private static final String SEARCH_WORK_ITEM_URL_TEMPLATE ="%s/{namespace}/{project}/_apis/wit/wiql?api-version={version}";
     private static final String WIQ_REPO_BRANCH = "Select [System.Id], [System.Title], " +
             "[System.State], [System.State], [System.WorkItemType] From WorkItems Where " +
             "[System.TeamProject] = @project AND [Tags] Contains '%s' AND [Tags] Contains '%s:%s'" +
@@ -107,20 +107,10 @@ public class ADOIssueTracker implements IssueTracker {
     @Override
     public List<Issue> getIssues(ScanRequest request) throws MachinaException {
         log.info("Executing getIssues Azure API call");
-        String baseUrl = request.getAdditionalMetadata(Constants.ADO_BASE_URL_KEY);
         List<Issue> issues = new ArrayList<>();
-        String adoProject = request.getAltProject();
-        if (ScanUtils.empty(adoProject) && request.getCxFields() != null) {
-            adoProject = request.getCxFields().get(ADO_PROJECT); // get from custom fields if available
-        }
-        String endpoint;
-        if(!ScanUtils.empty(adoProject)) { //driven by command line
-            endpoint = String.format(WORKITEMS_CLI, baseUrl, adoProject, properties.getApiVersion());
-        }
-        else { //driven by WebHook
-            endpoint = String.format(WORKITEMS, baseUrl, properties.getApiVersion());
-        }
-        log.debug(endpoint);
+
+        String projectName = getProjectName(request);
+        URI endpoint = getSearchEndpoint(projectName, request);
 
         String issueBody = request.getAdditionalMetadata(Constants.ADO_ISSUE_BODY_KEY);
         String wiq;
@@ -153,10 +143,10 @@ public class ADOIssueTracker implements IssueTracker {
         log.debug(wiq);
         JSONObject wiqJson = new JSONObject();
         wiqJson.put("query", wiq);
-        HttpEntity httpEntity = new HttpEntity<>(wiqJson.toString(), createAuthHeaders());
+        HttpEntity<String> httpEntity = new HttpEntity<>(wiqJson.toString(), createAuthHeaders());
 
         ResponseEntity<String> response = restTemplate.exchange(endpoint,
-                HttpMethod.POST, httpEntity, String.class, request.getNamespace());
+                HttpMethod.POST, httpEntity, String.class);
         if(response.getBody() == null) return issues;
 
         JSONObject json = new JSONObject(response.getBody());
@@ -176,7 +166,7 @@ public class ADOIssueTracker implements IssueTracker {
     }
 
     private Issue getIssue(String uri, String issueBody){
-        HttpEntity httpEntity = new HttpEntity<>(createAuthHeaders());
+        HttpEntity<Void> httpEntity = new HttpEntity<>(createAuthHeaders());
         log.debug("Getting issue at uri {}", uri);
         ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, httpEntity, String.class);
         String r = response.getBody();
@@ -201,28 +191,10 @@ public class ADOIssueTracker implements IssueTracker {
     @Override
     public Issue createIssue(ScanResults.XIssue resultIssue, ScanRequest request) throws MachinaException {
         log.debug("Executing createIssue Azure API call");
-		String ADOProject;
-        String baseUrl = request.getAdditionalMetadata(Constants.ADO_BASE_URL_KEY);
-        String issueType = request.getAdditionalMetadata(Constants.ADO_ISSUE_KEY);
         String issueBody = request.getAdditionalMetadata(Constants.ADO_ISSUE_BODY_KEY);
 
-        ADOProject = request.getAltProject();
-        if (ScanUtils.empty(ADOProject) && request.getCxFields() != null) {
-            ADOProject = request.getCxFields().get(ADO_PROJECT); // get from custom fields if available
-        }
-        String endpoint;
-        if(!ScanUtils.empty(ADOProject)) { //driven by command line
-            endpoint = String.format(CREATEWORKITEMS_CLI, baseUrl,
-                    ADOProject,
-                    issueType,
-                    properties.getApiVersion());
-        }
-        else { //driven by WebHook
-            endpoint = String.format(CREATEWORKITEMS, baseUrl,
-                    issueType,
-                    properties.getApiVersion());
-        }
-		log.debug(endpoint);
+        String projectName = getProjectName(request);
+        URI endpoint = getCreationEndpoint(projectName, request);
         /*Namespace/Repo/Branch provided*/
         StringBuilder tags = new StringBuilder();
         tags.append(request.getProduct().getProduct()).append("; ");
@@ -239,7 +211,7 @@ public class ADOIssueTracker implements IssueTracker {
         }
 
 
-        log.debug("tags: {}", tags.toString());
+        log.debug("tags: {}", tags);
         CreateWorkItemAttr title = new CreateWorkItemAttr();
         title.setOp("add");
         title.setPath(Constants.ADO_FIELD.concat(TITLE_FIELD));
@@ -265,11 +237,10 @@ public class ADOIssueTracker implements IssueTracker {
             body.add(fieldBlock);
         }
 
-        log.debug(body.toString());
+        log.debug("Request body: {}", body);
         HttpEntity<List<CreateWorkItemAttr>> httpEntity = new HttpEntity<>(body, createPatchAuthHeaders());
 
-        ResponseEntity<String> response = restTemplate.exchange(endpoint,
-                HttpMethod.POST, httpEntity, String.class, request.getNamespace());
+        ResponseEntity<String> response = restTemplate.exchange(endpoint, HttpMethod.POST, httpEntity, String.class);
         try {
             String url = new JSONObject(response.getBody()).getJSONObject("_links").getJSONObject("self").getString("href");
             return getIssue(url, issueBody);
@@ -279,6 +250,52 @@ public class ADOIssueTracker implements IssueTracker {
         }
     }
 
+    private String getProjectName(ScanRequest request) throws MachinaException {
+        log.debug("Determining target ADO project.");
+        String adoProject = request.getProject();
+        log.debug("Checking main project field: {}", adoProject);
+
+        if (StringUtils.isEmpty(adoProject)) {
+            adoProject = request.getAltProject();
+            log.debug("Checking alt-project: {}", adoProject);
+        }
+
+        if (StringUtils.isEmpty(adoProject) && request.getCxFields() != null) {
+            adoProject = request.getCxFields().get(ADO_PROJECT);
+            log.debug("Checking the '{}' custom field: {}", ADO_PROJECT, adoProject);
+        }
+
+        if (StringUtils.isEmpty(adoProject)) {
+            throw new MachinaException("Unable to determine target ADO project.");
+        }
+
+        if (StringUtils.isEmpty(request.getNamespace())) {
+            throw new MachinaException("Namespace must be specified.");
+        }
+        return adoProject;
+    }
+
+    private URI getCreationEndpoint(String adoProject, ScanRequest request) {
+        String baseUrl = request.getAdditionalMetadata(Constants.ADO_BASE_URL_KEY);
+        String urlTemplate = String.format(CREATE_WORK_ITEM_URL_TEMPLATE, baseUrl);
+        String workItemType = request.getAdditionalMetadata(Constants.ADO_ISSUE_KEY);
+
+        URI result = new DefaultUriBuilderFactory()
+                .expand(urlTemplate, request.getNamespace(), adoProject, workItemType, properties.getApiVersion());
+
+        log.debug("Endpoint URI: {}", result);
+        return result;
+    }
+
+    private URI getSearchEndpoint(String adoProject, ScanRequest request) {
+        String baseUrl = request.getAdditionalMetadata(Constants.ADO_BASE_URL_KEY);
+        String urlTemplate = String.format(SEARCH_WORK_ITEM_URL_TEMPLATE, baseUrl);
+        URI result = new DefaultUriBuilderFactory()
+                .expand(urlTemplate, request.getNamespace(), adoProject, properties.getApiVersion());
+
+        log.debug("Endpoint URI: {}", result);
+        return result;
+    }
     @Override
     public void closeIssue(Issue issue, ScanRequest request) {
         log.debug("Executing closeIssue Azure API call");
@@ -362,7 +379,7 @@ public class ADOIssueTracker implements IssueTracker {
     }
 
     @Override
-    public void complete(ScanRequest request, ScanResults results) throws MachinaException {
+    public void complete(ScanRequest request, ScanResults results) {
         log.info("Finalizing Azure Processing");
     }
 

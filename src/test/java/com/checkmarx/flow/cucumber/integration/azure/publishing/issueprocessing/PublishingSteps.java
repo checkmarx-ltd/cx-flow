@@ -1,10 +1,12 @@
-package com.checkmarx.flow.cucumber.integration.azure.publishing;
+package com.checkmarx.flow.cucumber.integration.azure.publishing.issueprocessing;
 
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.ADOProperties;
 import com.checkmarx.flow.cucumber.common.Constants;
 import com.checkmarx.flow.cucumber.common.utils.JsonUtils;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
+import com.checkmarx.flow.cucumber.integration.azure.publishing.AzureDevopsClient;
+import com.checkmarx.flow.cucumber.integration.azure.publishing.PublishingStepsBase;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
@@ -25,21 +27,17 @@ import org.springframework.web.util.HtmlUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
-import java.util.Properties;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(classes = {CxFlowApplication.class})
+@SpringBootTest(classes = {CxFlowApplication.class, AzureDevopsClient.class})
 @Slf4j
-public class PublishingSteps {
-    private static final String PROPERTIES_FILE_PATH = "cucumber/features/integrationTests/azure/publishing.properties";
-
+public class PublishingSteps extends PublishingStepsBase {
     private static final String REPORT_WITH_ONE_FINDING = "1-finding.xml";
 
     // Description cannot be null or empty during issue creation.
@@ -57,7 +55,6 @@ public class PublishingSteps {
     @Autowired
     private AzureDevopsClient adoClient;
 
-    private String projectName;
     private String sastReportFilename;
 
     // Used to avoid duplicate ADO requests in different steps.
@@ -69,13 +66,9 @@ public class PublishingSteps {
 
     @Before
     public void prepareEnvironment() throws IOException {
-        Properties testProperties = TestUtils.getPropertiesFromResource(PROPERTIES_FILE_PATH);
-        projectName = testProperties.getProperty("projectName");
-
         cxProperties.setOffline(true);
-
-        adoClient.ensureProjectExists(projectName);
-        adoClient.deleteProjectIssues(projectName);
+        adoClient.ensureProjectExists();
+        adoClient.deleteProjectIssues();
     }
 
     @Given("Azure DevOps initially contains {int} {string} issue with title: {string}")
@@ -257,11 +250,6 @@ public class PublishingSteps {
         issue.setTitle(title);
         issue.setBody(description);
         issue.setState(adoProperties.getOpenStatus());
-
-        HashMap<String, String> metadata = new HashMap<>();
-        metadata.put(AzureDevopsClient.PROJECT_NAME_KEY, projectName);
-        issue.setMetadata(metadata);
-
         String id = adoClient.createIssue(issue);
         issue.setId(id);
         return issue;
@@ -284,20 +272,21 @@ public class PublishingSteps {
     }
 
     private List<Issue> getIssues() throws IOException {
-        issuesAfterPublish = adoClient.getIssues(projectName);
+        issuesAfterPublish = adoClient.getIssues();
         return issuesAfterPublish;
     }
 
     private ScanRequest prepareScanRequest() {
         BugTracker bugTracker = BugTracker.builder()
                 .type(BugTracker.Type.CUSTOM)
-                .customBean("Azure")
+                .customBean(ISSUE_TRACKER_NAME)
                 .build();
 
         return ScanRequest.builder()
                 .bugTracker(bugTracker)
-                .namespace(projectName)
-                .repoName(projectName)
+                .namespace(getOrganizationName())
+                .project(getProjectName())
+                .repoName(getProjectName())
                 .branch(AzureDevopsClient.DEFAULT_BRANCH)
                 .product(ScanRequest.Product.CX)
                 .build();

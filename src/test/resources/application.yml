@@ -172,7 +172,7 @@ bitbucket:
 azure:
   webhook-token: cxflow:1234
   token: xxxx
-  url: https://dev.azure.com/cxflowtestuser
+  url: https://dev.azure.com/
   issue-type: issue
   # This version corresponds to TFS 2018 Update 2 and higher (including cloud)
   # For details, see https://docs.microsoft.com/en-us/rest/api/azure/devops/?view=azure-devops-rest-5.1#api-and-tfs-version-mapping
