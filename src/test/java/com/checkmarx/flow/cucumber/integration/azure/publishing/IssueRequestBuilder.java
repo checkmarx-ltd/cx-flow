@@ -8,11 +8,11 @@ import java.util.Collections;
 import java.util.List;
 
 class IssueRequestBuilder {
-    public List<CreateWorkItemAttr> getEntityBodyForCreation(Issue issue) {
+    public List<CreateWorkItemAttr> getEntityBodyForCreation(Issue issue, String projectName, String organizationName) {
         CreateWorkItemAttr title = getTitle(issue);
         CreateWorkItemAttr description = getDescription(issue);
         CreateWorkItemAttr state = getState(issue.getState());
-        CreateWorkItemAttr tags = getTags(issue);
+        CreateWorkItemAttr tags = getTags(projectName, organizationName);
         return Arrays.asList(title, description, state, tags);
     }
 
@@ -44,13 +44,12 @@ class IssueRequestBuilder {
         return state;
     }
 
-    private CreateWorkItemAttr getTags(Issue issue) {
+    private CreateWorkItemAttr getTags(String projectName, String organizationName) {
         CreateWorkItemAttr result = new CreateWorkItemAttr();
         result.setOp("add");
         result.setPath("/fields/Tags");
 
-        String projectName = issue.getMetadata().get(AzureDevopsClient.PROJECT_NAME_KEY);
-        String tags = String.format("CX,owner:%1$s,repo:%1$s,branch:%2$s", projectName, AzureDevopsClient.DEFAULT_BRANCH);
+        String tags = String.format("CX,owner:%s,repo:%s,branch:%s", organizationName, projectName, AzureDevopsClient.DEFAULT_BRANCH);
         result.setValue(tags);
         return result;
     }

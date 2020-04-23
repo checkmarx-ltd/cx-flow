@@ -1,4 +1,4 @@
-@WebHookFeature @ComponentTest
+@WebHook @ComponentTest
 Feature: Processing WebHook requests from version control providers
 
   Scenario: High load on CxFlow due to frequent WebHook requests from GitHub

@@ -5,14 +5,12 @@ import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanDetails;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxProject;
-import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -140,8 +138,7 @@ public  abstract class AbstractScanSteps {
         
         CxProject cxProject = cxClient.getProject(scanDetails.getProjectId());
 
-        ScanDTO scanDTO = new ScanDTO(scanDetails.getProjectId(), scanDetails.getScanId(), cxProject.getTeamId());
-        return scanDTO;
+        return new ScanDTO(scanDetails.getProjectId(), scanDetails.getScanId(), cxProject.getTeamId());
 
     }
     

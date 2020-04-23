@@ -1,14 +1,12 @@
 package com.checkmarx.flow.cucumber.integration.publishprocess;
 
 import com.checkmarx.flow.CxFlowApplication;
-import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.jira.IPublishUtils;
 import com.checkmarx.jira.PublishUtils;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.ExitThrowable;
-import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.jira.IJiraTestUtils;
 import com.checkmarx.jira.JiraTestUtils;
 import com.checkmarx.sdk.config.CxProperties;
@@ -108,7 +106,7 @@ public class RunPublishProcessSteps {
         this.totalResults = totalResults;
         needFilter = true;
         Filter filter = Filter.builder().type(Filter.Type.SEVERITY).value("High").build();
-        filters =Arrays.asList(filter);
+        filters = Collections.singletonList(filter);
     }
 
     @Given("filter-severity is {}")
@@ -277,11 +275,8 @@ public class RunPublishProcessSteps {
         Map<String, Integer> issuesPerStatus = jiraUtils.getIssuesByStatus(jiraProperties.getProject());
         int closed = getClosedIssues(issuesPerStatus);
         int open  = getOpenIssues(issuesPerStatus);
-        Assert.assertNotNull(closed);
-        Assert.assertNotNull(open);
         Assert.assertEquals("Closed issues number is incorrect", 1, closed);
         Assert.assertEquals("Open issues number is incorrect", 1, open);
-
     }
 
     private int getOpenIssues(Map<String, Integer> issues) {
