@@ -9,6 +9,7 @@ import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -32,8 +33,7 @@ public class GitLabIssueTracker implements IssueTracker {
     private static final String TRANSITION_OPEN = "reopen";
     private static final String OPEN_STATE = "opened";
     private static final String ISSUES_PER_PAGE = "100";
-    private static final String PROJECT_PATH = "/projects/{id}";
-    private static final String PROJECT = "/projects/{namespace}{x}{repo}";
+    private static final String PROJECT = "/projects?search={repo}";
     private static final String ISSUES_PATH = "/projects/{id}/issues?per_page=".concat(ISSUES_PER_PAGE);
     private static final String NEW_ISSUE_PATH = "/projects/{id}/issues";
     private static final String ISSUE_PATH = "/projects/{id}/issues/{iid}";
@@ -62,7 +62,7 @@ public class GitLabIssueTracker implements IssueTracker {
             throw new MachinaException("GitLab API Url must be provided in property config");
         }
         if(request.getRepoProjectId() == null) {
-            Integer projectId = getProjectDetails(request.getNamespace(), request.getRepoName());
+            Integer projectId = getProjectDetails(request.getRepoName());
             if (projectId.equals(UNKNOWN_INT)) {
                 log.error("Could not obtain GitLab Project Id for {}/{}/{}", request.getNamespace(), request.getRepoName(), request.getBranch());
                 throw new MachinaException("Could not obtain GitLab Project Id");
@@ -71,41 +71,21 @@ public class GitLabIssueTracker implements IssueTracker {
         }
     }
 
-    /**
-     * API call to determine additional project details, specifically the size of the code base
-     *
-     * @param projectId
-     * @return
-     */
-    private String getProjectDetails(Integer projectId){
-        String endpoint = properties.getApiUrl().concat(PROJECT_PATH);
-        HttpEntity httpEntity = new HttpEntity<>(createAuthHeaders());
-        log.info("Calling GitLab for additional Repository/Project information of project Id", projectId);
-        ResponseEntity<String> response = restTemplate.exchange(
-                endpoint, HttpMethod.GET, httpEntity, String.class, projectId);
-
-        return response.getBody();
-    }
-
-
-    private Integer getProjectDetails(String namespace, String repoName){
-
+    private Integer getProjectDetails(String repoName) {
         try {
             String url = properties.getApiUrl().concat(PROJECT);
-            url = url.replace("{namespace}", namespace);
-            url = url.replace("{x}", "%2F");
             url = url.replace("{repo}", repoName);
             URI uri = new URI(url);
             HttpEntity httpEntity = new HttpEntity<>(createAuthHeaders());
             ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, httpEntity, String.class);
-            JSONObject obj = new JSONObject(response.getBody());
+            JSONArray arr = new JSONArray(response.getBody());
+            JSONObject obj = (JSONObject)arr.get(0);
             return obj.getInt("id");
-        }catch (HttpClientErrorException e){
+        } catch(HttpClientErrorException e) {
             log.error("Error calling gitlab project api {}", e.getResponseBodyAsString(), e);
-        }catch (JSONException e){
+        } catch(JSONException e) {
             log.error("Error parsing gitlab project response.", e);
-        }
-        catch (URISyntaxException e){
+        } catch(URISyntaxException e) {
             log.error("Incorrect URI", e);
         }
         return UNKNOWN_INT;
