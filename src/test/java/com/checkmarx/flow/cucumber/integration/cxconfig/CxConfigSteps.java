@@ -82,8 +82,7 @@ public class CxConfigSteps {
                           MergeResultEvaluator mergeResultEvaluator, FlowService flowService) {
 
         this.cxClientMock = mock(CxClient.class);
-
-        flowProperties.setThresholds(new HashMap<>());
+        
         this.flowProperties = flowProperties;
         
         this.cxProperties = cxProperties;
@@ -109,11 +108,20 @@ public class CxConfigSteps {
 
     @Before("@CxConfigFeature")
     public void prepareServices() {
+        initFlowProperties();
         initCxClientMock();
         scanResultsToInject = createFakeScanResults();
         initServices();
         initHelperServiceMock();
         initMockGitHubController();
+    }
+
+    private void initFlowProperties() {
+        flowProperties.setThresholds(new HashMap<>());
+        flowProperties.setFilterCategory(null);
+        flowProperties.setFilterCwe(null);
+        flowProperties.setFilterSeverity(null);
+        flowProperties.setFilterStatus(null);
     }
 
     @Given("github branch is {string} and threshods section is not set application.yml")
