@@ -3,6 +3,7 @@ package com.checkmarx.flow.cucumber.integration.azure.publishing.githubflow;
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
+import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.controller.GitHubController;
 import com.checkmarx.flow.cucumber.common.Constants;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
@@ -14,6 +15,7 @@ import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
+import com.checkmarx.sdk.service.CxService;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
@@ -56,6 +58,10 @@ public class PublishingSteps extends PublishingStepsBase {
     private final CxProperties cxProperties;
     private final HelperService helperService;
     private final GitHubService gitHubService;
+    private final CxService cxService;
+    private final GitLabService gitLabService;
+    private final BitBucketService bitBucketService;
+    private final SastScannerService sastScannerService;
     @MockBean
     private final CxClient cxClientMock;
     private final ResultsService resultsService;
@@ -147,17 +153,23 @@ public class PublishingSteps extends PublishingStepsBase {
 
     private GitHubController getGitHubControllerInstance() {
         FlowService flowService = new FlowService(
-                cxClientMock,
+                cxService,
                 null,
-                resultsService,
-                gitHubService,
-                null,
-                null,
-                adoService,
-                emailService,
-                helperService,
                 cxProperties,
-                flowProperties);
+                flowProperties,
+                new ResultsService(
+                        cxService,
+                        null,
+                        new JiraService(new JiraProperties(), flowProperties),
+                        new IssueService(flowProperties),
+                        gitHubService,
+                        gitLabService,
+                        bitBucketService,
+                        adoService,
+                        emailService,
+                        cxProperties,
+                        flowProperties
+                ),helperService, sastScannerService);
 
         return new GitHubController(gitHubProperties, flowProperties, cxProperties,
                 null, flowService, helperService, gitHubService);
