@@ -81,7 +81,15 @@ Feature: CxFlow should read configuration from cx.config file in the root of rep
        ## branch test9: Filter section contains:
        ## filter filter severity: High, Medium
        ## filter category:   "XSS_Reflected", "SQL_Injection"
-      | test11 | severity,category,cwe | 
+      | test11 | severity,category,cwe |
 
+  @Invalid
+  Scenario Outline: CxFlow will fail when cx.config format is invalid
+    Given github branch is "<branch>" with invalid cx.config
+    Then CxFlow will ignore the cxconfig and take all the values from application.yml
 
-    
+    Examples:
+      | branch |
+      # branch12 contain cxconfig with invalid field
+      | test12 | 
+      
