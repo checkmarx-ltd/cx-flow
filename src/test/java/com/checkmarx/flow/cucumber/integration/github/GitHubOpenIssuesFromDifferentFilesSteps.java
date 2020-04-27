@@ -40,7 +40,7 @@ public class GitHubOpenIssuesFromDifferentFilesSteps extends GitHubCommonSteps {
     @When("publishing results from {string}")
     public void publishResults(String input) throws IOException, ExitThrowable {
         scanRequest = getBasicScanRequest();
-        flowService.cxParseResults(scanRequest, getFileFromResourcePath(INPUT_BASE_PATH + input));
+        sastScannerService.cxParseResults(scanRequest, getFileFromResourcePath(INPUT_BASE_PATH + input));
     }
 
     @Then("{int} new issues should be opened")

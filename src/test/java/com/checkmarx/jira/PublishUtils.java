@@ -5,7 +5,7 @@ import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.ExitThrowable;
-import com.checkmarx.flow.service.FlowService;
+import com.checkmarx.flow.service.SastScannerService;
 import com.checkmarx.sdk.config.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestComponent;
@@ -24,7 +24,7 @@ public class PublishUtils implements IPublishUtils {
     private FlowProperties flowProperties;
 
     @Autowired
-    private FlowService flowService;
+    private SastScannerService sastScannerService;
 
     @Override
     public File getFileFromResourcePath(String path) throws IOException {
@@ -49,7 +49,7 @@ public class PublishUtils implements IPublishUtils {
     public void publishRequest(ScanRequest request, File file, BugTracker.Type bugTrackerType) throws ExitThrowable {
         request.setBugTracker(createJiraBugTracker());
         flowProperties.setBugTracker(bugTrackerType.name());
-        flowService.cxParseResults(request, file);
+        sastScannerService.cxParseResults(request, file);
     }
 
     @Override

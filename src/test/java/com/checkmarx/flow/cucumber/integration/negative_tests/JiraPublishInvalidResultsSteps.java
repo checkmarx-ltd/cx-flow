@@ -7,6 +7,7 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.JiraClientRunTimeException;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.JiraService;
+import com.checkmarx.flow.service.SastScannerService;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import io.cucumber.java.Before;
@@ -43,6 +44,9 @@ public class JiraPublishInvalidResultsSteps {
     @Autowired
     private JiraService jiraService;
 
+    @Autowired
+    private SastScannerService sastScannerService;
+
     private BugTracker bugTracker;
 
     @Before("@JiraIntegrationTests")
@@ -69,7 +73,7 @@ public class JiraPublishInvalidResultsSteps {
     @Then("the call execution should throw a JiraClientRunTimeException since an error occurred when published new tickets")
     public void verifyExceptionWhenPublishInvalidResults() {
         Assertions.assertThrows(JiraClientRunTimeException.class,
-                () -> flowService.cxParseResults(basicScanRequest, getFileFromResourcePath()),
+                () -> sastScannerService.cxParseResults(basicScanRequest, getFileFromResourcePath()),
                 "Expected to get Jira un-published tickets exception error");
     }
 

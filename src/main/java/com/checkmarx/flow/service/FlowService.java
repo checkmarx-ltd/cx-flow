@@ -71,20 +71,6 @@ public class FlowService {
         }
     }
 
-    public void cxParseResults(ScanRequest request, File file) throws ExitThrowable {
-        try {
-            ScanResults results = cxService.getReportContent(file, request.getFilters());
-            resultsService.processResults(request, results, scanDetails);
-            if(flowProperties.isBreakBuild() && results !=null && results.getXIssues()!=null && !results.getXIssues().isEmpty()){
-                log.error(ERROR_BREAK_MSG);
-                exit(10);
-            }
-        } catch (MachinaException | CheckmarxException e) {
-            log.error("Error occurred while processing results file", e);
-            exit(3);
-        }
-    }
-
     public void cxOsaParseResults(ScanRequest request, File file, File libs) throws ExitThrowable {
         try {
             ScanResults results = cxService.getOsaReportContent(file, libs, request.getFilters());

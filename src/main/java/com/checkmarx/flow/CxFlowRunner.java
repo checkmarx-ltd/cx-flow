@@ -458,7 +458,7 @@ public class CxFlowRunner implements ApplicationRunner {
         flowService.cxOsaParseResults(request, file, libs);
     }
     private void cxParse(ScanRequest request, File file) throws ExitThrowable {
-        flowService.cxParseResults(request, file);
+        sastScannerService.cxParseResults(request, file);
     }
     private void cxBatch(ScanRequest request) throws ExitThrowable {
         flowService.cxBatch(request);

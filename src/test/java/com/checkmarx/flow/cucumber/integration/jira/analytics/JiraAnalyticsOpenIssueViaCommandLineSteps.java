@@ -48,7 +48,7 @@ public class JiraAnalyticsOpenIssueViaCommandLineSteps extends JiraAnalyticsComm
 
     @When("opening a new Jira issue via the command line")
     public void openNewIssueViaCommandLine() throws IOException, ExitThrowable {
-        flowService.cxParseResults(getBasicScanRequest(), getFileFromResourcePath(FINDING_PATH));
+        sastScannerService.cxParseResults(getBasicScanRequest(), getFileFromResourcePath(FINDING_PATH));
     }
 
     @Then("a matching ticket creation data should be recorded in the analytics json file")
