@@ -342,6 +342,7 @@ public class GitHubController {
                 }
             }
             emails.add(event.getPusher().getEmail());
+            emails.add(event.getRepository().getOwner().getEmail().toString());
 
             //build request object
             Repository repository = event.getRepository();
