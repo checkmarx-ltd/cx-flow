@@ -8,6 +8,7 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.HelperService;
+import com.checkmarx.flow.service.ResultsService;
 import com.checkmarx.flow.service.SastScannerService;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
@@ -16,7 +17,7 @@ import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -33,9 +34,8 @@ import static com.checkmarx.flow.exception.ExitThrowable.exit;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class CxFlowRunner implements ApplicationRunner {
-
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(CxFlowRunner.class);
 
     /**
      * Command line option that causes CxFlow to throw an exception instead of exiting.
@@ -56,6 +56,7 @@ public class CxFlowRunner implements ApplicationRunner {
     private final FlowService flowService;
     private final SastScannerService sastScannerService;
     private final List<ThreadPoolTaskExecutor> executors;
+    private final ResultsService resultsService;
 
     @Override
     public void run(ApplicationArguments args) throws InvocationTargetException {
@@ -463,7 +464,7 @@ public class CxFlowRunner implements ApplicationRunner {
         flowService.cxBatch(request);
     }
     private void cxResults(ScanRequest request) throws ExitThrowable {
-        ScanResults results = flowService.cxGetResults(request, null).join();
+        ScanResults results = resultsService.cxGetResults(request, null).join();
         if(flowProperties.isBreakBuild() && results !=null && results.getXIssues()!=null && !results.getXIssues().isEmpty()){
             log.error("Exiting with Error code 10 due to issues present");
             exit(10);

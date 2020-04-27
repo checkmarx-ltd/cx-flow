@@ -12,7 +12,7 @@ import com.checkmarx.sdk.dto.cx.CxProject;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -24,13 +24,11 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import static com.checkmarx.flow.exception.ExitThrowable.exit;
-import static com.checkmarx.sdk.config.Constants.UNKNOWN_INT;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class FlowService {
-
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(FlowService.class);
 
     private static final String ERROR_BREAK_MSG = "Exiting with Error code 10 due to issues present";
 
@@ -101,93 +99,6 @@ public class FlowService {
         }
     }
 
-    public CompletableFuture<ScanResults> cxGetResults(ScanRequest request, CxProject cxProject){
-        try {
-            CxProject project;
-
-            if(cxProject == null) {
-                String team = request.getTeam();
-                if(ScanUtils.empty(team)){
-                    //if the team is not provided, use the default
-                    team = cxProperties.getTeam();
-                    request.setTeam(team);
-                }
-                if (!team.startsWith(cxProperties.getTeamPathSeparator())) {
-                    team = cxProperties.getTeamPathSeparator().concat(team);
-                }
-                String teamId = cxService.getTeamId(team);
-                Integer projectId = cxService.getProjectId(teamId, request.getProject());
-                if(projectId.equals(UNKNOWN_INT)){
-                    log.warn("No project found for {}", request.getProject());
-                    CompletableFuture<ScanResults> x = new CompletableFuture<>();
-                    x.complete(null);
-                    return x;
-                }
-                project = cxService.getProject(projectId);
-
-            }
-            else {
-                project = cxProject;
-            }
-            Integer scanId = cxService.getLastScanId(project.getId());
-            if(scanId.equals(UNKNOWN_INT)){
-                log.warn("No Scan Results to process for project {}", project.getName());
-                CompletableFuture<ScanResults> x = new CompletableFuture<>();
-                x.complete(null);
-                return x;
-            }
-            else {
-                getCxFields(project, request);
-                //null is passed for osaScanId as it is not applicable here and will be ignored
-                return resultsService.processScanResultsAsync(request, project.getId(), scanId, null, request.getFilters());
-            }
-
-        } catch (MachinaException | CheckmarxException e) {
-            log.error("Error occurred while processing results for {}{}", request.getTeam(), request.getProject(), e);
-            CompletableFuture<ScanResults> x = new CompletableFuture<>();
-            x.completeExceptionally(e);
-            return x;
-        }
-    }
-
-    private void getCxFields(CxProject project, ScanRequest request) {
-        if(project == null) { return; }
-
-        Map<String, String> fields = new HashMap<>();
-        for(CxProject.CustomField field : project.getCustomFields()){
-            String name = field.getName();
-            String value = field.getValue();
-            if(!ScanUtils.empty(name) && !ScanUtils.empty(value)) {
-                fields.put(name, value);
-            }
-        }
-        if(!ScanUtils.empty(cxProperties.getJiraProjectField())){
-            String jiraProject = fields.get(cxProperties.getJiraProjectField());
-            if(!ScanUtils.empty(jiraProject)) {
-                request.getBugTracker().setProjectKey(jiraProject);
-            }
-        }
-        if(!ScanUtils.empty(cxProperties.getJiraIssuetypeField())) {
-            String jiraIssuetype = fields.get(cxProperties.getJiraIssuetypeField());
-            if (!ScanUtils.empty(jiraIssuetype)) {
-                request.getBugTracker().setIssueType(jiraIssuetype);
-            }
-        }
-        if(!ScanUtils.empty(cxProperties.getJiraCustomField()) &&
-                (fields.get(cxProperties.getJiraCustomField()) != null) && !fields.get(cxProperties.getJiraCustomField()).isEmpty()){
-            request.getBugTracker().setFields(ScanUtils.getCustomFieldsFromCx(fields.get(cxProperties.getJiraCustomField())));
-        }
-
-        if(!ScanUtils.empty(cxProperties.getJiraAssigneeField())){
-            String assignee = fields.get(cxProperties.getJiraAssigneeField());
-            if(!ScanUtils.empty(assignee)) {
-                request.getBugTracker().setAssignee(assignee);
-            }
-        }
-
-        request.setCxFields(fields);
-    }
-
     /**
      * Process Projects in batch mode - JIRA ONLY
      */
@@ -214,7 +125,7 @@ public class FlowService {
                 helperService.getShortUid(request); //update new request object with a unique id for thread log monitoring
                 request.setProject(name);
                 request.setApplication(name);
-                processes.add(cxGetResults(request, project));
+                processes.add(resultsService.cxGetResults(request, project));
             }
             log.info("Waiting for processing to complete");
             processes.forEach(CompletableFuture::join);
