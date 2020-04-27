@@ -8,7 +8,10 @@ import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Builder;
+import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -44,11 +47,10 @@ public class GitLabSecurityDasbhoard implements IssueTracker {
         filename = ScanUtils.getFilename(request, filename);
         request.setFilename(filename);
         log.info("Creating file {}", filename);
-        log.info("Deleting if already exists");
         try {
             Files.deleteIfExists(Paths.get(filename));
             Files.createFile(Paths.get(filename));
-        } catch (IOException e){
+        } catch (IOException e) {
             log.error("Issue deleting existing file or writing initial {}", filename, e);
         }
     }
@@ -56,30 +58,62 @@ public class GitLabSecurityDasbhoard implements IssueTracker {
     @Override
     public void complete(ScanRequest request, ScanResults results) throws MachinaException {
         log.info("Finalizing Dashboard output");
-
-        JSONObject report = new JSONObject();
-        JSONArray vulnerabilities = new JSONArray();
-        vulnerabilities.p
-
-
+        List<Vulnerability> vulns = new ArrayList<>();
+        Scanner scanner = Scanner.builder().build();
+        results.getXIssues().forEach( issue -> {
+            issue.getDetails().forEach( (k,v) -> {
+                Vulnerability vuln = Vulnerability.builder()
+                        .category("sast")
+                        .id(issue.getVulnerability().concat(":").concat(issue.getFilename()).concat(":").concat(k.toString()))
+                        .name(issue.getVulnerability())
+                        .message(issue.getVulnerability().concat(" found in code"))
+                        .description(issue.getVulnerability())
+                        .severity(issue.getSeverity())
+                        .confidence(issue.getSeverity())
+                        .solution(issue.getLink())
+                        .scanner(scanner)
+                        .identifiers(getIdentifiers(issue))
+                        .location(
+                                Location.builder()
+                                        .file(issue.getFilename())
+                                        .startLine(k)
+                                        .endLine(k)
+                                        .build()
+                        )
+                        .build();
+                vulns.add(vuln);
+            });
+        });
+        SecurityDashboard report  = SecurityDashboard.builder()
+                .vulnerabilities(vulns)
+                .build();
         try {
             ObjectMapper mapper = new ObjectMapper();
             mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-            if(request != null && results != null) {
-                mapper.writeValue(new File(request.getFilename()), results);
-            } else {
-                log.error("No request or results provided");
-                throw new MachinaException();
-            }
-
+            mapper.writeValue(new File(request.getFilename()), report);
         } catch (IOException e) {
             log.error("Issue occurred while writing file {}", request.getFilename(), e);
             throw new MachinaException();
         }
     }
 
-    public JSONArray getVulnerabilityObj(ScanResults.XIssue issue){
-        return new JSONArray();
+    private List<Identifier> getIdentifiers(ScanResults.XIssue issue){
+        List<Identifier> identifiers = new ArrayList<>();
+        identifiers.add(
+                Identifier.builder()
+                        .type("checkmarx_issue")
+                        .value("Checkmarx - ".concat(issue.getVulnerability()))
+                        .url(issue.getLink())
+                        .build()
+        );
+        identifiers.add(
+                Identifier.builder()
+                        .type("cwe")
+                        .value(issue.getCwe())
+                        .url(String.format(flowProperties.getMitreUrl(), issue.getCwe()))
+                        .build()
+        );
+        return identifiers;
     }
 
     @Override
@@ -127,4 +161,78 @@ public class GitLabSecurityDasbhoard implements IssueTracker {
         return false;
     }
 
+    @Data
+    @Builder
+    public static class SecurityDashboard {
+        @JsonProperty("version")
+        @Builder.Default
+        public Double version = 2.0;
+        @JsonProperty("vulnerabilities")
+        public List<Vulnerability> vulnerabilities = null;
+        @JsonProperty("remediations")
+        public List<String> remediations;
+    }
+
+    @Data
+    @Builder
+    public static class Vulnerability {
+        @JsonProperty("id")
+        public String id;
+        @JsonProperty("category")
+        @Builder.Default
+        public String category = "sast";
+        @JsonProperty("name")
+        public String name;
+        @JsonProperty("message")
+        public String message;
+        @JsonProperty("description")
+        public String description;
+        @JsonProperty("location")
+        public Location location;
+        @JsonProperty("severity")
+        public String severity;
+        @JsonProperty("confidence")
+        public String confidence;
+        @JsonProperty("solution")
+        public String solution;
+        @JsonProperty("scanner")
+        public Scanner scanner;
+        @JsonProperty("identifiers")
+        public List<Identifier> identifiers;
+    }
+
+    @Data
+    @Builder
+    public static class Scanner {
+        @JsonProperty("id")
+        @Builder.Default
+        public String id = "Checkmarx";
+        @JsonProperty("name")
+        @Builder.Default
+        public String name = "Checkmarx";
+    }
+
+    @Data
+    @Builder
+    public static class Location {
+        @JsonProperty("file")
+        public String file;
+        @JsonProperty("start_line")
+        public Integer startLine;
+        @JsonProperty("end_line")
+        public Integer endLine;
+    }
+
+    @Data
+    @Builder
+    public static class Identifier {
+        @JsonProperty("type")
+        public String type;
+        @JsonProperty("name")
+        public String name;
+        @JsonProperty("value")
+        public String value;
+        @JsonProperty("url")
+        public String url;
+    }
 }
