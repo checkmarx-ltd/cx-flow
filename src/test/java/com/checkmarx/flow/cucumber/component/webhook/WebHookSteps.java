@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 @SpringBootTest(classes = { CxFlowApplication.class, GitHubTestUtils.class})
 @Slf4j
 public class WebHookSteps {
-    private static final String REQUEST_FILENAME = "github-push-minimal.json";
+    private static final String REQUEST_FILENAME = "github-push.json";
 
     private final List<CompletableFuture<Long>> requestSendingTasks = new ArrayList<>();
 
