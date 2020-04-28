@@ -342,8 +342,11 @@ public class GitHubController {
                 }
             }
             emails.add(event.getPusher().getEmail());
-            emails.add(event.getRepository().getOwner().getEmail().toString());
-
+            if(event.getRepository().getOwner() != null && 
+                    event.getRepository().getOwner().getEmail() != null && 
+                    !ScanUtils.empty(event.getRepository().getOwner().getEmail().toString())){
+                emails.add(event.getRepository().getOwner().getEmail().toString());
+            }
             //build request object
             Repository repository = event.getRepository();
             String gitUrl = repository.getCloneUrl();
