@@ -111,7 +111,7 @@ Feature: parse, and then publish processing given SAST XML results, findings sho
     Then the call execution should throw a JiraClientRunTimeException since JIRA is un-accessible
 
 
-  @Integration @Negative_test @Error_Handling
+  @Skip @Integration @Negative_test @Error_Handling
   Scenario: Fail to publish tickets to JIRA environment
     Given target is JIRA
     And Cx-Flow is configured with invalid project key
