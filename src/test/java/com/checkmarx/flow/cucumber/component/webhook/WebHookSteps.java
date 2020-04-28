@@ -1,6 +1,7 @@
 package com.checkmarx.flow.cucumber.component.webhook;
 
 import com.checkmarx.flow.CxFlowApplication;
+import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 import com.checkmarx.flow.utils.github.GitHubTestUtils;
 import com.checkmarx.flow.utils.github.GitHubTestUtilsImpl;
@@ -8,12 +9,13 @@ import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
 import org.awaitility.Awaitility;
 import org.junit.Assert;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.web.client.RestTemplate;
@@ -24,20 +26,25 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
+/**
+ * Send N requests to the GitHub controller with a fixed interval (without waiting for responses).
+ * Wait until all the responses are received.
+ * Check the timing for each of the responses.
+ */
 @SpringBootTest(classes = { CxFlowApplication.class, GitHubTestUtils.class})
 @Slf4j
+@RequiredArgsConstructor
 public class WebHookSteps {
     private static final String REQUEST_FILENAME = "github-push.json";
 
     private final List<CompletableFuture<Long>> requestSendingTasks = new ArrayList<>();
 
-    @Autowired
-    private GitHubTestUtilsImpl testUtils;
+    private final GitHubTestUtilsImpl testUtils;
 
     private HttpEntity<String> webHookRequest;
     private String cxFlowPort;
 
-    Properties testProperties;
+    private Properties testProperties;
 
     @Before("@WebHook")
     public void loadProperties() throws IOException {
@@ -46,7 +53,14 @@ public class WebHookSteps {
 
     @Given("CxFlow is running as a service")
     public void runAsService() {
-        cxFlowPort = TestUtils.runCxFlowAsService();
+        ConfigurableApplicationContext context = TestUtils.runCxFlowAsService();
+        List<String> branchesAllowedForScan = context.getBean(FlowProperties.class).getBranches();
+
+        // As a result of this, the automation won't start in the background. This allows to avoid orphaned SAST scans.
+        // The automation flow is asynchronous, so request timing won't change.
+        branchesAllowedForScan.clear();
+
+        cxFlowPort = context.getEnvironment().getProperty("server.port");
     }
 
     @When("GitHub sends WebHook requests to CxFlow {int} times per second")
