@@ -389,6 +389,13 @@ public class ScanUtils {
         return request;
     }
 
+    private static String convertWithStream(Map<?, ?> map) {
+        String mapAsString = map.keySet().stream()
+                .map(key -> key + "=" + map.get(key))
+                .collect(Collectors.joining(", ", "{", "}"));
+        return mapAsString;
+    }
+
     private static Map<FindingSeverity, Integer> getThresholdsMap(FlowOverride.Thresholds thresholds) {
 
         Map<FindingSeverity, Integer> map = new HashMap<>();
