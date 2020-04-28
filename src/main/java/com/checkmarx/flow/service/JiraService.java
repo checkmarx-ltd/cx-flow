@@ -747,7 +747,8 @@ public class JiraService {
     private void loadCustomFields(String jiraProject, String issueType, boolean force) {
         log.debug("Loading all custom fields");
         Map<String, String> fields = new HashMap<>();
-        if(!force && this.customFields.containsKey(jiraProject.concat(issueType))){
+        String customFieldKey = jiraProject.concat(issueType);
+        if(!force && this.customFields.containsKey(customFieldKey)){
             return;
         }
         GetCreateIssueMetadataOptions options;
@@ -764,7 +765,7 @@ public class JiraService {
                 fields.put(name, id);
             });
         });
-        this.customFields.put(jiraProject.concat(issueType), fields);
+        this.customFields.put(customFieldKey, fields);
     }
 
     private String getCustomFieldByName(String jiraProject, String issueType, String fieldName) {
