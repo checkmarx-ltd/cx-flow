@@ -1,7 +1,6 @@
 package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.dto.ScanDetails;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.flow.exception.MachinaException;
@@ -16,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,8 +28,6 @@ import static com.checkmarx.flow.exception.ExitThrowable.exit;
 @Slf4j
 public class FlowService {
 
-    private static final String ERROR_BREAK_MSG = "Exiting with Error code 10 due to issues present";
-
     private final CxClient cxService;
     private final EmailService emailService;
     private final CxProperties cxProperties;
@@ -39,8 +35,6 @@ public class FlowService {
     private final ResultsService resultsService;
     private final HelperService helperService;
     private final SastScannerService sastScannerService;
-
-    private ScanDetails scanDetails = null;
 
     @Async("webHook")
     public void initiateAutomation(ScanRequest request) {
@@ -68,20 +62,6 @@ public class FlowService {
                     .concat(request.getRepoUrl()).concat("  Error: ").concat(e.getMessage()));
             emailCtx.put("heading","Error occurred during scan");
             emailService.sendmail(request.getEmail(), "Error occurred for ".concat(request.getNamespace()).concat("/").concat(request.getRepoName()), emailCtx, "message-error.html");
-        }
-    }
-
-    public void cxOsaParseResults(ScanRequest request, File file, File libs) throws ExitThrowable {
-        try {
-            ScanResults results = cxService.getOsaReportContent(file, libs, request.getFilters());
-            resultsService.processResults(request, results, scanDetails);
-            if(flowProperties.isBreakBuild() && results !=null && results.getXIssues()!=null && !results.getXIssues().isEmpty()){
-                log.error(ERROR_BREAK_MSG);
-                exit(10);
-            }
-        } catch (MachinaException | CheckmarxException e) {
-            log.error("Error occurred while processing results file(s)", e);
-            exit(3);
         }
     }
 

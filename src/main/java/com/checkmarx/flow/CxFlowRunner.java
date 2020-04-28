@@ -6,10 +6,7 @@ import com.checkmarx.flow.dto.ExitCode;
 import com.checkmarx.flow.dto.FlowOverride;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.ExitThrowable;
-import com.checkmarx.flow.service.FlowService;
-import com.checkmarx.flow.service.HelperService;
-import com.checkmarx.flow.service.ResultsService;
-import com.checkmarx.flow.service.SastScannerService;
+import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
@@ -57,6 +54,7 @@ public class CxFlowRunner implements ApplicationRunner {
     private final SastScannerService sastScannerService;
     private final List<ThreadPoolTaskExecutor> executors;
     private final ResultsService resultsService;
+    private final OsaScannerService osaScannerService;
 
     @Override
     public void run(ApplicationArguments args) throws InvocationTargetException {
@@ -455,7 +453,7 @@ public class CxFlowRunner implements ApplicationRunner {
         sastScannerService.cxFullScan(request, path);
     }
     private void cxOsaParse(ScanRequest request, File file, File libs) throws ExitThrowable {
-        flowService.cxOsaParseResults(request, file, libs);
+        osaScannerService.cxOsaParseResults(request, file, libs);
     }
     private void cxParse(ScanRequest request, File file) throws ExitThrowable {
         sastScannerService.cxParseResults(request, file);

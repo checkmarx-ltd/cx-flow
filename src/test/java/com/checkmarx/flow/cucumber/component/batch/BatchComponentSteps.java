@@ -5,10 +5,7 @@ import com.checkmarx.flow.CxFlowRunner;
 import com.checkmarx.flow.config.*;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 import com.checkmarx.flow.cucumber.component.scan.ScanFixture;
-import com.checkmarx.flow.service.FlowService;
-import com.checkmarx.flow.service.HelperService;
-import com.checkmarx.flow.service.ResultsService;
-import com.checkmarx.flow.service.SastScannerService;
+import com.checkmarx.flow.service.*;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
@@ -40,13 +37,15 @@ public class BatchComponentSteps {
     private final CxClient cxClient;
     private final List<ThreadPoolTaskExecutor> executors;
     private final ResultsService resultsService;
+    private final OsaScannerService osaScannerService;
     private CxFlowRunner cxFlowRunner;
     private String projectName;
     private String teamName;
     private SastScannerService sastScannerService;
 
     public BatchComponentSteps(FlowProperties flowProperties, CxProperties cxProperties, JiraProperties jiraProperties, GitHubProperties gitHubProperties, GitLabProperties gitLabProperties,
-                               ADOProperties adoProperties, FlowService flowService, HelperService helperService, CxClient cxClient, List<ThreadPoolTaskExecutor> executors, SastScannerService sastScannerService, ResultsService resultsService) {
+                               ADOProperties adoProperties, FlowService flowService, HelperService helperService, CxClient cxClient, List<ThreadPoolTaskExecutor> executors,
+                               SastScannerService sastScannerService, ResultsService resultsService, OsaScannerService osaScannerService) {
         this.flowProperties = flowProperties;
         this.cxProperties = cxProperties;
         this.jiraProperties = jiraProperties;
@@ -58,6 +57,7 @@ public class BatchComponentSteps {
         this.cxClient = cxClient;
         this.executors = executors;
         this.resultsService = resultsService;
+        this.osaScannerService = osaScannerService;
     }
 
     @Given("SAST client is mocked - to allow tests to pass without active SAST environment")
@@ -65,7 +65,7 @@ public class BatchComponentSteps {
         when(cxClient.getTeamId(anyString())).thenReturn(ScanFixture.TEAM_ID);
         when(cxClient.getProjects(anyString())).thenReturn(ScanFixture.getProjects());
         when(cxClient.getReportContentByScanId(ScanFixture.SCAN_ID, ScanFixture.getScanFilters())).thenReturn(ScanFixture.getScanResults());
-        cxFlowRunner = new CxFlowRunner(flowProperties, cxProperties, jiraProperties, gitHubProperties, gitLabProperties, adoProperties, helperService, flowService, sastScannerService, executors, resultsService);
+        cxFlowRunner = new CxFlowRunner(flowProperties, cxProperties, jiraProperties, gitHubProperties, gitLabProperties, adoProperties, helperService, flowService, sastScannerService, executors, resultsService, osaScannerService);
     }
 
     @Given("project is provided: {string} and team: {string}")
