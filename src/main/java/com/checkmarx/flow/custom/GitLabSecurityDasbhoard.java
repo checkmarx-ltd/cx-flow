@@ -35,6 +35,7 @@ public class GitLabSecurityDasbhoard implements IssueTracker {
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(GitLabSecurityDasbhoard.class);
     private final GitLabProperties properties;
     private final FlowProperties flowProperties;
+    private final String ISSUE_FORMAT = "%s @ %s : %d";
 
     public GitLabSecurityDasbhoard(GitLabProperties properties, FlowProperties flowProperties) {
         this.properties = properties;
@@ -64,9 +65,10 @@ public class GitLabSecurityDasbhoard implements IssueTracker {
             issue.getDetails().forEach( (k,v) -> {
                 Vulnerability vuln = Vulnerability.builder()
                         .category("sast")
-                        .id(issue.getVulnerability().concat(":").concat(issue.getFilename()).concat(":").concat(k.toString()))
+                        .id(issue.getCwe())
+                        .cve(issue.getCwe())
                         .name(issue.getVulnerability())
-                        .message(issue.getVulnerability().concat(" found in code"))
+                        .message(String.format(ISSUE_FORMAT, issue.getVulnerability(), issue.getFilename(), k))
                         .description(issue.getVulnerability())
                         .severity(issue.getSeverity())
                         .confidence(issue.getSeverity())
@@ -101,14 +103,16 @@ public class GitLabSecurityDasbhoard implements IssueTracker {
         List<Identifier> identifiers = new ArrayList<>();
         identifiers.add(
                 Identifier.builder()
-                        .type("checkmarx_issue")
-                        .value("Checkmarx - ".concat(issue.getVulnerability()))
+                        .type("checkmarx_finding")
+                        .name("Checkmarx-".concat(issue.getVulnerability()))
+                        .value(issue.getVulnerability())
                         .url(issue.getLink())
                         .build()
         );
         identifiers.add(
                 Identifier.builder()
                         .type("cwe")
+                        .name("CWE-".concat(issue.getCwe()))
                         .value(issue.getCwe())
                         .url(String.format(flowProperties.getMitreUrl(), issue.getCwe()))
                         .build()
@@ -168,7 +172,7 @@ public class GitLabSecurityDasbhoard implements IssueTracker {
         @Builder.Default
         public Double version = 2.0;
         @JsonProperty("vulnerabilities")
-        public List<Vulnerability> vulnerabilities = null;
+        public List<Vulnerability> vulnerabilities;
         @JsonProperty("remediations")
         public List<String> remediations;
     }
@@ -178,6 +182,8 @@ public class GitLabSecurityDasbhoard implements IssueTracker {
     public static class Vulnerability {
         @JsonProperty("id")
         public String id;
+        @JsonProperty("cve")
+        public String cve;
         @JsonProperty("category")
         @Builder.Default
         public String category = "sast";
@@ -221,6 +227,21 @@ public class GitLabSecurityDasbhoard implements IssueTracker {
         public Integer startLine;
         @JsonProperty("end_line")
         public Integer endLine;
+        @Builder.Default
+        @JsonProperty("class")
+        public String clazz = "N/A";
+        @Builder.Default
+        @JsonProperty("method")
+        public String method = "N/A";
+        @JsonProperty("dependency")
+        public Dependency dependency;
+    }
+
+    @Data
+    @Builder
+    public static class Dependency {
+        @JsonProperty("package")
+        public Object pkg;
     }
 
     @Data
