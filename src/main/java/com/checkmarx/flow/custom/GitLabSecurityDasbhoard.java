@@ -65,8 +65,8 @@ public class GitLabSecurityDasbhoard implements IssueTracker {
             issue.getDetails().forEach( (k,v) -> {
                 Vulnerability vuln = Vulnerability.builder()
                         .category("sast")
-                        .id(issue.getCwe())
-                        .cve(issue.getCwe())
+                        .id(issue.getVulnerability().concat(":").concat(issue.getFilename()).concat(":").concat(k.toString()))
+                        .cve(issue.getVulnerability().concat(":").concat(issue.getFilename()).concat(":").concat(k.toString()))
                         .name(issue.getVulnerability())
                         .message(String.format(ISSUE_FORMAT, issue.getVulnerability(), issue.getFilename(), k))
                         .description(issue.getVulnerability())
