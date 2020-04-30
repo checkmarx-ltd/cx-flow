@@ -1,39 +1,24 @@
 package com.checkmarx.flow.service;
 
-import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.utils.ScanUtils;
-import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.ScanResults;
-import com.checkmarx.sdk.dto.cx.CxProject;
-import com.checkmarx.sdk.exception.CheckmarxException;
-import com.checkmarx.sdk.service.CxClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-
-import static com.checkmarx.flow.exception.ExitThrowable.exit;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class FlowService {
 
-    private final CxClient cxService;
     private final EmailService emailService;
-    private final CxProperties cxProperties;
-    private final FlowProperties flowProperties;
-    private final ResultsService resultsService;
-    private final HelperService helperService;
     private final SastScannerService sastScannerService;
 
     @Async("webHook")
@@ -62,43 +47,6 @@ public class FlowService {
                     .concat(request.getRepoUrl()).concat("  Error: ").concat(e.getMessage()));
             emailCtx.put("heading","Error occurred during scan");
             emailService.sendmail(request.getEmail(), "Error occurred for ".concat(request.getNamespace()).concat("/").concat(request.getRepoName()), emailCtx, "message-error.html");
-        }
-    }
-
-    /**
-     * Process Projects in batch mode - JIRA ONLY
-     */
-    public void cxBatch(ScanRequest originalRequest) throws ExitThrowable {
-        try {
-            List<CxProject> projects;
-            List<CompletableFuture<ScanResults>> processes = new ArrayList<>();
-            //Get all projects
-            if(ScanUtils.empty(originalRequest.getTeam())){
-                projects = cxService.getProjects();
-            }
-            else{ //Get projects for the provided team
-                String team = originalRequest.getTeam();
-                if(!team.startsWith(cxProperties.getTeamPathSeparator())){
-                    team = cxProperties.getTeamPathSeparator().concat(team);
-                }
-                String teamId = cxService.getTeamId(team);
-                projects = cxService.getProjects(teamId);
-            }
-            for(CxProject project: projects){
-                ScanRequest request = new ScanRequest(originalRequest);
-                String name = project.getName().replaceAll("[^a-zA-Z0-9-_]+","_");
-                //TODO set team when entire instance batch mode
-                helperService.getShortUid(request); //update new request object with a unique id for thread log monitoring
-                request.setProject(name);
-                request.setApplication(name);
-                processes.add(resultsService.cxGetResults(request, project));
-            }
-            log.info("Waiting for processing to complete");
-            processes.forEach(CompletableFuture::join);
-
-        } catch ( CheckmarxException e) {
-            log.error("Error occurred while processing projects in batch mode", e);
-            exit(3);
         }
     }
 }

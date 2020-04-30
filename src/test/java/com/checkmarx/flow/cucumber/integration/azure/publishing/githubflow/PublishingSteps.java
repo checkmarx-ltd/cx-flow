@@ -152,24 +152,7 @@ public class PublishingSteps extends PublishingStepsBase {
     }
 
     private GitHubController getGitHubControllerInstance() {
-        FlowService flowService = new FlowService(
-                cxService,
-                null,
-                cxProperties,
-                flowProperties,
-                new ResultsService(
-                        cxService,
-                        null,
-                        new JiraService(new JiraProperties(), flowProperties),
-                        new IssueService(flowProperties),
-                        gitHubService,
-                        gitLabService,
-                        bitBucketService,
-                        adoService,
-                        emailService,
-                        cxProperties,
-                        flowProperties
-                ),helperService, sastScannerService);
+        FlowService flowService = new FlowService(emailService, sastScannerService);
 
         return new GitHubController(gitHubProperties, flowProperties, cxProperties,
                 null, flowService, helperService, gitHubService);

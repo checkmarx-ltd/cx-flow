@@ -10,6 +10,7 @@ import com.checkmarx.flow.utils.ZipUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.ScanResults;
+import com.checkmarx.sdk.dto.cx.CxProject;
 import com.checkmarx.sdk.dto.cx.CxScanParams;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
@@ -24,7 +25,9 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -174,6 +177,43 @@ public class SastScannerService {
             }
         } catch (MachinaException | CheckmarxException e) {
             log.error("Error occurred while processing results file", e);
+            exit(3);
+        }
+    }
+
+    /**
+     * Process Projects in batch mode - JIRA ONLY
+     */
+    public void cxBatch(ScanRequest originalRequest) throws ExitThrowable {
+        try {
+            List<CxProject> projects;
+            List<CompletableFuture<ScanResults>> processes = new ArrayList<>();
+            //Get all projects
+            if(ScanUtils.empty(originalRequest.getTeam())){
+                projects = cxService.getProjects();
+            }
+            else{ //Get projects for the provided team
+                String team = originalRequest.getTeam();
+                if(!team.startsWith(cxProperties.getTeamPathSeparator())){
+                    team = cxProperties.getTeamPathSeparator().concat(team);
+                }
+                String teamId = cxService.getTeamId(team);
+                projects = cxService.getProjects(teamId);
+            }
+            for(CxProject project: projects){
+                ScanRequest request = new ScanRequest(originalRequest);
+                String name = project.getName().replaceAll("[^a-zA-Z0-9-_]+","_");
+                //TODO set team when entire instance batch mode
+                helperService.getShortUid(request); //update new request object with a unique id for thread log monitoring
+                request.setProject(name);
+                request.setApplication(name);
+                processes.add(resultsService.cxGetResults(request, project));
+            }
+            log.info("Waiting for processing to complete");
+            processes.forEach(CompletableFuture::join);
+
+        } catch ( CheckmarxException e) {
+            log.error("Error occurred while processing projects in batch mode", e);
             exit(3);
         }
     }

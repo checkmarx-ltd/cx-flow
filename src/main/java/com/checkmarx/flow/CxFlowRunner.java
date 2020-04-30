@@ -459,7 +459,7 @@ public class CxFlowRunner implements ApplicationRunner {
         sastScannerService.cxParseResults(request, file);
     }
     private void cxBatch(ScanRequest request) throws ExitThrowable {
-        flowService.cxBatch(request);
+        sastScannerService.cxBatch(request);
     }
     private void cxResults(ScanRequest request) throws ExitThrowable {
         ScanResults results = resultsService.cxGetResults(request, null).join();
