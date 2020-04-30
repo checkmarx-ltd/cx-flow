@@ -42,6 +42,12 @@ public class ADOIssueTracker implements IssueTracker {
     private static final String WIQ_APP = "Select [System.Id], [System.Title], " +
             "[System.State], [System.State], [System.WorkItemType] From WorkItems Where " +
             "[System.TeamProject] = @project AND [Tags] Contains '%s' AND [Tags] Contains '%s:%s'";
+    private static final String WIQ_PROJECT_NAME = "Select [System.Id], [System.Title], " +
+            "[System.State], [System.State], [System.WorkItemType] From WorkItems Where " +
+            "[System.TeamProject] = @project ";
+    private static final String WIQ_PROJECT_NAME_AND_NAMESPACE = "Select [System.Id], [System.Title], " +
+            "[System.State], [System.State], [System.WorkItemType] From WorkItems Where " +
+            "[System.TeamProject] = @project AND [Tags] Contains '%s'";
     private static final Logger log = LoggerFactory.getLogger(ADOIssueTracker.class);
 
     private final RestTemplate restTemplate;
@@ -62,7 +68,7 @@ public class ADOIssueTracker implements IssueTracker {
         String issueBody = request.getAdditionalMetadata(Constants.ADO_ISSUE_BODY_KEY);
         String openedState = request.getAdditionalMetadata(Constants.ADO_OPENED_STATE_KEY);
         String closedState = request.getAdditionalMetadata(Constants.ADO_CLOSED_STATE_KEY);
-
+        
         if(ScanUtils.empty(issueType)){
             issueType = properties.getIssueType();
             request.putAdditionalMetadata(Constants.ADO_ISSUE_KEY, issueType);
@@ -109,13 +115,22 @@ public class ADOIssueTracker implements IssueTracker {
         log.info("Executing getIssues Azure API call");
         List<Issue> issues = new ArrayList<>();
 
-        String projectName = getProjectName(request);
-        URI endpoint = getSearchEndpoint(projectName, request);
+        String projectName = calculateProjectName(request);
+
+        URI  endpoint = getSearchEndpoint(projectName, request);
 
         String issueBody = request.getAdditionalMetadata(Constants.ADO_ISSUE_BODY_KEY);
         String wiq;
+        //if there are project and namespace in properties on the ado section, they will be used for the URL
+        if(!StringUtils.isEmpty(properties.getProjectName())){
+            if(!StringUtils.isEmpty(properties.getNamespace())){
+                wiq = String.format(WIQ_PROJECT_NAME_AND_NAMESPACE,properties.getNamespace());
+            }else {
+                wiq = String.format(WIQ_PROJECT_NAME);
+            }
+        }
         /*Namespace/Repo/Branch provided*/
-        if(!flowProperties.isTrackApplicationOnly() &&
+       else if(!flowProperties.isTrackApplicationOnly() &&
                 !ScanUtils.empty(request.getNamespace()) &&
                 !ScanUtils.empty(request.getRepoName()) &&
                 !ScanUtils.empty(request.getBranch())) {
@@ -193,16 +208,23 @@ public class ADOIssueTracker implements IssueTracker {
         log.debug("Executing createIssue Azure API call");
         String issueBody = request.getAdditionalMetadata(Constants.ADO_ISSUE_BODY_KEY);
 
-        String projectName = getProjectName(request);
+        String projectName = calculateProjectName(request);
         URI endpoint = getCreationEndpoint(projectName, request);
         /*Namespace/Repo/Branch provided*/
         StringBuilder tags = new StringBuilder();
         tags.append(request.getProduct().getProduct()).append("; ");
-        if(!flowProperties.isTrackApplicationOnly() &&
+        
+        if(!StringUtils.isEmpty(properties.getProjectName())){
+            if(!StringUtils.isEmpty(properties.getNamespace())){
+                tags.append(properties.getOwnerTagPrefix()).append(":").append(properties.getNamespace()).append("; ");
+            }
+        }
+        else if(!flowProperties.isTrackApplicationOnly() &&
                 !ScanUtils.empty(request.getNamespace()) &&
                 !ScanUtils.empty(request.getRepoName()) &&
                 !ScanUtils.empty(request.getBranch())) {
-                    tags.append(properties.getOwnerTagPrefix()).append(":").append(request.getNamespace()).append("; ");
+            
+            tags.append(properties.getOwnerTagPrefix()).append(":").append(request.getNamespace()).append("; ");
                     tags.append(properties.getRepoTagPrefix()).append(":").append(request.getRepoName()).append("; ");
                     tags.append(properties.getBranchLabelPrefix()).append(":").append(request.getBranch());
         }/*Only application provided*/
@@ -250,9 +272,14 @@ public class ADOIssueTracker implements IssueTracker {
         }
     }
 
-    private String getProjectName(ScanRequest request) throws MachinaException {
+    private String calculateProjectName(ScanRequest request) throws MachinaException {
         log.debug("Determining target ADO project.");
-        String adoProject = request.getProject();
+
+        String adoProject = properties.getProjectName();
+        if(StringUtils.isEmpty(adoProject)) {
+            adoProject = request.getProject();
+        }
+        
         log.debug("Checking main project field: {}", adoProject);
 
         if (StringUtils.isEmpty(adoProject)) {
@@ -280,22 +307,38 @@ public class ADOIssueTracker implements IssueTracker {
         String urlTemplate = String.format(CREATE_WORK_ITEM_URL_TEMPLATE, baseUrl);
         String workItemType = request.getAdditionalMetadata(Constants.ADO_ISSUE_KEY);
 
+        String adoNamespace;
+
+        if(!StringUtils.isEmpty(properties.getNamespace())){
+            adoNamespace = properties.getNamespace();
+        }else{
+            adoNamespace = request.getNamespace();
+        }
+        
         URI result = new DefaultUriBuilderFactory()
-                .expand(urlTemplate, request.getNamespace(), adoProject, workItemType, properties.getApiVersion());
+                .expand(urlTemplate, adoNamespace, adoProject, workItemType, properties.getApiVersion());
 
         log.debug("Endpoint URI: {}", result);
         return result;
     }
-
+    
     private URI getSearchEndpoint(String adoProject, ScanRequest request) {
         String baseUrl = request.getAdditionalMetadata(Constants.ADO_BASE_URL_KEY);
         String urlTemplate = String.format(SEARCH_WORK_ITEM_URL_TEMPLATE, baseUrl);
+        String adoNamespace;
+        
+        if(!StringUtils.isEmpty(properties.getNamespace())){
+            adoNamespace = properties.getNamespace();
+        }else{
+            adoNamespace = request.getNamespace();
+        }
         URI result = new DefaultUriBuilderFactory()
-                .expand(urlTemplate, request.getNamespace(), adoProject, properties.getApiVersion());
+                .expand(urlTemplate, adoNamespace, adoProject, properties.getApiVersion());
 
         log.debug("Endpoint URI: {}", result);
         return result;
     }
+    
     @Override
     public void closeIssue(Issue issue, ScanRequest request) {
         log.debug("Executing closeIssue Azure API call");
