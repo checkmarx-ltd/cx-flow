@@ -187,7 +187,7 @@ public class JiraService {
             log.error("Namespace/Repo/Branch or App must be provided in order to properly track ");
             throw new MachinaRuntimeException();
         }
-        log.debug(jql);
+        log.debug("jql query : {}", jql);
         HashSet<String> fields = new HashSet<>();
         fields.add("key");
         fields.add("project");
@@ -200,6 +200,7 @@ public class JiraService {
         Promise<SearchResult> searchJqlPromise = this.client.getSearchClient().searchJql(jql, JiraConstants.MAX_JQL_RESULTS, 0, fields);
         for (Issue issue : searchJqlPromise.claim().getIssues()) {
             issues.add(issue);
+            log.info("issue : {}", issue);
         }
         return issues;
     }
@@ -213,10 +214,10 @@ public class JiraService {
 
         Project project = this.projectClient.getProject(projectKey).claim();
         Iterator<IssueType> issueTypes = project.getIssueTypes().iterator();
-
         while (issueTypes.hasNext()) {
             IssueType it = issueTypes.next();
             issueTypesList.add(it.getName());
+            log.info("getIssueType iterator: {}", it.getName());
             if (it.getName().equals(type)) {
                 return it;
             }
