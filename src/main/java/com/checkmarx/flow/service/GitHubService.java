@@ -91,8 +91,9 @@ public class GitHubService extends RepoService {
 
     void startBlockMerge(ScanRequest request, String url){
         if(properties.isBlockMerge()) {
+            final String PULL_REQUEST_STATUS = "pending";
             HttpEntity<?> httpEntity = new HttpEntity<>(
-                    getJSONStatus("pending", url, "Checkmarx Scan Initiated").toString(),
+                    getJSONStatus(PULL_REQUEST_STATUS, url, "Checkmarx Scan Initiated").toString(),
                     createAuthHeaders()
             );
             String statusApiUrl = request.getAdditionalMetadata(STATUSES_URL_KEY);
@@ -100,8 +101,10 @@ public class GitHubService extends RepoService {
                 log.error(STATUSES_URL_NOT_PROVIDED);
                 return;
             }
-            log.debug("Setting pull request status: {}", statusApiUrl);
-            statusExchange(request, httpEntity, statusApiUrl, "failed to set merge status to pending");
+            log.debug("Setting pull request status to '{}': {}", PULL_REQUEST_STATUS, statusApiUrl);
+
+            String logErrorMessage = String.format("failed to set pull request status to %s", PULL_REQUEST_STATUS);
+            statusExchange(request, httpEntity, statusApiUrl, logErrorMessage);
         }
     }
 
@@ -120,19 +123,18 @@ public class GitHubService extends RepoService {
         }
     }
 
-    void endBlockMerge(ScanRequest request, ScanResults results, ScanDetails scanDetails){
-         if(properties.isBlockMerge()) {
-             String statusApiUrl = request.getAdditionalMetadata(STATUSES_URL_KEY);
-             if (ScanUtils.empty(statusApiUrl)) {
-                 log.error(STATUSES_URL_NOT_PROVIDED);
-                 return;
-             }
+    void endBlockMerge(ScanRequest request, ScanResults results, ScanDetails scanDetails) {
+        if (properties.isBlockMerge()) {
+            String statusApiUrl = request.getAdditionalMetadata(STATUSES_URL_KEY);
+            if (ScanUtils.empty(statusApiUrl)) {
+                log.error(STATUSES_URL_NOT_PROVIDED);
+                return;
+            }
 
-            HttpEntity<String> httpEntity = getStatusRequestEntity(results, new PullRequestReport(scanDetails ,request));
-
+            HttpEntity<String> httpEntity = getStatusRequestEntity(results, new PullRequestReport(scanDetails, request));
 
             log.debug("Updating pull request status: {}", statusApiUrl);
-             statusExchange(request, httpEntity, statusApiUrl, "failed to update merge status for completed scan");
+            statusExchange(request, httpEntity, statusApiUrl, "failed to update merge status for completed scan");
         } else {
             log.debug("Pull request blocking is disabled in configuration, no need to unblock.");
         }
@@ -155,6 +157,7 @@ public class GitHubService extends RepoService {
         pullRequestReport.setPullRequestResult(requestResult);
         pullRequestReport.log();
 
+        log.debug("Setting pull request status to '{}'.", statusForApi);
         JSONObject requestBody = getJSONStatus(statusForApi, results.getLink(), description);
         return new HttpEntity<>(requestBody.toString(), createAuthHeaders());
     }
