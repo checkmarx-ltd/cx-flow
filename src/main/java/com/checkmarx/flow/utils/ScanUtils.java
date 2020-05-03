@@ -157,43 +157,7 @@ public class ScanUtils {
         BugTracker bt = request.getBugTracker();
         /*Override only applicable to Simple JIRA bug*/
         if(request.getBugTracker().getType().equals(BugTracker.Type.JIRA) && override.getJira()!=null) {
-            FlowOverride.Jira jira = override.getJira();
-            if(!ScanUtils.empty(jira.getAssignee())) {
-                bt.setAssignee(jira.getAssignee());
-            }//if empty value override with null
-            if(jira.getAssignee() != null && jira.getAssignee().isEmpty()) {
-                bt.setAssignee(null);
-            }
-            if(!ScanUtils.empty(jira.getProject())) {
-                bt.setProjectKey(jira.getProject());
-            }
-            if(!ScanUtils.empty(jira.getIssueType())) {
-                bt.setIssueType(jira.getIssueType());
-            }
-            if(!ScanUtils.empty(jira.getOpenedStatus())) {
-                bt.setOpenStatus(jira.getOpenedStatus());
-            }
-            if(!ScanUtils.empty(jira.getClosedStatus())) {
-                bt.setClosedStatus(jira.getClosedStatus());
-            }
-            if(!ScanUtils.empty(jira.getOpenTransition())) {
-                bt.setOpenTransition(jira.getOpenTransition());
-            }
-            if(!ScanUtils.empty(jira.getCloseTransition())) {
-                bt.setCloseTransition(jira.getCloseTransition());
-            }
-            if(!ScanUtils.empty(jira.getCloseTransitionField())) {
-                bt.setCloseTransitionField(jira.getCloseTransitionField());
-            }
-            if(!ScanUtils.empty(jira.getCloseTransitionValue())) {
-                bt.setCloseTransitionValue(jira.getCloseTransitionValue());
-            }
-            if(jira.getFields()!=null) { //if empty, assume no fields
-                bt.setFields(jira.getFields());
-            }
-            if(jira.getPriorities() != null && !jira.getPriorities().isEmpty()) {
-                bt.setPriorities(jira.getPriorities());
-            }
+            overrideJiraBugProperties(override, bt);
         }
         request.setBugTracker(bt);
 
@@ -236,6 +200,8 @@ public class ScanUtils {
      * @return
      */
     public static ScanRequest overrideCxConfig(ScanRequest request, CxConfig override, FlowProperties flowProperties, JiraProperties jiraProperties){
+        Map<String,String> overridePropertiesMap = new HashMap<>();
+
         if(override == null || request == null || !override.getActive()){
             return request;
         }
@@ -246,28 +212,35 @@ public class ScanUtils {
             project = project.replaceAll("\\$\\{branch}", request.getBranch());
             project = project.replaceAll("[^a-zA-Z0-9-_.]+","-");
             request.setProject(project);
+            overridePropertiesMap.put("project", project);
         }
         if (!ScanUtils.empty(override.getTeam())) {
             request.setTeam(override.getTeam());
+            overridePropertiesMap.put("team", override.getTeam());
         }
         if(override.getSast() != null) {
             if (override.getSast().getIncremental() != null) {
                 request.setIncremental(override.getSast().getIncremental());
+                overridePropertiesMap.put("incremental", override.getSast().getIncremental().toString());
             }
 
             if (override.getSast().getForceScan() != null) {
                 request.setForceScan(override.getSast().getForceScan());
+                overridePropertiesMap.put("force scan", override.getSast().getForceScan().toString());
             }
 
             if (!ScanUtils.empty(override.getSast().getPreset())) {
                 request.setScanPreset(override.getSast().getPreset());
                 request.setScanPresetOverride(true);
+                overridePropertiesMap.put("scan preset", override.getSast().getPreset());
             }
             if (override.getSast().getFolderExcludes() != null) {
                 request.setExcludeFolders(Arrays.asList(override.getSast().getFolderExcludes().split(",")));
+                overridePropertiesMap.put("exclude folders", override.getSast().getFolderExcludes());
             }
             if (override.getSast().getFileExcludes() != null) {
                 request.setExcludeFiles(Arrays.asList(override.getSast().getFileExcludes().split(",")));
+                overridePropertiesMap.put("exclude files", override.getSast().getFileExcludes());
             }
         }
         try {
@@ -275,7 +248,7 @@ public class ScanUtils {
                 Object flow = override.getAdditionalProperties().get("cxFlow");
                 ObjectMapper mapper = new ObjectMapper();
                 FlowOverride flowOverride = mapper.convertValue(flow, FlowOverride.class);
-                //FlowOverride flowOverride = (FlowOverride) override.getAdditionalProperties().get("cxFlow");
+
                 if (flowOverride != null) {
                     BugTracker bt = request.getBugTracker();
                     //initial bt as NONE
@@ -297,57 +270,23 @@ public class ScanUtils {
                                     .type(bugType)
                                     .build();
                         }
-
+                        overridePropertiesMap.put("bug tracker", flowOverride.getBugTracker());
                     }
                     /*Override only applicable to Simple JIRA bug*/
                     if (bt.getType().equals(BugTracker.Type.JIRA) && flowOverride.getJira() != null) {
-                        FlowOverride.Jira jira = flowOverride.getJira();
-                        if (!ScanUtils.empty(jira.getAssignee())) {
-                            bt.setAssignee(jira.getAssignee());
-                        }//if empty value override with null
-                        if (jira.getAssignee() != null && jira.getAssignee().isEmpty()) {
-                            bt.setAssignee(null);
-                        }
-                        if (!ScanUtils.empty(jira.getProject())) {
-                            bt.setProjectKey(jira.getProject());
-                        }
-                        if (!ScanUtils.empty(jira.getIssueType())) {
-                            bt.setIssueType(jira.getIssueType());
-                        }
-                        if (!ScanUtils.empty(jira.getOpenedStatus())) {
-                            bt.setOpenStatus(jira.getOpenedStatus());
-                        }
-                        if (!ScanUtils.empty(jira.getClosedStatus())) {
-                            bt.setClosedStatus(jira.getClosedStatus());
-                        }
-                        if (!ScanUtils.empty(jira.getOpenTransition())) {
-                            bt.setOpenTransition(jira.getOpenTransition());
-                        }
-                        if (!ScanUtils.empty(jira.getCloseTransition())) {
-                            bt.setCloseTransition(jira.getCloseTransition());
-                        }
-                        if (!ScanUtils.empty(jira.getCloseTransitionField())) {
-                            bt.setCloseTransitionField(jira.getCloseTransitionField());
-                        }
-                        if (!ScanUtils.empty(jira.getCloseTransitionValue())) {
-                            bt.setCloseTransitionValue(jira.getCloseTransitionValue());
-                        }
-                        if (jira.getFields() != null) { //if empty, assume no fields
-                            bt.setFields(jira.getFields());
-                        }
-                        if (jira.getPriorities() != null && !jira.getPriorities().isEmpty()) {
-                            bt.setPriorities(jira.getPriorities());
-                        }
+                        overrideJiraBugProperties(flowOverride, bt);
                     }
 
                     request.setBugTracker(bt);
 
                     if (!ScanUtils.empty(flowOverride.getApplication())) {
                         request.setApplication(flowOverride.getApplication());
+                        overridePropertiesMap.put("application", flowOverride.getApplication());
                     }
 
                     if (!ScanUtils.empty(flowOverride.getBranches())) {
                         request.setActiveBranches(flowOverride.getBranches());
+                        overridePropertiesMap.put("active branches", flowOverride.getBranches().toArray().toString());
                     }
 
                     List<String> emails = flowOverride.getEmails();
@@ -366,8 +305,10 @@ public class ScanUtils {
                         List<Filter> filters = ScanUtils.getFilters(filtersObj.getSeverity(), filtersObj.getCwe(),
                                 filtersObj.getCategory(), filtersObj.getStatus());
                         request.setFilters(filters);
+                        overridePropertiesMap.put("filters", filters.stream().map(Object::toString).collect(Collectors.joining(",")));
                     } else if (filtersObj != null) {
                         request.setFilters(null);
+                        overridePropertiesMap.put("filters", "EMPTY");
                     }
 
                     FlowOverride.Thresholds thresholds = flowOverride.getThresholds();
@@ -380,13 +321,67 @@ public class ScanUtils {
                             if(!thresholdsMap.isEmpty()) {
                                 flowProperties.setThresholds(thresholdsMap);
                             }
+
+                        overridePropertiesMap.put("thresholds", convertMapToString(thresholdsMap));
                     } 
                 }
             }
+
+            String overridePropertiesString = convertMapToString(overridePropertiesMap);
+
+            log.info("override configuration properties from config as code file. with values: {}", overridePropertiesString);
+
         }catch (IllegalArgumentException e){
             log.warn("Issue parsing CxConfig cxFlow element", e);
         }
         return request;
+    }
+
+    private static String convertMapToString(Map<?, ?> map) {
+        String mapAsString = map.keySet().stream()
+                .map(key -> key + "=" + map.get(key))
+                .collect(Collectors.joining(", ", "{", "}"));
+        return mapAsString;
+    }
+
+    private static void overrideJiraBugProperties(FlowOverride override, BugTracker bt) {
+        FlowOverride.Jira jira = override.getJira();
+        if(!ScanUtils.empty(jira.getAssignee())) {
+            bt.setAssignee(jira.getAssignee());
+        }//if empty value override with null
+        if(jira.getAssignee() != null && jira.getAssignee().isEmpty()) {
+            bt.setAssignee(null);
+        }
+        if(!ScanUtils.empty(jira.getProject())) {
+            bt.setProjectKey(jira.getProject());
+        }
+        if(!ScanUtils.empty(jira.getIssueType())) {
+            bt.setIssueType(jira.getIssueType());
+        }
+        if(!ScanUtils.empty(jira.getOpenedStatus())) {
+            bt.setOpenStatus(jira.getOpenedStatus());
+        }
+        if(!ScanUtils.empty(jira.getClosedStatus())) {
+            bt.setClosedStatus(jira.getClosedStatus());
+        }
+        if(!ScanUtils.empty(jira.getOpenTransition())) {
+            bt.setOpenTransition(jira.getOpenTransition());
+        }
+        if(!ScanUtils.empty(jira.getCloseTransition())) {
+            bt.setCloseTransition(jira.getCloseTransition());
+        }
+        if(!ScanUtils.empty(jira.getCloseTransitionField())) {
+            bt.setCloseTransitionField(jira.getCloseTransitionField());
+        }
+        if(!ScanUtils.empty(jira.getCloseTransitionValue())) {
+            bt.setCloseTransitionValue(jira.getCloseTransitionValue());
+        }
+        if(jira.getFields()!=null) { //if empty, assume no fields
+            bt.setFields(jira.getFields());
+        }
+        if(jira.getPriorities() != null && !jira.getPriorities().isEmpty()) {
+            bt.setPriorities(jira.getPriorities());
+        }
     }
 
     private static Map<FindingSeverity, Integer> getThresholdsMap(FlowOverride.Thresholds thresholds) {
