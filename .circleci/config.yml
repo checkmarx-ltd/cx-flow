@@ -142,9 +142,12 @@ jobs:
             helm upgrade --install --atomic --namespace << parameters.namespace >> << parameters.release-name >> \
               --set cxflow.checkmarxUsername=${CHECKMARX_USERNAME} \
               --set cxflow.checkmarxPassword=${CHECKMARX_PASSWORD} \
+              --set cxflow.checkmarxBaseUrl=${CHECKMARX_BASE_URL} \
               --set cxflow.githubToken=${GITHUB_TOKEN} \
               --set cxflow.githubWebhookToken=${GITHUB_WEBHOOK_TOKEN} \
               --set cxflow.checkmarxClientSecret=${CHECKMARX_CLIENT_SECRET} \
+              --set cxflow.jiraUrl=${JIRA_URL} \
+              --set cxflow.jiraUserName=${JIRA_USERNAME} \
               --set cxflow.jiraToken=${JIRA_TOKEN} \
               --set cxflow.jiraProject=${JIRA_PROJECT} \
               --set cxflow.azureToken=${AZURE_TOKEN} \

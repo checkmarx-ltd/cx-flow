@@ -12,11 +12,11 @@ cxflow:
   githubWebhookToken: ""
   checkmarxClientSecret: ""
   jiraToken: ""
-  jiraUrl: https://cxflow.atlassian.net/
-  jiraUserName: cxflowtestuser@checkmarx.com
+  jiraUrl: ""
+  jiraUserName: ""
   jiraProject: E2E
   bugTracker: JIRA
-  checkmarxBaseUrl: https://sast.cxflow-ci.com
+  checkmarxBaseUrl: ""
   azureToken: ""
 
 imagePullSecrets: []
