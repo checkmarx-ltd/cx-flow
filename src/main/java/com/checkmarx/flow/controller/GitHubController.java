@@ -156,11 +156,15 @@ public class GitHubController {
                 app = application;
             }
 
-            BugTracker.Type bugType;
-            if (ScanUtils.empty(bug)) {
-                bug = flowProperties.getBugTracker();
+            // By default, when a pull request is opened, use the current source control provider as a bug tracker
+            // (GitHub in this case). Bug tracker from the config is not used, because we only want to notify the user
+            // that their code has some issues. I.e. we don't want to open real issues in the "official" bug tracker yet.
+            BugTracker.Type bugType = BugTracker.Type.GITHUBPULL;
+
+            // However, if the bug tracker is overridden in the query string, use the override value.
+            if(!ScanUtils.empty(bug)){
+                bugType = ScanUtils.getBugTypeEnum(bug, flowProperties.getBugTrackerImpl());
             }
-            bugType = ScanUtils.getBugTypeEnum(bug, flowProperties.getBugTrackerImpl());
 
             if(appOnlyTracking != null){
                 flowProperties.setTrackApplicationOnly(appOnlyTracking);
@@ -305,8 +309,12 @@ public class GitHubController {
                 app = application;
             }
 
-            //set the default bug tracker as per yml
+            // If user has pushed their changes into an important branch (e.g. master) and the code has some issues,
+            // use the bug tracker from the config. As a result, "real" issues will be opened in the bug tracker and
+            // not just notifications for the user. The "push" case also includes merging a pull request.
+            // See the comment for the pullRequest method for further details.
             BugTracker.Type bugType;
+            // However, if the bug tracker is overridden in the query string, use the override value.
             if (ScanUtils.empty(bug)) {
                 bug =  flowProperties.getBugTracker();
             }
