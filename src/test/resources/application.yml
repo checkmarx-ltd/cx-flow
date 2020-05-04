@@ -79,6 +79,14 @@ checkmarx:
   #exclude-files:
   #exclude-folders:
 
+sca:
+  appUrl: https://xxxxx
+  apiUrl: https://xxxxx
+  accessControlUrl: https://xxxxx
+  tenant: xxxxx
+  username: xxxxx
+  password: xxxxx
+
 jira:
   url: http://localhost:8080
   username: xxxx
