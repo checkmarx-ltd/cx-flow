@@ -36,6 +36,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
@@ -152,7 +153,8 @@ public class PublishingSteps extends PublishingStepsBase {
     }
 
     private GitHubController getGitHubControllerInstance() {
-        FlowService flowService = new FlowService(emailService, sastScannerService);
+        List<VulnerabilityScanner> vulnerabilityScannerList = new ArrayList<>();
+        FlowService flowService = new FlowService(vulnerabilityScannerList);
 
         return new GitHubController(gitHubProperties, flowProperties, cxProperties,
                 null, flowService, helperService, gitHubService);
