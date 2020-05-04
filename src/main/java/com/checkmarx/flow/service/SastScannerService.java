@@ -29,6 +29,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
 
 import static com.checkmarx.flow.exception.ExitThrowable.exit;
@@ -38,7 +40,7 @@ import static com.checkmarx.sdk.config.Constants.UNKNOWN_INT;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class SastScannerService {
+public class SastScannerService implements VulnerabilityScanner{
 
     private static final String SCAN_MESSAGE = "Scan submitted to Checkmarx";
     private static final String ERROR_BREAK_MSG = "Exiting with Error code 10 due to issues present";
@@ -53,9 +55,27 @@ public class SastScannerService {
     private final BitBucketService bbService;
     private final ADOService adoService;
     private final CxOsaClient osaService;
+    private final EmailService emailService;
 
     private ScanDetails scanDetails = null;
     private String sourcesPath = null;
+
+    @Override
+    public void scan(ScanRequest scanRequest) {
+        if (isSastScanConfigured()) {
+            try {
+                if (!ScanUtils.anyEmpty(scanRequest.getNamespace(), scanRequest.getRepoName(), scanRequest.getRepoUrl())) {
+                    sendSuccessScanEmail(scanRequest);
+                }
+                CompletableFuture<ScanResults> results = executeCxScanFlow(scanRequest, null);
+                if (results.isCompletedExceptionally()) {
+                    log.error("An error occurred while executing process");
+                }
+            } catch (MachinaException e) {
+                sendErrorScanEmail(scanRequest, e);
+            }
+        }
+    }
 
     public CompletableFuture<ScanResults> executeCxScanFlow(ScanRequest request, File cxFile) throws MachinaException {
         ScanDetails scanDetails = executeCxScan(request,cxFile);
@@ -420,6 +440,10 @@ public class SastScannerService {
         return repoUrl;
     }
 
+    private boolean isSastScanConfigured() {
+        return flowProperties.getEnabledVulnerabilityScanners().contains(ScannerType.SAST.getScanner());
+    }
+
     private String getTeamErrorMessage() {
         return "Parent team could not be established. Please ensure correct team is provided.\n" +
                 "Some hints:\n" +
@@ -428,6 +452,27 @@ public class SastScannerService {
                 "\t- team name separator depends on Checkmarx product version specified in CxFlow configuration:\n" +
                 String.format("\t\tCheckmarx version: %s%n", cxProperties.getVersion()) +
                 String.format("\t\tSeparator that should be used: %s%n", cxProperties.getTeamPathSeparator());
+    }
+
+    private void sendSuccessScanEmail(ScanRequest request) {
+        Map<String, Object> emailCtx = new HashMap<>();
+
+        emailCtx.put("message", "Checkmarx Scan has been submitted for "
+                .concat(request.getNamespace()).concat("/").concat(request.getRepoName()).concat(" - ")
+                .concat(request.getRepoUrl()));
+        emailCtx.put("heading", "Scan Request Submitted");
+        emailService.sendmail(request.getEmail(), "Checkmarx Scan Submitted for ".concat(request.getNamespace()).concat("/").concat(request.getRepoName()), emailCtx, "message.html");
+    }
+
+    private void sendErrorScanEmail(ScanRequest request, MachinaException e) {
+        Map<String, Object>  emailCtx = new HashMap<>();
+
+        log.error("Machina Exception has occurred.", e);
+        emailCtx.put("message", "Error occurred during scan/bug tracking process for "
+                .concat(request.getNamespace()).concat("/").concat(request.getRepoName()).concat(" - ")
+                .concat(request.getRepoUrl()).concat("  Error: ").concat(e.getMessage()));
+        emailCtx.put("heading", "Error occurred during scan");
+        emailService.sendmail(request.getEmail(), "Error occurred for ".concat(request.getNamespace()).concat("/").concat(request.getRepoName()), emailCtx, "message-error.html");
     }
 
     private String createOsaScan(ScanRequest request, Integer projectId) throws GitAPIException, CheckmarxException {
