@@ -210,6 +210,7 @@ task integrationTest(type: Test) {
             include 'com/checkmarx/flow/cucumber/integration/jira/autoconfig/*'
             exclude 'com/checkmarx/flow/cucumber/integration/github/**'
             include 'com/checkmarx/flow/cucumber/integration/azure/publishing/**'
+            include 'com/checkmarx/flow/cucumber/integration/azure/publishing/github2ado/*'
             include 'com/checkmarx/flow/cucumber/integration/jira/analytics/*'
             include 'com/checkmarx/flow/cucumber/integration/cxconfig/*'
             exclude 'com/checkmarx/flow/cucumber/integration/end2end/github2jira/**'

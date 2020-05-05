@@ -3,17 +3,15 @@ package com.checkmarx.flow.cucumber.integration.azure.publishing.githubflow;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Instead of using this class, it's possible (in theory) to deserialize ScanResults from a JSON file.
  * However, an attempt to do this results in an error:
  *      Cannot construct instance of `com.checkmarx.sdk.dto.ScanResults$XIssue`
  */
-class ScanResultsBuilder {
+public class ScanResultsBuilder {
+    
     public ScanResults getScanResultsWithSingleFinding(String projectName) {
         return ScanResults.builder()
                 .projectId("12")
@@ -39,7 +37,7 @@ class ScanResultsBuilder {
         return result;
     }
 
-    private static List<ScanResults.XIssue> getXIssues() {
+    public static List<ScanResults.XIssue> getXIssues() {
 
         ScanResults.XIssue xIssue = ScanResults.XIssue.builder()
                 .vulnerability("Reflected_XSS_All_Clients")
@@ -57,6 +55,32 @@ class ScanResultsBuilder {
 
     }
 
+
+
+    public static List<ScanResults.XIssue> get2XIssues() {
+
+        List<ScanResults.XIssue> collection = new ArrayList<>();
+
+        ScanResults.XIssue xIssue = ScanResults.XIssue.builder()
+                .vulnerability("SQL_Injection")
+                .similarityId("1000027")
+                .cwe("89")
+                .description("")
+                .language("Java")
+                .severity("High")
+                .link("http://example.local/CxWebClient/ViewerMain.aspx?scanid=1000026&projectid=6&pathid=2")
+                .file("DOS_Login.java")
+                .details(getIssueDetails())
+                .additionalDetails(Collections.emptyMap())
+                .build();
+        collection.add(xIssue);
+        
+        collection.addAll(getXIssues());
+        
+        return collection;
+
+    }
+    
     private static Map<String, Object> getAdditionalScanDetails() {
         Map<String, Integer> flowSummary = Collections.singletonMap("High", 1);
 
