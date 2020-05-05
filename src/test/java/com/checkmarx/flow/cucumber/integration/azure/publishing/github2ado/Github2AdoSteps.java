@@ -59,7 +59,7 @@ public class Github2AdoSteps {
     private IssueService issueService;
     private GitHubController gitHubControllerSpy;
     private final ObjectMapper mapper = new ObjectMapper();
-    private final MergeResultEvaluator mergeResultEvaluator;
+
     private FlowProperties flowProperties;
     private final CxProperties cxProperties;
     private final GitHubProperties gitHubProperties;
@@ -89,7 +89,7 @@ public class Github2AdoSteps {
         
         this.cxProperties = cxProperties;
         this.jiraProperties = jiraProperties;
-        this.mergeResultEvaluator = mergeResultEvaluator;
+ 
         this.helperService = mock(HelperService.class);
         this.flowService = flowService;
         this.gitHubService = gitHubService;
@@ -229,9 +229,8 @@ public class Github2AdoSteps {
 
             CompletableFuture<ScanResults> task = resultsService.processScanResultsAsync(
                     request, 0, 0, null, null);
-
-
-            ScanResults results = task.get(1, TimeUnit.MINUTES);
+            
+             task.get(1, TimeUnit.MINUTES);
 
         } catch (MachinaException | ExecutionException | TimeoutException e) {
             String message = "Error processing scan results.";

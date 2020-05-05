@@ -35,15 +35,14 @@ public class ADOIssueTracker implements IssueTracker {
     private static final String CREATE_WORK_ITEM_URL_TEMPLATE =
             "%s/{namespace}/{project}/_apis/wit/workitems/${work-item-type}?api-version={version}";
     private static final String SEARCH_WORK_ITEM_URL_TEMPLATE ="%s/{namespace}/{project}/_apis/wit/wiql?api-version={version}";
-    private static final String WIQ_REPO_BRANCH = "Select [System.Id], [System.Title], " +
-            "[System.State], [System.State], [System.WorkItemType] From WorkItems Where " +
+    private static final String WIQ_BASE = "Select [System.Id], [System.Title], " +
+            "[System.State], [System.State], [System.WorkItemType] From WorkItems Where ";
+    private static final String WIQ_REPO_BRANCH = WIQ_BASE +
             "[System.TeamProject] = @project AND [Tags] Contains '%s' AND [Tags] Contains '%s:%s'" +
             "AND [Tags] Contains '%s:%s' AND [Tags] Contains '%s:%s'";
-    private static final String WIQ_APP = "Select [System.Id], [System.Title], " +
-            "[System.State], [System.State], [System.WorkItemType] From WorkItems Where " +
+    private static final String WIQ_APP = WIQ_BASE +
             "[System.TeamProject] = @project AND [Tags] Contains '%s' AND [Tags] Contains '%s:%s'";
-    private static final String WIQ_PROJECT_NAME_AND_NAMESPACE = "Select [System.Id], [System.Title], " +
-            "[System.State], [System.State], [System.WorkItemType] From WorkItems Where " +
+    private static final String WIQ_PROJECT_NAME_AND_NAMESPACE = WIQ_BASE +
             "[System.TeamProject] = @project AND [Tags] Contains '%s'";
     private static final Logger log = LoggerFactory.getLogger(ADOIssueTracker.class);
 
