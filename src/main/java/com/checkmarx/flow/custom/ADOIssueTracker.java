@@ -126,7 +126,7 @@ public class ADOIssueTracker implements IssueTracker {
             if(!StringUtils.isEmpty(properties.getNamespace())){
                 wiq = String.format(WIQ_PROJECT_NAME_AND_NAMESPACE,properties.getNamespace());
             }else {
-                wiq = String.format(WIQ_PROJECT_NAME);
+                wiq = String.format(WIQ_PROJECT_NAME_AND_NAMESPACE,request.getNamespace());
             }
         }
         /*Namespace/Repo/Branch provided*/
@@ -309,7 +309,7 @@ public class ADOIssueTracker implements IssueTracker {
 
         String adoNamespace;
 
-        if(!StringUtils.isEmpty(properties.getNamespace())){
+        if(isNotEmptyAdoNamespace()){
             adoNamespace = properties.getNamespace();
         }else{
             adoNamespace = request.getNamespace();
@@ -321,13 +321,18 @@ public class ADOIssueTracker implements IssueTracker {
         log.debug("Endpoint URI: {}", result);
         return result;
     }
-    
+
+    private boolean isNotEmptyAdoNamespace() {
+        return !StringUtils.isEmpty(properties.getNamespace()) && !StringUtils.isEmpty(properties.getProjectName());
+    }
+
     private URI getSearchEndpoint(String adoProject, ScanRequest request) {
         String baseUrl = request.getAdditionalMetadata(Constants.ADO_BASE_URL_KEY);
         String urlTemplate = String.format(SEARCH_WORK_ITEM_URL_TEMPLATE, baseUrl);
         String adoNamespace;
         
-        if(!StringUtils.isEmpty(properties.getNamespace())){
+        //we use namespace from ado.properties only if the projectName in ado.properties is not empty as well
+        if(isNotEmptyAdoNamespace()){
             adoNamespace = properties.getNamespace();
         }else{
             adoNamespace = request.getNamespace();
