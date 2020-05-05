@@ -84,12 +84,12 @@ public class GitHubService extends RepoService {
         }
     }
 
-    void sendMergeComment(ScanRequest request, String comment){
+    public void sendMergeComment(ScanRequest request, String comment){
         HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONComment("body",comment).toString(), createAuthHeaders());
         restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
-    void startBlockMerge(ScanRequest request, String url){
+    public void startBlockMerge(ScanRequest request, String url){
         if(properties.isBlockMerge()) {
             final String PULL_REQUEST_STATUS = "pending";
             HttpEntity<?> httpEntity = new HttpEntity<>(
