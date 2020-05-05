@@ -111,6 +111,7 @@ public class Github2AdoSteps {
     public void prepareServices() {
         this.flowProperties.setBugTracker(AZURE);
         this.flowProperties.setBugTrackerImpl(Arrays.asList(new String[]{AZURE}));
+        this.adoProperties.setUrl("https://dev.azure.com/");
         issueService = new IssueService(flowProperties);
         issueService.setApplicationContext(applicationContext);
         scanResultsToInject = createFakeResults();
