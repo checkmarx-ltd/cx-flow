@@ -1,5 +1,6 @@
 package com.checkmarx.flow.service;
 
+import com.checkmarx.flow.bug_tracker_trigger.BugTrackerTriggerEvent;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.report.ScanReport;
@@ -42,7 +43,6 @@ import static com.checkmarx.sdk.config.Constants.UNKNOWN_INT;
 @RequiredArgsConstructor
 public class SastScanner implements VulnerabilityScanner {
 
-    private static final String SCAN_MESSAGE = "Scan submitted to Checkmarx";
     private static final String ERROR_BREAK_MSG = "Exiting with Error code 10 due to issues present";
 
     private final ResultsService resultsService;
@@ -50,13 +50,10 @@ public class SastScanner implements VulnerabilityScanner {
     private final HelperService helperService;
     private final CxProperties cxProperties;
     private final FlowProperties flowProperties;
-    private final GitHubService gitService;
-    private final GitLabService gitLabService;
-    private final BitBucketService bbService;
-    private final ADOService adoService;
     private final CxOsaClient osaService;
     private final EmailService emailService;
     private final ScanRequestConverter scanRequestConverter;
+    private final BugTrackerTriggerEvent bugTrackerTriggerEvent;
 
     private ScanDetails scanDetails = null;
     private String sourcesPath = null;
@@ -79,10 +76,10 @@ public class SastScanner implements VulnerabilityScanner {
     }
 
     public CompletableFuture<ScanResults> executeCxScanFlow(ScanRequest request, File cxFile) throws MachinaException {
-        ScanDetails scanDetails = executeCxScan(request,cxFile);
-        if(scanDetails.processResults()) {
+        ScanDetails scanDetails = executeCxScan(request, cxFile);
+        if (scanDetails.processResults()) {
             return resultsService.processScanResultsAsync(request, scanDetails.getProjectId(), scanDetails.getScanId(), scanDetails.getOsaScanId(), request.getFilters());
-        }else{
+        } else {
             return scanDetails.getResults();
         }
     }
@@ -107,11 +104,11 @@ public class SastScanner implements VulnerabilityScanner {
 
             CxScanParams params = scanRequestConverter.prepareScanParamsObject(request, cxFile, ownerId, projectName, projectId);
 
-            BugTracker.Type bugTrackerType = triggerBugTrackerEvent(request);
+            BugTracker.Type bugTrackerType = bugTrackerTriggerEvent.triggerBugTrackerEvent(request);
 
-            scanId = cxService.createScan(params,"CxFlow Automated Scan");
+            scanId = cxService.createScan(params, "CxFlow Automated Scan");
 
-            if(bugTrackerType.equals(BugTracker.Type.NONE)){
+            if (bugTrackerType.equals(BugTracker.Type.NONE)) {
 
                 log.info("Not waiting for scan completion as Bug Tracker type is NONE");
                 CompletableFuture<ScanResults> results = CompletableFuture.completedFuture(null);
@@ -125,13 +122,13 @@ public class SastScanner implements VulnerabilityScanner {
                     projectId = cxService.getProjectId(ownerId, projectName); //get the project id of the updated or created project
                 }
                 osaScanId = createOsaScan(request, projectId);
-                if(osaScanId != null) {
+                if (osaScanId != null) {
                     logRequest(request, osaScanId, cxFile, OperationResult.successful());
                 }
             }
 
 
-        }catch (CheckmarxException | GitAPIException e){
+        } catch (CheckmarxException | GitAPIException e) {
             String extendedMessage = ExceptionUtils.getMessage(e);
             log.error(extendedMessage, e);
             Thread.currentThread().interrupt();
@@ -159,14 +156,14 @@ public class SastScanner implements VulnerabilityScanner {
             CompletableFuture<ScanResults> future = executeCxScanFlow(request, f);
             log.debug("Waiting for scan to complete");
             ScanResults results = future.join();
-            if(flowProperties.isBreakBuild() && results !=null && results.getXIssues()!=null && !results.getXIssues().isEmpty()){
+            if (flowProperties.isBreakBuild() && results != null && results.getXIssues() != null && !results.getXIssues().isEmpty()) {
                 log.error(ERROR_BREAK_MSG);
                 exit(10);
             }
         } catch (IOException e) {
             log.error("Error occurred while attempting to zip path {}", path, e);
             exit(3);
-        } catch (MachinaException e){
+        } catch (MachinaException e) {
             log.error("Error occurred", e);
             exit(3);
         }
@@ -178,11 +175,11 @@ public class SastScanner implements VulnerabilityScanner {
             CompletableFuture<ScanResults> future = executeCxScanFlow(request, null);
             log.debug("Waiting for scan to complete");
             ScanResults results = future.join();
-            if(flowProperties.isBreakBuild() && results !=null && results.getXIssues()!=null && !results.getXIssues().isEmpty()){
+            if (flowProperties.isBreakBuild() && results != null && results.getXIssues() != null && !results.getXIssues().isEmpty()) {
                 log.error(ERROR_BREAK_MSG);
                 exit(10);
             }
-        } catch (MachinaException e){
+        } catch (MachinaException e) {
             log.error("Error occurred", e);
             exit(3);
         }
@@ -192,7 +189,7 @@ public class SastScanner implements VulnerabilityScanner {
         try {
             ScanResults results = cxService.getReportContent(file, request.getFilters());
             resultsService.processResults(request, results, scanDetails);
-            if(flowProperties.isBreakBuild() && results !=null && results.getXIssues()!=null && !results.getXIssues().isEmpty()){
+            if (flowProperties.isBreakBuild() && results != null && results.getXIssues() != null && !results.getXIssues().isEmpty()) {
                 log.error(ERROR_BREAK_MSG);
                 exit(10);
             }
@@ -210,20 +207,19 @@ public class SastScanner implements VulnerabilityScanner {
             List<CxProject> projects;
             List<CompletableFuture<ScanResults>> processes = new ArrayList<>();
             //Get all projects
-            if(ScanUtils.empty(originalRequest.getTeam())){
+            if (ScanUtils.empty(originalRequest.getTeam())) {
                 projects = cxService.getProjects();
-            }
-            else{ //Get projects for the provided team
+            } else { //Get projects for the provided team
                 String team = originalRequest.getTeam();
-                if(!team.startsWith(cxProperties.getTeamPathSeparator())){
+                if (!team.startsWith(cxProperties.getTeamPathSeparator())) {
                     team = cxProperties.getTeamPathSeparator().concat(team);
                 }
                 String teamId = cxService.getTeamId(team);
                 projects = cxService.getProjects(teamId);
             }
-            for(CxProject project: projects){
+            for (CxProject project : projects) {
                 ScanRequest request = new ScanRequest(originalRequest);
-                String name = project.getName().replaceAll("[^a-zA-Z0-9-_]+","_");
+                String name = project.getName().replaceAll("[^a-zA-Z0-9-_]+", "_");
                 //TODO set team when entire instance batch mode
                 helperService.getShortUid(request); //update new request object with a unique id for thread log monitoring
                 request.setProject(name);
@@ -233,44 +229,18 @@ public class SastScanner implements VulnerabilityScanner {
             log.info("Waiting for processing to complete");
             processes.forEach(CompletableFuture::join);
 
-        } catch ( CheckmarxException e) {
+        } catch (CheckmarxException e) {
             log.error("Error occurred while processing projects in batch mode", e);
             exit(3);
         }
     }
 
-    private BugTracker.Type triggerBugTrackerEvent(ScanRequest request) {
-        BugTracker.Type bugTrackerType = request.getBugTracker().getType();
-        if(bugTrackerType.equals(BugTracker.Type.GITLABMERGE)){
-            gitLabService.sendMergeComment(request, SCAN_MESSAGE);
-            gitLabService.startBlockMerge(request);
-        }
-        else if(bugTrackerType.equals(BugTracker.Type.GITLABCOMMIT)){
-            gitLabService.sendCommitComment(request, SCAN_MESSAGE);
-        }
-        else if(bugTrackerType.equals(BugTracker.Type.GITHUBPULL)){
-            gitService.sendMergeComment(request, SCAN_MESSAGE);
-            gitService.startBlockMerge(request, cxProperties.getUrl());
-        }
-        else if(bugTrackerType.equals(BugTracker.Type.BITBUCKETPULL)){
-            bbService.sendMergeComment(request, SCAN_MESSAGE);
-        }
-        else if(bugTrackerType.equals(BugTracker.Type.BITBUCKETSERVERPULL)){
-            bbService.sendServerMergeComment(request, SCAN_MESSAGE);
-        }
-        else if(bugTrackerType.equals(BugTracker.Type.ADOPULL)){
-            adoService.sendMergeComment(request, SCAN_MESSAGE);
-            adoService.startBlockMerge(request);
-        }
-        return bugTrackerType;
-    }
-
-    private void logRequest(ScanRequest request, Integer scanId, File  cxFile, OperationResult scanCreationResult)  {
+    private void logRequest(ScanRequest request, Integer scanId, File cxFile, OperationResult scanCreationResult) {
         ScanReport report = new ScanReport(scanId, request, getRepoUrl(request, cxFile), scanCreationResult);
         report.log();
     }
 
-    private void logRequest(ScanRequest request, String scanId, File  cxFile,  OperationResult scanCreationResult)  {
+    private void logRequest(ScanRequest request, String scanId, File cxFile, OperationResult scanCreationResult) {
         ScanReport report = new ScanReport(scanId, request, getRepoUrl(request, cxFile), scanCreationResult);
         report.log();
     }
@@ -278,14 +248,14 @@ public class SastScanner implements VulnerabilityScanner {
     private String getRepoUrl(ScanRequest request, File cxFile) {
         String repoUrl = null;
 
-        if(sourcesPath != null){
+        if (sourcesPath != null) {
             //the folder to scan is supplied via -f flag in command line and it is located in the filesystem
             repoUrl = sourcesPath;
-        }else if(cxFile != null){
+        } else if (cxFile != null) {
             //in general cxFile is a zip created by cxFlow using the folder supplied y -f
             //the use case when sourcePath is empty but cxFile is set is only for the test flow
             repoUrl = cxFile.getAbsolutePath();
-        }else{
+        } else {
             //sources to scan are in the remote repository (GitHib, TFS ... etc)
             repoUrl = request.getRepoUrl();
         }
@@ -307,7 +277,7 @@ public class SastScanner implements VulnerabilityScanner {
     }
 
     private void sendErrorScanEmail(ScanRequest request, MachinaException e) {
-        Map<String, Object>  emailCtx = new HashMap<>();
+        Map<String, Object> emailCtx = new HashMap<>();
 
         log.error("Machina Exception has occurred.", e);
         emailCtx.put("message", "Error occurred during scan/bug tracking process for "
@@ -319,14 +289,14 @@ public class SastScanner implements VulnerabilityScanner {
 
     private String createOsaScan(ScanRequest request, Integer projectId) throws GitAPIException, CheckmarxException {
         String osaScanId = null;
-        if(cxProperties.getEnableOsa()){
+        if (cxProperties.getEnableOsa()) {
             String path = cxProperties.getGitClonePath().concat("/").concat(UUID.randomUUID().toString());
             File pathFile = new File(path);
 
             Git git = Git.cloneRepository()
                     .setURI(request.getRepoUrlWithAuth())
                     .setBranch(request.getBranch())
-                    .setBranchesToClone(Collections.singleton(Constants.CX_BRANCH_PREFIX.concat(request.getBranch()) ))
+                    .setBranchesToClone(Collections.singleton(Constants.CX_BRANCH_PREFIX.concat(request.getBranch())))
                     .setDirectory(pathFile)
                     .call();
             osaScanId = osaService.createScan(projectId, path);
