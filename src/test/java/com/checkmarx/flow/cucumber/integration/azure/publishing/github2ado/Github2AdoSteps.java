@@ -202,7 +202,8 @@ public class Github2AdoSteps {
             azureDevopsClient.init(namespace,project);
             assertTrue(azureDevopsClient.projectExists());
             assertEquals(azureDevopsClient.getIssues().size(),2);
-
+            
+            azureDevopsClient.deleteProjectIssues();
             
         } catch (IOException e) {
             fail(e.getMessage());
@@ -225,10 +226,10 @@ public class Github2AdoSteps {
 
     private void processScanResultsInCxFlow() throws InterruptedException{
         try {
-            ScanRequest scanRequest = createScanRequestForResultsService();
+            //ScanRequest scanRequest = createScanRequestForResultsService();
 
             CompletableFuture<ScanResults> task = resultsService.processScanResultsAsync(
-                    scanRequest, 0, 0, null, null);
+                    request, 0, 0, null, null);
 
 
             ScanResults results = task.get(1, TimeUnit.MINUTES);
@@ -241,20 +242,20 @@ public class Github2AdoSteps {
     }
     
   
-    private ScanRequest createScanRequestForResultsService() {
-        ScanRequest scanRequest = new ScanRequest();
-
-        scanRequest.setProduct(ScanRequest.Product.CX);
+//    private ScanRequest createScanRequestForResultsService() {
+//        ScanRequest scanRequest = new ScanRequest();
+//
+//        scanRequest.setProduct(ScanRequest.Product.CX);
         
-        BugTracker bt = BugTracker.builder().type(BugTracker.Type.CUSTOM).build();
-        bt.setCustomBean(AZURE);
-        scanRequest.setBugTracker(bt);
-        scanRequest.setProject(this.repoName);
-        scanRequest.setRepoName(this.repoName);
-        scanRequest.setBranch(this.branch);
-        scanRequest.setNamespace(GITHUB_USER);
-        return scanRequest;
-    }
+//        BugTracker bt = BugTracker.builder().type(BugTracker.Type.CUSTOM).build();
+//        bt.setCustomBean(AZURE);
+//        scanRequest.setBugTracker(bt);
+//        scanRequest.setProject(this.repoName);
+//        scanRequest.setRepoName(this.repoName);
+//        scanRequest.setBranch(this.branch);
+//        scanRequest.setNamespace(GITHUB_USER);
+//        return scanRequest;
+//    }
 
     
     private void initCxClientMock() {
@@ -346,6 +347,7 @@ public class Github2AdoSteps {
         @Override
         public Boolean answer(InvocationOnMock invocation) {
             request = invocation.getArgument(0);
+            request.setBranch(branch);
             return false;
         }
     }

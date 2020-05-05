@@ -2,6 +2,7 @@
 Feature: CxFlow should read configuration from cx.config file in the root of repository
 
   
+  @ProjectName
   Scenario Outline: CxFlow will create tickets in the appropriate project in Azure 
     Given application.yml contains the Azure project "<inputProject>" and Asure namespace "<inputNamespace>"
     And commit or merge pull request is performed in github repo "<repo>" and branch "<branch>"
@@ -13,7 +14,7 @@ Feature: CxFlow should read configuration from cx.config file in the root of rep
       | repo     | branch | inputProject | inputNamespace | outputProject | outputNamespace |
       | testsAdo | master | CxTest1      | CxNamespace    | CxTest1       | CxNamespace     |
       | testsAdo | master | CxTest2      |                | CxTest2       | cxflowtestuser  |
-      #| testsAdo | master |              | CxNamespace    | testsAdo      | cxflowtestuser  |
+      | testsAdo | master |              | CxNamespace    | testsAdo      | cxflowtestuser  |
       | testsAdo | master |              |                | testsAdo      | cxflowtestuser  | 
 
  
