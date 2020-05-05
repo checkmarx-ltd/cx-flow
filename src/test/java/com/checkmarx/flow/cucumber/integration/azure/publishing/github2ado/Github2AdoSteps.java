@@ -72,23 +72,22 @@ public class Github2AdoSteps {
     private final FlowService flowService;
     private String branch;
     private ScanRequest request;
-    private final JiraProperties jiraProperties;
+
     private String repoName;
 
     @Autowired
     private ApplicationContext applicationContext;
     
     public Github2AdoSteps(FlowProperties flowProperties, GitHubService gitHubService,
-                           CxProperties cxProperties, GitHubProperties gitHubProperties, JiraProperties jiraProperties,
-                           MergeResultEvaluator mergeResultEvaluator, FlowService flowService,
-                           ADOProperties adoProperties, AzureDevopsClient azureDevopsClient) {
+                           CxProperties cxProperties, GitHubProperties gitHubProperties, 
+                          FlowService flowService, ADOProperties adoProperties, AzureDevopsClient azureDevopsClient) {
 
         this.cxClientMock = mock(CxClient.class);
         
         this.flowProperties = flowProperties;
         
         this.cxProperties = cxProperties;
-        this.jiraProperties = jiraProperties;
+
  
         this.helperService = mock(HelperService.class);
         this.flowService = flowService;
@@ -280,7 +279,7 @@ public class Github2AdoSteps {
         this.gitHubControllerSpy = spy(new GitHubController(gitHubProperties,
                 flowProperties,
                 cxProperties,
-                jiraProperties,
+                null,
                 flowService,
                 helperService,
                 gitHubService));
