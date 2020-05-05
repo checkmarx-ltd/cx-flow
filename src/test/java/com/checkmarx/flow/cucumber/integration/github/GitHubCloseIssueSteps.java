@@ -43,7 +43,7 @@ public class GitHubCloseIssueSteps extends GitHubCommonSteps {
     @And("for a given issue, with a given vulnerabilities")
     public void setIssueVulnerabilities() throws IOException, ExitThrowable {
         scanRequest = getBasicScanRequest();
-        sastScannerService.cxParseResults(scanRequest, getFileFromResourcePath(INPUT_BASE_PATH + INPUT_VUL));
+        sastScanner.cxParseResults(scanRequest, getFileFromResourcePath(INPUT_BASE_PATH + INPUT_VUL));
         List<Issue> openIssuesList = gitHubTestUtils.filterIssuesByState(gitHubTestUtils.getIssues(scanRequest), "open");
 
         Assert.assertFalse("Expected to find open issues, but found none", openIssuesList.isEmpty());
@@ -51,7 +51,7 @@ public class GitHubCloseIssueSteps extends GitHubCommonSteps {
 
     @When("resolving all vulnerabilities for an issue")
     public void resolveIssueVulnerabilities() throws IOException, ExitThrowable {
-        sastScannerService.cxParseResults(scanRequest, getFileFromResourcePath(INPUT_BASE_PATH + INPUT_VUL_RESOLVED));
+        sastScanner.cxParseResults(scanRequest, getFileFromResourcePath(INPUT_BASE_PATH + INPUT_VUL_RESOLVED));
     }
 
     @Then("the issues should be mark as closed")

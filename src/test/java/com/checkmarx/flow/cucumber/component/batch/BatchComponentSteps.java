@@ -41,11 +41,11 @@ public class BatchComponentSteps {
     private CxFlowRunner cxFlowRunner;
     private String projectName;
     private String teamName;
-    private SastScannerService sastScannerService;
+    private SastScanner sastScanner;
 
     public BatchComponentSteps(FlowProperties flowProperties, CxProperties cxProperties, JiraProperties jiraProperties, GitHubProperties gitHubProperties, GitLabProperties gitLabProperties,
                                ADOProperties adoProperties, FlowService flowService, HelperService helperService, CxClient cxClient, List<ThreadPoolTaskExecutor> executors,
-                               SastScannerService sastScannerService, ResultsService resultsService, OsaScannerService osaScannerService) {
+                               SastScanner sastScanner, ResultsService resultsService, OsaScannerService osaScannerService) {
         this.flowProperties = flowProperties;
         this.cxProperties = cxProperties;
         this.jiraProperties = jiraProperties;
@@ -65,7 +65,7 @@ public class BatchComponentSteps {
         when(cxClient.getTeamId(anyString())).thenReturn(ScanFixture.TEAM_ID);
         when(cxClient.getProjects(anyString())).thenReturn(ScanFixture.getProjects());
         when(cxClient.getReportContentByScanId(ScanFixture.SCAN_ID, ScanFixture.getScanFilters())).thenReturn(ScanFixture.getScanResults());
-        cxFlowRunner = new CxFlowRunner(flowProperties, cxProperties, jiraProperties, gitHubProperties, gitLabProperties, adoProperties, helperService, flowService, sastScannerService, executors, resultsService, osaScannerService);
+        cxFlowRunner = new CxFlowRunner(flowProperties, cxProperties, jiraProperties, gitHubProperties, gitLabProperties, adoProperties, helperService, flowService, sastScanner, executors, resultsService, osaScannerService);
     }
 
     @Given("project is provided: {string} and team: {string}")

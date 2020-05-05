@@ -12,7 +12,7 @@ import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.flow.service.FlowService;
-import com.checkmarx.flow.service.SastScannerService;
+import com.checkmarx.flow.service.SastScanner;
 import com.checkmarx.sdk.config.CxProperties;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
@@ -57,7 +57,7 @@ public class PublishingSteps extends PublishingStepsBase {
     private AzureDevopsClient adoClient;
 
     @Autowired
-    private SastScannerService sastScannerService;
+    private SastScanner sastScanner;
 
     private String sastReportFilename;
 
@@ -146,7 +146,7 @@ public class PublishingSteps extends PublishingStepsBase {
         File sastReport = TestUtils.getFileFromResource(sastReportPath);
 
         try {
-            sastScannerService.cxParseResults(request, sastReport);
+            sastScanner.cxParseResults(request, sastReport);
         } catch (Throwable e) {
             if (expectingException) {
                 lastCxFlowException = e;

@@ -24,7 +24,7 @@ import java.util.List;
 public class GitHubControllerTest {
 
     @Autowired
-    private static SastScannerService sastScannerService;
+    private static SastScanner sastScanner;
 
     private static final FlowProperties flowProperties = new FlowProperties();
     private static final GitHubProperties properties = new GitHubProperties();

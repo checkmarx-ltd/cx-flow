@@ -3,7 +3,6 @@ package com.checkmarx.flow.cucumber.integration.azure.publishing.githubflow;
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
-import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.controller.GitHubController;
 import com.checkmarx.flow.cucumber.common.Constants;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
@@ -62,7 +61,7 @@ public class PublishingSteps extends PublishingStepsBase {
     private final CxService cxService;
     private final GitLabService gitLabService;
     private final BitBucketService bitBucketService;
-    private final SastScannerService sastScannerService;
+    private final SastScanner sastScanner;
     @MockBean
     private final CxClient cxClientMock;
     private final ResultsService resultsService;

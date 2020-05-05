@@ -51,7 +51,7 @@ public class CxFlowRunner implements ApplicationRunner {
     private final ADOProperties adoProperties;
     private final HelperService helperService;
     private final FlowService flowService;
-    private final SastScannerService sastScannerService;
+    private final SastScanner sastScanner;
     private final List<ThreadPoolTaskExecutor> executors;
     private final ResultsService resultsService;
     private final OsaScannerService osaScannerService;
@@ -443,23 +443,23 @@ public class CxFlowRunner implements ApplicationRunner {
         request.setRepoUrl(gitUrl);
         request.setRepoUrlWithAuth(gitAuthUrl);
         request.setRefs(Constants.CX_BRANCH_PREFIX.concat(branch));
-        sastScannerService.cxFullScan(request);
+        sastScanner.cxFullScan(request);
     }
     private void cxScan(ScanRequest request, String path) throws ExitThrowable {
         if(ScanUtils.empty(request.getProject())){
             log.error("Please provide --cx-project to define the project in Checkmarx");
             exit(2);
         }
-        sastScannerService.cxFullScan(request, path);
+        sastScanner.cxFullScan(request, path);
     }
     private void cxOsaParse(ScanRequest request, File file, File libs) throws ExitThrowable {
         osaScannerService.cxOsaParseResults(request, file, libs);
     }
     private void cxParse(ScanRequest request, File file) throws ExitThrowable {
-        sastScannerService.cxParseResults(request, file);
+        sastScanner.cxParseResults(request, file);
     }
     private void cxBatch(ScanRequest request) throws ExitThrowable {
-        sastScannerService.cxBatch(request);
+        sastScanner.cxBatch(request);
     }
     private void cxResults(ScanRequest request) throws ExitThrowable {
         ScanResults results = resultsService.cxGetResults(request, null).join();

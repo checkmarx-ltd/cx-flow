@@ -54,7 +54,7 @@ public class GitHubOpenIssuesBySeverityFiltersSteps extends GitHubCommonSteps {
     @When("publishing {string}")
     public void publishResults(String input) throws IOException, ExitThrowable {
         scanRequest = getBasicScanRequest();
-        sastScannerService.cxParseResults(scanRequest, getFileFromResourcePath(INPUT_BASE_PATH + input));
+        sastScanner.cxParseResults(scanRequest, getFileFromResourcePath(INPUT_BASE_PATH + input));
     }
 
     @Then("{int} new issues should be opened according filters severity")

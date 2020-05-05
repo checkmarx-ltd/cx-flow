@@ -7,7 +7,7 @@ import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.JiraClientRunTimeException;
 import com.checkmarx.flow.service.JiraService;
-import com.checkmarx.flow.service.SastScannerService;
+import com.checkmarx.flow.service.SastScanner;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import io.cucumber.java.Before;
@@ -45,7 +45,7 @@ public class JiraUnreachableSteps {
     private JiraService jiraService;
 
     @Autowired
-    private SastScannerService sastScannerService;
+    private SastScanner sastScanner;
 
     private BugTracker bugTracker;
 
@@ -74,7 +74,7 @@ public class JiraUnreachableSteps {
     @Then("the call execution should throw a JiraClientRunTimeException since JIRA is un-accessible")
     public void verifyExceptionWhenJiraIsUnreachable() {
         Assertions.assertThrows(JiraClientRunTimeException.class,
-                () -> sastScannerService.cxParseResults(basicScanRequest, getFileFromResourcePath()),
+                () -> sastScanner.cxParseResults(basicScanRequest, getFileFromResourcePath()),
                 "Expected to get Jira un-accessible exception error");
     }
 

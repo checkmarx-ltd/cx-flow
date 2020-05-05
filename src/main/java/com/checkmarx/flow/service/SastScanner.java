@@ -40,7 +40,7 @@ import static com.checkmarx.sdk.config.Constants.UNKNOWN_INT;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class SastScannerService implements VulnerabilityScanner{
+public class SastScanner implements VulnerabilityScanner{
 
     private static final String SCAN_MESSAGE = "Scan submitted to Checkmarx";
     private static final String ERROR_BREAK_MSG = "Exiting with Error code 10 due to issues present";
