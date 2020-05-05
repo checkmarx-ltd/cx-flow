@@ -42,9 +42,6 @@ public class ADOIssueTracker implements IssueTracker {
     private static final String WIQ_APP = "Select [System.Id], [System.Title], " +
             "[System.State], [System.State], [System.WorkItemType] From WorkItems Where " +
             "[System.TeamProject] = @project AND [Tags] Contains '%s' AND [Tags] Contains '%s:%s'";
-    private static final String WIQ_PROJECT_NAME = "Select [System.Id], [System.Title], " +
-            "[System.State], [System.State], [System.WorkItemType] From WorkItems Where " +
-            "[System.TeamProject] = @project ";
     private static final String WIQ_PROJECT_NAME_AND_NAMESPACE = "Select [System.Id], [System.Title], " +
             "[System.State], [System.State], [System.WorkItemType] From WorkItems Where " +
             "[System.TeamProject] = @project AND [Tags] Contains '%s'";

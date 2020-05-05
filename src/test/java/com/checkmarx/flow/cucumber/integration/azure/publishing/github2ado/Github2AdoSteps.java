@@ -226,7 +226,6 @@ public class Github2AdoSteps {
 
     private void processScanResultsInCxFlow() throws InterruptedException{
         try {
-            //ScanRequest scanRequest = createScanRequestForResultsService();
 
             CompletableFuture<ScanResults> task = resultsService.processScanResultsAsync(
                     request, 0, 0, null, null);
@@ -242,21 +241,6 @@ public class Github2AdoSteps {
     }
     
   
-//    private ScanRequest createScanRequestForResultsService() {
-//        ScanRequest scanRequest = new ScanRequest();
-//
-//        scanRequest.setProduct(ScanRequest.Product.CX);
-        
-//        BugTracker bt = BugTracker.builder().type(BugTracker.Type.CUSTOM).build();
-//        bt.setCustomBean(AZURE);
-//        scanRequest.setBugTracker(bt);
-//        scanRequest.setProject(this.repoName);
-//        scanRequest.setRepoName(this.repoName);
-//        scanRequest.setBranch(this.branch);
-//        scanRequest.setNamespace(GITHUB_USER);
-//        return scanRequest;
-//    }
-
     
     private void initCxClientMock() {
         try {
