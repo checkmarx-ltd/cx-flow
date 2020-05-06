@@ -178,40 +178,6 @@ task componentTest(type: Test) {
     check.dependsOn.remove(test)
 }
 
-task integrationTest(type: Test) {
-
-    useJUnitPlatform() {
-        systemProperty "testprofile", "integration"
-        if (System.properties['testprofile'] != 'unit' | System.properties['testprofile'] != 'component' | System.properties['testprofile'] != 'e2e') {
-            include 'com/checkmarx/flow/cucumber/integration/negative_tests/**'
-            include 'com/checkmarx/flow/cucumber/integration/jira/manualconfig/**'
-            include 'com/checkmarx/flow/cucumber/integration/jira/autoconfig/*'
-            exclude 'com/checkmarx/flow/cucumber/integration/github/**'
-            include 'com/checkmarx/flow/cucumber/integration/azure/publishing/**'
-            include 'com/checkmarx/flow/cucumber/integration/jira/analytics/*'
-            include 'com/checkmarx/flow/cucumber/integration/cxconfig/*'
-            include 'com/checkmarx/flow/cucumber/integration/**'
-            exclude 'com/checkmarx/flow/cucumber/integration/publishprocess/**'
-            exclude 'com/checkmarx/flow/test/flow**'
-            exclude 'com/checkmarx/flow/exception/**'
-            exclude 'com/checkmarx/flow/custom/**'
-            exclude 'com/checkmarx/flow/controller**'
-            exclude 'com/checkmarx/flow/filter/**'
-            exclude 'com/checkmarx/flow/service/**'
-            exclude 'com/checkmarx/flow/utils/**'
-            exclude 'com/checkmarx/flow/CxFlowApplicationTest'
-            exclude 'com/checkmarx/flow/cucumber/integration/end2end/github2jira/'
-            exclude 'com/checkmarx/flow/cucumber/integration/end2end/genericendtoend/'
-            exclude 'com/checkmarx/flow/cucumber/component/**'
-            exclude 'com/checkmarx/flow/cucumber/integration/scan'
-            exclude 'com/checkmarx/flow/cucumber/integration/jira/load/**'
-            exclude 'com/checkmarx/flow/cucumber/integration/jira/load/JiraLoadTestRunner.java'
-        }
-        testLogging {
-            events "passed", "skipped", "failed"
-        }
-    }
-}
 
 task e2eTests(type: Test) {
     useJUnitPlatform() {
@@ -264,6 +230,7 @@ task integrationTest(type: Test) {
             include 'com/checkmarx/flow/cucumber/integration/azure/publishing/github2ado/*'
             include 'com/checkmarx/flow/cucumber/integration/jira/analytics/*'
             include 'com/checkmarx/flow/cucumber/integration/cxconfig/*'
+            exclude 'com/checkmarx/flow/cucumber/integration/end2end/genericendtoend/**'
             exclude 'com/checkmarx/flow/cucumber/integration/end2end/github2jira/**'
             exclude 'com/checkmarx/flow/cucumber/integration/publishprocess/**'
             exclude 'com/checkmarx/flow/test/flow**'
@@ -276,7 +243,7 @@ task integrationTest(type: Test) {
             exclude 'com/checkmarx/flow/CxFlowApplicationTest'
             exclude 'com/checkmarx/flow/cucumber/component/**'
             exclude 'com/checkmarx/flow/cucumber/integration/scan/**'
-            exclude 'com/checkmarx/flow/cucumber/integration/jira/JiraLoadTestRunner.java'
+            exclude 'com/checkmarx/flow/cucumber/integration/jira/Load/**'
         }
         testLogging {
             events "passed", "skipped", "failed"
