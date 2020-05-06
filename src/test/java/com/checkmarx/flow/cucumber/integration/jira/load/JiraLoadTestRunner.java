@@ -10,7 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @CucumberOptions(plugin = { "pretty", "summary", "html:build/cucumber/component/api", "json:build/cucumber/component/api/cucumber.json" },
         features = "classpath:cucumber/features/integrationTests/jira/jira-load.feature",
-        glue = { "com.checkmarx.flow.cucumber.common.steps", "com.checkmarx.flow.cucumber.integration.jira" },
+        glue = { "com.checkmarx.flow.cucumber.integration.jira" },
         tags = "@Integration and not @Skip")
 public class JiraLoadTestRunner {
 }
