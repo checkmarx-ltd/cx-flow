@@ -334,4 +334,8 @@ public class Github2AdoSteps {
             return false;
         }
     }
+    
+    private void emptyMethod(){
+        
+    }
 }
