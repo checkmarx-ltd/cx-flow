@@ -34,6 +34,7 @@ import java.util.UUID;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 import static com.checkmarx.flow.exception.ExitThrowable.exit;
 import static com.checkmarx.sdk.config.Constants.UNKNOWN_INT;
@@ -60,20 +61,44 @@ public class SastScanner implements VulnerabilityScanner {
 
     @Override
     public ScanResults scan(ScanRequest scanRequest) {
-        if (isSastScanConfigured()) {
+        ScanResults scanResults = null;
+
+        if (isThisScannerEnabled()) {
+            checkScanSubmitEmailDelivery(scanRequest);
             try {
-                if (!ScanUtils.anyEmpty(scanRequest.getNamespace(), scanRequest.getRepoName(), scanRequest.getRepoUrl())) {
-                    sendSuccessScanEmail(scanRequest);
+                Integer projectId;
+                CxScanParams cxScanParams = scanRequestConverter.toScanParams(scanRequest);
+                Integer scanId = cxService.createScan(cxScanParams, "CxFlow Automated Scan");
+                projectId = cxScanParams.getProjectId();
+
+                BugTracker.Type bugTrackerType = bugTrackerTriggerEvent.triggerBugTrackerEvent(scanRequest);
+                if (bugTrackerType.equals(BugTracker.Type.NONE)) {
+                    scanDetails = handleNoneBugTrackerCase(scanRequest,null, scanId, projectId);
+                } else {
+                    cxService.waitForScanCompletion(scanId);
+                    projectId = handleUnKnownProjectId(cxScanParams.getProjectId(), cxScanParams.getTeamId(), cxScanParams.getProjectName());
                 }
-                CompletableFuture<ScanResults> results = executeCxScanFlow(scanRequest, null);
-                if (results.isCompletedExceptionally()) {
-                    log.error("An error occurred while executing process");
+                logRequest(scanRequest, scanId, null, OperationResult.successful());
+
+                scanDetails = new ScanDetails(projectId, scanId, null);
+
+                CompletableFuture<ScanResults> futureResults;
+                if (scanDetails.processResults()) {
+                    futureResults =  resultsService.processScanResultsAsync(scanRequest, scanDetails.getProjectId(), scanDetails.getScanId(), scanDetails.getOsaScanId(), scanRequest.getFilters());
+                } else {
+                    futureResults = scanDetails.getResults();
                 }
+
+                scanResults = getResults(scanResults, futureResults);
+                return scanResults;
+
+            } catch (CheckmarxException e) {
+                log.error("SAST scan failed", e);
             } catch (MachinaException e) {
                 sendErrorScanEmail(scanRequest, e);
             }
         }
-        return null; // To be fixed.
+        return scanResults;
     }
 
     public CompletableFuture<ScanResults> executeCxScanFlow(ScanRequest request, File cxFile) throws MachinaException {
@@ -105,30 +130,20 @@ public class SastScanner implements VulnerabilityScanner {
 
             CxScanParams params = scanRequestConverter.prepareScanParamsObject(request, cxFile, ownerId, projectName, projectId);
 
-            BugTracker.Type bugTrackerType = bugTrackerTriggerEvent.triggerBugTrackerEvent(request);
-
             scanId = cxService.createScan(params, "CxFlow Automated Scan");
 
+            BugTracker.Type bugTrackerType = bugTrackerTriggerEvent.triggerBugTrackerEvent(request);
             if (bugTrackerType.equals(BugTracker.Type.NONE)) {
-
-                log.info("Not waiting for scan completion as Bug Tracker type is NONE");
-                CompletableFuture<ScanResults> results = CompletableFuture.completedFuture(null);
-                logRequest(request, scanId, cxFile, OperationResult.successful());
-                return new ScanDetails(projectId, scanId, results, false);
-
+                return handleNoneBugTrackerCase(request, cxFile, scanId, projectId);
             } else {
-
                 cxService.waitForScanCompletion(scanId);
-                if (projectId == UNKNOWN_INT) {
-                    projectId = cxService.getProjectId(ownerId, projectName); //get the project id of the updated or created project
-                }
+                projectId = handleUnKnownProjectId(projectId, ownerId, projectName);
                 osaScanId = createOsaScan(request, projectId);
+
                 if (osaScanId != null) {
                     logRequest(request, osaScanId, cxFile, OperationResult.successful());
                 }
             }
-
-
         } catch (CheckmarxException | GitAPIException e) {
             String extendedMessage = ExceptionUtils.getMessage(e);
             log.error(extendedMessage, e);
@@ -263,11 +278,12 @@ public class SastScanner implements VulnerabilityScanner {
         return repoUrl;
     }
 
-    private boolean isSastScanConfigured() {
-        return flowProperties.getEnabledVulnerabilityScanners().contains(ScannerType.SAST.getScanner());
+    private boolean isThisScannerEnabled() {
+        List<String> enabledScanners = flowProperties.getEnabledVulnerabilityScanners();
+        return enabledScanners != null && enabledScanners.contains(CxProperties.CONFIG_PREFIX);
     }
 
-    private void sendSuccessScanEmail(ScanRequest request) {
+    private void sendSubmittedScanEmail(ScanRequest request) {
         Map<String, Object> emailCtx = new HashMap<>();
 
         emailCtx.put("message", "Checkmarx Scan has been submitted for "
@@ -286,6 +302,36 @@ public class SastScanner implements VulnerabilityScanner {
                 .concat(request.getRepoUrl()).concat("  Error: ").concat(e.getMessage()));
         emailCtx.put("heading", "Error occurred during scan");
         emailService.sendmail(request.getEmail(), "Error occurred for ".concat(request.getNamespace()).concat("/").concat(request.getRepoName()), emailCtx, "message-error.html");
+    }
+
+    private ScanDetails handleNoneBugTrackerCase(ScanRequest request, File cxFile, Integer scanId, Integer projectId) {
+        log.info("Not waiting for scan completion as Bug Tracker type is NONE");
+        CompletableFuture<ScanResults> results = CompletableFuture.completedFuture(null);
+        logRequest(request, scanId, cxFile, OperationResult.successful());
+        return new ScanDetails(projectId, scanId, results, false);
+    }
+
+    private Integer handleUnKnownProjectId(Integer projectId, String ownerId, String projectName) {
+        if (projectId == UNKNOWN_INT) {
+            projectId = cxService.getProjectId(ownerId, projectName); //get the project id of the updated or created project
+        }
+        return projectId;
+    }
+
+    private ScanResults getResults(ScanResults scanResults, CompletableFuture<ScanResults> futureResults) {
+        try {
+            scanResults = futureResults.get();
+        } catch (InterruptedException | ExecutionException e) {
+            log.error("Thread was interrupted while trying to get scan results", e);
+            Thread.currentThread().interrupt();
+        }
+        return scanResults;
+    }
+
+    private void checkScanSubmitEmailDelivery(ScanRequest scanRequest) {
+        if (!ScanUtils.anyEmpty(scanRequest.getNamespace(), scanRequest.getRepoName(), scanRequest.getRepoUrl())) {
+            sendSubmittedScanEmail(scanRequest);
+        }
     }
 
     private String createOsaScan(ScanRequest request, Integer projectId) throws GitAPIException, CheckmarxException {
