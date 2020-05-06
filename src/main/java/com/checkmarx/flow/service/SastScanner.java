@@ -77,10 +77,9 @@ public class SastScanner implements VulnerabilityScanner {
                 } else {
                     cxService.waitForScanCompletion(scanId);
                     projectId = handleUnKnownProjectId(cxScanParams.getProjectId(), cxScanParams.getTeamId(), cxScanParams.getProjectName());
+                    scanDetails = new ScanDetails(projectId, scanId, null);
                 }
                 logRequest(scanRequest, scanId, null, OperationResult.successful());
-
-                scanDetails = new ScanDetails(projectId, scanId, null);
 
                 CompletableFuture<ScanResults> futureResults;
                 if (scanDetails.processResults()) {
