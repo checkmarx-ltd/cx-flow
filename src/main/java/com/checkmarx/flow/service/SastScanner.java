@@ -61,7 +61,7 @@ public class SastScanner implements VulnerabilityScanner{
     private String sourcesPath = null;
 
     @Override
-    public void scan(ScanRequest scanRequest) {
+    public ScanResults scan(ScanRequest scanRequest) {
         if (isSastScanConfigured()) {
             try {
                 if (!ScanUtils.anyEmpty(scanRequest.getNamespace(), scanRequest.getRepoName(), scanRequest.getRepoUrl())) {
@@ -75,6 +75,7 @@ public class SastScanner implements VulnerabilityScanner{
                 sendErrorScanEmail(scanRequest, e);
             }
         }
+        return null; // To be fixed.
     }
 
     public CompletableFuture<ScanResults> executeCxScanFlow(ScanRequest request, File cxFile) throws MachinaException {

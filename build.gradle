@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        CxSBSDK = "0.4.14"
+        CxSBSDK = "0.4.14-SNAPSHOT"
         //cxVersion = "8.90.5"
         springBootVersion = '2.2.4.RELEASE'
         sonarqubeVersion = '2.8'
@@ -51,8 +51,8 @@ def cucumberVersion = '4.7.4'
 def junitVersion = '5.5.0'
 
 repositories {
-    jcenter()
     mavenLocal()
+    jcenter()
     mavenCentral()
     maven {
         url = 'https://packages.atlassian.com/mvn/maven-external'
