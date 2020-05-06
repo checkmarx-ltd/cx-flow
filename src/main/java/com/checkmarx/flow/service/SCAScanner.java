@@ -2,6 +2,7 @@ package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.sca.SCAParams;
@@ -13,6 +14,8 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 
 @Service
@@ -27,13 +30,14 @@ public class SCAScanner implements VulnerabilityScanner {
         ScanResults result = null;
         if (isThisScannerEnabled()) {
             SCAParams internalScaParams = toScaParams(scanRequest);
-            SCAResults internalResults = null;
             try {
-                internalResults = scaClient.scanRemoteRepo(internalScaParams);
+                SCAResults internalResults = scaClient.scanRemoteRepo(internalScaParams);
+                result = toScanResults(internalResults);
             } catch (IOException e) {
-                log.error("SCA scan failed.", e);
+                final String message = "SCA scan failed.";
+                log.error(message, e);
+                throw new MachinaRuntimeException(message);
             }
-            result = toScanResults(internalResults);
         }
         return result;
     }
@@ -50,10 +54,23 @@ public class SCAScanner implements VulnerabilityScanner {
     }
 
     private SCAParams toScaParams(ScanRequest scanRequest) {
+        URL parsedUrl = getRepoUrl(scanRequest);
+
         return SCAParams.builder()
                 .projectName(getProjectName(scanRequest))
-                .remoteRepoUrl(scanRequest.getRepoUrl())
+                .remoteRepoUrl(parsedUrl)
                 .build();
+    }
+
+    private URL getRepoUrl(ScanRequest scanRequest) {
+        URL parsedUrl;
+        try {
+            parsedUrl = new URL(scanRequest.getRepoUrl());
+        } catch (MalformedURLException e) {
+            log.error("Failed to parse repository URL: '{}'", scanRequest.getRepoUrl());
+            throw new MachinaRuntimeException("Invalid repository URL.");
+        }
+        return parsedUrl;
     }
 
     /*
