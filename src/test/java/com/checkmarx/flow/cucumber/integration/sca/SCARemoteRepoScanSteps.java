@@ -2,6 +2,7 @@ package com.checkmarx.flow.cucumber.integration.sca;
 
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.sca.SCAParams;
 import com.checkmarx.sdk.dto.sca.SCAResults;
@@ -11,8 +12,8 @@ import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import lombok.RequiredArgsConstructor;
 import org.junit.Assert;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.IOException;
@@ -21,6 +22,7 @@ import java.net.URL;
 import java.util.Collections;
 
 @SpringBootTest(classes = {CxFlowApplication.class})
+@RequiredArgsConstructor
 public class SCARemoteRepoScanSteps {
 
     private static final String APP_URL = "https://sca.scacheckmarx.com";
@@ -28,14 +30,10 @@ public class SCARemoteRepoScanSteps {
     private static final String AC_URL = "https://v2.ac-checkmarx.com";
     private static final String PROJECT_NAME = "Test Project";
 
-    @Autowired
-    private FlowProperties flowProperties;
-
-    @Autowired
-    private ScaProperties scaProperties;
-
-    @Autowired
-    private ScaClient scaClient;
+    private final FlowProperties flowProperties;
+    private final ScaProperties scaProperties;
+    private final ScaClient scaClient;
+    private final GitHubProperties gitHubProperties;
 
     private String remoteRepoUrl;
     private SCAResults scaResults;
@@ -55,7 +53,8 @@ public class SCARemoteRepoScanSteps {
         if (repoVisibilityType.equals("public")) {
             remoteRepoUrl = "https://github.com/checkmarx-ltd/cx-flow.git";
         } else if (repoVisibilityType.equals("private")){
-            remoteRepoUrl = "https://e7d5332437f66d6249a8f1825a6079da10156aa2@github.com/cxflowtestuser/EndToEndTests.git";
+            String token = gitHubProperties.getToken();
+            remoteRepoUrl = "https://" + token + "@github.com/cxflowtestuser/TestAlgorithms-.git";
         }
     }
 
