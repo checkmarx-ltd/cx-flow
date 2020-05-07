@@ -241,9 +241,7 @@ public class GenericEndToEndSteps {
             private String OldObject = null;
             private String createdFileSha = null;
             private String projectId = null;
-            private String repositoryId = null;
-
-
+            
             @Override
             Boolean hasWebHook() {
                 String uri = getHookServiceURI();
@@ -272,7 +270,7 @@ public class GenericEndToEndSteps {
                 try {
                     final ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
                     assertEquals(HttpStatus.OK, response.getStatusCode());
-                    Map responseMap = new ObjectMapper().readValue(response.getBody().replace("<", ""), Map.class);
+                    Map<?,?> responseMap = new ObjectMapper().readValue(response.getBody().replace("<", ""), Map.class);
                     hookId = responseMap.get("id").toString();
                     System.out.println("hookId=" + hookId);
 
@@ -404,14 +402,6 @@ public class GenericEndToEndSteps {
                         adoProperties.getUrl(), namespace, repo, repo, apiVersion);
             }
 
-            private String getRepositoriesFormat() {
-                //"%s/{organization}/{project}/_apis/git/repositories/{repositoryId}?api-version=5.1"
-
-                return format("%s/%s/%s/_apis/git/repositories/%s?%s",
-                        adoProperties.getUrl(), namespace, repo, repo, apiVersion);
-
-            }
-
             private String getRefsFormat() {
                 return format("%s/%s/%s/_apis/git/repositories/%s/refs?%s",
                         adoProperties.getUrl(), namespace, repo, repo, apiVersion);
@@ -423,30 +413,13 @@ public class GenericEndToEndSteps {
             }
 
             private String getProjectId() throws IOException {
-                String key = "id";
                 String url = getProjectsFormat();
                 String response = getResponseEntity(url).getBody();
-                Map responseMap = new ObjectMapper().readValue(response, Map.class);
+                Map<?,?> responseMap = new ObjectMapper().readValue(response, Map.class);
 
                 projectId = responseMap.get("id").toString();
 
                 return projectId;
-            }
-
-
-            private String getRepositoryId() {
-                String url = getRepositoriesFormat();
-                String response = getResponseEntity(url).getBody();
-
-                Map responseMap = null;
-                try {
-                    responseMap = new ObjectMapper().readValue(response, Map.class);
-                } catch (JsonProcessingException e) {
-                    e.printStackTrace();
-                }
-                repositoryId = responseMap.get("id").toString();
-
-                return repositoryId;
             }
 
             private String getDeleteFileFormat() {

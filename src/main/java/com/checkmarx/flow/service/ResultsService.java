@@ -111,10 +111,12 @@ public class ResultsService {
                 log.info("Successfully completed automation for repository {} under namespace {}", repoName, namespace);
             }
             processResults(request, results, new ScanDetails(projectId, scanId, osaScanId));
-            log.info(String.format("request : %s", request.toString()));
-            log.info(String.format("results : %s", results.toString()));
-            log.info(String.format("projectId : %s", projectId.toString()));
-            log.info("Process completed Succesfully");
+            if (log.isInfoEnabled()) {
+                log.info(String.format("request : %s", String.valueOf(request)));
+                log.info(String.format("results : %s", String.valueOf(results)));
+                log.info(String.format("projectId : %s", String.valueOf(projectId)));
+                log.info("Process completed Succesfully");
+            }
             future.complete(results);
             
             return future;
