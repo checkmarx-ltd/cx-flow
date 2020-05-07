@@ -76,7 +76,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 @SpringBootTest(classes = {CxFlowApplication.class})
 public class GenericEndToEndSteps {
     private enum Repository {
-        GitHub {
+        GITHUB {
             private GitHubProperties gitHubProperties;
             private Integer hookId;
             private String createdFileSha;
@@ -264,7 +264,7 @@ public class GenericEndToEndSteps {
                     data = generateHookData(hookTargetURL);
 
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    fail("can not create web hook, check parameters");
                 }
                 final HttpEntity<Subscription> request = new HttpEntity<>(data, headers);
                 try {
@@ -537,7 +537,7 @@ public class GenericEndToEndSteps {
 
         static Repository setTo(String toRepository, GenericEndToEndSteps genericEndToEndSteps) {
             log.info("setting repository to {}", toRepository);
-            Repository repo = valueOf(toRepository);
+            Repository repo = valueOf(toRepository.toUpperCase());
             repo.init(genericEndToEndSteps);
             return repo;
         }
@@ -646,7 +646,7 @@ public class GenericEndToEndSteps {
                     Promise<SearchResult> temp = searchClient.searchJql(jql, 10, 0, fields);
                     try {
                         TimeUnit.SECONDS.sleep(5);
-                    } catch (InterruptedException e) {
+                    } catch (Exception e) {
                         log.info("starting attempt {}", retries + 1);
                     }
                     try {
