@@ -61,8 +61,6 @@ public class SastScanner implements VulnerabilityScanner {
 
     @Override
     public ScanResults scan(ScanRequest scanRequest) {
-        handleEmptyVulnerabilityScannersCase();
-
         ScanResults scanResults = null;
         if (isThisScannerEnabled()) {
             checkScanSubmitEmailDelivery(scanRequest);
@@ -74,7 +72,7 @@ public class SastScanner implements VulnerabilityScanner {
 
                 BugTracker.Type bugTrackerType = bugTrackerTriggerEvent.triggerBugTrackerEvent(scanRequest);
                 if (bugTrackerType.equals(BugTracker.Type.NONE)) {
-                    scanDetails = handleNoneBugTrackerCase(scanRequest,null, scanId, projectId);
+                    scanDetails = handleNoneBugTrackerCase(scanRequest, null, scanId, projectId);
                 } else {
                     cxService.waitForScanCompletion(scanId);
                     projectId = handleUnKnownProjectId(cxScanParams.getProjectId(), cxScanParams.getTeamId(), cxScanParams.getProjectName());
@@ -84,7 +82,7 @@ public class SastScanner implements VulnerabilityScanner {
 
                 CompletableFuture<ScanResults> futureResults;
                 if (scanDetails.processResults()) {
-                    futureResults =  resultsService.processScanResultsAsync(scanRequest, scanDetails.getProjectId(), scanDetails.getScanId(), scanDetails.getOsaScanId(), scanRequest.getFilters());
+                    futureResults = resultsService.processScanResultsAsync(scanRequest, scanDetails.getProjectId(), scanDetails.getScanId(), scanDetails.getOsaScanId(), scanRequest.getFilters());
                 } else {
                     futureResults = scanDetails.getResults();
                 }
@@ -274,8 +272,15 @@ public class SastScanner implements VulnerabilityScanner {
     }
 
     private boolean isThisScannerEnabled() {
+        boolean result = false;
         List<String> enabledScanners = flowProperties.getEnabledVulnerabilityScanners();
-        return enabledScanners != null && enabledScanners.contains(CxProperties.CONFIG_PREFIX);
+        if (enabledScanners == null || enabledScanners.isEmpty()) {
+            log.info("None of the vulnerability scanners is enabled in the configuration. Using CxSAST scanner by default.");
+            result = true;
+        } else if (enabledScanners.contains(CxProperties.CONFIG_PREFIX)) {
+            result = true;
+        }
+        return result;
     }
 
     private void sendSubmittedScanEmail(ScanRequest request) {
@@ -326,13 +331,6 @@ public class SastScanner implements VulnerabilityScanner {
     private void checkScanSubmitEmailDelivery(ScanRequest scanRequest) {
         if (!ScanUtils.anyEmpty(scanRequest.getNamespace(), scanRequest.getRepoName(), scanRequest.getRepoUrl())) {
             sendSubmittedScanEmail(scanRequest);
-        }
-    }
-
-    private void handleEmptyVulnerabilityScannersCase() {
-        if (flowProperties.getEnabledVulnerabilityScanners().isEmpty()) {
-            log.info("No vulnerability scanners were found. Updating a default scanner as 'SAST'");
-            flowProperties.setEnabledVulnerabilityScanners(Collections.singletonList(CxProperties.CONFIG_PREFIX));
         }
     }
 
