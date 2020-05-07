@@ -26,10 +26,10 @@ public class SCAScanner implements VulnerabilityScanner {
     private final FlowProperties flowProperties;
 
     @Override
-    public ScanResults scan(ScanRequest scanRequest, String projectName) {
+    public ScanResults scan(ScanRequest scanRequest) {
         ScanResults result = null;
         if (isThisScannerEnabled()) {
-            SCAParams internalScaParams = toScaParams(scanRequest, projectName);
+            SCAParams internalScaParams = toScaParams(scanRequest);
             try {
                 SCAResults internalResults = scaClient.scanRemoteRepo(internalScaParams);
                 result = toScanResults(internalResults);
@@ -53,11 +53,11 @@ public class SCAScanner implements VulnerabilityScanner {
                 .build();
     }
 
-    private SCAParams toScaParams(ScanRequest scanRequest, String projectName) {
+    private SCAParams toScaParams(ScanRequest scanRequest) {
         URL parsedUrl = getRepoUrl(scanRequest);
 
         return SCAParams.builder()
-                .projectName(projectName)
+                .projectName(scanRequest.getProject())
                 .remoteRepoUrl(parsedUrl)
                 .build();
     }
@@ -71,30 +71,5 @@ public class SCAScanner implements VulnerabilityScanner {
             throw new MachinaRuntimeException("Invalid repository URL.");
         }
         return parsedUrl;
-    }
-
-    /*
-        Logic to determine the project name according to SAST project name determination.
-        In this case project name is trying to be built as not as a multi tenant project
-     */
-    private String getProjectName(ScanRequest scanRequest) {
-        StringBuilder projectName = new StringBuilder();
-
-        String repoName = scanRequest.getRepoName();
-        String namespace = scanRequest.getNamespace();
-        String branch = scanRequest.getBranch();
-
-        if (!StringUtils.isEmpty(namespace)) {
-            projectName.append(namespace);
-        }
-
-        if (!StringUtils.isEmpty(repoName)) {
-            projectName.append("-").append(repoName);
-        }
-
-        if (!StringUtils.isEmpty(branch)) {
-            projectName.append("-").append(branch);
-        }
-        return projectName.toString();
     }
 }

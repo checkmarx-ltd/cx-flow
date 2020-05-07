@@ -9,9 +9,9 @@ import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
+
 import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
@@ -114,30 +114,6 @@ public class HelperService {
         return null;  //null will indicate no override of team will take place
     }
 
-    public String getCxProject(ScanRequest request){
-        String scriptFile = cxProperties.getProjectScript();
-        String project = request.getProject();
-        //note:  if script is provided, it is highest priority
-        if(!ScanUtils.empty(scriptFile)){
-            log.info("executing external script to determine the Project in Checkmarx to be used ({})", scriptFile);
-            try {
-                String script = getStringFromFile(scriptFile);
-                HashMap<String, Object> bindings = new HashMap<>();
-                bindings.put("request", request);
-                Object result = scriptService.runScript(script, bindings);
-                if (result instanceof String) {
-                    return ((String) result);
-                }
-            }catch (IOException e){
-                log.error("Error reading script file for checkmarx project {}", scriptFile, e);
-            }
-        }
-        else if(!ScanUtils.empty(project)){
-            return project;
-        }
-        return null;  //null will indicate no override of team will take place
-    }
-
     public String getShortUid(ScanRequest request){
         String uid = RandomStringUtils.random(Constants.SHORT_ID_LENGTH, true, true) ;
         request.setId(uid);
@@ -148,7 +124,7 @@ public class HelperService {
         return RandomStringUtils.random(Constants.SHORT_ID_LENGTH, true, true) ;
     }
 
-    private String getStringFromFile(String path) throws IOException {
+    public String getStringFromFile(String path) throws IOException {
         return new String(Files.readAllBytes(Paths.get(path.intern())));
     }
 

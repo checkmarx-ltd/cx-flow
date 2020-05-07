@@ -1,8 +1,6 @@
 package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.exception.MachinaException;
-import com.checkmarx.flow.sastscanning.ScanRequestConverter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -16,25 +14,15 @@ import java.util.List;
 public class FlowService {
 
     private final List<VulnerabilityScanner> scanners;
-    private final ScanRequestConverter scanRequestConverter;
+    private final ProjectNameGenerator projectNameGenerator;
 
     @Async("webHook")
     public void initiateAutomation(ScanRequest scanRequest) {
-        String projectName = null;
-        projectName = determineProjectName(scanRequest, projectName);
+        String effectiveProjectName = projectNameGenerator.determineProjectName(scanRequest);
+        scanRequest.setProject(effectiveProjectName);
 
         for (VulnerabilityScanner currentScanner : scanners) {
-            currentScanner.scan(scanRequest, projectName);
+            currentScanner.scan(scanRequest);
         }
     }
-
-    private String determineProjectName(ScanRequest scanRequest, String projectName) {
-        try {
-            projectName = scanRequestConverter.determineProjectName(scanRequest);
-        } catch (MachinaException e) {
-            log.error("Cannot initiate a new scan due to the following error: {}", e);
-        }
-        return projectName;
-    }
-
 }

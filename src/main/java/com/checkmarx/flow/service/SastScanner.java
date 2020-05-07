@@ -60,7 +60,7 @@ public class SastScanner implements VulnerabilityScanner {
     private String sourcesPath = null;
 
     @Override
-    public ScanResults scan(ScanRequest scanRequest, String projectName) {
+    public ScanResults scan(ScanRequest scanRequest) {
         handleEmptyVulnerabilityScannersCase();
 
         ScanResults scanResults = null;
@@ -68,7 +68,7 @@ public class SastScanner implements VulnerabilityScanner {
             checkScanSubmitEmailDelivery(scanRequest);
             try {
                 Integer projectId;
-                CxScanParams cxScanParams = scanRequestConverter.toScanParams(scanRequest, projectName);
+                CxScanParams cxScanParams = scanRequestConverter.toScanParams(scanRequest);
                 Integer scanId = cxService.createScan(cxScanParams, "CxFlow Automated Scan");
                 projectId = cxScanParams.getProjectId();
 
@@ -112,23 +112,18 @@ public class SastScanner implements VulnerabilityScanner {
 
     public ScanDetails executeCxScan(ScanRequest request, File cxFile) throws MachinaException {
 
-        String osaScanId = null;
+        String osaScanId;
         Integer scanId = null;
-        Integer projectId = null;
+        Integer projectId;
 
         try {
             /*Check if team is provided*/
             String ownerId = scanRequestConverter.determineTeamAndOwnerID(request);
 
-            /*Determine project name*/
-            String projectName = scanRequestConverter.determineProjectName(request);
-
             log.debug("Auto profiling is enabled");
-            projectId = scanRequestConverter.determinePresetAndProjectId(request, ownerId, projectName);
+            projectId = scanRequestConverter.determinePresetAndProjectId(request, ownerId);
 
-            request.setProject(projectName);
-
-            CxScanParams params = scanRequestConverter.prepareScanParamsObject(request, cxFile, ownerId, projectName, projectId);
+            CxScanParams params = scanRequestConverter.prepareScanParamsObject(request, cxFile, ownerId, projectId);
 
             scanId = cxService.createScan(params, "CxFlow Automated Scan");
 
@@ -137,7 +132,7 @@ public class SastScanner implements VulnerabilityScanner {
                 return handleNoneBugTrackerCase(request, cxFile, scanId, projectId);
             } else {
                 cxService.waitForScanCompletion(scanId);
-                projectId = handleUnKnownProjectId(projectId, ownerId, projectName);
+                projectId = handleUnKnownProjectId(projectId, ownerId, request.getProject());
                 osaScanId = createOsaScan(request, projectId);
 
                 if (osaScanId != null) {
@@ -262,7 +257,7 @@ public class SastScanner implements VulnerabilityScanner {
     }
 
     private String getRepoUrl(ScanRequest request, File cxFile) {
-        String repoUrl = null;
+        String repoUrl;
 
         if (sourcesPath != null) {
             //the folder to scan is supplied via -f flag in command line and it is located in the filesystem

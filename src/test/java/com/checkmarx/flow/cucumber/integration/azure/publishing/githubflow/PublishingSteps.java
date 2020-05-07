@@ -64,11 +64,12 @@ public class PublishingSteps extends PublishingStepsBase {
     private final BitBucketService bitBucketService;
     private final SastScanner sastScanner;
     private final ScanRequestConverter scanRequestConverter;
+
     @MockBean
     private final CxClient cxClientMock;
-    private final ResultsService resultsService;
-    private final ADOService adoService;
-    private final EmailService emailService;
+
+    @MockBean
+    private final ProjectNameGenerator projectNameGenerator;
 
     private ScanResults scanResultsToInject;
     private String webhookRequestBody;
@@ -83,6 +84,9 @@ public class PublishingSteps extends PublishingStepsBase {
 
         when(cxClientMock.getTeamId(anyString()))
                 .thenReturn("dummyTeamId");
+
+        when(projectNameGenerator.determineProjectName(any()))
+                .thenReturn(getProjectName());
     }
 
     @Given("issue tracker is ADO")
@@ -155,7 +159,7 @@ public class PublishingSteps extends PublishingStepsBase {
 
     private GitHubController getGitHubControllerInstance() {
         List<VulnerabilityScanner> vulnerabilityScannerList = new ArrayList<>();
-        FlowService flowService = new FlowService(vulnerabilityScannerList, scanRequestConverter);
+        FlowService flowService = new FlowService(vulnerabilityScannerList, projectNameGenerator);
 
         return new GitHubController(gitHubProperties, flowProperties, cxProperties,
                 null, flowService, helperService, gitHubService);

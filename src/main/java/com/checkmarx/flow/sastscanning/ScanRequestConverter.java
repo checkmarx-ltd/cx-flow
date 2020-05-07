@@ -3,7 +3,6 @@ package com.checkmarx.flow.sastscanning;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.Sources;
-import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.service.GitHubService;
 import com.checkmarx.flow.service.GitLabService;
 import com.checkmarx.flow.service.HelperService;
@@ -34,12 +33,10 @@ public class ScanRequestConverter {
     private final GitHubService gitService;
     private final GitLabService gitLabService;
 
-    public CxScanParams toScanParams(ScanRequest scanRequest, String projectName) throws CheckmarxException {
+    public CxScanParams toScanParams(ScanRequest scanRequest) throws CheckmarxException {
         String ownerId = determineTeamAndOwnerID(scanRequest);
-        Integer projectId = determinePresetAndProjectId(scanRequest, ownerId, projectName);
-        scanRequest.setProject(projectName);
-
-        return prepareScanParamsObject(scanRequest, null, ownerId, projectName, projectId);
+        Integer projectId = determinePresetAndProjectId(scanRequest, ownerId);
+        return prepareScanParamsObject(scanRequest, null, ownerId, projectId);
     }
 
     public String determineTeamAndOwnerID(ScanRequest request) throws CheckmarxException {
@@ -81,44 +78,12 @@ public class ScanRequestConverter {
         return ownerId;
     }
 
-    public String determineProjectName(ScanRequest request) throws MachinaException {
-        String projectName;
-        String repoName = request.getRepoName();
-        String branch = request.getBranch();
-        String namespace = request.getNamespace();
-
-        String project = helperService.getCxProject(request);
-        if (!ScanUtils.empty(project)) {
-            projectName = project;
-        } else if (cxProperties.isMultiTenant() && !ScanUtils.empty(repoName)) {
-            projectName = repoName;
-            if (!ScanUtils.empty(branch)) {
-                projectName = projectName.concat("-").concat(branch);
-            }
-        } else {
-            if (!ScanUtils.empty(namespace) && !ScanUtils.empty(repoName) && !ScanUtils.empty(branch)) {
-                projectName = namespace.concat("-").concat(repoName).concat("-").concat(branch);
-            } else if (!ScanUtils.empty(request.getApplication())) {
-                projectName = request.getApplication();
-            } else {
-                log.error("Namespace (--namespace)/RepoName(--repo-name)/Branch(--branch) OR Application (--app) must be provided if the Project is not provided (--cx-project)");
-                throw new MachinaException("Namespace (--namespace)/RepoName(--repo-name)/Branch(--branch) OR Application (--app) must be provided if the Project is not provided (--cx-project)");
-            }
-        }
-
-        //only allow specific chars in project name in checkmarx
-        projectName = projectName.replaceAll("[^a-zA-Z0-9-_.]+", "-");
-        log.info("Project Name being used {}", projectName);
-
-        return projectName;
-    }
-
-    public Integer determinePresetAndProjectId(ScanRequest request, String ownerId, String projectName) {
-        Boolean projectExists = false;
+    public Integer determinePresetAndProjectId(ScanRequest request, String ownerId) {
+        boolean projectExists = false;
         Integer projectId = UNKNOWN_INT;
         if (flowProperties.isAutoProfile() && !request.isScanPresetOverride()) {
 
-            projectId = cxService.getProjectId(ownerId, projectName);
+            projectId = cxService.getProjectId(ownerId, request.getProject());
             if (projectId != UNKNOWN_INT) {
                 int presetId = cxService.getProjectPresetId(projectId);
                 if (presetId != UNKNOWN_INT) {
@@ -159,12 +124,12 @@ public class ScanRequestConverter {
         return projectId;
     }
 
-    public CxScanParams prepareScanParamsObject(ScanRequest request, File cxFile, String ownerId, String projectName, Integer projectId) {
+    public CxScanParams prepareScanParamsObject(ScanRequest request, File cxFile, String ownerId, Integer projectId) {
         CxScanParams params = new CxScanParams()
                 .teamId(ownerId)
                 .withTeamName(request.getTeam())
                 .projectId(projectId)
-                .withProjectName(projectName)
+                .withProjectName(request.getProject())
                 .withScanPreset(request.getScanPreset())
                 .withGitUrl(request.getRepoUrlWithAuth())
                 .withIncremental(request.isIncremental())
