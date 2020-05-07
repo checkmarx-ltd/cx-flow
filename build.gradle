@@ -61,6 +61,10 @@ repositories {
 
 }
 
+configurations {
+    compile.exclude group: "org.slf4j", module: "slf4j-simple"
+}
+
 dependencies {
     compile('org.springframework.boot:spring-boot-starter-actuator')
     compile('org.springframework.boot:spring-boot-starter-web')
