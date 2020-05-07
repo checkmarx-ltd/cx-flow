@@ -233,7 +233,8 @@ public class GenericEndToEndSteps {
                 gitHubProperties = genericEndToEndSteps.gitHubProperties;
                 super.init(genericEndToEndSteps);
             }
-        }, ADO {
+        },
+        ADO {
             private ADOProperties adoProperties;
             private String COMMIT_FILE_PATH = null;
             private String hookId = null;
