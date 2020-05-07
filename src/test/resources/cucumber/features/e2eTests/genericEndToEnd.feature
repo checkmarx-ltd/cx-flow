@@ -1,8 +1,6 @@
 @EndToEnd
 @Integration
-@Skip
 Feature: Cxflow generic end-2-end tests
-
   Scenario Outline: Check cxflow end-2-end SAST flow between <repository> webhook and <bug-tracker>
     Given repository is <repository>
     And bug-tracker is <bug-tracker>

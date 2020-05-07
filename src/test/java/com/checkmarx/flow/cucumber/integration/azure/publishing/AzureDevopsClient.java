@@ -178,19 +178,25 @@ public class AzureDevopsClient {
         }
     }
 
-    private boolean projectExists() throws IOException {
+    public boolean projectExists()  {
         log.info("Checking if project {} exists", projectName);
         HttpEntity<?> request = getRequestEntity(null);
 
-        String url = getResourceUrl("projects", null);
-        ResponseEntity<ObjectNode> response = restClient.exchange(url, HttpMethod.GET, request, ObjectNode.class);
-        ObjectNode body = extractBody(response);
+        try {
+            String url = getResourceUrl("projects", null);
+            ResponseEntity<ObjectNode> response = restClient.exchange(url, HttpMethod.GET, request, ObjectNode.class);
+            ObjectNode body = extractBody(response);
 
-        boolean result = StreamSupport.stream(body.get("value").spliterator(), false)
-                .anyMatch(currentProjectName());
+            boolean result = StreamSupport.stream(body.get("value").spliterator(), false)
+                    .anyMatch(currentProjectName());
 
-        log.info(result ? "Project {} already exists" : "Project {} doesn't exist.", projectName);
-        return result;
+            log.info(result ? "Project {} already exists" : "Project {} doesn't exist.", projectName);
+            return result;
+        }
+        catch(Exception e){
+            log.info("Project {} doesn't exist.", projectName);
+            return false;
+        }
     }
 
     private String queueProjectCreation() throws IOException {

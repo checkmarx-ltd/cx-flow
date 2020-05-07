@@ -59,7 +59,7 @@ public class ResultsService {
             //TODO async these, and join and merge after
             ScanResults results = cxService.getReportContentByScanId(scanId, filters);
             new ScanResultsReport(scanId,request, results).log();
-            
+            log.info("ScanResults results : {}", results);
             if(cxProperties.getEnableOsa() && !ScanUtils.empty(osaScanId)){
                 log.info("Waiting for OSA Scan results for scan id {}", osaScanId);
                 results = osaService.waitForOsaScan(osaScanId, projectId, results, filters);
@@ -68,6 +68,7 @@ public class ResultsService {
             }
             Map<String, Object> emailCtx = new HashMap<>();
             BugTracker.Type bugTrackerType = request.getBugTracker().getType();
+            log.info("bugTrackerType : {}", bugTrackerType);
             //Send email (if EMAIL was enabled and EMAIL was not main feedback option
             if (flowProperties.getMail() != null && flowProperties.getMail().isEnabled() &&
                     !bugTrackerType.equals(BugTracker.Type.NONE) &&
@@ -97,6 +98,9 @@ public class ResultsService {
                 log.info("Successfully completed automation for repository {} under namespace {}", repoName, namespace);
             }
             processResults(request, results, new ScanDetails(projectId, scanId, osaScanId));
+            log.info(String.format("request : %s", request.toString()));
+            log.info(String.format("results : %s", results.toString()));
+            log.info(String.format("projectId : %s", projectId.toString()));
             log.info("Process completed Succesfully");
             future.complete(results);
             
@@ -176,6 +180,7 @@ public class ResultsService {
                 break;
             case JIRA:
                 handleJiraCase(request, results, scanDetails);
+                log.info("Results Service case JIRA : request =:  {}  results = {}  scanDetails= {}", request.toString(),results.toString(),scanDetails.toString());
                 break;
             case GITHUBPULL:
                 gitService.processPull(request, results);
