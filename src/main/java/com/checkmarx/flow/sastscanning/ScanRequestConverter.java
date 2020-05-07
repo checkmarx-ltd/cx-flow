@@ -34,9 +34,8 @@ public class ScanRequestConverter {
     private final GitHubService gitService;
     private final GitLabService gitLabService;
 
-    public CxScanParams toScanParams(ScanRequest scanRequest) throws MachinaException, CheckmarxException {
+    public CxScanParams toScanParams(ScanRequest scanRequest, String projectName) throws CheckmarxException {
         String ownerId = determineTeamAndOwnerID(scanRequest);
-        String projectName = determineProjectName(scanRequest);
         Integer projectId = determinePresetAndProjectId(scanRequest, ownerId, projectName);
         scanRequest.setProject(projectName);
 

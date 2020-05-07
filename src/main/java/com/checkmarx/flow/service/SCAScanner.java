@@ -26,10 +26,10 @@ public class SCAScanner implements VulnerabilityScanner {
     private final FlowProperties flowProperties;
 
     @Override
-    public ScanResults scan(ScanRequest scanRequest) {
+    public ScanResults scan(ScanRequest scanRequest, String projectName) {
         ScanResults result = null;
         if (isThisScannerEnabled()) {
-            SCAParams internalScaParams = toScaParams(scanRequest);
+            SCAParams internalScaParams = toScaParams(scanRequest, projectName);
             try {
                 SCAResults internalResults = scaClient.scanRemoteRepo(internalScaParams);
                 result = toScanResults(internalResults);
@@ -53,11 +53,11 @@ public class SCAScanner implements VulnerabilityScanner {
                 .build();
     }
 
-    private SCAParams toScaParams(ScanRequest scanRequest) {
+    private SCAParams toScaParams(ScanRequest scanRequest, String projectName) {
         URL parsedUrl = getRepoUrl(scanRequest);
 
         return SCAParams.builder()
-                .projectName(getProjectName(scanRequest))
+                .projectName(projectName)
                 .remoteRepoUrl(parsedUrl)
                 .build();
     }

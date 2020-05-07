@@ -60,14 +60,13 @@ public class SastScanner implements VulnerabilityScanner {
     private String sourcesPath = null;
 
     @Override
-    public ScanResults scan(ScanRequest scanRequest) {
+    public ScanResults scan(ScanRequest scanRequest, String projectName) {
         ScanResults scanResults = null;
-
         if (isThisScannerEnabled()) {
             checkScanSubmitEmailDelivery(scanRequest);
             try {
                 Integer projectId;
-                CxScanParams cxScanParams = scanRequestConverter.toScanParams(scanRequest);
+                CxScanParams cxScanParams = scanRequestConverter.toScanParams(scanRequest, projectName);
                 Integer scanId = cxService.createScan(cxScanParams, "CxFlow Automated Scan");
                 projectId = cxScanParams.getProjectId();
 

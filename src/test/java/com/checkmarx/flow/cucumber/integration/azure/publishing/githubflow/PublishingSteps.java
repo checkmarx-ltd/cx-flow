@@ -8,6 +8,7 @@ import com.checkmarx.flow.cucumber.common.Constants;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 import com.checkmarx.flow.cucumber.integration.azure.publishing.AzureDevopsClient;
 import com.checkmarx.flow.cucumber.integration.azure.publishing.PublishingStepsBase;
+import com.checkmarx.flow.sastscanning.ScanRequestConverter;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.github.GitHubTestUtils;
 import com.checkmarx.sdk.config.CxProperties;
@@ -62,6 +63,7 @@ public class PublishingSteps extends PublishingStepsBase {
     private final GitLabService gitLabService;
     private final BitBucketService bitBucketService;
     private final SastScanner sastScanner;
+    private final ScanRequestConverter scanRequestConverter;
     @MockBean
     private final CxClient cxClientMock;
     private final ResultsService resultsService;
@@ -153,7 +155,7 @@ public class PublishingSteps extends PublishingStepsBase {
 
     private GitHubController getGitHubControllerInstance() {
         List<VulnerabilityScanner> vulnerabilityScannerList = new ArrayList<>();
-        FlowService flowService = new FlowService(vulnerabilityScannerList);
+        FlowService flowService = new FlowService(vulnerabilityScannerList, scanRequestConverter);
 
         return new GitHubController(gitHubProperties, flowProperties, cxProperties,
                 null, flowService, helperService, gitHubService);
