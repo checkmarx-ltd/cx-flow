@@ -61,6 +61,8 @@ public class SastScanner implements VulnerabilityScanner {
 
     @Override
     public ScanResults scan(ScanRequest scanRequest, String projectName) {
+        handleEmptyVulnerabilityScannersCase();
+
         ScanResults scanResults = null;
         if (isThisScannerEnabled()) {
             checkScanSubmitEmailDelivery(scanRequest);
@@ -329,6 +331,13 @@ public class SastScanner implements VulnerabilityScanner {
     private void checkScanSubmitEmailDelivery(ScanRequest scanRequest) {
         if (!ScanUtils.anyEmpty(scanRequest.getNamespace(), scanRequest.getRepoName(), scanRequest.getRepoUrl())) {
             sendSubmittedScanEmail(scanRequest);
+        }
+    }
+
+    private void handleEmptyVulnerabilityScannersCase() {
+        if (flowProperties.getEnabledVulnerabilityScanners().isEmpty()) {
+            log.info("No vulnerability scanners were found. Updating a default scanner as 'SAST'");
+            flowProperties.setEnabledVulnerabilityScanners(Collections.singletonList(CxProperties.CONFIG_PREFIX));
         }
     }
 
