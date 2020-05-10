@@ -48,6 +48,7 @@ import static org.mockito.Mockito.*;
 public class CxConfigBugTrackerSteps {
     private static final String PULL_REQUEST_STATUSES_URL = "statuses url stub";
     public static final String BRANCH = "udi-tests";
+    public static final String CUSTOM_BEAN_NAME = "GitHub";
 
     @Autowired
     private CxClient cxClientMock;
@@ -100,6 +101,10 @@ public class CxConfigBugTrackerSteps {
         fixBranch();
     }
 
+    private void initGitHubControllerSpy() {
+        doNothing().when(gitHubControllerSpy).verifyHmacSignature(any(), any());
+    }
+
     private void fixBranch() {
         if (!flowProperties.getBranches().contains(BRANCH)) {
             flowProperties.getBranches().add(BRANCH);
@@ -109,8 +114,6 @@ public class CxConfigBugTrackerSteps {
     private void cleanRequest() {
         this.request = null;
     }
-
-
 
     private void initHelperServiceMock() {
         when(helperService.isBranch2Scan(any(), anyList())).thenReturn(true);
@@ -149,6 +152,8 @@ public class CxConfigBugTrackerSteps {
         ArgumentCaptor<ScanRequest> ac = ArgumentCaptor.forClass(ScanRequest.class);
         FlowService flowServiceMock = Mockito.mock(FlowService.class);
         gitHubControllerSpy = new GitHubController(gitHubProperties,flowProperties, cxProperties, jiraProperties, flowServiceMock,helperService, gitHubService);
+        gitHubControllerSpy = spy(gitHubControllerSpy);
+        initGitHubControllerSpy();
         buildPullRequest();
         verify(flowServiceMock, times(1)).initiateAutomation(ac.capture());
         request = ac.getValue();
@@ -161,9 +166,8 @@ public class CxConfigBugTrackerSteps {
     @Then("scan request should have CUSTOM bug tracker, and GitHub custom bean name")
     public void assertIssuesInGitHb() {
         Assert.assertEquals(BugTracker.Type.CUSTOM, request.getBugTracker().getType());
-        Assert.assertEquals("GitHub", request.getBugTracker().getCustomBean());
+        Assert.assertEquals(CUSTOM_BEAN_NAME, request.getBugTracker().getCustomBean());
     }
-
 
     public void buildPullRequest() {
         PullEvent pullEvent = new PullEvent();
@@ -193,7 +197,7 @@ public class CxConfigBugTrackerSteps {
 
             gitHubControllerSpy.pullRequest(
                     pullEventStr,
-                    "sha1=D8E2187EB2E7E19D3D3FC2335FFAE80BB52317D8",
+                    "SIGNATURE",
                     "CX", "VB",
                     Arrays.asList(branch), null,
                     null,
@@ -214,7 +218,6 @@ public class CxConfigBugTrackerSteps {
             fail("Unable to parse " + pullEvent.toString());
         }
     }
-
 
      /**
      * Returns scan results as if they were produced by SAST.

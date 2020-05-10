@@ -17,11 +17,4 @@ public class CxConfigBugTrackerConfiguration {
         return Mockito.mock(CxService.class);
     }
 
-    @Bean
-    @Primary
-    public FlowService flowServiceMock() {
-        return Mockito.mock(FlowService.class);
-    }
-
-
 }
