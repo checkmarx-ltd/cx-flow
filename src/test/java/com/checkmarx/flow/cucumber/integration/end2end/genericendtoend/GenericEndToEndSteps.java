@@ -76,7 +76,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 @SpringBootTest(classes = {CxFlowApplication.class})
 public class GenericEndToEndSteps {
     private enum Repository {
-        GitHub {
+        GITHUB {
             private GitHubProperties gitHubProperties;
             private Integer hookId;
             private String createdFileSha;
@@ -233,7 +233,8 @@ public class GenericEndToEndSteps {
                 gitHubProperties = genericEndToEndSteps.gitHubProperties;
                 super.init(genericEndToEndSteps);
             }
-        }, ADO {
+        },
+        ADO {
             private ADOProperties adoProperties;
             private String COMMIT_FILE_PATH = null;
             private String hookId = null;
@@ -241,9 +242,7 @@ public class GenericEndToEndSteps {
             private String OldObject = null;
             private String createdFileSha = null;
             private String projectId = null;
-            private String repositoryId = null;
-
-
+            
             @Override
             Boolean hasWebHook() {
                 String uri = getHookServiceURI();
@@ -266,13 +265,13 @@ public class GenericEndToEndSteps {
                     data = generateHookData(hookTargetURL);
 
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    fail("can not create web hook, check parameters");
                 }
                 final HttpEntity<Subscription> request = new HttpEntity<>(data, headers);
                 try {
                     final ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
                     assertEquals(HttpStatus.OK, response.getStatusCode());
-                    Map responseMap = new ObjectMapper().readValue(response.getBody().replace("<", ""), Map.class);
+                    Map<?,?> responseMap = new ObjectMapper().readValue(response.getBody().replace("<", ""), Map.class);
                     hookId = responseMap.get("id").toString();
                     System.out.println("hookId=" + hookId);
 
@@ -404,14 +403,6 @@ public class GenericEndToEndSteps {
                         adoProperties.getUrl(), namespace, repo, repo, apiVersion);
             }
 
-            private String getRepositoriesFormat() {
-                //"%s/{organization}/{project}/_apis/git/repositories/{repositoryId}?api-version=5.1"
-
-                return format("%s/%s/%s/_apis/git/repositories/%s?%s",
-                        adoProperties.getUrl(), namespace, repo, repo, apiVersion);
-
-            }
-
             private String getRefsFormat() {
                 return format("%s/%s/%s/_apis/git/repositories/%s/refs?%s",
                         adoProperties.getUrl(), namespace, repo, repo, apiVersion);
@@ -423,30 +414,13 @@ public class GenericEndToEndSteps {
             }
 
             private String getProjectId() throws IOException {
-                String key = "id";
                 String url = getProjectsFormat();
                 String response = getResponseEntity(url).getBody();
-                Map responseMap = new ObjectMapper().readValue(response, Map.class);
+                Map<?,?> responseMap = new ObjectMapper().readValue(response, Map.class);
 
                 projectId = responseMap.get("id").toString();
 
                 return projectId;
-            }
-
-
-            private String getRepositoryId() {
-                String url = getRepositoriesFormat();
-                String response = getResponseEntity(url).getBody();
-
-                Map responseMap = null;
-                try {
-                    responseMap = new ObjectMapper().readValue(response, Map.class);
-                } catch (JsonProcessingException e) {
-                    e.printStackTrace();
-                }
-                repositoryId = responseMap.get("id").toString();
-
-                return repositoryId;
             }
 
             private String getDeleteFileFormat() {
@@ -564,7 +538,7 @@ public class GenericEndToEndSteps {
 
         static Repository setTo(String toRepository, GenericEndToEndSteps genericEndToEndSteps) {
             log.info("setting repository to {}", toRepository);
-            Repository repo = valueOf(toRepository);
+            Repository repo = valueOf(toRepository.toUpperCase());
             repo.init(genericEndToEndSteps);
             return repo;
         }
@@ -673,7 +647,7 @@ public class GenericEndToEndSteps {
                     Promise<SearchResult> temp = searchClient.searchJql(jql, 10, 0, fields);
                     try {
                         TimeUnit.SECONDS.sleep(5);
-                    } catch (InterruptedException e) {
+                    } catch (Exception e) {
                         log.info("starting attempt {}", retries + 1);
                     }
                     try {
