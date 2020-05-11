@@ -22,6 +22,8 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class SCAScanner implements VulnerabilityScanner {
+    private static final String SCAN_TYPE = ScaProperties.CONFIG_PREFIX;
+
     private final ScaClient scaClient;
     private final FlowProperties flowProperties;
 
@@ -29,6 +31,7 @@ public class SCAScanner implements VulnerabilityScanner {
     public ScanResults scan(ScanRequest scanRequest) {
         ScanResults result = null;
         if (isThisScannerEnabled()) {
+            log.info("--------------------- Initiating new {} scan ---------------------", SCAN_TYPE);
             SCAParams internalScaParams = toScaParams(scanRequest);
             try {
                 SCAResults internalResults = scaClient.scanRemoteRepo(internalScaParams);

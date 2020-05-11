@@ -43,7 +43,7 @@ import static com.checkmarx.sdk.config.Constants.UNKNOWN_INT;
 @Slf4j
 @RequiredArgsConstructor
 public class SastScanner implements VulnerabilityScanner {
-
+    private static final String SCAN_TYPE = CxProperties.CONFIG_PREFIX;
     private static final String ERROR_BREAK_MSG = "Exiting with Error code 10 due to issues present";
 
     private final ResultsService resultsService;
@@ -63,6 +63,7 @@ public class SastScanner implements VulnerabilityScanner {
     public ScanResults scan(ScanRequest scanRequest) {
         ScanResults scanResults = null;
         if (isThisScannerEnabled()) {
+            log.info("--------------------- Initiating new {} scan ---------------------", SCAN_TYPE);
             checkScanSubmitEmailDelivery(scanRequest);
             try {
                 Integer projectId;
