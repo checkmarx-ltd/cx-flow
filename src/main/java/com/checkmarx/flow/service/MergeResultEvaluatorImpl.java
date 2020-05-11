@@ -3,6 +3,8 @@ package com.checkmarx.flow.service;
 import com.checkmarx.flow.config.FindingSeverity;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.RepoProperties;
+import com.checkmarx.flow.dto.OperationResult;
+import com.checkmarx.flow.dto.OperationStatus;
 import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.dto.ScanResults;
@@ -19,6 +21,9 @@ import java.util.*;
 public class MergeResultEvaluatorImpl implements MergeResultEvaluator {
     private static final ObjectMapper jsonMapper = new ObjectMapper();
 
+    public static final String MERGE_SUCCESS_DESCRIPTION = "Checkmarx Scan Completed";
+    public static final String MERGE_FAILURE_DESCRIPTION = "Checkmarx Scan completed. Vulnerability scan failed";
+    
     private final FlowProperties flowProperties;
 
     public MergeResultEvaluatorImpl(FlowProperties flowProperties) {
@@ -27,6 +32,21 @@ public class MergeResultEvaluatorImpl implements MergeResultEvaluator {
 
     @Override
     public boolean isMergeAllowed(ScanResults scanResults, RepoProperties repoProperties, PullRequestReport pullRequestReport) {
+
+        OperationResult requestResult = new OperationResult(OperationStatus.SUCCESS, MERGE_SUCCESS_DESCRIPTION);
+        boolean isMergeAllowed = isAllowed(scanResults, repoProperties, pullRequestReport);
+        
+        if (!isMergeAllowed) {
+            requestResult = new OperationResult(OperationStatus.FAILURE, MERGE_FAILURE_DESCRIPTION);
+        } 
+
+        pullRequestReport.setPullRequestResult(requestResult);
+        pullRequestReport.log();
+        
+        return isMergeAllowed;
+    }
+    
+    private boolean isAllowed(ScanResults scanResults, RepoProperties repoProperties, PullRequestReport pullRequestReport) {
         if (!repoProperties.isErrorMerge()) {
             log.info("Merge is allowed, because error-merge is set to false.");
             return true;

@@ -38,8 +38,7 @@ public class GitHubService extends RepoService {
     private static final String STATUSES_URL_KEY = "statuses_url";
     private static final String STATUSES_URL_NOT_PROVIDED = "statuses_url was not provided within the request object, which is required for blocking / unblocking pull requests";
 
-    public static final String MERGE_SUCCESS_DESCRIPTION = "Checkmarx Scan Completed";
-    public static final String MERGE_FAILURE_DESCRIPTION = "Checkmarx Scan completed. Vulnerability scan failed";
+
     public static final String MERGE_SUCCESS = "success";
     public static final String MERGE_FAILURE = "failure";
 
@@ -112,8 +111,8 @@ public class GitHubService extends RepoService {
         log.trace(API_REQUEST, httpEntity.getBody());
         try {
             ResponseEntity<String> responseEntity = restTemplate.exchange(statusApiUrl, HttpMethod.POST, httpEntity, String.class);
-            log.debug(API_RESPONSE_CODE, responseEntity.getStatusCode().toString());
-            log.trace(API_RESPONSE, responseEntity.toString());
+            log.debug(API_RESPONSE_CODE, responseEntity.getStatusCode());
+            log.trace(API_RESPONSE, responseEntity);
         } catch (RestClientException e) {
             String msg = message;
             if (log.isDebugEnabled()) {
@@ -141,24 +140,14 @@ public class GitHubService extends RepoService {
     }
 
     private HttpEntity<String> getStatusRequestEntity(ScanResults results, PullRequestReport pullRequestReport) {
-        OperationStatus status;
-        String statusForApi;
-        String description;
-        if (mergeResultEvaluator.isMergeAllowed(results, properties, pullRequestReport)) {
-            status = OperationStatus.SUCCESS;
-            statusForApi = MERGE_SUCCESS;
-            description = MERGE_SUCCESS_DESCRIPTION;
-        } else {
-            status = OperationStatus.FAILURE;
+        String statusForApi = MERGE_SUCCESS;
+
+        if (!mergeResultEvaluator.isMergeAllowed(results, properties, pullRequestReport)) {
             statusForApi = MERGE_FAILURE;
-            description = MERGE_FAILURE_DESCRIPTION;
         }
-        OperationResult requestResult = new OperationResult(status, description);
-        pullRequestReport.setPullRequestResult(requestResult);
-        pullRequestReport.log();
 
         log.debug("Setting pull request status to '{}'.", statusForApi);
-        JSONObject requestBody = getJSONStatus(statusForApi, results.getLink(), description);
+        JSONObject requestBody = getJSONStatus(statusForApi, results.getLink(), pullRequestReport.getPullRequestResult().getMessage());
         return new HttpEntity<>(requestBody.toString(), createAuthHeaders());
     }
 
