@@ -13,13 +13,16 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import lombok.RequiredArgsConstructor;
-import org.junit.Assert;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 @SpringBootTest(classes = {CxFlowApplication.class})
 @RequiredArgsConstructor
@@ -66,9 +69,11 @@ public class SCARemoteRepoScanSteps {
 
     @Then("the returned results are not null")
     public void validateResults() {
-        Assert.assertNotNull("Expected scan-Id of remote repo scan not to return null", scaResults.getScanId());
-        Assert.assertNotNull("Expected findings counts of remote repo scan not to return null", scaResults.getFindingCounts());
-        Assert.assertNotNull("Expected report link of remote repo scan not to return null", scaResults.getWebReportLink());
+        assertNotNull("SCA results is null.", scaResults);
+        assertTrue("Scan ID is empty.", StringUtils.isNotEmpty(scaResults.getScanId()));
+        assertNotNull("Summary is null.", scaResults.getSummary());
+        assertNotNull("Finding counts are null.", scaResults.getSummary().getFindingCounts());
+        assertNotNull("Expected report link of remote repo scan not to return null", scaResults.getWebReportLink());
     }
 
     private void initSCAConfig() {

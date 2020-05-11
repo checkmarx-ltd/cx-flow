@@ -59,11 +59,6 @@ public class PublishingSteps extends PublishingStepsBase {
     private final CxProperties cxProperties;
     private final HelperService helperService;
     private final GitHubService gitHubService;
-    private final CxService cxService;
-    private final GitLabService gitLabService;
-    private final BitBucketService bitBucketService;
-    private final SastScanner sastScanner;
-    private final ScanRequestConverter scanRequestConverter;
 
     @MockBean
     private final CxClient cxClientMock;
