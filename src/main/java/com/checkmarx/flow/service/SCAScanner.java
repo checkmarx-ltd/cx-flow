@@ -30,22 +30,21 @@ public class SCAScanner implements VulnerabilityScanner {
     @Override
     public ScanResults scan(ScanRequest scanRequest) {
         ScanResults result = null;
-        if (isThisScannerEnabled()) {
-            log.info("--------------------- Initiating new {} scan ---------------------", SCAN_TYPE);
-            SCAParams internalScaParams = toScaParams(scanRequest);
-            try {
-                SCAResults internalResults = scaClient.scanRemoteRepo(internalScaParams);
-                result = toScanResults(internalResults);
-            } catch (IOException e) {
-                final String message = "SCA scan failed.";
-                log.error(message, e);
-                throw new MachinaRuntimeException(message);
-            }
+        log.info("--------------------- Initiating new {} scan ---------------------", SCAN_TYPE);
+        SCAParams internalScaParams = toScaParams(scanRequest);
+        try {
+            SCAResults internalResults = scaClient.scanRemoteRepo(internalScaParams);
+            result = toScanResults(internalResults);
+        } catch (IOException e) {
+            final String message = "SCA scan failed.";
+            log.error(message, e);
+            throw new MachinaRuntimeException(message);
         }
         return result;
     }
 
-    private boolean isThisScannerEnabled() {
+    @Override
+    public boolean isThisScannedEnabled() {
         List<String> enabledScanners = flowProperties.getEnabledVulnerabilityScanners();
         return enabledScanners != null && enabledScanners.contains(ScaProperties.CONFIG_PREFIX);
     }

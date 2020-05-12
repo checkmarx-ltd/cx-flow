@@ -62,34 +62,47 @@ public class SastScanner implements VulnerabilityScanner {
     @Override
     public ScanResults scan(ScanRequest scanRequest) {
         ScanResults scanResults = null;
-        if (isThisScannerEnabled()) {
-            log.info("--------------------- Initiating new {} scan ---------------------", SCAN_TYPE);
-            checkScanSubmitEmailDelivery(scanRequest);
-            try {
-                Integer projectId;
-                CxScanParams cxScanParams = scanRequestConverter.toScanParams(scanRequest);
-                Integer scanId = cxService.createScan(cxScanParams, "CxFlow Automated Scan");
-                projectId = cxScanParams.getProjectId();
+        log.info("--------------------- Initiating new {} scan ---------------------", SCAN_TYPE);
+        checkScanSubmitEmailDelivery(scanRequest);
 
-                BugTracker.Type bugTrackerType = bugTrackerTriggerEvent.triggerBugTrackerEvent(scanRequest);
-                if (bugTrackerType.equals(BugTracker.Type.NONE)) {
-                    scanDetails = handleNoneBugTrackerCase(scanRequest, null, scanId, projectId);
-                } else {
-                    cxService.waitForScanCompletion(scanId);
-                    projectId = handleUnKnownProjectId(cxScanParams.getProjectId(), cxScanParams.getTeamId(), cxScanParams.getProjectName());
-                    scanDetails = new ScanDetails(projectId, scanId, null);
-                }
-                logRequest(scanRequest, scanId, null, OperationResult.successful());
+        try {
+            Integer projectId;
+            CxScanParams cxScanParams = scanRequestConverter.toScanParams(scanRequest);
+            Integer scanId = cxService.createScan(cxScanParams, "CxFlow Automated Scan");
+            projectId = cxScanParams.getProjectId();
 
-                scanResults = cxService.getReportContentByScanId(scanId, scanRequest.getFilters());
-                scanResults.setSastScanId(scanId);
-                return scanResults;
-
-            } catch (CheckmarxException e) {
-                log.error("SAST scan failed", e);
+            BugTracker.Type bugTrackerType = bugTrackerTriggerEvent.triggerBugTrackerEvent(scanRequest);
+            if (bugTrackerType.equals(BugTracker.Type.NONE)) {
+                scanDetails = handleNoneBugTrackerCase(scanRequest, null, scanId, projectId);
+            } else {
+                cxService.waitForScanCompletion(scanId);
+                projectId = handleUnKnownProjectId(cxScanParams.getProjectId(), cxScanParams.getTeamId(), cxScanParams.getProjectName());
+                scanDetails = new ScanDetails(projectId, scanId, null);
             }
+            logRequest(scanRequest, scanId, null, OperationResult.successful());
+
+            scanResults = cxService.getReportContentByScanId(scanId, scanRequest.getFilters());
+            scanResults.setSastScanId(scanId);
+            return scanResults;
+
+        } catch (CheckmarxException e) {
+            log.error("SAST scan failed", e);
         }
+
         return scanResults;
+    }
+
+    @Override
+    public boolean isThisScannedEnabled() {
+        boolean result = false;
+        List<String> enabledScanners = flowProperties.getEnabledVulnerabilityScanners();
+        if (enabledScanners == null || enabledScanners.isEmpty()) {
+            log.info("None of the vulnerability scanners is enabled in the configuration. Using CxSAST scanner by default.");
+            result = true;
+        } else if (enabledScanners.contains(CxProperties.CONFIG_PREFIX)) {
+            result = true;
+        }
+        return result;
     }
 
     public CompletableFuture<ScanResults> executeCxScanFlow(ScanRequest request, File cxFile) throws MachinaException {
@@ -262,18 +275,6 @@ public class SastScanner implements VulnerabilityScanner {
             repoUrl = request.getRepoUrl();
         }
         return repoUrl;
-    }
-
-    private boolean isThisScannerEnabled() {
-        boolean result = false;
-        List<String> enabledScanners = flowProperties.getEnabledVulnerabilityScanners();
-        if (enabledScanners == null || enabledScanners.isEmpty()) {
-            log.info("None of the vulnerability scanners is enabled in the configuration. Using CxSAST scanner by default.");
-            result = true;
-        } else if (enabledScanners.contains(CxProperties.CONFIG_PREFIX)) {
-            result = true;
-        }
-        return result;
     }
 
     private void sendSubmittedScanEmail(ScanRequest request) {

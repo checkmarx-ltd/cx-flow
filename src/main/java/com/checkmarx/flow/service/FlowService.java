@@ -26,8 +26,10 @@ public class FlowService {
         scanRequest.setProject(effectiveProjectName);
 
         for (VulnerabilityScanner currentScanner : scanners) {
-            ScanResults scanResults = currentScanner.scan(scanRequest);
-            combinedResults.mergeResultsWith(scanResults);
+            if (currentScanner.isThisScannedEnabled()) {
+                ScanResults scanResults = currentScanner.scan(scanRequest);
+                combinedResults.mergeResultsWith(scanResults);
+            }
         }
 
         resultsService.publishCombinedResults(scanRequest, combinedResults);
