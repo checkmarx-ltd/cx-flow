@@ -59,6 +59,7 @@ public class PublishingSteps extends PublishingStepsBase {
     private final CxProperties cxProperties;
     private final HelperService helperService;
     private final GitHubService gitHubService;
+    private final ResultsService resultsService;
 
     @MockBean
     private final CxClient cxClientMock;
@@ -154,7 +155,7 @@ public class PublishingSteps extends PublishingStepsBase {
 
     private GitHubController getGitHubControllerInstance() {
         List<VulnerabilityScanner> vulnerabilityScannerList = new ArrayList<>();
-        FlowService flowService = new FlowService(vulnerabilityScannerList, projectNameGenerator);
+        FlowService flowService = new FlowService(vulnerabilityScannerList, projectNameGenerator, resultsService);
 
         return new GitHubController(gitHubProperties, flowProperties, cxProperties,
                 null, flowService, helperService, gitHubService);
