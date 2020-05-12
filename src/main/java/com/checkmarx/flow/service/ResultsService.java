@@ -58,63 +58,45 @@ public class ResultsService {
             CompletableFuture<ScanResults> future = new CompletableFuture<>();
             //TODO async these, and join and merge after
             ScanResults results = cxService.getReportContentByScanId(scanId, filters);
-            new ScanResultsReport(scanId,request, results).log();
-            log.info("ScanResults results : {}", results);
-            if(cxProperties.getEnableOsa() && !ScanUtils.empty(osaScanId)){
-                log.info("Waiting for OSA Scan results for scan id {}", osaScanId);
-                results = osaService.waitForOsaScan(osaScanId, projectId, results, filters);
+            new ScanResultsReport(scanId, request, results).log();
+            results = isOSAScanEnable(request, projectId, osaScanId, filters, results);
 
-                new ScanResultsReport(osaScanId,request, results).log();
-            }
-            Map<String, Object> emailCtx = new HashMap<>();
-            BugTracker.Type bugTrackerType = request.getBugTracker().getType();
-            log.info("bugTrackerType : {}", bugTrackerType);
-            //Send email (if EMAIL was enabled and EMAIL was not main feedback option
-            if (flowProperties.getMail() != null && flowProperties.getMail().isEnabled() &&
-                    !bugTrackerType.equals(BugTracker.Type.NONE) &&
-                    !bugTrackerType.equals(BugTracker.Type.EMAIL)) {
-                String namespace = request.getNamespace();
-                String repoName = request.getRepoName();
-                String concat = COMPLETED_PROCESSING
-                        .concat(namespace).concat("/").concat(repoName);
-                if (!ScanUtils.empty(namespace) && !ScanUtils.empty(request.getBranch())) {
-                    emailCtx.put(MESSAGE_KEY, concat.concat(" - ")
-                            .concat(request.getRepoUrl()));
-                } else if (!ScanUtils.empty(request.getApplication())) {
-                    emailCtx.put(MESSAGE_KEY, COMPLETED_PROCESSING
-                            .concat(request.getApplication()));
-                }
-                emailCtx.put("heading", "Scan Successfully Completed");
-
-                if (results != null) {
-                    emailCtx.put("issues", results.getXIssues());
-                }
-                if (results != null && !ScanUtils.empty(results.getLink())) {
-                    emailCtx.put("link", results.getLink());
-                }
-                emailCtx.put("repo", request.getRepoUrl());
-                emailCtx.put("repo_fullname", namespace.concat("/").concat(repoName));
-                emailService.sendmail(request.getEmail(), concat, emailCtx, "template-demo.html");
-                log.info("Successfully completed automation for repository {} under namespace {}", repoName, namespace);
-            }
+            sendEmailNotification(request, results);
             processResults(request, results, new ScanDetails(projectId, scanId, osaScanId));
-            if (log.isInfoEnabled()) {
-                log.info(String.format("request : %s", String.valueOf(request)));
-                log.info(String.format("results : %s", String.valueOf(results)));
-                log.info(String.format("projectId : %s", String.valueOf(projectId)));
-                log.info("Process completed Succesfully");
-            }
+            logScanDetails(request, projectId, results);
             future.complete(results);
-            
+
             return future;
-        }catch (Exception e){
-            
+        } catch (Exception e) {
+
             log.error("Error occurred while processing results.", e);
             CompletableFuture<ScanResults> x = new CompletableFuture<>();
             x.completeExceptionally(e);
             return x;
         }
+    }
 
+    @Async("scanRequest")
+    public CompletableFuture<ScanResults> publishCombinedResults(ScanRequest scanRequest, ScanResults scanResults) {
+        try {
+            CompletableFuture<ScanResults> future = new CompletableFuture<>();
+            Integer projectId = Integer.parseInt(scanResults.getProjectId());
+
+            new ScanResultsReport(scanResults.getSastScanId(), scanRequest, scanResults).log();
+
+            sendEmailNotification(scanRequest, scanResults);
+            processResults(scanRequest, scanResults, new ScanDetails(projectId, scanResults.getSastScanId(), null));
+            logScanDetails(scanRequest, projectId, scanResults);
+            future.complete(scanResults);
+
+            return future;
+
+        } catch (Exception e) {
+            log.error("Error occurred while processing results.", e);
+            CompletableFuture<ScanResults> x = new CompletableFuture<>();
+            x.completeExceptionally(e);
+            return x;
+        }
     }
 
     public CompletableFuture<ScanResults> cxGetResults(ScanRequest request, CxProject cxProject){
@@ -167,7 +149,7 @@ public class ResultsService {
     }
 
     void processResults(ScanRequest request, ScanResults results, ScanDetails scanDetails) throws MachinaException {
-        
+
         if(scanDetails == null){
             scanDetails = new ScanDetails();
         }
@@ -242,6 +224,59 @@ public class ResultsService {
             log.info("To view results use following link: {}", results.getLink());
             log.info("######################################");
         }
+    }
+
+    void logScanDetails(ScanRequest request, Integer projectId, ScanResults results) {
+        if (log.isInfoEnabled()) {
+            log.info(String.format("request : %s", String.valueOf(request)));
+            log.info(String.format("results : %s", String.valueOf(results)));
+            log.info(String.format("projectId : %s", String.valueOf(projectId)));
+            log.info("Process completed Succesfully");
+        }
+    }
+
+    void sendEmailNotification(ScanRequest request, ScanResults results) {
+        Map<String, Object> emailCtx = new HashMap<>();
+        BugTracker.Type bugTrackerType = request.getBugTracker().getType();
+        log.info("bugTrackerType : {}", bugTrackerType);
+        //Send email (if EMAIL was enabled and EMAIL was not main feedback option
+        if (flowProperties.getMail() != null && flowProperties.getMail().isEnabled() &&
+                !bugTrackerType.equals(BugTracker.Type.NONE) &&
+                !bugTrackerType.equals(BugTracker.Type.EMAIL)) {
+            String namespace = request.getNamespace();
+            String repoName = request.getRepoName();
+            String concat = COMPLETED_PROCESSING
+                    .concat(namespace).concat("/").concat(repoName);
+            if (!ScanUtils.empty(namespace) && !ScanUtils.empty(request.getBranch())) {
+                emailCtx.put(MESSAGE_KEY, concat.concat(" - ")
+                        .concat(request.getRepoUrl()));
+            } else if (!ScanUtils.empty(request.getApplication())) {
+                emailCtx.put(MESSAGE_KEY, COMPLETED_PROCESSING
+                        .concat(request.getApplication()));
+            }
+            emailCtx.put("heading", "Scan Successfully Completed");
+
+            if (results != null) {
+                emailCtx.put("issues", results.getXIssues());
+            }
+            if (results != null && !ScanUtils.empty(results.getLink())) {
+                emailCtx.put("link", results.getLink());
+            }
+            emailCtx.put("repo", request.getRepoUrl());
+            emailCtx.put("repo_fullname", namespace.concat("/").concat(repoName));
+            emailService.sendmail(request.getEmail(), concat, emailCtx, "template-demo.html");
+            log.info("Successfully completed automation for repository {} under namespace {}", repoName, namespace);
+        }
+    }
+
+    ScanResults isOSAScanEnable(ScanRequest request, Integer projectId, String osaScanId, List<Filter> filters, ScanResults results) throws CheckmarxException {
+        if(cxProperties.getEnableOsa() && !ScanUtils.empty(osaScanId)){
+            log.info("Waiting for OSA Scan results for scan id {}", osaScanId);
+            results = osaService.waitForOsaScan(osaScanId, projectId, results, filters);
+
+            new ScanResultsReport(osaScanId,request, results).log();
+        }
+        return results;
     }
 
     private void getCxFields(CxProject project, ScanRequest request) {
