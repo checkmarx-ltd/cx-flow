@@ -81,20 +81,12 @@ public class SastScanner implements VulnerabilityScanner {
                 }
                 logRequest(scanRequest, scanId, null, OperationResult.successful());
 
-                CompletableFuture<ScanResults> futureResults;
-                if (scanDetails.processResults()) {
-                    futureResults = resultsService.processScanResultsAsync(scanRequest, scanDetails.getProjectId(), scanDetails.getScanId(), scanDetails.getOsaScanId(), scanRequest.getFilters());
-                } else {
-                    futureResults = scanDetails.getResults();
-                }
-
-                scanResults = getResults(scanResults, futureResults);
+                scanResults = cxService.getReportContentByScanId(scanId, scanRequest.getFilters());
+                scanResults.setSastScanId(scanId);
                 return scanResults;
 
             } catch (CheckmarxException e) {
                 log.error("SAST scan failed", e);
-            } catch (MachinaException e) {
-                sendErrorScanEmail(scanRequest, e);
             }
         }
         return scanResults;
