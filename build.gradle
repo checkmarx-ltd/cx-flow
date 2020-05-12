@@ -63,6 +63,9 @@ repositories {
 
 configurations {
     compile.exclude group: "org.slf4j", module: "slf4j-simple"
+    compile.exclude group: "org.slf4j", module: "slf4j-log4j12"
+    all*.exclude module: 'cx-ws-fs-agent'
+    all*.exclude module: 'wss-agent-api'
 }
 
 dependencies {
