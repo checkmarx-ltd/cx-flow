@@ -1,4 +1,4 @@
-package com.checkmarx.flow.cucumber.integration.scan;
+package com.checkmarx.flow.cucumber.integration.sast.scan;
 
 import com.checkmarx.flow.CxFlowApplication;
 
