@@ -19,7 +19,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.util.Collections;
 import java.util.Objects;
 
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -32,10 +31,10 @@ public class SCARemoteRepoScanSteps {
     private static final String AC_URL = "https://v2.ac-checkmarx.com";
 
     private static final String PUBLIC_PROJECT_NAME = "Public-Test-Test-Repo";
-    private static final String PRIVATE_PROJECT_NAME = "Public-Test-Test-Repo";
+    private static final String PRIVATE_PROJECT_NAME = "Private-Test-Test-Repo";
 
     private static final String PUBLIC_REPO = "https://github.com/checkmarx-ltd/cx-flow.git";
-    private static final String PRIVATE_REPO = "https://%s@github.com/cxflowtestuser/TestAlgorithms-.git;";
+    private static final String PRIVATE_REPO = "https://%s@github.com/cxflowtestuser/TestAlgorithms-.git";
 
     private final FlowProperties flowProperties;
     private final ScaProperties scaProperties;
@@ -73,8 +72,8 @@ public class SCARemoteRepoScanSteps {
         assertNotNull("Summary is null.", scaResults.getSummary());
         assertNotNull("Finding counts are null.", scaResults.getSummary().getFindingCounts());
         assertNotNull("Expected report link of remote repo scan not to return null", scaResults.getWebReportLink());
-        assertFalse("SCA Packages are empty", scaResults.getPackages().isEmpty());
-        assertFalse("SCA Findings are empty", scaResults.getFindings().isEmpty());
+        assertNotNull("SCA Packages are empty", scaResults.getPackages());
+        assertNotNull("SCA Findings are empty", scaResults.getFindings());
     }
 
     @When("scan is finished")
