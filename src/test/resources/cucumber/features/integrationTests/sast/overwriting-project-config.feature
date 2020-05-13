@@ -1,7 +1,7 @@
 Feature: CxFlow should preserve SAST project settings if the project already exists in SAST
 
   Scenario Outline: Preserving SAST project settings for an existing project
-    Given "<project name"> project exists in SAST
+    Given "<project name>" project exists in SAST
     And project preset is "<initial preset>"
     And project configuration is "<initial config>"
     And SAST configuration is set to "<new config>" in CxFlow config
@@ -11,8 +11,8 @@ Feature: CxFlow should preserve SAST project settings if the project already exi
     And 'preset' parameter is not specified in GitHub request
     And GitHub repository does not contain a config-as-code file
     And CxFlow starts a SAST scan
-    Then "<project name"> project still has "<initial preset>" preset
-    And "<project name"> project still has "<initial config>" configuration
+    Then "<project name>" project still has "<initial preset>" preset
+    And "<project name>" project still has "<initial config>" configuration
 
     Examples:
       | project name                 | initial preset  | initial config      | new preset        | new config            |
