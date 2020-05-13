@@ -608,21 +608,19 @@ public class FlowService {
     }
     
     public void deleteProject(ScanRequest request){
-        /*Check if team is provided*/
-        String ownerId = null;
+
         try {
-            ownerId = determineTeamAndOwnerID(request);
+            String ownerId = determineTeamAndOwnerID(request);
+            
+            String projectName = determineProjectName(request);
 
-        /*Determine project name*/
-        String projectName = determineProjectName(request);
-        
-        Integer projectId = determinePresetAndProjectId(request, ownerId, projectName);
+            Integer projectId = determinePresetAndProjectId(request, ownerId, projectName);
 
-        cxService.deleteProject(projectId);
+            cxService.deleteProject(projectId);
 
-        } catch (CheckmarxException |  MachinaException e) {
-           log.error("Error delete branch " + e.getMessage());
-        } 
+        } catch (CheckmarxException | MachinaException e) {
+            log.error("Error delete branch " + e.getMessage());
+        }
     }
 
 }
