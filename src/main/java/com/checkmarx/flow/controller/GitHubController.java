@@ -18,6 +18,7 @@ import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.Filter;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.platform.commons.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
@@ -47,6 +48,7 @@ public class GitHubController {
     private static final String PING = EVENT + "=ping";
     private static final String PULL = EVENT + "=pull_request";
     private static final String PUSH = EVENT + "=push";
+    private static final String DELETE = EVENT + "=delete";
     private static final String HMAC_ALGORITHM = "HmacSHA1";
     private static final Charset CHARSET = StandardCharsets.UTF_8;
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(GitHubController.class);
@@ -422,6 +424,109 @@ public class GitHubController {
                     .success(false)
                     .build());
         }
+
+        return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
+                .message("Scan Request Successfully Submitted")
+                .success(true)
+                .build());
+
+    }
+
+    /**
+     * Delete Request event submitted (JSON), along with the Product (cx for example)
+     */
+    @PostMapping(value = {"/{product}", "/"}, headers = DELETE)
+    public ResponseEntity<EventResponse> deleteBranchRequest(
+            @RequestBody String body,
+            @RequestHeader(value = SIGNATURE) String signature,
+            @PathVariable(value = "product", required = false) String product,
+            @RequestParam(value = "application", required = false) String application,
+            @RequestParam(value = "branch", required = false) List<String> branch,
+            @RequestParam(value = "project", required = false) String project,
+            @RequestParam(value = "team", required = false) String team
+    ){
+        String uid = helperService.getShortUid();
+        MDC.put("cx", uid);
+        log.info("Processing GitHub DELETE Branch request");
+        DeleteEvent event;
+        ObjectMapper mapper = new ObjectMapper();
+
+        try {
+            event = mapper.readValue(body, DeleteEvent.class);
+        } catch (NullPointerException | IOException | IllegalArgumentException e) {
+            throw new MachinaRuntimeException(e);
+        }
+
+        if(flowProperties == null || cxProperties == null){
+            log.error("Properties have null values");
+            throw new MachinaRuntimeException();
+        }
+        //verify message signature
+        verifyHmacSignature(body, signature);
+
+        if(event.getRefType().equals("tag")){
+            log.error("Nothing to do for delete tag");
+            ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
+                    .message("Nothing to do for delete tag")
+                    .success(true)
+                    .build());
+        }
+        
+            String app = event.getRepository().getName();
+            if(!ScanUtils.empty(application)){
+                app = application;
+            }
+            
+            if(ScanUtils.empty(product)){
+                product = ScanRequest.Product.CX.getProduct();
+            }
+            ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
+
+            //determine branch (without refs)
+            String currentBranch = ScanUtils.getBranchFromRef(event.getRef());
+            List<String> branches = getBranches(branch);
+            
+            //build request object
+            Repository repository = event.getRepository();
+            String gitUrl = repository.getCloneUrl();
+            log.debug("Using url: {}", gitUrl);
+            String token = properties.getToken();
+            if(ScanUtils.empty(token)){
+                log.error("No token was provided for Github");
+                throw new MachinaRuntimeException();
+            }
+            String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(token).concat("@"));
+            gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(token).concat("@"));
+
+            String namespace;
+            if(StringUtils.isBlank(repository.getOwner().getName())){
+                namespace = repository.getOwner().getLogin();
+            }else{
+                namespace = repository.getOwner().getName().replaceAll(" ","_");
+            }
+
+            flowProperties.setAutoProfile(true);
+
+        
+            ScanRequest request = ScanRequest.builder()
+                    .application(app)
+                    .product(p)
+                    .project(project)
+                    .team(team)
+                    .namespace(namespace)
+                    .repoName(repository.getName())
+                    .repoUrl(repository.getCloneUrl())
+                    .repoUrlWithAuth(gitAuthUrl)
+                    .repoType(ScanRequest.Repository.GITHUB)
+                    .branch(currentBranch)
+                    .refs(event.getRef())
+                    .build();
+
+            request.setScanPresetOverride(false);
+
+            request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body);
+            request.setId(uid);
+        
 
         return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
                 .message("Scan Request Successfully Submitted")
