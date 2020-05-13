@@ -21,8 +21,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 @SpringBootTest(classes = {CxFlowApplication.class})
 @RequiredArgsConstructor
@@ -69,11 +68,17 @@ public class SCARemoteRepoScanSteps {
 
     @Then("the returned results are not null")
     public void validateResults() {
-        assertNotNull("SCA results is null.", scaResults);
+        assertNotNull("SCA results are null.", scaResults);
         assertTrue("Scan ID is empty.", StringUtils.isNotEmpty(scaResults.getScanId()));
         assertNotNull("Summary is null.", scaResults.getSummary());
         assertNotNull("Finding counts are null.", scaResults.getSummary().getFindingCounts());
         assertNotNull("Expected report link of remote repo scan not to return null", scaResults.getWebReportLink());
+
+        assertNotNull("Finding list is null.", scaResults.getFindings());
+        assertFalse("Finding list is empty.", scaResults.getFindings().isEmpty());
+
+        assertNotNull("Package list is null.", scaResults.getPackages());
+        assertFalse("Package list is empty.", scaResults.getPackages().isEmpty());
     }
 
     private void initSCAConfig() {
