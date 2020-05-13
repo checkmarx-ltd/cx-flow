@@ -610,6 +610,7 @@ public class FlowService {
     public void deleteProject(ScanRequest request){
 
         try {
+            
             String ownerId = determineTeamAndOwnerID(request);
             
             String projectName = determineProjectName(request);
