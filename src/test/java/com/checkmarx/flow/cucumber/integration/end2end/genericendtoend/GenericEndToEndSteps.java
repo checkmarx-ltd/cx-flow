@@ -716,27 +716,12 @@ public class GenericEndToEndSteps {
     private BugTracker bugTracker;
     private ConfigurableApplicationContext appContext;
 
-    @Given("repository is GitHub")
-    public void setRepositoryGitHub() {
-        setRepository("GitHub");
-    }
-
-    @Given("repository is ADO")
-    public void setRepositoryADO() {
-        setRepository("ADO");
-    }
-
-    // @Given("repository is {string}")
+    @Given("repository is {word}")
     public void setRepository(String repository) {
         this.repository = Repository.setTo(repository, this);
     }
 
-    @And("bug-tracker is JIRA")
-    public void setBugTrackerJira() {
-        setBugTracker("JIRA");
-    }
-
-    @And("bug-tracker is {string}")
+    @And("bug-tracker is {word}")
     public void setBugTracker(String bugTracker) {
         this.bugTracker = BugTracker.setTo(bugTracker, this);
         flowProperties.setBugTracker(bugTracker);
