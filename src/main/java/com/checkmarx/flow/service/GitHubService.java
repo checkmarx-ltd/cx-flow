@@ -13,6 +13,8 @@ import com.checkmarx.sdk.dto.ScanResults;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +29,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 
+import java.io.IOException;
 import java.util.*;
 
 @Service
@@ -73,17 +76,67 @@ public class GitHubService extends RepoService {
     }
 
     void processPull(ScanRequest request, ScanResults results) throws GitHubClientException {
-        try {
             String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties, properties);
             log.debug("comment: {}", comment);
             sendMergeComment(request, comment);
-        } catch (HttpClientErrorException e){
-            log.error("Error occurred while creating Merge Request comment: {}", ExceptionUtils.getRootCauseMessage(e));
-            throw new GitHubClientException();
+    }
+
+    private String getEditCommentUrl(String baseUrl, RepoComment comment) {
+        // The PARCH (edit comment) uri is without the pull request ID, so we must remove it before adding comment id.
+        baseUrl = baseUrl.replaceAll("[0-9]+/", "");
+        return baseUrl + "/" + comment.getId();
+    }
+
+    private void updateComment(String baseUrl, String comment) {
+        log.debug("Updating exisiting comment");
+        HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONComment("body",comment).toString(), createAuthHeaders());
+        restTemplate.exchange(baseUrl, HttpMethod.PATCH, httpEntity, String.class);
+    }
+
+    private List<RepoComment> getComments(String url) throws IOException {
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, null, String.class);
+        List<RepoComment> result = new ArrayList<>();
+        ObjectMapper objMapper = new ObjectMapper();
+        JsonNode root = objMapper.readTree(response.getBody());
+        Iterator<JsonNode> it = root.getElements();
+        while (it.hasNext()) {
+            JsonNode commentNode = it.next();
+            RepoComment comment = createRepoComment(commentNode);
+            if (isCheckMarxComment(comment)) {
+                result.add(comment);
+            }
+        }
+        return result;
+    }
+
+    private boolean isCheckMarxComment(RepoComment comment) {
+        return comment.getComment().contains("Full Scan Details") && comment.getComment().contains("Checkmarx scan completed") ||
+                comment.getComment().contains("Scan submitted to Checkmarx");
+    }
+
+    private RepoComment createRepoComment(JsonNode commentNode) {
+        String commentBody = commentNode.path("body").getTextValue();
+        long id = commentNode.path("id").asLong();
+        return new RepoComment(id, commentBody);
+    }
+
+    void sendMergeComment(ScanRequest request, String comment) throws GitHubClientException {
+        try {
+            List<RepoComment> repoComments = getComments(request.getMergeNoteUri());
+            log.debug("There are {} checkmarx comments on this pull request", repoComments.size());
+            if (repoComments.size() == 1) {
+                updateComment(getEditCommentUrl(request.getMergeNoteUri(), repoComments.get(0)), comment);
+            } else {
+                addComment(request, comment);
+            }
+        }
+        catch (IOException ioe) {
+            throw new GitHubClientException("Error while adding or updating repo pull request comment", ioe);
         }
     }
 
-    void sendMergeComment(ScanRequest request, String comment){
+    private void addComment(ScanRequest request, String comment) {
+        log.debug("Adding a new comment");
         HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONComment("body",comment).toString(), createAuthHeaders());
         restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
