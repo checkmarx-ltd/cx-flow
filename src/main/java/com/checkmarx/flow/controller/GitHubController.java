@@ -426,8 +426,6 @@ public class GitHubController {
                     .success(false)
                     .build());
         }
-
-        log.info("Process of push has finished");
         
         return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
                 .message("Scan Request Successfully Submitted")
@@ -445,7 +443,6 @@ public class GitHubController {
             @RequestHeader(value = SIGNATURE) String signature,
             @PathVariable(value = "product", required = false) String product,
             @RequestParam(value = "application", required = false) String application,
-            @RequestParam(value = "branch", required = false) List<String> branch,
             @RequestParam(value = "project", required = false) String project,
             @RequestParam(value = "team", required = false) String team
     ){
@@ -475,53 +472,45 @@ public class GitHubController {
                     .success(true)
                     .build());
         }
-        
-            String app = event.getRepository().getName();
-            if(!ScanUtils.empty(application)){
-                app = application;
-            }
-            
-            if(ScanUtils.empty(product)){
-                product = ScanRequest.Product.CX.getProduct();
-            }
-            ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
 
-            //determine branch (without refs)
-            String currentBranch = ScanUtils.getBranchFromRef(event.getRef());
-            List<String> branches = getBranches(branch);
-            
-            //build request object
-            Repository repository = event.getRepository();
+        String app = event.getRepository().getName();
+        if (!ScanUtils.empty(application)) {
+            app = application;
+        }
 
-            String namespace;
-            if(StringUtils.isBlank(repository.getOwner().getName())){
-                namespace = repository.getOwner().getLogin();
-            }else{
-                namespace = repository.getOwner().getName().replaceAll(" ","_");
-            }
+        if (ScanUtils.empty(product)) {
+            product = ScanRequest.Product.CX.getProduct();
+        }
+        ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
+        String currentBranch = ScanUtils.getBranchFromRef(event.getRef());
+        Repository repository = event.getRepository();
 
-            flowProperties.setAutoProfile(true);
-        
-            ScanRequest request = ScanRequest.builder()
-                    .application(app)
-                    .product(p)
-                    .project(project)
-                    .team(team)
-                    .namespace(namespace)
-                    .repoName(repository.getName())
-                    .repoUrl(repository.getCloneUrl())
-                    .repoType(ScanRequest.Repository.NA)
-                    .branch(currentBranch)
-                    .refs(event.getRef())
-                    .build();
+        String namespace;
+        if (StringUtils.isBlank(repository.getOwner().getName())) {
+            namespace = repository.getOwner().getLogin();
+        } else {
+            namespace = repository.getOwner().getName().replaceAll(" ", "_");
+        }
 
-            request.setScanPresetOverride(false);
-            
-            
-            //only initiate scan/automation if branch is applicable
-            if(helperService.isBranch2Scan(request, branches)){
-                flowService.deleteProject(request);
-            }
+        flowProperties.setAutoProfile(true);
+
+        ScanRequest request = ScanRequest.builder()
+                .application(app)
+                .product(p)
+                .project(project)
+                .team(team)
+                .namespace(namespace)
+                .repoName(repository.getName())
+                .repoUrl(repository.getCloneUrl())
+                .repoType(ScanRequest.Repository.NA)
+                .branch(currentBranch)
+                .refs(event.getRef())
+                .build();
+
+        request.setScanPresetOverride(false);
+
+        //deletes a project which is not in the middle of a scan, otherwise it will not be deleted
+        flowService.deleteProject(request);
             
         log.info("Process of delete branch has finished successfully");
         

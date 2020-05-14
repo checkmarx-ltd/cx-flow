@@ -86,8 +86,13 @@ public class FlowService {
                     emailService.sendmail(request.getEmail(), "Checkmarx Scan Submitted for ".concat(request.getNamespace()).concat("/").concat(request.getRepoName()), emailCtx, "message.html");
                 }
                 CompletableFuture<ScanResults> results = executeCxScanFlow(request, null);
+                
                 if(results.isCompletedExceptionally()){
                     log.error("An error occurred while executing process");
+                }else{
+                    if (log.isInfoEnabled()) {
+                        log.info("Finished processing the request");
+                    }
                 }
             } else {
                 log.warn("Unknown Product type of {}, exiting", request.getProduct());
