@@ -921,10 +921,8 @@ public class ScanUtils {
     }
 
     public static void writeByte(String filename, byte[] bytes) {
-        try {
-            OutputStream os = new FileOutputStream(new File(filename));
+        try (OutputStream os = new FileOutputStream(new File(filename))) {
             os.write(bytes);
-            os.close();
         }
         catch (IOException e) {
             log.error("Error while writing file {}", filename, e);
