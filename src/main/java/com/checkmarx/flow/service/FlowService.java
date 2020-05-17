@@ -5,6 +5,7 @@ import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.report.ScanReport;
 import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.flow.exception.GitHubClientException;
+import com.checkmarx.flow.exception.GitHubClientRunTimeException;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.flow.utils.ZipUtils;
@@ -85,8 +86,13 @@ public class FlowService {
                     emailService.sendmail(request.getEmail(), "Checkmarx Scan Submitted for ".concat(request.getNamespace()).concat("/").concat(request.getRepoName()), emailCtx, "message.html");
                 }
                 CompletableFuture<ScanResults> results = executeCxScanFlow(request, null);
+                
                 if(results.isCompletedExceptionally()){
                     log.error("An error occurred while executing process");
+                }else{
+                    if (log.isInfoEnabled()) {
+                        log.info("Finished processing the request");
+                    }
                 }
             } else {
                 log.warn("Unknown Product type of {}, exiting", request.getProduct());
@@ -160,12 +166,17 @@ public class FlowService {
             }
 
 
-        }catch (CheckmarxException | GitAPIException e){
-            String extendedMessage = ExceptionUtils.getMessage(e);
-            log.error(extendedMessage, e);
-            Thread.currentThread().interrupt();
-            OperationResult scanCreationFailure = new OperationResult(OperationStatus.FAILURE, e.getMessage());
-            logRequest(request, scanId, cxFile, scanCreationFailure);
+            
+        }
+        catch (GitHubClientRunTimeException e){
+            //the error message is printed when the exception is thrown
+            //usually should occur during push event occuring on delete branch
+            //therefore need to eliminate the scan process but do not want to create 
+            //an error stuck trace in the log
+            return new ScanDetails(UNKNOWN_INT, UNKNOWN_INT, new CompletableFuture<ScanResults> (), false);
+        }
+        catch (CheckmarxException | GitAPIException e){
+            String extendedMessage = treatFailure(request, cxFile, scanId, e);
             throw new MachinaException("Checkmarx Error Occurred: " + extendedMessage);
         }
 
@@ -173,6 +184,15 @@ public class FlowService {
 
         this.scanDetails = new ScanDetails(projectId, scanId, osaScanId);
         return scanDetails;
+    }
+
+    private String treatFailure(ScanRequest request, File cxFile, Integer scanId, Exception e) {
+        String extendedMessage = ExceptionUtils.getMessage(e);
+        log.error(extendedMessage, e);
+        Thread.currentThread().interrupt();
+        OperationResult scanCreationFailure = new OperationResult(OperationStatus.FAILURE, e.getMessage());
+        logRequest(request, scanId, cxFile, scanCreationFailure);
+        return extendedMessage;
     }
 
 
@@ -246,7 +266,7 @@ public class FlowService {
             }
         }
         if(!projectExists || flowProperties.isAlwaysProfile()) {
-            log.info("Project is new, profiling source...");
+            log.info("Project doesn't exist, profiling source...");
             Sources sources = new Sources();
             switch (request.getRepoType()) {
                 case GITHUB:
@@ -265,6 +285,7 @@ public class FlowService {
                     log.warn("Profiling is not available for Azure DevOps");
                     break;
                 default:
+                    log.info("Nothing to profile");
                     break;
             }
             String preset = helperService.getPresetFromSources(sources);
@@ -356,7 +377,7 @@ public class FlowService {
                 String.format("\t\tSeparator that should be used: %s%n", cxProperties.getTeamPathSeparator());
     }
 
-    private String determineProjectName(ScanRequest request) throws MachinaException {
+    public String determineProjectName(ScanRequest request) throws MachinaException {
         String projectName;
         String repoName = request.getRepoName();
         String branch = request.getBranch();
@@ -604,6 +625,25 @@ public class FlowService {
         } catch ( CheckmarxException e) {
             log.error("Error occurred while processing projects in batch mode", e);
             exit(3);
+        }
+    }
+    
+    public void deleteProject(ScanRequest request){
+
+        try {
+            
+            String ownerId = determineTeamAndOwnerID(request);
+            
+            String projectName = determineProjectName(request);
+            
+            Integer projectId = determinePresetAndProjectId(request, ownerId, projectName);
+
+            if(projectId != UNKNOWN_INT) {
+                cxService.deleteProject(projectId);
+            }
+
+        } catch (CheckmarxException | MachinaException e) {
+            log.error("Error delete branch " + e.getMessage());
         }
     }
 
