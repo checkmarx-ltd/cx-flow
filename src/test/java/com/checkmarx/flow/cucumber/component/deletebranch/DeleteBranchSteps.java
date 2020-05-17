@@ -53,6 +53,7 @@ public class DeleteBranchSteps {
     private final CxProperties cxProperties;
     private final GitHubProperties gitHubProperties;
     private final HelperService helperService;
+    private final SastScanner sastScanner;
 
     private ProjectNameGenerator projectNameGeneratorSpy;
     private FlowService flowServiceSpy;
@@ -67,7 +68,7 @@ public class DeleteBranchSteps {
     private String calculatedProjectName;
     
     public DeleteBranchSteps(FlowProperties flowProperties, GitHubService gitHubService,
-                             CxProperties cxProperties, GitHubProperties gitHubProperties) {
+                             CxProperties cxProperties, GitHubProperties gitHubProperties, SastScanner sastScanner) {
 
         this.cxClientMock = mock(CxClient.class);
         
@@ -80,6 +81,8 @@ public class DeleteBranchSteps {
         this.gitHubService = gitHubService;
         
         this.gitHubProperties = gitHubProperties;
+
+        this.sastScanner = sastScanner;
 
     }
 
@@ -250,7 +253,7 @@ public class DeleteBranchSteps {
                 null,
                 flowServiceSpy,
                 helperService,
-                gitHubService, null));
+                gitHubService, sastScanner));
         
     }
 
