@@ -10,6 +10,10 @@ public class MachinaException extends Exception {
         super(message);
     }
 
+    public MachinaException(String message, Throwable t) {
+        super(message, t);
+    }
+
     public Step getStep() {
         return this.step;
     }
