@@ -103,17 +103,13 @@ public class GitHubService extends RepoService {
         while (it.hasNext()) {
             JsonNode commentNode = it.next();
             RepoComment comment = createRepoComment(commentNode);
-            if (isCheckMarxComment(comment)) {
+            if (PullRequestCommentsHelper.isCheckMarxComment(comment)) {
                 result.add(comment);
             }
         }
         return result;
     }
 
-    private boolean isCheckMarxComment(RepoComment comment) {
-        return comment.getComment().contains("Full Scan Details") && comment.getComment().contains("Checkmarx scan completed") ||
-                comment.getComment().contains("Scan submitted to Checkmarx");
-    }
 
     private RepoComment createRepoComment(JsonNode commentNode) {
         String commentBody = commentNode.path("body").getTextValue();
@@ -123,9 +119,14 @@ public class GitHubService extends RepoService {
 
     public void sendMergeComment(ScanRequest request, String comment) throws GitHubClientException {
         try {
-            List<RepoComment> repoComments = getComments(request.getMergeNoteUri());
-            log.debug("There are {} checkmarx comments on this pull request", repoComments.size());
-            addComment(request, comment);
+            RepoComment commentToUpdate = PullRequestCommentsHelper.getCommentToUpdate(getComments(request.getMergeNoteUri()), comment);
+            if (commentToUpdate !=  null) {
+                log.debug("Going to update GitHub pull request comment");
+                updateComment(getEditCommentUrl(request.getMergeNoteUri(), commentToUpdate), comment);
+            } else {
+                log.debug("Going to create a new GitHub pull request comment");
+                addComment(request, comment);
+            }
         }
         catch (IOException ioe) {
             throw new GitHubClientException("Error while adding or updating repo pull request comment", ioe);
