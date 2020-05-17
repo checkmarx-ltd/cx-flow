@@ -114,6 +114,30 @@ public class HelperService {
         return null;  //null will indicate no override of team will take place
     }
 
+    public String getCxProject(ScanRequest request){
+        String scriptFile = cxProperties.getProjectScript();
+        String project = request.getProject();
+        //note:  if script is provided, it is highest priority
+        if(!ScanUtils.empty(scriptFile)){
+            log.info("executing external script to determine the Project in Checkmarx to be used ({})", scriptFile);
+            try {
+                String script = getStringFromFile(scriptFile);
+                HashMap<String, Object> bindings = new HashMap<>();
+                bindings.put("request", request);
+                Object result = scriptService.runScript(script, bindings);
+                if (result instanceof String) {
+                    return ((String) result);
+                }
+            }catch (IOException e){
+                log.error("Error reading script file for checkmarx project {}", scriptFile, e);
+            }
+        }
+        else if(!ScanUtils.empty(project)){
+            return project;
+        }
+        return null;  //null will indicate no override of team will take place
+    }
+
     public String getShortUid(ScanRequest request){
         String uid = RandomStringUtils.random(Constants.SHORT_ID_LENGTH, true, true) ;
         request.setId(uid);

@@ -529,7 +529,7 @@ public class CxConfigSteps {
                 jiraProperties,
                 flowService,
                 helperService,
-                gitHubService));
+                gitHubService, null));
         
         //results service will be a Mock and will work with gitHubService Mock
         //and will not not connect to any external 

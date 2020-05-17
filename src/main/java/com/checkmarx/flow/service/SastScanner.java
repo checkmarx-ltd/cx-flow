@@ -5,6 +5,7 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.report.ScanReport;
 import com.checkmarx.flow.exception.ExitThrowable;
+import com.checkmarx.flow.exception.GitHubClientRunTimeException;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.sastscanning.ScanRequestConverter;
 import com.checkmarx.flow.utils.ScanUtils;
@@ -55,6 +56,7 @@ public class SastScanner implements VulnerabilityScanner {
     private final EmailService emailService;
     private final ScanRequestConverter scanRequestConverter;
     private final BugTrackerTriggerEvent bugTrackerTriggerEvent;
+    private final ProjectNameGenerator projectNameGenerator;
 
     private ScanDetails scanDetails = null;
     private String sourcesPath = null;
@@ -143,12 +145,14 @@ public class SastScanner implements VulnerabilityScanner {
                     logRequest(request, osaScanId, cxFile, OperationResult.successful());
                 }
             }
+        } catch (GitHubClientRunTimeException e) {
+            //the error message is printed when the exception is thrown
+            //usually should occur during push event occuring on delete branch
+            //therefore need to eliminate the scan process but do not want to create
+            //an error stuck trace in the log
+            return new ScanDetails(UNKNOWN_INT, UNKNOWN_INT, new CompletableFuture<ScanResults>(), false);
         } catch (CheckmarxException | GitAPIException e) {
-            String extendedMessage = ExceptionUtils.getMessage(e);
-            log.error(extendedMessage, e);
-            Thread.currentThread().interrupt();
-            OperationResult scanCreationFailure = new OperationResult(OperationStatus.FAILURE, e.getMessage());
-            logRequest(request, scanId, cxFile, scanCreationFailure);
+            String extendedMessage = treatFailure(request, cxFile, scanId, e);
             throw new MachinaException("Checkmarx Error Occurred: " + extendedMessage);
         }
 
@@ -188,6 +192,15 @@ public class SastScanner implements VulnerabilityScanner {
 
         try {
             CompletableFuture<ScanResults> future = executeCxScanFlow(request, null);
+
+            if (future.isCompletedExceptionally()) {
+                log.error("An error occurred while executing process");
+            } else {
+                if (log.isInfoEnabled()) {
+                    log.info("Finished processing the request");
+                }
+            }
+
             log.debug("Waiting for scan to complete");
             ScanResults results = future.join();
             if (flowProperties.isBreakBuild() && results != null && results.getXIssues() != null && !results.getXIssues().isEmpty()) {
@@ -248,6 +261,34 @@ public class SastScanner implements VulnerabilityScanner {
             log.error("Error occurred while processing projects in batch mode", e);
             exit(3);
         }
+    }
+
+    public void deleteProject(ScanRequest request){
+
+        try {
+
+            String ownerId = scanRequestConverter.determineTeamAndOwnerID(request);
+
+            String projectName = projectNameGenerator.determineProjectName(request);
+
+            Integer projectId = scanRequestConverter.determinePresetAndProjectId(request, ownerId);
+
+            if(projectId != UNKNOWN_INT) {
+                cxService.deleteProject(projectId);
+            }
+
+        } catch (CheckmarxException e) {
+            log.error("Error delete branch " + e.getMessage());
+        }
+    }
+
+    private String treatFailure(ScanRequest request, File cxFile, Integer scanId, Exception e) {
+        String extendedMessage = ExceptionUtils.getMessage(e);
+        log.error(extendedMessage, e);
+        Thread.currentThread().interrupt();
+        OperationResult scanCreationFailure = new OperationResult(OperationStatus.FAILURE, e.getMessage());
+        logRequest(request, scanId, cxFile, scanCreationFailure);
+        return extendedMessage;
     }
 
     private void logRequest(ScanRequest request, Integer scanId, File cxFile, OperationResult scanCreationResult) {

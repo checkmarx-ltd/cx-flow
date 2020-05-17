@@ -94,7 +94,7 @@ public class ScanRequestConverter {
             }
         }
         if (!projectExists || flowProperties.isAlwaysProfile()) {
-            log.info("Project is new, profiling source...");
+            log.info("Project doesn't exist, profiling source...");
             Sources sources = new Sources();
             switch (request.getRepoType()) {
                 case GITHUB:
@@ -113,6 +113,7 @@ public class ScanRequestConverter {
                     log.warn("Profiling is not available for Azure DevOps");
                     break;
                 default:
+                    log.info("Nothing to profile");
                     break;
             }
             String preset = helperService.getPresetFromSources(sources);

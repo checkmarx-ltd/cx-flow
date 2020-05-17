@@ -120,7 +120,7 @@ public class GitHubService extends RepoService {
         return new RepoComment(id, commentBody);
     }
 
-    void sendMergeComment(ScanRequest request, String comment) throws GitHubClientException {
+    public void sendMergeComment(ScanRequest request, String comment) throws GitHubClientException {
         try {
             List<RepoComment> repoComments = getComments(request.getMergeNoteUri());
             log.debug("There are {} checkmarx comments on this pull request", repoComments.size());
@@ -137,11 +137,6 @@ public class GitHubService extends RepoService {
 
     private void addComment(ScanRequest request, String comment) {
         log.debug("Adding a new comment");
-        HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONComment("body",comment).toString(), createAuthHeaders());
-        restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
-    }
-
-    void sendMergeComment(ScanRequest request, String comment){
         HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONComment("body",comment).toString(), createAuthHeaders());
         restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }

@@ -13,12 +13,14 @@ import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.GitHubService;
 import com.checkmarx.flow.service.HelperService;
+import com.checkmarx.flow.service.SastScanner;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.Filter;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import org.junit.platform.commons.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
@@ -42,6 +44,7 @@ import java.util.*;
  */
 @RestController
 @RequestMapping(value = "/")
+@RequiredArgsConstructor
 public class GitHubController {
 
     private static final String SIGNATURE = "X-Hub-Signature";
@@ -60,24 +63,8 @@ public class GitHubController {
     private final FlowService flowService;
     private final HelperService helperService;
     private final GitHubService gitHubService;
+    private final SastScanner sastScanner;
     private Mac hmac;
-
-
-    public GitHubController(GitHubProperties properties,
-                            FlowProperties flowProperties,
-                            CxProperties cxProperties,
-                            JiraProperties jiraProperties,
-                            FlowService flowService,
-                            HelperService helperService,
-                            GitHubService gitHubService) {
-        this.properties = properties;
-        this.flowProperties = flowProperties;
-        this.cxProperties = cxProperties;
-        this.jiraProperties = jiraProperties;
-        this.flowService = flowService;
-        this.helperService = helperService;
-        this.gitHubService = gitHubService;
-    }
 
     @PostConstruct
     public void init() throws NoSuchAlgorithmException, InvalidKeyException {
@@ -510,7 +497,7 @@ public class GitHubController {
         request.setScanPresetOverride(false);
 
         //deletes a project which is not in the middle of a scan, otherwise it will not be deleted
-        flowService.deleteProject(request);
+        sastScanner.deleteProject(request);
             
         log.info("Process of delete branch has finished successfully");
         

@@ -53,7 +53,8 @@ public class DeleteBranchSteps {
     private final CxProperties cxProperties;
     private final GitHubProperties gitHubProperties;
     private final HelperService helperService;
-    
+
+    private ProjectNameGenerator projectNameGeneratorSpy;
     private FlowService flowServiceSpy;
     private String branch;
     
@@ -232,13 +233,10 @@ public class DeleteBranchSteps {
     
     private void initServices() {
 
-        flowServiceSpy = spy(new FlowService( cxClientMock, null, null,  gitHubService,
-                null, null,null,
-                null, helperService,  cxProperties,
-                 flowProperties));
+        projectNameGeneratorSpy = spy(new ProjectNameGenerator(helperService, cxProperties, null));
 
         try {
-            initFlowServiceSpy(flowServiceSpy);
+            initProjectNameGeneratorSpy(projectNameGeneratorSpy);
         } catch (MachinaException e) {
             fail(e.getMessage());
         }
@@ -252,19 +250,19 @@ public class DeleteBranchSteps {
                 null,
                 flowServiceSpy,
                 helperService,
-                gitHubService));
+                gitHubService, null));
         
     }
 
-    private void initFlowServiceSpy(FlowService flowService) throws MachinaException {
-        FlowServiceAnswerer answerer = new FlowServiceAnswerer();
-        doAnswer(answerer).when(flowService).determineProjectName(any());
+    private void initProjectNameGeneratorSpy(ProjectNameGenerator projectNameGenerator) throws MachinaException {
+        ProjectNameGeneratorAnswered answered = new ProjectNameGeneratorAnswered();
+        doAnswer(answered).when(projectNameGenerator).determineProjectName(any());
     }
 
-    private class FlowServiceAnswerer implements Answer {
+    private class ProjectNameGeneratorAnswered implements Answer {
 
         @Override
-        public Object answer(InvocationOnMock invocation) {
+        public Object answer(InvocationOnMock invocation) throws Throwable {
             try {
                 calculatedProjectName = (String)invocation.callRealMethod();
             } catch (Throwable throwable) {
@@ -274,6 +272,4 @@ public class DeleteBranchSteps {
             return calculatedProjectName;
         }
     }
-
-
 }
