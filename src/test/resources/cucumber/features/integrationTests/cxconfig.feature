@@ -1,4 +1,4 @@
-@CxConfigFeature
+@CxConfigFeature @IntegrationTest
 Feature: CxFlow should read configuration from cx.config file in the root of repository
 
   @Thresholds

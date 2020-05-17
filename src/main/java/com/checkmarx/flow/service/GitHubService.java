@@ -315,6 +315,7 @@ public class GitHubService extends RepoService {
         } catch (NullPointerException e) {
             log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
         } catch (HttpClientErrorException e) {
+            log.warn("Repo content is unavailable. The reason can be that branch has been deleted.");
             throw new GitHubClientRunTimeException("Error getting repo content.", e);
         }
         return Collections.emptyList();
