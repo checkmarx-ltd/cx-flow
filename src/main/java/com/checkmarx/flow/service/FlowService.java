@@ -4,6 +4,7 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.report.ScanReport;
 import com.checkmarx.flow.exception.ExitThrowable;
+import com.checkmarx.flow.exception.GitHubClientException;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.flow.utils.ZipUtils;
@@ -275,7 +276,7 @@ public class FlowService {
         return projectId;
     }
 
-    private BugTracker.Type triggerBugTrackerEvent(ScanRequest request) {
+    private BugTracker.Type triggerBugTrackerEvent(ScanRequest request) throws GitHubClientException {
         BugTracker.Type bugTrackerType = request.getBugTracker().getType();
         if(bugTrackerType.equals(BugTracker.Type.GITLABMERGE)){
             gitLabService.sendMergeComment(request, SCAN_MESSAGE);
