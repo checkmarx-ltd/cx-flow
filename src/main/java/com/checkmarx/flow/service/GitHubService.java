@@ -102,17 +102,13 @@ public class GitHubService extends RepoService {
         while (it.hasNext()) {
             JsonNode commentNode = it.next();
             RepoComment comment = createRepoComment(commentNode);
-            if (isCheckMarxComment(comment)) {
+            if (PullRequestCommentsHelper.isCheckMarxComment(comment)) {
                 result.add(comment);
             }
         }
         return result;
     }
 
-    private boolean isCheckMarxComment(RepoComment comment) {
-        return comment.getComment().contains("Full Scan Details") && comment.getComment().contains("Checkmarx scan completed") ||
-                comment.getComment().contains("Scan submitted to Checkmarx");
-    }
 
     private RepoComment createRepoComment(JsonNode commentNode) {
         String commentBody = commentNode.path("body").getTextValue();
@@ -122,11 +118,12 @@ public class GitHubService extends RepoService {
 
     void sendMergeComment(ScanRequest request, String comment) throws GitHubClientException {
         try {
-            List<RepoComment> repoComments = getComments(request.getMergeNoteUri());
-            log.debug("There are {} checkmarx comments on this pull request", repoComments.size());
-            if (repoComments.size() == 1) {
-                updateComment(getEditCommentUrl(request.getMergeNoteUri(), repoComments.get(0)), comment);
+            RepoComment commentToUpdate = PullRequestCommentsHelper.getCommentToUpdate(getComments(request.getMergeNoteUri()), comment);
+            if (commentToUpdate !=  null) {
+                log.debug("Going to update GitHub pull request comment");
+                updateComment(getEditCommentUrl(request.getMergeNoteUri(), commentToUpdate), comment);
             } else {
+                log.debug("Going to create a new GitHub pull request comment");
                 addComment(request, comment);
             }
         }
