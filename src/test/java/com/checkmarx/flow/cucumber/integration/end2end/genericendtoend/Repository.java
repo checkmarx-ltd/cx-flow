@@ -41,6 +41,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
+import cucumber.api.PendingException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -49,7 +50,7 @@ enum Repository {
         GitHubProperties gitHubProperties;
         private Integer hookId;
         private String createdFileSha;
-        //TO DO: pr id
+        private Integer prId;
 
         @Override
         Boolean hasWebHook() {
@@ -215,17 +216,63 @@ enum Repository {
 
         @Override
         void createPR() {
-            // TODO Auto-generated method stub
+            String data = createPRData(false);
+            final HttpHeaders headers = getHeaders();
+            final HttpEntity<String> request = new HttpEntity<>(data, headers);
+            try {
+                RestTemplate restTemplate = new RestTemplate();
+                String url = String.format("%s/%s/%s/pulls", 
+                    gitHubProperties.getApiUrl(), namespace, repo);
+                if (log.isInfoEnabled()) {
+                    throw new PendingException("createPR is waiting on deletePR, and parameters");
+                }
+                final ResponseEntity<String> response = restTemplate.postForEntity(url, request,
+                    String.class);
+                assertEquals(HttpStatus.CREATED, response.getStatusCode());
+                prId = new JSONObject(response.getBody()).getInt("id");
+            } catch (Exception e) {
+                fail("failed to create PR " + e.getMessage());
+            }
+        }
 
-            // POST /repos/:owner/:repo/pulls
+        private String createPRData(boolean isDelete) {
+            //TO DO: replace parameters 
+            ObjectMapper mapper = new ObjectMapper();
+            ObjectNode pr = mapper.createObjectNode();
+            pr.put("title", "cxflow GitHub e2e test")
+            .put("body", "This is an automated test")
+            .put("base", "master");
+            if (isDelete) {
+                pr.put("state", "close");
+            } else {
+                pr.put("head", "feature");
+            }
+            String data = null;
+            try {
+                data = mapper.writeValueAsString(pr);
+            } catch (JsonProcessingException e) {
+                String msg = "faild to create GitHub PR data";
+                log.error(msg);
+                fail(msg);
+            }
+            return data;
+        }
 
-            // {
-            //     "title": "Amazing new feature",
-            //     "body": "Please pull these awesome changes in!",
-            //     "head": "octocat:new-feature",
-            //     "base": "master"
-            //   }
-
+        @Override
+        void deletePR() {
+            String data = createPRData(true);
+            final HttpHeaders headers = getHeaders();
+            final HttpEntity<String> request = new HttpEntity<>(data, headers);
+            try {
+                RestTemplate restTemplate = new RestTemplate();
+                String url = String.format("%s/%s/%s/pulls/%d", 
+                    gitHubProperties.getApiUrl(), namespace, repo, prId);
+                final ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.PATCH,
+                    request, String.class);
+                assertEquals(HttpStatus.OK, response.getStatusCode());
+            } catch (Exception e) {
+                fail("failed to delete PR " + e.getMessage());
+            }
         }
     },
     ADO {
@@ -538,10 +585,11 @@ enum Repository {
 
         @Override
         void createPR() {
+            throw new PendingException(); 
             // TODO Auto-generated method stub
 
             // POST https://dev.azure.com/fabrikam/_apis/git/repositories/3411ebc1-d5aa-464f-9615-0b527bc66719/pullrequests?api-version=5.1
-
+            
             // {
             //     "sourceRefName": "refs/heads/npaulk/my_work",
             //     "targetRefName": "refs/heads/new_feature",
@@ -556,8 +604,16 @@ enum Repository {
 
         }
 
+        @Override
+        void deletePR() {
+            throw new PendingException();
+            // TODO Auto-generated method stub
+
+        }
+
     };
 
+    private HookType hookType;
     /* where to push the file */
     static final String filePath = "src/main/java/sample/encode.frm";
 
@@ -573,8 +629,8 @@ enum Repository {
         if (
 
                 System.getenv(upperCaseName + "_HOOK_NAMESPACE") == null ||
-                        System.getenv(upperCaseName + "_HOOK_REPO") == null ||
-                        System.getenv(upperCaseName + "_HOOK_TARGET") == null
+                System.getenv(upperCaseName + "_HOOK_REPO") == null ||
+                System.getenv(upperCaseName + "_HOOK_TARGET") == null
         ) {
             log.info("running with property file");
             Properties properties = getProperties();
@@ -592,6 +648,7 @@ enum Repository {
     protected void generateWebHook(HookType hookType) {
         log.info("testing if repository alredy has hooks configured");
         assertTrue(!hasWebHook(), "repository alredy has hooks configured");
+        this.hookType = hookType;
         log.info("creating the webhook ({})", hookType);
         generateHook(hookType);
     }
@@ -620,25 +677,31 @@ enum Repository {
     abstract Boolean hasWebHook();
 
     abstract void generateHook(HookType hookType);
-
     abstract void deleteHook();
 
     abstract HttpHeaders getHeaders();
 
     abstract void pushFile(String content);
-
     abstract void deleteFile();
     
     abstract void createPR();
+    abstract void deletePR();
 
     protected String namespace = null;
     protected String repo = null;
     protected String hookTargetURL = null;
 
     public void cleanup() {
-        // switch()
-        deleteHook();
-        deleteFile();
+        switch (hookType) {
+            case PUSH:
+                deleteHook();
+                deleteFile();        
+                break;
+            case PULL_REQUEST:
+                deleteHook();
+                deletePR();
+                break;
+        }
     }
 
 }
