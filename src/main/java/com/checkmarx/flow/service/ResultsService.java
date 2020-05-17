@@ -188,7 +188,7 @@ public class ResultsService {
                 break;
             case ADOPULL:
                 adoService.processPull(request, results);
-                adoService.endBlockMerge(request, results.getLink(), !results.getXIssues().isEmpty());
+                adoService.endBlockMerge(request, results, scanDetails);
                 break;
             case EMAIL:
                 if(!flowProperties.getMail().isEnabled()) {
@@ -220,7 +220,7 @@ public class ResultsService {
         if(results != null && results.getScanSummary() != null) {
             log.info("####Checkmarx Scan Results Summary####");
             log.info("Team: {}, Project: {}, Scan-Id: {}", request.getTeam(), request.getProject(), results.getAdditionalDetails().get("scanId"));
-            log.info(String.format("The vulnerabilities found for the scan are: %s", results.getScanSummary().toString()));
+            log.info(String.format("The vulnerabilities found for the scan are: %s", String.valueOf(results.getScanSummary())));
             log.info("To view results use following link: {}", results.getLink());
             log.info("######################################");
         }
