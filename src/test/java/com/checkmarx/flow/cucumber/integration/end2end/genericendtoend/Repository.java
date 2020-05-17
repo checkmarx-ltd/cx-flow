@@ -108,12 +108,12 @@ enum Repository {
             switch (hookType) {
                 case PUSH:
                     hook.setEvents(Arrays.asList("push"));
-                    
                     break;
-                    case PULL_REQUEST:
-                    hook.setEvents(Arrays.asList("pull_request"));
-                    
+                case PULL_REQUEST:
+                    hook.setEvents(Arrays.asList("pull_request"));    
                     break;
+                default:
+                    throw new PendingException();
             }
             Config config = new Config();
             config.setUrl(url);
@@ -277,11 +277,8 @@ enum Repository {
     },
     ADO {
         private ADOProperties adoProperties;
-        private String COMMIT_FILE_PATH = null;
         private String hookId = null;
         private String apiVersion = "api-version=5.0";
-        private String OldObject = null;
-        private String createdFileSha = null;
         private String projectId = null;
         
         @Override
@@ -308,6 +305,8 @@ enum Repository {
                     hookTargetURL = hookTargetURL + "/ado/pull";
                     eventType = "git.pullrequest.created";
                     break;
+                default:
+                    throw new PendingException();
             }
             String url = getHookServiceURI();
             RestTemplate restTemplate = new RestTemplate();
@@ -325,7 +324,7 @@ enum Repository {
                 assertEquals(HttpStatus.OK, response.getStatusCode());
                 Map<?,?> responseMap = new ObjectMapper().readValue(response.getBody().replace("<", ""), Map.class);
                 hookId = responseMap.get("id").toString();
-                System.out.println("hookId=" + hookId);
+                log.info("generated hookId={}", hookId);
 
             } catch (Exception e) {
                 fail("failed to create hook " + e.getMessage());
@@ -358,7 +357,7 @@ enum Repository {
 
         @Override
         void deleteHook() {
-            Optional.ofNullable(hookId).ifPresent(hookId -> {
+            Optional.ofNullable(hookId).ifPresent(h -> {
                 String url = getDeleteHooksFormat();
                 RestTemplate restTemplate = new RestTemplate();
                 HttpHeaders headers = getHeaders();
@@ -388,14 +387,14 @@ enum Repository {
         @Override
         void pushFile(String content) {
             String data = null;
-            COMMIT_FILE_PATH = getPushesFormat();
+            String commitFilePath = getPushesFormat();
             String Path = "/encode.frm";
             final RestTemplate restTemplate = new RestTemplate();
 
             ObjectMapper mapper = new ObjectMapper();
-            OldObject = getLastOldObject();
+            String oldObject = getLastOldObject();
 
-            ObjectNode commit = createCommit(Path, content, OldObject);
+            ObjectNode commit = createCommit(Path, content, oldObject);
 
             try {
 
@@ -414,9 +413,9 @@ enum Repository {
 
             try {
 
-                ResponseEntity<String> response = restTemplate.exchange(COMMIT_FILE_PATH, HttpMethod.POST, request,
+                ResponseEntity<String> response = restTemplate.exchange(commitFilePath, HttpMethod.POST, request,
                         String.class);
-                log.info("Pushed response body=" + response.getBody());
+                log.info("Pushed response body={}", response.getBody());
             } catch (Exception e) {
                 String msg = "faild to push a file:";
                 log.error(msg);
@@ -489,7 +488,7 @@ enum Repository {
         @Override
         void deleteFile() {
             String Path = "/encode.frm";
-            createdFileSha = getLastOldObject();
+            String createdFileSha = getLastOldObject();
             ObjectMapper mapper = new ObjectMapper();
             String data = null;
             ObjectNode deleteCommit = deleteCommit(Path, createdFileSha);
@@ -546,7 +545,7 @@ enum Repository {
             object.putArray("refUpdates").addPOJO(refUpdates);
             refUpdates.put("name", "refs/heads/master")
                     .put("oldObjectId", ObjectId);
-            log.info("Commit object Created = " + object);
+            log.info("Commit object Created = {}", object);
 
             return object;
 

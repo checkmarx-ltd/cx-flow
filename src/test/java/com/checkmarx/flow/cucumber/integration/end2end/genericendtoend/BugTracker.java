@@ -52,11 +52,11 @@ enum BugTracker {
         void verifyIssueCreated(String severities) {
             String jql = String.format("project = %s and priority  in %s", jiraProperties.getProject(), severities);
             log.info("filtering issue with jql: {}", jql);
-            Set<String> fields = new HashSet<String>();
+            Set<String> fields = new HashSet<>();
             fields.addAll(
                     Arrays.asList("key", "project", "issuetype", "summary", "labels", "created", "updated", "status"));
             SearchResult result = null;
-            Boolean found = false;
+            boolean found = false;
             for (int retries = 0; retries < 20; retries++) {
                 Promise<SearchResult> temp = searchClient.searchJql(jql, 10, 0, fields);
                 try {
