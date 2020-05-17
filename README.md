@@ -4,6 +4,7 @@ Please read latest features and fixes from the Release.txt file
 ## Build
 `gradlew clean build`
 
+
 ## Parse
 
 _Parse mode will use the Checkmarx Scan XML as input to drive the automation_
