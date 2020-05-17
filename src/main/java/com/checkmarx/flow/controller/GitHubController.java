@@ -7,6 +7,7 @@ import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.EventResponse;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.github.*;
+import com.checkmarx.flow.exception.GitHubClientRunTimeException;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.service.FlowService;
@@ -414,7 +415,8 @@ public class GitHubController {
                 flowService.initiateAutomation(request);
             }
 
-        }catch (IllegalArgumentException e){
+        }
+        catch (IllegalArgumentException e){
             String errorMessage = "Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product != null ? product : "").concat(" | ").concat(bug != null ? bug : "");
             log.error(errorMessage, e);
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
@@ -425,6 +427,8 @@ public class GitHubController {
                     .build());
         }
 
+        log.info("Process of push has finished");
+        
         return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
                 .message("Scan Request Successfully Submitted")
                 .success(true)
@@ -488,15 +492,6 @@ public class GitHubController {
             
             //build request object
             Repository repository = event.getRepository();
-            String gitUrl = repository.getCloneUrl();
-            log.debug("Using url: {}", gitUrl);
-            String token = properties.getToken();
-            if(ScanUtils.empty(token)){
-                log.error("No token was provided for Github");
-                throw new MachinaRuntimeException();
-            }
-            String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(token).concat("@"));
-            gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(token).concat("@"));
 
             String namespace;
             if(StringUtils.isBlank(repository.getOwner().getName())){
@@ -506,7 +501,6 @@ public class GitHubController {
             }
 
             flowProperties.setAutoProfile(true);
-
         
             ScanRequest request = ScanRequest.builder()
                     .application(app)
@@ -516,20 +510,23 @@ public class GitHubController {
                     .namespace(namespace)
                     .repoName(repository.getName())
                     .repoUrl(repository.getCloneUrl())
-                    .repoUrlWithAuth(gitAuthUrl)
-                    .repoType(ScanRequest.Repository.GITHUB)
+                    .repoType(ScanRequest.Repository.NA)
                     .branch(currentBranch)
                     .refs(event.getRef())
                     .build();
 
             request.setScanPresetOverride(false);
-
-            request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body);
-            request.setId(uid);
+            
+            
+            //only initiate scan/automation if branch is applicable
+            if(helperService.isBranch2Scan(request, branches)){
+                flowService.deleteProject(request);
+            }
+            
+        log.info("Process of delete branch has finished successfully");
         
-
         return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
-                .message("Scan Request Successfully Submitted")
+                .message("Delete Branch Successfully finished")
                 .success(true)
                 .build());
 

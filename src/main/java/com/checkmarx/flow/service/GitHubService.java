@@ -315,6 +315,7 @@ public class GitHubService extends RepoService {
         } catch (NullPointerException e) {
             log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
         } catch (HttpClientErrorException e) {
+            log.warn("Unable to get repo content.");
             throw new GitHubClientRunTimeException("Error getting repo content.", e);
         }
         return Collections.emptyList();
