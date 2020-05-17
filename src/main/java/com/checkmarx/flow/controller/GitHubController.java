@@ -465,9 +465,9 @@ public class GitHubController {
         //verify message signature
         verifyHmacSignature(body, signature);
 
-        if(event.getRefType().equals("tag")){
+        if(!event.getRefType().equalsIgnoreCase("branch")){
             log.error("Nothing to do for delete tag");
-            ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
+            return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
                     .message("Nothing to do for delete tag")
                     .success(true)
                     .build());

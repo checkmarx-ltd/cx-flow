@@ -377,7 +377,7 @@ public class FlowService {
                 String.format("\t\tSeparator that should be used: %s%n", cxProperties.getTeamPathSeparator());
     }
 
-    private String determineProjectName(ScanRequest request) throws MachinaException {
+    public String determineProjectName(ScanRequest request) throws MachinaException {
         String projectName;
         String repoName = request.getRepoName();
         String branch = request.getBranch();
