@@ -1,6 +1,7 @@
 package com.checkmarx.flow.utils.github;
 
 import com.checkmarx.flow.config.GitHubProperties;
+import com.checkmarx.flow.controller.GitHubController;
 import com.checkmarx.flow.cucumber.common.Constants;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 import com.checkmarx.flow.custom.GitHubIssueTracker;
@@ -73,7 +74,7 @@ public class GitHubTestUtils implements GitHubTestUtilsImpl {
     }
 
     @Override
-    public void closeIssue(Issue issue, ScanRequest request)  {
+    public void closeIssue(Issue issue, ScanRequest request) {
         try {
             gitHubIssueTracker.closeIssue(issue, request);
         } catch (MachinaException e) {
@@ -83,7 +84,7 @@ public class GitHubTestUtils implements GitHubTestUtilsImpl {
 
     @Override
     public void closeAllIssues(List<Issue> issuesList, ScanRequest request) {
-        if (issuesList !=null) {
+        if (issuesList != null) {
             issuesList.forEach(issue ->
                     closeIssue(issue, request));
         }
@@ -111,19 +112,46 @@ public class GitHubTestUtils implements GitHubTestUtilsImpl {
     }
 
     @Override
-    public HttpEntity<String> prepareWebhookRequest(String filename, EventType eventType){
-        String body;
+    public String loadWebhookRequestBody(EventType eventType) {
+        String filename = (eventType == GitHubTestUtils.EventType.PULL_REQUEST) ?
+                "github-pull-request.json" : "github-push.json";
+
+        String path = Paths.get(Constants.WEBHOOK_REQUEST_DIR, filename).toString();
         try {
-            String path = Paths.get(Constants.WEBHOOK_REQUEST_DIR, filename).toString();
-            body = TestUtils.getResourceAsString(path);
+            return TestUtils.getResourceAsString(path);
         } catch (IOException e) {
             throw new RuntimeException("Unable to read resource stream.", e);
         }
+    }
+
+    @Override
+    public HttpEntity<String> prepareWebhookRequest(EventType eventType) {
+        String body = loadWebhookRequestBody(eventType);
 
         MultiValueMap<String, String> headers = new HttpHeaders();
         headers.add("X-GitHub-Event", eventType.getValue());
         headers.add("X-Hub-Signature", createSignature(body));
         return new HttpEntity<>(body, headers);
+    }
+
+    /**
+     * Executes a controller method that corresponds to eventType.
+     * No parameter overrides are passed to the call.
+     */
+    public void callController(GitHubController controller, EventType eventType) {
+        String body = loadWebhookRequestBody(eventType);
+        String signature = createSignature(body);
+        if (eventType == EventType.PULL_REQUEST) {
+            controller.pullRequest(body, signature,
+                    null, null, null, null, null, null, null,
+                    null, null, null, null, null, null,
+                    null, null, null, null);
+        } else {
+            controller.pushRequest(body, signature,
+                    null, null, null, null, null, null, null,
+                    null, null, null, null, null, null,
+                    null, null, null, null);
+        }
     }
 
     @RequiredArgsConstructor

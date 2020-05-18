@@ -33,11 +33,6 @@ import static org.junit.Assert.*;
 @SpringBootTest(classes = { CxFlowApplication.class })
 @ActiveProfiles({ "scan", "secrets" })
 public class ScanSteps extends AbstractScanSteps {
-
-//    @When("nothing {string}")
-//    public void whenDoNothing(String str){}
-
-
     @And("The request sent to SAST will contain exclude-folder {string} and exclude files {string}")
     public void setExcludeFolders(String excludeFolders, String excludeFiles) {
         if (!excludeFiles.equals("")) {
@@ -135,7 +130,7 @@ public class ScanSteps extends AbstractScanSteps {
             return;
         }
         try {
-            assertTrue(scanDTO.getTeamId().equals(cxClient.getTeamId(outputTeamName)));
+            assertEquals(scanDTO.getTeamId(), cxClient.getTeamId(outputTeamName));
             assertEquals(high, results.getScanSummary().getHighSeverity());
             assertEquals(medium, results.getScanSummary().getMediumSeverity());
             assertEquals(low, results.getScanSummary().getLowSeverity());
@@ -293,7 +288,7 @@ public class ScanSteps extends AbstractScanSteps {
 
 
     @Then("The request sent to SAST reporitory will contain scan result with project name={string} and team {string}")
-    public void runVerifyProjectName(String OutProjectName, String outputTeamName) throws ExitThrowable {
+    public void runVerifyProjectName(String OutProjectName, String outputTeamName) {
         ScanDTO scanDTO = callSast();
 
         assertTrue(results.getProject().equalsIgnoreCase(OutProjectName));
