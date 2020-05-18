@@ -66,7 +66,7 @@ public class SCAScanner implements VulnerabilityScanner {
     private URL getRepoUrl(ScanRequest scanRequest) {
         URL parsedUrl;
         try {
-            parsedUrl = new URL(scanRequest.getRepoUrl());
+            parsedUrl = new URL(scanRequest.getRepoUrlWithAuth());
         } catch (MalformedURLException e) {
             log.error("Failed to parse repository URL: '{}'", scanRequest.getRepoUrl());
             throw new MachinaRuntimeException("Invalid repository URL.");
