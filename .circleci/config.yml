@@ -188,7 +188,7 @@ jobs:
           name: Run E2E Tests
           command: |
             export GITHUB_HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
-            export ADO_HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}/ado/push
+            export ADO_HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
             ./gradlew clean e2eTests --info -DGITHUB_target=${GITHUB_HOOK_TARGET} -DGITHUB_repo=${GITHUB_HOOK_REPO} -DGITHUB_namespace=${GITHUB_HOOK_NAMESPACE} -DADO_target=${ADO_HOOK_TARGET} -DADO_repo=${ADO_HOOK_REPO}-DADO_namespace=${ADO_HOOK_NAMESPACE}
       - run:
           name: Save test results

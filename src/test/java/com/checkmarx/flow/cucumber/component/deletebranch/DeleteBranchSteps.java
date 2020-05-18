@@ -46,7 +46,7 @@ public class DeleteBranchSteps {
     private static final String PROJECT_NAME = "VB_3845-test1";
     private static final String PRESET = "Default Preset";
     private static final String BRANCH = "branch";
-    public static String GITHUB_USER = "cxflowtestuser";
+    public static final String GITHUB_USER = "cxflowtestuser";
     private final CxClient cxClientMock;
     private final GitHubService gitHubService;
     private GitHubController gitHubControllerSpy;

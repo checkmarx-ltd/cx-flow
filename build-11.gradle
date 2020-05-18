@@ -3,11 +3,12 @@ import org.gradle.api.tasks.testing.Test
 buildscript {
 	ext {
         CxSBSDK = "0.4.16-20200517.152112-1"
+        //cxVersion = "8.90.5"
         springBootVersion = '2.2.4.RELEASE'
         sonarqubeVersion = '2.8'
         atlassianVersion = "5.2.0"
         atlassianFugueVersion = "4.7.2"
-        mainClass='com.checkmarx.flow.CxFlowApplication'
+        mainClass = 'com.checkmarx.flow.CxFlowApplication'
     }
 	repositories {
         jcenter()

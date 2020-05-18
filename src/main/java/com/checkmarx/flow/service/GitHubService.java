@@ -121,16 +121,11 @@ public class GitHubService extends RepoService {
         return new RepoComment(id, commentBody);
     }
 
-    public void sendMergeComment(ScanRequest request, String comment) throws GitHubClientException {
+    void sendMergeComment(ScanRequest request, String comment) throws GitHubClientException {
         try {
             List<RepoComment> repoComments = getComments(request.getMergeNoteUri());
             log.debug("There are {} checkmarx comments on this pull request", repoComments.size());
             addComment(request, comment);
-//            if (repoComments.size() == 1) {
-//                updateComment(getEditCommentUrl(request.getMergeNoteUri(), repoComments.get(0)), comment);
-//            } else {
-//                addComment(request, comment);
-//            }
         }
         catch (IOException ioe) {
             throw new GitHubClientException("Error while adding or updating repo pull request comment", ioe);

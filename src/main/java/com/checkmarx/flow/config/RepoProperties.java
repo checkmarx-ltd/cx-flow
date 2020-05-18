@@ -14,6 +14,7 @@ public class RepoProperties {
     private String configAsCode = "cx.config";
     private String openTransition = "open";
     private String closeTransition = "closed";
+    private String filePath = ".";
     private boolean blockMerge = false;
     private boolean errorMerge = false;
     private boolean detailed = true;
@@ -93,6 +94,14 @@ public class RepoProperties {
 
     public void setCloseTransition(String closeTransition) {
         this.closeTransition = closeTransition;
+    }
+
+    public String getFilePath() {
+        return filePath;
+    }
+
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
     }
 
     public boolean isBlockMerge() {
