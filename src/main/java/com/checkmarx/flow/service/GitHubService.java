@@ -121,7 +121,7 @@ public class GitHubService extends RepoService {
         return new RepoComment(id, commentBody);
     }
 
-    void sendMergeComment(ScanRequest request, String comment) throws GitHubClientException {
+    public void sendMergeComment(ScanRequest request, String comment) throws GitHubClientException {
         try {
             List<RepoComment> repoComments = getComments(request.getMergeNoteUri());
             log.debug("There are {} checkmarx comments on this pull request", repoComments.size());
