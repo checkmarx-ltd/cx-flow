@@ -7,6 +7,7 @@ import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.JiraService;
+import com.checkmarx.flow.service.SastScanner;
 import com.checkmarx.jira.IJiraTestUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
@@ -43,6 +44,9 @@ class JiraAnalyticsCommandLineCommonSteps {
 
     @Autowired
     protected JsonLoggerTestUtils jsonLoggerTestUtils;
+
+    @Autowired
+    protected SastScanner sastScanner;
 
     protected Filter filter;
     protected BugTracker bugTracker;

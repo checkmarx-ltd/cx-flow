@@ -9,6 +9,7 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.HelperService;
+import com.checkmarx.flow.service.ResultsService;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
@@ -47,15 +48,17 @@ public class FlowController {
     private final FlowService scanService;
     private final HelperService helperService;
     private final JiraProperties jiraProperties;
+    private final ResultsService resultsService;
 
-    @ConstructorProperties({"properties", "cxProperties", "scanService", "helperService", "jiraProperties"})
+    @ConstructorProperties({"properties", "cxProperties", "scanService", "helperService", "jiraProperties", "resultsService"})
     public FlowController(FlowProperties properties, CxProperties cxProperties, FlowService scanService,
-                          HelperService helperService, JiraProperties jiraProperties) {
+                          HelperService helperService, JiraProperties jiraProperties, ResultsService resultsService) {
         this.properties = properties;
         this.cxProperties = cxProperties;
         this.scanService = scanService;
         this.helperService = helperService;
         this.jiraProperties = jiraProperties;
+        this.resultsService = resultsService;
     }
 
     @RequestMapping(value = "/scanresults", method = RequestMethod.GET, produces = "application/json")
@@ -105,7 +108,7 @@ public class FlowController {
         // Fetch the Checkmarx Scan Results based on given ScanRequest.
         // The cxProject parameter is null because the required project metadata
         // is already contained in the scanRequest parameter.
-        ScanResults scanResults = scanService.cxGetResults(scanRequest, null).join();
+        ScanResults scanResults = resultsService.cxGetResults(scanRequest, null).join();
         log.debug("ScanResults {}", scanResults);
 
         return scanResults;

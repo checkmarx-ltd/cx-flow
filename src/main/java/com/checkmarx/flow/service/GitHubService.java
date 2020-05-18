@@ -7,6 +7,7 @@ import com.checkmarx.flow.dto.github.Content;
 import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.exception.GitHubClientException;
 import com.checkmarx.flow.exception.GitHubClientRunTimeException;
+import com.checkmarx.flow.exception.GitHubRepoUnavailableException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
@@ -120,7 +121,7 @@ public class GitHubService extends RepoService {
         return new RepoComment(id, commentBody);
     }
 
-    void sendMergeComment(ScanRequest request, String comment) throws GitHubClientException {
+    public void sendMergeComment(ScanRequest request, String comment) throws GitHubClientException {
         try {
             List<RepoComment> repoComments = getComments(request.getMergeNoteUri());
             log.debug("There are {} checkmarx comments on this pull request", repoComments.size());
@@ -137,7 +138,7 @@ public class GitHubService extends RepoService {
         restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
-    void startBlockMerge(ScanRequest request, String url){
+    public void startBlockMerge(ScanRequest request, String url){
         if(properties.isBlockMerge()) {
             final String PULL_REQUEST_STATUS = "pending";
             HttpEntity<?> httpEntity = new HttpEntity<>(
@@ -312,7 +313,7 @@ public class GitHubService extends RepoService {
             log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
         } catch (HttpClientErrorException e) {
             log.warn("Repo content is unavailable. The reason can be that branch has been deleted.");
-            throw new GitHubClientRunTimeException("Error getting repo content.", e);
+            throw new GitHubRepoUnavailableException("Error getting repo content.", e);
         }
         return Collections.emptyList();
     }

@@ -69,12 +69,12 @@ public class BitBucketService {
         }
     }
 
-    void sendMergeComment(ScanRequest request, String comment){
+    public void sendMergeComment(ScanRequest request, String comment){
         HttpEntity httpEntity = new HttpEntity<>(getJSONComment(comment).toString(), createAuthHeaders());
         restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
-    void sendServerMergeComment(ScanRequest request, String comment){
+    public void sendServerMergeComment(ScanRequest request, String comment){
         HttpEntity httpEntity = new HttpEntity<>(getServerJSONComment(comment).toString(), createAuthHeaders());
         restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }

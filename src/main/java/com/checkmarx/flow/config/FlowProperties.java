@@ -23,6 +23,7 @@ public class FlowProperties {
     private List<String> filterCwe;
     private List<String> filterCategory;
     private List<String> filterStatus;
+    private List<String> enabledVulnerabilityScanners;
     private boolean autoProfile = false;
     private boolean alwaysProfile = false;
     private Integer profilingDepth = 1;
@@ -130,6 +131,14 @@ public class FlowProperties {
 
     public void setFilterStatus(List<String> filterStatus) {
         this.filterStatus = filterStatus;
+    }
+
+    public List<String> getEnabledVulnerabilityScanners() {
+        return enabledVulnerabilityScanners;
+    }
+
+    public void setEnabledVulnerabilityScanners(List<String> enabledVulnerabilityScanners) {
+        this.enabledVulnerabilityScanners = enabledVulnerabilityScanners;
     }
 
     /**
