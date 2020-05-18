@@ -19,6 +19,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ConfigurableApplicationContext;
 
+import cucumber.api.PendingException;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -59,11 +61,12 @@ public class GenericEndToEndSteps {
     @And("bug-tracker is {word}")
     public void setBugTracker(String bugTracker) {
         this.bugTracker = BugTracker.setTo(bugTracker, this);
-        flowProperties.setBugTracker(bugTracker); //TO DO: ?!?!?
+        flowProperties.setBugTracker(bugTracker);
     }
 
     @And("Scan engine is {word}")
-    public void setScanEngine() {
+    public void setScanEngine(String engine) {
+        throw new PendingException();
         //TO DO: set the engine
     }
 
@@ -107,6 +110,7 @@ public class GenericEndToEndSteps {
 
     @Then("pull-request is updated")
     public void checkPRUpdate() {
+        throw new PendingException();
         // TO DO: get data from pr
         // TO DO: validate data
     }
