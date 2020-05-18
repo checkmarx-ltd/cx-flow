@@ -82,13 +82,17 @@ public class ResultsService {
             CompletableFuture<ScanResults> future = new CompletableFuture<>();
             Integer projectId = Integer.parseInt(scanResults.getProjectId());
 
-            new ScanResultsReport(scanResults.getSastScanId(), scanRequest, scanResults).log();
+            if(projectId != UNKNOWN_INT) {
+                new ScanResultsReport(scanResults.getSastScanId(), scanRequest, scanResults).log();
+                sendEmailNotification(scanRequest, scanResults);
+                processResults(scanRequest, scanResults, new ScanDetails(projectId, scanResults.getSastScanId(), null));
+                logScanDetails(scanRequest, projectId, scanResults);
+            }
 
-            sendEmailNotification(scanRequest, scanResults);
-            processResults(scanRequest, scanResults, new ScanDetails(projectId, scanResults.getSastScanId(), null));
-            logScanDetails(scanRequest, projectId, scanResults);
             future.complete(scanResults);
-
+            
+            log.info("Finished processing the request");
+            
             return future;
 
         } catch (Exception e) {

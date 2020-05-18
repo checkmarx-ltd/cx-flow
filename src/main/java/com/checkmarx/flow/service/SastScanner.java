@@ -6,6 +6,7 @@ import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.report.ScanReport;
 import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.flow.exception.GitHubClientRunTimeException;
+import com.checkmarx.flow.exception.GitHubRepoUnavailableException;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.sastscanning.ScanRequestConverter;
 import com.checkmarx.flow.utils.ScanUtils;
@@ -39,6 +40,7 @@ import java.util.concurrent.ExecutionException;
 
 import static com.checkmarx.flow.exception.ExitThrowable.exit;
 import static com.checkmarx.sdk.config.Constants.UNKNOWN_INT;
+import static com.checkmarx.sdk.config.Constants.UNKNOWN;
 
 @Service
 @Slf4j
@@ -87,6 +89,19 @@ public class SastScanner implements VulnerabilityScanner {
             scanResults.setSastScanId(scanId);
             return scanResults;
 
+        } catch(GitHubRepoUnavailableException e){
+            //the repository is unavailable - can happen for a push event of a deleted branch - nothing to do
+
+            //the error message is printed when the exception is thrown
+            //usually should occur during push event occuring on delete branch
+            //therefore need to eliminate the scan process but do not want to create
+            //an error stuck trace in the log
+            scanResults =  new ScanResults();
+            scanResults.setProjectId(UNKNOWN);
+            scanResults.setProject(UNKNOWN);
+            scanResults.setScanType(SCAN_TYPE);
+            return scanResults;
+            
         } catch (CheckmarxException e) {
             log.error("SAST scan failed", e);
         }
@@ -145,7 +160,7 @@ public class SastScanner implements VulnerabilityScanner {
                     logRequest(request, osaScanId, cxFile, OperationResult.successful());
                 }
             }
-        } catch (GitHubClientRunTimeException e) {
+        } catch (GitHubRepoUnavailableException e) {
             //the error message is printed when the exception is thrown
             //usually should occur during push event occuring on delete branch
             //therefore need to eliminate the scan process but do not want to create

@@ -62,7 +62,7 @@ public class BugTrackerTriggerEvent {
                 break;
 
             default:
-                log.error("Bug-Tracker type: {} is not supported", bugTrackerType);
+                log.warn("Bug-Tracker type: {} is not supported", bugTrackerType);
         }
         return bugTrackerType;
     }

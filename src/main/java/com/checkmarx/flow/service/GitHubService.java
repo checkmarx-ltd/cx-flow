@@ -7,6 +7,7 @@ import com.checkmarx.flow.dto.github.Content;
 import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.exception.GitHubClientException;
 import com.checkmarx.flow.exception.GitHubClientRunTimeException;
+import com.checkmarx.flow.exception.GitHubRepoUnavailableException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
@@ -317,7 +318,7 @@ public class GitHubService extends RepoService {
             log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
         } catch (HttpClientErrorException e) {
             log.warn("Repo content is unavailable. The reason can be that branch has been deleted.");
-            throw new GitHubClientRunTimeException("Error getting repo content.", e);
+            throw new GitHubRepoUnavailableException("Error getting repo content.", e);
         }
         return Collections.emptyList();
     }
