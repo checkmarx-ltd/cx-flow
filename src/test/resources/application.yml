@@ -181,7 +181,7 @@ bitbucket:
 
 azure:
   webhook-token: cxflow:1234
-  token: xxxx
+  token: e6u7kjxwme5wsx62pfc7delctlx5t74vjyydij7har6ni6lkdwga
   url: https://dev.azure.com/
   issue-type: issue
   # This version corresponds to TFS 2018 Update 2 and higher (including cloud)
