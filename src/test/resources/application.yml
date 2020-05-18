@@ -37,6 +37,8 @@ cx-flow:
     - security
   filter-severity:
     - High
+  enabled-vulnerability-scanners:
+  - sast
   mitre-url: https://cwe.mitre.org/data/definitions/%s.html
   wiki-url: https://checkmarx.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
   codebash-url: https://cxa.codebashing.com/courses/
@@ -76,6 +78,14 @@ checkmarx:
   #team-script: D:\\tmp\CxTeam.groovy
   #exclude-files:
   #exclude-folders:
+
+sca:
+  appUrl: https://xxxxx
+  apiUrl: https://xxxxx
+  accessControlUrl: https://xxxxx
+  tenant: xxxxx
+  username: xxxxx
+  password: xxxxx
 
 jira:
   url: http://localhost:8080

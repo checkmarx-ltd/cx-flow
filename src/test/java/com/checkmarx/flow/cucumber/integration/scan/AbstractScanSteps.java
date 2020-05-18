@@ -6,6 +6,7 @@ import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanDetails;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.service.FlowService;
+import com.checkmarx.flow.service.SastScanner;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.Filter;
@@ -37,6 +38,8 @@ public  abstract class AbstractScanSteps {
     protected FlowService flowService;
     @Autowired
     protected CxClient cxClient;
+    @Autowired
+    protected SastScanner sastScanner;
 
     protected String projectName;
     protected String teamName;
@@ -74,7 +77,7 @@ public  abstract class AbstractScanSteps {
         
         try {
 
-            scanDetails = flowService.executeCxScan(request, fileRepo);
+            scanDetails = sastScanner.executeCxScan(request, fileRepo);
             CompletableFuture<ScanResults> future = new CompletableFuture<>();
             //TODO async these, and join and merge after
             results = cxClient.getReportContentByScanId(scanDetails.getScanId(), request.getFilters());

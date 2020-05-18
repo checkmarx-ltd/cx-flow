@@ -104,7 +104,7 @@ public class GitLabService extends RepoService {
         }
     }
 
-    void sendMergeComment(ScanRequest request, String comment){
+    public void sendMergeComment(ScanRequest request, String comment){
         Note note = Note.builder()
                 .body(comment)
                 .build();
@@ -123,14 +123,14 @@ public class GitLabService extends RepoService {
         }
     }
 
-    void sendCommitComment(ScanRequest request, String comment){
+    public void sendCommitComment(ScanRequest request, String comment){
         JSONObject note = new JSONObject();
         note.put("note", comment);
         HttpEntity<String> httpEntity = new HttpEntity<>(note.toString(), createAuthHeaders());
         restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
-    void startBlockMerge(ScanRequest request){
+    public void startBlockMerge(ScanRequest request){
         if(properties.isBlockMerge()) {
             String mergeId = request.getAdditionalMetadata("merge_id");
             if(ScanUtils.empty(request.getAdditionalMetadata("merge_id")) || ScanUtils.empty(request.getAdditionalMetadata("merge_title"))){

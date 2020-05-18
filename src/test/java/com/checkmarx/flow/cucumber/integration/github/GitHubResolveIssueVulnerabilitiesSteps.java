@@ -44,7 +44,7 @@ public class GitHubResolveIssueVulnerabilitiesSteps extends GitHubCommonSteps {
     @And("for a given type, there is an opened issue with multiple vulnerabilities")
     public void setOpenIssueWithVulnerabilities() throws IOException, ExitThrowable {
         scanRequest = getBasicScanRequest();
-        flowService.cxParseResults(scanRequest, getFileFromResourcePath(INPUT_BASE_PATH + INPUT_VUL_BEFORE_FIX));
+        sastScanner.cxParseResults(scanRequest, getFileFromResourcePath(INPUT_BASE_PATH + INPUT_VUL_BEFORE_FIX));
 
         List<Issue> openIssues = gitHubTestUtils.filterIssuesByState(gitHubTestUtils.getIssues(scanRequest), "open");
         int issueLinesCount = gitHubTestUtils.getIssueLinesCount(openIssues.get(0));
@@ -55,7 +55,7 @@ public class GitHubResolveIssueVulnerabilitiesSteps extends GitHubCommonSteps {
 
     @When("resolving a vulnerability")
     public void resolveIssue() throws IOException, ExitThrowable {
-        flowService.cxParseResults(scanRequest, getFileFromResourcePath(INPUT_BASE_PATH + INPUT_VUL_AFTER_FIX));
+        sastScanner.cxParseResults(scanRequest, getFileFromResourcePath(INPUT_BASE_PATH + INPUT_VUL_AFTER_FIX));
     }
 
     @Then("the issue's code lines should be update")

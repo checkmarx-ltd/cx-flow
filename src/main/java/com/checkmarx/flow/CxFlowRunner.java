@@ -6,15 +6,15 @@ import com.checkmarx.flow.dto.ExitCode;
 import com.checkmarx.flow.dto.FlowOverride;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.ExitThrowable;
-import com.checkmarx.flow.service.FlowService;
-import com.checkmarx.flow.service.HelperService;
+import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.slf4j.Logger;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -30,9 +30,9 @@ import java.util.List;
 import static com.checkmarx.flow.exception.ExitThrowable.exit;
 
 @Component
+@RequiredArgsConstructor
+@Slf4j
 public class CxFlowRunner implements ApplicationRunner {
-
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(CxFlowRunner.class);
 
     /**
      * Command line option that causes CxFlow to throw an exception instead of exiting.
@@ -51,22 +51,10 @@ public class CxFlowRunner implements ApplicationRunner {
     private final ADOProperties adoProperties;
     private final HelperService helperService;
     private final FlowService flowService;
+    private final SastScanner sastScanner;
     private final List<ThreadPoolTaskExecutor> executors;
-
-    public CxFlowRunner(FlowProperties flowProperties,
-                        CxProperties cxProperties, JiraProperties jiraProperties,
-                        GitHubProperties gitHubProperties, GitLabProperties gitLabProperties,
-                        ADOProperties adoProperties, FlowService flowService, HelperService helperService, List<ThreadPoolTaskExecutor> executors) {
-        this.flowProperties = flowProperties;
-        this.cxProperties = cxProperties;
-        this.jiraProperties = jiraProperties;
-        this.gitHubProperties = gitHubProperties;
-        this.gitLabProperties = gitLabProperties;
-        this.adoProperties = adoProperties;
-        this.flowService = flowService;
-        this.helperService = helperService;
-        this.executors = executors;
-    }
+    private final ResultsService resultsService;
+    private final OsaScannerService osaScannerService;
 
     @Override
     public void run(ApplicationArguments args) throws InvocationTargetException {
@@ -75,11 +63,11 @@ public class CxFlowRunner implements ApplicationRunner {
                 if (args.containsOption("web")) {
                     log.debug("Running web mode");
                 } else {
-                    log.debug("Running cmd mode. Parameters: " + String.join(" ", args.getSourceArgs()));
+                    log.debug("Running cmd mode. Parameters: {}", String.join(" ", args.getSourceArgs()));
                     commandLineRunner(args);
                 }
             } catch (ExitThrowable ee) {
-                log.info("Finished with exit code: " + ee.getExitCode());
+                log.info("Finished with exit code: {}", ee.getExitCode());
                 if (args.containsOption(THROW_INSTEAD_OF_EXIT_OPTION)) {
                     throw new InvocationTargetException(ee);
                 }
@@ -455,26 +443,26 @@ public class CxFlowRunner implements ApplicationRunner {
         request.setRepoUrl(gitUrl);
         request.setRepoUrlWithAuth(gitAuthUrl);
         request.setRefs(Constants.CX_BRANCH_PREFIX.concat(branch));
-        flowService.cxFullScan(request);
+        sastScanner.cxFullScan(request);
     }
     private void cxScan(ScanRequest request, String path) throws ExitThrowable {
         if(ScanUtils.empty(request.getProject())){
             log.error("Please provide --cx-project to define the project in Checkmarx");
             exit(2);
         }
-        flowService.cxFullScan(request, path);
+        sastScanner.cxFullScan(request, path);
     }
     private void cxOsaParse(ScanRequest request, File file, File libs) throws ExitThrowable {
-        flowService.cxOsaParseResults(request, file, libs);
+        osaScannerService.cxOsaParseResults(request, file, libs);
     }
     private void cxParse(ScanRequest request, File file) throws ExitThrowable {
-        flowService.cxParseResults(request, file);
+        sastScanner.cxParseResults(request, file);
     }
     private void cxBatch(ScanRequest request) throws ExitThrowable {
-        flowService.cxBatch(request);
+        sastScanner.cxBatch(request);
     }
     private void cxResults(ScanRequest request) throws ExitThrowable {
-        ScanResults results = flowService.cxGetResults(request, null).join();
+        ScanResults results = resultsService.cxGetResults(request, null).join();
         if(flowProperties.isBreakBuild() && results !=null && results.getXIssues()!=null && !results.getXIssues().isEmpty()){
             log.error("Exiting with Error code 10 due to issues present");
             exit(10);

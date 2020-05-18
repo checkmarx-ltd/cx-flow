@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        CxSBSDK = "0.4.15"
+        CxSBSDK = "0.4.16-20200517.152112-1"
         //cxVersion = "8.90.5"
         springBootVersion = '2.2.4.RELEASE'
         sonarqubeVersion = '2.8'
@@ -51,14 +51,21 @@ def cucumberVersion = '4.7.4'
 def junitVersion = '5.5.0'
 
 repositories {
-    jcenter()
     mavenLocal()
+    jcenter()
     mavenCentral()
     maven {
         url = 'https://packages.atlassian.com/mvn/maven-external'
     }
     gradlePluginPortal()
 
+}
+
+configurations {
+    compile.exclude group: "org.slf4j", module: "slf4j-simple"
+    compile.exclude group: "org.slf4j", module: "slf4j-log4j12"
+    all*.exclude module: 'cx-ws-fs-agent'
+    all*.exclude module: 'wss-agent-api'
 }
 
 dependencies {

@@ -69,7 +69,7 @@ public class ADOService {
         }
     }
 
-    void sendMergeComment(ScanRequest request, String comment){
+    public void sendMergeComment(ScanRequest request, String comment){
         String mergeUrl = request.getMergeNoteUri();
         if(ScanUtils.empty(mergeUrl)){
             log.error("mergeUrl was not provided within the request object, which is required for commenting on pull request");
@@ -98,7 +98,7 @@ public class ADOService {
         }
     }
 
-    void startBlockMerge(ScanRequest request){
+    public void startBlockMerge(ScanRequest request){
         if(properties.isBlockMerge()) {
             String url = request.getAdditionalMetadata("statuses_url");
             if(ScanUtils.empty(url)){

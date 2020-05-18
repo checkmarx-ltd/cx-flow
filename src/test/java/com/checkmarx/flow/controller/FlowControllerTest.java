@@ -7,6 +7,7 @@ import com.checkmarx.flow.dto.EventResponse;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.HelperService;
+import com.checkmarx.flow.service.ResultsService;
 import com.checkmarx.flow.utils.ApiFlowControllerComponentTestProperties;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.Filter;
@@ -68,6 +69,9 @@ public class FlowControllerTest {
     @Autowired
     ApiFlowControllerComponentTestProperties testProps;
 
+    @Autowired
+    ResultsService resultsService;
+
     @BeforeEach
     public void initMocks() throws CheckmarxException {
         when(cxClient.getTeamId(anyString())).thenReturn(ScanFixture.TEAM_ID);
@@ -82,7 +86,7 @@ public class FlowControllerTest {
     public void testSSuccessfullScanResult(String severity, String cwe, String category, String status, String assignee, String override, String bug) {
         ScanResults results = new ScanResults();
         CompletableFuture<ScanResults> cf = CompletableFuture.completedFuture(results);
-        when(flowService.cxGetResults(any(ScanRequest.class), isNull())).thenReturn(cf);
+        when(resultsService.cxGetResults(any(ScanRequest.class), isNull())).thenReturn(cf);
 
         ArgumentCaptor<ScanRequest> captor = ArgumentCaptor.forClass(ScanRequest.class);
         List<String> severityFilters = TestsParseUtils.parseCsvToList(severity);
@@ -91,7 +95,7 @@ public class FlowControllerTest {
         List<String> statusFilters = TestsParseUtils.parseCsvToList(status);
         ScanResults scanResults = flowController.latestScanResults(testProps.getProject(), flowProperties.getToken(), ScanFixture.TEAM_ID, testProps.getApplication(), severityFilters,
                 cweFilters, categoryFilters, statusFilters, assignee, override, bug);
-        verify(flowService, times(1)).cxGetResults(captor.capture(), isNull());
+        verify(resultsService, times(1)).cxGetResults(captor.capture(), isNull());
         ScanRequest actual = captor.getValue();
         assertScanResultsRequest(actual, testProps.getApplication(), ScanFixture.TEAM_ID, severityFilters, cweFilters, categoryFilters, statusFilters);
     }
