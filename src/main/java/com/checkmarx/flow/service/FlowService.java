@@ -32,6 +32,9 @@ public class FlowService {
             }
         }
 
-        resultsService.publishCombinedResults(scanRequest, combinedResults);
+        // TODO: 5/18/2020 temporary check for a situation that only SCA is enabled. Need to remove this validation after implementing SCA results
+        if (combinedResults.getScanSummary() != null) {
+            resultsService.publishCombinedResults(scanRequest, combinedResults);
+        }
     }
 }
