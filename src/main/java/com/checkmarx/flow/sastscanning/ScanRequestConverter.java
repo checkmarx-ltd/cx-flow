@@ -77,7 +77,7 @@ public class ScanRequestConverter {
         }
         return ownerId;
     }
-
+    
     public Integer determinePresetAndProjectId(ScanRequest request, String ownerId) {
         boolean projectExists = false;
         Integer projectId = UNKNOWN_INT;

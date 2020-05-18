@@ -270,7 +270,8 @@ public class SastScanner implements VulnerabilityScanner {
             String ownerId = scanRequestConverter.determineTeamAndOwnerID(request);
 
             String projectName = projectNameGenerator.determineProjectName(request);
-
+            request.setProject(projectName);
+            
             Integer projectId = scanRequestConverter.determinePresetAndProjectId(request, ownerId);
 
             if(projectId != UNKNOWN_INT) {

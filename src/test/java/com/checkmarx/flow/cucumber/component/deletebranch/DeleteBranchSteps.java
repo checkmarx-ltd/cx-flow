@@ -5,6 +5,7 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
 
 import com.checkmarx.flow.exception.MachinaException;
+import com.checkmarx.flow.sastscanning.ScanRequestConverter;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -25,10 +26,12 @@ import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 
 import java.util.LinkedList;
+import java.util.List;
 
 import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
@@ -53,10 +56,9 @@ public class DeleteBranchSteps {
     private final CxProperties cxProperties;
     private final GitHubProperties gitHubProperties;
     private final HelperService helperService;
-    private final SastScanner sastScanner;
-
+    
     private ProjectNameGenerator projectNameGeneratorSpy;
-    private FlowService flowServiceSpy;
+
     private String branch;
     
     private Boolean deleteCalled = null;
@@ -67,8 +69,8 @@ public class DeleteBranchSteps {
     private String trigger;
     private String calculatedProjectName;
     
-    public DeleteBranchSteps(FlowProperties flowProperties, GitHubService gitHubService,
-                             CxProperties cxProperties, GitHubProperties gitHubProperties, SastScanner sastScanner) {
+    public DeleteBranchSteps(FlowProperties flowProperties, GitHubService gitHubService, 
+                             CxProperties cxProperties, GitHubProperties gitHubProperties) {
 
         this.cxClientMock = mock(CxClient.class);
         
@@ -81,8 +83,6 @@ public class DeleteBranchSteps {
         this.gitHubService = gitHubService;
         
         this.gitHubProperties = gitHubProperties;
-
-        this.sastScanner = sastScanner;
 
     }
 
@@ -210,7 +210,8 @@ public class DeleteBranchSteps {
         repo.setOwner(owner);
         deleteEvent.setRepository(repo);
         deleteEvent.setRefType(refType);
-        
+        deleteEvent.setRef(branch);
+                
         try {
             String deleteEventStr = mapper.writeValueAsString(deleteEvent);
 
@@ -243,7 +244,14 @@ public class DeleteBranchSteps {
         } catch (MachinaException e) {
             fail(e.getMessage());
         }
-
+        
+        ScanRequestConverter scanRequestConverter = new ScanRequestConverter(helperService, cxProperties, cxClientMock, flowProperties, gitHubService, null);
+        SastScanner sastScanner = new SastScanner(null, cxClientMock, helperService, cxProperties, flowProperties, null, null, scanRequestConverter, null, projectNameGeneratorSpy);
+        List<VulnerabilityScanner> scanners= new LinkedList<>();
+        scanners.add(sastScanner);
+        
+        FlowService flowServiceSpy = spy(new FlowService(scanners, projectNameGeneratorSpy, null));
+        
         //gitHubControllerSpy is a spy which will run real methods.
         //It will connect to a real github repository to read a real cx.config file
         //And thus it will work with real gitHubService
@@ -265,7 +273,7 @@ public class DeleteBranchSteps {
     private class ProjectNameGeneratorAnswered implements Answer {
 
         @Override
-        public Object answer(InvocationOnMock invocation) throws Throwable {
+        public Object answer(InvocationOnMock invocation)  {
             try {
                 calculatedProjectName = (String)invocation.callRealMethod();
             } catch (Throwable throwable) {
