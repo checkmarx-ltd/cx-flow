@@ -21,7 +21,7 @@ Feature: Cxflow generic end-2-end tests
     And Scan engine is <scan-engine>
     And CxFlow is running as a service
     And webhook is configured for pull-request
-    When creating/updating pull-request
+    When creating pull-request
     Then pull-request is updated
     Examples:
     | repository  | scan-engine |
