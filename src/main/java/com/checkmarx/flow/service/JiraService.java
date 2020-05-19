@@ -60,6 +60,7 @@ public class JiraService {
     private static final String LABEL_FIELD_TYPE = "labels";
     private static final String SECURITY_FIELD_TYPE = "security";
     private static final String VALUE_FIELD_TYPE = "value";
+    private static final String CHILD_FIELD_TYPE = "child";
 
     @ConstructorProperties({"jiraProperties", "flowProperties"})
     public JiraService(JiraProperties jiraProperties, FlowProperties flowProperties) {
@@ -626,6 +627,22 @@ public class JiraService {
                                 fields.add(fieldValue);
                             }
                             issueBuilder.setFieldValue(customField, fields);
+                            break;
+                        case "cascading-select":
+                            log.debug("cascading select list field");
+                            // expected value format is "parent;child"
+                            // neither can be empty; enclose in quotes if spaces/special characters
+                            // must match case
+                            String[] selectedValues = StringUtils.split(value, ";");
+                            if(selectedValues.length == 2) {
+                                Map<String, Object> cascadingValues = new HashMap<String, Object>();
+                                cascadingValues.put(VALUE_FIELD_TYPE, selectedValues[0].trim());
+                                cascadingValues.put(CHILD_FIELD_TYPE, ComplexIssueInputFieldValue.with(VALUE_FIELD_TYPE, selectedValues[1].trim()));
+                                issueBuilder.setFieldValue(customField, new ComplexIssueInputFieldValue(cascadingValues));
+                            }
+                            else {
+                                log.warn("Invalid value for jira field type {}", f.getJiraFieldType());
+                            }
                             break;
                         default:
                             log.warn("{} not a valid option for jira field type", f.getJiraFieldType());
