@@ -49,9 +49,13 @@ public class ProjectNameGenerator {
             }
         }
 
-        //only allow specific chars in project name in checkmarx
-        projectName = projectName.replaceAll("[^a-zA-Z0-9-_.]+", "-");
-        log.info("Project Name being used {}", projectName);
+        if (projectName != null) {
+            //only allow specific chars in project name in checkmarx
+            projectName = projectName.replaceAll("[^a-zA-Z0-9-_.]+", "-");
+            log.info("Project Name being used {}", projectName);
+        } else {
+            log.info("Project name returned NULL");
+        }
 
         return projectName;
     }
