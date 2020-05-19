@@ -54,7 +54,7 @@ public class ProjectNameGenerator {
             projectName = projectName.replaceAll("[^a-zA-Z0-9-_.]+", "-");
             log.info("Project Name being used {}", projectName);
         } else {
-            log.info("Project name returned NULL");
+            log.warn("Project name returned NULL");
         }
 
         return projectName;
