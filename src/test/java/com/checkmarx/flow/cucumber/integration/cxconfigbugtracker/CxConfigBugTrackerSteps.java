@@ -47,7 +47,7 @@ import static org.mockito.Mockito.*;
 @Slf4j
 public class CxConfigBugTrackerSteps {
     private static final String PULL_REQUEST_STATUSES_URL = "statuses url stub";
-    public static final String BRANCH = "udi-tests";
+    public static final String BRANCH_NAME = "udi-tests";
     public static final String CUSTOM_BEAN_NAME = "GitHub";
 
     @Autowired
@@ -106,8 +106,8 @@ public class CxConfigBugTrackerSteps {
     }
 
     private void fixBranch() {
-        if (!flowProperties.getBranches().contains(BRANCH)) {
-            flowProperties.getBranches().add(BRANCH);
+        if (!flowProperties.getBranches().contains(BRANCH_NAME)) {
+            flowProperties.getBranches().add(BRANCH_NAME);
         }
     }
 
@@ -143,7 +143,7 @@ public class CxConfigBugTrackerSteps {
 
     @Given("github branch is udi-tests")
     public void setBranchAndCreatePullReqeust(){
-        this.branch = BRANCH;
+        this.branch = BRANCH_NAME;
     }
 
     @When("pull request webhook arrives")
