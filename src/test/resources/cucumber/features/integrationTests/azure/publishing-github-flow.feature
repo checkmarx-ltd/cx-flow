@@ -1,4 +1,3 @@
-@Skip
 @AzureDevOps
 @PublishProcessing
 @Integration
