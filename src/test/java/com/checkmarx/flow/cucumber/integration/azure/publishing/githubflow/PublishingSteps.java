@@ -36,6 +36,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
@@ -60,6 +61,7 @@ public class PublishingSteps extends PublishingStepsBase {
     private final HelperService helperService;
     private final GitHubService gitHubService;
     private final ResultsService resultsService;
+    private final VulnerabilityScanner sastScanner;
 
     @MockBean
     private final CxClient cxClientMock;
@@ -154,7 +156,7 @@ public class PublishingSteps extends PublishingStepsBase {
     }
 
     private GitHubController getGitHubControllerInstance() {
-        List<VulnerabilityScanner> vulnerabilityScannerList = new ArrayList<>();
+        List<VulnerabilityScanner> vulnerabilityScannerList = Collections.singletonList(sastScanner);
         FlowService flowService = new FlowService(vulnerabilityScannerList, projectNameGenerator, resultsService);
 
         return new GitHubController(gitHubProperties, flowProperties, cxProperties,
