@@ -26,7 +26,6 @@ import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 
@@ -45,7 +44,7 @@ public class DeleteBranchSteps {
     private static final String TEAM = "SOME_TEAM";
     private static final String PROJECT_NAME = "VB_3845-test1";
     private static final String PRESET = "Default Preset";
-    private static final String BRANCH = "branch";
+    private static final String BRANCH_STR = "branch";
     public static final String GITHUB_USER = "cxflowtestuser";
     private final CxClient cxClientMock;
     private final GitHubService gitHubService;
@@ -153,7 +152,7 @@ public class DeleteBranchSteps {
         
         buildDeleteRequest(trigger);
 
-        if(trigger.equals(BRANCH)){
+        if(trigger.equals(BRANCH_STR)){
             assertEquals(deleteCalled, Boolean.TRUE);
             assertEquals(actualProjectId,EXISTING_PROJECT_ID );
         }else{
@@ -187,7 +186,7 @@ public class DeleteBranchSteps {
     @And("CxFlow will call or not call the SAST delete API based on the fact whether the project {string} or not in SAST")
     public void checkIfDeleteMethodIsCalled(String methodCalled)        
     {
-        buildDeleteRequest(BRANCH);
+        buildDeleteRequest(BRANCH_STR);
         
         if(Boolean.parseBoolean(methodCalled)){
             assertEquals(deleteCalled, Boolean.TRUE);
