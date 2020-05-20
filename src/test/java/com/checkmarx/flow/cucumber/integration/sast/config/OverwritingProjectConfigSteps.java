@@ -4,10 +4,8 @@ import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.controller.GitHubController;
-import com.checkmarx.flow.service.FlowService;
-import com.checkmarx.flow.service.GitHubService;
-import com.checkmarx.flow.service.HelperService;
-import com.checkmarx.flow.service.SastScanner;
+import com.checkmarx.flow.exception.MachinaException;
+import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.github.GitHubTestUtils;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.cx.CxScanParams;
@@ -25,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.awaitility.Awaitility;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 
 import java.time.Duration;
@@ -32,12 +31,13 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.*;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -48,6 +48,9 @@ public class OverwritingProjectConfigSteps {
 
     @SpyBean
     private final CxClient cxClientSpy;
+
+    @MockBean
+    private final ResultsService resultsServiceMock;
 
     private final CxProperties cxProperties;
     private final FlowProperties flowProperties;
@@ -66,16 +69,18 @@ public class OverwritingProjectConfigSteps {
     private final Map<String, Integer> configMapping = new HashMap<>();
 
     @Before()
-    public void ensureCorrectTeam() {
+    public void ensureCorrectTeam() throws MachinaException, CheckmarxException {
         // Make sure we use the same team in the test and during scan (without the namespace postfix).
         // Otherwise we'll get 2 projects with the same name but in different teams.
         cxProperties.setMultiTenant(false);
+
+        enableScanIdInterception();
+        skipScanResultsProcessing();
     }
 
     @Given("{string} project exists in SAST")
     public void projectExistsInSAST(String projectName) throws CheckmarxException {
         this.projectId = ensureProjectExists(projectName);
-        enableScanIdInterception();
     }
 
     @And("all of {string}, {string}, {string}, {string} exist in SAST")
@@ -137,10 +142,12 @@ public class OverwritingProjectConfigSteps {
         JsonNode config = jsonMapper.readTree(configJson);
 
         int currentPresetId = config.at("/preset/id").asInt();
-        assertEquals(presetMapping.get(expectedPreset), currentPresetId, "Preset has changed after starting a scan.");
+        assertEquals(presetMapping.get(expectedPreset), currentPresetId,
+                "Preset ID has changed after starting the scan.");
 
         int currentConfigId = config.at("/engineConfiguration/id").asInt();
-        assertEquals(configMapping.get(expectedConfigName), currentConfigId, "Configuration has changed after starting a scan.");
+        assertEquals(configMapping.get(expectedConfigName), currentConfigId,
+                "Configuration ID has changed after starting the scan.");
     }
 
     private void enableScanIdInterception() throws CheckmarxException {
@@ -148,6 +155,16 @@ public class OverwritingProjectConfigSteps {
             interceptedScanId = (Integer) invocation.callRealMethod();
             return interceptedScanId;
         }).when(cxClientSpy).createScan(any(CxScanParams.class), anyString());
+    }
+
+    // Don't waste resources on getting SAST report and processing scan results.
+    private void skipScanResultsProcessing() throws CheckmarxException, MachinaException {
+        doNothing().when(cxClientSpy)
+                .waitForScanCompletion(any());
+
+        doReturn(CompletableFuture.completedFuture(null))
+                .when(resultsServiceMock)
+                .processScanResultsAsync(any(), any(), any(), any(), any());
     }
 
     private Integer ensureProjectExists(String projectName) throws CheckmarxException {
