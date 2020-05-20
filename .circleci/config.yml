@@ -133,7 +133,7 @@ jobs:
       - run:
           name: Change appVersion
           command: |
-            sed -i "s/appVersion:[[:space:]]*.*/appVersion: ${CIRCLE_SHA1::7}/g" ./helm/cxflow/Chart.yaml
+            sed -i "s/appVersion:[[:space:]]*.*/appVersion: '${CIRCLE_SHA1::7}'/g" ./helm/cxflow/Chart.yaml
       - helm/install-helm-client:
           version: << parameters.version >>
       - run:
