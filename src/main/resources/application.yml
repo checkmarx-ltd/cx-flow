@@ -39,7 +39,7 @@ logging:
 cx-flow:
   # Agreed upon shared API token
   token: xxxx
-  bug-tracker: ServiceNow
+  bug-tracker: JIRA
   bug-tracker-impl:
     - CxXml
     - Json
@@ -125,8 +125,8 @@ servicenow:
   servicenow-workspace-id: xxxx
   url: https://servicenow.com
   apiUrl: https://dev90318.service-now.com/api/now/table
-  username: admin
-  password: ServiceNow123!
+  username: xxxx
+  password: xxxx
 
 github:
   webhook-token: xxxx
