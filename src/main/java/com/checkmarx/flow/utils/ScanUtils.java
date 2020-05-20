@@ -11,6 +11,8 @@ import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
+import com.checkmarx.sdk.dto.sca.SCAResults;
+import com.cx.restclient.sca.dto.report.Finding;
 import com.cx.restclient.sca.dto.report.Package;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.EnumUtils;
@@ -649,30 +651,29 @@ public class ScanUtils {
                     "High severity vulnerabilities | " + r.getSummary().getFindingCounts().get(Filter.Severity.HIGH) + " " + CRLF +
                     "Medium severity vulnerabilities | " + r.getSummary().getFindingCounts().get(Filter.Severity.MEDIUM) + " " + CRLF +
                     "Low severity vulnerabilities | " + r.getSummary().getFindingCounts().get(Filter.Severity.LOW) + " |" + CRLF +
-                    "Scan risk score | " + String.format("%.2f", r.getSummary().getRiskScore() )+ " |" + CRLF +
+                    "Scan risk score | " + String.format("%.2f", r.getSummary().getRiskScore()) + " |" + CRLF +
                     "  \r\n");
 
             body.append(
                     "#### CxSCA vulnerability result overview" + CRLF +
-                    "| Vulnerability ID | Package | Severity | CWE / Category | CVSS score | Publish date | recommended version | Link in CxSCA | Reference – NVD link |" + CRLF +
-                    "|-|-|-|-|-|-|-|-|-|" + CRLF);
+                            "| Vulnerability ID | Package | Severity | CWE / Category | CVSS score | Publish date | recommended version | Link in CxSCA | Reference – NVD link |" + CRLF +
+                            "|-|-|-|-|-|-|-|-|-|" + CRLF);
             r.getFindings().stream()
                     .sorted(Comparator.comparingDouble(o -> -o.getScore()))
                     .sorted(Comparator.comparingInt(o -> -o.getSeverity().ordinal()))
-                    .forEach( f -> {
-                body.append("| " + f.getId() + " | " + r.getPackages().stream().filter(p -> p.id.equals(f.getPackageId())).map(Package::getName).findFirst().orElse("") + " | " + f.getSeverity().name() + " | N\\A | " + f.getScore() + " | " + f.getPublishDate() + " | " + f.getRecommendations() + " | [Link in CxSCA](Sca.checkmarx.com/ss/xx/xx) | ");
+                    .forEach(f -> {
+                        body.append("| ").append(f.getId()).append(" | ").append(extractPackageNameFromFindings(r, f)).
+                                append(" | ").append(f.getSeverity().name()).append(" | N\\A | ").append(f.getScore()).
+                                append(" | ").append(f.getPublishDate()).append(" | ").append(f.getRecommendations()).
+                                append(" | [Link in CxSCA](Sca.checkmarx.com/ss/xx/xx) | ");
 
-                if (StringUtils.isEmpty(f.getCveName())) {
-                    body.append( "[" + f.getCveName() + "](https://nvd.nist.gov/vuln/detail/" + f.getCveName() + ")");
-                }
-                body.append("|" + CRLF);
-            });
+                        if (StringUtils.isEmpty(f.getCveName())) {
+                            body.append("[").append(f.getCveName()).append("](https://nvd.nist.gov/vuln/detail/").append(f.getCveName()).append(")");
+                        }
+                        body.append("|" + CRLF);
+                    });
 
         });
-
-        if (results.getScaResults() != null) {
-
-        }
 
         return body.toString();
     }
@@ -985,11 +986,14 @@ public class ScanUtils {
         }
         return hostWithProtocol;
     }
-
     public static String getBranchFromRef(String ref){
         // refs/head/master (get 2nd position of /
         int index = StringUtils.ordinalIndexOf(ref, "/", 2);
         if(index < 0) return ref;
         return ref.substring(index+1);
+    }
+
+    private static String extractPackageNameFromFindings(SCAResults r, Finding f) {
+        return r.getPackages().stream().filter(p -> p.id.equals(f.getPackageId())).map(Package::getName).findFirst().orElse("");
     }
 }
