@@ -17,6 +17,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.MultiValueMap;
 
+import javax.annotation.Nullable;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
@@ -138,17 +139,17 @@ public class GitHubTestUtils implements GitHubTestUtilsImpl {
      * Executes a controller method that corresponds to eventType.
      * No parameter overrides are passed to the call.
      */
-    public void callController(GitHubController controller, EventType eventType) {
+    public void callController(GitHubController controller, EventType eventType, @Nullable String projectNameOverride) {
         String body = loadWebhookRequestBody(eventType);
         String signature = createSignature(body);
         if (eventType == EventType.PULL_REQUEST) {
             controller.pullRequest(body, signature,
-                    null, null, null, null, null, null, null,
+                    null, null, null, null, null, null, projectNameOverride,
                     null, null, null, null, null, null,
                     null, null, null, null);
         } else {
             controller.pushRequest(body, signature,
-                    null, null, null, null, null, null, null,
+                    null, null, null, null, null, null, projectNameOverride,
                     null, null, null, null, null, null,
                     null, null, null, null);
         }

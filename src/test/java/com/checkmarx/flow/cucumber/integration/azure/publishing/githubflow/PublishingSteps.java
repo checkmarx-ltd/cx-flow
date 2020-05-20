@@ -110,7 +110,7 @@ public class PublishingSteps extends PublishingStepsBase {
     @And("CxFlow publishes the report")
     public void cxFlowPublishesReport() {
         GitHubController gitHubController = getGitHubControllerInstance();
-        testUtils.callController(gitHubController, currentGitHubEventType);
+        testUtils.callController(gitHubController, currentGitHubEventType, null);
     }
 
     @Then("ADO contains {int} issues")

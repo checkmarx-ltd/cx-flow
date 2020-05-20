@@ -6,6 +6,7 @@ import org.junit.runner.RunWith;
 
 @RunWith(Cucumber.class)
 @CucumberOptions(
-        features = "src/test/resources/cucumber/features/integrationTests/sast/overwriting-project-config.feature")
+        features = "src/test/resources/cucumber/features/integrationTests/sast/overwriting-project-config.feature",
+        tags = "not @Skip")
 public class OverwritingProjectConfigRunner {
 }
