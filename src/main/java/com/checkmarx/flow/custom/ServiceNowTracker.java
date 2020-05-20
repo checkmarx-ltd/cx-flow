@@ -52,8 +52,6 @@ public class ServiceNowTracker implements IssueTracker {
     @Autowired
     private FlowProperties flowProperties;
 
-    private JSONArray tagsList = new JSONArray();
-
     @PostConstruct
     public void initialize(){
         restOperations = new RestTemplateBuilder()
@@ -92,6 +90,7 @@ public class ServiceNowTracker implements IssueTracker {
         String repoTag = properties.getRepoLabelPrefix().concat(":").concat(repoName);
         String branchTag = properties.getBranchLabelPrefix().concat(":").concat(branch);
 
+        JSONArray tagsList = new JSONArray();
         // product tag
         tagsList.put(request.getProduct().getProduct());
 
@@ -108,6 +107,8 @@ public class ServiceNowTracker implements IssueTracker {
         } else {
             tagsList.put(appTag);
         }
+
+        request.putAdditionalMetadata("tagsList", tagsList.toString());
     }
 
     @Override
@@ -362,7 +363,7 @@ public class ServiceNowTracker implements IssueTracker {
         incident.setDescription(convertToText(body));
         incident.setSeverity(resultIssue.getSeverity());
         incident.setComments(tag);
-        incident.setWorkNotes(this.tagsList.toString());
+        incident.setWorkNotes(request.getAdditionalMetadata("tagsList"));
         incident.setState(TRANSITION_OPEN);
 
         return incident;
