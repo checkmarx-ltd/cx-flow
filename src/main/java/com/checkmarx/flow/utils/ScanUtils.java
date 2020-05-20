@@ -641,21 +641,21 @@ public class ScanUtils {
 
 
         Optional.ofNullable(results.getScaResults()).ifPresent(r -> {
-            body.append("### CxSCA Scan summary\r\n" +
-                    "\r\n" +
-                    "| | |\r\n" +
-                    "-|-\r\n" +
-                    "Total Packages identified | " + r.getSummary().getTotalPackages() + " \r\n" +
-                    "High severity vulnerabilities | " + r.getSummary().getFindingCounts().get(Filter.Severity.HIGH) + "  \r\n" +
-                    "Medium severity vulnerabilities | " + r.getSummary().getFindingCounts().get(Filter.Severity.MEDIUM) + "  \r\n" +
-                    "Low severity vulnerabilities | " + r.getSummary().getFindingCounts().get(Filter.Severity.LOW) + " |\r\n" +
-                    "Scan risk score | " + String.format("%.2f", r.getSummary().getRiskScore() )+ " |\r\n" +
+            body.append("### CxSCA Scan summary" + CRLF +
+                    CRLF +
+                    "| | |" + CRLF +
+                    "-|-" + CRLF +
+                    "Total Packages identified | " + r.getSummary().getTotalPackages() + " " + CRLF +
+                    "High severity vulnerabilities | " + r.getSummary().getFindingCounts().get(Filter.Severity.HIGH) + " " + CRLF +
+                    "Medium severity vulnerabilities | " + r.getSummary().getFindingCounts().get(Filter.Severity.MEDIUM) + " " + CRLF +
+                    "Low severity vulnerabilities | " + r.getSummary().getFindingCounts().get(Filter.Severity.LOW) + " |" + CRLF +
+                    "Scan risk score | " + String.format("%.2f", r.getSummary().getRiskScore() )+ " |" + CRLF +
                     "  \r\n");
 
             body.append(
-                    "#### CxSCA vulnerability result overview\r\n" +
-                    "| Vulnerability ID | Package | Severity | CWE / Category | CVSS score | Publish date | recommended version | Link in CxSCA | Reference – NVD link |\r\n" +
-                    "|-|-|-|-|-|-|-|-|-|\r\n");
+                    "#### CxSCA vulnerability result overview" + CRLF +
+                    "| Vulnerability ID | Package | Severity | CWE / Category | CVSS score | Publish date | recommended version | Link in CxSCA | Reference – NVD link |" + CRLF +
+                    "|-|-|-|-|-|-|-|-|-|" + CRLF);
             r.getFindings().stream()
                     .sorted(Comparator.comparingDouble(o -> -o.getScore()))
                     .sorted(Comparator.comparingInt(o -> -o.getSeverity().ordinal()))
@@ -665,7 +665,7 @@ public class ScanUtils {
                 if (StringUtils.isEmpty(f.getCveName())) {
                     body.append( "[" + f.getCveName() + "](https://nvd.nist.gov/vuln/detail/" + f.getCveName() + ")");
                 }
-                body.append("|\r\n");
+                body.append("|" + CRLF);
             });
 
         });
