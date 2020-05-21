@@ -1131,12 +1131,21 @@ public class JiraService {
     }
 
     private void closeIssueInCaseOfIssueIsInOpenState(ScanRequest request, List<String> closedIssues, Issue fpIssue) throws JiraClientException {
-        if (request.getBugTracker().getOpenStatus().contains(fpIssue.getStatus().getName())) { //If the status is of open state, close it
+        if (containsIgnoreCase(request.getBugTracker().getOpenStatus(), fpIssue.getStatus().getName())) {
             /*Close the issue*/
             log.info("Closing issue with key {}", fpIssue.getKey());
             this.transitionCloseIssue(fpIssue.getKey(), request.getBugTracker().getCloseTransition(), request.getBugTracker(), true);
             closedIssues.add(fpIssue.getKey());
         }
+    }
+
+    private boolean containsIgnoreCase(List<String> openStatuses, String fpIssueStatusName) {
+        for (String status : openStatuses) {
+            if (status.equalsIgnoreCase(fpIssueStatusName)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private Issue checkForFalsePositiveIssuesInList(ScanRequest request, Map.Entry<String, ScanResults.XIssue> xIssue, ScanResults.XIssue currentIssue, Issue issue) throws JiraClientException {
