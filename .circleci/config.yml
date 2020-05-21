@@ -304,7 +304,12 @@ workflows:
               only: 
                 - develop
                 - /pr-.*/
+                - /pr .*/
                 - sonar
+      - sonarcloud/check_quality_gate:
+          context: sonarcloud
+          requires:
+            - sonar
   build_deploy:
     jobs:
       - build
@@ -316,6 +321,7 @@ workflows:
               only: 
                 - develop
                 - /pr-.*/
+                - /pr .*/
       - component-tests:
           requires:
             - build
@@ -330,6 +336,7 @@ workflows:
               only: 
                 - develop
                 - /pr-.*/
+                - /pr .*/
           requires:
             - docker-build
             - component-tests
@@ -339,6 +346,7 @@ workflows:
               only: 
                 - develop
                 - /pr-.*/
+                - /pr .*/
           requires:
             - deploy-cxflow
       - integration-tests:
@@ -368,6 +376,7 @@ workflows:
               only: 
                 - develop
                 - /pr-.*/
+                - /pr .*/
           requires:
             - e2e-tests
             - integration-tests
