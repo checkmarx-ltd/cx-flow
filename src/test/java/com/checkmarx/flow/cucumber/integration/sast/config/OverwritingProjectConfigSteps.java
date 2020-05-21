@@ -137,7 +137,7 @@ public class OverwritingProjectConfigSteps {
     }
 
     @Then("project preset is still {string} and scan configuration is {string}")
-    public void projectPresetIsStill(String expectedPreset, String expectedConfigName) throws JsonProcessingException {
+    public void projectPresetIsStill(String expectedPreset, String expectedConfig) throws JsonProcessingException {
         String configJson = cxClientSpy.getScanSetting(projectId);
         JsonNode config = jsonMapper.readTree(configJson);
 
@@ -146,7 +146,7 @@ public class OverwritingProjectConfigSteps {
                 "Preset ID has changed after starting the scan.");
 
         int currentConfigId = config.at("/engineConfiguration/id").asInt();
-        assertEquals(configMapping.get(expectedConfigName), currentConfigId,
+        assertEquals(configMapping.get(expectedConfig), currentConfigId,
                 "Configuration ID has changed after starting the scan.");
     }
 

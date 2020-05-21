@@ -14,6 +14,7 @@ import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -79,50 +80,69 @@ public class ScanRequestConverter {
     }
     
     public Integer determinePresetAndProjectId(ScanRequest request, String ownerId) {
-        boolean projectExists = false;
-        Integer projectId = UNKNOWN_INT;
-        if (flowProperties.isAutoProfile() && !request.isScanPresetOverride()) {
+        Integer projectId = cxService.getProjectId(ownerId, request.getProject());
+        boolean projectExists = (projectId != UNKNOWN_INT);
 
-            projectId = cxService.getProjectId(ownerId, request.getProject());
-            if (projectId != UNKNOWN_INT) {
-                int presetId = cxService.getProjectPresetId(projectId);
-                if (presetId != UNKNOWN_INT) {
-                    String preset = cxService.getPresetName(presetId);
-                    request.setScanPreset(preset);
-                    projectExists = true;
-                }
-            }
-        }
-        if (!projectExists || flowProperties.isAlwaysProfile()) {
-            log.info("Project doesn't exist, profiling source...");
-            Sources sources = new Sources();
-            switch (request.getRepoType()) {
-                case GITHUB:
-                    sources = gitService.getRepoContent(request);
-                    break;
-                case GITLAB:
-                    sources = gitLabService.getRepoContent(request);
-                    break;
-                case BITBUCKET:
-                    log.warn("Profiling is not available for BitBucket Cloud");
-                    break;
-                case BITBUCKETSERVER:
-                    log.warn("Profiling is not available for BitBucket Server");
-                    break;
-                case ADO:
-                    log.warn("Profiling is not available for Azure DevOps");
-                    break;
-                default:
-                    log.info("Nothing to profile");
-                    break;
-            }
-            String preset = helperService.getPresetFromSources(sources);
-            if (!ScanUtils.empty(preset)) {
-                request.setScanPreset(preset);
-            }
+        boolean needToProfile = flowProperties.isAlwaysProfile() ||
+                (flowProperties.isAutoProfile() && !projectExists && !request.isScanPresetOverride());
 
+        log.debug("Determining scan preset based on the following flags: isAlwaysProfile: {}, isAutoProfile: {}, projectExists: {}, isScanPresetOverride: {}",
+                flowProperties.isAlwaysProfile(),
+                flowProperties.isAutoProfile(),
+                projectExists,
+                request.isScanPresetOverride());
+
+        if (needToProfile) {
+            setPresetBasedOnSources(request);
         }
+        else if (projectExists && !request.isScanPresetOverride()) {
+            setPresetBasedOnExistingProject(request, projectId);
+        }
+
         return projectId;
+    }
+
+    private void setPresetBasedOnExistingProject(ScanRequest request, Integer projectId) {
+        log.debug("Setting scan preset based on an existing project (ID {})", projectId);
+        int presetId = cxService.getProjectPresetId(projectId);
+        if (presetId != UNKNOWN_INT) {
+            String preset = cxService.getPresetName(presetId);
+            request.setScanPreset(preset);
+        }
+    }
+
+    private void setPresetBasedOnSources(ScanRequest request) {
+        log.debug("Setting scan preset based on the source repo.");
+        Sources sources = getRepoContent(request);
+        String preset = helperService.getPresetFromSources(sources);
+        if (!StringUtils.isEmpty(preset)) {
+            request.setScanPreset(preset);
+        }
+    }
+
+    private Sources getRepoContent(ScanRequest request) {
+        Sources sources = new Sources();
+        switch (request.getRepoType()) {
+            case GITHUB:
+                sources = gitService.getRepoContent(request);
+                break;
+            case GITLAB:
+                sources = gitLabService.getRepoContent(request);
+                break;
+            case BITBUCKET:
+                log.warn("Profiling is not available for BitBucket Cloud");
+                break;
+            case BITBUCKETSERVER:
+                log.warn("Profiling is not available for BitBucket Server");
+                break;
+            case ADO:
+                log.warn("Profiling is not available for Azure DevOps");
+                break;
+            default:
+                log.info("Nothing to profile");
+                break;
+        }
+        return sources;
     }
 
     public CxScanParams prepareScanParamsObject(ScanRequest request, File cxFile, String ownerId, Integer projectId) {

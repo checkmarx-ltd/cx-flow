@@ -43,8 +43,13 @@ public class ScanRequest {
     private boolean incremental;
     private String scanPreset;
 
+    /**
+     * Indicates whether scan preset has been overridden.
+     * Overrides may come from a webhook parameter or config-as-code.
+     */
     @Builder.Default
     private boolean scanPresetOverride = false;
+
     private List<String> excludeFiles;
     private List<String> excludeFolders;
     private Repository repoType;
@@ -94,7 +99,7 @@ public class ScanRequest {
             return Collections.emptyMap();
         }
         Map<String,String> map = new HashMap<>();
-        for( String s :Arrays.asList(this.altFields.split(","))) {
+        for( String s : this.altFields.split(",")) {
             String[] split = s.split(":");
             map.put(split[0],split[1]);
         }
