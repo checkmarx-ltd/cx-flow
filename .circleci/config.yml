@@ -55,8 +55,7 @@ jobs:
       - run:
           name: Compile
           command: ./gradlew clean compileJava compileTestJava
-      - sonarcloud/scan_with_gradle:
-          main_branch: develop
+      - sonarcloud/scan:
 
   docker-build:
     executor: docker
@@ -95,7 +94,7 @@ jobs:
             - ./image-8.tar
             - ./image.tar
             - ./latest.tar
-  
+
   deploy-cxflow:
     executor: aws-eks/python3
     parameters:
@@ -138,7 +137,7 @@ jobs:
       - helm/install-helm-client:
           version: << parameters.version >>
       - run:
-          name: Install cxflow service on cluster 
+          name: Install cxflow service on cluster
           command: |
             helm upgrade --install --atomic --namespace << parameters.namespace >> << parameters.release-name >> \
               --set cxflow.checkmarxUsername=${CHECKMARX_USERNAME} \
@@ -206,7 +205,7 @@ jobs:
     docker:
       - image: "circleci/openjdk:8-jdk"
     steps:
-      - checkout 
+      - checkout
       - run:
           name: Run Integration Tests
           command: |
@@ -222,7 +221,7 @@ jobs:
           path: ~/test-results
       - store_artifacts:
           path: ~/test-results/junit
-  
+
   cleanup:
     executor: aws-eks/python3
     parameters:
@@ -254,7 +253,7 @@ jobs:
           command: kubectl delete namespace << parameters.namespace >>
       - store_artifacts:
           path: ~/application-logs
-      
+
   docker-push-stable:
     executor: docker
     steps:
@@ -289,7 +288,8 @@ jobs:
             ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -n ${VERSION} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./build/libs/
 
 orbs:
-  sonarcloud: extendaretail/sonarcloud@0.0.2
+  sonarcloud: sonarsource/sonarcloud@1.0.1
+  sonarcloudgate: extendaretail/sonarcloud@0.0.2
   aws-eks: circleci/aws-eks@0.2.6
   kubernetes: circleci/kubernetes@0.4.0
   helm: circleci/helm@0.2.3
@@ -302,12 +302,12 @@ workflows:
           context: sonarcloud
           filters:
             branches:
-              only: 
+              only:
                 - develop
                 - /pr-.*/
                 - /pr .*/
                 - sonar
-      - sonarcloud/check_quality_gate:
+      - sonarcloudgate/check_quality_gate:
           context: sonarcloud
           requires:
             - sonar
