@@ -655,27 +655,53 @@ public class ScanUtils {
                     .append("[Full Scan Details](").append(r.getWebReportLink()).append(")  ").append(CRLF)
                     .append("#### Summary  ").append(CRLF)
                     .append("| Total Packages Identified | ").append(r.getSummary().getTotalPackages()).append("| ").append(CRLF)
-                    .append("-|-").append(CRLF)
-                    .append("High severity vulnerabilities | ").append(r.getSummary().getFindingCounts().get(Filter.Severity.HIGH)).append(" ").append(CRLF)
-                    .append("Medium severity vulnerabilities | ").append(r.getSummary().getFindingCounts().get(Filter.Severity.MEDIUM)).append(" ").append(CRLF)
-                    .append("Low severity vulnerabilities | ").append(r.getSummary().getFindingCounts().get(Filter.Severity.LOW)).append(" |").append(CRLF)
-                    .append("Scan risk score | ").append(String.format("%.2f", r.getSummary().getRiskScore())).append(" |").append(CRLF).append(CRLF);
+                    .append("-|-").append(CRLF);
 
-            body.append(
-                    "#### CxSCA vulnerability result overview" + CRLF +
-                            "| Vulnerability ID | Package | Severity | CWE / Category | CVSS score | Publish date | recommended version | Link in CxSCA | Reference – NVD link |" + CRLF +
-                            "|-|-|-|-|-|-|-|-|-|" + CRLF);
+            Arrays.asList("High", "Medium", "Low").forEach(v ->
+                    body.append(v).append(" severity vulnerabilities | ")
+                            .append(r.getSummary().getFindingCounts().get(Filter.Severity.valueOf(v.toUpperCase()))).append(" ").append(CRLF));
+            body.append("Scan risk score | ").append(String.format("%.2f", r.getSummary().getRiskScore())).append(" |").append(CRLF).append(CRLF);
+
+            body.append("#### CxSCA vulnerability result overview").append(CRLF);
+            List<String> headlines = Arrays.asList(
+                    "Vulnerability ID",
+                    "Package",
+                    "Severity",
+                    "CWE / Category",
+                    "CVSS score",
+                    "Publish date",
+                    "Current version",
+                    "Recommended version",
+                    "Link in CxSCA",
+                    "Reference – NVD link"
+            );
+            headlines.forEach(h -> body.append("| ").append(h));
+            body.append("|").append(CRLF);
+
+            headlines.forEach(h -> body.append("|-"));
+            body.append("|").append(CRLF);
+
             r.getFindings().stream()
                     .sorted(Comparator.comparingDouble(o -> -o.getScore()))
                     .sorted(Comparator.comparingInt(o -> -o.getSeverity().ordinal()))
                     .forEach(f -> {
-                        body.append("| ").append(f.getId()).append(" | ").append(extractPackageNameFromFindings(r, f)).
-                                append(" | ").append(f.getSeverity().name()).append(" | N\\A | ").append(f.getScore()).
-                                append(" | ").append(f.getPublishDate()).append(" | ").append(f.getRecommendations()).
-                                append(" | [Link in CxSCA](Sca.checkmarx.com/ss/xx/xx) | ");
 
-                        if (StringUtils.isEmpty(f.getCveName())) {
+                        Arrays.asList(
+                                f.getId(),
+                                extractPackageNameFromFindings(r, f),
+                                f.getSeverity().name(),
+                                "N\\A",
+                                f.getScore(),
+                                f.getPublishDate(),
+                                extractPackageVersionFromFindings(r, f),
+                                Optional.ofNullable(f.getRecommendations()).orElse(""),
+                                " [Link in CxSCA](Sca.checkmarx.com/ss/xx/xx) | "
+                        ).forEach(v -> body.append("| ").append(v));
+
+                        if (!StringUtils.isEmpty(f.getCveName())) {
                             body.append("[").append(f.getCveName()).append("](https://nvd.nist.gov/vuln/detail/").append(f.getCveName()).append(")");
+                        } else {
+                            body.append("NVD link is not supported");
                         }
                         body.append("|" + CRLF);
                     });
@@ -1089,5 +1115,9 @@ public class ScanUtils {
     
     private static String extractPackageNameFromFindings(SCAResults r, Finding f) {
         return r.getPackages().stream().filter(p -> p.id.equals(f.getPackageId())).map(Package::getName).findFirst().orElse("");
+    }
+
+    private static String extractPackageVersionFromFindings(SCAResults r, Finding f) {
+        return r.getPackages().stream().filter(p -> p.id.equals(f.getPackageId())).map(Package::getVersion).findFirst().orElse("");
     }
 }
