@@ -52,24 +52,29 @@ public class ServiceNowTracker implements IssueTracker {
     @Autowired
     private FlowProperties flowProperties;
 
-    @PostConstruct
-    public void initialize(){
-        restOperations = new RestTemplateBuilder()
-                            .basicAuthentication(properties.getUsername(), properties.getPassword())
-                            .build();
-    }
-
     @Override
     public void init(ScanRequest request, ScanResults results) throws MachinaException {
         log.info("Initializing Service Now Tracker");
+
         if(ScanUtils.empty(request.getNamespace()) ||
                 ScanUtils.empty(request.getRepoName()) ||
                 ScanUtils.empty(request.getBranch())) {
             throw new MachinaException("Namespace / RepoName / Branch are required");
         }
+
         if(ScanUtils.empty(properties.getApiUrl())) {
             throw new MachinaException("Service Now API Url must be provided in property config");
         }
+
+        if( ScanUtils.empty(properties.getUsername()) ||
+                ScanUtils.empty(properties.getUsername() )){
+            throw new MachinaException("Service Now API Rest Call requires username and password");
+        }
+
+        restOperations = new RestTemplateBuilder()
+                            .basicAuthentication(properties.getUsername(), properties.getPassword())
+                            .build();
+
         createSeviceNowTags(request);
     }
 
