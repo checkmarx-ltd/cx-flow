@@ -36,6 +36,7 @@ buildscript {
 plugins {
     id 'io.franzbecker.gradle-lombok' version '3.3.0'
     id "ua.eshepelyuk.ManifestClasspath" version "1.0.0"
+    id "org.sonarqube" version "2.8"
 }
 
 apply plugin: 'java'
@@ -123,6 +124,17 @@ bootJar {
 test {
 
     useJUnitPlatform()
+}
+
+sonarqube {
+    properties {
+        property "sonar.projectKey", "checkmarx-ltd_cx-flow"
+        property "sonar.organization", "checkmarx-ltd"
+        property "sonar.host.url", "https://sonarcloud.io"
+        property "sonar.login", "d7a0d2dc315aa70559e0f4e3b863259144391a97"
+        property "sonar.java.binaries", "./build/classes"
+        property "sonar.exclusions", "**/test/**"
+    }
 }
 
 task unitTest(type: Test) {

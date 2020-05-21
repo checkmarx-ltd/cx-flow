@@ -55,7 +55,8 @@ jobs:
       - run:
           name: Compile
           command: ./gradlew clean compileJava compileTestJava
-      - sonarcloud/scan
+      - sonarcloud/scan_with_gradle:
+          main_branch: develop
 
   docker-build:
     executor: docker
@@ -288,8 +289,7 @@ jobs:
             ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -n ${VERSION} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./build/libs/
 
 orbs:
-  sonarcloud: sonarsource/sonarcloud@1.0.1
-  sonarcloudgate: extendaretail/sonarcloud@0.0.2
+  sonarcloud: extendaretail/sonarcloud@0.0.2
   aws-eks: circleci/aws-eks@0.2.6
   kubernetes: circleci/kubernetes@0.4.0
   helm: circleci/helm@0.2.3
@@ -307,7 +307,7 @@ workflows:
                 - /pr-.*/
                 - /pr .*/
                 - sonar
-      - sonarcloudgate/check_quality_gate:
+      - sonarcloud/check_quality_gate:
           context: sonarcloud
           requires:
             - sonar
