@@ -311,7 +311,6 @@ workflows:
           context: sonarcloud
           requires:
             - sonar
-          main_branch: develop
   build_deploy:
     jobs:
       - build
