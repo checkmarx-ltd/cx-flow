@@ -534,14 +534,16 @@ public class ScanUtils {
 
     public static String getMergeCommentMD(ScanRequest request, ScanResults results, FlowProperties flowProperties,
                                            RepoProperties properties) {
-        CxScanSummary summary = results.getScanSummary();
         StringBuilder body = new StringBuilder();
-        // TODO: 5/20/2020 Temp if - change it!
-        if(false) {
+
+        if (Optional.ofNullable(results.getScanSummary()).isPresent()) {
+            log.debug("Building merge comment MD for SAST scanner");
+
+            CxScanSummary summary = results.getScanSummary();
             body.append("### Checkmarx scan completed").append(CRLF);
             body.append("[Full Scan Details](").append(results.getLink()).append(")").append(CRLF);
-            if(properties.isCxSummary() && !request.getProduct().equals(ScanRequest.Product.CXOSA)){
-                if(!ScanUtils.empty(properties.getCxSummaryHeader())) {
+            if (properties.isCxSummary() && !request.getProduct().equals(ScanRequest.Product.CXOSA)) {
+                if (!ScanUtils.empty(properties.getCxSummaryHeader())) {
                     body.append("#### ").append(properties.getCxSummaryHeader()).append(CRLF);
                 }
                 body.append("Severity|Count").append(CRLF);
@@ -551,21 +553,21 @@ public class ScanUtils {
                 body.append("Low|").append(summary.getLowSeverity().toString()).append(CRLF);
                 body.append("Informational|").append(summary.getInfoSeverity().toString()).append(CRLF).append(CRLF);
             }
-            if(properties.isFlowSummary()){
-                if(!ScanUtils.empty(properties.getFlowSummaryHeader())) {
+            if (properties.isFlowSummary()) {
+                if (!ScanUtils.empty(properties.getFlowSummaryHeader())) {
                     body.append("#### ").append(properties.getFlowSummaryHeader()).append(CRLF);
                 }
                 body.append("Severity|Count").append(CRLF);
                 body.append("---|---").append(CRLF);
                 Map<String, Integer> flow = (Map<String, Integer>) results.getAdditionalDetails().get(Constants.SUMMARY_KEY);
-                if(flow != null) {
+                if (flow != null) {
                     for (Map.Entry<String, Integer> severity : flow.entrySet()) {
                         body.append(severity.getKey()).append("|").append(severity.getValue().toString()).append(CRLF);
                     }
                 }
                 body.append(CRLF);
             }
-            if(properties.isDetailed()) {
+            if (properties.isDetailed()) {
                 if (!ScanUtils.empty(properties.getDetailHeader())) {
                     body.append("#### ").append(properties.getDetailHeader()).append(CRLF);
                 }
@@ -616,6 +618,7 @@ public class ScanUtils {
                         });
 
                 if (results.getOsa() != null && results.getOsa()) {
+                    log.debug("Building merge comment MD for OSA scanner");
                     body.append(CRLF);
                     body.append("|Library|Severity|CVE|").append(CRLF);
                     body.append("---|---|---").append(CRLF);
@@ -641,8 +644,8 @@ public class ScanUtils {
             }
         }
 
-
         Optional.ofNullable(results.getScaResults()).ifPresent(r -> {
+            log.debug("Building merge comment MD for SCA scanner");
             body.append("### CxSCA Scan summary" + CRLF +
                     CRLF +
                     "| | |" + CRLF +
@@ -674,7 +677,6 @@ public class ScanUtils {
                     });
 
         });
-
         return body.toString();
     }
 
