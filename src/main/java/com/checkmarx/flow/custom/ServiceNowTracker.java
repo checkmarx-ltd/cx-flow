@@ -67,7 +67,7 @@ public class ServiceNowTracker implements IssueTracker {
         }
 
         if( ScanUtils.empty(properties.getUsername()) ||
-                ScanUtils.empty(properties.getUsername() )){
+                ScanUtils.empty(properties.getPassword() )){
             throw new MachinaException("Service Now API Rest Call requires username and password");
         }
 
