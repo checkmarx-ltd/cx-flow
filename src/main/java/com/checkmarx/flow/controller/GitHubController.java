@@ -7,7 +7,6 @@ import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.EventResponse;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.github.*;
-import com.checkmarx.flow.exception.GitHubClientRunTimeException;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.service.FlowService;
@@ -220,7 +219,7 @@ public class GitHubController {
             }
             /*Check for Config as code (cx.config) and override*/
             CxConfig cxConfig =  gitHubService.getCxConfigOverride(request);
-            request = ScanUtils.overrideCxConfig(request, cxConfig, flowProperties, jiraProperties);
+            request = ScanUtils.overrideCxConfig(request, cxConfig, flowProperties);
 
             request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body);
             request.putAdditionalMetadata("statuses_url", event.getPullRequest().getStatusesUrl());
@@ -393,7 +392,7 @@ public class GitHubController {
 
             /*Check for Config as code (cx.config) and override*/
             CxConfig cxConfig =  gitHubService.getCxConfigOverride(request);
-            request = ScanUtils.overrideCxConfig(request, cxConfig, flowProperties, jiraProperties);
+            request = ScanUtils.overrideCxConfig(request, cxConfig, flowProperties);
 
             request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body);
             request.setId(uid);

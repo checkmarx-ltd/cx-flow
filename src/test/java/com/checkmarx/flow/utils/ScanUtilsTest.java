@@ -52,7 +52,7 @@ public class ScanUtilsTest {
         );
         CxConfig cxConfig = ScanUtils.getConfigAsCode(file);
         assertNotNull(cxConfig);
-        com.checkmarx.flow.utils.ScanUtils.overrideCxConfig(request, cxConfig, flowProperties, jiraProperties);
+        com.checkmarx.flow.utils.ScanUtils.overrideCxConfig(request, cxConfig, flowProperties);
         assertEquals(request.getTeam(), "/a/b/c");
         assertEquals(request.getProject(), "XYZ-Riches-master");
         assertFalse(request.isIncremental());
@@ -83,7 +83,7 @@ public class ScanUtilsTest {
         );
         CxConfig cxConfig = ScanUtils.getConfigAsCode(file);
         assertNotNull(cxConfig);
-        com.checkmarx.flow.utils.ScanUtils.overrideCxConfig(request, cxConfig, flowProperties, jiraProperties);
+        com.checkmarx.flow.utils.ScanUtils.overrideCxConfig(request, cxConfig, flowProperties);
         assertEquals(request.getTeam(), "/a/b/c");
         assertEquals(request.getProject(), "XYZ-Riches-master");
         assertEquals(request.getApplication(), "test app");
@@ -119,7 +119,7 @@ public class ScanUtilsTest {
         );
         CxConfig cxConfig = ScanUtils.getConfigAsCode(file);
         assertNotNull(cxConfig);
-        com.checkmarx.flow.utils.ScanUtils.overrideCxConfig(request, cxConfig, flowProperties, jiraProperties);
+        com.checkmarx.flow.utils.ScanUtils.overrideCxConfig(request, cxConfig, flowProperties);
         assertEquals(request.getBugTracker().getType().toString(), "JIRA");
         assertEquals(request.getBugTracker().getProjectKey(), "APPSEC");
     }
