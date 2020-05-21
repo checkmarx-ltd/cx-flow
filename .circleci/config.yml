@@ -57,6 +57,7 @@ jobs:
           command: ./gradlew clean compileJava compileTestJava
       - sonarcloud/scan_with_gradle:
           main_branch: develop
+          gradle_task: sonarqube -x test
 
   docker-build:
     executor: docker
