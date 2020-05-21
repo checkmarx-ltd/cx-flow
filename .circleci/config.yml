@@ -55,7 +55,7 @@ jobs:
       - run:
           name: Compile
           command: ./gradlew clean compileJava compileTestJava
-      - sonarcloud/scan:
+      - sonarcloud/scan
 
   docker-build:
     executor: docker
