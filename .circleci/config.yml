@@ -56,6 +56,7 @@ jobs:
           name: Compile
           command: ./gradlew clean compileJava compileTestJava
       - sonarcloud/scan_with_gradle
+          main_branch: "develop"
 
   docker-build:
     executor: docker
@@ -310,6 +311,7 @@ workflows:
           context: sonarcloud
           requires:
             - sonar
+          main_branch: "develop"
   build_deploy:
     jobs:
       - build
