@@ -31,6 +31,7 @@ cx-flow:
     - GitHub
     - Csv
     - Azure
+    - ServiceNow
   branches:
     - develop
     - master
@@ -171,6 +172,15 @@ gitlab:
   url: https://gitlab.com
   api-url: https://gitlab.com/api/v4/
   block-merge: true
+
+servicenow:
+  token: xxxx
+  servicenow-project-id: xxxx
+  servicenow-workspace-id: xxxx
+  url: https://servicenow.com
+  apiUrl: https://dev90318.service-now.com/api/now/table
+  username: xxxx
+  password: xxxx
 
 bitbucket:
   webhook-token: 1234
