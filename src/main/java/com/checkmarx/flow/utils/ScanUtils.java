@@ -38,6 +38,7 @@ public class ScanUtils {
     public static final String RUNNING = "running";
     public static final String CRLF = "\r\n";
     public static final String ISSUE_BODY = "**%s** issue exists @ **%s** in branch **%s**";
+    public static final String ISSUE_BODY_TEXT = "%s issue exists @ %s in branch %s";
     public static final String ISSUE_KEY = "%s %s @ %s [%s]";
     public static final String ISSUE_KEY_2 = "%s %s @ %s";
     public static final String JIRA_ISSUE_KEY = "%s%s @ %s [%s]%s";
@@ -951,5 +952,94 @@ public class ScanUtils {
         int index = StringUtils.ordinalIndexOf(ref, "/", 2);
         if(index < 0) return ref;
         return ref.substring(index+1);
+    }
+
+    /**
+     * = Generates an Text message describing the discovered issue.
+     *
+     * @param issue The issue to add the comment too
+     * @return string with the HTML message
+     */
+    public static String getTextBody(ScanResults.XIssue issue, ScanRequest request, FlowProperties flowProperties) {
+        String branch = request.getBranch();
+        StringBuilder body = new StringBuilder();
+        body.append(String.format(ISSUE_BODY_TEXT, issue.getVulnerability(), issue.getFilename(), branch)).append(CRLF);
+        if(!ScanUtils.empty(issue.getDescription())) {
+            body.append(issue.getDescription().trim());
+        }
+        body.append(CRLF);
+        if(!ScanUtils.empty(issue.getSeverity())) {
+            body.append("Severity: ").append(issue.getSeverity()).append(CRLF);
+        }
+        if(!ScanUtils.empty(issue.getCwe())) {
+            body.append("CWE: ").append(issue.getCwe()).append(CRLF);
+            if(!ScanUtils.empty(flowProperties.getMitreUrl())) {
+                body.append("Details - ")
+                        .append(
+                        String.format(
+                                flowProperties.getMitreUrl(),
+                                issue.getCwe()
+                        )
+                ).append(" - Vulnerability details and guidance").append(CRLF);
+            }
+        }
+        if(!ScanUtils.empty(flowProperties.getWikiUrl())) {
+            body.append("Details - ").append(flowProperties.getWikiUrl()).append(" - Internal Guidance ").append(CRLF);
+        }
+        if(!ScanUtils.empty(issue.getLink())){
+            body.append("Details - ").append(issue.getLink()).append(" - Checkmarx").append(CRLF);
+        }
+        if(issue.getDetails() != null && !issue.getDetails().isEmpty()) {
+            Map<Integer, ScanResults.IssueDetails> trueIssues = issue.getDetails().entrySet().stream()
+                    .filter(x -> x.getKey( ) != null && x.getValue() != null && !x.getValue().isFalsePositive())
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            Map<Integer, ScanResults.IssueDetails> fpIssues = issue.getDetails().entrySet().stream()
+                    .filter(x -> x.getKey( ) != null && x.getValue() != null && x.getValue().isFalsePositive())
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            if(!trueIssues.isEmpty()) {
+                body.append("Lines: ");
+                for (Map.Entry<Integer, ScanResults.IssueDetails> entry : trueIssues.entrySet()) {
+                    body.append(entry.getKey()).append(" ");
+                }
+            }
+            if(flowProperties.isListFalsePositives() && !fpIssues.isEmpty()) {//List the false positives / not exploitable
+                body.append("Lines Marked Not Exploitable: ");
+                for (Map.Entry<Integer, ScanResults.IssueDetails> entry : fpIssues.entrySet()) {
+                    body.append(entry.getKey()).append(" ");
+                }
+            }
+            for (Map.Entry<Integer, ScanResults.IssueDetails> entry : trueIssues.entrySet()) {
+                if (!ScanUtils.empty(entry.getValue().getCodeSnippet())) {
+                    body.append("Line # ").append(entry.getKey());
+                    String codeSnippet = entry.getValue().getCodeSnippet();
+                    body.append(StringEscapeUtils.escapeHtml4(codeSnippet)).append(CRLF);
+                }
+            }
+        }
+        if(issue.getOsaDetails()!=null){
+            for(ScanResults.OsaDetails o: issue.getOsaDetails()){
+                body.append(CRLF);
+                if(!ScanUtils.empty(o.getCve())) {
+                    body.append(o.getCve()).append(CRLF);
+                }
+                if(!ScanUtils.empty(o.getSeverity())) {
+                    body.append("Severity: ").append(o.getSeverity()).append(CRLF);
+                }
+                if(!ScanUtils.empty(o.getVersion())) {
+                    body.append("Version: ").append(o.getVersion()).append(CRLF);
+                }
+                if(!ScanUtils.empty(o.getDescription())) {
+                    body.append("Description: ").append(o.getDescription()).append(CRLF);
+                }
+                if(!ScanUtils.empty(o.getRecommendation())){
+                    body.append("Recommendation: ").append(o.getRecommendation()).append(CRLF);
+                }
+                if(!ScanUtils.empty(o.getUrl())) {
+                    body.append("URL: ").append(o.getUrl());
+                }
+                body.append(CRLF);
+            }
+        }
+        return body.toString();
     }
 }
