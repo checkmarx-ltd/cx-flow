@@ -540,7 +540,7 @@ public class ScanUtils {
             log.debug("Building merge comment MD for SAST scanner");
 
             CxScanSummary summary = results.getScanSummary();
-            body.append("### Checkmarx scan completed").append(CRLF);
+            body.append("### Checkmarx SAST Scan Summary").append(CRLF);
             body.append("[Full Scan Details](").append(results.getLink()).append(")").append(CRLF);
             if (properties.isCxSummary() && !request.getProduct().equals(ScanRequest.Product.CXOSA)) {
                 if (!ScanUtils.empty(properties.getCxSummaryHeader())) {
@@ -646,16 +646,19 @@ public class ScanUtils {
 
         Optional.ofNullable(results.getScaResults()).ifPresent(r -> {
             log.debug("Building merge comment MD for SCA scanner");
-            body.append("### CxSCA Scan summary" + CRLF +
-                    CRLF +
-                    "| | |" + CRLF +
-                    "-|-" + CRLF +
-                    "Total Packages identified | " + r.getSummary().getTotalPackages() + " " + CRLF +
-                    "High severity vulnerabilities | " + r.getSummary().getFindingCounts().get(Filter.Severity.HIGH) + " " + CRLF +
-                    "Medium severity vulnerabilities | " + r.getSummary().getFindingCounts().get(Filter.Severity.MEDIUM) + " " + CRLF +
-                    "Low severity vulnerabilities | " + r.getSummary().getFindingCounts().get(Filter.Severity.LOW) + " |" + CRLF +
-                    "Scan risk score | " + String.format("%.2f", r.getSummary().getRiskScore()) + " |" + CRLF +
-                    "  \r\n");
+            if (body.length() > 0) {
+                body.append("***").append(CRLF);
+            }
+
+            body.append("### Checkmarx Dependency (CxSCA) Scan Summary").append(CRLF)
+                    .append("[Full Scan Details](").append(r.getWebReportLink()).append(")  ").append(CRLF)
+                    .append("#### Summary  ").append(CRLF)
+                    .append("| Total Packages Identified | ").append(r.getSummary().getTotalPackages()).append("| ").append(CRLF)
+                    .append("-|-").append(CRLF)
+                    .append("High severity vulnerabilities | ").append(r.getSummary().getFindingCounts().get(Filter.Severity.HIGH)).append(" ").append(CRLF)
+                    .append("Medium severity vulnerabilities | ").append(r.getSummary().getFindingCounts().get(Filter.Severity.MEDIUM)).append(" ").append(CRLF)
+                    .append("Low severity vulnerabilities | ").append(r.getSummary().getFindingCounts().get(Filter.Severity.LOW)).append(" |").append(CRLF)
+                    .append("Scan risk score | ").append(String.format("%.2f", r.getSummary().getRiskScore())).append(" |").append(CRLF).append(CRLF);
 
             body.append(
                     "#### CxSCA vulnerability result overview" + CRLF +
@@ -733,7 +736,6 @@ public class ScanUtils {
      * = Generates an HTML message describing the discovered issue.
      *
      * @param issue The issue to add the comment too
-     * @param branch The repo branch name
      * @return string with the HTML message
      */
     public static String getHTMLBody(ScanResults.XIssue issue, ScanRequest request, FlowProperties flowProperties) {
