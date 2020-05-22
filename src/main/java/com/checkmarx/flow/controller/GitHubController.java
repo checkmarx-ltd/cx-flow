@@ -86,16 +86,6 @@ public class GitHubController {
         }
     }
 
-    //TODO: REMOVE LATER
-    public void testSonarGate1(){}
-
-    public void testSonarGate2(){}
-
-    public void testSonarGate3(){}
-
-    public void testSonarGate4(){}
-
-
     /**
      * Ping Request event submitted (JSON)
      */
