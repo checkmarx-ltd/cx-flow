@@ -7,17 +7,21 @@ import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.EventResponse;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.github.*;
+import com.checkmarx.flow.exception.GitHubClientRunTimeException;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.GitHubService;
 import com.checkmarx.flow.service.HelperService;
+import com.checkmarx.flow.service.SastScanner;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.Filter;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
+import org.junit.platform.commons.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
@@ -40,6 +44,7 @@ import java.util.*;
  */
 @RestController
 @RequestMapping(value = "/")
+@RequiredArgsConstructor
 public class GitHubController {
 
     private static final String SIGNATURE = "X-Hub-Signature";
@@ -47,6 +52,7 @@ public class GitHubController {
     private static final String PING = EVENT + "=ping";
     private static final String PULL = EVENT + "=pull_request";
     private static final String PUSH = EVENT + "=push";
+    private static final String DELETE = EVENT + "=delete";
     private static final String HMAC_ALGORITHM = "HmacSHA1";
     private static final Charset CHARSET = StandardCharsets.UTF_8;
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(GitHubController.class);
@@ -57,24 +63,8 @@ public class GitHubController {
     private final FlowService flowService;
     private final HelperService helperService;
     private final GitHubService gitHubService;
+    private final SastScanner sastScanner;
     private Mac hmac;
-
-
-    public GitHubController(GitHubProperties properties,
-                            FlowProperties flowProperties,
-                            CxProperties cxProperties,
-                            JiraProperties jiraProperties,
-                            FlowService flowService,
-                            HelperService helperService,
-                            GitHubService gitHubService) {
-        this.properties = properties;
-        this.flowProperties = flowProperties;
-        this.cxProperties = cxProperties;
-        this.jiraProperties = jiraProperties;
-        this.flowService = flowService;
-        this.helperService = helperService;
-        this.gitHubService = gitHubService;
-    }
 
     @PostConstruct
     public void init() throws NoSuchAlgorithmException, InvalidKeyException {
@@ -412,7 +402,8 @@ public class GitHubController {
                 flowService.initiateAutomation(request);
             }
 
-        }catch (IllegalArgumentException e){
+        }
+        catch (IllegalArgumentException e){
             String errorMessage = "Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product != null ? product : "").concat(" | ").concat(bug != null ? bug : "");
             log.error(errorMessage, e);
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
@@ -422,9 +413,96 @@ public class GitHubController {
                     .success(false)
                     .build());
         }
-
+        
         return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
                 .message("Scan Request Successfully Submitted")
+                .success(true)
+                .build());
+
+    }
+
+    /**
+     * Delete Request event submitted (JSON), along with the Product (cx for example)
+     */
+    @PostMapping(value = {"/{product}", "/"}, headers = DELETE)
+    public ResponseEntity<EventResponse> deleteBranchRequest(
+            @RequestBody String body,
+            @RequestHeader(value = SIGNATURE) String signature,
+            @PathVariable(value = "product", required = false) String product,
+            @RequestParam(value = "application", required = false) String application,
+            @RequestParam(value = "project", required = false) String project,
+            @RequestParam(value = "team", required = false) String team
+    ){
+        String uid = helperService.getShortUid();
+        MDC.put("cx", uid);
+        log.info("Processing GitHub DELETE Branch request");
+        DeleteEvent event;
+        ObjectMapper mapper = new ObjectMapper();
+
+        try {
+            event = mapper.readValue(body, DeleteEvent.class);
+        } catch (NullPointerException | IOException | IllegalArgumentException e) {
+            throw new MachinaRuntimeException(e);
+        }
+
+        if(flowProperties == null || cxProperties == null){
+            log.error("Properties have null values");
+            throw new MachinaRuntimeException();
+        }
+        //verify message signature
+        verifyHmacSignature(body, signature);
+
+        if(!event.getRefType().equalsIgnoreCase("branch")){
+            log.error("Nothing to do for delete tag");
+            return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
+                    .message("Nothing to do for delete tag")
+                    .success(true)
+                    .build());
+        }
+
+        String app = event.getRepository().getName();
+        if (!ScanUtils.empty(application)) {
+            app = application;
+        }
+
+        if (ScanUtils.empty(product)) {
+            product = ScanRequest.Product.CX.getProduct();
+        }
+        ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
+        String currentBranch = ScanUtils.getBranchFromRef(event.getRef());
+        Repository repository = event.getRepository();
+
+        String namespace;
+        if (StringUtils.isBlank(repository.getOwner().getName())) {
+            namespace = repository.getOwner().getLogin();
+        } else {
+            namespace = repository.getOwner().getName().replaceAll(" ", "_");
+        }
+
+        flowProperties.setAutoProfile(true);
+
+        ScanRequest request = ScanRequest.builder()
+                .application(app)
+                .product(p)
+                .project(project)
+                .team(team)
+                .namespace(namespace)
+                .repoName(repository.getName())
+                .repoUrl(repository.getCloneUrl())
+                .repoType(ScanRequest.Repository.NA)
+                .branch(currentBranch)
+                .refs(event.getRef())
+                .build();
+
+        request.setScanPresetOverride(false);
+
+        //deletes a project which is not in the middle of a scan, otherwise it will not be deleted
+        sastScanner.deleteProject(request);
+            
+        log.info("Process of delete branch has finished successfully");
+        
+        return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
+                .message("Delete Branch Successfully finished")
                 .success(true)
                 .build());
 

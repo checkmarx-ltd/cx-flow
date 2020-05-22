@@ -2,8 +2,10 @@ package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.config.ADOProperties;
 import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.dto.ScanDetails;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.azure.CreateWorkItemAttr;
+import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.exception.ADOClientException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.CxProperties;
@@ -28,6 +30,7 @@ import java.util.List;
 @Service
 public class ADOService {
     private static final Logger log = LoggerFactory.getLogger(ADOService.class);
+    private static final String API_VERSION = "?api-version=";
     private final RestTemplate restTemplate;
     private final ADOProperties properties;
     private final FlowProperties flowProperties;
@@ -66,7 +69,7 @@ public class ADOService {
         }
     }
 
-    void sendMergeComment(ScanRequest request, String comment){
+    public void sendMergeComment(ScanRequest request, String comment){
         String mergeUrl = request.getMergeNoteUri();
         if(ScanUtils.empty(mergeUrl)){
             log.error("mergeUrl was not provided within the request object, which is required for commenting on pull request");
@@ -77,7 +80,7 @@ public class ADOService {
         if(ScanUtils.empty(threadId)){
             HttpEntity<String> httpEntity = new HttpEntity<>(getJSONThread(comment).toString(), createAuthHeaders());
             log.debug("Creating new thread for comments");
-            ResponseEntity<String> response = restTemplate.exchange(mergeUrl.concat("?api-version=").concat(properties.getApiVersion()),
+            ResponseEntity<String> response = restTemplate.exchange(mergeUrl.concat(API_VERSION).concat(properties.getApiVersion()),
                     HttpMethod.POST, httpEntity, String.class);
             if(response.getBody() != null) {
                 JSONObject json = new JSONObject(response.getBody());
@@ -90,12 +93,12 @@ public class ADOService {
             HttpEntity<String> httpEntity = new HttpEntity<>(getJSONComment(comment).toString(), createAuthHeaders());
             mergeUrl = mergeUrl.concat("/").concat(threadId).concat("/comments");
             log.debug("Adding comment to thread Id {}", threadId);
-            restTemplate.exchange(mergeUrl.concat("?api-version=").concat(properties.getApiVersion()),
+            restTemplate.exchange(mergeUrl.concat(API_VERSION).concat(properties.getApiVersion()),
                     HttpMethod.POST, httpEntity, String.class);
         }
     }
 
-    void startBlockMerge(ScanRequest request){
+    public void startBlockMerge(ScanRequest request){
         if(properties.isBlockMerge()) {
             String url = request.getAdditionalMetadata("statuses_url");
             if(ScanUtils.empty(url)){
@@ -110,7 +113,7 @@ public class ADOService {
         }
     }
 
-    void endBlockMerge(ScanRequest request, String scanUrl, boolean findingsPresent){
+    void endBlockMerge(ScanRequest request, ScanResults results, ScanDetails scanDetails){
         if(properties.isBlockMerge()) {
             String url = request.getAdditionalMetadata("statuses_url");
             String statusId = request.getAdditionalMetadata("status_id");
@@ -134,16 +137,19 @@ public class ADOService {
             }
             //TODO remove preview once applicable
             log.info("Removing pending status from pull {}", url);
-            restTemplate.exchange(url.concat("?api-version=").concat(properties.getApiVersion().concat("-preview")),
+            restTemplate.exchange(url.concat(API_VERSION).concat(properties.getApiVersion().concat("-preview")),
                     HttpMethod.PATCH, httpEntity, Void.class);
 
-            if(properties.isErrorMerge() && findingsPresent){
+            MergeResultEvaluatorImpl evaluator = new MergeResultEvaluatorImpl(flowProperties);
+            boolean isMergeAllowed = evaluator.isMergeAllowed(results, properties, new PullRequestReport(scanDetails, request));
+            
+            if(!isMergeAllowed){
                 log.debug("Creating status of failed to {}", url);
-                createStatus("failed", "Checkmarx Scan Completed", url, scanUrl);
+                createStatus("failed", "Checkmarx Scan Completed", url, results.getLink());
             }
             else{
                 log.debug("Creating status of succeeded to {}", url);
-                createStatus("succeeded", "Checkmarx Scan Completed", url, scanUrl);
+                createStatus("succeeded", "Checkmarx Scan Completed", url, results.getLink());
             }
         }
     }
@@ -155,9 +161,9 @@ public class ADOService {
         );
         //TODO remove preview once applicable
         log.info("Adding pending status to pull {}", url);
-        ResponseEntity<String> response = restTemplate.exchange(url.concat("?api-version=").concat(properties.getApiVersion().concat("-preview")),
+        ResponseEntity<String> response = restTemplate.exchange(url.concat(API_VERSION).concat(properties.getApiVersion().concat("-preview")),
                 HttpMethod.POST, httpEntity, String.class);
-        log.debug(response.getStatusCode().toString());
+        log.debug(String.valueOf(response.getStatusCode()));
         try{
             if(response.getBody() != null) {
                 JSONObject json = new JSONObject(response.getBody());
@@ -180,17 +186,7 @@ public class ADOService {
         requestBody.put("target_url", url);
         return requestBody;
     }
-/*
-{
-  "state": "succeeded", | succeeded, failed, pending, notSet, notApplicable | error
-  "description": "Sample status succeeded",
-  "context": {
-    "name": "sample-status-4",
-    "genre": "vsts-samples"
-  },
-  "targetUrl": "http://fabrikam-fiber-inc.com/CI/builds/1"
-}
-*/
+
     private JSONObject getJSONThread(String description){
         JSONObject requestBody = new JSONObject();
         JSONArray comments = new JSONArray();
@@ -213,16 +209,5 @@ public class ADOService {
 
         return requestBody;
     }
-    /*
-    {
-  "comments": [
-    {
-      "parentCommentId": 0,
-      "content": "This new feature looks good!",
-      "commentType": 1
-    }
-  ],
-  "status": 1
-}
- */
+
 }

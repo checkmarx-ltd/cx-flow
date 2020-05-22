@@ -49,6 +49,7 @@ cx-flow:
     - Csv
     - Azure
     - Rally
+    - ServiceNow
   branches:
     - develop
     - master
@@ -117,6 +118,15 @@ rally:
   rally-workspace-id: xxxx
   url: https://rallydev.com
   api-url: https://rally1.rallydev.com/slm/webservice/v2.0
+
+servicenow:
+  token: 123
+  servicenow-project-id: xxxx
+  servicenow-workspace-id: xxxx
+  url: https://servicenow.com
+  apiUrl: https://dev90318.service-now.com/api/now/table
+  username: xxxx
+  password: xxxx
 
 github:
   webhook-token: xxxx

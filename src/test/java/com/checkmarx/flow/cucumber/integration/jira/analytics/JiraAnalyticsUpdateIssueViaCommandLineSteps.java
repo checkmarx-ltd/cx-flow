@@ -31,7 +31,7 @@ public class JiraAnalyticsUpdateIssueViaCommandLineSteps extends JiraAnalyticsCo
 
         bugTracker = getBasicBugTrackerToJira();
         flowProperties.setBugTracker(bugTracker.getType().name());
-        flowService.cxParseResults(getBasicScanRequest(), getFileFromResourcePath(OPEN_FINDING_PATH));
+        sastScanner.cxParseResults(getBasicScanRequest(), getFileFromResourcePath(OPEN_FINDING_PATH));
     }
 
     @After("@Jira_Analytics_Update_Issue_Command_Line")
@@ -42,7 +42,7 @@ public class JiraAnalyticsUpdateIssueViaCommandLineSteps extends JiraAnalyticsCo
 
     @When("updating a new Jira issue via the command line")
     public void closeNewIssueViaCommandLine() throws IOException, ExitThrowable {
-        flowService.cxParseResults(getBasicScanRequest(), getFileFromResourcePath(CLOSE_FINDING_PATH));
+        sastScanner.cxParseResults(getBasicScanRequest(), getFileFromResourcePath(CLOSE_FINDING_PATH));
     }
 
     @Then("a matching ticket updating data should be recorded in the analytics json file")

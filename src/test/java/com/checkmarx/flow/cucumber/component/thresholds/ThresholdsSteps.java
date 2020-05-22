@@ -1,12 +1,14 @@
 package com.checkmarx.flow.cucumber.component.thresholds;
 
 import com.checkmarx.flow.CxFlowApplication;
+import com.checkmarx.flow.config.ADOProperties;
 import com.checkmarx.flow.config.FindingSeverity;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaException;
+import com.checkmarx.flow.service.ADOService;
 import com.checkmarx.flow.service.GitHubService;
 import com.checkmarx.flow.service.MergeResultEvaluator;
 import com.checkmarx.flow.service.ResultsService;
@@ -52,10 +54,12 @@ import static org.mockito.Mockito.*;
 @SpringBootTest(classes = {CxFlowMocksConfig.class, CxFlowApplication.class})
 @Slf4j
 public class ThresholdsSteps {
+    
     private static final String PULL_REQUEST_STATUSES_URL = "statuses url stub";
     private static final String MERGE_NOTE_URL = "merge note url stub";
-
+    
     private static final ObjectMapper mapper = new ObjectMapper();
+    private static final String STATUSES_URL_KEY = "statuses_url";
 
     private final CxClient cxClientMock;
     private final RestTemplate restTemplateMock;
@@ -63,13 +67,14 @@ public class ThresholdsSteps {
     private final FlowProperties flowProperties;
     private final CxProperties cxProperties;
     private final GitHubProperties gitHubProperties;
+    private final ADOProperties adoProperties;
     private ScanResults scanResultsToInject;
 
     private ResultsService resultsService;
     private Boolean pullRequestWasApproved;
     private Filter filter;
 
-    public ThresholdsSteps(CxClient cxClientMock, RestTemplate restTemplateMock, FlowProperties flowProperties,
+    public ThresholdsSteps(CxClient cxClientMock, RestTemplate restTemplateMock, FlowProperties flowProperties, ADOProperties adoProperties,
                            CxProperties cxProperties, GitHubProperties gitHubProperties, MergeResultEvaluator mergeResultEvaluator) {
 
         this.cxClientMock = cxClientMock;
@@ -83,6 +88,8 @@ public class ThresholdsSteps {
         gitHubProperties.setCxSummary(false);
         this.gitHubProperties = gitHubProperties;
 
+        this.adoProperties = adoProperties;
+
         this.mergeResultEvaluator = mergeResultEvaluator;
     }
 
@@ -92,6 +99,11 @@ public class ThresholdsSteps {
         initMock(restTemplateMock);
         scanResultsToInject = createFakeScanResults();
         resultsService = createResultsService();
+        this.adoProperties.setBlockMerge(true);
+        this.adoProperties.setErrorMerge(true);
+        this.gitHubProperties.setBlockMerge(true);
+        this.gitHubProperties.setErrorMerge(true);
+        pullRequestWasApproved = null;
     }
 
     @Given("threshold for findings of {string} severity is {string}")
@@ -131,18 +143,40 @@ public class ThresholdsSteps {
         }
     }
 
-    @Then("CxFlow {string} the pull request")
-    public void cxflowApprovesOrFailsThePullRequest(String approvesOrFails) {
-        processScanResultsInCxFlow();
+    @Then("CxFlow {string} the pull request on GitHub")
+    public void cxflowApprovesOrFailsGithubPullRequest(String approvesOrFails) {
+        processScanResultsInCxFlow(true);
 
         boolean expectingApproval = approvesOrFails.equals("approves");
         verifyPullRequestState(expectingApproval);
     }
 
-    private void processScanResultsInCxFlow() {
-        try {
-            ScanRequest scanRequest = createScanRequest();
+    @And ("blockMerge is {string} and errorMerge is {string}")
+    public void setFlags(String blockMergeStr, String errorMergeStr) {
+        boolean blockMerge  = Boolean.parseBoolean(blockMergeStr);
+        boolean errorMerge  = Boolean.parseBoolean(errorMergeStr);
+        
+        if(!(blockMerge && errorMerge)){
+            pullRequestWasApproved = true;             
+        }
+        this.adoProperties.setBlockMerge(blockMerge);
+        this.adoProperties.setErrorMerge(errorMerge);
+        this.gitHubProperties.setBlockMerge(blockMerge);
+        this.gitHubProperties.setErrorMerge(errorMerge);
+    }
 
+    @Then("CxFlow {string} the pull request on Azure")
+    public void cxflowApprovesOrFailsAzurePullRequest(String approvesOrFails) {
+        processScanResultsInCxFlow(false);
+
+        boolean expectingApproval = approvesOrFails.equals("approves");
+        verifyPullRequestState(expectingApproval);
+    }
+    private void processScanResultsInCxFlow(boolean isGitHub) {
+        try {
+
+            ScanRequest scanRequest = createScanRequest(isGitHub);
+     
             CompletableFuture<ScanResults> task = resultsService.processScanResultsAsync(
                     scanRequest, 0, 0, null, null);
 
@@ -165,27 +199,46 @@ public class ThresholdsSteps {
         }
     }
 
-    private ScanRequest createScanRequest() {
+    private ScanRequest createScanRequest(boolean isGitHub) {
         ScanRequest scanRequest = new ScanRequest();
-        BugTracker issueTracker = BugTracker.builder().type(BugTracker.Type.GITHUBPULL).build();
-        scanRequest.setBugTracker(issueTracker);
-        scanRequest.setMergeNoteUri(MERGE_NOTE_URL);
-        scanRequest.setProduct(ScanRequest.Product.CX);
+        BugTracker.Type issueTruckerType;
 
         Map<String, String> additionalMetadata = new HashMap<String, String>();
-        additionalMetadata.put("statuses_url", PULL_REQUEST_STATUSES_URL);
+        additionalMetadata.put(STATUSES_URL_KEY, PULL_REQUEST_STATUSES_URL);
+        
+        if(isGitHub) {
+            issueTruckerType = BugTracker.Type.GITHUBPULL;
+            scanRequest.setMergeNoteUri(MERGE_NOTE_URL);
+        }else{
+            issueTruckerType = BugTracker.Type.ADOPULL;
+            additionalMetadata.put("status_id", Integer.toString(1));
+    }
+        BugTracker issueTracker = BugTracker.builder().type(issueTruckerType).build();
+        scanRequest.setBugTracker(issueTracker);
+
+        scanRequest.setProduct(ScanRequest.Product.CX);
+
+
         scanRequest.setAdditionalMetadata(additionalMetadata);
         return scanRequest;
     }
+
 
     private void initMock(RestTemplate restTemplateMock) {
         Answer<ResponseEntity<String>> interceptor = new HttpRequestInterceptor();
 
         ResponseEntity<String> sendingPostRequest = restTemplateMock.exchange(
                 anyString(), eq(HttpMethod.POST), any(HttpEntity.class), ArgumentMatchers.<Class<String>>any());
-
+  
         when(sendingPostRequest).thenAnswer(interceptor);
+        when(restTemplateMock.exchange(anyString(),eq(HttpMethod.GET),isNull(), any(Class.class) )).thenReturn(createResponseForGetComments());
     }
+
+    private ResponseEntity<String> createResponseForGetComments() {
+        ResponseEntity<String> result = new ResponseEntity<>("{}", HttpStatus.OK);
+        return result;
+    }
+
 
     private void initMock(CxClient cxClientMock) {
         try {
@@ -202,6 +255,12 @@ public class ThresholdsSteps {
                 flowProperties,
                 mergeResultEvaluator);
 
+        ADOService adoService = new ADOService(restTemplateMock,
+                adoProperties,
+                flowProperties,
+                cxProperties);
+
+        
         return new ResultsService(
                 cxClientMock,
                 null,
@@ -210,7 +269,7 @@ public class ThresholdsSteps {
                 gitService,
                 null,
                 null,
-                null,
+                adoService,
                 null,
                 cxProperties,
                 flowProperties);
@@ -237,9 +296,12 @@ public class ThresholdsSteps {
     private class HttpRequestInterceptor implements Answer<ResponseEntity<String>> {
         @Override
         public ResponseEntity<String> answer(InvocationOnMock invocation) {
+
             String url = invocation.getArgument(0);
-            if (url.equals(PULL_REQUEST_STATUSES_URL)) {
+            log.info("HttpRequestInterceptor url: " + url);
+            if (url.contains(PULL_REQUEST_STATUSES_URL)) {
                 HttpEntity<String> interceptedRequest = invocation.getArgument(2);
+                log.info("interceptedRequest: " + interceptedRequest);
                 pullRequestWasApproved = wasApproved(interceptedRequest);
             }
             return new ResponseEntity<>(HttpStatus.OK);
@@ -251,14 +313,18 @@ public class ThresholdsSteps {
             Assert.assertNotNull("Status request body is null.", body);
             try {
                 JsonNode requestJson = mapper.readTree(body);
+    
                 String state = requestJson.get("state").textValue();
-                if (state.equals("success")) {
+                log.info("state:" + state);
+                if (state.equals("success") || state.equals("succeeded")) {
                     result = true;
-                } else if (state.equals("failure")) {
+                } else if (state.equals("failure") || state.equals("failed")) {
                     result = false;
                 }
             } catch (JsonProcessingException e) {
                 Assert.fail("Error parsing request. " + e);
+            }catch(Exception e){
+                Assert.fail("Unexpected error: " + e);
             }
             return result;
         }

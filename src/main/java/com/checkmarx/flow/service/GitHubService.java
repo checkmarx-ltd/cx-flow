@@ -7,12 +7,15 @@ import com.checkmarx.flow.dto.github.Content;
 import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.exception.GitHubClientException;
 import com.checkmarx.flow.exception.GitHubClientRunTimeException;
+import com.checkmarx.flow.exception.GitHubRepoUnavailableException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +30,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 
+import java.io.IOException;
 import java.util.*;
 
 @Service
@@ -38,8 +42,7 @@ public class GitHubService extends RepoService {
     private static final String STATUSES_URL_KEY = "statuses_url";
     private static final String STATUSES_URL_NOT_PROVIDED = "statuses_url was not provided within the request object, which is required for blocking / unblocking pull requests";
 
-    public static final String MERGE_SUCCESS_DESCRIPTION = "Checkmarx Scan Completed";
-    public static final String MERGE_FAILURE_DESCRIPTION = "Checkmarx Scan completed. Vulnerability scan failed";
+
     public static final String MERGE_SUCCESS = "success";
     public static final String MERGE_FAILURE = "failure";
 
@@ -74,22 +77,68 @@ public class GitHubService extends RepoService {
     }
 
     void processPull(ScanRequest request, ScanResults results) throws GitHubClientException {
-        try {
             String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties, properties);
             log.debug("comment: {}", comment);
             sendMergeComment(request, comment);
-        } catch (HttpClientErrorException e){
-            log.error("Error occurred while creating Merge Request comment: {}", ExceptionUtils.getRootCauseMessage(e));
-            throw new GitHubClientException();
+    }
+
+    private String getEditCommentUrl(String baseUrl, RepoComment comment) {
+        // The PARCH (edit comment) uri is without the pull request ID, so we must remove it before adding comment id.
+        baseUrl = baseUrl.replaceAll("[0-9]+/", "");
+        return baseUrl + "/" + comment.getId();
+    }
+
+    private void updateComment(String baseUrl, String comment) {
+        log.debug("Updating exisiting comment");
+        HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONComment("body",comment).toString(), createAuthHeaders());
+        restTemplate.exchange(baseUrl, HttpMethod.PATCH, httpEntity, String.class);
+    }
+
+    private List<RepoComment> getComments(String url) throws IOException {
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, null, String.class);
+        List<RepoComment> result = new ArrayList<>();
+        ObjectMapper objMapper = new ObjectMapper();
+        JsonNode root = objMapper.readTree(response.getBody());
+        Iterator<JsonNode> it = root.getElements();
+        while (it.hasNext()) {
+            JsonNode commentNode = it.next();
+            RepoComment comment = createRepoComment(commentNode);
+            if (isCheckMarxComment(comment)) {
+                result.add(comment);
+            }
+        }
+        return result;
+    }
+
+    private boolean isCheckMarxComment(RepoComment comment) {
+        return comment.getComment().contains("Full Scan Details") && comment.getComment().contains("Checkmarx scan completed") ||
+                comment.getComment().contains("Scan submitted to Checkmarx");
+    }
+
+    private RepoComment createRepoComment(JsonNode commentNode) {
+        String commentBody = commentNode.path("body").getTextValue();
+        long id = commentNode.path("id").asLong();
+        return new RepoComment(id, commentBody);
+    }
+
+    public void sendMergeComment(ScanRequest request, String comment) throws GitHubClientException {
+        try {
+            List<RepoComment> repoComments = getComments(request.getMergeNoteUri());
+            log.debug("There are {} checkmarx comments on this pull request", repoComments.size());
+            addComment(request, comment);
+        }
+        catch (IOException ioe) {
+            throw new GitHubClientException("Error while adding or updating repo pull request comment", ioe);
         }
     }
 
-    void sendMergeComment(ScanRequest request, String comment){
+    private void addComment(ScanRequest request, String comment) {
+        log.debug("Adding a new comment");
         HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONComment("body",comment).toString(), createAuthHeaders());
         restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
-    void startBlockMerge(ScanRequest request, String url){
+    public void startBlockMerge(ScanRequest request, String url){
         if(properties.isBlockMerge()) {
             final String PULL_REQUEST_STATUS = "pending";
             HttpEntity<?> httpEntity = new HttpEntity<>(
@@ -112,8 +161,8 @@ public class GitHubService extends RepoService {
         log.trace(API_REQUEST, httpEntity.getBody());
         try {
             ResponseEntity<String> responseEntity = restTemplate.exchange(statusApiUrl, HttpMethod.POST, httpEntity, String.class);
-            log.debug(API_RESPONSE_CODE, responseEntity.getStatusCode().toString());
-            log.trace(API_RESPONSE, responseEntity.toString());
+            log.debug(API_RESPONSE_CODE, responseEntity.getStatusCode());
+            log.trace(API_RESPONSE, responseEntity);
         } catch (RestClientException e) {
             String msg = message;
             if (log.isDebugEnabled()) {
@@ -141,24 +190,14 @@ public class GitHubService extends RepoService {
     }
 
     private HttpEntity<String> getStatusRequestEntity(ScanResults results, PullRequestReport pullRequestReport) {
-        OperationStatus status;
-        String statusForApi;
-        String description;
-        if (mergeResultEvaluator.isMergeAllowed(results, properties, pullRequestReport)) {
-            status = OperationStatus.SUCCESS;
-            statusForApi = MERGE_SUCCESS;
-            description = MERGE_SUCCESS_DESCRIPTION;
-        } else {
-            status = OperationStatus.FAILURE;
+        String statusForApi = MERGE_SUCCESS;
+
+        if (!mergeResultEvaluator.isMergeAllowed(results, properties, pullRequestReport)) {
             statusForApi = MERGE_FAILURE;
-            description = MERGE_FAILURE_DESCRIPTION;
         }
-        OperationResult requestResult = new OperationResult(status, description);
-        pullRequestReport.setPullRequestResult(requestResult);
-        pullRequestReport.log();
 
         log.debug("Setting pull request status to '{}'.", statusForApi);
-        JSONObject requestBody = getJSONStatus(statusForApi, results.getLink(), description);
+        JSONObject requestBody = getJSONStatus(statusForApi, results.getLink(), pullRequestReport.getPullRequestResult().getMessage());
         return new HttpEntity<>(requestBody.toString(), createAuthHeaders());
     }
 
@@ -273,7 +312,8 @@ public class GitHubService extends RepoService {
         } catch (NullPointerException e) {
             log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
         } catch (HttpClientErrorException e) {
-            throw new GitHubClientRunTimeException("Error getting repo content.", e);
+            log.warn("Repo content is unavailable. The reason can be that branch has been deleted.");
+            throw new GitHubRepoUnavailableException("Error getting repo content.", e);
         }
         return Collections.emptyList();
     }

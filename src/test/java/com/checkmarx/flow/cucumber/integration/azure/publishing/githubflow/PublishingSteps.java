@@ -8,12 +8,14 @@ import com.checkmarx.flow.cucumber.common.Constants;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 import com.checkmarx.flow.cucumber.integration.azure.publishing.AzureDevopsClient;
 import com.checkmarx.flow.cucumber.integration.azure.publishing.PublishingStepsBase;
+import com.checkmarx.flow.sastscanning.ScanRequestConverter;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.github.GitHubTestUtils;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
+import com.checkmarx.sdk.service.CxService;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
@@ -34,6 +36,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
@@ -56,11 +60,14 @@ public class PublishingSteps extends PublishingStepsBase {
     private final CxProperties cxProperties;
     private final HelperService helperService;
     private final GitHubService gitHubService;
+    private final ResultsService resultsService;
+    private final VulnerabilityScanner sastScanner;
+
     @MockBean
     private final CxClient cxClientMock;
-    private final ResultsService resultsService;
-    private final ADOService adoService;
-    private final EmailService emailService;
+
+    @MockBean
+    private final ProjectNameGenerator projectNameGenerator;
 
     private ScanResults scanResultsToInject;
     private String webhookRequestBody;
@@ -75,6 +82,9 @@ public class PublishingSteps extends PublishingStepsBase {
 
         when(cxClientMock.getTeamId(anyString()))
                 .thenReturn("dummyTeamId");
+
+        when(projectNameGenerator.determineProjectName(any()))
+                .thenReturn(getProjectName());
     }
 
     @Given("issue tracker is ADO")
@@ -146,21 +156,11 @@ public class PublishingSteps extends PublishingStepsBase {
     }
 
     private GitHubController getGitHubControllerInstance() {
-        FlowService flowService = new FlowService(
-                cxClientMock,
-                null,
-                resultsService,
-                gitHubService,
-                null,
-                null,
-                adoService,
-                emailService,
-                helperService,
-                cxProperties,
-                flowProperties);
+        List<VulnerabilityScanner> vulnerabilityScannerList = Collections.singletonList(sastScanner);
+        FlowService flowService = new FlowService(vulnerabilityScannerList, projectNameGenerator, resultsService);
 
         return new GitHubController(gitHubProperties, flowProperties, cxProperties,
-                null, flowService, helperService, gitHubService);
+                null, flowService, helperService, gitHubService, null);
     }
 
     private static GitHubTestUtils.EventType determineEventType(String eventName) {

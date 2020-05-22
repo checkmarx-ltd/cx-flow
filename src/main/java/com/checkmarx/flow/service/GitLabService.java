@@ -104,7 +104,7 @@ public class GitLabService extends RepoService {
         }
     }
 
-    void sendMergeComment(ScanRequest request, String comment){
+    public void sendMergeComment(ScanRequest request, String comment){
         Note note = Note.builder()
                 .body(comment)
                 .build();
@@ -123,14 +123,14 @@ public class GitLabService extends RepoService {
         }
     }
 
-    void sendCommitComment(ScanRequest request, String comment){
+    public void sendCommitComment(ScanRequest request, String comment){
         JSONObject note = new JSONObject();
         note.put("note", comment);
         HttpEntity<String> httpEntity = new HttpEntity<>(note.toString(), createAuthHeaders());
         restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
-    void startBlockMerge(ScanRequest request){
+    public void startBlockMerge(ScanRequest request){
         if(properties.isBlockMerge()) {
             String mergeId = request.getAdditionalMetadata("merge_id");
             if(ScanUtils.empty(request.getAdditionalMetadata("merge_id")) || ScanUtils.empty(request.getAdditionalMetadata("merge_title"))){
@@ -266,26 +266,25 @@ public class GitLabService extends RepoService {
                     properties.getConfigAsCode(),
                     request.getBranch()
             );
-            if(response.getBody() == null){
+            if(response.getBody() == null) {
                 log.warn("HTTP Body is null for content api ");
-            }
-            else {
+            } else {
                 JSONObject json = new JSONObject(response.getBody());
                 String content = json.getString("content");
-                if(ScanUtils.empty(content)){
+                if(ScanUtils.empty(content)) {
                     log.warn("Content not found in JSON response");
                     return null;
                 }
                 String decodedContent = new String(Base64.decodeBase64(content.trim()));
                 return com.checkmarx.sdk.utils.ScanUtils.getConfigAsCode(decodedContent);
             }
-        }catch (NullPointerException e){
+        } catch (NullPointerException e) {
             log.warn("Content not found in JSON response", e);
-        }catch (HttpClientErrorException.NotFound e){
-            log.info("No Config As code was found [{}]", properties.getConfigAsCode(), e);
-        }catch (HttpClientErrorException e){
+        } catch (HttpClientErrorException.NotFound e) {
+            log.info("No Config As code was found [{}]", properties.getConfigAsCode());
+        } catch (HttpClientErrorException e) {
             log.error("Error occurred", e);
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("Error occurred", e);
         }
         return null;

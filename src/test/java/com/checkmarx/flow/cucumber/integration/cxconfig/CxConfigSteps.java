@@ -477,10 +477,16 @@ public class CxConfigSteps {
         when(restTemplateMock.exchange(
                 anyString(), eq(HttpMethod.POST), any(HttpEntity.class), ArgumentMatchers.<Class<String>>any()))
                 .thenAnswer(interceptor);
-        
+        when(restTemplateMock.exchange(anyString(),eq(HttpMethod.GET),isNull(), any(Class.class) )).thenReturn(createResponseForGetComments());
      }
 
-    
+    private ResponseEntity<String> createResponseForGetComments() {
+        ResponseEntity<String> result = new ResponseEntity<>("{}", HttpStatus.OK);
+        return result;
+    }
+
+
+
     private void initCxClientMock() {
         try {
             ScanResultsAnswerer answerer = new ScanResultsAnswerer();
@@ -523,7 +529,7 @@ public class CxConfigSteps {
                 jiraProperties,
                 flowService,
                 helperService,
-                gitHubService));
+                gitHubService, null));
         
         //results service will be a Mock and will work with gitHubService Mock
         //and will not not connect to any external 
