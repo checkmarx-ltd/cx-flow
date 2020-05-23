@@ -51,6 +51,8 @@ spec:
               value: {{ .Values.cxflow.jiraProject | quote }}
             - name: AZURE_TOKEN
               value: {{ .Values.cxflow.azureToken | quote }}
+            - name: CHECKMARX_TEAM
+              value: {{ .Values.cxflow.checkmarxTeam }}
           envFrom:
             - secretRef:
                 name: {{ .Release.Name }}-external-secret
