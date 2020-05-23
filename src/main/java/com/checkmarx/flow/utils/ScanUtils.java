@@ -21,12 +21,11 @@ import org.apache.commons.text.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.springframework.web.bind.annotation.RequestParam;
 import javax.validation.constraints.NotNull;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -694,7 +693,7 @@ public class ScanUtils {
                                 f.getPublishDate(),
                                 extractPackageVersionFromFindings(r, f),
                                 Optional.ofNullable(f.getRecommendations()).orElse(""),
-                                " [Link in CxSCA](Sca.checkmarx.com/ss/xx/xx) | "
+                                " [Vulnerability Link](" + constructVulnerabilityUrl(r.getWebReportLink(), f) + ") | "
                         ).forEach(v -> body.append("| ").append(v));
 
                         if (!StringUtils.isEmpty(f.getCveName())) {
@@ -1029,5 +1028,24 @@ public class ScanUtils {
 
     private static String extractPackageVersionFromFindings(SCAResults r, Finding f) {
         return r.getPackages().stream().filter(p -> p.id.equals(f.getPackageId())).map(Package::getVersion).findFirst().orElse("");
+    }
+
+    private static String constructVulnerabilityUrl(String allVulnerabilitiesReportUrl, Finding finding) {
+        StringBuilder vulnerabilityUrl = new StringBuilder();
+        String urlColonEncode = "";
+
+        try {
+            urlColonEncode = URLEncoder.encode(":", StandardCharsets.UTF_8.toString());
+        } catch (UnsupportedEncodingException e) {
+            log.error("Encoding error: {}", e);
+        }
+
+        vulnerabilityUrl.append(allVulnerabilitiesReportUrl).append("/vulnerabilities/");
+        String urlCompatiblePackageId = finding.getPackageId().replace(":", urlColonEncode);
+
+        vulnerabilityUrl.append(finding.getId())
+                .append(urlColonEncode).append(urlCompatiblePackageId).append("/vulnerabilityDetails");
+
+        return vulnerabilityUrl.toString();
     }
 }
