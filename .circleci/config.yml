@@ -132,11 +132,6 @@ jobs:
           cluster-name: << parameters.cluster-name >>
           install-kubectl: true
       - run:
-          name: Create namespace
-          command: |
-            export NAMESPACE_EXISTS=$(kubectl get namespaces | grep << parameters.namespace >>)
-            if [[ ${NAMESPACE_EXISTS} ]]; then echo "Namespace already exists"; else kubectl create namespace << parameters.namespace >>; fi
-      - run:
           name: Change appVersion
           command: |
             sed -i "s/appVersion:[[:space:]]*.*/appVersion: '${CIRCLE_SHA1::7}'/g" ./helm/cxflow/Chart.yaml
@@ -145,13 +140,9 @@ jobs:
       - run:
           name: Install cxflow service on cluster 
           command: |
-            helm upgrade --install --atomic --namespace << parameters.namespace >> << parameters.release-name >> \
-              --set cxflow.checkmarxUsername=${CHECKMARX_USERNAME} \
-              --set cxflow.checkmarxPassword=${CHECKMARX_PASSWORD} \
-              --set cxflow.checkmarxBaseUrl=${CHECKMARX_BASE_URL} \
+            helm upgrade --install --atomic --create-namespace --namespace << parameters.namespace >> << parameters.release-name >> \
               --set cxflow.githubToken=${GITHUB_TOKEN} \
               --set cxflow.githubWebhookToken=${GITHUB_WEBHOOK_TOKEN} \
-              --set cxflow.checkmarxClientSecret=${CHECKMARX_CLIENT_SECRET} \
               --set cxflow.jiraUrl=${JIRA_URL} \
               --set cxflow.jiraUserName=${JIRA_USERNAME} \
               --set cxflow.jiraToken=${JIRA_TOKEN} \
@@ -330,7 +321,7 @@ workflows:
           chart: ./helm/cxflow
           namespace: cxflow-${CIRCLE_SHA1::7}
           release-name: cxflow-${CIRCLE_SHA1::7}
-          version: v3.1.1
+          version: v3.2.1
           filters:
             branches:
               only: 
@@ -368,7 +359,7 @@ workflows:
           cluster-name: eks-cxflow-ci
           namespace: cxflow-${CIRCLE_SHA1::7}
           release-name: cxflow-${CIRCLE_SHA1::7}
-          version: v3.1.1
+          version: v3.2.1
           filters:
             branches:
               only: 
