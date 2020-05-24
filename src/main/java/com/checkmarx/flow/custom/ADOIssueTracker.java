@@ -303,14 +303,8 @@ public class ADOIssueTracker implements IssueTracker {
         String urlTemplate = String.format(CREATE_WORK_ITEM_URL_TEMPLATE, baseUrl);
         String workItemType = request.getAdditionalMetadata(Constants.ADO_ISSUE_KEY);
 
-        String adoNamespace;
+        String adoNamespace = determineNamespace(request);
 
-        if(isNotEmptyAdoNamespace()){
-            adoNamespace = properties.getNamespace();
-        }else{
-            adoNamespace = request.getNamespace();
-        }
-        
         URI result = new DefaultUriBuilderFactory()
                 .expand(urlTemplate, adoNamespace, adoProject, workItemType, properties.getApiVersion());
 
@@ -318,28 +312,39 @@ public class ADOIssueTracker implements IssueTracker {
         return result;
     }
 
-    private boolean isNotEmptyAdoNamespace() {
-        return !StringUtils.isEmpty(properties.getNamespace()) && !StringUtils.isEmpty(properties.getProjectName());
-    }
-
     private URI getSearchEndpoint(String adoProject, ScanRequest request) {
         String baseUrl = request.getAdditionalMetadata(Constants.ADO_BASE_URL_KEY);
         String urlTemplate = String.format(SEARCH_WORK_ITEM_URL_TEMPLATE, baseUrl);
-        String adoNamespace;
-        
-        //we use namespace from ado.properties only if the projectName in ado.properties is not empty as well
-        if(isNotEmptyAdoNamespace()){
-            adoNamespace = properties.getNamespace();
-        }else{
-            adoNamespace = request.getNamespace();
-        }
+
+        String adoNamespace = determineNamespace(request);
+
         URI result = new DefaultUriBuilderFactory()
                 .expand(urlTemplate, adoNamespace, adoProject, properties.getApiVersion());
 
         log.debug("Endpoint URI: {}", result);
         return result;
     }
-    
+
+    private String determineNamespace(ScanRequest request) {
+        log.debug("Determining ADO namespace.");
+        boolean canUseProperties = !StringUtils.isEmpty(properties.getNamespace()) &&
+                !StringUtils.isEmpty(properties.getProjectName());
+
+        String result;
+        if (canUseProperties) {
+            // We use namespace from ado.properties only if the projectName in ado.properties is not empty as well.
+            result = properties.getNamespace();
+            log.debug("Using the namespace from ADO properties ({}), because both namespace and project name " +
+                    "are specified in the properties.",
+                    result);
+        } else {
+            result = request.getNamespace();
+            log.debug("Using namespace from the scan request: {}", result);
+        }
+
+        return result;
+    }
+
     @Override
     public void closeIssue(Issue issue, ScanRequest request) {
         log.debug("Executing closeIssue Azure API call");

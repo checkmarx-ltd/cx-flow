@@ -192,7 +192,7 @@ public class ADOController {
                     .product(p)
                     .project(project)
                     .team(team)
-                    .namespace(repository.getProject().getName().replaceAll(" ","_"))
+                    .namespace(determineNamespace(repository))
                     .repoName(repository.getName())
                     .repoUrl(gitUrl)
                     .repoUrlWithAuth(gitAuthUrl)
@@ -385,7 +385,7 @@ public class ADOController {
                     .product(p)
                     .project(project)
                     .team(team)
-                    .namespace(repository.getProject().getName().replaceAll(" ","_"))
+                    .namespace(determineNamespace(repository))
                     .repoName(repository.getName())
                     .repoUrl(gitUrl)
                     .repoUrlWithAuth(gitAuthUrl)
@@ -432,6 +432,12 @@ public class ADOController {
                 .success(true)
                 .build());
 
+    }
+
+    private String determineNamespace(Repository repository) {
+        String result = repository.getProject().getName().replaceAll(" ", "_");
+        log.debug("Using namespace based on repository.project.name: {}", result);
+        return result;
     }
 
     /** Validates the base64 / basic auth received in the request. */
