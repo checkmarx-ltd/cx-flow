@@ -18,7 +18,6 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
     {{- end }}
-      serviceAccountName: {{ include "cxflow.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
@@ -34,55 +33,29 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           env:
-            - name: CHECKMARX_BASE_URL
-              value: {{ .Values.cxflow.checkmarxBaseUrl }}
-            - name: CHECKMARX_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Release.Name }}-secret
-                  key: checkmarx-password
-            - name: CHECKMARX_TEAM
-              value: {{ .Values.cxflow.checkmarxTeam }}
-            - name: CHECKMARX_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Release.Name }}-secret
-                  key: checkmarx-username
             - name: CX_FLOW_BUG_TRACKER
-              value: {{ .Values.cxflow.bugTracker }}
+              value: {{ .Values.cxflow.bugTracker | quote }}
             - name: GITHUB_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Release.Name }}-secret
-                  key: github-token
+              value: {{ .Values.cxflow.githubToken | quote }}
             - name: GITHUB_WEBHOOK_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Release.Name }}-secret
-                  key: github-webhook-token
+              value: {{ .Values.cxflow.githubWebhookToken | quote }}
             - name: MULTI_TENANT
               value: "true"
-            - name: CHECKMARX_CLIENT_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Release.Name }}-secret
-                  key: checkmarx-client-secret
             - name: JIRA_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Release.Name }}-secret
-                  key: jira-token
+              value: {{ .Values.cxflow.jiraToken | quote }}
             - name: JIRA_URL
-              value: {{ .Values.cxflow.jiraUrl }}
+              value: {{ .Values.cxflow.jiraUrl | quote }}
             - name: JIRA_USERNAME
-              value: {{ .Values.cxflow.jiraUserName }}
+              value: {{ .Values.cxflow.jiraUserName | quote }}
             - name: JIRA_PROJECT
-              value: {{ .Values.cxflow.jiraProject }}
+              value: {{ .Values.cxflow.jiraProject | quote }}
             - name: AZURE_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Release.Name }}-secret
-                  key: azure-token
+              value: {{ .Values.cxflow.azureToken | quote }}
+            - name: CHECKMARX_TEAM
+              value: {{ .Values.cxflow.checkmarxTeam }}
+          envFrom:
+            - secretRef:
+                name: {{ .Release.Name }}-external-secret
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
