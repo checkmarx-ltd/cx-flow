@@ -212,8 +212,6 @@ public class ADOController {
 
             request = ScanUtils.overrideMap(request, o);
             request.putAdditionalMetadata("statuses_url", pullUrl.concat("/statuses"));
-            String baseUrl = body.getResourceContainers().getAccount().getBaseUrl();
-            request.putAdditionalMetadata(Constants.ADO_BASE_URL_KEY,baseUrl);
             request.putAdditionalMetadata(Constants.ADO_ISSUE_KEY, adoIssueType);
             request.putAdditionalMetadata(Constants.ADO_ISSUE_BODY_KEY, adoIssueBody);
             request.putAdditionalMetadata(Constants.ADO_OPENED_STATE_KEY, adoOpenedState);
@@ -401,8 +399,7 @@ public class ADOController {
                     .bugTracker(bt)
                     .filters(filters)
                     .build();
-            String baseUrl = body.getResourceContainers().getAccount().getBaseUrl();
-            request.putAdditionalMetadata(Constants.ADO_BASE_URL_KEY,baseUrl);
+
             request.putAdditionalMetadata(Constants.ADO_ISSUE_KEY, adoIssueType);
             request.putAdditionalMetadata(Constants.ADO_ISSUE_BODY_KEY, adoIssueBody);
             request.putAdditionalMetadata(Constants.ADO_OPENED_STATE_KEY, adoOpenedState);
