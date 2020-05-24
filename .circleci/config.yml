@@ -386,14 +386,14 @@ workflows:
       - docker-push-stable:
           filters:
             branches:
-              only: master
+              only: develop
           requires:
             - e2e-tests
             - integration-tests
       - publish-github-release:
           filters:
             branches:
-              only: master
+              only: develop
           requires:
             - e2e-tests
             - integration-tests
