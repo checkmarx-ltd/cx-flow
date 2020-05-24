@@ -373,6 +373,13 @@ public class ADOController {
                 inc = incremental;
             }
 
+            String defaultBranch = repository.getDefaultBranch();
+            String [] branchPath = repository.getDefaultBranch().split("/");
+
+            if (branchPath.length == 5) {
+                defaultBranch = branchPath[2];
+            }
+
             ScanRequest request = ScanRequest.builder()
                     .application(app)
                     .product(p)
@@ -384,6 +391,7 @@ public class ADOController {
                     .repoUrlWithAuth(gitAuthUrl)
                     .repoType(ScanRequest.Repository.ADO)
                     .branch(currentBranch)
+                    .defaultBranch(defaultBranch)
                     .refs(ref)
                     .email(emails)
                     .incremental(inc)

@@ -86,6 +86,12 @@ public class HelperService {
         for( String b: branches){
             if(strMatches(b, branch)) return true;
         }
+
+        if (branches.isEmpty() && branch.equalsIgnoreCase(request.getDefaultBranch()))
+        {
+            log.info("Scanning default branch - {}", request.getDefaultBranch());
+            return true;
+        }
         log.info("Branch {} did not meet the scanning criteria [{}]", branch, branches);
         return false;
     }
