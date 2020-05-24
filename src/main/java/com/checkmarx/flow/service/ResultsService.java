@@ -80,13 +80,18 @@ public class ResultsService {
     public CompletableFuture<ScanResults> publishCombinedResults(ScanRequest scanRequest, ScanResults scanResults) {
         try {
             CompletableFuture<ScanResults> future = new CompletableFuture<>();
-            Integer projectId = Integer.parseInt(scanResults.getProjectId());
 
-            if(projectId != UNKNOWN_INT) {
-                new ScanResultsReport(scanResults.getSastScanId(), scanRequest, scanResults).log();
-                sendEmailNotification(scanRequest, scanResults);
-                processResults(scanRequest, scanResults, new ScanDetails(projectId, scanResults.getSastScanId(), null));
-                logScanDetails(scanRequest, projectId, scanResults);
+            if (scanResults.getProjectId() != null) {
+                Integer projectId = Integer.parseInt(scanResults.getProjectId());
+
+                if(projectId != UNKNOWN_INT) {
+                    new ScanResultsReport(scanResults.getSastScanId(), scanRequest, scanResults).log();
+                    sendEmailNotification(scanRequest, scanResults);
+                    processResults(scanRequest, scanResults, new ScanDetails(projectId, scanResults.getSastScanId(), null));
+                    logScanDetails(scanRequest, projectId, scanResults);
+                }
+            } else {
+                processResults(scanRequest, scanResults, new ScanDetails(null, scanResults.getSastScanId(), null));
             }
 
             future.complete(scanResults);
