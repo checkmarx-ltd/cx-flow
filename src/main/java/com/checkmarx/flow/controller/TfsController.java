@@ -182,6 +182,7 @@ public class TfsController {
                 .repoUrl(repository.getRemoteUrl())
                 .repoUrlWithAuth(addTokenToUrl(repository.getRemoteUrl() , properties.getToken()))
                 .branch(ScanUtils.getBranchFromRef(resource.getRefUpdates().get(0).getName()))
+                    .defaultBranch(repository.getDefaultBranch())
                 .email(determineEmails(resource))
                 .bugTracker(ScanUtils.getBugTracker(
                     assignee.orElse(null), 

@@ -130,6 +130,8 @@ public class GitLabController {
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
             String currentBranch = objectAttributes.getSourceBranch();
             String targetBranch = objectAttributes.getTargetBranch();
+            String defaultBranch = objectAttributes.getTarget().getDefaultBranch();
+
             List<String> branches = new ArrayList<>();
             List<Filter> filters;
 
@@ -185,6 +187,7 @@ public class GitLabController {
                     .repoUrlWithAuth(gitAuthUrl)
                     .repoType(ScanRequest.Repository.GITLAB)
                     .branch(currentBranch)
+                    .defaultBranch(defaultBranch)
                     .mergeTargetBranch(targetBranch)
                     .mergeNoteUri(mergeEndpoint)
                     .refs(Constants.CX_BRANCH_PREFIX.concat(currentBranch))
