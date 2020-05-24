@@ -61,6 +61,9 @@ public class BugTrackerTriggerEvent {
                 adoService.startBlockMerge(request);
                 break;
 
+            case JIRA:
+                break; // No action is needed
+
             default:
                 log.warn("Bug-Tracker type: {} is not supported", bugTrackerType);
         }
