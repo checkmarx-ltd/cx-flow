@@ -376,7 +376,7 @@ public class ADOController {
             String defaultBranch = repository.getDefaultBranch();
             String [] branchPath = repository.getDefaultBranch().split("/");
 
-            if (branchPath.length == 5) {
+            if (branchPath.length == 3) {
                 defaultBranch = branchPath[2];
             }
 
