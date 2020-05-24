@@ -29,18 +29,26 @@ public class ProjectNameGenerator {
         String branch = request.getBranch();
         String namespace = request.getNamespace();
 
+        log.debug("Determining project name for vulnerability scanner.");
         String nameOverride = tryGetProjectNameFromScript(request);
         if (StringUtils.isNotEmpty(nameOverride)) {
+            log.debug("Project name override is present. Using the override: {}.", nameOverride);
             projectName = nameOverride;
         } else if (cxProperties.isMultiTenant() && StringUtils.isNotEmpty(repoName)) {
             projectName = repoName;
             if (StringUtils.isNotEmpty(branch)) {
+                log.debug("Multi-tenant mode is enabled. Branch is specified. Using repo name and branch.");
                 projectName = projectName.concat("-").concat(branch);
+            }
+            else {
+                log.debug("Multi-tenant mode is enabled. Branch is not specified. Using repo name only.");
             }
         } else {
             if (StringUtils.isNotEmpty(namespace) && StringUtils.isNotEmpty(repoName) && StringUtils.isNotEmpty(branch)) {
+                log.debug("Namespace, repo name and branch are specified. Using them all.");
                 projectName = namespace.concat("-").concat(repoName).concat("-").concat(branch);
             } else if (StringUtils.isNotEmpty(request.getApplication())) {
+                log.debug("Using application name.");
                 projectName = request.getApplication();
             } else {
                 final String message = "Namespace (--namespace)/RepoName(--repo-name)/Branch(--branch) OR Application (--app) must be provided if the Project is not provided (--cx-project)";
@@ -49,15 +57,22 @@ public class ProjectNameGenerator {
             }
         }
 
-        if (projectName != null) {
+        return normalize(projectName);
+    }
+
+    private static String normalize(String rawProjectName) {
+        String result = null;
+        if (rawProjectName != null) {
             //only allow specific chars in project name in checkmarx
-            projectName = projectName.replaceAll("[^a-zA-Z0-9-_.]+", "-");
-            log.info("Project Name being used {}", projectName);
+            result = rawProjectName.replaceAll("[^a-zA-Z0-9-_.]+", "-");
+            if (!result.equals(rawProjectName)) {
+                log.debug("Project name ({}) has been normalized to allow only valid characters.", rawProjectName);
+            }
+            log.info("Project name being used: {}", result);
         } else {
             log.warn("Project name returned NULL");
         }
-
-        return projectName;
+        return result;
     }
 
     private String tryGetProjectNameFromScript(ScanRequest request) {
@@ -78,6 +93,7 @@ public class ProjectNameGenerator {
                 log.error("Error reading script file for checkmarx project {}", scriptFile, e);
             }
         } else if (StringUtils.isNotEmpty(project)) {
+            log.info("External script is not specified. Using project name from scan request: {}", project);
             return project;
         }
         return null;  //null will indicate no override of team will take place
