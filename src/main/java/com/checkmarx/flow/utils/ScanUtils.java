@@ -685,7 +685,7 @@ public class ScanUtils {
                     .forEach(f -> {
 
                         Arrays.asList(
-                                f.getId(),
+                                '`'+f.getId()+'`',
                                 extractPackageNameFromFindings(r, f),
                                 f.getSeverity().name(),
 //                                "N\\A",
@@ -699,7 +699,7 @@ public class ScanUtils {
                         if (!StringUtils.isEmpty(f.getCveName())) {
                             body.append("[").append(f.getCveName()).append("](https://nvd.nist.gov/vuln/detail/").append(f.getCveName()).append(")");
                         } else {
-                            body.append("NVD link is not supported");
+                            body.append("N\\A");
                         }
                         body.append("|" + CRLF);
                     });
