@@ -375,6 +375,7 @@ public class GitHubController {
                     .repoUrlWithAuth(gitAuthUrl)
                     .repoType(ScanRequest.Repository.GITHUB)
                     .branch(currentBranch)
+                    .defaultBranch(repository.getDefaultBranch())
                     .refs(event.getRef())
                     .email(emails)
                     .incremental(inc)

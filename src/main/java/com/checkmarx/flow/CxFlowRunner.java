@@ -107,6 +107,7 @@ public class CxFlowRunner implements ApplicationRunner {
         List<String> excludeFolders;
         ScanRequest.Repository repoType = ScanRequest.Repository.NA;
         boolean osa;
+        boolean force;
         FlowOverride o = null;
         ObjectMapper mapper = new ObjectMapper();
         String uid = helperService.getShortUid();
@@ -151,6 +152,7 @@ public class CxFlowRunner implements ApplicationRunner {
         mergeId = getOptionValues(args,"merge-id");
         preset = getOptionValues(args,"preset");
         osa = args.getOptionValues("osa") != null;
+        force = args.getOptionValues("forcescan") != null;
         /*Collect command line options (List of Strings)*/
         emails = args.getOptionValues("emails");
         severity = args.getOptionValues("severity");
@@ -316,6 +318,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 .filters(filters)
 				.altProject(altProject)
                 .altFields(altFields)
+                .forceScan(force)
                 .build();
 
         request = ScanUtils.overrideMap(request, o);
