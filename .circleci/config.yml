@@ -337,6 +337,7 @@ workflows:
           filters:
             branches:
               only:
+                - master
                 - develop
                 - /pr-.*/
                 - /pr .*/
@@ -350,6 +351,7 @@ workflows:
           filters:
             branches:
               only: 
+                - master
                 - develop
                 - /pr-.*/
                 - /pr .*/
@@ -365,6 +367,7 @@ workflows:
           filters:
             branches:
               only: 
+                - master
                 - develop
                 - /pr-.*/
                 - /pr .*/
@@ -375,6 +378,7 @@ workflows:
           filters:
             branches:
               only: 
+                - master
                 - develop
                 - /pr-.*/
                 - /pr .*/
@@ -386,14 +390,14 @@ workflows:
       - docker-push-stable:
           filters:
             branches:
-              only: develop
+              only: master
           requires:
             - e2e-tests
             - integration-tests
       - publish-github-release:
           filters:
             branches:
-              only: develop
+              only: master
           requires:
             - e2e-tests
             - integration-tests
@@ -405,6 +409,7 @@ workflows:
           filters:
             branches:
               only: 
+                - master
                 - develop
                 - /pr-.*/
                 - /pr .*/
