@@ -50,6 +50,11 @@ public class ScanRequest {
     @Builder.Default
     private boolean scanPresetOverride = false;
 
+    /**
+    Also known as scan engine configuration.
+     */
+    private String scanConfiguration;
+
     private List<String> excludeFiles;
     private List<String> excludeFolders;
     private Repository repoType;

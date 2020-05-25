@@ -1,4 +1,3 @@
-@Skip
 @Integration
 Feature: CxFlow should preserve SAST project settings if the project already exists in SAST
 
@@ -13,5 +12,5 @@ Feature: CxFlow should preserve SAST project settings if the project already exi
     Then project preset is still "<initial preset>" and scan configuration is "<initial config>"
 
     Examples:
-      | initial preset  | initial config      | global preset     | global config         | project name                 |
-      | High and Medium | Multi-language Scan | Checkmarx Default | Default Configuration | OverwritingProjectConfigTest |
+      | project name                 | initial preset  | initial config      | global preset     | global config         |
+      | OverwritingProjectConfigTest | High and Medium | Multi-language Scan | Checkmarx Default | Default Configuration |
