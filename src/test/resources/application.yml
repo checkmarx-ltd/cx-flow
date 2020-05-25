@@ -1,5 +1,5 @@
 server:
-  port: ${PORT:8585}
+  port: ${PORT:8080}
 
 logging:
   file:
@@ -22,24 +22,24 @@ logging:
 cx-flow:
   # Agreed upon shared API token
   token: xxxx
-  bug-tracker: Json
+  bug-tracker: NONE
   bug-tracker-impl:
     - CxXml
     - Json
-    - JIRA
+ #   - JIRA
     - GitLab
     - GitHub
     - Csv
     - Azure
     - ServiceNow
   branches:
-    - develop
+    - udi-tests-2
     - master
-    - security
+    - udi-test-ci-3
   filter-severity:
     - High
-  enabled-vulnerability-scanners:
-  - sast
+    - Medium
+    - Low
   mitre-url: https://cwe.mitre.org/data/definitions/%s.html
   wiki-url: https://checkmarx.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
   codebash-url: https://cxa.codebashing.com/courses/
@@ -53,16 +53,20 @@ cx-flow:
 
 
 checkmarx:
-  username: xxx
-  password: xxx
+  username: admin@cx
+  password: Cx123456!
   client-secret: 014DF517-39D1-4453-B7B3-9930C563627C
-  base-url: http://localhost:8100
+  base-url: http://10.32.0.11
+#  username: admin@cx
+#  password: Cx123456!
+#  client-secret: 014DF517-39D1-4453-B7B3-9930C563627C
+#  base-url: http://10.32.0.240
   url: ${checkmarx.base-url}/cxrestapi
   multi-tenant: true
   incremental: true
   scan-preset: Checkmarx Default
   configuration: Default Configuration
-  team: \CxServer\SP\Checkmarx
+  team: \CxServer\SP
   scan-timeout: 120
   #WSDL Config
   portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
@@ -80,19 +84,11 @@ checkmarx:
   #exclude-files:
   #exclude-folders:
 
-sca:
-  appUrl: https://xxxxx
-  apiUrl: https://xxxxx
-  accessControlUrl: https://xxxxx
-  tenant: xxxxx
-  username: xxxxx
-  password: xxxxx
-
 jira:
-  url: http://localhost:8080
-  username: xxxx
-  token: xxxx
-  project: APPSEC
+  url: https://cxflow.atlassian.net/
+  username: cxflowtestuser@checkmarx.com
+  token: vFqIzQka0hLXvFj3Z8gVE4C6
+  project: UACT
   issue-type: Bug
   priorities:
     High: High
@@ -157,8 +153,8 @@ jira:
 
 github:
   webhook-token: 1234
-  token: xxxx
-  url: https://github.com
+  token: 85fadbade418c01249935bf77dd7ae45964b6d5a
+  url: https://github.com/cxflowtestuser/Code_Injection
   api-url: https://api.github.com/repos/
   block-merge: true
   error-merge: true
@@ -166,7 +162,7 @@ github:
   # null value prevents CxFlow from trying to download config override from GitHub.
   # Added to get more stable results for "high load" scenario in webhook feature.
   config-as-code: null
-
+  #config-as-code: cx.config
 gitlab:
   webhook-token: 1234
   url: https://gitlab.com
@@ -191,7 +187,7 @@ bitbucket:
 
 azure:
   webhook-token: cxflow:1234
-  token: xxxx
+  token: qrilzn2mcudktrmnkplv7yzfbajb6q3kjhsdskbgsnw37w23i54q
   url: https://dev.azure.com/
   issue-type: issue
   # This version corresponds to TFS 2018 Update 2 and higher (including cloud)

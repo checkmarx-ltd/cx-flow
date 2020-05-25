@@ -162,7 +162,6 @@ task unitTest(type: Test) {
             include 'com/checkmarx/flow/filter/**'
             include 'com/checkmarx/flow/service/**'
             include 'com/checkmarx/flow/utils/**'
-
         }
         testLogging {
             events "passed", "skipped", "failed"
@@ -247,6 +246,9 @@ task integrationTest(type: Test) {
             include 'com/checkmarx/flow/cucumber/integration/azure/publishing/github2ado/*'
             include 'com/checkmarx/flow/cucumber/integration/jira/analytics/*'
             include 'com/checkmarx/flow/cucumber/integration/cxconfig/*'
+            include 'com/checkmarx/flow/cucumber/integration/pullrequest/updatecomments/*'
+            include 'com/checkmarx/flow/cucumber/integration/cxconfigbugtracker/*'
+            /*
             exclude 'com/checkmarx/flow/cucumber/integration/end2end/genericendtoend/**'
             exclude 'com/checkmarx/flow/cucumber/integration/end2end/github2jira/**'
             exclude 'com/checkmarx/flow/cucumber/integration/publishprocess/**'
@@ -261,6 +263,8 @@ task integrationTest(type: Test) {
             exclude 'com/checkmarx/flow/cucumber/component/**'
             exclude 'com/checkmarx/flow/cucumber/integration/scan/**'
             exclude 'com/checkmarx/flow/cucumber/integration/jira/Load/**'
+
+             */
         }
         testLogging {
             events "passed", "skipped", "failed"
