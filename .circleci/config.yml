@@ -337,6 +337,7 @@ workflows:
           filters:
             branches:
               only:
+                - master
                 - develop
                 - /pr-.*/
                 - /pr .*/
@@ -350,6 +351,7 @@ workflows:
           filters:
             branches:
               only: 
+                - master
                 - develop
                 - /pr-.*/
                 - /pr .*/
@@ -365,6 +367,7 @@ workflows:
           filters:
             branches:
               only: 
+                - master
                 - develop
                 - /pr-.*/
                 - /pr .*/
@@ -375,6 +378,7 @@ workflows:
           filters:
             branches:
               only: 
+                - master
                 - develop
                 - /pr-.*/
                 - /pr .*/
@@ -405,6 +409,7 @@ workflows:
           filters:
             branches:
               only: 
+                - master
                 - develop
                 - /pr-.*/
                 - /pr .*/

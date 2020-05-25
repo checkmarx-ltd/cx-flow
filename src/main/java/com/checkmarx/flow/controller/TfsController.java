@@ -196,8 +196,6 @@ public class TfsController {
         if ("pull".equals(action)) {     
             request.putAdditionalMetadata("statuses_url", resource.getUrl().concat("/statuses"));
         }
-        String baseUrl = body.getResourceContainers().getCollection().getBaseUrl();
-        request.putAdditionalMetadata(Constants.ADO_BASE_URL_KEY,baseUrl);
         request.putAdditionalMetadata(Constants.ADO_ISSUE_KEY, adoIssueType.orElse(properties.getIssueType()));
         request.putAdditionalMetadata(Constants.ADO_ISSUE_BODY_KEY, adoIssueBody.orElse(properties.getIssueBody()));
         request.putAdditionalMetadata(Constants.ADO_OPENED_STATE_KEY, adoOpenedState.orElse(properties.getOpenStatus()));

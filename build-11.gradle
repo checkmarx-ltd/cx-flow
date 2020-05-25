@@ -37,7 +37,7 @@ apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
 
 group = 'com.checkmarx'
-version = '1.5.4'
+version = '1.6.0'
 sourceCompatibility = 1.8
 def cucumberVersion = '4.7.4'
 def junitVersion = '5.5.0'
