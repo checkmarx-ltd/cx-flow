@@ -1,4 +1,4 @@
-package com.checkmarx.flow.cucumber.integration.sca;
+package com.checkmarx.flow.cucumber.integration.sca_scanner;
 
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.FlowProperties;
@@ -93,10 +93,10 @@ public class SCARemoteRepoScanSteps {
     }
 
 
-    private ScanRequest getBasicScanRequest(String projectName, String repoUrl) {
+    private ScanRequest getBasicScanRequest(String projectName, String repoWithAuth) {
         return ScanRequest.builder()
                 .project(projectName)
-                .repoUrl(repoUrl)
+                .repoUrlWithAuth(repoWithAuth)
                 .build();
     }
 }
