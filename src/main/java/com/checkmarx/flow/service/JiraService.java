@@ -273,7 +273,12 @@ public class JiraService {
                     && !ScanUtils.empty(namespace)
                     && !ScanUtils.empty(repoName)
                     && !ScanUtils.empty(branch)) {
-                summary = String.format(ScanUtils.JIRA_ISSUE_KEY, issuePrefix, vulnerability, filename, branch, issuePostfix);
+                List<ScanResults.ScaDetails> scaDetails = issue.getScaDetails();
+                if (scaDetails != null) {
+                    summary = String.format(ScanUtils.JIRA_ISSUE_KEY, issuePrefix, scaDetails.get(0).getFinding().getSeverity() + " Vulnerable Package", scaDetails.get(0).getVulnerabilityPackage().getName(), branch, issuePostfix);
+                } else {
+                    summary = String.format(ScanUtils.JIRA_ISSUE_KEY, issuePrefix, vulnerability, filename, branch, issuePostfix);
+                }
             } else {
                 summary = String.format(ScanUtils.JIRA_ISSUE_KEY_2, issuePrefix, vulnerability, filename, issuePostfix);
             }
@@ -792,30 +797,37 @@ public class JiraService {
         return jiraMap;
     }
 
-    private Map<String, ScanResults.XIssue> getIssueMap(List<ScanResults.XIssue> issues, ScanRequest request) {
-        String issuePrefix = jiraProperties.getIssuePrefix();
-        String issuePostfix = jiraProperties.getIssuePostfix();
-        if (issuePrefix == null) {
-            issuePrefix = "";
-        }
-        if (issuePostfix == null) {
-            issuePostfix = "";
-        }
+    private Map<String, ScanResults.XIssue> getIssueMap(ScanResults results, ScanRequest request) {
+        List<ScanResults.XIssue> issues = new ArrayList<>();
+
+        Optional.ofNullable(results.getScaResults()).ifPresent( s -> {
+            List<ScanResults.XIssue> scaIssues = ScanUtils.scaToXIssues(s);
+            issues.addAll(scaIssues);
+        });
+
+        Optional.ofNullable(results.getXIssues()).ifPresent( i -> {
+            issues.addAll(results.getXIssues());
+        });
+
+        String issuePrefix = Optional.ofNullable(jiraProperties.getIssuePrefix()).orElse("");
+        String issuePostfix = Optional.ofNullable(jiraProperties.getIssuePostfix()).orElse("");
+
         Map<String, ScanResults.XIssue> map = new HashMap<>();
 
-        if (!flowProperties.isTrackApplicationOnly()
-                && !ScanUtils.empty(request.getNamespace())
-                && !ScanUtils.empty(request.getRepoName())
-                && !ScanUtils.empty(request.getBranch())) {
-            for (ScanResults.XIssue issue : issues) {
-                String key = String.format(ScanUtils.JIRA_ISSUE_KEY, issuePrefix, issue.getVulnerability(), issue.getFilename(), request.getBranch(), issuePostfix);
-                map.put(key, issue);
-            }
-        } else {
-            for (ScanResults.XIssue issue : issues) {
-                String key = String.format(ScanUtils.JIRA_ISSUE_KEY_2, issuePrefix, issue.getVulnerability(), issue.getFilename(), issuePostfix);
-                map.put(key, issue);
-            }
+        boolean useBranch = (
+                !flowProperties.isTrackApplicationOnly()
+                        && !ScanUtils.anyEmpty(
+                        request.getNamespace(),
+                        request.getRepoName(),
+                        request.getBranch())
+        );
+        for (ScanResults.XIssue issue : issues) {
+            String key = useBranch
+                    ? issue.getScaDetails() == null
+                    ? String.format(ScanUtils.JIRA_ISSUE_KEY, issuePrefix, issue.getVulnerability(), issue.getFilename(), request.getBranch(), issuePostfix)
+                    : String.format(ScanUtils.JIRA_ISSUE_KEY, issuePrefix, issue.getScaDetails().get(0).getFinding().getSeverity(), issue.getScaDetails().get(0).getVulnerabilityPackage().getName(), request.getBranch(), issuePostfix)
+                    : String.format(ScanUtils.JIRA_ISSUE_KEY_2, issuePrefix, issue.getVulnerability(), issue.getFilename(), issuePostfix);
+            map.put(key, issue);
         }
         return map;
     }
@@ -829,7 +841,12 @@ public class JiraService {
                 && !ScanUtils.empty(request.getNamespace())
                 && !ScanUtils.empty(request.getRepoName())
                 && !ScanUtils.empty(request.getBranch())) {
+            Optional.ofNullable(issue.getScaDetails()).ifPresent(s -> {
+                body.append(s.get(0).getFinding().getDescription()).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
+                body.append(String.format(ScanUtils.JIRA_ISSUE_BODY, issue.getScaDetails().get(0).getFinding().getSeverity() + " Vulnerable Package", issue.getScaDetails().get(0).getVulnerabilityPackage().getName(), request.getBranch())).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
+            });
             body.append(String.format(ScanUtils.JIRA_ISSUE_BODY, issue.getVulnerability(), issue.getFilename(), request.getBranch())).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
+
         } else {
             body.append(String.format(ScanUtils.JIRA_ISSUE_BODY_2, issue.getVulnerability(), issue.getFilename())).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
         }
@@ -973,6 +990,23 @@ public class JiraService {
                 body.append(ScanUtils.CRLF);
             }
         }
+
+        Optional.ofNullable(issue.getScaDetails()).ifPresent(s -> {
+            int count = issue.getScaDetails().size();
+            Map<String, String> scaDetailsMap = new HashMap<>();
+            ScanResults.ScaDetails scaDetails = s.stream().findAny().get();
+
+            scaDetailsMap.put("Vulnerabilities Count", Integer.toString(count));
+            scaDetailsMap.put("Package", scaDetails.getVulnerabilityPackage().getName());
+            scaDetailsMap.put("Version", scaDetails.getVulnerabilityPackage().getVersion());
+            scaDetailsMap.put("License", scaDetails.getVulnerabilityPackage().getLicenses().toString());
+            scaDetailsMap.put("Dependency Type", scaDetails.getVulnerabilityPackage().getPackageRepository());
+
+            scaDetailsMap.forEach((key, value) -> {
+                body.append(key).append(": ").append(value).append(ScanUtils.CRLF);
+            });
+        });
+
         if (!ScanUtils.empty(jiraProperties.getDescriptionPostfix())) {
             body.append(jiraProperties.getDescriptionPostfix());
         }
@@ -1015,7 +1049,7 @@ public class JiraService {
 
         log.info("Processing Results and publishing findings to Jira");
 
-        map = this.getIssueMap(results.getXIssues(), request);
+        map = this.getIssueMap(results, request);
         setMapWithScanResults(map, nonPublishedScanResultsMap);
         jiraMap = this.getJiraIssueMap(this.getIssues(request));
 
