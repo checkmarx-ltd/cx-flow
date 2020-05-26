@@ -24,6 +24,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.EnumSet;
 import java.util.stream.Collectors;
 
 import javax.validation.constraints.NotNull;
@@ -85,6 +86,26 @@ public class ScanUtils {
         }
         return false;
     }
+
+    public static List<ScanResults.XIssue> scaToXIssues(SCAResults scaResults) {
+        List<ScanResults.XIssue> issueList = new ArrayList<>();
+
+        List<Finding> findings = scaResults.getFindings();
+        EnumSet.range(Filter.Severity.HIGH, Filter.Severity.LOW)
+                .forEach(s -> {
+                    List<Finding> findingsListBySeverity = getFindingsListBySeverity(findings, s);
+                    Map<String, List<Finding>> packageMap = findingsListBySeverity.stream()
+                            .collect(Collectors.groupingBy(Finding::getPackageId));
+                    packageMap.forEach((k,v) -> {
+                        ScanResults.XIssue issue = ScanResults.XIssue.builder()
+                                .build();
+                        issue.setScaDetails(getScaDetailsListBySeverity(scaResults, v));
+                        issueList.add(issue);
+                    });
+                });
+        return issueList;
+    }
+
     /**
      * Create List of filters based on String lists of severity, cwe, category
      * @param flowProperties
@@ -335,14 +356,14 @@ public class ScanUtils {
                     if (thresholds != null &&
                             !(thresholds.getHigh()==null && thresholds.getMedium()==null &&
                                     thresholds.getLow()==null && thresholds.getInfo()==null)) {
-                                
+
                             Map<FindingSeverity,Integer> thresholdsMap = ScanUtils.getThresholdsMap(thresholds);
                             if(!thresholdsMap.isEmpty()) {
                                 flowProperties.setThresholds(thresholdsMap);
                             }
 
                         overridePropertiesMap.put("thresholds", convertMapToString(thresholdsMap));
-                    } 
+                    }
                 }
             }
 
@@ -418,7 +439,7 @@ public class ScanUtils {
         if(thresholds.getInfo()!=null){
             map.put(FindingSeverity.INFO, thresholds.getInfo());
         }
-        
+
         return  map;
      }
 
@@ -1127,13 +1148,38 @@ public class ScanUtils {
         }
         return body.toString();
     }
-    
+
+    private static List<Finding> getFindingsListBySeverity(List<Finding> findingList, Filter.Severity severity) {
+        return findingList.stream()
+                .filter(f -> f.getSeverity().name().equals(severity.name()))
+                .collect(Collectors.toList());
+    }
+
+    private static Package getScaPackageByFinding(List<Package> packageList, Finding finding) {
+        return packageList.stream().filter(p -> p.id.equals(finding.getPackageId())).findFirst().orElse(new Package());
+    }
+
     private static String extractPackageNameFromFindings(SCAResults r, Finding f) {
         return r.getPackages().stream().filter(p -> p.id.equals(f.getPackageId())).map(Package::getName).findFirst().orElse("");
     }
 
     private static String extractPackageVersionFromFindings(SCAResults r, Finding f) {
         return r.getPackages().stream().filter(p -> p.id.equals(f.getPackageId())).map(Package::getVersion).findFirst().orElse("");
+    }
+
+    private static List<ScanResults.ScaDetails> getScaDetailsListBySeverity(SCAResults scaResults, List<Finding> scaFindingsBySeverity) {
+        List<ScanResults.ScaDetails> scaDetailsList = new ArrayList<>();
+
+        scaFindingsBySeverity.forEach(f -> {
+            ScanResults.ScaDetails scaDetails = ScanResults.ScaDetails.builder()
+                    .finding(f)
+                    .vulnerabilityPackage(getScaPackageByFinding(scaResults.getPackages(), f))
+                    .vulnerabilityLink(constructVulnerabilityUrl(scaResults.getWebReportLink(), f))
+                    .build();
+
+            scaDetailsList.add(scaDetails);
+        });
+        return scaDetailsList;
     }
 
     private static String constructVulnerabilityUrl(String allVulnerabilitiesReportUrl, Finding finding) {
