@@ -89,50 +89,56 @@ public class BitBucketService {
         }
     }
 
-    void setBuildStartStatus(ScanRequest request){
+    public void setBuildStartStatus(ScanRequest request){
+
         if(properties.isBlockMerge()) {
-            updateInProgressBuildStatus(request, BUILD_IN_PROGRESS);
+
+            String cxBaseUrl = request.getAdditionalMetadata("cxBaseUrl");
+            String scanQueueUrl = "/CxWebClient/UserQueue.aspx";
+
+            JSONObject buildStatusBody = createBuildStatusRequestBody(BUILD_IN_PROGRESS,"cxflow","Checkmarx Scan Initiated", cxBaseUrl.concat(scanQueueUrl) ,"Waiting for scan to complete..");
+
+            sendBuildStatus(request,buildStatusBody.toString());
         }
     }
 
-    void setBuildEndStatus(ScanRequest request,ScanResults results, ScanDetails scanDetails){
+    public void setBuildEndStatus(ScanRequest request,ScanResults results, ScanDetails scanDetails){
 
         if(properties.isBlockMerge()) {
+
             String status = BUILD_SUCCESSFUL;
             if (!mergeResultEvaluator.isMergeAllowed(results, properties, new PullRequestReport(scanDetails, request))) {
                 status = BUILD_FAILED;
             }
 
-            String buildStatusUrl = request.getAdditionalMetadata("buildStatusUrl");
+            JSONObject buildStatusBody = createBuildStatusRequestBody(status,"cxflow","Checkmarx Scan Results", results.getLink(),results.getScanSummary().toString());
 
-            JSONObject buildStatusBody = new JSONObject();
-            buildStatusBody.put("state", status);
-            buildStatusBody.put("key", "cxflow");
-            buildStatusBody.put("name", "Checkmarx Scan Results");
-            buildStatusBody.put("url", results.getLink());
-            buildStatusBody.put("description", results.getScanSummary().toString());
-
-            HttpEntity httpEntity = new HttpEntity<>(buildStatusBody.toString(), createAuthHeaders());
-            restTemplate.exchange(buildStatusUrl, HttpMethod.POST, httpEntity, String.class);
+            sendBuildStatus(request,buildStatusBody.toString());
         }
     }
 
-    void updateInProgressBuildStatus(ScanRequest request, String status)
+    private JSONObject createBuildStatusRequestBody(String buildState, String buildKey, String buildName, String buildUrl, String buildDescription)
     {
-            String buildStatusUrl = request.getAdditionalMetadata("buildStatusUrl");
-            String cxBaseUrl = request.getAdditionalMetadata("cxBaseUrl");
+        JSONObject buildJsonBody = new JSONObject();
+        buildJsonBody.put("state", buildState);
+        buildJsonBody.put("key", buildKey);
+        buildJsonBody.put("url", buildUrl);
 
-            JSONObject buildStatusBody = new JSONObject();
-            buildStatusBody.put("state", status);
-            buildStatusBody.put("key", "cxflow");
-            buildStatusBody.put("url", cxBaseUrl.concat("/CxWebClient/UserQueue.aspx"));
+        //Following fields are optional
+        if(!ScanUtils.empty(buildName)) {
+            buildJsonBody.put("name", buildName);
+        }
+        if(!ScanUtils.empty(buildDescription)) {
+            buildJsonBody.put("description", buildDescription);
+        }
+        return buildJsonBody;
+    }
 
-            //Following is optional
-            buildStatusBody.put("name", "Checkmarx Scan Initiated");
-            buildStatusBody.put("description", "Waiting for scan to complete..");
-
-            HttpEntity httpEntity = new HttpEntity<>(buildStatusBody.toString(), createAuthHeaders());
-            restTemplate.exchange(buildStatusUrl, HttpMethod.POST, httpEntity, String.class);
+    private void sendBuildStatus(ScanRequest request, String buildStatusRequestBody)
+    {
+        String buildStatusApiUrl = request.getAdditionalMetadata("buildStatusUrl");
+        HttpEntity httpEntity = new HttpEntity<>(buildStatusRequestBody, createAuthHeaders());
+        restTemplate.exchange(buildStatusApiUrl, HttpMethod.POST, httpEntity, String.class);
     }
 
     public void sendMergeComment(ScanRequest request, String comment){
@@ -145,7 +151,7 @@ public class BitBucketService {
         restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
-    void sendServerMergeTask(ScanRequest request, String comment){
+    private void sendServerMergeTask(ScanRequest request, String comment){
 
         ResponseEntity<String> retrievedResult = retrieveExistingOpenTasks(request);
         Object cxFlowTask =  getCxFlowTask(retrievedResult);
