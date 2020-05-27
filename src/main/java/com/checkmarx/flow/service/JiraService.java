@@ -822,11 +822,14 @@ public class JiraService {
                         request.getBranch())
         );
         for (ScanResults.XIssue issue : issues) {
-            String key = useBranch
-                    ? issue.getScaDetails() == null
-                    ? String.format(ScanUtils.JIRA_ISSUE_KEY, issuePrefix, issue.getVulnerability(), issue.getFilename(), request.getBranch(), issuePostfix)
-                    : String.format(ScanUtils.JIRA_ISSUE_KEY, issuePrefix, issue.getScaDetails().get(0).getFinding().getSeverity(), issue.getScaDetails().get(0).getVulnerabilityPackage().getName(), request.getBranch(), issuePostfix)
-                    : String.format(ScanUtils.JIRA_ISSUE_KEY_2, issuePrefix, issue.getVulnerability(), issue.getFilename(), issuePostfix);
+            String key;
+            if (useBranch) {
+                key = issue.getScaDetails() == null
+                        ? String.format(ScanUtils.JIRA_ISSUE_KEY, issuePrefix, issue.getVulnerability(), issue.getFilename(), request.getBranch(), issuePostfix)
+                        : String.format(ScanUtils.JIRA_ISSUE_KEY, issuePrefix, issue.getScaDetails().get(0).getFinding().getSeverity() + " Vulnerable Package", issue.getScaDetails().get(0).getVulnerabilityPackage().getName(), request.getBranch(), issuePostfix);
+            } else {
+                key = String.format(ScanUtils.JIRA_ISSUE_KEY_2, issuePrefix, issue.getVulnerability(), issue.getFilename(), issuePostfix);
+            }
             map.put(key, issue);
         }
         return map;
@@ -1054,12 +1057,13 @@ public class JiraService {
         jiraMap = this.getJiraIssueMap(this.getIssues(request));
 
         for (Map.Entry<String, ScanResults.XIssue> xIssue : map.entrySet()) {
+            String issueCurrentKey = xIssue.getKey();
             try {
                 ScanResults.XIssue currentIssue = xIssue.getValue();
 
                 /*Issue already exists -> update and comment*/
-                if (jiraMap.containsKey(xIssue.getKey())) {
-                    Issue issue = jiraMap.get(xIssue.getKey());
+                if (jiraMap.containsKey(issueCurrentKey)) {
+                    Issue issue = jiraMap.get(issueCurrentKey);
                     if (xIssue.getValue().isAllFalsePositive()) {
                         //All issues are false positive, so issue should be closed
                         log.debug("All issues are false positives");
@@ -1070,11 +1074,11 @@ public class JiraService {
                     else if (!issue.getLabels().contains(jiraProperties.getFalsePositiveLabel())) {
                         updateIssueAndAddToNewIssuesList(request, updatedIssues, xIssue, currentIssue, issue);
                     } else {
-                        log.info("Skipping issue marked as false-positive or has False Positive state with key {}", xIssue.getKey());
+                        log.info("Skipping issue marked as false-positive or has False Positive state with key {}", issueCurrentKey);
                     }
                 } else {
                     /*Create the new issue*/
-                    if (!currentIssue.isAllFalsePositive() && (!jiraProperties.isChild() || (!parentCheck(xIssue.getKey(), issuesParent) && !grandparentCheck(xIssue.getKey(), issuesGrandParent)))) {
+                    if (!currentIssue.isAllFalsePositive() && (!jiraProperties.isChild() || (!parentCheck(issueCurrentKey, issuesParent) && !grandparentCheck(issueCurrentKey, issuesGrandParent)))) {
                         if (jiraProperties.isChild()) {
                             log.info("Issue not found in parent creating issue for child");
                         }
@@ -1082,11 +1086,11 @@ public class JiraService {
                     }
                 }
             } catch (RestClientException e) {
-                log.error("Error occurred while processing issue with key {}", xIssue.getKey(), e);
+                log.error("Error occurred while processing issue with key {}", issueCurrentKey, e);
                 throw new JiraClientException();
             }
             log.debug("Issue: {} successfully updated. Removing it from dynamic scan results map", xIssue.getValue());
-            nonPublishedScanResultsMap.remove(xIssue.getKey());
+            nonPublishedScanResultsMap.remove(issueCurrentKey);
         }
 
         /*Check if an issue exists in Jira but not within results and close if not*/
