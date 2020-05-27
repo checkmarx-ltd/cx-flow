@@ -7,9 +7,9 @@ import com.atlassian.jira.rest.client.api.domain.input.FieldInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
 import com.atlassian.jira.rest.client.api.domain.input.TransitionInput;
 import com.atlassian.jira.rest.client.internal.async.CustomAsynchronousJiraRestClientFactory;
-import com.checkmarx.flow.constants.JiraConstants;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.constants.JiraConstants;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanDetails;
 import com.checkmarx.flow.dto.ScanRequest;
@@ -20,7 +20,6 @@ import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.google.common.collect.ImmutableMap;
-import io.atlassian.util.concurrent.Promise;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
@@ -37,6 +36,13 @@ import java.util.stream.Collectors;
 
 @Service
 public class JiraService {
+
+    public static final String JIRA_ISSUE_KEY = "%s%s @ %s [%s]%s";
+    public static final String JIRA_ISSUE_KEY_2 = "%s%s @ %s%s";
+    public static final String JIRA_ISSUE_KEY_3 = "%s%s Vulnerable Package @ %s [%s]%s";
+    public static final String JIRA_ISSUE_BODY = "*%s* issue exists @ *%s* in branch *%s*";
+    public static final String JIRA_ISSUE_BODY_2 = "*%s* issue exists @ *%s*";
+    public static final String JIRA_ISSUE_BODY_3 = "*%s Vulnerable Package* issue exists @ *%s* in branch *%s*";
 
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(JiraService.class);
     private JiraRestClient client;
@@ -268,25 +274,24 @@ public class JiraService {
             }
 
             String summary;
-            if (!flowProperties.isTrackApplicationOnly()
-                    && !flowProperties.isApplicationRepoOnly()
-                    && !ScanUtils.empty(namespace)
-                    && !ScanUtils.empty(repoName)
-                    && !ScanUtils.empty(branch)) {
-                summary = String.format(ScanUtils.JIRA_ISSUE_KEY, issuePrefix, vulnerability, filename, branch, issuePostfix);
+
+            boolean useBranch = isUseBranch(request);
+
+            if (useBranch) {
+                List<ScanResults.ScaDetails> scaDetails = issue.getScaDetails();
+                if (scaDetails != null) {
+                    summary = String.format(JIRA_ISSUE_KEY_3, issuePrefix, scaDetails.get(0).getFinding().getSeverity(), scaDetails.get(0).getVulnerabilityPackage().getName(), branch, issuePostfix);
+                } else {
+                    summary = String.format(JIRA_ISSUE_KEY, issuePrefix, vulnerability, filename, branch, issuePostfix);
+                }
             } else {
-                summary = String.format(ScanUtils.JIRA_ISSUE_KEY_2, issuePrefix, vulnerability, filename, issuePostfix);
+                summary = String.format(JIRA_ISSUE_KEY_2, issuePrefix, vulnerability, filename, issuePostfix);
             }
             String fileUrl = ScanUtils.getFileUrl(request, issue.getFilename());
+            summary = checkSummaryLength(summary);
 
-            /* Summary can only be 255 chars */
-            if (summary.length() > 255) {
-                summary = summary.substring(0, 254);
-            }
             issueBuilder.setSummary(summary);
-
             issueBuilder.setDescription(this.getBody(issue, request, fileUrl));
-
             if (assignee != null && !assignee.isEmpty()) {
                 try {
                     User userAssignee = getAssignee(assignee);
@@ -303,16 +308,12 @@ public class JiraService {
 
             /*Add labels for tracking existing issues*/
             List<String> labels = new ArrayList<>();
-            if (!flowProperties.isTrackApplicationOnly()
-                    && !flowProperties.isApplicationRepoOnly()
-                    && !ScanUtils.empty(namespace)
-                    && !ScanUtils.empty(repoName)
-                    && !ScanUtils.empty(branch)) {
+            if (useBranch) {
                 labels.add(request.getProduct().getProduct());
                 labels.add(jiraProperties.getOwnerLabelPrefix().concat(":").concat(namespace));
                 labels.add(jiraProperties.getRepoLabelPrefix().concat(":").concat(repoName));
                 labels.add(jiraProperties.getBranchLabelPrefix().concat(":").concat(branch));
-            } else if (!ScanUtils.empty(application) && !ScanUtils.empty(repoName)) {
+            } else if (!ScanUtils.anyEmpty(application, repoName)) {
                 labels.add(request.getProduct().getProduct());
                 labels.add(jiraProperties.getAppLabelPrefix().concat(":").concat(application));
                 labels.add(jiraProperties.getRepoLabelPrefix().concat(":").concat(repoName));
@@ -341,6 +342,22 @@ public class JiraService {
             log.error("Error occurred while creating JIRA issue.", e);
             throw new JiraClientException();
         }
+    }
+
+    private String checkSummaryLength(String summary) {
+        /* Summary can only be 255 chars */
+        if (summary.length() > 255) {
+            summary = summary.substring(0, 254);
+        }
+        return summary;
+    }
+
+    private boolean isUseBranch(ScanRequest request) {
+        return !flowProperties.isTrackApplicationOnly()
+                && !ScanUtils.anyEmpty(
+                request.getNamespace(),
+                request.getRepoName(),
+                request.getBranch());
     }
 
     private Issue updateIssue(String bugId, ScanResults.XIssue issue, ScanRequest request) throws JiraClientException {
@@ -759,12 +776,12 @@ public class JiraService {
                 .build();
         Iterable<CimProject> metadata = this.issueClient.getCreateIssueMetadata(options).claim();
         CimProject cim = metadata.iterator().next();
-        cim.getIssueTypes().forEach( issueTypes -> {
-            issueTypes.getFields().forEach((id, value) -> {
-                String name = value.getName();
-                fields.put(name, id);
-            });
-        });
+        cim.getIssueTypes().forEach(issueTypes ->
+                issueTypes.getFields().forEach((id, value) -> {
+                    String name = value.getName();
+                    fields.put(name, id);
+                })
+        );
         this.customFields.put(customFieldKey, fields);
     }
 
@@ -792,84 +809,85 @@ public class JiraService {
         return jiraMap;
     }
 
-    private Map<String, ScanResults.XIssue> getIssueMap(List<ScanResults.XIssue> issues, ScanRequest request) {
-        String issuePrefix = jiraProperties.getIssuePrefix();
-        String issuePostfix = jiraProperties.getIssuePostfix();
-        if (issuePrefix == null) {
-            issuePrefix = "";
-        }
-        if (issuePostfix == null) {
-            issuePostfix = "";
-        }
+    private Map<String, ScanResults.XIssue> getIssueMap(ScanResults results, ScanRequest request) {
+        List<ScanResults.XIssue> issues = new ArrayList<>();
+
+        Optional.ofNullable(results.getScaResults()).ifPresent( s -> {
+            List<ScanResults.XIssue> scaIssues = ScanUtils.scaToXIssues(s);
+            issues.addAll(scaIssues);
+        });
+
+        Optional.ofNullable(results.getXIssues()).ifPresent(i ->
+                issues.addAll(results.getXIssues())
+        );
+
+        String issuePrefix = Optional.ofNullable(jiraProperties.getIssuePrefix()).orElse("");
+        String issuePostfix = Optional.ofNullable(jiraProperties.getIssuePostfix()).orElse("");
+
         Map<String, ScanResults.XIssue> map = new HashMap<>();
 
-        if (!flowProperties.isTrackApplicationOnly()
-                && !ScanUtils.empty(request.getNamespace())
-                && !ScanUtils.empty(request.getRepoName())
-                && !ScanUtils.empty(request.getBranch())) {
-            for (ScanResults.XIssue issue : issues) {
-                String key = String.format(ScanUtils.JIRA_ISSUE_KEY, issuePrefix, issue.getVulnerability(), issue.getFilename(), request.getBranch(), issuePostfix);
-                map.put(key, issue);
+        boolean useBranch = isUseBranch(request);
+        for (ScanResults.XIssue issue : issues) {
+            String key;
+            if (useBranch) {
+                key = issue.getScaDetails() == null
+                        ? String.format(JIRA_ISSUE_KEY, issuePrefix, issue.getVulnerability(), issue.getFilename(), request.getBranch(), issuePostfix)
+                        : String.format(JIRA_ISSUE_KEY_3, issuePrefix, issue.getScaDetails().get(0).getFinding().getSeverity(), issue.getScaDetails().get(0).getVulnerabilityPackage().getName(), request.getBranch(), issuePostfix);
+            } else {
+                key = String.format(JIRA_ISSUE_KEY_2, issuePrefix, issue.getVulnerability(), issue.getFilename(), issuePostfix);
             }
-        } else {
-            for (ScanResults.XIssue issue : issues) {
-                String key = String.format(ScanUtils.JIRA_ISSUE_KEY_2, issuePrefix, issue.getVulnerability(), issue.getFilename(), issuePostfix);
-                map.put(key, issue);
-            }
+            map.put(key, issue);
         }
         return map;
     }
 
     private String getBody(ScanResults.XIssue issue, ScanRequest request, String fileUrl) {
         StringBuilder body = new StringBuilder();
-        if (!ScanUtils.empty(jiraProperties.getDescriptionPrefix())) {
-            body.append(jiraProperties.getDescriptionPrefix());
-        }
-        if (!flowProperties.isTrackApplicationOnly()
-                && !ScanUtils.empty(request.getNamespace())
-                && !ScanUtils.empty(request.getRepoName())
-                && !ScanUtils.empty(request.getBranch())) {
-            body.append(String.format(ScanUtils.JIRA_ISSUE_BODY, issue.getVulnerability(), issue.getFilename(), request.getBranch())).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
+        Optional.ofNullable(jiraProperties.getDescriptionPrefix())
+                .ifPresent(body::append);
+
+        boolean useBranch = isUseBranch(request);
+
+        if (useBranch) {
+            Optional.ofNullable(issue.getScaDetails()).ifPresent(s ->
+                s.stream().findAny().ifPresent(any -> {
+                    body.append(any.getFinding().getDescription()).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
+                    body.append(String.format(JIRA_ISSUE_BODY_3, any.getFinding().getSeverity(), any.getVulnerabilityPackage().getName(), request.getBranch())).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
+                })
+            );
+            body.append(String.format(JIRA_ISSUE_BODY, issue.getVulnerability(), issue.getFilename(), request.getBranch())).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
+
         } else {
-            body.append(String.format(ScanUtils.JIRA_ISSUE_BODY_2, issue.getVulnerability(), issue.getFilename())).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
+            body.append(String.format(JIRA_ISSUE_BODY_2, issue.getVulnerability(), issue.getFilename())).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
         }
-        if (!ScanUtils.empty(issue.getDescription())) {
-            body.append(issue.getDescription().trim()).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
-        }
+        Optional.ofNullable(issue.getDescription())
+                .ifPresent(d -> body.append(d.trim()).append(ScanUtils.CRLF).append(ScanUtils.CRLF));
 
-        if (!ScanUtils.empty(request.getNamespace())) {
-            body.append("*Namespace:* ").append(request.getNamespace()).append(ScanUtils.CRLF);
-        }
-        if (!ScanUtils.empty(request.getRepoName())) {
-            body.append("*Repository:* ").append(request.getRepoName()).append(ScanUtils.CRLF);
-        }
-        if (!ScanUtils.empty(request.getBranch())) {
-            body.append("*Branch:* ").append(request.getBranch()).append(ScanUtils.CRLF);
-        }
-        if (!ScanUtils.empty(request.getRepoUrl())) {
-            body.append("*Repository Url:* ").append(request.getRepoUrl()).append(ScanUtils.CRLF);
-        }
-        if (!ScanUtils.empty(request.getApplication())) {
-            body.append("*Application:* ").append(request.getApplication()).append(ScanUtils.CRLF);
-        }
-        if (!ScanUtils.empty(request.getProject())) {
-            body.append("*Cx-Project:* ").append(request.getProject()).append(ScanUtils.CRLF);
-        }
-        if (!ScanUtils.empty(request.getTeam())) {
-            body.append("*Cx-Team:* ").append(request.getTeam()).append(ScanUtils.CRLF);
-        }
-        if (!ScanUtils.empty(issue.getSeverity())) {
-            body.append("*Severity:* ").append(issue.getSeverity()).append(ScanUtils.CRLF);
-        }
-        if (!ScanUtils.empty(issue.getCwe())) {
-            body.append("*CWE:* ").append(issue.getCwe()).append(ScanUtils.CRLF);
-        }
+        Map<String, String> displayedParametersMap = new LinkedHashMap <>();
 
-        body.append(ScanUtils.CRLF).append("*Addition Info*").append(ScanUtils.CRLF).append("----").append(ScanUtils.CRLF);
-        if (issue.getLink() != null && !issue.getLink().isEmpty()) {
+        displayedParametersMap.put("*Namespace:*", request.getNamespace());
+        displayedParametersMap.put("*Repository:* ", request.getRepoName());
+        displayedParametersMap.put("*Branch:* ", request.getBranch());
+        displayedParametersMap.put("*Repository Url:* ", request.getRepoUrl());
+        displayedParametersMap.put("*Application:* ", request.getApplication());
+        displayedParametersMap.put("*Cx-Project:* ", request.getProject());
+        displayedParametersMap.put("*Cx-Team:* ", request.getTeam());
+        displayedParametersMap.put("*Severity:* ", issue.getSeverity());
+        displayedParametersMap.put("*CWE:* ", issue.getCwe());
+        displayedParametersMap.forEach((k, v ) -> {
+            if (!ScanUtils.empty(v)) {
+                body.append(k).append(v).append(ScanUtils.CRLF);
+            }
+        });
+
+        body.append(ScanUtils.CRLF)
+                .append("*Addition Info*").append(ScanUtils.CRLF)
+                .append("----").append(ScanUtils.CRLF);
+
+        if (!ScanUtils.empty(issue.getLink()) ) {
             body.append("[Checkmarx|").append(issue.getLink()).append("]").append(ScanUtils.CRLF);
         }
-        if (!ScanUtils.empty(issue.getCwe()) && !ScanUtils.empty(flowProperties.getMitreUrl())) {
+        if (!ScanUtils.anyEmpty(issue.getCwe(), flowProperties.getMitreUrl())) {
             body.append("[Mitre Details|").append(String.format(flowProperties.getMitreUrl(), issue.getCwe())).append("]").append(ScanUtils.CRLF);
         }
         if (!ScanUtils.empty(flowProperties.getCodebashUrl())) {
@@ -882,22 +900,13 @@ public class JiraService {
             if (issue.getDetails().entrySet().stream().anyMatch(x -> x.getKey() != null && x.getValue() != null && !x.getValue().isFalsePositive())) {
                 body.append("Lines: ");
             }
+            String lines = "#lines-";
             issue.getDetails().entrySet().stream()
                     .filter(x -> x.getKey() != null && x.getValue() != null && !x.getValue().isFalsePositive())
                     .sorted(Map.Entry.comparingByKey())
-                    .forEach(entry -> {
-                        if (!ScanUtils.empty(fileUrl)) {
-                            if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)) {
-                                body.append("[").append(entry.getKey()).append("|").append(fileUrl).append("#").append(entry.getKey()).append("] ");
-                            } else if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)) { //BB Cloud
-                                body.append("[").append(entry.getKey()).append("|").append(fileUrl).append("#lines-").append(entry.getKey()).append("] ");
-                            } else {
-                                body.append("[").append(entry.getKey()).append("|").append(fileUrl).append("#L").append(entry.getKey()).append("] ");
-                            }
-                        } else {
-                            body.append(entry.getKey()).append(" ");
-                        }
-                    });
+                    .forEach(entry ->
+                            isFileUrlEmpty(request, fileUrl, body, lines, entry)
+                    );
 
             if (flowProperties.isListFalsePositives()) {//List the false positives / not exploitable
                 body.append(ScanUtils.CRLF);
@@ -907,19 +916,9 @@ public class JiraService {
                 issue.getDetails().entrySet().stream()
                         .filter(x -> x.getKey() != null && x.getValue() != null && x.getValue().isFalsePositive())
                         .sorted(Map.Entry.comparingByKey())
-                        .forEach(entry -> {
-                            if (!ScanUtils.empty(fileUrl)) {
-                                if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)) {
-                                    body.append("[").append(entry.getKey()).append("|").append(fileUrl).append("#").append(entry.getKey()).append("] ");
-                                } else if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)) { //BB Cloud
-                                    body.append("[").append(entry.getKey()).append("|").append(fileUrl).append("#lines-").append(entry.getKey()).append("] ");
-                                } else {
-                                    body.append("[").append(entry.getKey()).append("|").append(fileUrl).append("#L").append(entry.getKey()).append("] ");
-                                }
-                            } else {
-                                body.append(entry.getKey()).append(" ");
-                            }
-                        });
+                        .forEach(entry ->
+                                isFileUrlEmpty(request, fileUrl, body, lines, entry)
+                        );
             }
             body.append(ScanUtils.CRLF).append(ScanUtils.CRLF);
             issue.getDetails().entrySet().stream()
@@ -929,12 +928,13 @@ public class JiraService {
                         if (!ScanUtils.empty(entry.getValue().getCodeSnippet())) {
                             body.append("----").append(ScanUtils.CRLF);
                             if (!ScanUtils.empty(fileUrl)) {
+                                String line = "[Line #";
                                 if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)) {
-                                    body.append("[Line #").append(entry.getKey()).append(":|").append(fileUrl).append("#").append(entry.getKey()).append("]").append(ScanUtils.CRLF);
+                                    body.append(line).append(entry.getKey()).append(":|").append(fileUrl).append("#").append(entry.getKey()).append("]").append(ScanUtils.CRLF);
                                 } else if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)) { //BB Cloud
-                                    body.append("[Line #").append(entry.getKey()).append(":|").append(fileUrl).append("#lines-").append(entry.getKey()).append("]").append(ScanUtils.CRLF);
+                                    body.append(line).append(entry.getKey()).append(":|").append(fileUrl).append(lines).append(entry.getKey()).append("]").append(ScanUtils.CRLF);
                                 } else {
-                                    body.append("[Line #").append(entry.getKey()).append(":|").append(fileUrl).append("#L").append(entry.getKey()).append("]").append(ScanUtils.CRLF);
+                                    body.append(line).append(entry.getKey()).append(":|").append(fileUrl).append("#L").append(entry.getKey()).append("]").append(ScanUtils.CRLF);
                                 }
                             } else {
                                 body.append("Line #").append(entry.getKey()).append(ScanUtils.CRLF);
@@ -973,10 +973,41 @@ public class JiraService {
                 body.append(ScanUtils.CRLF);
             }
         }
+
+        Optional.ofNullable(issue.getScaDetails()).ifPresent(s -> {
+            int count = issue.getScaDetails().size();
+            Map<String, String> scaDetailsMap = new HashMap<>();
+            ScanResults.ScaDetails scaDetails = s.stream().findAny().get();
+
+            scaDetailsMap.put("Vulnerabilities Count", Integer.toString(count));
+            scaDetailsMap.put("Package", scaDetails.getVulnerabilityPackage().getName());
+            scaDetailsMap.put("Version", scaDetails.getVulnerabilityPackage().getVersion());
+            scaDetailsMap.put("License", scaDetails.getVulnerabilityPackage().getLicenses().toString());
+            scaDetailsMap.put("Dependency Type", scaDetails.getVulnerabilityPackage().getPackageRepository());
+
+            scaDetailsMap.forEach((key, value) ->
+                    body.append(key).append(": ").append(value).append(ScanUtils.CRLF)
+            );
+        });
+
         if (!ScanUtils.empty(jiraProperties.getDescriptionPostfix())) {
             body.append(jiraProperties.getDescriptionPostfix());
         }
         return StringUtils.truncate(body.toString(), JiraConstants.JIRA_MAX_DESCRIPTION);
+    }
+
+    private void isFileUrlEmpty(ScanRequest request, String fileUrl, StringBuilder body, String lines, Map.Entry<Integer, ScanResults.IssueDetails> entry) {
+        if (!ScanUtils.empty(fileUrl)) {
+            if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)) {
+                body.append("[").append(entry.getKey()).append("|").append(fileUrl).append("#").append(entry.getKey()).append("] ");
+            } else if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)) { //BB Cloud
+                body.append("[").append(entry.getKey()).append("|").append(fileUrl).append(lines).append(entry.getKey()).append("] ");
+            } else {
+                body.append("[").append(entry.getKey()).append("|").append(fileUrl).append("#L").append(entry.getKey()).append("] ");
+            }
+        } else {
+            body.append(entry.getKey()).append(" ");
+        }
     }
 
     Map<String, List<String>> process(ScanResults results, ScanRequest request, ScanDetails scanDetails) throws JiraClientException {
@@ -1015,17 +1046,18 @@ public class JiraService {
 
         log.info("Processing Results and publishing findings to Jira");
 
-        map = this.getIssueMap(results.getXIssues(), request);
+        map = this.getIssueMap(results, request);
         setMapWithScanResults(map, nonPublishedScanResultsMap);
         jiraMap = this.getJiraIssueMap(this.getIssues(request));
 
         for (Map.Entry<String, ScanResults.XIssue> xIssue : map.entrySet()) {
+            String issueCurrentKey = xIssue.getKey();
             try {
                 ScanResults.XIssue currentIssue = xIssue.getValue();
 
                 /*Issue already exists -> update and comment*/
-                if (jiraMap.containsKey(xIssue.getKey())) {
-                    Issue issue = jiraMap.get(xIssue.getKey());
+                if (jiraMap.containsKey(issueCurrentKey)) {
+                    Issue issue = jiraMap.get(issueCurrentKey);
                     if (xIssue.getValue().isAllFalsePositive()) {
                         //All issues are false positive, so issue should be closed
                         log.debug("All issues are false positives");
@@ -1036,11 +1068,11 @@ public class JiraService {
                     else if (!issue.getLabels().contains(jiraProperties.getFalsePositiveLabel())) {
                         updateIssueAndAddToNewIssuesList(request, updatedIssues, xIssue, currentIssue, issue);
                     } else {
-                        log.info("Skipping issue marked as false-positive or has False Positive state with key {}", xIssue.getKey());
+                        log.info("Skipping issue marked as false-positive or has False Positive state with key {}", issueCurrentKey);
                     }
                 } else {
                     /*Create the new issue*/
-                    if (!currentIssue.isAllFalsePositive() && (!jiraProperties.isChild() || (!parentCheck(xIssue.getKey(), issuesParent) && !grandparentCheck(xIssue.getKey(), issuesGrandParent)))) {
+                    if (!currentIssue.isAllFalsePositive() && (!jiraProperties.isChild() || (!parentCheck(issueCurrentKey, issuesParent) && !grandparentCheck(issueCurrentKey, issuesGrandParent)))) {
                         if (jiraProperties.isChild()) {
                             log.info("Issue not found in parent creating issue for child");
                         }
@@ -1048,11 +1080,11 @@ public class JiraService {
                     }
                 }
             } catch (RestClientException e) {
-                log.error("Error occurred while processing issue with key {}", xIssue.getKey(), e);
+                log.error("Error occurred while processing issue with key {}", issueCurrentKey, e);
                 throw new JiraClientException();
             }
             log.debug("Issue: {} successfully updated. Removing it from dynamic scan results map", xIssue.getValue());
-            nonPublishedScanResultsMap.remove(xIssue.getKey());
+            nonPublishedScanResultsMap.remove(issueCurrentKey);
         }
 
         /*Check if an issue exists in Jira but not within results and close if not*/
