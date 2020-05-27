@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 public class PullRequestCommentsHelper {
 
     private static final String COMMENT_TYPE_SCAN_STARTED = "Scan submitted to Checkmarx";
-    private static final String COMMENT_TYPE_FINDINGS_1 = "Checkmarx scan completed";
+    private static final String COMMENT_TYPE_FINDINGS_1 = "Checkmarx SAST Scan Summary";
     private static final String COMMENT_TYPE_FINDINGS_2 = "Full Scan Details";
 
     public static boolean isCheckMarxComment(RepoComment comment) {
@@ -47,6 +47,16 @@ public class PullRequestCommentsHelper {
         }
         // We are not supposed to go in here at all.
         return new ArrayList<>();
+    }
+
+    public static boolean shouldUpdateComment(String newComment, String oldComment) {
+        if (newComment == null) {
+            if (oldComment == null) {
+                return false;
+            }
+            return true;
+        }
+        return !newComment.equals(oldComment);
     }
 
     enum CommentType {

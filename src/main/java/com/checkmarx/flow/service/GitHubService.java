@@ -31,6 +31,8 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Service
@@ -82,20 +84,16 @@ public class GitHubService extends RepoService {
             sendMergeComment(request, comment);
     }
 
-    private String getEditCommentUrl(String baseUrl, RepoComment comment) {
-        // The PARCH (edit comment) uri is without the pull request ID, so we must remove it before adding comment id.
-        baseUrl = baseUrl.replaceAll("[0-9]+/", "");
-        return baseUrl + "/" + comment.getId();
-    }
-
     private void updateComment(String baseUrl, String comment) {
-        log.debug("Updating exisiting comment");
+        log.debug("Updating exisiting comment. url: {}", baseUrl);
+        log.debug("Updated comment: {}" , comment);
         HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONComment("body",comment).toString(), createAuthHeaders());
         restTemplate.exchange(baseUrl, HttpMethod.PATCH, httpEntity, String.class);
     }
 
-    private List<RepoComment> getComments(String url) throws IOException {
-        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, null, String.class);
+    public List<RepoComment> getComments(String url) throws IOException  {
+        HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders());
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, httpEntity , String.class);
         List<RepoComment> result = new ArrayList<>();
         ObjectMapper objMapper = new ObjectMapper();
         JsonNode root = objMapper.readTree(response.getBody());
@@ -110,19 +108,38 @@ public class GitHubService extends RepoService {
         return result;
     }
 
+    public void deleteComment(String url) {
+        HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders());
+        restTemplate.exchange(url, HttpMethod.DELETE, httpEntity, String.class);
+    }
 
-    private RepoComment createRepoComment(JsonNode commentNode) {
+
+    private RepoComment createRepoComment(JsonNode commentNode)  {
         String commentBody = commentNode.path("body").getTextValue();
         long id = commentNode.path("id").asLong();
-        return new RepoComment(id, commentBody);
+        String commentUrl = commentNode.path(("url")).asText();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+        String updatedStr = commentNode.path("updated_at").asText();
+        String createdStr = commentNode.path("created_at").asText();
+        try {
+            return new RepoComment(id, commentBody, commentUrl, sdf.parse(createdStr), sdf.parse(updatedStr));
+        }
+        catch (ParseException pe) {
+            throw new GitHubClientRunTimeException("Error parsing github pull request created or updted date", pe);
+        }
     }
 
     public void sendMergeComment(ScanRequest request, String comment) throws GitHubClientException {
         try {
             RepoComment commentToUpdate = PullRequestCommentsHelper.getCommentToUpdate(getComments(request.getMergeNoteUri()), comment);
             if (commentToUpdate !=  null) {
+                if (!PullRequestCommentsHelper.shouldUpdateComment(comment, commentToUpdate.getComment())) {
+                    log.debug("Comment should not be updated");
+                    return;
+                }
                 log.debug("Going to update GitHub pull request comment");
-                updateComment(getEditCommentUrl(request.getMergeNoteUri(), commentToUpdate), comment);
+                updateComment(commentToUpdate.getCommentUrl(), comment);
             } else {
                 log.debug("Going to create a new GitHub pull request comment");
                 addComment(request, comment);
