@@ -36,11 +36,7 @@ public class GitHubControllerTest {
     private static final RestTemplate restTemplate = new RestTemplate();
     private static final GitHubProperties gitHubProperties = new GitHubProperties();
     private static final GitLabProperties gitLabProperties = new GitLabProperties();
-    private static final BitBucketProperties bitBucketProperties = new BitBucketProperties();
     private static final MergeResultEvaluator mergeResultEvaluator = new MergeResultEvaluatorImpl(flowProperties);
-    private static final BitBucketService bitBucketService =new BitBucketService(restTemplate,bitBucketProperties , flowProperties);
-    private static final GitLabService gitLabService = new GitLabService(restTemplate, gitLabProperties, flowProperties);
-    private static final GitHubService gitHubService = new GitHubService(restTemplate, gitHubProperties, flowProperties, mergeResultEvaluator);
     private static final ExternalScriptService scriptService = new ExternalScriptService();
     private static final HelperService helperService = new HelperService(flowProperties, cxProperties, scriptService);
     private static final ADOProperties adoProperties = new ADOProperties();
@@ -48,7 +44,6 @@ public class GitHubControllerTest {
     private static final EmailService emailService = new EmailService(flowProperties, new TemplateEngine(), new JavaMailSenderImpl());
     private static final CxLegacyService cxLegacyService = new CxLegacyService(cxProperties, new WebServiceTemplate());
     private static final CxAuthClient authClient = new CxAuthService(cxProperties, cxLegacyService, restTemplate);
-    private static final CxService cxService = new CxService(authClient, cxProperties, cxLegacyService, restTemplate, scanSettingsClient);
     private static final List<VulnerabilityScanner> scanners = new ArrayList<>();
     private static final ProjectNameGenerator projectNameGenerator = new ProjectNameGenerator(helperService, cxProperties, scriptService);
     private static final FlowService flowService = new FlowService(scanners, projectNameGenerator, resultsService);

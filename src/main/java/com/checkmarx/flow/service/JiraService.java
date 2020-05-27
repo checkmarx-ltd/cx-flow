@@ -288,15 +288,10 @@ public class JiraService {
                 summary = String.format(JIRA_ISSUE_KEY_2, issuePrefix, vulnerability, filename, issuePostfix);
             }
             String fileUrl = ScanUtils.getFileUrl(request, issue.getFilename());
+            summary = checkSummaryLength(summary);
 
-            /* Summary can only be 255 chars */
-            if (summary.length() > 255) {
-                summary = summary.substring(0, 254);
-            }
             issueBuilder.setSummary(summary);
-
             issueBuilder.setDescription(this.getBody(issue, request, fileUrl));
-
             if (assignee != null && !assignee.isEmpty()) {
                 try {
                     User userAssignee = getAssignee(assignee);
@@ -318,7 +313,7 @@ public class JiraService {
                 labels.add(jiraProperties.getOwnerLabelPrefix().concat(":").concat(namespace));
                 labels.add(jiraProperties.getRepoLabelPrefix().concat(":").concat(repoName));
                 labels.add(jiraProperties.getBranchLabelPrefix().concat(":").concat(branch));
-            } else if (!ScanUtils.empty(application) && !ScanUtils.empty(repoName)) {
+            } else if (!ScanUtils.anyEmpty(application, repoName)) {
                 labels.add(request.getProduct().getProduct());
                 labels.add(jiraProperties.getAppLabelPrefix().concat(":").concat(application));
                 labels.add(jiraProperties.getRepoLabelPrefix().concat(":").concat(repoName));
@@ -347,6 +342,14 @@ public class JiraService {
             log.error("Error occurred while creating JIRA issue.", e);
             throw new JiraClientException();
         }
+    }
+
+    private String checkSummaryLength(String summary) {
+        /* Summary can only be 255 chars */
+        if (summary.length() > 255) {
+            summary = summary.substring(0, 254);
+        }
+        return summary;
     }
 
     private boolean isUseBranch(ScanRequest request) {
