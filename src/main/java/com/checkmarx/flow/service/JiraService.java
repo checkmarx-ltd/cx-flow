@@ -7,9 +7,9 @@ import com.atlassian.jira.rest.client.api.domain.input.FieldInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
 import com.atlassian.jira.rest.client.api.domain.input.TransitionInput;
 import com.atlassian.jira.rest.client.internal.async.CustomAsynchronousJiraRestClientFactory;
-import com.checkmarx.flow.constants.JiraConstants;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.constants.JiraConstants;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanDetails;
 import com.checkmarx.flow.dto.ScanRequest;
@@ -20,7 +20,6 @@ import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.google.common.collect.ImmutableMap;
-import io.atlassian.util.concurrent.Promise;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
@@ -37,6 +36,13 @@ import java.util.stream.Collectors;
 
 @Service
 public class JiraService {
+
+    public static final String JIRA_ISSUE_KEY = "%s%s @ %s [%s]%s";
+    public static final String JIRA_ISSUE_KEY_2 = "%s%s @ %s%s";
+    public static final String JIRA_ISSUE_KEY_3 = "%s%s Vulnerable Package @ %s [%s]%s";
+    public static final String JIRA_ISSUE_BODY = "*%s* issue exists @ *%s* in branch *%s*";
+    public static final String JIRA_ISSUE_BODY_2 = "*%s* issue exists @ *%s*";
+    public static final String JIRA_ISSUE_BODY_3 = "*%s Vulnerable Package* issue exists @ *%s* in branch *%s*";
 
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(JiraService.class);
     private JiraRestClient client;
@@ -268,19 +274,18 @@ public class JiraService {
             }
 
             String summary;
-            if (!flowProperties.isTrackApplicationOnly()
-                    && !flowProperties.isApplicationRepoOnly()
-                    && !ScanUtils.empty(namespace)
-                    && !ScanUtils.empty(repoName)
-                    && !ScanUtils.empty(branch)) {
+
+            boolean useBranch = isUseBranch(request);
+
+            if (useBranch) {
                 List<ScanResults.ScaDetails> scaDetails = issue.getScaDetails();
                 if (scaDetails != null) {
-                    summary = String.format(ScanUtils.JIRA_ISSUE_KEY, issuePrefix, scaDetails.get(0).getFinding().getSeverity() + " Vulnerable Package", scaDetails.get(0).getVulnerabilityPackage().getName(), branch, issuePostfix);
+                    summary = String.format(JIRA_ISSUE_KEY_3, issuePrefix, scaDetails.get(0).getFinding().getSeverity(), scaDetails.get(0).getVulnerabilityPackage().getName(), branch, issuePostfix);
                 } else {
-                    summary = String.format(ScanUtils.JIRA_ISSUE_KEY, issuePrefix, vulnerability, filename, branch, issuePostfix);
+                    summary = String.format(JIRA_ISSUE_KEY, issuePrefix, vulnerability, filename, branch, issuePostfix);
                 }
             } else {
-                summary = String.format(ScanUtils.JIRA_ISSUE_KEY_2, issuePrefix, vulnerability, filename, issuePostfix);
+                summary = String.format(JIRA_ISSUE_KEY_2, issuePrefix, vulnerability, filename, issuePostfix);
             }
             String fileUrl = ScanUtils.getFileUrl(request, issue.getFilename());
 
@@ -308,11 +313,7 @@ public class JiraService {
 
             /*Add labels for tracking existing issues*/
             List<String> labels = new ArrayList<>();
-            if (!flowProperties.isTrackApplicationOnly()
-                    && !flowProperties.isApplicationRepoOnly()
-                    && !ScanUtils.empty(namespace)
-                    && !ScanUtils.empty(repoName)
-                    && !ScanUtils.empty(branch)) {
+            if (useBranch) {
                 labels.add(request.getProduct().getProduct());
                 labels.add(jiraProperties.getOwnerLabelPrefix().concat(":").concat(namespace));
                 labels.add(jiraProperties.getRepoLabelPrefix().concat(":").concat(repoName));
@@ -346,6 +347,14 @@ public class JiraService {
             log.error("Error occurred while creating JIRA issue.", e);
             throw new JiraClientException();
         }
+    }
+
+    private boolean isUseBranch(ScanRequest request) {
+        return !flowProperties.isTrackApplicationOnly()
+                && !ScanUtils.anyEmpty(
+                request.getNamespace(),
+                request.getRepoName(),
+                request.getBranch());
     }
 
     private Issue updateIssue(String bugId, ScanResults.XIssue issue, ScanRequest request) throws JiraClientException {
@@ -814,21 +823,15 @@ public class JiraService {
 
         Map<String, ScanResults.XIssue> map = new HashMap<>();
 
-        boolean useBranch = (
-                !flowProperties.isTrackApplicationOnly()
-                        && !ScanUtils.anyEmpty(
-                        request.getNamespace(),
-                        request.getRepoName(),
-                        request.getBranch())
-        );
+        boolean useBranch = isUseBranch(request);
         for (ScanResults.XIssue issue : issues) {
             String key;
             if (useBranch) {
                 key = issue.getScaDetails() == null
-                        ? String.format(ScanUtils.JIRA_ISSUE_KEY, issuePrefix, issue.getVulnerability(), issue.getFilename(), request.getBranch(), issuePostfix)
-                        : String.format(ScanUtils.JIRA_ISSUE_KEY, issuePrefix, issue.getScaDetails().get(0).getFinding().getSeverity() + " Vulnerable Package", issue.getScaDetails().get(0).getVulnerabilityPackage().getName(), request.getBranch(), issuePostfix);
+                        ? String.format(JIRA_ISSUE_KEY, issuePrefix, issue.getVulnerability(), issue.getFilename(), request.getBranch(), issuePostfix)
+                        : String.format(JIRA_ISSUE_KEY_3, issuePrefix, issue.getScaDetails().get(0).getFinding().getSeverity(), issue.getScaDetails().get(0).getVulnerabilityPackage().getName(), request.getBranch(), issuePostfix);
             } else {
-                key = String.format(ScanUtils.JIRA_ISSUE_KEY_2, issuePrefix, issue.getVulnerability(), issue.getFilename(), issuePostfix);
+                key = String.format(JIRA_ISSUE_KEY_2, issuePrefix, issue.getVulnerability(), issue.getFilename(), issuePostfix);
             }
             map.put(key, issue);
         }
@@ -840,18 +843,19 @@ public class JiraService {
         if (!ScanUtils.empty(jiraProperties.getDescriptionPrefix())) {
             body.append(jiraProperties.getDescriptionPrefix());
         }
-        if (!flowProperties.isTrackApplicationOnly()
-                && !ScanUtils.empty(request.getNamespace())
-                && !ScanUtils.empty(request.getRepoName())
-                && !ScanUtils.empty(request.getBranch())) {
+        boolean useBranch = isUseBranch(request);
+
+        if (useBranch) {
             Optional.ofNullable(issue.getScaDetails()).ifPresent(s -> {
-                body.append(s.get(0).getFinding().getDescription()).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
-                body.append(String.format(ScanUtils.JIRA_ISSUE_BODY, issue.getScaDetails().get(0).getFinding().getSeverity() + " Vulnerable Package", issue.getScaDetails().get(0).getVulnerabilityPackage().getName(), request.getBranch())).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
+                s.stream().findAny().ifPresent(any -> {
+                    body.append(any.getFinding().getDescription()).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
+                    body.append(String.format(JIRA_ISSUE_BODY_3, any.getFinding().getSeverity(), any.getVulnerabilityPackage().getName(), request.getBranch())).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
+                });
             });
-            body.append(String.format(ScanUtils.JIRA_ISSUE_BODY, issue.getVulnerability(), issue.getFilename(), request.getBranch())).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
+            body.append(String.format(JIRA_ISSUE_BODY, issue.getVulnerability(), issue.getFilename(), request.getBranch())).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
 
         } else {
-            body.append(String.format(ScanUtils.JIRA_ISSUE_BODY_2, issue.getVulnerability(), issue.getFilename())).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
+            body.append(String.format(JIRA_ISSUE_BODY_2, issue.getVulnerability(), issue.getFilename())).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
         }
         if (!ScanUtils.empty(issue.getDescription())) {
             body.append(issue.getDescription().trim()).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
@@ -902,6 +906,7 @@ public class JiraService {
             if (issue.getDetails().entrySet().stream().anyMatch(x -> x.getKey() != null && x.getValue() != null && !x.getValue().isFalsePositive())) {
                 body.append("Lines: ");
             }
+            String lines = "#lines-";
             issue.getDetails().entrySet().stream()
                     .filter(x -> x.getKey() != null && x.getValue() != null && !x.getValue().isFalsePositive())
                     .sorted(Map.Entry.comparingByKey())
@@ -910,7 +915,7 @@ public class JiraService {
                             if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)) {
                                 body.append("[").append(entry.getKey()).append("|").append(fileUrl).append("#").append(entry.getKey()).append("] ");
                             } else if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)) { //BB Cloud
-                                body.append("[").append(entry.getKey()).append("|").append(fileUrl).append("#lines-").append(entry.getKey()).append("] ");
+                                body.append("[").append(entry.getKey()).append("|").append(fileUrl).append(lines).append(entry.getKey()).append("] ");
                             } else {
                                 body.append("[").append(entry.getKey()).append("|").append(fileUrl).append("#L").append(entry.getKey()).append("] ");
                             }
@@ -932,7 +937,7 @@ public class JiraService {
                                 if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)) {
                                     body.append("[").append(entry.getKey()).append("|").append(fileUrl).append("#").append(entry.getKey()).append("] ");
                                 } else if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)) { //BB Cloud
-                                    body.append("[").append(entry.getKey()).append("|").append(fileUrl).append("#lines-").append(entry.getKey()).append("] ");
+                                    body.append("[").append(entry.getKey()).append("|").append(fileUrl).append(lines).append(entry.getKey()).append("] ");
                                 } else {
                                     body.append("[").append(entry.getKey()).append("|").append(fileUrl).append("#L").append(entry.getKey()).append("] ");
                                 }
@@ -949,12 +954,13 @@ public class JiraService {
                         if (!ScanUtils.empty(entry.getValue().getCodeSnippet())) {
                             body.append("----").append(ScanUtils.CRLF);
                             if (!ScanUtils.empty(fileUrl)) {
+                                String line = "[Line #";
                                 if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)) {
-                                    body.append("[Line #").append(entry.getKey()).append(":|").append(fileUrl).append("#").append(entry.getKey()).append("]").append(ScanUtils.CRLF);
+                                    body.append(line).append(entry.getKey()).append(":|").append(fileUrl).append("#").append(entry.getKey()).append("]").append(ScanUtils.CRLF);
                                 } else if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)) { //BB Cloud
-                                    body.append("[Line #").append(entry.getKey()).append(":|").append(fileUrl).append("#lines-").append(entry.getKey()).append("]").append(ScanUtils.CRLF);
+                                    body.append(line).append(entry.getKey()).append(":|").append(fileUrl).append(lines).append(entry.getKey()).append("]").append(ScanUtils.CRLF);
                                 } else {
-                                    body.append("[Line #").append(entry.getKey()).append(":|").append(fileUrl).append("#L").append(entry.getKey()).append("]").append(ScanUtils.CRLF);
+                                    body.append(line).append(entry.getKey()).append(":|").append(fileUrl).append("#L").append(entry.getKey()).append("]").append(ScanUtils.CRLF);
                                 }
                             } else {
                                 body.append("Line #").append(entry.getKey()).append(ScanUtils.CRLF);

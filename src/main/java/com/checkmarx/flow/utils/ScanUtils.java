@@ -63,13 +63,16 @@ public class ScanUtils {
     public static final String ISSUE_BODY_TEXT = "%s issue exists @ %s in branch %s";
     public static final String ISSUE_KEY = "%s %s @ %s [%s]";
     public static final String ISSUE_KEY_2 = "%s %s @ %s";
-    public static final String JIRA_ISSUE_KEY = "%s%s @ %s [%s]%s";
-    public static final String JIRA_ISSUE_KEY_2 = "%s%s @ %s%s";
-    public static final String JIRA_ISSUE_BODY = "*%s* issue exists @ *%s* in branch *%s*";
-    public static final String JIRA_ISSUE_BODY_2 = "*%s* issue exists @ *%s*";
     public static final String WEB_HOOK_PAYLOAD = "web-hook-payload";
 
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(ScanUtils.class);
+    public static final String VERSION = "Version: ";
+    public static final String DESCRIPTION = "Description: ";
+    public static final String RECOMMENDATION = "Recommendation: ";
+    public static final String URL = "URL: ";
+    public static final String DETAILS = "Details - ";
+    public static final String SEVERITY = "Severity: ";
+    public static final String DIV = "</div>";
 
     /**
      * Function used to determine if file extension of full filename is preset in list
@@ -483,7 +486,7 @@ public class ScanUtils {
             body.append("*").append(issue.getDescription().trim()).append("*").append(CRLF).append(CRLF);
         }
         if(!ScanUtils.empty(issue.getSeverity())) {
-            body.append("Severity: ").append(issue.getSeverity()).append(CRLF).append(CRLF);
+            body.append(SEVERITY).append(issue.getSeverity()).append(CRLF).append(CRLF);
         }
         if(!ScanUtils.empty(issue.getCwe())) {
             body.append("CWE:").append(issue.getCwe()).append(CRLF).append(CRLF);
@@ -548,19 +551,19 @@ public class ScanUtils {
                 }
                 body.append("```");
                 if(!ScanUtils.empty(o.getSeverity())) {
-                    body.append("Severity: ").append(o.getSeverity()).append(CRLF);
+                    body.append(SEVERITY).append(o.getSeverity()).append(CRLF);
                 }
                 if(!ScanUtils.empty(o.getVersion())) {
-                    body.append("Version: ").append(o.getVersion()).append(CRLF);
+                    body.append(VERSION).append(o.getVersion()).append(CRLF);
                 }
                 if(!ScanUtils.empty(o.getDescription())) {
-                    body.append("Description: ").append(o.getDescription()).append(CRLF);
+                    body.append(DESCRIPTION).append(o.getDescription()).append(CRLF);
                 }
                 if(!ScanUtils.empty(o.getRecommendation())){
-                    body.append("Recommendation: ").append(o.getRecommendation()).append(CRLF);
+                    body.append(RECOMMENDATION).append(o.getRecommendation()).append(CRLF);
                 }
                 if(!ScanUtils.empty(o.getUrl())) {
-                    body.append("URL: ").append(o.getUrl());
+                    body.append(URL).append(o.getUrl());
                 }
                 body.append("```");
                 body.append(CRLF);
@@ -811,10 +814,10 @@ public class ScanUtils {
         }
         body.append(CRLF);
         if(!ScanUtils.empty(issue.getSeverity())) {
-            body.append("<div><b>Severity:</b> ").append(issue.getSeverity()).append("</div>");
+            body.append("<div><b>Severity:</b> ").append(issue.getSeverity()).append(DIV);
         }
         if(!ScanUtils.empty(issue.getCwe())) {
-            body.append("<div><b>CWE:</b>").append(issue.getCwe()).append("</div>");
+            body.append("<div><b>CWE:</b>").append(issue.getCwe()).append(DIV);
             if(!ScanUtils.empty(flowProperties.getMitreUrl())) {
                 body.append("<div><a href=\'").append(
                         String.format(
@@ -842,14 +845,14 @@ public class ScanUtils {
                 for (Map.Entry<Integer, ScanResults.IssueDetails> entry : trueIssues.entrySet()) {
                     body.append(entry.getKey()).append(" ");
                 }
-                body.append("</div>");
+                body.append(DIV);
             }
             if(flowProperties.isListFalsePositives() && !fpIssues.isEmpty()) {//List the false positives / not exploitable
                 body.append("<div><b>Lines Marked Not Exploitable: </b>");
                 for (Map.Entry<Integer, ScanResults.IssueDetails> entry : fpIssues.entrySet()) {
                     body.append(entry.getKey()).append(" ");
                 }
-                body.append("</div>");
+                body.append(DIV);
             }
             for (Map.Entry<Integer, ScanResults.IssueDetails> entry : trueIssues.entrySet()) {
                 if (!ScanUtils.empty(entry.getValue().getCodeSnippet())) {
@@ -871,25 +874,25 @@ public class ScanUtils {
                 }
                 body.append("<pre><code><div>");
                 if(!ScanUtils.empty(o.getSeverity())) {
-                    body.append("Severity: ").append(o.getSeverity()).append(CRLF);
+                    body.append(SEVERITY).append(o.getSeverity()).append(CRLF);
                 }
                 if(!ScanUtils.empty(o.getVersion())) {
-                    body.append("Version: ").append(o.getVersion()).append(CRLF);
+                    body.append(VERSION).append(o.getVersion()).append(CRLF);
                 }
                 if(!ScanUtils.empty(o.getDescription())) {
-                    body.append("Description: ").append(o.getDescription()).append(CRLF);
+                    body.append(DESCRIPTION).append(o.getDescription()).append(CRLF);
                 }
                 if(!ScanUtils.empty(o.getRecommendation())){
-                    body.append("Recommendation: ").append(o.getRecommendation()).append(CRLF);
+                    body.append(RECOMMENDATION).append(o.getRecommendation()).append(CRLF);
                 }
                 if(!ScanUtils.empty(o.getUrl())) {
-                    body.append("URL: ").append(o.getUrl());
+                    body.append(URL).append(o.getUrl());
                 }
                 body.append("</div></code></pre><div>");
                 body.append(CRLF);
             }
         }
-        body.append("</div>");
+        body.append(DIV);
         return body.toString();
     }
 
@@ -1075,12 +1078,12 @@ public class ScanUtils {
         }
         body.append(CRLF);
         if(!ScanUtils.empty(issue.getSeverity())) {
-            body.append("Severity: ").append(issue.getSeverity()).append(CRLF);
+            body.append(SEVERITY).append(issue.getSeverity()).append(CRLF);
         }
         if(!ScanUtils.empty(issue.getCwe())) {
             body.append("CWE: ").append(issue.getCwe()).append(CRLF);
             if(!ScanUtils.empty(flowProperties.getMitreUrl())) {
-                body.append("Details - ")
+                body.append(DETAILS)
                         .append(
                         String.format(
                                 flowProperties.getMitreUrl(),
@@ -1090,10 +1093,10 @@ public class ScanUtils {
             }
         }
         if(!ScanUtils.empty(flowProperties.getWikiUrl())) {
-            body.append("Details - ").append(flowProperties.getWikiUrl()).append(" - Internal Guidance ").append(CRLF);
+            body.append(DETAILS).append(flowProperties.getWikiUrl()).append(" - Internal Guidance ").append(CRLF);
         }
         if(!ScanUtils.empty(issue.getLink())){
-            body.append("Details - ").append(issue.getLink()).append(" - Checkmarx").append(CRLF);
+            body.append(DETAILS).append(issue.getLink()).append(" - Checkmarx").append(CRLF);
         }
         if(issue.getDetails() != null && !issue.getDetails().isEmpty()) {
             Map<Integer, ScanResults.IssueDetails> trueIssues = issue.getDetails().entrySet().stream()
@@ -1129,19 +1132,19 @@ public class ScanUtils {
                     body.append(o.getCve()).append(CRLF);
                 }
                 if(!ScanUtils.empty(o.getSeverity())) {
-                    body.append("Severity: ").append(o.getSeverity()).append(CRLF);
+                    body.append(SEVERITY).append(o.getSeverity()).append(CRLF);
                 }
                 if(!ScanUtils.empty(o.getVersion())) {
-                    body.append("Version: ").append(o.getVersion()).append(CRLF);
+                    body.append(VERSION).append(o.getVersion()).append(CRLF);
                 }
                 if(!ScanUtils.empty(o.getDescription())) {
-                    body.append("Description: ").append(o.getDescription()).append(CRLF);
+                    body.append(DESCRIPTION).append(o.getDescription()).append(CRLF);
                 }
                 if(!ScanUtils.empty(o.getRecommendation())){
-                    body.append("Recommendation: ").append(o.getRecommendation()).append(CRLF);
+                    body.append(RECOMMENDATION).append(o.getRecommendation()).append(CRLF);
                 }
                 if(!ScanUtils.empty(o.getUrl())) {
-                    body.append("URL: ").append(o.getUrl());
+                    body.append(URL).append(o.getUrl());
                 }
                 body.append(CRLF);
             }
