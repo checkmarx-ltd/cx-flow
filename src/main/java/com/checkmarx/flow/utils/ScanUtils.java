@@ -24,6 +24,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.EnumSet;
 import java.util.stream.Collectors;
 
 import javax.validation.constraints.NotNull;
@@ -62,13 +63,16 @@ public class ScanUtils {
     public static final String ISSUE_BODY_TEXT = "%s issue exists @ %s in branch %s";
     public static final String ISSUE_KEY = "%s %s @ %s [%s]";
     public static final String ISSUE_KEY_2 = "%s %s @ %s";
-    public static final String JIRA_ISSUE_KEY = "%s%s @ %s [%s]%s";
-    public static final String JIRA_ISSUE_KEY_2 = "%s%s @ %s%s";
-    public static final String JIRA_ISSUE_BODY = "*%s* issue exists @ *%s* in branch *%s*";
-    public static final String JIRA_ISSUE_BODY_2 = "*%s* issue exists @ *%s*";
     public static final String WEB_HOOK_PAYLOAD = "web-hook-payload";
 
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(ScanUtils.class);
+    public static final String VERSION = "Version: ";
+    public static final String DESCRIPTION = "Description: ";
+    public static final String RECOMMENDATION = "Recommendation: ";
+    public static final String URL = "URL: ";
+    public static final String DETAILS = "Details - ";
+    public static final String SEVERITY = "Severity: ";
+    public static final String DIV = "</div>";
 
     /**
      * Function used to determine if file extension of full filename is preset in list
@@ -85,6 +89,26 @@ public class ScanUtils {
         }
         return false;
     }
+
+    public static List<ScanResults.XIssue> scaToXIssues(SCAResults scaResults) {
+        List<ScanResults.XIssue> issueList = new ArrayList<>();
+
+        List<Finding> findings = scaResults.getFindings();
+        EnumSet.range(Filter.Severity.HIGH, Filter.Severity.LOW)
+                .forEach(s -> {
+                    List<Finding> findingsListBySeverity = getFindingsListBySeverity(findings, s);
+                    Map<String, List<Finding>> packageMap = findingsListBySeverity.stream()
+                            .collect(Collectors.groupingBy(Finding::getPackageId));
+                    packageMap.forEach((k,v) -> {
+                        ScanResults.XIssue issue = ScanResults.XIssue.builder()
+                                .build();
+                        issue.setScaDetails(getScaDetailsListBySeverity(scaResults, v));
+                        issueList.add(issue);
+                    });
+                });
+        return issueList;
+    }
+
     /**
      * Create List of filters based on String lists of severity, cwe, category
      * @param flowProperties
@@ -335,14 +359,14 @@ public class ScanUtils {
                     if (thresholds != null &&
                             !(thresholds.getHigh()==null && thresholds.getMedium()==null &&
                                     thresholds.getLow()==null && thresholds.getInfo()==null)) {
-                                
+
                             Map<FindingSeverity,Integer> thresholdsMap = ScanUtils.getThresholdsMap(thresholds);
                             if(!thresholdsMap.isEmpty()) {
                                 flowProperties.setThresholds(thresholdsMap);
                             }
 
                         overridePropertiesMap.put("thresholds", convertMapToString(thresholdsMap));
-                    } 
+                    }
                 }
             }
 
@@ -418,7 +442,7 @@ public class ScanUtils {
         if(thresholds.getInfo()!=null){
             map.put(FindingSeverity.INFO, thresholds.getInfo());
         }
-        
+
         return  map;
      }
 
@@ -462,7 +486,7 @@ public class ScanUtils {
             body.append("*").append(issue.getDescription().trim()).append("*").append(CRLF).append(CRLF);
         }
         if(!ScanUtils.empty(issue.getSeverity())) {
-            body.append("Severity: ").append(issue.getSeverity()).append(CRLF).append(CRLF);
+            body.append(SEVERITY).append(issue.getSeverity()).append(CRLF).append(CRLF);
         }
         if(!ScanUtils.empty(issue.getCwe())) {
             body.append("CWE:").append(issue.getCwe()).append(CRLF).append(CRLF);
@@ -526,21 +550,7 @@ public class ScanUtils {
                     body.append("*").append(o.getCve()).append("*").append(CRLF);
                 }
                 body.append("```");
-                if(!ScanUtils.empty(o.getSeverity())) {
-                    body.append("Severity: ").append(o.getSeverity()).append(CRLF);
-                }
-                if(!ScanUtils.empty(o.getVersion())) {
-                    body.append("Version: ").append(o.getVersion()).append(CRLF);
-                }
-                if(!ScanUtils.empty(o.getDescription())) {
-                    body.append("Description: ").append(o.getDescription()).append(CRLF);
-                }
-                if(!ScanUtils.empty(o.getRecommendation())){
-                    body.append("Recommendation: ").append(o.getRecommendation()).append(CRLF);
-                }
-                if(!ScanUtils.empty(o.getUrl())) {
-                    body.append("URL: ").append(o.getUrl());
-                }
+                appendOsaDetails(body, o);
                 body.append("```");
                 body.append(CRLF);
             }
@@ -790,10 +800,10 @@ public class ScanUtils {
         }
         body.append(CRLF);
         if(!ScanUtils.empty(issue.getSeverity())) {
-            body.append("<div><b>Severity:</b> ").append(issue.getSeverity()).append("</div>");
+            body.append("<div><b>Severity:</b> ").append(issue.getSeverity()).append(DIV);
         }
         if(!ScanUtils.empty(issue.getCwe())) {
-            body.append("<div><b>CWE:</b>").append(issue.getCwe()).append("</div>");
+            body.append("<div><b>CWE:</b>").append(issue.getCwe()).append(DIV);
             if(!ScanUtils.empty(flowProperties.getMitreUrl())) {
                 body.append("<div><a href=\'").append(
                         String.format(
@@ -821,14 +831,14 @@ public class ScanUtils {
                 for (Map.Entry<Integer, ScanResults.IssueDetails> entry : trueIssues.entrySet()) {
                     body.append(entry.getKey()).append(" ");
                 }
-                body.append("</div>");
+                body.append(DIV);
             }
             if(flowProperties.isListFalsePositives() && !fpIssues.isEmpty()) {//List the false positives / not exploitable
                 body.append("<div><b>Lines Marked Not Exploitable: </b>");
                 for (Map.Entry<Integer, ScanResults.IssueDetails> entry : fpIssues.entrySet()) {
                     body.append(entry.getKey()).append(" ");
                 }
-                body.append("</div>");
+                body.append(DIV);
             }
             for (Map.Entry<Integer, ScanResults.IssueDetails> entry : trueIssues.entrySet()) {
                 if (!ScanUtils.empty(entry.getValue().getCodeSnippet())) {
@@ -849,27 +859,31 @@ public class ScanUtils {
                     body.append("<b>").append(o.getCve()).append("</b>").append(CRLF);
                 }
                 body.append("<pre><code><div>");
-                if(!ScanUtils.empty(o.getSeverity())) {
-                    body.append("Severity: ").append(o.getSeverity()).append(CRLF);
-                }
-                if(!ScanUtils.empty(o.getVersion())) {
-                    body.append("Version: ").append(o.getVersion()).append(CRLF);
-                }
-                if(!ScanUtils.empty(o.getDescription())) {
-                    body.append("Description: ").append(o.getDescription()).append(CRLF);
-                }
-                if(!ScanUtils.empty(o.getRecommendation())){
-                    body.append("Recommendation: ").append(o.getRecommendation()).append(CRLF);
-                }
-                if(!ScanUtils.empty(o.getUrl())) {
-                    body.append("URL: ").append(o.getUrl());
-                }
+                appendOsaDetails(body, o);
                 body.append("</div></code></pre><div>");
                 body.append(CRLF);
             }
         }
-        body.append("</div>");
+        body.append(DIV);
         return body.toString();
+    }
+
+    private static void appendOsaDetails(StringBuilder body, ScanResults.OsaDetails o) {
+        if (!ScanUtils.empty(o.getSeverity())) {
+            body.append(SEVERITY).append(o.getSeverity()).append(CRLF);
+        }
+        if (!ScanUtils.empty(o.getVersion())) {
+            body.append(VERSION).append(o.getVersion()).append(CRLF);
+        }
+        if (!ScanUtils.empty(o.getDescription())) {
+            body.append(DESCRIPTION).append(o.getDescription()).append(CRLF);
+        }
+        if (!ScanUtils.empty(o.getRecommendation())) {
+            body.append(RECOMMENDATION).append(o.getRecommendation()).append(CRLF);
+        }
+        if (!ScanUtils.empty(o.getUrl())) {
+            body.append(URL).append(o.getUrl());
+        }
     }
 
     /**
@@ -1054,12 +1068,12 @@ public class ScanUtils {
         }
         body.append(CRLF);
         if(!ScanUtils.empty(issue.getSeverity())) {
-            body.append("Severity: ").append(issue.getSeverity()).append(CRLF);
+            body.append(SEVERITY).append(issue.getSeverity()).append(CRLF);
         }
         if(!ScanUtils.empty(issue.getCwe())) {
             body.append("CWE: ").append(issue.getCwe()).append(CRLF);
             if(!ScanUtils.empty(flowProperties.getMitreUrl())) {
-                body.append("Details - ")
+                body.append(DETAILS)
                         .append(
                         String.format(
                                 flowProperties.getMitreUrl(),
@@ -1069,10 +1083,10 @@ public class ScanUtils {
             }
         }
         if(!ScanUtils.empty(flowProperties.getWikiUrl())) {
-            body.append("Details - ").append(flowProperties.getWikiUrl()).append(" - Internal Guidance ").append(CRLF);
+            body.append(DETAILS).append(flowProperties.getWikiUrl()).append(" - Internal Guidance ").append(CRLF);
         }
         if(!ScanUtils.empty(issue.getLink())){
-            body.append("Details - ").append(issue.getLink()).append(" - Checkmarx").append(CRLF);
+            body.append(DETAILS).append(issue.getLink()).append(" - Checkmarx").append(CRLF);
         }
         if(issue.getDetails() != null && !issue.getDetails().isEmpty()) {
             Map<Integer, ScanResults.IssueDetails> trueIssues = issue.getDetails().entrySet().stream()
@@ -1107,33 +1121,44 @@ public class ScanUtils {
                 if(!ScanUtils.empty(o.getCve())) {
                     body.append(o.getCve()).append(CRLF);
                 }
-                if(!ScanUtils.empty(o.getSeverity())) {
-                    body.append("Severity: ").append(o.getSeverity()).append(CRLF);
-                }
-                if(!ScanUtils.empty(o.getVersion())) {
-                    body.append("Version: ").append(o.getVersion()).append(CRLF);
-                }
-                if(!ScanUtils.empty(o.getDescription())) {
-                    body.append("Description: ").append(o.getDescription()).append(CRLF);
-                }
-                if(!ScanUtils.empty(o.getRecommendation())){
-                    body.append("Recommendation: ").append(o.getRecommendation()).append(CRLF);
-                }
-                if(!ScanUtils.empty(o.getUrl())) {
-                    body.append("URL: ").append(o.getUrl());
-                }
+                appendOsaDetails(body, o);
                 body.append(CRLF);
             }
         }
         return body.toString();
     }
-    
+
+    private static List<Finding> getFindingsListBySeverity(List<Finding> findingList, Filter.Severity severity) {
+        return findingList.stream()
+                .filter(f -> f.getSeverity().name().equals(severity.name()))
+                .collect(Collectors.toList());
+    }
+
+    private static Package getScaPackageByFinding(List<Package> packageList, Finding finding) {
+        return packageList.stream().filter(p -> p.id.equals(finding.getPackageId())).findFirst().orElse(new Package());
+    }
+
     private static String extractPackageNameFromFindings(SCAResults r, Finding f) {
         return r.getPackages().stream().filter(p -> p.id.equals(f.getPackageId())).map(Package::getName).findFirst().orElse("");
     }
 
     private static String extractPackageVersionFromFindings(SCAResults r, Finding f) {
         return r.getPackages().stream().filter(p -> p.id.equals(f.getPackageId())).map(Package::getVersion).findFirst().orElse("");
+    }
+
+    private static List<ScanResults.ScaDetails> getScaDetailsListBySeverity(SCAResults scaResults, List<Finding> scaFindingsBySeverity) {
+        List<ScanResults.ScaDetails> scaDetailsList = new ArrayList<>();
+
+        scaFindingsBySeverity.forEach(f -> {
+            ScanResults.ScaDetails scaDetails = ScanResults.ScaDetails.builder()
+                    .finding(f)
+                    .vulnerabilityPackage(getScaPackageByFinding(scaResults.getPackages(), f))
+                    .vulnerabilityLink(constructVulnerabilityUrl(scaResults.getWebReportLink(), f))
+                    .build();
+
+            scaDetailsList.add(scaDetails);
+        });
+        return scaDetailsList;
     }
 
     private static String constructVulnerabilityUrl(String allVulnerabilitiesReportUrl, Finding finding) {

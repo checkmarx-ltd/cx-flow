@@ -28,7 +28,7 @@ public class FlowService {
         for (VulnerabilityScanner currentScanner : scanners) {
             if (currentScanner.isThisScannedEnabled()) {
                 ScanResults scanResults = currentScanner.scan(scanRequest);
-                combinedResults.mergeResultsWith(scanResults);
+                combinedResults.mergeWith(scanResults);
             }
         }
 
