@@ -550,21 +550,7 @@ public class ScanUtils {
                     body.append("*").append(o.getCve()).append("*").append(CRLF);
                 }
                 body.append("```");
-                if(!ScanUtils.empty(o.getSeverity())) {
-                    body.append(SEVERITY).append(o.getSeverity()).append(CRLF);
-                }
-                if(!ScanUtils.empty(o.getVersion())) {
-                    body.append(VERSION).append(o.getVersion()).append(CRLF);
-                }
-                if(!ScanUtils.empty(o.getDescription())) {
-                    body.append(DESCRIPTION).append(o.getDescription()).append(CRLF);
-                }
-                if(!ScanUtils.empty(o.getRecommendation())){
-                    body.append(RECOMMENDATION).append(o.getRecommendation()).append(CRLF);
-                }
-                if(!ScanUtils.empty(o.getUrl())) {
-                    body.append(URL).append(o.getUrl());
-                }
+                appendOsaDetails(body, o);
                 body.append("```");
                 body.append(CRLF);
             }
@@ -873,27 +859,31 @@ public class ScanUtils {
                     body.append("<b>").append(o.getCve()).append("</b>").append(CRLF);
                 }
                 body.append("<pre><code><div>");
-                if(!ScanUtils.empty(o.getSeverity())) {
-                    body.append(SEVERITY).append(o.getSeverity()).append(CRLF);
-                }
-                if(!ScanUtils.empty(o.getVersion())) {
-                    body.append(VERSION).append(o.getVersion()).append(CRLF);
-                }
-                if(!ScanUtils.empty(o.getDescription())) {
-                    body.append(DESCRIPTION).append(o.getDescription()).append(CRLF);
-                }
-                if(!ScanUtils.empty(o.getRecommendation())){
-                    body.append(RECOMMENDATION).append(o.getRecommendation()).append(CRLF);
-                }
-                if(!ScanUtils.empty(o.getUrl())) {
-                    body.append(URL).append(o.getUrl());
-                }
+                appendOsaDetails(body, o);
                 body.append("</div></code></pre><div>");
                 body.append(CRLF);
             }
         }
         body.append(DIV);
         return body.toString();
+    }
+
+    private static void appendOsaDetails(StringBuilder body, ScanResults.OsaDetails o) {
+        if (!ScanUtils.empty(o.getSeverity())) {
+            body.append(SEVERITY).append(o.getSeverity()).append(CRLF);
+        }
+        if (!ScanUtils.empty(o.getVersion())) {
+            body.append(VERSION).append(o.getVersion()).append(CRLF);
+        }
+        if (!ScanUtils.empty(o.getDescription())) {
+            body.append(DESCRIPTION).append(o.getDescription()).append(CRLF);
+        }
+        if (!ScanUtils.empty(o.getRecommendation())) {
+            body.append(RECOMMENDATION).append(o.getRecommendation()).append(CRLF);
+        }
+        if (!ScanUtils.empty(o.getUrl())) {
+            body.append(URL).append(o.getUrl());
+        }
     }
 
     /**
@@ -1131,21 +1121,7 @@ public class ScanUtils {
                 if(!ScanUtils.empty(o.getCve())) {
                     body.append(o.getCve()).append(CRLF);
                 }
-                if(!ScanUtils.empty(o.getSeverity())) {
-                    body.append(SEVERITY).append(o.getSeverity()).append(CRLF);
-                }
-                if(!ScanUtils.empty(o.getVersion())) {
-                    body.append(VERSION).append(o.getVersion()).append(CRLF);
-                }
-                if(!ScanUtils.empty(o.getDescription())) {
-                    body.append(DESCRIPTION).append(o.getDescription()).append(CRLF);
-                }
-                if(!ScanUtils.empty(o.getRecommendation())){
-                    body.append(RECOMMENDATION).append(o.getRecommendation()).append(CRLF);
-                }
-                if(!ScanUtils.empty(o.getUrl())) {
-                    body.append(URL).append(o.getUrl());
-                }
+                appendOsaDetails(body, o);
                 body.append(CRLF);
             }
         }
