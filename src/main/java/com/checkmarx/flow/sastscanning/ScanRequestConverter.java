@@ -80,47 +80,48 @@ public class ScanRequestConverter {
     
     public Integer determinePresetAndProjectId(ScanRequest request, String ownerId) {
         boolean projectExists = false;
-        Integer projectId = UNKNOWN_INT;
-        if (flowProperties.isAutoProfile() && !request.isScanPresetOverride()) {
+        Integer projectId = cxService.getProjectId(ownerId, request.getProject());
 
-            projectId = cxService.getProjectId(ownerId, request.getProject());
-            if (projectId != UNKNOWN_INT) {
-                int presetId = cxService.getProjectPresetId(projectId);
-                if (presetId != UNKNOWN_INT) {
-                    String preset = cxService.getPresetName(presetId);
-                    request.setScanPreset(preset);
-                    projectExists = true;
+        if(!request.isScanPresetOverride()) {
+            if (flowProperties.isAutoProfile()) {
+                log.debug("Auto profiling is enabled");
+                if (projectId != UNKNOWN_INT) {
+                    int presetId = cxService.getProjectPresetId(projectId);
+                    if (presetId != UNKNOWN_INT) {
+                        String preset = cxService.getPresetName(presetId);
+                        request.setScanPreset(preset);
+                        projectExists = true;
+                    }
                 }
             }
-        }
-        if (!projectExists || flowProperties.isAlwaysProfile()) {
-            log.info("Project doesn't exist, profiling source...");
-            Sources sources = new Sources();
-            switch (request.getRepoType()) {
-                case GITHUB:
-                    sources = gitService.getRepoContent(request);
-                    break;
-                case GITLAB:
-                    sources = gitLabService.getRepoContent(request);
-                    break;
-                case BITBUCKET:
-                    log.warn("Profiling is not available for BitBucket Cloud");
-                    break;
-                case BITBUCKETSERVER:
-                    log.warn("Profiling is not available for BitBucket Server");
-                    break;
-                case ADO:
-                    log.warn("Profiling is not available for Azure DevOps");
-                    break;
-                default:
-                    log.info("Nothing to profile");
-                    break;
+            if (!projectExists || flowProperties.isAlwaysProfile()) {
+                log.info("Project doesn't exist, profiling source...");
+                Sources sources = new Sources();
+                switch (request.getRepoType()) {
+                    case GITHUB:
+                        sources = gitService.getRepoContent(request);
+                        break;
+                    case GITLAB:
+                        sources = gitLabService.getRepoContent(request);
+                        break;
+                    case BITBUCKET:
+                        log.warn("Profiling is not available for BitBucket Cloud");
+                        break;
+                    case BITBUCKETSERVER:
+                        log.warn("Profiling is not available for BitBucket Server");
+                        break;
+                    case ADO:
+                        log.warn("Profiling is not available for Azure DevOps");
+                        break;
+                    default:
+                        log.info("Nothing to profile");
+                        break;
+                }
+                String preset = helperService.getPresetFromSources(sources);
+                if (!ScanUtils.empty(preset)) {
+                    request.setScanPreset(preset);
+                }
             }
-            String preset = helperService.getPresetFromSources(sources);
-            if (!ScanUtils.empty(preset)) {
-                request.setScanPreset(preset);
-            }
-
         }
         return projectId;
     }
