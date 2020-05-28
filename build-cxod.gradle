@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        CxSBSDK = "0.1.13"
+        CxSBSDK = "0.1.14"
         //cxVersion = "8.90.5"
         springBootVersion = '2.2.4.RELEASE'
         sonarqubeVersion = '2.8'
