@@ -141,7 +141,6 @@ public class SastScanner implements VulnerabilityScanner {
             /*Check if team is provided*/
             String ownerId = scanRequestConverter.determineTeamAndOwnerID(request);
 
-            log.debug("Auto profiling is enabled");
             projectId = scanRequestConverter.determinePresetAndProjectId(request, ownerId);
 
             CxScanParams params = scanRequestConverter.prepareScanParamsObject(request, cxFile, ownerId, projectId);
