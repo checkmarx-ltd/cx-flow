@@ -1131,14 +1131,14 @@ public class JiraService {
             try {
                 if (!map.containsKey(jiraIssue.getKey()) && (request.getBugTracker().getOpenStatus().contains(jiraIssue.getValue().getStatus().getName()))) {
                     /*Close the issue*/
-                    log.info("Closing issue with key {}", jiraIssue.getKey());
+                    log.info("Closing issue {} with key {}",jiraIssue.getValue().getKey(), jiraIssue.getKey());
                     this.transitionCloseIssue(jiraIssue.getValue().getKey(),
                             request.getBugTracker().getCloseTransition(), request.getBugTracker(), false); //No false positives
                     closedIssues.add(jiraIssue.getValue().getKey());
 
                 }
             } catch (HttpClientErrorException e) {
-                log.error("Error occurred while processing issue with key {}", jiraIssue.getKey(), e);
+                log.error("Error occurred while processing issue {} with key {}",jiraIssue.getValue().getKey(), jiraIssue.getKey(), e);
             }
         }
     }
