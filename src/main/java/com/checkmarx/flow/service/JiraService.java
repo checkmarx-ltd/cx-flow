@@ -66,6 +66,8 @@ public class JiraService {
     private static final String LABEL_FIELD_TYPE = "labels";
     private static final String SECURITY_FIELD_TYPE = "security";
     private static final String VALUE_FIELD_TYPE = "value";
+    private static final String CHILD_FIELD_TYPE = "child";
+    private static final String CASCADE_PARENT_CHILD_DELIMITER  = ";";
 
     @ConstructorProperties({"jiraProperties", "flowProperties"})
     public JiraService(JiraProperties jiraProperties, FlowProperties flowProperties) {
@@ -644,11 +646,32 @@ public class JiraService {
                             }
                             issueBuilder.setFieldValue(customField, fields);
                             break;
+                        case "cascading-select":
+                            log.debug("cascading select list field");
+                            log.debug("cascading values {}", value);
+                            addCascadingSelect(issueBuilder, f, customField, value);
+                            break;
                         default:
                             log.warn("{} not a valid option for jira field type", f.getJiraFieldType());
                     }
                 }
             }
+        }
+    }
+
+    private void addCascadingSelect(IssueInputBuilder issueBuilder, com.checkmarx.flow.dto.Field f, String customField, String value) {
+        // expected value format is "parent;child"
+        // neither can be empty; enclose in quotes if spaces/special characters
+        // must match case
+        String[] selectedValues = StringUtils.split(value, CASCADE_PARENT_CHILD_DELIMITER);
+        if(selectedValues.length == 2) {
+            Map<String, Object> cascadingValues = new HashMap<String, Object>();
+            cascadingValues.put(VALUE_FIELD_TYPE, selectedValues[0].trim());
+            cascadingValues.put(CHILD_FIELD_TYPE, ComplexIssueInputFieldValue.with(VALUE_FIELD_TYPE, selectedValues[1].trim()));
+            issueBuilder.setFieldValue(customField, new ComplexIssueInputFieldValue(cascadingValues));
+        }
+        else {
+            log.warn("Invalid value for jira field type {}", f.getJiraFieldType());
         }
     }
 
