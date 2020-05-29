@@ -17,7 +17,6 @@ import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.Filter;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
@@ -303,8 +302,9 @@ public class BitbucketServerController {
                     .concat(projectKey.concat("/"))
                     .concat(fromRefRepository.getSlug()).concat(".git");
 
-            String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(properties.getToken()).concat("@"));
-            gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(properties.getToken()).concat("@"));
+            String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(getEncodedAccessToken()).concat("@"));
+            gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(getEncodedAccessToken()).concat("@"));
+
             String mergeEndpoint = properties.getUrl().concat(properties.getApiPath()).concat(MERGE_COMMENT);
             mergeEndpoint = mergeEndpoint.replace("{project}", toRefRepository.getProject().getKey());
             mergeEndpoint = mergeEndpoint.replace("{repo}", toRefRepository.getSlug());
@@ -383,6 +383,8 @@ public class BitbucketServerController {
                 .success(true)
                 .build());
     }
+
+
 
 
     /**
@@ -481,8 +483,9 @@ public class BitbucketServerController {
             String gitUrl = properties.getUrl().concat("/scm/")
                     .concat(projectKey.concat("/"))
                     .concat(repository.getSlug()).concat(".git");
-            String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(properties.getToken()).concat("@"));
-            gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(properties.getToken()).concat("@"));
+
+            String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(getEncodedAccessToken()).concat("@"));
+            gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(getEncodedAccessToken()).concat("@"));
 
             String scanPreset = cxProperties.getScanPreset();
             if(!ScanUtils.empty(preset)){
@@ -553,4 +556,16 @@ public class BitbucketServerController {
         log.info("Signature verified");
     }
 
+    private String getEncodedAccessToken() {
+        String[] basicAuthCredentials = properties.getToken().split(":");
+        String accessToken = basicAuthCredentials[1];
+
+        String encodedTokenString =  ScanUtils.getStringWithEncodedCharacter(accessToken);
+
+        String encodedToken = basicAuthCredentials[0].concat(":").concat(encodedTokenString);
+        return encodedToken;
+    }
+
 }
+
+

@@ -1179,4 +1179,18 @@ public class ScanUtils {
 
         return vulnerabilityUrl.toString();
     }
+
+    public static String getStringWithEncodedCharacter(String str)
+    {
+        String encodedString = "";
+        if (!ScanUtils.empty(str))
+        {
+            try {
+                encodedString = URLEncoder.encode(str, StandardCharsets.UTF_8.toString());
+            } catch (UnsupportedEncodingException e) {
+                log.error("Encoding error: {}", e);
+            }
+        }
+        return encodedString;
+    }
 }
