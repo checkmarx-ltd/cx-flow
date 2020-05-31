@@ -66,7 +66,7 @@ public class BatchComponentSteps {
         when(cxClient.getTeamId(anyString())).thenReturn(ScanFixture.TEAM_ID);
         when(cxClient.getProjects(anyString())).thenReturn(ScanFixture.getProjects());
 
-        FilterConfiguration filter = FilterConfiguration.builder().simpleFilters(ScanFixture.getScanFilters()).build();
+        FilterConfiguration filter = FilterConfiguration.fromSimpleFilters(ScanFixture.getScanFilters());
         when(cxClient.getReportContentByScanId(ScanFixture.SCAN_ID, filter))
                 .thenReturn(ScanFixture.getScanResults());
         cxFlowRunner = new CxFlowRunner(flowProperties, cxProperties, jiraProperties, gitHubProperties, gitLabProperties, adoProperties, helperService, flowService, sastScanner, executors, resultsService, osaScannerService);
