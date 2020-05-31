@@ -194,7 +194,7 @@ public class AnalyticsSteps {
                 anyString(), eq(HttpMethod.POST), any(HttpEntity.class), ArgumentMatchers.<Class<String>>any());
 
         when(sendingPostRequest).thenAnswer(invocation -> new ResponseEntity<>(HttpStatus.OK));
-        when(restTemplateMock.exchange(anyString(),eq(HttpMethod.GET),isNull(), any(Class.class) )).thenReturn(createResponseForGetComments());
+        when(restTemplateMock.exchange(anyString(),eq(HttpMethod.GET),any(), any(Class.class) )).thenReturn(createResponseForGetComments());
     }
 
     private ResponseEntity<String> createResponseForGetComments() {
