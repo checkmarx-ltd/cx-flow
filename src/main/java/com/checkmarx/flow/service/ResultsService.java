@@ -58,7 +58,7 @@ public class ResultsService {
         try {
             CompletableFuture<ScanResults> future = new CompletableFuture<>();
             //TODO async these, and join and merge after
-            FilterConfiguration filter = FilterConfiguration.builder().simpleFilters(filters).build();
+            FilterConfiguration filter = FilterConfiguration.fromSimpleFilters(filters);
             ScanResults results = cxService.getReportContentByScanId(scanId, filter);
             new ScanResultsReport(scanId, request, results).log();
             results = isOSAScanEnable(request, projectId, osaScanId, filters, results);

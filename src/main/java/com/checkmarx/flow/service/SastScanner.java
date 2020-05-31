@@ -80,7 +80,7 @@ public class SastScanner implements VulnerabilityScanner {
             }
             logRequest(scanRequest, scanId, null, OperationResult.successful());
 
-            FilterConfiguration filter = FilterConfiguration.builder().simpleFilters(scanRequest.getFilters()).build();
+            FilterConfiguration filter = FilterConfiguration.fromSimpleFilters(scanRequest.getFilters());
             scanResults = cxService.getReportContentByScanId(scanId, filter);
             scanResults.setSastScanId(scanId);
             return scanResults;
@@ -226,7 +226,7 @@ public class SastScanner implements VulnerabilityScanner {
 
     public void cxParseResults(ScanRequest request, File file) throws ExitThrowable {
         try {
-            FilterConfiguration filter = FilterConfiguration.builder().simpleFilters(request.getFilters()).build();
+            FilterConfiguration filter = FilterConfiguration.fromSimpleFilters(request.getFilters());
             ScanResults results = cxService.getReportContent(file, filter);
             resultsService.processResults(request, results, scanDetails);
             if (flowProperties.isBreakBuild() && results != null && results.getXIssues() != null && !results.getXIssues().isEmpty()) {

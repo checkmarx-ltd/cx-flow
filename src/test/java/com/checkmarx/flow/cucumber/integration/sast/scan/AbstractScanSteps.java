@@ -82,7 +82,7 @@ public  abstract class AbstractScanSteps {
             CompletableFuture<ScanResults> future = new CompletableFuture<>();
             //TODO async these, and join and merge after
 
-            FilterConfiguration filter = FilterConfiguration.builder().simpleFilters(request.getFilters()).build();
+            FilterConfiguration filter = FilterConfiguration.fromSimpleFilters(request.getFilters());
             results = cxClient.getReportContentByScanId(scanDetails.getScanId(), filter);
             future.complete(results);
             results = future.join();
