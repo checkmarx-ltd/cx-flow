@@ -49,15 +49,13 @@ jobs:
           path: ~/test-results/junit
 
   sonar:
-    machine:
-      image: ubuntu-1604:201903-01
-    steps:
-      - checkout
-      - run:
-          name: Compile
-          command: ./gradlew clean compileJava compileTestJava
-      - sonarcloud/scan:
-          cache_version: 2
+    docker:
+      - image: 'circleci/openjdk:8-jdk'
+      steps:
+        - checkout
+        - run:
+            name: Analyze on SonarCloud
+            command: gradle build sonarqube
       - run:
           name: Check Quality Gate
           command: |
