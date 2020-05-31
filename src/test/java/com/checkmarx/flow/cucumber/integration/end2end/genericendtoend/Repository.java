@@ -20,18 +20,18 @@ import java.util.StringJoiner;
 
 import com.checkmarx.flow.config.ADOProperties;
 import com.checkmarx.flow.config.GitHubProperties;
+import com.checkmarx.flow.dto.HookType;
 import com.checkmarx.flow.dto.azure.ConsumerInputs;
 import com.checkmarx.flow.dto.azure.PublisherInputs;
 import com.checkmarx.flow.dto.azure.Subscription;
-import com.checkmarx.flow.dto.github.Committer;
 import com.checkmarx.flow.dto.github.Config;
 import com.checkmarx.flow.dto.github.Hook;
 import com.checkmarx.flow.dto.rally.Object;
+import com.checkmarx.flow.utils.GitHubAPIHandler;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -47,92 +47,39 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 enum Repository {
     GITHUB {
+        private GitHubAPIHandler handler;
         GitHubProperties gitHubProperties;
         private Integer hookId;
         private String createdFileSha;
         private Integer prId;
 
         @Override
-        Boolean hasWebHook() {
-            String repoHooksBaseUrl = getHooksFormat();
-            JSONArray hooks = getJSONArray(repoHooksBaseUrl);
-            assertNotNull(hooks, "could not create webhook configuration");
-            return !hooks.isEmpty();
-        }
-
-        private String getHooksFormat() {
-            return String.format("%s/%s/%s/hooks",
-                    gitHubProperties.getApiUrl(), namespace, repo);
-        }
-
-        JSONArray getJSONArray(String uri) {
-            RestTemplate restTemplate = new RestTemplate();
-            HttpHeaders headers = getHeaders();
-            log.info("GET array headers: {}", headers.toString());
-            HttpEntity<String> requestEntity = new HttpEntity<>(null, headers);
-            ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, requestEntity, String.class);
-            String body = response.getBody();
-            if (body == null) {
-                return null;
+        public Boolean hasWebHook() {
+            try {
+                return !handler.hasWebHook();
             }
-            return new JSONArray(body);
+            catch(IllegalStateException e){
+                fail("could not create webhook configuration");
+            }
+            return false;
         }
+        
 
 
         @Override
         void generateHook(HookType hookType) {
             Hook data = null;
             try {
-                data = generateHookData(hookTargetURL, gitHubProperties.getWebhookToken(), hookType);
-            } catch (Exception e) {
-                fail("can not create web hook, check parameters");
-            }
-            final HttpHeaders headers = getHeaders();
-            final HttpEntity<Hook> request = new HttpEntity<>(data, headers);
-            try {
-                RestTemplate restTemplate = new RestTemplate();
-                String url = getHooksFormat();
-                final ResponseEntity<String> response = restTemplate.postForEntity(url, request,
-                        String.class);
+                ResponseEntity<String> response = handler.generateHook(hookType, hookTargetURL, hookId);
                 assertEquals(HttpStatus.CREATED, response.getStatusCode());
-                hookId = new JSONObject(response.getBody()).getInt("id");
             } catch (Exception e) {
-                fail("failed to create hook " + e.getMessage());
+                fail(e.getMessage());
             }
         }
-
-        private Hook generateHookData(String url, String secret, HookType hookType) {
-            Hook hook = new Hook();
-            hook.setName("web");
-            hook.setActive(true);
-            switch (hookType) {
-                case PUSH:
-                    hook.setEvents(Arrays.asList("push"));
-                    break;
-                case PULL_REQUEST:
-                    hook.setEvents(Arrays.asList("pull_request"));    
-                    break;
-                default:
-                    throw new PendingException();
-            }
-            Config config = new Config();
-            config.setUrl(url);
-            config.setContentType("json");
-            config.setInsecureSsl("0");
-            config.setSecret(secret);
-            hook.setConfig(config);
-            return hook;
-        }
-
+        
         @Override
         void deleteHook() {
-            Optional.ofNullable(hookId).ifPresent(id -> {
-                RestTemplate restTemplate = new RestTemplate();
-                final HttpHeaders headers = getHeaders();
-                HttpEntity<String> requestEntity = new HttpEntity<>(null, headers);
-                String url = getHooksFormat();
-                restTemplate.exchange(url + "/" + hookId, HttpMethod.DELETE, requestEntity, Object.class);
-            });
+            handler.deleteHook(hookId);
         }
 
         @Override
@@ -145,132 +92,58 @@ enum Repository {
 
         @Override
         void pushFile(String content) {
-            ObjectMapper mapper = new ObjectMapper();
-            ObjectNode jo = mapper.createObjectNode();
-            jo.put("message", "GitHubToJira test message");
-            Committer committer = new Committer();
-            committer.setName("CxFlowTestUser");
-            committer.setEmail("CxFlowTestUser@checkmarx.com");
-            jo.putPOJO("committer", committer);
-            jo.put("content", content);
-            String data;
+
             try {
-                data = mapper.writeValueAsString(jo);
+                createdFileSha = handler.pushFile(content, USER, EMAIL, MESSAGE);
             } catch (JsonProcessingException e) {
-                String msg = "faild to create file for push";
-                log.error(msg);
-                fail(msg);
-                data = null;
-            }
-            final HttpHeaders headers = getHeaders();
-            final HttpEntity<String> request = new HttpEntity<>(data, headers);
-            RestTemplate restTemplate = new RestTemplate();
-            try {
-                String path = getContentsFormat();
-                ResponseEntity<String> response = restTemplate.exchange(path, HttpMethod.PUT, request,
-                        String.class);
-                createdFileSha = new JSONObject(response.getBody()).getJSONObject("content").getString("sha");
-            } catch (Exception e) {
+                fail(e.getMessage());
+            }catch (Exception e) {
                 fail("faild to push a file: " + e.getMessage());
             }
-
-        }
-
-        private String getContentsFormat() {
-            return String.format("%s/%s/%s/contents/%s",
-                    gitHubProperties.getApiUrl(), namespace, repo, filePath);
         }
 
         @Override
         void deleteFile() {
-            RestTemplate restTemplate = new RestTemplate();
-            final HttpHeaders headers = getHeaders();
-            String data = null;
+            
             try {
-                ObjectMapper mapper = new ObjectMapper();
-                ObjectNode jo = mapper.createObjectNode();
-                jo.put("message", "deleting test commited file");
-                Committer committer = new Committer();
-                committer.setName("CxFlowTestUser");
-                committer.setEmail("CxFlowTestUser@checkmarx.com");
-                jo.putPOJO("committer", committer);
-                jo.put("sha", createdFileSha);
-
-                data = mapper.writeValueAsString(jo);
-            } catch (Exception e) {
-                String msg = "faild to delete file of push";
-                log.error(msg);
-                fail(msg);
+                handler.deleteFile(createdFileSha, USER, EMAIL, MESSAGE);
+            } catch (JsonProcessingException e) {
+                fail(e.getMessage());
+            }catch (Exception e) {
+                fail("faild to push a file: " + e.getMessage());
             }
-
-            HttpEntity<String> requestEntity = new HttpEntity<>(data, headers);
-            String path = getContentsFormat();
-            restTemplate.exchange(path, HttpMethod.DELETE, requestEntity, String.class);
-        }
+       }
 
         @Override
         protected void init(GenericEndToEndSteps genericEndToEndSteps) {
             gitHubProperties = genericEndToEndSteps.gitHubProperties;
             super.init(genericEndToEndSteps);
+            this.handler = new GitHubAPIHandler(gitHubProperties, namespace, repo, filePath);
         }
 
         @Override
         void createPR() {
-            String data = createPRData(false);
-            final HttpHeaders headers = getHeaders();
-            final HttpEntity<String> request = new HttpEntity<>(data, headers);
             try {
-                RestTemplate restTemplate = new RestTemplate();
-                String url = String.format("%s/%s/%s/pulls", 
-                    gitHubProperties.getApiUrl(), namespace, repo);
-                if (log.isInfoEnabled()) {
-                    throw new PendingException("createPR is waiting on deletePR, and parameters");
-                }
-                final ResponseEntity<String> response = restTemplate.postForEntity(url, request,
-                    String.class);
+                final ResponseEntity<String> response = handler.createPR(TITLE, BODY, BASE, prId);
                 assertEquals(HttpStatus.CREATED, response.getStatusCode());
                 prId = new JSONObject(response.getBody()).getInt("id");
-            } catch (Exception e) {
+            }catch (PendingException p){
+                throw p;
+            }
+            catch (Exception e) {
                 fail("failed to create PR " + e.getMessage());
             }
         }
 
-        private String createPRData(boolean isDelete) {
-            //TO DO: replace parameters 
-            ObjectMapper mapper = new ObjectMapper();
-            ObjectNode pr = mapper.createObjectNode();
-            pr.put("title", "cxflow GitHub e2e test")
-            .put("body", "This is an automated test")
-            .put("base", "master");
-            if (isDelete) {
-                pr.put("state", "close");
-            } else {
-                pr.put("head", "feature");
-            }
-            String data = null;
-            try {
-                data = mapper.writeValueAsString(pr);
-            } catch (JsonProcessingException e) {
-                String msg = "faild to create GitHub PR data";
-                log.error(msg);
-                fail(msg);
-            }
-            return data;
-        }
+
 
         @Override
         void deletePR() {
-            String data = createPRData(true);
-            final HttpHeaders headers = getHeaders();
-            final HttpEntity<String> request = new HttpEntity<>(data, headers);
             try {
-                RestTemplate restTemplate = new RestTemplate();
-                String url = String.format("%s/%s/%s/pulls/%d", 
-                    gitHubProperties.getApiUrl(), namespace, repo, prId);
-                final ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.PATCH,
-                    request, String.class);
+                final ResponseEntity<String> response = this.handler.deletePR(TITLE, BODY, BASE, prId);
                 assertEquals(HttpStatus.OK, response.getStatusCode());
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 fail("failed to delete PR " + e.getMessage());
             }
         }
@@ -612,6 +485,12 @@ enum Repository {
 
     };
 
+    private static final String MESSAGE = "GitHubToJira test message";
+    private static final String EMAIL = "CxFlowTestUser@checkmarx.com";
+    private static final String USER = "CxFlowTestUser";
+    private static final String BASE = "master";
+    private static final String BODY = "This is an automated test";
+    private static final String TITLE = "cxflow GitHub e2e test";
     private HookType hookType;
     /* where to push the file */
     static final String filePath = "src/main/java/sample/encode.frm";
