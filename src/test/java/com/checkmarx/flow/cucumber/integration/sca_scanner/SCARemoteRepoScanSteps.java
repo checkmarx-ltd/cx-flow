@@ -13,6 +13,7 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -25,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 
 @SpringBootTest(classes = {CxFlowApplication.class})
 @RequiredArgsConstructor
+@Slf4j
 public class SCARemoteRepoScanSteps {
 
     private static final String APP_URL = "https://sca.scacheckmarx.com";
@@ -48,6 +50,27 @@ public class SCARemoteRepoScanSteps {
     @Before("@SCARemoteRepoScan")
     public void init() {
         initSCAConfig();
+
+        String sca_username = System.getenv("SCA_USERNAME");
+        if (sca_username != null) {
+            log.info("SCA username env variable has been found with value: {}", sca_username);
+        } else {
+            log.info("SCA username env variable wasn't been found");
+        }
+
+        String sca_password = System.getenv("SCA_PASSWORD");
+        if (sca_password != null) {
+            log.info("SCA password env variable has been found with value: {}", sca_password);
+        } else {
+            log.info("SCA password env variable wasn't been found");
+        }
+
+        String sca_tenant = System.getenv("SCA_TENANT");
+        if (sca_tenant != null) {
+            log.info("SCA tenant env variable has been found with value: {}", sca_tenant);
+        } else {
+            log.info("SCA tenant env variable wasn't been found");
+        }
     }
 
     @Given("scan initiator is SCA")
