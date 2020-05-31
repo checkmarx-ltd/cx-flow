@@ -59,7 +59,7 @@ jobs:
       - run:
           name: Check Quality Gate
           command: |
-                    REPORT_PATH="/home/circleci/project/.scannerwork/report-task.txt"
+                    REPORT_PATH=".scannerwork/report-task.txt"
                     CE_TASK_ID_KEY="ceTaskId="
                     SONAR_INSTANCE="https://sonarcloud.io"
                     SLEEP_TIME=5
