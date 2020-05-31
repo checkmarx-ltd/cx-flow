@@ -55,7 +55,7 @@ jobs:
       - checkout
       - run:
           name: Analyze by SonarCloud
-          command: ./gradlew clean compileJava compileTestJava sonar
+          command: ./gradlew clean compileJava compileTestJava sonarqube
       - run:
           name: Check Quality Gate
           command: |
