@@ -50,12 +50,12 @@ jobs:
 
   sonar:
     docker:
-      - image: 'circleci/openjdk:8-jdk'
-      steps:
-        - checkout
-        - run:
-            name: Analyze on SonarCloud
-            command: gradle build sonarqube
+      - image: circleci/openjdk:8-jdk
+    steps:
+      - checkout
+      - run:
+          name: Analyze on SonarCloud
+          command: gradle build sonarqube
       - run:
           name: Check Quality Gate
           command: |
