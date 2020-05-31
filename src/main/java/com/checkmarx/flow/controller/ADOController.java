@@ -192,7 +192,7 @@ public class ADOController {
                     .product(p)
                     .project(project)
                     .team(team)
-                    .namespace(repository.getProject().getName().replaceAll(" ","_"))
+                    .namespace(determineNamespace(repository))
                     .repoName(repository.getName())
                     .repoUrl(gitUrl)
                     .repoUrlWithAuth(gitAuthUrl)
@@ -212,8 +212,6 @@ public class ADOController {
 
             request = ScanUtils.overrideMap(request, o);
             request.putAdditionalMetadata("statuses_url", pullUrl.concat("/statuses"));
-            String baseUrl = body.getResourceContainers().getAccount().getBaseUrl();
-            request.putAdditionalMetadata(Constants.ADO_BASE_URL_KEY,baseUrl);
             request.putAdditionalMetadata(Constants.ADO_ISSUE_KEY, adoIssueType);
             request.putAdditionalMetadata(Constants.ADO_ISSUE_BODY_KEY, adoIssueBody);
             request.putAdditionalMetadata(Constants.ADO_OPENED_STATE_KEY, adoOpenedState);
@@ -373,17 +371,25 @@ public class ADOController {
                 inc = incremental;
             }
 
+            String defaultBranch = repository.getDefaultBranch();
+            String [] branchPath = repository.getDefaultBranch().split("/");
+
+            if (branchPath.length == 3) {
+                defaultBranch = branchPath[2];
+            }
+
             ScanRequest request = ScanRequest.builder()
                     .application(app)
                     .product(p)
                     .project(project)
                     .team(team)
-                    .namespace(repository.getProject().getName().replaceAll(" ","_"))
+                    .namespace(determineNamespace(repository))
                     .repoName(repository.getName())
                     .repoUrl(gitUrl)
                     .repoUrlWithAuth(gitAuthUrl)
                     .repoType(ScanRequest.Repository.ADO)
                     .branch(currentBranch)
+                    .defaultBranch(defaultBranch)
                     .refs(ref)
                     .email(emails)
                     .incremental(inc)
@@ -393,8 +399,7 @@ public class ADOController {
                     .bugTracker(bt)
                     .filters(filters)
                     .build();
-            String baseUrl = body.getResourceContainers().getAccount().getBaseUrl();
-            request.putAdditionalMetadata(Constants.ADO_BASE_URL_KEY,baseUrl);
+
             request.putAdditionalMetadata(Constants.ADO_ISSUE_KEY, adoIssueType);
             request.putAdditionalMetadata(Constants.ADO_ISSUE_BODY_KEY, adoIssueBody);
             request.putAdditionalMetadata(Constants.ADO_OPENED_STATE_KEY, adoOpenedState);
@@ -424,6 +429,12 @@ public class ADOController {
                 .success(true)
                 .build());
 
+    }
+
+    private String determineNamespace(Repository repository) {
+        String result = repository.getProject().getName().replaceAll(" ", "_");
+        log.debug("Using namespace based on repository.project.name: {}", result);
+        return result;
     }
 
     /** Validates the base64 / basic auth received in the request. */

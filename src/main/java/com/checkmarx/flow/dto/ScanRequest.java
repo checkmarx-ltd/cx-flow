@@ -32,6 +32,7 @@ public class ScanRequest {
     private String repoUrlWithAuth;
     private String repoName;
     private String branch;
+    private String defaultBranch;
     private String mergeTargetBranch;
     private String mergeNoteUri;
     //project repoProjectId used by GitLab
@@ -69,6 +70,7 @@ public class ScanRequest {
         this.repoUrlWithAuth = other.repoUrlWithAuth;
         this.repoName = other.repoName;
         this.branch = other.branch;
+        this.defaultBranch = other.defaultBranch;
         this.mergeTargetBranch = other.mergeTargetBranch;
         this.mergeNoteUri = other.mergeNoteUri;
         this.repoProjectId = other.repoProjectId;
