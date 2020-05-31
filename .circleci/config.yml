@@ -20,7 +20,6 @@ jobs:
           key: v1-gradle-cache-{{ checksum "build.gradle" }}
       - run: ./gradlew clean build
       - run: ./gradlew -b build-11.gradle --build-cache assemble
-      - run: ./gradlew -b build-cxod.gradle --build-cache assemble
       - run: ./gradlew -q getVersion > build/libs/version.txt
       - save_cache:
           paths:
