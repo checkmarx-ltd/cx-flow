@@ -7,6 +7,7 @@ import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 import com.checkmarx.flow.cucumber.component.scan.ScanFixture;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.sdk.config.CxProperties;
+import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
 import com.checkmarx.test.flow.config.CxFlowMocksConfig;
@@ -64,7 +65,10 @@ public class BatchComponentSteps {
     public void sastClientIsMocked() throws CheckmarxException {
         when(cxClient.getTeamId(anyString())).thenReturn(ScanFixture.TEAM_ID);
         when(cxClient.getProjects(anyString())).thenReturn(ScanFixture.getProjects());
-        when(cxClient.getReportContentByScanId(ScanFixture.SCAN_ID, ScanFixture.getScanFilters())).thenReturn(ScanFixture.getScanResults());
+
+        FilterConfiguration filter = FilterConfiguration.builder().simpleFilters(ScanFixture.getScanFilters()).build();
+        when(cxClient.getReportContentByScanId(ScanFixture.SCAN_ID, filter))
+                .thenReturn(ScanFixture.getScanResults());
         cxFlowRunner = new CxFlowRunner(flowProperties, cxProperties, jiraProperties, gitHubProperties, gitLabProperties, adoProperties, helperService, flowService, sastScanner, executors, resultsService, osaScannerService);
     }
 
