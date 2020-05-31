@@ -55,11 +55,11 @@ jobs:
       - checkout
       - run:
           name: Analyze by SonarCloud
-          command: ./gradlew clean compileJava compileTestJava sonarqube -x test --debug
+          command: ./gradlew clean compileJava compileTestJava sonarqube -x test --info
       - run:
           name: Check Quality Gate
           command: |
-                    REPORT_PATH=".scannerwork/report-task.txt"
+                    REPORT_PATH="/home/circleci/project/build/sonar/report-task.txt"
                     CE_TASK_ID_KEY="ceTaskId="
                     SONAR_INSTANCE="https://sonarcloud.io"
                     SLEEP_TIME=5
