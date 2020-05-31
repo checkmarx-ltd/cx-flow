@@ -14,6 +14,7 @@ import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxProject;
+import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
 import com.checkmarx.sdk.service.CxOsaClient;
@@ -57,7 +58,8 @@ public class ResultsService {
         try {
             CompletableFuture<ScanResults> future = new CompletableFuture<>();
             //TODO async these, and join and merge after
-            ScanResults results = cxService.getReportContentByScanId(scanId, filters);
+            FilterConfiguration filter = FilterConfiguration.builder().simpleFilters(filters).build();
+            ScanResults results = cxService.getReportContentByScanId(scanId, filter);
             new ScanResultsReport(scanId, request, results).log();
             results = isOSAScanEnable(request, projectId, osaScanId, filters, results);
 
@@ -229,7 +231,7 @@ public class ResultsService {
         if(results != null && results.getScanSummary() != null) {
             log.info("####Checkmarx Scan Results Summary####");
             log.info("Team: {}, Project: {}, Scan-Id: {}", request.getTeam(), request.getProject(), results.getAdditionalDetails().get("scanId"));
-            log.info(String.format("The vulnerabilities found for the scan are: %s", String.valueOf(results.getScanSummary())));
+            log.info(String.format("The vulnerabilities found for the scan are: %s", results.getScanSummary()));
             log.info("To view results use following link: {}", results.getLink());
             log.info("######################################");
         }
@@ -237,9 +239,9 @@ public class ResultsService {
 
     void logScanDetails(ScanRequest request, Integer projectId, ScanResults results) {
         if (log.isInfoEnabled()) {
-            log.info(String.format("request : %s", String.valueOf(request)));
-            log.info(String.format("results : %s", String.valueOf(results)));
-            log.info(String.format("projectId : %s", String.valueOf(projectId)));
+            log.info(String.format("request : %s", request));
+            log.info(String.format("results : %s", results));
+            log.info(String.format("projectId : %s", projectId));
             log.info("Process completed Succesfully");
         }
     }
