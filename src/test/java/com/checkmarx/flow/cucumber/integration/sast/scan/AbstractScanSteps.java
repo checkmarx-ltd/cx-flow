@@ -12,7 +12,6 @@ import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxProject;
-import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.checkmarx.sdk.service.CxClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -81,9 +80,7 @@ public  abstract class AbstractScanSteps {
             scanDetails = sastScanner.executeCxScan(request, fileRepo);
             CompletableFuture<ScanResults> future = new CompletableFuture<>();
             //TODO async these, and join and merge after
-
-            FilterConfiguration filter = FilterConfiguration.fromSimpleFilters(request.getFilters());
-            results = cxClient.getReportContentByScanId(scanDetails.getScanId(), filter);
+            results = cxClient.getReportContentByScanId(scanDetails.getScanId(), request.getFilters());
             future.complete(results);
             results = future.join();
             errorExpected = false;
