@@ -39,7 +39,10 @@ public class UpdatePullRequestCommentsSteps {
 
 
     public static final int COMMENTS_POLL_INTERVAL = 5;
-    public static final String PULL_REQUEST_COMMENTS_URL = "https://api.github.com/repos/cxflowtestuser/vb_test_udi/issues/2/comments";
+    private static final String GIT_PROJECT_NAME = "vb_test_pr_comments";
+    private static final String GITHUB_PR_BASE_URL = "https://api.github.com/repos/cxflowtestuser/" + GIT_PROJECT_NAME;
+    public static final String PULL_REQUEST_COMMENTS_URL = GITHUB_PR_BASE_URL + "/issues/5/comments";
+    private static final String GIT_URL = "https://github.com/cxflowtestuser/" + GIT_PROJECT_NAME;
     private final GitHubService gitHubService;
     private GitHubController gitHubControllerSpy;
     private final ObjectMapper mapper = new ObjectMapper();
@@ -65,9 +68,9 @@ public class UpdatePullRequestCommentsSteps {
         initHelperServiceMock();
     }
 
-    @Given("branch is udi-tests-2")
+    @Given("branch is pr-comments-tests")
     public void setBranchName() {
-        branch = "udi-tests-2";
+        branch = "pr-comments-tests";
     }
 
     @Given("different filters configuration is set")
@@ -161,7 +164,7 @@ public class UpdatePullRequestCommentsSteps {
     private void initGitHubProperties() {
         this.gitHubProperties.setCxSummary(false);
         this.gitHubProperties.setFlowSummary(false);
-        this.gitHubProperties.setUrl("https://github.com/cxflowtestuser/vb_test_udi");
+        this.gitHubProperties.setUrl(GIT_URL);
         this.gitHubProperties.setWebhookToken("1234");
         this.gitHubProperties.setApiUrl("https://api.github.com/repos");
     }
@@ -187,7 +190,7 @@ public class UpdatePullRequestCommentsSteps {
         pullRequest.setHead(headBranch);
         pullRequest.setBase(new Base());
         pullRequest.setStatusesUrl("");
-        pullRequest.setIssueUrl("https://api.github.com/repos/cxflowtestuser/vb_test_udi/issues/2");
+        pullRequest.setIssueUrl(GITHUB_PR_BASE_URL + "/issues/5");
 
         pullEvent.setPullRequest(pullRequest);
 

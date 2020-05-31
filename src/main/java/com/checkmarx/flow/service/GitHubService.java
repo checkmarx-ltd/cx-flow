@@ -130,23 +130,25 @@ public class GitHubService extends RepoService {
         }
     }
 
-    public void sendMergeComment(ScanRequest request, String comment) throws GitHubClientException {
+    public void sendMergeComment(ScanRequest request, String comment) {
         try {
             RepoComment commentToUpdate = PullRequestCommentsHelper.getCommentToUpdate(getComments(request.getMergeNoteUri()), comment);
             if (commentToUpdate !=  null) {
+                log.debug("Got candidate comment to update. comment: {}", commentToUpdate.getComment());
                 if (!PullRequestCommentsHelper.shouldUpdateComment(comment, commentToUpdate.getComment())) {
-                    log.debug("Comment should not be updated");
+                    log.debug("sendMergeComment: Comment should not be updated");
                     return;
                 }
-                log.debug("Going to update GitHub pull request comment");
+                log.debug("sendMergeComment: Going to update GitHub pull request comment");
                 updateComment(commentToUpdate.getCommentUrl(), comment);
             } else {
-                log.debug("Going to create a new GitHub pull request comment");
+                log.debug("sendMergeComment: Going to create a new GitHub pull request comment");
                 addComment(request, comment);
             }
         }
-        catch (IOException ioe) {
-            throw new GitHubClientException("Error while adding or updating repo pull request comment", ioe);
+        catch (Exception e) {
+            // We "swallow" the exception so that the flow will not be terminated because of errors in GIT comments
+            log.error("Error while adding or updating repo pull request comment", e);
         }
     }
 
