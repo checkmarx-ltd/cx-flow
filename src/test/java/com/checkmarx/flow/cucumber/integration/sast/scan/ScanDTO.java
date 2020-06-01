@@ -1,4 +1,4 @@
-package com.checkmarx.flow.cucumber.integration.scan;
+package com.checkmarx.flow.cucumber.integration.sast.scan;
 
 public class ScanDTO {
 

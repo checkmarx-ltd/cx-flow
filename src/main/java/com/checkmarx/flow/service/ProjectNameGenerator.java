@@ -93,7 +93,7 @@ public class ProjectNameGenerator {
                 log.error("Error reading script file for checkmarx project {}", scriptFile, e);
             }
         } else if (StringUtils.isNotEmpty(project)) {
-            log.info("External script is not specified. Using project name from scan request: {}", project);
+            log.info("External script is not specified. Using project name from scan request.");
             return project;
         }
         return null;  //null will indicate no override of team will take place

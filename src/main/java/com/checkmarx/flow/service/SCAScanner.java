@@ -43,7 +43,7 @@ public class SCAScanner implements VulnerabilityScanner {
     }
 
     @Override
-    public boolean isThisScannedEnabled() {
+    public boolean isEnabled() {
         List<String> enabledScanners = flowProperties.getEnabledVulnerabilityScanners();
         return enabledScanners != null && enabledScanners.contains(ScaProperties.CONFIG_PREFIX);
     }
