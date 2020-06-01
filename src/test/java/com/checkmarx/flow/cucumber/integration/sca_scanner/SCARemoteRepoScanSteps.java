@@ -36,7 +36,7 @@ public class SCARemoteRepoScanSteps {
     private static final String PUBLIC_PROJECT_NAME = "Public-Test-Test-Repo";
     private static final String PRIVATE_PROJECT_NAME = "Private-Test-Test-Repo";
 
-    private static final String PUBLIC_REPO = "https://github.com/checkmarx-ltd/cx-flow.git";
+    private static final String PUBLIC_REPO = "https://github.com/cxflowtestuser/public-rest-repo.git";
     private static final String PRIVATE_REPO = "https://%s@github.com/cxflowtestuser/TestAlgorithms-.git";
 
     private final FlowProperties flowProperties;
