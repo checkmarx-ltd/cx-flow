@@ -5,9 +5,7 @@ import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.github.Content;
 import com.checkmarx.flow.dto.report.PullRequestReport;
-import com.checkmarx.flow.exception.GitHubClientException;
 import com.checkmarx.flow.exception.GitHubClientRunTimeException;
-import com.checkmarx.flow.exception.GitHubRepoUnavailableException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
@@ -78,7 +76,7 @@ public class GitHubService extends RepoService {
         return httpHeaders;
     }
 
-    void processPull(ScanRequest request, ScanResults results) throws GitHubClientException {
+    void processPull(ScanRequest request, ScanResults results) {
             String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties, properties);
             log.debug("comment: {}", comment);
             sendMergeComment(request, comment);
@@ -307,7 +305,7 @@ public class GitHubService extends RepoService {
             log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
         }catch (HttpClientErrorException.NotFound e){
             String error = "Got 404 'Not Found' error. GitHub endpoint: " + getGitHubEndPoint(request) + " is invalid.";
-            throw new GitHubClientRunTimeException(error, e);
+            log.warn(error);
         }catch (HttpClientErrorException e){
             log.error(ExceptionUtils.getRootCauseMessage(e));
         }
@@ -333,7 +331,6 @@ public class GitHubService extends RepoService {
             log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
         } catch (HttpClientErrorException e) {
             log.warn("Repo content is unavailable. The reason can be that branch has been deleted.");
-            throw new GitHubRepoUnavailableException("Error getting repo content.", e);
         }
         return Collections.emptyList();
     }
