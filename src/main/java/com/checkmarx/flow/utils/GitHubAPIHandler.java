@@ -10,6 +10,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.mutable.MutableInt;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.http.*;
@@ -35,7 +36,7 @@ public class GitHubAPIHandler {
     private ObjectMapper mapper = new ObjectMapper();
     
             
-    private HttpHeaders getHeaders() {
+    public HttpHeaders getHeaders() {
         final HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("Authorization", "token " + gitHubProperties.getToken());
@@ -164,13 +165,18 @@ public class GitHubAPIHandler {
         return response;
     }
     
-    public Boolean hasWebHook() {
+    public Boolean hasWebHook(MutableInt hookId) {
         String repoHooksBaseUrl = getHooksFormat();
         JSONArray hooks = getJSONArray(repoHooksBaseUrl);
+        
         if(hooks == null){
             throw new IllegalStateException("could not create webhook configuration");
         }
-        return !hooks.isEmpty();
+        boolean hasHook = !hooks.isEmpty();
+        if(hasHook){
+            hookId.setValue(((JSONObject)hooks.get(0)).getInt("id"));
+        }
+        return hasHook;
     }
 
     private String getHooksFormat() {
@@ -192,7 +198,7 @@ public class GitHubAPIHandler {
     }
 
     
-    public ResponseEntity<String> generateHook(HookType hookType, String hookTargetURL, Integer hookId) {
+    public ResponseEntity<String> generateHook(HookType hookType, String hookTargetURL, MutableInt hookId) {
         Hook data = null;
         try {
             data = generateHookData(hookTargetURL, gitHubProperties.getWebhookToken(), hookType);
@@ -206,7 +212,7 @@ public class GitHubAPIHandler {
             String url = getHooksFormat();
             final ResponseEntity<String> response = restTemplate.postForEntity(url, request,
                     String.class);
-            hookId = new JSONObject(response.getBody()).getInt("id");
+            hookId.setValue(new JSONObject(response.getBody()).getInt("id"));
             return response;
         } catch (Exception e) {
             throw new IllegalStateException("failed to create hook " + e.getMessage());
@@ -237,7 +243,7 @@ public class GitHubAPIHandler {
     }
 
 
-    public void deleteHook(Integer hookId) {
+    public void deleteHook(MutableInt hookId) {
         Optional.ofNullable(hookId).ifPresent(id -> {
             RestTemplate restTemplate = new RestTemplate();
             final HttpHeaders headers = getHeaders();

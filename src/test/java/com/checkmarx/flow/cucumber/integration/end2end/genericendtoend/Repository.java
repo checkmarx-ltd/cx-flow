@@ -32,6 +32,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import org.apache.commons.lang3.mutable.MutableInt;
 import org.json.JSONObject;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -49,14 +50,14 @@ enum Repository {
     GITHUB {
         private GitHubAPIHandler handler;
         GitHubProperties gitHubProperties;
-        private Integer hookId;
+        private MutableInt hookId = new MutableInt(0);
         private String createdFileSha;
         private Integer prId;
 
         @Override
         public Boolean hasWebHook() {
             try {
-                return !handler.hasWebHook();
+                return handler.hasWebHook(hookId);
             }
             catch(IllegalStateException e){
                 fail("could not create webhook configuration");
@@ -76,18 +77,17 @@ enum Repository {
                 fail(e.getMessage());
             }
         }
-        
+         
         @Override
         void deleteHook() {
-            handler.deleteHook(hookId);
+            if(hookId.getValue() != 0) {
+                handler.deleteHook(hookId);
+            }
         }
 
         @Override
         HttpHeaders getHeaders() {
-            final HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("Authorization", "token " + gitHubProperties.getToken());
-            return headers;
+            return handler.getHeaders();
         }
 
         @Override
@@ -113,6 +113,7 @@ enum Repository {
                 fail("faild to push a file: " + e.getMessage());
             }
        }
+       
 
         @Override
         protected void init(GenericEndToEndSteps genericEndToEndSteps) {
@@ -454,6 +455,7 @@ enum Repository {
             adoProperties = genericEndToEndSteps.adoProperties;
             super.init(genericEndToEndSteps);
         }
+        
 
         @Override
         void createPR() {
@@ -525,12 +527,19 @@ enum Repository {
 
     protected void generateWebHook(HookType hookType) {
         log.info("testing if repository alredy has hooks configured");
-        assertTrue(!hasWebHook(), "repository alredy has hooks configured");
+        //assertTrue(!hasWebHook(), "repository alredy has hooks configured");
         this.hookType = hookType;
         log.info("creating the webhook ({})", hookType);
+        try {
+            if (hasWebHook()) {
+                deleteHook();
+            }
+            //deleteFileByParam();
+        } catch (Exception e) {/*do nothing */}
+        
         generateHook(hookType);
     }
-
+    
     protected Properties getProperties() {
         Properties prop = new Properties();
         String path = new StringJoiner(File.separator, File.separator, "")
