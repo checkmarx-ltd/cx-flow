@@ -125,7 +125,7 @@ enum Repository {
         @Override
         void createPR() {
             try {
-                final ResponseEntity<String> response = handler.createPR(TITLE, BODY, BASE, prId);
+                final ResponseEntity<String> response = handler.createPR(TITLE, BODY, BASE);
                 assertEquals(HttpStatus.CREATED, response.getStatusCode());
                 prId = new JSONObject(response.getBody()).getInt("id");
             }catch (PendingException p){

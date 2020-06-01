@@ -108,7 +108,7 @@ public class GitHubAPIHandler {
         restTemplate.exchange(path, HttpMethod.DELETE, requestEntity, String.class);
     }
 
-    public ResponseEntity<String> createPR(String TITLE, String BODY, String BASE, Integer prId) throws JsonProcessingException {
+    public ResponseEntity<String> createPR(String TITLE, String BODY, String BASE) throws JsonProcessingException {
         String data = createPRData(false, TITLE, BODY, BASE);
         final HttpHeaders headers = getHeaders();
         final HttpEntity<String> request = new HttpEntity<>(data, headers);
@@ -121,8 +121,6 @@ public class GitHubAPIHandler {
         }
         final ResponseEntity<String> response = restTemplate.postForEntity(url, request,
                 String.class);
-
-        prId = new JSONObject(response.getBody()).getInt("id");
 
         return response;
         
