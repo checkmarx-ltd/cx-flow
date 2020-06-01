@@ -51,6 +51,7 @@ enum Repository {
         private Integer hookId;
         private String createdFileSha;
         private Integer prId;
+        private GitHubApiHandler api;
 
         @Override
         Boolean hasWebHook() {
@@ -145,35 +146,19 @@ enum Repository {
 
         @Override
         void pushFile(String content) {
-            ObjectMapper mapper = new ObjectMapper();
-            ObjectNode jo = mapper.createObjectNode();
-            jo.put("message", "GitHubToJira test message");
             Committer committer = new Committer();
             committer.setName("CxFlowTestUser");
             committer.setEmail("CxFlowTestUser@checkmarx.com");
-            jo.putPOJO("committer", committer);
-            jo.put("content", content);
-            String data;
             try {
-                data = mapper.writeValueAsString(jo);
+                JSONObject response = api.pushFile(content, "GitHubToJira test message", committer, getHeaders(), gitHubProperties.getApiUrl(), namespace, repo, filePath);
+                createdFileSha = response.getJSONObject("content").getString("sha");
             } catch (JsonProcessingException e) {
                 String msg = "faild to create file for push";
                 log.error(msg);
                 fail(msg);
-                data = null;
-            }
-            final HttpHeaders headers = getHeaders();
-            final HttpEntity<String> request = new HttpEntity<>(data, headers);
-            RestTemplate restTemplate = new RestTemplate();
-            try {
-                String path = getContentsFormat();
-                ResponseEntity<String> response = restTemplate.exchange(path, HttpMethod.PUT, request,
-                        String.class);
-                createdFileSha = new JSONObject(response.getBody()).getJSONObject("content").getString("sha");
             } catch (Exception e) {
                 fail("faild to push a file: " + e.getMessage());
             }
-
         }
 
         private String getContentsFormat() {
@@ -211,6 +196,7 @@ enum Repository {
         @Override
         protected void init(GenericEndToEndSteps genericEndToEndSteps) {
             gitHubProperties = genericEndToEndSteps.gitHubProperties;
+            api = new GitHubApiHandler();
             super.init(genericEndToEndSteps);
         }
 
