@@ -21,6 +21,7 @@ import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
 import com.checkmarx.sdk.dto.sca.SCAResults;
 import com.checkmarx.sdk.dto.sca.Summary;
+import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
 import com.checkmarx.test.flow.config.CxFlowMocksConfig;
@@ -72,7 +73,7 @@ public class AnalyticsSteps {
         int fakeScanId;
         ScanRequest scanRequest;
         PullRequestReport lastAnalyticsReport;
-        List<Filter> filters;
+        FilterConfiguration filter;
         Map<FindingSeverity, Integer> findingsPerSeverity;
     }
 
@@ -97,10 +98,10 @@ public class AnalyticsSteps {
 
     @Given("SCA Scan in configured in application.yml")
     public void scanScanIsconfigured(){}
-    
+
     @And("filters are disabled")
     public void filtersAreDisabled() {
-        state.filters = new ArrayList<>();
+        state.filter = FilterConfiguration.fromSimpleFilters(Collections.emptyList());
     }
 
     @When("pull request is created for a repo with URL: {string} in GitHub")
@@ -123,7 +124,7 @@ public class AnalyticsSteps {
         state.scanResultsToInject = createFakeSCAScanResults(state.findingsPerSeverity, scanId);
         processScanResultsInCxFlow();
     }
-    
+
     @Then("in analytics report, the operation is {string}")
     public void inAnalyticsReportTheOperationIs(String operation) throws CheckmarxException {
         state.lastAnalyticsReport = (PullRequestReport) loggerUtils.getReportNode(operation, PullRequestReport.class);
@@ -178,7 +179,7 @@ public class AnalyticsSteps {
     private void processScanResultsInCxFlow() throws InterruptedException {
         try {
             CompletableFuture<ScanResults> task = resultsService.processScanResultsAsync(
-                    state.scanRequest, 0, state.fakeScanId, null, state.filters);
+                    state.scanRequest, 0, state.fakeScanId, null, state.filter);
 
             task.get(1, TimeUnit.MINUTES);
         } catch (MachinaException | ExecutionException | TimeoutException e) {
@@ -267,13 +268,13 @@ public class AnalyticsSteps {
     }
 
     private static ScanResults createFakeSCAScanResults(Map<FindingSeverity, Integer> findingsPerSeverity, int scanId) {
-        
+
         Map<Filter.Severity, Integer> findingCounts= new HashMap<Filter.Severity, Integer>() ;
-        
+
         SCAResults scaResults = new SCAResults();
 
         scaResults.setScanId("" + scanId);
-        
+
         List<Finding> findings = new LinkedList<Finding>();
         addFinding(findingsPerSeverity.get(FindingSeverity.HIGH), findingCounts, findings, Severity.HIGH, Filter.Severity.HIGH);
         addFinding(findingsPerSeverity.get(FindingSeverity.MEDIUM), findingCounts, findings, Severity.MEDIUM, Filter.Severity.MEDIUM);
@@ -281,12 +282,12 @@ public class AnalyticsSteps {
 
         Summary summary = new Summary();
         summary.setFindingCounts(findingCounts);
-        
+
         scaResults.setFindings(findings);
 
         scaResults.setSummary(summary);
         scaResults.setPackages(new LinkedList<>());
-        
+
         return ScanResults.builder()
                 .scaResults(scaResults)
                 .xIssues(new ArrayList<>())

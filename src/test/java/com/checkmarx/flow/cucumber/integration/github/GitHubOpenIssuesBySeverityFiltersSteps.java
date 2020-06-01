@@ -8,6 +8,7 @@ import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.utils.github.GitHubTestUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.dto.Filter;
+import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
@@ -19,6 +20,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -73,6 +75,8 @@ public class GitHubOpenIssuesBySeverityFiltersSteps extends GitHubCommonSteps {
     }
 
     private ScanRequest getBasicScanRequest() {
+        List<Filter> simpleFilters = Collections.singletonList(this.filter);
+        FilterConfiguration filterConfiguration = FilterConfiguration.fromSimpleFilters(simpleFilters);
         return ScanRequest.builder()
                 .product(ScanRequest.Product.CX)
                 .project(REPO_NAME + "-" + MASTER_BRANCH_NAME)
@@ -85,7 +89,7 @@ public class GitHubOpenIssuesBySeverityFiltersSteps extends GitHubCommonSteps {
                 .refs(Constants.CX_BRANCH_PREFIX.concat(MASTER_BRANCH_NAME))
                 .email(null)
                 .incremental(false)
-                .filters(severityFilters)
+                .filter(filterConfiguration)
                 .build();
     }
 }

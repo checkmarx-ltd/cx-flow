@@ -6,6 +6,7 @@ import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.dto.Filter;
+import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
@@ -62,6 +63,7 @@ public class GitHubCloseIssueSteps extends GitHubCommonSteps {
     }
 
     private ScanRequest getBasicScanRequest() {
+        FilterConfiguration filterConfiguration = FilterConfiguration.fromSimpleFilters(Collections.singletonList(filter));
         return ScanRequest.builder()
                 .product(ScanRequest.Product.CX)
                 .project(REPO_NAME + "-" + MASTER_BRANCH_NAME)
@@ -74,7 +76,7 @@ public class GitHubCloseIssueSteps extends GitHubCommonSteps {
                 .refs(Constants.CX_BRANCH_PREFIX.concat(MASTER_BRANCH_NAME))
                 .email(null)
                 .incremental(false)
-                .filters(Collections.singletonList(filter))
+                .filter(filterConfiguration)
                 .build();
     }
 }

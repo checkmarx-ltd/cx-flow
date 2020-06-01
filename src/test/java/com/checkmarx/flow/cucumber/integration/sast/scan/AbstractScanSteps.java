@@ -82,8 +82,7 @@ public  abstract class AbstractScanSteps {
             CompletableFuture<ScanResults> future = new CompletableFuture<>();
             //TODO async these, and join and merge after
 
-            FilterConfiguration filter = FilterConfiguration.fromSimpleFilters(request.getFilters());
-            results = cxClient.getReportContentByScanId(scanDetails.getScanId(), filter);
+            results = cxClient.getReportContentByScanId(scanDetails.getScanId(), request.getFilter());
             future.complete(results);
             results = future.join();
             errorExpected = false;
@@ -125,7 +124,7 @@ public  abstract class AbstractScanSteps {
         cxProperties.setConfiguration("Default Configuration");
         
         if(!filters.isEmpty()){
-            request.setFilters(filters);
+            request.setFilter(FilterConfiguration.fromSimpleFilters(filters));
         }
         if(!excludeFilesList.isEmpty()){
             request.setExcludeFiles(excludeFilesList);

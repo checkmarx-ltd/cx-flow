@@ -53,8 +53,8 @@ public class ScanUtilsTest {
         CxConfig cxConfig = ScanUtils.getConfigAsCode(file);
         assertNotNull(cxConfig);
         com.checkmarx.flow.utils.ScanUtils.overrideCxConfig(request, cxConfig, flowProperties);
-        assertEquals(request.getTeam(), "/a/b/c");
-        assertEquals(request.getProject(), "XYZ-Riches-master");
+        assertEquals("/a/b/c", request.getTeam());
+        assertEquals("XYZ-Riches-master", request.getProject());
         assertFalse(request.isIncremental());
         assertEquals("All", request.getScanPreset());
     }
@@ -88,8 +88,9 @@ public class ScanUtilsTest {
         assertEquals(request.getProject(), "XYZ-Riches-master");
         assertEquals(request.getApplication(), "test app");
         assertEquals(request.getActiveBranches().size(), 2);
-        assertNotNull(request.getFilters());
-        assertFalse(request.getFilters().isEmpty());
+        assertNotNull(request.getFilter());
+        assertNotNull(request.getFilter().getSimpleFilters());
+        assertFalse(request.getFilter().getSimpleFilters().isEmpty());
     }
 
     @Test

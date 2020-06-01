@@ -304,10 +304,10 @@ public class CxConfigSteps {
         return filterByType;
     }
     private void validateRequestFilter() {
-        
-        List<String> filterSeverity = getFilter(request.getFilters(), Filter.Type.SEVERITY);
-        List<String> filterCwe = getFilter(request.getFilters(), Filter.Type.CWE);
-        List<String> filterCatergory = getFilter(request.getFilters(), Filter.Type.TYPE);
+        List<Filter> filters = request.getFilter().getSimpleFilters();
+        List<String> filterSeverity = getFilter(filters, Filter.Type.SEVERITY);
+        List<String> filterCwe = getFilter(filters, Filter.Type.CWE);
+        List<String> filterCatergory = getFilter(filters, Filter.Type.TYPE);
         
         boolean asExpected = false;
         switch(branch){
