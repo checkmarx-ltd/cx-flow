@@ -45,6 +45,7 @@ import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
+import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.checkmarx.sdk.dto.sca.SCAResults;
 import com.cx.restclient.sca.dto.report.Finding;
 import com.cx.restclient.sca.dto.report.Package;
@@ -114,6 +115,20 @@ public class ScanUtils {
                     });
                 });
         return issueList;
+    }
+
+    public static FilterConfiguration getFilter(List<String> severity,
+                                                List<String> cwe,
+                                                List<String> category,
+                                                List<String> status,
+                                                FlowProperties flowProperties) {
+        List<Filter> filters;
+        if (!ScanUtils.empty(severity) || !ScanUtils.empty(cwe) || !ScanUtils.empty(category) || !ScanUtils.empty(status)) {
+            filters = getFilters(severity, cwe, category, status);
+        } else {
+            filters = getFilters(flowProperties);
+        }
+        return FilterConfiguration.fromSimpleFilters(filters);
     }
 
     /**
@@ -229,12 +244,12 @@ public class ScanUtils {
 
         if(filtersObj != null && (!ScanUtils.empty(filtersObj.getSeverity()) || !ScanUtils.empty(filtersObj.getCwe()) ||
                 !ScanUtils.empty(filtersObj.getCategory()) || !ScanUtils.empty(filtersObj.getStatus()))) {
-            List<Filter> filters = ScanUtils.getFilters(filtersObj.getSeverity(), filtersObj.getCwe(),
+            List<Filter> simpleFilters = ScanUtils.getFilters(filtersObj.getSeverity(), filtersObj.getCwe(),
                     filtersObj.getCategory(), filtersObj.getStatus());
-            request.setFilters(filters);
+            request.setFilter(FilterConfiguration.fromSimpleFilters(simpleFilters));
         }
         else if (filtersObj != null){
-            request.setFilters(null);
+            request.setFilter(null);
         }
 
         return request;
@@ -278,7 +293,7 @@ public class ScanUtils {
             Optional.ofNullable(s.getForceScan()).ifPresent(sf -> {
                 request.setForceScan(sf);
                 overridePropertiesMap.put("force scan", sf.toString());
-            }); 
+            });
 
             Optional.ofNullable(s.getPreset()).ifPresent(sp -> {
                 request.setScanPreset(sp);
@@ -294,7 +309,7 @@ public class ScanUtils {
                 overridePropertiesMap.put("exclude files", sf);
             });
         });
-       
+
         try {
             Optional.ofNullable(override.getAdditionalProperties()).ifPresent(ap -> {
                 Object flow = ap.get("cxFlow");
@@ -310,12 +325,12 @@ public class ScanUtils {
                     String bug = fo.getBugTracker();
                     if(bug != null && !bug.equalsIgnoreCase(bt.getType().toString())) {
                         BugTracker.Type bugType = ScanUtils.getBugTypeEnum(bug, flowProperties.getBugTrackerImpl());
-                        
+
                         BugTrackerBuilder builder = BugTracker.builder()
                             .type(bugType);
                         if (bugType.equals(BugTracker.Type.CUSTOM)) {
                             builder.customBean(bug);
-                        } 
+                        }
                         bt = builder.build();
                         overridePropertiesMap.put("bug tracker", fo.getBugTracker());
                     }
@@ -344,30 +359,32 @@ public class ScanUtils {
                     .ifPresent(e -> request.setEmail(e.isEmpty() ? null : e));
 
                     Optional.ofNullable(fo.getFilters()).ifPresent(f -> {
-                        if (!(ScanUtils.empty(f.getSeverity()) && ScanUtils.empty(f.getCwe()) &&
-                                        ScanUtils.empty(f.getCategory()) && ScanUtils.empty(f.getStatus()))) {
-                            List<Filter> filters = ScanUtils.getFilters(f.getSeverity(), f.getCwe(),
-                                    f.getCategory(), f.getStatus());
-                            request.setFilters(filters);
-                            overridePropertiesMap.put("filters", filters.stream().map(Object::toString).collect(Collectors.joining(",")));
-                        } else {
-                            request.setFilters(null);
-                            overridePropertiesMap.put("filters", "EMPTY");
-                        }
-                    });
+                        if (!ScanUtils.empty(f.getSeverity()) || !ScanUtils.empty(f.getCwe()) ||
+                                    !ScanUtils.empty(f.getCategory()) || !ScanUtils.empty(f.getStatus()))) {
+                        List<Filter> filters = ScanUtils.getFilters(f.getSeverity(), f.getCwe(),
+                                f.getCategory(), f.getStatus());
+                        request.setFilter(FilterConfiguration.fromSimpleFilters(filters));
+                        overridePropertiesMap.put("filters", filters.stream().map(Object::toString).collect(Collectors.joining(",")));
+                    } else if (fo != null) {
+                        request.setFilter(null);
+                        overridePropertiesMap.put("filters", "EMPTY");
+                    }
+                });
 
-                    Optional.ofNullable(flowOverride.getThresholds()).ifPresent(th -> {                    
+                    FlowOverride.Thresholds thresholds = flowOverride.getThresholds();
+
+                    Optional.ofNullable(flowOverride.getThresholds()).ifPresent(th -> {
                         if ( !(
-                            th.getHigh()==null && 
+                            th.getHigh()==null &&
                             th.getMedium()==null &&
-                            th.getLow()==null && 
+                            th.getLow()==null &&
                             th.getInfo()==null
                             )) {
                                 Map<FindingSeverity,Integer> thresholdsMap = ScanUtils.getThresholdsMap(th);
                                 if(!thresholdsMap.isEmpty()) {
                                     flowProperties.setThresholds(thresholdsMap);
                                 }
-    
+
                             overridePropertiesMap.put("thresholds", convertMapToString(thresholdsMap));
                         }
                     });

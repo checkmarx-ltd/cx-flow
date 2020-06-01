@@ -15,8 +15,14 @@ import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
+import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
+import com.checkmarx.sdk.dto.filtering.ScriptedFilter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import groovy.lang.GroovyShell;
+import groovy.lang.Script;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
@@ -86,7 +92,7 @@ public class FlowController {
         BugTracker bugTracker = getBugTracker(assignee, bug);
 
         // Create filters if available
-        List<Filter> filters = getFilters(severity, cwe, category, status);
+        FilterConfiguration filter = ScanUtils.getFilter(severity, cwe, category, status, properties);
 
         // Create the scan request
         ScanRequest scanRequest = ScanRequest.builder()
@@ -96,7 +102,7 @@ public class FlowController {
                 .project(project)
                 .team(team)
                 .bugTracker(bugTracker)
-                .filters(filters)
+                .filter(filter)
                 .build();
         scanRequest.setId(uid);
         // If an override blob/file is provided, substitute these values
@@ -171,10 +177,7 @@ public class FlowController {
                 product = ScanRequest.Product.valueOf(scanRequest.getProduct().toUpperCase(Locale.ROOT));
             }
 
-            List<Filter> filters = getFilters(properties.getFilterSeverity(), properties.getFilterCwe(), properties.getFilterCategory(), properties.getFilterStatus());
-            if(!ScanUtils.empty(scanRequest.getFilters())){
-                filters = scanRequest.getFilters();
-            }
+            FilterConfiguration filter = determineFilter(scanRequest);
 
             String bug = properties.getBugTracker();
             if(!ScanUtils.empty(scanRequest.getBug())){
@@ -210,7 +213,7 @@ public class FlowController {
                     .excludeFolders(excludeFolders)
                     .excludeFiles(excludeFiles)
                     .bugTracker(bt)
-                    .filters(filters)
+                    .filter(filter)
                     .build();
             request.setId(uid);
 
@@ -234,6 +237,27 @@ public class FlowController {
                 .message("Scan Request Successfully Submitted")
                 .success(true)
                 .build());
+    }
+
+    private FilterConfiguration determineFilter(CxScanRequest scanRequest) {
+        FilterConfiguration filter = ScanUtils.getFilter(properties.getFilterSeverity(), properties.getFilterCwe(), properties.getFilterCategory(), properties.getFilterStatus(), properties);
+
+        boolean hasSimpleFilters = CollectionUtils.isNotEmpty(scanRequest.getFilters());
+        boolean hasFilterScript = StringUtils.isNotEmpty(scanRequest.getFilterScript());
+        if (hasSimpleFilters || hasFilterScript) {
+            Script parsedScript = null;
+            if (hasFilterScript) {
+                GroovyShell groovyShell = new GroovyShell();
+                parsedScript = groovyShell.parse(scanRequest.getFilterScript());
+            }
+            filter = FilterConfiguration.builder()
+                    .simpleFilters(scanRequest.getFilters())
+                    .scriptedFilter(ScriptedFilter.builder()
+                            .script(parsedScript)
+                            .build())
+                    .build();
+        }
+        return filter;
     }
 
     /**
@@ -316,6 +340,8 @@ public class FlowController {
         public String team;
         @JsonProperty("filters")
         public List<Filter> filters;
+        @JsonProperty("filter_script")
+        public String filterScript;
         @JsonProperty("cx_product")
         public String product;
         @JsonProperty("cx_preset")
@@ -463,6 +489,13 @@ public class FlowController {
             this.filters = filters;
         }
 
+        public String getFilterScript() {
+            return filterScript;
+        }
+
+        public void setFilterScript(String filterScript) {
+            this.filterScript = filterScript;
+        }
         public boolean isIncremental() {
             return incremental;
         }

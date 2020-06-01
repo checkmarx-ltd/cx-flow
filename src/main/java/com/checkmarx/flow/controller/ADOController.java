@@ -15,6 +15,7 @@ import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.Filter;
+import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
@@ -146,7 +147,6 @@ public class ADOController {
             String targetBranch = ScanUtils.getBranchFromRef(resource.getTargetRefName());
 
             List<String> branches = new ArrayList<>();
-            List<Filter> filters;
             if(!ScanUtils.empty(branch)){
                 branches.addAll(branch);
             }
@@ -155,14 +155,8 @@ public class ADOController {
             }
 
             BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
-            /*Determine filters, if any*/
-            if(!ScanUtils.empty(severity) || !ScanUtils.empty(cwe) || !ScanUtils.empty(category) || !ScanUtils.empty(status)){
-                filters = ScanUtils.getFilters(severity, cwe, category, status);
-            }
-            else{
-                filters = ScanUtils.getFilters(flowProperties.getFilterSeverity(), flowProperties.getFilterCwe(),
-                        flowProperties.getFilterCategory(), flowProperties.getFilterStatus());
-            }
+
+            FilterConfiguration filter = ScanUtils.getFilter(severity, cwe, category, status, flowProperties);
 
             if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
                 excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
@@ -207,7 +201,7 @@ public class ADOController {
                     .excludeFolders(excludeFolders)
                     .excludeFiles(excludeFiles)
                     .bugTracker(bt)
-                    .filters(filters)
+                    .filter(filter)
                     .build();
 
             request = ScanUtils.overrideMap(request, o);
@@ -322,7 +316,6 @@ public class ADOController {
             String currentBranch = ScanUtils.getBranchFromRef(ref);
 
             List<String> branches = new ArrayList<>();
-            List<Filter> filters;
             if(!ScanUtils.empty(branch)){
                 branches.addAll(branch);
             }
@@ -332,14 +325,8 @@ public class ADOController {
 
             BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
 
-            /*Determine filters, if any*/
-            if(!ScanUtils.empty(severity) || !ScanUtils.empty(cwe) || !ScanUtils.empty(category) || !ScanUtils.empty(status)){
-                filters = ScanUtils.getFilters(severity, cwe, category, status);
-            }
-            else{
-                filters = ScanUtils.getFilters(flowProperties.getFilterSeverity(), flowProperties.getFilterCwe(),
-                        flowProperties.getFilterCategory(), flowProperties.getFilterStatus());
-            }
+            FilterConfiguration filter = ScanUtils.getFilter(severity, cwe, category, status, flowProperties);
+
             if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
                 excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
             }
@@ -397,7 +384,7 @@ public class ADOController {
                     .excludeFolders(excludeFolders)
                     .excludeFiles(excludeFiles)
                     .bugTracker(bt)
-                    .filters(filters)
+                    .filter(filter)
                     .build();
 
             request.putAdditionalMetadata(Constants.ADO_ISSUE_KEY, adoIssueType);

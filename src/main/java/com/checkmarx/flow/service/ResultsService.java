@@ -11,7 +11,6 @@ import com.checkmarx.flow.exception.*;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
-import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxProject;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
@@ -54,14 +53,13 @@ public class ResultsService {
 
     @Async("scanRequest")
     public CompletableFuture<ScanResults> processScanResultsAsync(ScanRequest request, Integer projectId,
-                                                                  Integer scanId, String osaScanId, List<Filter> filters) throws MachinaException {
+                                                                  Integer scanId, String osaScanId, FilterConfiguration filterConfiguration) throws MachinaException {
         try {
             CompletableFuture<ScanResults> future = new CompletableFuture<>();
             //TODO async these, and join and merge after
-            FilterConfiguration filter = FilterConfiguration.fromSimpleFilters(filters);
-            ScanResults results = cxService.getReportContentByScanId(scanId, filter);
+            ScanResults results = cxService.getReportContentByScanId(scanId, filterConfiguration);
             logGetResultsJsonLogger(request, scanId, results);
-            results = getOSAScan(request, projectId, osaScanId, filters, results);
+            results = getOSAScan(request, projectId, osaScanId, filterConfiguration, results);
 
             sendEmailNotification(request, results);
             processResults(request, results, new ScanDetails(projectId, scanId, osaScanId));
@@ -158,7 +156,7 @@ public class ResultsService {
             else {
                 getCxFields(project, request);
                 //null is passed for osaScanId as it is not applicable here and will be ignored
-                return processScanResultsAsync(request, project.getId(), scanId, null, request.getFilters());
+                return processScanResultsAsync(request, project.getId(), scanId, null, request.getFilter());
             }
 
         } catch (MachinaException | CheckmarxException e) {
@@ -291,10 +289,10 @@ public class ResultsService {
         }
     }
 
-    ScanResults getOSAScan(ScanRequest request, Integer projectId, String osaScanId, List<Filter> filters, ScanResults results) throws CheckmarxException {
+    ScanResults getOSAScan(ScanRequest request, Integer projectId, String osaScanId, FilterConfiguration filter, ScanResults results) throws CheckmarxException {
         if(cxProperties.getEnableOsa() && !ScanUtils.empty(osaScanId)){
             log.info("Waiting for OSA Scan results for scan id {}", osaScanId);
-            results = osaService.waitForOsaScan(osaScanId, projectId, results, filters);
+            results = osaService.waitForOsaScan(osaScanId, projectId, results, filter.getSimpleFilters());
 
             new ScanResultsReport(osaScanId,request, results).log();
         }

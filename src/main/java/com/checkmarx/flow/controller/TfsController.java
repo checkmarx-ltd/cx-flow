@@ -29,9 +29,9 @@ import com.checkmarx.flow.service.HelperService;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
-import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.flow.dto.azure.Repository;
 
+import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
@@ -126,17 +126,12 @@ public class TfsController {
 
         appOnlyTracking.ifPresent(flowProperties::setTrackApplicationOnly);
 
-        List<Filter> filters;
-        if(severity.isPresent() || cwe.isPresent() || category.isPresent() || status.isPresent()){
-            filters = ScanUtils.getFilters(
-                severity.orElse(Collections.emptyList()), 
-                cwe.orElse(Collections.emptyList()), 
-                category.orElse(Collections.emptyList()), 
-                status.orElse(Collections.emptyList()));
-        } else {
-            filters = ScanUtils.getFilters(flowProperties.getFilterSeverity(), flowProperties.getFilterCwe(),
-                    flowProperties.getFilterCategory(), flowProperties.getFilterStatus());
-        }
+        List<String> severityList = severity.orElse(Collections.emptyList());
+        List<String> cweList = cwe.orElse(Collections.emptyList());
+        List<String> categoryList = category.orElse(Collections.emptyList());
+        List<String> statusList = status.orElse(Collections.emptyList());
+
+        FilterConfiguration filter = ScanUtils.getFilter(severityList, cweList, categoryList, statusList, flowProperties);
 
         ScanRequestBuilder requestBuilder = ScanRequest.builder()
                 .application(application.orElse(app))
@@ -150,7 +145,7 @@ public class TfsController {
                 .scanPreset(preset.orElse(cxProperties.getScanPreset()))
                 .excludeFolders(createExludeList(excludeFolders , cxProperties.getExcludeFolders()))
                 .excludeFiles(createExludeList(excludeFiles , cxProperties.getExcludeFiles()))
-                .filters(filters);
+                .filter(filter);
         if("pull".equals(action)) {
             BugTracker.Type bugType = 
             bug.map(theBug -> ScanUtils.getBugTypeEnum(theBug, flowProperties.getBugTrackerImpl()))

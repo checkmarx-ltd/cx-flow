@@ -14,7 +14,7 @@ import com.checkmarx.flow.service.HelperService;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
-import com.checkmarx.sdk.dto.Filter;
+import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
@@ -111,7 +111,6 @@ public class BitbucketCloudController {
             String currentBranch = pullRequest.getSource().getBranch().getName();
             String targetBranch = pullRequest.getDestination().getBranch().getName();
             List<String> branches = new ArrayList<>();
-            List<Filter> filters;
 
             if(!ScanUtils.empty(branch)){
                 branches.addAll(branch);
@@ -122,12 +121,7 @@ public class BitbucketCloudController {
 
             BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
 
-            if(!ScanUtils.empty(severity) || !ScanUtils.empty(cwe) || !ScanUtils.empty(category) || !ScanUtils.empty(status)){
-                filters = ScanUtils.getFilters(severity, cwe, category, status);
-            }
-            else{
-                filters = ScanUtils.getFilters(flowProperties);
-            }
+            FilterConfiguration filter = ScanUtils.getFilter(severity, cwe, category, status, flowProperties);
 
             if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
                 excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
@@ -168,7 +162,7 @@ public class BitbucketCloudController {
                     .excludeFolders(excludeFolders)
                     .excludeFiles(excludeFiles)
                     .bugTracker(bt)
-                    .filters(filters)
+                    .filter(filter)
                     .build();
 
             request = ScanUtils.overrideMap(request, o);
@@ -253,7 +247,6 @@ public class BitbucketCloudController {
             List<Change> changeList =  body.getPush().getChanges();
             String currentBranch = changeList.get(0).getNew().getName();
             List<String> branches = new ArrayList<>();
-            List<Filter> filters;
 
             if(!ScanUtils.empty(branch)){
                 branches.addAll(branch);
@@ -263,13 +256,8 @@ public class BitbucketCloudController {
             }
 
             BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
-            /*Determine filters, if any*/
-            if(!ScanUtils.empty(severity) || !ScanUtils.empty(cwe) || !ScanUtils.empty(category) || !ScanUtils.empty(status)){
-                filters = ScanUtils.getFilters(severity, cwe, category, status);
-            }
-            else{
-                filters = ScanUtils.getFilters(flowProperties);
-            }
+
+            FilterConfiguration filter = ScanUtils.getFilter(severity, cwe, category, status, flowProperties);
 
             if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
                 excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
@@ -319,7 +307,7 @@ public class BitbucketCloudController {
                     .excludeFolders(excludeFolders)
                     .excludeFiles(excludeFiles)
                     .bugTracker(bt)
-                    .filters(filters)
+                    .filter(filter)
                     .build();
 
             request = ScanUtils.overrideMap(request, o);

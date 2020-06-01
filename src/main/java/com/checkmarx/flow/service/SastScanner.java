@@ -15,7 +15,6 @@ import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxProject;
 import com.checkmarx.sdk.dto.cx.CxScanParams;
-import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
 import com.checkmarx.sdk.service.CxOsaClient;
@@ -81,8 +80,7 @@ public class SastScanner implements VulnerabilityScanner {
             }
             logRequest(scanRequest, scanId, null, OperationResult.successful());
 
-            FilterConfiguration filter = FilterConfiguration.fromSimpleFilters(scanRequest.getFilters());
-            scanResults = cxService.getReportContentByScanId(scanId, filter);
+            scanResults = cxService.getReportContentByScanId(scanId, scanRequest.getFilter());
             scanResults.setSastScanId(scanId);
             return scanResults;
 
@@ -125,7 +123,7 @@ public class SastScanner implements VulnerabilityScanner {
     public CompletableFuture<ScanResults> executeCxScanFlow(ScanRequest request, File cxFile) throws MachinaException {
         ScanDetails scanDetails = executeCxScan(request, cxFile);
         if (scanDetails.processResults()) {
-            return resultsService.processScanResultsAsync(request, scanDetails.getProjectId(), scanDetails.getScanId(), scanDetails.getOsaScanId(), request.getFilters());
+            return resultsService.processScanResultsAsync(request, scanDetails.getProjectId(), scanDetails.getScanId(), scanDetails.getOsaScanId(), request.getFilter());
         } else {
             return scanDetails.getResults();
         }
@@ -230,8 +228,7 @@ public class SastScanner implements VulnerabilityScanner {
 
     public void cxParseResults(ScanRequest request, File file) throws ExitThrowable {
         try {
-            FilterConfiguration filter = FilterConfiguration.fromSimpleFilters(request.getFilters());
-            ScanResults results = cxService.getReportContent(file, filter);
+            ScanResults results = cxService.getReportContent(file, request.getFilter());
             resultsService.processResults(request, results, scanDetails);
             if (flowProperties.isBreakBuild() && results != null && results.getXIssues() != null && !results.getXIssues().isEmpty()) {
                 log.error(ERROR_BREAK_MSG);
