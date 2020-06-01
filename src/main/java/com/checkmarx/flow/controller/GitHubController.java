@@ -9,10 +9,7 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.github.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
-import com.checkmarx.flow.service.FlowService;
-import com.checkmarx.flow.service.GitHubService;
-import com.checkmarx.flow.service.HelperService;
-import com.checkmarx.flow.service.SastScanner;
+import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
@@ -171,7 +168,7 @@ public class GitHubController {
             String targetBranch = pullRequest.getBase().getRef();
             List<String> branches = getBranches(branch);
             BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
-            FilterConfiguration filter = ScanUtils.getFilter(severity, cwe, category, status, flowProperties);
+            FilterConfiguration filter = FilterFactory.getFilter(severity, cwe, category, status, flowProperties);
 
             if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
                 excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
@@ -325,7 +322,7 @@ public class GitHubController {
             List<String> branches = getBranches(branch);
 
             BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
-            FilterConfiguration filter = ScanUtils.getFilter(severity, cwe, category, status, flowProperties);
+            FilterConfiguration filter = FilterFactory.getFilter(severity, cwe, category, status, flowProperties);
 
             if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
                 excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));

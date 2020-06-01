@@ -7,6 +7,7 @@ import com.checkmarx.flow.dto.EventResponse;
 import com.checkmarx.flow.dto.FlowOverride;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.InvalidTokenException;
+import com.checkmarx.flow.service.FilterFactory;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.HelperService;
 import com.checkmarx.flow.service.ResultsService;
@@ -92,7 +93,7 @@ public class FlowController {
         BugTracker bugTracker = getBugTracker(assignee, bug);
 
         // Create filters if available
-        FilterConfiguration filter = ScanUtils.getFilter(severity, cwe, category, status, properties);
+        FilterConfiguration filter = FilterFactory.getFilter(severity, cwe, category, status, properties);
 
         // Create the scan request
         ScanRequest scanRequest = ScanRequest.builder()
@@ -240,7 +241,7 @@ public class FlowController {
     }
 
     private FilterConfiguration determineFilter(CxScanRequest scanRequest) {
-        FilterConfiguration filter = ScanUtils.getFilter(properties.getFilterSeverity(), properties.getFilterCwe(), properties.getFilterCategory(), properties.getFilterStatus(), properties);
+        FilterConfiguration filter = FilterFactory.getFilter(properties.getFilterSeverity(), properties.getFilterCwe(), properties.getFilterCategory(), properties.getFilterStatus(), properties);
 
         boolean hasSimpleFilters = CollectionUtils.isNotEmpty(scanRequest.getFilters());
         boolean hasFilterScript = StringUtils.isNotEmpty(scanRequest.getFilterScript());
@@ -272,30 +273,6 @@ public class FlowController {
             throw new InvalidTokenException();
         }
         log.info("Validation successful");
-    }
-
-    /**
-     * Creates a list of {@link Filter}s based on any given values. If no values are provided,
-     * the filter values specified in the cx-flow section of the yml file will be used.
-     *
-     * @param severity list of severity values to use
-     * @param cwe      list of CWE values to use
-     * @param category list of vulnerability categories to use
-     * @param status   list of status values to use
-     * @return list of {@link Filter} objects
-     */
-    protected List<Filter> getFilters(List<String> severity, List<String> cwe, List<String> category, List<String> status) {
-        List<Filter> filters;
-        // If values are provided, use them
-        if (!ScanUtils.empty(severity) || !ScanUtils.empty(cwe) || !ScanUtils.empty(category) || !ScanUtils.empty(status)) {
-            filters = ScanUtils.getFilters(severity, cwe, category, status);
-        }
-        // otherwise, default to filters specified in the cx-flow section of the yml
-        else {
-            filters = ScanUtils.getFilters(properties.getFilterSeverity(), properties.getFilterCwe(),
-                    properties.getFilterCategory(), properties.getFilterStatus());
-        }
-        return filters;
     }
 
     /**

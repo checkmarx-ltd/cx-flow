@@ -171,7 +171,7 @@ public class CxFlowRunner implements ApplicationRunner {
             exit(1);
         }
 
-        FilterConfiguration filter = ScanUtils.getFilter(severity, cwe, category, status, flowProperties);
+        FilterConfiguration filter = FilterFactory.getFilter(severity, cwe, category, status, flowProperties);
 
         //Adding default file/folder exclusions from properties if they are not provided as an override
         if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){

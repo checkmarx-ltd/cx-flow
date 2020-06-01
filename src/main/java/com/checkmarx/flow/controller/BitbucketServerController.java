@@ -10,6 +10,7 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.bitbucketserver.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
+import com.checkmarx.flow.service.FilterFactory;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.HelperService;
 import com.checkmarx.flow.utils.ScanUtils;
@@ -282,7 +283,7 @@ public class BitbucketServerController {
 
             BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
 
-            FilterConfiguration filter = ScanUtils.getFilter(severity, cwe, category, status, flowProperties);
+            FilterConfiguration filter = FilterFactory.getFilter(severity, cwe, category, status, flowProperties);
 
             if (excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())) {
                 excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
@@ -452,7 +453,7 @@ public class BitbucketServerController {
             }
 
             BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
-            FilterConfiguration filter = ScanUtils.getFilter(severity, cwe, category, status, flowProperties);
+            FilterConfiguration filter = FilterFactory.getFilter(severity, cwe, category, status, flowProperties);
 
             if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
                 excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));

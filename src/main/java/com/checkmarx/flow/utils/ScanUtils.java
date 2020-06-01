@@ -40,6 +40,7 @@ import com.checkmarx.flow.dto.RepoIssue;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.BugTracker.BugTrackerBuilder;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
+import com.checkmarx.flow.service.FilterFactory;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.Filter;
@@ -117,58 +118,6 @@ public class ScanUtils {
         return issueList;
     }
 
-    public static FilterConfiguration getFilter(List<String> severity,
-                                                List<String> cwe,
-                                                List<String> category,
-                                                List<String> status,
-                                                FlowProperties flowProperties) {
-        List<Filter> filters;
-        if (!ScanUtils.empty(severity) || !ScanUtils.empty(cwe) || !ScanUtils.empty(category) || !ScanUtils.empty(status)) {
-            filters = getFilters(severity, cwe, category, status);
-        } else {
-            filters = getFilters(flowProperties);
-        }
-        return FilterConfiguration.fromSimpleFilters(filters);
-    }
-
-    /**
-     * Create List of filters based on String lists of severity, cwe, category
-     * @param flowProperties
-     * @return
-     */
-    public static List<Filter> getFilters(FlowProperties flowProperties) {
-        return getFilters(flowProperties.getFilterSeverity(), flowProperties.getFilterCwe(), flowProperties.getFilterCategory(), flowProperties.getFilterStatus());
-    }
-
-    /**
-     * Create List of filters based on String lists of severity, cwe, category
-     * @param severity
-     * @param cwe
-     * @param category
-     * @return
-     */
-    public static List<Filter> getFilters(List<String> severity, List<String> cwe, List<String> category, List<String> status) {
-        List<Filter> filters = new ArrayList<>();
-        filters.addAll(getListByFilterType(severity, Filter.Type.SEVERITY));
-        filters.addAll(getListByFilterType(cwe, Filter.Type.CWE));
-        filters.addAll(getListByFilterType(category, Filter.Type.TYPE));
-        filters.addAll(getListByFilterType(status, Filter.Type.STATUS));
-        return filters;
-    }
-
-    private static List<Filter> getListByFilterType(List<String> stringFilters, Filter.Type type){
-        List<Filter> filterList = new ArrayList<>();
-        if(stringFilters != null) {
-            for (String s : stringFilters) {
-                filterList.add(Filter.builder()
-                        .type(type)
-                        .value(s)
-                        .build());
-            }
-        }
-        return filterList;
-    }
-
     /**
      * Check if string is empty or null
      * @param str
@@ -244,7 +193,7 @@ public class ScanUtils {
 
         if(filtersObj != null && (!ScanUtils.empty(filtersObj.getSeverity()) || !ScanUtils.empty(filtersObj.getCwe()) ||
                 !ScanUtils.empty(filtersObj.getCategory()) || !ScanUtils.empty(filtersObj.getStatus()))) {
-            List<Filter> simpleFilters = ScanUtils.getFilters(filtersObj.getSeverity(), filtersObj.getCwe(),
+            List<Filter> simpleFilters = FilterFactory.getFilters(filtersObj.getSeverity(), filtersObj.getCwe(),
                     filtersObj.getCategory(), filtersObj.getStatus());
             request.setFilter(FilterConfiguration.fromSimpleFilters(simpleFilters));
         }
@@ -361,7 +310,7 @@ public class ScanUtils {
                     Optional.ofNullable(fo.getFilters()).ifPresent(f -> {
                         if (!ScanUtils.empty(f.getSeverity()) || !ScanUtils.empty(f.getCwe()) ||
                                     !ScanUtils.empty(f.getCategory()) || !ScanUtils.empty(f.getStatus()))) {
-                        List<Filter> filters = ScanUtils.getFilters(f.getSeverity(), f.getCwe(),
+                        List<Filter> filters = FilterFactory.getFilters(f.getSeverity(), f.getCwe(),
                                 f.getCategory(), f.getStatus());
                         request.setFilter(FilterConfiguration.fromSimpleFilters(filters));
                         overridePropertiesMap.put("filters", filters.stream().map(Object::toString).collect(Collectors.joining(",")));

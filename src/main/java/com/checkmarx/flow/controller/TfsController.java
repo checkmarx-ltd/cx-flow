@@ -24,6 +24,7 @@ import com.checkmarx.flow.dto.ScanRequest.ScanRequestBuilder;
 import com.checkmarx.flow.dto.azure.PullEvent;
 import com.checkmarx.flow.dto.azure.Resource;
 import com.checkmarx.flow.exception.InvalidTokenException;
+import com.checkmarx.flow.service.FilterFactory;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.HelperService;
 import com.checkmarx.flow.utils.ScanUtils;
@@ -131,7 +132,7 @@ public class TfsController {
         List<String> categoryList = category.orElse(Collections.emptyList());
         List<String> statusList = status.orElse(Collections.emptyList());
 
-        FilterConfiguration filter = ScanUtils.getFilter(severityList, cweList, categoryList, statusList, flowProperties);
+        FilterConfiguration filter = FilterFactory.getFilter(severityList, cweList, categoryList, statusList, flowProperties);
 
         ScanRequestBuilder requestBuilder = ScanRequest.builder()
                 .application(application.orElse(app))

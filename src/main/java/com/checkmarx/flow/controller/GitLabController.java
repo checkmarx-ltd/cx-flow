@@ -9,6 +9,7 @@ import com.checkmarx.flow.dto.FlowOverride;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.gitlab.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
+import com.checkmarx.flow.service.FilterFactory;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.GitLabService;
 import com.checkmarx.flow.service.HelperService;
@@ -16,7 +17,6 @@ import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.CxConfig;
-import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
@@ -144,7 +144,7 @@ public class GitLabController {
 
             BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
 
-            FilterConfiguration filter = ScanUtils.getFilter(severity, cwe, category, status, flowProperties);
+            FilterConfiguration filter = FilterFactory.getFilter(severity, cwe, category, status, flowProperties);
 
             if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
                 excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
@@ -293,7 +293,7 @@ public class GitLabController {
             }
 
             BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
-            FilterConfiguration filter = ScanUtils.getFilter(severity, cwe, category, status, flowProperties);
+            FilterConfiguration filter = FilterFactory.getFilter(severity, cwe, category, status, flowProperties);
 
             if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
                 excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
