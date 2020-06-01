@@ -242,7 +242,7 @@ public class ScanUtils {
      * @param override
      * @return
      */
-    public static ScanRequest overrideCxConfig(ScanRequest request, CxConfig override, FlowProperties flowProperties, JiraProperties jiraProperties){
+    public static ScanRequest overrideCxConfig(ScanRequest request, CxConfig override, FlowProperties flowProperties){
         Map<String,String> overridePropertiesMap = new HashMap<>();
 
         if(override == null || request == null || !override.getActive()){

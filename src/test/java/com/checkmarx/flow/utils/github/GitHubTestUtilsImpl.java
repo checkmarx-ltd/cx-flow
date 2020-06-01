@@ -5,6 +5,7 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaException;
 import org.springframework.http.HttpEntity;
 
+import java.io.IOException;
 import java.util.List;
 
 public interface GitHubTestUtilsImpl {
@@ -23,5 +24,7 @@ public interface GitHubTestUtilsImpl {
 
     String createSignature(String requestBody);
 
-    HttpEntity<String> prepareWebhookRequest(String filename, GitHubTestUtils.EventType eventType);
+    String loadWebhookRequestBody(GitHubTestUtils.EventType eventType) throws IOException;
+
+    HttpEntity<String> prepareWebhookRequest(GitHubTestUtils.EventType eventType);
 }

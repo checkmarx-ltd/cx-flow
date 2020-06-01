@@ -35,7 +35,6 @@ import java.util.stream.Collectors;
 @Slf4j
 @RequiredArgsConstructor
 public class WebHookSteps {
-    private static final String REQUEST_FILENAME = "github-push.json";
 
     private final List<CompletableFuture<Long>> requestSendingTasks = new ArrayList<>();
 
@@ -67,7 +66,7 @@ public class WebHookSteps {
     public void githubSendsWebHookRequests(int timesPerSecond) {
         final int MILLISECONDS_IN_SECOND = 1000;
 
-        webHookRequest = testUtils.prepareWebhookRequest(REQUEST_FILENAME, GitHubTestUtils.EventType.PUSH);
+        webHookRequest = testUtils.prepareWebhookRequest(GitHubTestUtils.EventType.PUSH);
         sendWarmUpRequest();
 
         int totalRequestCount = Integer.parseUnsignedInt(testProperties.getProperty("totalRequestCount"));
