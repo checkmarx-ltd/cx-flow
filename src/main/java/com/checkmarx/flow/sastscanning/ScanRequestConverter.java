@@ -43,20 +43,19 @@ public class ScanRequestConverter {
     }
 
     private void setScanConfiguration(ScanRequest scanRequest, Integer projectId) {
-        if (!entityExists(projectId)) {
-            // In this case CxClient will use scan configuration name from global CxFlow config.
-            log.debug("Project doesn't exist. Scan configuration was not set in scan request.");
-        }
-
-        log.debug("Using scan configuration of the existing project in scan request.");
-        CxScanSettings scanSettings = cxService.getScanSettingsDto(projectId);
-        if (scanSettings != null && scanSettings.getEngineConfigurationId() != null) {
-            Integer configId = scanSettings.getEngineConfigurationId();
-            String configName = cxService.getScanConfigurationName(configId);
-            log.debug("Using scan configuration ID: {}, name: '{}'.", configId, configName);
-            scanRequest.setScanConfiguration(configName);
+        if (entityExists(projectId)) {
+            log.debug("Scan request will contain scan configuration of the existing project.");
+            CxScanSettings scanSettings = cxService.getScanSettingsDto(projectId);
+            if (scanSettings != null && scanSettings.getEngineConfigurationId() != null) {
+                Integer configId = scanSettings.getEngineConfigurationId();
+                String configName = cxService.getScanConfigurationName(configId);
+                log.debug("Using scan configuration ID: {}, name: '{}'.", configId, configName);
+                scanRequest.setScanConfiguration(configName);
+            } else {
+                log.warn("Unable to retrieve scan settings for the existing project (ID {}).", projectId);
+            }
         } else {
-            log.warn("Unable to retrieve scan settings for the existing project (ID {}).", projectId);
+            log.debug("Project doesn't exist. Scan configuration from the global config will be used.");
         }
     }
 
