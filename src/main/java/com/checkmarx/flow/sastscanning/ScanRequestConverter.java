@@ -55,7 +55,7 @@ public class ScanRequestConverter {
                 log.warn("Unable to retrieve scan settings for the existing project (ID {}).", projectId);
             }
         } else {
-            log.debug("Project doesn't exist. Scan request will contain scan configuration from the global config.");
+            log.debug("Project doesn't exist. Scan configuration from the global config will be used.");
         }
     }
 
