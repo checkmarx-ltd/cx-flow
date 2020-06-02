@@ -137,17 +137,17 @@ public class BitBucketService {
     private void sendBuildStatus(ScanRequest request, String buildStatusRequestBody)
     {
         String buildStatusApiUrl = request.getAdditionalMetadata("buildStatusUrl");
-        HttpEntity httpEntity = new HttpEntity<>(buildStatusRequestBody, createAuthHeaders());
+        HttpEntity<String> httpEntity = new HttpEntity<>(buildStatusRequestBody, createAuthHeaders());
         restTemplate.exchange(buildStatusApiUrl, HttpMethod.POST, httpEntity, String.class);
     }
 
     public void sendMergeComment(ScanRequest request, String comment){
-        HttpEntity httpEntity = new HttpEntity<>(getJSONComment(comment).toString(), createAuthHeaders());
+        HttpEntity<String> httpEntity = new HttpEntity<>(getJSONComment(comment).toString(), createAuthHeaders());
         restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
     public void sendServerMergeComment(ScanRequest request, String comment){
-        HttpEntity httpEntity = new HttpEntity<>(getServerJSONComment(comment).toString(), createAuthHeaders());
+        HttpEntity<String> httpEntity = new HttpEntity<>(getServerJSONComment(comment).toString(), createAuthHeaders());
         restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
@@ -167,7 +167,7 @@ public class BitBucketService {
             taskBody.put("severity","BLOCKER");
             taskBody.put("text", comment);
 
-            HttpEntity httpEntity = new HttpEntity<>(taskBody.toString(), createAuthHeaders());
+            HttpEntity<String> httpEntity = new HttpEntity<>(taskBody.toString(), createAuthHeaders());
             restTemplate.exchange(request.getMergeNoteUri().concat("/"+ taskId), HttpMethod.PUT, httpEntity, String.class);
 
         }
@@ -175,7 +175,7 @@ public class BitBucketService {
             JSONObject taskBody = new JSONObject();
             taskBody.put("severity", "BLOCKER");
             taskBody.put("text", comment);
-            HttpEntity httpEntity = new HttpEntity<>(taskBody.toString(), createAuthHeaders());
+            HttpEntity<String> httpEntity = new HttpEntity<>(taskBody.toString(), createAuthHeaders());
             restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
         }
     }
@@ -210,21 +210,20 @@ public class BitBucketService {
     private String getCxFlowServiceAccountSlug()
     {
         String[] basicAuthCredentials = properties.getToken().split(":");
-        String cxFlowSlug = basicAuthCredentials[0];
-        return cxFlowSlug;
+        return basicAuthCredentials[0];
+
     }
 
     private ResponseEntity<String> retrieveExistingOpenTasks(ScanRequest request) {
 
         String blockerCommentUrl = request.getAdditionalMetadata("blocker-comment-url");
 
-        Map<String, String> params = new HashMap<String,String>();
+        Map<String, String> params = new HashMap<>();
         params.put("state", "OPEN");
 
-        HttpEntity httpEntity = new HttpEntity<>(createAuthHeaders());
-        ResponseEntity<String> response = restTemplate.exchange(blockerCommentUrl.concat("?state={state}"), HttpMethod.GET,httpEntity,String.class,params);
+        HttpEntity<Object> httpEntity = new HttpEntity<>(createAuthHeaders());
+        return restTemplate.exchange(blockerCommentUrl.concat("?state={state}"), HttpMethod.GET,httpEntity,String.class,params);
 
-        return response;
     }
 
     void processCommit(ScanRequest request, ScanResults results) throws BitBucketClientException {

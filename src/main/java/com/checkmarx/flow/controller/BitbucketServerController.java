@@ -562,8 +562,8 @@ public class BitbucketServerController {
 
         String encodedTokenString =  ScanUtils.getStringWithEncodedCharacter(accessToken);
 
-        String encodedToken = basicAuthCredentials[0].concat(":").concat(encodedTokenString);
-        return encodedToken;
+         return basicAuthCredentials[0].concat(":").concat(encodedTokenString);
+
     }
 
 }
