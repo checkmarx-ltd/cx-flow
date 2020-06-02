@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import com.atlassian.jira.rest.client.api.JiraRestClient;
@@ -90,9 +91,9 @@ enum BugTracker {
 
         @Override
         void deleteIssues() {
-            for (String issueKey : issueCreatedKeys) {
-                client.getIssueClient().deleteIssue(issueKey, false);
-            }
+            Optional.ofNullable(issueCreatedKeys).ifPresent(ks -> ks.forEach(
+                k->   client.getIssueClient().deleteIssue(k, false)
+            ));
         }
     };
 
