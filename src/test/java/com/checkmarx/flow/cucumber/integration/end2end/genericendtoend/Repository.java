@@ -34,12 +34,14 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.cucumber.java.PendingException;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.junit.platform.commons.PreconditionViolationException;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 
@@ -157,6 +159,14 @@ enum Repository {
                 String msg = "faild to create file for push";
                 log.error(msg);
                 fail(msg);
+            } catch (HttpClientErrorException e) {
+                if (e.getRawStatusCode() == HttpStatus.UNPROCESSABLE_ENTITY.value()) {
+                    String message = "There is already a file with the specified name (" + filePath + "). please delete the file before running the test";
+                    log.error(message);
+                    throw new PreconditionViolationException(message);
+                } else {
+                    throw e;
+                }
             } catch (Exception e) {
                 fail("faild to push a file: " + e.getMessage());
             }
