@@ -1188,7 +1188,7 @@ public class ScanUtils {
             try {
                 encodedString = URLEncoder.encode(str, StandardCharsets.UTF_8.toString());
             } catch (UnsupportedEncodingException e) {
-                log.error("Encoding error: {}", e);
+                log.error("Encoding error:", e);
             }
         }
         return encodedString;
