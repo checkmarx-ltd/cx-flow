@@ -210,29 +210,30 @@ enum Repository {
                 RestTemplate restTemplate = new RestTemplate();
                 String url = String.format("%s/%s/%s/pulls", 
                     gitHubProperties.getApiUrl(), namespace, repo);
-                if (log.isInfoEnabled()) {
-                    throw new PendingException("createPR is waiting on deletePR, and parameters");
-                }
+//                if (log.isInfoEnabled()) {
+//                    throw new PendingException("createPR is waiting on parameters");
+//                }
                 final ResponseEntity<String> response = restTemplate.postForEntity(url, request,
                     String.class);
                 assertEquals(HttpStatus.CREATED, response.getStatusCode());
-                prId = new JSONObject(response.getBody()).getInt("id");
+                prId = new JSONObject(response.getBody()).getInt("number");
             } catch (Exception e) {
                 fail("failed to create PR " + e.getMessage());
             }
         }
 
         private String createPRData(boolean isDelete) {
+            Properties prProperties = getProperties("PullRequestProperties");
             //TO DO: replace parameters 
             ObjectMapper mapper = new ObjectMapper();
             ObjectNode pr = mapper.createObjectNode();
-            pr.put("title", "cxflow GitHub e2e test")
-            .put("body", "This is an automated test")
-            .put("base", "master");
             if (isDelete) {
-                pr.put("state", "close");
+                pr.put("state", "closed");
             } else {
-                pr.put("head", "feature");
+                pr.put("title", prProperties.getProperty("title"))
+                        .put("body", prProperties.getProperty("body"))
+                        .put("base", prProperties.getProperty("base"))
+                        .put("head", prProperties.getProperty("head"));
             }
             String data = null;
             try {
@@ -254,7 +255,7 @@ enum Repository {
                 RestTemplate restTemplate = new RestTemplate();
                 String url = String.format("%s/%s/%s/pulls/%d", 
                     gitHubProperties.getApiUrl(), namespace, repo, prId);
-                final ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.PATCH,
+                final ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST,
                     request, String.class);
                 assertEquals(HttpStatus.OK, response.getStatusCode());
             } catch (Exception e) {
@@ -619,7 +620,7 @@ enum Repository {
                 System.getenv(upperCaseName + "_HOOK_TARGET") == null
         ) {
             log.info("running with property file");
-            Properties properties = getProperties();
+            Properties properties = getProperties("HookProperties");
             namespace = properties.getProperty(upperCaseName + "_namespace");
             repo = properties.getProperty(upperCaseName + "_repo");
             hookTargetURL = properties.getProperty(upperCaseName + "_target");
@@ -633,19 +634,19 @@ enum Repository {
 
     protected void generateWebHook(HookType hookType) {
         log.info("testing if repository alredy has hooks configured");
-        assertTrue(!hasWebHook(), "repository alredy has hooks configured");
+        assertTrue(!hasWebHook(), "repository already has hooks configured");
         this.hookType = hookType;
         log.info("creating the webhook ({})", hookType);
         generateHook(hookType);
     }
 
-    protected Properties getProperties() {
+    protected Properties getProperties(String propertiesName) {
         Properties prop = new Properties();
         String path = new StringJoiner(File.separator, File.separator, "")
                 .add("cucumber")
                 .add("features")
                 .add("e2eTests")
-                .add(String.format("HookProperties_%s.properties", name()))
+                .add(String.format("%s_%s.properties", propertiesName, name()))
                 .toString();
         try (InputStream is = getClass().getClassLoader().getResourceAsStream(path)) {
             prop.load(is);
@@ -678,16 +679,18 @@ enum Repository {
     protected String hookTargetURL = null;
 
     public void cleanup() {
-        switch (hookType) {
-            case PUSH:
-                deleteHook();
-                deleteFile();        
-                break;
-            case PULL_REQUEST:
-                deleteHook();
-                deletePR();
-                break;
-        }
+        Optional.ofNullable(hookType).ifPresent(h -> {
+            switch (h) {
+                case PUSH:
+                    deleteHook();
+                    deleteFile();
+                    break;
+                case PULL_REQUEST:
+                    deleteHook();
+                    deletePR();
+                    break;
+            }
+        });
     }
 
 }
