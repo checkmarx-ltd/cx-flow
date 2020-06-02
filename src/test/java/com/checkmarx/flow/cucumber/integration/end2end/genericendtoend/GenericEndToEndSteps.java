@@ -7,6 +7,7 @@ import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 
+import com.checkmarx.sdk.config.ScaProperties;
 import io.cucumber.java.After;
 import io.cucumber.java.PendingException;
 import io.cucumber.java.en.And;
@@ -28,6 +29,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.Base64;
+import java.util.Collections;
+import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
@@ -53,7 +56,13 @@ public class GenericEndToEndSteps {
     private BugTracker bugTracker;
     private ConfigurableApplicationContext appContext;
 
-    @Given("repository is {word}")
+    @Given("CxFlow is running as a service")
+    public void runAsService() {
+        log.info("runnning cx-flow as a service");
+        appContext = TestUtils.runCxFlowAsService();
+    }
+
+    @And("repository is {word}")
     public void setRepository(String repository) {
         this.repository = Repository.setTo(repository, this);
     }
@@ -61,19 +70,21 @@ public class GenericEndToEndSteps {
     @And("bug-tracker is {word}")
     public void setBugTracker(String bugTracker) {
         this.bugTracker = BugTracker.setTo(bugTracker, this);
+        FlowProperties flowProperties = (FlowProperties)appContext.getBean("flowProperties");
         flowProperties.setBugTracker(bugTracker);
     }
 
     @And("Scan engine is {word}")
     public void setScanEngine(String engine) {
-        throw new PendingException();
-        //TO DO: set the engine
-    }
+        if (engine.equals(ScaProperties.CONFIG_PREFIX)) {
+            FlowProperties flowProperties = (FlowProperties)appContext.getBean("flowProperties");
+            flowProperties.setEnabledVulnerabilityScanners(Collections.singletonList(engine));
 
-    @And("CxFlow is running as a service")
-    public void runAsService() {
-        log.info("runnning cx-flow as a service");
-        appContext = TestUtils.runCxFlowAsService();
+            ScaProperties scaProperties = (ScaProperties)appContext.getBean("scaProperties");
+            scaProperties.setAppUrl("https://sca.scacheckmarx.com");
+            scaProperties.setApiUrl("https://api.scacheckmarx.com");
+            scaProperties.setAccessControlUrl("https://v2.ac-checkmarx.com");
+        }
     }
 
     @And("webhook is configured for push event")
@@ -118,7 +129,8 @@ public class GenericEndToEndSteps {
     @After
     public void cleanUp() {
         repository.cleanup();
-        bugTracker.deleteIssues(); //TO DO: move to bt
+        //TO DO: move to bt
+        Optional.ofNullable(bugTracker).ifPresent(BugTracker::deleteIssues);
         SpringApplication.exit(appContext);
     }
 
