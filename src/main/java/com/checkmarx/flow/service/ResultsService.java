@@ -193,7 +193,8 @@ public class ResultsService {
                 bbService.processMerge(request, results);
                 break;
             case BITBUCKETSERVERPULL:
-                bbService.processServerMerge(request, results);
+                bbService.processServerMerge(request, results,scanDetails);
+                bbService.setBuildEndStatus(request, results, scanDetails);
                 break;
             case ADOPULL:
                 adoService.processPull(request, results);
