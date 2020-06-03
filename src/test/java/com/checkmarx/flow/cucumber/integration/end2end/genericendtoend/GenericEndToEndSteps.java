@@ -121,9 +121,7 @@ public class GenericEndToEndSteps {
 
     @Then("pull-request is updated")
     public void checkPRUpdate() {
-        throw new PendingException();
-        // TO DO: get data from pr
-        // TO DO: validate data
+        repository.verifyPRUpdated();
     }
 
     @After

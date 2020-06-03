@@ -17,6 +17,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.StringJoiner;
+import java.util.concurrent.TimeUnit;
 
 import com.checkmarx.flow.config.ADOProperties;
 import com.checkmarx.flow.config.GitHubProperties;
@@ -70,16 +71,21 @@ enum Repository {
         }
 
         JSONArray getJSONArray(String uri) {
-            RestTemplate restTemplate = new RestTemplate();
-            HttpHeaders headers = getHeaders();
-            log.info("GET array headers: {}", headers.toString());
-            HttpEntity<String> requestEntity = new HttpEntity<>(null, headers);
-            ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, requestEntity, String.class);
+            ResponseEntity<String> response = getResponseEntity(uri);
             String body = response.getBody();
             if (body == null) {
                 return null;
             }
             return new JSONArray(body);
+        }
+
+        JSONObject getJSONObject(String uri) {
+            ResponseEntity<String> response = getResponseEntity(uri);
+            String body = response.getBody();
+            if (body == null) {
+                return null;
+            }
+            return new JSONObject(body);
         }
 
 
@@ -263,13 +269,51 @@ enum Repository {
             final HttpEntity<String> request = new HttpEntity<>(data, headers);
             try {
                 RestTemplate restTemplate = new RestTemplate();
-                String url = String.format("%s/%s/%s/pulls/%d", 
-                    gitHubProperties.getApiUrl(), namespace, repo, prId);
+                String url = getPRURL();
                 final ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST,
                     request, String.class);
                 assertEquals(HttpStatus.OK, response.getStatusCode());
             } catch (Exception e) {
                 fail("failed to delete PR " + e.getMessage());
+            }
+        }
+
+        private String getPRURL() {
+            return String.format("%s/%s/%s/pulls/%d",
+                            gitHubProperties.getApiUrl(), namespace, repo, prId);
+        }
+
+        private String getPRCommentsUrl() {
+            return String.format("%s/%s/%s/issues/%d/comments", gitHubProperties.getApiUrl(), namespace, repo, prId);
+        }
+
+        @Override
+        void verifyPRUpdated() {
+            String url = getPRCommentsUrl();
+            boolean isFound = false;
+            for (int retries = 0 ; retries < 20 && !isFound ; retries++) {
+                try {
+                    TimeUnit.SECONDS.sleep(5);
+                } catch (Exception e) {
+                    log.info("starting attempt {}", retries + 1);
+                }
+                try {
+                    JSONArray comments = getJSONArray(url);
+                    for (java.lang.Object c : Objects.requireNonNull(comments)) {
+                        if (((JSONObject) c).getString("body").startsWith("### Checkmarx Dependency (CxSCA)")) {
+                            log.info("Relevant PR comment was found");
+                            isFound = true;
+                            break;
+                        }
+                    }
+                } catch (Exception e) {
+                    log.info("failed attempt {}", retries + 1);
+                }
+            }
+            if (!isFound) {
+                String msg = "failed to find update in PR comments";
+                log.error(msg);
+                fail(msg);
             }
         }
     },
@@ -421,13 +465,6 @@ enum Repository {
 
             }
 
-        }
-
-        private ResponseEntity<String> getResponseEntity(String requestUrl) {
-            RestTemplate restTemplate = new RestTemplate();
-            HttpHeaders headers = getHeaders();
-            HttpEntity<String> requestEntity = new HttpEntity<>(null, headers);
-            return restTemplate.exchange(requestUrl, HttpMethod.GET, requestEntity, String.class);
         }
 
         private String getLastOldObject() {
@@ -608,6 +645,11 @@ enum Repository {
 
         }
 
+        @Override
+        void verifyPRUpdated() {
+            throw new PendingException();
+        }
+
     };
 
     private HookType hookType;
@@ -679,10 +721,19 @@ enum Repository {
     abstract HttpHeaders getHeaders();
 
     abstract void pushFile(String content);
+
+    protected ResponseEntity<String> getResponseEntity(String requestUrl) {
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = getHeaders();
+        HttpEntity<String> requestEntity = new HttpEntity<>(null, headers);
+        return restTemplate.exchange(requestUrl, HttpMethod.GET, requestEntity, String.class);
+    }
+
     abstract void deleteFile();
     
     abstract void createPR();
     abstract void deletePR();
+    abstract void verifyPRUpdated();
 
     protected String namespace = null;
     protected String repo = null;

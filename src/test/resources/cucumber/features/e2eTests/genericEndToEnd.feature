@@ -14,7 +14,6 @@ Feature: Cxflow generic end-2-end tests
     | GitHub      | JIRA        |
     | ADO         | JIRA        |
 
-  @Skip
   Scenario Outline: Check cxflow pull-request end-2-end <scan-engine> of <repository>
     Given CxFlow is running as a service
     And repository is <repository>
