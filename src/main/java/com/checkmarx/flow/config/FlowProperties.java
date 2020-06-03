@@ -23,6 +23,7 @@ public class FlowProperties {
     private List<String> filterCwe;
     private List<String> filterCategory;
     private List<String> filterStatus;
+    private String filterScript;
     private List<String> enabledVulnerabilityScanners;
     private boolean autoProfile = false;
     private boolean alwaysProfile = false;
@@ -83,6 +84,14 @@ public class FlowProperties {
 
     public List<String> getFilterStatus() {
         return this.filterStatus;
+    }
+
+    public String getFilterScript() {
+        return filterScript;
+    }
+
+    public void setFilterScript(String filterScript) {
+        this.filterScript = filterScript;
     }
 
     public String getMitreUrl() {

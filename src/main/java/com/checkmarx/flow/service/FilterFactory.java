@@ -1,56 +1,83 @@
 package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
+import com.checkmarx.sdk.dto.filtering.ScriptedFilter;
+import groovy.lang.GroovyShell;
+import groovy.lang.Script;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
 public class FilterFactory {
+    private FilterFactory() {
+    }
+
     public static FilterConfiguration getFilter(List<String> severity,
                                                 List<String> cwe,
                                                 List<String> category,
                                                 List<String> status,
-                                                FlowProperties flowProperties) {
-        List<Filter> filters;
-        if (!ScanUtils.empty(severity) || !ScanUtils.empty(cwe) || !ScanUtils.empty(category) || !ScanUtils.empty(status)) {
-            filters = getFilters(severity, cwe, category, status);
+                                                @Nullable FlowProperties flowProperties) {
+        FilterConfiguration result;
+        if (CollectionUtils.isNotEmpty(severity)
+                || CollectionUtils.isNotEmpty(cwe)
+                || CollectionUtils.isNotEmpty(category)
+                || CollectionUtils.isNotEmpty(status)) {
+            result = getFilters(severity, cwe, category, status, null);
+        } else if (flowProperties != null) {
+            result = getFilters(flowProperties);
         } else {
-            filters = getFilters(flowProperties);
+            result = FilterConfiguration.builder().build();
         }
-        return FilterConfiguration.fromSimpleFilters(filters);
+        return result;
     }
 
     /**
-     * Create List of filters based on String lists of severity, cwe, category
-     * @param flowProperties
-     * @return
+     * Create filter configuration based on CxFlow properties.
      */
-    private static List<Filter> getFilters(FlowProperties flowProperties) {
-        return getFilters(flowProperties.getFilterSeverity(), flowProperties.getFilterCwe(), flowProperties.getFilterCategory(), flowProperties.getFilterStatus());
+    private static FilterConfiguration getFilters(FlowProperties flowProperties) {
+        return getFilters(flowProperties.getFilterSeverity(),
+                flowProperties.getFilterCwe(),
+                flowProperties.getFilterCategory(),
+                flowProperties.getFilterStatus(),
+                flowProperties.getFilterScript());
     }
 
     /**
-     * Create List of filters based on String lists of severity, cwe, category
-     * @param severity
-     * @param cwe
-     * @param category
-     * @return
+     * Create filter configuration based on lists of severity, cwe, category and on the text of a filter script
      */
-    public static List<Filter> getFilters(List<String> severity, List<String> cwe, List<String> category, List<String> status) {
-        List<Filter> filters = new ArrayList<>();
-        filters.addAll(getListByFilterType(severity, Filter.Type.SEVERITY));
-        filters.addAll(getListByFilterType(cwe, Filter.Type.CWE));
-        filters.addAll(getListByFilterType(category, Filter.Type.TYPE));
-        filters.addAll(getListByFilterType(status, Filter.Type.STATUS));
-        return filters;
+    private static FilterConfiguration getFilters(List<String> severity,
+                                                  List<String> cwe,
+                                                  List<String> category,
+                                                  List<String> status,
+                                                  String filterScript) {
+        List<Filter> simpleFilters = new ArrayList<>();
+        simpleFilters.addAll(getListByFilterType(severity, Filter.Type.SEVERITY));
+        simpleFilters.addAll(getListByFilterType(cwe, Filter.Type.CWE));
+        simpleFilters.addAll(getListByFilterType(category, Filter.Type.TYPE));
+        simpleFilters.addAll(getListByFilterType(status, Filter.Type.STATUS));
+
+        Script parsedScript = null;
+        if (StringUtils.isNotEmpty(filterScript)) {
+            GroovyShell groovyShell = new GroovyShell();
+            parsedScript = groovyShell.parse(filterScript);
+        }
+
+        return FilterConfiguration.builder()
+                .simpleFilters(simpleFilters)
+                .scriptedFilter(ScriptedFilter.builder()
+                        .script(parsedScript)
+                        .build())
+                .build();
     }
 
-    private static List<Filter> getListByFilterType(List<String> stringFilters, Filter.Type type){
+    private static List<Filter> getListByFilterType(List<String> stringFilters, Filter.Type type) {
         List<Filter> filterList = new ArrayList<>();
-        if(stringFilters != null) {
+        if (stringFilters != null) {
             for (String s : stringFilters) {
                 filterList.add(Filter.builder()
                         .type(type)

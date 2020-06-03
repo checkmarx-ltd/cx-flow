@@ -52,6 +52,7 @@ import com.cx.restclient.sca.dto.report.Finding;
 import com.cx.restclient.sca.dto.report.Package;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
@@ -191,14 +192,13 @@ public class ScanUtils {
         }
         FlowOverride.Filters filtersObj = override.getFilters();
 
-        if(filtersObj != null && (!ScanUtils.empty(filtersObj.getSeverity()) || !ScanUtils.empty(filtersObj.getCwe()) ||
-                !ScanUtils.empty(filtersObj.getCategory()) || !ScanUtils.empty(filtersObj.getStatus()))) {
-            List<Filter> simpleFilters = FilterFactory.getFilters(filtersObj.getSeverity(), filtersObj.getCwe(),
-                    filtersObj.getCategory(), filtersObj.getStatus());
-            request.setFilter(FilterConfiguration.fromSimpleFilters(simpleFilters));
-        }
-        else if (filtersObj != null){
-            request.setFilter(null);
+        if (filtersObj != null) {
+            FilterConfiguration filter = FilterFactory.getFilter(filtersObj.getSeverity(),
+                    filtersObj.getCwe(),
+                    filtersObj.getCategory(),
+                    filtersObj.getStatus(),
+                    null);
+            request.setFilter(filter);
         }
 
         return request;
@@ -308,17 +308,22 @@ public class ScanUtils {
                     .ifPresent(e -> request.setEmail(e.isEmpty() ? null : e));
 
                     Optional.ofNullable(fo.getFilters()).ifPresent(f -> {
-                        if (!ScanUtils.empty(f.getSeverity()) || !ScanUtils.empty(f.getCwe()) ||
-                                    !ScanUtils.empty(f.getCategory()) || !ScanUtils.empty(f.getStatus()))) {
-                        List<Filter> filters = FilterFactory.getFilters(f.getSeverity(), f.getCwe(),
-                                f.getCategory(), f.getStatus());
-                        request.setFilter(FilterConfiguration.fromSimpleFilters(filters));
-                        overridePropertiesMap.put("filters", filters.stream().map(Object::toString).collect(Collectors.joining(",")));
-                    } else if (fo != null) {
-                        request.setFilter(null);
-                        overridePropertiesMap.put("filters", "EMPTY");
-                    }
-                });
+                        FilterConfiguration filter = FilterFactory.getFilter(f.getSeverity(),
+                                f.getCwe(),
+                                f.getCategory(),
+                                f.getStatus(),
+                                null);
+                        request.setFilter(filter);
+
+                        String filterDescr;
+                        if (CollectionUtils.isNotEmpty(filter.getSimpleFilters())) {
+                            filterDescr = filter.getSimpleFilters().stream().map(Object::toString).collect(Collectors.joining(","));
+                        }
+                        else {
+                            filterDescr = "EMPTY";
+                        }
+                        overridePropertiesMap.put("filters", filterDescr);
+                    });
 
                     FlowOverride.Thresholds thresholds = flowOverride.getThresholds();
 

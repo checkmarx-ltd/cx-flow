@@ -71,7 +71,7 @@ public class FlowController {
     @RequestMapping(value = "/scanresults", method = RequestMethod.GET, produces = "application/json")
     public ScanResults latestScanResults(
             // Mandatory parameters
-            @RequestParam(value = "project", required = true) String project,
+            @RequestParam(value = "project") String project,
             @RequestHeader(value = TOKEN_HEADER) String token,
             // Optional parameters
             @RequestParam(value = "team", required = false) String team,
@@ -241,7 +241,8 @@ public class FlowController {
     }
 
     private FilterConfiguration determineFilter(CxScanRequest scanRequest) {
-        FilterConfiguration filter = FilterFactory.getFilter(properties.getFilterSeverity(), properties.getFilterCwe(), properties.getFilterCategory(), properties.getFilterStatus(), properties);
+        FilterConfiguration filter = FilterFactory.getFilter(null, null, null, null,
+                properties);
 
         boolean hasSimpleFilters = CollectionUtils.isNotEmpty(scanRequest.getFilters());
         boolean hasFilterScript = StringUtils.isNotEmpty(scanRequest.getFilterScript());
