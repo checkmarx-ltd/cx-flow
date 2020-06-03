@@ -20,6 +20,7 @@ jobs:
           key: v1-gradle-cache-{{ checksum "build.gradle" }}
       - run: ./gradlew clean build
       - run: ./gradlew -b build-11.gradle --build-cache assemble
+      - run: ./gradlew -b build-cxod.gradle --build-cache assemble
       - run: ./gradlew -q getVersion > build/libs/version.txt
       - save_cache:
           paths:
@@ -121,12 +122,16 @@ jobs:
             docker build --target java11 \
               -t ${DOCKER_REPO}:${VERSION}-11 \
               .
+            docker build --target cxod8 \
+              -t ${DOCKER_REPO}:${VERSION}-CXOD8 \
+              .
             docker push ${DOCKER_REPO}:${SHA1_SHORT}
       - run:
           name: Archive Docker images
           command: |
             VERSION=$(cat ./build/libs/version.txt)
             docker save -o image-11.tar ${DOCKER_REPO}:${VERSION}-11
+            docker save -o image-cxod8.tar ${DOCKER_REPO}:${VERSION}-CXOD8
             docker save -o image-8.tar ${DOCKER_REPO}:${VERSION}-8
             docker save -o image.tar ${DOCKER_REPO}:${VERSION}
             docker save -o latest.tar ${DOCKER_REPO}:latest
@@ -134,6 +139,7 @@ jobs:
           root: .
           paths:
             - ./image-11.tar
+            - ./image-cxod8.tar
             - ./image-8.tar
             - ./image.tar
             - ./latest.tar
