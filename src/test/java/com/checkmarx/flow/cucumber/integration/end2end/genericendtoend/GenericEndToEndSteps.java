@@ -76,10 +76,10 @@ public class GenericEndToEndSteps {
 
     @And("Scan engine is {word}")
     public void setScanEngine(String engine) {
-        if (engine.equals(ScaProperties.CONFIG_PREFIX)) {
-            FlowProperties flowProperties = (FlowProperties)appContext.getBean("flowProperties");
-            flowProperties.setEnabledVulnerabilityScanners(Collections.singletonList(engine));
+        FlowProperties flowProperties = (FlowProperties)appContext.getBean("flowProperties");
+        flowProperties.setEnabledVulnerabilityScanners(Collections.singletonList(engine));
 
+        if (engine.equalsIgnoreCase(ScaProperties.CONFIG_PREFIX)) {
             ScaProperties scaProperties = (ScaProperties)appContext.getBean("scaProperties");
             scaProperties.setAppUrl("https://sca.scacheckmarx.com");
             scaProperties.setApiUrl("https://api.scacheckmarx.com");
