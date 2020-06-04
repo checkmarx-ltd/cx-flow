@@ -22,7 +22,6 @@ Feature: Parsing SAST results
       | 2 findings with different vulnerability types and in the same file   | 2                | 1                 |
       | 2 findings with different vulnerability types and in different files | 2                | 1                 |
 
-  @NonDefaultConfiguration
   Scenario: Parsing SAST scan results with a variety of severities
   Findings should be correctly grouped by severity in report summary
     Given input has 4 findings with "Low" severity
@@ -44,7 +43,7 @@ Feature: Parsing SAST results
     #  }
 
   Scenario Outline: Parsing execution paths in SAST scan results
-    CxFlow should only take the first and last <PathNode> elements from <Path> in SAST results.
+  CxFlow should only take the first and last <PathNode> elements from <Path> in SAST results.
     Given input with <number of findings> finding(s)
     And the execution path of each finding contains 5 nodes
     And each of the findings has a different filename
@@ -75,8 +74,7 @@ Feature: Parsing SAST results
         #     "object": "getRawParameter"
         #  }
 
-  @NonDefaultConfiguration
-  Scenario: Filtering findings from SAST scan results
+  Scenario: Filtering findings from SAST scan results using simple filters
     Given input containing 3 findings with different severities: Medium, High, Critical
     When parsing the input with severity filter: High, Critical
     Then CxFlow report is generated with 2 issues
