@@ -685,7 +685,7 @@ enum Repository {
     }
 
     protected void generateWebHook(HookType hookType) {
-        log.info("testing if repository alredy has hooks configured");
+        log.info("testing if repository already has hooks configured");
         assertTrue(!hasWebHook(), "repository already has hooks configured");
         this.hookType = hookType;
         log.info("creating the webhook ({})", hookType);
