@@ -370,7 +370,7 @@ workflows:
           version: v3.2.1
           filters:
             branches:
-              only:
+              only: 
                 - master
                 - develop
                 - /pr-.*/
@@ -381,7 +381,7 @@ workflows:
       - e2e-tests:
           filters:
             branches:
-              only:
+              only: 
                 - master
                 - develop
                 - /pr-.*/
@@ -412,7 +412,7 @@ workflows:
           version: v3.2.1
           filters:
             branches:
-              only:
+              only: 
                 - master
                 - develop
                 - /pr-.*/
