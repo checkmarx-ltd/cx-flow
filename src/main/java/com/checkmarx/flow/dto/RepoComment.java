@@ -5,10 +5,15 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Date;
+
 @Getter
 @Setter
 @AllArgsConstructor
 public class RepoComment {
-    long Id;
+    long id;
     String comment;
+    String commentUrl;
+    Date createdAt;
+    Date updateTime;
 }

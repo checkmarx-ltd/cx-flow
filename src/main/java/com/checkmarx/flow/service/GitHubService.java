@@ -5,9 +5,7 @@ import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.github.Content;
 import com.checkmarx.flow.dto.report.PullRequestReport;
-import com.checkmarx.flow.exception.GitHubClientException;
 import com.checkmarx.flow.exception.GitHubClientRunTimeException;
-import com.checkmarx.flow.exception.GitHubRepoUnavailableException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
@@ -31,6 +29,8 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Service
@@ -76,26 +76,22 @@ public class GitHubService extends RepoService {
         return httpHeaders;
     }
 
-    void processPull(ScanRequest request, ScanResults results) throws GitHubClientException {
+    void processPull(ScanRequest request, ScanResults results) {
             String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties, properties);
             log.debug("comment: {}", comment);
             sendMergeComment(request, comment);
     }
 
-    private String getEditCommentUrl(String baseUrl, RepoComment comment) {
-        // The PARCH (edit comment) uri is without the pull request ID, so we must remove it before adding comment id.
-        baseUrl = baseUrl.replaceAll("[0-9]+/", "");
-        return baseUrl + "/" + comment.getId();
-    }
-
     private void updateComment(String baseUrl, String comment) {
-        log.debug("Updating exisiting comment");
+        log.debug("Updating exisiting comment. url: {}", baseUrl);
+        log.debug("Updated comment: {}" , comment);
         HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONComment("body",comment).toString(), createAuthHeaders());
         restTemplate.exchange(baseUrl, HttpMethod.PATCH, httpEntity, String.class);
     }
 
-    private List<RepoComment> getComments(String url) throws IOException {
-        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, null, String.class);
+    public List<RepoComment> getComments(String url) throws IOException  {
+        HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders());
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, httpEntity , String.class);
         List<RepoComment> result = new ArrayList<>();
         ObjectMapper objMapper = new ObjectMapper();
         JsonNode root = objMapper.readTree(response.getBody());
@@ -103,32 +99,54 @@ public class GitHubService extends RepoService {
         while (it.hasNext()) {
             JsonNode commentNode = it.next();
             RepoComment comment = createRepoComment(commentNode);
-            if (isCheckMarxComment(comment)) {
+            if (PullRequestCommentsHelper.isCheckMarxComment(comment)) {
                 result.add(comment);
             }
         }
         return result;
     }
 
-    private boolean isCheckMarxComment(RepoComment comment) {
-        return comment.getComment().contains("Full Scan Details") && comment.getComment().contains("Checkmarx scan completed") ||
-                comment.getComment().contains("Scan submitted to Checkmarx");
+    public void deleteComment(String url) {
+        HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders());
+        restTemplate.exchange(url, HttpMethod.DELETE, httpEntity, String.class);
     }
 
-    private RepoComment createRepoComment(JsonNode commentNode) {
+
+    private RepoComment createRepoComment(JsonNode commentNode)  {
         String commentBody = commentNode.path("body").getTextValue();
         long id = commentNode.path("id").asLong();
-        return new RepoComment(id, commentBody);
+        String commentUrl = commentNode.path(("url")).asText();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+        String updatedStr = commentNode.path("updated_at").asText();
+        String createdStr = commentNode.path("created_at").asText();
+        try {
+            return new RepoComment(id, commentBody, commentUrl, sdf.parse(createdStr), sdf.parse(updatedStr));
+        }
+        catch (ParseException pe) {
+            throw new GitHubClientRunTimeException("Error parsing github pull request created or updted date", pe);
+        }
     }
 
-    public void sendMergeComment(ScanRequest request, String comment) throws GitHubClientException {
+    public void sendMergeComment(ScanRequest request, String comment) {
         try {
-            List<RepoComment> repoComments = getComments(request.getMergeNoteUri());
-            log.debug("There are {} checkmarx comments on this pull request", repoComments.size());
-            addComment(request, comment);
+            RepoComment commentToUpdate = PullRequestCommentsHelper.getCommentToUpdate(getComments(request.getMergeNoteUri()), comment);
+            if (commentToUpdate !=  null) {
+                log.debug("Got candidate comment to update. comment: {}", commentToUpdate.getComment());
+                if (!PullRequestCommentsHelper.shouldUpdateComment(comment, commentToUpdate.getComment())) {
+                    log.debug("sendMergeComment: Comment should not be updated");
+                    return;
+                }
+                log.debug("sendMergeComment: Going to update GitHub pull request comment");
+                updateComment(commentToUpdate.getCommentUrl(), comment);
+            } else {
+                log.debug("sendMergeComment: Going to create a new GitHub pull request comment");
+                addComment(request, comment);
+            }
         }
-        catch (IOException ioe) {
-            throw new GitHubClientException("Error while adding or updating repo pull request comment", ioe);
+        catch (Exception e) {
+            // We "swallow" the exception so that the flow will not be terminated because of errors in GIT comments
+            log.error("Error while adding or updating repo pull request comment", e);
         }
     }
 
@@ -287,7 +305,7 @@ public class GitHubService extends RepoService {
             log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
         }catch (HttpClientErrorException.NotFound e){
             String error = "Got 404 'Not Found' error. GitHub endpoint: " + getGitHubEndPoint(request) + " is invalid.";
-            throw new GitHubClientRunTimeException(error, e);
+            log.warn(error);
         }catch (HttpClientErrorException e){
             log.error(ExceptionUtils.getRootCauseMessage(e));
         }
@@ -313,7 +331,6 @@ public class GitHubService extends RepoService {
             log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
         } catch (HttpClientErrorException e) {
             log.warn("Repo content is unavailable. The reason can be that branch has been deleted.");
-            throw new GitHubRepoUnavailableException("Error getting repo content.", e);
         }
         return Collections.emptyList();
     }

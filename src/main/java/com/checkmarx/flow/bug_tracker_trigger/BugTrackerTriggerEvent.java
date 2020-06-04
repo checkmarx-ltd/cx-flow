@@ -2,8 +2,6 @@ package com.checkmarx.flow.bug_tracker_trigger;
 
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.exception.GitHubClientException;
-import com.checkmarx.flow.exception.GitHubClientRunTimeException;
 import com.checkmarx.flow.service.ADOService;
 import com.checkmarx.flow.service.BitBucketService;
 import com.checkmarx.flow.service.GitHubService;
@@ -40,11 +38,7 @@ public class BugTrackerTriggerEvent {
                 break;
 
             case GITHUBPULL:
-                try {
-                    gitService.sendMergeComment(request, SCAN_MESSAGE);
-                } catch (GitHubClientException e) {
-                    throw new GitHubClientRunTimeException(e.getMessage());
-                }
+                gitService.sendMergeComment(request, SCAN_MESSAGE);
                 gitService.startBlockMerge(request, cxProperties.getUrl());
                 break;
 
@@ -54,6 +48,7 @@ public class BugTrackerTriggerEvent {
 
             case BITBUCKETSERVERPULL:
                 bbService.sendServerMergeComment(request, SCAN_MESSAGE);
+                bbService.setBuildStartStatus(request);
                 break;
 
             case ADOPULL:

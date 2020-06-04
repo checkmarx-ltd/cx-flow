@@ -17,7 +17,6 @@ import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.Filter;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
@@ -50,8 +49,11 @@ public class BitbucketServerController {
     private static final String PUSH = EVENT + "=repo:refs_changed";
     private static final String MERGE = EVENT + "=pr:opened";
     private static final String MERGED = EVENT + "=pr:merged";
+    private static final String PR_SOURCE_BRANCH_UPDATED = EVENT + "=pr:from_ref_updated";
     private static final String HMAC_ALGORITHM = "HMACSha256";
     private static final String MERGE_COMMENT = "/projects/{project}/repos/{repo}/pull-requests/{id}/comments";
+    private static final String BLOCKER_COMMENT = "/projects/{project}/repos/{repo}/pull-requests/{id}/blocker-comments";
+    private static final String BUILD_API_PATH = "/rest/build-status/latest/commits/{commit}";
     private static final Charset CHARSET = StandardCharsets.UTF_8;
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(BitbucketServerController.class);
 
@@ -84,8 +86,9 @@ public class BitbucketServerController {
         }
     }
 
-    @PostMapping(value = "/{product}", headers = PING)
-    public String pingEvent(@PathVariable(value = "product", required = false) String product){
+    @PostMapping(value = {"/{product}", "/"}, headers = PING)
+    public String pingEvent(
+            @PathVariable(value = "product", required = false) String product){
         log.info("Processing Bitbucket Server PING request");
         return "ok";
     }
@@ -141,6 +144,52 @@ public class BitbucketServerController {
      */
     @PostMapping(value = {"/{product}", "/"}, headers = MERGED)
     public ResponseEntity<EventResponse> mergedRequest(
+            @RequestBody String body,
+            @PathVariable(value = "product", required = false) String product,
+            @RequestHeader(value = SIGNATURE) String signature,
+            @RequestParam(value = "application", required = false) String application,
+            @RequestParam(value = "branch", required = false) List<String> branch,
+            @RequestParam(value = "severity", required = false) List<String> severity,
+            @RequestParam(value = "cwe", required = false) List<String> cwe,
+            @RequestParam(value = "category", required = false) List<String> category,
+            @RequestParam(value = "project", required = false) String project,
+            @RequestParam(value = "team", required = false) String team,
+            @RequestParam(value = "status", required = false) List<String> status,
+            @RequestParam(value = "assignee", required = false) String assignee,
+            @RequestParam(value = "preset", required = false) String preset,
+            @RequestParam(value = "incremental", required = false) Boolean incremental,
+            @RequestParam(value = "exclude-files", required = false) List<String> excludeFiles,
+            @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders,
+            @RequestParam(value = "override", required = false) String override,
+            @RequestParam(value = "bug", required = false) String bug,
+            @RequestParam(value = "app-only", required = false) Boolean appOnlyTracking
+    ){
+        return doMergeEvent(body,
+                product,
+                signature,
+                application,
+                branch,
+                severity,
+                cwe,
+                category,
+                project,
+                team,
+                status,
+                assignee,
+                preset,
+                incremental,
+                excludeFiles,
+                excludeFolders,
+                override,
+                bug,
+                appOnlyTracking);
+    }
+
+    /**
+     * PR Source Branch Updated Request event webhook submitted.
+     */
+    @PostMapping(value = {"/{product}", "/"}, headers = PR_SOURCE_BRANCH_UPDATED)
+    public ResponseEntity<EventResponse> prSourceBranchUpdateRequest(
             @RequestBody String body,
             @PathVariable(value = "product", required = false) String product,
             @RequestHeader(value = SIGNATURE) String signature,
@@ -253,12 +302,22 @@ public class BitbucketServerController {
                     .concat(projectKey.concat("/"))
                     .concat(fromRefRepository.getSlug()).concat(".git");
 
-            String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(properties.getToken()).concat("@"));
-            gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(properties.getToken()).concat("@"));
+            String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(getEncodedAccessToken()).concat("@"));
+            gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(getEncodedAccessToken()).concat("@"));
+
             String mergeEndpoint = properties.getUrl().concat(properties.getApiPath()).concat(MERGE_COMMENT);
             mergeEndpoint = mergeEndpoint.replace("{project}", toRefRepository.getProject().getKey());
             mergeEndpoint = mergeEndpoint.replace("{repo}", toRefRepository.getSlug());
             mergeEndpoint = mergeEndpoint.replace("{id}", pullRequest.getId().toString());
+
+            String buildStatusEndpoint = properties.getUrl().concat(BUILD_API_PATH);
+            buildStatusEndpoint = buildStatusEndpoint.replace("{commit}", fromRef.getLatestCommit());
+
+            String blockerCommentUrl = properties.getUrl().concat(BLOCKER_COMMENT);
+            blockerCommentUrl = blockerCommentUrl.replace("{project}", toRefRepository.getProject().getKey());
+            blockerCommentUrl = blockerCommentUrl.replace("{repo}", toRefRepository.getSlug());
+            blockerCommentUrl = blockerCommentUrl.replace("{id}", pullRequest.getId().toString());
+
 
             String scanPreset = cxProperties.getScanPreset();
             if (!ScanUtils.empty(preset)) {
@@ -294,6 +353,9 @@ public class BitbucketServerController {
 
             request = ScanUtils.overrideMap(request, o);
             request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body);
+            request.putAdditionalMetadata("buildStatusUrl", buildStatusEndpoint);
+            request.putAdditionalMetadata("cxBaseUrl", cxProperties.getBaseUrl());
+            request.putAdditionalMetadata("blocker-comment-url", blockerCommentUrl);
             request.setId(uid);
             try {
                 request.putAdditionalMetadata("BITBUCKET_BROWSE", fromRefRepository.getLinks().getSelf().get(0).getHref());
@@ -321,6 +383,8 @@ public class BitbucketServerController {
                 .success(true)
                 .build());
     }
+
+
 
 
     /**
@@ -419,8 +483,9 @@ public class BitbucketServerController {
             String gitUrl = properties.getUrl().concat("/scm/")
                     .concat(projectKey.concat("/"))
                     .concat(repository.getSlug()).concat(".git");
-            String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(properties.getToken()).concat("@"));
-            gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(properties.getToken()).concat("@"));
+
+            String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(getEncodedAccessToken()).concat("@"));
+            gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(getEncodedAccessToken()).concat("@"));
 
             String scanPreset = cxProperties.getScanPreset();
             if(!ScanUtils.empty(preset)){
@@ -491,4 +556,16 @@ public class BitbucketServerController {
         log.info("Signature verified");
     }
 
+    private String getEncodedAccessToken() {
+        String[] basicAuthCredentials = properties.getToken().split(":");
+        String accessToken = basicAuthCredentials[1];
+
+        String encodedTokenString =  ScanUtils.getStringWithEncodedCharacter(accessToken);
+
+         return basicAuthCredentials[0].concat(":").concat(encodedTokenString);
+
+    }
+
 }
+
+

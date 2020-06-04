@@ -110,7 +110,7 @@ public class SastScanner implements VulnerabilityScanner {
     }
 
     @Override
-    public boolean isThisScannedEnabled() {
+    public boolean isEnabled() {
         boolean result = false;
         List<String> enabledScanners = flowProperties.getEnabledVulnerabilityScanners();
         if (enabledScanners == null || enabledScanners.isEmpty()) {

@@ -79,8 +79,14 @@ public class GitLabIssueTracker implements IssueTracker {
             HttpEntity httpEntity = new HttpEntity<>(createAuthHeaders());
             ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, httpEntity, String.class);
             JSONArray arr = new JSONArray(response.getBody());
-            JSONObject obj = (JSONObject)arr.get(0);
-            return obj.getInt("id");
+            for(Object obj: arr){
+                JSONObject realObj = (JSONObject) obj;
+                String name = realObj.getString("name");
+                if(name.equals(repoName)) {
+                    return realObj.getInt("id");
+                }
+            }
+            return 0;
         } catch(HttpClientErrorException e) {
             log.error("Error calling gitlab project api {}", e.getResponseBodyAsString(), e);
         } catch(JSONException e) {
@@ -90,7 +96,6 @@ public class GitLabIssueTracker implements IssueTracker {
         }
         return UNKNOWN_INT;
     }
-
 
     /**
      * Get list of issues associated with the project in GitLab
