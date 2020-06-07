@@ -171,10 +171,8 @@ public class ScanUtils {
      * @param list
      * @return
      */
-    public static boolean empty(List list) {
-        if (list == null) {
-            return true;
-        } else return list.isEmpty();
+    public static boolean empty(List<?> list) {
+        return (list == null) || list.isEmpty();
     }
 
     public static boolean emptyObj(Object object) {
