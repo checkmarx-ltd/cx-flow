@@ -10,7 +10,6 @@ import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -24,7 +23,9 @@ import org.springframework.web.client.RestTemplate;
 import java.beans.ConstructorProperties;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 
 @Service
@@ -39,6 +40,11 @@ public class GitLabService extends RepoService {
     private static final String REPO_CONTENT = "/projects/{id}/repository/tree?ref={branch}";
     private static final int UNKNOWN_INT = -1;
     private static final Logger log = LoggerFactory.getLogger(GitLabService.class);
+    private static final String MERGE_ID = "merge_id";
+    private static final String MERGE_TITLE = "merge_title";
+    private static final String HTTP_BODY_WARN_MESSAGE = "HTTP Body is null for content api ";
+    private static final String CONTENT_NOT_FOUND_ERROR_MESSAGE = "Content not found in JSON response";
+    private static final String ERROR_OCCURRED = "Error occurred";
     private final RestTemplate restTemplate;
     private final GitLabProperties properties;
     private final FlowProperties flowProperties;
@@ -132,8 +138,8 @@ public class GitLabService extends RepoService {
 
     public void startBlockMerge(ScanRequest request){
         if(properties.isBlockMerge()) {
-            String mergeId = request.getAdditionalMetadata("merge_id");
-            if(ScanUtils.empty(request.getAdditionalMetadata("merge_id")) || ScanUtils.empty(request.getAdditionalMetadata("merge_title"))){
+            String mergeId = request.getAdditionalMetadata(MERGE_ID);
+            if(ScanUtils.empty(request.getAdditionalMetadata(MERGE_ID)) || ScanUtils.empty(request.getAdditionalMetadata(MERGE_TITLE))){
                 log.error("merge_id and merge_title was not provided within the request object, which is required for blocking / unblocking merge requests");
                 return;
             }
@@ -142,7 +148,7 @@ public class GitLabService extends RepoService {
             endpoint = endpoint.replace("{iid}", mergeId);
 
             HttpEntity httpEntity = new HttpEntity<>(
-                    getJSONMergeTitle("WIP:CX|".concat(request.getAdditionalMetadata("merge_title"))).toString(),
+                    getJSONMergeTitle("WIP:CX|".concat(request.getAdditionalMetadata(MERGE_TITLE))).toString(),
                     createAuthHeaders()
             );
             restTemplate.exchange(endpoint,
@@ -152,8 +158,8 @@ public class GitLabService extends RepoService {
 
     void endBlockMerge(ScanRequest request){
         if(properties.isBlockMerge()) {
-            String mergeId = request.getAdditionalMetadata("merge_id");
-            if(ScanUtils.empty(request.getAdditionalMetadata("merge_id")) || ScanUtils.empty(request.getAdditionalMetadata("merge_title"))){
+            String mergeId = request.getAdditionalMetadata(MERGE_ID);
+            if(ScanUtils.empty(request.getAdditionalMetadata(MERGE_ID)) || ScanUtils.empty(request.getAdditionalMetadata(MERGE_TITLE))){
                 log.error("merge_id and merge_title was not provided within the request object, which is required for blocking / unblocking merge requests");
                 return;
             }
@@ -162,7 +168,7 @@ public class GitLabService extends RepoService {
             endpoint = endpoint.replace("{iid}", mergeId);
 
             HttpEntity httpEntity = new HttpEntity<>(
-                    getJSONMergeTitle(request.getAdditionalMetadata("merge_title")
+                    getJSONMergeTitle(request.getAdditionalMetadata(MERGE_TITLE)
                             .replace("WIP:CX|","")).toString(),
                     createAuthHeaders()
             );
@@ -201,7 +207,7 @@ public class GitLabService extends RepoService {
                     request.getRepoProjectId()
             );
             if(response.getBody() == null){
-                log.warn("HTTP Body is null for content api ");
+                log.warn(HTTP_BODY_WARN_MESSAGE);
             }
             else {
                 JSONObject json = new JSONObject(response.getBody());
@@ -214,11 +220,9 @@ public class GitLabService extends RepoService {
                 sources.setLanguageStats(langs);
             }
         }catch (NullPointerException e){
-            log.warn("Content not found in JSON response", e);
-        }catch (HttpClientErrorException.NotFound e){
-            log.error("Error occurred", e);
+            log.warn(CONTENT_NOT_FOUND_ERROR_MESSAGE, e);
         }catch (HttpClientErrorException e){
-            log.error("Error occurred", e);
+            log.error(ERROR_OCCURRED, e);
         }
         return sources;
     }
@@ -235,7 +239,7 @@ public class GitLabService extends RepoService {
                     request.getBranch()
             );
             if(response.getBody() == null){
-                log.warn("HTTP Body is null for content api ");
+                log.warn(HTTP_BODY_WARN_MESSAGE);
             }
             JSONArray files = new JSONArray(response.getBody());
             for(int i = 0; i < files.length(); i++){
@@ -245,11 +249,9 @@ public class GitLabService extends RepoService {
                 sources.addSource(path, f);
             }
         }catch (NullPointerException e){
-            log.warn("Content not found in JSON response", e);
-        }catch (HttpClientErrorException.NotFound e){
-            log.error("Error occurred", e);
+            log.warn(CONTENT_NOT_FOUND_ERROR_MESSAGE, e);
         }catch (HttpClientErrorException e){
-            log.error("Error occurred", e);
+            log.error(ERROR_OCCURRED, e);
         }
     }
 
@@ -267,25 +269,23 @@ public class GitLabService extends RepoService {
                     request.getBranch()
             );
             if(response.getBody() == null) {
-                log.warn("HTTP Body is null for content api ");
+                log.warn(HTTP_BODY_WARN_MESSAGE);
             } else {
                 JSONObject json = new JSONObject(response.getBody());
                 String content = json.getString("content");
                 if(ScanUtils.empty(content)) {
-                    log.warn("Content not found in JSON response");
+                    log.warn(CONTENT_NOT_FOUND_ERROR_MESSAGE);
                     return null;
                 }
                 String decodedContent = new String(Base64.decodeBase64(content.trim()));
                 return com.checkmarx.sdk.utils.ScanUtils.getConfigAsCode(decodedContent);
             }
         } catch (NullPointerException e) {
-            log.warn("Content not found in JSON response", e);
+            log.warn(CONTENT_NOT_FOUND_ERROR_MESSAGE, e);
         } catch (HttpClientErrorException.NotFound e) {
             log.info("No Config As code was found [{}]", properties.getConfigAsCode());
-        } catch (HttpClientErrorException e) {
-            log.error("Error occurred", e);
         } catch (Exception e) {
-            log.error("Error occurred", e);
+            log.error(ERROR_OCCURRED, e);
         }
         return null;
     }

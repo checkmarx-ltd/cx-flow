@@ -27,6 +27,7 @@ import java.util.*;
 public class BitBucketService {
 
     private static final Logger log = LoggerFactory.getLogger(BitBucketService.class);
+    private static final String LOG_COMMENT = "comment: {}";
     private final RestTemplate restTemplate;
     private final BitBucketProperties properties;
     private final FlowProperties flowProperties;
@@ -56,7 +57,7 @@ public class BitBucketService {
     void processMerge(ScanRequest request,ScanResults results) throws BitBucketClientException {
         try {
             String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties, properties);
-            log.debug("comment: {}", comment);
+            log.debug(LOG_COMMENT, comment);
             sendMergeComment(request, comment);
         } catch (HttpClientErrorException e){
             log.error("Error occurred while creating Merge Request comment", e);
@@ -67,7 +68,7 @@ public class BitBucketService {
     void processServerMerge(ScanRequest request,ScanResults results, ScanDetails scanDetails) throws BitBucketClientException {
         try {
             String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties, properties);
-            log.debug("comment: {}", comment);
+            log.debug(LOG_COMMENT, comment);
 
             if(properties.isBlockMerge()) {
                 if (mergeResultEvaluator.isMergeAllowed(results, properties, new PullRequestReport(scanDetails, request))) {
@@ -229,7 +230,7 @@ public class BitBucketService {
     void processCommit(ScanRequest request, ScanResults results) throws BitBucketClientException {
         try {
             String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties, properties);
-            log.debug("comment: {}", comment);
+            log.debug(LOG_COMMENT, comment);
             sendCommitComment(request, comment);
         } catch (HttpClientErrorException e){
             log.error("Error occurred while creating Commit comment", e);
