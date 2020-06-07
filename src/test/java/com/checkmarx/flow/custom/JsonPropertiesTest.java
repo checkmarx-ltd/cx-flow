@@ -11,7 +11,7 @@ public class JsonPropertiesTest {
         JsonProperties jsonProperties = new JsonProperties();
         assert jsonProperties.getFileNameFormat().equals("[APP]-[BRANCH]-[TIME]");
     }
-
+   
     @Test
     public void setFileNameFormat() {
         JsonProperties jsonProperties = new JsonProperties();

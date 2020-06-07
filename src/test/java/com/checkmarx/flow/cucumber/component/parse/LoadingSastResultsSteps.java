@@ -3,7 +3,8 @@ package com.checkmarx.flow.cucumber.component.parse;
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.cucumber.common.Constants;
 import com.google.common.collect.Sets;
-import cucumber.api.PendingException;
+
+import io.cucumber.java.PendingException;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import org.apache.commons.io.FilenameUtils;
