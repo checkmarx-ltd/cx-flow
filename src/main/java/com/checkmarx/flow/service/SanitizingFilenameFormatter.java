@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -15,6 +16,7 @@ public class SanitizingFilenameFormatter implements FilenameFormatter {
     @Override
     public String format(ScanRequest request, String filenameFormat, String dataFolder) {
         String result = formatFilenameTemplate(request, filenameFormat);
+        result = sanitizeAgainstPathTraversal(result);
         if (!ScanUtils.empty(dataFolder)) {
             if (dataFolder.endsWith("/")) {
                 result = dataFolder.concat(result);
@@ -47,8 +49,7 @@ public class SanitizingFilenameFormatter implements FilenameFormatter {
         return filename;
     }
 
-
-    public static String fillPlaceholder(String filename, String placeholder, String actualValue){
+    private static String fillPlaceholder(String filename, String placeholder, String actualValue){
         if(StringUtils.isNotEmpty(actualValue)) {
             actualValue = actualValue.replaceAll("[^a-zA-Z0-9-_]+","_");
             filename = filename.replace(placeholder, actualValue);
@@ -56,5 +57,11 @@ public class SanitizingFilenameFormatter implements FilenameFormatter {
             log.debug(filename);
         }
         return filename;
+    }
+
+    private String sanitizeAgainstPathTraversal(String filename) {
+        return Paths.get(filename)
+                .getFileName()
+                .toString();
     }
 }
