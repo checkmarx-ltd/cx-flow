@@ -14,14 +14,13 @@ import java.time.format.DateTimeFormatter;
 @Slf4j
 public class SanitizingFilenameFormatter implements FilenameFormatter {
     @Override
-    public String format(ScanRequest request, String filenameFormat, String dataFolder) {
-        String result = formatFilenameTemplate(request, filenameFormat);
-        result = sanitizeAgainstPathTraversal(result);
-        if (!ScanUtils.empty(dataFolder)) {
-            if (dataFolder.endsWith("/")) {
-                result = dataFolder.concat(result);
+    public String formatPath(ScanRequest request, String filenameTemplate, String baseDir) {
+        String result = formatFilenameTemplate(request, filenameTemplate);
+        if (!ScanUtils.empty(baseDir)) {
+            if (baseDir.endsWith("/")) {
+                result = baseDir.concat(result);
             } else {
-                result = dataFolder.concat("/").concat(result);
+                result = baseDir.concat("/").concat(result);
             }
         }
         return result;
@@ -29,24 +28,23 @@ public class SanitizingFilenameFormatter implements FilenameFormatter {
 
     @Override
     public String formatFilenameTemplate(ScanRequest request, String filenameTemplate) {
-        String filename;
-        filename = filenameTemplate;
+        String result = filenameTemplate;
 
         LocalDateTime now = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd.HHmmss");
-        String dt = now.format(formatter);
-        filename = filename.replace("[TIME]", dt);
-        log.debug(dt);
-        log.debug(filename);
+        String timestamp = now.format(formatter);
+        result = result.replace("[TIME]", timestamp);
+        log.debug("Timestamp: {}", timestamp);
+        log.debug(result);
 
-        filename = fillPlaceholder(filename, "[TEAM]", request.getTeam());
-        filename = fillPlaceholder(filename, "[APP]", request.getApplication());
-        filename = fillPlaceholder(filename, "[PROJECT]", request.getProject());
-        filename = fillPlaceholder(filename, "[NAMESPACE]", request.getNamespace());
-        filename = fillPlaceholder(filename, "[REPO]", request.getRepoName());
-        filename = fillPlaceholder(filename, "[BRANCH]", request.getBranch());
+        result = fillPlaceholder(result, "[TEAM]", request.getTeam());
+        result = fillPlaceholder(result, "[APP]", request.getApplication());
+        result = fillPlaceholder(result, "[PROJECT]", request.getProject());
+        result = fillPlaceholder(result, "[NAMESPACE]", request.getNamespace());
+        result = fillPlaceholder(result, "[REPO]", request.getRepoName());
+        result = fillPlaceholder(result, "[BRANCH]", request.getBranch());
 
-        return filename;
+        return sanitizeAgainstPathTraversal(result);
     }
 
     private static String fillPlaceholder(String filename, String placeholder, String actualValue){

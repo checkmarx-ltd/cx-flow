@@ -13,7 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -25,8 +25,8 @@ import java.util.List;
 
 @Service("GitLabDashboard")
 @RequiredArgsConstructor
+@Slf4j
 public class GitLabSecurityDasbhoard implements IssueTracker {
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(GitLabSecurityDasbhoard.class);
     private static final String ISSUE_FORMAT = "%s @ %s : %d";
 
     private final GitLabProperties properties;

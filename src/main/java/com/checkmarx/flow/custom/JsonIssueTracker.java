@@ -28,7 +28,7 @@ public class JsonIssueTracker implements IssueTracker {
     public void init(ScanRequest request, ScanResults results) throws MachinaException {
         if (properties != null) {
             if(request != null) {
-                String filename = filenameFormatter.format(request, properties.getFileNameFormat(), properties.getDataFolder());
+                String filename = filenameFormatter.formatPath(request, properties.getFileNameFormat(), properties.getDataFolder());
                 request.setFilename(filename);
                 log.info("Creating file {}", filename);
                 log.info("Deleting if already exists");

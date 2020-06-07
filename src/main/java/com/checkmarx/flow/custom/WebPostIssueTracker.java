@@ -47,7 +47,7 @@ public class WebPostIssueTracker implements IssueTracker {
     public void init(ScanRequest request, ScanResults results) throws MachinaException {
         if(request != null) {
             String initialFilename = "cx.".concat(UUID.randomUUID().toString());
-            String filename = filenameFormatter.format(request, initialFilename, properties.getDataFolder());
+            String filename = filenameFormatter.formatPath(request, initialFilename, properties.getDataFolder());
             request.setFilename(filename);
             log.info("Creating file {}", filename);
             log.info("Deleting if already exists");

@@ -33,7 +33,7 @@ public class CsvIssueTracker implements IssueTracker {
 
     @Override
     public void init(ScanRequest request, ScanResults results) throws MachinaException {
-        String filename = filenameFormatter.format(request, properties.getFileNameFormat(), properties.getDataFolder());
+        String filename = filenameFormatter.formatPath(request, properties.getFileNameFormat(), properties.getDataFolder());
         request.setFilename(filename);
         log.info("Creating file {}", filename);
         log.info("Deleting if already exists");
