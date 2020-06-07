@@ -1,5 +1,6 @@
 package com.checkmarx.flow.utils;
 
+import com.google.common.base.Strings;
 import org.slf4j.Logger;
 
 import java.io.File;
@@ -20,6 +21,9 @@ public class ZipUtils {
 
     private static final int DEFAULT_BUFFER_SIZE = 1024 * 4;
 
+    private ZipUtils() {
+    }
+
     public static void zipFile(String fileToZip, String zipFile, String excludePatterns)
             throws IOException {
         List<String> excludeList = null;
@@ -28,7 +32,7 @@ public class ZipUtils {
             log.info("Applying exclusions: {}", excludePatterns);
         }
 
-        if(!ScanUtils.empty(excludePatterns)) {
+        if(!Strings.isNullOrEmpty(excludePatterns)) {
             excludeList = Arrays.asList(excludePatterns.split(","));
         }
 
