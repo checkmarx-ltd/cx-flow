@@ -4,14 +4,14 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaException;
+import com.checkmarx.flow.service.FilenameFormatter;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
-import java.beans.ConstructorProperties;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -24,28 +24,16 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service("Csv")
+@RequiredArgsConstructor
 public class CsvIssueTracker implements IssueTracker {
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(CsvIssueTracker.class);
     private final CsvProperties properties;
     private final FlowProperties flowProperties;
-
-    @ConstructorProperties({"properties", "flowProperties"})
-    public CsvIssueTracker(CsvProperties properties, FlowProperties flowProperties) {
-        this.properties = properties;
-        this.flowProperties = flowProperties;
-    }
+    private final FilenameFormatter filenameFormatter;
 
     @Override
     public void init(ScanRequest request, ScanResults results) throws MachinaException {
-        String filename = properties.getFileNameFormat();
-        filename = ScanUtils.getFilename(request, filename);
-        String folder = properties.getDataFolder();
-        if(!ScanUtils.empty(folder) && folder.endsWith("/")){
-            filename = folder.concat(filename);
-        }
-        else if(!ScanUtils.empty(folder) && !folder.endsWith("/")){
-            filename = folder.concat("/").concat(filename);
-        }
+        String filename = filenameFormatter.format(request, properties.getFileNameFormat(), properties.getDataFolder());
         request.setFilename(filename);
         log.info("Creating file {}", filename);
         log.info("Deleting if already exists");

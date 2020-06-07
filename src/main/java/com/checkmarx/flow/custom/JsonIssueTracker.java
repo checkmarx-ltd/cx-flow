@@ -3,15 +3,14 @@ package com.checkmarx.flow.custom;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaException;
-import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.flow.service.FilenameFormatter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.lang3.exception.ExceptionUtils;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
-import java.beans.ConstructorProperties;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -19,26 +18,17 @@ import java.nio.file.Paths;
 import java.util.List;
 
 @Service("Json")
+@RequiredArgsConstructor
 public class JsonIssueTracker implements IssueTracker {
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(JsonIssueTracker.class);
     private final JsonProperties properties;
-
-    public JsonIssueTracker(JsonProperties properties) {
-        this.properties = properties;
-    }
+    private final FilenameFormatter filenameFormatter;
 
     @Override
     public void init(ScanRequest request, ScanResults results) throws MachinaException {
         if (properties != null) {
-            String filename = properties.getFileNameFormat();
-            if(request != null && filename != null) {
-                filename = ScanUtils.getFilename(request, filename);
-                String folder = properties.getDataFolder();
-                if (!ScanUtils.empty(folder) && folder.endsWith("/")) {
-                    filename = folder.concat(filename);
-                } else if (!ScanUtils.empty(folder) && !folder.endsWith("/")) {
-                    filename = folder.concat("/").concat(filename);
-                }
+            if(request != null) {
+                String filename = filenameFormatter.format(request, properties.getFileNameFormat(), properties.getDataFolder());
                 request.setFilename(filename);
                 log.info("Creating file {}", filename);
                 log.info("Deleting if already exists");
