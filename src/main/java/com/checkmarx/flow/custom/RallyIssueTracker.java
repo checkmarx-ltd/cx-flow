@@ -31,6 +31,7 @@ import java.util.Map;
 @Service("Rally")
 public class RallyIssueTracker implements IssueTracker {
 
+    private static final long MAX_RESULTS_ALLOWED = 1000000L;
     private static final String TRANSITION_CLOSE = "Closed";
     private static final String TRANSITION_OPEN = "Open";
     private static final String ISSUES_PER_PAGE = "100";
@@ -108,7 +109,7 @@ public class RallyIssueTracker implements IssueTracker {
             // totalResultCount
             //
             int resultsFound = 0;
-            while(resultsFound < rallyQuery.getQueryResult().getTotalResultCount()) {
+            while(resultsFound < getTotalResultCount(rallyQuery)) {
                 resultsFound += rallyQuery.getQueryResult().getPageSize();
                 // Create CxFlow issues from Rally issues
                 for(Result issue: rallyQuery.getQueryResult().getResults()){
@@ -116,7 +117,7 @@ public class RallyIssueTracker implements IssueTracker {
                     issues.add(i);
                 }
                 // If there are more issues on the server, fetch them
-                if(resultsFound < rallyQuery.getQueryResult().getTotalResultCount()) {
+                if(resultsFound < getTotalResultCount(rallyQuery)) {
                     pageIndex++;
                     response = restTemplate.exchange(
                             properties.getApiUrl().concat(GET_ISSUES),
@@ -134,6 +135,17 @@ public class RallyIssueTracker implements IssueTracker {
         } catch(RestClientException e) {
             return new ArrayList<>();
         }
+    }
+
+    private Long getTotalResultCount(QueryResult rallyQuery) {
+        Long totalResults =  rallyQuery.getQueryResult().getTotalResultCount();
+        if (totalResults == null) {
+            return 0l;
+        }
+        if (totalResults > MAX_RESULTS_ALLOWED) {
+            totalResults = MAX_RESULTS_ALLOWED;
+        }
+        return totalResults;
     }
 
     /**
