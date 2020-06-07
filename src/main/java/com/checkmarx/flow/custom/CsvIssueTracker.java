@@ -279,7 +279,7 @@ public class CsvIssueTracker implements IssueTracker {
         if(!ScanUtils.empty(request.getTeam())){
             String team = request.getTeam();
             team = team.replaceAll("\\\\","_");
-            team = team.replaceAll("/","_");
+            team = team.replace("/","_");
             value = value.replace("[TEAM]", team);
         }
         if(!ScanUtils.empty(request.getApplication())) {

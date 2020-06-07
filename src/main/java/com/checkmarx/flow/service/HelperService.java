@@ -28,6 +28,7 @@ import java.util.regex.Pattern;
 public class HelperService {
 
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(HelperService.class);
+    private static final String REQUEST = "request";
     private final FlowProperties properties;
     private final CxProperties cxProperties;
     private final ExternalScriptService scriptService;
@@ -68,7 +69,7 @@ public class HelperService {
             try {
                 String script = getStringFromFile(scriptFile);
                 HashMap<String, Object> bindings = new HashMap<>();
-                bindings.put("request", request);
+                bindings.put(REQUEST, request);
                 bindings.put("branches", branches);
                 Object result = scriptService.runScript(script, bindings);
                 if (result instanceof Boolean) {
@@ -105,7 +106,7 @@ public class HelperService {
             try {
                 String script = getStringFromFile(scriptFile);
                 HashMap<String, Object> bindings = new HashMap<>();
-                bindings.put("request", request);
+                bindings.put(REQUEST, request);
                 Object result = scriptService.runScript(script, bindings);
                 if (result instanceof String) {
                     return ((String) result);
@@ -129,7 +130,7 @@ public class HelperService {
             try {
                 String script = getStringFromFile(scriptFile);
                 HashMap<String, Object> bindings = new HashMap<>();
-                bindings.put("request", request);
+                bindings.put(REQUEST, request);
                 Object result = scriptService.runScript(script, bindings);
                 if (result instanceof String) {
                     return ((String) result);

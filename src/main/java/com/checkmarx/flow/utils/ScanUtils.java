@@ -57,8 +57,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 public class ScanUtils {
 
+    private static final String DIV_A_HREF = "<div><a href=\'";
     public static final String RUNNING = "running";
     public static final String CRLF = "\r\n";
+    public static final String MD_H3 = "###";
+    public static final String MD_H4 = "####";
     public static final String ISSUE_BODY = "**%s** issue exists @ **%s** in branch **%s**";
     public static final String ISSUE_BODY_TEXT = "%s issue exists @ %s in branch %s";
     public static final String ISSUE_KEY = "%s %s @ %s [%s]";
@@ -168,10 +171,8 @@ public class ScanUtils {
      * @param list
      * @return
      */
-    public static boolean empty(List list) {
-        if (list == null) {
-            return true;
-        } else return list.isEmpty();
+    public static boolean empty(List<?> list) {
+        return (list == null) || list.isEmpty();
     }
 
     public static boolean emptyObj(Object object) {
@@ -566,11 +567,11 @@ public class ScanUtils {
             log.debug("Building merge comment MD for SAST scanner");
 
             CxScanSummary summary = results.getScanSummary();
-            body.append("### Checkmarx SAST Scan Summary").append(CRLF);
+            body.append(MD_H3).append(" Checkmarx SAST Scan Summary").append(CRLF);
             body.append("[Full Scan Details](").append(results.getLink()).append(")").append(CRLF);
             if (properties.isCxSummary() && !request.getProduct().equals(ScanRequest.Product.CXOSA)) {
                 if (!ScanUtils.empty(properties.getCxSummaryHeader())) {
-                    body.append("#### ").append(properties.getCxSummaryHeader()).append(CRLF);
+                    body.append(MD_H4).append(" ").append(properties.getCxSummaryHeader()).append(CRLF);
                 }
                 body.append("Severity|Count").append(CRLF);
                 body.append("---|---").append(CRLF);
@@ -581,7 +582,7 @@ public class ScanUtils {
             }
             if (properties.isFlowSummary()) {
                 if (!ScanUtils.empty(properties.getFlowSummaryHeader())) {
-                    body.append("#### ").append(properties.getFlowSummaryHeader()).append(CRLF);
+                    body.append(MD_H4).append(" ").append(properties.getFlowSummaryHeader()).append(CRLF);
                 }
                 body.append("Severity|Count").append(CRLF);
                 body.append("---|---").append(CRLF);
@@ -595,7 +596,7 @@ public class ScanUtils {
             }
             if (properties.isDetailed()) {
                 if (!ScanUtils.empty(properties.getDetailHeader())) {
-                    body.append("#### ").append(properties.getDetailHeader()).append(CRLF);
+                    body.append(MD_H4).append(" ").append(properties.getDetailHeader()).append(CRLF);
                 }
                 body.append("|Lines|Severity|Category|File|Link|").append(CRLF);
                 body.append("---|---|---|---|---").append(CRLF);
@@ -676,9 +677,9 @@ public class ScanUtils {
                 body.append("***").append(CRLF);
             }
 
-            body.append("### Checkmarx Dependency (CxSCA) Scan Summary").append(CRLF)
+            body.append(MD_H3).append(" Checkmarx Dependency (CxSCA) Scan Summary").append(CRLF)
                     .append("[Full Scan Details](").append(r.getWebReportLink()).append(")  ").append(CRLF)
-                    .append("#### Summary  ").append(CRLF)
+                    .append(MD_H4).append(" Summary  ").append(CRLF)
                     .append("| Total Packages Identified | ").append(r.getSummary().getTotalPackages()).append("| ").append(CRLF)
                     .append("-|-").append(CRLF);
 
@@ -687,7 +688,7 @@ public class ScanUtils {
                             .append(r.getSummary().getFindingCounts().get(Filter.Severity.valueOf(v.toUpperCase()))).append(" ").append(CRLF));
             body.append("Scan risk score | ").append(String.format("%.2f", r.getSummary().getRiskScore())).append(" |").append(CRLF).append(CRLF);
 
-            body.append("#### CxSCA vulnerability result overview").append(CRLF);
+            body.append(MD_H4).append(" CxSCA vulnerability result overview").append(CRLF);
             List<String> headlines = Arrays.asList(
                     "Vulnerability ID",
                     "Package",
@@ -805,7 +806,7 @@ public class ScanUtils {
         if(!ScanUtils.empty(issue.getCwe())) {
             body.append("<div><b>CWE:</b>").append(issue.getCwe()).append(DIV);
             if(!ScanUtils.empty(flowProperties.getMitreUrl())) {
-                body.append("<div><a href=\'").append(
+                body.append(DIV_A_HREF).append(
                         String.format(
                                 flowProperties.getMitreUrl(),
                                 issue.getCwe()
@@ -814,10 +815,10 @@ public class ScanUtils {
             }
         }
         if(!ScanUtils.empty(flowProperties.getWikiUrl())) {
-            body.append("<div><a href=\'").append(flowProperties.getWikiUrl()).append("\'>Internal Guidance</a></div>");
+            body.append(DIV_A_HREF).append(flowProperties.getWikiUrl()).append("\'>Internal Guidance</a></div>");
         }
         if(!ScanUtils.empty(issue.getLink())){
-            body.append("<div><a href=\'").append(issue.getLink()).append("\'>Checkmarx</a></div>");
+            body.append(DIV_A_HREF).append(issue.getLink()).append("\'>Checkmarx</a></div>");
         }
         if(issue.getDetails() != null && !issue.getDetails().isEmpty()) {
             Map<Integer, ScanResults.IssueDetails> trueIssues = issue.getDetails().entrySet().stream()
@@ -1168,7 +1169,7 @@ public class ScanUtils {
         try {
             urlColonEncode = URLEncoder.encode(":", StandardCharsets.UTF_8.toString());
         } catch (UnsupportedEncodingException e) {
-            log.error("Encoding error: {}", e);
+            log.error("Encoding error: {}", e.getMessage());
         }
 
         vulnerabilityUrl.append(allVulnerabilitiesReportUrl).append("/vulnerabilities/");
