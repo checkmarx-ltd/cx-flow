@@ -4,4 +4,6 @@ import com.checkmarx.flow.dto.ScanRequest;
 
 public interface FilenameFormatter {
     String format(ScanRequest request, String filenameFormat, String dataFolder);
+
+    String formatFilenameTemplate(ScanRequest request, String filenameTemplate);
 }
