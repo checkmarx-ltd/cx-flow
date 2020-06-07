@@ -29,10 +29,6 @@ import static org.junit.Assert.assertTrue;
 @Slf4j
 public class SCARemoteRepoScanSteps {
 
-    private static final String APP_URL = "https://sca.scacheckmarx.com";
-    private static final String API_URL = "https://api.scacheckmarx.com";
-    private static final String AC_URL = "https://v2.ac-checkmarx.com";
-
     private static final String PUBLIC_PROJECT_NAME = "Public-Test-Test-Repo";
     private static final String PRIVATE_PROJECT_NAME = "Private-Test-Test-Repo";
 
@@ -89,9 +85,9 @@ public class SCARemoteRepoScanSteps {
     }
 
     private void initSCAConfig() {
-        scaProperties.setAppUrl(APP_URL);
-        scaProperties.setApiUrl(API_URL);
-        scaProperties.setAccessControlUrl(AC_URL);
+        scaProperties.setAppUrl("https://sca.scacheckmarx.com");
+        scaProperties.setApiUrl("https://api.scacheckmarx.com");
+        scaProperties.setAccessControlUrl("https://platform.checkmarx.net");
     }
 
 
