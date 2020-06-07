@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 
 @RestController
@@ -263,9 +264,7 @@ public class BitbucketServerController {
             if (!ScanUtils.empty(bug)) {
                 bugType = ScanUtils.getBugTypeEnum(bug, flowProperties.getBugTrackerImpl());
             }
-            if (appOnlyTracking != null) {
-                flowProperties.setTrackApplicationOnly(appOnlyTracking);
-            }
+            Optional.ofNullable(appOnlyTracking).ifPresent(flowProperties::setTrackApplicationOnly);
 
             if (ScanUtils.empty(product)) {
                 product = ScanRequest.Product.CX.getProduct();
@@ -333,7 +332,7 @@ public class BitbucketServerController {
                     .product(p)
                     .project(project)
                     .team(team)
-                    .namespace(projectKey.replaceAll(" ", "_"))
+                    .namespace(projectKey.replace(" ", "_"))
                     .repoName(fromRefRepository.getName())
                     .repoUrl(gitUrl)
                     .repoUrlWithAuth(gitAuthUrl)
@@ -441,9 +440,7 @@ public class BitbucketServerController {
             }
             bugType = ScanUtils.getBugTypeEnum(bug, flowProperties.getBugTrackerImpl());
 
-            if(appOnlyTracking != null){
-                flowProperties.setTrackApplicationOnly(appOnlyTracking);
-            }
+            Optional.ofNullable(appOnlyTracking).ifPresent(flowProperties::setTrackApplicationOnly);
 
             if(ScanUtils.empty(product)){
                 product = ScanRequest.Product.CX.getProduct();
@@ -501,7 +498,7 @@ public class BitbucketServerController {
                     .product(p)
                     .project(project)
                     .team(team)
-                    .namespace(projectKey.replaceAll(" ","_"))
+                    .namespace(projectKey.replace(" ","_"))
                     .repoName(repository.getName())
                     .repoUrl(gitUrl)
                     .repoUrlWithAuth(gitAuthUrl)
