@@ -35,6 +35,7 @@ public class RallyIssueTracker implements IssueTracker {
     private static final String TRANSITION_OPEN = "Open";
     private static final String ISSUES_PER_PAGE = "100";
     private static final Logger log = LoggerFactory.getLogger(RallyIssueTracker.class);
+    private static final String STATE = "State";
 
     private final RestTemplate restTemplate;
     private final RallyProperties properties;
@@ -201,7 +202,7 @@ public class RallyIssueTracker implements IssueTracker {
         i.setTitle((String)rallyDefect.get("_refObjectName"));
         i.setId((String)rallyDefect.get("_refObjectUUID"));
         i.setUrl((String)rallyDefect.get("_ref"));
-        i.setState((String)rallyDefect.get("State"));
+        i.setState((String)rallyDefect.get(STATE));
         List<String> labels = new ArrayList<>();
         i.setLabels(labels);
         return i;
@@ -290,7 +291,7 @@ public class RallyIssueTracker implements IssueTracker {
             requestBody.put("Name", title);
             requestBody.put("Workspace", properties.getRallyWorkspaceId());
             requestBody.put("Project", properties.getRallyProjectId());
-            requestBody.put("State", TRANSITION_OPEN);
+            requestBody.put(STATE, TRANSITION_OPEN);
             requestBody.put("Description", body);
             requestBody.put("Tags", this.tagsList);
             createBody.put("Defect", requestBody);
@@ -496,7 +497,7 @@ public class RallyIssueTracker implements IssueTracker {
         JSONObject createBody = new JSONObject();
         JSONObject requestBody = new JSONObject();
         try {
-            requestBody.put("State", TRANSITION_CLOSE);
+            requestBody.put(STATE, TRANSITION_CLOSE);
             createBody.put("Defect", requestBody);
         } catch (JSONException e) {
             log.error("Error creating JSON Close Issue Object - JSON object will be empty");
