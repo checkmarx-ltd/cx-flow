@@ -13,6 +13,7 @@ import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Strings;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -378,12 +379,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 log.info("Executing scan process");
                 //GitHub Scan with Git Clone
                 if(args.containsOption("github")){
-                    if(ScanUtils.empty(repoUrl) && !ScanUtils.anyEmpty(namespace, repoName)) {
-                        repoUrl = gitHubProperties.getGitUri(namespace, repoName);
-                    } else if(ScanUtils.empty(repoUrl)){
-                        log.error("Unable to determine git url for scanning, exiting...");
-                        exit(2);
-                    }
+                    repoUrl = getNoneEmptyRepoUrl(namespace, repoName, repoUrl, gitHubProperties.getGitUri(namespace, repoName));
                     String token = gitHubProperties.getToken();
                     gitAuthUrl = repoUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(token).concat("@"));
                     gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(token).concat("@"));
@@ -391,12 +387,7 @@ public class CxFlowRunner implements ApplicationRunner {
                     cxScan(request, repoUrl, gitAuthUrl, branch, ScanRequest.Repository.GITHUB);
                 } //GitLab Scan with Git Clone
                 else if(args.containsOption("gitlab") &&  !ScanUtils.anyEmpty(namespace, repoName)){
-                    if(ScanUtils.empty(repoUrl) && !ScanUtils.anyEmpty(namespace, repoName)) {
-                        repoUrl = gitLabProperties.getGitUri(namespace, repoName);
-                    } else if(ScanUtils.empty(repoUrl)){
-                        log.error("Unable to determine git url for scanning, exiting...");
-                        exit(2);
-                    }
+                    repoUrl = getNoneEmptyRepoUrl(namespace, repoName, repoUrl, gitLabProperties.getGitUri(namespace, repoName));
                     String token = gitLabProperties.getToken();
                     gitAuthUrl = repoUrl.replace(Constants.HTTPS, Constants.HTTPS_OAUTH2.concat(token).concat("@"));
                     gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP_OAUTH2.concat(token).concat("@"));
@@ -421,6 +412,19 @@ public class CxFlowRunner implements ApplicationRunner {
         }
         log.info("Completed Successfully");
         exit(ExitCode.SUCCESS);
+    }
+
+    private String getNoneEmptyRepoUrl(String namespace, String repoName, String repoUrl, String gitUri) throws ExitThrowable {
+        if (Strings.isNullOrEmpty(repoUrl)) {
+            if (!ScanUtils.anyEmpty(namespace, repoName)) {
+                repoUrl = gitUri;
+            } else {
+                log.error("Unable to determine git url for scanning, exiting...");
+                exit(2);
+                throw new IllegalArgumentException("repo url is null");
+            }
+        }
+        return repoUrl;
     }
 
     private boolean containsRepoArgs(String namespace, String repoName, String branch){
