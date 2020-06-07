@@ -3,39 +3,28 @@ package com.checkmarx.flow.custom;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaException;
+import com.checkmarx.flow.service.FilenameFormatter;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
-import org.apache.commons.lang3.exception.ExceptionUtils;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
-import java.beans.ConstructorProperties;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
 @Service("CxXml")
+@RequiredArgsConstructor
 public class CxXMLIssueTracker implements IssueTracker {
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(CxXMLIssueTracker.class);
     private final CxXMLProperties properties;
-
-    @ConstructorProperties("properties")
-    public CxXMLIssueTracker(CxXMLProperties properties) {
-        this.properties = properties;
-    }
+    private final FilenameFormatter filenameFormatter;
 
     @Override
     public void init(ScanRequest request, ScanResults results) throws MachinaException {
-        String filename = properties.getFileNameFormat();
-        filename = ScanUtils.getFilename(request, filename);
-        String folder = properties.getDataFolder();
-        if(!ScanUtils.empty(folder) && folder.endsWith("/")){
-            filename = folder.concat(filename);
-        }
-        else if(!ScanUtils.empty(folder) && !folder.endsWith("/")){
-            filename = folder.concat("/").concat(filename);
-        }
+        String filename = filenameFormatter.format(request, properties.getFileNameFormat(), properties.getDataFolder());
         request.setFilename(filename);
         log.info("Creating file {}", filename);
         log.info("Deleting if already exists");
