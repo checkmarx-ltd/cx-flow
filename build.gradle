@@ -2,7 +2,7 @@ buildscript {
     ext {
         CxSBSDK = "0.4.17-20200526.121516-1"
         //cxVersion = "8.90.5"
-        springBootVersion = '2.2.4.RELEASE'
+        springBootVersion = '2.2.6.RELEASE'
         sonarqubeVersion = '2.8'
         atlassianVersion = "5.2.0"
         atlassianFugueVersion = "4.7.2"
@@ -48,7 +48,7 @@ apply plugin: 'com.gorylenko.gradle-git-properties'
 group = 'com.checkmarx'
 version = '1.6.0'
 sourceCompatibility = 1.8
-def cucumberVersion = '4.7.4'
+def cucumberVersion = '5.7.0'
 def junitVersion = '5.5.0'
 
 repositories {
@@ -76,10 +76,10 @@ dependencies {
     compile("com.github.checkmarx-ts:cx-spring-boot-sdk:${CxSBSDK}")
     compile("org.apache.commons:commons-text:1.8")
     compile('commons-codec:commons-codec:1.13')
-    compile('commons-io:commons-io:2.6')
+    compile('commons-io:commons-io:2.7')
     compile('org.apache.commons:commons-lang3:3.9')
     compile('org.json:json:20190722')
-    compile('com.fasterxml.jackson.core:jackson-databind')
+    compile('com.fasterxml.jackson.core:jackson-databind:2.10.3')
     compile('org.springframework.boot:spring-boot-starter-web-services')
     compile('org.springframework.boot:spring-boot-starter-mail')
     compile('org.springframework.boot:spring-boot-starter-thymeleaf')
