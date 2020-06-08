@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 @Service
 public class JiraService {
 
+    public static final int MAX_RESULTS_ALLOWED = 1000000;
     public static final String JIRA_ISSUE_KEY = "%s%s @ %s [%s]%s";
     public static final String JIRA_ISSUE_KEY_2 = "%s%s @ %s%s";
     public static final String JIRA_ISSUE_KEY_3 = "%s%s Vulnerable Package @ %s [%s]%s";
@@ -218,8 +219,17 @@ public class JiraService {
                 issues.add(issue);
             }
             startAt += jiraProperties.getMaxJqlResults();
-        }while(startAt < searchResults.getTotal() );
+        }while(startAt < getTotalResults(searchResults));
         return issues;
+    }
+
+    private int getTotalResults(SearchResult searchResults) {
+        int totalResults =  searchResults.getTotal();
+        if (totalResults > MAX_RESULTS_ALLOWED) {
+            totalResults = MAX_RESULTS_ALLOWED;
+        }
+        return totalResults;
+
     }
 
     private Issue getIssue(String bugId) {
