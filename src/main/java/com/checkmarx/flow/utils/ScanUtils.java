@@ -337,7 +337,7 @@ public class ScanUtils {
                     .filter(ne -> !empty(ne))
                     .ifPresent(br -> {
                         request.setActiveBranches(br);
-                        overridePropertiesMap.put("active branches", br.toArray().toString());
+                        overridePropertiesMap.put("active branches", Arrays.toString(br.toArray()));
                     });
 
                     Optional.ofNullable(fo.getEmails())
@@ -385,10 +385,9 @@ public class ScanUtils {
     }
 
     private static String convertMapToString(Map<?, ?> map) {
-        String mapAsString = map.keySet().stream()
+        return map.keySet().stream()
                 .map(key -> key + "=" + map.get(key))
                 .collect(Collectors.joining(", ", "{", "}"));
-        return mapAsString;
     }
 
     private static void overrideJiraBugProperties(FlowOverride override, BugTracker bt) {
@@ -1017,7 +1016,9 @@ public class ScanUtils {
     }
 
     public static String cleanStringUTF8(String dirty){
-        log.debug(""+dirty.length());
+        if (log.isDebugEnabled()) {
+            log.debug(String.valueOf(dirty.length()));
+        }
         return new String(dirty.getBytes(), 0, dirty.length(), UTF_8);
     }
 
