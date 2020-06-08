@@ -220,24 +220,7 @@ public class RallyIssueTracker implements IssueTracker {
         i.setLabels(labels);
         return i;
     }
-
-    /**
-     * Retrieve DTO representation of Rally defect
-     *
-     * @param issueUrl URL for specific Rally defect
-     * @return Rally Issue
-     */
-    private Issue getIssue(String issueUrl) {
-        log.info("Executing getIssue Rally API call");
-        HttpEntity httpEntity = new HttpEntity<>(createAuthHeaders());
-        ResponseEntity<DefectQuery> response = restTemplate.exchange(
-                issueUrl,
-                HttpMethod.GET,
-                httpEntity,
-                DefectQuery.class);
-        return null;
-    }
-
+    
     /**
      * Add a comment to an existing Rally Issue (technically adding a 'discussion')
      *
@@ -425,7 +408,6 @@ public class RallyIssueTracker implements IssueTracker {
                     httpEntity,
                     com.checkmarx.flow.dto.rally.Issue.class);
             this.addComment(issue.getUrl(),"Issue still exists. ");
-            return issue;
         } catch (HttpClientErrorException e) {
             log.error("Error updating issue.  This is likely due to the fact that another user has closed this issue. Adding comment");
             if(e.getStatusCode().equals(HttpStatus.GONE)) {
@@ -433,7 +415,7 @@ public class RallyIssueTracker implements IssueTracker {
             }
             this.addComment(issue.getUrl(), "This issue still exists.  Please add label 'false-positive' to remove from scope of SAST results");
         }
-        return this.getIssue(issue.getUrl());
+        return issue;
     }
 
     @Override
