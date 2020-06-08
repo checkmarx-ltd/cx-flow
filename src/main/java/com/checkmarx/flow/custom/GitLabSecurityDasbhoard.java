@@ -5,47 +5,37 @@ import com.checkmarx.flow.config.GitLabProperties;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaException;
-import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.flow.service.FilenameFormatter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Builder;
 import lombok.Data;
-import org.apache.commons.lang3.StringUtils;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.slf4j.Logger;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service("GitLabDashboard")
+@RequiredArgsConstructor
+@Slf4j
 public class GitLabSecurityDasbhoard implements IssueTracker {
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(GitLabSecurityDasbhoard.class);
+    private static final String ISSUE_FORMAT = "%s @ %s : %d";
+
     private final GitLabProperties properties;
     private final FlowProperties flowProperties;
-    private final String ISSUE_FORMAT = "%s @ %s : %d";
-
-    public GitLabSecurityDasbhoard(GitLabProperties properties, FlowProperties flowProperties) {
-        this.properties = properties;
-        this.flowProperties = flowProperties;
-    }
+    private final FilenameFormatter filenameFormatter;
 
     @Override
     public void init(ScanRequest request, ScanResults results) throws MachinaException {
-        String filename = properties.getFilePath();
-        filename = ScanUtils.getFilename(request, filename);
+        String filename = filenameFormatter.formatFilenameTemplate(request, properties.getFilePath());
         request.setFilename(filename);
         log.info("Creating file {}", filename);
         try {
@@ -61,7 +51,7 @@ public class GitLabSecurityDasbhoard implements IssueTracker {
         log.info("Finalizing Dashboard output");
         List<Vulnerability> vulns = new ArrayList<>();
         Scanner scanner = Scanner.builder().build();
-        results.getXIssues().forEach( issue -> {
+        results.getXIssues().forEach( issue ->
             issue.getDetails().forEach( (k,v) -> {
                 Vulnerability vuln = Vulnerability.builder()
                         .category("sast")
@@ -84,8 +74,8 @@ public class GitLabSecurityDasbhoard implements IssueTracker {
                         )
                         .build();
                 vulns.add(vuln);
-            });
-        });
+            })
+        );
         SecurityDashboard report  = SecurityDashboard.builder()
                 .vulnerabilities(vulns)
                 .build();
@@ -127,7 +117,7 @@ public class GitLabSecurityDasbhoard implements IssueTracker {
 
     @Override
     public List<Issue> getIssues(ScanRequest request) throws MachinaException {
-        return null;
+        return new ArrayList<>();
     }
 
     @Override

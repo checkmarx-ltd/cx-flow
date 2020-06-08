@@ -3,6 +3,7 @@ package com.checkmarx.flow.custom;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaException;
+import com.checkmarx.flow.service.FilenameFormatter;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -23,7 +24,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
@@ -33,22 +33,21 @@ public class WebPostIssueTracker implements IssueTracker {
     private static final Logger log = LoggerFactory.getLogger(WebPostIssueTracker.class);
     private final WebPostProperties properties;
     private final RestTemplate restTemplate;
+    private final FilenameFormatter filenameFormatter;
 
-    public WebPostIssueTracker(WebPostProperties properties, @Qualifier("flowRestTemplate") RestTemplate restTemplate) {
+    public WebPostIssueTracker(WebPostProperties properties,
+                               @Qualifier("flowRestTemplate") RestTemplate restTemplate,
+                               FilenameFormatter filenameFormatter) {
         this.properties = properties;
         this.restTemplate = restTemplate;
+        this.filenameFormatter = filenameFormatter;
     }
 
     @Override
     public void init(ScanRequest request, ScanResults results) throws MachinaException {
         if(request != null) {
-            String folder = properties.getDataFolder();
-            String filename = "cx.".concat(UUID.randomUUID().toString());
-            if (!ScanUtils.empty(folder) && folder.endsWith("/")) {
-                filename = folder.concat(filename);
-            } else if (!ScanUtils.empty(folder) && !folder.endsWith("/")) {
-                filename = folder.concat("/").concat(filename);
-            }
+            String initialFilename = "cx.".concat(UUID.randomUUID().toString());
+            String filename = filenameFormatter.formatPath(request, initialFilename, properties.getDataFolder());
             request.setFilename(filename);
             log.info("Creating file {}", filename);
             log.info("Deleting if already exists");
