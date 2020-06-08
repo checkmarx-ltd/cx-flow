@@ -138,7 +138,7 @@ public class RallyIssueTracker implements IssueTracker {
     }
 
     private Long getTotalResultCount(QueryResult rallyQuery) {
-        Long totalResults =  rallyQuery.getQueryResult().getTotalResultCount();
+        Long totalResults =  Long.valueOf(rallyQuery.getQueryResult().getTotalResultCount());
         if (totalResults == null) {
             return 0l;
         }
