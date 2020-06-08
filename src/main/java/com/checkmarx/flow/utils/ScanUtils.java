@@ -982,39 +982,6 @@ public class ScanUtils {
         return bugType;
     }
 
-    public static String getFilename(ScanRequest request, String format){
-        String filename;
-        filename = format;
-
-        LocalDateTime now = LocalDateTime.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd.HHmmss");
-        String dt = now.format(formatter);
-        filename = filename.replace("[TIME]", dt);
-        log.debug(dt);
-        log.debug(filename);
-
-        filename = getGenericFilename(filename, "[TEAM]", request.getTeam());
-        filename = getGenericFilename(filename, "[APP]", request.getApplication());
-        filename = getGenericFilename(filename, "[PROJECT]", request.getProject());
-        filename = getGenericFilename(filename, "[NAMESPACE]", request.getNamespace());
-        filename = getGenericFilename(filename, "[REPO]", request.getRepoName());
-        filename = getGenericFilename(filename, "[BRANCH]", request.getBranch());
-
-        return filename;
-    }
-
-    public static String getGenericFilename(String filename, String valueToReplace, String replacement){
-
-        if(!empty(replacement)) {
-            replacement = replacement.replaceAll("[^a-zA-Z0-9-_]+","_");
-
-            filename = filename.replace(valueToReplace, replacement);
-            log.debug(replacement);
-            log.debug(filename);
-        }
-        return filename;
-    }
-
     public static String cleanStringUTF8(String dirty){
         if (log.isDebugEnabled()) {
             log.debug(String.valueOf(dirty.length()));
