@@ -17,6 +17,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.StringJoiner;
+import java.util.concurrent.TimeUnit;
 
 import com.checkmarx.flow.config.ADOProperties;
 import com.checkmarx.flow.config.GitHubProperties;
@@ -34,12 +35,14 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.cucumber.java.PendingException;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.junit.platform.commons.PreconditionViolationException;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 
@@ -68,16 +71,21 @@ enum Repository {
         }
 
         JSONArray getJSONArray(String uri) {
-            RestTemplate restTemplate = new RestTemplate();
-            HttpHeaders headers = getHeaders();
-            log.info("GET array headers: {}", headers.toString());
-            HttpEntity<String> requestEntity = new HttpEntity<>(null, headers);
-            ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, requestEntity, String.class);
+            ResponseEntity<String> response = getResponseEntity(uri);
             String body = response.getBody();
             if (body == null) {
                 return null;
             }
             return new JSONArray(body);
+        }
+
+        JSONObject getJSONObject(String uri) {
+            ResponseEntity<String> response = getResponseEntity(uri);
+            String body = response.getBody();
+            if (body == null) {
+                return null;
+            }
+            return new JSONObject(body);
         }
 
 
@@ -157,6 +165,14 @@ enum Repository {
                 String msg = "faild to create file for push";
                 log.error(msg);
                 fail(msg);
+            } catch (HttpClientErrorException e) {
+                if (e.getRawStatusCode() == HttpStatus.UNPROCESSABLE_ENTITY.value()) {
+                    String message = "There is already a file with the specified name (" + filePath + "). please delete the file before running the test";
+                    log.error(message);
+                    throw new PreconditionViolationException(message);
+                } else {
+                    throw e;
+                }
             } catch (Exception e) {
                 fail("faild to push a file: " + e.getMessage());
             }
@@ -210,29 +226,30 @@ enum Repository {
                 RestTemplate restTemplate = new RestTemplate();
                 String url = String.format("%s/%s/%s/pulls", 
                     gitHubProperties.getApiUrl(), namespace, repo);
-                if (log.isInfoEnabled()) {
-                    throw new PendingException("createPR is waiting on deletePR, and parameters");
-                }
+//                if (log.isInfoEnabled()) {
+//                    throw new PendingException("createPR is waiting on parameters");
+//                }
                 final ResponseEntity<String> response = restTemplate.postForEntity(url, request,
                     String.class);
                 assertEquals(HttpStatus.CREATED, response.getStatusCode());
-                prId = new JSONObject(response.getBody()).getInt("id");
+                prId = new JSONObject(response.getBody()).getInt("number");
             } catch (Exception e) {
                 fail("failed to create PR " + e.getMessage());
             }
         }
 
         private String createPRData(boolean isDelete) {
+            Properties prProperties = getProperties("PullRequestProperties");
             //TO DO: replace parameters 
             ObjectMapper mapper = new ObjectMapper();
             ObjectNode pr = mapper.createObjectNode();
-            pr.put("title", "cxflow GitHub e2e test")
-            .put("body", "This is an automated test")
-            .put("base", "master");
             if (isDelete) {
-                pr.put("state", "close");
+                pr.put("state", "closed");
             } else {
-                pr.put("head", "feature");
+                pr.put("title", prProperties.getProperty("title"))
+                        .put("body", prProperties.getProperty("body"))
+                        .put("base", prProperties.getProperty("base"))
+                        .put("head", prProperties.getProperty("head"));
             }
             String data = null;
             try {
@@ -252,13 +269,51 @@ enum Repository {
             final HttpEntity<String> request = new HttpEntity<>(data, headers);
             try {
                 RestTemplate restTemplate = new RestTemplate();
-                String url = String.format("%s/%s/%s/pulls/%d", 
-                    gitHubProperties.getApiUrl(), namespace, repo, prId);
-                final ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.PATCH,
+                String url = getPRURL();
+                final ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST,
                     request, String.class);
                 assertEquals(HttpStatus.OK, response.getStatusCode());
             } catch (Exception e) {
                 fail("failed to delete PR " + e.getMessage());
+            }
+        }
+
+        private String getPRURL() {
+            return String.format("%s/%s/%s/pulls/%d",
+                            gitHubProperties.getApiUrl(), namespace, repo, prId);
+        }
+
+        private String getPRCommentsUrl() {
+            return String.format("%s/%s/%s/issues/%d/comments", gitHubProperties.getApiUrl(), namespace, repo, prId);
+        }
+
+        @Override
+        void verifyPRUpdated() {
+            String url = getPRCommentsUrl();
+            boolean isFound = false;
+            for (int retries = 0 ; retries < 20 && !isFound ; retries++) {
+                try {
+                    TimeUnit.SECONDS.sleep(5);
+                } catch (Exception e) {
+                    log.info("starting attempt {}", retries + 1);
+                }
+                try {
+                    JSONArray comments = getJSONArray(url);
+                    for (java.lang.Object c : Objects.requireNonNull(comments)) {
+                        if (((JSONObject) c).getString("body").startsWith("### Checkmarx Dependency (CxSCA)")) {
+                            log.info("Relevant PR comment was found");
+                            isFound = true;
+                            break;
+                        }
+                    }
+                } catch (Exception e) {
+                    log.info("failed attempt {}", retries + 1);
+                }
+            }
+            if (!isFound) {
+                String msg = "failed to find update in PR comments";
+                log.error(msg);
+                fail(msg);
             }
         }
     },
@@ -410,13 +465,6 @@ enum Repository {
 
             }
 
-        }
-
-        private ResponseEntity<String> getResponseEntity(String requestUrl) {
-            RestTemplate restTemplate = new RestTemplate();
-            HttpHeaders headers = getHeaders();
-            HttpEntity<String> requestEntity = new HttpEntity<>(null, headers);
-            return restTemplate.exchange(requestUrl, HttpMethod.GET, requestEntity, String.class);
         }
 
         private String getLastOldObject() {
@@ -597,6 +645,11 @@ enum Repository {
 
         }
 
+        @Override
+        void verifyPRUpdated() {
+            throw new PendingException();
+        }
+
     };
 
     private HookType hookType;
@@ -619,7 +672,7 @@ enum Repository {
                 System.getenv(upperCaseName + "_HOOK_TARGET") == null
         ) {
             log.info("running with property file");
-            Properties properties = getProperties();
+            Properties properties = getProperties("HookProperties");
             namespace = properties.getProperty(upperCaseName + "_namespace");
             repo = properties.getProperty(upperCaseName + "_repo");
             hookTargetURL = properties.getProperty(upperCaseName + "_target");
@@ -632,20 +685,20 @@ enum Repository {
     }
 
     protected void generateWebHook(HookType hookType) {
-        log.info("testing if repository alredy has hooks configured");
-        assertTrue(!hasWebHook(), "repository alredy has hooks configured");
+        log.info("testing if repository already has hooks configured");
+        assertTrue(!hasWebHook(), "repository already has hooks configured");
         this.hookType = hookType;
         log.info("creating the webhook ({})", hookType);
         generateHook(hookType);
     }
 
-    protected Properties getProperties() {
+    protected Properties getProperties(String propertiesName) {
         Properties prop = new Properties();
         String path = new StringJoiner(File.separator, File.separator, "")
                 .add("cucumber")
                 .add("features")
                 .add("e2eTests")
-                .add(String.format("HookProperties_%s.properties", name()))
+                .add(String.format("%s_%s.properties", propertiesName, name()))
                 .toString();
         try (InputStream is = getClass().getClassLoader().getResourceAsStream(path)) {
             prop.load(is);
@@ -668,26 +721,37 @@ enum Repository {
     abstract HttpHeaders getHeaders();
 
     abstract void pushFile(String content);
+
+    protected ResponseEntity<String> getResponseEntity(String requestUrl) {
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = getHeaders();
+        HttpEntity<String> requestEntity = new HttpEntity<>(null, headers);
+        return restTemplate.exchange(requestUrl, HttpMethod.GET, requestEntity, String.class);
+    }
+
     abstract void deleteFile();
     
     abstract void createPR();
     abstract void deletePR();
+    abstract void verifyPRUpdated();
 
     protected String namespace = null;
     protected String repo = null;
     protected String hookTargetURL = null;
 
     public void cleanup() {
-        switch (hookType) {
-            case PUSH:
-                deleteHook();
-                deleteFile();        
-                break;
-            case PULL_REQUEST:
-                deleteHook();
-                deletePR();
-                break;
-        }
+        Optional.ofNullable(hookType).ifPresent(h -> {
+            switch (h) {
+                case PUSH:
+                    deleteHook();
+                    deleteFile();
+                    break;
+                case PULL_REQUEST:
+                    deleteHook();
+                    deletePR();
+                    break;
+            }
+        });
     }
 
 }
