@@ -867,13 +867,12 @@ public class JiraService {
         for (ScanResults.XIssue issue : issues) {
             String key;
             if (useBranch) {
-                ScanResults.ScaDetails details = issue.getScaDetails().get(0);
                 key = issue.getScaDetails() == null
                         ? String.format(JIRA_ISSUE_KEY, issuePrefix, issue.getVulnerability(), issue.getFilename(), request.getBranch(), issuePostfix)
-                        : String.format(JIRA_ISSUE_KEY_3, issuePrefix, details.getFinding().getId(),
-                        details.getFinding().getSeverity(), details.getFinding().getScore(),
-                        details.getVulnerabilityPackage().getName(),
-                        details.getVulnerabilityPackage().getVersion(), request.getBranch(), issuePostfix);
+                        : String.format(JIRA_ISSUE_KEY_3, issuePrefix, issue.getScaDetails().get(0).getFinding().getId(),
+                        issue.getScaDetails().get(0).getFinding().getSeverity(), issue.getScaDetails().get(0).getFinding().getScore(),
+                        issue.getScaDetails().get(0).getVulnerabilityPackage().getName(),
+                        issue.getScaDetails().get(0).getVulnerabilityPackage().getVersion(), request.getBranch(), issuePostfix);
             } else {
                 key = String.format(JIRA_ISSUE_KEY_2, issuePrefix, issue.getVulnerability(), issue.getFilename(), issuePostfix);
             }
