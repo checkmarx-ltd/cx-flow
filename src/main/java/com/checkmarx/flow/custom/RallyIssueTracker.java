@@ -115,17 +115,19 @@ public class RallyIssueTracker implements IssueTracker {
                 totalResultCount = rallyQuery.getQueryResult().getTotalResultCount();
             }
 
+/*
             long pageSize = 0;
             if (rallyQuery.getQueryResult().getPageSize() != null && rallyQuery.getQueryResult().getPageSize() > MAX_RESULTS_ALLOWED) {
                 pageSize = MAX_RESULTS_ALLOWED;
             } else {
                 pageSize = rallyQuery.getQueryResult().getPageSize();
             }
+*/
 
 
             int resultsFound = 0;
             while(resultsFound < totalResultCount) {
-                resultsFound += pageSize;
+                resultsFound += rallyQuery.getQueryResult().getPageSize();
                 // Create CxFlow issues from Rally issues
                 for(Result issue: rallyQuery.getQueryResult().getResults()){
                     Issue i = mapToIssue(issue);
