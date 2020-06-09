@@ -4,10 +4,12 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.checkmarx.sdk.dto.filtering.ScriptedFilter;
+import com.checkmarx.sdk.exception.CheckmarxRuntimeException;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.codehaus.groovy.control.CompilationFailedException;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -61,11 +63,7 @@ public class FilterFactory {
         simpleFilters.addAll(getListByFilterType(category, Filter.Type.TYPE));
         simpleFilters.addAll(getListByFilterType(status, Filter.Type.STATUS));
 
-        Script parsedScript = null;
-        if (StringUtils.isNotEmpty(filterScript)) {
-            GroovyShell groovyShell = new GroovyShell();
-            parsedScript = groovyShell.parse(filterScript);
-        }
+        Script parsedScript = parseScriptText(filterScript);
 
         return FilterConfiguration.builder()
                 .simpleFilters(simpleFilters)
@@ -73,6 +71,22 @@ public class FilterFactory {
                         .script(parsedScript)
                         .build())
                 .build();
+    }
+
+    private static Script parseScriptText(String filterScript) {
+        Script result = null;
+        if (StringUtils.isNotEmpty(filterScript)) {
+            GroovyShell groovyShell = new GroovyShell();
+            try {
+                result = groovyShell.parse(filterScript);
+            } catch (CompilationFailedException e) {
+                throw new CheckmarxRuntimeException("An error has occurred while parsing the filter script. " +
+                        "Please make sure the script syntax is correct.", e);
+            } catch (Exception e) {
+                throw new CheckmarxRuntimeException("An unexpected error has occurred while parsing the filter script.", e);
+            }
+        }
+        return result;
     }
 
     private static List<Filter> getListByFilterType(List<String> stringFilters, Filter.Type type) {
