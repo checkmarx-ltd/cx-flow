@@ -35,7 +35,7 @@ public class JsonLoggerTestUtils {
 
     }
 
-    public AnalyticsReport getAnalyticsReport(Class reportClass, ObjectMapper objectMapper, JsonNode node) throws CheckmarxException {
+    private AnalyticsReport getAnalyticsReport(Class reportClass, ObjectMapper objectMapper, JsonNode node) throws CheckmarxException {
 
         objectMapper.configure(DeserializationFeature.FAIL_ON_NUMBERS_FOR_ENUMS, false);
 
@@ -62,7 +62,7 @@ public class JsonLoggerTestUtils {
 
     }
 
-    public String getLastLine() throws CheckmarxException {
+    private String getLastLine() throws CheckmarxException {
 
         try (
                 FileInputStream inputStream = new FileInputStream(logAbsolutePath);

@@ -102,11 +102,8 @@ public class SastScanner implements VulnerabilityScanner {
             scanResults.setScanType(SCAN_TYPE);
             return scanResults;
             
-        } catch (Exception e) {
-            log.error("SAST scan failed ", e);
-            OperationResult scanCreationFailure = new OperationResult(OperationStatus.FAILURE, e.getMessage());
-            ScanReport report = new ScanReport(-1, scanRequest,scanRequest.getRepoUrl(), scanCreationFailure);
-            report.log();
+        } catch (CheckmarxException e) {
+            log.error("SAST scan failed", e);
         }
 
         return scanResults;
