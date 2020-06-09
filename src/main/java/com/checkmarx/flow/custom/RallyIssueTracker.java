@@ -108,9 +108,24 @@ public class RallyIssueTracker implements IssueTracker {
             /// Now decode the CxFlow defects and continue reading lists of defects until we've found the
             // totalResultCount
             //
+            long totalResultCount = 0;
+            if (rallyQuery.getQueryResult().getTotalResultCount() != null && rallyQuery.getQueryResult().getTotalResultCount() > MAX_RESULTS_ALLOWED) {
+                totalResultCount = MAX_RESULTS_ALLOWED;
+            } else {
+                totalResultCount = rallyQuery.getQueryResult().getTotalResultCount();
+            }
+
+            long pageSize = 0;
+            if (rallyQuery.getQueryResult().getPageSize() != null && rallyQuery.getQueryResult().getPageSize() > MAX_RESULTS_ALLOWED) {
+                pageSize = MAX_RESULTS_ALLOWED;
+            } else {
+                pageSize = rallyQuery.getQueryResult().getPageSize();
+            }
+
+
             int resultsFound = 0;
-            while(resultsFound < rallyQuery.getQueryResult().getTotalResultCount()) {
-                resultsFound += rallyQuery.getQueryResult().getPageSize();
+            while(resultsFound < totalResultCount) {
+                resultsFound += pageSize;
                 // Create CxFlow issues from Rally issues
                 for(Result issue: rallyQuery.getQueryResult().getResults()){
                     Issue i = mapToIssue(issue);
