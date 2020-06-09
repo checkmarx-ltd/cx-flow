@@ -109,7 +109,7 @@ public class RallyIssueTracker implements IssueTracker {
             // totalResultCount
             //
             int resultsFound = 0;
-            while(resultsFound < getTotalResultCount(rallyQuery)) {
+            while(resultsFound < rallyQuery.getQueryResult().getTotalResultCount()) {
                 resultsFound += rallyQuery.getQueryResult().getPageSize();
                 // Create CxFlow issues from Rally issues
                 for(Result issue: rallyQuery.getQueryResult().getResults()){
