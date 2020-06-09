@@ -40,7 +40,7 @@ public class JiraService {
     private static final int MAX_RESULTS_ALLOWED = 1000000;
     private static final String JIRA_ISSUE_KEY = "%s%s @ %s [%s]%s";
     private static final String JIRA_ISSUE_KEY_2 = "%s%s @ %s%s";
-    private static final String JIRA_ISSUE_KEY_3 = "%s%s (%s:%.1f) @ %s:%s [%s]%s";
+    private static final String JIRA_ISSUE_KEY_3 = "%s<%s> %.1f: <%s> in %s and %s @ <%s.%s>%s";
     private static final String JIRA_ISSUE_BODY = "*%s* issue exists @ *%s* in branch *%s*";
     private static final String JIRA_ISSUE_BODY_2 = "*%s* issue exists @ *%s*";
     private static final String JIRA_ISSUE_BODY_3 = "*%s Vulnerable Package* issue exists @ *%s* in branch *%s*";
@@ -293,10 +293,10 @@ public class JiraService {
                 List<ScanResults.ScaDetails> scaDetails = issue.getScaDetails();
                 if (scaDetails != null) {
                     ScanResults.ScaDetails details = scaDetails.get(0);
-                    summary = String.format(JIRA_ISSUE_KEY_3, issuePrefix, details.getFinding().getId(),
-                            details.getFinding().getSeverity(), details.getFinding().getScore(),
+                    summary = String.format(JIRA_ISSUE_KEY_3, issuePrefix, details.getFinding().getSeverity(),
+                            details.getFinding().getScore(), details.getFinding().getId(),
                             details.getVulnerabilityPackage().getName(),
-                            details.getVulnerabilityPackage().getVersion(), branch, issuePostfix);
+                            details.getVulnerabilityPackage().getVersion(), request.getRepoName(), branch, issuePostfix);
                 } else {
                     summary = String.format(JIRA_ISSUE_KEY, issuePrefix, vulnerability, filename, branch, issuePostfix);
                 }
@@ -869,10 +869,10 @@ public class JiraService {
             if (useBranch) {
                 key = issue.getScaDetails() == null
                         ? String.format(JIRA_ISSUE_KEY, issuePrefix, issue.getVulnerability(), issue.getFilename(), request.getBranch(), issuePostfix)
-                        : String.format(JIRA_ISSUE_KEY_3, issuePrefix, issue.getScaDetails().get(0).getFinding().getId(),
-                        issue.getScaDetails().get(0).getFinding().getSeverity(), issue.getScaDetails().get(0).getFinding().getScore(),
+                        : String.format(JIRA_ISSUE_KEY_3, issuePrefix, issue.getScaDetails().get(0).getFinding().getSeverity(),
+                        issue.getScaDetails().get(0).getFinding().getScore(), issue.getScaDetails().get(0).getFinding().getId(),
                         issue.getScaDetails().get(0).getVulnerabilityPackage().getName(),
-                        issue.getScaDetails().get(0).getVulnerabilityPackage().getVersion(), request.getBranch(), issuePostfix);
+                        issue.getScaDetails().get(0).getVulnerabilityPackage().getVersion(), request.getRepoName(), request.getBranch(), issuePostfix);
             } else {
                 key = String.format(JIRA_ISSUE_KEY_2, issuePrefix, issue.getVulnerability(), issue.getFilename(), issuePostfix);
             }
