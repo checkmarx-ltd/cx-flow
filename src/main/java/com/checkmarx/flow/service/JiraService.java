@@ -1020,15 +1020,21 @@ public class JiraService {
             Map<String, String> scaDetailsMap = new HashMap<>();
             ScanResults.ScaDetails scaDetails = s.stream().findAny().get();
 
+            scaDetailsMap.put("Vulnerability ID", scaDetails.getFinding().getId());
+            scaDetailsMap.put("Package Name", scaDetails.getVulnerabilityPackage().getName());
+            scaDetailsMap.put("Severity", scaDetails.getFinding().getSeverity().name());
+            scaDetailsMap.put("CVSS Score", String.valueOf(scaDetails.getFinding().getScore()));
+            scaDetailsMap.put("Publish Date", scaDetails.getFinding().getPublishDate());
+            scaDetailsMap.put("Current Version", scaDetails.getVulnerabilityPackage().getVersion());
+            scaDetailsMap.put("Recommended version", scaDetails.getFinding().getRecommendations());
             scaDetailsMap.put("Vulnerabilities Count", Integer.toString(count));
-            scaDetailsMap.put("Package", scaDetails.getVulnerabilityPackage().getName());
-            scaDetailsMap.put("Version", scaDetails.getVulnerabilityPackage().getVersion());
-            scaDetailsMap.put("License", scaDetails.getVulnerabilityPackage().getLicenses().toString());
-            scaDetailsMap.put("Dependency Type", scaDetails.getVulnerabilityPackage().getPackageRepository());
 
             scaDetailsMap.forEach((key, value) ->
                     body.append(key).append(": ").append(value).append(ScanUtils.CRLF)
             );
+            String findingLink = ScanUtils.constructVulnerabilityUrl(scaDetails.getVulnerabilityLink(), scaDetails.getFinding());
+            body.append("[Link To SCA](").append(findingLink).append(")").append(ScanUtils.CRLF).append(ScanUtils.CRLF);
+            body.append("[Reference – NVD link](").append("https://nvd.nist.gov/vuln/detail/").append(scaDetails.getFinding().getCveName()).append(")").append(ScanUtils.CRLF).append(ScanUtils.CRLF);
         });
 
         if (!ScanUtils.empty(jiraProperties.getDescriptionPostfix())) {
