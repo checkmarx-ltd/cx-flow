@@ -1133,7 +1133,7 @@ public class ScanUtils {
         return scaDetailsList;
     }
 
-    private static String constructVulnerabilityUrl(String allVulnerabilitiesReportUrl, Finding finding) {
+    public static String constructVulnerabilityUrl(String allVulnerabilitiesReportUrl, Finding finding) {
         StringBuilder vulnerabilityUrl = new StringBuilder();
         String urlColonEncode = "";
 
