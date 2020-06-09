@@ -1,7 +1,10 @@
 package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.dto.OperationResult;
+import com.checkmarx.flow.dto.OperationStatus;
 import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.dto.report.ScanReport;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.ScanResults;
@@ -12,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -31,17 +35,27 @@ public class SCAScanner implements VulnerabilityScanner {
         ScanResults result = null;
         log.info("--------------------- Initiating new {} scan ---------------------", SCAN_TYPE);
         SCAParams internalScaParams = toScaParams(scanRequest);
+        SCAResults internalResults = new SCAResults();
         try {
-            SCAResults internalResults = scaClient.scanRemoteRepo(internalScaParams);
+            internalResults = scaClient.scanRemoteRepo(internalScaParams);
+            logRequest(scanRequest, internalResults.getScanId(),  OperationResult.successful());
             result = toScanResults(internalResults);
-        } catch (IOException e) {
+        } catch (Exception e) {
             final String message = "SCA scan failed.";
             log.error(message, e);
+            OperationResult scanCreationFailure = new OperationResult(OperationStatus.FAILURE, e.getMessage());
+            logRequest(scanRequest, internalResults.getScanId(),  scanCreationFailure);
             throw new MachinaRuntimeException(message);
         }
         return result;
     }
 
+    private void logRequest(ScanRequest request, String scanId, OperationResult scanCreationResult) {
+        ScanReport report = new ScanReport(scanId, request,request.getRepoUrl(), scanCreationResult, ScanReport.SCA);
+        report.log();
+    }    
+    
+    
     @Override
     public boolean isEnabled() {
         List<String> enabledScanners = flowProperties.getEnabledVulnerabilityScanners();
