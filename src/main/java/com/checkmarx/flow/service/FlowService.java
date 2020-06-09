@@ -10,6 +10,9 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * High level business logic for CxFlow automation.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -19,6 +22,11 @@ public class FlowService {
     private final ProjectNameGenerator projectNameGenerator;
     private final ResultsService resultsService;
 
+    /**
+     * Main entry point for the automation process initiated by webhooks.
+     * Marked as async, because we don't wait for scan completion in webhooks handler: otherwise version control
+     * provider will fail the webhook request by timeout.
+     */
     @Async("webHook")
     public void initiateAutomation(ScanRequest scanRequest) {
         String effectiveProjectName = projectNameGenerator.determineProjectName(scanRequest);
