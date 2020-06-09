@@ -1,4 +1,4 @@
-package com.checkmarx.flow.cucumber.component.analytics.get;
+package com.checkmarx.flow.cucumber.component.analytics;
 
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.FindingSeverity;

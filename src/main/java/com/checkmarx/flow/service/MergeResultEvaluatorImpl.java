@@ -38,9 +38,10 @@ public class MergeResultEvaluatorImpl implements MergeResultEvaluator {
         
         if (!isMergeAllowed) {
             requestResult = new OperationResult(OperationStatus.FAILURE, MERGE_FAILURE_DESCRIPTION);
-        }
+        } 
 
         pullRequestReport.setPullRequestResult(requestResult);
+        pullRequestReport.log();
         
         return isMergeAllowed;
     }
