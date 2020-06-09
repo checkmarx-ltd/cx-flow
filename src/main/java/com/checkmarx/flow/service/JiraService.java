@@ -1026,10 +1026,10 @@ public class JiraService {
             scaDetailsMap.put("CVSS Score", String.valueOf(scaDetails.getFinding().getScore()));
             scaDetailsMap.put("Publish Date", scaDetails.getFinding().getPublishDate());
             scaDetailsMap.put("Current Version", scaDetails.getVulnerabilityPackage().getVersion());
-            Optional.ofNullable(scaDetails.getFinding().getFixResolutionText()).ifPresent(f -> {
-                scaDetailsMap.put("Recommended version", f);
+            Optional.ofNullable(scaDetails.getFinding().getFixResolutionText()).ifPresent(f ->
+                scaDetailsMap.put("Recommended version", f)
 
-            });
+            );
             scaDetailsMap.put("Vulnerabilities Count", Integer.toString(count));
 
             scaDetailsMap.forEach((key, value) ->
