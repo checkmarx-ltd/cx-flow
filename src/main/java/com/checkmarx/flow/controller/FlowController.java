@@ -88,6 +88,9 @@ public class FlowController {
         // Create filters if available
         List<Filter> filters = getFilters(severity, cwe, category, status);
 
+        team = team == null ? "" : team;
+        application = application == null ? "" : application;
+        project = project == null ? "" : project;
         // Create the scan request
         ScanRequest scanRequest = ScanRequest.builder()
                 // By default, use project as application, unless overridden
