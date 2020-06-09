@@ -1,4 +1,4 @@
-package com.checkmarx.flow.cucumber.component.analytics.pullrequest;
+package com.checkmarx.flow.cucumber.component.pullrequestanalytics;
 
 import io.cucumber.junit.Cucumber;
 import io.cucumber.junit.CucumberOptions;

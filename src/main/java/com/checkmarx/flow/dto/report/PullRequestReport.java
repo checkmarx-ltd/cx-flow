@@ -39,16 +39,6 @@ public class PullRequestReport extends AnalyticsReport {
         }
     }
 
-    public PullRequestReport(String scanId, ScanRequest request, String scanInitiator) {
-        this.scanId = scanId;
-        this.scanInitiator = scanInitiator;
-        if (scanId == null) {
-            this.scanId = NOT_APPLICABLE;
-        }
-        this.projectName = request.getProject();
-        setEncryptedRepoUrl(request.getRepoUrl());
-    }
-    
     @Override
     protected String _getOperation() {
         return OPERATION;
