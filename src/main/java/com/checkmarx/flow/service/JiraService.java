@@ -13,7 +13,6 @@ import com.checkmarx.flow.constants.JiraConstants;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanDetails;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.dto.rally.QueryResult;
 import com.checkmarx.flow.dto.report.JiraTicketsReport;
 import com.checkmarx.flow.exception.JiraClientException;
 import com.checkmarx.flow.exception.JiraClientRunTimeException;
@@ -221,18 +220,18 @@ public class JiraService {
                 issues.add(issue);
             }
             startAt += jiraProperties.getMaxJqlResults();
-            totalResultsCount = getTotalResultCount(searchResults);
+            totalResultsCount = validateTotalResultCount(searchResults.getTotal());
         }while(startAt < totalResultsCount);
         return issues;
     }
 
 
-    private int getTotalResultCount(SearchResult searchResults) {
+    private int validateTotalResultCount(int total) {
         int totalResultCount = 0;
-        if (searchResults.getTotal() > MAX_RESULTS_ALLOWED) {
+        if (total> MAX_RESULTS_ALLOWED) {
             totalResultCount = MAX_RESULTS_ALLOWED;
         } else {
-            totalResultCount = searchResults.getTotal();
+            totalResultCount = total;
         }
         return totalResultCount;
     }
