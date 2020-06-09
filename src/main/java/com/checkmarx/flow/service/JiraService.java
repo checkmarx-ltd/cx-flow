@@ -213,6 +213,7 @@ public class JiraService {
         int startAt = 0;
 
         SearchResult searchResults;
+        int totalResultsCount;
         //Retrieve JQL results through pagination (jira.max-jql-results per page -> default 50)
         do {
             searchResults = this.client.getSearchClient().searchJql(jql, jiraProperties.getMaxJqlResults(), startAt, fields).claim();
@@ -220,7 +221,8 @@ public class JiraService {
                 issues.add(issue);
             }
             startAt += jiraProperties.getMaxJqlResults();
-        }while(startAt < getTotalResultCount(searchResults));
+            totalResultsCount = getTotalResultCount(searchResults);
+        }while(startAt < totalResultsCount);
         return issues;
     }
 
