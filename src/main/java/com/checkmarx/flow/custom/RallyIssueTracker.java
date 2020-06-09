@@ -117,7 +117,7 @@ public class RallyIssueTracker implements IssueTracker {
                     issues.add(i);
                 }
                 // If there are more issues on the server, fetch them
-                if(resultsFound < getTotalResultCount(rallyQuery)) {
+                if(resultsFound < rallyQuery.getQueryResult().getTotalResultCount()) {
                     pageIndex++;
                     response = restTemplate.exchange(
                             properties.getApiUrl().concat(GET_ISSUES),
