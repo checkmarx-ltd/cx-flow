@@ -39,6 +39,7 @@ public class FilterScriptSteps {
     private String sastReportFilename;
     private final FlowProperties flowProperties;
     private final CxClient cxClient;
+    private final FilterFactory filterFactory;
     private Set<String> filenames;
     private Map<Integer, String> findingNumberToFilename = new HashMap<>();
 
@@ -64,7 +65,7 @@ public class FilterScriptSteps {
     @When("CxFlow generates issues from the findings using {string}")
     public void parsingTheInputWith(String scriptText) throws CheckmarxException {
         flowProperties.setFilterScript(scriptText);
-        FilterConfiguration filter = FilterFactory.getFilter(null, null, null, null, flowProperties);
+        FilterConfiguration filter = filterFactory.getFilter(null, null, null, null, flowProperties);
         ScanResults report = cxClient.getReportContent(333, filter);
         filenames = report.getXIssues()
                 .stream()

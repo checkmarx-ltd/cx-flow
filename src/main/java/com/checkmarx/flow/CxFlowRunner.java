@@ -51,11 +51,11 @@ public class CxFlowRunner implements ApplicationRunner {
     private final GitLabProperties gitLabProperties;
     private final ADOProperties adoProperties;
     private final HelperService helperService;
-    private final FlowService flowService;
     private final SastScanner sastScanner;
     private final List<ThreadPoolTaskExecutor> executors;
     private final ResultsService resultsService;
     private final OsaScannerService osaScannerService;
+    private final FilterFactory filterFactory;
 
     @Override
     public void run(ApplicationArguments args) throws InvocationTargetException {
@@ -171,7 +171,7 @@ public class CxFlowRunner implements ApplicationRunner {
             exit(1);
         }
 
-        FilterConfiguration filter = FilterFactory.getFilter(severity, cwe, category, status, flowProperties);
+        FilterConfiguration filter = filterFactory.getFilter(severity, cwe, category, status, flowProperties);
 
         //Adding default file/folder exclusions from properties if they are not provided as an override
         if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){

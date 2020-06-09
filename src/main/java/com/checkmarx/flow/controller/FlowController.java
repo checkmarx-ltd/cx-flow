@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -43,6 +44,7 @@ import java.util.Locale;
  */
 @RestController
 @RequestMapping(value = "/")
+@RequiredArgsConstructor
 public class FlowController {
 
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(FlowController.class);
@@ -56,17 +58,7 @@ public class FlowController {
     private final HelperService helperService;
     private final JiraProperties jiraProperties;
     private final ResultsService resultsService;
-
-    @ConstructorProperties({"properties", "cxProperties", "scanService", "helperService", "jiraProperties", "resultsService"})
-    public FlowController(FlowProperties properties, CxProperties cxProperties, FlowService scanService,
-                          HelperService helperService, JiraProperties jiraProperties, ResultsService resultsService) {
-        this.properties = properties;
-        this.cxProperties = cxProperties;
-        this.scanService = scanService;
-        this.helperService = helperService;
-        this.jiraProperties = jiraProperties;
-        this.resultsService = resultsService;
-    }
+    private final FilterFactory filterFactory;
 
     @RequestMapping(value = "/scanresults", method = RequestMethod.GET, produces = "application/json")
     public ScanResults latestScanResults(
@@ -93,7 +85,7 @@ public class FlowController {
         BugTracker bugTracker = getBugTracker(assignee, bug);
 
         // Create filters if available
-        FilterConfiguration filter = FilterFactory.getFilter(severity, cwe, category, status, properties);
+        FilterConfiguration filter = filterFactory.getFilter(severity, cwe, category, status, properties);
 
         // Create the scan request
         ScanRequest scanRequest = ScanRequest.builder()
@@ -241,7 +233,7 @@ public class FlowController {
     }
 
     private FilterConfiguration determineFilter(CxScanRequest scanRequest) {
-        FilterConfiguration filter = FilterFactory.getFilter(null, null, null, null,
+        FilterConfiguration filter = filterFactory.getFilter(null, null, null, null,
                 properties);
 
         boolean hasSimpleFilters = CollectionUtils.isNotEmpty(scanRequest.getFilters());

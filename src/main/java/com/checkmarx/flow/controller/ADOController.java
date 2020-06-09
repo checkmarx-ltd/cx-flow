@@ -16,6 +16,7 @@ import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
@@ -28,6 +29,7 @@ import java.util.*;
 /**
  * Class used to manage Controller for GitHub WebHooks
  */
+@RequiredArgsConstructor
 @RestController
 @RequestMapping(value = "/")
 public class ADOController {
@@ -43,17 +45,7 @@ public class ADOController {
     private final JiraProperties jiraProperties;
     private final FlowService flowService;
     private final HelperService helperService;
-
-    @ConstructorProperties({"properties", "flowProperties", "cxProperties", "jiraProperties", "flowService", "helperService"})
-    public ADOController(ADOProperties properties, FlowProperties flowProperties, CxProperties cxProperties,
-                         JiraProperties jiraProperties, FlowService flowService, HelperService helperService) {
-        this.properties = properties;
-        this.flowProperties = flowProperties;
-        this.cxProperties = cxProperties;
-        this.jiraProperties = jiraProperties;
-        this.flowService = flowService;
-        this.helperService = helperService;
-    }
+    private final FilterFactory filterFactory;
 
     /**
      * Pull Request event submitted (JSON)
@@ -156,7 +148,7 @@ public class ADOController {
 
             BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
 
-            FilterConfiguration filter = FilterFactory.getFilter(severity, cwe, category, status, flowProperties);
+            FilterConfiguration filter = filterFactory.getFilter(severity, cwe, category, status, flowProperties);
 
             if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
                 excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
@@ -325,7 +317,7 @@ public class ADOController {
 
             BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
 
-            FilterConfiguration filter = FilterFactory.getFilter(severity, cwe, category, status, flowProperties);
+            FilterConfiguration filter = filterFactory.getFilter(severity, cwe, category, status, flowProperties);
 
             if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
                 excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));

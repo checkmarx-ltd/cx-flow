@@ -8,6 +8,7 @@ import com.checkmarx.flow.controller.GitHubController;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.github.*;
+import com.checkmarx.flow.service.FilterFactory;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.GitHubService;
 import com.checkmarx.flow.service.HelperService;
@@ -33,10 +34,7 @@ import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
@@ -59,6 +57,7 @@ public class CxConfigBugTrackerSteps {
     private final CxProperties cxProperties;
     private final GitHubProperties gitHubProperties;
     private final HelperService helperService;
+    private final FilterFactory filterFactory;
     private ScanResults scanResultsToInject;
 
     private String branch;
@@ -67,13 +66,16 @@ public class CxConfigBugTrackerSteps {
 
 
     public CxConfigBugTrackerSteps(FlowProperties flowProperties, GitHubService gitHubService,
-                                   CxProperties cxProperties, GitHubProperties gitHubProperties, JiraProperties jiraProperties, GitHubController gitHubController) {
+                                   CxProperties cxProperties, GitHubProperties gitHubProperties,
+                                   JiraProperties jiraProperties, GitHubController gitHubController,
+                                   FilterFactory filterFactory) {
 
 
         this.flowProperties = flowProperties;
 
         this.cxProperties = cxProperties;
         this.jiraProperties = jiraProperties;
+        this.filterFactory = filterFactory;
         this.helperService = mock(HelperService.class);
         this.gitHubService = gitHubService;
 
@@ -147,11 +149,11 @@ public class CxConfigBugTrackerSteps {
     }
 
     @When("pull request webhook arrives")
-    public void sendPullRequestWebhookEvent() throws InterruptedException {
-        assertFlowPropertiesBugTracker("Json");
+    public void sendPullRequestWebhookEvent() {
+        assertFlowPropertiesBugTracker("NONE");
         ArgumentCaptor<ScanRequest> ac = ArgumentCaptor.forClass(ScanRequest.class);
         FlowService flowServiceMock = Mockito.mock(FlowService.class);
-        gitHubControllerSpy = new GitHubController(gitHubProperties,flowProperties, cxProperties, jiraProperties, flowServiceMock,helperService, gitHubService, null);
+        gitHubControllerSpy = new GitHubController(gitHubProperties,flowProperties, cxProperties, jiraProperties, flowServiceMock,helperService, gitHubService, null, filterFactory);
         gitHubControllerSpy = spy(gitHubControllerSpy);
         initGitHubControllerSpy();
         buildPullRequest();
@@ -199,7 +201,7 @@ public class CxConfigBugTrackerSteps {
                     pullEventStr,
                     "SIGNATURE",
                     "CX", "VB",
-                    Arrays.asList(branch), null,
+                    Collections.singletonList(branch), null,
                     null,
                     null,
                     "VB",

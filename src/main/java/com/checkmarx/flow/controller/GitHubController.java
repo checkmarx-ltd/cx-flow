@@ -63,6 +63,7 @@ public class GitHubController {
     private final HelperService helperService;
     private final GitHubService gitHubService;
     private final SastScanner sastScanner;
+    private final FilterFactory filterFactory;
     private Mac hmac;
 
     @PostConstruct
@@ -168,7 +169,7 @@ public class GitHubController {
             String targetBranch = pullRequest.getBase().getRef();
             List<String> branches = getBranches(branch);
             BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
-            FilterConfiguration filter = FilterFactory.getFilter(severity, cwe, category, status, flowProperties);
+            FilterConfiguration filter = filterFactory.getFilter(severity, cwe, category, status, flowProperties);
 
             if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
                 excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
@@ -322,7 +323,7 @@ public class GitHubController {
             List<String> branches = getBranches(branch);
 
             BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
-            FilterConfiguration filter = FilterFactory.getFilter(severity, cwe, category, status, flowProperties);
+            FilterConfiguration filter = filterFactory.getFilter(severity, cwe, category, status, flowProperties);
 
             if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
                 excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));

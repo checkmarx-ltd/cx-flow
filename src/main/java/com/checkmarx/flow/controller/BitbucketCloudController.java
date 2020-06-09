@@ -16,6 +16,7 @@ import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
@@ -28,7 +29,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
-
+@RequiredArgsConstructor
 @RestController
 @RequestMapping(value = "/" )
 public class BitbucketCloudController {
@@ -44,17 +45,7 @@ public class BitbucketCloudController {
     private final JiraProperties jiraProperties;
     private final FlowService flowService;
     private final HelperService helperService;
-
-    @ConstructorProperties({"flowProperties", "properties", "cxProperties", "jiraProperties", "flowService", "helperService"})
-    public BitbucketCloudController(FlowProperties flowProperties, BitBucketProperties properties, CxProperties cxProperties,
-                                    JiraProperties jiraProperties, FlowService flowService, HelperService helperService) {
-        this.flowProperties = flowProperties;
-        this.properties = properties;
-        this.cxProperties = cxProperties;
-        this.jiraProperties = jiraProperties;
-        this.flowService = flowService;
-        this.helperService = helperService;
-    }
+    private final FilterFactory filterFactory;
 
     /**
      * Push Request event webhook submitted.
@@ -122,7 +113,7 @@ public class BitbucketCloudController {
 
             BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
 
-            FilterConfiguration filter = FilterFactory.getFilter(severity, cwe, category, status, flowProperties);
+            FilterConfiguration filter = filterFactory.getFilter(severity, cwe, category, status, flowProperties);
 
             if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
                 excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
@@ -258,7 +249,7 @@ public class BitbucketCloudController {
 
             BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
 
-            FilterConfiguration filter = FilterFactory.getFilter(severity, cwe, category, status, flowProperties);
+            FilterConfiguration filter = filterFactory.getFilter(severity, cwe, category, status, flowProperties);
 
             if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
                 excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));

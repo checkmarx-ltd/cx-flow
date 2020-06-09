@@ -39,6 +39,7 @@ public class BatchComponentSteps {
     private final List<ThreadPoolTaskExecutor> executors;
     private final ResultsService resultsService;
     private final OsaScannerService osaScannerService;
+    private final FilterFactory filterFactory;
     private CxFlowRunner cxFlowRunner;
     private String projectName;
     private String teamName;
@@ -46,7 +47,7 @@ public class BatchComponentSteps {
 
     public BatchComponentSteps(FlowProperties flowProperties, CxProperties cxProperties, JiraProperties jiraProperties, GitHubProperties gitHubProperties, GitLabProperties gitLabProperties,
                                ADOProperties adoProperties, FlowService flowService, HelperService helperService, CxClient cxClient, List<ThreadPoolTaskExecutor> executors,
-                               SastScanner sastScanner, ResultsService resultsService, OsaScannerService osaScannerService) {
+                               SastScanner sastScanner, ResultsService resultsService, OsaScannerService osaScannerService, FilterFactory filterFactory) {
         this.flowProperties = flowProperties;
         this.cxProperties = cxProperties;
         this.jiraProperties = jiraProperties;
@@ -59,6 +60,7 @@ public class BatchComponentSteps {
         this.executors = executors;
         this.resultsService = resultsService;
         this.osaScannerService = osaScannerService;
+        this.filterFactory = filterFactory;
     }
 
     @Given("SAST client is mocked - to allow tests to pass without active SAST environment")
@@ -69,7 +71,18 @@ public class BatchComponentSteps {
         FilterConfiguration filter = FilterConfiguration.fromSimpleFilters(ScanFixture.getScanFilters());
         when(cxClient.getReportContentByScanId(ScanFixture.SCAN_ID, filter))
                 .thenReturn(ScanFixture.getScanResults());
-        cxFlowRunner = new CxFlowRunner(flowProperties, cxProperties, jiraProperties, gitHubProperties, gitLabProperties, adoProperties, helperService, flowService, sastScanner, executors, resultsService, osaScannerService);
+        cxFlowRunner = new CxFlowRunner(flowProperties,
+                cxProperties,
+                jiraProperties,
+                gitHubProperties,
+                gitLabProperties,
+                adoProperties,
+                helperService,
+                sastScanner,
+                executors,
+                resultsService,
+                osaScannerService,
+                filterFactory);
     }
 
     @Given("project is provided: {string} and team: {string}")

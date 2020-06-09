@@ -172,7 +172,8 @@ public class ScanUtils {
         FlowOverride.Filters filtersObj = override.getFilters();
 
         if (filtersObj != null) {
-            FilterConfiguration filter = FilterFactory.getFilter(filtersObj.getSeverity(),
+            FilterFactory filterFactory = new FilterFactory();
+            FilterConfiguration filter = filterFactory.getFilter(filtersObj.getSeverity(),
                     filtersObj.getCwe(),
                     filtersObj.getCategory(),
                     filtersObj.getStatus(),
@@ -287,7 +288,8 @@ public class ScanUtils {
                     .ifPresent(e -> request.setEmail(e.isEmpty() ? null : e));
 
                     Optional.ofNullable(fo.getFilters()).ifPresent(f -> {
-                        FilterConfiguration filter = FilterFactory.getFilter(f.getSeverity(),
+                        FilterFactory filterFactory = new FilterFactory();
+                        FilterConfiguration filter = filterFactory.getFilter(f.getSeverity(),
                                 f.getCwe(),
                                 f.getCategory(),
                                 f.getStatus(),
@@ -841,10 +843,6 @@ public class ScanUtils {
 
     /**
      * TODO  BB has a different format
-     *
-     * @param request
-     * @param filename
-     * @return
      */
     public static String getBBFileUrl(ScanRequest request, String filename) {
         String repoUrl = request.getRepoUrl().replace(".git", "/");

@@ -10,16 +10,15 @@ import groovy.lang.Script;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.groovy.control.CompilationFailedException;
+import org.springframework.stereotype.Service;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
+@Service
 public class FilterFactory {
-    private FilterFactory() {
-    }
-
-    public static FilterConfiguration getFilter(List<String> severity,
+    public FilterConfiguration getFilter(List<String> severity,
                                                 List<String> cwe,
                                                 List<String> category,
                                                 List<String> status,
