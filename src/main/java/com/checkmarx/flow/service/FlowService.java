@@ -1,6 +1,7 @@
 package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.sdk.dto.ScanResults;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,17 +22,26 @@ public class FlowService {
     @Async("webHook")
     public void initiateAutomation(ScanRequest scanRequest) {
         ScanResults combinedResults = new ScanResults();
+        boolean isAtLeastOneScannerIsEnabled = false;
 
         String effectiveProjectName = projectNameGenerator.determineProjectName(scanRequest);
         scanRequest.setProject(effectiveProjectName);
 
         for (VulnerabilityScanner currentScanner : scanners) {
             if (currentScanner.isEnabled()) {
+                isAtLeastOneScannerIsEnabled = true;
                 ScanResults scanResults = currentScanner.scan(scanRequest);
                 combinedResults.mergeWith(scanResults);
             }
         }
-
+        if (!isAtLeastOneScannerIsEnabled) {
+            handleNoScannerIsEnabled();
+        }
         resultsService.publishCombinedResults(scanRequest, combinedResults);
+    }
+
+    private void handleNoScannerIsEnabled() {
+        String errorMessage = "The defined scanners are not supported. Please make sure you're using one of the following: [sast, sca]";
+        throw new MachinaRuntimeException(errorMessage);
     }
 }
