@@ -199,6 +199,14 @@ jobs:
           command: |
             sleep 60
             kubectl get pods -n << parameters.namespace >>
+      - run:
+          name: Delete cxflow deployment
+          command: helm uninstall << parameters.release-name >> --namespace << parameters.namespace >>
+          when: on_fail
+      - run:
+          name: Delete namespace
+          command: kubectl delete namespace << parameters.namespace >>
+          when: on_fail
 
   component-tests:
     docker:
