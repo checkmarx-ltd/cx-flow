@@ -1,13 +1,13 @@
 package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.sdk.dto.ScanResults;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -21,27 +21,36 @@ public class FlowService {
 
     @Async("webHook")
     public void initiateAutomation(ScanRequest scanRequest) {
-        ScanResults combinedResults = new ScanResults();
-        boolean isAtLeastOneScannerIsEnabled = false;
-
         String effectiveProjectName = projectNameGenerator.determineProjectName(scanRequest);
         scanRequest.setProject(effectiveProjectName);
+        List<VulnerabilityScanner> enabledScanners = getEnabledScanners();
 
-        for (VulnerabilityScanner currentScanner : scanners) {
-            if (currentScanner.isEnabled()) {
-                isAtLeastOneScannerIsEnabled = true;
-                ScanResults scanResults = currentScanner.scan(scanRequest);
-                combinedResults.mergeWith(scanResults);
-            }
+        if (enabledScanners.isEmpty()) {
+            log.error("The defined scanners are not supported.");
+            return;
         }
-        if (!isAtLeastOneScannerIsEnabled) {
-            handleNoScannerIsEnabled();
-        }
+        runScanRequest(scanRequest, enabledScanners);
+    }
+
+    private void runScanRequest(ScanRequest scanRequest, List<VulnerabilityScanner> scanners) {
+        ScanResults combinedResults = new ScanResults();
+
+        scanners.forEach(scanner -> {
+            ScanResults scanResults = scanner.scan(scanRequest);
+            combinedResults.mergeWith(scanResults);
+        });
+
         resultsService.publishCombinedResults(scanRequest, combinedResults);
     }
 
-    private void handleNoScannerIsEnabled() {
-        String errorMessage = "The defined scanners are not supported.";
-        throw new MachinaRuntimeException(errorMessage);
+    private List<VulnerabilityScanner> getEnabledScanners() {
+        List<VulnerabilityScanner> enabledScanners = new ArrayList<>();
+
+        scanners.forEach(scanner -> {
+            if (scanner.isEnabled()) {
+                enabledScanners.add(scanner);
+            }
+        });
+        return enabledScanners;
     }
 }
