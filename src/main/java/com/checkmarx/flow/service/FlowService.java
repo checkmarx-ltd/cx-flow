@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -20,18 +21,36 @@ public class FlowService {
 
     @Async("webHook")
     public void initiateAutomation(ScanRequest scanRequest) {
-        ScanResults combinedResults = new ScanResults();
-
         String effectiveProjectName = projectNameGenerator.determineProjectName(scanRequest);
         scanRequest.setProject(effectiveProjectName);
+        List<VulnerabilityScanner> enabledScanners = getEnabledScanners();
 
-        for (VulnerabilityScanner currentScanner : scanners) {
-            if (currentScanner.isEnabled()) {
-                ScanResults scanResults = currentScanner.scan(scanRequest);
-                combinedResults.mergeWith(scanResults);
-            }
+        if (enabledScanners.isEmpty()) {
+            log.error("The defined scanners are not supported.");
+            return;
         }
+        runScanRequest(scanRequest, enabledScanners);
+    }
+
+    private void runScanRequest(ScanRequest scanRequest, List<VulnerabilityScanner> scanners) {
+        ScanResults combinedResults = new ScanResults();
+
+        scanners.forEach(scanner -> {
+            ScanResults scanResults = scanner.scan(scanRequest);
+            combinedResults.mergeWith(scanResults);
+        });
 
         resultsService.publishCombinedResults(scanRequest, combinedResults);
+    }
+
+    private List<VulnerabilityScanner> getEnabledScanners() {
+        List<VulnerabilityScanner> enabledScanners = new ArrayList<>();
+
+        scanners.forEach(scanner -> {
+            if (scanner.isEnabled()) {
+                enabledScanners.add(scanner);
+            }
+        });
+        return enabledScanners;
     }
 }
