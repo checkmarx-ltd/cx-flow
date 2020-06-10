@@ -108,23 +108,7 @@ public class RallyIssueTracker implements IssueTracker {
             /// Now decode the CxFlow defects and continue reading lists of defects until we've found the
             // totalResultCount
             //
-            long totalResultCount = 0;
-            if (rallyQuery.getQueryResult().getTotalResultCount() != null && rallyQuery.getQueryResult().getTotalResultCount() > MAX_RESULTS_ALLOWED) {
-                totalResultCount = MAX_RESULTS_ALLOWED;
-            } else {
-                totalResultCount = rallyQuery.getQueryResult().getTotalResultCount();
-            }
-
-/*
-            long pageSize = 0;
-            if (rallyQuery.getQueryResult().getPageSize() != null && rallyQuery.getQueryResult().getPageSize() > MAX_RESULTS_ALLOWED) {
-                pageSize = MAX_RESULTS_ALLOWED;
-            } else {
-                pageSize = rallyQuery.getQueryResult().getPageSize();
-            }
-*/
-
-
+            long totalResultCount = getTotalResultCount(rallyQuery);
             int resultsFound = 0;
             while(resultsFound < totalResultCount) {
                 resultsFound += rallyQuery.getQueryResult().getPageSize();
@@ -154,15 +138,14 @@ public class RallyIssueTracker implements IssueTracker {
         }
     }
 
-    private Long getTotalResultCount(QueryResult rallyQuery) {
-        Long totalResults =  Long.valueOf(rallyQuery.getQueryResult().getTotalResultCount());
-        if (totalResults == null) {
-            return 0l;
+    private long getTotalResultCount(QueryResult rallyQuery) {
+        long totalResultCount = 0;
+        if (rallyQuery.getQueryResult().getTotalResultCount() != null && rallyQuery.getQueryResult().getTotalResultCount() > MAX_RESULTS_ALLOWED) {
+            totalResultCount = MAX_RESULTS_ALLOWED;
+        } else {
+            totalResultCount = rallyQuery.getQueryResult().getTotalResultCount();
         }
-        if (totalResults > MAX_RESULTS_ALLOWED) {
-            totalResults = MAX_RESULTS_ALLOWED;
-        }
-        return totalResults;
+        return totalResultCount;
     }
 
     /**
