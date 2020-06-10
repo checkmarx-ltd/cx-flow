@@ -85,7 +85,7 @@ public class FlowController {
         BugTracker bugTracker = getBugTracker(assignee, bug);
 
         // Create filters if available
-        FilterConfiguration filter = filterFactory.getFilter(severity, cwe, category, status, properties);
+        FilterConfiguration filter = filterFactory.getFilter(severity, cwe, category, status, null, properties);
 
         // Create the scan request
         ScanRequest scanRequest = ScanRequest.builder()
@@ -233,7 +233,7 @@ public class FlowController {
     }
 
     private FilterConfiguration determineFilter(CxScanRequest scanRequest) {
-        FilterConfiguration filter = filterFactory.getFilter(null, null, null, null,
+        FilterConfiguration filter = filterFactory.getFilter(null, null, null, null, null,
                 properties);
 
         boolean hasSimpleFilters = CollectionUtils.isNotEmpty(scanRequest.getFilters());

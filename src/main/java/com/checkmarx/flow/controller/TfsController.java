@@ -109,7 +109,7 @@ public class TfsController {
         List<String> categoryList = category.orElse(Collections.emptyList());
         List<String> statusList = status.orElse(Collections.emptyList());
 
-        FilterConfiguration filter = filterFactory.getFilter(severityList, cweList, categoryList, statusList, flowProperties);
+        FilterConfiguration filter = filterFactory.getFilter(severityList, cweList, categoryList, statusList, null, flowProperties);
 
         ScanRequestBuilder requestBuilder = ScanRequest.builder()
                 .application(application.orElse(app))

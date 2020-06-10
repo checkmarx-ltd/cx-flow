@@ -1,6 +1,7 @@
 package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.dto.azure.Collection;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.checkmarx.sdk.dto.filtering.ScriptedFilter;
@@ -22,13 +23,15 @@ public class FilterFactory {
                                                 List<String> cwe,
                                                 List<String> category,
                                                 List<String> status,
+                                                List<String> state,
                                                 @Nullable FlowProperties flowProperties) {
         FilterConfiguration result;
         if (CollectionUtils.isNotEmpty(severity)
                 || CollectionUtils.isNotEmpty(cwe)
                 || CollectionUtils.isNotEmpty(category)
-                || CollectionUtils.isNotEmpty(status)) {
-            result = getFilters(severity, cwe, category, status, null);
+                || CollectionUtils.isNotEmpty(status)
+                || CollectionUtils.isNotEmpty(state)) {
+            result = getFilters(severity, cwe, category, status,state, null);
         } else if (flowProperties != null) {
             result = getFilters(flowProperties);
         } else {
@@ -45,6 +48,7 @@ public class FilterFactory {
                 flowProperties.getFilterCwe(),
                 flowProperties.getFilterCategory(),
                 flowProperties.getFilterStatus(),
+                flowProperties.getFilterState(),
                 flowProperties.getFilterScript());
     }
 
@@ -55,12 +59,14 @@ public class FilterFactory {
                                                   List<String> cwe,
                                                   List<String> category,
                                                   List<String> status,
+                                                  List<String> state,
                                                   String filterScript) {
         List<Filter> simpleFilters = new ArrayList<>();
         simpleFilters.addAll(getListByFilterType(severity, Filter.Type.SEVERITY));
         simpleFilters.addAll(getListByFilterType(cwe, Filter.Type.CWE));
         simpleFilters.addAll(getListByFilterType(category, Filter.Type.TYPE));
         simpleFilters.addAll(getListByFilterType(status, Filter.Type.STATUS));
+        simpleFilters.addAll(getListByFilterType(state, Filter.Type.STATE));
 
         Script parsedScript = parseScriptText(filterScript);
 

@@ -177,6 +177,7 @@ public class ScanUtils {
                     filtersObj.getCwe(),
                     filtersObj.getCategory(),
                     filtersObj.getStatus(),
+                    null,
                     null);
             request.setFilter(filter);
         }
@@ -293,6 +294,7 @@ public class ScanUtils {
                                 f.getCwe(),
                                 f.getCategory(),
                                 f.getStatus(),
+                                null,
                                 null);
                         request.setFilter(filter);
 

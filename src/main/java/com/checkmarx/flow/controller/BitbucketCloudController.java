@@ -113,7 +113,7 @@ public class BitbucketCloudController {
 
             BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
 
-            FilterConfiguration filter = filterFactory.getFilter(severity, cwe, category, status, flowProperties);
+            FilterConfiguration filter = filterFactory.getFilter(severity, cwe, category, status, null, flowProperties);
 
             if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
                 excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
@@ -249,7 +249,7 @@ public class BitbucketCloudController {
 
             BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
 
-            FilterConfiguration filter = filterFactory.getFilter(severity, cwe, category, status, flowProperties);
+            FilterConfiguration filter = filterFactory.getFilter(severity, cwe, category, status, null, flowProperties);
 
             if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
                 excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
