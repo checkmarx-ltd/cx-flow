@@ -19,6 +19,8 @@ import com.checkmarx.flow.exception.JiraClientRunTimeException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
+import com.cx.restclient.sca.dto.report.Finding;
+import com.cx.restclient.sca.dto.report.Package;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -40,7 +42,7 @@ public class JiraService {
     private static final int MAX_RESULTS_ALLOWED = 1000000;
     private static final String JIRA_ISSUE_KEY = "%s%s @ %s [%s]%s";
     private static final String JIRA_ISSUE_KEY_2 = "%s%s @ %s%s";
-    private static final String JIRA_ISSUE_KEY_3 = "%s<%s> %.1f: <%s> in %s and %s @ <%s.%s>%s";
+    private static final String JIRA_ISSUE_KEY_3 = "%s%s %.1f: %s in %s and %s @ %s.%s%s";
     private static final String JIRA_ISSUE_BODY = "*%s* issue exists @ *%s* in branch *%s*";
     private static final String JIRA_ISSUE_BODY_2 = "*%s* issue exists @ *%s*";
     private static final String JIRA_ISSUE_BODY_3 = "*%s Vulnerable Package* issue exists @ *%s* in branch *%s*";
@@ -293,10 +295,12 @@ public class JiraService {
                 List<ScanResults.ScaDetails> scaDetails = issue.getScaDetails();
                 if (scaDetails != null) {
                     ScanResults.ScaDetails details = scaDetails.get(0);
-                    summary = String.format(JIRA_ISSUE_KEY_3, issuePrefix, details.getFinding().getSeverity(),
-                            details.getFinding().getScore(), details.getFinding().getId(),
-                            details.getVulnerabilityPackage().getName(),
-                            details.getVulnerabilityPackage().getVersion(), request.getRepoName(), branch, issuePostfix);
+                    Finding detailsFindings = details.getFinding();
+                    Package vulnerabilityPackage = details.getVulnerabilityPackage();
+                    summary = String.format(JIRA_ISSUE_KEY_3, issuePrefix, detailsFindings.getSeverity(),
+                            detailsFindings.getScore(), detailsFindings.getId(),
+                            vulnerabilityPackage.getName(),
+                            vulnerabilityPackage.getVersion(), request.getRepoName(), branch, issuePostfix);
                 } else {
                     summary = String.format(JIRA_ISSUE_KEY, issuePrefix, vulnerability, filename, branch, issuePostfix);
                 }
