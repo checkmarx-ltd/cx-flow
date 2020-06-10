@@ -10,6 +10,7 @@ import com.checkmarx.sdk.dto.sca.SCAResults;
 import com.checkmarx.sdk.service.ScaClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -45,7 +46,7 @@ public class SCAScanner implements VulnerabilityScanner {
     @Override
     public boolean isEnabled() {
         List<String> enabledScanners = flowProperties.getEnabledVulnerabilityScanners();
-        return enabledScanners != null && enabledScanners.contains(ScaProperties.CONFIG_PREFIX);
+        return enabledScanners != null && (StringUtils.containsIgnoreCase(enabledScanners.toString(), ScaProperties.CONFIG_PREFIX));
     }
 
     private ScanResults toScanResults(SCAResults scaResults) {
