@@ -65,10 +65,26 @@ public class SastScanner implements VulnerabilityScanner {
         checkScanSubmitEmailDelivery(scanRequest);
 
         try {
-            Integer projectId;
+            Integer scanId;
             CxScanParams cxScanParams = scanRequestConverter.toScanParams(scanRequest);
-            Integer scanId = cxService.createScan(cxScanParams, "CxFlow Automated Scan");
-            projectId = cxScanParams.getProjectId();
+            Integer projectId = cxScanParams.getProjectId();
+
+            log.info("Checking if there is any existing scan for Project:" + projectId);
+            Integer existingScanId = cxService.getScanIdOfExistingScanIfExists(projectId);
+
+            if (existingScanId != UNKNOWN_INT) {
+                if (flowProperties.getScanResubmit()) {
+                    log.info("Existing ongoing scan with id " + existingScanId +" found for Project :" + projectId);
+                    log.info("Aborting the ongoing scan with id "+ existingScanId +" for Project:" + projectId);
+                    cxService.cancelScan(existingScanId);
+                    log.info("Resubmitting the scan for Project:" + projectId);
+                    scanId = cxService.createScan(cxScanParams, "CxFlow Automated Scan");
+                } else {
+                      throw new CheckmarxException("Active Scan with Id" + existingScanId + " already exists for Project: " + projectId);
+                }
+            } else {
+                scanId = cxService.createScan(cxScanParams, "CxFlow Automated Scan");
+            }
 
             BugTracker.Type bugTrackerType = bugTrackerTriggerEvent.triggerBugTrackerEvent(scanRequest);
             if (bugTrackerType.equals(BugTracker.Type.NONE)) {
@@ -91,14 +107,14 @@ public class SastScanner implements VulnerabilityScanner {
             //usually should occur during push event occuring on delete branch
             //therefore need to eliminate the scan process but do not want to create
             //an error stuck trace in the log
-            scanResults =  new ScanResults();
+            scanResults = new ScanResults();
             scanResults.setProjectId(UNKNOWN);
             scanResults.setProject(UNKNOWN);
             scanResults.setScanType(SCAN_TYPE);
             return scanResults;
-            
+
         } catch (Exception e) {
-            log.error("SAST scan failed ", e);
+            log.error("SAST scan failed", e);
             OperationResult scanCreationFailure = new OperationResult(OperationStatus.FAILURE, e.getMessage());
             ScanReport report = new ScanReport(-1, scanRequest,scanRequest.getRepoUrl(), scanCreationFailure);
             report.log();
@@ -284,7 +300,7 @@ public class SastScanner implements VulnerabilityScanner {
 
             String projectName = projectNameGenerator.determineProjectName(request);
             request.setProject(projectName);
-            
+
             Integer projectId = scanRequestConverter.determinePresetAndProjectId(request, ownerId);
 
             if(projectId != UNKNOWN_INT) {

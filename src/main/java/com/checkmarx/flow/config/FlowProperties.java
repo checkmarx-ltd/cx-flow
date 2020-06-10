@@ -43,6 +43,7 @@ public class FlowProperties {
     private Integer httpConnectionTimeout = 30000;
     private Integer httpReadTimeout = 120000;
     private boolean listFalsePositives = false;
+    private Boolean scanResubmit = false;
     private Mail mail;
     private Map<FindingSeverity,Integer> thresholds;
 
@@ -292,6 +293,10 @@ public class FlowProperties {
     public void setListFalsePositives(boolean listFalsePositives) {
         this.listFalsePositives = listFalsePositives;
     }
+
+    public Boolean getScanResubmit() {return scanResubmit;}
+
+    public void setScanResubmit(Boolean scanResubmit) {this.scanResubmit = scanResubmit;}
 
     public Map<FindingSeverity, Integer> getThresholds() {
         return thresholds;
