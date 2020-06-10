@@ -41,7 +41,7 @@ public class FlowService {
     }
 
     private void handleNoScannerIsEnabled() {
-        String errorMessage = "The defined scanners are not supported. Please make sure you're using one of the following: [sast, sca]";
+        String errorMessage = "The defined scanners are not supported.";
         throw new MachinaRuntimeException(errorMessage);
     }
 }
