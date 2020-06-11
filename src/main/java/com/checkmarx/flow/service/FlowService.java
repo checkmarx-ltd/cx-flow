@@ -45,10 +45,13 @@ public class FlowService {
 
         scanners.forEach(scanner -> {
             ScanResults scanResults = scanner.scan(scanRequest);
-            combinedResults.mergeWith(scanResults);
+            if(scanResults!=null) {
+                combinedResults.mergeWith(scanResults);
+            }
         });
-
-        resultsService.publishCombinedResults(scanRequest, combinedResults);
+        if(combinedResults.getProjectId()!=null) {
+            resultsService.publishCombinedResults(scanRequest, combinedResults);
+        }
     }
 
     private List<VulnerabilityScanner> getEnabledScanners() {

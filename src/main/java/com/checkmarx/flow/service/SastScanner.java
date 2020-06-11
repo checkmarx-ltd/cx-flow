@@ -80,7 +80,7 @@ public class SastScanner implements VulnerabilityScanner {
                     log.info("Resubmitting the scan for Project:" + projectId);
                     scanId = cxService.createScan(cxScanParams, "CxFlow Automated Scan");
                 } else {
-                      throw new CheckmarxException("Active Scan with Id" + existingScanId + " already exists for Project: " + projectId);
+                      throw new CheckmarxException("Active Scan with Id " + existingScanId + " already exists for Project: " + projectId);
                 }
             } else {
                 scanId = cxService.createScan(cxScanParams, "CxFlow Automated Scan");
