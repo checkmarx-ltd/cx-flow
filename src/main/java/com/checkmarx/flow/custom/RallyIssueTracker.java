@@ -36,7 +36,8 @@ public class RallyIssueTracker implements IssueTracker {
     private static final String TRANSITION_OPEN = "Open";
     private static final String ISSUES_PER_PAGE = "100";
     private static final Logger log = LoggerFactory.getLogger(RallyIssueTracker.class);
-    private static final String STATE = "State";
+    private static final String REQUEST_STATE_FIELD = "State";
+    private static final String RALLY_DEFECT_STATE_FIELD = "State";
 
     private final RestTemplate restTemplate;
     private final RallyProperties properties;
@@ -109,8 +110,9 @@ public class RallyIssueTracker implements IssueTracker {
             /// Now decode the CxFlow defects and continue reading lists of defects until we've found the
             // totalResultCount
             //
+            long totalResultCount = getTotalResultCount(rallyQuery);
             int resultsFound = 0;
-            while(resultsFound < getTotalResultCount(rallyQuery)) {
+            while(resultsFound < totalResultCount) {
                 resultsFound += rallyQuery.getQueryResult().getPageSize();
                 // Create CxFlow issues from Rally issues
                 for(Result issue: rallyQuery.getQueryResult().getResults()){
@@ -118,7 +120,7 @@ public class RallyIssueTracker implements IssueTracker {
                     issues.add(i);
                 }
                 // If there are more issues on the server, fetch them
-                if(resultsFound < getTotalResultCount(rallyQuery)) {
+                if(resultsFound < rallyQuery.getQueryResult().getTotalResultCount()) {
                     pageIndex++;
                     response = restTemplate.exchange(
                             properties.getApiUrl().concat(GET_ISSUES),
@@ -138,15 +140,14 @@ public class RallyIssueTracker implements IssueTracker {
         }
     }
 
-    private Long getTotalResultCount(QueryResult rallyQuery) {
-        Long totalResults =  rallyQuery.getQueryResult().getTotalResultCount();
-        if (totalResults == null) {
-            return 0l;
+    private long getTotalResultCount(QueryResult rallyQuery) {
+        long totalResultCount = 0;
+        if (rallyQuery.getQueryResult().getTotalResultCount() != null && rallyQuery.getQueryResult().getTotalResultCount() > MAX_RESULTS_ALLOWED) {
+            totalResultCount = MAX_RESULTS_ALLOWED;
+        } else {
+            totalResultCount = rallyQuery.getQueryResult().getTotalResultCount();
         }
-        if (totalResults > MAX_RESULTS_ALLOWED) {
-            totalResults = MAX_RESULTS_ALLOWED;
-        }
-        return totalResults;
+        return totalResultCount;
     }
 
     /**
@@ -214,7 +215,7 @@ public class RallyIssueTracker implements IssueTracker {
         i.setTitle((String)rallyDefect.get("_refObjectName"));
         i.setId((String)rallyDefect.get("_refObjectUUID"));
         i.setUrl((String)rallyDefect.get("_ref"));
-        i.setState((String)rallyDefect.get(STATE));
+        i.setState((String)rallyDefect.get(RALLY_DEFECT_STATE_FIELD));
         List<String> labels = new ArrayList<>();
         i.setLabels(labels);
         return i;
@@ -303,7 +304,7 @@ public class RallyIssueTracker implements IssueTracker {
             requestBody.put("Name", title);
             requestBody.put("Workspace", properties.getRallyWorkspaceId());
             requestBody.put("Project", properties.getRallyProjectId());
-            requestBody.put(STATE, TRANSITION_OPEN);
+            requestBody.put(REQUEST_STATE_FIELD, TRANSITION_OPEN);
             requestBody.put("Description", body);
             requestBody.put("Tags", this.tagsList);
             createBody.put("Defect", requestBody);
@@ -509,7 +510,7 @@ public class RallyIssueTracker implements IssueTracker {
         JSONObject createBody = new JSONObject();
         JSONObject requestBody = new JSONObject();
         try {
-            requestBody.put(STATE, TRANSITION_CLOSE);
+            requestBody.put(REQUEST_STATE_FIELD, TRANSITION_CLOSE);
             createBody.put("Defect", requestBody);
         } catch (JSONException e) {
             log.error("Error creating JSON Close Issue Object - JSON object will be empty");
