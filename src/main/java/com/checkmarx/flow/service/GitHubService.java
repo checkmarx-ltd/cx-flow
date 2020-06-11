@@ -9,7 +9,6 @@ import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.exception.GitHubClientRunTimeException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.CxConfig;
-import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
@@ -226,6 +225,7 @@ public class GitHubService extends RepoService {
             PullRequestReport report = new PullRequestReport(scanDetails, request);
             Map<FindingSeverity, Integer> findings = MergeResultEvaluatorImpl.getFindingCountPerSeverity(results);
             report.setFindingsPerSeverity(findings);
+            report.setPullRequestResult(OperationResult.successful());
             report.log();
         }
     }
@@ -246,17 +246,14 @@ public class GitHubService extends RepoService {
     private void logPullRequestWithScaResutls(ScanRequest request, ScanResults results) {
         if(results.getScaResults() != null ) {
             PullRequestReport report = new PullRequestReport(results.getScaResults().getScanId(), request, PullRequestReport.SCA);
-            Map<Filter.Severity, Integer> findingsMap = results.getScaResults().getSummary().getFindingCounts();
-            Map findingMapReport = new HashMap<FindingSeverity, Integer>();
-            findingMapReport.put(FindingSeverity.HIGH, findingsMap.get(Filter.Severity.HIGH));
-            findingMapReport.put(FindingSeverity.MEDIUM, findingsMap.get(Filter.Severity.MEDIUM));
-            findingMapReport.put(FindingSeverity.LOW, findingsMap.get(Filter.Severity.LOW));
-            findingMapReport.put(FindingSeverity.INFO, findingsMap.get(Filter.Severity.INFO));
-            report.setFindingsPerSeverity(findingMapReport);
+            report.setFindingsPerSeveritySca(results);
+            report.setPullRequestResult(OperationResult.successful());
             report.log();
         }
          
     }
+
+
 
     private HttpEntity<String> getStatusRequestEntity(ScanResults results, PullRequestReport pullRequestReport) {
         String statusForApi = MERGE_SUCCESS;
