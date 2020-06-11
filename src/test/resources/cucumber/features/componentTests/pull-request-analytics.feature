@@ -57,4 +57,3 @@ Feature: Analytics report should be logged correctly when CxFlow approves or fai
       | scan ID | f_high | f_medium | f_low | status  | repo url                                 |
       | 3452124 | 4      | 2        | 12    | SUCCESS | https://github.com/example-org/test-repo |
       | 937582  | 1      | 3        | 8     | SUCCESS | https://github.com/example-org/test-repo |
-      | 937582  | 1      | 3        | 8     | FAILURE | https://github.com/invalid_repo          |
