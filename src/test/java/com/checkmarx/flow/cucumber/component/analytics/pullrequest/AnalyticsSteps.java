@@ -275,30 +275,9 @@ public class AnalyticsSteps {
         scaResults.setScanId("" + scanId);
         
         List<Finding> findings = new LinkedList<Finding>();
-        for ( int i=0; i < findingsPerSeverity.get(FindingSeverity.HIGH); i++) {
-            Finding fnd = new Finding();
-            fnd.setSeverity(Severity.HIGH);
-            fnd.setPackageId("");
-            findings.add(fnd);
-        }
-        
-        findingCounts.put(Filter.Severity.HIGH, findingsPerSeverity.get(FindingSeverity.HIGH));
-        
-        for ( int i=0; i < findingsPerSeverity.get(FindingSeverity.MEDIUM); i++) {
-            Finding fnd = new Finding();
-            fnd.setSeverity(Severity.MEDIUM);
-            fnd.setPackageId("");
-            findings.add(fnd);
-        }
-        findingCounts.put(Filter.Severity.MEDIUM, findingsPerSeverity.get(FindingSeverity.MEDIUM));
-        
-        for ( int i=0; i < findingsPerSeverity.get(FindingSeverity.LOW); i++) {
-            Finding fnd = new Finding();
-            fnd.setSeverity(Severity.LOW);
-            fnd.setPackageId("");
-            findings.add(fnd);
-        }
-        findingCounts.put(Filter.Severity.LOW, findingsPerSeverity.get(FindingSeverity.LOW));
+        addFinding(findingsPerSeverity.get(FindingSeverity.HIGH), findingCounts, findings, Severity.HIGH, Filter.Severity.HIGH);
+        addFinding(findingsPerSeverity.get(FindingSeverity.MEDIUM), findingCounts, findings, Severity.MEDIUM, Filter.Severity.MEDIUM);
+        addFinding(findingsPerSeverity.get(FindingSeverity.LOW), findingCounts, findings, Severity.LOW, Filter.Severity.LOW);
 
         Summary summary = new Summary();
         summary.setFindingCounts(findingCounts);
@@ -312,5 +291,16 @@ public class AnalyticsSteps {
                 .scaResults(scaResults)
                 .xIssues(new ArrayList<>())
                 .build();
+    }
+
+    private static void addFinding(Integer countFindingsPerSeverity, Map<Filter.Severity, Integer> findingCounts, List<Finding> findings, Severity severity, Filter.Severity filterSeverity) {
+        for ( int i=0; i <countFindingsPerSeverity; i++) {
+            Finding fnd = new Finding();
+            fnd.setSeverity(severity);
+            fnd.setPackageId("");
+            findings.add(fnd);
+        }
+
+        findingCounts.put(filterSeverity, countFindingsPerSeverity);
     }
 }
