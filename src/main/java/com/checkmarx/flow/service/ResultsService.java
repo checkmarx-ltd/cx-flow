@@ -59,8 +59,8 @@ public class ResultsService {
             //TODO async these, and join and merge after
             ScanResults results = cxService.getReportContentByScanId(scanId, filters);
             logGetResultsJsonLogger(request, scanId, results);
-            results = isOSAScanEnable(request, projectId, osaScanId, filters, results);
-
+            results = getOSAScan(request, projectId, osaScanId, filters, results);
+            
             sendEmailNotification(request, results);
             processResults(request, results, new ScanDetails(projectId, scanId, osaScanId));
             logScanDetails(request, projectId, results);
@@ -77,7 +77,7 @@ public class ResultsService {
     }
 
     private void logGetResultsJsonLogger(ScanRequest request, Integer scanId, ScanResults results) {
-        //SAST & OSA results
+        //SAST results
         if(results.getScanSummary()!=null) {
             new ScanResultsReport(scanId, request, results).log();
         }
@@ -289,7 +289,7 @@ public class ResultsService {
         }
     }
 
-    ScanResults isOSAScanEnable(ScanRequest request, Integer projectId, String osaScanId, List<Filter> filters, ScanResults results) throws CheckmarxException {
+    ScanResults getOSAScan(ScanRequest request, Integer projectId, String osaScanId, List<Filter> filters, ScanResults results) throws CheckmarxException {
         if(cxProperties.getEnableOsa() && !ScanUtils.empty(osaScanId)){
             log.info("Waiting for OSA Scan results for scan id {}", osaScanId);
             results = osaService.waitForOsaScan(osaScanId, projectId, results, filters);
