@@ -35,6 +35,11 @@ public class ScanReport extends AnalyticsReport {
         setFields(request, sourcesPath, result);
     }
 
+    public ScanReport(String scanId, ScanRequest request, String sourcesPath, OperationResult result, String scanInitiator) {
+        super(scanId, request, scanInitiator);
+        setFields(request, sourcesPath, result);
+    }
+    
     private void setFields(ScanRequest request, String repoUrl, OperationResult result) {
         this.branch = request.getBranch();
         this.repoType = request.getRepoType().getRepository();
