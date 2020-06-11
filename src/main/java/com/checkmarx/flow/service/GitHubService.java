@@ -1,5 +1,6 @@
 package com.checkmarx.flow.service;
 
+import com.checkmarx.flow.config.FindingSeverity;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.dto.*;
@@ -8,6 +9,7 @@ import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.exception.GitHubClientRunTimeException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.CxConfig;
+import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
@@ -191,6 +193,9 @@ public class GitHubService extends RepoService {
     }
 
     void endBlockMerge(ScanRequest request, ScanResults results, ScanDetails scanDetails) {
+
+        logPullRequestWithScaResutls(request, results);
+        
         if (properties.isBlockMerge()) {
             String statusApiUrl = request.getAdditionalMetadata(STATUSES_URL_KEY);
             if (ScanUtils.empty(statusApiUrl)) {
@@ -198,13 +203,59 @@ public class GitHubService extends RepoService {
                 return;
             }
 
-            HttpEntity<String> httpEntity = getStatusRequestEntity(results, new PullRequestReport(scanDetails, request));
+            PullRequestReport report = new PullRequestReport(scanDetails, request);
+            
+            HttpEntity<String> httpEntity = getStatusRequestEntity(results, report);
+            
+            logPullRequestWithSastOsa(results, report);
 
             log.debug("Updating pull request status: {}", statusApiUrl);
             statusExchange(request, httpEntity, statusApiUrl, "failed to update merge status for completed scan");
         } else {
             log.debug("Pull request blocking is disabled in configuration, no need to unblock.");
+
+            logPullRequestWithSastOsa(request, results, scanDetails);
         }
+    }
+
+    private void logPullRequestWithSastOsa(ScanRequest request, ScanResults results, ScanDetails scanDetails) {
+
+        //Report pull request only if there was SAST/OSA scan
+        //Otherwise it would be only SCA
+        if(hasSastOsaScan(results)) {
+            PullRequestReport report = new PullRequestReport(scanDetails, request);
+            Map<FindingSeverity, Integer> findings = MergeResultEvaluatorImpl.getFindingCountPerSeverity(results);
+            report.setFindingsPerSeverity(findings);
+            report.log();
+        }
+    }
+
+    private boolean hasSastOsaScan(ScanResults results) {
+        return results.getSastScanId() != null || Boolean.TRUE.equals(results.getOsa()) || results.getScanSummary() != null;
+    }
+
+    private void logPullRequestWithSastOsa(ScanResults results, PullRequestReport report) {
+        
+        //Report pull request only if there was SAST/OSA scan
+        //Otherwise it would be only SCA
+        if(hasSastOsaScan(results)) {
+            report.log();
+        }
+    }
+
+    private void logPullRequestWithScaResutls(ScanRequest request, ScanResults results) {
+        if(results.getScaResults() != null ) {
+            PullRequestReport report = new PullRequestReport(results.getScaResults().getScanId(), request, PullRequestReport.SCA);
+            Map<Filter.Severity, Integer> findingsMap = results.getScaResults().getSummary().getFindingCounts();
+            Map findingMapReport = new HashMap<FindingSeverity, Integer>();
+            findingMapReport.put(FindingSeverity.HIGH, findingsMap.get(Filter.Severity.HIGH));
+            findingMapReport.put(FindingSeverity.MEDIUM, findingsMap.get(Filter.Severity.MEDIUM));
+            findingMapReport.put(FindingSeverity.LOW, findingsMap.get(Filter.Severity.LOW));
+            findingMapReport.put(FindingSeverity.INFO, findingsMap.get(Filter.Severity.INFO));
+            report.setFindingsPerSeverity(findingMapReport);
+            report.log();
+        }
+         
     }
 
     private HttpEntity<String> getStatusRequestEntity(ScanResults results, PullRequestReport pullRequestReport) {

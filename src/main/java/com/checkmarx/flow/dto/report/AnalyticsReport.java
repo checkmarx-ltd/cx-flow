@@ -27,13 +27,23 @@ public abstract class AnalyticsReport {
     protected static final String NOT_APPLICABLE = "NA";
     public static final String SAST = "SAST";
     public static final String OSA = "OSA";
-
+    public static final String SCA = "SCA";
+    
     protected String projectName = NOT_APPLICABLE;
     protected String repoUrl = null;
     protected String scanInitiator;
     protected String scanId;
 
 
+    public AnalyticsReport(String scanId, ScanRequest request, String scanInitiator) {
+        this.scanId = scanId;
+        this.scanInitiator = scanInitiator;
+        if (scanId == null) {
+            this.scanId = NOT_APPLICABLE;
+        }
+        this.projectName = request.getProject();
+    }
+    
     public AnalyticsReport(String scanId, ScanRequest request) {
         this.scanId = scanId;
         scanInitiator = OSA;
