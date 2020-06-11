@@ -4,12 +4,15 @@ import com.checkmarx.flow.config.FindingSeverity;
 import com.checkmarx.flow.dto.OperationResult;
 import com.checkmarx.flow.dto.ScanDetails;
 import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.sdk.dto.Filter;
+import com.checkmarx.sdk.dto.ScanResults;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -47,6 +50,16 @@ public class PullRequestReport extends AnalyticsReport {
         }
         this.projectName = request.getProject();
         setEncryptedRepoUrl(request.getRepoUrl());
+    }
+
+    public void setFindingsPerSeveritySca(ScanResults results) {
+        Map<Filter.Severity, Integer> findingsMap = results.getScaResults().getSummary().getFindingCounts();
+        Map findingMapReport = new HashMap<FindingSeverity, Integer>();
+        findingMapReport.put(FindingSeverity.HIGH, findingsMap.get(Filter.Severity.HIGH));
+        findingMapReport.put(FindingSeverity.MEDIUM, findingsMap.get(Filter.Severity.MEDIUM));
+        findingMapReport.put(FindingSeverity.LOW, findingsMap.get(Filter.Severity.LOW));
+        findingMapReport.put(FindingSeverity.INFO, findingsMap.get(Filter.Severity.INFO));
+        setFindingsPerSeverity(findingMapReport);
     }
     
     @Override

@@ -226,6 +226,7 @@ public class GitHubService extends RepoService {
             PullRequestReport report = new PullRequestReport(scanDetails, request);
             Map<FindingSeverity, Integer> findings = MergeResultEvaluatorImpl.getFindingCountPerSeverity(results);
             report.setFindingsPerSeverity(findings);
+            report.setPullRequestResult(OperationResult.successful());
             report.log();
         }
     }
@@ -246,17 +247,14 @@ public class GitHubService extends RepoService {
     private void logPullRequestWithScaResutls(ScanRequest request, ScanResults results) {
         if(results.getScaResults() != null ) {
             PullRequestReport report = new PullRequestReport(results.getScaResults().getScanId(), request, PullRequestReport.SCA);
-            Map<Filter.Severity, Integer> findingsMap = results.getScaResults().getSummary().getFindingCounts();
-            Map findingMapReport = new HashMap<FindingSeverity, Integer>();
-            findingMapReport.put(FindingSeverity.HIGH, findingsMap.get(Filter.Severity.HIGH));
-            findingMapReport.put(FindingSeverity.MEDIUM, findingsMap.get(Filter.Severity.MEDIUM));
-            findingMapReport.put(FindingSeverity.LOW, findingsMap.get(Filter.Severity.LOW));
-            findingMapReport.put(FindingSeverity.INFO, findingsMap.get(Filter.Severity.INFO));
-            report.setFindingsPerSeverity(findingMapReport);
+            report.setFindingsPerSeveritySca(results);
+            report.setPullRequestResult(OperationResult.successful());
             report.log();
         }
          
     }
+
+
 
     private HttpEntity<String> getStatusRequestEntity(ScanResults results, PullRequestReport pullRequestReport) {
         String statusForApi = MERGE_SUCCESS;

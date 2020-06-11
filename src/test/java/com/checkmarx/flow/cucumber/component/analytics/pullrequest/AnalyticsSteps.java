@@ -19,10 +19,13 @@ import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
+import com.checkmarx.sdk.dto.sca.SCAResults;
+import com.checkmarx.sdk.dto.sca.Summary;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
 import com.checkmarx.test.flow.config.CxFlowMocksConfig;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.cx.restclient.dto.scansummary.Severity;
+import com.cx.restclient.sca.dto.report.Finding;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
@@ -92,6 +95,9 @@ public class AnalyticsSteps {
         flowProperties.setThresholds(thresholds);
     }
 
+    @Given("SCA Scan in configured in application.yml")
+    public void scanScanIsconfigured(){}
+    
     @And("filters are disabled")
     public void filtersAreDisabled() {
         state.filters = new ArrayList<>();
@@ -106,10 +112,18 @@ public class AnalyticsSteps {
     public void sastReturnsScanID(int scanId, int high, int medium, int low) throws InterruptedException {
         state.fakeScanId = scanId;
         state.findingsPerSeverity = toSeverityMap(high, medium, low);
-        state.scanResultsToInject = createFakeScanResults(state.findingsPerSeverity);
+        state.scanResultsToInject = createFakeSASTScanResults(state.findingsPerSeverity);
         processScanResultsInCxFlow();
     }
 
+    @And("SCA returns scan ID: {int} and finding count per severity: HIGH: {int}, MEDIUM: {int}, LOW: {int}")
+    public void scaReturnsScanID(int scanId, int high, int medium, int low) throws InterruptedException {
+        state.fakeScanId = scanId;
+        state.findingsPerSeverity = toSeverityMap(high, medium, low);
+        state.scanResultsToInject = createFakeSCAScanResults(state.findingsPerSeverity, scanId);
+        processScanResultsInCxFlow();
+    }
+    
     @Then("in analytics report, the operation is {string}")
     public void inAnalyticsReportTheOperationIs(String operation) throws CheckmarxException {
         state.lastAnalyticsReport = (PullRequestReport) loggerUtils.getReportNode(operation, PullRequestReport.class);
@@ -142,6 +156,7 @@ public class AnalyticsSteps {
     public void findingsPerSeverity(int high, int medium, int low) {
         Map<FindingSeverity, Integer> expectedMap = toSeverityMap(high, medium, low);
         Map<FindingSeverity, Integer> actualMap = state.lastAnalyticsReport.getFindingsPerSeverity();
+        actualMap.remove(FindingSeverity.INFO);
         Assert.assertEquals("Incorrect finding map", expectedMap, actualMap);
     }
 
@@ -231,7 +246,7 @@ public class AnalyticsSteps {
                 flowProperties);
     }
 
-    private static ScanResults createFakeScanResults(Map<FindingSeverity, Integer> findingsPerSeverity) {
+    private static ScanResults createFakeSASTScanResults(Map<FindingSeverity, Integer> findingsPerSeverity) {
         CxScanSummary summary = new CxScanSummary();
         summary.setHighSeverity(findingsPerSeverity.get(FindingSeverity.HIGH));
         summary.setMediumSeverity(findingsPerSeverity.get(FindingSeverity.MEDIUM));
@@ -247,6 +262,54 @@ public class AnalyticsSteps {
         return ScanResults.builder()
                 .scanSummary(summary)
                 .additionalDetails(details)
+                .xIssues(new ArrayList<>())
+                .build();
+    }
+
+    private static ScanResults createFakeSCAScanResults(Map<FindingSeverity, Integer> findingsPerSeverity, int scanId) {
+        
+        Map<Filter.Severity, Integer> findingCounts= new HashMap<Filter.Severity, Integer>() ;
+        
+        SCAResults scaResults = new SCAResults();
+
+        scaResults.setScanId("" + scanId);
+        
+        List<Finding> findings = new LinkedList<Finding>();
+        for ( int i=0; i < findingsPerSeverity.get(FindingSeverity.HIGH); i++) {
+            Finding fnd = new Finding();
+            fnd.setSeverity(Severity.HIGH);
+            fnd.setPackageId("");
+            findings.add(fnd);
+        }
+        
+        findingCounts.put(Filter.Severity.HIGH, findingsPerSeverity.get(FindingSeverity.HIGH));
+        
+        for ( int i=0; i < findingsPerSeverity.get(FindingSeverity.MEDIUM); i++) {
+            Finding fnd = new Finding();
+            fnd.setSeverity(Severity.MEDIUM);
+            fnd.setPackageId("");
+            findings.add(fnd);
+        }
+        findingCounts.put(Filter.Severity.MEDIUM, findingsPerSeverity.get(FindingSeverity.MEDIUM));
+        
+        for ( int i=0; i < findingsPerSeverity.get(FindingSeverity.LOW); i++) {
+            Finding fnd = new Finding();
+            fnd.setSeverity(Severity.LOW);
+            fnd.setPackageId("");
+            findings.add(fnd);
+        }
+        findingCounts.put(Filter.Severity.LOW, findingsPerSeverity.get(FindingSeverity.LOW));
+
+        Summary summary = new Summary();
+        summary.setFindingCounts(findingCounts);
+        
+        scaResults.setFindings(findings);
+
+        scaResults.setSummary(summary);
+        scaResults.setPackages(new LinkedList<>());
+        
+        return ScanResults.builder()
+                .scaResults(scaResults)
                 .xIssues(new ArrayList<>())
                 .build();
     }

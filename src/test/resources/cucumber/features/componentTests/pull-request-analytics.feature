@@ -1,6 +1,7 @@
 @ComponentTest @PullRequestAnalyticsFeature
 Feature: Analytics report should be logged correctly when CxFlow approves or fails a pull request
 
+  @Skip
   Scenario Outline: Analytics logging with regards to thresholds
     Given thresholds are configured as HIGH: <thr_high>, MEDIUM: <thr_medium>, LOW: <thr_low>
     And filters are disabled
@@ -40,3 +41,20 @@ Feature: Analytics report should be logged correctly when CxFlow approves or fai
 #         }
 #     }
 # }
+
+  Scenario Outline: Analytics logging with regards to thresholds
+    Given SCA Scan in configured in application.yml 
+    When pull request is created for a repo with URL: "<repo url>" in GitHub
+    And SCA returns scan ID: <scan ID> and finding count per severity: HIGH: <f_high>, MEDIUM: <f_medium>, LOW: <f_low>
+    Then in analytics report, the operation is "Pull Request"
+    And pullRequestStatus is "<status>"
+    And repoUrl contains encrypted "<repo url>"
+    And scanInitiator is "SCA", scanId is "<scan ID>"
+    And findingsMap is HIGH: <f_high>, MEDIUM: <f_medium>, LOW: <f_low>
+
+
+    Examples:
+      | scan ID | f_high | f_medium | f_low | status  | repo url                                 |
+      | 3452124 | 4      | 2        | 12    | SUCCESS | https://github.com/example-org/test-repo |
+      | 937582  | 1      | 3        | 8     | SUCCESS | https://github.com/example-org/test-repo |
+      | 937582  | 1      | 3        | 8     | FAILURE | https://github.com/invalid_repo          |

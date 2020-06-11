@@ -58,7 +58,7 @@ public class ResultsService {
             CompletableFuture<ScanResults> future = new CompletableFuture<>();
             //TODO async these, and join and merge after
             ScanResults results = cxService.getReportContentByScanId(scanId, filters);
-            new ScanResultsReport(scanId, request, results).log();
+            logGetResultsJsonLogger(request, scanId, results);
             results = isOSAScanEnable(request, projectId, osaScanId, filters, results);
 
             sendEmailNotification(request, results);
@@ -76,6 +76,16 @@ public class ResultsService {
         }
     }
 
+    private void logGetResultsJsonLogger(ScanRequest request, Integer scanId, ScanResults results) {
+        //SAST & OSA results
+        if(results.getScanSummary()!=null) {
+            new ScanResultsReport(scanId, request, results).log();
+        }
+        else if(results.getScaResults()!=null) {
+            new ScanResultsReport(results.getScaResults().getScanId(), request, results).log();
+        }
+    }
+
     @Async("scanRequest")
     public CompletableFuture<ScanResults> publishCombinedResults(ScanRequest scanRequest, ScanResults scanResults) {
         try {
@@ -85,7 +95,7 @@ public class ResultsService {
                 Integer projectId = Integer.parseInt(scanResults.getProjectId());
 
                 if(projectId != UNKNOWN_INT) {
-                    new ScanResultsReport(scanResults.getSastScanId(), scanRequest, scanResults).log();
+                    logGetResultsJsonLogger(scanRequest, scanResults.getSastScanId(), scanResults);
                     sendEmailNotification(scanRequest, scanResults);
                     processResults(scanRequest, scanResults, new ScanDetails(projectId, scanResults.getSastScanId(), null));
                     logScanDetails(scanRequest, projectId, scanResults);

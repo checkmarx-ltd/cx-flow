@@ -3,6 +3,7 @@ package com.checkmarx.flow.dto.report;
 import com.checkmarx.flow.config.FindingSeverity;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.service.MergeResultEvaluatorImpl;
+import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
@@ -41,14 +42,34 @@ public class ScanResultsReport extends AnalyticsReport {
 
     private void setResults(ScanResults results) {
 
+        if(results.getScanSummary() !=null) {
+            getSastResults(results);
+        }
+        else if(results.getScanSummary() !=null) {
+            getSCAResults(results);
+        }
+    }
+
+    private void getSCAResults(ScanResults results) {
+
+        Map<Filter.Severity, Integer> findingsCount = results.getScaResults().getSummary().getFindingCounts();
+        
+        this.scanSummary.put(FindingSeverity.HIGH, findingsCount.get(Filter.Severity.HIGH));
+        this.scanSummary.put(FindingSeverity.MEDIUM, findingsCount.get(Filter.Severity.HIGH));
+        this.scanSummary.put(FindingSeverity.LOW, findingsCount.get(Filter.Severity.LOW));
+        this.scanSummary.put(FindingSeverity.INFO, findingsCount.get(Filter.Severity.INFO));
+
+        //TODO - the functionality of additionalDetails (results after filtering) is not developped in SCA yet
+        //so we are not logging it
+    }
+
+    private void getSastResults(ScanResults results) {
         this.scanSummary.put(FindingSeverity.HIGH, results.getScanSummary().getHighSeverity());
         this.scanSummary.put(FindingSeverity.MEDIUM, results.getScanSummary().getMediumSeverity());
         this.scanSummary.put(FindingSeverity.LOW, results.getScanSummary().getLowSeverity());
         this.scanSummary.put(FindingSeverity.INFO, results.getScanSummary().getInfoSeverity());
 
-
         Map<FindingSeverity, Integer> cxFlowResultsIn = MergeResultEvaluatorImpl.getFindingCountPerSeverity(results);
-
 
         if (cxFlowResultsIn.get(FindingSeverity.HIGH) != null) {
             this.cxFlowResults.put(FindingSeverity.HIGH, cxFlowResultsIn.get(FindingSeverity.HIGH));
