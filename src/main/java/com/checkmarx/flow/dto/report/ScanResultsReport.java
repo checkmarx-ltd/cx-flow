@@ -45,7 +45,7 @@ public class ScanResultsReport extends AnalyticsReport {
         if(results.getScanSummary() !=null) {
             getSastResults(results);
         }
-        else if(results.getScanSummary() !=null) {
+        else if(results.getScaResults() !=null) {
             getSCAResults(results);
         }
     }

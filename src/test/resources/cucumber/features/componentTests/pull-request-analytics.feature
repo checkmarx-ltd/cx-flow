@@ -1,7 +1,7 @@
 @ComponentTest @PullRequestAnalyticsFeature
 Feature: Analytics report should be logged correctly when CxFlow approves or fails a pull request
 
-  @Skip
+
   Scenario Outline: Analytics logging with regards to thresholds
     Given thresholds are configured as HIGH: <thr_high>, MEDIUM: <thr_medium>, LOW: <thr_low>
     And filters are disabled

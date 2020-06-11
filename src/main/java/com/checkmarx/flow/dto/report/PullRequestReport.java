@@ -54,7 +54,7 @@ public class PullRequestReport extends AnalyticsReport {
 
     public void setFindingsPerSeveritySca(ScanResults results) {
         Map<Filter.Severity, Integer> findingsMap = results.getScaResults().getSummary().getFindingCounts();
-        Map findingMapReport = new HashMap<FindingSeverity, Integer>();
+        Map<FindingSeverity, Integer> findingMapReport = new HashMap<FindingSeverity, Integer>();
         findingMapReport.put(FindingSeverity.HIGH, findingsMap.get(Filter.Severity.HIGH));
         findingMapReport.put(FindingSeverity.MEDIUM, findingsMap.get(Filter.Severity.MEDIUM));
         findingMapReport.put(FindingSeverity.LOW, findingsMap.get(Filter.Severity.LOW));
