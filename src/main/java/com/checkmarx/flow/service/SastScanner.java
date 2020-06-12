@@ -43,6 +43,7 @@ import static com.checkmarx.sdk.config.Constants.UNKNOWN_INT;
 public class SastScanner implements VulnerabilityScanner {
     private static final String SCAN_TYPE = CxProperties.CONFIG_PREFIX;
     private static final String ERROR_BREAK_MSG = "Exiting with Error code 10 due to issues present";
+    private static final String CXFLOW_SCAN_MSG = "CxFlow Automated Scan";
 
     private final ResultsService resultsService;
     private final CxClient cxService;
@@ -78,12 +79,12 @@ public class SastScanner implements VulnerabilityScanner {
                     log.info("Aborting the ongoing scan with id "+ existingScanId +" for Project:" + projectId);
                     cxService.cancelScan(existingScanId);
                     log.info("Resubmitting the scan for Project:" + projectId);
-                    scanId = cxService.createScan(cxScanParams, "CxFlow Automated Scan");
+                    scanId = cxService.createScan(cxScanParams, CXFLOW_SCAN_MSG);
                 } else {
                       throw new CheckmarxException("Active Scan with Id " + existingScanId + " already exists for Project: " + projectId);
                 }
             } else {
-                scanId = cxService.createScan(cxScanParams, "CxFlow Automated Scan");
+                scanId = cxService.createScan(cxScanParams, CXFLOW_SCAN_MSG);
             }
 
             BugTracker.Type bugTrackerType = bugTrackerTriggerEvent.triggerBugTrackerEvent(scanRequest);
@@ -160,7 +161,7 @@ public class SastScanner implements VulnerabilityScanner {
 
             CxScanParams params = scanRequestConverter.prepareScanParamsObject(request, cxFile, ownerId, projectId);
 
-            scanId = cxService.createScan(params, "CxFlow Automated Scan");
+            scanId = cxService.createScan(params, CXFLOW_SCAN_MSG);
 
             BugTracker.Type bugTrackerType = bugTrackerTriggerEvent.triggerBugTrackerEvent(request);
             if (bugTrackerType.equals(BugTracker.Type.NONE)) {
