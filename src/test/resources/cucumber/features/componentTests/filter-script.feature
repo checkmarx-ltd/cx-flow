@@ -7,7 +7,7 @@ Feature: Using Groovy script to filter SAST findings
     And finding #3 has "Low" severity, "New" status and "To verify" state
     And no simple filters are defined
     And filter script is "<filter script>"
-    When CxFlow generates issues from the findings
+    When CxFlow generates issues from findings
     Then CxFlow report is generated with issues corresponding to these findings: "<findings>"
     Examples:
       | filter script                                                                               | findings |
@@ -20,16 +20,40 @@ Feature: Using Groovy script to filter SAST findings
       | finding.status == 'NEW'                                                                     | 2,3      |
       | finding.status == 'REOCCURED'                                                               | 1        |
 
-  @Skip
   @NegativeTest
   Scenario: Both scripted filter and simple filters are specified in config
-    # Check that an error is thrown
-  @Skip
+    Given SAST report containing 3 findings, each in a different file and with a different vulnerability type
+    And status filter is set to "New"
+    And filter script is "finding.severity == 'MEDIUM'"
+    When CxFlow generates issues from findings
+    Then CheckmarxRuntimeException is thrown
+    And the exception message contains the text: "Simple filters and scripted filter cannot be used together"
+
   @NegativeTest
-  Scenario: Invalid script syntax
-    # Throw an exception with a meaningful message
-  @Skip
+  Scenario Outline: Invalid script syntax
+    Given SAST report containing 3 findings, each in a different file and with a different vulnerability type
+    And no simple filters are defined
+    And filter script is "<invalid script>"
+    When CxFlow generates issues from findings
+    Then CheckmarxRuntimeException is thrown
+    And the exception message contains the text: "make sure the script syntax is correct"
+    Examples:
+      | invalid script        |
+      | (finding.severity     |
+      | 12q3C = Z'            |
+      | Bonnie Prince Charlie |
+
   @NegativeTest
-  Scenario: Script runtime error
-    # E.g. script uses a non-existent variable
-    # Throw an exception with a meaningful message
+  Scenario Outline: Script runtime error
+    Given SAST report containing 3 findings, each in a different file and with a different vulnerability type
+    And no simple filters are defined
+    And filter script is "<invalid script>"
+    When CxFlow generates issues from findings
+    Then CheckmarxRuntimeException is thrown
+    And the exception message contains the text: "runtime error has occurred while executing the filter script"
+    Examples:
+      | invalid script               |
+      | finding.creativity == 'HIGH' |
+      | nonExistingVar > 23          |
+
+    # Script returning an incorrect value: "Filtering script must return a boolean value."

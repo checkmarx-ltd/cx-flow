@@ -10,6 +10,7 @@ import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.checkmarx.sdk.exception.CheckmarxException;
+import com.checkmarx.sdk.exception.CheckmarxRuntimeException;
 import com.checkmarx.sdk.service.*;
 import com.checkmarx.utils.TestsParseUtils;
 import io.cucumber.java.en.And;
@@ -33,13 +34,10 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest(classes = {CxFlowApplication.class})
@@ -55,8 +53,11 @@ public class FilterScriptSteps {
     private final CxProperties cxProperties;
     private final CxLegacyService cxLegacyService;
     private final FilterValidator filterValidator;
+
     private Set<Integer> findingNumbersAfterFiltering;
     private String sastReportPath;
+    private Exception reportGenerationException;
+
 
     @Given("SAST report containing 3 findings, each in a different file and with a different vulnerability type")
     public void inputContainingFindings() {
@@ -95,38 +96,80 @@ public class FilterScriptSteps {
         flowProperties.setFilterScript(scriptText);
     }
 
-    @When("CxFlow generates issues from the findings")
+    @When("CxFlow generates issues from findings")
     public void cxFlowGeneratesIssues() throws CheckmarxException, IOException {
-        FilterConfiguration filter = filterFactory.getFilter(null,
+        RestTemplate restTemplateMock = getRestTemplateMock();
+        CxAuthClient authClientMock = getAuthClientMock();
+        CxClient cxClientSpy = getCxClientSpy(restTemplateMock, authClientMock);
+        generateIssues(cxClientSpy);
+    }
+
+    @Then("CxFlow report is generated with issues corresponding to these findings: {string}")
+    public void cxflowReportIsGenerated(String issueDescription) {
+        if (reportGenerationException != null) {
+            fail("Unexpected exception while getting CxFlow report.", reportGenerationException);
+        }
+
+        if (issueDescription.equals("<none>")) {
+            assertTrue(findingNumbersAfterFiltering.isEmpty());
+        } else {
+            Set<Integer> expectedFindingNumbers = TestsParseUtils.parseCsvToList(issueDescription)
+                    .stream()
+                    .map(Integer::parseInt)
+                    .collect(Collectors.toSet());
+            assertEquals(expectedFindingNumbers, findingNumbersAfterFiltering);
+        }
+    }
+
+    @Given("status filter is set to {string}")
+    public void statusFilterIsSetTo(String status) {
+        flowProperties.setFilterStatus(Collections.singletonList(status));
+    }
+
+    @Then("CheckmarxRuntimeException is thrown")
+    public void checkmarxruntimeexceptionIsThrown() {
+        assertNotNull(reportGenerationException, "Expected an exception, but didn't get any.");
+
+        assertTrue(reportGenerationException instanceof CheckmarxRuntimeException,
+                () -> String.format("Expected CheckmarxRuntimeException to be thrown, but the actual exception was %s.",
+                        reportGenerationException.getClass().getName()));
+    }
+
+    @And("the exception message contains the text: {string}")
+    public void theExceptionMessageContainsTheText(String text) {
+        boolean messageContainsExpectedText = reportGenerationException.getMessage()
+                .toLowerCase(Locale.ROOT)
+                .contains(text.toLowerCase(Locale.ROOT));
+
+        assertTrue(messageContainsExpectedText,
+                String.format("Expected the exception message to contain '%s', but the actual message was '%s'.",
+                        text,
+                        reportGenerationException.getMessage()));
+    }
+
+    private FilterConfiguration getFilterConfiguration() {
+        return filterFactory.getFilter(null,
                 null,
                 null,
                 null,
                 null,
                 flowProperties);
+    }
 
+    private void generateIssues(CxClient cxClientSpy) {
         // Avoid additional API calls that we don't care about.
         cxProperties.setOffline(true);
 
-        RestTemplate restTemplateMock = getRestTemplateMock();
-        CxAuthClient authClientMock = getAuthClientMock();
+        try {
+            FilterConfiguration filter = getFilterConfiguration();
+            ScanResults report = cxClientSpy.getReportContent(333333, filter);
 
-        CxClient cxClientSpy = getCxClientSpy(restTemplateMock, authClientMock);
-
-        ScanResults report = cxClientSpy.getReportContent(333333, filter);
-
-        findingNumbersAfterFiltering = report.getXIssues()
-                .stream()
-                .map(xIssue -> findingFilenameToNumber.get(xIssue.getFilename()))
-                .collect(Collectors.toSet());
-    }
-
-    @Then("CxFlow report is generated with issues corresponding to these findings: {string}")
-    public void cxflowReportIsGenerated(String issueDescription) {
-        if (issueDescription.equals("<none>")) {
-            assertTrue(findingNumbersAfterFiltering.isEmpty());
-        } else {
-            Set<Integer> expectedFindingNumbers = TestsParseUtils.parseCsvToList(issueDescription).stream().map(Integer::parseInt).collect(Collectors.toSet());
-            assertEquals(expectedFindingNumbers, findingNumbersAfterFiltering);
+            findingNumbersAfterFiltering = report.getXIssues()
+                    .stream()
+                    .map(xIssue -> findingFilenameToNumber.get(xIssue.getFilename()))
+                    .collect(Collectors.toSet());
+        } catch (Exception e) {
+            reportGenerationException = e;
         }
     }
 
