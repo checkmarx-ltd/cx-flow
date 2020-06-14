@@ -12,11 +12,16 @@ import com.checkmarx.flow.service.ResultsService;
 import com.checkmarx.jira.PublishUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
+import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
+import com.checkmarx.sdk.dto.sca.SCAResults;
+import com.checkmarx.sdk.dto.sca.Summary;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
 import com.checkmarx.test.flow.config.CxFlowMocksConfig;
+import com.cx.restclient.dto.scansummary.Severity;
+import com.cx.restclient.sca.dto.report.Finding;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -26,10 +31,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -64,7 +66,7 @@ public class GetResultsAnalyticsTestSteps {
     @Before()
     public void prepareServices() {
         initMock(cxClientMock);
-        scanResultsToInject = createFakeScanResults();
+
         resultsService = createResultsService();
     }
 
@@ -84,7 +86,7 @@ public class GetResultsAnalyticsTestSteps {
     }
 
 
-    private static ScanResults createFakeScanResults() {
+    private static ScanResults createFakeSASTScanResults() {
         ScanResults result = new ScanResults();
         CxScanSummary summary =  new CxScanSummary();
         result.setScanSummary(summary);
@@ -95,6 +97,44 @@ public class GetResultsAnalyticsTestSteps {
         return result;
     }
 
+    private static ScanResults createFakeSCAScanResults(int high, int medium, int low) {
+
+        Map<Filter.Severity, Integer> findingCounts= new HashMap<Filter.Severity, Integer>() ;
+
+        SCAResults scaResults = new SCAResults();
+
+        scaResults.setScanId("" + SCAN_ID);
+
+        List<Finding> findings = new LinkedList<Finding>();
+        addFinding(high, findingCounts, findings, Severity.HIGH, Filter.Severity.HIGH);
+        addFinding(medium, findingCounts, findings, Severity.MEDIUM, Filter.Severity.MEDIUM);
+        addFinding(low, findingCounts, findings, Severity.LOW, Filter.Severity.LOW);
+
+        Summary summary = new Summary();
+        summary.setFindingCounts(findingCounts);
+
+        scaResults.setFindings(findings);
+
+        scaResults.setSummary(summary);
+        scaResults.setPackages(new LinkedList<>());
+
+        return ScanResults.builder()
+                .scaResults(scaResults)
+                .xIssues(new ArrayList<>())
+                .build();
+    }
+
+    private static void addFinding(Integer countFindingsPerSeverity, Map<Filter.Severity, Integer> findingCounts, List<Finding> findings, Severity severity, Filter.Severity filterSeverity) {
+        for ( int i=0; i <countFindingsPerSeverity; i++) {
+            Finding fnd = new Finding();
+            fnd.setSeverity(severity);
+            fnd.setPackageId("");
+            findings.add(fnd);
+        }
+
+        findingCounts.put(filterSeverity, countFindingsPerSeverity);
+    }
+    
     private void initMock(CxClient cxClientMock) {
         try {
             ScanResultsAnswerer answerer = new ScanResultsAnswerer();
@@ -145,6 +185,8 @@ public class GetResultsAnalyticsTestSteps {
         scanResultsToInject.getScanSummary().setInfoSeverity(info);
     }
 
+
+
     private void addFlowSummaryToResults(int high, int medium, int low, int info) {
         Map<String, Object> flowSummary = new HashMap<>();
         flowSummary.put("High", high);
@@ -177,9 +219,10 @@ public class GetResultsAnalyticsTestSteps {
         return scanRequest;
     }
 
-    @When("doing get results operation on a scan with {int} {int} {int} {int} results")
-    public void getResults(int high, int medium, int low, int info) throws InterruptedException {
+    @When("doing get results operation on SAST scan with {int} {int} {int} {int} results")
+    public void getSASTResults(int high, int medium, int low, int info) throws InterruptedException {
         try {
+            scanResultsToInject = createFakeSASTScanResults();
             ScanRequest scanRequest = createScanRequest();
             setFindingsSummary(high, medium, low, info);
             addAdditionalInfoToResults();
@@ -194,9 +237,28 @@ public class GetResultsAnalyticsTestSteps {
         }
     }
 
-    @When("doing get results operation on a scan with {int} {int} {int} {int} results and filter is {string}")
+    @When("doing get results operation on SCA scan with {int} {int} {int} results")
+    public void getSCAResults(int high, int medium, int low) throws InterruptedException {
+        try {
+            scanResultsToInject = createFakeSCAScanResults(high, medium, low);
+            ScanRequest scanRequest = createScanRequest();
+
+            //addAdditionalInfoToResults();
+            //addFlowSummaryToResults(high, medium, low, info);
+            CompletableFuture<ScanResults> task = resultsService.processScanResultsAsync(
+                    scanRequest, PROJECT_ID, SCAN_ID, null, null);
+            task.get(1, TimeUnit.MINUTES);
+        } catch (MachinaException | ExecutionException | TimeoutException e) {
+            String message = "Error processing scan results.";
+            log.error(message, e);
+            Assert.fail(message);
+        }
+    }
+    
+    @When("doing get results operation on SAST scan with {int} {int} {int} {int} results and filter is {string}")
     public void getResultsWithFilter(int high, int medium, int low, int info, String filter) throws InterruptedException  {
         try {
+            scanResultsToInject = createFakeSASTScanResults();
             ScanRequest scanRequest = createScanRequest();
             setFindingsSummary(high, medium, low, info, filter);
             addAdditionalInfoToResults();
@@ -210,15 +272,22 @@ public class GetResultsAnalyticsTestSteps {
             Assert.fail(message);
         }
     }
-    @Then("we should see the expected number of tickets in analytics")
-    public void verifyReport() throws CheckmarxException {
+    @Then("we should see the expected number of tickets in analytics for SAST")
+    public void verifyReportSAST() throws CheckmarxException {
         ScanResultsReport report = getLatestReport();
-        assertScanSummary(report);
-        assertScanResults(report);
+        assertScanSASTSummary(report);
+        assertScanSASTResults(report);
         Assert.assertEquals("Scan ID does not match !", Integer.valueOf(SCAN_ID), Integer.valueOf(report.getScanId()));
     }
 
-    private void assertScanResults(ScanResultsReport report) {
+    @Then("we should see the expected number of tickets in analytics for SCA")
+    public void verifyReportSCA() throws CheckmarxException {
+        ScanResultsReport report = getLatestReport();
+        assertScanSCASummary(report);
+        Assert.assertEquals("Scan ID does not match !", Integer.valueOf(SCAN_ID), Integer.valueOf(report.getScanId()));
+    }
+    
+    private void assertScanSASTResults(ScanResultsReport report) {
         Assert.assertEquals("Error getting high severity flow results", getFlowSummaryField("High") , getScanResultsBySeverity(report, FindingSeverity.HIGH));
         Assert.assertEquals("Error getting medium severity flow results", getFlowSummaryField("Medium") , getScanResultsBySeverity(report, FindingSeverity.MEDIUM));
         Assert.assertEquals("Error getting low severity flow results", getFlowSummaryField("Low") , getScanResultsBySeverity(report, FindingSeverity.LOW));
@@ -229,12 +298,17 @@ public class GetResultsAnalyticsTestSteps {
         return (Integer) ((Map) scanResultsToInject.getAdditionalDetails().get("flow-summary")).get(field);
     }
 
-    private void assertScanSummary(ScanResultsReport report) {
+    private void assertScanSASTSummary(ScanResultsReport report) {
         Assert.assertEquals("Error getting high severity results summary", scanResultsToInject.getScanSummary().getHighSeverity(), getFindingsNum(report, FindingSeverity.HIGH));
         Assert.assertEquals("Error getting low severity results summary", scanResultsToInject.getScanSummary().getLowSeverity(), getFindingsNum(report, FindingSeverity.LOW));
         Assert.assertEquals("Error getting info severity results summary", scanResultsToInject.getScanSummary().getInfoSeverity(), getFindingsNum(report, FindingSeverity.INFO));
     }
 
+    private void assertScanSCASummary(ScanResultsReport report) {
+        Assert.assertEquals("Error getting high severity results summary", scanResultsToInject.getScaResults().getSummary().getFindingCounts().get(Filter.Severity.HIGH), getFindingsNum(report, FindingSeverity.HIGH));
+        Assert.assertEquals("Error getting medium severity results summary", scanResultsToInject.getScaResults().getSummary().getFindingCounts().get(Filter.Severity.MEDIUM), getFindingsNum(report, FindingSeverity.MEDIUM));
+        Assert.assertEquals("Error getting low severity results summary", scanResultsToInject.getScaResults().getSummary().getFindingCounts().get(Filter.Severity.LOW), getFindingsNum(report, FindingSeverity.LOW));
+    }
     /**
      * Returns scan results as if they were produced by SAST.
      */

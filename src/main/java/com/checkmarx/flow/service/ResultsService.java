@@ -81,8 +81,8 @@ public class ResultsService {
         if(results.getScanSummary()!=null) {
             new ScanResultsReport(scanId, request, results).log();
         }
-        else if(results.getScaResults()!=null) {
-            new ScanResultsReport(results.getScaResults().getScanId(), request, results).log();
+        if(results.getScaResults()!=null) {
+            new ScanResultsReport(results.getScaResults().getScanId(), request, results, ScanResultsReport.SCA).log();
         }
     }
 

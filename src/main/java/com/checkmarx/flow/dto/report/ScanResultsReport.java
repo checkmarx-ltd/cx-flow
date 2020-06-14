@@ -6,11 +6,13 @@ import com.checkmarx.flow.service.MergeResultEvaluatorImpl;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.fasterxml.jackson.annotation.JsonInclude;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import javax.management.openmbean.InvalidOpenTypeException;
 import java.util.EnumMap;
 import java.util.Map;
 
@@ -40,6 +42,27 @@ public class ScanResultsReport extends AnalyticsReport {
         setEncryptedRepoUrl(request.getRepoUrl());
     }
 
+    public ScanResultsReport(String scanId, ScanRequest request, ScanResults results, String scanInitiator) {
+        super(scanId, request, scanInitiator);
+        setResults(results);
+        setEncryptedRepoUrl(request.getRepoUrl());
+    }
+    
+    public String calcScanInitiator(ScanResults results){
+        
+        if(Boolean.TRUE.equals(results.getOsa()) && results.getScanSummary() !=null) {
+            return OSA;
+        }
+        else if (results.getScanSummary() !=null) {
+            return SAST;
+        }
+        else if(results.getScaResults() !=null) {
+            return SCA;
+        }
+        else{
+            throw new InvalidOpenTypeException();
+        }
+    }
     private void setResults(ScanResults results) {
 
         if(results.getScanSummary() !=null) {
@@ -55,7 +78,7 @@ public class ScanResultsReport extends AnalyticsReport {
         Map<Filter.Severity, Integer> findingsCount = results.getScaResults().getSummary().getFindingCounts();
         
         this.scanSummary.put(FindingSeverity.HIGH, findingsCount.get(Filter.Severity.HIGH));
-        this.scanSummary.put(FindingSeverity.MEDIUM, findingsCount.get(Filter.Severity.HIGH));
+        this.scanSummary.put(FindingSeverity.MEDIUM, findingsCount.get(Filter.Severity.MEDIUM));
         this.scanSummary.put(FindingSeverity.LOW, findingsCount.get(Filter.Severity.LOW));
         this.scanSummary.put(FindingSeverity.INFO, findingsCount.get(Filter.Severity.INFO));
 
