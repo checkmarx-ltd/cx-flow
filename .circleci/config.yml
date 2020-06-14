@@ -22,6 +22,8 @@ jobs:
       - run: ./gradlew -b build-11.gradle --build-cache assemble
       - run: ./gradlew -b build-cxod.gradle --build-cache assemble
       - run: ./gradlew -q getVersion > build/libs/version.txt
+      - run: ./gradlew -b build-cxod.gradle -q getVersion > build/libs/cxod/version.txt
+      - run: cat build/libs/cxod/version.txt
       - run: ls -R build/libs
       #- run: mv build/libs/cx-flow-1.6.0.jar build/libs/cx-flow-1.6.0-java8.jar
       #- run: mv build/libs/java11/repo-1.6.0.jar build/libs/cx-flow-1.6.0-java11.jar
@@ -117,7 +119,8 @@ jobs:
           command: |
             VERSION=$(cat ./build/libs/version.txt)
             SHA1_SHORT=${CIRCLE_SHA1::7}
-            ls -R ./build/libs
+            VERSION_OD=$(cat ./build/libs/cxod/version.txt)
+            echo ${VERSION_OD}
             docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} docker.io
             docker build --target java8 \
               -t ${DOCKER_REPO}:${SHA1_SHORT} \
