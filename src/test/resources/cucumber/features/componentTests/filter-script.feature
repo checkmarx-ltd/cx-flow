@@ -56,4 +56,11 @@ Feature: Using Groovy script to filter SAST findings
       | finding.creativity == 'HIGH' |
       | nonExistingVar > 23          |
 
-    # Script returning an incorrect value: "Filtering script must return a boolean value."
+  @NegativeTest
+  Scenario: Script returns a non-boolean value
+    Given SAST report containing 3 findings, each in a different file and with a different vulnerability type
+    And no simple filters are defined
+    And filter script is "return 302"
+    When CxFlow generates issues from findings
+    Then CheckmarxRuntimeException is thrown
+    And the exception message contains the text: "Filtering script must return a boolean value"
