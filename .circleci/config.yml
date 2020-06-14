@@ -315,6 +315,7 @@ jobs:
             docker load -i /tmp/workspace/image-8.tar
             docker load -i /tmp/workspace/image.tar
             docker load -i /tmp/workspace/latest.tar
+            docker load -i /tmp/workspace/image-cxod8.tar
       - run:
           name: Publish Docker images to Docker Hub
           command: |
