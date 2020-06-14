@@ -22,6 +22,7 @@ jobs:
       - run: ./gradlew -b build-11.gradle --build-cache assemble
       - run: ./gradlew -b build-cxod.gradle --build-cache assemble
       - run: ./gradlew -q getVersion > build/libs/version.txt
+      - run: ./gradlew -b build-cxod.gradle -q getVersion > build/libs/cxod/version.txt
       - save_cache:
           paths:
             - ~/.gradle/wrapper
@@ -315,6 +316,7 @@ jobs:
             docker load -i /tmp/workspace/image-8.tar
             docker load -i /tmp/workspace/image.tar
             docker load -i /tmp/workspace/latest.tar
+            docker load -i /tmp/workspace/image-cxod8.tar
       - run:
           name: Publish Docker images to Docker Hub
           command: |
@@ -333,6 +335,10 @@ jobs:
             go get github.com/tcnksm/ghr
             VERSION=$(cat ./build/libs/version.txt)
             rm ./build/libs/version.txt
+            VERSION_OD=$(cat ./build/libs/cxod/version.txt)
+            mv build/libs/cx-flow-${VERSION}.jar build/libs/cx-flow-${VERSION}-java8.jar
+            mv build/libs/java11/repo-${VERSION}.jar build/libs/cx-flow-${VERSION}-java11.jar
+            mv build/libs/cxod/repo-${VERSION_OD}.jar build/libs/${VERSION_OD}.jar
             ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -n ${VERSION} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./build/libs/
 
 orbs:
