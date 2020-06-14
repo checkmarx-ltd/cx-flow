@@ -23,12 +23,6 @@ jobs:
       - run: ./gradlew -b build-cxod.gradle --build-cache assemble
       - run: ./gradlew -q getVersion > build/libs/version.txt
       - run: ./gradlew -b build-cxod.gradle -q getVersion > build/libs/cxod/version.txt
-      - run: cat build/libs/cxod/version.txt
-      - run: ls -R build/libs
-      #- run: mv build/libs/cx-flow-1.6.0.jar build/libs/cx-flow-1.6.0-java8.jar
-      #- run: mv build/libs/java11/repo-1.6.0.jar build/libs/cx-flow-1.6.0-java11.jar
-      #- run: mv build/libs/cxod/repo-cxod-0.0.1.jar build/libs/cx-flow-0.0.1-od.jar
-      #- run: ls -R build/libs
       - save_cache:
           paths:
             - ~/.gradle/wrapper
@@ -119,8 +113,6 @@ jobs:
           command: |
             VERSION=$(cat ./build/libs/version.txt)
             SHA1_SHORT=${CIRCLE_SHA1::7}
-            VERSION_OD=$(cat ./build/libs/cxod/version.txt)
-            echo ${VERSION_OD}
             docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} docker.io
             docker build --target java8 \
               -t ${DOCKER_REPO}:${SHA1_SHORT} \
@@ -144,6 +136,12 @@ jobs:
             docker save -o image-8.tar ${DOCKER_REPO}:${VERSION}-8
             docker save -o image.tar ${DOCKER_REPO}:${VERSION}
             docker save -o latest.tar ${DOCKER_REPO}:latest
+            VERSION_OD=$(cat ./build/libs/cxod/version.txt)
+            ls -R build/libs
+            mv build/libs/cx-flow-${VERSION}.jar build/libs/cx-flow-${VERSION}-java8.jar
+            mv build/libs/java11/repo-${VERSION}.jar build/libs/cx-flow-${VERSION}-java11.jar
+            mv build/libs/cxod/repo-${VERSION_OD}.jar build/libs/${VERSION_OD}.jar
+            ls -R build/libs
       - persist_to_workspace:
           root: .
           paths:
