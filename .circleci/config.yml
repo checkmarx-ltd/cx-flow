@@ -336,7 +336,6 @@ jobs:
             VERSION=$(cat ./build/libs/version.txt)
             rm ./build/libs/version.txt
             VERSION_OD=$(cat ./build/libs/cxod/version.txt)
-            mv build/libs/cx-flow-${VERSION}.jar build/libs/cx-flow-${VERSION}-java8.jar
             mv build/libs/java11/repo-${VERSION}.jar build/libs/cx-flow-${VERSION}-java11.jar
             mv build/libs/cxod/repo-${VERSION_OD}.jar build/libs/${VERSION_OD}.jar
             ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -n ${VERSION} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./build/libs/
