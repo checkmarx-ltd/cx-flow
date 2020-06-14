@@ -23,10 +23,10 @@ jobs:
       - run: ./gradlew -b build-cxod.gradle --build-cache assemble
       - run: ./gradlew -q getVersion > build/libs/version.txt
       - run: ls -R build/libs
-      - run: mv build/libs/cx-flow-1.6.0.jar build/libs/cx-flow-1.6.0-java8.jar
-      - run: mv build/libs/java11/repo-1.6.0.jar build/libs/cx-flow-1.6.0-java11.jar
-      - run: mv build/libs/cxod/repo-cxod-0.0.1.jar build/libs/cx-flow-0.0.1-od.jar
-      - run: ls -R build/libs
+      #- run: mv build/libs/cx-flow-1.6.0.jar build/libs/cx-flow-1.6.0-java8.jar
+      #- run: mv build/libs/java11/repo-1.6.0.jar build/libs/cx-flow-1.6.0-java11.jar
+      #- run: mv build/libs/cxod/repo-cxod-0.0.1.jar build/libs/cx-flow-0.0.1-od.jar
+      #- run: ls -R build/libs
       - save_cache:
           paths:
             - ~/.gradle/wrapper
