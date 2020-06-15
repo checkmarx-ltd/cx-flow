@@ -6,14 +6,13 @@ import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.controller.GitHubController;
 import com.checkmarx.flow.cucumber.integration.azure.publishing.AzureDevopsClient;
 import com.checkmarx.flow.cucumber.integration.azure.publishing.PublishingStepsBase;
-import com.checkmarx.flow.sastscanning.ScanRequestConverter;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.github.GitHubTestUtils;
+import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
-import com.checkmarx.sdk.service.CxService;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
@@ -65,18 +64,13 @@ public class PublishingSteps extends PublishingStepsBase {
     private final ProjectNameGenerator projectNameGenerator;
 
     private ScanResults scanResultsToInject;
-    private String webhookRequestBody;
     private GitHubTestUtils.EventType currentGitHubEventType;
 
     @Before
     public void init() throws IOException, CheckmarxException {
         adoClient.ensureProjectExists();
 
-        when(cxClientMock.getReportContentByScanId(anyInt(), any()))
-                .thenAnswer(invocation -> scanResultsToInject);
-
-        when(cxClientMock.getTeamId(anyString()))
-                .thenReturn("dummyTeamId");
+        initCxClientMock();
 
         when(projectNameGenerator.determineProjectName(any()))
                 .thenReturn(getProjectName());
@@ -100,7 +94,6 @@ public class PublishingSteps extends PublishingStepsBase {
     @When("GitHub notifies CxFlow about a {string}")
     public void githubNotifiesCxFlowAboutEvent(String eventName) {
         currentGitHubEventType = determineEventType(eventName);
-        webhookRequestBody = testUtils.loadWebhookRequestBody(currentGitHubEventType);
     }
 
     @And("SAST scan returns a report with 1 finding")
@@ -128,6 +121,18 @@ public class PublishingSteps extends PublishingStepsBase {
 
             Assert.fail(message);
         }
+    }
+
+    private void initCxClientMock() throws CheckmarxException {
+        when(cxClientMock.getReportContentByScanId(anyInt(), any()))
+                .thenAnswer(invocation -> scanResultsToInject);
+
+        when(cxClientMock.getTeamId(anyString()))
+                .thenReturn("dummyTeamId");
+
+        // Prevent an error related to scan resubmission.
+        when(cxClientMock.getScanIdOfExistingScanIfExists(any()))
+                .thenReturn(Constants.UNKNOWN_INT);
     }
 
     private GitHubController getGitHubControllerInstance() {
