@@ -259,7 +259,7 @@ task integrationTest(type: Test) {
 }
 
 configurations {
-    libsDirName = 'libs/cxod'
+    libsDirName = 'libs/cxgo'
 }
 
 task getVersion {
