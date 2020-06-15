@@ -22,7 +22,7 @@ jobs:
       - run: ./gradlew -b build-11.gradle --build-cache assemble
       - run: ./gradlew -b build-cxgo.gradle --build-cache assemble
       - run: ./gradlew -q getVersion > build/libs/version.txt
-      - run: ./gradlew -b build-cxod.gradle -q getVersion > build/libs/cxod/version.txt
+      - run: ./gradlew -b build-cxgo.gradle -q getVersion > build/libs/cxgo/version.txt
       - save_cache:
           paths:
             - ~/.gradle/wrapper
