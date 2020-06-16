@@ -49,7 +49,7 @@ public class FlowService {
                 combinedResults.mergeWith(scanResults);
             }
         });
-        if(combinedResults.getProjectId()!=null) {
+        if(combinedResults.getSastScanId()!=null || combinedResults.getScaResults()!=null) {
             resultsService.publishCombinedResults(scanRequest, combinedResults);
         }
     }

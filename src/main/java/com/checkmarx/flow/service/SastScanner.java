@@ -81,7 +81,8 @@ public class SastScanner implements VulnerabilityScanner {
                     log.info("Resubmitting the scan for Project: {}", projectId);
                     scanId = cxService.createScan(cxScanParams, CXFLOW_SCAN_MSG);
                 } else {
-                      throw new CheckmarxException("Active Scan with Id " + existingScanId + " already exists for Project: " + projectId);
+                    log.warn("Property scan-resubmit set to {} : New scan not submitted, due to existing ongoing scan for the same Project id {}", flowProperties.getScanResubmit(), projectId);
+                    throw new CheckmarxException(String.format("Active Scan with Id %d already exists for Project: %d , ", existingScanId, projectId));
                 }
             } else {
                 scanId = cxService.createScan(cxScanParams, CXFLOW_SCAN_MSG);
