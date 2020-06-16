@@ -60,7 +60,7 @@ public class ScaFiltersSteps extends ScaCommonSteps {
         scaProperties.setFilterScore(scoreFilter);
     }
 
-    @When("SCA detects multiple vulnerabilities results")
+    @When("SCA runs a new scan on Filters-Tests-Repo which contains 8 vulnerabilities results")
     public void scanResults() {
         scaResults = Objects.requireNonNull(scaScanner.scan(scanRequest)).getScaResults();
     }
