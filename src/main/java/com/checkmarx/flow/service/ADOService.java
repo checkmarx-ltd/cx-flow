@@ -2,14 +2,19 @@ package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.config.ADOProperties;
 import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.dto.RepoComment;
+import com.checkmarx.flow.dto.RepoIssue;
 import com.checkmarx.flow.dto.ScanDetails;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.azure.CreateWorkItemAttr;
 import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.exception.ADOClientException;
+import com.checkmarx.flow.exception.GitHubClientRunTimeException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.ScanResults;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -23,14 +28,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
+import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 @Service
 public class ADOService {
     private static final Logger log = LoggerFactory.getLogger(ADOService.class);
     private static final String API_VERSION = "?api-version=";
+    private static final String ADO_COMMENT_CONTENT_FIELD_NAME = "content";
     private final RestTemplate restTemplate;
     private final ADOProperties properties;
     private final FlowProperties flowProperties;
@@ -76,26 +83,47 @@ public class ADOService {
             return;
         }
         log.debug(mergeUrl);
-        String threadId = request.getAdditionalMetadata("ado_thread_id");
-        if(ScanUtils.empty(threadId)){
-            HttpEntity<String> httpEntity = new HttpEntity<>(getJSONThread(comment).toString(), createAuthHeaders());
-            log.debug("Creating new thread for comments");
-            ResponseEntity<String> response = restTemplate.exchange(mergeUrl.concat(API_VERSION).concat(properties.getApiVersion()),
-                    HttpMethod.POST, httpEntity, String.class);
-            if(response.getBody() != null) {
-                JSONObject json = new JSONObject(response.getBody());
-                int id = json.getInt("id");
-                request.putAdditionalMetadata("ado_thread_id", Integer.toString(id));
-                log.debug("Created new thread with Id {}", id);
+        try {
+            RepoComment commentToUpdate = PullRequestCommentsHelper.getCommentToUpdate(getComments(mergeUrl), comment);
+            if (commentToUpdate != null && PullRequestCommentsHelper.shouldUpdateComment(comment, commentToUpdate.getComment())) {
+                updateComment(commentToUpdate, comment);
+            } else if (commentToUpdate == null){
+                String threadId = request.getAdditionalMetadata("ado_thread_id");
+                if (ScanUtils.empty(threadId)) {
+                    HttpEntity<String> httpEntity = new HttpEntity<>(getJSONThread(comment).toString(), createAuthHeaders());
+                    log.debug("Creating new thread for comments");
+                    ResponseEntity<String> response = restTemplate.exchange(getFullAdoApiUrl(mergeUrl),
+                            HttpMethod.POST, httpEntity, String.class);
+                    if (response.getBody() != null) {
+                        JSONObject json = new JSONObject(response.getBody());
+                        int id = json.getInt("id");
+                        request.putAdditionalMetadata("ado_thread_id", Integer.toString(id));
+                        log.debug("Created new thread with Id {}", id);
+                    }
+                } else {
+                    HttpEntity<String> httpEntity = new HttpEntity<>(getJSONComment(comment).toString(), createAuthHeaders());
+                    mergeUrl = mergeUrl.concat("/").concat(threadId).concat("/comments");
+                    log.debug("Adding comment to thread Id {}", threadId);
+                    restTemplate.exchange(getFullAdoApiUrl(mergeUrl),
+                            HttpMethod.POST, httpEntity, String.class);
+                }
             }
         }
-        else{
-            HttpEntity<String> httpEntity = new HttpEntity<>(getJSONComment(comment).toString(), createAuthHeaders());
-            mergeUrl = mergeUrl.concat("/").concat(threadId).concat("/comments");
-            log.debug("Adding comment to thread Id {}", threadId);
-            restTemplate.exchange(mergeUrl.concat(API_VERSION).concat(properties.getApiVersion()),
-                    HttpMethod.POST, httpEntity, String.class);
+        catch (Exception e) {
+            // We "swallow" the exception so that the flow will not be terminated because of errors in GIT comments
+            log.error("Error while adding or updating repo pull request comment", e);
         }
+    }
+
+    private String getFullAdoApiUrl(String url) {
+        return url.concat(API_VERSION).concat(properties.getApiVersion());
+    }
+
+    private void updateComment(RepoComment repoComment, String newComment) {
+        log.debug("Updating exisiting comment. url: {}", repoComment.getCommentUrl());
+        log.debug("Updated comment: {}" , repoComment);
+        HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONComment(ADO_COMMENT_CONTENT_FIELD_NAME,newComment).toString(), createAuthHeaders());
+        restTemplate.exchange(getFullAdoApiUrl(repoComment.getCommentUrl()), HttpMethod.PATCH, httpEntity, String.class);
     }
 
     public void startBlockMerge(ScanRequest request){
@@ -137,7 +165,7 @@ public class ADOService {
             }
             //TODO remove preview once applicable
             log.info("Removing pending status from pull {}", url);
-            restTemplate.exchange(url.concat(API_VERSION).concat(properties.getApiVersion().concat("-preview")),
+            restTemplate.exchange(getFullAdoApiUrl(url).concat("-preview"),
                     HttpMethod.PATCH, httpEntity, Void.class);
 
             MergeResultEvaluatorImpl evaluator = new MergeResultEvaluatorImpl(flowProperties);
@@ -161,7 +189,7 @@ public class ADOService {
         );
         //TODO remove preview once applicable
         log.info("Adding pending status to pull {}", url);
-        ResponseEntity<String> response = restTemplate.exchange(url.concat(API_VERSION).concat(properties.getApiVersion().concat("-preview")),
+        ResponseEntity<String> response = restTemplate.exchange(getFullAdoApiUrl(url).concat("-preview"),
                 HttpMethod.POST, httpEntity, String.class);
         log.debug(String.valueOf(response.getStatusCode()));
         try{
@@ -192,7 +220,7 @@ public class ADOService {
         JSONArray comments = new JSONArray();
         JSONObject comment = new JSONObject();
         comment.put("parentCommentId", 0);
-        comment.put("content", description);
+        comment.put(ADO_COMMENT_CONTENT_FIELD_NAME, description);
         comment.put("commentType", 1);
         comments.put(comment);
         requestBody.put("comments", comments);
@@ -203,11 +231,52 @@ public class ADOService {
 
     private JSONObject getJSONComment(String description){
         JSONObject requestBody = new JSONObject();
-        requestBody.put("content", description);
+        requestBody.put(ADO_COMMENT_CONTENT_FIELD_NAME, description);
         requestBody.put("parentCommentId", 1);
         requestBody.put("commentType", 1);
 
         return requestBody;
+    }
+
+    private List<RepoComment> getComments(String url) throws IOException {
+        HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders());
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, httpEntity , String.class);
+        List<RepoComment> result = new ArrayList<>();
+        ObjectMapper objMapper = new ObjectMapper();
+        JsonNode root = objMapper.readTree(response.getBody());
+        JsonNode value = root.path("value");
+        Iterator<JsonNode> threadsIter = value.getElements();
+        while (threadsIter.hasNext()) {
+            JsonNode thread = threadsIter.next();
+            JsonNode comments = thread.get("comments");
+            Iterator<JsonNode> commentsIter = comments.getElements();
+            while (commentsIter.hasNext()) {
+                JsonNode commentNode = commentsIter.next();
+                if (commentNode.has(ADO_COMMENT_CONTENT_FIELD_NAME)) {
+                    String commentStr = commentNode.get(ADO_COMMENT_CONTENT_FIELD_NAME).asText();
+                }
+                result.add(createRepoComment(commentNode));
+            }
+
+        }
+        return result;
+
+    }
+
+    private RepoComment createRepoComment(JsonNode commentNode)  {
+        String commentBody = commentNode.path(ADO_COMMENT_CONTENT_FIELD_NAME).getTextValue();
+        long id = commentNode.path("id").asLong();
+        String commentUrl = commentNode.path(("_links")).path("self").path("href").asText();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+        String updatedStr = commentNode.path("lastContentUpdatedDate").asText();
+        String createdStr = commentNode.path("publishedDate").asText();
+        try {
+            return new RepoComment(id, commentBody, commentUrl, sdf.parse(createdStr), sdf.parse(updatedStr));
+        }
+        catch (ParseException pe) {
+            throw new GitHubClientRunTimeException("Error parsing github pull request created or updted date", pe);
+        }
     }
 
 }

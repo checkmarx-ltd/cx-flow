@@ -39,10 +39,10 @@ public class PullRequestCommentsHelper {
 
     private static List<RepoComment> getCheckmarxCommentsForType(List<RepoComment> allComments, CommentType commentType) {
         if (commentType == CommentType.SCAN_STARTED) {
-            return allComments.stream().filter(rc -> rc.getComment().contains(COMMENT_TYPE_SCAN_STARTED)).collect(Collectors.toList());
+            return allComments.stream().filter(rc -> rc.getComment() != null && rc.getComment().contains(COMMENT_TYPE_SCAN_STARTED)).collect(Collectors.toList());
         }
         else if (commentType == CommentType.FINDINGS) {
-            return allComments.stream().filter(rc ->
+            return allComments.stream().filter(rc -> rc.getComment() != null &&
                     (rc.getComment().contains(COMMENT_TYPE_FINDINGS_1) && rc.getComment().contains(COMMENT_TYPE_FINDINGS_2))).collect(Collectors.toList());
         }
         // We are not supposed to go in here at all.
