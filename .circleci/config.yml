@@ -316,7 +316,7 @@ jobs:
             docker load -i /tmp/workspace/image-8.tar
             docker load -i /tmp/workspace/image.tar
             docker load -i /tmp/workspace/latest.tar
-            docker load -i /tmp/workspace/image-cxod8.tar
+            docker load -i /tmp/workspace/image-cxgo8.tar
       - run:
           name: Publish Docker images to Docker Hub
           command: |
@@ -335,9 +335,9 @@ jobs:
             go get github.com/tcnksm/ghr
             VERSION=$(cat ./build/libs/version.txt)
             rm ./build/libs/version.txt
-            VERSION_OD=$(cat ./build/libs/cxod/version.txt)
+            VERSION_OD=$(cat ./build/libs/cxgo/version.txt)
             mv build/libs/java11/repo-${VERSION}.jar build/libs/cx-flow-${VERSION}-java11.jar
-            mv build/libs/cxod/repo-${VERSION_OD}.jar build/libs/${VERSION_OD}.jar
+            mv build/libs/cxgo/repo-${VERSION_OD}.jar build/libs/${VERSION_OD}.jar
             ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -n ${VERSION} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./build/libs/
 
 orbs:
