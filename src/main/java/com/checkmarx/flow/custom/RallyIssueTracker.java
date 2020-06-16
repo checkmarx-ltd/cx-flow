@@ -5,7 +5,6 @@ import com.checkmarx.flow.config.RallyProperties;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.rally.CreateResultAction;
-import com.checkmarx.flow.dto.rally.DefectQuery;
 import com.checkmarx.flow.dto.rally.QueryResult;
 import com.checkmarx.flow.dto.rally.Result;
 import com.checkmarx.flow.exception.MachinaException;
