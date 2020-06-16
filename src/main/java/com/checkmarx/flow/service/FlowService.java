@@ -45,9 +45,7 @@ public class FlowService {
 
         scanners.forEach(scanner -> {
             ScanResults scanResults = scanner.scan(scanRequest);
-            if(scanResults!=null) {
                 combinedResults.mergeWith(scanResults);
-            }
         });
         if(combinedResults.getSastScanId()!=null || combinedResults.getScaResults()!=null) {
             resultsService.publishCombinedResults(scanRequest, combinedResults);
