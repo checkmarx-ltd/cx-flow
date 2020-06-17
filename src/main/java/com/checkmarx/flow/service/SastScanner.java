@@ -75,7 +75,7 @@ public class SastScanner implements VulnerabilityScanner {
 
             if (existingScanId != UNKNOWN_INT) {
                 if (flowProperties.getScanResubmit()) {
-                    log.info("Existing ongoing scan with id {} found for Project : {}",  existingScanId, projectId);
+                    log.info("Existing ongoing scan with id {} found for Project : {}", existingScanId, projectId);
                     log.info("Aborting the ongoing scan with id {} for Project: {}", existingScanId, projectId);
                     cxService.cancelScan(existingScanId);
                     log.info("Resubmitting the scan for Project: {}", projectId);
@@ -102,26 +102,24 @@ public class SastScanner implements VulnerabilityScanner {
             scanResults.setSastScanId(scanId);
             return scanResults;
 
-        } catch(GitHubRepoUnavailableException e){
-            //the repository is unavailable - can happen for a push event of a deleted branch - nothing to do
-
-            //the error message is printed when the exception is thrown
-            //usually should occur during push event occuring on delete branch
-            //therefore need to eliminate the scan process but do not want to create
-            //an error stuck trace in the log
-            scanResults = new ScanResults();
-            scanResults.setProjectId(UNKNOWN);
-            scanResults.setProject(UNKNOWN);
-            scanResults.setScanType(SCAN_TYPE);
-            return scanResults;
+        } catch (GitHubRepoUnavailableException e) {
+            return getEmptyScanResults();
 
         } catch (Exception e) {
             log.error("SAST scan failed", e);
             OperationResult scanCreationFailure = new OperationResult(OperationStatus.FAILURE, e.getMessage());
-            ScanReport report = new ScanReport(-1, scanRequest,scanRequest.getRepoUrl(), scanCreationFailure);
+            ScanReport report = new ScanReport(-1, scanRequest, scanRequest.getRepoUrl(), scanCreationFailure);
             report.log();
+            return getEmptyScanResults();
         }
+    }
 
+    private ScanResults getEmptyScanResults() {
+        ScanResults scanResults;
+        scanResults = new ScanResults();
+        scanResults.setProjectId(UNKNOWN);
+        scanResults.setProject(UNKNOWN);
+        scanResults.setScanType(SCAN_TYPE);
         return scanResults;
     }
 
@@ -294,7 +292,7 @@ public class SastScanner implements VulnerabilityScanner {
         }
     }
 
-    public void deleteProject(ScanRequest request){
+    public void deleteProject(ScanRequest request) {
 
         try {
 
@@ -305,7 +303,7 @@ public class SastScanner implements VulnerabilityScanner {
 
             Integer projectId = scanRequestConverter.determinePresetAndProjectId(request, ownerId);
 
-            if(projectId != UNKNOWN_INT) {
+            if (projectId != UNKNOWN_INT) {
                 cxService.deleteProject(projectId);
             }
 
