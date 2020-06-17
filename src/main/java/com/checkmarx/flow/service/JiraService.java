@@ -1020,7 +1020,6 @@ public class JiraService {
         }
 
         Optional.ofNullable(issue.getScaDetails()).ifPresent(s -> {
-            int count = issue.getScaDetails().size();
             Map<String, String> scaDetailsMap = new LinkedHashMap<>();
             ScanResults.ScaDetails scaDetails = s.stream().findAny().get();
 
@@ -1029,19 +1028,22 @@ public class JiraService {
             scaDetailsMap.put("Severity", scaDetails.getFinding().getSeverity().name());
             scaDetailsMap.put("CVSS Score", String.valueOf(scaDetails.getFinding().getScore()));
             scaDetailsMap.put("Publish Date", scaDetails.getFinding().getPublishDate());
-            scaDetailsMap.put("Current Version", scaDetails.getVulnerabilityPackage().getVersion());
+            scaDetailsMap.put("Current Package Version", scaDetails.getVulnerabilityPackage().getVersion());
             Optional.ofNullable(scaDetails.getFinding().getFixResolutionText()).ifPresent(f ->
-                scaDetailsMap.put("Recommended version", f)
+                scaDetailsMap.put("Remediation Upgrade Recommendation", f)
 
             );
-            scaDetailsMap.put("Vulnerabilities Count", Integer.toString(count));
 
             scaDetailsMap.forEach((key, value) ->
                     body.append(key).append(": ").append(value).append(ScanUtils.CRLF)
             );
             String findingLink = ScanUtils.constructVulnerabilityUrl(scaDetails.getVulnerabilityLink(), scaDetails.getFinding());
             body.append("[Link To SCA|").append(findingLink).append("]").append(ScanUtils.CRLF);
-            body.append("[Reference – NVD link|").append("https://nvd.nist.gov/vuln/detail/").append(scaDetails.getFinding().getCveName()).append("]").append(ScanUtils.CRLF).append(ScanUtils.CRLF);
+
+            String cveName = scaDetails.getFinding().getCveName();
+            if (!ScanUtils.empty(cveName)) {
+                body.append("[Reference – NVD link|").append("https://nvd.nist.gov/vuln/detail/").append(cveName).append("]").append(ScanUtils.CRLF).append(ScanUtils.CRLF);
+            }
         });
 
         if (!ScanUtils.empty(jiraProperties.getDescriptionPostfix())) {
