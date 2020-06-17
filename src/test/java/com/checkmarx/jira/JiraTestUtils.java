@@ -177,7 +177,13 @@ Line #222:
         return firstLineParts[0];
     }
 
-
+    @Override
+    public String getIssueVulnerabilityStatus(String projectKey) {
+        Issue issue = getFirstIssue(projectKey);
+        String statusLine = issue.getDescription().split(System.lineSeparator())[13];
+        return statusLine;
+    }
+    
     @Override
     public int getFirstIssueNumOfFindings(String projectKey) {
         SearchResult result = searchForAllIssues(projectKey);

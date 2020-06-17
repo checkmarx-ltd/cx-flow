@@ -21,6 +21,8 @@ public interface IJiraTestUtils {
 
     String getIssueVulnerability(String projectKey);
 
+    String getIssueVulnerabilityStatus(String projectKey);
+
     int getFirstIssueNumOfFindings(String projectKey);
 
     void ensureProjectExists(String project) throws IOException;

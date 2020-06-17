@@ -24,6 +24,7 @@ Feature: parse, and then publish processing given SAST XML results, findings sho
     When  publishing results to JIRA
     Then  verify <Total_Of> new issues got created
     And verify <Number_Of> findings in body
+    And issue status will be present in the body  
 
     Examples:
       | Number_Of | Total_Of |
@@ -74,6 +75,18 @@ Feature: parse, and then publish processing given SAST XML results, findings sho
     And issue's updated field is set to a more recent timestamp
     And issue has the same vulnerability type and filename
 
+  @Update_issue @status
+  Scenario: updating an existing JIRA issue during publish
+    Given target is JIRA
+    And there is an existing issue
+    And there is status change in the issue
+    And SAST results contain 1 finding, with the same vulnerability type and filename
+    When publishing results to JIRA
+    Then JIRA still contains 1 issue
+    And issue ID hasn't changed
+    And issue's updated field is set to a more recent timestamp
+    And issue has the same vulnerability type and filename
+    And the updated issue has the new status field in the body
 
   @Update_issue @NegativeTest
     # Change scenario name
