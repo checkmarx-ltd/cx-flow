@@ -34,3 +34,22 @@ Feature: Cx-Flow SCA Integration permutation tests
     Examples:
       | repository              |
       | http://some_invalid_url |
+
+  @SCA_Filtering
+  Scenario Outline: Apply filter severity and filter score on SCA results
+    Given scan initiator is SCA
+    And SCA filter severity is enabled with "<severities>" filter
+    And Sca filter score is enabled with <score> filter
+    When SCA runs a new scan on Filters-Tests-Repo which contains 8 vulnerabilities results
+    Then the expected number of sanitized vulnerabilities are <expected_vulnerabilities>
+
+    Examples:
+      | severities    | score | expected_vulnerabilities |
+      | HIGH          | 7.5   | 2                        |
+      | High, medium  | 5.6   | 3                        |
+      | high, invalid | 9.2   | 1                        |
+      |               | 5.6   | 3                        |
+      | medium        | 0.0   | 6                        |
+      |               | 0.0   | 8                        |
+      | low           | 0.0   | 0                        |
+      |               | -0.3  | 8                        |
