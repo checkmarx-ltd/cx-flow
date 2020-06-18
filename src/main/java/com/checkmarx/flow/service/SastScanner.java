@@ -82,7 +82,7 @@ public class SastScanner implements VulnerabilityScanner {
                     scanId = cxService.createScan(cxScanParams, CXFLOW_SCAN_MSG);
                 } else {
                     log.warn("Property scan-resubmit set to {} : New scan not submitted, due to existing ongoing scan for the same Project id {}", flowProperties.getScanResubmit(), projectId);
-                    throw new CheckmarxException(String.format("Active Scan with Id %d already exists for Project: %d , ", existingScanId, projectId));
+                    throw new CheckmarxException(String.format("Active Scan with Id %d already exists for Project: %d", existingScanId, projectId));
                 }
             } else {
                 scanId = cxService.createScan(cxScanParams, CXFLOW_SCAN_MSG);
@@ -103,6 +103,12 @@ public class SastScanner implements VulnerabilityScanner {
             return scanResults;
 
         } catch (GitHubRepoUnavailableException e) {
+            //the repository is unavailable - can happen for a push event of a deleted branch - nothing to do
+
+            //the error message is printed when the exception is thrown
+            //usually should occur during push event occuring on delete branch
+            //therefore need to eliminate the scan process but do not want to create
+            //an error stuck trace in the log
             return getEmptyScanResults();
 
         } catch (Exception e) {
