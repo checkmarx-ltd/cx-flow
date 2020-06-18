@@ -1,14 +1,14 @@
-package com.checkmarx.flow.cucumber.integration.sca_scanner;
+package com.checkmarx.flow.cucumber.integration.sca_scanner.scans;
 
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.cucumber.common.JsonLoggerTestUtils;
+import com.checkmarx.flow.cucumber.integration.sca_scanner.ScaCommonSteps;
 import com.checkmarx.flow.dto.OperationStatus;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.report.AnalyticsReport;
 import com.checkmarx.flow.dto.report.ScanReport;
-import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.service.SCAScanner;
 import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.sca.SCAResults;
@@ -22,7 +22,6 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import io.cucumber.spring.CucumberContextConfiguration;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -34,22 +33,24 @@ import static org.junit.Assert.*;
 
 @CucumberContextConfiguration
 @SpringBootTest(classes = {CxFlowApplication.class})
-@RequiredArgsConstructor
 @Slf4j
-public class SCARemoteRepoScanSteps {
+public class SCARemoteRepoScanSteps extends ScaCommonSteps {
 
     private static final String PUBLIC_PROJECT_NAME = "Public-Test-Test-Repo";
     private static final String PRIVATE_PROJECT_NAME = "Private-Test-Test-Repo";
     private static final String PUBLIC_REPO = "https://github.com/cxflowtestuser/public-rest-repo.git";
     private static final String PRIVATE_REPO = "https://%s@github.com/cxflowtestuser/TestAlgorithms-.git";
 
-    private final FlowProperties flowProperties;
-    private final ScaProperties scaProperties;
     private final GitHubProperties gitHubProperties;
-    private final SCAScanner scaScanner;
 
     private ScanRequest scanRequest;
     private SCAResults scaResults;
+
+    public SCARemoteRepoScanSteps(FlowProperties flowProperties, ScaProperties scaProperties,
+                                  SCAScanner scaScanner, GitHubProperties gitHubProperties) {
+        super(flowProperties, scaProperties, scaScanner);
+        this.gitHubProperties = gitHubProperties;
+    }
 
     @Before("@SCARemoteRepoScan")
     public void init() {
@@ -96,22 +97,6 @@ public class SCARemoteRepoScanSteps {
         scaResults = Objects.requireNonNull(scaScanner.scan(scanRequest)).getScaResults();
     }
 
-    private void initSCAConfig() {
-        scaProperties.setAppUrl("https://sca.scacheckmarx.com");
-        scaProperties.setApiUrl("https://api.scacheckmarx.com");
-        scaProperties.setAccessControlUrl("https://platform.checkmarx.net");
-    }
-
-
-    private ScanRequest getBasicScanRequest(String projectName, String repoWithAuth) {
-        return ScanRequest.builder()
-                .project(projectName)
-                .repoUrlWithAuth(repoWithAuth)
-                .branch("master")
-                .repoType(ScanRequest.Repository.GITHUB)
-                .build();
-    }
-    
     @And("SCA scan report entry is created in Json Logger with corresponding error message")
     public void validateLoggerError() {
         
