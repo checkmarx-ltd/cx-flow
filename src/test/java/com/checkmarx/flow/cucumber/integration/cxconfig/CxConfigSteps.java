@@ -67,6 +67,8 @@ public class CxConfigSteps {
     private final CxProperties cxProperties;
     private final GitHubProperties gitHubProperties;
     private final HelperService helperService;
+    private final FilterFactory filterFactory;
+
     private ScanResults scanResultsToInject;
 
     private ResultsService resultsService;
@@ -77,22 +79,23 @@ public class CxConfigSteps {
     private ScanRequest request;
     private final JiraProperties jiraProperties;
 
-    public CxConfigSteps( FlowProperties flowProperties, GitHubService gitHubService,
+    public CxConfigSteps(FlowProperties flowProperties, GitHubService gitHubService,
                          CxProperties cxProperties, GitHubProperties gitHubProperties, JiraProperties jiraProperties,
-                          MergeResultEvaluator mergeResultEvaluator, FlowService flowService) {
+                         MergeResultEvaluator mergeResultEvaluator, FilterFactory filterFactory, FlowService flowService) {
 
         this.cxClientMock = mock(CxClient.class);
-        
+
         this.flowProperties = flowProperties;
-        
+
         this.cxProperties = cxProperties;
         this.jiraProperties = jiraProperties;
         this.mergeResultEvaluator = mergeResultEvaluator;
         this.helperService = mock(HelperService.class);
         this.flowService = flowService;
         this.gitHubService = gitHubService;
-        
+
         this.gitHubProperties = gitHubProperties;
+        this.filterFactory = filterFactory;
         initGitHubProperties();
     }
 
@@ -304,10 +307,10 @@ public class CxConfigSteps {
         return filterByType;
     }
     private void validateRequestFilter() {
-        
-        List<String> filterSeverity = getFilter(request.getFilters(), Filter.Type.SEVERITY);
-        List<String> filterCwe = getFilter(request.getFilters(), Filter.Type.CWE);
-        List<String> filterCatergory = getFilter(request.getFilters(), Filter.Type.TYPE);
+        List<Filter> filters = request.getFilter().getSimpleFilters();
+        List<String> filterSeverity = getFilter(filters, Filter.Type.SEVERITY);
+        List<String> filterCwe = getFilter(filters, Filter.Type.CWE);
+        List<String> filterCatergory = getFilter(filters, Filter.Type.TYPE);
         
         boolean asExpected = false;
         switch(branch){
@@ -529,7 +532,9 @@ public class CxConfigSteps {
                 jiraProperties,
                 flowService,
                 helperService,
-                gitHubService, null));
+                gitHubService,
+                null,
+                filterFactory));
         
         //results service will be a Mock and will work with gitHubService Mock
         //and will not not connect to any external 

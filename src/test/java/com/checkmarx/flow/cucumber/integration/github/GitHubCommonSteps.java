@@ -8,11 +8,13 @@ import com.checkmarx.flow.service.SastScanner;
 import com.checkmarx.flow.utils.github.GitHubTestUtilsImpl;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.Filter;
+import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 
 public abstract class GitHubCommonSteps {
 
@@ -47,5 +49,15 @@ public abstract class GitHubCommonSteps {
                 .type(BugTracker.Type.CUSTOM)
                 .customBean("GitHub")
                 .build();
+    }
+
+    protected FilterConfiguration getFilterConfiguration() {
+        FilterConfiguration result;
+        if (filter != null) {
+            result = FilterConfiguration.fromSimpleFilters(Collections.singletonList(filter));
+        } else {
+            result = FilterConfiguration.builder().build();
+        }
+        return result;
     }
 }

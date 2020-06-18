@@ -10,8 +10,8 @@ import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
-import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
+import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import lombok.RequiredArgsConstructor;
@@ -51,11 +51,11 @@ public class CxFlowRunner implements ApplicationRunner {
     private final GitLabProperties gitLabProperties;
     private final ADOProperties adoProperties;
     private final HelperService helperService;
-    private final FlowService flowService;
     private final SastScanner sastScanner;
     private final List<ThreadPoolTaskExecutor> executors;
     private final ResultsService resultsService;
     private final OsaScannerService osaScannerService;
+    private final FilterFactory filterFactory;
 
     @Override
     public void run(ApplicationArguments args) throws InvocationTargetException {
@@ -171,14 +171,8 @@ public class CxFlowRunner implements ApplicationRunner {
             exit(1);
         }
 
-        /*Determine filters, if any*/
-        List<Filter> filters;
-        if(!ScanUtils.empty(severity) || !ScanUtils.empty(cwe) || !ScanUtils.empty(category) || !ScanUtils.empty(status) ){
-            filters = ScanUtils.getFilters(severity, cwe, category, status);
-        }
-        else{
-            filters = ScanUtils.getFilters(flowProperties);
-        }
+        FilterConfiguration filter = filterFactory.getFilter(severity, cwe, category, status, null, flowProperties);
+
         //Adding default file/folder exclusions from properties if they are not provided as an override
         if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
             excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
@@ -316,7 +310,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 .excludeFolders(excludeFolders)
                 .excludeFiles(excludeFiles)
                 .bugTracker(bt)
-                .filters(filters)
+                .filter(filter)
 				.altProject(altProject)
                 .altFields(altFields)
                 .forceScan(force)

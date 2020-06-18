@@ -7,6 +7,7 @@ import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 import com.checkmarx.flow.cucumber.component.scan.ScanFixture;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.sdk.config.CxProperties;
+import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
 import com.checkmarx.test.flow.config.CxFlowMocksConfig;
@@ -38,6 +39,7 @@ public class BatchComponentSteps {
     private final List<ThreadPoolTaskExecutor> executors;
     private final ResultsService resultsService;
     private final OsaScannerService osaScannerService;
+    private final FilterFactory filterFactory;
     private CxFlowRunner cxFlowRunner;
     private String projectName;
     private String teamName;
@@ -45,7 +47,7 @@ public class BatchComponentSteps {
 
     public BatchComponentSteps(FlowProperties flowProperties, CxProperties cxProperties, JiraProperties jiraProperties, GitHubProperties gitHubProperties, GitLabProperties gitLabProperties,
                                ADOProperties adoProperties, FlowService flowService, HelperService helperService, CxClient cxClient, List<ThreadPoolTaskExecutor> executors,
-                               SastScanner sastScanner, ResultsService resultsService, OsaScannerService osaScannerService) {
+                               SastScanner sastScanner, ResultsService resultsService, OsaScannerService osaScannerService, FilterFactory filterFactory) {
         this.flowProperties = flowProperties;
         this.cxProperties = cxProperties;
         this.jiraProperties = jiraProperties;
@@ -58,14 +60,29 @@ public class BatchComponentSteps {
         this.executors = executors;
         this.resultsService = resultsService;
         this.osaScannerService = osaScannerService;
+        this.filterFactory = filterFactory;
     }
 
     @Given("SAST client is mocked - to allow tests to pass without active SAST environment")
     public void sastClientIsMocked() throws CheckmarxException {
         when(cxClient.getTeamId(anyString())).thenReturn(ScanFixture.TEAM_ID);
         when(cxClient.getProjects(anyString())).thenReturn(ScanFixture.getProjects());
-        when(cxClient.getReportContentByScanId(ScanFixture.SCAN_ID, ScanFixture.getScanFilters())).thenReturn(ScanFixture.getScanResults());
-        cxFlowRunner = new CxFlowRunner(flowProperties, cxProperties, jiraProperties, gitHubProperties, gitLabProperties, adoProperties, helperService, flowService, sastScanner, executors, resultsService, osaScannerService);
+
+        FilterConfiguration filter = FilterConfiguration.fromSimpleFilters(ScanFixture.getScanFilters());
+        when(cxClient.getReportContentByScanId(ScanFixture.SCAN_ID, filter))
+                .thenReturn(ScanFixture.getScanResults());
+        cxFlowRunner = new CxFlowRunner(flowProperties,
+                cxProperties,
+                jiraProperties,
+                gitHubProperties,
+                gitLabProperties,
+                adoProperties,
+                helperService,
+                sastScanner,
+                executors,
+                resultsService,
+                osaScannerService,
+                filterFactory);
     }
 
     @Given("project is provided: {string} and team: {string}")
