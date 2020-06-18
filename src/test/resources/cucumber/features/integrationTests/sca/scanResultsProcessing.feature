@@ -51,3 +51,5 @@ Feature: Cx-Flow SCA Integration permutation tests
       |               | 5.6   | 3                        |
       | medium        | 0.0   | 6                        |
       |               | 0.0   | 8                        |
+      | low           | 0.0   | 0                        |
+      |               | -0.3  | 8                        |
