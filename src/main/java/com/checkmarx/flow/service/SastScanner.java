@@ -5,7 +5,6 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.report.ScanReport;
 import com.checkmarx.flow.exception.ExitThrowable;
-import com.checkmarx.flow.exception.GitHubClientRunTimeException;
 import com.checkmarx.flow.exception.GitHubRepoUnavailableException;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.sastscanning.ScanRequestConverter;
@@ -30,18 +29,13 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import static com.checkmarx.flow.exception.ExitThrowable.exit;
-import static com.checkmarx.sdk.config.Constants.UNKNOWN_INT;
 import static com.checkmarx.sdk.config.Constants.UNKNOWN;
+import static com.checkmarx.sdk.config.Constants.UNKNOWN_INT;
 
 @Service
 @Slf4j
@@ -86,7 +80,7 @@ public class SastScanner implements VulnerabilityScanner {
             }
             logRequest(scanRequest, scanId, null, OperationResult.successful());
 
-            scanResults = cxService.getReportContentByScanId(scanId, scanRequest.getFilters());
+            scanResults = cxService.getReportContentByScanId(scanId, scanRequest.getFilter());
             scanResults.setSastScanId(scanId);
             return scanResults;
 
@@ -129,7 +123,7 @@ public class SastScanner implements VulnerabilityScanner {
     public CompletableFuture<ScanResults> executeCxScanFlow(ScanRequest request, File cxFile) throws MachinaException {
         ScanDetails scanDetails = executeCxScan(request, cxFile);
         if (scanDetails.processResults()) {
-            return resultsService.processScanResultsAsync(request, scanDetails.getProjectId(), scanDetails.getScanId(), scanDetails.getOsaScanId(), request.getFilters());
+            return resultsService.processScanResultsAsync(request, scanDetails.getProjectId(), scanDetails.getScanId(), scanDetails.getOsaScanId(), request.getFilter());
         } else {
             return scanDetails.getResults();
         }
@@ -169,7 +163,7 @@ public class SastScanner implements VulnerabilityScanner {
             //usually should occur during push event occuring on delete branch
             //therefore need to eliminate the scan process but do not want to create
             //an error stuck trace in the log
-            return new ScanDetails(UNKNOWN_INT, UNKNOWN_INT, new CompletableFuture<ScanResults>(), false);
+            return new ScanDetails(UNKNOWN_INT, UNKNOWN_INT, new CompletableFuture<>(), false);
         } catch (CheckmarxException | GitAPIException e) {
             String extendedMessage = treatFailure(request, cxFile, scanId, e);
             throw new MachinaException("Checkmarx Error Occurred: " + extendedMessage);
@@ -234,7 +228,7 @@ public class SastScanner implements VulnerabilityScanner {
 
     public void cxParseResults(ScanRequest request, File file) throws ExitThrowable {
         try {
-            ScanResults results = cxService.getReportContent(file, request.getFilters());
+            ScanResults results = cxService.getReportContent(file, request.getFilter());
             resultsService.processResults(request, results, scanDetails);
             if (flowProperties.isBreakBuild() && results != null && results.getXIssues() != null && !results.getXIssues().isEmpty()) {
                 log.error(ERROR_BREAK_MSG);

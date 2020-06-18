@@ -9,15 +9,12 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.github.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
-import com.checkmarx.flow.service.FlowService;
-import com.checkmarx.flow.service.GitHubService;
-import com.checkmarx.flow.service.HelperService;
-import com.checkmarx.flow.service.SastScanner;
+import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.CxConfig;
-import com.checkmarx.sdk.dto.Filter;
+import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.junit.platform.commons.util.StringUtils;
@@ -36,7 +33,10 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * Class used to manage Controller for GitHub WebHooks
@@ -63,6 +63,7 @@ public class GitHubController {
     private final HelperService helperService;
     private final GitHubService gitHubService;
     private final SastScanner sastScanner;
+    private final FilterFactory filterFactory;
     private Mac hmac;
 
     @PostConstruct
@@ -168,7 +169,7 @@ public class GitHubController {
             String targetBranch = pullRequest.getBase().getRef();
             List<String> branches = getBranches(branch);
             BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
-            List<Filter> filters = getFilters(severity, cwe, category, status);
+            FilterConfiguration filter = filterFactory.getFilter(severity, cwe, category, status, null, flowProperties);
 
             if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
                 excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
@@ -210,7 +211,7 @@ public class GitHubController {
                     .excludeFolders(excludeFolders)
                     .excludeFiles(excludeFiles)
                     .bugTracker(bt)
-                    .filters(filters)
+                    .filter(filter)
                     .build();
 
             if(!ScanUtils.empty(preset)){
@@ -322,7 +323,7 @@ public class GitHubController {
             List<String> branches = getBranches(branch);
 
             BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
-            List<Filter> filters = getFilters(severity, cwe, category, status);
+            FilterConfiguration filter = filterFactory.getFilter(severity, cwe, category, status, null, flowProperties);
 
             if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
                 excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
@@ -382,7 +383,7 @@ public class GitHubController {
                     .excludeFolders(excludeFolders)
                     .excludeFiles(excludeFiles)
                     .bugTracker(bt)
-                    .filters(filters)
+                    .filter(filter)
                     .build();
 
             if(!ScanUtils.empty(preset)){
@@ -506,19 +507,6 @@ public class GitHubController {
                 .success(true)
                 .build());
 
-    }
-
-    /**
-     * Determine filters, if any. The arguments are overrides that may be specified in the query string.
-     */
-    private List<Filter> getFilters(List<String> severity, List<String> cwe, List<String> category, List<String> status) {
-        List<Filter> filters;
-        if (!ScanUtils.empty(severity) || !ScanUtils.empty(cwe) || !ScanUtils.empty(category) || !ScanUtils.empty(status)) {
-            filters = ScanUtils.getFilters(severity, cwe, category, status);
-        } else {
-            filters = ScanUtils.getFilters(flowProperties);
-        }
-        return filters;
     }
 
     private List<String> getBranches(List<String> branchesFromQuery) {

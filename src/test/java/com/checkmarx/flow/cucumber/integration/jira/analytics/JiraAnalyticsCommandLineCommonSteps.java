@@ -12,12 +12,14 @@ import com.checkmarx.jira.IJiraTestUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.Filter;
+import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 
 class JiraAnalyticsCommandLineCommonSteps {
 
@@ -63,6 +65,8 @@ class JiraAnalyticsCommandLineCommonSteps {
     }
 
     ScanRequest getBasicScanRequest() {
+        List<Filter> simpleFilters = Collections.singletonList(this.filter);
+        FilterConfiguration filterConfiguration = FilterConfiguration.fromSimpleFilters(simpleFilters);
         return ScanRequest.builder()
                 .application("TestApp")
                 .product(ScanRequest.Product.CX)
@@ -79,7 +83,7 @@ class JiraAnalyticsCommandLineCommonSteps {
                 .email(null)
                 .incremental(false)
                 .scanPreset("Checkmarx Default")
-                .filters(Collections.singletonList(filter))
+                .filter(filterConfiguration)
                 .build();
     }
 }

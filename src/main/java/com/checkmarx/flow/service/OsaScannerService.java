@@ -31,7 +31,7 @@ public class OsaScannerService {
 
     public void cxOsaParseResults(ScanRequest request, File file, File libs) throws ExitThrowable {
         try {
-            ScanResults results = cxService.getOsaReportContent(file, libs, request.getFilters());
+            ScanResults results = cxService.getOsaReportContent(file, libs, request.getFilter().getSimpleFilters());
             resultsService.processResults(request, results, scanDetails);
             if(flowProperties.isBreakBuild() && results !=null && results.getXIssues()!=null && !results.getXIssues().isEmpty()){
                 log.error(ERROR_BREAK_MSG);

@@ -9,6 +9,7 @@ import com.checkmarx.flow.dto.FlowOverride;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.gitlab.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
+import com.checkmarx.flow.service.FilterFactory;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.GitLabService;
 import com.checkmarx.flow.service.HelperService;
@@ -16,7 +17,8 @@ import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.CxConfig;
-import com.checkmarx.sdk.dto.Filter;
+import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
@@ -31,6 +33,7 @@ import java.util.Locale;
 
 @RestController
 @RequestMapping(value = "/")
+@RequiredArgsConstructor
 public class GitLabController {
 
     private static final String TOKEN_HEADER = "X-Gitlab-Token";
@@ -45,22 +48,7 @@ public class GitLabController {
     private final JiraProperties jiraProperties;
     private final FlowProperties flowProperties;
     private final GitLabService gitLabService;
-
-    public GitLabController(FlowService flowService,
-                            HelperService helperService,
-                            GitLabProperties properties,
-                            CxProperties cxProperties,
-                            JiraProperties jiraProperties,
-                            FlowProperties flowProperties,
-                            GitLabService gitLabService) {
-        this.flowService = flowService;
-        this.helperService = helperService;
-        this.properties = properties;
-        this.cxProperties = cxProperties;
-        this.jiraProperties = jiraProperties;
-        this.flowProperties = flowProperties;
-        this.gitLabService = gitLabService;
-    }
+    private final FilterFactory filterFactory;
 
     @GetMapping(value = "/test")
     public String getTest() {
@@ -133,7 +121,6 @@ public class GitLabController {
             String defaultBranch = objectAttributes.getTarget().getDefaultBranch();
 
             List<String> branches = new ArrayList<>();
-            List<Filter> filters;
 
             if(!ScanUtils.empty(branch)){
                 branches.addAll(branch);
@@ -144,13 +131,7 @@ public class GitLabController {
 
             BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
 
-            /*Determine filters, if any*/
-            if(!ScanUtils.empty(severity) || !ScanUtils.empty(cwe) || !ScanUtils.empty(category) || !ScanUtils.empty(status)){
-                filters = ScanUtils.getFilters(severity, cwe, category, status);
-            }
-            else{
-                filters = ScanUtils.getFilters(flowProperties);
-            }
+            FilterConfiguration filter = filterFactory.getFilter(severity, cwe, category, status, null, flowProperties);
 
             if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
                 excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
@@ -197,7 +178,7 @@ public class GitLabController {
                     .excludeFolders(excludeFolders)
                     .excludeFiles(excludeFiles)
                     .bugTracker(bt)
-                    .filters(filters)
+                    .filter(filter)
                     .build();
 
             if(!ScanUtils.empty(preset)){
@@ -290,7 +271,6 @@ public class GitLabController {
             //extract branch from ref (refs/heads/master -> master)
             String currentBranch = ScanUtils.getBranchFromRef(body.getRef());
             List<String> branches = new ArrayList<>();
-            List<Filter> filters;
 
             if(!ScanUtils.empty(branch)){
                 branches.addAll(branch);
@@ -300,13 +280,7 @@ public class GitLabController {
             }
 
             BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
-            /*Determine filters, if any*/
-            if(!ScanUtils.empty(severity) || !ScanUtils.empty(cwe) || !ScanUtils.empty(category) || !ScanUtils.empty(status)){
-                filters = ScanUtils.getFilters(severity, cwe, category, status);
-            }
-            else{
-                filters = ScanUtils.getFilters(flowProperties);
-            }
+            FilterConfiguration filter = filterFactory.getFilter(severity, cwe, category, status, null, flowProperties);
 
             if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
                 excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
@@ -367,7 +341,7 @@ public class GitLabController {
                     .excludeFolders(excludeFolders)
                     .excludeFiles(excludeFiles)
                     .bugTracker(bt)
-                    .filters(filters)
+                    .filter(filter)
                     .build();
 
             if(!ScanUtils.empty(preset)){

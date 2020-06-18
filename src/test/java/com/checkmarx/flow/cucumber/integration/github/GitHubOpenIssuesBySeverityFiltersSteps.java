@@ -8,6 +8,7 @@ import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.utils.github.GitHubTestUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.dto.Filter;
+import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
@@ -85,7 +86,7 @@ public class GitHubOpenIssuesBySeverityFiltersSteps extends GitHubCommonSteps {
                 .refs(Constants.CX_BRANCH_PREFIX.concat(MASTER_BRANCH_NAME))
                 .email(null)
                 .incremental(false)
-                .filters(severityFilters)
+                .filter(FilterConfiguration.fromSimpleFilters(severityFilters))
                 .build();
     }
 }

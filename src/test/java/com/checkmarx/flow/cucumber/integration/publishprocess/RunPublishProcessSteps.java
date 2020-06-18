@@ -11,6 +11,7 @@ import com.checkmarx.jira.IJiraTestUtils;
 import com.checkmarx.jira.JiraTestUtils;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.Filter;
+import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
@@ -161,7 +162,7 @@ public class RunPublishProcessSteps {
     public void publishResults() throws ExitThrowable, IOException {
         ScanRequest request = getScanRequestWithDefaults();
         if (needFilter) {
-            request.setFilters(filters);
+            request.setFilter(FilterConfiguration.fromSimpleFilters(filters));
         }
         File file = getFileForPublish();
         innerPublishRequest(request, file);

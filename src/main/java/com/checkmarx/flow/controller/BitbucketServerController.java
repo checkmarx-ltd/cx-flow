@@ -10,13 +10,15 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.bitbucketserver.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
+import com.checkmarx.flow.service.FilterFactory;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.HelperService;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
-import com.checkmarx.sdk.dto.Filter;
+import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
@@ -42,6 +44,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping(value = "/" )
+@RequiredArgsConstructor
 public class BitbucketServerController {
 
     private static final String SIGNATURE = "X-Hub-Signature";
@@ -64,18 +67,8 @@ public class BitbucketServerController {
     private final JiraProperties jiraProperties;
     private final FlowService flowService;
     private final HelperService helperService;
+    private final FilterFactory filterFactory;
     private Mac hmac;
-
-    @ConstructorProperties({"flowProperties", "properties", "cxProperties", "jiraProperties", "flowService", "helperService"})
-    public BitbucketServerController(FlowProperties flowProperties, BitBucketProperties properties, CxProperties cxProperties,
-                                     JiraProperties jiraProperties, FlowService flowService, HelperService helperService) {
-        this.flowProperties = flowProperties;
-        this.properties = properties;
-        this.cxProperties = cxProperties;
-        this.jiraProperties = jiraProperties;
-        this.flowService = flowService;
-        this.helperService = helperService;
-    }
 
     @PostConstruct
     public void init() throws NoSuchAlgorithmException, InvalidKeyException {
@@ -273,7 +266,6 @@ public class BitbucketServerController {
             String currentBranch = fromRef.getDisplayId();
             String targetBranch = toRef.getDisplayId();
             List<String> branches = new ArrayList<>();
-            List<Filter> filters;
 
             if (!ScanUtils.empty(branch)) {
                 branches.addAll(branch);
@@ -283,11 +275,7 @@ public class BitbucketServerController {
 
             BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
 
-            if (!ScanUtils.empty(severity) || !ScanUtils.empty(cwe) || !ScanUtils.empty(category) || !ScanUtils.empty(status)) {
-                filters = ScanUtils.getFilters(severity, cwe, category, status);
-            } else {
-                filters = ScanUtils.getFilters(flowProperties);
-            }
+            FilterConfiguration filter = filterFactory.getFilter(severity, cwe, category, status, null, flowProperties);
 
             if (excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())) {
                 excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
@@ -347,7 +335,7 @@ public class BitbucketServerController {
                     .excludeFolders(excludeFolders)
                     .excludeFiles(excludeFiles)
                     .bugTracker(bt)
-                    .filters(filters)
+                    .filter(filter)
                     .build();
 
             request = ScanUtils.overrideMap(request, o);
@@ -448,7 +436,6 @@ public class BitbucketServerController {
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
             String currentBranch = ScanUtils.getBranchFromRef(event.getChanges().get(0).getRefId());
             List<String> branches = new ArrayList<>();
-            List<Filter> filters;
 
             if(!ScanUtils.empty(branch)){
                 branches.addAll(branch);
@@ -458,12 +445,7 @@ public class BitbucketServerController {
             }
 
             BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
-            if(!ScanUtils.empty(severity) || !ScanUtils.empty(cwe) || !ScanUtils.empty(category) || !ScanUtils.empty(status)){
-                filters = ScanUtils.getFilters(severity, cwe, category, status);
-            }
-            else{
-                filters = ScanUtils.getFilters(flowProperties);
-            }
+            FilterConfiguration filter = filterFactory.getFilter(severity, cwe, category, status, null, flowProperties);
 
             if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
                 excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
@@ -511,7 +493,7 @@ public class BitbucketServerController {
                     .excludeFolders(excludeFolders)
                     .excludeFiles(excludeFiles)
                     .bugTracker(bt)
-                    .filters(filters)
+                    .filter(filter)
                     .build();
             try {
                 request.putAdditionalMetadata("BITBUCKET_BROWSE", repository.getLinks().getSelf().get(0).getHref());

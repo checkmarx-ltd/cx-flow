@@ -1,60 +1,42 @@
 package com.checkmarx.flow.utils;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Map.Entry.comparingByKey;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.EnumSet;
-import java.util.stream.Collectors;
-
-import javax.validation.constraints.NotNull;
-
 import com.checkmarx.flow.config.FindingSeverity;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.config.RepoProperties;
-import com.checkmarx.flow.dto.BugTracker;
-import com.checkmarx.flow.dto.Field;
-import com.checkmarx.flow.dto.FlowOverride;
-import com.checkmarx.flow.dto.RepoIssue;
-import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.BugTracker.BugTrackerBuilder;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
+import com.checkmarx.flow.service.FilterFactory;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
+import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.checkmarx.sdk.dto.sca.SCAResults;
 import com.cx.restclient.sca.dto.report.Finding;
 import com.cx.restclient.sca.dto.report.Package;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import javax.validation.constraints.NotNull;
+import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Map.Entry.comparingByKey;
 
 public class ScanUtils {
 
@@ -114,44 +96,6 @@ public class ScanUtils {
                     });
                 });
         return issueList;
-    }
-
-    /**
-     * Create List of filters based on String lists of severity, cwe, category
-     * @param flowProperties
-     * @return
-     */
-    public static List<Filter> getFilters(FlowProperties flowProperties) {
-        return getFilters(flowProperties.getFilterSeverity(), flowProperties.getFilterCwe(), flowProperties.getFilterCategory(), flowProperties.getFilterStatus());
-    }
-
-    /**
-     * Create List of filters based on String lists of severity, cwe, category
-     * @param severity
-     * @param cwe
-     * @param category
-     * @return
-     */
-    public static List<Filter> getFilters(List<String> severity, List<String> cwe, List<String> category, List<String> status) {
-        List<Filter> filters = new ArrayList<>();
-        filters.addAll(getListByFilterType(severity, Filter.Type.SEVERITY));
-        filters.addAll(getListByFilterType(cwe, Filter.Type.CWE));
-        filters.addAll(getListByFilterType(category, Filter.Type.TYPE));
-        filters.addAll(getListByFilterType(status, Filter.Type.STATUS));
-        return filters;
-    }
-
-    private static List<Filter> getListByFilterType(List<String> stringFilters, Filter.Type type){
-        List<Filter> filterList = new ArrayList<>();
-        if(stringFilters != null) {
-            for (String s : stringFilters) {
-                filterList.add(Filter.builder()
-                        .type(type)
-                        .value(s)
-                        .build());
-            }
-        }
-        return filterList;
     }
 
     /**
@@ -227,14 +171,15 @@ public class ScanUtils {
         }
         FlowOverride.Filters filtersObj = override.getFilters();
 
-        if(filtersObj != null && (!ScanUtils.empty(filtersObj.getSeverity()) || !ScanUtils.empty(filtersObj.getCwe()) ||
-                !ScanUtils.empty(filtersObj.getCategory()) || !ScanUtils.empty(filtersObj.getStatus()))) {
-            List<Filter> filters = ScanUtils.getFilters(filtersObj.getSeverity(), filtersObj.getCwe(),
-                    filtersObj.getCategory(), filtersObj.getStatus());
-            request.setFilters(filters);
-        }
-        else if (filtersObj != null){
-            request.setFilters(null);
+        if (filtersObj != null) {
+            FilterFactory filterFactory = new FilterFactory();
+            FilterConfiguration filter = filterFactory.getFilter(filtersObj.getSeverity(),
+                    filtersObj.getCwe(),
+                    filtersObj.getCategory(),
+                    filtersObj.getStatus(),
+                    null,
+                    null);
+            request.setFilter(filter);
         }
 
         return request;
@@ -278,7 +223,7 @@ public class ScanUtils {
             Optional.ofNullable(s.getForceScan()).ifPresent(sf -> {
                 request.setForceScan(sf);
                 overridePropertiesMap.put("force scan", sf.toString());
-            }); 
+            });
 
             Optional.ofNullable(s.getPreset()).ifPresent(sp -> {
                 request.setScanPreset(sp);
@@ -294,7 +239,7 @@ public class ScanUtils {
                 overridePropertiesMap.put("exclude files", sf);
             });
         });
-       
+
         try {
             Optional.ofNullable(override.getAdditionalProperties()).ifPresent(ap -> {
                 Object flow = ap.get("cxFlow");
@@ -310,12 +255,12 @@ public class ScanUtils {
                     String bug = fo.getBugTracker();
                     if(bug != null && !bug.equalsIgnoreCase(bt.getType().toString())) {
                         BugTracker.Type bugType = ScanUtils.getBugTypeEnum(bug, flowProperties.getBugTrackerImpl());
-                        
+
                         BugTrackerBuilder builder = BugTracker.builder()
                             .type(bugType);
                         if (bugType.equals(BugTracker.Type.CUSTOM)) {
                             builder.customBean(bug);
-                        } 
+                        }
                         bt = builder.build();
                         overridePropertiesMap.put("bug tracker", fo.getBugTracker());
                     }
@@ -344,30 +289,39 @@ public class ScanUtils {
                     .ifPresent(e -> request.setEmail(e.isEmpty() ? null : e));
 
                     Optional.ofNullable(fo.getFilters()).ifPresent(f -> {
-                        if (!(ScanUtils.empty(f.getSeverity()) && ScanUtils.empty(f.getCwe()) &&
-                                        ScanUtils.empty(f.getCategory()) && ScanUtils.empty(f.getStatus()))) {
-                            List<Filter> filters = ScanUtils.getFilters(f.getSeverity(), f.getCwe(),
-                                    f.getCategory(), f.getStatus());
-                            request.setFilters(filters);
-                            overridePropertiesMap.put("filters", filters.stream().map(Object::toString).collect(Collectors.joining(",")));
-                        } else {
-                            request.setFilters(null);
-                            overridePropertiesMap.put("filters", "EMPTY");
+                        FilterFactory filterFactory = new FilterFactory();
+                        FilterConfiguration filter = filterFactory.getFilter(f.getSeverity(),
+                                f.getCwe(),
+                                f.getCategory(),
+                                f.getStatus(),
+                                null,
+                                null);
+                        request.setFilter(filter);
+
+                        String filterDescr;
+                        if (CollectionUtils.isNotEmpty(filter.getSimpleFilters())) {
+                            filterDescr = filter.getSimpleFilters().stream().map(Object::toString).collect(Collectors.joining(","));
                         }
+                        else {
+                            filterDescr = "EMPTY";
+                        }
+                        overridePropertiesMap.put("filters", filterDescr);
                     });
 
-                    Optional.ofNullable(flowOverride.getThresholds()).ifPresent(th -> {                    
+                    FlowOverride.Thresholds thresholds = flowOverride.getThresholds();
+
+                    Optional.ofNullable(flowOverride.getThresholds()).ifPresent(th -> {
                         if ( !(
-                            th.getHigh()==null && 
+                            th.getHigh()==null &&
                             th.getMedium()==null &&
-                            th.getLow()==null && 
+                            th.getLow()==null &&
                             th.getInfo()==null
                             )) {
                                 Map<FindingSeverity,Integer> thresholdsMap = ScanUtils.getThresholdsMap(th);
                                 if(!thresholdsMap.isEmpty()) {
                                     flowProperties.setThresholds(thresholdsMap);
                                 }
-    
+
                             overridePropertiesMap.put("thresholds", convertMapToString(thresholdsMap));
                         }
                     });
@@ -891,10 +845,6 @@ public class ScanUtils {
 
     /**
      * TODO  BB has a different format
-     *
-     * @param request
-     * @param filename
-     * @return
      */
     public static String getBBFileUrl(ScanRequest request, String filename) {
         String repoUrl = request.getRepoUrl().replace(".git", "/");
