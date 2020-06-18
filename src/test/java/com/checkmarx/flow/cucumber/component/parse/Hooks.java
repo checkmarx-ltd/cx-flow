@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.Collections;
 
 @RequiredArgsConstructor
 public class Hooks {
@@ -20,8 +21,9 @@ public class Hooks {
     @Before("@ParseFeature")
     public void beforeEachScenario() {
         // Other component tests may change flowProperties.
-        // Reset these changes to prevent the current test from failing.
+        // Reset these changes to the values as in application.yml to prevent the current test from failing.
         flowProperties.setFilterScript(null);
+        flowProperties.setFilterSeverity(Collections.singletonList("High"));
 
         tryCreateWorkDir();
         testContext.reset();

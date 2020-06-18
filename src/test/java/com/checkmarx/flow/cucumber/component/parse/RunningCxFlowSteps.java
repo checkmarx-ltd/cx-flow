@@ -8,6 +8,7 @@ import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.utils.TestsParseUtils;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import lombok.RequiredArgsConstructor;
 import org.assertj.core.util.Strings;
 import org.junit.Assert;
 
@@ -25,12 +26,9 @@ import java.util.stream.Collectors;
 /**
  * Implementation for steps that run CxFlow with different arguments.
  */
+@RequiredArgsConstructor
 public class RunningCxFlowSteps {
     private final TestContext testContext;
-
-    public RunningCxFlowSteps(TestContext testContext) {
-        this.testContext = testContext;
-    }
 
     @When("parsing the input")
     public void runParse() throws IOException {
