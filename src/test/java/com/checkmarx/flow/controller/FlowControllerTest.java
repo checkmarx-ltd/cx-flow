@@ -150,7 +150,7 @@ public class FlowControllerTest {
         ArgumentCaptor<ScanRequest> captor = ArgumentCaptor.forClass(ScanRequest.class);
         verify(flowService).initiateAutomation(captor.capture());
         ScanRequest actual = captor.getValue();
-        assertScanApiFilters(actual.getFilters(), filters);
+        assertScanApiFilters(actual.getFilter().getSimpleFilters(), filters);
         assertOKResponse(response);
     }
 
@@ -208,21 +208,24 @@ public class FlowControllerTest {
     private void assertScanResultsRequest(ScanRequest actual, String application, String teamId, List<String> severity, List<String> cwe, List<String> category, List<String> status) {
         Assert.assertEquals("Application does not match", application, actual.getApplication());
         Assert.assertEquals( "Team does not match", teamId, actual.getTeam());
-        assertScanResultsFilters(severity, actual.getFilters(), Filter.Type.SEVERITY);
-        assertScanResultsFilters(cwe, actual.getFilters(), Filter.Type.CWE);
-        assertScanResultsFilters(category, actual.getFilters(), Filter.Type.TYPE);
-        assertScanResultsFilters(status, actual.getFilters(), Filter.Type.STATUS);
+        assertScanResultsFilters(severity, actual, Filter.Type.SEVERITY);
+        assertScanResultsFilters(cwe, actual, Filter.Type.CWE);
+        assertScanResultsFilters(category, actual, Filter.Type.TYPE);
+        assertScanResultsFilters(status, actual, Filter.Type.STATUS);
     }
 
 
+    private void assertScanResultsFilters(List<String> wanted, ScanRequest scanRequest, Filter.Type filterType) {
+        List<Filter> filtersForType = scanRequest.getFilter()
+                .getSimpleFilters()
+                .stream()
+                .filter(f -> f.getType().equals(filterType))
+                .collect(Collectors.toList());
 
-
-    private void assertScanResultsFilters(List<String> wanted, List<Filter> actual, Filter.Type filterType) {
-          List<Filter> filtersForType = actual.stream().filter(f -> f.getType().equals(filterType)).collect(Collectors.toList());
-          for (String wantedStr: wanted) {
-              boolean found = !filtersForType.stream().filter(f -> f.getValue().equals(wantedStr)).collect(Collectors.toList()).isEmpty();
-              Assert.assertTrue(String.format("Filter from type: %s and value %s was not found in call to FlowService", filterType, wanted) ,found);
-          }
+        for (String wantedStr : wanted) {
+            boolean found = !filtersForType.stream().filter(f -> f.getValue().equals(wantedStr)).collect(Collectors.toList()).isEmpty();
+            Assert.assertTrue(String.format("Filter from type: %s and value %s was not found in call to FlowService", filterType, wanted), found);
+        }
     }
 
     private void assertScanApiFilters(List<Filter> actual, List<Filter> wanted) {

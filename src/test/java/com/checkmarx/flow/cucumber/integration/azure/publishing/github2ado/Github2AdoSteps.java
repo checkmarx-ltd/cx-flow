@@ -4,20 +4,16 @@ import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.ADOProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
-import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.controller.GitHubController;
 import com.checkmarx.flow.cucumber.integration.azure.publishing.AzureDevopsClient;
 import com.checkmarx.flow.cucumber.integration.azure.publishing.githubflow.ScanResultsBuilder;
-import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.github.*;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
-import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
-import com.checkmarx.sdk.dto.ScanResults.XIssue;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
@@ -64,6 +60,8 @@ public class Github2AdoSteps {
     private final CxProperties cxProperties;
     private final GitHubProperties gitHubProperties;
     private final HelperService helperService;
+    private final FilterFactory filterFactory;
+
     private ScanResults scanResultsToInject;
     
     private ResultsService resultsService;
@@ -79,8 +77,9 @@ public class Github2AdoSteps {
     private ApplicationContext applicationContext;
     
     public Github2AdoSteps(FlowProperties flowProperties, GitHubService gitHubService,
-                           CxProperties cxProperties, GitHubProperties gitHubProperties, 
-                          FlowService flowService, ADOProperties adoProperties, AzureDevopsClient azureDevopsClient) {
+                           CxProperties cxProperties, GitHubProperties gitHubProperties,
+                           FlowService flowService, ADOProperties adoProperties, FilterFactory filterFactory, AzureDevopsClient azureDevopsClient) {
+        this.filterFactory = filterFactory;
 
         this.cxClientMock = mock(CxClient.class);
         
@@ -110,7 +109,7 @@ public class Github2AdoSteps {
     @Before("@Github2AdoFeature")
     public void prepareServices() {
         this.flowProperties.setBugTracker(AZURE);
-        this.flowProperties.setBugTrackerImpl(Arrays.asList(new String[]{AZURE}));
+        this.flowProperties.setBugTrackerImpl(Arrays.asList(AZURE));
         this.adoProperties.setUrl("https://dev.azure.com/");
         issueService = new IssueService(flowProperties);
         issueService.setApplicationContext(applicationContext);
@@ -176,7 +175,7 @@ public class Github2AdoSteps {
                     pullEventStr,
                     "SIGNATURE",
                     "CX", repoName,
-                    Arrays.asList(branch), null,
+                    Collections.singletonList(branch), null,
                     null,
                     null,
                     repoName,
@@ -201,7 +200,7 @@ public class Github2AdoSteps {
         try {
             azureDevopsClient.init(namespace,project);
             assertTrue(azureDevopsClient.projectExists());
-            assertEquals(azureDevopsClient.getIssues().size(),2);
+            assertEquals(2, azureDevopsClient.getIssues().size());
             
             azureDevopsClient.deleteProjectIssues();
             
@@ -211,7 +210,7 @@ public class Github2AdoSteps {
     }
     
     @And("project {string} exists in Azure under namespace {string}")
-    public void validateProjectName(String project, String namespace) throws InterruptedException {
+    public void validateProjectName(String project, String namespace) {
 
         try {
             azureDevopsClient.init(namespace, project);
@@ -283,7 +282,9 @@ public class Github2AdoSteps {
                 null,
                 flowService,
                 helperService,
-                gitHubService, null));
+                gitHubService,
+                null,
+                filterFactory));
         
         //results service will be a Mock and will work with gitHubService Mock
         //and will not not connect to any external 

@@ -9,7 +9,6 @@ import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -19,6 +18,9 @@ import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.*;
 
+/**
+ *  Issue manipulation logic for issue trackers of type {@link BugTracker.Type#CUSTOM}.
+ */
 @Service
 public class IssueService implements ApplicationContextAware {
 
@@ -41,11 +43,6 @@ public class IssueService implements ApplicationContextAware {
 
     /**
      * Create a map of custom issues
-     *
-     * @param tracker
-     * @param issues
-     * @param request
-     * @return
      */
     private Map<String, Issue> getIssueMap(IssueTracker tracker, List<Issue> issues, ScanRequest request) {
         Map<String, Issue> issueMap = new HashMap<>();
@@ -58,11 +55,6 @@ public class IssueService implements ApplicationContextAware {
 
     /**
      * Create a map of Checkmarx Issues
-     *
-     * @param tracker
-     * @param issues
-     * @param request
-     * @return
      */
     private Map<String, ScanResults.XIssue> getXIssueMap(IssueTracker tracker, List<ScanResults.XIssue> issues, ScanRequest request) {
         Map<String, ScanResults.XIssue> xMap = new HashMap<>();
@@ -185,5 +177,4 @@ public class IssueService implements ApplicationContextAware {
             throw new MachinaRuntimeException();
         }
     }
-
 }

@@ -8,12 +8,20 @@ import java.beans.ConstructorProperties;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Issue tracker properties stored inside {@link ScanRequest}.
+ */
 @Data
 @Builder
 @NoArgsConstructor
 public class BugTracker {
     private Type type;
+
+    /**
+     * Used when {@link  #type} is set to {@link BugTracker.Type#CUSTOM}.
+     */
     private String customBean;
+
     private String projectKey;
     private String issueType;
     private String openTransition;

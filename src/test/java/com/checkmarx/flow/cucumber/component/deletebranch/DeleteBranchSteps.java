@@ -55,7 +55,8 @@ public class DeleteBranchSteps {
     private final CxProperties cxProperties;
     private final GitHubProperties gitHubProperties;
     private final HelperService helperService;
-    
+    private final FilterFactory filterFactory;
+
     private ProjectNameGenerator projectNameGeneratorSpy;
 
     private String branch;
@@ -68,8 +69,9 @@ public class DeleteBranchSteps {
     private String trigger;
     private String calculatedProjectName;
     
-    public DeleteBranchSteps(FlowProperties flowProperties, GitHubService gitHubService, 
-                             CxProperties cxProperties, GitHubProperties gitHubProperties) {
+    public DeleteBranchSteps(FlowProperties flowProperties, GitHubService gitHubService,
+                             CxProperties cxProperties, GitHubProperties gitHubProperties, FilterFactory filterFactory) {
+        this.filterFactory = filterFactory;
 
         this.cxClientMock = mock(CxClient.class);
         
@@ -260,7 +262,9 @@ public class DeleteBranchSteps {
                 null,
                 flowServiceSpy,
                 helperService,
-                gitHubService, sastScanner));
+                gitHubService,
+                sastScanner,
+                filterFactory));
         
     }
 

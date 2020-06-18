@@ -1,17 +1,5 @@
 package com.checkmarx.flow.controller;
 
-import java.beans.ConstructorProperties;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import javax.servlet.http.HttpServletRequest;
-
 import com.checkmarx.flow.config.ADOProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
@@ -22,30 +10,30 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.ScanRequest.Product;
 import com.checkmarx.flow.dto.ScanRequest.ScanRequestBuilder;
 import com.checkmarx.flow.dto.azure.PullEvent;
+import com.checkmarx.flow.dto.azure.Repository;
 import com.checkmarx.flow.dto.azure.Resource;
 import com.checkmarx.flow.exception.InvalidTokenException;
+import com.checkmarx.flow.service.FilterFactory;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.HelperService;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
-import com.checkmarx.sdk.dto.Filter;
-import com.checkmarx.flow.dto.azure.Repository;
-
+import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(value = "/")
+@RequiredArgsConstructor
 public class TfsController {
     private static final String PULL_EVENT = "git.pullrequest.created";
     private static final String AUTHORIZATION = "authorization";
@@ -57,17 +45,7 @@ public class TfsController {
     private final JiraProperties jiraProperties;
     private final FlowService flowService;
     private final HelperService helperService;
-
-    @ConstructorProperties({"properties", "flowProperties", "cxProperties", "jiraProperties", "flowService", "helperService"})
-    public TfsController(ADOProperties properties, FlowProperties flowProperties, CxProperties cxProperties,
-            JiraProperties jiraProperties, FlowService flowService, HelperService helperService) {
-        this.properties = properties;
-        this.flowProperties = flowProperties;
-        this.cxProperties = cxProperties;
-        this.jiraProperties = jiraProperties;
-        this.flowService = flowService;
-        this.helperService = helperService;
-    }
+    private final FilterFactory filterFactory;
 
     @PostMapping(value = { "/{product}/tfs/pull", "/tfs/pull" , "/{product}/tfs/push","/tfs/push" })
     public ResponseEntity<EventResponse> pullPushRequest(
@@ -126,17 +104,12 @@ public class TfsController {
 
         appOnlyTracking.ifPresent(flowProperties::setTrackApplicationOnly);
 
-        List<Filter> filters;
-        if(severity.isPresent() || cwe.isPresent() || category.isPresent() || status.isPresent()){
-            filters = ScanUtils.getFilters(
-                severity.orElse(Collections.emptyList()), 
-                cwe.orElse(Collections.emptyList()), 
-                category.orElse(Collections.emptyList()), 
-                status.orElse(Collections.emptyList()));
-        } else {
-            filters = ScanUtils.getFilters(flowProperties.getFilterSeverity(), flowProperties.getFilterCwe(),
-                    flowProperties.getFilterCategory(), flowProperties.getFilterStatus());
-        }
+        List<String> severityList = severity.orElse(Collections.emptyList());
+        List<String> cweList = cwe.orElse(Collections.emptyList());
+        List<String> categoryList = category.orElse(Collections.emptyList());
+        List<String> statusList = status.orElse(Collections.emptyList());
+
+        FilterConfiguration filter = filterFactory.getFilter(severityList, cweList, categoryList, statusList, null, flowProperties);
 
         ScanRequestBuilder requestBuilder = ScanRequest.builder()
                 .application(application.orElse(app))
@@ -150,7 +123,7 @@ public class TfsController {
                 .scanPreset(preset.orElse(cxProperties.getScanPreset()))
                 .excludeFolders(createExludeList(excludeFolders , cxProperties.getExcludeFolders()))
                 .excludeFiles(createExludeList(excludeFiles , cxProperties.getExcludeFiles()))
-                .filters(filters);
+                .filter(filter);
         if("pull".equals(action)) {
             BugTracker.Type bugType = 
             bug.map(theBug -> ScanUtils.getBugTypeEnum(theBug, flowProperties.getBugTrackerImpl()))

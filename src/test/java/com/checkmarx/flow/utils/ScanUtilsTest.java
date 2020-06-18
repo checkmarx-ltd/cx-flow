@@ -9,6 +9,7 @@ import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.utils.ScanUtils;
 import org.junit.Before;
 import org.junit.Test;
+
 import java.io.File;
 import java.util.Arrays;
 
@@ -53,8 +54,8 @@ public class ScanUtilsTest {
         CxConfig cxConfig = ScanUtils.getConfigAsCode(file);
         assertNotNull(cxConfig);
         com.checkmarx.flow.utils.ScanUtils.overrideCxConfig(request, cxConfig, flowProperties);
-        assertEquals(request.getTeam(), "/a/b/c");
-        assertEquals(request.getProject(), "XYZ-Riches-master");
+        assertEquals("/a/b/c", request.getTeam());
+        assertEquals("XYZ-Riches-master", request.getProject());
         assertFalse(request.isIncremental());
         assertEquals("All", request.getScanPreset());
     }
@@ -84,12 +85,13 @@ public class ScanUtilsTest {
         CxConfig cxConfig = ScanUtils.getConfigAsCode(file);
         assertNotNull(cxConfig);
         com.checkmarx.flow.utils.ScanUtils.overrideCxConfig(request, cxConfig, flowProperties);
-        assertEquals(request.getTeam(), "/a/b/c");
-        assertEquals(request.getProject(), "XYZ-Riches-master");
-        assertEquals(request.getApplication(), "test app");
-        assertEquals(request.getActiveBranches().size(), 2);
-        assertNotNull(request.getFilters());
-        assertFalse(request.getFilters().isEmpty());
+        assertEquals("/a/b/c", request.getTeam());
+        assertEquals("XYZ-Riches-master", request.getProject());
+        assertEquals("test app", request.getApplication());
+        assertEquals(2, request.getActiveBranches().size());
+        assertNotNull(request.getFilter());
+        assertNotNull(request.getFilter().getSimpleFilters());
+        assertFalse(request.getFilter().getSimpleFilters().isEmpty());
     }
 
     @Test
@@ -120,67 +122,7 @@ public class ScanUtilsTest {
         CxConfig cxConfig = ScanUtils.getConfigAsCode(file);
         assertNotNull(cxConfig);
         com.checkmarx.flow.utils.ScanUtils.overrideCxConfig(request, cxConfig, flowProperties);
-        assertEquals(request.getBugTracker().getType().toString(), "JIRA");
-        assertEquals(request.getBugTracker().getProjectKey(), "APPSEC");
-    }
-
-    @Test
-    public void fileListContains() {
-    }
-
-    @Test
-    public void getFilters() {
-    }
-
-    @Test
-    public void empty() {
-    }
-
-    @Test
-    public void empty1() {
-    }
-
-    @Test
-    public void emptyObj() {
-    }
-
-    @Test
-    public void overrideMap() {
-    }
-
-    @Test
-    public void getBugTracker() {
-    }
-
-    @Test
-    public void zipDirectory() {
-    }
-
-    @Test
-    public void getMDBody() {
-    }
-
-    @Test
-    public void getMergeCommentMD() {
-    }
-
-    @Test
-    public void getFileUrl() {
-    }
-
-    @Test
-    public void getXIssueMap() {
-    }
-
-    @Test
-    public void getBBFileUrl() {
-    }
-
-    @Test
-    public void getMachinaOverride() {
-    }
-
-    @Test
-    public void getRepoIssueMap() {
+        assertEquals("JIRA", request.getBugTracker().getType().toString());
+        assertEquals("APPSEC", request.getBugTracker().getProjectKey());
     }
 }
