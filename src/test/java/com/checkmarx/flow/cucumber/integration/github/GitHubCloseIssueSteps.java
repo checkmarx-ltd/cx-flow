@@ -63,7 +63,6 @@ public class GitHubCloseIssueSteps extends GitHubCommonSteps {
     }
 
     private ScanRequest getBasicScanRequest() {
-        FilterConfiguration filterConfiguration = FilterConfiguration.fromSimpleFilters(Collections.singletonList(filter));
         return ScanRequest.builder()
                 .product(ScanRequest.Product.CX)
                 .project(REPO_NAME + "-" + MASTER_BRANCH_NAME)
@@ -76,7 +75,7 @@ public class GitHubCloseIssueSteps extends GitHubCommonSteps {
                 .refs(Constants.CX_BRANCH_PREFIX.concat(MASTER_BRANCH_NAME))
                 .email(null)
                 .incremental(false)
-                .filter(filterConfiguration)
+                .filter(getFilterConfiguration())
                 .build();
     }
 }

@@ -69,8 +69,6 @@ public class GitHubResolveIssueVulnerabilitiesSteps extends GitHubCommonSteps {
     }
 
     private ScanRequest getBasicScanRequest() {
-        List<Filter> simpleFilter = Collections.singletonList(filter);
-        FilterConfiguration filter = FilterConfiguration.fromSimpleFilters(simpleFilter);
         return ScanRequest.builder()
                 .product(ScanRequest.Product.CX)
                 .project(REPO_NAME + "-" + MASTER_BRANCH_NAME)
@@ -83,7 +81,7 @@ public class GitHubResolveIssueVulnerabilitiesSteps extends GitHubCommonSteps {
                 .refs(Constants.CX_BRANCH_PREFIX.concat(MASTER_BRANCH_NAME))
                 .email(null)
                 .incremental(false)
-                .filter(filter)
+                .filter(getFilterConfiguration())
                 .build();
     }
 }

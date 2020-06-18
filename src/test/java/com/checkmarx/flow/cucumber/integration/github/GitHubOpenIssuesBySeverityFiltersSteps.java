@@ -20,7 +20,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -75,8 +74,6 @@ public class GitHubOpenIssuesBySeverityFiltersSteps extends GitHubCommonSteps {
     }
 
     private ScanRequest getBasicScanRequest() {
-        List<Filter> simpleFilters = Collections.singletonList(this.filter);
-        FilterConfiguration filterConfiguration = FilterConfiguration.fromSimpleFilters(simpleFilters);
         return ScanRequest.builder()
                 .product(ScanRequest.Product.CX)
                 .project(REPO_NAME + "-" + MASTER_BRANCH_NAME)
@@ -89,7 +86,7 @@ public class GitHubOpenIssuesBySeverityFiltersSteps extends GitHubCommonSteps {
                 .refs(Constants.CX_BRANCH_PREFIX.concat(MASTER_BRANCH_NAME))
                 .email(null)
                 .incremental(false)
-                .filter(filterConfiguration)
+                .filter(FilterConfiguration.fromSimpleFilters(severityFilters))
                 .build();
     }
 }
