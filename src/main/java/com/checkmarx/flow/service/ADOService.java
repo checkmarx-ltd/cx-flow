@@ -238,7 +238,7 @@ public class ADOService {
         return requestBody;
     }
 
-    private List<RepoComment> getComments(String url) throws IOException {
+    public List<RepoComment> getComments(String url) throws IOException {
         HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders());
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, httpEntity , String.class);
         List<RepoComment> result = new ArrayList<>();
@@ -252,15 +252,26 @@ public class ADOService {
             Iterator<JsonNode> commentsIter = comments.getElements();
             while (commentsIter.hasNext()) {
                 JsonNode commentNode = commentsIter.next();
-                if (commentNode.has(ADO_COMMENT_CONTENT_FIELD_NAME)) {
-                    String commentStr = commentNode.get(ADO_COMMENT_CONTENT_FIELD_NAME).asText();
+                // Remove empty or deleted comments
+                if (commentNode.has(ADO_COMMENT_CONTENT_FIELD_NAME) && !isCommentDeleted(commentNode)) {
+                    RepoComment rc = createRepoComment(commentNode);
+                    if (PullRequestCommentsHelper.isCheckMarxComment(rc)) {
+                        result.add(rc);
+                    }
                 }
-                result.add(createRepoComment(commentNode));
+
             }
 
         }
         return result;
 
+    }
+
+    private boolean isCommentDeleted(JsonNode commentNode) {
+        if (commentNode.has("isDeleted") && commentNode.get("isDeleted") != null) {
+            return commentNode.get("isDeleted").asBoolean();
+        }
+        return false;
     }
 
     private RepoComment createRepoComment(JsonNode commentNode)  {
@@ -277,6 +288,12 @@ public class ADOService {
         catch (ParseException pe) {
             throw new GitHubClientRunTimeException("Error parsing github pull request created or updted date", pe);
         }
+    }
+
+    public void deleteComment(String url) {
+        url = getFullAdoApiUrl(url);
+        HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders());
+        restTemplate.exchange(url, HttpMethod.DELETE, httpEntity, String.class);
     }
 
 }
