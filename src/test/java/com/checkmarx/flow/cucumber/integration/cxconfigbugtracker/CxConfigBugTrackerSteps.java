@@ -150,7 +150,7 @@ public class CxConfigBugTrackerSteps {
 
     @When("pull request webhook arrives")
     public void sendPullRequestWebhookEvent() {
-        assertFlowPropertiesBugTracker("NONE");
+        assertFlowPropertiesBugTracker("Json");
         ArgumentCaptor<ScanRequest> ac = ArgumentCaptor.forClass(ScanRequest.class);
         FlowService flowServiceMock = Mockito.mock(FlowService.class);
         gitHubControllerSpy = new GitHubController(gitHubProperties,flowProperties, cxProperties, jiraProperties, flowServiceMock,helperService, gitHubService, null, filterFactory);
