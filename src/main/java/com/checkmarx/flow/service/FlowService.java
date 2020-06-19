@@ -47,7 +47,6 @@ public class FlowService {
             ScanResults scanResults = scanner.scan(scanRequest);
             combinedResults.mergeWith(scanResults);
         });
-
         resultsService.publishCombinedResults(scanRequest, combinedResults);
     }
 
