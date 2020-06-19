@@ -45,7 +45,7 @@ apply plugin: 'io.spring.dependency-management'
 apply plugin: 'com.gorylenko.gradle-git-properties'
 
 group = 'com.checkmarx'
-version = 'cxod-1.6.1'
+version = 'cxgo-1.6.1'
 sourceCompatibility = 1.8
 def cucumberVersion = '5.7.0'
 def junitVersion = '5.5.0'
@@ -259,7 +259,7 @@ task integrationTest(type: Test) {
 }
 
 configurations {
-    libsDirName = 'libs/cxod'
+    libsDirName = 'libs/cxgo'
 }
 
 task getVersion {

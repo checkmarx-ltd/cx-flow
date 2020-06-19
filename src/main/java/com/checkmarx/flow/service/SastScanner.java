@@ -43,6 +43,7 @@ import static com.checkmarx.sdk.config.Constants.UNKNOWN_INT;
 public class SastScanner implements VulnerabilityScanner {
     private static final String SCAN_TYPE = CxProperties.CONFIG_PREFIX;
     private static final String ERROR_BREAK_MSG = "Exiting with Error code 10 due to issues present";
+    private static final String CXFLOW_SCAN_MSG = "CxFlow Automated Scan";
 
     private final ResultsService resultsService;
     private final CxClient cxService;
@@ -65,10 +66,27 @@ public class SastScanner implements VulnerabilityScanner {
         checkScanSubmitEmailDelivery(scanRequest);
 
         try {
-            Integer projectId;
+            Integer scanId;
             CxScanParams cxScanParams = scanRequestConverter.toScanParams(scanRequest);
-            Integer scanId = cxService.createScan(cxScanParams, "CxFlow Automated Scan");
-            projectId = cxScanParams.getProjectId();
+            Integer projectId = cxScanParams.getProjectId();
+
+            log.info("Checking if there is any existing scan for Project: {}", projectId);
+            Integer existingScanId = cxService.getScanIdOfExistingScanIfExists(projectId);
+
+            if (existingScanId != UNKNOWN_INT) {
+                if (flowProperties.getScanResubmit()) {
+                    log.info("Existing ongoing scan with id {} found for Project : {}", existingScanId, projectId);
+                    log.info("Aborting the ongoing scan with id {} for Project: {}", existingScanId, projectId);
+                    cxService.cancelScan(existingScanId);
+                    log.info("Resubmitting the scan for Project: {}", projectId);
+                    scanId = cxService.createScan(cxScanParams, CXFLOW_SCAN_MSG);
+                } else {
+                    log.warn("Property scan-resubmit set to {} : New scan not submitted, due to existing ongoing scan for the same Project id {}", flowProperties.getScanResubmit(), projectId);
+                    throw new CheckmarxException(String.format("Active Scan with Id %d already exists for Project: %d", existingScanId, projectId));
+                }
+            } else {
+                scanId = cxService.createScan(cxScanParams, CXFLOW_SCAN_MSG);
+            }
 
             BugTracker.Type bugTrackerType = bugTrackerTriggerEvent.triggerBugTrackerEvent(scanRequest);
             if (bugTrackerType.equals(BugTracker.Type.NONE)) {
@@ -84,26 +102,30 @@ public class SastScanner implements VulnerabilityScanner {
             scanResults.setSastScanId(scanId);
             return scanResults;
 
-        } catch(GitHubRepoUnavailableException e){
+        } catch (GitHubRepoUnavailableException e) {
             //the repository is unavailable - can happen for a push event of a deleted branch - nothing to do
 
             //the error message is printed when the exception is thrown
             //usually should occur during push event occuring on delete branch
             //therefore need to eliminate the scan process but do not want to create
             //an error stuck trace in the log
-            scanResults =  new ScanResults();
-            scanResults.setProjectId(UNKNOWN);
-            scanResults.setProject(UNKNOWN);
-            scanResults.setScanType(SCAN_TYPE);
-            return scanResults;
-            
-        } catch (Exception e) {
-            log.error("SAST scan failed ", e);
-            OperationResult scanCreationFailure = new OperationResult(OperationStatus.FAILURE, e.getMessage());
-            ScanReport report = new ScanReport(-1, scanRequest,scanRequest.getRepoUrl(), scanCreationFailure);
-            report.log();
-        }
+            return getEmptyScanResults();
 
+        } catch (Exception e) {
+            log.error("SAST scan failed", e);
+            OperationResult scanCreationFailure = new OperationResult(OperationStatus.FAILURE, e.getMessage());
+            ScanReport report = new ScanReport(-1, scanRequest, scanRequest.getRepoUrl(), scanCreationFailure);
+            report.log();
+            return getEmptyScanResults();
+        }
+    }
+
+    private ScanResults getEmptyScanResults() {
+        ScanResults scanResults;
+        scanResults = new ScanResults();
+        scanResults.setProjectId(UNKNOWN);
+        scanResults.setProject(UNKNOWN);
+        scanResults.setScanType(SCAN_TYPE);
         return scanResults;
     }
 
@@ -144,7 +166,7 @@ public class SastScanner implements VulnerabilityScanner {
 
             CxScanParams params = scanRequestConverter.prepareScanParamsObject(request, cxFile, ownerId, projectId);
 
-            scanId = cxService.createScan(params, "CxFlow Automated Scan");
+            scanId = cxService.createScan(params, CXFLOW_SCAN_MSG);
 
             BugTracker.Type bugTrackerType = bugTrackerTriggerEvent.triggerBugTrackerEvent(request);
             if (bugTrackerType.equals(BugTracker.Type.NONE)) {
@@ -276,7 +298,7 @@ public class SastScanner implements VulnerabilityScanner {
         }
     }
 
-    public void deleteProject(ScanRequest request){
+    public void deleteProject(ScanRequest request) {
 
         try {
 
@@ -284,10 +306,10 @@ public class SastScanner implements VulnerabilityScanner {
 
             String projectName = projectNameGenerator.determineProjectName(request);
             request.setProject(projectName);
-            
+
             Integer projectId = scanRequestConverter.determinePresetAndProjectId(request, ownerId);
 
-            if(projectId != UNKNOWN_INT) {
+            if (projectId != UNKNOWN_INT) {
                 cxService.deleteProject(projectId);
             }
 
