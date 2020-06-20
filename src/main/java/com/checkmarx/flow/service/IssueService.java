@@ -56,7 +56,18 @@ public class IssueService implements ApplicationContextAware {
     /**
      * Create a map of Checkmarx Issues
      */
-    private Map<String, ScanResults.XIssue> getXIssueMap(IssueTracker tracker, List<ScanResults.XIssue> issues, ScanRequest request) {
+    private Map<String, ScanResults.XIssue> getXIssueMap(IssueTracker tracker, ScanResults results, ScanRequest request) {
+        List<ScanResults.XIssue> issues = new ArrayList<>();
+
+        Optional.ofNullable(results.getScaResults()).ifPresent( s -> {
+            List<ScanResults.XIssue> scaIssues = ScanUtils.scaToXIssues(s);
+            issues.addAll(scaIssues);
+        });
+
+        Optional.ofNullable(results.getXIssues()).ifPresent(i ->
+                issues.addAll(results.getXIssues())
+        );
+
         Map<String, ScanResults.XIssue> xMap = new HashMap<>();
         for (ScanResults.XIssue issue : issues) {
             String key = tracker.getXIssueKey(issue, request);
@@ -88,7 +99,7 @@ public class IssueService implements ApplicationContextAware {
             if(issues == null){
                 issues = Collections.emptyList();
             }
-            xMap = this.getXIssueMap(tracker, results.getXIssues(), request);
+            xMap = this.getXIssueMap(tracker, results, request);
             iMap = this.getIssueMap(tracker, issues, request);
 
             for (Map.Entry<String, ScanResults.XIssue> xIssue : xMap.entrySet()) {
