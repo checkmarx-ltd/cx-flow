@@ -52,6 +52,7 @@ public class ScanUtils {
     public static final String WEB_HOOK_PAYLOAD = "web-hook-payload";
     public static final String SCA_SUMMARY_CUSTOM_ISSUE_KEY = "%s %.1f: %s in %s and %s @ %s.%s";
     public static final String SCA_HTML_ISSUE_BODY_1 = "<div><b>%s Vulnerable Package</b> issue exists @ <b>%s</b> in branch <b>%s</b>";
+    public static final String SCA_ISSUE_BODY_1 = "**%s Vulnerable Package** issue exists @ **%s** in branch **%s**";
 
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(ScanUtils.class);
     public static final String VERSION = "Version: ";
@@ -443,80 +444,118 @@ public class ScanUtils {
 
     public static String getMDBody(ScanResults.XIssue issue, String branch, String fileUrl, FlowProperties flowProperties) {
         StringBuilder body = new StringBuilder();
-        body.append(String.format(ISSUE_BODY, issue.getVulnerability(), issue.getFilename(), branch)).append(CRLF).append(CRLF);
-        if(!ScanUtils.empty(issue.getDescription())) {
-            body.append("*").append(issue.getDescription().trim()).append("*").append(CRLF).append(CRLF);
-        }
-        if(!ScanUtils.empty(issue.getSeverity())) {
-            body.append(SEVERITY).append(issue.getSeverity()).append(CRLF).append(CRLF);
-        }
-        if(!ScanUtils.empty(issue.getCwe())) {
-            body.append("CWE:").append(issue.getCwe()).append(CRLF).append(CRLF);
-            if(!empty(flowProperties.getMitreUrl())) {
-                body.append("[Vulnerability details and guidance](").append(String.format(flowProperties.getMitreUrl(), issue.getCwe())).append(")").append(CRLF).append(CRLF);
+
+        List<ScanResults.ScaDetails> scaDetails = issue.getScaDetails();
+        if (!empty(scaDetails)) {
+            log.debug("Building MD body for SCA scanner");
+            scaDetails.stream().findAny().ifPresent(any -> {
+                body.append("**Description**").append(CRLF).append(CRLF);
+                body.append(any.getFinding().getDescription()).append(CRLF).append(CRLF);
+                body.append(String.format(SCA_ISSUE_BODY_1, any.getFinding().getSeverity(),
+                        any.getVulnerabilityPackage().getName(), branch)).append(CRLF).append(CRLF);
+
+                Map<String, String> scaDetailsMap = new LinkedHashMap<>();
+                scaDetailsMap.put("**Vulnerability ID", any.getFinding().getId());
+                scaDetailsMap.put("**Package Name", any.getVulnerabilityPackage().getName());
+                scaDetailsMap.put("**Severity", any.getFinding().getSeverity().name());
+                scaDetailsMap.put("**CVSS Score", String.valueOf(any.getFinding().getScore()));
+                scaDetailsMap.put("**Publish Date", any.getFinding().getPublishDate());
+                scaDetailsMap.put("**Current Package Version", any.getVulnerabilityPackage().getVersion());
+                Optional.ofNullable(any.getFinding().getFixResolutionText()).ifPresent(f ->
+                        scaDetailsMap.put("**Remediation Upgrade Recommendation", f)
+
+                );
+
+                scaDetailsMap.forEach((key, value) ->
+                        body.append(key).append(":** ").append(value).append(CRLF).append(CRLF)
+                );
+                String findingLink = constructVulnerabilityUrl(any.getVulnerabilityLink(), any.getFinding());
+                body.append("[Link To SCA](").append(findingLink).append(")").append(CRLF).append(CRLF);
+
+                String cveName = any.getFinding().getCveName();
+                if (!empty(cveName)) {
+                    body.append("[Reference – NVD link](").append("https://nvd.nist.gov/vuln/detail/").append(cveName).append(")").append(ScanUtils.CRLF).append(ScanUtils.CRLF);
+                }
+            });
+
+        } else {
+            log.debug("Building MD body for SAST scanner");
+            body.append(String.format(ISSUE_BODY, issue.getVulnerability(), issue.getFilename(), branch)).append(CRLF).append(CRLF);
+            if(!ScanUtils.empty(issue.getDescription())) {
+                body.append("*").append(issue.getDescription().trim()).append("*").append(CRLF).append(CRLF);
             }
-        }
-        if(!ScanUtils.empty(flowProperties.getWikiUrl())) {
-            body.append("[Internal Guidance](").append(flowProperties.getWikiUrl()).append(")").append(CRLF).append(CRLF);
-        }
-        if(!ScanUtils.empty(issue.getLink())){
-            body.append("[Checkmarx](").append(issue.getLink()).append(")").append(CRLF).append(CRLF);
-        }
-        if(issue.getDetails() != null && !issue.getDetails().isEmpty()) {
-            Map<Integer, ScanResults.IssueDetails> trueIssues = issue.getDetails().entrySet().stream()
-                    .filter(x -> x.getKey( ) != null && x.getValue() != null && !x.getValue().isFalsePositive())
-                    .sorted(comparingByKey())
-                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-            Map<Integer, ScanResults.IssueDetails> fpIssues = issue.getDetails().entrySet().stream()
-                    .filter(x -> x.getKey( ) != null && x.getValue() != null && x.getValue().isFalsePositive())
-                    .sorted(comparingByKey())
-                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-            if(!trueIssues.isEmpty()) {
-                body.append("Lines: ");
+            if(!ScanUtils.empty(issue.getSeverity())) {
+                body.append(SEVERITY).append(issue.getSeverity()).append(CRLF).append(CRLF);
+            }
+            if(!ScanUtils.empty(issue.getCwe())) {
+                body.append("CWE:").append(issue.getCwe()).append(CRLF).append(CRLF);
+                if(!empty(flowProperties.getMitreUrl())) {
+                    body.append("[Vulnerability details and guidance](").append(String.format(flowProperties.getMitreUrl(), issue.getCwe())).append(")").append(CRLF).append(CRLF);
+                }
+            }
+            if(!ScanUtils.empty(flowProperties.getWikiUrl())) {
+                body.append("[Internal Guidance](").append(flowProperties.getWikiUrl()).append(")").append(CRLF).append(CRLF);
+            }
+            if(!ScanUtils.empty(issue.getLink())){
+                body.append("[Checkmarx](").append(issue.getLink()).append(")").append(CRLF).append(CRLF);
+            }
+            if(issue.getDetails() != null && !issue.getDetails().isEmpty()) {
+                Map<Integer, ScanResults.IssueDetails> trueIssues = issue.getDetails().entrySet().stream()
+                        .filter(x -> x.getKey( ) != null && x.getValue() != null && !x.getValue().isFalsePositive())
+                        .sorted(comparingByKey())
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                Map<Integer, ScanResults.IssueDetails> fpIssues = issue.getDetails().entrySet().stream()
+                        .filter(x -> x.getKey( ) != null && x.getValue() != null && x.getValue().isFalsePositive())
+                        .sorted(comparingByKey())
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                if(!trueIssues.isEmpty()) {
+                    body.append("Lines: ");
+                    for (Map.Entry<Integer, ScanResults.IssueDetails> entry : trueIssues.entrySet()) {
+                        if (fileUrl != null) {  //[<line>](<url>)
+                            body.append("[").append(entry.getKey()).append("](").append(fileUrl).append("#L").append(entry.getKey()).append(") ");
+                        } else { //if the fileUrl is not provided, simply putting the line number (no link) - ADO for example
+                            body.append(entry.getKey()).append(" ");
+                        }
+                    }
+                    body.append(CRLF).append(CRLF);
+                }
+                if(flowProperties.isListFalsePositives() && !fpIssues.isEmpty()) {//List the false positives / not exploitable
+                    body.append(ScanUtils.CRLF);
+                    body.append("Lines Marked Not Exploitable: ");
+                    for (Map.Entry<Integer, ScanResults.IssueDetails> entry : fpIssues.entrySet()) {
+                        if (fileUrl != null) {  //[<line>](<url>)
+                            body.append("[").append(entry.getKey()).append("](").append(fileUrl).append("#L").append(entry.getKey()).append(") ");
+                        } else { //if the fileUrl is not provided, simply putting the line number (no link) - ADO for example
+                            body.append(entry.getKey()).append(" ");
+                        }
+                    }
+                    body.append(CRLF).append(CRLF);
+                }
                 for (Map.Entry<Integer, ScanResults.IssueDetails> entry : trueIssues.entrySet()) {
-                    if (fileUrl != null) {  //[<line>](<url>)
-                        body.append("[").append(entry.getKey()).append("](").append(fileUrl).append("#L").append(entry.getKey()).append(") ");
-                    } else { //if the fileUrl is not provided, simply putting the line number (no link) - ADO for example
-                        body.append(entry.getKey()).append(" ");
+                    if (entry.getValue() != null && entry.getValue().getCodeSnippet() != null) {
+                        body.append("---").append(CRLF);
+                        body.append("[Code (Line #").append(entry.getKey()).append("):](").append(fileUrl).append("#L").append(entry.getKey()).append(")").append(CRLF);
+                        body.append("```").append(CRLF);
+                        body.append(entry.getValue().getCodeSnippet()).append(CRLF);
+                        body.append("```").append(CRLF);
                     }
                 }
-                body.append(CRLF).append(CRLF);
+                body.append("---").append(CRLF);
             }
-            if(flowProperties.isListFalsePositives() && !fpIssues.isEmpty()) {//List the false positives / not exploitable
-                body.append(ScanUtils.CRLF);
-                body.append("Lines Marked Not Exploitable: ");
-                for (Map.Entry<Integer, ScanResults.IssueDetails> entry : fpIssues.entrySet()) {
-                    if (fileUrl != null) {  //[<line>](<url>)
-                        body.append("[").append(entry.getKey()).append("](").append(fileUrl).append("#L").append(entry.getKey()).append(") ");
-                    } else { //if the fileUrl is not provided, simply putting the line number (no link) - ADO for example
-                        body.append(entry.getKey()).append(" ");
+            if(issue.getOsaDetails()!=null){
+                for(ScanResults.OsaDetails o: issue.getOsaDetails()){
+                    body.append(CRLF);
+                    if(!ScanUtils.empty(o.getCve())) {
+                        body.append("*").append(o.getCve()).append("*").append(CRLF);
                     }
+                    body.append("```");
+                    appendOsaDetails(body, o);
+                    body.append("```");
+                    body.append(CRLF);
                 }
-                body.append(CRLF).append(CRLF);
-            }
-            for (Map.Entry<Integer, ScanResults.IssueDetails> entry : trueIssues.entrySet()) {
-                if (entry.getValue() != null && entry.getValue().getCodeSnippet() != null) {
-                    body.append("---").append(CRLF);
-                    body.append("[Code (Line #").append(entry.getKey()).append("):](").append(fileUrl).append("#L").append(entry.getKey()).append(")").append(CRLF);
-                    body.append("```").append(CRLF);
-                    body.append(entry.getValue().getCodeSnippet()).append(CRLF);
-                    body.append("```").append(CRLF);
-                }
-            }
-            body.append("---").append(CRLF);
-        }
-        if(issue.getOsaDetails()!=null){
-            for(ScanResults.OsaDetails o: issue.getOsaDetails()){
-                body.append(CRLF);
-                if(!ScanUtils.empty(o.getCve())) {
-                    body.append("*").append(o.getCve()).append("*").append(CRLF);
-                }
-                body.append("```");
-                appendOsaDetails(body, o);
-                body.append("```");
-                body.append(CRLF);
             }
         }
+
         return body.toString();
     }
 
@@ -866,6 +905,14 @@ public class ScanUtils {
         }
         body.append(DIV_CLOSING_TAG);
         return body.toString();
+    }
+
+    public static String getScaSummaryCustomIssueKey(ScanRequest request, ScanResults.XIssue issue) {
+        ScanResults.ScaDetails scaDetails = issue.getScaDetails().get(0);
+        return String.format(ScanUtils.SCA_SUMMARY_CUSTOM_ISSUE_KEY, scaDetails.getFinding().getSeverity(),
+                scaDetails.getFinding().getScore(), scaDetails.getFinding().getId(),
+                scaDetails.getVulnerabilityPackage().getName(),
+                scaDetails.getVulnerabilityPackage().getVersion(), request.getRepoName(), request.getBranch());
     }
 
     private static void appendOsaDetails(StringBuilder body, ScanResults.OsaDetails o) {

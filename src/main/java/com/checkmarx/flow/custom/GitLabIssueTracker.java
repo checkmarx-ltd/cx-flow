@@ -24,6 +24,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service("GitLab")
 public class GitLabIssueTracker implements IssueTracker {
@@ -263,7 +264,11 @@ public class GitLabIssueTracker implements IssueTracker {
             return null;
         }
         String repoUrl = request.getRepoUrl().replace(".git", "/");
-        return repoUrl.concat("/blob/").concat(request.getBranch()).concat("/").concat(filename);
+        if (Optional.ofNullable(filename).isPresent()) {
+            return repoUrl.concat("/blob/").concat(request.getBranch()).concat("/").concat(filename);
+        } else {
+            return null;
+        }
     }
 
 
@@ -336,7 +341,9 @@ public class GitLabIssueTracker implements IssueTracker {
             return String.format(ScanUtils.ISSUE_KEY_2, request.getProduct().getProduct(), issue.getVulnerability(), issue.getFilename());
         }
         else {
-            return String.format(ScanUtils.ISSUE_KEY, request.getProduct().getProduct(), issue.getVulnerability(), issue.getFilename(), request.getBranch());
+            return issue.getScaDetails() == null
+                    ? String.format(ScanUtils.ISSUE_KEY, request.getProduct().getProduct(), issue.getVulnerability(), issue.getFilename(), request.getBranch())
+                    : ScanUtils.getScaSummaryCustomIssueKey(request, issue);
         }
     }
 

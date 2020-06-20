@@ -398,10 +398,7 @@ public class ADOIssueTracker implements IssueTracker {
         else {
             return issue.getScaDetails() == null
                     ? String.format(ScanUtils.ISSUE_KEY, request.getProduct().getProduct(), issue.getVulnerability(), issue.getFilename(), request.getBranch())
-                    : String.format(ScanUtils.SCA_SUMMARY_CUSTOM_ISSUE_KEY, issue.getScaDetails().get(0).getFinding().getSeverity(),
-                    issue.getScaDetails().get(0).getFinding().getScore(), issue.getScaDetails().get(0).getFinding().getId(),
-                    issue.getScaDetails().get(0).getVulnerabilityPackage().getName(),
-                    issue.getScaDetails().get(0).getVulnerabilityPackage().getVersion(), request.getRepoName(), request.getBranch());
+                    : ScanUtils.getScaSummaryCustomIssueKey(request, issue);
         }
     }
 
