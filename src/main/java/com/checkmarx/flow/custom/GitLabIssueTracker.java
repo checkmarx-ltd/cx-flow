@@ -72,25 +72,16 @@ public class GitLabIssueTracker implements IssueTracker {
 
     private Integer getProjectId(String targetNamespace, String targetRepoName) {
         try {
-            String url = properties.getApiUrl()
-                    .concat(PROJECT)
-                    .replace("{repo}", targetRepoName);
-            URI uri = new URI(url);
-            HttpEntity<Void> httpEntity = new HttpEntity<>(createAuthHeaders());
-            ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, httpEntity, String.class);
-            JSONArray foundProjects = new JSONArray(response.getBody());
-            for (Object project : foundProjects) {
+            JSONArray candidateProjects = getProjectSearchResults(targetRepoName);
+            log.debug("Projects found: {}. Looking for exact match.", candidateProjects.length());
+
+            // The search is fuzzy, so we need to additionally filter search results here for strict match.
+            for (Object project : candidateProjects) {
                 JSONObject projectJson = (JSONObject) project;
-
-                // Using paths, because this is what appears in browser's address bar.
-                String name = projectJson.getString("path");
-
-                // E.g. namespace name may look like: "My Good Old Namespace", whereas its path cannot contain spaces
-                // and may look like: "my-good-old-namespace".
-                String namespace = projectJson.getJSONObject("namespace")
-                        .getString("path");
-                if (name.equals(targetRepoName) && namespace.equals(targetNamespace)) {
-                    return projectJson.getInt("id");
+                if (isTargetProject(projectJson, targetNamespace, targetRepoName)) {
+                    int result = projectJson.getInt("id");
+                    log.debug("Using GitLab project ID: {}", result);
+                    return result;
                 }
             }
             return 0;
@@ -102,6 +93,31 @@ public class GitLabIssueTracker implements IssueTracker {
             log.error("Incorrect URI", e);
         }
         return UNKNOWN_INT;
+    }
+
+    private static boolean isTargetProject(JSONObject projectJson, String targetNamespace, String targetRepo) {
+        // Using paths, because they are more well-defined (this is what appears in browser's address bar).
+        String repoPath = projectJson.getString("path");
+
+        // Namespace name may look like: "My Good Old Namespace", whereas its path cannot contain spaces
+        // and may look like: "my-good-old-namespace".
+        String namespacePath = projectJson.getJSONObject("namespace")
+                .getString("path");
+
+        boolean result = repoPath.equals(targetRepo) && namespacePath.equals(targetNamespace);
+        log.debug("Checking {}/{}... {}", namespacePath, repoPath, result ? "match!" : "no match.");
+        return result;
+    }
+
+    private JSONArray getProjectSearchResults(String targetRepoName) throws URISyntaxException {
+        log.debug("Searching repo by query: {}", targetRepoName);
+        String url = properties.getApiUrl()
+                .concat(PROJECT)
+                .replace("{repo}", targetRepoName);
+        URI uri = new URI(url);
+        HttpEntity<Void> httpEntity = new HttpEntity<>(createAuthHeaders());
+        ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, httpEntity, String.class);
+        return new JSONArray(response.getBody());
     }
 
     /**
