@@ -340,6 +340,25 @@ jobs:
             mv build/libs/cxgo/repo-${VERSION_OD}.jar build/libs/${VERSION_OD}.jar
             ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -n ${VERSION} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./build/libs/
 
+  clean-eks:
+    executor: aws-eks/python3
+    steps:
+      - aws-eks/update-kubeconfig-with-authenticator:
+          cluster-name: eks-cxflow-ci
+          install-kubectl: true
+      - run:
+          name: Delete namespace
+          command: |
+            kubectl get ns
+            NS_TO_DELETE=$(kubectl get ns -o jsonpath="{.items[*].metadata.name}" | sed 's/default//g' | sed 's/kube-node-lease//g' | sed 's/kube-public//g' | sed 's/kube-system//g' | sed 's/nginx-kibana-ci//g' | sed 's/test//g')
+            echo "NS_TO_DELETE: ${NS_TO_DELETE}"
+            if [[ $NS_TO_DELETE =~ ^\ +$ ]] ;then 
+              # There are no namespaces to delete (NS_TO_DELETE contain only whitespaces) 
+              echo "No namespaces to delete."
+            else 
+              kubectl delete namespace ${NS_TO_DELETE}
+            fi
+
 orbs:
   aws-eks: circleci/aws-eks@0.2.6
   kubernetes: circleci/kubernetes@0.4.0
@@ -433,3 +452,12 @@ workflows:
           requires:
             - e2e-tests
             - integration-tests
+  nightly-cleanup:
+    triggers:
+      - schedule:
+          cron: "00 01 * * *"
+          filters:
+            branches:
+              only: develop
+    jobs:
+      - clean-eks
