@@ -343,7 +343,7 @@ public class GitLabIssueTracker implements IssueTracker {
         else {
             return issue.getScaDetails() == null
                     ? String.format(ScanUtils.ISSUE_KEY, request.getProduct().getProduct(), issue.getVulnerability(), issue.getFilename(), request.getBranch())
-                    : ScanUtils.getScaSummaryCustomIssueKey(request, issue);
+                    : ScanUtils.getScaSummaryIssueKey(request, issue);
         }
     }
 

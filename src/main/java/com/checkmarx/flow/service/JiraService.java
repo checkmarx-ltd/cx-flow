@@ -293,13 +293,7 @@ public class JiraService {
             if (useBranch) {
                 List<ScanResults.ScaDetails> scaDetails = issue.getScaDetails();
                 if (scaDetails != null) {
-                    ScanResults.ScaDetails details = scaDetails.get(0);
-                    Finding detailsFindings = details.getFinding();
-                    Package vulnerabilityPackage = details.getVulnerabilityPackage();
-                    summary = String.format(SCATicketingConstants.SCA_JIRA_ISSUE_KEY, issuePrefix, detailsFindings.getSeverity(),
-                            detailsFindings.getScore(), detailsFindings.getId(),
-                            vulnerabilityPackage.getName(),
-                            vulnerabilityPackage.getVersion(), request.getRepoName(), branch, issuePostfix);
+                    summary = ScanUtils.getScaSummaryIssueKey(request, issue, issuePrefix, issuePostfix);
                 } else {
                     summary = String.format(JIRA_ISSUE_KEY, issuePrefix, vulnerability, filename, branch, issuePostfix);
                 }

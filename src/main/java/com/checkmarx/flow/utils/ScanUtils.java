@@ -21,6 +21,7 @@ import com.cx.restclient.sca.dto.report.Package;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.EnumUtils;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.slf4j.Logger;
@@ -905,12 +906,45 @@ public class ScanUtils {
         return body.toString();
     }
 
-    public static String getScaSummaryCustomIssueKey(ScanRequest request, ScanResults.XIssue issue) {
+    /**
+     *
+     * @param request   The scanRequest object
+     * @param issue     The scanResults issue
+     * @param extraTags Extra tags array. Jira issue prefix/postfix are on the [0], [1] positions
+     * @return  Issue key according to the bug type parameter
+     */
+    public static String getScaSummaryIssueKey(ScanRequest request, ScanResults.XIssue issue, String... extraTags) {
         ScanResults.ScaDetails scaDetails = issue.getScaDetails().get(0);
+        String bugType = request.getBugTracker().getType().getType();
+
+        switch (bugType) {
+            case "JIRA":
+                String issuePrefix = extraTags[0];
+                String issuePostfix = extraTags[1];
+
+                Finding detailsFindings = scaDetails.getFinding();
+                Package vulnerabilityPackage = scaDetails.getVulnerabilityPackage();
+
+                return getJiraScaSummaryIssueKey(request, issuePrefix, issuePostfix, detailsFindings, vulnerabilityPackage);
+            case "CUSTOM":
+                return getCustomScaSummaryIssueKey(request, scaDetails);
+            default:
+                throw new NotImplementedException("Summary issue key wasn't implemented yet for bug type: {}", bugType);
+        }
+    }
+
+    private static String getCustomScaSummaryIssueKey(ScanRequest request, ScanResults.ScaDetails scaDetails) {
         return String.format(SCATicketingConstants.SCA_SUMMARY_CUSTOM_ISSUE_KEY, scaDetails.getFinding().getSeverity(),
                 scaDetails.getFinding().getScore(), scaDetails.getFinding().getId(),
                 scaDetails.getVulnerabilityPackage().getName(),
                 scaDetails.getVulnerabilityPackage().getVersion(), request.getRepoName(), request.getBranch());
+    }
+
+    private static String getJiraScaSummaryIssueKey(ScanRequest request, String issuePrefix, String issuePostfix, Finding detailsFindings, Package vulnerabilityPackage) {
+        return String.format(SCATicketingConstants.SCA_JIRA_ISSUE_KEY, issuePrefix, detailsFindings.getSeverity(),
+                detailsFindings.getScore(), detailsFindings.getId(),
+                vulnerabilityPackage.getName(),
+                vulnerabilityPackage.getVersion(), request.getRepoName(), request.getBranch(), issuePostfix);
     }
 
     private static void appendOsaDetails(StringBuilder body, ScanResults.OsaDetails o) {
