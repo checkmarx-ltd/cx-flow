@@ -106,15 +106,12 @@ public class GitLabIssueTracker implements IssueTracker {
 
     /**
      * Get list of issues associated with the project in GitLab
-     *
-     * @param request
-     * @return
      */
     @Override
     public List<Issue> getIssues(ScanRequest request) {
         log.info("Executing getIssues GitLab API call");
         List<Issue> issues = new ArrayList<>();
-        HttpEntity httpEntity = new HttpEntity<>(createAuthHeaders());
+        HttpEntity<Void> httpEntity = new HttpEntity<>(createAuthHeaders());
         String endpoint = properties.getApiUrl().concat(ISSUES_PATH);
         ResponseEntity<com.checkmarx.flow.dto.gitlab.Issue[]> response = restTemplate.exchange(endpoint,
                 HttpMethod.GET, httpEntity, com.checkmarx.flow.dto.gitlab.Issue[].class, request.getRepoProjectId());
@@ -163,7 +160,7 @@ public class GitLabIssueTracker implements IssueTracker {
     private Issue getIssue(Integer projectId, Integer iid) {
         log.debug("Executing getIssue GitLab API call");
         String endpoint = properties.getApiUrl().concat(ISSUE_PATH);
-        HttpEntity httpEntity = new HttpEntity<>(createAuthHeaders());
+        HttpEntity<Void> httpEntity = new HttpEntity<>(createAuthHeaders());
         ResponseEntity<com.checkmarx.flow.dto.gitlab.Issue> response =
                 restTemplate.exchange(endpoint, HttpMethod.GET, httpEntity, com.checkmarx.flow.dto.gitlab.Issue.class, projectId, iid);
 
@@ -173,10 +170,6 @@ public class GitLabIssueTracker implements IssueTracker {
 
     /**
      *  Adds a comment (Note) to an issue
-     *
-     * @param projectId
-     * @param iid
-     * @param comment
      */
     private void addComment(Integer projectId, Integer iid, String comment) {
         log.debug("Executing add comment GitLab API call");
@@ -216,16 +209,10 @@ public class GitLabIssueTracker implements IssueTracker {
         closeIssue(request.getRepoProjectId(), Integer.parseInt(issue.getId()));
     }
 
-    /**
-     *
-     * @param projectId
-     * @param iid
-     * @return
-     */
     private com.checkmarx.flow.dto.gitlab.Issue closeIssue(Integer projectId, Integer iid) {
         log.debug("Executing closeIssue GitHub API call");
         String endpoint = properties.getApiUrl().concat(ISSUE_PATH);
-        HttpEntity httpEntity = new HttpEntity<>(getJSONCloseIssue().toString(), createAuthHeaders());
+        HttpEntity<String> httpEntity = new HttpEntity<>(getJSONCloseIssue().toString(), createAuthHeaders());
         ResponseEntity<com.checkmarx.flow.dto.gitlab.Issue> response = restTemplate.exchange(endpoint, HttpMethod.PUT, httpEntity,
                 com.checkmarx.flow.dto.gitlab.Issue.class, projectId, iid);
         return response.getBody();
@@ -238,18 +225,12 @@ public class GitLabIssueTracker implements IssueTracker {
 
     /**
      * Update existing issue in GitLab
-     *
-     * @param issue
-     * @param projectId
-     * @param iid
-     * @return
-     * @throws MachinaException
      */
-    private Issue updateIssue(JSONObject issue, Integer projectId, Integer iid) throws MachinaException {
+    private Issue updateIssue(JSONObject issue, Integer projectId, Integer iid) {
         log.debug("Executing updateIssue GitLab API call");
         String endpoint = properties.getApiUrl().concat(ISSUE_PATH);
 
-        HttpEntity httpEntity = new HttpEntity<>(issue.toString(), createAuthHeaders());
+        HttpEntity<String> httpEntity = new HttpEntity<>(issue.toString(), createAuthHeaders());
         ResponseEntity<com.checkmarx.flow.dto.gitlab.Issue> response;
         try {
             response = restTemplate.exchange(endpoint, HttpMethod.PUT, httpEntity, com.checkmarx.flow.dto.gitlab.Issue.class, projectId, iid);
@@ -393,7 +374,7 @@ public class GitLabIssueTracker implements IssueTracker {
         String linkRelation;
         for (final String link : links) {
             final int positionOfSeparator = link.indexOf(';');
-            linkRelation = link.substring(positionOfSeparator + 1, link.length()).trim();
+            linkRelation = link.substring(positionOfSeparator + 1).trim();
             if (extractTypeOfRelation(linkRelation).equals(rel)) {
                 uriWithSpecifiedRel = link.substring(1, positionOfSeparator - 1);
                 break;
