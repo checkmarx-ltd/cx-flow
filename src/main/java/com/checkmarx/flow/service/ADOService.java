@@ -38,6 +38,7 @@ public class ADOService {
     private static final Logger log = LoggerFactory.getLogger(ADOService.class);
     private static final String API_VERSION = "?api-version=";
     private static final String ADO_COMMENT_CONTENT_FIELD_NAME = "content";
+    private static final String IS_DELETED_FIELD_NAME = "isDeleted";
     private final RestTemplate restTemplate;
     private final ADOProperties properties;
     private final FlowProperties flowProperties;
@@ -268,8 +269,8 @@ public class ADOService {
     }
 
     private boolean isCommentDeleted(JsonNode commentNode) {
-        if (commentNode.has("isDeleted") && commentNode.get("isDeleted") != null) {
-            return commentNode.get("isDeleted").asBoolean();
+        if (commentNode.has(IS_DELETED_FIELD_NAME) && commentNode.get(IS_DELETED_FIELD_NAME) != null) {
+            return commentNode.get(IS_DELETED_FIELD_NAME).asBoolean();
         }
         return false;
     }
