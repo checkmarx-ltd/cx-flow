@@ -133,9 +133,9 @@ public class GitLabIssueTracker implements IssueTracker {
         ResponseEntity<com.checkmarx.flow.dto.gitlab.Issue[]> response = restTemplate.exchange(endpoint,
                 HttpMethod.GET, httpEntity, com.checkmarx.flow.dto.gitlab.Issue[].class, request.getRepoProjectId());
         if(response.getBody() == null) return new ArrayList<>();
-        for(com.checkmarx.flow.dto.gitlab.Issue issue: response.getBody()){
+        for (com.checkmarx.flow.dto.gitlab.Issue issue : response.getBody()) {
             Issue i = mapToIssue(issue);
-            if(i != null && i.getTitle().startsWith(request.getProduct().getProduct())){
+            if (i != null) {
                 issues.add(i);
             }
         }
