@@ -79,6 +79,7 @@ public class UpdatePullRequestCommentsSteps {
     @Before
     public void initMocks() {
         flowProperties.getBranches().add("udi-tests-2");
+        flowProperties.setEnabledVulnerabilityScanners(Arrays.asList("sast"));
         initGitHubControllerSpy();
         initHelperServiceMock();
     }
@@ -90,7 +91,7 @@ public class UpdatePullRequestCommentsSteps {
 
     @Given("branch is udi-test-2")
     public void setAdoBranch() {
-        branch = "udi-test-2";
+        branch = "udi-tests-2";
     }
 
     @Given("different filters configuration is set")
