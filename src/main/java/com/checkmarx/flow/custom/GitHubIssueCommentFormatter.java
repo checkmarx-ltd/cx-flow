@@ -74,9 +74,9 @@ public class GitHubIssueCommentFormatter {
         commentFormat.append("\n### **SUMMARY**\n\n");
         // No Resolved vulnerabilities
         if ((issueStatus.getTotalResolvedLinesFromResults() + issueStatus.getTotalResolvedFalsePositiveLines()) == 0) {
-            commentFormat.append("Issue has total **")
+            commentFormat.append("Issue has **")
                     .append(issueStatus.getTotalOpenLinesForIssueBeforeFixing())
-                    .append("** vulnerabilities left to be fix (Please scroll to the top for more information)");
+                    .append("** vulnerability/vulnerabilities left to be fixed (Please scroll to the top for more information)");
         } else {
             commentFormat.append("- Total of vulnerabilities resolved on the last scan: **")
                     .append(issueStatus.getTotalResolvedLinesFromResults())
