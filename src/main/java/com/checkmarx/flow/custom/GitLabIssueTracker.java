@@ -8,7 +8,6 @@ import com.checkmarx.flow.dto.gitlab.Note;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -62,7 +61,7 @@ public class GitLabIssueTracker implements IssueTracker {
             throw new MachinaException("GitLab API Url must be provided in property config");
         }
         if(request.getRepoProjectId() == null) {
-            Integer projectId = getProjectDetails(request.getRepoName());
+            Integer projectId = getProjectId(request.getNamespace(), request.getRepoName());
             if (projectId.equals(UNKNOWN_INT)) {
                 log.error("Could not obtain GitLab Project Id for {}/{}/{}", request.getNamespace(), request.getRepoName(), request.getBranch());
                 throw new MachinaException("Could not obtain GitLab Project Id");
@@ -71,19 +70,27 @@ public class GitLabIssueTracker implements IssueTracker {
         }
     }
 
-    private Integer getProjectDetails(String repoName) {
+    private Integer getProjectId(String targetNamespace, String targetRepoName) {
         try {
-            String url = properties.getApiUrl().concat(PROJECT);
-            url = url.replace("{repo}", repoName);
+            String url = properties.getApiUrl()
+                    .concat(PROJECT)
+                    .replace("{repo}", targetRepoName);
             URI uri = new URI(url);
-            HttpEntity httpEntity = new HttpEntity<>(createAuthHeaders());
+            HttpEntity<Void> httpEntity = new HttpEntity<>(createAuthHeaders());
             ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, httpEntity, String.class);
-            JSONArray arr = new JSONArray(response.getBody());
-            for(Object obj: arr){
-                JSONObject realObj = (JSONObject) obj;
-                String name = realObj.getString("name");
-                if(name.equals(repoName)) {
-                    return realObj.getInt("id");
+            JSONArray foundProjects = new JSONArray(response.getBody());
+            for (Object project : foundProjects) {
+                JSONObject projectJson = (JSONObject) project;
+
+                // Using paths, because this is what appears in browser's address bar.
+                String name = projectJson.getString("path");
+
+                // E.g. namespace name may look like: "My Good Old Namespace", whereas its path cannot contain spaces
+                // and may look like: "my-good-old-namespace".
+                String namespace = projectJson.getJSONObject("namespace")
+                        .getString("path");
+                if (name.equals(targetRepoName) && namespace.equals(targetNamespace)) {
+                    return projectJson.getInt("id");
                 }
             }
             return 0;
