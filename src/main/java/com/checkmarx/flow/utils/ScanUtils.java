@@ -4,6 +4,7 @@ import com.checkmarx.flow.config.FindingSeverity;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.config.RepoProperties;
+import com.checkmarx.flow.constants.SCATicketingConstants;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.BugTracker.BugTrackerBuilder;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
@@ -50,9 +51,6 @@ public class ScanUtils {
     public static final String ISSUE_KEY = "%s %s @ %s [%s]";
     public static final String ISSUE_KEY_2 = "%s %s @ %s";
     public static final String WEB_HOOK_PAYLOAD = "web-hook-payload";
-    public static final String SCA_SUMMARY_CUSTOM_ISSUE_KEY = "%s %.1f: %s in %s and %s @ %s.%s";
-    public static final String SCA_HTML_ISSUE_BODY_1 = "<div><b>%s Vulnerable Package</b> issue exists @ <b>%s</b> in branch <b>%s</b>";
-    public static final String SCA_ISSUE_BODY_1 = "**%s Vulnerable Package** issue exists @ **%s** in branch **%s**";
 
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(ScanUtils.class);
     public static final String VERSION = "Version: ";
@@ -451,7 +449,7 @@ public class ScanUtils {
             scaDetails.stream().findAny().ifPresent(any -> {
                 body.append("**Description**").append(CRLF).append(CRLF);
                 body.append(any.getFinding().getDescription()).append(CRLF).append(CRLF);
-                body.append(String.format(SCA_ISSUE_BODY_1, any.getFinding().getSeverity(),
+                body.append(String.format(SCATicketingConstants.SCA_CUSTOM_ISSUE_BODY, any.getFinding().getSeverity(),
                         any.getVulnerabilityPackage().getName(), branch)).append(CRLF).append(CRLF);
 
                 Map<String, String> scaDetailsMap = new LinkedHashMap<>();
@@ -800,7 +798,7 @@ public class ScanUtils {
             issue.getScaDetails().stream().findAny().ifPresent(any -> {
                 body.append(ITALIC_OPENING_DIV).append(any.getFinding().getDescription())
                         .append(ITALIC_CLOSING_DIV).append(LINE_BREAK);
-                body.append(String.format(SCA_HTML_ISSUE_BODY_1, any.getFinding().getSeverity(),
+                body.append(String.format(SCATicketingConstants.SCA_HTML_ISSUE_BODY_1, any.getFinding().getSeverity(),
                         any.getVulnerabilityPackage().getName(), request.getBranch()))
                         .append(DIV_CLOSING_TAG).append(LINE_BREAK);
             });
@@ -909,7 +907,7 @@ public class ScanUtils {
 
     public static String getScaSummaryCustomIssueKey(ScanRequest request, ScanResults.XIssue issue) {
         ScanResults.ScaDetails scaDetails = issue.getScaDetails().get(0);
-        return String.format(ScanUtils.SCA_SUMMARY_CUSTOM_ISSUE_KEY, scaDetails.getFinding().getSeverity(),
+        return String.format(SCATicketingConstants.SCA_SUMMARY_CUSTOM_ISSUE_KEY, scaDetails.getFinding().getSeverity(),
                 scaDetails.getFinding().getScore(), scaDetails.getFinding().getId(),
                 scaDetails.getVulnerabilityPackage().getName(),
                 scaDetails.getVulnerabilityPackage().getVersion(), request.getRepoName(), request.getBranch());
