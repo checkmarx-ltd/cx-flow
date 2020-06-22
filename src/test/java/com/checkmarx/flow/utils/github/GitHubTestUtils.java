@@ -144,7 +144,7 @@ public class GitHubTestUtils implements GitHubTestUtilsImpl {
         String signature = createSignature(body);
         if (eventType == EventType.PULL_REQUEST) {
             controller.pullRequest(body, signature,
-                    null, null, null, null, null, null, projectNameOverride,
+                    null, null, null, null, null, projectNameOverride,
                     null, null, null, null, null, null,
                     null, null, null, null);
         } else {

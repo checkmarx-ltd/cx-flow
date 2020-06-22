@@ -6,6 +6,7 @@ import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.controller.GitHubController;
 import com.checkmarx.flow.dto.BugTracker;
+import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.github.*;
 import com.checkmarx.flow.service.FilterFactory;
@@ -197,11 +198,13 @@ public class CxConfigBugTrackerSteps {
         try {
             String pullEventStr = mapper.writeValueAsString(pullEvent);
 
+            ControllerRequest request = ControllerRequest.builder().branch(Collections.singletonList(branch)).application("VB").build();
             gitHubControllerSpy.pullRequest(
                     pullEventStr,
                     "SIGNATURE",
-                    "CX", "VB",
-                    Collections.singletonList(branch), null,
+                    "CX",
+                    request,
+                    null,
                     null,
                     null,
                     "VB",

@@ -7,6 +7,7 @@ import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.controller.GitHubController;
 import com.checkmarx.flow.dto.BugTracker;
+import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.github.*;
 import com.checkmarx.flow.exception.MachinaException;
@@ -171,11 +172,17 @@ public class CxConfigSteps {
         try {
             String pullEventStr = mapper.writeValueAsString(pullEvent);
 
+            ControllerRequest request = ControllerRequest.builder()
+                    .branch(Collections.singletonList(branch))
+                    .application("VB")
+                    .build();
+
             gitHubControllerSpy.pullRequest(
                     pullEventStr,
                     "SIGNATURE",
-                    "CX", "VB",
-                    Arrays.asList(branch), null,
+                    "CX",
+                    request,
+                    null,
                     null,
                     null,
                     "VB",
@@ -235,15 +242,15 @@ public class CxConfigSteps {
         
         switch(currSeverity){
             case("severity"):
-                List<String> severity = Arrays.asList(new String[]{FindingSeverity.HIGH.toString(), FindingSeverity.LOW.toString()});
+                List<String> severity = Arrays.asList(FindingSeverity.HIGH.toString(), FindingSeverity.LOW.toString());
                 flowProperties.setFilterSeverity(severity);
                 break;
             case("cwe"):
-                List<String> cwe = Arrays.asList(new String[]{"anyOther1","anyOther2","anyOther3"});
+                List<String> cwe = Arrays.asList("anyOther1","anyOther2","anyOther3");
                 flowProperties.setFilterCwe(cwe);
                 break;
             case("category"):
-                List<String> category = Arrays.asList(new String[]{"anyOther1","anyOther2","anyOther3"});
+                List<String> category = Arrays.asList("anyOther1","anyOther2","anyOther3");
                 flowProperties.setFilterCategory(category);
                 break;
             default:
@@ -484,8 +491,7 @@ public class CxConfigSteps {
      }
 
     private ResponseEntity<String> createResponseForGetComments() {
-        ResponseEntity<String> result = new ResponseEntity<>("{}", HttpStatus.OK);
-        return result;
+        return new ResponseEntity<>("{}", HttpStatus.OK);
     }
 
 

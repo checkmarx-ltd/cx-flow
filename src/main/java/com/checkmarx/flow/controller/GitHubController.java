@@ -4,6 +4,7 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.dto.BugTracker;
+import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.EventResponse;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.github.*;
@@ -33,10 +34,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 /**
  * Class used to manage Controller for GitHub WebHooks
@@ -98,8 +96,7 @@ public class GitHubController {
             @RequestBody String body,
             @RequestHeader(value = SIGNATURE) String signature,
             @PathVariable(value = "product", required = false) String product,
-            @RequestParam(value = "application", required = false) String application,
-            @RequestParam(value = "branch", required = false) List<String> branch,
+            ControllerRequest controllerRequest,
             @RequestParam(value = "severity", required = false) List<String> severity,
             @RequestParam(value = "cwe", required = false) List<String> cwe,
             @RequestParam(value = "category", required = false) List<String> category,
@@ -120,6 +117,8 @@ public class GitHubController {
         log.info("Processing GitHub PULL request");
         PullEvent event;
         ObjectMapper mapper = new ObjectMapper();
+        controllerRequest = Optional.ofNullable(controllerRequest)
+                .orElseGet(() -> ControllerRequest.builder().build());
 
         try {
             event = mapper.readValue(body, PullEvent.class);
@@ -142,8 +141,8 @@ public class GitHubController {
             }
             Repository repository = event.getRepository();
             String app = repository.getName();
-            if(!ScanUtils.empty(application)){
-                app = application;
+            if(!ScanUtils.empty(controllerRequest.getApplication())){
+                app = controllerRequest.getApplication();
             }
 
             // By default, when a pull request is opened, use the current source control provider as a bug tracker
@@ -167,7 +166,7 @@ public class GitHubController {
             PullRequest pullRequest = event.getPullRequest();
             String currentBranch = pullRequest.getHead().getRef();
             String targetBranch = pullRequest.getBase().getRef();
-            List<String> branches = getBranches(branch);
+            List<String> branches = getBranches(controllerRequest.getBranch());
             BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
             FilterConfiguration filter = filterFactory.getFilter(severity, cwe, category, status, null, flowProperties);
 
@@ -196,7 +195,7 @@ public class GitHubController {
                     .product(p)
                     .project(project)
                     .team(team)
-                    .namespace(repository.getOwner().getLogin().replaceAll(" ","_"))
+                    .namespace(repository.getOwner().getLogin().replace(" ","_"))
                     .repoName(repository.getName())
                     .repoUrl(repository.getCloneUrl())
                     .repoUrlWithAuth(gitAuthUrl)
@@ -369,7 +368,7 @@ public class GitHubController {
                     .product(p)
                     .project(project)
                     .team(team)
-                    .namespace(repository.getOwner().getName().replaceAll(" ","_"))
+                    .namespace(repository.getOwner().getName().replace(" ","_"))
                     .repoName(repository.getName())
                     .repoUrl(repository.getCloneUrl())
                     .repoUrlWithAuth(gitAuthUrl)
@@ -477,7 +476,7 @@ public class GitHubController {
         if (StringUtils.isBlank(repository.getOwner().getName())) {
             namespace = repository.getOwner().getLogin();
         } else {
-            namespace = repository.getOwner().getName().replaceAll(" ", "_");
+            namespace = repository.getOwner().getName().replace(" ", "_");
         }
 
         flowProperties.setAutoProfile(true);
