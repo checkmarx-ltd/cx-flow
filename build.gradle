@@ -249,6 +249,7 @@ task integrationTest(type: Test) {
             include 'com/checkmarx/flow/cucumber/integration/jira/analytics/*'
             include 'com/checkmarx/flow/cucumber/integration/cxconfig/*'
             include 'com/checkmarx/flow/cucumber/integration/cxconfigbugtracker/**'
+            include 'com/checkmarx/flow/cucumber/integration/pullrequest/updatecomments/**'
             exclude 'com/checkmarx/flow/cucumber/integration/end2end/genericendtoend/**'
             exclude 'com/checkmarx/flow/cucumber/integration/end2end/github2jira/**'
             exclude 'com/checkmarx/flow/cucumber/integration/publishprocess/**'
