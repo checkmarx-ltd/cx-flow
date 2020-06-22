@@ -36,7 +36,7 @@ public class ADOController {
 
     private static final String HTTP = "http://";
     private static final String HTTPS = "https://";
-    private static final String PULL_EVENT = "git.pullrequest.created";
+    private static final List<String> PULL_EVENT = Arrays.asList(new String[]{"git.pullrequest.created", "git.pullrequest.updated"});
     private static final String AUTHORIZATION = "authorization";
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(ADOController.class);
     private final ADOProperties properties;
@@ -81,7 +81,7 @@ public class ADOController {
         log.info("Processing Azure PULL request");
         validateBasicAuth(auth);
 
-        if(!body.getEventType().equals(PULL_EVENT)){
+        if(!PULL_EVENT.contains(body.getEventType()) || !body.getResource().getStatus().equals("active")){
             log.info("Pull requested not processed.  Event was not opened ({})", body.getEventType());
             return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
                     .message("No processing occurred for updates to Pull Request")
