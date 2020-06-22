@@ -8,7 +8,6 @@ import com.checkmarx.flow.dto.gitlab.Note;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -62,7 +61,7 @@ public class GitLabIssueTracker implements IssueTracker {
             throw new MachinaException("GitLab API Url must be provided in property config");
         }
         if(request.getRepoProjectId() == null) {
-            Integer projectId = getProjectDetails(request.getRepoName());
+            Integer projectId = getProjectId(request.getNamespace(), request.getRepoName());
             if (projectId.equals(UNKNOWN_INT)) {
                 log.error("Could not obtain GitLab Project Id for {}/{}/{}", request.getNamespace(), request.getRepoName(), request.getBranch());
                 throw new MachinaException("Could not obtain GitLab Project Id");
@@ -71,22 +70,21 @@ public class GitLabIssueTracker implements IssueTracker {
         }
     }
 
-    private Integer getProjectDetails(String repoName) {
+    private Integer getProjectId(String targetNamespace, String targetRepoName) {
         try {
-            String url = properties.getApiUrl().concat(PROJECT);
-            url = url.replace("{repo}", repoName);
-            URI uri = new URI(url);
-            HttpEntity httpEntity = new HttpEntity<>(createAuthHeaders());
-            ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, httpEntity, String.class);
-            JSONArray arr = new JSONArray(response.getBody());
-            for(Object obj: arr){
-                JSONObject realObj = (JSONObject) obj;
-                String name = realObj.getString("name");
-                if(name.equals(repoName)) {
-                    return realObj.getInt("id");
+            int projectId = 0;
+            JSONArray candidateProjects = getProjectSearchResults(targetRepoName);
+            log.debug("Projects found: {}. Looking for exact match.", candidateProjects.length());
+            // The search is fuzzy, so we need to additionally filter search results here for strict match.
+            for (Object project : candidateProjects) {
+                JSONObject projectJson = (JSONObject) project;
+                if (isTargetProject(projectJson, targetNamespace, targetRepoName)) {
+                    projectId = projectJson.getInt("id");
+                    log.debug("Using GitLab project ID: {}", projectId);
+                    break;
                 }
             }
-            return 0;
+            return projectId;
         } catch(HttpClientErrorException e) {
             log.error("Error calling gitlab project api {}", e.getResponseBodyAsString(), e);
         } catch(JSONException e) {
@@ -97,17 +95,39 @@ public class GitLabIssueTracker implements IssueTracker {
         return UNKNOWN_INT;
     }
 
+    private static boolean isTargetProject(JSONObject projectJson, String targetNamespace, String targetRepo) {
+        // Using paths, because they are more well-defined (this is what appears in browser's address bar).
+        String repoPath = projectJson.getString("path");
+
+        // Namespace name may look like: "My Good Old Namespace", whereas its path cannot contain spaces
+        // and may look like: "my-good-old-namespace".
+        String namespacePath = projectJson.getJSONObject("namespace")
+                .getString("path");
+
+        boolean result = repoPath.equals(targetRepo) && namespacePath.equals(targetNamespace);
+        log.debug("Checking {}/{}... {}", namespacePath, repoPath, result ? "match!" : "no match.");
+        return result;
+    }
+
+    private JSONArray getProjectSearchResults(String targetRepoName) throws URISyntaxException {
+        log.debug("Searching repo by query: {}", targetRepoName);
+        String url = properties.getApiUrl()
+                .concat(PROJECT)
+                .replace("{repo}", targetRepoName);
+        URI uri = new URI(url);
+        HttpEntity<Void> httpEntity = new HttpEntity<>(createAuthHeaders());
+        ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, httpEntity, String.class);
+        return new JSONArray(response.getBody());
+    }
+
     /**
      * Get list of issues associated with the project in GitLab
-     *
-     * @param request
-     * @return
      */
     @Override
     public List<Issue> getIssues(ScanRequest request) {
         log.info("Executing getIssues GitLab API call");
         List<Issue> issues = new ArrayList<>();
-        HttpEntity httpEntity = new HttpEntity<>(createAuthHeaders());
+        HttpEntity<Void> httpEntity = new HttpEntity<>(createAuthHeaders());
         String endpoint = properties.getApiUrl().concat(ISSUES_PATH);
         ResponseEntity<com.checkmarx.flow.dto.gitlab.Issue[]> response = restTemplate.exchange(endpoint,
                 HttpMethod.GET, httpEntity, com.checkmarx.flow.dto.gitlab.Issue[].class, request.getRepoProjectId());
@@ -156,7 +176,7 @@ public class GitLabIssueTracker implements IssueTracker {
     private Issue getIssue(Integer projectId, Integer iid) {
         log.debug("Executing getIssue GitLab API call");
         String endpoint = properties.getApiUrl().concat(ISSUE_PATH);
-        HttpEntity httpEntity = new HttpEntity<>(createAuthHeaders());
+        HttpEntity<Void> httpEntity = new HttpEntity<>(createAuthHeaders());
         ResponseEntity<com.checkmarx.flow.dto.gitlab.Issue> response =
                 restTemplate.exchange(endpoint, HttpMethod.GET, httpEntity, com.checkmarx.flow.dto.gitlab.Issue.class, projectId, iid);
 
@@ -166,10 +186,6 @@ public class GitLabIssueTracker implements IssueTracker {
 
     /**
      *  Adds a comment (Note) to an issue
-     *
-     * @param projectId
-     * @param iid
-     * @param comment
      */
     private void addComment(Integer projectId, Integer iid, String comment) {
         log.debug("Executing add comment GitLab API call");
@@ -209,16 +225,10 @@ public class GitLabIssueTracker implements IssueTracker {
         closeIssue(request.getRepoProjectId(), Integer.parseInt(issue.getId()));
     }
 
-    /**
-     *
-     * @param projectId
-     * @param iid
-     * @return
-     */
     private com.checkmarx.flow.dto.gitlab.Issue closeIssue(Integer projectId, Integer iid) {
         log.debug("Executing closeIssue GitHub API call");
         String endpoint = properties.getApiUrl().concat(ISSUE_PATH);
-        HttpEntity httpEntity = new HttpEntity<>(getJSONCloseIssue().toString(), createAuthHeaders());
+        HttpEntity<String> httpEntity = new HttpEntity<>(getJSONCloseIssue().toString(), createAuthHeaders());
         ResponseEntity<com.checkmarx.flow.dto.gitlab.Issue> response = restTemplate.exchange(endpoint, HttpMethod.PUT, httpEntity,
                 com.checkmarx.flow.dto.gitlab.Issue.class, projectId, iid);
         return response.getBody();
@@ -231,18 +241,12 @@ public class GitLabIssueTracker implements IssueTracker {
 
     /**
      * Update existing issue in GitLab
-     *
-     * @param issue
-     * @param projectId
-     * @param iid
-     * @return
-     * @throws MachinaException
      */
-    private Issue updateIssue(JSONObject issue, Integer projectId, Integer iid) throws MachinaException {
+    private Issue updateIssue(JSONObject issue, Integer projectId, Integer iid) {
         log.debug("Executing updateIssue GitLab API call");
         String endpoint = properties.getApiUrl().concat(ISSUE_PATH);
 
-        HttpEntity httpEntity = new HttpEntity<>(issue.toString(), createAuthHeaders());
+        HttpEntity<String> httpEntity = new HttpEntity<>(issue.toString(), createAuthHeaders());
         ResponseEntity<com.checkmarx.flow.dto.gitlab.Issue> response;
         try {
             response = restTemplate.exchange(endpoint, HttpMethod.PUT, httpEntity, com.checkmarx.flow.dto.gitlab.Issue.class, projectId, iid);
@@ -386,7 +390,7 @@ public class GitLabIssueTracker implements IssueTracker {
         String linkRelation;
         for (final String link : links) {
             final int positionOfSeparator = link.indexOf(';');
-            linkRelation = link.substring(positionOfSeparator + 1, link.length()).trim();
+            linkRelation = link.substring(positionOfSeparator + 1).trim();
             if (extractTypeOfRelation(linkRelation).equals(rel)) {
                 uriWithSpecifiedRel = link.substring(1, positionOfSeparator - 1);
                 break;
