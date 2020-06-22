@@ -72,19 +72,19 @@ public class GitLabIssueTracker implements IssueTracker {
 
     private Integer getProjectId(String targetNamespace, String targetRepoName) {
         try {
+            int projectId = 0;
             JSONArray candidateProjects = getProjectSearchResults(targetRepoName);
             log.debug("Projects found: {}. Looking for exact match.", candidateProjects.length());
-
             // The search is fuzzy, so we need to additionally filter search results here for strict match.
             for (Object project : candidateProjects) {
                 JSONObject projectJson = (JSONObject) project;
                 if (isTargetProject(projectJson, targetNamespace, targetRepoName)) {
-                    int result = projectJson.getInt("id");
-                    log.debug("Using GitLab project ID: {}", result);
-                    return result;
+                    projectId = projectJson.getInt("id");
+                    log.debug("Using GitLab project ID: {}", projectId);
+                    break;
                 }
             }
-            return 0;
+            return projectId;
         } catch(HttpClientErrorException e) {
             log.error("Error calling gitlab project api {}", e.getResponseBodyAsString(), e);
         } catch(JSONException e) {
