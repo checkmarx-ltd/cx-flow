@@ -12,9 +12,11 @@ import com.checkmarx.flow.dto.github.*;
 import com.checkmarx.flow.service.ADOService;
 import com.checkmarx.flow.service.GitHubService;
 import com.checkmarx.flow.service.HelperService;
+import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
@@ -62,10 +64,10 @@ public class UpdatePullRequestCommentsSteps {
     private ScanResults scanResultsToInject;
     private SourceControlType sourceControl;
     private FlowProperties flowProperties;
-
+    private CxProperties cxProperties;
     private String branch;
 
-    public UpdatePullRequestCommentsSteps(GitHubService gitHubService, GitHubProperties gitHubProperties, GitHubController gitHubController, ADOService adoService, ADOController adoController, FlowProperties flowProperties) {
+    public UpdatePullRequestCommentsSteps(GitHubService gitHubService, GitHubProperties gitHubProperties, GitHubController gitHubController, ADOService adoService, ADOController adoController, FlowProperties flowProperties, CxProperties cxProperties) {
         this.helperService = mock(HelperService.class);
         this.gitHubService = gitHubService;
         this.gitHubProperties = gitHubProperties;
@@ -73,6 +75,7 @@ public class UpdatePullRequestCommentsSteps {
         this.adoService = adoService;
         this.adoControllerSpy = Mockito.spy(adoController);
         this.flowProperties = flowProperties;
+        this.cxProperties = cxProperties;
         initGitHubProperties();
     }
 
@@ -82,6 +85,15 @@ public class UpdatePullRequestCommentsSteps {
         flowProperties.setEnabledVulnerabilityScanners(Arrays.asList("sast"));
         initGitHubControllerSpy();
         initHelperServiceMock();
+    }
+
+    @After
+    public void cleanUp() throws IOException, InterruptedException {
+        if (sourceControl.equals(SourceControlType.GITHUB)) {
+            deleteGitHubComments();
+        } else if (sourceControl.equals(SourceControlType.ADO)) {
+            deleteADOComments();
+        }
     }
 
     @Given("branch is pr-comments-tests")
@@ -298,7 +310,7 @@ public class UpdatePullRequestCommentsSteps {
 
         pullEvent.setResource(resource);
 
-        adoControllerSpy.pullRequest(pullEvent,"Basic Y3hmbG93OjEyMzQ=", null, null,null,null,null,null,"AdoPullRequestTests-master",null,null,null,null,null,null,null,null,null,null,null,null,null, null);
+        adoControllerSpy.pullRequest(pullEvent,"Basic Y3hmbG93OjEyMzQ=", null, null,null,null,null,null,"AdoPullRequestTests-master", "\\CxServer\\SP",null,null,null,null,null,null,null,null,null,null,null,null, null);
     }
 
     private class ScanResultsAnswerer implements Answer<ScanResults> {
