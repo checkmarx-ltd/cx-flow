@@ -13,6 +13,7 @@ import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import io.cucumber.java.Before;
+import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -236,6 +237,15 @@ public class RunPublishProcessSteps {
         assertUpdateTime();
     }
 
+    @And("there is status change in the issue")
+    public void statusChange(){}
+    
+    @And("the updated issue has the new status field in the body")
+    public void validateUpdatedIssueVulnerabilityStatus(){
+        String vulStatus = jiraUtils.getIssueVulnerabilityStatus(jiraProperties.getProject());
+        
+        Assert.assertTrue( vulStatus.contains("URGENT"));
+    }
     @Then("the issue should be closed")
     public void assertIssueIsClosed() {
         Assert.assertTrue("Issue is not in closed status", jiraProperties.getClosedStatus().contains(jiraUtils.getIssueStatus(jiraProperties.getProject())));
@@ -311,9 +321,19 @@ public class RunPublishProcessSteps {
     public void verifyNumOfFindingsInBodyForOneIssue(int findings) {
         int actualFindings = jiraUtils.getFirstIssueNumOfFindings(jiraProperties.getProject());
         Assert.assertEquals("Wrong number of findigs", findings, actualFindings);
-    }
+     }
 
+    @And("issue status will be present in the body")
+    public void verifyIssueStatus() {
 
+        int actualFindings = jiraUtils.getFirstIssueNumOfFindings(jiraProperties.getProject());
+        if(actualFindings > 0) {
+            String vulStatus = jiraUtils.getIssueVulnerabilityStatus(jiraProperties.getProject());
+            Assert.assertNotEquals(null, vulStatus);
+            Assert.assertTrue(vulStatus.contains("TO VERIFY"));
+        }
+        
+     }
 
     private File getDifferentVulnerabilityTypeFindings() throws IOException {
         return getFileFromResourcePath(String.format(DIFFERENT_VULNERABILITIES_FILENAME_TEMPLATE, numOfFindings));

@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        CxSBSDK = "0.1.20"
+        CxSBSDK = "0.1.21"
         //cxVersion = "8.90.5"
         springBootVersion = '2.2.6.RELEASE'
         sonarqubeVersion = '2.8'
@@ -239,7 +239,7 @@ task integrationTest(type: Test) {
             include 'com/checkmarx/flow/cucumber/integration/cxconfig/*'
             exclude 'com/checkmarx/flow/cucumber/integration/end2end/genericendtoend/**'
             exclude 'com/checkmarx/flow/cucumber/integration/end2end/github2jira/**'
-            exclude 'com/checkmarx/flow/cucumber/integration/publishprocess/**'
+            include 'com/checkmarx/flow/cucumber/integration/publishprocess/**'
             exclude 'com/checkmarx/flow/test/flow**'
             exclude 'com/checkmarx/flow/exception/**'
             exclude 'com/checkmarx/flow/custom/**'

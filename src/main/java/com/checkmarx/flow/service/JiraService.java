@@ -919,6 +919,8 @@ public class JiraService {
         displayedParametersMap.put("*Cx-Team:* ", request.getTeam());
         displayedParametersMap.put("*Severity:* ", issue.getSeverity());
         displayedParametersMap.put("*CWE:* ", issue.getCwe());
+        displayedParametersMap.put("*Status:* ", issue.getVulnerabilityStatus());
+        
         displayedParametersMap.forEach((k, v ) -> {
             if (!ScanUtils.empty(v)) {
                 body.append(k).append(v).append(ScanUtils.CRLF);

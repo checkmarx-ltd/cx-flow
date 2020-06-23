@@ -102,6 +102,9 @@ public class JiraTestUtils implements IJiraTestUtils {
             if (severity == null) {
                 continue;
             }
+            
+            log.info("Filter Severity values " + Filter.Severity.values().toString());
+            
             Filter.Severity filterSeverity = Filter.Severity.valueOf(severity.toUpperCase());
             if (result.containsKey(filterSeverity)) {
                 result.put(filterSeverity,result.get(filterSeverity) + 1 );
@@ -177,7 +180,13 @@ Line #222:
         return firstLineParts[0];
     }
 
-
+    @Override
+    public String getIssueVulnerabilityStatus(String projectKey) {
+        Issue issue = getFirstIssue(projectKey);
+        String statusLine = issue.getDescription().split(System.lineSeparator())[13];
+        return statusLine;
+    }
+    
     @Override
     public int getFirstIssueNumOfFindings(String projectKey) {
         SearchResult result = searchForAllIssues(projectKey);
