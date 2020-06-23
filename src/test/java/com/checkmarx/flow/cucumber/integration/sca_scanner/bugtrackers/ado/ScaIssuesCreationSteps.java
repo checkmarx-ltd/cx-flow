@@ -1,4 +1,4 @@
-package com.checkmarx.flow.cucumber.integration.azure.publishing.issueprocessing.scaissueprocessing;
+package com.checkmarx.flow.cucumber.integration.sca_scanner.bugtrackers.ado;
 
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.ADOProperties;
