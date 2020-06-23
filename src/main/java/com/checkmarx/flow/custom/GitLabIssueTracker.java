@@ -132,8 +132,10 @@ public class GitLabIssueTracker implements IssueTracker {
         String endpoint = properties.getApiUrl().concat(ISSUES_PATH);
         ResponseEntity<com.checkmarx.flow.dto.gitlab.Issue[]> response = restTemplate.exchange(endpoint,
                 HttpMethod.GET, httpEntity, com.checkmarx.flow.dto.gitlab.Issue[].class, request.getRepoProjectId());
-        if(response.getBody() == null) return new ArrayList<>();
-        for (com.checkmarx.flow.dto.gitlab.Issue issue : response.getBody()) {
+        if(response.getBody() == null) {
+            return issues;
+        }
+        for(com.checkmarx.flow.dto.gitlab.Issue issue: response.getBody()){
             Issue i = mapToIssue(issue);
             if (i != null) {
                 issues.add(i);
@@ -141,9 +143,9 @@ public class GitLabIssueTracker implements IssueTracker {
         }
         String next = getNextURIFromHeaders(response.getHeaders(), "link", "next");
         while (next != null) {
-            ResponseEntity<Issue[]> responsePage = restTemplate.exchange(next, HttpMethod.GET, httpEntity, Issue[].class);
+            ResponseEntity<com.checkmarx.flow.dto.gitlab.Issue[]> responsePage = restTemplate.exchange(next, HttpMethod.GET, httpEntity, com.checkmarx.flow.dto.gitlab.Issue[].class);
             if(responsePage.getBody() != null) {
-                for(com.checkmarx.flow.dto.gitlab.Issue issue: response.getBody()){
+                for(com.checkmarx.flow.dto.gitlab.Issue issue: responsePage.getBody()){
                     Issue i = mapToIssue(issue);
                     if(i != null && i.getTitle().startsWith(request.getProduct().getProduct())){
                         issues.add(i);
