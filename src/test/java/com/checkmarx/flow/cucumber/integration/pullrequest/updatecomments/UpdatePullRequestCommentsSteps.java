@@ -84,7 +84,7 @@ public class UpdatePullRequestCommentsSteps {
     @Before
     public void initMocks() {
         flowProperties.getBranches().add("udi-tests-2");
-        flowProperties.setEnabledVulnerabilityScanners(Arrays.asList("sast"));
+        flowProperties.setEnabledVulnerabilityScanners(Collections.singletonList("sast"));
         initGitHubControllerSpy();
         initHelperServiceMock();
     }
@@ -264,27 +264,12 @@ public class UpdatePullRequestCommentsSteps {
             ControllerRequest request = ControllerRequest.builder()
                     .branch(Collections.singletonList(branch))
                     .application("VB")
+                    .team("\\CxServer\\SP")
+                    .assignee("")
+                    .preset("default")
                     .build();
 
-            gitHubControllerSpy.pullRequest(
-                    pullEventStr,
-                    "SIGNATURE",
-                    "CX",
-                    request,
-                    null,
-                    null,
-                    null,
-                    "VB",
-                    "\\CxServer\\SP",
-                    null,
-                    "",
-                    "default",
-                    false,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null);
+            gitHubControllerSpy.pullRequest(pullEventStr, "SIGNATURE", "CX", request);
 
         } catch (JsonProcessingException e) {
             fail("Unable to parse " + pullEvent.toString());
@@ -330,6 +315,6 @@ public class UpdatePullRequestCommentsSteps {
 
     enum SourceControlType {
         GITHUB,
-        ADO;
+        ADO
     }
 }

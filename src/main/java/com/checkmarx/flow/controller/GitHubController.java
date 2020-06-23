@@ -96,21 +96,7 @@ public class GitHubController {
             @RequestBody String body,
             @RequestHeader(value = SIGNATURE) String signature,
             @PathVariable(value = "product", required = false) String product,
-            ControllerRequest controllerRequest,
-            @RequestParam(value = "severity", required = false) List<String> severity,
-            @RequestParam(value = "cwe", required = false) List<String> cwe,
-            @RequestParam(value = "category", required = false) List<String> category,
-            @RequestParam(value = "project", required = false) String project,
-            @RequestParam(value = "team", required = false) String team,
-            @RequestParam(value = "status", required = false) List<String> status,
-            @RequestParam(value = "assignee", required = false) String assignee,
-            @RequestParam(value = "preset", required = false) String preset,
-            @RequestParam(value = "incremental", required = false) Boolean incremental,
-            @RequestParam(value = "exclude-files", required = false) List<String> excludeFiles,
-            @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders,
-            @RequestParam(value = "override", required = false) String override,
-            @RequestParam(value = "bug", required = false) String bug,
-            @RequestParam(value = "app-only", required = false) Boolean appOnlyTracking
+            ControllerRequest controllerRequest
     ){
         String uid = helperService.getShortUid();
         MDC.put("cx", uid);
@@ -151,12 +137,12 @@ public class GitHubController {
             BugTracker.Type bugType = BugTracker.Type.GITHUBPULL;
 
             // However, if the bug tracker is overridden in the query string, use the override value.
-            if(!ScanUtils.empty(bug)){
-                bugType = ScanUtils.getBugTypeEnum(bug, flowProperties.getBugTrackerImpl());
+            if (!ScanUtils.empty(controllerRequest.getBug())) {
+                bugType = ScanUtils.getBugTypeEnum(controllerRequest.getBug(), flowProperties.getBugTrackerImpl());
             }
 
-            if(appOnlyTracking != null){
-                flowProperties.setTrackApplicationOnly(appOnlyTracking);
+            if (controllerRequest.getAppOnly() != null) {
+                flowProperties.setTrackApplicationOnly(controllerRequest.getAppOnly());
             }
 
             if(ScanUtils.empty(product)){
@@ -167,14 +153,19 @@ public class GitHubController {
             String currentBranch = pullRequest.getHead().getRef();
             String targetBranch = pullRequest.getBase().getRef();
             List<String> branches = getBranches(controllerRequest.getBranch());
-            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
-            FilterConfiguration filter = filterFactory.getFilter(severity, cwe, category, status, null, flowProperties);
+            BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
+            FilterConfiguration filter = filterFactory.getFilter(controllerRequest.getSeverity(),
+                    controllerRequest.getCwe(),
+                    controllerRequest.getCategory(),
+                    controllerRequest.getStatus(),
+                    null,
+                    flowProperties);
 
-            if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
-                excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
+            if (controllerRequest.getExcludeFiles() == null && !ScanUtils.empty(cxProperties.getExcludeFiles())) {
+                controllerRequest.setExcludeFiles(Arrays.asList(cxProperties.getExcludeFiles().split(",")));
             }
-            if(excludeFolders == null && !ScanUtils.empty(cxProperties.getExcludeFolders())){
-                excludeFolders = Arrays.asList(cxProperties.getExcludeFolders().split(","));
+            if (controllerRequest.getExcludeFolders() == null && !ScanUtils.empty(cxProperties.getExcludeFolders())) {
+                controllerRequest.setExcludeFolders(Arrays.asList(cxProperties.getExcludeFolders().split(",")));
             }
             //build request object
             String gitUrl = repository.getCloneUrl();
@@ -186,15 +177,15 @@ public class GitHubController {
             String scanPreset = cxProperties.getScanPreset();
 
             boolean inc = cxProperties.getIncremental();
-            if(incremental != null){
-                inc = incremental;
+            if (controllerRequest.getIncremental() != null) {
+                inc = controllerRequest.getIncremental();
             }
 
             ScanRequest request = ScanRequest.builder()
                     .application(app)
                     .product(p)
-                    .project(project)
-                    .team(team)
+                    .project(controllerRequest.getProject())
+                    .team(controllerRequest.getTeam())
                     .namespace(repository.getOwner().getLogin().replace(" ","_"))
                     .repoName(repository.getName())
                     .repoUrl(repository.getCloneUrl())
@@ -207,14 +198,14 @@ public class GitHubController {
                     .email(null)
                     .incremental(inc)
                     .scanPreset(scanPreset)
-                    .excludeFolders(excludeFolders)
-                    .excludeFiles(excludeFiles)
+                    .excludeFolders(controllerRequest.getExcludeFolders())
+                    .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)
                     .filter(filter)
                     .build();
 
-            if(!ScanUtils.empty(preset)){
-                request.setScanPreset(preset);
+            if(!ScanUtils.empty(controllerRequest.getPreset())){
+                request.setScanPreset(controllerRequest.getPreset());
                 request.setScanPresetOverride(true);
             }
             /*Check for Config as code (cx.config) and override*/
@@ -231,7 +222,7 @@ public class GitHubController {
 
 
         }catch (IllegalArgumentException e){
-            String errorMessage = "Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product != null ? product : "").concat(" | ").concat(bug != null ? bug : "");
+            String errorMessage = "Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product != null ? product : "").concat(" | ").concat(controllerRequest.getBug() != null ? controllerRequest.getBug() : "");
             log.error(errorMessage, e);
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 

@@ -198,26 +198,15 @@ public class CxConfigBugTrackerSteps {
         try {
             String pullEventStr = mapper.writeValueAsString(pullEvent);
 
-            ControllerRequest request = ControllerRequest.builder().branch(Collections.singletonList(branch)).application("VB").build();
-            gitHubControllerSpy.pullRequest(
-                    pullEventStr,
-                    "SIGNATURE",
-                    "CX",
-                    request,
-                    null,
-                    null,
-                    null,
-                    "VB",
-                    "\\CxServer\\SP",
-                    null,
-                    "",
-                    "default",
-                    false,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null);
+            ControllerRequest request = ControllerRequest.builder()
+                    .branch(Collections.singletonList(branch))
+                    .application("VB")
+                    .team("\\CxServer\\SP")
+                    .assignee("")
+                    .preset("default")
+                    .build();
+
+            gitHubControllerSpy.pullRequest(pullEventStr, "SIGNATURE", "CX", request);
 
         } catch (JsonProcessingException e) {
             fail("Unable to parse " + pullEvent.toString());

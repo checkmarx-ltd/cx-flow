@@ -5,6 +5,7 @@ import com.checkmarx.flow.controller.GitHubController;
 import com.checkmarx.flow.cucumber.common.Constants;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 import com.checkmarx.flow.custom.GitHubIssueTracker;
+import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaException;
@@ -137,16 +138,14 @@ public class GitHubTestUtils implements GitHubTestUtilsImpl {
 
     /**
      * Executes a controller method that corresponds to eventType.
-     * No parameter overrides are passed to the call.
+     * No parameter overrides are passed to the call besides project name.
      */
     public void callController(GitHubController controller, EventType eventType, @Nullable String projectNameOverride) {
         String body = loadWebhookRequestBody(eventType);
         String signature = createSignature(body);
         if (eventType == EventType.PULL_REQUEST) {
             controller.pullRequest(body, signature,
-                    null, null, null, null, null, projectNameOverride,
-                    null, null, null, null, null, null,
-                    null, null, null, null);
+                    null, ControllerRequest.builder().project(projectNameOverride).build());
         } else {
             controller.pushRequest(body, signature,
                     null, null, null, null, null, null, projectNameOverride,

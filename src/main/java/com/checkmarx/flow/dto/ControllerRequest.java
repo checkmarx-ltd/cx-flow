@@ -23,7 +23,6 @@ public class ControllerRequest {
     private Boolean incremental;
     private List<String> excludeFiles;
     private List<String> excludeFolders;
-    private String override;    // never used
     private String bug;
     private Boolean appOnly;
 }

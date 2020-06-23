@@ -175,27 +175,12 @@ public class CxConfigSteps {
             ControllerRequest request = ControllerRequest.builder()
                     .branch(Collections.singletonList(branch))
                     .application("VB")
+                    .team("\\CxServer\\SP")
+                    .assignee("")
+                    .preset("default")
                     .build();
 
-            gitHubControllerSpy.pullRequest(
-                    pullEventStr,
-                    "SIGNATURE",
-                    "CX",
-                    request,
-                    null,
-                    null,
-                    null,
-                    "VB",
-                    "\\CxServer\\SP",
-                    null,
-                    "",
-                    "default",
-                    false,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null);
+            gitHubControllerSpy.pullRequest(pullEventStr, "SIGNATURE", "CX", request);
 
         } catch (JsonProcessingException e) {
             fail("Unable to parse " + pullEvent.toString());
