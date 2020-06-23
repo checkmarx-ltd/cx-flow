@@ -59,9 +59,11 @@ public class ScaIssuesCreationSteps {
 
     @And("bug tracker is Azure")
     public void setBugTracker() {
-        this.flowProperties.setBugTracker(AZURE);
-        this.flowProperties.setBugTrackerImpl(Collections.singletonList(AZURE));
-        this.adoProperties.setUrl("https://dev.azure.com/");
+        flowProperties.setBugTracker(AZURE);
+        flowProperties.setBugTrackerImpl(Collections.singletonList(AZURE));
+        adoProperties.setUrl("https://dev.azure.com/");
+        adoProperties.setProjectName(PROJECT_NAME);
+        adoProperties.setNamespace(NAMESPACE);
     }
 
     @When("publishing new known unfiltered SCA results from {string}")
@@ -79,7 +81,7 @@ public class ScaIssuesCreationSteps {
     private ScanRequest getBasicScanRequest() {
         return ScanRequest.builder()
                 .product(ScanRequest.Product.CX)
-                .project("htmx master")
+                .project(PROJECT_NAME)
                 .namespace("cxflowtestuser")
                 .repoName("htmx")
                 .repoType(ScanRequest.Repository.GITHUB)
