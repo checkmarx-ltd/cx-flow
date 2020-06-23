@@ -102,6 +102,9 @@ public class JiraTestUtils implements IJiraTestUtils {
             if (severity == null) {
                 continue;
             }
+            
+            log.info("Filter Severity values " + Filter.Severity.values().toString());
+            
             Filter.Severity filterSeverity = Filter.Severity.valueOf(severity.toUpperCase());
             if (result.containsKey(filterSeverity)) {
                 result.put(filterSeverity,result.get(filterSeverity) + 1 );
