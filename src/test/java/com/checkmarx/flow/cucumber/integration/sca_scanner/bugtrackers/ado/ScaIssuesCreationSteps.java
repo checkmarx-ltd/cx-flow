@@ -35,6 +35,7 @@ public class ScaIssuesCreationSteps {
     private final static String NAMESPACE = "CxNamespace";
     private final static String PROJECT_NAME = "CxScaTest";
     private static final String AZURE = "Azure";
+    private static final String INPUT_FILE = "8-findings-2-high-6-medium.json";
 
     private final FlowProperties flowProperties;
     private final ADOProperties adoProperties;
@@ -66,9 +67,9 @@ public class ScaIssuesCreationSteps {
         adoProperties.setNamespace(NAMESPACE);
     }
 
-    @When("publishing new known unfiltered SCA results from {string}")
-    public void publishNewScaResults(String inputUrl) throws IOException, MachinaException {
-        ScanResults scanResults = JsonUtils.json2Object(getFileFromResourcePath(INPUT_BASE_PATH + inputUrl), ScanResults.class);
+    @When("publishing new known unfiltered SCA results with 8 findings including 2 high and 6 medium vulnerabilities")
+    public void publishNewScaResults() throws IOException, MachinaException {
+        ScanResults scanResults = JsonUtils.json2Object(getFileFromResourcePath(INPUT_BASE_PATH + INPUT_FILE), ScanResults.class);
         resultsService.processResults(getBasicScanRequest(), scanResults, null);
     }
 
