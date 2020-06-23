@@ -1,7 +1,6 @@
 package com.checkmarx.flow.filter;
 
 import com.google.common.base.CaseFormat;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.FilterChain;
@@ -18,9 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class CaseTransformingFilter extends OncePerRequestFilter {
     @Override
-    protected void doFilterInternal(@NotNull HttpServletRequest request,
-                                    @NotNull HttpServletResponse response,
-                                    @NotNull FilterChain filterChain)
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         Map<String, String[]> camelCaseParams = new ConcurrentHashMap<>();
 
