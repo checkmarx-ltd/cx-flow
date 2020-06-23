@@ -202,7 +202,7 @@ task e2eTests(type: Test) {
             exclude 'com/checkmarx/flow/cucumber/integration/negative_tests/**'
             exclude 'com/checkmarx/flow/test/flow**'
             exclude 'com/checkmarx/flow/exception/**'
-            exclude 'com/checkmarx/flow/custom/**'
+            include 'com/checkmarx/flow/custom/**'
             exclude 'com/checkmarx/flow/controller**'
             exclude 'com/checkmarx/flow/filter/**'
             exclude 'com/checkmarx/flow/service/**'
@@ -210,7 +210,7 @@ task e2eTests(type: Test) {
             exclude 'com.checkmarx.flow.CxFlowApplicationTest'
             exclude 'com/checkmarx/flow/cucumber/integration/publishprocess/*'
             exclude 'com/checkmarx/flow/cucumber/integration/scan/*'
-            include 'com/checkmarx/flow/cucumber/integration/end2end/genericendtoend/**'
+            exclude 'com/checkmarx/flow/cucumber/integration/end2end/genericendtoend/**'
 
 
         } else {
@@ -229,14 +229,14 @@ task integrationTest(type: Test) {
     useJUnitPlatform() {
         systemProperty "testprofile", "integration"
         if (System.properties['testprofile'] != 'unit' | System.properties['testprofile'] != 'component' | System.properties['testprofile'] != 'e2e') {
-            include 'com/checkmarx/flow/cucumber/integration/negative_tests/**'
+            exclude 'com/checkmarx/flow/cucumber/integration/negative_tests/**'
             include 'com/checkmarx/flow/cucumber/integration/jira/manualconfig/**'
-            include 'com/checkmarx/flow/cucumber/integration/jira/autoconfig/*'
+            exclude 'com/checkmarx/flow/cucumber/integration/jira/autoconfig/*'
             exclude 'com/checkmarx/flow/cucumber/integration/github/**'
-            include 'com/checkmarx/flow/cucumber/integration/azure/publishing/**'
-            include 'com/checkmarx/flow/cucumber/integration/azure/publishing/github2ado/*'
-            include 'com/checkmarx/flow/cucumber/integration/jira/analytics/*'
-            include 'com/checkmarx/flow/cucumber/integration/cxconfig/*'
+            exclude 'com/checkmarx/flow/cucumber/integration/azure/publishing/**'
+            exclude 'com/checkmarx/flow/cucumber/integration/azure/publishing/github2ado/*'
+            exclude 'com/checkmarx/flow/cucumber/integration/jira/analytics/*'
+            exclude 'com/checkmarx/flow/cucumber/integration/cxconfig/*'
             exclude 'com/checkmarx/flow/cucumber/integration/end2end/genericendtoend/**'
             exclude 'com/checkmarx/flow/cucumber/integration/end2end/github2jira/**'
             include 'com/checkmarx/flow/cucumber/integration/publishprocess/**'

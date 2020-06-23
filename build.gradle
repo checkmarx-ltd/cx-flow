@@ -216,11 +216,11 @@ task e2eTests(type: Test) {
             exclude 'com/checkmarx/flow/controller**'
             exclude 'com/checkmarx/flow/filter/**'
             exclude 'com/checkmarx/flow/service/**'
-            exclude 'com/checkmarx/flow/utils/**'
+            include 'com/checkmarx/flow/utils/**'
             exclude 'com.checkmarx.flow.CxFlowApplicationTest'
             exclude 'com/checkmarx/flow/cucumber/integration/publishprocess/*'
             exclude 'com/checkmarx/flow/cucumber/integration/scan/*'
-            include 'com/checkmarx/flow/cucumber/integration/end2end/genericendtoend/**'
+            exclude 'com/checkmarx/flow/cucumber/integration/end2end/genericendtoend/**'
 
 
         } else {
@@ -239,17 +239,16 @@ task integrationTest(type: Test) {
     useJUnitPlatform() {
         systemProperty "testprofile", "integration"
         if (System.properties['testprofile'] != 'unit' | System.properties['testprofile'] != 'component' | System.properties['testprofile'] != 'e2e') {
-            include 'com/checkmarx/flow/cucumber/integration/negative_tests/**'
-            include 'com/checkmarx/flow/cucumber/integration/jira/manualconfig/**'
-            include 'com/checkmarx/flow/cucumber/integration/jira/autoconfig/*'
-            include 'com/checkmarx/flow/cucumber/integration/sca_scanner/**'
-            include 'com/checkmarx/flow/cucumber/integration/github/**'
-            include 'com/checkmarx/flow/cucumber/integration/azure/publishing/**'
-            include 'com/checkmarx/flow/cucumber/integration/azure/publishing/github2ado/*'
-            include 'com/checkmarx/flow/cucumber/integration/jira/analytics/*'
-            include 'com/checkmarx/flow/cucumber/integration/cxconfig/*'
-            include 'com/checkmarx/flow/cucumber/integration/cxconfigbugtracker/**'
-            include 'com/checkmarx/flow/cucumber/integration/pullrequest/updatecomments/**'
+            exclude 'com/checkmarx/flow/cucumber/integration/jira/manualconfig/**'
+            exclude 'com/checkmarx/flow/cucumber/integration/jira/autoconfig/*'
+            exclude 'com/checkmarx/flow/cucumber/integration/sca_scanner/**'
+            exclude 'com/checkmarx/flow/cucumber/integration/github/**'
+            exclude 'com/checkmarx/flow/cucumber/integration/azure/publishing/**'
+            exclude 'com/checkmarx/flow/cucumber/integration/azure/publishing/github2ado/*'
+            exclude 'com/checkmarx/flow/cucumber/integration/jira/analytics/*'
+            exclude 'com/checkmarx/flow/cucumber/integration/cxconfig/*'
+            exclude 'com/checkmarx/flow/cucumber/integration/cxconfigbugtracker/**'
+            exclude 'com/checkmarx/flow/cucumber/integration/pullrequest/updatecomments/**'
             exclude 'com/checkmarx/flow/cucumber/integration/end2end/genericendtoend/**'
             exclude 'com/checkmarx/flow/cucumber/integration/end2end/github2jira/**'
             include 'com/checkmarx/flow/cucumber/integration/publishprocess/**'
