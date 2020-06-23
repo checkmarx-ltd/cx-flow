@@ -102,11 +102,19 @@ public class JiraTestUtils implements IJiraTestUtils {
             if (severity == null) {
                 continue;
             }
-            
-            log.info("Filter Severity values " + Filter.Severity.values().toString());
-            
-            Filter.Severity filterSeverity = Filter.Severity.valueOf(severity.toUpperCase());
-            if (result.containsKey(filterSeverity)) {
+
+            Filter.Severity filterSeverity = null;
+
+            // iterate over enums using for loop 
+            for (Filter.Severity s : Filter.Severity.values()) {
+                log.info("Comparing Filter Severity: '" + s.name() + "' to  '" + severity + "'\n");
+                if(s.name().trim().equalsIgnoreCase(severity.trim())){
+                    filterSeverity = s;
+                }
+            }
+
+            //Filter.Severity filterSeverity = Filter.Severity.valueOf(severity.toUpperCase());
+            if (filterSeverity!=null && result.containsKey(filterSeverity)) {
                 result.put(filterSeverity,result.get(filterSeverity) + 1 );
             } else {
                 result.put(filterSeverity, 1);

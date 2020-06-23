@@ -50,7 +50,7 @@ Feature: parse, and then publish processing given SAST XML results, findings sho
       | 10              | 10        |
 
 
-    @Create_issue @Skip
+    @Create_issue 
   Scenario Outline: sanity of publishing new issues to JIRA, with filter that may contain multiple severities.
     Given target is JIRA
     And   filter-severity is <Filter_Severity>
