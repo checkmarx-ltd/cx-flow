@@ -167,7 +167,7 @@ public class ResultsService {
         }
     }
 
-    void processResults(ScanRequest request, ScanResults results, ScanDetails scanDetails) throws MachinaException {
+    public void processResults(ScanRequest request, ScanResults results, ScanDetails scanDetails) throws MachinaException {
 
         if(scanDetails == null){
             scanDetails = new ScanDetails();
