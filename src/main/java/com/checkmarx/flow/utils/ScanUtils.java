@@ -925,29 +925,30 @@ public class ScanUtils {
         });
 
         Map<String, String> scaDetailsMap = new LinkedHashMap<>();
-        ScanResults.ScaDetails scaDetails = issue.getScaDetails().stream().findAny().get();
-        scaDetailsMap.put("<b>Vulnerability ID", scaDetails.getFinding().getId());
-        scaDetailsMap.put("<b>Package Name", scaDetails.getVulnerabilityPackage().getName());
-        scaDetailsMap.put("<b>Severity", scaDetails.getFinding().getSeverity().name());
-        scaDetailsMap.put("<b>CVSS Score", String.valueOf(scaDetails.getFinding().getScore()));
-        scaDetailsMap.put("<b>Publish Date", scaDetails.getFinding().getPublishDate());
-        scaDetailsMap.put("<b>Current Package Version", scaDetails.getVulnerabilityPackage().getVersion());
-        Optional.ofNullable(scaDetails.getFinding().getFixResolutionText()).ifPresent(f ->
-                scaDetailsMap.put("<b>Remediation Upgrade Recommendation", f)
+        issue.getScaDetails().stream().findAny().ifPresent(any -> {
+            scaDetailsMap.put("<b>Vulnerability ID", any.getFinding().getId());
+            scaDetailsMap.put("<b>Package Name", any.getVulnerabilityPackage().getName());
+            scaDetailsMap.put("<b>Severity", any.getFinding().getSeverity().name());
+            scaDetailsMap.put("<b>CVSS Score", String.valueOf(any.getFinding().getScore()));
+            scaDetailsMap.put("<b>Publish Date", any.getFinding().getPublishDate());
+            scaDetailsMap.put("<b>Current Package Version", any.getVulnerabilityPackage().getVersion());
+            Optional.ofNullable(any.getFinding().getFixResolutionText()).ifPresent(f ->
+                    scaDetailsMap.put("<b>Remediation Upgrade Recommendation", f)
 
-        );
+            );
 
-        scaDetailsMap.forEach((key, value) ->
-                body.append(key).append(":</b> ").append(value).append(LINE_BREAK)
-        );
+            scaDetailsMap.forEach((key, value) ->
+                    body.append(key).append(":</b> ").append(value).append(LINE_BREAK)
+            );
 
-        String findingLink = ScanUtils.constructVulnerabilityUrl(scaDetails.getVulnerabilityLink(), scaDetails.getFinding());
-        body.append(DIV_A_HREF).append(findingLink).append("\'>Link To SCA</a></div>");
+            String findingLink = ScanUtils.constructVulnerabilityUrl(any.getVulnerabilityLink(), any.getFinding());
+            body.append(DIV_A_HREF).append(findingLink).append("\'>Link To SCA</a></div>");
 
-        String cveName = scaDetails.getFinding().getCveName();
-        if (!ScanUtils.empty(cveName)) {
-            body.append(DIV_A_HREF).append("https://nvd.nist.gov/vuln/detail/").append(cveName).append("\'>Reference – NVD link</a></div>");
-        }
+            String cveName = any.getFinding().getCveName();
+            if (!ScanUtils.empty(cveName)) {
+                body.append(DIV_A_HREF).append("https://nvd.nist.gov/vuln/detail/").append(cveName).append("\'>Reference – NVD link</a></div>");
+            }
+        });
     }
 
     private static String getCustomScaSummaryIssueKey(ScanRequest request, ScanResults.ScaDetails scaDetails) {
