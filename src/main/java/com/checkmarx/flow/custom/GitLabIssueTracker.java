@@ -264,11 +264,9 @@ public class GitLabIssueTracker implements IssueTracker {
             return null;
         }
         String repoUrl = request.getRepoUrl().replace(".git", "/");
-        if (Optional.ofNullable(filename).isPresent()) {
-            return repoUrl.concat("/blob/").concat(request.getBranch()).concat("/").concat(filename);
-        } else {
-            return null;
-        }
+        return (Optional.ofNullable(filename).isPresent())
+                ? String.format(String.format("%s/blob/%%s/%%s", repoUrl), request.getBranch(), filename)
+                : null;
     }
 
 
@@ -338,11 +336,11 @@ public class GitLabIssueTracker implements IssueTracker {
     @Override
     public String getXIssueKey(ScanResults.XIssue issue, ScanRequest request) {
         if(flowProperties.isTrackApplicationOnly() || ScanUtils.empty(request.getBranch())){
-            return String.format(ScanUtils.ISSUE_KEY_2, request.getProduct().getProduct(), issue.getVulnerability(), issue.getFilename());
+            return String.format(ScanUtils.ISSUE_TITLE_KEY, request.getProduct().getProduct(), issue.getVulnerability(), issue.getFilename());
         }
         else {
             return issue.getScaDetails() == null
-                    ? String.format(ScanUtils.ISSUE_KEY, request.getProduct().getProduct(), issue.getVulnerability(), issue.getFilename(), request.getBranch())
+                    ? String.format(ScanUtils.ISSUE_TITLE_KEY_WITH_BRANCH, request.getProduct().getProduct(), issue.getVulnerability(), issue.getFilename(), request.getBranch())
                     : ScanUtils.getScaSummaryIssueKey(request, issue);
         }
     }
