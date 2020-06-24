@@ -161,12 +161,7 @@ public class GitHubController {
                     null,
                     flowProperties);
 
-            if (controllerRequest.getExcludeFiles() == null && !ScanUtils.empty(cxProperties.getExcludeFiles())) {
-                controllerRequest.setExcludeFiles(Arrays.asList(cxProperties.getExcludeFiles().split(",")));
-            }
-            if (controllerRequest.getExcludeFolders() == null && !ScanUtils.empty(cxProperties.getExcludeFolders())) {
-                controllerRequest.setExcludeFolders(Arrays.asList(cxProperties.getExcludeFolders().split(",")));
-            }
+            setExclusionProperties(controllerRequest);
             //build request object
             String gitUrl = repository.getCloneUrl();
             String token = properties.getToken();
@@ -175,11 +170,6 @@ public class GitHubController {
             gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(token).concat("@"));
 
             String scanPreset = cxProperties.getScanPreset();
-
-            boolean inc = cxProperties.getIncremental();
-            if (controllerRequest.getIncremental() != null) {
-                inc = controllerRequest.getIncremental();
-            }
 
             ScanRequest request = ScanRequest.builder()
                     .application(app)
@@ -196,7 +186,7 @@ public class GitHubController {
                     .mergeNoteUri(event.getPullRequest().getIssueUrl().concat("/comments"))
                     .mergeTargetBranch(targetBranch)
                     .email(null)
-                    .incremental(inc)
+                    .incremental(isScanIncremental(controllerRequest))
                     .scanPreset(scanPreset)
                     .excludeFolders(controllerRequest.getExcludeFolders())
                     .excludeFiles(controllerRequest.getExcludeFiles())
@@ -204,10 +194,8 @@ public class GitHubController {
                     .filter(filter)
                     .build();
 
-            if(!ScanUtils.empty(controllerRequest.getPreset())){
-                request.setScanPreset(controllerRequest.getPreset());
-                request.setScanPresetOverride(true);
-            }
+            overrideScanPreset(controllerRequest, request);
+
             /*Check for Config as code (cx.config) and override*/
             CxConfig cxConfig =  gitHubService.getCxConfigOverride(request);
             request = ScanUtils.overrideCxConfig(request, cxConfig, flowProperties);
@@ -249,7 +237,7 @@ public class GitHubController {
             throw new MachinaRuntimeException(e);
         }
 
-        if(flowProperties == null || cxProperties == null){
+        if (flowProperties == null || cxProperties == null) {
             log.error("Properties have null values");
             throw new MachinaRuntimeException();
         }
@@ -288,26 +276,8 @@ public class GitHubController {
             BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
             FilterConfiguration filter = filterFactory.getFilter(controllerRequest.getSeverity(), controllerRequest.getCwe(), controllerRequest.getCategory(), controllerRequest.getStatus(), null, flowProperties);
 
-            if(controllerRequest.getExcludeFiles() == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
-                controllerRequest.setExcludeFiles(Arrays.asList(cxProperties.getExcludeFiles().split(",")));
-            }
-            if (controllerRequest.getExcludeFolders() == null && !ScanUtils.empty(cxProperties.getExcludeFolders())) {
-                controllerRequest.setExcludeFolders(Arrays.asList(cxProperties.getExcludeFolders().split(",")));
-            }
+            setExclusionProperties(controllerRequest);
 
-            /*Determine emails*/
-            List<String> emails = new ArrayList<>();
-            for(Commit c: event.getCommits()){
-                if (c.getAuthor() != null && !ScanUtils.empty(c.getAuthor().getEmail())){
-                    emails.add(c.getAuthor().getEmail());
-                }
-            }
-            emails.add(event.getPusher().getEmail());
-            if(event.getRepository().getOwner() != null && 
-                    event.getRepository().getOwner().getEmail() != null && 
-                    !ScanUtils.empty(event.getRepository().getOwner().getEmail().toString())){
-                emails.add(event.getRepository().getOwner().getEmail().toString());
-            }
             //build request object
             Repository repository = event.getRepository();
             String gitUrl = repository.getCloneUrl();
@@ -322,11 +292,6 @@ public class GitHubController {
 
             String scanPreset = cxProperties.getScanPreset();
 
-            boolean inc = cxProperties.getIncremental();
-            if(controllerRequest.getIncremental() != null){
-                inc = controllerRequest.getIncremental();
-            }
-
             ScanRequest request = ScanRequest.builder()
                     .application(app)
                     .product(p)
@@ -340,8 +305,8 @@ public class GitHubController {
                     .branch(currentBranch)
                     .defaultBranch(repository.getDefaultBranch())
                     .refs(event.getRef())
-                    .email(emails)
-                    .incremental(inc)
+                    .email(determineEmails(event))
+                    .incremental(isScanIncremental(controllerRequest))
                     .scanPreset(scanPreset)
                     .excludeFolders(controllerRequest.getExcludeFolders())
                     .excludeFiles(controllerRequest.getExcludeFiles())
@@ -349,10 +314,7 @@ public class GitHubController {
                     .filter(filter)
                     .build();
 
-            if(!ScanUtils.empty(controllerRequest.getPreset())){
-                request.setScanPreset(controllerRequest.getPreset());
-                request.setScanPresetOverride(true);
-            }
+            overrideScanPreset(controllerRequest, request);
 
             /*Check for Config as code (cx.config) and override*/
             CxConfig cxConfig =  gitHubService.getCxConfigOverride(request);
@@ -372,6 +334,23 @@ public class GitHubController {
         }
         
         return getSuccessResponse();
+    }
+
+    private List<String> determineEmails(PushEvent event) {
+        /*Determine emails*/
+        List<String> emails = new ArrayList<>();
+        for (Commit c : event.getCommits()) {
+            if (c.getAuthor() != null && !ScanUtils.empty(c.getAuthor().getEmail())) {
+                emails.add(c.getAuthor().getEmail());
+            }
+        }
+        emails.add(event.getPusher().getEmail());
+        if(event.getRepository().getOwner() != null &&
+                event.getRepository().getOwner().getEmail() != null &&
+                !ScanUtils.empty(event.getRepository().getOwner().getEmail().toString())){
+            emails.add(event.getRepository().getOwner().getEmail().toString());
+        }
+        return emails;
     }
 
     /**
@@ -518,6 +497,27 @@ public class GitHubController {
         } else {
             log.error("Unable to initialize Hmac. Signature cannot be verified.");
             throw new InvalidTokenException();
+        }
+    }
+
+    private void setExclusionProperties(ControllerRequest target) {
+        if (target.getExcludeFiles() == null && !ScanUtils.empty(cxProperties.getExcludeFiles())) {
+            target.setExcludeFiles(Arrays.asList(cxProperties.getExcludeFiles().split(",")));
+        }
+        if (target.getExcludeFolders() == null && !ScanUtils.empty(cxProperties.getExcludeFolders())) {
+            target.setExcludeFolders(Arrays.asList(cxProperties.getExcludeFolders().split(",")));
+        }
+    }
+
+    private boolean isScanIncremental(ControllerRequest request) {
+        return Optional.ofNullable(request.getIncremental())
+                .orElse(cxProperties.getIncremental());
+    }
+
+    private void overrideScanPreset(ControllerRequest controllerRequest, ScanRequest scanRequest) {
+        if (!ScanUtils.empty(controllerRequest.getPreset())) {
+            scanRequest.setScanPreset(controllerRequest.getPreset());
+            scanRequest.setScanPresetOverride(true);
         }
     }
 }
