@@ -49,8 +49,8 @@ public class ScanUtils {
     public static final String MD_H4 = "####";
     public static final String ISSUE_BODY = "**%s** issue exists @ **%s** in branch **%s**";
     public static final String ISSUE_BODY_TEXT = "%s issue exists @ %s in branch %s";
-    public static final String ISSUE_KEY = "%s %s @ %s [%s]";
-    public static final String ISSUE_KEY_2 = "%s %s @ %s";
+    public static final String ISSUE_TITLE_KEY_WITH_BRANCH = "%s %s @ %s [%s]";
+    public static final String ISSUE_TITLE_KEY = "%s %s @ %s";
     public static final String WEB_HOOK_PAYLOAD = "web-hook-payload";
 
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(ScanUtils.class);
@@ -64,6 +64,7 @@ public class ScanUtils {
     private static final String ITALIC_OPENING_DIV = "<div><i>";
     private static final String ITALIC_CLOSING_DIV = "</i></div>";
     private static final String LINE_BREAK = "<br>";
+    private static final String NVD_URL_PREFIX = "https://nvd.nist.gov/vuln/detail/";
 
     private ScanUtils() {
         // this is to hide the public constractor
@@ -675,7 +676,7 @@ public class ScanUtils {
     public static Map<String, ScanResults.XIssue> getXIssueMap(List<ScanResults.XIssue> issues, ScanRequest request) {
         Map<String, ScanResults.XIssue> xMap = new HashMap<>();
         for (ScanResults.XIssue issue : issues) {
-            String key = String.format(ISSUE_KEY, request.getProduct().getProduct(), issue.getVulnerability(), issue.getFilename(), request.getBranch());
+            String key = String.format(ISSUE_TITLE_KEY_WITH_BRANCH, request.getProduct().getProduct(), issue.getVulnerability(), issue.getFilename(), request.getBranch());
             xMap.put(key, issue);
         }
         return xMap;
@@ -835,7 +836,7 @@ public class ScanUtils {
 
             String cveName = any.getFinding().getCveName();
             if (!empty(cveName)) {
-                body.append("[Reference – NVD link](").append("https://nvd.nist.gov/vuln/detail/").append(cveName).append(")").append(ScanUtils.CRLF).append(ScanUtils.CRLF);
+                body.append("[Reference – NVD link](").append(NVD_URL_PREFIX).append(cveName).append(")").append(ScanUtils.CRLF).append(ScanUtils.CRLF);
             }
         });
     }
@@ -919,7 +920,7 @@ public class ScanUtils {
         issue.getScaDetails().stream().findAny().ifPresent(any -> {
             body.append(ITALIC_OPENING_DIV).append(any.getFinding().getDescription())
                     .append(ITALIC_CLOSING_DIV).append(LINE_BREAK);
-            body.append(String.format(SCATicketingConstants.SCA_HTML_ISSUE_BODY_1, any.getFinding().getSeverity(),
+            body.append(String.format(SCATicketingConstants.SCA_HTML_ISSUE_BODY, any.getFinding().getSeverity(),
                     any.getVulnerabilityPackage().getName(), request.getBranch()))
                     .append(DIV_CLOSING_TAG).append(LINE_BREAK);
         });
