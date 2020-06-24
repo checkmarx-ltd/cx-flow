@@ -14,6 +14,8 @@ public class LoggingAop {
     @Before(value = "(execution(* com.checkmarx.flow.service.FlowService.initiateAutomation(.., com.checkmarx.flow.dto.ScanRequest, ..)) ||" +
             "execution(* com.checkmarx.flow.service.ResultsService.processScanResultsAsync(.., com.checkmarx.flow.dto.ScanRequest, ..)) ||" +
             "execution(* com.checkmarx.flow.service.SastScanner.executeCxScanFlow(com.checkmarx.flow.dto.ScanRequest, ..)) ||" +
+            "execution(* com.checkmarx.flow.service.SCAScanner.scan(com.checkmarx.flow.dto.ScanRequest, ..)) ||" +
+            "execution(* com.checkmarx.flow.service.ResultsService.publishCombinedResults(com.checkmarx.flow.dto.ScanRequest, ..)) ||" +
             "execution(* com.checkmarx.flow.service.*.process(.., com.checkmarx.flow.dto.ScanRequest, ..))) && (args(.., request) || args(request, ..))")
     public void beforeAdvice(JoinPoint joinPoint, ScanRequest request) {
         if(request != null) {
