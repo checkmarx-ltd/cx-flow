@@ -53,3 +53,11 @@ Feature: Cx-Flow SCA Integration permutation tests
       |               | 0.0   | 8                        |
       | low           | 0.0   | 0                        |
       |               | -0.3  | 8                        |
+
+
+  @SCA_Issues_Creation
+  Scenario: Publish SCA results and check ADO tickets are getting created
+    Given scan initiator is SCA
+    And bug tracker is Azure
+    When publishing new known unfiltered SCA results with 8 findings including 2 high and 6 medium vulnerabilities
+    Then new 8 tickets should be created

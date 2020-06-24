@@ -10,6 +10,7 @@ import com.atlassian.jira.rest.client.internal.async.CustomAsynchronousJiraRestC
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.constants.JiraConstants;
+import com.checkmarx.flow.constants.SCATicketingConstants;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanDetails;
 import com.checkmarx.flow.dto.ScanRequest;
@@ -19,8 +20,6 @@ import com.checkmarx.flow.exception.JiraClientRunTimeException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
-import com.cx.restclient.sca.dto.report.Finding;
-import com.cx.restclient.sca.dto.report.Package;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -38,14 +37,6 @@ import java.util.stream.Collectors;
 
 @Service
 public class JiraService {
-
-    private static final int MAX_RESULTS_ALLOWED = 1000000;
-    private static final String JIRA_ISSUE_KEY = "%s%s @ %s [%s]%s";
-    private static final String JIRA_ISSUE_KEY_2 = "%s%s @ %s%s";
-    private static final String JIRA_ISSUE_KEY_3 = "%s%s %.1f: %s in %s and %s @ %s.%s%s";
-    private static final String JIRA_ISSUE_BODY = "*%s* issue exists @ *%s* in branch *%s*";
-    private static final String JIRA_ISSUE_BODY_2 = "*%s* issue exists @ *%s*";
-    private static final String JIRA_ISSUE_BODY_3 = "*%s Vulnerable Package* issue exists @ *%s* in branch *%s*";
 
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(JiraService.class);
     private JiraRestClient client;
@@ -227,8 +218,8 @@ public class JiraService {
 
     private int getTotalResults(SearchResult searchResults) {
         int totalResults =  searchResults.getTotal();
-        if (totalResults > MAX_RESULTS_ALLOWED) {
-            totalResults = MAX_RESULTS_ALLOWED;
+        if (totalResults > JiraConstants.MAX_RESULTS_ALLOWED) {
+            totalResults = JiraConstants.MAX_RESULTS_ALLOWED;
         }
         return totalResults;
 
@@ -294,18 +285,12 @@ public class JiraService {
             if (useBranch) {
                 List<ScanResults.ScaDetails> scaDetails = issue.getScaDetails();
                 if (scaDetails != null) {
-                    ScanResults.ScaDetails details = scaDetails.get(0);
-                    Finding detailsFindings = details.getFinding();
-                    Package vulnerabilityPackage = details.getVulnerabilityPackage();
-                    summary = String.format(JIRA_ISSUE_KEY_3, issuePrefix, detailsFindings.getSeverity(),
-                            detailsFindings.getScore(), detailsFindings.getId(),
-                            vulnerabilityPackage.getName(),
-                            vulnerabilityPackage.getVersion(), request.getRepoName(), branch, issuePostfix);
+                    summary = ScanUtils.getScaSummaryIssueKey(request, issue, issuePrefix, issuePostfix);
                 } else {
-                    summary = String.format(JIRA_ISSUE_KEY, issuePrefix, vulnerability, filename, branch, issuePostfix);
+                    summary = String.format(JiraConstants.JIRA_ISSUE_TITLE_KEY_WITH_BRANCH, issuePrefix, vulnerability, filename, branch, issuePostfix);
                 }
             } else {
-                summary = String.format(JIRA_ISSUE_KEY_2, issuePrefix, vulnerability, filename, issuePostfix);
+                summary = String.format(JiraConstants.JIRA_ISSUE_TITLE_KEY, issuePrefix, vulnerability, filename, issuePostfix);
             }
             String fileUrl = ScanUtils.getFileUrl(request, issue.getFilename());
             summary = checkSummaryLength(summary);
@@ -872,17 +857,23 @@ public class JiraService {
             String key;
             if (useBranch) {
                 key = issue.getScaDetails() == null
-                        ? String.format(JIRA_ISSUE_KEY, issuePrefix, issue.getVulnerability(), issue.getFilename(), request.getBranch(), issuePostfix)
-                        : String.format(JIRA_ISSUE_KEY_3, issuePrefix, issue.getScaDetails().get(0).getFinding().getSeverity(),
-                        issue.getScaDetails().get(0).getFinding().getScore(), issue.getScaDetails().get(0).getFinding().getId(),
-                        issue.getScaDetails().get(0).getVulnerabilityPackage().getName(),
-                        issue.getScaDetails().get(0).getVulnerabilityPackage().getVersion(), request.getRepoName(), request.getBranch(), issuePostfix);
+                        ? String.format(JiraConstants.JIRA_ISSUE_TITLE_KEY_WITH_BRANCH, issuePrefix, issue.getVulnerability(), issue.getFilename(), request.getBranch(), issuePostfix)
+                        : getScaDetailsIssueTitleFormat(request, issuePrefix, issuePostfix, issue);
             } else {
-                key = String.format(JIRA_ISSUE_KEY_2, issuePrefix, issue.getVulnerability(), issue.getFilename(), issuePostfix);
+                key = String.format(JiraConstants.JIRA_ISSUE_TITLE_KEY, issuePrefix, issue.getVulnerability(), issue.getFilename(), issuePostfix);
             }
             map.put(key, issue);
         }
         return map;
+    }
+
+    private String getScaDetailsIssueTitleFormat(ScanRequest request, String issuePrefix, String issuePostfix, ScanResults.XIssue issue) {
+        ScanResults.ScaDetails scaDetails = issue.getScaDetails().get(0);
+
+        return String.format(SCATicketingConstants.SCA_JIRA_ISSUE_KEY, issuePrefix, scaDetails.getFinding().getSeverity(),
+        scaDetails.getFinding().getScore(), scaDetails.getFinding().getId(),
+        scaDetails.getVulnerabilityPackage().getName(),
+        scaDetails.getVulnerabilityPackage().getVersion(), request.getRepoName(), request.getBranch(), issuePostfix);
     }
 
     private String getBody(ScanResults.XIssue issue, ScanRequest request, String fileUrl) {
@@ -896,14 +887,14 @@ public class JiraService {
             if (Optional.ofNullable(issue.getScaDetails()).isPresent() ) {
                 issue.getScaDetails().stream().findAny().ifPresent(any -> {
                     body.append(any.getFinding().getDescription()).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
-                    body.append(String.format(JIRA_ISSUE_BODY_3, any.getFinding().getSeverity(), any.getVulnerabilityPackage().getName(), request.getBranch())).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
+                    body.append(String.format(SCATicketingConstants.SCA_JIRA_ISSUE_BODY, any.getFinding().getSeverity(), any.getVulnerabilityPackage().getName(), request.getBranch())).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
                 });
             } else {
-                body.append(String.format(JIRA_ISSUE_BODY, issue.getVulnerability(), issue.getFilename(), request.getBranch())).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
+                body.append(String.format(JiraConstants.JIRA_ISSUE_BODY_WITH_BRANCH, issue.getVulnerability(), issue.getFilename(), request.getBranch())).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
             }
 
         } else {
-            body.append(String.format(JIRA_ISSUE_BODY_2, issue.getVulnerability(), issue.getFilename())).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
+            body.append(String.format(JiraConstants.JIRA_ISSUE_BODY, issue.getVulnerability(), issue.getFilename())).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
         }
         Optional.ofNullable(issue.getDescription())
                 .ifPresent(d -> body.append(d.trim()).append(ScanUtils.CRLF).append(ScanUtils.CRLF));
