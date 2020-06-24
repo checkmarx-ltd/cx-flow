@@ -19,7 +19,6 @@ import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
@@ -472,7 +471,6 @@ public class GitHubController {
         return result;
     }
 
-    @NotNull
     private ResponseEntity<EventResponse> getSuccessResponse() {
         return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
                 .message("Scan Request Successfully Submitted")
@@ -480,7 +478,6 @@ public class GitHubController {
                 .build());
     }
 
-    @NotNull
     private ResponseEntity<EventResponse> getBadRequestMessage(IllegalArgumentException cause, ControllerRequest controllerRequest, String product) {
         String errorMessage = String.format("Error submitting Scan Request. Product or Bugtracker option incorrect %s | %s",
                 StringUtils.defaultIfEmpty(product, ""),
