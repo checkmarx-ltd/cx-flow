@@ -947,7 +947,7 @@ public class ScanUtils {
 
             String cveName = any.getFinding().getCveName();
             if (!ScanUtils.empty(cveName)) {
-                body.append(DIV_A_HREF).append("https://nvd.nist.gov/vuln/detail/").append(cveName).append("\'>Reference – NVD link</a></div>");
+                body.append(DIV_A_HREF).append(NVD_URL_PREFIX).append(cveName).append("\'>Reference – NVD link</a></div>");
             }
         });
     }
