@@ -4,8 +4,8 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitLabProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.dto.BugTracker;
+import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.EventResponse;
-import com.checkmarx.flow.dto.FlowOverride;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.gitlab.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
@@ -26,7 +26,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -34,7 +33,7 @@ import java.util.Locale;
 @RestController
 @RequestMapping(value = "/")
 @RequiredArgsConstructor
-public class GitLabController {
+public class GitLabController extends WebhookController {
 
     private static final String TOKEN_HEADER = "X-Gitlab-Token";
     private static final String EVENT = "X-Gitlab-Event";
@@ -64,28 +63,12 @@ public class GitLabController {
             @RequestBody MergeEvent body,
             @RequestHeader(value = TOKEN_HEADER) String token,
             @PathVariable(value = "product", required = false) String product,
-            @RequestParam(value = "application", required = false) String application,
-            @RequestParam(value = "branch", required = false) List<String> branch,
-            @RequestParam(value = "severity", required = false) List<String> severity,
-            @RequestParam(value = "cwe", required = false) List<String> cwe,
-            @RequestParam(value = "category", required = false) List<String> category,
-            @RequestParam(value = "project", required = false) String project,
-            @RequestParam(value = "team", required = false) String team,
-            @RequestParam(value = "status", required = false) List<String> status,
-            @RequestParam(value = "assignee", required = false) String assignee,
-            @RequestParam(value = "preset", required = false) String preset,
-            @RequestParam(value = "incremental", required = false) Boolean incremental,
-            @RequestParam(value = "exclude-files", required = false) List<String> excludeFiles,
-            @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders,
-            @RequestParam(value = "override", required = false) String override,
-            @RequestParam(value = "bug", required = false) String bug,
-            @RequestParam(value = "app-only", required = false) Boolean appOnlyTracking
+            ControllerRequest controllerRequest
     ){
         String uid = helperService.getShortUid();
         MDC.put("cx", uid);
         log.info("Processing GitLab MERGE request");
         validateGitLabRequest(token);
-        FlowOverride o = ScanUtils.getMachinaOverride(override);
 
         try {
             ObjectAttributes objectAttributes = body.getObjectAttributes();
@@ -99,17 +82,17 @@ public class GitLabController {
                         .build());
             }
             String app = body.getRepository().getName();
-            if(!ScanUtils.empty(application)){
-                app = application;
+            if(!ScanUtils.empty(controllerRequest.getApplication())){
+                app = controllerRequest.getApplication();
             }
 
             BugTracker.Type bugType = BugTracker.Type.GITLABMERGE;
-            if(!ScanUtils.empty(bug)){
-                bugType = ScanUtils.getBugTypeEnum(bug, flowProperties.getBugTrackerImpl());
+            if(!ScanUtils.empty(controllerRequest.getBug())){
+                bugType = ScanUtils.getBugTypeEnum(controllerRequest.getBug(), flowProperties.getBugTrackerImpl());
             }
 
-            if(appOnlyTracking != null){
-                flowProperties.setTrackApplicationOnly(appOnlyTracking);
+            if(controllerRequest.getAppOnly() != null){
+                flowProperties.setTrackApplicationOnly(controllerRequest.getAppOnly());
             }
 
             if(ScanUtils.empty(product)){
@@ -120,25 +103,13 @@ public class GitLabController {
             String targetBranch = objectAttributes.getTargetBranch();
             String defaultBranch = objectAttributes.getTarget().getDefaultBranch();
 
-            List<String> branches = new ArrayList<>();
+            List<String> branches = getBranches(controllerRequest.getBranch(), flowProperties);
 
-            if(!ScanUtils.empty(branch)){
-                branches.addAll(branch);
-            }
-            else if(!ScanUtils.empty(flowProperties.getBranches())){
-                branches.addAll(flowProperties.getBranches());
-            }
+            BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
 
-            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
+            FilterConfiguration filter = filterFactory.getFilter(controllerRequest.getSeverity(), controllerRequest.getCwe(), controllerRequest.getCategory(), controllerRequest.getStatus(), null, flowProperties);
 
-            FilterConfiguration filter = filterFactory.getFilter(severity, cwe, category, status, null, flowProperties);
-
-            if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
-                excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
-            }
-            if(excludeFolders == null && !ScanUtils.empty(cxProperties.getExcludeFolders())){
-                excludeFolders = Arrays.asList(cxProperties.getExcludeFolders().split(","));
-            }
+            setExclusionProperties(controllerRequest, cxProperties);
 
             Project proj = body.getProject();
             String mergeEndpoint = properties.getApiUrl().concat(GitLabService.MERGE_NOTE_PATH);
@@ -149,20 +120,17 @@ public class GitLabController {
             String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS_OAUTH2.concat(properties.getToken()).concat("@"));
             gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP_OAUTH2.concat(properties.getToken()).concat("@"));
             String scanPreset = cxProperties.getScanPreset();
-            if(!ScanUtils.empty(preset)){
-                scanPreset = preset;
+            if(!ScanUtils.empty(controllerRequest.getPreset())){
+                scanPreset = controllerRequest.getPreset();
             }
-            boolean inc = cxProperties.getIncremental();
-            if(incremental != null){
-                inc = incremental;
-            }
+
             ScanRequest request = ScanRequest.builder()
                     .id(String.valueOf(proj.getId()))
                     .application(app)
                     .product(p)
-                    .project(project)
-                    .team(team)
-                    .namespace(proj.getNamespace().replaceAll(" ","_"))
+                    .project(controllerRequest.getProject())
+                    .team(controllerRequest.getTeam())
+                    .namespace(proj.getNamespace().replace(" ","_"))
                     .repoName(proj.getName())
                     .repoUrl(proj.getGitHttpUrl())
                     .repoUrlWithAuth(gitAuthUrl)
@@ -173,18 +141,15 @@ public class GitLabController {
                     .mergeNoteUri(mergeEndpoint)
                     .refs(Constants.CX_BRANCH_PREFIX.concat(currentBranch))
                     .email(null)
-                    .incremental(inc)
+                    .incremental(isScanIncremental(controllerRequest, cxProperties))
                     .scanPreset(scanPreset)
-                    .excludeFolders(excludeFolders)
-                    .excludeFiles(excludeFiles)
+                    .excludeFolders(controllerRequest.getExcludeFolders())
+                    .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)
                     .filter(filter)
                     .build();
 
-            if(!ScanUtils.empty(preset)){
-                request.setScanPreset(preset);
-                request.setScanPresetOverride(true);
-            }
+            overrideScanPreset(controllerRequest, request);
 
             /*Check for Config as code (cx.config) and override*/
             CxConfig cxConfig =  gitLabService.getCxConfigOverride(request);
@@ -201,20 +166,10 @@ public class GitLabController {
                 flowService.initiateAutomation(request);
             }
 
-        }catch (IllegalArgumentException e){
-            String errorMessage = "Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product != null ? product : "").concat(" | ").concat(bug != null ? bug : "");
-            log.error(errorMessage, e);
-            ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
-                    .message(errorMessage)
-                    .success(false)
-                    .build());
+        } catch (IllegalArgumentException e) {
+            return getBadRequestMessage(e, controllerRequest, product);
         }
-        return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
-                .message("Scan Request Successfully Submitted")
-                .success(true)
-                .build());
+        return getSuccessResponse();
     }
 
     /**
@@ -225,44 +180,28 @@ public class GitLabController {
             @RequestBody PushEvent body,
             @RequestHeader(value = TOKEN_HEADER) String token,
             @PathVariable(value = "product", required = false) String product,
-            @RequestParam(value = "application", required = false) String application,
-            @RequestParam(value = "branch", required = false) List<String> branch,
-            @RequestParam(value = "severity", required = false) List<String> severity,
-            @RequestParam(value = "cwe", required = false) List<String> cwe,
-            @RequestParam(value = "category", required = false) List<String> category,
-            @RequestParam(value = "project", required = false) String project,
-            @RequestParam(value = "team", required = false) String team,
-            @RequestParam(value = "status", required = false) List<String> status,
-            @RequestParam(value = "assignee", required = false) String assignee,
-            @RequestParam(value = "preset", required = false) String preset,
-            @RequestParam(value = "incremental", required = false) Boolean incremental,
-            @RequestParam(value = "exclude-files", required = false) List<String> excludeFiles,
-            @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders,
-            @RequestParam(value = "override", required = false) String override,
-            @RequestParam(value = "bug", required = false) String bug,
-            @RequestParam(value = "app-only", required = false) Boolean appOnlyTracking
+            ControllerRequest controllerRequest
     ){
         String uid = helperService.getShortUid();
         MDC.put("cx", uid);
         validateGitLabRequest(token);
 
-        FlowOverride o = ScanUtils.getMachinaOverride(override);
         String commitEndpoint = null;
         try {
             String app = body.getRepository().getName();
-            if(!ScanUtils.empty(application)){
-                app = application;
+            if(!ScanUtils.empty(controllerRequest.getApplication())){
+                app = controllerRequest.getApplication();
             }
 
             //set the default bug tracker as per yml
             BugTracker.Type bugType;
-            if (ScanUtils.empty(bug)) {
-                bug =  flowProperties.getBugTracker();
+            if (ScanUtils.empty(controllerRequest.getBug())) {
+                controllerRequest.setBug(flowProperties.getBugTracker());
             }
-            bugType = ScanUtils.getBugTypeEnum(bug, flowProperties.getBugTrackerImpl());
+            bugType = ScanUtils.getBugTypeEnum(controllerRequest.getBug(), flowProperties.getBugTrackerImpl());
 
-            if(appOnlyTracking != null){
-                flowProperties.setTrackApplicationOnly(appOnlyTracking);
+            if(controllerRequest.getAppOnly() != null){
+                flowProperties.setTrackApplicationOnly(controllerRequest.getAppOnly());
             }
             if(ScanUtils.empty(product)){
                 product = ScanRequest.Product.CX.getProduct();
@@ -272,22 +211,17 @@ public class GitLabController {
             String currentBranch = ScanUtils.getBranchFromRef(body.getRef());
             List<String> branches = new ArrayList<>();
 
-            if(!ScanUtils.empty(branch)){
-                branches.addAll(branch);
+            if(!ScanUtils.empty(controllerRequest.getBranch())){
+                branches.addAll(controllerRequest.getBranch());
             }
             else if(!ScanUtils.empty(flowProperties.getBranches())){
                 branches.addAll(flowProperties.getBranches());
             }
 
-            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
-            FilterConfiguration filter = filterFactory.getFilter(severity, cwe, category, status, null, flowProperties);
+            BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
+            FilterConfiguration filter = filterFactory.getFilter(controllerRequest.getSeverity(), controllerRequest.getCwe(), controllerRequest.getCategory(), controllerRequest.getStatus(), null, flowProperties);
 
-            if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
-                excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
-            }
-            if(excludeFolders == null && !ScanUtils.empty(cxProperties.getExcludeFolders())){
-                excludeFolders = Arrays.asList(cxProperties.getExcludeFolders().split(","));
-            }
+            setExclusionProperties(controllerRequest, cxProperties);
 
             Project proj = body.getProject();
             /*Determine emails*/
@@ -313,21 +247,17 @@ public class GitLabController {
             gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP_OAUTH2.concat(properties.getToken()).concat("@"));
 
             String scanPreset = cxProperties.getScanPreset();
-            if(!ScanUtils.empty(preset)){
-                scanPreset = preset;
-            }
-            boolean inc = cxProperties.getIncremental();
-            if(incremental != null){
-                inc = incremental;
+            if(!ScanUtils.empty(controllerRequest.getPreset())){
+                scanPreset = controllerRequest.getPreset();
             }
 
             ScanRequest request = ScanRequest.builder()
                     .id(String.valueOf(body.getProjectId()))
                     .application(app)
                     .product(p)
-                    .project(project)
-                    .team(team)
-                    .namespace(proj.getNamespace().replaceAll(" ","_"))
+                    .project(controllerRequest.getProject())
+                    .team(controllerRequest.getTeam())
+                    .namespace(proj.getNamespace().replace(" ","_"))
                     .repoName(proj.getName())
                     .repoUrl(proj.getGitHttpUrl())
                     .repoUrlWithAuth(gitAuthUrl)
@@ -336,16 +266,16 @@ public class GitLabController {
                     .mergeNoteUri(commitEndpoint)
                     .refs(body.getRef())
                     .email(emails)
-                    .incremental(inc)
+                    .incremental(isScanIncremental(controllerRequest, cxProperties))
                     .scanPreset(scanPreset)
-                    .excludeFolders(excludeFolders)
-                    .excludeFiles(excludeFiles)
+                    .excludeFolders(controllerRequest.getExcludeFolders())
+                    .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)
                     .filter(filter)
                     .build();
 
-            if(!ScanUtils.empty(preset)){
-                request.setScanPreset(preset);
+            if(!ScanUtils.empty(controllerRequest.getPreset())){
+                request.setScanPreset(controllerRequest.getPreset());
                 request.setScanPresetOverride(true);
             }
 
@@ -361,26 +291,12 @@ public class GitLabController {
             if(helperService.isBranch2Scan(request, branches)){
                 flowService.initiateAutomation(request);
             }
-
-        }catch (IllegalArgumentException e){
-            String errorMessage = "Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product != null ? product : "").concat(" | ").concat(bug != null ? bug : "");
-            log.error(errorMessage, e);
-            ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
-                    .message(errorMessage)
-                    .success(false)
-                    .build());
+        } catch (IllegalArgumentException e) {
+            return getBadRequestMessage(e, controllerRequest, product);
         }
-        return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
-                .message("Scan Request Successfully Submitted")
-                .success(true)
-                .build());
+        return getSuccessResponse();
     }
 
-    /**
-     * @param token
-     */
     private void validateGitLabRequest(String token){
         log.info("Validating GitLab request token");
         if(!properties.getWebhookToken().equals(token)){
@@ -391,13 +307,12 @@ public class GitLabController {
     }
 
     /**
-     * Check if the merge event is being driven by updates to WIP status.
-     * @param event
-     * @return
+     * Check if the merge event is being driven by updates to 'work item in progress' status.
      */
     private boolean isWIP(MergeEvent event){
         /*Merge has been marked WIP, ignoring*/
-        if(event.getObjectAttributes().getWorkInProgress()){
+        Boolean inProgress = event.getObjectAttributes().getWorkInProgress();
+        if (Boolean.TRUE.equals(inProgress)) {
             return true;
         }
         Changes changes = event.getChanges();
@@ -405,12 +320,9 @@ public class GitLabController {
             return false;
         }
         /*Merge has been changed from WIP to not-WIP, ignoring*/
-        else if(changes != null && changes.getTitle() != null && changes.getTitle().getPrevious() != null &&
+        else return changes != null && changes.getTitle() != null && changes.getTitle().getPrevious() != null &&
                 changes.getTitle().getPrevious().startsWith("WIP:CX|") &&
-                    !changes.getTitle().getCurrent().startsWith("WIP:")){
-            return true;
-        }
-        return false;
+                !changes.getTitle().getCurrent().startsWith("WIP:");
     }
 }
 

@@ -42,7 +42,7 @@ import java.util.*;
 @RestController
 @RequestMapping(value = "/")
 @RequiredArgsConstructor
-public class GitHubController {
+public class GitHubController extends WebhookController {
 
     private static final String SIGNATURE = "X-Hub-Signature";
     private static final String EVENT = "X-GitHub-Event";
@@ -152,7 +152,7 @@ public class GitHubController {
             PullRequest pullRequest = event.getPullRequest();
             String currentBranch = pullRequest.getHead().getRef();
             String targetBranch = pullRequest.getBase().getRef();
-            List<String> branches = getBranches(controllerRequest.getBranch());
+            List<String> branches = getBranches(controllerRequest.getBranch(), flowProperties);
             BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
             FilterConfiguration filter = filterFactory.getFilter(controllerRequest.getSeverity(),
                     controllerRequest.getCwe(),
@@ -161,7 +161,7 @@ public class GitHubController {
                     null,
                     flowProperties);
 
-            setExclusionProperties(controllerRequest);
+            setExclusionProperties(controllerRequest, cxProperties);
             //build request object
             String gitUrl = repository.getCloneUrl();
             String token = properties.getToken();
@@ -186,7 +186,7 @@ public class GitHubController {
                     .mergeNoteUri(event.getPullRequest().getIssueUrl().concat("/comments"))
                     .mergeTargetBranch(targetBranch)
                     .email(null)
-                    .incremental(isScanIncremental(controllerRequest))
+                    .incremental(isScanIncremental(controllerRequest, cxProperties))
                     .scanPreset(scanPreset)
                     .excludeFolders(controllerRequest.getExcludeFolders())
                     .excludeFiles(controllerRequest.getExcludeFiles())
@@ -271,12 +271,12 @@ public class GitHubController {
 
             //determine branch (without refs)
             String currentBranch = ScanUtils.getBranchFromRef(event.getRef());
-            List<String> branches = getBranches(controllerRequest.getBranch());
+            List<String> branches = getBranches(controllerRequest.getBranch(), flowProperties);
 
             BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
             FilterConfiguration filter = filterFactory.getFilter(controllerRequest.getSeverity(), controllerRequest.getCwe(), controllerRequest.getCategory(), controllerRequest.getStatus(), null, flowProperties);
 
-            setExclusionProperties(controllerRequest);
+            setExclusionProperties(controllerRequest, cxProperties);
 
             //build request object
             Repository repository = event.getRepository();
@@ -306,7 +306,7 @@ public class GitHubController {
                     .defaultBranch(repository.getDefaultBranch())
                     .refs(event.getRef())
                     .email(determineEmails(event))
-                    .incremental(isScanIncremental(controllerRequest))
+                    .incremental(isScanIncremental(controllerRequest, cxProperties))
                     .scanPreset(scanPreset)
                     .excludeFolders(controllerRequest.getExcludeFolders())
                     .excludeFiles(controllerRequest.getExcludeFiles())
@@ -440,36 +440,6 @@ public class GitHubController {
 
     }
 
-    private List<String> getBranches(List<String> branchesFromQuery) {
-        List<String> result = new ArrayList<>();
-        if (!ScanUtils.empty(branchesFromQuery)) {
-            result.addAll(branchesFromQuery);
-        } else if (!ScanUtils.empty(flowProperties.getBranches())) {
-            result.addAll(flowProperties.getBranches());
-        }
-        return result;
-    }
-
-    private ResponseEntity<EventResponse> getSuccessResponse() {
-        return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
-                .message("Scan Request Successfully Submitted")
-                .success(true)
-                .build());
-    }
-
-    private ResponseEntity<EventResponse> getBadRequestMessage(IllegalArgumentException cause, ControllerRequest controllerRequest, String product) {
-        String errorMessage = String.format("Error submitting Scan Request. Product or Bugtracker option incorrect %s | %s",
-                StringUtils.defaultIfEmpty(product, ""),
-                StringUtils.defaultIfEmpty(controllerRequest.getBug(), ""));
-
-        log.error(errorMessage, cause);
-        ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
-                .message(errorMessage)
-                .success(false)
-                .build());
-    }
 
     /** Validates the received body using the Github hook secret. */
     public void verifyHmacSignature(String message, String signature) {
@@ -497,27 +467,6 @@ public class GitHubController {
         } else {
             log.error("Unable to initialize Hmac. Signature cannot be verified.");
             throw new InvalidTokenException();
-        }
-    }
-
-    private void setExclusionProperties(ControllerRequest target) {
-        if (target.getExcludeFiles() == null && !ScanUtils.empty(cxProperties.getExcludeFiles())) {
-            target.setExcludeFiles(Arrays.asList(cxProperties.getExcludeFiles().split(",")));
-        }
-        if (target.getExcludeFolders() == null && !ScanUtils.empty(cxProperties.getExcludeFolders())) {
-            target.setExcludeFolders(Arrays.asList(cxProperties.getExcludeFolders().split(",")));
-        }
-    }
-
-    private boolean isScanIncremental(ControllerRequest request) {
-        return Optional.ofNullable(request.getIncremental())
-                .orElse(cxProperties.getIncremental());
-    }
-
-    private void overrideScanPreset(ControllerRequest controllerRequest, ScanRequest scanRequest) {
-        if (!ScanUtils.empty(controllerRequest.getPreset())) {
-            scanRequest.setScanPreset(controllerRequest.getPreset());
-            scanRequest.setScanPresetOverride(true);
         }
     }
 }
