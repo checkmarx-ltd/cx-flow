@@ -1,6 +1,7 @@
 @AzureDevOps
 @PublishProcessing
 @Integration
+@Skip
 Feature: Parsing SAST report and publishing items to Azure DevOps
 
   Background: Issue tracker is Azure DevOps

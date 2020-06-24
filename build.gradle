@@ -252,7 +252,7 @@ task integrationTest(type: Test) {
             include 'com/checkmarx/flow/cucumber/integration/pullrequest/updatecomments/**'
             exclude 'com/checkmarx/flow/cucumber/integration/end2end/genericendtoend/**'
             exclude 'com/checkmarx/flow/cucumber/integration/end2end/github2jira/**'
-            include 'com/checkmarx/flow/cucumber/integration/publishprocess/**'
+            exclude 'com/checkmarx/flow/cucumber/integration/publishprocess/**'
             exclude 'com/checkmarx/flow/test/flow**'
             exclude 'com/checkmarx/flow/exception/**'
             exclude 'com/checkmarx/flow/custom/**'
