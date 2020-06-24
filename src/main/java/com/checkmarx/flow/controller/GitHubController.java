@@ -18,7 +18,8 @@ import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import org.junit.platform.commons.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
@@ -219,24 +220,11 @@ public class GitHubController {
             if(helperService.isBranch2Scan(request, branches)){
                 flowService.initiateAutomation(request);
             }
-
-
-        }catch (IllegalArgumentException e){
-            String errorMessage = "Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product != null ? product : "").concat(" | ").concat(controllerRequest.getBug() != null ? controllerRequest.getBug() : "");
-            log.error(errorMessage, e);
-            ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
-                    .message(errorMessage)
-                    .success(false)
-                    .build());
+        } catch (IllegalArgumentException e) {
+            return getBadRequestMessage(e, controllerRequest, product);
         }
 
-        return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
-                .message("Scan Request Successfully Submitted")
-                .success(true)
-                .build());
-
+        return getSuccessResponse();
     }
 
     /**
@@ -247,28 +235,14 @@ public class GitHubController {
             @RequestBody String body,
             @RequestHeader(value = SIGNATURE) String signature,
             @PathVariable(value = "product", required = false) String product,
-            @RequestParam(value = "application", required = false) String application,
-            @RequestParam(value = "branch", required = false) List<String> branch,
-            @RequestParam(value = "severity", required = false) List<String> severity,
-            @RequestParam(value = "cwe", required = false) List<String> cwe,
-            @RequestParam(value = "category", required = false) List<String> category,
-            @RequestParam(value = "project", required = false) String project,
-            @RequestParam(value = "team", required = false) String team,
-            @RequestParam(value = "status", required = false) List<String> status,
-            @RequestParam(value = "assignee", required = false) String assignee,
-            @RequestParam(value = "preset", required = false) String preset,
-            @RequestParam(value = "incremental", required = false) Boolean incremental,
-            @RequestParam(value = "exclude-files", required = false) List<String> excludeFiles,
-            @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders,
-            @RequestParam(value = "override", required = false) String override,
-            @RequestParam(value = "bug", required = false) String bug,
-            @RequestParam(value = "app-only", required = false) Boolean appOnlyTracking
-    ){
+            ControllerRequest controllerRequest) {
         String uid = helperService.getShortUid();
         MDC.put("cx", uid);
         log.info("Processing GitHub PUSH request");
         PushEvent event;
         ObjectMapper mapper = new ObjectMapper();
+        controllerRequest = Optional.ofNullable(controllerRequest)
+                .orElseGet(() -> ControllerRequest.builder().build());
 
         try {
             event = mapper.readValue(body, PushEvent.class);
@@ -285,8 +259,8 @@ public class GitHubController {
 
         try {
             String app = event.getRepository().getName();
-            if(!ScanUtils.empty(application)){
-                app = application;
+            if(!ScanUtils.empty(controllerRequest.getApplication())){
+                app = controllerRequest.getApplication();
             }
 
             // If user has pushed their changes into an important branch (e.g. master) and the code has some issues,
@@ -295,13 +269,13 @@ public class GitHubController {
             // See the comment for the pullRequest method for further details.
             BugTracker.Type bugType;
             // However, if the bug tracker is overridden in the query string, use the override value.
-            if (ScanUtils.empty(bug)) {
-                bug =  flowProperties.getBugTracker();
+            if (ScanUtils.empty(controllerRequest.getBug())) {
+                controllerRequest.setBug(flowProperties.getBugTracker());
             }
-            bugType = ScanUtils.getBugTypeEnum(bug, flowProperties.getBugTrackerImpl());
+            bugType = ScanUtils.getBugTypeEnum(controllerRequest.getBug(), flowProperties.getBugTrackerImpl());
 
-            if(appOnlyTracking != null){
-                flowProperties.setTrackApplicationOnly(appOnlyTracking);
+            if(controllerRequest.getAppOnly() != null){
+                flowProperties.setTrackApplicationOnly(controllerRequest.getAppOnly());
             }
             if(ScanUtils.empty(product)){
                 product = ScanRequest.Product.CX.getProduct();
@@ -310,16 +284,16 @@ public class GitHubController {
 
             //determine branch (without refs)
             String currentBranch = ScanUtils.getBranchFromRef(event.getRef());
-            List<String> branches = getBranches(branch);
+            List<String> branches = getBranches(controllerRequest.getBranch());
 
-            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
-            FilterConfiguration filter = filterFactory.getFilter(severity, cwe, category, status, null, flowProperties);
+            BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
+            FilterConfiguration filter = filterFactory.getFilter(controllerRequest.getSeverity(), controllerRequest.getCwe(), controllerRequest.getCategory(), controllerRequest.getStatus(), null, flowProperties);
 
-            if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
-                excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
+            if(controllerRequest.getExcludeFiles() == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
+                controllerRequest.setExcludeFiles(Arrays.asList(cxProperties.getExcludeFiles().split(",")));
             }
-            if(excludeFolders == null && !ScanUtils.empty(cxProperties.getExcludeFolders())){
-                excludeFolders = Arrays.asList(cxProperties.getExcludeFolders().split(","));
+            if (controllerRequest.getExcludeFolders() == null && !ScanUtils.empty(cxProperties.getExcludeFolders())) {
+                controllerRequest.setExcludeFolders(Arrays.asList(cxProperties.getExcludeFolders().split(",")));
             }
 
             /*Determine emails*/
@@ -350,15 +324,15 @@ public class GitHubController {
             String scanPreset = cxProperties.getScanPreset();
 
             boolean inc = cxProperties.getIncremental();
-            if(incremental != null){
-                inc = incremental;
+            if(controllerRequest.getIncremental() != null){
+                inc = controllerRequest.getIncremental();
             }
 
             ScanRequest request = ScanRequest.builder()
                     .application(app)
                     .product(p)
-                    .project(project)
-                    .team(team)
+                    .project(controllerRequest.getProject())
+                    .team(controllerRequest.getTeam())
                     .namespace(repository.getOwner().getName().replace(" ","_"))
                     .repoName(repository.getName())
                     .repoUrl(repository.getCloneUrl())
@@ -370,14 +344,14 @@ public class GitHubController {
                     .email(emails)
                     .incremental(inc)
                     .scanPreset(scanPreset)
-                    .excludeFolders(excludeFolders)
-                    .excludeFiles(excludeFiles)
+                    .excludeFolders(controllerRequest.getExcludeFolders())
+                    .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)
                     .filter(filter)
                     .build();
 
-            if(!ScanUtils.empty(preset)){
-                request.setScanPreset(preset);
+            if(!ScanUtils.empty(controllerRequest.getPreset())){
+                request.setScanPreset(controllerRequest.getPreset());
                 request.setScanPresetOverride(true);
             }
 
@@ -395,21 +369,10 @@ public class GitHubController {
 
         }
         catch (IllegalArgumentException e){
-            String errorMessage = "Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product != null ? product : "").concat(" | ").concat(bug != null ? bug : "");
-            log.error(errorMessage, e);
-            ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
-                    .message(errorMessage)
-                    .success(false)
-                    .build());
+            return getBadRequestMessage(e, controllerRequest, product);
         }
         
-        return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
-                .message("Scan Request Successfully Submitted")
-                .success(true)
-                .build());
-
+        return getSuccessResponse();
     }
 
     /**
@@ -489,9 +452,9 @@ public class GitHubController {
 
         //deletes a project which is not in the middle of a scan, otherwise it will not be deleted
         sastScanner.deleteProject(request);
-            
+
         log.info("Process of delete branch has finished successfully");
-        
+
         return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
                 .message("Delete Branch Successfully finished")
                 .success(true)
@@ -507,6 +470,29 @@ public class GitHubController {
             result.addAll(flowProperties.getBranches());
         }
         return result;
+    }
+
+    @NotNull
+    private ResponseEntity<EventResponse> getSuccessResponse() {
+        return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
+                .message("Scan Request Successfully Submitted")
+                .success(true)
+                .build());
+    }
+
+    @NotNull
+    private ResponseEntity<EventResponse> getBadRequestMessage(IllegalArgumentException cause, ControllerRequest controllerRequest, String product) {
+        String errorMessage = String.format("Error submitting Scan Request. Product or Bugtracker option incorrect %s | %s",
+                StringUtils.defaultIfEmpty(product, ""),
+                StringUtils.defaultIfEmpty(controllerRequest.getBug(), ""));
+
+        log.error(errorMessage, cause);
+        ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
+                .message(errorMessage)
+                .success(false)
+                .build());
     }
 
     /** Validates the received body using the Github hook secret. */
@@ -537,5 +523,4 @@ public class GitHubController {
             throw new InvalidTokenException();
         }
     }
-
 }

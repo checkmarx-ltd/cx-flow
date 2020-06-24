@@ -143,14 +143,11 @@ public class GitHubTestUtils implements GitHubTestUtilsImpl {
     public void callController(GitHubController controller, EventType eventType, @Nullable String projectNameOverride) {
         String body = loadWebhookRequestBody(eventType);
         String signature = createSignature(body);
+        ControllerRequest request = ControllerRequest.builder().project(projectNameOverride).build();
         if (eventType == EventType.PULL_REQUEST) {
-            controller.pullRequest(body, signature,
-                    null, ControllerRequest.builder().project(projectNameOverride).build());
+            controller.pullRequest(body, signature, null, request);
         } else {
-            controller.pushRequest(body, signature,
-                    null, null, null, null, null, null, projectNameOverride,
-                    null, null, null, null, null, null,
-                    null, null, null, null);
+            controller.pushRequest(body, signature, null, request);
         }
     }
 
