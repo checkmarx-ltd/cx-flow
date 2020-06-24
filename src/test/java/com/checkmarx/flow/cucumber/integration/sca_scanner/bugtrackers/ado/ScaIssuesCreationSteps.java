@@ -4,6 +4,7 @@ import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.ADOProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.cucumber.common.utils.JsonUtils;
+import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 import com.checkmarx.flow.cucumber.integration.azure.publishing.AzureDevopsClient;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
@@ -27,11 +28,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 
+import static com.checkmarx.flow.cucumber.common.Constants.CUCUMBER_DATA_DIR;
+
 @SpringBootTest(classes = {CxFlowApplication.class, AzureDevopsClient.class})
 @RequiredArgsConstructor
 public class ScaIssuesCreationSteps {
 
-    private static final String INPUT_BASE_PATH = "cucumber/data/sample-sca-results/";
+    private static final String INPUT_BASE_PATH = CUCUMBER_DATA_DIR + "/sample-sca-results/";
     private final static String NAMESPACE = "CxNamespace";
     private final static String PROJECT_NAME = "CxScaTest";
     private static final String AZURE = "Azure";
@@ -69,14 +72,14 @@ public class ScaIssuesCreationSteps {
 
     @When("publishing new known unfiltered SCA results with 8 findings including 2 high and 6 medium vulnerabilities")
     public void publishNewScaResults() throws IOException, MachinaException {
-        ScanResults scanResults = JsonUtils.json2Object(getFileFromResourcePath(INPUT_BASE_PATH + INPUT_FILE), ScanResults.class);
+        ScanResults scanResults = JsonUtils.json2Object(TestUtils.getFileFromRelativeResourcePath(INPUT_BASE_PATH + INPUT_FILE), ScanResults.class);
         resultsService.processResults(getBasicScanRequest(), scanResults, null);
     }
 
-    @Then("new {int} tickets should be created")
-    public void ticketsCreationValidation(int expectedTicketsCreation) throws IOException {
+    @Then("new 8 tickets should be created")
+    public void ticketsCreationValidation() throws IOException {
         Assert.assertEquals("Azure new SCA results tickets number is not as expected",
-                expectedTicketsCreation, azureDevopsClient.getIssueCount());
+                8, azureDevopsClient.getIssueCount());
     }
 
     private ScanRequest getBasicScanRequest() {
@@ -90,10 +93,6 @@ public class ScaIssuesCreationSteps {
                 .bugTracker(getAzureCustomBugTracker())
                 .refs(Constants.CX_BRANCH_PREFIX.concat("refs/heads/master"))
                 .build();
-    }
-
-    private File getFileFromResourcePath(String path) throws IOException {
-        return new ClassPathResource(path).getFile();
     }
 
     private BugTracker getAzureCustomBugTracker() {
