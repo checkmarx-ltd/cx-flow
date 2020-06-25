@@ -170,6 +170,10 @@ jobs:
         default: v3.1.1
         description: the helm client version to install
         type: string
+      consider-branch:
+        default: false
+        description: Should we only consider jobs running on the same branch?
+        type: boolean
     steps:
       - checkout
       - aws-eks/update-kubeconfig-with-authenticator:
@@ -298,7 +302,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Run SCA Integration Tests
+          name: Run Jira Integration Tests
           command: |
             export HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
             ./gradlew clean JiraIntegrationTest --info -Dtarget=${HOOK_TARGET} -Drepo=${HOOK_REPO} -Dnamespace=${HOOK_NAMESPACE}
@@ -319,7 +323,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Run SCA Integration Tests
+          name: Run pull request comments Integration Tests
           command: |
             export HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
             ./gradlew clean PullRequestCommnetsIntegrationTest --info -Dtarget=${HOOK_TARGET} -Drepo=${HOOK_REPO} -Dnamespace=${HOOK_NAMESPACE}
