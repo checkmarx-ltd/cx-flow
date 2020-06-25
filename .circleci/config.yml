@@ -454,6 +454,7 @@ workflows:
           requires:
             - e2e-tests
             - integration-tests
+            - sca-integration-tests
       - publish-github-release:
           filters:
             branches:
@@ -461,6 +462,7 @@ workflows:
           requires:
             - e2e-tests
             - integration-tests
+            - sca-integration-tests
       - cleanup:
           cluster-name: eks-cxflow-ci
           namespace: cxflow-${CIRCLE_SHA1::7}
@@ -476,6 +478,7 @@ workflows:
           requires:
             - e2e-tests
             - integration-tests
+            - sca-integration-tests
   nightly-cleanup:
     triggers:
       - schedule:
