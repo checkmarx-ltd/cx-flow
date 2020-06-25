@@ -62,6 +62,7 @@ public class JiraService {
     private static final String VALUE_FIELD_TYPE = "value";
     private static final String CHILD_FIELD_TYPE = "child";
     private static final String CASCADE_PARENT_CHILD_DELIMITER  = ";";
+    private static final int MAX_RESULTS_ALLOWED = 1000000;
 
     @ConstructorProperties({"jiraProperties", "flowProperties"})
     public JiraService(JiraProperties jiraProperties, FlowProperties flowProperties) {
