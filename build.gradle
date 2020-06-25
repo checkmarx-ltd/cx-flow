@@ -245,7 +245,6 @@ task integrationTest(type: Test) {
             include 'com/checkmarx/flow/cucumber/integration/azure/publishing/github2ado/*'
             include 'com/checkmarx/flow/cucumber/integration/cxconfig/*'
             include 'com/checkmarx/flow/cucumber/integration/cxconfigbugtracker/**'
-            include 'com/checkmarx/flow/cucumber/integration/pullrequest/updatecomments/**'
             exclude 'com/checkmarx/flow/cucumber/integration/end2end/genericendtoend/**'
             exclude 'com/checkmarx/flow/cucumber/integration/end2end/github2jira/**'
             exclude 'com/checkmarx/flow/cucumber/integration/publishprocess/**'
@@ -281,11 +280,23 @@ task ScaIntegrationTest(type: Test) {
 
 task JiraIntegrationTest(type: Test) {
     useJUnitPlatform() {
-        systemProperty "testprofile", "scaIntegration"
+        systemProperty "testprofile", "jiraIntegration"
         if (System.properties['testprofile'] != 'unit') {
             include 'com/checkmarx/flow/cucumber/integration/jira/manualconfig/**'
             include 'com/checkmarx/flow/cucumber/integration/jira/autoconfig/*'
             include 'com/checkmarx/flow/cucumber/integration/jira/analytics/*'
+        }
+        testLogging {
+            events "passed", "skipped", "failed"
+        }
+    }
+}
+
+task PullRequestCommnetsIntegrationTest(type: Test) {
+    useJUnitPlatform() {
+        systemProperty "testprofile", "pullrequestCommentIntegration"
+        if (System.properties['testprofile'] != 'unit') {
+            include 'com/checkmarx/flow/cucumber/integration/pullrequest/updatecomments/**'
         }
         testLogging {
             events "passed", "skipped", "failed"
