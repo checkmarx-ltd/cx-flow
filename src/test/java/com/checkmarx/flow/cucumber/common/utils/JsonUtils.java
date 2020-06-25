@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
+import java.io.File;
 import java.io.IOException;
 
 public class JsonUtils {
@@ -15,6 +16,10 @@ public class JsonUtils {
 
     public static String object2json(Object obj) throws IOException {
         return newObjectMapper().writeValueAsString(obj);
+    }
+
+    public static <T> T json2Object(File file, Class<T> clazz) throws IOException {
+        return newObjectMapper().readValue(file, clazz);
     }
 
     private static ObjectMapper newObjectMapper() {

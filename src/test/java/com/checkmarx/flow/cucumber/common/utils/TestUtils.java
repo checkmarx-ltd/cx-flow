@@ -37,6 +37,10 @@ public class TestUtils {
         return classLoader.getResourceAsStream(fullResourcePath);
     }
 
+    public static File getFileFromRelativeResourcePath(String relativePath) throws IOException {
+        return new ClassPathResource(relativePath).getFile();
+    }
+
     public static File getFileFromResource(String relativePath) throws IOException {
         String fullResourcePath = toFullResourcePath(relativePath);
         return new ClassPathResource(fullResourcePath).getFile();
