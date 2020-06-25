@@ -34,7 +34,9 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * Class used to manage Controller for GitHub WebHooks
@@ -103,8 +105,7 @@ public class GitHubController extends WebhookController {
         log.info("Processing GitHub PULL request");
         PullEvent event;
         ObjectMapper mapper = new ObjectMapper();
-        controllerRequest = Optional.ofNullable(controllerRequest)
-                .orElseGet(() -> ControllerRequest.builder().build());
+        controllerRequest = ensureNotNull(controllerRequest);
 
         try {
             event = mapper.readValue(body, PullEvent.class);
@@ -228,8 +229,7 @@ public class GitHubController extends WebhookController {
         log.info("Processing GitHub PUSH request");
         PushEvent event;
         ObjectMapper mapper = new ObjectMapper();
-        controllerRequest = Optional.ofNullable(controllerRequest)
-                .orElseGet(() -> ControllerRequest.builder().build());
+        controllerRequest = ensureNotNull(controllerRequest);
 
         try {
             event = mapper.readValue(body, PushEvent.class);

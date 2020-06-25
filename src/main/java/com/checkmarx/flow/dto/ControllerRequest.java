@@ -4,6 +4,12 @@ import lombok.*;
 
 import java.util.List;
 
+/**
+ * Represents a standard list of parameters that are passed to webhook controllers.
+ * All the parameters are optional.
+ *
+ * Field names need to be kept as is for backward compatibility unless we find a better solution.
+ */
 @Getter
 @Setter
 @Builder
@@ -23,6 +29,11 @@ public class ControllerRequest {
     private Boolean incremental;
     private List<String> excludeFiles;
     private List<String> excludeFolders;
+    private String override;
+
+    // Bug tracker.
     private String bug;
+
+    // trackApplicationOnly
     private Boolean appOnly;
 }

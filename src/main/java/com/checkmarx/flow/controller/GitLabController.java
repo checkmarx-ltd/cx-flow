@@ -69,6 +69,7 @@ public class GitLabController extends WebhookController {
         MDC.put("cx", uid);
         log.info("Processing GitLab MERGE request");
         validateGitLabRequest(token);
+        controllerRequest = ensureNotNull(controllerRequest);
 
         try {
             ObjectAttributes objectAttributes = body.getObjectAttributes();
@@ -185,6 +186,7 @@ public class GitLabController extends WebhookController {
         String uid = helperService.getShortUid();
         MDC.put("cx", uid);
         validateGitLabRequest(token);
+        controllerRequest = ensureNotNull(controllerRequest);
 
         String commitEndpoint = null;
         try {

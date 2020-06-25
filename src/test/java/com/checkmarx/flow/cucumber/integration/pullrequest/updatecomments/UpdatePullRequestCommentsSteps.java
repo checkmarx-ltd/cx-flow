@@ -303,7 +303,11 @@ public class UpdatePullRequestCommentsSteps {
 
         pullEvent.setResource(resource);
 
-        adoControllerSpy.pullRequest(pullEvent,"Basic Y3hmbG93OjEyMzQ=", null, null,null,null,null,null,"AdoPullRequestTests-master", "\\CxServer\\SP",null,null,null,null,null,null,null,null,null,null,null,null, null);
+        ControllerRequest request = ControllerRequest.builder()
+                .project("AdoPullRequestTests-master")
+                .team("\\CxServer\\SP")
+                .build();
+        adoControllerSpy.pullRequest(pullEvent,"Basic Y3hmbG93OjEyMzQ=", null, request, null);
     }
 
     private class ScanResultsAnswerer implements Answer<ScanResults> {

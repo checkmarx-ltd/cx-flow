@@ -72,4 +72,9 @@ public class WebhookController {
         return Optional.ofNullable(request.getIncremental())
                 .orElse(cxProperties.getIncremental());
     }
+
+    protected ControllerRequest ensureNotNull(ControllerRequest requestToCheck) {
+        return Optional.ofNullable(requestToCheck)
+                .orElseGet(() -> ControllerRequest.builder().build());
+    }
 }
