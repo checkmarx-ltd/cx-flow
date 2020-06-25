@@ -88,7 +88,7 @@ public class GitLabController extends WebhookController {
             }
 
             BugTracker.Type bugType = BugTracker.Type.GITLABMERGE;
-            if(!ScanUtils.empty(controllerRequest.getBug())){
+            if (!ScanUtils.empty(controllerRequest.getBug())) {
                 bugType = ScanUtils.getBugTypeEnum(controllerRequest.getBug(), flowProperties.getBugTrackerImpl());
             }
 
@@ -104,13 +104,13 @@ public class GitLabController extends WebhookController {
             String targetBranch = objectAttributes.getTargetBranch();
             String defaultBranch = objectAttributes.getTarget().getDefaultBranch();
 
-            List<String> branches = getBranches(controllerRequest.getBranch(), flowProperties);
+            List<String> branches = getBranches(controllerRequest, flowProperties);
 
             BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
 
             FilterConfiguration filter = filterFactory.getFilter(controllerRequest.getSeverity(), controllerRequest.getCwe(), controllerRequest.getCategory(), controllerRequest.getStatus(), null, flowProperties);
 
-            setExclusionProperties(controllerRequest, cxProperties);
+            setExclusionProperties(cxProperties, controllerRequest);
 
             Project proj = body.getProject();
             String mergeEndpoint = properties.getApiUrl().concat(GitLabService.MERGE_NOTE_PATH);
@@ -170,7 +170,7 @@ public class GitLabController extends WebhookController {
         } catch (IllegalArgumentException e) {
             return getBadRequestMessage(e, controllerRequest, product);
         }
-        return getSuccessResponse();
+        return getSuccessMessage();
     }
 
     /**
@@ -196,11 +196,8 @@ public class GitLabController extends WebhookController {
             }
 
             //set the default bug tracker as per yml
-            BugTracker.Type bugType;
-            if (ScanUtils.empty(controllerRequest.getBug())) {
-                controllerRequest.setBug(flowProperties.getBugTracker());
-            }
-            bugType = ScanUtils.getBugTypeEnum(controllerRequest.getBug(), flowProperties.getBugTrackerImpl());
+            setBugTracker(flowProperties, controllerRequest);
+            BugTracker.Type bugType = ScanUtils.getBugTypeEnum(controllerRequest.getBug(), flowProperties.getBugTrackerImpl());
 
             if(controllerRequest.getAppOnly() != null){
                 flowProperties.setTrackApplicationOnly(controllerRequest.getAppOnly());
@@ -223,7 +220,7 @@ public class GitLabController extends WebhookController {
             BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
             FilterConfiguration filter = filterFactory.getFilter(controllerRequest.getSeverity(), controllerRequest.getCwe(), controllerRequest.getCategory(), controllerRequest.getStatus(), null, flowProperties);
 
-            setExclusionProperties(controllerRequest, cxProperties);
+            setExclusionProperties(cxProperties, controllerRequest);
 
             Project proj = body.getProject();
             /*Determine emails*/
@@ -296,7 +293,7 @@ public class GitLabController extends WebhookController {
         } catch (IllegalArgumentException e) {
             return getBadRequestMessage(e, controllerRequest, product);
         }
-        return getSuccessResponse();
+        return getSuccessMessage();
     }
 
     private void validateGitLabRequest(String token){

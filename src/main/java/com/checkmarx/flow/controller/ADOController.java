@@ -107,13 +107,13 @@ public class ADOController extends WebhookController{
             String currentBranch = ScanUtils.getBranchFromRef(ref);
             String targetBranch = ScanUtils.getBranchFromRef(resource.getTargetRefName());
 
-            List<String> branches = getBranches(controllerRequest.getBranch(), flowProperties);
+            List<String> branches = getBranches(controllerRequest, flowProperties);
 
             BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
 
             FilterConfiguration filter = filterFactory.getFilter(controllerRequest.getSeverity(), controllerRequest.getCwe(), controllerRequest.getCategory(), controllerRequest.getStatus(), null, flowProperties);
 
-            setExclusionProperties(controllerRequest, cxProperties);
+            setExclusionProperties(cxProperties, controllerRequest);
 
             //build request object
             String gitUrl = repository.getWebUrl();
@@ -164,7 +164,7 @@ public class ADOController extends WebhookController{
             return getBadRequestMessage(e, controllerRequest, product);
         }
 
-        return getSuccessResponse();
+        return getSuccessMessage();
     }
 
     /**
@@ -202,11 +202,8 @@ public class ADOController extends WebhookController{
             }
 
             //set the default bug tracker as per yml
-            BugTracker.Type bugType;
-            if (ScanUtils.empty(controllerRequest.getBug())) {
-                controllerRequest.setBug(flowProperties.getBugTracker());
-            }
-            bugType = ScanUtils.getBugTypeEnum(controllerRequest.getBug(), flowProperties.getBugTrackerImpl());
+            setBugTracker(flowProperties, controllerRequest);
+            BugTracker.Type bugType = ScanUtils.getBugTypeEnum(controllerRequest.getBug(), flowProperties.getBugTrackerImpl());
 
             initAdoSpecificParams(adoDetailsRequest);
 
@@ -222,13 +219,13 @@ public class ADOController extends WebhookController{
             String ref = resource.getRefUpdates().get(0).getName();
             String currentBranch = ScanUtils.getBranchFromRef(ref);
 
-            List<String> branches = getBranches(controllerRequest.getBranch(), flowProperties);
+            List<String> branches = getBranches(controllerRequest, flowProperties);
 
             BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
 
             FilterConfiguration filter = filterFactory.getFilter(controllerRequest.getSeverity(), controllerRequest.getCwe(), controllerRequest.getCategory(), controllerRequest.getStatus(), null, flowProperties);
 
-            setExclusionProperties(controllerRequest, cxProperties);
+            setExclusionProperties(cxProperties, controllerRequest);
 
             List<String> emails = determineEmails(resource);
 
@@ -287,7 +284,7 @@ public class ADOController extends WebhookController{
             return getBadRequestMessage(e, controllerRequest, product);
         }
 
-        return getSuccessResponse();
+        return getSuccessMessage();
     }
 
     private List<String> determineEmails(Resource resource) {

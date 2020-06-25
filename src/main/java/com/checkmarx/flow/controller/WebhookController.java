@@ -20,8 +20,8 @@ import java.util.Optional;
  * Contains common logic for controllers that receive webhook requests.
  */
 @Slf4j
-public class WebhookController {
-    protected ResponseEntity<EventResponse> getSuccessResponse() {
+public abstract class WebhookController {
+    protected ResponseEntity<EventResponse> getSuccessMessage() {
         return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
                 .message("Scan Request Successfully Submitted")
                 .success(true)
@@ -42,7 +42,7 @@ public class WebhookController {
                 .build());
     }
 
-    protected void setExclusionProperties(ControllerRequest target, CxProperties cxProperties) {
+    protected void setExclusionProperties(CxProperties cxProperties, ControllerRequest target) {
         if (target.getExcludeFiles() == null && !ScanUtils.empty(cxProperties.getExcludeFiles())) {
             target.setExcludeFiles(Arrays.asList(cxProperties.getExcludeFiles().split(",")));
         }
@@ -51,10 +51,16 @@ public class WebhookController {
         }
     }
 
-    protected List<String> getBranches(List<String> branchesFromQuery, FlowProperties flowProperties) {
+    protected void setBugTracker(FlowProperties flowProperties, ControllerRequest target) {
+        if (StringUtils.isEmpty(target.getBug())) {
+            target.setBug(flowProperties.getBugTracker());
+        }
+    }
+
+    protected List<String> getBranches(ControllerRequest request, FlowProperties flowProperties) {
         List<String> result = new ArrayList<>();
-        if (!ScanUtils.empty(branchesFromQuery)) {
-            result.addAll(branchesFromQuery);
+        if (!ScanUtils.empty(request.getBranch())) {
+            result.addAll(request.getBranch());
         } else if (!ScanUtils.empty(flowProperties.getBranches())) {
             result.addAll(flowProperties.getBranches());
         }

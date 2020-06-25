@@ -153,7 +153,7 @@ public class GitHubController extends WebhookController {
             PullRequest pullRequest = event.getPullRequest();
             String currentBranch = pullRequest.getHead().getRef();
             String targetBranch = pullRequest.getBase().getRef();
-            List<String> branches = getBranches(controllerRequest.getBranch(), flowProperties);
+            List<String> branches = getBranches(controllerRequest, flowProperties);
             BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
             FilterConfiguration filter = filterFactory.getFilter(controllerRequest.getSeverity(),
                     controllerRequest.getCwe(),
@@ -162,7 +162,7 @@ public class GitHubController extends WebhookController {
                     null,
                     flowProperties);
 
-            setExclusionProperties(controllerRequest, cxProperties);
+            setExclusionProperties(cxProperties, controllerRequest);
             //build request object
             String gitUrl = repository.getCloneUrl();
             String token = properties.getToken();
@@ -212,7 +212,7 @@ public class GitHubController extends WebhookController {
             return getBadRequestMessage(e, controllerRequest, product);
         }
 
-        return getSuccessResponse();
+        return getSuccessMessage();
     }
 
     /**
@@ -254,12 +254,9 @@ public class GitHubController extends WebhookController {
             // use the bug tracker from the config. As a result, "real" issues will be opened in the bug tracker and
             // not just notifications for the user. The "push" case also includes merging a pull request.
             // See the comment for the pullRequest method for further details.
-            BugTracker.Type bugType;
             // However, if the bug tracker is overridden in the query string, use the override value.
-            if (ScanUtils.empty(controllerRequest.getBug())) {
-                controllerRequest.setBug(flowProperties.getBugTracker());
-            }
-            bugType = ScanUtils.getBugTypeEnum(controllerRequest.getBug(), flowProperties.getBugTrackerImpl());
+            setBugTracker(flowProperties, controllerRequest);
+            BugTracker.Type bugType = ScanUtils.getBugTypeEnum(controllerRequest.getBug(), flowProperties.getBugTrackerImpl());
 
             if(controllerRequest.getAppOnly() != null){
                 flowProperties.setTrackApplicationOnly(controllerRequest.getAppOnly());
@@ -271,12 +268,12 @@ public class GitHubController extends WebhookController {
 
             //determine branch (without refs)
             String currentBranch = ScanUtils.getBranchFromRef(event.getRef());
-            List<String> branches = getBranches(controllerRequest.getBranch(), flowProperties);
+            List<String> branches = getBranches(controllerRequest, flowProperties);
 
             BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
             FilterConfiguration filter = filterFactory.getFilter(controllerRequest.getSeverity(), controllerRequest.getCwe(), controllerRequest.getCategory(), controllerRequest.getStatus(), null, flowProperties);
 
-            setExclusionProperties(controllerRequest, cxProperties);
+            setExclusionProperties(cxProperties, controllerRequest);
 
             //build request object
             Repository repository = event.getRepository();
@@ -333,7 +330,7 @@ public class GitHubController extends WebhookController {
             return getBadRequestMessage(e, controllerRequest, product);
         }
         
-        return getSuccessResponse();
+        return getSuccessMessage();
     }
 
     private List<String> determineEmails(PushEvent event) {
