@@ -62,6 +62,7 @@ public class JiraService {
     private static final String VALUE_FIELD_TYPE = "value";
     private static final String CHILD_FIELD_TYPE = "child";
     private static final String CASCADE_PARENT_CHILD_DELIMITER  = ";";
+    private static final int MAX_RESULTS_ALLOWED = 1000000;
 
     @ConstructorProperties({"jiraProperties", "flowProperties"})
     public JiraService(JiraProperties jiraProperties, FlowProperties flowProperties) {
@@ -205,6 +206,7 @@ public class JiraService {
         int startAt = 0;
 
         SearchResult searchResults;
+        int totalResultsCount;
         //Retrieve JQL results through pagination (jira.max-jql-results per page -> default 50)
         do {
             searchResults = this.client.getSearchClient().searchJql(jql, jiraProperties.getMaxJqlResults(), startAt, fields).claim();
@@ -212,17 +214,19 @@ public class JiraService {
                 issues.add(issue);
             }
             startAt += jiraProperties.getMaxJqlResults();
-        }while(startAt < getTotalResults(searchResults));
+            totalResultsCount = validateTotalResultCount(searchResults.getTotal());
+        }while(startAt < totalResultsCount);
         return issues;
     }
 
-    private int getTotalResults(SearchResult searchResults) {
-        int totalResults =  searchResults.getTotal();
-        if (totalResults > JiraConstants.MAX_RESULTS_ALLOWED) {
-            totalResults = JiraConstants.MAX_RESULTS_ALLOWED;
+    private int validateTotalResultCount(int total) {
+        int totalResultCount = 0;
+        if (total> MAX_RESULTS_ALLOWED) {
+            totalResultCount = MAX_RESULTS_ALLOWED;
+        } else {
+            totalResultCount = total;
         }
-        return totalResults;
-
+        return totalResultCount;
     }
 
     private Issue getIssue(String bugId) {
