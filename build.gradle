@@ -247,7 +247,6 @@ task integrationTest(type: Test) {
             include 'com/checkmarx/flow/cucumber/integration/cxconfigbugtracker/**'
             exclude 'com/checkmarx/flow/cucumber/integration/end2end/genericendtoend/**'
             exclude 'com/checkmarx/flow/cucumber/integration/end2end/github2jira/**'
-            exclude 'com/checkmarx/flow/cucumber/integration/publishprocess/**'
             exclude 'com/checkmarx/flow/test/flow**'
             exclude 'com/checkmarx/flow/exception/**'
             exclude 'com/checkmarx/flow/custom/**'
@@ -285,6 +284,7 @@ task JiraIntegrationTest(type: Test) {
             include 'com/checkmarx/flow/cucumber/integration/jira/manualconfig/**'
             include 'com/checkmarx/flow/cucumber/integration/jira/autoconfig/*'
             include 'com/checkmarx/flow/cucumber/integration/jira/analytics/*'
+            include 'com/checkmarx/flow/cucumber/integration/publishprocess/**'
         }
         testLogging {
             events "passed", "skipped", "failed"
