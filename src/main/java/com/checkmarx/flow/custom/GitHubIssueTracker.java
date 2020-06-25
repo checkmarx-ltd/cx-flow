@@ -96,7 +96,7 @@ public class GitHubIssueTracker implements IssueTracker {
                     httpEntity, com.checkmarx.flow.dto.github.Issue[].class);
 
             if (responsePage.getBody() != null) {
-                for (com.checkmarx.flow.dto.github.Issue issue : response.getBody()) {
+                for (com.checkmarx.flow.dto.github.Issue issue : responsePage.getBody()) {
                     Issue i = mapToIssue(issue);
                     if (i != null && i.getTitle().startsWith(request.getProduct().getProduct())) {
                         issues.add(i);
