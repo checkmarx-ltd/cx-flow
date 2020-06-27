@@ -16,8 +16,8 @@ public class ADOProperties extends RepoProperties{
     private String branchLabelPrefix = "branch";
     private String apiVersion = "5.0";
     private String testRepository = "Fabrikam";
-    private String openStatus = "Active";
-    private String closedStatus = "Closed";
+    private String openStatus = "To Do";
+    private String closedStatus = "Done";
     private String projectName;
     private String namespace;
     
