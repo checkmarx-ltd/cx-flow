@@ -24,6 +24,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service("GitLab")
 public class GitLabIssueTracker implements IssueTracker {
@@ -131,18 +132,20 @@ public class GitLabIssueTracker implements IssueTracker {
         String endpoint = properties.getApiUrl().concat(ISSUES_PATH);
         ResponseEntity<com.checkmarx.flow.dto.gitlab.Issue[]> response = restTemplate.exchange(endpoint,
                 HttpMethod.GET, httpEntity, com.checkmarx.flow.dto.gitlab.Issue[].class, request.getRepoProjectId());
-        if(response.getBody() == null) return new ArrayList<>();
+        if(response.getBody() == null) {
+            return issues;
+        }
         for(com.checkmarx.flow.dto.gitlab.Issue issue: response.getBody()){
             Issue i = mapToIssue(issue);
-            if(i != null && i.getTitle().startsWith(request.getProduct().getProduct())){
+            if (i != null) {
                 issues.add(i);
             }
         }
         String next = getNextURIFromHeaders(response.getHeaders(), "link", "next");
         while (next != null) {
-            ResponseEntity<Issue[]> responsePage = restTemplate.exchange(next, HttpMethod.GET, httpEntity, Issue[].class);
+            ResponseEntity<com.checkmarx.flow.dto.gitlab.Issue[]> responsePage = restTemplate.exchange(next, HttpMethod.GET, httpEntity, com.checkmarx.flow.dto.gitlab.Issue[].class);
             if(responsePage.getBody() != null) {
-                for(com.checkmarx.flow.dto.gitlab.Issue issue: response.getBody()){
+                for(com.checkmarx.flow.dto.gitlab.Issue issue: responsePage.getBody()){
                     Issue i = mapToIssue(issue);
                     if(i != null && i.getTitle().startsWith(request.getProduct().getProduct())){
                         issues.add(i);
@@ -263,7 +266,9 @@ public class GitLabIssueTracker implements IssueTracker {
             return null;
         }
         String repoUrl = request.getRepoUrl().replace(".git", "/");
-        return repoUrl.concat("/blob/").concat(request.getBranch()).concat("/").concat(filename);
+        return (Optional.ofNullable(filename).isPresent())
+                ? String.format(String.format("%s/blob/%%s/%%s", repoUrl), request.getBranch(), filename)
+                : null;
     }
 
 
@@ -333,10 +338,12 @@ public class GitLabIssueTracker implements IssueTracker {
     @Override
     public String getXIssueKey(ScanResults.XIssue issue, ScanRequest request) {
         if(flowProperties.isTrackApplicationOnly() || ScanUtils.empty(request.getBranch())){
-            return String.format(ScanUtils.ISSUE_KEY_2, request.getProduct().getProduct(), issue.getVulnerability(), issue.getFilename());
+            return String.format(ScanUtils.ISSUE_TITLE_KEY, request.getProduct().getProduct(), issue.getVulnerability(), issue.getFilename());
         }
         else {
-            return String.format(ScanUtils.ISSUE_KEY, request.getProduct().getProduct(), issue.getVulnerability(), issue.getFilename(), request.getBranch());
+            return issue.getScaDetails() == null
+                    ? String.format(ScanUtils.ISSUE_TITLE_KEY_WITH_BRANCH, request.getProduct().getProduct(), issue.getVulnerability(), issue.getFilename(), request.getBranch())
+                    : ScanUtils.getScaSummaryIssueKey(request, issue);
         }
     }
 
