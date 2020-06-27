@@ -170,6 +170,10 @@ jobs:
         default: v3.1.1
         description: the helm client version to install
         type: string
+      consider-branch:
+        default: false
+        description: Should we only consider jobs running on the same branch?
+        type: boolean
     steps:
       - checkout
       - aws-eks/update-kubeconfig-with-authenticator:
@@ -270,6 +274,70 @@ jobs:
           path: ~/test-results
       - store_artifacts:
           path: ~/test-results/junit
+
+  sca-integration-tests:
+   docker:
+     - image: "circleci/openjdk:8-jdk"
+   steps:
+     - checkout
+     - run:
+         name: Run SCA Integration Tests
+         command: |
+           export HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
+           ./gradlew clean ScaIntegrationTest --info -Dtarget=${HOOK_TARGET} -Drepo=${HOOK_REPO} -Dnamespace=${HOOK_NAMESPACE}
+     - run:
+         name: Save test results
+         command: |
+           mkdir -p ~/test-results/junit/
+           find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ \;
+         when: always
+     - store_test_results:
+         path: ~/test-results
+     - store_artifacts:
+         path: ~/test-results/junit
+
+  jira-integration-tests:
+    docker:
+      - image: "circleci/openjdk:8-jdk"
+    steps:
+      - checkout
+      - run:
+          name: Run Jira Integration Tests
+          command: |
+            export HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
+            ./gradlew clean JiraIntegrationTest --info -Dtarget=${HOOK_TARGET} -Drepo=${HOOK_REPO} -Dnamespace=${HOOK_NAMESPACE}
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/test-results/junit/
+            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/test-results
+      - store_artifacts:
+          path: ~/test-results/junit
+
+  pullRequestComments-integration-tests:
+    docker:
+      - image: "circleci/openjdk:8-jdk"
+    steps:
+      - checkout
+      - run:
+          name: Run pull request comments Integration Tests
+          command: |
+            export HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
+            ./gradlew clean PullRequestCommnetsIntegrationTest --info -Dtarget=${HOOK_TARGET} -Drepo=${HOOK_REPO} -Dnamespace=${HOOK_NAMESPACE}
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/test-results/junit/
+            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/test-results
+      - store_artifacts:
+          path: ~/test-results/junit
+
 
   cleanup:
     executor: aws-eks/python3
@@ -423,6 +491,15 @@ workflows:
       - integration-tests:
           requires:
             - deploy-cxflow
+      - sca-integration-tests:
+          requires:
+            - deploy-cxflow
+      - jira-integration-tests:
+          requires:
+            - deploy-cxflow
+      - pullRequestComments-integration-tests:
+          requires:
+            - deploy-cxflow
       - docker-push-stable:
           filters:
             branches:
@@ -430,6 +507,9 @@ workflows:
           requires:
             - e2e-tests
             - integration-tests
+            - sca-integration-tests
+            - jira-integration-tests
+            - pullRequestComments-integration-tests
       - publish-github-release:
           filters:
             branches:
@@ -437,6 +517,9 @@ workflows:
           requires:
             - e2e-tests
             - integration-tests
+            - sca-integration-tests
+            - jira-integration-tests
+            - pullRequestComments-integration-tests
       - cleanup:
           cluster-name: eks-cxflow-ci
           namespace: cxflow-${CIRCLE_SHA1::7}
@@ -452,6 +535,9 @@ workflows:
           requires:
             - e2e-tests
             - integration-tests
+            - sca-integration-tests
+            - jira-integration-tests
+            - pullRequestComments-integration-tests
   nightly-cleanup:
     triggers:
       - schedule:
