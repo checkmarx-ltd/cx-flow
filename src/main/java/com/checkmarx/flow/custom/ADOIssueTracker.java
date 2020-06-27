@@ -116,9 +116,9 @@ public class ADOIssueTracker implements IssueTracker {
         //if there are project and namespace in properties on the ado section, they will be used for the URL
         if(!StringUtils.isEmpty(properties.getProjectName())){
             if(!StringUtils.isEmpty(properties.getNamespace())){
-                wiq = String.format(WIQ_PROJECT_NAME_AND_NAMESPACE,properties.getNamespace());
+                wiq = String.format(WIQ_PROJECT_NAME_AND_NAMESPACE, getNamespaceTag(properties.getNamespace()));
             }else {
-                wiq = String.format(WIQ_PROJECT_NAME_AND_NAMESPACE,request.getNamespace());
+                wiq = String.format(WIQ_PROJECT_NAME_AND_NAMESPACE, getNamespaceTag(request.getNamespace()));
             }
         }
         /*Namespace/Repo/Branch provided*/
@@ -208,7 +208,7 @@ public class ADOIssueTracker implements IssueTracker {
         
         if(!StringUtils.isEmpty(properties.getProjectName())){
             if(!StringUtils.isEmpty(properties.getNamespace())){
-                tags.append(properties.getOwnerTagPrefix()).append(":").append(properties.getNamespace()).append("; ");
+                tags = getNamespaceTag(properties.getNamespace()).append("; ");
             }
         }
         else if(!flowProperties.isTrackApplicationOnly() &&
@@ -216,7 +216,7 @@ public class ADOIssueTracker implements IssueTracker {
                 !ScanUtils.empty(request.getRepoName()) &&
                 !ScanUtils.empty(request.getBranch())) {
             
-            tags.append(properties.getOwnerTagPrefix()).append(":").append(request.getNamespace()).append("; ");
+            tags.append(getNamespaceTag(request.getNamespace())).append("; ");
                     tags.append(properties.getRepoTagPrefix()).append(":").append(request.getRepoName()).append("; ");
                     tags.append(properties.getBranchLabelPrefix()).append(":").append(request.getBranch());
         }/*Only application provided*/
@@ -230,7 +230,7 @@ public class ADOIssueTracker implements IssueTracker {
         title.setOp("add");
         title.setPath(Constants.ADO_FIELD.concat(TITLE_FIELD));
         title.setValue(getXIssueKey(resultIssue, request));
-
+        
         CreateWorkItemAttr description = new CreateWorkItemAttr();
         description.setOp("add");
         description.setPath(Constants.ADO_FIELD.concat(FIELD_PREFIX.concat(issueBody)));
@@ -262,6 +262,10 @@ public class ADOIssueTracker implements IssueTracker {
             log.warn("Error occurred while retrieving new WorkItem url.  Returning null", e);
             return null;
         }
+    }
+
+    private StringBuilder getNamespaceTag(String namespace) {
+        return  new StringBuilder().append(properties.getOwnerTagPrefix()).append(":").append(namespace);
     }
 
     private String calculateProjectName(ScanRequest request) throws MachinaException {
