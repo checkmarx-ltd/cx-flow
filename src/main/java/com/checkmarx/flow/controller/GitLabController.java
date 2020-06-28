@@ -19,6 +19,8 @@ import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
@@ -83,12 +85,12 @@ public class GitLabController extends WebhookController {
                         .build());
             }
             String app = body.getRepository().getName();
-            if(!ScanUtils.empty(controllerRequest.getApplication())){
+            if(StringUtils.isNotEmpty(controllerRequest.getApplication())){
                 app = controllerRequest.getApplication();
             }
 
             BugTracker.Type bugType = BugTracker.Type.GITLABMERGE;
-            if (!ScanUtils.empty(controllerRequest.getBug())) {
+            if (StringUtils.isNotEmpty(controllerRequest.getBug())) {
                 bugType = ScanUtils.getBugTypeEnum(controllerRequest.getBug(), flowProperties.getBugTrackerImpl());
             }
 
@@ -121,7 +123,7 @@ public class GitLabController extends WebhookController {
             String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS_OAUTH2.concat(properties.getToken()).concat("@"));
             gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP_OAUTH2.concat(properties.getToken()).concat("@"));
             String scanPreset = cxProperties.getScanPreset();
-            if(!ScanUtils.empty(controllerRequest.getPreset())){
+            if(StringUtils.isNotEmpty(controllerRequest.getPreset())){
                 scanPreset = controllerRequest.getPreset();
             }
 
@@ -191,7 +193,7 @@ public class GitLabController extends WebhookController {
         String commitEndpoint = null;
         try {
             String app = body.getRepository().getName();
-            if(!ScanUtils.empty(controllerRequest.getApplication())){
+            if(StringUtils.isNotEmpty(controllerRequest.getApplication())){
                 app = controllerRequest.getApplication();
             }
 
@@ -210,10 +212,10 @@ public class GitLabController extends WebhookController {
             String currentBranch = ScanUtils.getBranchFromRef(body.getRef());
             List<String> branches = new ArrayList<>();
 
-            if(!ScanUtils.empty(controllerRequest.getBranch())){
+            if(CollectionUtils.isNotEmpty(controllerRequest.getBranch())){
                 branches.addAll(controllerRequest.getBranch());
             }
-            else if(!ScanUtils.empty(flowProperties.getBranches())){
+            else if(CollectionUtils.isNotEmpty(flowProperties.getBranches())){
                 branches.addAll(flowProperties.getBranches());
             }
 
@@ -227,17 +229,17 @@ public class GitLabController extends WebhookController {
             List<String> emails = new ArrayList<>();
             for(Commit c: body.getCommits()){
                 Author author = c.getAuthor();
-                if (author != null && !ScanUtils.empty(author.getEmail())){
+                if (author != null && StringUtils.isNotEmpty(author.getEmail())){
                     emails.add(author.getEmail());
                 }
-                if(!ScanUtils.empty(c.getUrl()) && bugType.equals(BugTracker.Type.GITLABCOMMIT)) {
+                if(StringUtils.isNotEmpty(c.getUrl()) && bugType.equals(BugTracker.Type.GITLABCOMMIT)) {
                     commitEndpoint = properties.getApiUrl().concat(GitLabService.COMMIT_PATH);
                     commitEndpoint = commitEndpoint.replace("{id}", proj.getId().toString());
                     commitEndpoint = commitEndpoint.replace("{sha}", c.getId());
                 }
             }
 
-            if(!ScanUtils.empty(body.getUserEmail())) {
+            if(StringUtils.isNotEmpty(body.getUserEmail())) {
                 emails.add(body.getUserEmail());
             }
             String gitUrl = proj.getGitHttpUrl();
@@ -246,7 +248,7 @@ public class GitLabController extends WebhookController {
             gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP_OAUTH2.concat(properties.getToken()).concat("@"));
 
             String scanPreset = cxProperties.getScanPreset();
-            if(!ScanUtils.empty(controllerRequest.getPreset())){
+            if(StringUtils.isNotEmpty(controllerRequest.getPreset())){
                 scanPreset = controllerRequest.getPreset();
             }
 
@@ -273,7 +275,7 @@ public class GitLabController extends WebhookController {
                     .filter(filter)
                     .build();
 
-            if(!ScanUtils.empty(controllerRequest.getPreset())){
+            if(StringUtils.isNotEmpty(controllerRequest.getPreset())){
                 request.setScanPreset(controllerRequest.getPreset());
                 request.setScanPresetOverride(true);
             }

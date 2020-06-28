@@ -13,6 +13,7 @@ import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
@@ -44,14 +45,14 @@ public class ADOController extends AdoControllerBase {
     /**
      * Pull Request event submitted (JSON)
      */
-    @PostMapping(value={"/{product}/ado/pull","/ado/pull"})
+    @PostMapping(value = {"/{product}/ado/pull", "/ado/pull"})
     public ResponseEntity<EventResponse> pullRequest(
             @RequestBody PullEvent body,
             @RequestHeader(value = AUTHORIZATION) String auth,
             @PathVariable(value = "product", required = false) String product,
             ControllerRequest controllerRequest,
             AdoDetailsRequest adoDetailsRequest
-    ){
+    ) {
         String uid = helperService.getShortUid();
         MDC.put("cx", uid);
         log.info("Processing Azure PULL request");
@@ -59,7 +60,7 @@ public class ADOController extends AdoControllerBase {
         controllerRequest = ensureNotNull(controllerRequest);
         adoDetailsRequest = ensureDetailsNotNull(adoDetailsRequest);
 
-        if(!PULL_EVENT.contains(body.getEventType()) || !body.getResource().getStatus().equals("active")){
+        if (!PULL_EVENT.contains(body.getEventType()) || !body.getResource().getStatus().equals("active")) {
             log.info("Pull requested not processed.  Event was not opened ({})", body.getEventType());
             return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
                     .message("No processing occurred for updates to Pull Request")
@@ -81,12 +82,12 @@ public class ADOController extends AdoControllerBase {
                         .message("Test Event").success(true).build());
             }
 
-            if (!ScanUtils.empty(controllerRequest.getApplication())) {
+            if (StringUtils.isNotEmpty(controllerRequest.getApplication())) {
                 app = controllerRequest.getApplication();
             }
 
             BugTracker.Type bugType = BugTracker.Type.ADOPULL;
-            if (!ScanUtils.empty(controllerRequest.getBug())) {
+            if (StringUtils.isNotEmpty(controllerRequest.getBug())) {
                 bugType = ScanUtils.getBugTypeEnum(controllerRequest.getBug(), flowProperties.getBugTrackerImpl());
             }
 
@@ -97,7 +98,7 @@ public class ADOController extends AdoControllerBase {
             initAdoSpecificParams(adoDetailsRequest);
 
 
-            if(ScanUtils.empty(product)){
+            if (StringUtils.isEmpty(product)) {
                 product = ScanRequest.Product.CX.getProduct();
             }
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
@@ -122,7 +123,7 @@ public class ADOController extends AdoControllerBase {
             gitAuthUrl = gitAuthUrl.replace(HTTP, HTTP.concat(token).concat("@"));
 
             String scanPreset = cxProperties.getScanPreset();
-            if(!ScanUtils.empty(controllerRequest.getPreset())){
+            if (StringUtils.isNotEmpty(controllerRequest.getPreset())) {
                 scanPreset = controllerRequest.getPreset();
             }
 
@@ -155,7 +156,7 @@ public class ADOController extends AdoControllerBase {
             request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body.toString());
             request.setId(uid);
             //only initiate scan/automation if target branch is applicable
-            if(helperService.isBranch2Scan(request, branches)){
+            if (helperService.isBranch2Scan(request, branches)) {
                 flowService.initiateAutomation(request);
             }
 
@@ -169,14 +170,14 @@ public class ADOController extends AdoControllerBase {
     /**
      * Push Request event submitted (JSON), along with the Product (cx for example)
      */
-    @PostMapping(value={"/{product}/ado/push","/ado/push"})
+    @PostMapping(value = {"/{product}/ado/push", "/ado/push"})
     public ResponseEntity<EventResponse> pushRequest(
             @RequestBody PushEvent body,
             @RequestHeader(value = AUTHORIZATION) String auth,
             @PathVariable(value = "product", required = false) String product,
             ControllerRequest controllerRequest,
             AdoDetailsRequest adoDetailsRequest
-    ){
+    ) {
         //TODO handle different state (Active/Closed)
         String uid = helperService.getShortUid();
         MDC.put("cx", uid);
@@ -191,12 +192,12 @@ public class ADOController extends AdoControllerBase {
             Resource resource = body.getResource();
             Repository repository = resource.getRepository();
             String app = repository.getName();
-            if(repository.getName().startsWith(properties.getTestRepository())){
+            if (repository.getName().startsWith(properties.getTestRepository())) {
                 log.info("Handling ADO Test Event");
                 return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
                         .message("Test Event").success(true).build());
             }
-            if(!ScanUtils.empty(controllerRequest.getApplication())){
+            if (StringUtils.isNotEmpty(controllerRequest.getApplication())) {
                 app = controllerRequest.getApplication();
             }
 
@@ -206,10 +207,10 @@ public class ADOController extends AdoControllerBase {
 
             initAdoSpecificParams(adoDetailsRequest);
 
-            if(controllerRequest.getAppOnly() != null){
+            if (controllerRequest.getAppOnly() != null) {
                 flowProperties.setTrackApplicationOnly(controllerRequest.getAppOnly());
             }
-            if(ScanUtils.empty(product)){
+            if (StringUtils.isEmpty(product)) {
                 product = ScanRequest.Product.CX.getProduct();
             }
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
@@ -235,12 +236,12 @@ public class ADOController extends AdoControllerBase {
             gitAuthUrl = gitAuthUrl.replace(HTTP, HTTP.concat(properties.getToken()).concat("@"));
 
             String scanPreset = cxProperties.getScanPreset();
-            if(!ScanUtils.empty(controllerRequest.getPreset())){
+            if (StringUtils.isNotEmpty(controllerRequest.getPreset())) {
                 scanPreset = controllerRequest.getPreset();
             }
 
             String defaultBranch = repository.getDefaultBranch();
-            String [] branchPath = repository.getDefaultBranch().split("/");
+            String[] branchPath = repository.getDefaultBranch().split("/");
 
             if (branchPath.length == 3) {
                 defaultBranch = branchPath[2];
@@ -275,7 +276,7 @@ public class ADOController extends AdoControllerBase {
 
             request.setId(uid);
             //only initiate scan/automation if target branch is applicable
-            if(helperService.isBranch2Scan(request, branches)){
+            if (helperService.isBranch2Scan(request, branches)) {
                 flowService.initiateAutomation(request);
             }
 
@@ -288,9 +289,9 @@ public class ADOController extends AdoControllerBase {
 
     private List<String> determineEmails(Resource resource) {
         List<String> emails = new ArrayList<>();
-        if(resource.getCommits() != null) {
+        if (resource.getCommits() != null) {
             for (Commit c : resource.getCommits()) {
-                if (c.getAuthor() != null && !ScanUtils.empty(c.getAuthor().getEmail())) {
+                if (c.getAuthor() != null && StringUtils.isNotEmpty(c.getAuthor().getEmail())) {
                     emails.add(c.getAuthor().getEmail());
                 }
             }
@@ -305,7 +306,9 @@ public class ADOController extends AdoControllerBase {
         return result;
     }
 
-    /** Validates the base64 / basic auth received in the request. */
+    /**
+     * Validates the base64 / basic auth received in the request.
+     */
     private void validateBasicAuth(String token) {
         String auth = "Basic ".concat(Base64.getEncoder().encodeToString(properties.getWebhookToken().getBytes()));
         if (!auth.equals(token)) {
@@ -314,16 +317,16 @@ public class ADOController extends AdoControllerBase {
     }
 
     private void initAdoSpecificParams(AdoDetailsRequest request) {
-        if (ScanUtils.empty(request.getAdoIssue())) {
+        if (StringUtils.isEmpty(request.getAdoIssue())) {
             request.setAdoIssue(properties.getIssueType());
         }
-        if (ScanUtils.empty(request.getAdoBody())) {
+        if (StringUtils.isEmpty(request.getAdoBody())) {
             request.setAdoBody(properties.getIssueBody());
         }
-        if (ScanUtils.empty(request.getAdoOpened())) {
+        if (StringUtils.isEmpty(request.getAdoOpened())) {
             request.setAdoOpened(properties.getOpenStatus());
         }
-        if (ScanUtils.empty(request.getAdoClosed())) {
+        if (StringUtils.isEmpty(request.getAdoClosed())) {
             request.setAdoClosed(properties.getClosedStatus());
         }
     }

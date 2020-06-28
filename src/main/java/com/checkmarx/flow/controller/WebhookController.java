@@ -4,9 +4,9 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.EventResponse;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.CxProperties;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,10 +43,10 @@ public abstract class WebhookController {
     }
 
     protected void setExclusionProperties(CxProperties cxProperties, ControllerRequest target) {
-        if (target.getExcludeFiles() == null && !ScanUtils.empty(cxProperties.getExcludeFiles())) {
+        if (target.getExcludeFiles() == null && StringUtils.isNotEmpty(cxProperties.getExcludeFiles())) {
             target.setExcludeFiles(Arrays.asList(cxProperties.getExcludeFiles().split(",")));
         }
-        if (target.getExcludeFolders() == null && !ScanUtils.empty(cxProperties.getExcludeFolders())) {
+        if (target.getExcludeFolders() == null && StringUtils.isNotEmpty(cxProperties.getExcludeFolders())) {
             target.setExcludeFolders(Arrays.asList(cxProperties.getExcludeFolders().split(",")));
         }
     }
@@ -59,16 +59,16 @@ public abstract class WebhookController {
 
     protected List<String> getBranches(ControllerRequest request, FlowProperties flowProperties) {
         List<String> result = new ArrayList<>();
-        if (!ScanUtils.empty(request.getBranch())) {
+        if (CollectionUtils.isNotEmpty(request.getBranch())) {
             result.addAll(request.getBranch());
-        } else if (!ScanUtils.empty(flowProperties.getBranches())) {
+        } else if (CollectionUtils.isNotEmpty(flowProperties.getBranches())) {
             result.addAll(flowProperties.getBranches());
         }
         return result;
     }
 
     protected void overrideScanPreset(ControllerRequest controllerRequest, ScanRequest scanRequest) {
-        if (!ScanUtils.empty(controllerRequest.getPreset())) {
+        if (StringUtils.isNotEmpty(controllerRequest.getPreset())) {
             scanRequest.setScanPreset(controllerRequest.getPreset());
             scanRequest.setScanPresetOverride(true);
         }

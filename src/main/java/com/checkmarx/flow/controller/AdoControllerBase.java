@@ -12,7 +12,7 @@ public abstract class AdoControllerBase extends WebhookController {
                 .orElseGet(() -> AdoDetailsRequest.builder().build());
     }
 
-   protected void addMetadataToScanRequest(AdoDetailsRequest source, ScanRequest target) {
+    protected void addMetadataToScanRequest(AdoDetailsRequest source, ScanRequest target) {
         target.putAdditionalMetadata(Constants.ADO_ISSUE_KEY, source.getAdoIssue());
         target.putAdditionalMetadata(Constants.ADO_ISSUE_BODY_KEY, source.getAdoBody());
         target.putAdditionalMetadata(Constants.ADO_OPENED_STATE_KEY, source.getAdoOpened());

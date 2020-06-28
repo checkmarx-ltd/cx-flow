@@ -19,6 +19,8 @@ import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -45,7 +47,7 @@ public class TfsController extends AdoControllerBase {
     private final HelperService helperService;
     private final FilterFactory filterFactory;
 
-    @PostMapping(value = { "/{product}/tfs/pull", "/tfs/pull" , "/{product}/tfs/push","/tfs/push" })
+    @PostMapping(value = {"/{product}/tfs/pull", "/tfs/pull", "/{product}/tfs/push", "/tfs/push"})
     public ResponseEntity<EventResponse> pullPushRequest(
             HttpServletRequest httpRequest,
             @RequestBody PullEvent body,
@@ -55,7 +57,7 @@ public class TfsController extends AdoControllerBase {
             AdoDetailsRequest adoDetailsRequest
     ) {
         String action = getAction(httpRequest);
-        
+
         String uid = helperService.getShortUid();
         MDC.put("cx", uid);
         if (log.isInfoEnabled()) {
@@ -66,7 +68,7 @@ public class TfsController extends AdoControllerBase {
         controllerRequest = ensureNotNull(controllerRequest);
         adoDetailsRequest = ensureDetailsNotNull(adoDetailsRequest);
 
-        if(ACTION_PULL.equals(action) && !body.getEventType().equals(PULL_EVENT)){
+        if (ACTION_PULL.equals(action) && !body.getEventType().equals(PULL_EVENT)) {
             log.info("Pull requested not processed.  Event was not 'opened' ({})", body.getEventType());
             return ResponseEntity.accepted().body(EventResponse.builder()
                     .message("No processing occurred for updates to Pull Request")
@@ -79,7 +81,7 @@ public class TfsController extends AdoControllerBase {
 
         Repository repository = resource.getRepository();
         String app = repository.getName();
-        if(app.startsWith(properties.getTestRepository())){
+        if (app.startsWith(properties.getTestRepository())) {
             log.info("Handling TFS Test Event");
             return ResponseEntity.ok(EventResponse.builder()
                     .message("Test Event").success(true).build());
@@ -106,7 +108,7 @@ public class TfsController extends AdoControllerBase {
                 .product(getProductForName(product))
                 .project(Optional.ofNullable(controllerRequest.getProject()).orElse(null))
                 .team(Optional.ofNullable(controllerRequest.getTeam()).orElse(null))
-                .namespace(repository.getProject().getName().replace(" ","_"))
+                .namespace(repository.getProject().getName().replace(" ", "_"))
                 .repoName(repository.getName())
                 .repoType(ScanRequest.Repository.ADO)
                 .incremental(isScanIncremental(controllerRequest, cxProperties))
@@ -115,7 +117,7 @@ public class TfsController extends AdoControllerBase {
                 .excludeFiles(controllerRequest.getExcludeFiles())
                 .filter(filter);
 
-        if(ACTION_PULL.equals(action)) {
+        if (ACTION_PULL.equals(action)) {
             BugTracker.Type bugType = Optional.ofNullable(controllerRequest.getBug())
                     .map(theBug -> ScanUtils.getBugTypeEnum(theBug, flowProperties.getBugTrackerImpl()))
                     .orElse(BugTracker.Type.ADOPULL);
@@ -130,14 +132,14 @@ public class TfsController extends AdoControllerBase {
                     Optional.ofNullable(controllerRequest.getBug()).orElse(null));
 
             requestBuilder
-                .refs(resource.getSourceRefName())
-                .repoUrl(repository.getWebUrl())
-                .repoUrlWithAuth(addTokenToUrl(repository.getWebUrl() , properties.getToken()))
-                .mergeNoteUri(resource.getUrl().concat("/threads"))
-                .branch(ScanUtils.getBranchFromRef(resource.getSourceRefName()))
-                .mergeTargetBranch(ScanUtils.getBranchFromRef(resource.getTargetRefName()))
-                .email(null)
-                .bugTracker(bugTracker);
+                    .refs(resource.getSourceRefName())
+                    .repoUrl(repository.getWebUrl())
+                    .repoUrlWithAuth(addTokenToUrl(repository.getWebUrl(), properties.getToken()))
+                    .mergeNoteUri(resource.getUrl().concat("/threads"))
+                    .branch(ScanUtils.getBranchFromRef(resource.getSourceRefName()))
+                    .mergeTargetBranch(ScanUtils.getBranchFromRef(resource.getTargetRefName()))
+                    .email(null)
+                    .bugTracker(bugTracker);
         } else if (ACTION_PUSH.equals(action)) {
             String bug = Optional.ofNullable(controllerRequest.getBug())
                     .orElse(flowProperties.getBugTracker());
@@ -151,13 +153,13 @@ public class TfsController extends AdoControllerBase {
                     Optional.ofNullable(controllerRequest.getBug()).orElse(null));
 
             requestBuilder
-                .refs(resource.getRefUpdates().get(0).getName())
-                .repoUrl(repository.getRemoteUrl())
-                .repoUrlWithAuth(addTokenToUrl(repository.getRemoteUrl() , properties.getToken()))
-                .branch(ScanUtils.getBranchFromRef(resource.getRefUpdates().get(0).getName()))
+                    .refs(resource.getRefUpdates().get(0).getName())
+                    .repoUrl(repository.getRemoteUrl())
+                    .repoUrlWithAuth(addTokenToUrl(repository.getRemoteUrl(), properties.getToken()))
+                    .branch(ScanUtils.getBranchFromRef(resource.getRefUpdates().get(0).getName()))
                     .defaultBranch(repository.getDefaultBranch())
-                .email(determineEmails(resource))
-                .bugTracker(bugTracker);
+                    .email(determineEmails(resource))
+                    .bugTracker(bugTracker);
         }
         ScanRequest request = requestBuilder.build();
 
@@ -174,11 +176,11 @@ public class TfsController extends AdoControllerBase {
         Optional<List<String>> branch = Optional.ofNullable(controllerRequest.getBranch());
         if (branch.isPresent()) {
             branches.addAll(branch.get());
-        } else if(!ScanUtils.empty(flowProperties.getBranches())) {
+        } else if (CollectionUtils.isNotEmpty(flowProperties.getBranches())) {
             branches.addAll(flowProperties.getBranches());
         }
-        
-        if(helperService.isBranch2Scan(request, branches)){
+
+        if (helperService.isBranch2Scan(request, branches)) {
             flowService.initiateAutomation(request);
         }
         return ResponseEntity.accepted().body(EventResponse.builder()
@@ -189,10 +191,10 @@ public class TfsController extends AdoControllerBase {
 
     private List<String> determineEmails(Resource resource) {
         List<String> emails = new ArrayList<>();
-        if(resource.getCommits() != null) {
+        if (resource.getCommits() != null) {
             emails = resource.getCommits()
                     .stream()
-                    .filter(c -> c.getAuthor() != null && !ScanUtils.empty(c.getAuthor().getEmail()))
+                    .filter(c -> c.getAuthor() != null && StringUtils.isNotEmpty(c.getAuthor().getEmail()))
                     .map(c -> c.getAuthor().getEmail()).collect(Collectors.toList());
             emails.add(resource.getPushedBy().getUniqueName());
         }
@@ -217,9 +219,9 @@ public class TfsController extends AdoControllerBase {
         return url.replaceAll("^(https?://)(.+$)", "$1" + token + "@" + "$2");
     }
 
-    private void validateBasicAuth(String token){
+    private void validateBasicAuth(String token) {
         String auth = "Basic ".concat(Base64.getEncoder().encodeToString(properties.getWebhookToken().getBytes()));
-        if(!auth.equals(token)){
+        if (!auth.equals(token)) {
             throw new InvalidTokenException();
         }
     }
