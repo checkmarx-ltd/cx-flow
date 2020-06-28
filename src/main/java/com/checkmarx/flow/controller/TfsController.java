@@ -90,7 +90,7 @@ public class TfsController extends AdoControllerBase {
         Optional.ofNullable(controllerRequest.getAppOnly())
                 .ifPresent(flowProperties::setTrackApplicationOnly);
 
-        FilterConfiguration filter = filterFactory.getFilter(controllerRequest, null, flowProperties);
+        FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
 
         setExclusionProperties(cxProperties, controllerRequest);
 

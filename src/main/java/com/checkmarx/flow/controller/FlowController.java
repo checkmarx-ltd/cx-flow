@@ -82,7 +82,7 @@ public class FlowController {
 
         // Create filters if available
         ControllerRequest request = new ControllerRequest(severity, cwe, category, status);
-        FilterConfiguration filter = filterFactory.getFilter(request, null, properties);
+        FilterConfiguration filter = filterFactory.getFilter(request, properties);
 
         // Create the scan request
         ScanRequest scanRequest = ScanRequest.builder()
@@ -230,7 +230,7 @@ public class FlowController {
     }
 
     private FilterConfiguration determineFilter(CxScanRequest scanRequest) {
-        FilterConfiguration filter = filterFactory.getFilter(null, null, properties);
+        FilterConfiguration filter = filterFactory.getFilter(null, properties);
 
         boolean hasSimpleFilters = CollectionUtils.isNotEmpty(scanRequest.getFilters());
         boolean hasFilterScript = StringUtils.isNotEmpty(scanRequest.getFilterScript());

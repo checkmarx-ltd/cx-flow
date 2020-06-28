@@ -183,7 +183,7 @@ public class ScanUtils {
                     filtersObj.getCwe(),
                     filtersObj.getCategory(),
                     filtersObj.getStatus());
-            FilterConfiguration filter = filterFactory.getFilter(controllerRequest, null, null);
+            FilterConfiguration filter = filterFactory.getFilter(controllerRequest, null);
             request.setFilter(filter);
         }
 
@@ -299,7 +299,7 @@ public class ScanUtils {
                                 f.getCwe(),
                                 f.getCategory(),
                                 f.getStatus());
-                        FilterConfiguration filter = filterFactory.getFilter(controllerRequest, null, null);
+                        FilterConfiguration filter = filterFactory.getFilter(controllerRequest, null);
                         request.setFilter(filter);
 
                         String filterDescr;

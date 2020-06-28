@@ -111,7 +111,7 @@ public class ADOController extends AdoControllerBase {
 
             BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
 
-            FilterConfiguration filter = filterFactory.getFilter(controllerRequest, null, flowProperties);
+            FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
 
             setExclusionProperties(cxProperties, controllerRequest);
 
@@ -223,7 +223,7 @@ public class ADOController extends AdoControllerBase {
 
             BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
 
-            FilterConfiguration filter = filterFactory.getFilter(controllerRequest, null, flowProperties);
+            FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
 
             setExclusionProperties(cxProperties, controllerRequest);
 

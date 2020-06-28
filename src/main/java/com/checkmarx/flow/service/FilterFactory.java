@@ -21,19 +21,18 @@ import java.util.Optional;
 @Service
 public class FilterFactory {
     public FilterConfiguration getFilter(ControllerRequest request,
-                                         List<String> state,
                                          @Nullable FlowProperties flowProperties) {
         FilterConfiguration result;
 
         request = Optional.ofNullable(request)
                 .orElse(ControllerRequest.builder().build());
 
-        if (hasRequiredProperties(request) || CollectionUtils.isNotEmpty(state)) {
+        if (hasRequiredProperties(request)) {
             result = getFilter(request.getSeverity(),
                     request.getCwe(),
                     request.getCategory(),
                     request.getStatus(),
-                    state,
+                    null,
                     null);
         } else if (flowProperties != null) {
             result = getFilter(flowProperties);

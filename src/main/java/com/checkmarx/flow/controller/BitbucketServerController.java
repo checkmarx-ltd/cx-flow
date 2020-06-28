@@ -168,7 +168,7 @@ public class BitbucketServerController extends WebhookController {
 
             BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
 
-            FilterConfiguration filter = filterFactory.getFilter(controllerRequest, null, flowProperties);
+            FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
 
             setExclusionProperties(cxProperties, controllerRequest);
 
@@ -290,7 +290,7 @@ public class BitbucketServerController extends WebhookController {
             List<String> branches = getBranches(controllerRequest, flowProperties);
 
             BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
-            FilterConfiguration filter = filterFactory.getFilter(controllerRequest, null, flowProperties);
+            FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
 
             setExclusionProperties(cxProperties, controllerRequest);
 

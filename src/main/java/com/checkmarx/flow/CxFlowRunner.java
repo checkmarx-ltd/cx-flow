@@ -169,7 +169,7 @@ public class CxFlowRunner implements ApplicationRunner {
         }
 
         ControllerRequest controllerRequest = new ControllerRequest(severity, cwe, category, status);
-        FilterConfiguration filter = filterFactory.getFilter(controllerRequest, null, flowProperties);
+        FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
 
         //Adding default file/folder exclusions from properties if they are not provided as an override
         if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
