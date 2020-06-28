@@ -17,7 +17,7 @@ import java.util.List;
 
 @Service("CxXml")
 @RequiredArgsConstructor
-public class CxXMLIssueTracker implements IssueTracker {
+public class CxXMLIssueTracker extends ImmutableIssueTracker {
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(CxXMLIssueTracker.class);
     private final CxXMLProperties properties;
     private final FilenameFormatter filenameFormatter;
@@ -61,36 +61,4 @@ public class CxXMLIssueTracker implements IssueTracker {
     public Issue createIssue(ScanResults.XIssue resultIssue, ScanRequest request) throws MachinaException {
         return null;
     }
-
-    @Override
-    public void closeIssue(Issue issue, ScanRequest request) throws MachinaException {
-
-    }
-
-    @Override
-    public Issue updateIssue(Issue issue, ScanResults.XIssue resultIssue, ScanRequest request) throws MachinaException {
-        return null;
-    }
-
-    @Override
-    public String getIssueKey(Issue issue, ScanRequest request) {
-        return issue.getId();
-    }
-
-    @Override
-    public String getXIssueKey(ScanResults.XIssue issue, ScanRequest request) {
-        return issue.getFilename();
-    }
-
-    @Override
-    public boolean isIssueClosed(Issue issue, ScanRequest request) {
-        return false;
-    }
-
-    @Override
-    public boolean isIssueOpened(Issue issue, ScanRequest request) {
-        return false;
-    }
-
-
 }
