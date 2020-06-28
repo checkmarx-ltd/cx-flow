@@ -10,7 +10,6 @@ import com.checkmarx.flow.service.FilterFactory;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.HelperService;
 import com.checkmarx.flow.utils.ScanUtils;
-import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +27,7 @@ import java.util.*;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping(value = "/")
-public class ADOController extends WebhookController{
+public class ADOController extends AdoControllerBase {
     private static final String HTTP = "http://";
     private static final String HTTPS = "https://";
     private static final List<String> PULL_EVENT = Arrays.asList("git.pullrequest.created", "git.pullrequest.updated");
@@ -58,7 +57,7 @@ public class ADOController extends WebhookController{
         log.info("Processing Azure PULL request");
         validateBasicAuth(auth);
         controllerRequest = ensureNotNull(controllerRequest);
-        adoDetailsRequest = ensureAdoDetailsNotNull(adoDetailsRequest);
+        adoDetailsRequest = ensureDetailsNotNull(adoDetailsRequest);
 
         if(!PULL_EVENT.contains(body.getEventType()) || !body.getResource().getStatus().equals("active")){
             log.info("Pull requested not processed.  Event was not opened ({})", body.getEventType());
@@ -184,7 +183,7 @@ public class ADOController extends WebhookController{
         log.info("Processing Azure Push request");
         validateBasicAuth(auth);
         controllerRequest = ensureNotNull(controllerRequest);
-        adoDetailsRequest = ensureAdoDetailsNotNull(adoDetailsRequest);
+        adoDetailsRequest = ensureDetailsNotNull(adoDetailsRequest);
 
         FlowOverride o = ScanUtils.getMachinaOverride(controllerRequest.getOverride());
 
@@ -327,17 +326,5 @@ public class ADOController extends WebhookController{
         if (ScanUtils.empty(request.getAdoClosed())) {
             request.setAdoClosed(properties.getClosedStatus());
         }
-    }
-
-    private static void addMetadataToScanRequest(AdoDetailsRequest source, ScanRequest target) {
-        target.putAdditionalMetadata(Constants.ADO_ISSUE_KEY, source.getAdoIssue());
-        target.putAdditionalMetadata(Constants.ADO_ISSUE_BODY_KEY, source.getAdoBody());
-        target.putAdditionalMetadata(Constants.ADO_OPENED_STATE_KEY, source.getAdoOpened());
-        target.putAdditionalMetadata(Constants.ADO_CLOSED_STATE_KEY, source.getAdoClosed());
-    }
-
-    private static AdoDetailsRequest ensureAdoDetailsNotNull(AdoDetailsRequest requestToCheck) {
-        return Optional.ofNullable(requestToCheck)
-                .orElseGet(() -> AdoDetailsRequest.builder().build());
     }
 }

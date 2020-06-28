@@ -3,12 +3,10 @@ package com.checkmarx.flow.controller;
 import com.checkmarx.flow.config.ADOProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
-import com.checkmarx.flow.dto.BugTracker;
-import com.checkmarx.flow.dto.EventResponse;
-import com.checkmarx.flow.dto.FlowOverride;
-import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.ScanRequest.Product;
 import com.checkmarx.flow.dto.ScanRequest.ScanRequestBuilder;
+import com.checkmarx.flow.dto.azure.AdoDetailsRequest;
 import com.checkmarx.flow.dto.azure.PullEvent;
 import com.checkmarx.flow.dto.azure.Repository;
 import com.checkmarx.flow.dto.azure.Resource;
@@ -17,12 +15,10 @@ import com.checkmarx.flow.service.FilterFactory;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.HelperService;
 import com.checkmarx.flow.utils.ScanUtils;
-import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -34,10 +30,12 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping(value = "/")
 @RequiredArgsConstructor
-public class TfsController {
+@Slf4j
+public class TfsController extends AdoControllerBase {
     private static final String PULL_EVENT = "git.pullrequest.created";
     private static final String AUTHORIZATION = "authorization";
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(TfsController.class);
+    public static final String ACTION_PULL = "pull";
+    public static final String ACTION_PUSH = "push";
 
     private final ADOProperties properties;
     private final FlowProperties flowProperties;
@@ -51,28 +49,10 @@ public class TfsController {
     public ResponseEntity<EventResponse> pullPushRequest(
             HttpServletRequest httpRequest,
             @RequestBody PullEvent body,
-            @RequestHeader(value = AUTHORIZATION) String auth, 
-            @PathVariable Optional<String> product,
-            @RequestParam Optional<String> application, 
-            @RequestParam Optional<List<String>> branch,
-            @RequestParam Optional<List<String>> severity, 
-            @RequestParam Optional<List<String>> cwe,
-            @RequestParam Optional<List<String>> category, 
-            @RequestParam Optional<String> project,
-            @RequestParam Optional<String> team, 
-            @RequestParam Optional<List<String>> status,
-            @RequestParam Optional<String> assignee, 
-            @RequestParam Optional<String> preset,
-            @RequestParam Optional<Boolean> incremental,
-            @RequestParam(value = "exclude-files") Optional<List<String>> excludeFiles,
-            @RequestParam(value = "exclude-folders") Optional<List<String>> excludeFolders,
-            @RequestParam Optional<String> override, 
-            @RequestParam Optional<String> bug,
-            @RequestParam(value = "ado-issue") Optional<String> adoIssueType,
-            @RequestParam(value = "ado-body") Optional<String> adoIssueBody,
-            @RequestParam(value = "ado-opened") Optional<String> adoOpenedState,
-            @RequestParam(value = "ado-closed") Optional<String> adoClosedState,
-            @RequestParam(value = "app-only") Optional<Boolean> appOnlyTracking
+            @RequestHeader(value = AUTHORIZATION) String auth,
+            @PathVariable(value = "product", required = false) String product,
+            ControllerRequest controllerRequest,
+            AdoDetailsRequest adoDetailsRequest
     ) {
         String action = getAction(httpRequest);
         
@@ -83,16 +63,19 @@ public class TfsController {
         }
         validateBasicAuth(auth);
         Resource resource = body.getResource();
+        controllerRequest = ensureNotNull(controllerRequest);
+        adoDetailsRequest = ensureDetailsNotNull(adoDetailsRequest);
 
-        if("pull".equals(action) && !body.getEventType().equals(PULL_EVENT)){
-            log.info("Pull requested not processed.  Event was not opened ({})", body.getEventType());
+        if(ACTION_PULL.equals(action) && !body.getEventType().equals(PULL_EVENT)){
+            log.info("Pull requested not processed.  Event was not 'opened' ({})", body.getEventType());
             return ResponseEntity.accepted().body(EventResponse.builder()
                     .message("No processing occurred for updates to Pull Request")
                     .success(true)
                     .build());
         }
 
-        FlowOverride o = ScanUtils.getMachinaOverride(override.orElse(null));
+        FlowOverride o = ScanUtils.getMachinaOverride(Optional.ofNullable(controllerRequest.getOverride())
+                .orElse(null));
 
         Repository repository = resource.getRepository();
         String app = repository.getName();
@@ -102,35 +85,50 @@ public class TfsController {
                     .message("Test Event").success(true).build());
         }
 
-        appOnlyTracking.ifPresent(flowProperties::setTrackApplicationOnly);
+        Optional.ofNullable(controllerRequest.getAppOnly())
+                .ifPresent(flowProperties::setTrackApplicationOnly);
 
-        List<String> severityList = severity.orElse(Collections.emptyList());
-        List<String> cweList = cwe.orElse(Collections.emptyList());
-        List<String> categoryList = category.orElse(Collections.emptyList());
-        List<String> statusList = status.orElse(Collections.emptyList());
+        List<String> severityList = Optional.ofNullable(controllerRequest.getSeverity())
+                .orElse(Collections.emptyList());
+        List<String> cweList = Optional.ofNullable(controllerRequest.getCwe())
+                .orElse(Collections.emptyList());
+        List<String> categoryList = Optional.ofNullable(controllerRequest.getCategory())
+                .orElse(Collections.emptyList());
+        List<String> statusList = Optional.ofNullable(controllerRequest.getStatus())
+                .orElse(Collections.emptyList());
 
         FilterConfiguration filter = filterFactory.getFilter(severityList, cweList, categoryList, statusList, null, flowProperties);
 
+        setExclusionProperties(cxProperties, controllerRequest);
+
         ScanRequestBuilder requestBuilder = ScanRequest.builder()
-                .application(application.orElse(app))
+                .application(Optional.ofNullable(controllerRequest.getApplication()).orElse(app))
                 .product(getProductForName(product))
-                .project(project.orElse(null))
-                .team(team.orElse(null))
+                .project(Optional.ofNullable(controllerRequest.getProject()).orElse(null))
+                .team(Optional.ofNullable(controllerRequest.getTeam()).orElse(null))
                 .namespace(repository.getProject().getName().replace(" ","_"))
                 .repoName(repository.getName())
                 .repoType(ScanRequest.Repository.ADO)
-                .incremental(incremental.orElse(cxProperties.getIncremental()))
-                .scanPreset(preset.orElse(cxProperties.getScanPreset()))
-                .excludeFolders(createExludeList(excludeFolders , cxProperties.getExcludeFolders()))
-                .excludeFiles(createExludeList(excludeFiles , cxProperties.getExcludeFiles()))
+                .incremental(isScanIncremental(controllerRequest, cxProperties))
+                .scanPreset(Optional.ofNullable(controllerRequest.getPreset()).orElse(cxProperties.getScanPreset()))
+                .excludeFolders(controllerRequest.getExcludeFolders())
+                .excludeFiles(controllerRequest.getExcludeFiles())
                 .filter(filter);
-        if("pull".equals(action)) {
-            BugTracker.Type bugType = 
-            bug.map(theBug -> ScanUtils.getBugTypeEnum(theBug, flowProperties.getBugTrackerImpl()))
-            .orElse(BugTracker.Type.ADOPULL);
-        
-            appOnlyTracking.ifPresent(flowProperties::setTrackApplicationOnly);
-            
+
+        if(ACTION_PULL.equals(action)) {
+            BugTracker.Type bugType = Optional.ofNullable(controllerRequest.getBug())
+                    .map(theBug -> ScanUtils.getBugTypeEnum(theBug, flowProperties.getBugTrackerImpl()))
+                    .orElse(BugTracker.Type.ADOPULL);
+
+            Optional.ofNullable(controllerRequest.getAppOnly())
+                    .ifPresent(flowProperties::setTrackApplicationOnly);
+
+            BugTracker bugTracker = ScanUtils.getBugTracker(
+                    Optional.ofNullable(controllerRequest.getAssignee()).orElse(null),
+                    bugType,
+                    jiraProperties,
+                    Optional.ofNullable(controllerRequest.getBug()).orElse(null));
+
             requestBuilder
                 .refs(resource.getSourceRefName())
                 .repoUrl(repository.getWebUrl())
@@ -139,16 +137,18 @@ public class TfsController {
                 .branch(ScanUtils.getBranchFromRef(resource.getSourceRefName()))
                 .mergeTargetBranch(ScanUtils.getBranchFromRef(resource.getTargetRefName()))
                 .email(null)
-                .bugTracker(ScanUtils.getBugTracker(
-                    assignee.orElse(null), 
-                        bugType, 
-                        jiraProperties, 
-                        bug.orElse(null)));
-        } else if ("push".equals(action)) {
-            BugTracker.Type bugType = ScanUtils.getBugTypeEnum(
-                bug.orElse(flowProperties.getBugTracker()), 
-                flowProperties.getBugTrackerImpl());
+                .bugTracker(bugTracker);
+        } else if (ACTION_PUSH.equals(action)) {
+            String bug = Optional.ofNullable(controllerRequest.getBug())
+                    .orElse(flowProperties.getBugTracker());
 
+            BugTracker.Type bugType = ScanUtils.getBugTypeEnum(bug, flowProperties.getBugTrackerImpl());
+
+            BugTracker bugTracker = ScanUtils.getBugTracker(
+                    Optional.ofNullable(controllerRequest.getAssignee()).orElse(null),
+                    bugType,
+                    jiraProperties,
+                    Optional.ofNullable(controllerRequest.getBug()).orElse(null));
 
             requestBuilder
                 .refs(resource.getRefUpdates().get(0).getName())
@@ -157,26 +157,21 @@ public class TfsController {
                 .branch(ScanUtils.getBranchFromRef(resource.getRefUpdates().get(0).getName()))
                     .defaultBranch(repository.getDefaultBranch())
                 .email(determineEmails(resource))
-                .bugTracker(ScanUtils.getBugTracker(
-                    assignee.orElse(null), 
-                        bugType, 
-                        jiraProperties, 
-                        bug.orElse(null)));
+                .bugTracker(bugTracker);
         }
         ScanRequest request = requestBuilder.build();
 
         request = ScanUtils.overrideMap(request, o);
-        if ("pull".equals(action)) {     
+        if (ACTION_PULL.equals(action)) {
             request.putAdditionalMetadata("statuses_url", resource.getUrl().concat("/statuses"));
         }
-        request.putAdditionalMetadata(Constants.ADO_ISSUE_KEY, adoIssueType.orElse(properties.getIssueType()));
-        request.putAdditionalMetadata(Constants.ADO_ISSUE_BODY_KEY, adoIssueBody.orElse(properties.getIssueBody()));
-        request.putAdditionalMetadata(Constants.ADO_OPENED_STATE_KEY, adoOpenedState.orElse(properties.getOpenStatus()));
-        request.putAdditionalMetadata(Constants.ADO_CLOSED_STATE_KEY, adoClosedState.orElse(properties.getClosedStatus()));
+        addMetadataToScanRequest(adoDetailsRequest, request);
         request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body.toString());
         request.setId(uid);
         //only initiate scan/automation if target branch is applicable
         List<String> branches = new ArrayList<>();
+
+        Optional<List<String>> branch = Optional.ofNullable(controllerRequest.getBranch());
         if (branch.isPresent()) {
             branches.addAll(branch.get());
         } else if(!ScanUtils.empty(flowProperties.getBranches())) {
@@ -195,11 +190,10 @@ public class TfsController {
     private List<String> determineEmails(Resource resource) {
         List<String> emails = new ArrayList<>();
         if(resource.getCommits() != null) {
-            emails = new ArrayList<>(resource.getCommits()
+            emails = resource.getCommits()
                     .stream()
                     .filter(c -> c.getAuthor() != null && !ScanUtils.empty(c.getAuthor().getEmail()))
-                    .map(c -> c.getAuthor().getEmail())
-                    .collect(Collectors.toList()));
+                    .map(c -> c.getAuthor().getEmail()).collect(Collectors.toList());
             emails.add(resource.getPushedBy().getUniqueName());
         }
         return emails;
@@ -207,28 +201,20 @@ public class TfsController {
 
     private String getAction(HttpServletRequest request) {
         String pathInfo = request.getRequestURI();
-        return pathInfo.substring(pathInfo.length()-4);
+        return pathInfo.substring(pathInfo.length() - 4);
     }
 
-    private Product getProductForName(Optional<String> product) {
-        return product.map(pr -> ScanRequest.Product.valueOf(pr.toUpperCase(Locale.ROOT)))
-            .orElse(ScanRequest.Product.CX);
+    private Product getProductForName(String product) {
+        return Optional.ofNullable(product).map(pr -> ScanRequest.Product.valueOf(pr.toUpperCase(Locale.ROOT)))
+                .orElse(ScanRequest.Product.CX);
     }
 
     /*
      * $1 is http or https
      * $2 is the remainder of the url.
      */
-    private String addTokenToUrl(String url , String token) {
-        return url.replaceAll("^(https?:\\/\\/)(.+$)", "$1"+ token +"@"+"$2");
-    }
-
-    private List<String> createExludeList(Optional<List<String>> list , String defaultString) {
-        return list.orElse(
-                defaultString == null ?
-                    Collections.emptyList()
-                    : Arrays.asList(StringUtils.split(defaultString, ","))
-        );
+    private String addTokenToUrl(String url, String token) {
+        return url.replaceAll("^(https?://)(.+$)", "$1" + token + "@" + "$2");
     }
 
     private void validateBasicAuth(String token){
