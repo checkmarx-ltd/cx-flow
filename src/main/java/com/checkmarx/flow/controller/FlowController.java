@@ -2,10 +2,7 @@ package com.checkmarx.flow.controller;
 
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
-import com.checkmarx.flow.dto.BugTracker;
-import com.checkmarx.flow.dto.EventResponse;
-import com.checkmarx.flow.dto.FlowOverride;
-import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.service.FilterFactory;
 import com.checkmarx.flow.service.FlowService;
@@ -32,7 +29,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.beans.ConstructorProperties;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -60,7 +56,7 @@ public class FlowController {
     private final ResultsService resultsService;
     private final FilterFactory filterFactory;
 
-    @RequestMapping(value = "/scanresults", method = RequestMethod.GET, produces = "application/json")
+    @GetMapping(value = "/scanresults", produces = "application/json")
     public ScanResults latestScanResults(
             // Mandatory parameters
             @RequestParam(value = "project") String project,
@@ -85,7 +81,8 @@ public class FlowController {
         BugTracker bugTracker = getBugTracker(assignee, bug);
 
         // Create filters if available
-        FilterConfiguration filter = filterFactory.getFilter(severity, cwe, category, status, null, properties);
+        ControllerRequest request = new ControllerRequest(severity, cwe, category, status);
+        FilterConfiguration filter = filterFactory.getFilter(request, null, properties);
 
         // Create the scan request
         ScanRequest scanRequest = ScanRequest.builder()
@@ -233,8 +230,7 @@ public class FlowController {
     }
 
     private FilterConfiguration determineFilter(CxScanRequest scanRequest) {
-        FilterConfiguration filter = filterFactory.getFilter(null, null, null, null, null,
-                properties);
+        FilterConfiguration filter = filterFactory.getFilter(null, null, properties);
 
         boolean hasSimpleFilters = CollectionUtils.isNotEmpty(scanRequest.getFilters());
         boolean hasFilterScript = StringUtils.isNotEmpty(scanRequest.getFilterScript());

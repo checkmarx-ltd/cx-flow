@@ -39,4 +39,14 @@ public class ControllerRequest {
 
     // trackApplicationOnly
     private Boolean appOnly;
+
+    public ControllerRequest(List<String> severity,
+                             List<String> cwe,
+                             List<String> category,
+                             List<String> status) {
+        this.severity = severity;
+        this.cwe = cwe;
+        this.category = category;
+        this.status = status;
+    }
 }

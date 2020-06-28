@@ -42,7 +42,7 @@ import static java.util.Map.Entry.comparingByKey;
 
 public class ScanUtils {
 
-    private static final String DIV_A_HREF = "<div><a href=\'";
+    private static final String DIV_A_HREF = "<div><a href='";
     public static final String RUNNING = "running";
     public static final String CRLF = "\r\n";
     public static final String MD_H3 = "###";
@@ -179,12 +179,11 @@ public class ScanUtils {
 
         if (filtersObj != null) {
             FilterFactory filterFactory = new FilterFactory();
-            FilterConfiguration filter = filterFactory.getFilter(filtersObj.getSeverity(),
+            ControllerRequest controllerRequest = new ControllerRequest(filtersObj.getSeverity(),
                     filtersObj.getCwe(),
                     filtersObj.getCategory(),
-                    filtersObj.getStatus(),
-                    null,
-                    null);
+                    filtersObj.getStatus());
+            FilterConfiguration filter = filterFactory.getFilter(controllerRequest, null, null);
             request.setFilter(filter);
         }
 
@@ -296,12 +295,11 @@ public class ScanUtils {
 
                     Optional.ofNullable(fo.getFilters()).ifPresent(f -> {
                         FilterFactory filterFactory = new FilterFactory();
-                        FilterConfiguration filter = filterFactory.getFilter(f.getSeverity(),
+                        ControllerRequest controllerRequest = new ControllerRequest(f.getSeverity(),
                                 f.getCwe(),
                                 f.getCategory(),
-                                f.getStatus(),
-                                null,
-                                null);
+                                f.getStatus());
+                        FilterConfiguration filter = filterFactory.getFilter(controllerRequest, null, null);
                         request.setFilter(filter);
 
                         String filterDescr;
@@ -313,8 +311,6 @@ public class ScanUtils {
                         }
                         overridePropertiesMap.put("filters", filterDescr);
                     });
-
-                    FlowOverride.Thresholds thresholds = flowOverride.getThresholds();
 
                     Optional.ofNullable(flowOverride.getThresholds()).ifPresent(th -> {
                         if ( !(
@@ -391,23 +387,22 @@ public class ScanUtils {
     }
 
     private static Map<FindingSeverity, Integer> getThresholdsMap(FlowOverride.Thresholds thresholds) {
-
-        Map<FindingSeverity, Integer> map = new HashMap<>();
-       if(thresholds.getHigh()!=null){
-           map.put(FindingSeverity.HIGH, thresholds.getHigh());
-       }
-        if(thresholds.getMedium()!=null){
+        Map<FindingSeverity, Integer> map = new EnumMap<>(FindingSeverity.class);
+        if (thresholds.getHigh() != null) {
+            map.put(FindingSeverity.HIGH, thresholds.getHigh());
+        }
+        if (thresholds.getMedium() != null) {
             map.put(FindingSeverity.MEDIUM, thresholds.getMedium());
         }
-        if(thresholds.getLow()!=null){
+        if (thresholds.getLow() != null) {
             map.put(FindingSeverity.LOW, thresholds.getLow());
         }
-        if(thresholds.getInfo()!=null){
+        if (thresholds.getInfo() != null) {
             map.put(FindingSeverity.INFO, thresholds.getInfo());
         }
 
-        return  map;
-     }
+        return map;
+    }
 
     public static BugTracker getBugTracker(@RequestParam(value = "assignee", required = false) String assignee,
                                            BugTracker.Type bugType, JiraProperties jiraProperties, String bugTracker) {

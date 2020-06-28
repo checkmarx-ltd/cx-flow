@@ -86,7 +86,7 @@ public class BitbucketCloudController extends WebhookController {
 
             BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
 
-            FilterConfiguration filter = filterFactory.getFilter(controllerRequest.getSeverity(), controllerRequest.getCwe(), controllerRequest.getCategory(), controllerRequest.getStatus(), null, flowProperties);
+            FilterConfiguration filter = filterFactory.getFilter(controllerRequest, null, flowProperties);
 
             setExclusionProperties(cxProperties, controllerRequest);
 
@@ -179,7 +179,7 @@ public class BitbucketCloudController extends WebhookController {
 
             BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
 
-            FilterConfiguration filter = filterFactory.getFilter(controllerRequest.getSeverity(), controllerRequest.getCwe(), controllerRequest.getCategory(), controllerRequest.getStatus(), null, flowProperties);
+            FilterConfiguration filter = filterFactory.getFilter(controllerRequest, null, flowProperties);
 
             setExclusionProperties(cxProperties, controllerRequest);
 

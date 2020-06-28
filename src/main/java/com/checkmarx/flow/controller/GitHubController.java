@@ -155,12 +155,7 @@ public class GitHubController extends WebhookController {
             String targetBranch = pullRequest.getBase().getRef();
             List<String> branches = getBranches(controllerRequest, flowProperties);
             BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
-            FilterConfiguration filter = filterFactory.getFilter(controllerRequest.getSeverity(),
-                    controllerRequest.getCwe(),
-                    controllerRequest.getCategory(),
-                    controllerRequest.getStatus(),
-                    null,
-                    flowProperties);
+            FilterConfiguration filter = filterFactory.getFilter(controllerRequest, null, flowProperties);
 
             setExclusionProperties(cxProperties, controllerRequest);
             //build request object
@@ -271,7 +266,7 @@ public class GitHubController extends WebhookController {
             List<String> branches = getBranches(controllerRequest, flowProperties);
 
             BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
-            FilterConfiguration filter = filterFactory.getFilter(controllerRequest.getSeverity(), controllerRequest.getCwe(), controllerRequest.getCategory(), controllerRequest.getStatus(), null, flowProperties);
+            FilterConfiguration filter = filterFactory.getFilter(controllerRequest, null, flowProperties);
 
             setExclusionProperties(cxProperties, controllerRequest);
 

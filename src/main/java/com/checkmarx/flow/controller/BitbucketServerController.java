@@ -168,7 +168,7 @@ public class BitbucketServerController extends WebhookController {
 
             BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
 
-            FilterConfiguration filter = filterFactory.getFilter(controllerRequest.getSeverity(), controllerRequest.getCwe(), controllerRequest.getCategory(), controllerRequest.getStatus(), null, flowProperties);
+            FilterConfiguration filter = filterFactory.getFilter(controllerRequest, null, flowProperties);
 
             setExclusionProperties(cxProperties, controllerRequest);
 
@@ -224,11 +224,7 @@ public class BitbucketServerController extends WebhookController {
             request.putAdditionalMetadata("cxBaseUrl", cxProperties.getBaseUrl());
             request.putAdditionalMetadata("blocker-comment-url", blockerCommentUrl);
             request.setId(uid);
-            try {
-                request.putAdditionalMetadata("BITBUCKET_BROWSE", fromRefRepository.getLinks().getSelf().get(0).getHref());
-            } catch (NullPointerException e) {
-                log.warn("Not able to determine file url for browsing", e);
-            }
+            setBrowseUrl(fromRefRepository, request);
             //only initiate scan/automation if target branch is applicable
             if (helperService.isBranch2Scan(request, branches)) {
                 flowService.initiateAutomation(request);
@@ -237,6 +233,14 @@ public class BitbucketServerController extends WebhookController {
             return getBadRequestMessage(e, controllerRequest, product);
         }
         return getSuccessMessage();
+    }
+
+    private void setBrowseUrl(Repository repo, ScanRequest targetRequest) {
+        try {
+            targetRequest.putAdditionalMetadata("BITBUCKET_BROWSE", repo.getLinks().getSelf().get(0).getHref());
+        } catch (NullPointerException e) {
+            log.warn("Not able to determine file url for browsing", e);
+        }
     }
 
     /**
@@ -286,7 +290,7 @@ public class BitbucketServerController extends WebhookController {
             List<String> branches = getBranches(controllerRequest, flowProperties);
 
             BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
-            FilterConfiguration filter = filterFactory.getFilter(controllerRequest.getSeverity(), controllerRequest.getCwe(), controllerRequest.getCategory(), controllerRequest.getStatus(), null, flowProperties);
+            FilterConfiguration filter = filterFactory.getFilter(controllerRequest, null, flowProperties);
 
             setExclusionProperties(cxProperties, controllerRequest);
 
@@ -321,11 +325,7 @@ public class BitbucketServerController extends WebhookController {
                     .bugTracker(bt)
                     .filter(filter)
                     .build();
-            try {
-                request.putAdditionalMetadata("BITBUCKET_BROWSE", repository.getLinks().getSelf().get(0).getHref());
-            }catch (NullPointerException e){
-                log.warn("Not able to determine file url for browsing", e);
-            }
+            setBrowseUrl(repository, request);
             request = ScanUtils.overrideMap(request, o);
             request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body);
             request.setId(uid);

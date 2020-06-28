@@ -1,7 +1,7 @@
 package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.dto.azure.Collection;
+import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.checkmarx.sdk.dto.filtering.ScriptedFilter;
@@ -16,24 +16,27 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class FilterFactory {
-    public FilterConfiguration getFilter(List<String> severity,
-                                                List<String> cwe,
-                                                List<String> category,
-                                                List<String> status,
-                                                List<String> state,
-                                                @Nullable FlowProperties flowProperties) {
+    public FilterConfiguration getFilter(ControllerRequest request,
+                                         List<String> state,
+                                         @Nullable FlowProperties flowProperties) {
         FilterConfiguration result;
-        if (CollectionUtils.isNotEmpty(severity)
-                || CollectionUtils.isNotEmpty(cwe)
-                || CollectionUtils.isNotEmpty(category)
-                || CollectionUtils.isNotEmpty(status)
-                || CollectionUtils.isNotEmpty(state)) {
-            result = getFilters(severity, cwe, category, status,state, null);
+
+        request = Optional.ofNullable(request)
+                .orElse(ControllerRequest.builder().build());
+
+        if (hasRequiredProperties(request) || CollectionUtils.isNotEmpty(state)) {
+            result = getFilter(request.getSeverity(),
+                    request.getCwe(),
+                    request.getCategory(),
+                    request.getStatus(),
+                    state,
+                    null);
         } else if (flowProperties != null) {
-            result = getFilters(flowProperties);
+            result = getFilter(flowProperties);
         } else {
             result = FilterConfiguration.builder().build();
         }
@@ -43,8 +46,8 @@ public class FilterFactory {
     /**
      * Create filter configuration based on CxFlow properties.
      */
-    private static FilterConfiguration getFilters(FlowProperties flowProperties) {
-        return getFilters(flowProperties.getFilterSeverity(),
+    private static FilterConfiguration getFilter(FlowProperties flowProperties) {
+        return getFilter(flowProperties.getFilterSeverity(),
                 flowProperties.getFilterCwe(),
                 flowProperties.getFilterCategory(),
                 flowProperties.getFilterStatus(),
@@ -52,15 +55,22 @@ public class FilterFactory {
                 flowProperties.getFilterScript());
     }
 
+    private boolean hasRequiredProperties(ControllerRequest request) {
+        return CollectionUtils.isNotEmpty(request.getSeverity())
+                || CollectionUtils.isNotEmpty(request.getCwe())
+                || CollectionUtils.isNotEmpty(request.getCategory())
+                || CollectionUtils.isNotEmpty(request.getStatus());
+    }
+
     /**
      * Create filter configuration based on lists of severity, cwe, category and on the text of a filter script
      */
-    private static FilterConfiguration getFilters(List<String> severity,
-                                                  List<String> cwe,
-                                                  List<String> category,
-                                                  List<String> status,
-                                                  List<String> state,
-                                                  String filterScript) {
+    private static FilterConfiguration getFilter(List<String> severity,
+                                                 List<String> cwe,
+                                                 List<String> category,
+                                                 List<String> status,
+                                                 List<String> state,
+                                                 String filterScript) {
         List<Filter> simpleFilters = new ArrayList<>();
         simpleFilters.addAll(getListByFilterType(severity, Filter.Type.SEVERITY));
         simpleFilters.addAll(getListByFilterType(cwe, Filter.Type.CWE));
@@ -96,7 +106,7 @@ public class FilterFactory {
 
     private static List<Filter> getListByFilterType(List<String> stringFilters, Filter.Type type) {
         List<Filter> filterList = new ArrayList<>();
-        if (stringFilters != null) {
+        if (CollectionUtils.isNotEmpty(stringFilters)) {
             for (String s : stringFilters) {
                 filterList.add(Filter.builder()
                         .type(type)
