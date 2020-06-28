@@ -9,6 +9,9 @@ import java.util.List;
  * All the parameters are optional.
  *
  * Field names need to be kept as is for backward compatibility unless we find a better solution.
+ *
+ * Raw query string values use kebab case (e.g. exclude-files). To support this, a custom filter had to be used.
+ * See {@link com.checkmarx.flow.filter.CaseTransformingFilter}.
  */
 @Getter
 @Setter
