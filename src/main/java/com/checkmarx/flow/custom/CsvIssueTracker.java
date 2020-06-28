@@ -25,7 +25,7 @@ import java.util.stream.Stream;
 
 @Service("Csv")
 @RequiredArgsConstructor
-public class CsvIssueTracker implements IssueTracker {
+public class CsvIssueTracker extends ImmutableIssueTracker {
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(CsvIssueTracker.class);
     private final CsvProperties properties;
     private final FlowProperties flowProperties;
@@ -204,36 +204,6 @@ public class CsvIssueTracker implements IssueTracker {
             log.error("Error writing to file {}, value {}", request.getFilename(), csv, e);
         }
         return null;
-    }
-
-    @Override
-    public void closeIssue(Issue issue, ScanRequest request) throws MachinaException {
-
-    }
-
-    @Override
-    public Issue updateIssue(Issue issue, ScanResults.XIssue resultIssue, ScanRequest request) throws MachinaException {
-        return null;
-    }
-
-    @Override
-    public String getIssueKey(Issue issue, ScanRequest request) {
-        return issue.getId();
-    }
-
-    @Override
-    public String getXIssueKey(ScanResults.XIssue issue, ScanRequest request) {
-        return issue.getFilename();
-    }
-
-    @Override
-    public boolean isIssueClosed(Issue issue, ScanRequest request) {
-        return false;
-    }
-
-    @Override
-    public boolean isIssueOpened(Issue issue, ScanRequest request) {
-        return false;
     }
 
     private String escapeSpecialCharacters(String data) {

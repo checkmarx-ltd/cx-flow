@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +27,7 @@ import java.util.List;
 @Service("GitLabDashboard")
 @RequiredArgsConstructor
 @Slf4j
-public class GitLabSecurityDasbhoard implements IssueTracker {
+public class GitLabSecurityDashboard extends ImmutableIssueTracker {
     private static final String ISSUE_FORMAT = "%s @ %s : %d";
 
     private final GitLabProperties properties;
@@ -35,12 +36,16 @@ public class GitLabSecurityDasbhoard implements IssueTracker {
 
     @Override
     public void init(ScanRequest request, ScanResults results) throws MachinaException {
-        String filename = filenameFormatter.formatFilenameTemplate(request, properties.getFilePath());
-        request.setFilename(filename);
-        log.info("Creating file {}", filename);
+        Path fullPath = Paths.get(properties.getFilePath());
+        Path parentDir = fullPath.getParent();
+        Path filename = fullPath.getFileName();
+
+        String formattedPath = filenameFormatter.formatPath(request, filename.toString(), parentDir.toString());
+        request.setFilename(formattedPath);
+        log.info("Creating file {}", formattedPath);
         try {
-            Files.deleteIfExists(Paths.get(filename));
-            Files.createFile(Paths.get(filename));
+            Files.deleteIfExists(Paths.get(formattedPath));
+            Files.createFile(Paths.get(formattedPath));
         } catch (IOException e) {
             log.error("Issue deleting existing file or writing initial {}", filename, e);
         }
@@ -123,36 +128,6 @@ public class GitLabSecurityDasbhoard implements IssueTracker {
     @Override
     public Issue createIssue(ScanResults.XIssue issue, ScanRequest request) throws MachinaException {
         return null;
-    }
-
-    @Override
-    public void closeIssue(Issue issue, ScanRequest request) throws MachinaException {
-
-    }
-
-    @Override
-    public Issue updateIssue(Issue issue, ScanResults.XIssue resultIssue, ScanRequest request) throws MachinaException {
-        return null;
-    }
-
-    @Override
-    public String getIssueKey(Issue issue, ScanRequest request) {
-        return issue.getId();
-    }
-
-    @Override
-    public String getXIssueKey(ScanResults.XIssue issue, ScanRequest request) {
-        return issue.getFilename();
-    }
-
-    @Override
-    public boolean isIssueClosed(Issue issue, ScanRequest request) {
-        return false;
-    }
-
-    @Override
-    public boolean isIssueOpened(Issue issue, ScanRequest request) {
-        return false;
     }
 
     @Data
