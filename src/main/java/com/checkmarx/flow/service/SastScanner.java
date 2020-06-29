@@ -238,7 +238,7 @@ public class SastScanner implements VulnerabilityScanner {
 
             log.debug("Waiting for scan to complete");
             ScanResults results = future.join();
-            if (flowProperties.isBreakBuild() && results != null && results.getXIssues() != null && !results.getXIssues().isEmpty()) {
+            if (flowProperties.isBreakBuild() && resultsService.filteredIssuesPresent(results)) {
                 log.error(ERROR_BREAK_MSG);
                 exit(10);
             }
