@@ -143,9 +143,7 @@ public class GitHubControllerTest {
     public void pushRequestNullControllerNullParameters() {
         GitHubController gitHubController = new GitHubController(null, null, null, null, null, helperService, null, null, null);
         try {
-            gitHubController.pushRequest(null, null, null, null, null, null,
-                    null, null, null, null, null, null, null, null,
-                    null, null, null, null, null);
+            gitHubController.pushRequest(null, null, null, null);
             assert false;
         } catch (MachinaRuntimeException e) {
             assert true;
@@ -156,9 +154,7 @@ public class GitHubControllerTest {
     public void pushRequestNullControllerNullParametersWithBody() {
         GitHubController gitHubController = new GitHubController(null, null, null, null, null, helperService, null, null, null);
         try {
-            gitHubController.pushRequest(validBody, null, null, null, null, null,
-                    null, null, null, null, null, null, null, null,
-                    null, null, null, null, null);
+            gitHubController.pushRequest(validBody, null, null, null);
             assert false;
         } catch (MachinaRuntimeException | InvalidTokenException e) {
             assert true;
@@ -170,9 +166,7 @@ public class GitHubControllerTest {
         properties.setWebhookToken(invalidWebhookToken);
         GitHubController gitHubController = new GitHubController(properties, null, null, null, null, helperService, null, null, null);
         try {
-            gitHubController.pushRequest(validBody, null, null, null, null, null,
-                    null, null, null, null, null, null, null, null,
-                    null, null, null, null, null);
+            gitHubController.pushRequest(validBody, null, null, null);
             assert false;
         } catch (MachinaRuntimeException | InvalidTokenException e) {
             assert true;
@@ -185,9 +179,7 @@ public class GitHubControllerTest {
         properties.setWebhookToken(validWebhookToken);
         GitHubController gitHubController = new GitHubController(properties, null, null, null, null, helperService,null, null, null);
         try {
-            gitHubController.pushRequest(validBody, null, null, null, null, null,
-                    null, null, null, null, null, null, null, null,
-                    null, null, null, null, null);
+            gitHubController.pushRequest(validBody, null, null, null);
             assert false;
         } catch (MachinaRuntimeException | InvalidTokenException e) {
             assert true;
@@ -199,9 +191,7 @@ public class GitHubControllerTest {
         properties.setWebhookToken(validWebhookToken);
         GitHubController gitHubController = new GitHubController(properties, null, null, null, null, helperService, null, null, null);
         try {
-            gitHubController.pushRequest(validBody,validSignature2, null, null, null, null,
-                    null, null, null, null, null, null, null, null,
-                    null, null, null, null, null);
+            gitHubController.pushRequest(validBody,validSignature2, null, null);
             assert false;
         } catch (MachinaRuntimeException e) {
             assert true;
@@ -213,9 +203,7 @@ public class GitHubControllerTest {
         properties.setWebhookToken(validWebhookToken);
         GitHubController gitHubController = new GitHubController(properties, flowProperties, null, null, null, helperService, null, null, null);
         try {
-            gitHubController.pushRequest(validBody, validSignature2, null, null, null, null,
-                    null, null, null, null, null, null, null, null,
-                    null, null, null, null, null);
+            gitHubController.pushRequest(validBody, validSignature2, null, null);
             assert false;
         } catch (MachinaRuntimeException e) {
             assert true;
@@ -229,9 +217,7 @@ public class GitHubControllerTest {
         properties.setToken(invalidWebhookToken);
         GitHubController gitHubController = new GitHubController(properties, flowProperties, null, null, null, helperService, null, null, filterFactory);
         try {
-            gitHubController.pushRequest(validBody, validSignature2, null, null, null, null,
-                    null, null, null, null, null, null, null, null,
-                    null, null, null, null, null);
+            gitHubController.pushRequest(validBody, validSignature2, null, null);
             assert false;
         } catch (MachinaRuntimeException e) {
             assert true;
@@ -260,9 +246,7 @@ public class GitHubControllerTest {
         properties.setToken(invalidWebhookToken);
         GitHubController gitHubController = new GitHubController(properties, flowProperties, cxProperties, null, flowService, helperService, null, null, filterFactory);
         try {
-            gitHubController.pushRequest(validBody, validSignature2, null, null, null, null,
-                    null, null, null, null, null, null, null, null,
-                    null, null, null, null, null);
+            gitHubController.pushRequest(validBody, validSignature2, null, null);
             assert false;
         } catch (InvalidTokenException | InvalidCredentialsException e) {
             assert true;

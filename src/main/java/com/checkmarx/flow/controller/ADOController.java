@@ -3,40 +3,35 @@ package com.checkmarx.flow.controller;
 import com.checkmarx.flow.config.ADOProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
-import com.checkmarx.flow.dto.BugTracker;
-import com.checkmarx.flow.dto.EventResponse;
-import com.checkmarx.flow.dto.FlowOverride;
-import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.azure.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.service.FilterFactory;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.HelperService;
 import com.checkmarx.flow.utils.ScanUtils;
-import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.beans.ConstructorProperties;
 import java.util.*;
 
 /**
- * Class used to manage Controller for GitHub WebHooks
+ * Handles Azure DevOps (ADO) webhook requests.
  */
 @RequiredArgsConstructor
 @RestController
 @RequestMapping(value = "/")
-public class ADOController {
-
+public class ADOController extends AdoControllerBase {
     private static final String HTTP = "http://";
     private static final String HTTPS = "https://";
-    private static final List<String> PULL_EVENT = Arrays.asList(new String[]{"git.pullrequest.created", "git.pullrequest.updated"});
+    private static final List<String> PULL_EVENT = Arrays.asList("git.pullrequest.created", "git.pullrequest.updated");
     private static final String AUTHORIZATION = "authorization";
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(ADOController.class);
     private final ADOProperties properties;
@@ -50,38 +45,22 @@ public class ADOController {
     /**
      * Pull Request event submitted (JSON)
      */
-    @PostMapping(value={"/{product}/ado/pull","/ado/pull"})
+    @PostMapping(value = {"/{product}/ado/pull", "/ado/pull"})
     public ResponseEntity<EventResponse> pullRequest(
             @RequestBody PullEvent body,
             @RequestHeader(value = AUTHORIZATION) String auth,
             @PathVariable(value = "product", required = false) String product,
-            @RequestParam(value = "application", required = false) String application,
-            @RequestParam(value = "branch", required = false) List<String> branch,
-            @RequestParam(value = "severity", required = false) List<String> severity,
-            @RequestParam(value = "cwe", required = false) List<String> cwe,
-            @RequestParam(value = "category", required = false) List<String> category,
-            @RequestParam(value = "project", required = false) String project,
-            @RequestParam(value = "team", required = false) String team,
-            @RequestParam(value = "status", required = false) List<String> status,
-            @RequestParam(value = "assignee", required = false) String assignee,
-            @RequestParam(value = "preset", required = false) String preset,
-            @RequestParam(value = "incremental", required = false) Boolean incremental,
-            @RequestParam(value = "exclude-files", required = false) List<String> excludeFiles,
-            @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders,
-            @RequestParam(value = "override", required = false) String override,
-            @RequestParam(value = "bug", required = false) String bug,
-            @RequestParam(value = "ado-issue", required = false) String adoIssueType,
-            @RequestParam(value = "ado-body", required = false) String adoIssueBody,
-            @RequestParam(value = "ado-opened", required = false) String adoOpenedState,
-            @RequestParam(value = "ado-closed", required = false) String adoClosedState,
-            @RequestParam(value = "app-only", required = false) Boolean appOnlyTracking
-    ){
+            ControllerRequest controllerRequest,
+            AdoDetailsRequest adoDetailsRequest
+    ) {
         String uid = helperService.getShortUid();
         MDC.put("cx", uid);
         log.info("Processing Azure PULL request");
         validateBasicAuth(auth);
+        controllerRequest = ensureNotNull(controllerRequest);
+        adoDetailsRequest = ensureDetailsNotNull(adoDetailsRequest);
 
-        if(!PULL_EVENT.contains(body.getEventType()) || !body.getResource().getStatus().equals("active")){
+        if (!PULL_EVENT.contains(body.getEventType()) || !body.getResource().getStatus().equals("active")) {
             log.info("Pull requested not processed.  Event was not opened ({})", body.getEventType());
             return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
                     .message("No processing occurred for updates to Pull Request")
@@ -89,7 +68,7 @@ public class ADOController {
                     .build());
         }
 
-        FlowOverride o = ScanUtils.getMachinaOverride(override);
+        FlowOverride o = ScanUtils.getMachinaOverride(controllerRequest.getOverride());
 
         try {
             Resource resource = body.getResource();
@@ -97,39 +76,29 @@ public class ADOController {
             String pullUrl = resource.getUrl();
             String app = repository.getName();
 
-            if(repository.getName().startsWith(properties.getTestRepository())){
+            if (repository.getName().startsWith(properties.getTestRepository())) {
                 log.info("Handling ADO Test Event");
                 return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
                         .message("Test Event").success(true).build());
             }
 
-            if(!ScanUtils.empty(application)){
-                app = application;
+            if (StringUtils.isNotEmpty(controllerRequest.getApplication())) {
+                app = controllerRequest.getApplication();
             }
 
             BugTracker.Type bugType = BugTracker.Type.ADOPULL;
-            if(!ScanUtils.empty(bug)){
-                bugType = ScanUtils.getBugTypeEnum(bug, flowProperties.getBugTrackerImpl());
+            if (StringUtils.isNotEmpty(controllerRequest.getBug())) {
+                bugType = ScanUtils.getBugTypeEnum(controllerRequest.getBug(), flowProperties.getBugTrackerImpl());
             }
 
-            if(appOnlyTracking != null){
-                flowProperties.setTrackApplicationOnly(appOnlyTracking);
+            if (controllerRequest.getAppOnly() != null) {
+                flowProperties.setTrackApplicationOnly(controllerRequest.getAppOnly());
             }
 
-            if(ScanUtils.empty(adoIssueType)){
-                adoIssueType = properties.getIssueType();
-            }
-            if(ScanUtils.empty(adoIssueBody)){
-                adoIssueBody = properties.getIssueBody();
-            }
-            if(ScanUtils.empty(adoOpenedState)){
-                adoOpenedState = properties.getOpenStatus();
-            }
-            if(ScanUtils.empty(adoClosedState)){
-                adoClosedState = properties.getClosedStatus();
-            }
+            initAdoSpecificParams(adoDetailsRequest);
 
-            if(ScanUtils.empty(product)){
+
+            if (StringUtils.isEmpty(product)) {
                 product = ScanRequest.Product.CX.getProduct();
             }
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
@@ -138,24 +107,13 @@ public class ADOController {
             String currentBranch = ScanUtils.getBranchFromRef(ref);
             String targetBranch = ScanUtils.getBranchFromRef(resource.getTargetRefName());
 
-            List<String> branches = new ArrayList<>();
-            if(!ScanUtils.empty(branch)){
-                branches.addAll(branch);
-            }
-            else if(!ScanUtils.empty(flowProperties.getBranches())){
-                branches.addAll(flowProperties.getBranches());
-            }
+            List<String> branches = getBranches(controllerRequest, flowProperties);
 
-            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
+            BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
 
-            FilterConfiguration filter = filterFactory.getFilter(severity, cwe, category, status, null, flowProperties);
+            FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
 
-            if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
-                excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
-            }
-            if(excludeFolders == null && !ScanUtils.empty(cxProperties.getExcludeFolders())){
-                excludeFolders = Arrays.asList(cxProperties.getExcludeFolders().split(","));
-            }
+            setExclusionProperties(cxProperties, controllerRequest);
 
             //build request object
             String gitUrl = repository.getWebUrl();
@@ -165,19 +123,15 @@ public class ADOController {
             gitAuthUrl = gitAuthUrl.replace(HTTP, HTTP.concat(token).concat("@"));
 
             String scanPreset = cxProperties.getScanPreset();
-            if(!ScanUtils.empty(preset)){
-                scanPreset = preset;
-            }
-            boolean inc = cxProperties.getIncremental();
-            if(incremental != null){
-                inc = incremental;
+            if (StringUtils.isNotEmpty(controllerRequest.getPreset())) {
+                scanPreset = controllerRequest.getPreset();
             }
 
             ScanRequest request = ScanRequest.builder()
                     .application(app)
                     .product(p)
-                    .project(project)
-                    .team(team)
+                    .project(controllerRequest.getProject())
+                    .team(controllerRequest.getTeam())
                     .namespace(determineNamespace(repository))
                     .repoName(repository.getName())
                     .repoUrl(gitUrl)
@@ -188,117 +142,75 @@ public class ADOController {
                     .mergeNoteUri(pullUrl.concat("/threads"))
                     .mergeTargetBranch(targetBranch)
                     .email(null)
-                    .incremental(inc)
+                    .incremental(isScanIncremental(controllerRequest, cxProperties))
                     .scanPreset(scanPreset)
-                    .excludeFolders(excludeFolders)
-                    .excludeFiles(excludeFiles)
+                    .excludeFolders(controllerRequest.getExcludeFolders())
+                    .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)
                     .filter(filter)
                     .build();
 
             request = ScanUtils.overrideMap(request, o);
             request.putAdditionalMetadata("statuses_url", pullUrl.concat("/statuses"));
-            request.putAdditionalMetadata(Constants.ADO_ISSUE_KEY, adoIssueType);
-            request.putAdditionalMetadata(Constants.ADO_ISSUE_BODY_KEY, adoIssueBody);
-            request.putAdditionalMetadata(Constants.ADO_OPENED_STATE_KEY, adoOpenedState);
-            request.putAdditionalMetadata(Constants.ADO_CLOSED_STATE_KEY, adoClosedState);
+            addMetadataToScanRequest(adoDetailsRequest, request);
             request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body.toString());
             request.setId(uid);
             //only initiate scan/automation if target branch is applicable
-            if(helperService.isBranch2Scan(request, branches)){
+            if (helperService.isBranch2Scan(request, branches)) {
                 flowService.initiateAutomation(request);
             }
 
-        }catch (IllegalArgumentException e){
-            log.error("Error submitting Scan Request. Product option incorrect {}", product, e);
-            ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
-                    .message("Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product))
-                    .success(false)
-                    .build());
+        } catch (IllegalArgumentException e) {
+            return getBadRequestMessage(e, controllerRequest, product);
         }
 
-        return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
-                .message("Scan Request Successfully Submitted")
-                .success(true)
-                .build());
+        return getSuccessMessage();
     }
 
     /**
      * Push Request event submitted (JSON), along with the Product (cx for example)
      */
-    @PostMapping(value={"/{product}/ado/push","/ado/push"})
+    @PostMapping(value = {"/{product}/ado/push", "/ado/push"})
     public ResponseEntity<EventResponse> pushRequest(
             @RequestBody PushEvent body,
             @RequestHeader(value = AUTHORIZATION) String auth,
             @PathVariable(value = "product", required = false) String product,
-            @RequestParam(value = "application", required = false) String application,
-            @RequestParam(value = "branch", required = false) List<String> branch,
-            @RequestParam(value = "severity", required = false) List<String> severity,
-            @RequestParam(value = "cwe", required = false) List<String> cwe,
-            @RequestParam(value = "category", required = false) List<String> category,
-            @RequestParam(value = "project", required = false) String project,
-            @RequestParam(value = "team", required = false) String team,
-            @RequestParam(value = "status", required = false) List<String> status,
-            @RequestParam(value = "assignee", required = false) String assignee,
-            @RequestParam(value = "preset", required = false) String preset,
-            @RequestParam(value = "incremental", required = false) Boolean incremental,
-            @RequestParam(value = "exclude-files", required = false) List<String> excludeFiles,
-            @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders,
-            @RequestParam(value = "override", required = false) String override,
-            @RequestParam(value = "bug", required = false) String bug,
-            @RequestParam(value = "ado-issue", required = false) String adoIssueType,
-            @RequestParam(value = "ado-body", required = false) String adoIssueBody,
-            @RequestParam(value = "ado-opened", required = false) String adoOpenedState,
-            @RequestParam(value = "ado-closed", required = false) String adoClosedState,
-            @RequestParam(value = "app-only", required = false) Boolean appOnlyTracking
-    ){
+            ControllerRequest controllerRequest,
+            AdoDetailsRequest adoDetailsRequest
+    ) {
         //TODO handle different state (Active/Closed)
         String uid = helperService.getShortUid();
         MDC.put("cx", uid);
         log.info("Processing Azure Push request");
         validateBasicAuth(auth);
+        controllerRequest = ensureNotNull(controllerRequest);
+        adoDetailsRequest = ensureDetailsNotNull(adoDetailsRequest);
 
-        FlowOverride o = ScanUtils.getMachinaOverride(override);
+        FlowOverride o = ScanUtils.getMachinaOverride(controllerRequest.getOverride());
 
         try {
             Resource resource = body.getResource();
             Repository repository = resource.getRepository();
             String app = repository.getName();
-            if(repository.getName().startsWith(properties.getTestRepository())){
+            if (repository.getName().startsWith(properties.getTestRepository())) {
                 log.info("Handling ADO Test Event");
                 return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
                         .message("Test Event").success(true).build());
             }
-            if(!ScanUtils.empty(application)){
-                app = application;
+            if (StringUtils.isNotEmpty(controllerRequest.getApplication())) {
+                app = controllerRequest.getApplication();
             }
 
             //set the default bug tracker as per yml
-            BugTracker.Type bugType;
-            if (ScanUtils.empty(bug)) {
-                bug =  flowProperties.getBugTracker();
-            }
-            bugType = ScanUtils.getBugTypeEnum(bug, flowProperties.getBugTrackerImpl());
+            setBugTracker(flowProperties, controllerRequest);
+            BugTracker.Type bugType = ScanUtils.getBugTypeEnum(controllerRequest.getBug(), flowProperties.getBugTrackerImpl());
 
-            if(ScanUtils.empty(adoIssueType)){
-                adoIssueType = properties.getIssueType();
-            }
-            if(ScanUtils.empty(adoIssueBody)){
-                adoIssueBody = properties.getIssueBody();
-            }
-            if(ScanUtils.empty(adoOpenedState)){
-                adoOpenedState = properties.getOpenStatus();
-            }
-            if(ScanUtils.empty(adoClosedState)){
-                adoClosedState = properties.getClosedStatus();
-            }
+            initAdoSpecificParams(adoDetailsRequest);
 
-            if(appOnlyTracking != null){
-                flowProperties.setTrackApplicationOnly(appOnlyTracking);
+            if (controllerRequest.getAppOnly() != null) {
+                flowProperties.setTrackApplicationOnly(controllerRequest.getAppOnly());
             }
-            if(ScanUtils.empty(product)){
+            if (StringUtils.isEmpty(product)) {
                 product = ScanRequest.Product.CX.getProduct();
             }
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
@@ -307,34 +219,16 @@ public class ADOController {
             String ref = resource.getRefUpdates().get(0).getName();
             String currentBranch = ScanUtils.getBranchFromRef(ref);
 
-            List<String> branches = new ArrayList<>();
-            if(!ScanUtils.empty(branch)){
-                branches.addAll(branch);
-            }
-            else if(!ScanUtils.empty(flowProperties.getBranches())){
-                branches.addAll(flowProperties.getBranches());
-            }
+            List<String> branches = getBranches(controllerRequest, flowProperties);
 
-            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
+            BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
 
-            FilterConfiguration filter = filterFactory.getFilter(severity, cwe, category, status, null, flowProperties);
+            FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
 
-            if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
-                excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
-            }
-            if(excludeFolders == null && !ScanUtils.empty(cxProperties.getExcludeFolders())){
-                excludeFolders = Arrays.asList(cxProperties.getExcludeFolders().split(","));
-            }
-            /*Determine emails*/
-            List<String> emails = new ArrayList<>();
-            if(resource.getCommits() != null) {
-                for (Commit c : resource.getCommits()) {
-                    if (c.getAuthor() != null && !ScanUtils.empty(c.getAuthor().getEmail())) {
-                        emails.add(c.getAuthor().getEmail());
-                    }
-                }
-                emails.add(resource.getPushedBy().getUniqueName());
-            }
+            setExclusionProperties(cxProperties, controllerRequest);
+
+            List<String> emails = determineEmails(resource);
+
             //build request object
             String gitUrl = repository.getRemoteUrl();
             log.debug("Using url: {}", gitUrl);
@@ -342,16 +236,12 @@ public class ADOController {
             gitAuthUrl = gitAuthUrl.replace(HTTP, HTTP.concat(properties.getToken()).concat("@"));
 
             String scanPreset = cxProperties.getScanPreset();
-            if(!ScanUtils.empty(preset)){
-                scanPreset = preset;
-            }
-            boolean inc = cxProperties.getIncremental();
-            if(incremental != null){
-                inc = incremental;
+            if (StringUtils.isNotEmpty(controllerRequest.getPreset())) {
+                scanPreset = controllerRequest.getPreset();
             }
 
             String defaultBranch = repository.getDefaultBranch();
-            String [] branchPath = repository.getDefaultBranch().split("/");
+            String[] branchPath = repository.getDefaultBranch().split("/");
 
             if (branchPath.length == 3) {
                 defaultBranch = branchPath[2];
@@ -360,8 +250,8 @@ public class ADOController {
             ScanRequest request = ScanRequest.builder()
                     .application(app)
                     .product(p)
-                    .project(project)
-                    .team(team)
+                    .project(controllerRequest.getProject())
+                    .team(controllerRequest.getTeam())
                     .namespace(determineNamespace(repository))
                     .repoName(repository.getName())
                     .repoUrl(gitUrl)
@@ -371,56 +261,73 @@ public class ADOController {
                     .defaultBranch(defaultBranch)
                     .refs(ref)
                     .email(emails)
-                    .incremental(inc)
+                    .incremental(isScanIncremental(controllerRequest, cxProperties))
                     .scanPreset(scanPreset)
-                    .excludeFolders(excludeFolders)
-                    .excludeFiles(excludeFiles)
+                    .excludeFolders(controllerRequest.getExcludeFolders())
+                    .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)
                     .filter(filter)
                     .build();
 
-            request.putAdditionalMetadata(Constants.ADO_ISSUE_KEY, adoIssueType);
-            request.putAdditionalMetadata(Constants.ADO_ISSUE_BODY_KEY, adoIssueBody);
-            request.putAdditionalMetadata(Constants.ADO_OPENED_STATE_KEY, adoOpenedState);
-            request.putAdditionalMetadata(Constants.ADO_CLOSED_STATE_KEY, adoClosedState);
+            addMetadataToScanRequest(adoDetailsRequest, request);
             request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body.toString());
             //if an override blob/file is provided, substitute these values
             request = ScanUtils.overrideMap(request, o);
 
             request.setId(uid);
             //only initiate scan/automation if target branch is applicable
-            if(helperService.isBranch2Scan(request, branches)){
+            if (helperService.isBranch2Scan(request, branches)) {
                 flowService.initiateAutomation(request);
             }
 
-        }catch (IllegalArgumentException e){
-            log.error("Error submitting Scan Request. Product option incorrect {}", product, e);
-            ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-
-           return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
-                    .message("Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product))
-                    .success(false)
-                    .build());
+        } catch (IllegalArgumentException e) {
+            return getBadRequestMessage(e, controllerRequest, product);
         }
 
-        return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
-                .message("Scan Request Successfully Submitted")
-                .success(true)
-                .build());
+        return getSuccessMessage();
+    }
 
+    private List<String> determineEmails(Resource resource) {
+        List<String> emails = new ArrayList<>();
+        if (resource.getCommits() != null) {
+            for (Commit c : resource.getCommits()) {
+                if (c.getAuthor() != null && StringUtils.isNotEmpty(c.getAuthor().getEmail())) {
+                    emails.add(c.getAuthor().getEmail());
+                }
+            }
+            emails.add(resource.getPushedBy().getUniqueName());
+        }
+        return emails;
     }
 
     private String determineNamespace(Repository repository) {
-        String result = repository.getProject().getName().replaceAll(" ", "_");
+        String result = repository.getProject().getName().replace(" ", "_");
         log.debug("Using namespace based on repository.project.name: {}", result);
         return result;
     }
 
-    /** Validates the base64 / basic auth received in the request. */
-    private void validateBasicAuth(String token){
+    /**
+     * Validates the base64 / basic auth received in the request.
+     */
+    private void validateBasicAuth(String token) {
         String auth = "Basic ".concat(Base64.getEncoder().encodeToString(properties.getWebhookToken().getBytes()));
-        if(!auth.equals(token)){
+        if (!auth.equals(token)) {
             throw new InvalidTokenException();
+        }
+    }
+
+    private void initAdoSpecificParams(AdoDetailsRequest request) {
+        if (StringUtils.isEmpty(request.getAdoIssue())) {
+            request.setAdoIssue(properties.getIssueType());
+        }
+        if (StringUtils.isEmpty(request.getAdoBody())) {
+            request.setAdoBody(properties.getIssueBody());
+        }
+        if (StringUtils.isEmpty(request.getAdoOpened())) {
+            request.setAdoOpened(properties.getOpenStatus());
+        }
+        if (StringUtils.isEmpty(request.getAdoClosed())) {
+            request.setAdoClosed(properties.getClosedStatus());
         }
     }
 }

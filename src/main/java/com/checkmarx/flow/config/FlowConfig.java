@@ -1,5 +1,6 @@
 package com.checkmarx.flow.config;
 
+import com.checkmarx.flow.filter.CaseTransformingFilter;
 import com.checkmarx.flow.utils.ScanUtils;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.springframework.context.annotation.Bean;
@@ -11,7 +12,7 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.web.client.RestTemplate;
 
 import java.beans.ConstructorProperties;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
 @Configuration
@@ -24,8 +25,8 @@ public class FlowConfig {
         this.properties = properties;
     }
 
-    @Bean(name="flowRestTemplate")
-    public RestTemplate getRestTemplate(){
+    @Bean(name = "flowRestTemplate")
+    public RestTemplate getRestTemplate() {
         RestTemplate restTemplate = new RestTemplate();
 
         HttpComponentsClientHttpRequestFactory requestFactory = new
@@ -35,7 +36,7 @@ public class FlowConfig {
         restTemplate.setRequestFactory(requestFactory);
 
         restTemplate.getMessageConverters()
-                .add(0, new StringHttpMessageConverter(Charset.forName("UTF-8")));
+                .add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
         return restTemplate;
     }
 
@@ -45,13 +46,13 @@ public class FlowConfig {
 
         FlowProperties.Mail mail = properties.getMail();
 
-        if(mail == null || !mail.isEnabled()){
+        if (mail == null || !mail.isEnabled()) {
             return mailSender;
         }
         Properties props = mailSender.getJavaMailProperties();
 
-        if(!ScanUtils.empty(mail.getUsername()) &&
-                mail.getPort() != null && !ScanUtils.empty(mail.getHost())){
+        if (!ScanUtils.empty(mail.getUsername()) &&
+                mail.getPort() != null && !ScanUtils.empty(mail.getHost())) {
             mailSender.setHost(mail.getHost());
             mailSender.setPort(mail.getPort());
             mailSender.setUsername(mail.getUsername());
@@ -63,5 +64,21 @@ public class FlowConfig {
         props.put("mail.smtp.starttls.enable", "true");
 
         return mailSender;
+    }
+
+    /**
+     * Support for binding kebab-case controller parameters to POJO fields.
+     * E.g. if query looks like '?exclude-files=a,b,c&app-only=true', then the resulting
+     * {@link com.checkmarx.flow.dto.ControllerRequest} will have excludeFiles: ["a","b","c"]
+     * and appOnly: true.<br/>
+     *
+     * Without this functionality, both excludeFiles and appOnly would be null. As for parameters that
+     * don't contain dashes, Spring Boot binds them automatically.
+     *
+     * @return a filter that transforms parameter case.
+     */
+    @Bean
+    public javax.servlet.Filter supportKebabCaseInControllerRequests() {
+        return new CaseTransformingFilter();
     }
 }

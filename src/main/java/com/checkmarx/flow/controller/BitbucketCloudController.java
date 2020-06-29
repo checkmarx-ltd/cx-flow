@@ -3,10 +3,7 @@ package com.checkmarx.flow.controller;
 import com.checkmarx.flow.config.BitBucketProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
-import com.checkmarx.flow.dto.BugTracker;
-import com.checkmarx.flow.dto.EventResponse;
-import com.checkmarx.flow.dto.FlowOverride;
-import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.bitbucket.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.service.FilterFactory;
@@ -19,20 +16,17 @@ import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.beans.ConstructorProperties;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
 @RequiredArgsConstructor
 @RestController
 @RequestMapping(value = "/" )
-public class BitbucketCloudController {
+public class BitbucketCloudController extends WebhookController {
 
     private static final String EVENT = "X-Event-Key";
     private static final String PUSH = EVENT + "=repo:push";
@@ -54,22 +48,7 @@ public class BitbucketCloudController {
     public ResponseEntity<EventResponse> pushRequest(
             @RequestBody MergeEvent body,
             @PathVariable(value = "product", required = false) String product,
-            @RequestParam(value = "application", required = false) String application,
-            @RequestParam(value = "branch", required = false) List<String> branch,
-            @RequestParam(value = "severity", required = false) List<String> severity,
-            @RequestParam(value = "cwe", required = false) List<String> cwe,
-            @RequestParam(value = "category", required = false) List<String> category,
-            @RequestParam(value = "project", required = false) String project,
-            @RequestParam(value = "team", required = false) String team,
-            @RequestParam(value = "status", required = false) List<String> status,
-            @RequestParam(value = "assignee", required = false) String assignee,
-            @RequestParam(value = "preset", required = false) String preset,
-            @RequestParam(value = "incremental", required = false) Boolean incremental,
-            @RequestParam(value = "exclude-files", required = false) List<String> excludeFiles,
-            @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders,
-            @RequestParam(value = "override", required = false) String override,
-            @RequestParam(value = "bug", required = false) String bug,
-            @RequestParam(value = "app-only", required = false) Boolean appOnlyTracking,
+            ControllerRequest controllerRequest,
             @RequestParam(value = "token") String token
 
     ){
@@ -77,22 +56,23 @@ public class BitbucketCloudController {
         MDC.put("cx", uid);
         validateBitBucketRequest(token);
         log.info("Processing BitBucket MERGE request");
-        FlowOverride o = ScanUtils.getMachinaOverride(override);
+        FlowOverride o = ScanUtils.getMachinaOverride(controllerRequest.getOverride());
+        controllerRequest = ensureNotNull(controllerRequest);
 
         try {
             Repository repository = body.getRepository();
             String app = repository.getName();
-            if(!ScanUtils.empty(application)){
-                app = application;
+            if(!ScanUtils.empty(controllerRequest.getApplication())){
+                app = controllerRequest.getApplication();
             }
 
             BugTracker.Type bugType = BugTracker.Type.BITBUCKETPULL;
-            if(!ScanUtils.empty(bug)){
-                bugType = ScanUtils.getBugTypeEnum(bug, flowProperties.getBugTrackerImpl());
+            if (!ScanUtils.empty(controllerRequest.getBug())) {
+                bugType = ScanUtils.getBugTypeEnum(controllerRequest.getBug(), flowProperties.getBugTrackerImpl());
             }
 
-            if(appOnlyTracking != null){
-                flowProperties.setTrackApplicationOnly(appOnlyTracking);
+            if(controllerRequest.getAppOnly() != null){
+                flowProperties.setTrackApplicationOnly(controllerRequest.getAppOnly());
             }
 
             if(ScanUtils.empty(product)){
@@ -102,44 +82,28 @@ public class BitbucketCloudController {
             Pullrequest pullRequest = body.getPullrequest();
             String currentBranch = pullRequest.getSource().getBranch().getName();
             String targetBranch = pullRequest.getDestination().getBranch().getName();
-            List<String> branches = new ArrayList<>();
+            List<String> branches = getBranches(controllerRequest, flowProperties);
 
-            if(!ScanUtils.empty(branch)){
-                branches.addAll(branch);
-            }
-            else if(!ScanUtils.empty(flowProperties.getBranches())){
-                branches.addAll(flowProperties.getBranches());
-            }
+            BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
 
-            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
+            FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
 
-            FilterConfiguration filter = filterFactory.getFilter(severity, cwe, category, status, null, flowProperties);
-
-            if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
-                excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
-            }
-            if(excludeFolders == null && !ScanUtils.empty(cxProperties.getExcludeFolders())){
-                excludeFolders = Arrays.asList(cxProperties.getExcludeFolders().split(","));
-            }
+            setExclusionProperties(cxProperties, controllerRequest);
 
             String gitUrl = repository.getLinks().getHtml().getHref().concat(".git");
             String mergeEndpoint = pullRequest.getLinks().getComments().getHref();
 
             String scanPreset = cxProperties.getScanPreset();
-            if(!ScanUtils.empty(preset)){
-                scanPreset = preset;
-            }
-            boolean inc = cxProperties.getIncremental();
-            if(incremental != null){
-                inc = incremental;
+            if(!ScanUtils.empty(controllerRequest.getPreset())){
+                scanPreset = controllerRequest.getPreset();
             }
 
             ScanRequest request = ScanRequest.builder()
                     .application(app)
                     .product(p)
-                    .project(project)
-                    .team(team)
-                    .namespace(repository.getOwner().getDisplayName().replaceAll(" ","_"))
+                    .project(controllerRequest.getProject())
+                    .team(controllerRequest.getTeam())
+                    .namespace(repository.getOwner().getDisplayName().replace(" ","_"))
                     .repoName(repository.getName())
                     .repoUrl(gitUrl)
                     .repoUrlWithAuth(gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(properties.getToken()).concat("@")))
@@ -149,10 +113,10 @@ public class BitbucketCloudController {
                     .mergeNoteUri(mergeEndpoint)
                     .refs(Constants.CX_BRANCH_PREFIX.concat(currentBranch))
                     .email(null)
-                    .incremental(inc)
+                    .incremental(isScanIncremental(controllerRequest, cxProperties))
                     .scanPreset(scanPreset)
-                    .excludeFolders(excludeFolders)
-                    .excludeFiles(excludeFiles)
+                    .excludeFolders(controllerRequest.getExcludeFolders())
+                    .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)
                     .filter(filter)
                     .build();
@@ -161,24 +125,14 @@ public class BitbucketCloudController {
             request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body.toString());
             request.setId(uid);
 
-            if(helperService.isBranch2Scan(request, branches)){
+            if (helperService.isBranch2Scan(request, branches)) {
                 flowService.initiateAutomation(request);
             }
 
-        }catch (IllegalArgumentException e){
-            String errorMessage = "Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product != null ? product : "").concat(" | ").concat(bug != null ? bug : "");
-            log.error(errorMessage, e);
-            ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
-                    .message(errorMessage)
-                    .success(false)
-                    .build());
+        } catch (IllegalArgumentException e) {
+            return getBadRequestMessage(e, controllerRequest, product);
         }
-        return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
-                .message("Scan Request Successfully Submitted")
-                .success(true)
-                .build());
+        return getSuccessMessage();
     }
 
 
@@ -189,47 +143,30 @@ public class BitbucketCloudController {
     public ResponseEntity<EventResponse> pushRequest(
             @RequestBody PushEvent body,
             @PathVariable(value = "product", required = false) String product,
-            @RequestParam(value = "application", required = false) String application,
-            @RequestParam(value = "branch", required = false) List<String> branch,
-            @RequestParam(value = "severity", required = false) List<String> severity,
-            @RequestParam(value = "cwe", required = false) List<String> cwe,
-            @RequestParam(value = "category", required = false) List<String> category,
-            @RequestParam(value = "project", required = false) String project,
-            @RequestParam(value = "team", required = false) String team,
-            @RequestParam(value = "status", required = false) List<String> status,
-            @RequestParam(value = "assignee", required = false) String assignee,
-            @RequestParam(value = "preset", required = false) String preset,
-            @RequestParam(value = "incremental", required = false) Boolean incremental,
-            @RequestParam(value = "exclude-files", required = false) List<String> excludeFiles,
-            @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders,
-            @RequestParam(value = "override", required = false) String override,
-            @RequestParam(value = "bug", required = false) String bug,
-            @RequestParam(value = "app-only", required = false) Boolean appOnlyTracking,
+            ControllerRequest controllerRequest,
             @RequestParam(value = "token") String token
 
     ){
         String uid = helperService.getShortUid();
         MDC.put("cx", uid);
         validateBitBucketRequest(token);
+        controllerRequest = ensureNotNull(controllerRequest);
 
-        FlowOverride o = ScanUtils.getMachinaOverride(override);
+        FlowOverride o = ScanUtils.getMachinaOverride(controllerRequest.getOverride());
 
         try {
             Repository repository = body.getRepository();
             String app = repository.getName();
-            if(!ScanUtils.empty(application)){
-                app = application;
+            if(!ScanUtils.empty(controllerRequest.getApplication())){
+                app = controllerRequest.getApplication();
             }
 
             //set the default bug tracker as per yml
-            BugTracker.Type bugType;
-            if (ScanUtils.empty(bug)) {
-                bug =  flowProperties.getBugTracker();
-            }
-            bugType = ScanUtils.getBugTypeEnum(bug, flowProperties.getBugTrackerImpl());
+            setBugTracker(flowProperties, controllerRequest);
+            BugTracker.Type bugType = ScanUtils.getBugTypeEnum(controllerRequest.getBug(), flowProperties.getBugTrackerImpl());
 
-            if(appOnlyTracking != null){
-                flowProperties.setTrackApplicationOnly(appOnlyTracking);
+            if(controllerRequest.getAppOnly() != null){
+                flowProperties.setTrackApplicationOnly(controllerRequest.getAppOnly());
             }
 
             if(ScanUtils.empty(product)){
@@ -238,25 +175,13 @@ public class BitbucketCloudController {
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
             List<Change> changeList =  body.getPush().getChanges();
             String currentBranch = changeList.get(0).getNew().getName();
-            List<String> branches = new ArrayList<>();
+            List<String> branches = getBranches(controllerRequest, flowProperties);
 
-            if(!ScanUtils.empty(branch)){
-                branches.addAll(branch);
-            }
-            else if(!ScanUtils.empty(flowProperties.getBranches())){
-                branches.addAll(flowProperties.getBranches());
-            }
+            BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
 
-            BugTracker bt = ScanUtils.getBugTracker(assignee, bugType, jiraProperties, bug);
+            FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
 
-            FilterConfiguration filter = filterFactory.getFilter(severity, cwe, category, status, null, flowProperties);
-
-            if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
-                excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
-            }
-            if(excludeFolders == null && !ScanUtils.empty(cxProperties.getExcludeFolders())){
-                excludeFolders = Arrays.asList(cxProperties.getExcludeFolders().split(","));
-            }
+            setExclusionProperties(cxProperties, controllerRequest);
 
             /*Determine emails*/
             List<String> emails = new ArrayList<>();
@@ -273,20 +198,16 @@ public class BitbucketCloudController {
             String gitUrl = repository.getLinks().getHtml().getHref().concat(".git");
 
             String scanPreset = cxProperties.getScanPreset();
-            if(!ScanUtils.empty(preset)){
-                scanPreset = preset;
-            }
-            boolean inc = cxProperties.getIncremental();
-            if(incremental != null){
-                inc = incremental;
+            if(!ScanUtils.empty(controllerRequest.getPreset())){
+                scanPreset = controllerRequest.getPreset();
             }
 
             ScanRequest request = ScanRequest.builder()
                     .application(app)
                     .product(p)
-                    .project(project)
-                    .team(team)
-                    .namespace(repository.getOwner().getDisplayName().replaceAll(" ","_"))
+                    .project(controllerRequest.getProject())
+                    .team(controllerRequest.getTeam())
+                    .namespace(repository.getOwner().getDisplayName().replace(" ","_"))
                     .repoName(repository.getName())
                     .repoUrl(gitUrl)
                     .repoUrlWithAuth(gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(properties.getToken()).concat("@")))
@@ -294,10 +215,10 @@ public class BitbucketCloudController {
                     .branch(currentBranch)
                     .refs(Constants.CX_BRANCH_PREFIX.concat(currentBranch))
                     .email(emails)
-                    .incremental(inc)
+                    .incremental(isScanIncremental(controllerRequest, cxProperties))
                     .scanPreset(scanPreset)
-                    .excludeFolders(excludeFolders)
-                    .excludeFiles(excludeFiles)
+                    .excludeFolders(controllerRequest.getExcludeFolders())
+                    .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)
                     .filter(filter)
                     .build();
@@ -306,30 +227,17 @@ public class BitbucketCloudController {
             request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body.toString());
             request.setId(uid);
 
-            if(helperService.isBranch2Scan(request, branches)){
+            if (helperService.isBranch2Scan(request, branches)) {
                 flowService.initiateAutomation(request);
             }
-
-
-        }catch (IllegalArgumentException e){
-            String errorMessage = "Error submitting Scan Request.  Product or Bugtracker option incorrect ".concat(product != null ? product : "").concat(" | ").concat(bug != null ? bug : "");
-            log.error(errorMessage, e);
-            ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(EventResponse.builder()
-                    .message(errorMessage)
-                    .success(false)
-                    .build());
+        } catch (IllegalArgumentException e) {
+            return getBadRequestMessage(e, controllerRequest, product);
         }
-        return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
-                .message("Scan Request Successfully Submitted")
-                .success(true)
-                .build());
+        return getSuccessMessage();
     }
 
     /**
      * Token/Credential validation
-     * @param token
      */
     private void validateBitBucketRequest(String token){
         log.info("Validating BitBucket request token");

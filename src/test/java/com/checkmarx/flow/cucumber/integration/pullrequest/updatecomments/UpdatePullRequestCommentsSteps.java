@@ -5,6 +5,7 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.controller.ADOController;
 import com.checkmarx.flow.controller.GitHubController;
+import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.RepoComment;
 import com.checkmarx.flow.dto.azure.Project;
 import com.checkmarx.flow.dto.azure.Resource;
@@ -32,6 +33,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -82,7 +84,7 @@ public class UpdatePullRequestCommentsSteps {
     @Before
     public void initMocks() {
         flowProperties.getBranches().add("udi-tests-2");
-        flowProperties.setEnabledVulnerabilityScanners(Arrays.asList("sast"));
+        flowProperties.setEnabledVulnerabilityScanners(Collections.singletonList("sast"));
         initGitHubControllerSpy();
         initHelperServiceMock();
     }
@@ -166,7 +168,7 @@ public class UpdatePullRequestCommentsSteps {
         }
     }
 
-    private void validateCommentsUpdated(List<RepoComment> comments) throws IOException {
+    private void validateCommentsUpdated(List<RepoComment> comments) {
         for (RepoComment comment: comments) {
             Assert.assertTrue("Comment was not updated", isCommentUpdated(comment));
         }
@@ -181,7 +183,7 @@ public class UpdatePullRequestCommentsSteps {
     public void verify2NewComments() throws IOException {
         List<RepoComment> comments = getRepoComments();
         Assert.assertEquals("Wrong number of comments", 2, comments.size());
-        comments.stream().forEach(c -> Assert.assertTrue("Comment is not new (probably updated", isCommentNew(c)));
+        comments.forEach(c -> Assert.assertTrue("Comment is not new (probably updated", isCommentNew(c)));
 
     }
 
@@ -259,24 +261,15 @@ public class UpdatePullRequestCommentsSteps {
         try {
             String pullEventStr = mapper.writeValueAsString(pullEvent);
 
-            gitHubControllerSpy.pullRequest(
-                    pullEventStr,
-                    "SIGNATURE",
-                    "CX", "VB",
-                    Arrays.asList(branch), null,
-                    null,
-                    null,
-                    "VB",
-                    "\\CxServer\\SP",
-                    null,
-                    "",
-                    "default",
-                    false,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null);
+            ControllerRequest request = ControllerRequest.builder()
+                    .branch(Collections.singletonList(branch))
+                    .application("VB")
+                    .team("\\CxServer\\SP")
+                    .assignee("")
+                    .preset("default")
+                    .build();
+
+            gitHubControllerSpy.pullRequest(pullEventStr, "SIGNATURE", "CX", request);
 
         } catch (JsonProcessingException e) {
             fail("Unable to parse " + pullEvent.toString());
@@ -310,7 +303,11 @@ public class UpdatePullRequestCommentsSteps {
 
         pullEvent.setResource(resource);
 
-        adoControllerSpy.pullRequest(pullEvent,"Basic Y3hmbG93OjEyMzQ=", null, null,null,null,null,null,"AdoPullRequestTests-master", "\\CxServer\\SP",null,null,null,null,null,null,null,null,null,null,null,null, null);
+        ControllerRequest request = ControllerRequest.builder()
+                .project("AdoPullRequestTests-master")
+                .team("\\CxServer\\SP")
+                .build();
+        adoControllerSpy.pullRequest(pullEvent,"Basic Y3hmbG93OjEyMzQ=", null, request, null);
     }
 
     private class ScanResultsAnswerer implements Answer<ScanResults> {
@@ -322,6 +319,6 @@ public class UpdatePullRequestCommentsSteps {
 
     enum SourceControlType {
         GITHUB,
-        ADO;
+        ADO
     }
 }

@@ -148,12 +148,7 @@ public class FilterScriptSteps {
     }
 
     private FilterConfiguration getFilterConfiguration() {
-        return filterFactory.getFilter(null,
-                null,
-                null,
-                null,
-                null,
-                flowProperties);
+        return filterFactory.getFilter(null, flowProperties);
     }
 
     private void generateIssues(CxClient cxClientSpy) {
