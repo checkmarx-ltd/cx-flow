@@ -463,16 +463,10 @@ public class CxFlowRunner implements ApplicationRunner {
     }
     private void cxResults(ScanRequest request) throws ExitThrowable {
         ScanResults results = resultsService.cxGetResults(request, null).join();
-        if(flowProperties.isBreakBuild() && filteredIssuesPresent(results)){
+        if(flowProperties.isBreakBuild() && resultsService.filteredIssuesPresent(results)){
             log.error("Exiting with Error code 10 due to issues present");
             exit(10);
         }
     }
-
-    private boolean filteredIssuesPresent(ScanResults results){
-        Map<String, Integer> flow = (Map<String, Integer>) results.getAdditionalDetails().get(Constants.SUMMARY_KEY);
-        return flow == null || !flow.isEmpty();
-    }
-
 
 }
