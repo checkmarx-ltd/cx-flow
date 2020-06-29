@@ -7,6 +7,7 @@ import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.controller.GitHubController;
 import com.checkmarx.flow.cucumber.integration.azure.publishing.AzureDevopsClient;
 import com.checkmarx.flow.cucumber.integration.azure.publishing.githubflow.ScanResultsBuilder;
+import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.github.*;
 import com.checkmarx.flow.exception.MachinaException;
@@ -109,7 +110,7 @@ public class Github2AdoSteps {
     @Before("@Github2AdoFeature")
     public void prepareServices() {
         this.flowProperties.setBugTracker(AZURE);
-        this.flowProperties.setBugTrackerImpl(Arrays.asList(AZURE));
+        this.flowProperties.setBugTrackerImpl(Collections.singletonList(AZURE));
         this.adoProperties.setUrl("https://dev.azure.com/");
         issueService = new IssueService(flowProperties);
         issueService.setApplicationContext(applicationContext);
@@ -170,25 +171,16 @@ public class Github2AdoSteps {
 
         try {
             String pullEventStr = mapper.writeValueAsString(pushEvent);
+            ControllerRequest request = ControllerRequest.builder()
+                    .application(repoName)
+                    .branch(Collections.singletonList(branch))
+                    .project(repoName)
+                    .team("\\CxServer\\SP")
+                    .assignee("")
+                    .preset("default")
+                    .build();
 
-            gitHubControllerSpy.pushRequest(
-                    pullEventStr,
-                    "SIGNATURE",
-                    "CX", repoName,
-                    Collections.singletonList(branch), null,
-                    null,
-                    null,
-                    repoName,
-                    "\\CxServer\\SP",
-                    null,
-                    "",
-                    "default",
-                    false,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null);
+            gitHubControllerSpy.pushRequest(pullEventStr, "SIGNATURE", "CX", request);
 
         } catch (JsonProcessingException e) {
             fail("Unable to parse " + pushEvent.toString());

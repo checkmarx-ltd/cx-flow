@@ -1,10 +1,7 @@
 package com.checkmarx.flow;
 
 import com.checkmarx.flow.config.*;
-import com.checkmarx.flow.dto.BugTracker;
-import com.checkmarx.flow.dto.ExitCode;
-import com.checkmarx.flow.dto.FlowOverride;
-import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.ScanUtils;
@@ -171,7 +168,8 @@ public class CxFlowRunner implements ApplicationRunner {
             exit(1);
         }
 
-        FilterConfiguration filter = filterFactory.getFilter(severity, cwe, category, status, null, flowProperties);
+        ControllerRequest controllerRequest = new ControllerRequest(severity, cwe, category, status);
+        FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
 
         //Adding default file/folder exclusions from properties if they are not provided as an override
         if(excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())){
@@ -326,8 +324,8 @@ public class CxFlowRunner implements ApplicationRunner {
         else if(bbs){
             request.setRepoType(ScanRequest.Repository.BITBUCKETSERVER);
             if(repoUrl != null) {
-                repoUrl = repoUrl.replaceAll("\\/scm\\/", "/projects/");
-                repoUrl = repoUrl.replaceAll("\\/[\\w-]+.git$", "/repos$0");
+                repoUrl = repoUrl.replace("/scm/", "/projects/");
+                repoUrl = repoUrl.replaceAll("/[\\w-]+.git$", "/repos$0");
                 repoUrl = repoUrl.replaceAll(".git$", "");
                 repoUrl = repoUrl.concat("/browse");
             }

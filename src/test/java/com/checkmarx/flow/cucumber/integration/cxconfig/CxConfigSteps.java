@@ -7,6 +7,7 @@ import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.controller.GitHubController;
 import com.checkmarx.flow.dto.BugTracker;
+import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.github.*;
 import com.checkmarx.flow.exception.MachinaException;
@@ -106,7 +107,7 @@ public class CxConfigSteps {
         this.gitHubProperties.setWebhookToken("1234");
         this.gitHubProperties.setConfigAsCode("cx.config");
         this.gitHubProperties.setApiUrl("https://api.github.com/repos");
-                                         
+
     }
 
     @Before("@CxConfigFeature")
@@ -128,28 +129,28 @@ public class CxConfigSteps {
     }
 
     @Given("github branch is {string} and threshods section is not set application.yml")
-    public void setBranchAndCreatePullReqeust(String branch){
+    public void setBranchAndCreatePullReqeust(String branch) {
         this.branch = branch;
         buildPullRequest();
     }
 
     @And("github branch is {string} with cx.config")
-    public void setBranchAppSet(String branch){
+    public void setBranchAppSet(String branch) {
         setBranchAndCreatePullReqeust(branch);
     }
 
     @Given("github branch is {string} with invalid cx.config")
-    public void setBranchInvalid(String branch){
+    public void setBranchInvalid(String branch) {
         //set filter from application.yml
         setCurrentFilter("severity");
         setBranchAndCreatePullReqeust(branch);
     }
-    
+
     public void buildPullRequest() {
         PullEvent pullEvent = new PullEvent();
         Repository repo = new Repository();
         repo.setName("CxConfigTests");
-                      
+
         repo.setCloneUrl(gitHubProperties.getUrl());
         Owner owner = new Owner();
         owner.setName("");
@@ -161,34 +162,25 @@ public class CxConfigSteps {
         pullRequest.setIssueUrl("");
         Head headBranch = new Head();
         headBranch.setRef(branch);
-                
+
         pullRequest.setHead(headBranch);
         pullRequest.setBase(new Base());
         pullRequest.setStatusesUrl("");
-        
+
         pullEvent.setPullRequest(pullRequest);
-       
+
         try {
             String pullEventStr = mapper.writeValueAsString(pullEvent);
 
-            gitHubControllerSpy.pullRequest(
-                    pullEventStr,
-                    "SIGNATURE",
-                    "CX", "VB",
-                    Arrays.asList(branch), null,
-                    null,
-                    null,
-                    "VB",
-                    "\\CxServer\\SP",
-                    null,
-                    "",
-                    "default",
-                    false,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null);
+            ControllerRequest request = ControllerRequest.builder()
+                    .branch(Collections.singletonList(branch))
+                    .application("VB")
+                    .team("\\CxServer\\SP")
+                    .assignee("")
+                    .preset("default")
+                    .build();
+
+            gitHubControllerSpy.pullRequest(pullEventStr, "SIGNATURE", "CX", request);
 
         } catch (JsonProcessingException e) {
             fail("Unable to parse " + pullEvent.toString());
@@ -197,62 +189,62 @@ public class CxConfigSteps {
 
     @Given("application.xml contains high thresholds {string} medium thresholds {string} and low thresholds {string}")
     public void thresholdForFindingsOfSeverityIs(String highCount, String mediumCount, String lowCount) {
-        
+
         flowProperties.setThresholds(new HashMap<>());
-        if(StringUtils.isEmptyOrNull(highCount) && StringUtils.isEmptyOrNull(mediumCount) && StringUtils.isEmptyOrNull(lowCount)){
+        if (StringUtils.isEmptyOrNull(highCount) && StringUtils.isEmptyOrNull(mediumCount) && StringUtils.isEmptyOrNull(lowCount)) {
             flowProperties.setThresholds(null);
-        }else {
+        } else {
             if (!StringUtils.isEmptyOrNull(highCount)) {
                 flowProperties.getThresholds().put(FindingSeverity.HIGH, Integer.parseInt(highCount));
             }
             if (!StringUtils.isEmptyOrNull(mediumCount)) {
                 flowProperties.getThresholds().put(FindingSeverity.MEDIUM, Integer.parseInt(mediumCount));
-            } 
+            }
             if (!StringUtils.isEmptyOrNull(lowCount)) {
                 flowProperties.getThresholds().put(FindingSeverity.LOW, Integer.parseInt(lowCount));
             }
         }
     }
-    
-    
+
+
     @Given("application.xml contains filters section with filter type {string}")
     public void setFilter(String filterType) {
-        if(!StringUtils.isEmptyOrNull(filterType)) {
-            String[] filterTypeArr ;
-            if(filterType.contains(",")) {
+        if (!StringUtils.isEmptyOrNull(filterType)) {
+            String[] filterTypeArr;
+            if (filterType.contains(",")) {
                 filterTypeArr = filterType.trim().split(",");
-            }else{
+            } else {
                 filterTypeArr = new String[1];
                 filterTypeArr[0] = filterType;
             }
-            for (String currfilterType: filterTypeArr) {
+            for (String currfilterType : filterTypeArr) {
                 setCurrentFilter(currfilterType);
             }
         }
     }
 
     private void setCurrentFilter(String currSeverity) {
-        
-        switch(currSeverity){
-            case("severity"):
-                List<String> severity = Arrays.asList(new String[]{FindingSeverity.HIGH.toString(), FindingSeverity.LOW.toString()});
+
+        switch (currSeverity) {
+            case ("severity"):
+                List<String> severity = Arrays.asList(FindingSeverity.HIGH.toString(), FindingSeverity.LOW.toString());
                 flowProperties.setFilterSeverity(severity);
                 break;
-            case("cwe"):
-                List<String> cwe = Arrays.asList(new String[]{"anyOther1","anyOther2","anyOther3"});
+            case ("cwe"):
+                List<String> cwe = Arrays.asList("anyOther1", "anyOther2", "anyOther3");
                 flowProperties.setFilterCwe(cwe);
                 break;
-            case("category"):
-                List<String> category = Arrays.asList(new String[]{"anyOther1","anyOther2","anyOther3"});
+            case ("category"):
+                List<String> category = Arrays.asList("anyOther1", "anyOther2", "anyOther3");
                 flowProperties.setFilterCategory(category);
                 break;
             default:
                 fail("Invalid Filter");
                 break;
         }
-        
+
     }
-    
+
 
     @And("^(?:SAST detects )?(.*) findings of \"(.+)\" severity$")
     public void sastDetectsFindings(int expectedFindingCount, String severity) {
@@ -260,17 +252,17 @@ public class CxConfigSteps {
     }
 
     private void addFindingsTo(ScanResults target, int count, String severityName) {
-             Object summary = target.getAdditionalDetails().get(Constants.SUMMARY_KEY);
-            assertTrue(summary instanceof Map);
-            ((Map) summary).put(severityName, count);
+        Object summary = target.getAdditionalDetails().get(Constants.SUMMARY_KEY);
+        assertTrue(summary instanceof Map);
+        ((Map) summary).put(severityName, count);
 
     }
 
     @Then("CxFlow {string} the pull request")
     public void cxflowApprovesOrFailsThePullRequest(String approvesOrFails) throws InterruptedException {
-        
+
         validateRequestByConfig(Boolean.FALSE);
-        
+
         processScanResultsInCxFlow();
 
         boolean expectingApproval = approvesOrFails.equals("approves");
@@ -287,6 +279,7 @@ public class CxConfigSteps {
     public void validateFilterFromApp() {
         validateRequestFilter();
     }
+
     private List<String> getFilter(List<Filter> filters, Filter.Type type) {
 
         List<String> filterByType = new ArrayList<>();
@@ -294,43 +287,42 @@ public class CxConfigSteps {
         if (filters == null || filters.isEmpty()) {
             return filterByType;
         }
-        
-        for(Filter filter: filters){
-            if(filter.getType().equals(type)) {
+
+        for (Filter filter : filters) {
+            if (filter.getType().equals(type)) {
                 String value = filter.getValue();
-                if (type.equals(type)) {
-                    filterByType.add(value.toUpperCase(Locale.ROOT));
-                }
+                filterByType.add(value.toUpperCase(Locale.ROOT));
             }
         }
-        
+
         return filterByType;
     }
+
     private void validateRequestFilter() {
         List<Filter> filters = request.getFilter().getSimpleFilters();
         List<String> filterSeverity = getFilter(filters, Filter.Type.SEVERITY);
         List<String> filterCwe = getFilter(filters, Filter.Type.CWE);
         List<String> filterCatergory = getFilter(filters, Filter.Type.TYPE);
-        
+
         boolean asExpected = false;
-        switch(branch){
+        switch (branch) {
             case "test7":
                 //Filter Severity High and Medium:
-                asExpected = filterSeverity.size() ==2 &&
+                asExpected = filterSeverity.size() == 2 &&
                         filterSeverity.contains(FindingSeverity.HIGH.toString()) &&
                         filterSeverity.contains(FindingSeverity.MEDIUM.toString()) &&
                         filterCwe.isEmpty() && filterCatergory.isEmpty();
                 break;
             case "test8":
                 //Filter cwe: "79", "89"
-                asExpected = filterCwe.size() ==2 &&
+                asExpected = filterCwe.size() == 2 &&
                         filterCwe.contains(CWE_79) &&
                         filterCwe.contains(CWE_89) &&
                         filterCatergory.isEmpty() && filterSeverity.isEmpty();
                 break;
             case "test9":
                 // filter category: "XSS_Reflected", "SQL_Injection"
-                asExpected = filterCatergory.size() ==2 &&
+                asExpected = filterCatergory.size() == 2 &&
                         filterCatergory.contains(XSS_REFLECTED) &&
                         filterCatergory.contains(SQL_INJECTION) &&
                         filterCwe.isEmpty() && filterSeverity.isEmpty();
@@ -338,30 +330,30 @@ public class CxConfigSteps {
             case "test10":
                 // filter cwe:    "79", "89"
                 // filter category:   "XSS_Reflected", "SQL_Injection"
-                    
-                asExpected = filterCwe.size() ==2 &&
-                            filterCwe.contains(CWE_79) &&
-                            filterCwe.contains(CWE_89) &&
-                            filterCatergory.size() ==2 &&
-                            filterCatergory.contains(XSS_REFLECTED) &&
-                            filterCatergory.contains(SQL_INJECTION) &&
-                            filterSeverity.isEmpty();
+
+                asExpected = filterCwe.size() == 2 &&
+                        filterCwe.contains(CWE_79) &&
+                        filterCwe.contains(CWE_89) &&
+                        filterCatergory.size() == 2 &&
+                        filterCatergory.contains(XSS_REFLECTED) &&
+                        filterCatergory.contains(SQL_INJECTION) &&
+                        filterSeverity.isEmpty();
                 break;
             case "test11":
                 // filter filter severity: High, Medium
                 // filter category:   "XSS_Reflected", "SQL_Injection"       
                 asExpected =
-                        filterSeverity.size() ==2 &&
+                        filterSeverity.size() == 2 &&
                                 filterSeverity.contains(FindingSeverity.HIGH.toString()) &&
                                 filterSeverity.contains(FindingSeverity.MEDIUM.toString()) &&
                                 filterCatergory.size() == 2 &&
                                 filterCatergory.contains(XSS_REFLECTED) &&
                                 filterCatergory.contains(SQL_INJECTION) &&
-                                filterCwe.isEmpty();        
+                                filterCwe.isEmpty();
                 break;
             case "test12":
                 //Filter Severity High and Low as set by application.yml, cxconfig is ignored due to errors
-                asExpected = filterSeverity.size() ==2 &&
+                asExpected = filterSeverity.size() == 2 &&
                         filterSeverity.contains(FindingSeverity.HIGH.toString()) &&
                         filterSeverity.contains(FindingSeverity.LOW.toString()) &&
                         filterCwe.isEmpty() && filterCatergory.isEmpty();
@@ -371,13 +363,12 @@ public class CxConfigSteps {
                 break;
         }
 
-        if(!asExpected){
+        if (!asExpected) {
             fail("Invalid Filter for branch " + branch + ": " + flowProperties.getThresholds().toString());
         }
-        
+
     }
 
-   
 
     @Then("CxFlow {string} the pull request and cx.config truncates the data in application.yml")
     public void cxflowApprovesOrFailsThePullRequestOverride(String approvesOrFails) throws InterruptedException {
@@ -389,21 +380,21 @@ public class CxConfigSteps {
         boolean expectingApproval = approvesOrFails.equals("approves");
         verifyPullRequestState(expectingApproval);
     }
-    
+
     private void validateRequestByConfig(Boolean thresholdsOverrideTest) {
         boolean asExpected = false;
-        switch(branch){
+        switch (branch) {
             case "test1":
                 //High: 3  Medium: 8  Low: 15
                 asExpected = flowProperties.getThresholds().get(FindingSeverity.HIGH) == 3 &&
-                            flowProperties.getThresholds().get(FindingSeverity.MEDIUM) == 8 &&
-                            flowProperties.getThresholds().get(FindingSeverity.LOW) == 15;
+                        flowProperties.getThresholds().get(FindingSeverity.MEDIUM) == 8 &&
+                        flowProperties.getThresholds().get(FindingSeverity.LOW) == 15;
                 break;
             case "test2":
                 //High: not set  Medium: 8  Low: 15
                 asExpected = flowProperties.getThresholds().get(FindingSeverity.HIGH) == null &&
-                             flowProperties.getThresholds().get(FindingSeverity.MEDIUM) == 8 &&
-                             flowProperties.getThresholds().get(FindingSeverity.LOW) == 15;
+                        flowProperties.getThresholds().get(FindingSeverity.MEDIUM) == 8 &&
+                        flowProperties.getThresholds().get(FindingSeverity.LOW) == 15;
                 break;
             case "test3":
                 //High: 3  Medium: 8  Low: 15
@@ -413,12 +404,11 @@ public class CxConfigSteps {
                 break;
             case "test4":
             case "test5":
-                if(Boolean.TRUE.equals(thresholdsOverrideTest)){
+                if (Boolean.TRUE.equals(thresholdsOverrideTest)) {
                     asExpected = flowProperties.getThresholds().get(FindingSeverity.HIGH) == 2 &&
                             flowProperties.getThresholds().get(FindingSeverity.MEDIUM) == 5 &&
                             flowProperties.getThresholds().get(FindingSeverity.LOW) == 10;
-                }
-                else {
+                } else {
                     asExpected = flowProperties.getThresholds() == null || flowProperties.getThresholds().isEmpty();
                 }
                 break;
@@ -426,14 +416,14 @@ public class CxConfigSteps {
                 fail("Invalid Branch");
                 break;
         }
-        
-        if(!asExpected){
+
+        if (!asExpected) {
             fail("Invalid Threshods for branch " + branch + ": " + flowProperties.getThresholds().toString());
         }
-  
+
     }
 
-    private void processScanResultsInCxFlow() throws InterruptedException{
+    private void processScanResultsInCxFlow() throws InterruptedException {
         try {
             ScanRequest scanRequest = createScanRequest();
 
@@ -465,12 +455,12 @@ public class CxConfigSteps {
 
         scanRequest.setBugTracker(BugTracker.builder().type(BugTracker.Type.GITHUBPULL).build());
         scanRequest.setMergeNoteUri(MERGE_NOTE_URL);
-        
+
         HashMap<String, String> additionalMetdata = new HashMap<>();
         additionalMetdata.put("statuses_url", PULL_REQUEST_STATUSES_URL);
-        
+
         scanRequest.setAdditionalMetadata(additionalMetdata);
-        
+
         return scanRequest;
     }
 
@@ -480,14 +470,12 @@ public class CxConfigSteps {
         when(restTemplateMock.exchange(
                 anyString(), eq(HttpMethod.POST), any(HttpEntity.class), ArgumentMatchers.<Class<String>>any()))
                 .thenAnswer(interceptor);
-        when(restTemplateMock.exchange(anyString(),eq(HttpMethod.GET),isNull(), any(Class.class) )).thenReturn(createResponseForGetComments());
-     }
-
-    private ResponseEntity<String> createResponseForGetComments() {
-        ResponseEntity<String> result = new ResponseEntity<>("{}", HttpStatus.OK);
-        return result;
+        when(restTemplateMock.exchange(anyString(), eq(HttpMethod.GET), isNull(), any(Class.class))).thenReturn(createResponseForGetComments());
     }
 
+    private ResponseEntity<String> createResponseForGetComments() {
+        return new ResponseEntity<>("{}", HttpStatus.OK);
+    }
 
 
     private void initCxClientMock() {
@@ -520,7 +508,7 @@ public class CxConfigSteps {
     private void initMockGitHubController() {
         doNothing().when(gitHubControllerSpy).verifyHmacSignature(any(), any());
     }
-    
+
     private void initServices() {
 
         //gitHubControllerSpy is a spy which will run real methods.
@@ -535,14 +523,14 @@ public class CxConfigSteps {
                 gitHubService,
                 null,
                 filterFactory));
-        
+
         //results service will be a Mock and will work with gitHubService Mock
         //and will not not connect to any external 
         initResultsServiceMock();
     }
 
     private void initResultsServiceMock() {
-        
+
         RestTemplate restTemplateMock = mock(RestTemplate.class);
 
         initMock(restTemplateMock);
@@ -567,9 +555,9 @@ public class CxConfigSteps {
 
     private static ScanResults createFakeScanResults() {
         ScanResults result = new ScanResults();
-        
+
         result.setScanSummary(new CxScanSummary());
-        
+
         Map<String, Object> details = new HashMap<>();
         details.put(Constants.SUMMARY_KEY, new HashMap<>());
         result.setAdditionalDetails(details);
@@ -612,7 +600,7 @@ public class CxConfigSteps {
             return result;
         }
     }
-    
+
     /**
      * Returns scan results as if they were produced by SAST.
      */
