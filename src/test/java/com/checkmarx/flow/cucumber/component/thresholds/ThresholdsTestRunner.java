@@ -7,6 +7,6 @@ import org.junit.runner.RunWith;
 @RunWith(Cucumber.class)
 @CucumberOptions(
         features = "src/test/resources/cucumber/features/componentTests/thresholds.feature",
-        tags = "@ThresholdsFeature and not @Skip")
+        tags = "@ThresholdsFeature and not @Skip and not @CxSCA")
 public class ThresholdsTestRunner {
 }
