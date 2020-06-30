@@ -92,7 +92,7 @@ public class ScanResultsReport extends AnalyticsReport {
         this.scanSummary.put(FindingSeverity.LOW, results.getScanSummary().getLowSeverity());
         this.scanSummary.put(FindingSeverity.INFO, results.getScanSummary().getInfoSeverity());
 
-        Map<FindingSeverity, Integer> cxFlowResultsIn = MergeResultEvaluatorImpl.getFindingCountPerSeverity(results);
+        Map<FindingSeverity, Integer> cxFlowResultsIn = MergeResultEvaluatorImpl.getSastFindingCountPerSeverity(results);
 
         if (cxFlowResultsIn.get(FindingSeverity.HIGH) != null) {
             this.cxFlowResults.put(FindingSeverity.HIGH, cxFlowResultsIn.get(FindingSeverity.HIGH));

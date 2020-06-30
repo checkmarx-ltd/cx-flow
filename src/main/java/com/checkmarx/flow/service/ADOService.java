@@ -11,6 +11,7 @@ import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.exception.ADOClientException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.CxProperties;
+import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.ScanResults;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -43,12 +44,15 @@ public class ADOService {
     private final ADOProperties properties;
     private final FlowProperties flowProperties;
     private final CxProperties cxProperties;
+    private final ScaProperties scaProperties;
 
-    public ADOService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, ADOProperties properties, FlowProperties flowProperties, CxProperties cxProperties) {
+    public ADOService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, ADOProperties properties,
+                      FlowProperties flowProperties, CxProperties cxProperties, ScaProperties scaProperties) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.flowProperties = flowProperties;
         this.cxProperties = cxProperties;
+        this.scaProperties = scaProperties;
     }
 
     private HttpHeaders createAuthHeaders(){
@@ -169,7 +173,7 @@ public class ADOService {
             restTemplate.exchange(getFullAdoApiUrl(url).concat("-preview"),
                     HttpMethod.PATCH, httpEntity, Void.class);
 
-            MergeResultEvaluatorImpl evaluator = new MergeResultEvaluatorImpl(flowProperties);
+            MergeResultEvaluatorImpl evaluator = new MergeResultEvaluatorImpl(flowProperties, scaProperties);
             boolean isMergeAllowed = evaluator.isMergeAllowed(results, properties, new PullRequestReport(scanDetails, request));
             
             if(!isMergeAllowed){

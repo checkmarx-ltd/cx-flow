@@ -223,7 +223,7 @@ public class GitHubService extends RepoService {
         //Otherwise it would be only SCA
         if(hasSastOsaScan(results)) {
             PullRequestReport report = new PullRequestReport(scanDetails, request);
-            Map<FindingSeverity, Integer> findings = MergeResultEvaluatorImpl.getFindingCountPerSeverity(results);
+            Map<FindingSeverity, Integer> findings = MergeResultEvaluatorImpl.getSastFindingCountPerSeverity(results);
             report.setFindingsPerSeverity(findings);
             report.setPullRequestResult(OperationResult.successful());
             report.log();
