@@ -57,23 +57,33 @@ public class MergeResultEvaluatorImpl implements MergeResultEvaluator {
         }
 
         boolean isAllowed = true;
-        if (StringUtils.containsIgnoreCase(flowProperties.getEnabledVulnerabilityScanners().toString(), CxProperties.CONFIG_PREFIX)) {
+        if (isSast()) {
             isAllowed = isAllowedSast(scanResults, pullRequestReport);
         }
 
-        if (StringUtils.containsIgnoreCase(flowProperties.getEnabledVulnerabilityScanners().toString(), ScaProperties.CONFIG_PREFIX)) {
-            isAllowed = isAllowed && isAllowedSca(scanResults, pullRequestReport);
+        if (isAllowed && StringUtils.containsIgnoreCase(flowProperties.getEnabledVulnerabilityScanners().toString(), ScaProperties.CONFIG_PREFIX)) {
+            isAllowed = isAllowedSca(scanResults, pullRequestReport);
         }
+
         return isAllowed;
+    }
+
+    private boolean isSast() {
+        return flowProperties.getEnabledVulnerabilityScanners().isEmpty() ||
+                StringUtils.containsIgnoreCase(flowProperties.getEnabledVulnerabilityScanners().toString(), CxProperties.CONFIG_PREFIX);
     }
 
     private boolean isAllowedSca(ScanResults scanResults, PullRequestReport pullRequestReport) {
         log.debug("Checking if Cx-SCA pull request merge is allowed.");
-        Map<Severity, Double> scaThresholds = getScaEffectiveThresholds();
-        writeMapToLog(scaThresholds, "Using Cx-SCA thresholds");
-        // TODO: 6/30/2020 ask Orly
-//        pullRequestReport.setScaThresholdsMap(scaThresholds);
-        boolean isAllowedSca = !isAnyScaThresholdsExceeded(scanResults, scaThresholds, pullRequestReport);
+        Map<Severity, Integer> scaThresholdsSeverity = getScaEffectiveThresholdsSeverity();
+        Double scaThresholdsScore = getScaEffectiveThresholdsScore();
+
+        writeMapToLog(scaThresholdsSeverity, "Using Cx-SCA thresholds severity");
+        writeMapToLog(scaThresholdsScore, "Using Cx-SCA thresholds score");
+        pullRequestReport.setScaThresholdsSeverity(scaThresholdsSeverity);
+        pullRequestReport.setScaThresholdsScore(scaThresholdsScore);
+
+        boolean isAllowedSca = !isAnyScaThresholdsExceeded(scanResults, scaThresholdsSeverity, scaThresholdsScore, pullRequestReport);
         isAllowedScannerToLog(isAllowedSca);
 
         return isAllowedSca;
@@ -104,10 +114,16 @@ public class MergeResultEvaluatorImpl implements MergeResultEvaluator {
         }
     }
 
-    private Map<Severity, Double> getScaEffectiveThresholds() {
-        return (areScaThresholdsDefined())
-                ? scaProperties.getThresholds()
+    private Map<Severity, Integer> getScaEffectiveThresholdsSeverity() {
+        return (areScaThresholdsSeverityDefined())
+                ? scaProperties.getThresholdsSeverity()
                 : failScaPrIfResultHasAnyFindings();
+    }
+
+    private Double getScaEffectiveThresholdsScore() {
+        return (isScaThresholdsScoreDefined())
+                ? scaProperties.getThresholdsScore()
+                : 0.0;
     }
 
     private boolean areSastThresholdsDefined() {
@@ -117,35 +133,46 @@ public class MergeResultEvaluatorImpl implements MergeResultEvaluator {
                 && thresholds.values().stream().anyMatch(Objects::nonNull);
     }
 
-    private boolean areScaThresholdsDefined() {
-        Map<Severity, Double> thresholds = scaProperties.getThresholds();
-        return thresholds != null
-                && !thresholds.isEmpty()
-                && thresholds.values().stream().anyMatch(Objects::nonNull);
+    private boolean isScaThresholdsScoreDefined() {
+        return scaProperties.getThresholdsScore() != null;
     }
 
-    private static boolean isAnyScaThresholdsExceeded(ScanResults scanResults,  Map<Severity, Double> scaThresholds, PullRequestReport pullRequestReport) {
-        boolean notExceeding = true;
+    private boolean areScaThresholdsSeverityDefined() {
+        Map<Severity, Integer> thresholdsSeverity = scaProperties.getThresholdsSeverity();
+        return thresholdsSeverity != null
+                && !thresholdsSeverity.isEmpty()
+                && thresholdsSeverity.values().stream().anyMatch(Objects::nonNull);
+    }
 
-        Map<Severity, Double> scaFindingsMaxPerSeverity = getScaFindingsMaxPerSeverity(scanResults);
-        // TODO: 6/30/2020 ask Orly
-//        pullRequestReport.setMaxFindingsPerSeverity(scaFindingsMaxPerSeverity);
+    private static boolean isAnyScaThresholdsExceeded(ScanResults scanResults,  Map<Severity, Integer> scaThresholds,
+                                                      Double scaThresholdsScore, PullRequestReport pullRequestReport) {
+        boolean isExceeded = isExceedsScaThresholdsScore(scanResults, scaThresholdsScore);
 
-        for (Severity severity : scaFindingsMaxPerSeverity.keySet()) {
-            notExceeding &= isExceedsScaThreshold(scaThresholds, scaFindingsMaxPerSeverity, severity);
-            // enable fallthru for logging and authoring
+        Map<Severity, Integer> scaFindingsCountsPerSeverity = getScaFindingsCountsPerSeverity(scanResults);
+        pullRequestReport.setScaFindingsSeverityCount(scaFindingsCountsPerSeverity);
+
+        for (Severity severity : scaFindingsCountsPerSeverity.keySet()) {
+            Integer thresholdCount = scaThresholds.get(severity);
+            Integer findingsCount = scaFindingsCountsPerSeverity.get(severity);
+            if (findingsCount > thresholdCount) {
+                isExceeded = true;
+                logScaThresholdExceedsCounts(true, severity, thresholdCount, findingsCount);
+                // Don't break here, because we want to log validation for all the thresholds.
+            } else {
+                logScaThresholdExceedsCounts(false, severity, thresholdCount, findingsCount);
+            }
         }
-        return !notExceeding;
+
+        return isExceeded;
     }
 
-    private static boolean isExceedsScaThreshold(Map<Severity, Double> scaThresholds, Map<Severity, Double> scaFindingsMaxPerSeverity, Severity severity) {
-        Double findingsMaxSeverity = scaFindingsMaxPerSeverity.get(severity);
-        Double thresholdScore = scaThresholds.get(severity);
-        boolean exceedsThreshold = findingsMaxSeverity <= thresholdScore;
 
-        logScaThresholdCheck(exceedsThreshold, severity, thresholdScore, findingsMaxSeverity);
+    private static boolean isExceedsScaThresholdsScore(ScanResults scanResults, Double scaThresholdsScore) {
+        double summaryRiskScore = scanResults.getScaResults().getSummary().getRiskScore();
 
-        return exceedsThreshold;
+        boolean isExceeded = scaThresholdsScore != null && (summaryRiskScore > scaThresholdsScore);
+        logScaThresholdsScoreCheck(isExceeded, scaThresholdsScore, summaryRiskScore);
+        return isExceeded;
     }
 
     private static boolean isAnySastThresholdExceeded(ScanResults scanResults, Map<FindingSeverity, Integer> sastThresholds, PullRequestReport pullRequestReport) {
@@ -161,15 +188,15 @@ public class MergeResultEvaluatorImpl implements MergeResultEvaluator {
         return result;
     }
 
-    private static Map<Severity, Double> getScaFindingsMaxPerSeverity(ScanResults scanResults) {
-        log.debug("Calculating Cx-SCA finding MAX per severity, after the filters were applied.");
+    private static Map<Severity, Integer> getScaFindingsCountsPerSeverity(ScanResults scanResults) {
+        log.debug("Calculating Cx-SCA finding counts per severity, after the filters were applied.");
 
-        EnumMap<Severity, Double> maxSeverityMap = new EnumMap<>(Severity.class);
+        EnumMap<Severity, Integer> countsSeverityMap = new EnumMap<>(Severity.class);
         scanResults.getScaResults().getFindings().stream()
                 .collect(Collectors.groupingBy(Finding::getSeverity))
                 .forEach((k, v) ->
-                    maxSeverityMap.put(k, Collections.max(v, Comparator.comparingDouble(Finding::getScore)).getScore()));
-        return maxSeverityMap;
+                        countsSeverityMap.put(k, v.size()));
+        return countsSeverityMap;
     }
 
     public static Map<FindingSeverity, Integer> getSastFindingCountPerSeverity(ScanResults scanResults) {
@@ -219,10 +246,10 @@ public class MergeResultEvaluatorImpl implements MergeResultEvaluator {
         return result;
     }
 
-    private static Map<Severity, Double> failScaPrIfResultHasAnyFindings() {
-        EnumMap<Severity, Double> result = new EnumMap<>(Severity.class);
+    private static Map<Severity, Integer> failScaPrIfResultHasAnyFindings() {
+        EnumMap<Severity, Integer> result = new EnumMap<>(Severity.class);
         for (Severity any : Severity.values()) {
-            result.put(any, 0.0);
+            result.put(any, 0);
         }
         return result;
     }
@@ -238,19 +265,30 @@ public class MergeResultEvaluatorImpl implements MergeResultEvaluator {
         log.info("{}: {}", message, json);
     }
 
-    private static void logScaThresholdCheck(boolean exceedsThreshold, Severity severity,
-                                             Double threshold, Double findingsMaxSeverity) {
-        if (threshold == null) {
-            log.info("Threshold for the {} severity is not defined, skipping.", severity.name());
+    private static void logScaThresholdsScoreCheck(boolean exceedsThreshold, Double thresholdsScore,
+                                                   Double scaSummaryScore) {
+        if (thresholdsScore == null) {
+            log.info("SCA thresholds score is not defined, skipping.");
         } else {
             String message;
             if (exceedsThreshold) {
-                message = "Findings max severity score ({}) is above the threshold ({}) for the {} severity.";
+                message = "Cx-SCA findings summary's score: ({}) is exceeded the thresholds score defined: ({})";
             } else {
-                message = "Finding max severity score ({}) does not exceed the threshold ({}) for the {} severity.";
+                message = "Cx-SCA findings summary's score: ({}) doesn't exceeded the thresholds score defined: ({})";
             }
-            log.info(message, findingsMaxSeverity, threshold, severity.name());
+            log.info(message, scaSummaryScore, thresholdsScore);
         }
+    }
+
+    private static void logScaThresholdExceedsCounts(boolean exceedsThreshold, Severity severity,
+                                                     Integer thresholdCount, Integer findingsCount) {
+        String message;
+        if (exceedsThreshold) {
+            message = "Cx-SCA findings count: ({}) is exceeded the thresholds's severity counts: ({}) for severity: ({})";
+        } else {
+            message = "Cx-SCA findings count: ({}) doesn't exceeded the thresholds's severity counts: ({}) for severity: ({})";
+        }
+        log.info(message, findingsCount, thresholdCount, severity);
     }
 
     private static void logSastThresholdCheck(

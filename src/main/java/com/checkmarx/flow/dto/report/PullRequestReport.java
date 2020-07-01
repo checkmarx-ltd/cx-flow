@@ -6,6 +6,7 @@ import com.checkmarx.flow.dto.ScanDetails;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
+import com.cx.restclient.dto.scansummary.Severity;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -29,6 +30,9 @@ public class PullRequestReport extends AnalyticsReport {
 
     private Map<FindingSeverity, Integer> findingsPerSeverity = null;
     private Map<FindingSeverity, Integer> thresholds = null;
+    private Map<Severity, Integer> scaThresholdsSeverity = null;
+    private Map<Severity, Integer> scaFindingsSeverityCount = null;
+    private Double scaThresholdsScore = null;
 
     private OperationResult pullRequestResult;
 
