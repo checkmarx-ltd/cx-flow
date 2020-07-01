@@ -173,7 +173,7 @@ public class ADOService {
             restTemplate.exchange(getFullAdoApiUrl(url).concat("-preview"),
                     HttpMethod.PATCH, httpEntity, Void.class);
 
-            MergeResultEvaluatorImpl evaluator = new MergeResultEvaluatorImpl(flowProperties, scaProperties);
+            ThresholdValidatorImpl evaluator = new ThresholdValidatorImpl(flowProperties, scaProperties);
             boolean isMergeAllowed = evaluator.isMergeAllowed(results, properties, new PullRequestReport(scanDetails, request));
             
             if(!isMergeAllowed){

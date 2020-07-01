@@ -50,7 +50,7 @@ public class GitHubService extends RepoService {
     private final RestTemplate restTemplate;
     private final GitHubProperties properties;
     private final FlowProperties flowProperties;
-    private final MergeResultEvaluator mergeResultEvaluator;
+    private final ThresholdValidator thresholdValidator;
 
     private static final String FILE_CONTENT = "/{namespace}/{repo}/contents/{config}?ref={branch}";
     private static final String LANGUAGE_TYPES = "/{namespace}/{repo}/languages";
@@ -64,11 +64,11 @@ public class GitHubService extends RepoService {
     public GitHubService(@Qualifier("flowRestTemplate") RestTemplate restTemplate,
                          GitHubProperties properties,
                          FlowProperties flowProperties,
-                         MergeResultEvaluator mergeResultEvaluator) {
+                         ThresholdValidator thresholdValidator) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.flowProperties = flowProperties;
-        this.mergeResultEvaluator = mergeResultEvaluator;
+        this.thresholdValidator = thresholdValidator;
     }
 
     private HttpHeaders createAuthHeaders(){
@@ -223,7 +223,7 @@ public class GitHubService extends RepoService {
         //Otherwise it would be only SCA
         if(hasSastOsaScan(results)) {
             PullRequestReport report = new PullRequestReport(scanDetails, request);
-            Map<FindingSeverity, Integer> findings = MergeResultEvaluatorImpl.getSastFindingCountPerSeverity(results);
+            Map<FindingSeverity, Integer> findings = ThresholdValidatorImpl.getSastFindingCountPerSeverity(results);
             report.setFindingsPerSeverity(findings);
             report.setPullRequestResult(OperationResult.successful());
             report.log();
@@ -258,7 +258,7 @@ public class GitHubService extends RepoService {
     private HttpEntity<String> getStatusRequestEntity(ScanResults results, PullRequestReport pullRequestReport) {
         String statusForApi = MERGE_SUCCESS;
 
-        if (!mergeResultEvaluator.isMergeAllowed(results, properties, pullRequestReport)) {
+        if (!thresholdValidator.isMergeAllowed(results, properties, pullRequestReport)) {
             statusForApi = MERGE_FAILURE;
         }
 

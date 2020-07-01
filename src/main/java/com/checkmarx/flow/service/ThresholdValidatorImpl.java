@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class MergeResultEvaluatorImpl implements MergeResultEvaluator {
+public class ThresholdValidatorImpl implements ThresholdValidator {
     private static final ObjectMapper jsonMapper = new ObjectMapper();
 
     private static final String MERGE_SUCCESS_DESCRIPTION = "Checkmarx Scan Completed";

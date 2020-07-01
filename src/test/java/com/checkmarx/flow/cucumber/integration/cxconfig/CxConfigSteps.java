@@ -63,7 +63,7 @@ public class CxConfigSteps {
     private final GitHubService gitHubService;
     private GitHubController gitHubControllerSpy;
     private final ObjectMapper mapper = new ObjectMapper();
-    private final MergeResultEvaluator mergeResultEvaluator;
+    private final ThresholdValidator thresholdValidator;
     private final FlowProperties flowProperties;
     private final CxProperties cxProperties;
     private final GitHubProperties gitHubProperties;
@@ -82,7 +82,7 @@ public class CxConfigSteps {
 
     public CxConfigSteps(FlowProperties flowProperties, GitHubService gitHubService,
                          CxProperties cxProperties, GitHubProperties gitHubProperties, JiraProperties jiraProperties,
-                         MergeResultEvaluator mergeResultEvaluator, FilterFactory filterFactory, FlowService flowService) {
+                         ThresholdValidator thresholdValidator, FilterFactory filterFactory, FlowService flowService) {
 
         this.cxClientMock = mock(CxClient.class);
 
@@ -90,7 +90,7 @@ public class CxConfigSteps {
 
         this.cxProperties = cxProperties;
         this.jiraProperties = jiraProperties;
-        this.mergeResultEvaluator = mergeResultEvaluator;
+        this.thresholdValidator = thresholdValidator;
         this.helperService = mock(HelperService.class);
         this.flowService = flowService;
         this.gitHubService = gitHubService;
@@ -537,7 +537,7 @@ public class CxConfigSteps {
         GitHubService gitHubServiceMock = new GitHubService(restTemplateMock,
                 gitHubProperties,
                 flowProperties,
-                mergeResultEvaluator);
+                thresholdValidator);
 
         this.resultsService = new ResultsService(
                 cxClientMock,

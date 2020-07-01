@@ -11,7 +11,7 @@ import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.ADOProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
-import com.checkmarx.flow.service.MergeResultEvaluator;
+import com.checkmarx.flow.service.ThresholdValidator;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.ScanResults;
@@ -38,7 +38,7 @@ public class ScaThresholdsSteps {
 
     private final CxClient cxClientMock;
     private final RestTemplate restTemplateMock;
-    private final MergeResultEvaluator mergeResultEvaluator;
+    private final ThresholdValidator thresholdValidator;
     private final FlowProperties flowProperties;
     private final CxProperties cxProperties;
     private final GitHubProperties gitHubProperties;
@@ -49,7 +49,7 @@ public class ScaThresholdsSteps {
 
     public ScaThresholdsSteps(CxClient cxClientMock, RestTemplate restTemplateMock, FlowProperties flowProperties,
             ADOProperties adoProperties, CxProperties cxProperties, GitHubProperties gitHubProperties,
-            MergeResultEvaluator mergeResultEvaluator) {
+            ThresholdValidator thresholdValidator) {
         this.cxClientMock = cxClientMock;
         this.restTemplateMock = restTemplateMock;
 
@@ -63,7 +63,7 @@ public class ScaThresholdsSteps {
 
         this.adoProperties = adoProperties;
 
-        this.mergeResultEvaluator = mergeResultEvaluator;
+        this.thresholdValidator = thresholdValidator;
 
     }
 
