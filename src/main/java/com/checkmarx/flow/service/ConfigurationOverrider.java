@@ -205,13 +205,20 @@ public class ConfigurationOverrider {
     }
 
     private BugTracker getBugTracker(FlowOverride override, ScanRequest request, Map<String, String> overridingReport) {
-        BugTracker result = Optional.ofNullable(request.getBugTracker())
-                .orElse(BugTracker.builder()
-                        .type(BugTracker.Type.NONE)
-                        .build());
+        BugTracker result;
+        if (request.getBugTracker() == null) {
+            result = BugTracker.builder()
+                    .type(BugTracker.Type.NONE)
+                    .build();
+            log.debug("Bug tracker is not specified in scan request. Setting bug tracker type to '{}'.", result.getType());
+        }
+        else {
+            result = request.getBugTracker();
+        }
 
         if (canOverrideBugTracker(result, override)) {
             String bugTrackerNameOverride = override.getBugTracker();
+            log.debug("Overriding '{}' bug tracker with '{}'.", result.getType(), bugTrackerNameOverride);
             BugTracker.Type bugTrackerTypeOverride = ScanUtils.getBugTypeEnum(bugTrackerNameOverride, flowProperties.getBugTrackerImpl());
 
             BugTracker.BugTrackerBuilder builder = BugTracker.builder()
@@ -230,7 +237,7 @@ public class ConfigurationOverrider {
         String bugTrackerNameOverride = override.getBugTracker();
         BugTracker.Type currentBugTrackerType = bugTrackerFromScanRequest.getType();
 
-        // Don't override these bug tracker types. Otherwise bug tracker events won't be triggered.
+        // Don't override bug tracker types specified in bugTrackersForPullRequest. Otherwise bug tracker events won't be triggered.
         return !bugTrackersForPullRequest.contains(currentBugTrackerType) &&
                 bugTrackerNameOverride != null &&
                 // No need to override if scan request already uses the same bug tracker.

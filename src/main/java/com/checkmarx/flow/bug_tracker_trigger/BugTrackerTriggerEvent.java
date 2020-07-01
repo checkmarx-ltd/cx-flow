@@ -25,6 +25,7 @@ public class BugTrackerTriggerEvent {
     private final CxProperties cxProperties;
 
     public BugTracker.Type triggerBugTrackerEvent(ScanRequest request) {
+        boolean eventsWereTriggered = true;
         BugTracker.Type bugTrackerType = request.getBugTracker().getType();
 
         switch (bugTrackerType) {
@@ -57,14 +58,22 @@ public class BugTrackerTriggerEvent {
                 break;
 
             case JIRA:
-                break; // No action is needed
-
             case CUSTOM:
+                eventsWereTriggered = false;
                 break; // No action is needed
 
             default:
+                eventsWereTriggered = false;
                 log.warn("Bug-Tracker type: {} is not supported", bugTrackerType);
         }
+
+        if (eventsWereTriggered) {
+            log.debug("Completed triggering events for the '{}' bug tracker.", bugTrackerType);
+        }
+        else {
+            log.debug("Bug tracker events were not triggered, because bug tracker type is '{}'.", bugTrackerType);
+        }
+
         return bugTrackerType;
     }
 }
