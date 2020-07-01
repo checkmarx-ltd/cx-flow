@@ -60,15 +60,12 @@ public class DeleteBranchSteps {
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
 
-    private ProjectNameGenerator projectNameGeneratorSpy;
-
     private String branch;
     
     private Boolean deleteCalled = null;
     private String repoName;
 
     private int actualProjectId;
-    private int projectId;
     private String trigger;
     private String calculatedProjectName;
     
@@ -139,12 +136,12 @@ public class DeleteBranchSteps {
         
         buildDeleteRequest(trigger);
 
-        if(trigger.equals(BRANCH_STR)){
-            assertEquals(deleteCalled, Boolean.TRUE);
-            assertEquals(actualProjectId,EXISTING_PROJECT_ID );
-        }else{
-            assertEquals(deleteCalled, Boolean.FALSE);
-            assertEquals(actualProjectId,Constants.UNKNOWN_INT);
+        if (trigger.equals(BRANCH_STR)) {
+            assertEquals(Boolean.TRUE, deleteCalled);
+            assertEquals(EXISTING_PROJECT_ID, actualProjectId);
+        } else {
+            assertEquals(Boolean.FALSE, deleteCalled);
+            assertEquals(Constants.UNKNOWN_INT, actualProjectId);
         }
     }
     
@@ -162,10 +159,11 @@ public class DeleteBranchSteps {
     
     @And("a project {string} {string} in SAST")
     public void setProjectId(String projectName, String exists){
+        int projectId;
         if(Boolean.parseBoolean(exists)){
-            this.projectId = EXISTING_PROJECT_ID;
+            projectId = EXISTING_PROJECT_ID;
         }else{
-            this.projectId = Constants.UNKNOWN_INT;
+            projectId = Constants.UNKNOWN_INT;
         }
         when(cxClientMock.getProjectId(anyString(),anyString())).thenReturn(projectId);
     }
@@ -176,11 +174,11 @@ public class DeleteBranchSteps {
         buildDeleteRequest(BRANCH_STR);
         
         if(Boolean.parseBoolean(methodCalled)){
-            assertEquals(deleteCalled, Boolean.TRUE);
-            assertEquals(actualProjectId,EXISTING_PROJECT_ID );
+            assertEquals(Boolean.TRUE, deleteCalled);
+            assertEquals(EXISTING_PROJECT_ID,actualProjectId );
         }else{
-            assertEquals(deleteCalled, Boolean.FALSE);
-            assertEquals(actualProjectId,Constants.UNKNOWN_INT);
+            assertEquals(Boolean.FALSE, deleteCalled);
+            assertEquals(Constants.UNKNOWN_INT,actualProjectId);
         }
     }
     
@@ -223,7 +221,7 @@ public class DeleteBranchSteps {
     
     private void initServices() {
 
-        projectNameGeneratorSpy = spy(new ProjectNameGenerator(helperService, cxProperties, null));
+        ProjectNameGenerator projectNameGeneratorSpy = spy(new ProjectNameGenerator(helperService, cxProperties, null));
 
         try {
             initProjectNameGeneratorSpy(projectNameGeneratorSpy);
