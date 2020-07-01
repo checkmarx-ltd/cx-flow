@@ -52,12 +52,11 @@ public class UpdatePullRequestCommentsSteps {
     public static final int COMMENTS_POLL_INTERVAL = 5;
     private static final String GIT_PROJECT_NAME = "vb_test_pr_comments";
     private static final String GITHUB_PR_BASE_URL = "https://api.github.com/repos/cxflowtestuser/" + GIT_PROJECT_NAME;
-    public static final String PULL_REQUEST_COMMENTS_URL = GITHUB_PR_BASE_URL + "/issues/5/comments";
+    private static final String GITHUB_PR_ID = "6";
+    private static final String ADO_PR_ID = "69";
+    public static final String PULL_REQUEST_COMMENTS_URL = GITHUB_PR_BASE_URL + "/issues/"+ GITHUB_PR_ID + "/comments";
     private static final String GIT_URL = "https://github.com/cxflowtestuser/" + GIT_PROJECT_NAME;
-
-    //private static final String ADO_PR_URL = "https://dev.azure.com/CxNamespace/d50fc6e5-a5ab-4123-9bc9-ccb756c0bf16/_apis/git/repositories/a89a9d2f-ab67-4bda-9c56-a571224c2c66/pullRequests/67";
-    private static final String ADO_PR_COMMENTS_URL = "https://dev.azure.com/CxNamespace/d50fc6e5-a5ab-4123-9bc9-ccb756c0bf16/_apis/git/repositories/a89a9d2f-ab67-4bda-9c56-a571224c2c66/pullRequests/67/threads";
-
+    private static final String ADO_PR_COMMENTS_URL = "https://dev.azure.com/CxNamespace/d50fc6e5-a5ab-4123-9bc9-ccb756c0bf16/_apis/git/repositories/a89a9d2f-ab67-4bda-9c56-a571224c2c66/pullRequests/" + ADO_PR_ID + "/threads";
     private final GitHubService gitHubService;
     private final ADOService adoService;
     private GitHubController gitHubControllerSpy;
@@ -161,20 +160,18 @@ public class UpdatePullRequestCommentsSteps {
         }
     }
 
-    private void deleteADOComments() throws IOException, InterruptedException {
+    private void deleteADOComments() throws IOException {
         List<RepoComment> adoComments = getRepoComments();
         for (RepoComment rc: adoComments) {
             adoService.deleteComment(rc.getCommentUrl());
         }
-        TimeUnit.SECONDS.sleep(20);
     }
 
-    private void deleteGitHubComments() throws IOException, InterruptedException{
+    private void deleteGitHubComments() throws IOException {
         List<RepoComment> comments = getRepoComments();
         for (RepoComment comment: comments) {
             gitHubService.deleteComment(comment.getCommentUrl());
         }
-        TimeUnit.SECONDS.sleep(20);
     }
 
     private List<RepoComment> getRepoComments() throws IOException {
@@ -336,7 +333,7 @@ public class UpdatePullRequestCommentsSteps {
         pullRequest.setHead(headBranch);
         pullRequest.setBase(new Base());
         pullRequest.setStatusesUrl("");
-        pullRequest.setIssueUrl(GITHUB_PR_BASE_URL + "/issues/5");
+        pullRequest.setIssueUrl(GITHUB_PR_BASE_URL + "/issues/" + GITHUB_PR_ID);
 
         pullEvent.setPullRequest(pullRequest);
 
@@ -372,7 +369,7 @@ public class UpdatePullRequestCommentsSteps {
         resource.setStatus("active");
         resource.setSourceRefName("refs/heads/master");
         resource.setTargetRefName("refs/heads/udi-tests-2");
-        resource.setUrl("https://dev.azure.com/CxNamespace/d50fc6e5-a5ab-4123-9bc9-ccb756c0bf16/_apis/git/repositories/a89a9d2f-ab67-4bda-9c56-a571224c2c66/pullRequests/67");
+        resource.setUrl("https://dev.azure.com/CxNamespace/d50fc6e5-a5ab-4123-9bc9-ccb756c0bf16/_apis/git/repositories/a89a9d2f-ab67-4bda-9c56-a571224c2c66/pullRequests/" + ADO_PR_ID);
         com.checkmarx.flow.dto.azure.Repository repo = new com.checkmarx.flow.dto.azure.Repository();
         repo.setId("a89a9d2f-ab67-4bda-9c56-a571224c2c66");
         repo.setName("AdoPullRequestTests");
