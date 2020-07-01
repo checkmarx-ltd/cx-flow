@@ -7,6 +7,7 @@ import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.sastscanning.ScanRequestConverter;
 import com.checkmarx.sdk.exception.CheckmarxException;
+import lombok.RequiredArgsConstructor;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
         
@@ -38,6 +39,7 @@ import static org.mockito.Mockito.*;
 
 @SpringBootTest(classes = {CxFlowApplication.class})
 @Slf4j
+@RequiredArgsConstructor
 public class DeleteBranchSteps {
 
     private static final int EXISTING_PROJECT_ID = 20;
@@ -56,6 +58,7 @@ public class DeleteBranchSteps {
     private final GitHubProperties gitHubProperties;
     private final HelperService helperService;
     private final FilterFactory filterFactory;
+    private final ConfigurationOverrider configOverrider;
 
     private ProjectNameGenerator projectNameGeneratorSpy;
 
@@ -69,24 +72,6 @@ public class DeleteBranchSteps {
     private String trigger;
     private String calculatedProjectName;
     
-    public DeleteBranchSteps(FlowProperties flowProperties, GitHubService gitHubService,
-                             CxProperties cxProperties, GitHubProperties gitHubProperties, FilterFactory filterFactory) {
-        this.filterFactory = filterFactory;
-
-        this.cxClientMock = mock(CxClient.class);
-        
-        this.flowProperties = flowProperties;
-        
-        this.cxProperties = cxProperties;
-
-        this.helperService = mock(HelperService.class);
-
-        this.gitHubService = gitHubService;
-        
-        this.gitHubProperties = gitHubProperties;
-
-    }
-
     private void initGitHubProperties() {
         this.gitHubProperties.setCxSummary(false);
         this.gitHubProperties.setFlowSummary(false);
@@ -264,7 +249,8 @@ public class DeleteBranchSteps {
                 helperService,
                 gitHubService,
                 sastScanner,
-                filterFactory));
+                filterFactory,
+                configOverrider));
         
     }
 

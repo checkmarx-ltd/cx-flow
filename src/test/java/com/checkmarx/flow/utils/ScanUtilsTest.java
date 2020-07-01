@@ -4,6 +4,7 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.service.ConfigurationOverrider;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.utils.ScanUtils;
@@ -20,6 +21,7 @@ public class ScanUtilsTest {
 
     private FlowProperties flowProperties;
     private JiraProperties jiraProperties;
+    private ConfigurationOverrider configOverrider;
 
     @Before
     public void setup(){
@@ -27,7 +29,7 @@ public class ScanUtilsTest {
         flowProperties.setBugTrackerImpl(Arrays.asList("JIRA","GitHub","GitLab"));
 
         jiraProperties = new JiraProperties();
-
+        configOverrider = new ConfigurationOverrider(flowProperties);
     }
     @Test
     public void testCxConfigOverride(){
@@ -53,7 +55,7 @@ public class ScanUtilsTest {
         );
         CxConfig cxConfig = ScanUtils.getConfigAsCode(file);
         assertNotNull(cxConfig);
-        com.checkmarx.flow.utils.ScanUtils.overrideCxConfig(request, cxConfig, flowProperties);
+        configOverrider.overrideCxConfig(cxConfig, request);
         assertEquals("/a/b/c", request.getTeam());
         assertEquals("XYZ-Riches-master", request.getProject());
         assertFalse(request.isIncremental());
@@ -84,7 +86,7 @@ public class ScanUtilsTest {
         );
         CxConfig cxConfig = ScanUtils.getConfigAsCode(file);
         assertNotNull(cxConfig);
-        com.checkmarx.flow.utils.ScanUtils.overrideCxConfig(request, cxConfig, flowProperties);
+        configOverrider.overrideCxConfig(cxConfig, request);
         assertEquals("/a/b/c", request.getTeam());
         assertEquals("XYZ-Riches-master", request.getProject());
         assertEquals("test app", request.getApplication());
@@ -121,7 +123,7 @@ public class ScanUtilsTest {
         );
         CxConfig cxConfig = ScanUtils.getConfigAsCode(file);
         assertNotNull(cxConfig);
-        com.checkmarx.flow.utils.ScanUtils.overrideCxConfig(request, cxConfig, flowProperties);
+        configOverrider.overrideCxConfig(cxConfig, request);
         assertEquals("JIRA", request.getBugTracker().getType().toString());
         assertEquals("APPSEC", request.getBugTracker().getProjectKey());
     }

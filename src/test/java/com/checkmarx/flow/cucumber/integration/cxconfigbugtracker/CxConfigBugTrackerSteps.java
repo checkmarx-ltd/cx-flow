@@ -9,10 +9,7 @@ import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.github.*;
-import com.checkmarx.flow.service.FilterFactory;
-import com.checkmarx.flow.service.FlowService;
-import com.checkmarx.flow.service.GitHubService;
-import com.checkmarx.flow.service.HelperService;
+import com.checkmarx.flow.service.*;
 import com.checkmarx.jira.PublishUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
@@ -59,6 +56,8 @@ public class CxConfigBugTrackerSteps {
     private final GitHubProperties gitHubProperties;
     private final HelperService helperService;
     private final FilterFactory filterFactory;
+    private final ConfigurationOverrider configOverrider;
+
     private ScanResults scanResultsToInject;
 
     private String branch;
@@ -69,7 +68,7 @@ public class CxConfigBugTrackerSteps {
     public CxConfigBugTrackerSteps(FlowProperties flowProperties, GitHubService gitHubService,
                                    CxProperties cxProperties, GitHubProperties gitHubProperties,
                                    JiraProperties jiraProperties, GitHubController gitHubController,
-                                   FilterFactory filterFactory) {
+                                   FilterFactory filterFactory, ConfigurationOverrider configOverrider) {
 
 
         this.flowProperties = flowProperties;
@@ -82,6 +81,7 @@ public class CxConfigBugTrackerSteps {
 
         this.gitHubProperties = gitHubProperties;
         this.gitHubControllerSpy = gitHubController;
+        this.configOverrider = configOverrider;
         initGitHubProperties();
     }
 
@@ -154,7 +154,7 @@ public class CxConfigBugTrackerSteps {
         assertFlowPropertiesBugTracker("Json");
         ArgumentCaptor<ScanRequest> ac = ArgumentCaptor.forClass(ScanRequest.class);
         FlowService flowServiceMock = Mockito.mock(FlowService.class);
-        gitHubControllerSpy = new GitHubController(gitHubProperties,flowProperties, cxProperties, jiraProperties, flowServiceMock,helperService, gitHubService, null, filterFactory);
+        gitHubControllerSpy = new GitHubController(gitHubProperties,flowProperties, cxProperties, jiraProperties, flowServiceMock,helperService, gitHubService, null, filterFactory, configOverrider);
         gitHubControllerSpy = spy(gitHubControllerSpy);
         initGitHubControllerSpy();
         buildPullRequest();

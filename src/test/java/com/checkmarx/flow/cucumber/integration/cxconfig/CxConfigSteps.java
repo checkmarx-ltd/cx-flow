@@ -69,6 +69,7 @@ public class CxConfigSteps {
     private final GitHubProperties gitHubProperties;
     private final HelperService helperService;
     private final FilterFactory filterFactory;
+    private final ConfigurationOverrider configOverrider;
 
     private ScanResults scanResultsToInject;
 
@@ -81,7 +82,7 @@ public class CxConfigSteps {
     private final JiraProperties jiraProperties;
 
     public CxConfigSteps(FlowProperties flowProperties, GitHubService gitHubService,
-                         CxProperties cxProperties, GitHubProperties gitHubProperties, JiraProperties jiraProperties,
+                         CxProperties cxProperties, GitHubProperties gitHubProperties, ConfigurationOverrider configOverrider, JiraProperties jiraProperties,
                          ThresholdValidator thresholdValidator, FilterFactory filterFactory, FlowService flowService) {
 
         this.cxClientMock = mock(CxClient.class);
@@ -97,6 +98,7 @@ public class CxConfigSteps {
 
         this.gitHubProperties = gitHubProperties;
         this.filterFactory = filterFactory;
+        this.configOverrider = configOverrider;
         initGitHubProperties();
     }
 
@@ -522,7 +524,8 @@ public class CxConfigSteps {
                 helperService,
                 gitHubService,
                 null,
-                filterFactory));
+                filterFactory,
+                configOverrider));
 
         //results service will be a Mock and will work with gitHubService Mock
         //and will not not connect to any external 
