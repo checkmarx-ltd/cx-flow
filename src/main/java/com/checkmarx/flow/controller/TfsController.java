@@ -156,7 +156,7 @@ public class TfsController extends AdoControllerBase {
         }
         ScanRequest request = requestBuilder.build();
 
-        request = configOverrider.overrideMap(request, o);
+        request = configOverrider.overrideScanRequestProperties(o, request);
         if (ACTION_PULL.equals(action)) {
             request.putAdditionalMetadata("statuses_url", resource.getUrl().concat("/statuses"));
         }

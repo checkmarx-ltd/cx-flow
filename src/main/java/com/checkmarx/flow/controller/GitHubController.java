@@ -196,7 +196,7 @@ public class GitHubController extends WebhookController {
 
             /*Check for Config as code (cx.config) and override*/
             CxConfig cxConfig =  gitHubService.getCxConfigOverride(request);
-            request = configOverrider.overrideCxConfig(cxConfig, request);
+            request = configOverrider.overrideScanRequestProperties(cxConfig, request);
 
             request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body);
             request.putAdditionalMetadata("statuses_url", event.getPullRequest().getStatusesUrl());
@@ -312,7 +312,7 @@ public class GitHubController extends WebhookController {
 
             /*Check for Config as code (cx.config) and override*/
             CxConfig cxConfig =  gitHubService.getCxConfigOverride(request);
-            request = configOverrider.overrideCxConfig(cxConfig, request);
+            request = configOverrider.overrideScanRequestProperties(cxConfig, request);
 
             request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body);
             request.setId(uid);

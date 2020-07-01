@@ -315,7 +315,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 .forceScan(force)
                 .build();
 
-        request = configOverrider.overrideMap(request, o);
+        request = configOverrider.overrideScanRequestProperties(o, request);
         /*Determine if BitBucket Cloud/Server is being used - this will determine formatting of URL that links to file/line in repository */
         request.setId(uid);
         if(bb){

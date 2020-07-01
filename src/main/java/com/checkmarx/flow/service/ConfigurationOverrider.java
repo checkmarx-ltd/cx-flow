@@ -23,15 +23,19 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class ConfigurationOverrider {
+    private static final Set<BugTracker.Type> bugTrackersForPullRequest = new HashSet<>(Arrays.asList(
+            BugTracker.Type.ADOPULL,
+            BugTracker.Type.BITBUCKETPULL,
+            BugTracker.Type.BITBUCKETSERVERPULL,
+            BugTracker.Type.GITHUBPULL,
+            BugTracker.Type.GITLABMERGE));
+
     private final FlowProperties flowProperties;
 
-    /**
-     * Override scan request details as per file/blob (MachinaOverride)
-     */
-    public ScanRequest overrideCxConfig(CxConfig override, ScanRequest request) {
-        Map<String,String> overridePropertiesMap = new HashMap<>();
+    public ScanRequest overrideScanRequestProperties(CxConfig override, ScanRequest request) {
+        Map<String, String> overridePropertiesMap = new HashMap<>();
 
-        if(override == null || request == null || Boolean.FALSE.equals(override.getActive())){
+        if (override == null || request == null || Boolean.FALSE.equals(override.getActive())) {
             return request;
         }
         Optional.ofNullable(override.getProject())
@@ -40,7 +44,7 @@ public class ConfigurationOverrider {
                     /*Replace ${repo} and ${branch}  with the actual reponame and branch - then strip out non-alphanumeric (-_ are allowed)*/
                     String project = p.replace("${repo}", request.getRepoName())
                             .replace("${branch}", request.getBranch())
-                            .replaceAll("[^a-zA-Z0-9-_.]+","-");
+                            .replaceAll("[^a-zA-Z0-9-_.]+", "-");
                     request.setProject(project);
                     overridePropertiesMap.put("project", project);
                 });
@@ -83,23 +87,7 @@ public class ConfigurationOverrider {
                 FlowOverride flowOverride = mapper.convertValue(flow, FlowOverride.class);
 
                 Optional.ofNullable(flowOverride).ifPresent(fo -> {
-                    BugTracker bt = Optional.ofNullable(request.getBugTracker())
-                            .orElse(BugTracker.builder()
-                                    .type(BugTracker.Type.NONE)
-                                    .build());
-
-                    String bug = fo.getBugTracker();
-                    if(bug != null && !bug.equalsIgnoreCase(bt.getType().toString())) {
-                        BugTracker.Type bugType = ScanUtils.getBugTypeEnum(bug, flowProperties.getBugTrackerImpl());
-
-                        BugTracker.BugTrackerBuilder builder = BugTracker.builder()
-                                .type(bugType);
-                        if (bugType.equals(BugTracker.Type.CUSTOM)) {
-                            builder.customBean(bug);
-                        }
-                        bt = builder.build();
-                        overridePropertiesMap.put("bug tracker", fo.getBugTracker());
-                    }
+                    BugTracker bt = getBugTracker(fo, request, overridePropertiesMap);
                     /*Override only applicable to Simple JIRA bug*/
                     if (bt.getType().equals(BugTracker.Type.JIRA) && fo.getJira() != null) {
                         overrideJiraBugProperties(fo, bt);
@@ -136,22 +124,21 @@ public class ConfigurationOverrider {
                         String filterDescr;
                         if (CollectionUtils.isNotEmpty(filter.getSimpleFilters())) {
                             filterDescr = filter.getSimpleFilters().stream().map(Object::toString).collect(Collectors.joining(","));
-                        }
-                        else {
+                        } else {
                             filterDescr = "EMPTY";
                         }
                         overridePropertiesMap.put("filters", filterDescr);
                     });
 
                     Optional.ofNullable(flowOverride.getThresholds()).ifPresent(th -> {
-                        if ( !(
-                                th.getHigh()==null &&
-                                        th.getMedium()==null &&
-                                        th.getLow()==null &&
-                                        th.getInfo()==null
+                        if (!(
+                                th.getHigh() == null &&
+                                        th.getMedium() == null &&
+                                        th.getLow() == null &&
+                                        th.getInfo() == null
                         )) {
-                            Map<FindingSeverity,Integer> thresholdsMap = getThresholdsMap(th);
-                            if(!thresholdsMap.isEmpty()) {
+                            Map<FindingSeverity, Integer> thresholdsMap = getThresholdsMap(th);
+                            if (!thresholdsMap.isEmpty()) {
                                 flowProperties.setThresholds(thresholdsMap);
                             }
 
@@ -165,37 +152,37 @@ public class ConfigurationOverrider {
 
             log.info("override configuration properties from config as code file. with values: {}", overridePropertiesString);
 
-        }catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             log.warn("Issue parsing CxConfig cxFlow element", e);
         }
         return request;
     }
 
-
     /**
      * Override scan request details as per file/blob (MachinaOverride)
      */
-    public ScanRequest overrideMap(ScanRequest request, FlowOverride override){
-        if(override == null){
+    public ScanRequest overrideScanRequestProperties(FlowOverride override, ScanRequest request) {
+        if (override == null) {
             return request;
         }
+
         BugTracker bt = request.getBugTracker();
         /*Override only applicable to Simple JIRA bug*/
-        if(request.getBugTracker().getType().equals(BugTracker.Type.JIRA) && override.getJira()!=null) {
+        if (request.getBugTracker().getType().equals(BugTracker.Type.JIRA) && override.getJira() != null) {
             overrideJiraBugProperties(override, bt);
         }
         request.setBugTracker(bt);
 
-        if(!ScanUtils.empty(override.getApplication())) {
+        if (!ScanUtils.empty(override.getApplication())) {
             request.setApplication(override.getApplication());
         }
 
-        if(!ScanUtils.empty(override.getBranches())) {
+        if (!ScanUtils.empty(override.getBranches())) {
             request.setActiveBranches(override.getBranches());
         }
 
         List<String> emails = override.getEmails();
-        if(emails != null) {
+        if (emails != null) {
             if (emails.isEmpty()) {
                 request.setEmail(null);
             } else {
@@ -217,6 +204,39 @@ public class ConfigurationOverrider {
         return request;
     }
 
+    private BugTracker getBugTracker(FlowOverride override, ScanRequest request, Map<String, String> overridingReport) {
+        BugTracker result = Optional.ofNullable(request.getBugTracker())
+                .orElse(BugTracker.builder()
+                        .type(BugTracker.Type.NONE)
+                        .build());
+
+        if (canOverrideBugTracker(result, override)) {
+            String bugTrackerNameOverride = override.getBugTracker();
+            BugTracker.Type bugTrackerTypeOverride = ScanUtils.getBugTypeEnum(bugTrackerNameOverride, flowProperties.getBugTrackerImpl());
+
+            BugTracker.BugTrackerBuilder builder = BugTracker.builder()
+                    .type(bugTrackerTypeOverride);
+
+            if (bugTrackerTypeOverride.equals(BugTracker.Type.CUSTOM)) {
+                builder.customBean(bugTrackerNameOverride);
+            }
+            result = builder.build();
+            overridingReport.put("bug tracker", bugTrackerNameOverride);
+        }
+        return result;
+    }
+
+    private static boolean canOverrideBugTracker(BugTracker bugTrackerFromScanRequest, FlowOverride override) {
+        String bugTrackerNameOverride = override.getBugTracker();
+        BugTracker.Type currentBugTrackerType = bugTrackerFromScanRequest.getType();
+
+        // Don't override these bug tracker types. Otherwise bug tracker events won't be triggered.
+        return !bugTrackersForPullRequest.contains(currentBugTrackerType) &&
+                bugTrackerNameOverride != null &&
+                // No need to override if scan request already uses the same bug tracker.
+                !bugTrackerNameOverride.equalsIgnoreCase(currentBugTrackerType.toString());
+    }
+
     private static String convertMapToString(Map<?, ?> map) {
         return map.keySet().stream()
                 .map(key -> key + "=" + map.get(key))
@@ -226,40 +246,40 @@ public class ConfigurationOverrider {
 
     private static void overrideJiraBugProperties(FlowOverride override, BugTracker bt) {
         FlowOverride.Jira jira = override.getJira();
-        if(!ScanUtils.empty(jira.getAssignee())) {
+        if (!ScanUtils.empty(jira.getAssignee())) {
             bt.setAssignee(jira.getAssignee());
         }//if empty value override with null
-        if(jira.getAssignee() != null && jira.getAssignee().isEmpty()) {
+        if (jira.getAssignee() != null && jira.getAssignee().isEmpty()) {
             bt.setAssignee(null);
         }
-        if(!ScanUtils.empty(jira.getProject())) {
+        if (!ScanUtils.empty(jira.getProject())) {
             bt.setProjectKey(jira.getProject());
         }
-        if(!ScanUtils.empty(jira.getIssueType())) {
+        if (!ScanUtils.empty(jira.getIssueType())) {
             bt.setIssueType(jira.getIssueType());
         }
-        if(!ScanUtils.empty(jira.getOpenedStatus())) {
+        if (!ScanUtils.empty(jira.getOpenedStatus())) {
             bt.setOpenStatus(jira.getOpenedStatus());
         }
-        if(!ScanUtils.empty(jira.getClosedStatus())) {
+        if (!ScanUtils.empty(jira.getClosedStatus())) {
             bt.setClosedStatus(jira.getClosedStatus());
         }
-        if(!ScanUtils.empty(jira.getOpenTransition())) {
+        if (!ScanUtils.empty(jira.getOpenTransition())) {
             bt.setOpenTransition(jira.getOpenTransition());
         }
-        if(!ScanUtils.empty(jira.getCloseTransition())) {
+        if (!ScanUtils.empty(jira.getCloseTransition())) {
             bt.setCloseTransition(jira.getCloseTransition());
         }
-        if(!ScanUtils.empty(jira.getCloseTransitionField())) {
+        if (!ScanUtils.empty(jira.getCloseTransitionField())) {
             bt.setCloseTransitionField(jira.getCloseTransitionField());
         }
-        if(!ScanUtils.empty(jira.getCloseTransitionValue())) {
+        if (!ScanUtils.empty(jira.getCloseTransitionValue())) {
             bt.setCloseTransitionValue(jira.getCloseTransitionValue());
         }
-        if(jira.getFields()!=null) { //if empty, assume no fields
+        if (jira.getFields() != null) { //if empty, assume no fields
             bt.setFields(jira.getFields());
         }
-        if(jira.getPriorities() != null && !jira.getPriorities().isEmpty()) {
+        if (jira.getPriorities() != null && !jira.getPriorities().isEmpty()) {
             bt.setPriorities(jira.getPriorities());
         }
     }

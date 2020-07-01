@@ -221,7 +221,7 @@ public class BitbucketServerController extends WebhookController {
                     .filter(filter)
                     .build();
 
-            request = configOverrider.overrideMap(request, o);
+            request = configOverrider.overrideScanRequestProperties(o, request);
             request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body);
             request.putAdditionalMetadata("buildStatusUrl", buildStatusEndpoint);
             request.putAdditionalMetadata("cxBaseUrl", cxProperties.getBaseUrl());
@@ -329,7 +329,7 @@ public class BitbucketServerController extends WebhookController {
                     .filter(filter)
                     .build();
             setBrowseUrl(repository, request);
-            request = configOverrider.overrideMap(request, o);
+            request = configOverrider.overrideScanRequestProperties(o, request);
             request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body);
             request.setId(uid);
             //only initiate scan/automation if target branch is applicable

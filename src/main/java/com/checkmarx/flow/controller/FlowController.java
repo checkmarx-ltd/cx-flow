@@ -96,7 +96,7 @@ public class FlowController {
         // If an override blob/file is provided, substitute these values
         if (!ScanUtils.empty(override)) {
             FlowOverride ovr = ScanUtils.getMachinaOverride(override);
-            scanRequest = configOverrider.overrideMap(scanRequest, ovr);
+            scanRequest = configOverrider.overrideScanRequestProperties(ovr, scanRequest);
         }
 
         // Fetch the Checkmarx Scan Results based on given ScanRequest.

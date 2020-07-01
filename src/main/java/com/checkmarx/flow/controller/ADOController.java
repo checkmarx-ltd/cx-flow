@@ -152,7 +152,7 @@ public class ADOController extends AdoControllerBase {
                     .filter(filter)
                     .build();
 
-            request = configOverrider.overrideMap(request, o);
+            request = configOverrider.overrideScanRequestProperties(o, request);
             request.putAdditionalMetadata("statuses_url", pullUrl.concat("/statuses"));
             addMetadataToScanRequest(adoDetailsRequest, request);
             request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body.toString());
@@ -274,7 +274,7 @@ public class ADOController extends AdoControllerBase {
             addMetadataToScanRequest(adoDetailsRequest, request);
             request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body.toString());
             //if an override blob/file is provided, substitute these values
-            request = configOverrider.overrideMap(request, o);
+            request = configOverrider.overrideScanRequestProperties(o, request);
 
             request.setId(uid);
             //only initiate scan/automation if target branch is applicable

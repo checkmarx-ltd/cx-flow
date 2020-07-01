@@ -55,7 +55,7 @@ public class ScanUtilsTest {
         );
         CxConfig cxConfig = ScanUtils.getConfigAsCode(file);
         assertNotNull(cxConfig);
-        configOverrider.overrideCxConfig(cxConfig, request);
+        configOverrider.overrideScanRequestProperties(cxConfig, request);
         assertEquals("/a/b/c", request.getTeam());
         assertEquals("XYZ-Riches-master", request.getProject());
         assertFalse(request.isIncremental());
@@ -86,7 +86,7 @@ public class ScanUtilsTest {
         );
         CxConfig cxConfig = ScanUtils.getConfigAsCode(file);
         assertNotNull(cxConfig);
-        configOverrider.overrideCxConfig(cxConfig, request);
+        configOverrider.overrideScanRequestProperties(cxConfig, request);
         assertEquals("/a/b/c", request.getTeam());
         assertEquals("XYZ-Riches-master", request.getProject());
         assertEquals("test app", request.getApplication());
@@ -123,7 +123,7 @@ public class ScanUtilsTest {
         );
         CxConfig cxConfig = ScanUtils.getConfigAsCode(file);
         assertNotNull(cxConfig);
-        configOverrider.overrideCxConfig(cxConfig, request);
+        configOverrider.overrideScanRequestProperties(cxConfig, request);
         assertEquals("JIRA", request.getBugTracker().getType().toString());
         assertEquals("APPSEC", request.getBugTracker().getProjectKey());
     }

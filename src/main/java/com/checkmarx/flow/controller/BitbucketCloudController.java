@@ -123,7 +123,7 @@ public class BitbucketCloudController extends WebhookController {
                     .filter(filter)
                     .build();
 
-            request = configOverrider.overrideMap(request, o);
+            request = configOverrider.overrideScanRequestProperties(o, request);
             request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body.toString());
             request.setId(uid);
 
@@ -225,7 +225,7 @@ public class BitbucketCloudController extends WebhookController {
                     .filter(filter)
                     .build();
 
-            request = configOverrider.overrideMap(request, o);
+            request = configOverrider.overrideScanRequestProperties(o, request);
             request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body.toString());
             request.setId(uid);
 
