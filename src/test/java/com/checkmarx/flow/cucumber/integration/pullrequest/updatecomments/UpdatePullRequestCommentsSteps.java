@@ -109,7 +109,7 @@ public class UpdatePullRequestCommentsSteps {
     }
 
     @Given("scanner is set to {string}")
-    public void setScannerToSast(String scanner) {
+    public void setScanner(String scanner) {
         if ("sast".equals(scanner)) {
             scannerType = ScannerType.SAST;
             flowProperties.setEnabledVulnerabilityScanners(Arrays.asList("sast"));
@@ -265,7 +265,7 @@ public class UpdatePullRequestCommentsSteps {
                 }
             }
         }
-        throw new IllegalArgumentException("Wring scanner type: " + sct.name());
+        throw new IllegalArgumentException("Wrong scanner type: " + sct.name());
     }
 
     private boolean isThereUpdatedComment() throws IOException {

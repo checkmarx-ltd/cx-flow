@@ -16,7 +16,7 @@
         | both    |
 
 
-    Scenario Outline: Pull request arrives to CxFlow, then scan is initiated, and pull request comments should be updated. number of comments should be 2.
+    Scenario Outline: Pull request arrives to CxFlow, then scan is initiated, and pull request comments should be updated.
       Given scanner is set to "<scanner>"
       Given source control is GitHub
       And no comments on pull request
@@ -47,7 +47,7 @@
         | sast   |
         | both    |
 
-    Scenario Outline: ADO Pull request arrives to CxFlow, then scan is initiated, and pull request comments should be updated. number of comments should be 2
+    Scenario Outline: ADO Pull request arrives to CxFlow, then scan is initiated, and pull request comments should be updated.
       Given scanner is set to "<scanner>"
       Given source control is ADO
       And no comments on pull request
