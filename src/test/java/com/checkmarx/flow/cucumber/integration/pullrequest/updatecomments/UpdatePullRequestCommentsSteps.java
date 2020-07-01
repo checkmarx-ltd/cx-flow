@@ -16,6 +16,7 @@ import com.checkmarx.flow.service.GitHubService;
 import com.checkmarx.flow.service.HelperService;
 import com.checkmarx.flow.service.PullRequestCommentsHelper;
 import com.checkmarx.sdk.config.CxProperties;
+import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -51,11 +52,11 @@ public class UpdatePullRequestCommentsSteps {
     public static final int COMMENTS_POLL_INTERVAL = 5;
     private static final String GIT_PROJECT_NAME = "vb_test_pr_comments";
     private static final String GITHUB_PR_BASE_URL = "https://api.github.com/repos/cxflowtestuser/" + GIT_PROJECT_NAME;
-    public static final String PULL_REQUEST_COMMENTS_URL = GITHUB_PR_BASE_URL + "/issues/6/comments";
+    public static final String PULL_REQUEST_COMMENTS_URL = GITHUB_PR_BASE_URL + "/issues/5/comments";
     private static final String GIT_URL = "https://github.com/cxflowtestuser/" + GIT_PROJECT_NAME;
 
-    //private static final String ADO_PR_URL = "https://dev.azure.com/CxNamespace/d50fc6e5-a5ab-4123-9bc9-ccb756c0bf16/_apis/git/repositories/a89a9d2f-ab67-4bda-9c56-a571224c2c66/pullRequests/69";
-    private static final String ADO_PR_COMMENTS_URL = "https://dev.azure.com/CxNamespace/d50fc6e5-a5ab-4123-9bc9-ccb756c0bf16/_apis/git/repositories/a89a9d2f-ab67-4bda-9c56-a571224c2c66/pullRequests/69/threads";
+    //private static final String ADO_PR_URL = "https://dev.azure.com/CxNamespace/d50fc6e5-a5ab-4123-9bc9-ccb756c0bf16/_apis/git/repositories/a89a9d2f-ab67-4bda-9c56-a571224c2c66/pullRequests/67";
+    private static final String ADO_PR_COMMENTS_URL = "https://dev.azure.com/CxNamespace/d50fc6e5-a5ab-4123-9bc9-ccb756c0bf16/_apis/git/repositories/a89a9d2f-ab67-4bda-9c56-a571224c2c66/pullRequests/67/threads";
 
     private final GitHubService gitHubService;
     private final ADOService adoService;
@@ -71,9 +72,10 @@ public class UpdatePullRequestCommentsSteps {
     private String branchAdo;
     private String branchGitHub;
     private ScannerType scannerType;
+    private final ScaProperties scaProperties;
 
 
-    public UpdatePullRequestCommentsSteps(GitHubService gitHubService, GitHubProperties gitHubProperties, GitHubController gitHubController, ADOService adoService, ADOController adoController, FlowProperties flowProperties, CxProperties cxProperties) {
+    public UpdatePullRequestCommentsSteps(GitHubService gitHubService, GitHubProperties gitHubProperties, GitHubController gitHubController, ADOService adoService, ADOController adoController, FlowProperties flowProperties, CxProperties cxProperties, ScaProperties scaProperties) {
         this.helperService = mock(HelperService.class);
         this.gitHubService = gitHubService;
         this.gitHubProperties = gitHubProperties;
@@ -82,11 +84,20 @@ public class UpdatePullRequestCommentsSteps {
         this.adoControllerSpy = Mockito.spy(adoController);
         this.flowProperties = flowProperties;
         this.cxProperties = cxProperties;
-        initGitHubProperties();
+        this.scaProperties = scaProperties;
+
+    }
+
+    private void initSca() {
+        scaProperties.setAppUrl("https://sca.scacheckmarx.com");
+        scaProperties.setApiUrl("https://api.scacheckmarx.com");
+        scaProperties.setAccessControlUrl("https://platform.checkmarx.net");
     }
 
     @Before
     public void initMocks() {
+        initGitHubProperties();
+        initSca();
         flowProperties.getBranches().add("udi-tests-2");
         flowProperties.setEnabledVulnerabilityScanners(Arrays.asList("sast"));
         initGitHubControllerSpy();
@@ -325,7 +336,7 @@ public class UpdatePullRequestCommentsSteps {
         pullRequest.setHead(headBranch);
         pullRequest.setBase(new Base());
         pullRequest.setStatusesUrl("");
-        pullRequest.setIssueUrl(GITHUB_PR_BASE_URL + "/issues/6");
+        pullRequest.setIssueUrl(GITHUB_PR_BASE_URL + "/issues/5");
 
         pullEvent.setPullRequest(pullRequest);
 
@@ -361,7 +372,7 @@ public class UpdatePullRequestCommentsSteps {
         resource.setStatus("active");
         resource.setSourceRefName("refs/heads/master");
         resource.setTargetRefName("refs/heads/udi-tests-2");
-        resource.setUrl("https://dev.azure.com/CxNamespace/d50fc6e5-a5ab-4123-9bc9-ccb756c0bf16/_apis/git/repositories/a89a9d2f-ab67-4bda-9c56-a571224c2c66/pullRequests/69");
+        resource.setUrl("https://dev.azure.com/CxNamespace/d50fc6e5-a5ab-4123-9bc9-ccb756c0bf16/_apis/git/repositories/a89a9d2f-ab67-4bda-9c56-a571224c2c66/pullRequests/67");
         com.checkmarx.flow.dto.azure.Repository repo = new com.checkmarx.flow.dto.azure.Repository();
         repo.setId("a89a9d2f-ab67-4bda-9c56-a571224c2c66");
         repo.setName("AdoPullRequestTests");
