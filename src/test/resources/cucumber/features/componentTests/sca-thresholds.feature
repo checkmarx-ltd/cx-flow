@@ -3,25 +3,23 @@
 @ComponentTest
 Feature: CxFlow should fail builds and pull requests if scan exeeds threshold
 
-  Background: Definition of thresholds and findings
-    Given the following thresholds:
+  Scenario Outline: CxFlow should fail pull request if threshold-severity is exceeded
+    testing only the severity filter
+    Given the following thresholds-severitys:
       | threshold-name | threshold-for-high | threshold-for-medium | threshold-for-low |
       | N/A            | <omitted>          | <omitted>            | <omitted>         |
       | empty          | 0                  | 0                    | 0                 |
-      | normal         | 7.0                | 8.0                  | 9.0               |
-      | partial        | <omitted>          | 8.0                  | <omitted>         |
+      | normal         | 5                  | 10                   | 15                |
+      | partial        | <omitted>          | 10                   | <omitted>         |
     And the following scan findings:
-      | name        | max-score-high | max-score-medium | max-score-low |
-      | exact       | 7.0            | 8.0              | 9.0           |
-      | high-over   | 7.0-8.0        | under-8.0        | under-9.0     |
-      | medium-over | under-7.0      | 8.0-9.0          | under-9.0     |
-      | low-over    | under-7.0      | under-8.0        | over-9.0      |
-      | only-low    | 0              | 0                | over-0        |
-      | no-findings | 0              | 0                | 0             |
-
-  Scenario Outline: CxFlow should fail pull request if threshold is exceeded
-    PR-Webhook trigger notifies CxFlow that a pull request was created. CxFlow then executes a CxSCA scan.
-    When threshold is cofigured to <threshold-to-use>
+      | name        | high        | medium       | low          |
+      | exact       | 5           | 10           | 15           |
+      | high-over   | more-than-5 | less-than-10 | less-than-15 |
+      | medium-over | less-than-5 | more-than-10 | less-than-15 |
+      | low-over    | less-than-5 | less-than-10 | more-than-15 |
+      | only-low    | 0           | 0            | more-than-0  |
+      | no-findings | 0           | 0            | 0            |
+    When threshold-severity is cofigured to <threshold-to-use>
     And scan finding is <scan-findings>; using CxSca
     Then pull request should <pass-or-fail>
 
@@ -36,3 +34,26 @@ Feature: CxFlow should fail builds and pull requests if scan exeeds threshold
       | N/A              | only-low      | fail         |
       | N/A              | no-findings   | pass         |
       | partial          | high-over     | pass         |
+
+  Scenario Outline: CxFlow should fail pull request if exceedes threshold-score
+    testing only score
+    When max findings score is <isOver> threshold-score
+    Then pull request should <pass-or-fail>
+
+    Examples:
+      | over-or-undr | pass-or-fail |
+      | over         | fail         |
+      | under        | pass         |
+      | exact        | pass         |
+
+  Scenario Outline: CxFlow should fail if a threshold is exceeded
+    testing score and count
+    When the folowing threashold/s <type> fails
+    Then pull request should <pass-or-fail>
+
+    Examples:
+      | type  | pass-or-fail |
+      | score | fail         |
+      | count | fail         |
+      | both  | fail         |
+      | none  | pass         |

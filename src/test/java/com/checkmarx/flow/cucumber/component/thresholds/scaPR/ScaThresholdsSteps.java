@@ -36,6 +36,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ScaThresholdsSteps {
 
+    private enum ThresholdFeatureKeys {
+        THRESHOLD_NAME, THRESHOLD_FOR_HIGH, THRESHOLD_FOR_MEDIUM, THRESHOLD_FOR_LOW;
+
+        protected String toKey() {
+            return this.name().toLowerCase().replace('_', '-');
+        }
+    }
+
     private final CxClient cxClientMock;
     private final RestTemplate restTemplateMock;
     private final ThresholdValidator thresholdValidator;
@@ -44,7 +52,7 @@ public class ScaThresholdsSteps {
     private final GitHubProperties gitHubProperties;
     private final ADOProperties adoProperties;
     private ScanResults scanResultsToInject;
-	private List<Map<String, String>> thresholdDefs;
+    private List<Map<String, String>> thresholdDefs;
     private List<Map<String, String>> findingsDefs;
 
     public ScaThresholdsSteps(CxClient cxClientMock, RestTemplate restTemplateMock, FlowProperties flowProperties,
@@ -70,6 +78,8 @@ public class ScaThresholdsSteps {
     @Before("@ThresholdsFeature")
     public void prepareServices() {
         initMocks();
+        log.info("setting scan engine to CxSca");
+        flowProperties.setEnabledVulnerabilityScanners(Collections.singletonList(ScaProperties.CONFIG_PREFIX));
     }
 
     private void initMocks() {
@@ -81,17 +91,16 @@ public class ScaThresholdsSteps {
         // }
     }
 
-    @Given("the following thresholds:")
-    public void the_following_thresholds(List<Map<String, String>> thresholds) { 
-        log.info("setting scan engine to CxSca");
-        flowProperties.setEnabledVulnerabilityScanners(Collections.singletonList(ScaProperties.CONFIG_PREFIX));
-       
-        log.info("found {} threshold definitions", thresholds.size());
-        if (log.isInfoEnabled() ) {
+    @Given("the following thresholds-severitys:")
+    public void the_following_thresholds_severitys(List<Map<String, String>> thresholds) {
+        log.info("found {} threshold-severitys definitions", thresholds.size());
+        if (log.isInfoEnabled()) {
             thresholds.forEach(threshold -> {
-                log.info("{} --> high: {}, medium: {}, low: {}", threshold.get("threshold-name"),
-                        threshold.get("threshold-for-high"), threshold.get("threshold-for-medium"),
-                        threshold.get("threshold-for-low"));
+                log.info("{} --> high: {}, medium: {}, low: {}",
+                        threshold.get(ThresholdFeatureKeys.THRESHOLD_NAME.toKey()),
+                        threshold.get(ThresholdFeatureKeys.THRESHOLD_FOR_HIGH.toKey()),
+                        threshold.get(ThresholdFeatureKeys.THRESHOLD_FOR_MEDIUM.toKey()),
+                        threshold.get(ThresholdFeatureKeys.THRESHOLD_FOR_LOW.toKey()));
             });
         }
         thresholdDefs = thresholds;
@@ -100,63 +109,64 @@ public class ScaThresholdsSteps {
     @Given("the following scan findings:")
     public void the_following_scan_findings(List<Map<String, String>> findings) {
         log.info("found {} findings definitions", findings.size());
-        if (log.isInfoEnabled() ) {
+        if (log.isInfoEnabled()) {
             findings.forEach(finding -> {
-                log.info("{} --> high: {}, medium: {}, low: {}", finding.get("name"), finding.get("max-score-high"),
-                        finding.get("max-score-medium"), finding.get("max-score-low"));
+                log.info("{} --> high: {}, medium: {}, low: {}", finding.get("name"), finding.get("high"),
+                        finding.get("medium"), finding.get("low"));
             });
         }
         findingsDefs = findings;
     }
 
-    @When("threshold is cofigured to {word}")
-    public void threshold_is_cofigured(String selectedConfig) {
+    @When("threshold-severity is cofigured to {word}")
+    public void threshold_severity_is_cofigured_to_normal(String selectedConfig) {
         log.info("selected threshold is {}", selectedConfig);
         // TODO: set thresholds !!
         // throw new io.cucumber.java.PendingException();
     }
 
-    @When("scan finding is {word}; using CxSca")
-    public void scan_triggered_is_using_CxSca(String findings) {
-        SCAResults scaResults = getFakeSCAResults(findings, 1);
-        // Write code here that turns the phrase above into concrete actions
-        throw new io.cucumber.java.PendingException();
-    }
+    // @When("scan finding is {word}; using CxSca")
+    // public void scan_triggered_is_using_CxSca(String findings) {
+    // SCAResults scaResults = getFakeSCAResults(findings, 1);
+    // // Write code here that turns the phrase above into concrete actions
+    // throw new io.cucumber.java.PendingException();
+    // }
 
-    @Then("pull request should {word}")
-    public void pull_request_should_fail(String expected) {
-        // Write code here that turns the phrase above into concrete actions
-        throw new io.cucumber.java.PendingException();
-    }
+    // @Then("pull request should {word}")
+    // public void pull_request_should_fail(String expected) {
+    // // Write code here that turns the phrase above into concrete actions
+    // throw new io.cucumber.java.PendingException();
+    // }
 
-    private SCAResults getFakeSCAResults(String findingsName , int scanId) {
-        SCAResults scaResults = new SCAResults();
-        scaResults.setScanId(String.valueOf(scanId));
-        Summary summary = new Summary();
-        List<Finding> findings = new LinkedList<Finding>();
-        Map<String, String> specMap = findingsDefs.stream()
-                .filter(findingsDef -> findingsDef.get("name").equals(findingsName)).findAny().get();
-        EnumSet.allOf(Severity.class).forEach(severity -> {
-            String spec = specMap.get("max-score-" + severity.name().toLowerCase());
-            log.info("{}-spec: {}", severity, spec);
-            /* create findings */
-            Double score = Arrays.asList(spec.split("-")).stream()
-                    .map(v -> v.equals("under") ? "0.0" : (String)v)
-                    .map(v -> v.equals("over") ? "10.0" : (String)v)
-                    .mapToDouble(f -> Float.valueOf(f))
-                    .average()
-                    .getAsDouble();
-            log.info("setting score: {}", score);
-            Finding fnd = new Finding();
-            fnd.setSeverity(severity);
-            fnd.setPackageId("");
-            fnd.setScore(score);
-            findings.add(fnd);
+    // private SCAResults getFakeSCAResults(String findingsName , int scanId) {
+    // SCAResults scaResults = new SCAResults();
+    // scaResults.setScanId(String.valueOf(scanId));
+    // Summary summary = new Summary();
+    // List<Finding> findings = new LinkedList<Finding>();
+    // Map<String, String> specMap = findingsDefs.stream()
+    // .filter(findingsDef ->
+    // findingsDef.get("name").equals(findingsName)).findAny().get();
+    // EnumSet.allOf(Severity.class).forEach(severity -> {
+    // String spec = specMap.get("max-score-" + severity.name().toLowerCase());
+    // log.info("{}-spec: {}", severity, spec);
+    // /* create findings */
+    // Double score = Arrays.asList(spec.split("-")).stream()
+    // .map(v -> v.equals("under") ? "0.0" : (String)v)
+    // .map(v -> v.equals("over") ? "10.0" : (String)v)
+    // .mapToDouble(f -> Float.valueOf(f))
+    // .average()
+    // .getAsDouble();
+    // log.info("setting score: {}", score);
+    // Finding fnd = new Finding();
+    // fnd.setSeverity(severity);
+    // fnd.setPackageId("");
+    // fnd.setScore(score);
+    // findings.add(fnd);
 
-        });
+    // });
 
-        scaResults.setFindings(findings);
-        scaResults.setSummary(summary);
-        return scaResults;
-    }
+    // scaResults.setFindings(findings);
+    // scaResults.setSummary(summary);
+    // return scaResults;
+    // }
 }
