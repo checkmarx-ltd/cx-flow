@@ -26,7 +26,6 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import lombok.extern.slf4j.Slf4j;
 import org.awaitility.Awaitility;
-import org.graalvm.compiler.asm.sparc.SPARCAssembler;
 import org.junit.Assert;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
