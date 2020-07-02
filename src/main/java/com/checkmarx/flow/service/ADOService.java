@@ -9,7 +9,6 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.azure.CreateWorkItemAttr;
 import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.exception.ADOClientException;
-import com.checkmarx.flow.exception.GitHubClientRunTimeException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.ScanResults;
@@ -29,8 +28,9 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.*;
 
 @Service
@@ -279,16 +279,15 @@ public class ADOService {
         String commentBody = commentNode.path(ADO_COMMENT_CONTENT_FIELD_NAME).getTextValue();
         long id = commentNode.path("id").asLong();
         String commentUrl = commentNode.path(("_links")).path("self").path("href").asText();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
         String updatedStr = commentNode.path("lastContentUpdatedDate").asText();
         String createdStr = commentNode.path("publishedDate").asText();
-        try {
-            return new RepoComment(id, commentBody, commentUrl, sdf.parse(createdStr), sdf.parse(updatedStr));
-        }
-        catch (ParseException pe) {
-            throw new GitHubClientRunTimeException("Error parsing github pull request created or updted date", pe);
-        }
+        return new RepoComment(id, commentBody, commentUrl, parseDate(createdStr), parseDate(updatedStr));
+    }
+
+    private Date parseDate(String dateStr) {
+        LocalDateTime date = ZonedDateTime.parse(dateStr).toLocalDateTime();
+        ZonedDateTime zonedDateTime = date.atZone(ZoneId.systemDefault());
+        return Date.from(zonedDateTime.toInstant());
     }
 
     public void deleteComment(String url) {
@@ -296,5 +295,4 @@ public class ADOService {
         HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders());
         restTemplate.exchange(url, HttpMethod.DELETE, httpEntity, String.class);
     }
-
 }

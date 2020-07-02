@@ -7,13 +7,16 @@ import com.checkmarx.flow.controller.ADOController;
 import com.checkmarx.flow.controller.GitHubController;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.RepoComment;
+import com.checkmarx.flow.dto.azure.AdoDetailsRequest;
 import com.checkmarx.flow.dto.azure.Project;
 import com.checkmarx.flow.dto.azure.Resource;
 import com.checkmarx.flow.dto.github.*;
 import com.checkmarx.flow.service.ADOService;
 import com.checkmarx.flow.service.GitHubService;
 import com.checkmarx.flow.service.HelperService;
+import com.checkmarx.flow.service.PullRequestCommentsHelper;
 import com.checkmarx.sdk.config.CxProperties;
+import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,7 +36,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -50,12 +52,11 @@ public class UpdatePullRequestCommentsSteps {
     public static final int COMMENTS_POLL_INTERVAL = 5;
     private static final String GIT_PROJECT_NAME = "vb_test_pr_comments";
     private static final String GITHUB_PR_BASE_URL = "https://api.github.com/repos/cxflowtestuser/" + GIT_PROJECT_NAME;
-    public static final String PULL_REQUEST_COMMENTS_URL = GITHUB_PR_BASE_URL + "/issues/5/comments";
+    private static final String GITHUB_PR_ID = "6";
+    private static final String ADO_PR_ID = "69";
+    public static final String PULL_REQUEST_COMMENTS_URL = GITHUB_PR_BASE_URL + "/issues/"+ GITHUB_PR_ID + "/comments";
     private static final String GIT_URL = "https://github.com/cxflowtestuser/" + GIT_PROJECT_NAME;
-
-    //private static final String ADO_PR_URL = "https://dev.azure.com/CxNamespace/d50fc6e5-a5ab-4123-9bc9-ccb756c0bf16/_apis/git/repositories/a89a9d2f-ab67-4bda-9c56-a571224c2c66/pullRequests/67";
-    private static final String ADO_PR_COMMENTS_URL = "https://dev.azure.com/CxNamespace/d50fc6e5-a5ab-4123-9bc9-ccb756c0bf16/_apis/git/repositories/a89a9d2f-ab67-4bda-9c56-a571224c2c66/pullRequests/67/threads";
-
+    private static final String ADO_PR_COMMENTS_URL = "https://dev.azure.com/CxNamespace/d50fc6e5-a5ab-4123-9bc9-ccb756c0bf16/_apis/git/repositories/a89a9d2f-ab67-4bda-9c56-a571224c2c66/pullRequests/" + ADO_PR_ID + "/threads";
     private final GitHubService gitHubService;
     private final ADOService adoService;
     private GitHubController gitHubControllerSpy;
@@ -67,9 +68,13 @@ public class UpdatePullRequestCommentsSteps {
     private SourceControlType sourceControl;
     private FlowProperties flowProperties;
     private CxProperties cxProperties;
-    private String branch;
+    private String branchAdo;
+    private String branchGitHub;
+    private ScannerType scannerType;
+    private final ScaProperties scaProperties;
 
-    public UpdatePullRequestCommentsSteps(GitHubService gitHubService, GitHubProperties gitHubProperties, GitHubController gitHubController, ADOService adoService, ADOController adoController, FlowProperties flowProperties, CxProperties cxProperties) {
+
+    public UpdatePullRequestCommentsSteps(GitHubService gitHubService, GitHubProperties gitHubProperties, GitHubController gitHubController, ADOService adoService, ADOController adoController, FlowProperties flowProperties, CxProperties cxProperties, ScaProperties scaProperties) {
         this.helperService = mock(HelperService.class);
         this.gitHubService = gitHubService;
         this.gitHubProperties = gitHubProperties;
@@ -78,15 +83,30 @@ public class UpdatePullRequestCommentsSteps {
         this.adoControllerSpy = Mockito.spy(adoController);
         this.flowProperties = flowProperties;
         this.cxProperties = cxProperties;
-        initGitHubProperties();
+        this.scaProperties = scaProperties;
+
+    }
+
+    private void initSca() {
+        scaProperties.setAppUrl("https://sca.scacheckmarx.com");
+        scaProperties.setApiUrl("https://api.scacheckmarx.com");
+        scaProperties.setAccessControlUrl("https://platform.checkmarx.net");
     }
 
     @Before
     public void initMocks() {
+        initGitHubProperties();
+        initSca();
         flowProperties.getBranches().add("udi-tests-2");
-        flowProperties.setEnabledVulnerabilityScanners(Collections.singletonList("sast"));
+        flowProperties.setEnabledVulnerabilityScanners(Arrays.asList("sast"));
         initGitHubControllerSpy();
         initHelperServiceMock();
+        setBranches();
+    }
+
+    private void setBranches() {
+        branchAdo =  "udi-tests-2";
+        branchGitHub = "pr-comments-tests";
     }
 
     @After
@@ -98,14 +118,21 @@ public class UpdatePullRequestCommentsSteps {
         }
     }
 
-    @Given("branch is pr-comments-tests")
-    public void setBranchName() {
-        branch = "pr-comments-tests";
-    }
-
-    @Given("branch is udi-test-2")
-    public void setAdoBranch() {
-        branch = "udi-tests-2";
+    @Given("scanner is set to {string}")
+    public void setScanner(String scanner) {
+        if ("sast".equals(scanner)) {
+            scannerType = ScannerType.SAST;
+            flowProperties.setEnabledVulnerabilityScanners(Arrays.asList("sast"));
+        } else if ("sca".equals(scanner)) {
+            scannerType = ScannerType.SCA;
+            flowProperties.setEnabledVulnerabilityScanners(Arrays.asList("sca"));
+        } else if ("both".equals(scanner)) {
+            scannerType = ScannerType.BOTH;
+            flowProperties.setEnabledVulnerabilityScanners(Arrays.asList("sca", "sast"));
+        }
+        else {
+            throw new IllegalArgumentException("Wrong scanner type: " + scanner);
+        }
     }
 
     @Given("different filters configuration is set")
@@ -133,20 +160,18 @@ public class UpdatePullRequestCommentsSteps {
         }
     }
 
-    private void deleteADOComments() throws IOException, InterruptedException {
+    private void deleteADOComments() throws IOException {
         List<RepoComment> adoComments = getRepoComments();
         for (RepoComment rc: adoComments) {
             adoService.deleteComment(rc.getCommentUrl());
         }
-        TimeUnit.SECONDS.sleep(20);
     }
 
-    private void deleteGitHubComments() throws IOException, InterruptedException{
+    private void deleteGitHubComments() throws IOException {
         List<RepoComment> comments = getRepoComments();
         for (RepoComment comment: comments) {
             gitHubService.deleteComment(comment.getCommentUrl());
         }
-        TimeUnit.SECONDS.sleep(20);
     }
 
     private List<RepoComment> getRepoComments() throws IOException {
@@ -168,23 +193,30 @@ public class UpdatePullRequestCommentsSteps {
         }
     }
 
-    private void validateCommentsUpdated(List<RepoComment> comments) {
-        for (RepoComment comment: comments) {
-            Assert.assertTrue("Comment was not updated", isCommentUpdated(comment));
-        }
-    }
-
     @Then("Wait for comments")
     public void waitForNewComments() {
-        Awaitility.await().atMost(Duration.ofMinutes(2)).pollInterval(Duration.ofSeconds(COMMENTS_POLL_INTERVAL)).until(this::areThereCommentsAtAll);
+        int minutesToWait = scannerType == ScannerType.BOTH ? 3 : 2;
+        Awaitility.await().atMost(Duration.ofMinutes(minutesToWait)).pollInterval(Duration.ofSeconds(COMMENTS_POLL_INTERVAL)).until(this::areThereCommentsAtAll);
     }
 
-    @Then("verify 2 new comments")
-    public void verify2NewComments() throws IOException {
+    @Then("verify new comments")
+    public void verifyNewComments() throws IOException {
+        int expectedNumOfComments = getExpectedNumOfNewComments();
         List<RepoComment> comments = getRepoComments();
-        Assert.assertEquals("Wrong number of comments", 2, comments.size());
-        comments.forEach(c -> Assert.assertTrue("Comment is not new (probably updated", isCommentNew(c)));
+        Assert.assertEquals("Wrong number of comments", expectedNumOfComments, comments.size());
+        comments.stream().forEach(c -> Assert.assertTrue("Comment is not new (probably updated", isCommentNew(c)));
 
+    }
+
+    private int getExpectedNumOfNewComments() {
+        switch (scannerType) {
+            case SCA:
+                return 1;
+            case SAST:
+            case BOTH:
+                return 2;
+        }
+        throw  new RuntimeException("Wrong scanner type");
     }
 
     @Then("Wait for updated comment")
@@ -194,7 +226,54 @@ public class UpdatePullRequestCommentsSteps {
 
     private boolean areThereCommentsAtAll() throws IOException {
         List<RepoComment> comments = getRepoComments();
-        return comments.size() > 1;
+        if (scannerType == ScannerType.SCA) {
+            if (comments.size() < 1) {
+                return false;
+            }
+        } else if (scannerType == ScannerType.SAST || scannerType == ScannerType.BOTH) {
+            if(comments.size() <= 1) {
+                return false;
+            }
+        } else {
+            throw new IllegalArgumentException("Wrong Scanner Type: " + scannerType.name());
+        }
+        return areThereCorrectComments(comments, scannerType);
+    }
+
+    private boolean areThereCorrectComments(List<RepoComment> comments, ScannerType sct){
+
+        if (sct.equals(ScannerType.BOTH)) {
+            boolean foundScaAndSast = false;
+            boolean foundScanStarted = false;
+            for (RepoComment comment : comments) {
+                if (PullRequestCommentsHelper.isScanStartedComment(comment.getComment())) {
+                    foundScanStarted = true;
+                } else if (PullRequestCommentsHelper.isSastAndScaComment(comment.getComment())) {
+                    foundScaAndSast = true;
+                }
+            }
+            return foundScaAndSast && foundScanStarted;
+        }
+        else if (sct.equals(ScannerType.SAST)) {
+            boolean foundSast = false;
+            boolean foundScanStarted = false;
+            for (RepoComment comment : comments) {
+                if (PullRequestCommentsHelper.isSastFindingsComment(comment.getComment())) {
+                    foundSast = true;
+                } else if (PullRequestCommentsHelper.isScanStartedComment(comment.getComment())) {
+                    foundScanStarted = true;
+                }
+            }
+            return foundSast && foundScanStarted;
+        }
+        else if (sct.equals(ScannerType.SCA)) {
+            for (RepoComment comment : comments) {
+                if (PullRequestCommentsHelper.isScaComment(comment.getComment())) {
+                    return true;
+                }
+            }
+        }
+        throw new IllegalArgumentException("Wrong scanner type: " + sct.name());
     }
 
     private boolean isThereUpdatedComment() throws IOException {
@@ -249,27 +328,30 @@ public class UpdatePullRequestCommentsSteps {
         PullRequest pullRequest = new PullRequest();
         pullRequest.setIssueUrl("");
         Head headBranch = new Head();
-        headBranch.setRef(branch);
+        headBranch.setRef(branchGitHub);
 
         pullRequest.setHead(headBranch);
         pullRequest.setBase(new Base());
         pullRequest.setStatusesUrl("");
-        pullRequest.setIssueUrl(GITHUB_PR_BASE_URL + "/issues/5");
+        pullRequest.setIssueUrl(GITHUB_PR_BASE_URL + "/issues/" + GITHUB_PR_ID);
 
         pullEvent.setPullRequest(pullRequest);
 
         try {
             String pullEventStr = mapper.writeValueAsString(pullEvent);
-
-            ControllerRequest request = ControllerRequest.builder()
-                    .branch(Collections.singletonList(branch))
-                    .application("VB")
-                    .team("\\CxServer\\SP")
-                    .assignee("")
-                    .preset("default")
-                    .build();
-
-            gitHubControllerSpy.pullRequest(pullEventStr, "SIGNATURE", "CX", request);
+            ControllerRequest controllerRequest = new ControllerRequest();
+            controllerRequest.setApplication("VB");
+            controllerRequest.setBranch(Arrays.asList(branchGitHub));
+            controllerRequest.setProject("VB");
+            controllerRequest.setTeam("\\CxServer\\SP");
+            controllerRequest.setPreset("default");
+            controllerRequest.setIncremental(false);
+            gitHubControllerSpy.pullRequest(
+                    pullEventStr,
+                    "SIGNATURE",
+                    "CX",
+                    controllerRequest
+                    );
 
         } catch (JsonProcessingException e) {
             fail("Unable to parse " + pullEvent.toString());
@@ -287,7 +369,7 @@ public class UpdatePullRequestCommentsSteps {
         resource.setStatus("active");
         resource.setSourceRefName("refs/heads/master");
         resource.setTargetRefName("refs/heads/udi-tests-2");
-        resource.setUrl("https://dev.azure.com/CxNamespace/d50fc6e5-a5ab-4123-9bc9-ccb756c0bf16/_apis/git/repositories/a89a9d2f-ab67-4bda-9c56-a571224c2c66/pullRequests/67");
+        resource.setUrl("https://dev.azure.com/CxNamespace/d50fc6e5-a5ab-4123-9bc9-ccb756c0bf16/_apis/git/repositories/a89a9d2f-ab67-4bda-9c56-a571224c2c66/pullRequests/" + ADO_PR_ID);
         com.checkmarx.flow.dto.azure.Repository repo = new com.checkmarx.flow.dto.azure.Repository();
         repo.setId("a89a9d2f-ab67-4bda-9c56-a571224c2c66");
         repo.setName("AdoPullRequestTests");
@@ -302,12 +384,11 @@ public class UpdatePullRequestCommentsSteps {
         resource.setRepository(repo);
 
         pullEvent.setResource(resource);
-
-        ControllerRequest request = ControllerRequest.builder()
-                .project("AdoPullRequestTests-master")
-                .team("\\CxServer\\SP")
-                .build();
-        adoControllerSpy.pullRequest(pullEvent,"Basic Y3hmbG93OjEyMzQ=", null, request, null);
+        ControllerRequest controllerRequest = new ControllerRequest();
+        controllerRequest.setProject("AdoPullRequestTests-master");
+        controllerRequest.setTeam("\\CxServer\\SP");
+        AdoDetailsRequest adoRequest = new AdoDetailsRequest();
+        adoControllerSpy.pullRequest(pullEvent,"Basic Y3hmbG93OjEyMzQ=", null, controllerRequest, adoRequest);
     }
 
     private class ScanResultsAnswerer implements Answer<ScanResults> {
@@ -320,5 +401,11 @@ public class UpdatePullRequestCommentsSteps {
     enum SourceControlType {
         GITHUB,
         ADO
+    }
+
+    enum ScannerType {
+        SAST,
+        SCA,
+        BOTH;
     }
 }
