@@ -150,7 +150,7 @@ public class ConfigurationOverrider {
 
             String overridePropertiesString = convertMapToString(overridePropertiesMap);
 
-            log.info("override configuration properties from config as code file. with values: {}", overridePropertiesString);
+            log.info("The following properties were overridden by config-as-code file: {}", overridePropertiesString);
 
         } catch (IllegalArgumentException e) {
             log.warn("Issue parsing CxConfig cxFlow element", e);
@@ -237,11 +237,26 @@ public class ConfigurationOverrider {
         String bugTrackerNameOverride = override.getBugTracker();
         BugTracker.Type currentBugTrackerType = bugTrackerFromScanRequest.getType();
 
-        // Don't override bug tracker types specified in bugTrackersForPullRequest. Otherwise bug tracker events won't be triggered.
-        return !bugTrackersForPullRequest.contains(currentBugTrackerType) &&
-                bugTrackerNameOverride != null &&
-                // No need to override if scan request already uses the same bug tracker.
-                !bugTrackerNameOverride.equalsIgnoreCase(currentBugTrackerType.toString());
+        boolean comingFromPullRequest = bugTrackersForPullRequest.contains(currentBugTrackerType);
+        boolean isOverridePresent = StringUtils.isNotEmpty(bugTrackerNameOverride);
+        boolean overrideIsTheSame = bugTrackerNameOverride.equalsIgnoreCase(currentBugTrackerType.toString());
+
+        String cannotOverrideReason = null;
+        if (comingFromPullRequest) {
+            // Don't override bug tracker type if the scan is initiated by a pull request.
+            // Otherwise bug tracker events won't be triggered.
+            cannotOverrideReason = "scan was initiated by pull request";
+        } else if (!isOverridePresent) {
+            cannotOverrideReason = "no bug tracker override is defined";
+        } else if (overrideIsTheSame) {
+            cannotOverrideReason = "bug tracker type in override is the same as in scan request";
+        }
+
+        if (cannotOverrideReason != null) {
+            log.debug("Bug tracker override was not applied, because {}.", cannotOverrideReason);
+        }
+
+        return cannotOverrideReason == null;
     }
 
     private static String convertMapToString(Map<?, ?> map) {
