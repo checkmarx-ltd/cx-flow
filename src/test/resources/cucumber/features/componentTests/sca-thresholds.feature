@@ -1,6 +1,7 @@
 @ThresholdsFeature
 @CxSCA
 @ComponentTest
+@Skip
 Feature: CxFlow should fail builds and pull requests if scan exeeds threshold
 
   Scenario Outline: CxFlow should fail pull request if threshold-severity is exceeded
@@ -20,7 +21,7 @@ Feature: CxFlow should fail builds and pull requests if scan exeeds threshold
       | only-low    | 0           | 0            | more-than-0  |
       | no-findings | 0           | 0            | 0            |
     When threshold-severity is cofigured to <threshold-to-use>
-    And scan finding is <scan-findings>; using CxSca
+    And scan finding is <scan-findings>
     Then pull request should <pass-or-fail>
 
     Examples:
@@ -37,7 +38,7 @@ Feature: CxFlow should fail builds and pull requests if scan exeeds threshold
 
   Scenario Outline: CxFlow should fail pull request if exceedes threshold-score
     testing only score
-    When max findings score is <isOver> threshold-score
+    When max findings score is <over-or-undr> threshold-score
     Then pull request should <pass-or-fail>
 
     Examples:

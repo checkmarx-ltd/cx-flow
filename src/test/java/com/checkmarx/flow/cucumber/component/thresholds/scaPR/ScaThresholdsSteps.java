@@ -1,11 +1,13 @@
 package com.checkmarx.flow.cucumber.component.thresholds.scaPR;
 
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.ADOProperties;
@@ -14,6 +16,7 @@ import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.service.ThresholdValidator;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.ScaProperties;
+import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.sca.SCAResults;
 import com.checkmarx.sdk.dto.sca.Summary;
@@ -54,6 +57,7 @@ public class ScaThresholdsSteps {
     private ScanResults scanResultsToInject;
     private List<Map<String, String>> thresholdDefs;
     private List<Map<String, String>> findingsDefs;
+    private SCAResults scaResults;
 
     public ScaThresholdsSteps(CxClient cxClientMock, RestTemplate restTemplateMock, FlowProperties flowProperties,
             ADOProperties adoProperties, CxProperties cxProperties, GitHubProperties gitHubProperties,
@@ -94,9 +98,9 @@ public class ScaThresholdsSteps {
     @Given("the following thresholds-severitys:")
     public void the_following_thresholds_severitys(List<Map<String, String>> thresholds) {
         log.info("found {} threshold-severitys definitions", thresholds.size());
-        if (log.isInfoEnabled()) {
+        if (log.isDebugEnabled()) {
             thresholds.forEach(threshold -> {
-                log.info("{} --> high: {}, medium: {}, low: {}",
+                log.debug("{} --> high: {}, medium: {}, low: {}",
                         threshold.get(ThresholdFeatureKeys.THRESHOLD_NAME.toKey()),
                         threshold.get(ThresholdFeatureKeys.THRESHOLD_FOR_HIGH.toKey()),
                         threshold.get(ThresholdFeatureKeys.THRESHOLD_FOR_MEDIUM.toKey()),
@@ -109,9 +113,9 @@ public class ScaThresholdsSteps {
     @Given("the following scan findings:")
     public void the_following_scan_findings(List<Map<String, String>> findings) {
         log.info("found {} findings definitions", findings.size());
-        if (log.isInfoEnabled()) {
+        if (log.isDebugEnabled()) {
             findings.forEach(finding -> {
-                log.info("{} --> high: {}, medium: {}, low: {}", finding.get("name"), finding.get("high"),
+                log.debug("{} --> high: {}, medium: {}, low: {}", finding.get("name"), finding.get("high"),
                         finding.get("medium"), finding.get("low"));
             });
         }
@@ -125,48 +129,57 @@ public class ScaThresholdsSteps {
         // throw new io.cucumber.java.PendingException();
     }
 
-    // @When("scan finding is {word}; using CxSca")
-    // public void scan_triggered_is_using_CxSca(String findings) {
-    // SCAResults scaResults = getFakeSCAResults(findings, 1);
-    // // Write code here that turns the phrase above into concrete actions
-    // throw new io.cucumber.java.PendingException();
-    // }
+    @When("scan finding is {word}")
+    public void scan_finding_is_(String findings) {
+        this.scaResults = getFakeSCAResults(findings);
+    }
 
-    // @Then("pull request should {word}")
-    // public void pull_request_should_fail(String expected) {
-    // // Write code here that turns the phrase above into concrete actions
-    // throw new io.cucumber.java.PendingException();
-    // }
+    
+    @Then("pull request should {word}")
+    public void pull_request_should_fail(String expected) {
+        // Write code here that turns the phrase above into concrete actions
+        throw new io.cucumber.java.PendingException();
+    }
 
-    // private SCAResults getFakeSCAResults(String findingsName , int scanId) {
-    // SCAResults scaResults = new SCAResults();
-    // scaResults.setScanId(String.valueOf(scanId));
-    // Summary summary = new Summary();
-    // List<Finding> findings = new LinkedList<Finding>();
-    // Map<String, String> specMap = findingsDefs.stream()
-    // .filter(findingsDef ->
-    // findingsDef.get("name").equals(findingsName)).findAny().get();
-    // EnumSet.allOf(Severity.class).forEach(severity -> {
-    // String spec = specMap.get("max-score-" + severity.name().toLowerCase());
-    // log.info("{}-spec: {}", severity, spec);
-    // /* create findings */
-    // Double score = Arrays.asList(spec.split("-")).stream()
-    // .map(v -> v.equals("under") ? "0.0" : (String)v)
-    // .map(v -> v.equals("over") ? "10.0" : (String)v)
-    // .mapToDouble(f -> Float.valueOf(f))
-    // .average()
-    // .getAsDouble();
-    // log.info("setting score: {}", score);
-    // Finding fnd = new Finding();
-    // fnd.setSeverity(severity);
-    // fnd.setPackageId("");
-    // fnd.setScore(score);
-    // findings.add(fnd);
+    @When("max findings score is {word} threshold-score")
+    public void max_findings_score_threshold_score(String scoreType) {
+        double thresholdScore = 7.5;
+        Double findingsScore = scoreType.equals("over") ? 8.0 : scoreType.equals("under") ? 7.0 : scoreType.equals("exact") ? 7.5 : null;
+        
+        log.info("findings score is {} -> score: {} threshold: {}", scoreType, findingsScore, thresholdScore);
+        // Write code here that turns the phrase above into concrete actions
+        throw new io.cucumber.java.PendingException();
+}
 
-    // });
-
-    // scaResults.setFindings(findings);
-    // scaResults.setSummary(summary);
-    // return scaResults;
-    // }
+    private SCAResults getFakeSCAResults(String findingsName) {
+        SCAResults scaResults = new SCAResults();
+        scaResults.setScanId("1");
+        Summary summary = new Summary();
+        Map<Filter.Severity, Integer> summaryMap = new EnumMap<>(Filter.Severity.class);
+        List<Finding> findings = new LinkedList<Finding>();
+        Map<String, String> specMap = findingsDefs.stream()
+                .filter(findingsDef -> findingsDef.get("name").equals(findingsName)).findAny().get();
+        
+        EnumSet.allOf(Severity.class).forEach(severity -> {
+            String spec = specMap.get(severity.name().toLowerCase());
+            log.info("{}-spec: {}", severity, spec);
+            
+            /* create findings */
+            Integer count = Arrays.asList(spec.split("-than-")).stream()
+                    .mapToInt(v -> "more".equals(v) ? 3 : "less".equals(v) ? -3 : Integer.valueOf((String) v))
+                    .reduce(0, Integer::sum);
+            log.debug("going to generate {} issues with {} severity", count, severity);
+            summaryMap.put(Filter.Severity.valueOf(severity.name()), count);
+            for(int i = 0 ; i<count ; i++) {
+                Finding fnd = new Finding();
+                fnd.setSeverity(severity);
+                fnd.setPackageId("");
+                findings.add(fnd);
+            }
+        });
+        summary.setFindingCounts(summaryMap);
+        scaResults.setFindings(findings);
+        scaResults.setSummary(summary);
+        return scaResults;
+    }
 }
