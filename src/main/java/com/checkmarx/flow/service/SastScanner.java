@@ -1,6 +1,5 @@
 package com.checkmarx.flow.service;
 
-import com.checkmarx.flow.bug_tracker_trigger.BugTrackerTriggerEvent;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.report.ScanReport;
@@ -53,7 +52,7 @@ public class SastScanner implements VulnerabilityScanner {
     private final CxOsaClient osaService;
     private final EmailService emailService;
     private final ScanRequestConverter scanRequestConverter;
-    private final BugTrackerTriggerEvent bugTrackerTriggerEvent;
+    private final BugTrackerEventTrigger bugTrackerEventTrigger;
     private final ProjectNameGenerator projectNameGenerator;
 
     private ScanDetails scanDetails = null;
@@ -61,7 +60,7 @@ public class SastScanner implements VulnerabilityScanner {
 
     @Override
     public ScanResults scan(ScanRequest scanRequest) {
-        ScanResults scanResults = null;
+        ScanResults scanResults;
         log.info("--------------------- Initiating new {} scan ---------------------", SCAN_TYPE);
         checkScanSubmitEmailDelivery(scanRequest);
 
@@ -88,7 +87,7 @@ public class SastScanner implements VulnerabilityScanner {
                 scanId = cxService.createScan(cxScanParams, CXFLOW_SCAN_MSG);
             }
 
-            BugTracker.Type bugTrackerType = bugTrackerTriggerEvent.triggerBugTrackerEvent(scanRequest);
+            BugTracker.Type bugTrackerType = bugTrackerEventTrigger.triggerBugTrackerEvent(scanRequest);
             if (bugTrackerType.equals(BugTracker.Type.NONE)) {
                 scanDetails = handleNoneBugTrackerCase(scanRequest, null, scanId, projectId);
             } else {
@@ -143,11 +142,11 @@ public class SastScanner implements VulnerabilityScanner {
     }
 
     public CompletableFuture<ScanResults> executeCxScanFlow(ScanRequest request, File cxFile) throws MachinaException {
-        ScanDetails scanDetails = executeCxScan(request, cxFile);
-        if (scanDetails.processResults()) {
-            return resultsService.processScanResultsAsync(request, scanDetails.getProjectId(), scanDetails.getScanId(), scanDetails.getOsaScanId(), request.getFilter());
+        ScanDetails details = executeCxScan(request, cxFile);
+        if (details.processResults()) {
+            return resultsService.processScanResultsAsync(request, details.getProjectId(), details.getScanId(), details.getOsaScanId(), request.getFilter());
         } else {
-            return scanDetails.getResults();
+            return details.getResults();
         }
     }
 
@@ -168,7 +167,7 @@ public class SastScanner implements VulnerabilityScanner {
 
             scanId = cxService.createScan(params, CXFLOW_SCAN_MSG);
 
-            BugTracker.Type bugTrackerType = bugTrackerTriggerEvent.triggerBugTrackerEvent(request);
+            BugTracker.Type bugTrackerType = bugTrackerEventTrigger.triggerBugTrackerEvent(request);
             if (bugTrackerType.equals(BugTracker.Type.NONE)) {
                 return handleNoneBugTrackerCase(request, cxFile, scanId, projectId);
             } else {
@@ -407,11 +406,11 @@ public class SastScanner implements VulnerabilityScanner {
 
     private String createOsaScan(ScanRequest request, Integer projectId) throws GitAPIException, CheckmarxException {
         String osaScanId = null;
-        if (cxProperties.getEnableOsa()) {
+        if (Boolean.TRUE.equals(cxProperties.getEnableOsa())) {
             String path = cxProperties.getGitClonePath().concat("/").concat(UUID.randomUUID().toString());
             File pathFile = new File(path);
 
-            Git git = Git.cloneRepository()
+            Git.cloneRepository()
                     .setURI(request.getRepoUrlWithAuth())
                     .setBranch(request.getBranch())
                     .setBranchesToClone(Collections.singleton(Constants.CX_BRANCH_PREFIX.concat(request.getBranch())))

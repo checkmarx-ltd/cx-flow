@@ -1,11 +1,7 @@
-package com.checkmarx.flow.bug_tracker_trigger;
+package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.service.ADOService;
-import com.checkmarx.flow.service.BitBucketService;
-import com.checkmarx.flow.service.GitHubService;
-import com.checkmarx.flow.service.GitLabService;
 import com.checkmarx.sdk.config.CxProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +10,7 @@ import org.springframework.stereotype.Component;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-public class BugTrackerTriggerEvent {
+public class BugTrackerEventTrigger {
 
     private static final String SCAN_MESSAGE = "Scan submitted to Checkmarx";
 
