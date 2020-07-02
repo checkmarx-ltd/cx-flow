@@ -134,7 +134,6 @@ public class ScaThresholdsSteps {
         this.scaResults = getFakeSCAResults(findings);
     }
 
-    
     @Then("pull request should {word}")
     public void pull_request_should_fail(String expected) {
         // Write code here that turns the phrase above into concrete actions
@@ -144,12 +143,21 @@ public class ScaThresholdsSteps {
     @When("max findings score is {word} threshold-score")
     public void max_findings_score_threshold_score(String scoreType) {
         double thresholdScore = 7.5;
-        Double findingsScore = scoreType.equals("over") ? 8.0 : scoreType.equals("under") ? 7.0 : scoreType.equals("exact") ? 7.5 : null;
-        
+        Double findingsScore = thresholdScore + (scoreType.equals("over") ? 1.0
+                : scoreType.equals("under") ? -1.0 
+                : scoreType.equals("exact") ? 0.0 
+                : null);
+
         log.info("findings score is {} -> score: {} threshold: {}", scoreType, findingsScore, thresholdScore);
         // Write code here that turns the phrase above into concrete actions
         throw new io.cucumber.java.PendingException();
-}
+    }
+
+    @When("the folowing threashold\\/s {word} fails")
+    public void the_folowing_threashold_fails(String failType) {
+        // Write code here that turns the phrase above into concrete actions
+        throw new io.cucumber.java.PendingException();
+    }
 
     private SCAResults getFakeSCAResults(String findingsName) {
         SCAResults scaResults = new SCAResults();
@@ -159,18 +167,18 @@ public class ScaThresholdsSteps {
         List<Finding> findings = new LinkedList<Finding>();
         Map<String, String> specMap = findingsDefs.stream()
                 .filter(findingsDef -> findingsDef.get("name").equals(findingsName)).findAny().get();
-        
+
         EnumSet.allOf(Severity.class).forEach(severity -> {
             String spec = specMap.get(severity.name().toLowerCase());
             log.info("{}-spec: {}", severity, spec);
-            
+
             /* create findings */
             Integer count = Arrays.asList(spec.split("-than-")).stream()
                     .mapToInt(v -> "more".equals(v) ? 3 : "less".equals(v) ? -3 : Integer.valueOf((String) v))
                     .reduce(0, Integer::sum);
             log.debug("going to generate {} issues with {} severity", count, severity);
             summaryMap.put(Filter.Severity.valueOf(severity.name()), count);
-            for(int i = 0 ; i<count ; i++) {
+            for (int i = 0; i < count; i++) {
                 Finding fnd = new Finding();
                 fnd.setSeverity(severity);
                 fnd.setPackageId("");
