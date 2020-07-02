@@ -1,5 +1,7 @@
 package com.checkmarx.flow.cucumber.component.thresholds.scaPR;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.EnumSet;
@@ -8,12 +10,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.ADOProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
+import com.checkmarx.flow.config.RepoProperties;
+import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.service.ThresholdValidator;
+import com.checkmarx.flow.service.ThresholdValidatorImpl;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.Filter;
@@ -45,6 +51,14 @@ public class ScaThresholdsSteps {
         protected String toKey() {
             return this.name().toLowerCase().replace('_', '-');
         }
+
+        static ThresholdFeatureKeys fromKey(String key) {
+            return valueOf(key.toUpperCase().replace('-', '_'));
+        }
+
+        protected Severity toSeverity() {
+            return this == THRESHOLD_NAME ? null : Severity.valueOf(name().substring("THRESHOLD_FOR_".length()));
+        }
     }
 
     private final CxClient cxClientMock;
@@ -58,10 +72,13 @@ public class ScaThresholdsSteps {
     private List<Map<String, String>> thresholdDefs;
     private List<Map<String, String>> findingsDefs;
     private SCAResults scaResults;
+    private ScaProperties scaProperties;
+    private ThresholdValidatorImpl thresholdValidatorImpl;
 
-    public ScaThresholdsSteps(CxClient cxClientMock, RestTemplate restTemplateMock, FlowProperties flowProperties,
-            ADOProperties adoProperties, CxProperties cxProperties, GitHubProperties gitHubProperties,
-            ThresholdValidator thresholdValidator) {
+    public ScaThresholdsSteps(ThresholdValidatorImpl thresholdValidatorImpl, CxClient cxClientMock,
+            RestTemplate restTemplateMock, FlowProperties flowProperties, ADOProperties adoProperties,
+            CxProperties cxProperties, GitHubProperties gitHubProperties, ThresholdValidator thresholdValidator,
+            ScaProperties scaProperties) {
         this.cxClientMock = cxClientMock;
         this.restTemplateMock = restTemplateMock;
 
@@ -76,6 +93,10 @@ public class ScaThresholdsSteps {
         this.adoProperties = adoProperties;
 
         this.thresholdValidator = thresholdValidator;
+
+        this.scaProperties = scaProperties;
+
+        this.thresholdValidatorImpl = thresholdValidatorImpl;
 
     }
 
@@ -125,8 +146,16 @@ public class ScaThresholdsSteps {
     @When("threshold-severity is cofigured to {word}")
     public void threshold_severity_is_cofigured_to_normal(String selectedConfig) {
         log.info("selected threshold is {}", selectedConfig);
-        // TODO: set thresholds !!
-        // throw new io.cucumber.java.PendingException();
+
+        Map<Severity, Integer> thresholdsSeverity = thresholdDefs.stream()
+                .filter(spec -> spec.get(ThresholdFeatureKeys.THRESHOLD_NAME.toKey()).equals(selectedConfig))
+                .flatMap(aMap -> aMap.entrySet().stream())
+                .filter(entry -> !ThresholdFeatureKeys.THRESHOLD_NAME.toKey().equals(entry.getKey()))
+                .filter(entry -> !entry.getValue().equals("<omitted>"))
+                .collect(Collectors.toMap(entry -> ThresholdFeatureKeys.fromKey(entry.getKey()).toSeverity(),
+                        entry -> Integer.parseInt(entry.getValue())));
+
+        scaProperties.setThresholdsSeverity(thresholdsSeverity);
     }
 
     @When("scan finding is {word}")
@@ -136,8 +165,14 @@ public class ScaThresholdsSteps {
 
     @Then("pull request should {word}")
     public void pull_request_should_fail(String expected) {
-        // Write code here that turns the phrase above into concrete actions
-        throw new io.cucumber.java.PendingException();
+        RepoProperties repoProperties = new RepoProperties();
+        repoProperties.setErrorMerge(true);
+        ScanResults scanResults = new ScanResults();
+        scanResults.setScaResults(scaResults);
+        PullRequestReport pullRequestReport = new PullRequestReport();
+        boolean actual = thresholdValidatorImpl.isMergeAllowed(scanResults, repoProperties, pullRequestReport);
+        log.info("is merged allowed = {} (expecting: {})", actual, expected);
+        assertTrue(expected.equals("pass") ? actual : !actual, "is merged allowed = " + actual + ", but was expecting: " + expected);
     }
 
     @When("max findings score is {word} threshold-score")
@@ -176,7 +211,7 @@ public class ScaThresholdsSteps {
             Integer count = Arrays.asList(spec.split("-than-")).stream()
                     .mapToInt(v -> "more".equals(v) ? 3 : "less".equals(v) ? -3 : Integer.valueOf((String) v))
                     .reduce(0, Integer::sum);
-            log.debug("going to generate {} issues with {} severity", count, severity);
+            log.info("going to generate {} issues with {} severity", count, severity);
             summaryMap.put(Filter.Severity.valueOf(severity.name()), count);
             for (int i = 0; i < count; i++) {
                 Finding fnd = new Finding();

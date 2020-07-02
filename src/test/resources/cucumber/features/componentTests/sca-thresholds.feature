@@ -1,7 +1,6 @@
 @ThresholdsFeature
 @CxSCA
 @ComponentTest
-@Skip
 Feature: CxFlow should fail builds and pull requests if scan exeeds threshold
 
   Scenario Outline: CxFlow should fail pull request if threshold-severity is exceeded
@@ -9,7 +8,7 @@ Feature: CxFlow should fail builds and pull requests if scan exeeds threshold
     Given the following thresholds-severitys:
       | threshold-name | threshold-for-high | threshold-for-medium | threshold-for-low |
       | N/A            | <omitted>          | <omitted>            | <omitted>         |
-      | empty          | 0                  | 0                    | 0                 |
+      | strict         | 0                  | 0                    | 0                 |
       | normal         | 5                  | 10                   | 15                |
       | partial        | <omitted>          | 10                   | <omitted>         |
     And the following scan findings:
@@ -31,11 +30,12 @@ Feature: CxFlow should fail builds and pull requests if scan exeeds threshold
       | normal           | medium-over   | fail         |
       | normal           | low-over      | fail         |
       | normal           | no-findings   | pass         |
-      | empty            | only-low      | fail         |
+      | strict           | only-low      | fail         |
       | N/A              | only-low      | fail         |
       | N/A              | no-findings   | pass         |
       | partial          | high-over     | pass         |
 
+@Skip
   Scenario Outline: CxFlow should fail pull request if exceedes threshold-score
     testing only score
     When max findings score is <over-or-undr> threshold-score
@@ -46,7 +46,7 @@ Feature: CxFlow should fail builds and pull requests if scan exeeds threshold
       | over         | fail         |
       | under        | pass         |
       | exact        | pass         |
-
+@Skip
   Scenario Outline: CxFlow should fail if a threshold is exceeded
     testing score and count
     When the folowing threashold/s <type> fails
