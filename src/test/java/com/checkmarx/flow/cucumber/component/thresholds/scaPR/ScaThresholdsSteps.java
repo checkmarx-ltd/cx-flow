@@ -188,8 +188,8 @@ public class ScaThresholdsSteps {
         throw new io.cucumber.java.PendingException();
     }
 
-    @When("the folowing threashold\\/s {word} fails")
-    public void the_folowing_threashold_fails(String failType) {
+    @When("the folowing threshold\\/s {word} fails")
+    public void the_folowing_threshold_fails(String failType) {
         // Write code here that turns the phrase above into concrete actions
         throw new io.cucumber.java.PendingException();
     }

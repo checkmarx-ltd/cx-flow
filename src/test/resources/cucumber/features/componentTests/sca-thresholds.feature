@@ -49,7 +49,7 @@ Feature: CxFlow should fail builds and pull requests if scan exeeds threshold
 @Skip
   Scenario Outline: CxFlow should fail if a threshold is exceeded
     testing score and count
-    When the folowing threashold/s <type> fails
+    When the folowing threshold/s <type> fails
     Then pull request should <pass-or-fail>
 
     Examples:
