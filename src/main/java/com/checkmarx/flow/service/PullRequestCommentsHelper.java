@@ -1,7 +1,7 @@
 package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.dto.RepoComment;
-import com.checkmarx.flow.exception.PullRequestCommentUnknown;
+import com.checkmarx.flow.exception.PullRequestCommentUnknownException;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -43,7 +43,7 @@ public class PullRequestCommentsHelper {
         if (isScaComment(comment)) {
             return CommentType.SCA;
         }
-        throw new PullRequestCommentUnknown("Unknown comment type. content: " + comment);
+        throw new PullRequestCommentUnknownException("Unknown comment type. content: " + comment);
     }
 
 
