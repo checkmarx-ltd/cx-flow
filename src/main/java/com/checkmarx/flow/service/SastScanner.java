@@ -30,7 +30,6 @@ import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 import static com.checkmarx.flow.exception.ExitThrowable.exit;
 import static com.checkmarx.sdk.config.Constants.UNKNOWN;
@@ -363,17 +362,6 @@ public class SastScanner implements VulnerabilityScanner {
         emailService.sendmail(request.getEmail(), "Checkmarx Scan Submitted for ".concat(request.getNamespace()).concat("/").concat(request.getRepoName()), emailCtx, "message.html");
     }
 
-    private void sendErrorScanEmail(ScanRequest request, MachinaException e) {
-        Map<String, Object> emailCtx = new HashMap<>();
-
-        log.error("Machina Exception has occurred.", e);
-        emailCtx.put("message", "Error occurred during scan/bug tracking process for "
-                .concat(request.getNamespace()).concat("/").concat(request.getRepoName()).concat(" - ")
-                .concat(request.getRepoUrl()).concat("  Error: ").concat(e.getMessage()));
-        emailCtx.put("heading", "Error occurred during scan");
-        emailService.sendmail(request.getEmail(), "Error occurred for ".concat(request.getNamespace()).concat("/").concat(request.getRepoName()), emailCtx, "message-error.html");
-    }
-
     private ScanDetails handleNoneBugTrackerCase(ScanRequest request, File cxFile, Integer scanId, Integer projectId) {
         log.info("Not waiting for scan completion as Bug Tracker type is NONE");
         CompletableFuture<ScanResults> results = CompletableFuture.completedFuture(null);
@@ -386,16 +374,6 @@ public class SastScanner implements VulnerabilityScanner {
             projectId = cxService.getProjectId(ownerId, projectName); //get the project id of the updated or created project
         }
         return projectId;
-    }
-
-    private ScanResults getResults(ScanResults scanResults, CompletableFuture<ScanResults> futureResults) {
-        try {
-            scanResults = futureResults.get();
-        } catch (InterruptedException | ExecutionException e) {
-            log.error("Thread was interrupted while trying to get scan results", e);
-            Thread.currentThread().interrupt();
-        }
-        return scanResults;
     }
 
     private void checkScanSubmitEmailDelivery(ScanRequest scanRequest) {
