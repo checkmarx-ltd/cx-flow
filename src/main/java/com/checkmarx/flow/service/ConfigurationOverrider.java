@@ -33,11 +33,106 @@ public class ConfigurationOverrider {
     private final FlowProperties flowProperties;
 
     public ScanRequest overrideScanRequestProperties(CxConfig override, ScanRequest request) {
-        Map<String, String> overridePropertiesMap = new HashMap<>();
-
         if (override == null || request == null || Boolean.FALSE.equals(override.getActive())) {
             return request;
         }
+
+        Map<String, String> overrideReport = new HashMap<>();
+        overrideMainProperties(override, request, overrideReport);
+
+        try {
+            Optional.ofNullable(override.getAdditionalProperties()).ifPresent(ap -> {
+                Object flow = ap.get("cxFlow");
+                ObjectMapper mapper = new ObjectMapper();
+                FlowOverride flowOverride = mapper.convertValue(flow, FlowOverride.class);
+
+                applyFlowOverride(flowOverride, request, overrideReport);
+            });
+
+            String overriddenProperties = convertMapToString(overrideReport);
+            log.info("The following properties were overridden by config-as-code file: {}", overriddenProperties);
+
+        } catch (IllegalArgumentException e) {
+            log.warn("Error parsing cxFlow object from CxConfig.", e);
+        }
+        return request;
+    }
+
+    private void applyFlowOverride(FlowOverride flowOverride, ScanRequest request, Map<String, String> overrideReport) {
+        Optional.ofNullable(flowOverride).ifPresent(fo -> {
+            BugTracker bt = getBugTracker(fo, request, overrideReport);
+            /*Override only applicable to Simple JIRA bug*/
+            if (bt.getType().equals(BugTracker.Type.JIRA) && fo.getJira() != null) {
+                overrideJiraBugProperties(fo, bt);
+            }
+
+            request.setBugTracker(bt);
+
+            Optional.ofNullable(fo.getApplication())
+                    .filter(StringUtils::isNotBlank)
+                    .ifPresent(a -> {
+                        request.setApplication(a);
+                        overrideReport.put("application", a);
+                    });
+
+            Optional.ofNullable(fo.getBranches())
+                    .filter(CollectionUtils::isNotEmpty)
+                    .ifPresent(br -> {
+                        request.setActiveBranches(br);
+                        overrideReport.put("active branches", Arrays.toString(br.toArray()));
+                    });
+
+            Optional.ofNullable(fo.getEmails())
+                    .ifPresent(e -> request.setEmail(e.isEmpty() ? null : e));
+
+            overrideFilters(fo, request, overrideReport);
+
+            overrideThresholds(flowOverride, overrideReport);
+        });
+    }
+
+    private void overrideThresholds(FlowOverride flowOverride, Map<String, String> overrideReport) {
+        Optional.ofNullable(flowOverride.getThresholds()).ifPresent(thresholds -> {
+            if (!(
+                    thresholds.getHigh() == null &&
+                            thresholds.getMedium() == null &&
+                            thresholds.getLow() == null &&
+                            thresholds.getInfo() == null
+            )) {
+                Map<FindingSeverity, Integer> thresholdsMap = getThresholdsMap(thresholds);
+                if (!thresholdsMap.isEmpty()) {
+                    flowProperties.setThresholds(thresholdsMap);
+                }
+
+                overrideReport.put("thresholds", convertMapToString(thresholdsMap));
+            }
+        });
+    }
+
+    private void overrideFilters(FlowOverride flowOverride, ScanRequest request, Map<String, String> overrideReport) {
+        Optional.ofNullable(flowOverride.getFilters()).ifPresent(override -> {
+            FilterFactory filterFactory = new FilterFactory();
+            ControllerRequest controllerRequest = new ControllerRequest(override.getSeverity(),
+                    override.getCwe(),
+                    override.getCategory(),
+                    override.getStatus());
+            FilterConfiguration filter = filterFactory.getFilter(controllerRequest, null);
+            request.setFilter(filter);
+
+            String filterDescr;
+            if (CollectionUtils.isNotEmpty(filter.getSimpleFilters())) {
+                filterDescr = filter.getSimpleFilters()
+                        .stream()
+                        .map(Object::toString)
+                        .collect(Collectors.joining(","));
+            } else {
+                filterDescr = "EMPTY";
+            }
+            overrideReport.put("filters", filterDescr);
+        });
+    }
+
+    private void overrideMainProperties(CxConfig override, ScanRequest request, Map<String, String> overrideReport) {
         Optional.ofNullable(override.getProject())
                 .filter(StringUtils::isNotBlank)
                 .ifPresent(p -> {
@@ -46,116 +141,39 @@ public class ConfigurationOverrider {
                             .replace("${branch}", request.getBranch())
                             .replaceAll("[^a-zA-Z0-9-_.]+", "-");
                     request.setProject(project);
-                    overridePropertiesMap.put("project", project);
+                    overrideReport.put("project", project);
                 });
         Optional.ofNullable(override.getTeam())
                 .filter(StringUtils::isNotBlank)
                 .ifPresent(t -> {
                     request.setTeam(t);
-                    overridePropertiesMap.put("team", t);
+                    overrideReport.put("team", t);
                 });
         Optional.ofNullable(override.getSast()).ifPresent(s -> {
             Optional.ofNullable(s.getIncremental()).ifPresent(si -> {
                 request.setIncremental(si);
-                overridePropertiesMap.put("incremental", si.toString());
+                overrideReport.put("incremental", si.toString());
             });
 
             Optional.ofNullable(s.getForceScan()).ifPresent(sf -> {
                 request.setForceScan(sf);
-                overridePropertiesMap.put("force scan", sf.toString());
+                overrideReport.put("force scan", sf.toString());
             });
 
             Optional.ofNullable(s.getPreset()).ifPresent(sp -> {
                 request.setScanPreset(sp);
                 request.setScanPresetOverride(true);
-                overridePropertiesMap.put("scan preset", sp);
+                overrideReport.put("scan preset", sp);
             });
             Optional.ofNullable(s.getFolderExcludes()).ifPresent(sfe -> {
                 request.setExcludeFolders(Arrays.asList(sfe.split(",")));
-                overridePropertiesMap.put("exclude folders", sfe);
+                overrideReport.put("exclude folders", sfe);
             });
             Optional.ofNullable(s.getFileExcludes()).ifPresent(sf -> {
                 request.setExcludeFiles(Arrays.asList(sf.split(",")));
-                overridePropertiesMap.put("exclude files", sf);
+                overrideReport.put("exclude files", sf);
             });
         });
-
-        try {
-            Optional.ofNullable(override.getAdditionalProperties()).ifPresent(ap -> {
-                Object flow = ap.get("cxFlow");
-                ObjectMapper mapper = new ObjectMapper();
-                FlowOverride flowOverride = mapper.convertValue(flow, FlowOverride.class);
-
-                Optional.ofNullable(flowOverride).ifPresent(fo -> {
-                    BugTracker bt = getBugTracker(fo, request, overridePropertiesMap);
-                    /*Override only applicable to Simple JIRA bug*/
-                    if (bt.getType().equals(BugTracker.Type.JIRA) && fo.getJira() != null) {
-                        overrideJiraBugProperties(fo, bt);
-                    }
-
-                    request.setBugTracker(bt);
-
-                    Optional.ofNullable(fo.getApplication())
-                            .filter(StringUtils::isNotBlank)
-                            .ifPresent(a -> {
-                                request.setApplication(a);
-                                overridePropertiesMap.put("application", a);
-                            });
-
-                    Optional.ofNullable(fo.getBranches())
-                            .filter(CollectionUtils::isNotEmpty)
-                            .ifPresent(br -> {
-                                request.setActiveBranches(br);
-                                overridePropertiesMap.put("active branches", Arrays.toString(br.toArray()));
-                            });
-
-                    Optional.ofNullable(fo.getEmails())
-                            .ifPresent(e -> request.setEmail(e.isEmpty() ? null : e));
-
-                    Optional.ofNullable(fo.getFilters()).ifPresent(f -> {
-                        FilterFactory filterFactory = new FilterFactory();
-                        ControllerRequest controllerRequest = new ControllerRequest(f.getSeverity(),
-                                f.getCwe(),
-                                f.getCategory(),
-                                f.getStatus());
-                        FilterConfiguration filter = filterFactory.getFilter(controllerRequest, null);
-                        request.setFilter(filter);
-
-                        String filterDescr;
-                        if (CollectionUtils.isNotEmpty(filter.getSimpleFilters())) {
-                            filterDescr = filter.getSimpleFilters().stream().map(Object::toString).collect(Collectors.joining(","));
-                        } else {
-                            filterDescr = "EMPTY";
-                        }
-                        overridePropertiesMap.put("filters", filterDescr);
-                    });
-
-                    Optional.ofNullable(flowOverride.getThresholds()).ifPresent(th -> {
-                        if (!(
-                                th.getHigh() == null &&
-                                        th.getMedium() == null &&
-                                        th.getLow() == null &&
-                                        th.getInfo() == null
-                        )) {
-                            Map<FindingSeverity, Integer> thresholdsMap = getThresholdsMap(th);
-                            if (!thresholdsMap.isEmpty()) {
-                                flowProperties.setThresholds(thresholdsMap);
-                            }
-
-                            overridePropertiesMap.put("thresholds", convertMapToString(thresholdsMap));
-                        }
-                    });
-                });
-            });
-
-            String overridePropertiesString = convertMapToString(overridePropertiesMap);
-
-            log.info("The following properties were overridden by config-as-code file: {}", overridePropertiesString);
-
-        } catch (IllegalArgumentException e) {
-            log.warn("Issue parsing CxConfig cxFlow element", e);
-        }
-        return request;
     }
 
     /**
@@ -211,8 +229,7 @@ public class ConfigurationOverrider {
                     .type(BugTracker.Type.NONE)
                     .build();
             log.debug("Bug tracker is not specified in scan request. Setting bug tracker type to '{}'.", result.getType());
-        }
-        else {
+        } else {
             result = request.getBugTracker();
         }
 
