@@ -115,15 +115,21 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
     }
 
     private Map<Severity, Integer> getScaEffectiveThresholdsSeverity() {
+        Map<Severity, Integer> defult = isScaThresholdsScoreDefined()
+        ? passScaPrForAnyFindings()
+        : failScaPrIfResultHasAnyFindings();
         return (areScaThresholdsSeverityDefined())
                 ? scaProperties.getThresholdsSeverity()
-                : failScaPrIfResultHasAnyFindings();
+                : defult;
     }
 
     private Double getScaEffectiveThresholdsScore() {
+        double defult = areScaThresholdsSeverityDefined()
+        ? 10.0
+        : 0.0;
         return (isScaThresholdsScoreDefined())
                 ? scaProperties.getThresholdsScore()
-                : 0.0;
+                : defult;
     }
 
     private boolean areSastThresholdsDefined() {
@@ -153,6 +159,9 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
 
         for (Severity severity : scaFindingsCountsPerSeverity.keySet()) {
             Integer thresholdCount = scaThresholds.get(severity);
+            if (thresholdCount == null) {
+                continue;
+            }
             Integer findingsCount = scaFindingsCountsPerSeverity.get(severity);
             if (findingsCount > thresholdCount) {
                 isExceeded = true;
@@ -250,6 +259,14 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
         EnumMap<Severity, Integer> result = new EnumMap<>(Severity.class);
         for (Severity any : Severity.values()) {
             result.put(any, 0);
+        }
+        return result;
+    }
+
+    private static Map<Severity, Integer> passScaPrForAnyFindings() {
+        EnumMap<Severity, Integer> result = new EnumMap<>(Severity.class);
+        for (Severity any : Severity.values()) {
+            result.put(any, Integer.MAX_VALUE);
         }
         return result;
     }
