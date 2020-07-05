@@ -31,18 +31,18 @@ public class BitBucketService {
     private final RestTemplate restTemplate;
     private final BitBucketProperties properties;
     private final FlowProperties flowProperties;
-    private final MergeResultEvaluator mergeResultEvaluator;
+    private final ThresholdValidator thresholdValidator;
 
     private static final String BUILD_IN_PROGRESS = "INPROGRESS";
     private static final String BUILD_SUCCESSFUL = "SUCCESSFUL";
     private static final String BUILD_FAILED = "FAILED";
 
-    @ConstructorProperties({"restTemplate", "properties", "flowProperties", "mergeResultEvaluator"})
-    public BitBucketService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, BitBucketProperties properties, FlowProperties flowProperties, MergeResultEvaluator mergeResultEvaluator) {
+    @ConstructorProperties({"restTemplate", "properties", "flowProperties", "thresholdValidator"})
+    public BitBucketService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, BitBucketProperties properties, FlowProperties flowProperties, ThresholdValidator thresholdValidator) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.flowProperties = flowProperties;
-        this.mergeResultEvaluator = mergeResultEvaluator;
+        this.thresholdValidator = thresholdValidator;
     }
 
     private HttpHeaders createAuthHeaders(){
@@ -71,7 +71,7 @@ public class BitBucketService {
             log.debug(LOG_COMMENT, comment);
 
             if(properties.isBlockMerge()) {
-                if (mergeResultEvaluator.isMergeAllowed(results, properties, new PullRequestReport(scanDetails, request))) {
+                if (thresholdValidator.isMergeAllowed(results, properties, new PullRequestReport(scanDetails, request))) {
                     sendServerMergeComment(request, comment);
                 }
                 else
@@ -108,7 +108,7 @@ public class BitBucketService {
         if(properties.isBlockMerge()) {
 
             String status = BUILD_SUCCESSFUL;
-            if (!mergeResultEvaluator.isMergeAllowed(results, properties, new PullRequestReport(scanDetails, request))) {
+            if (!thresholdValidator.isMergeAllowed(results, properties, new PullRequestReport(scanDetails, request))) {
                 status = BUILD_FAILED;
             }
 

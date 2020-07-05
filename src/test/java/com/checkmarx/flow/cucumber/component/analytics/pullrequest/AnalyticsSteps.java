@@ -11,7 +11,7 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.service.GitHubService;
-import com.checkmarx.flow.service.MergeResultEvaluator;
+import com.checkmarx.flow.service.ThresholdValidator;
 import com.checkmarx.flow.service.ResultsService;
 import com.checkmarx.flow.utils.AesEncryptionUtils;
 import com.checkmarx.sdk.config.Constants;
@@ -62,7 +62,7 @@ public class AnalyticsSteps {
 
     private final GitHubProperties gitHubProperties;
     private final FlowProperties flowProperties;
-    private final MergeResultEvaluator mergeResultEvaluator;
+    private final ThresholdValidator thresholdValidator;
 
     private final CxClient cxClientMock;
     private final CxProperties cxProperties;
@@ -231,7 +231,7 @@ public class AnalyticsSteps {
         GitHubService gitService = new GitHubService(restTemplateMock,
                 gitHubProperties,
                 flowProperties,
-                mergeResultEvaluator);
+                thresholdValidator);
 
         return new ResultsService(
                 cxClientMock,

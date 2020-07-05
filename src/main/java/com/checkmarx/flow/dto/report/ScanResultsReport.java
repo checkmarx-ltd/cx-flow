@@ -2,7 +2,7 @@ package com.checkmarx.flow.dto.report;
 
 import com.checkmarx.flow.config.FindingSeverity;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.service.MergeResultEvaluatorImpl;
+import com.checkmarx.flow.service.ThresholdValidatorImpl;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -92,7 +92,7 @@ public class ScanResultsReport extends AnalyticsReport {
         this.scanSummary.put(FindingSeverity.LOW, results.getScanSummary().getLowSeverity());
         this.scanSummary.put(FindingSeverity.INFO, results.getScanSummary().getInfoSeverity());
 
-        Map<FindingSeverity, Integer> cxFlowResultsIn = MergeResultEvaluatorImpl.getFindingCountPerSeverity(results);
+        Map<FindingSeverity, Integer> cxFlowResultsIn = ThresholdValidatorImpl.getSastFindingCountPerSeverity(results);
 
         if (cxFlowResultsIn.get(FindingSeverity.HIGH) != null) {
             this.cxFlowResults.put(FindingSeverity.HIGH, cxFlowResultsIn.get(FindingSeverity.HIGH));

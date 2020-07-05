@@ -4,6 +4,6 @@ import com.checkmarx.flow.config.RepoProperties;
 import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.sdk.dto.ScanResults;
 
-public interface MergeResultEvaluator {
+public interface ThresholdValidator {
     boolean isMergeAllowed(ScanResults results, RepoProperties repoProperties, PullRequestReport pullRequestReport);
 }
