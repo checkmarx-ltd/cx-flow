@@ -1,4 +1,4 @@
-package com.checkmarx.flow.cucumber.component.thresholds;
+package com.checkmarx.flow.cucumber.component.thresholds.sastPR;
 
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.ADOProperties;

@@ -7,8 +7,9 @@ import io.cucumber.junit.CucumberOptions;
 
 @RunWith(Cucumber.class)
 @CucumberOptions(
-    features =  "src/test/resources/cucumber/features/componentTests/sca-thresholds.feature", 
-    tags = "@CxSCA and @ThresholdsFeature and not @Skip")
+        features = "src/test/resources/cucumber/features/componentTests/sca-thresholds.feature",
+        glue = {"com.checkmarx.flow.cucumber.component.thresholds.scaPR"},
+        tags = "@CxSCA and @ThresholdsFeature and not @Skip")
 public class ScaThresholdsTestRunner {
 
 }
