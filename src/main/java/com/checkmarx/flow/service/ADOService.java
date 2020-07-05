@@ -20,6 +20,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -45,14 +46,19 @@ public class ADOService {
     private final FlowProperties flowProperties;
     private final CxProperties cxProperties;
     private final ScaProperties scaProperties;
+    private final SastScanner sastScanner;
+    private final SCAScanner scaScanner;
 
     public ADOService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, ADOProperties properties,
-                      FlowProperties flowProperties, CxProperties cxProperties, ScaProperties scaProperties) {
+                      FlowProperties flowProperties, CxProperties cxProperties, ScaProperties scaProperties,
+                      @Lazy SastScanner sastScanner, @Lazy SCAScanner scaScanner) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.flowProperties = flowProperties;
         this.cxProperties = cxProperties;
         this.scaProperties = scaProperties;
+        this.sastScanner = sastScanner;
+        this.scaScanner = scaScanner;
     }
 
     private HttpHeaders createAuthHeaders(){
@@ -173,7 +179,7 @@ public class ADOService {
             restTemplate.exchange(getFullAdoApiUrl(url).concat("-preview"),
                     HttpMethod.PATCH, httpEntity, Void.class);
 
-            ThresholdValidatorImpl evaluator = new ThresholdValidatorImpl(flowProperties, scaProperties);
+            ThresholdValidatorImpl evaluator = new ThresholdValidatorImpl(sastScanner, scaScanner, flowProperties, scaProperties);
             boolean isMergeAllowed = evaluator.isMergeAllowed(results, properties, new PullRequestReport(scanDetails, request));
             
             if(!isMergeAllowed){
