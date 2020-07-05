@@ -7,17 +7,16 @@ import com.checkmarx.flow.dto.OperationResult;
 import com.checkmarx.flow.dto.OperationStatus;
 import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.sdk.config.Constants;
-import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.cx.restclient.dto.scansummary.Severity;
 import com.cx.restclient.sca.dto.report.Finding;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.EnumUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -25,7 +24,6 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class ThresholdValidatorImpl implements ThresholdValidator {
     private static final ObjectMapper jsonMapper = new ObjectMapper();
 
@@ -36,6 +34,15 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
     private final ScaProperties scaProperties;
     private final SastScanner sastScanner;
     private final SCAScanner scaScanner;
+
+    @Autowired
+    public ThresholdValidatorImpl(@Lazy SastScanner sastScanner, @Lazy SCAScanner scaScanner,
+                                  FlowProperties flowProperties, ScaProperties scaProperties) {
+        this.sastScanner = sastScanner;
+        this.scaScanner = scaScanner;
+        this.flowProperties = flowProperties;
+        this.scaProperties = scaProperties;
+    }
 
     @Override
     public boolean isMergeAllowed(ScanResults scanResults, RepoProperties repoProperties, PullRequestReport pullRequestReport) {
