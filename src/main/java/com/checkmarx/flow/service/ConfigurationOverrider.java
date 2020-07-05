@@ -255,17 +255,16 @@ public class ConfigurationOverrider {
         BugTracker.Type currentBugTrackerType = bugTrackerFromScanRequest.getType();
 
         boolean comingFromPullRequest = bugTrackersForPullRequest.contains(currentBugTrackerType);
-        boolean isOverridePresent = StringUtils.isNotEmpty(bugTrackerNameOverride);
-        boolean overrideIsTheSame = bugTrackerNameOverride.equalsIgnoreCase(currentBugTrackerType.toString());
 
         String cannotOverrideReason = null;
+
         if (comingFromPullRequest) {
             // Don't override bug tracker type if the scan is initiated by a pull request.
             // Otherwise bug tracker events won't be triggered.
             cannotOverrideReason = "scan was initiated by pull request";
-        } else if (!isOverridePresent) {
+        } else if (StringUtils.isEmpty(bugTrackerNameOverride)) {
             cannotOverrideReason = "no bug tracker override is defined";
-        } else if (overrideIsTheSame) {
+        } else if (bugTrackerNameOverride.equalsIgnoreCase(currentBugTrackerType.toString())) {
             cannotOverrideReason = "bug tracker type in override is the same as in scan request";
         }
 
