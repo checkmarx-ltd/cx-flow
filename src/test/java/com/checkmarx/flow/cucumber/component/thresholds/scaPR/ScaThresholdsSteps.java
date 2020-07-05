@@ -2,6 +2,8 @@ package com.checkmarx.flow.cucumber.component.thresholds.scaPR;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.EnumSet;
@@ -10,7 +12,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.ADOProperties;
@@ -31,7 +35,6 @@ import com.checkmarx.test.flow.config.CxFlowMocksConfig;
 import com.cx.restclient.dto.scansummary.Severity;
 import com.cx.restclient.sca.dto.report.Finding;
 
-import org.assertj.core.util.Arrays;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.web.client.RestTemplate;
 
@@ -178,14 +181,27 @@ public class ScaThresholdsSteps {
     @When("max findings score is {word} threshold-score")
     public void max_findings_score_threshold_score(String scoreType) {
         double thresholdScore = 7.5;
+        scaProperties.setThresholdsScore(thresholdScore);
         Double findingsScore = thresholdScore + (scoreType.equals("over") ? 1.0
                 : scoreType.equals("under") ? -1.0 
                 : scoreType.equals("exact") ? 0.0 
                 : null);
 
         log.info("findings score is {} -> score: {} threshold: {}", scoreType, findingsScore, thresholdScore);
+        scaResults = new SCAResults();
+        scaResults.setScanId("2");
+        Summary summary = new Summary();
+        summary.setRiskScore(findingsScore);
+        List<Finding> findings = new ArrayList<>();
+        Stream<com.checkmarx.sdk.dto.Filter.Severity> severityStream = Arrays.stream(Filter.Severity.values());
+        Arrays.stream(Severity.values()).forEach(severity -> populateFindings(findings, severity, 10));
+        scaResults.setFindings(findings);
+        Map<Filter.Severity, Integer> findingCounts = severityStream
+        .collect(Collectors.toMap(Function.identity(), v -> 10));
+        summary.setFindingCounts(findingCounts);
+        scaResults.setSummary(summary);
         // Write code here that turns the phrase above into concrete actions
-        throw new io.cucumber.java.PendingException();
+        // throw new io.cucumber.java.PendingException();
     }
 
     @When("the folowing threshold\\/s {word} fails")
@@ -213,16 +229,20 @@ public class ScaThresholdsSteps {
                     .reduce(0, Integer::sum);
             log.info("going to generate {} issues with {} severity", count, severity);
             summaryMap.put(Filter.Severity.valueOf(severity.name()), count);
-            for (int i = 0; i < count; i++) {
-                Finding fnd = new Finding();
-                fnd.setSeverity(severity);
-                fnd.setPackageId("");
-                findings.add(fnd);
-            }
+            populateFindings(findings, severity, count);
         });
         summary.setFindingCounts(summaryMap);
         scaResults.setFindings(findings);
         scaResults.setSummary(summary);
         return scaResults;
+    }
+
+    private void populateFindings(List<Finding> findings, Severity severity, Integer count) {
+        for (int i = 0; i < count; i++) {
+            Finding fnd = new Finding();
+            fnd.setSeverity(severity);
+            fnd.setPackageId("");
+            findings.add(fnd);
+        }
     }
 }

@@ -35,7 +35,6 @@ Feature: CxFlow should fail builds and pull requests if scan exeeds threshold
       | N/A              | no-findings   | pass         |
       | partial          | high-over     | pass         |
 
-@Skip
   Scenario Outline: CxFlow should fail pull request if exceedes threshold-score
     testing only score
     When max findings score is <over-or-undr> threshold-score
