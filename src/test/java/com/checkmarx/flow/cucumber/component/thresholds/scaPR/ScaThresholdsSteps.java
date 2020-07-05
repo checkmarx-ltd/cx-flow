@@ -11,32 +11,26 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.checkmarx.flow.CxFlowApplication;
-import com.checkmarx.flow.config.ADOProperties;
 import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.config.RepoProperties;
 import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.service.ThresholdValidator;
 import com.checkmarx.flow.service.ThresholdValidatorImpl;
-import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.sca.SCAResults;
 import com.checkmarx.sdk.dto.sca.Summary;
-import com.checkmarx.sdk.service.CxClient;
 import com.checkmarx.test.flow.config.CxFlowMocksConfig;
 import com.cx.restclient.dto.scansummary.Severity;
 import com.cx.restclient.sca.dto.report.Finding;
 
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.web.client.RestTemplate;
 
 import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
@@ -64,59 +58,27 @@ public class ScaThresholdsSteps {
         }
     }
 
-    private final CxClient cxClientMock;
-    private final RestTemplate restTemplateMock;
-    private final ThresholdValidator thresholdValidator;
     private final FlowProperties flowProperties;
-    private final CxProperties cxProperties;
-    private final GitHubProperties gitHubProperties;
-    private final ADOProperties adoProperties;
-    private ScanResults scanResultsToInject;
     private List<Map<String, String>> thresholdDefs;
     private List<Map<String, String>> findingsDefs;
     private SCAResults scaResults;
     private ScaProperties scaProperties;
     private ThresholdValidatorImpl thresholdValidatorImpl;
 
-    public ScaThresholdsSteps(ThresholdValidatorImpl thresholdValidatorImpl, CxClient cxClientMock,
-            RestTemplate restTemplateMock, FlowProperties flowProperties, ADOProperties adoProperties,
-            CxProperties cxProperties, GitHubProperties gitHubProperties, ThresholdValidator thresholdValidator,
+    public ScaThresholdsSteps(ThresholdValidatorImpl thresholdValidatorImpl, 
+            FlowProperties flowProperties, ThresholdValidator thresholdValidator,
             ScaProperties scaProperties) {
-        this.cxClientMock = cxClientMock;
-        this.restTemplateMock = restTemplateMock;
-
         flowProperties.setThresholds(new HashMap<>());
         this.flowProperties = flowProperties;
-
-        this.cxProperties = cxProperties;
-
-        gitHubProperties.setCxSummary(false);
-        this.gitHubProperties = gitHubProperties;
-
-        this.adoProperties = adoProperties;
-
-        this.thresholdValidator = thresholdValidator;
-
         this.scaProperties = scaProperties;
-
         this.thresholdValidatorImpl = thresholdValidatorImpl;
 
     }
 
     @Before("@ThresholdsFeature")
     public void prepareServices() {
-        initMocks();
         log.info("setting scan engine to CxSca");
         flowProperties.setEnabledVulnerabilityScanners(Collections.singletonList(ScaProperties.CONFIG_PREFIX));
-    }
-
-    private void initMocks() {
-        // try {
-        // when(cxClientMock.getReportContentByScanId(anyInt(),
-        // any())).thenAnswer(answerer);
-        // } catch (CheckmarxException e) {
-        // Assert.fail("Error initializing mock." + e);
-        // }
     }
 
     @Given("the following thresholds-severitys:")
@@ -197,8 +159,6 @@ public class ScaThresholdsSteps {
         .collect(Collectors.toMap(Function.identity(), v -> 10));
         summary.setFindingCounts(findingCounts);
         scaResults.setSummary(summary);
-        // Write code here that turns the phrase above into concrete actions
-        // throw new io.cucumber.java.PendingException();
     }
 
     private Double generateScoreThresholds(String scoreType) {
