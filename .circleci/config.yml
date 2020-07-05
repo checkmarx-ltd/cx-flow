@@ -431,9 +431,15 @@ orbs:
   aws-eks: circleci/aws-eks@0.2.6
   kubernetes: circleci/kubernetes@0.4.0
   helm: circleci/helm@0.2.3
+  checkmarx: checkmarx/circleci-kpi-shipper@0.5.0
 
 workflows:
   version: 2
+  
+  cx-kpi-shipper:
+    jobs:
+      - checkmarx/circleci-kpi-shipper
+  
   sonar:
     jobs:
       - sonar:
