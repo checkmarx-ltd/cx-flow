@@ -34,6 +34,8 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
     
     private final FlowProperties flowProperties;
     private final ScaProperties scaProperties;
+    private final SastScanner sastScanner;
+    private final SCAScanner scaScanner;
 
     @Override
     public boolean isMergeAllowed(ScanResults scanResults, RepoProperties repoProperties, PullRequestReport pullRequestReport) {
@@ -61,7 +63,7 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
             isAllowed = isAllowedSast(scanResults, pullRequestReport);
         }
 
-        if (isAllowed && StringUtils.containsIgnoreCase(flowProperties.getEnabledVulnerabilityScanners().toString(), ScaProperties.CONFIG_PREFIX)) {
+        if (isAllowed && scaScanner.isEnabled()) {
             isAllowed = isAllowedSca(scanResults, pullRequestReport);
         }
 
@@ -69,8 +71,7 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
     }
 
     private boolean isSast() {
-        return flowProperties.getEnabledVulnerabilityScanners().isEmpty() ||
-                StringUtils.containsIgnoreCase(flowProperties.getEnabledVulnerabilityScanners().toString(), CxProperties.CONFIG_PREFIX);
+        return sastScanner.isEnabled();
     }
 
     private boolean isAllowedSca(ScanResults scanResults, PullRequestReport pullRequestReport) {

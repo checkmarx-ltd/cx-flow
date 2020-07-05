@@ -12,6 +12,8 @@ import com.checkmarx.flow.service.ADOService;
 import com.checkmarx.flow.service.GitHubService;
 import com.checkmarx.flow.service.ThresholdValidator;
 import com.checkmarx.flow.service.ResultsService;
+import com.checkmarx.flow.service.SCAScanner;
+import com.checkmarx.flow.service.SastScanner;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.ScaProperties;
@@ -70,15 +72,17 @@ public class ThresholdsSteps {
     private final GitHubProperties gitHubProperties;
     private final ADOProperties adoProperties;
     private final ScaProperties scaProperties;
-    private ScanResults scanResultsToInject;
+    private final SastScanner sastScanner;
+    private final SCAScanner scaScanner;
 
+    private ScanResults scanResultsToInject;
     private ResultsService resultsService;
     private Boolean pullRequestWasApproved;
     private Filter filter;
 
     public ThresholdsSteps(CxClient cxClientMock, RestTemplate restTemplateMock, FlowProperties flowProperties, ADOProperties adoProperties,
                            CxProperties cxProperties, GitHubProperties gitHubProperties, ThresholdValidator thresholdValidator,
-                           ScaProperties scaProperties) {
+                           ScaProperties scaProperties, SastScanner sastScanner, SCAScanner scaScanner) {
 
         this.cxClientMock = cxClientMock;
         this.restTemplateMock = restTemplateMock;
@@ -95,6 +99,9 @@ public class ThresholdsSteps {
 
         this.thresholdValidator = thresholdValidator;
         this.scaProperties = scaProperties;
+
+        this.sastScanner = sastScanner;
+        this.scaScanner = scaScanner;
     }
 
     @Before("@ThresholdsFeature")
@@ -263,7 +270,9 @@ public class ThresholdsSteps {
                 adoProperties,
                 flowProperties,
                 cxProperties,
-                scaProperties);
+                scaProperties,
+                sastScanner,
+                scaScanner);
 
         
         return new ResultsService(
