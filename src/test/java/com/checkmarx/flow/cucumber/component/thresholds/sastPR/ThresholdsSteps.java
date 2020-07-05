@@ -1,4 +1,4 @@
-package com.checkmarx.flow.cucumber.component.thresholds;
+package com.checkmarx.flow.cucumber.component.thresholds.sastPR;
 
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.ADOProperties;
@@ -10,10 +10,11 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.service.ADOService;
 import com.checkmarx.flow.service.GitHubService;
-import com.checkmarx.flow.service.MergeResultEvaluator;
+import com.checkmarx.flow.service.ThresholdValidator;
 import com.checkmarx.flow.service.ResultsService;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
+import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
@@ -63,11 +64,12 @@ public class ThresholdsSteps {
 
     private final CxClient cxClientMock;
     private final RestTemplate restTemplateMock;
-    private final MergeResultEvaluator mergeResultEvaluator;
+    private final ThresholdValidator thresholdValidator;
     private final FlowProperties flowProperties;
     private final CxProperties cxProperties;
     private final GitHubProperties gitHubProperties;
     private final ADOProperties adoProperties;
+    private final ScaProperties scaProperties;
     private ScanResults scanResultsToInject;
 
     private ResultsService resultsService;
@@ -75,7 +77,8 @@ public class ThresholdsSteps {
     private Filter filter;
 
     public ThresholdsSteps(CxClient cxClientMock, RestTemplate restTemplateMock, FlowProperties flowProperties, ADOProperties adoProperties,
-                           CxProperties cxProperties, GitHubProperties gitHubProperties, MergeResultEvaluator mergeResultEvaluator) {
+                           CxProperties cxProperties, GitHubProperties gitHubProperties, ThresholdValidator thresholdValidator,
+                           ScaProperties scaProperties) {
 
         this.cxClientMock = cxClientMock;
         this.restTemplateMock = restTemplateMock;
@@ -90,7 +93,8 @@ public class ThresholdsSteps {
 
         this.adoProperties = adoProperties;
 
-        this.mergeResultEvaluator = mergeResultEvaluator;
+        this.thresholdValidator = thresholdValidator;
+        this.scaProperties = scaProperties;
     }
 
     @Before("@ThresholdsFeature")
@@ -253,12 +257,13 @@ public class ThresholdsSteps {
         GitHubService gitService = new GitHubService(restTemplateMock,
                 gitHubProperties,
                 flowProperties,
-                mergeResultEvaluator);
+                thresholdValidator);
 
         ADOService adoService = new ADOService(restTemplateMock,
                 adoProperties,
                 flowProperties,
-                cxProperties);
+                cxProperties,
+                scaProperties);
 
         
         return new ResultsService(
