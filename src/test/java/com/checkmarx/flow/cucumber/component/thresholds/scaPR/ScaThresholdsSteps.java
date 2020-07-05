@@ -148,6 +148,10 @@ public class ScaThresholdsSteps {
 
     @When("threshold-severity is cofigured to {word}")
     public void threshold_severity_is_cofigured_to_normal(String selectedConfig) {
+        configureThreshold(selectedConfig);
+    }
+
+    private void configureThreshold(String selectedConfig) {
         log.info("selected threshold is {}", selectedConfig);
 
         Map<Severity, Integer> thresholdsSeverity = thresholdDefs.stream()
@@ -180,14 +184,7 @@ public class ScaThresholdsSteps {
 
     @When("max findings score is {word} threshold-score")
     public void max_findings_score_threshold_score(String scoreType) {
-        double thresholdScore = 7.5;
-        scaProperties.setThresholdsScore(thresholdScore);
-        Double findingsScore = thresholdScore + (scoreType.equals("over") ? 1.0
-                : scoreType.equals("under") ? -1.0 
-                : scoreType.equals("exact") ? 0.0 
-                : null);
-
-        log.info("findings score is {} -> score: {} threshold: {}", scoreType, findingsScore, thresholdScore);
+        Double findingsScore = generateScoreThresholds(scoreType);
         scaResults = new SCAResults();
         scaResults.setScanId("2");
         Summary summary = new Summary();
@@ -204,10 +201,41 @@ public class ScaThresholdsSteps {
         // throw new io.cucumber.java.PendingException();
     }
 
-    @When("the folowing threshold\\/s {word} fails")
+    private Double generateScoreThresholds(String scoreType) {
+        double thresholdScore = 7.5;
+        scaProperties.setThresholdsScore(thresholdScore);
+        Double findingsScore = thresholdScore + (scoreType.equals("over") ? 1.0
+                : scoreType.equals("under") ? -1.0 
+                : scoreType.equals("exact") ? 0.0 
+                : null);
+
+        log.info("findings score is {} -> score: {} threshold: {}", scoreType, findingsScore, thresholdScore);
+        return findingsScore;
+    }
+
+    @When("the folowing threshold\\/s fails on {word}")
     public void the_folowing_threshold_fails(String failType) {
-        // Write code here that turns the phrase above into concrete actions
-        throw new io.cucumber.java.PendingException();
+        boolean isPassSeverity = Arrays.asList("score", "none").contains(failType);
+        boolean isPassScore = Arrays.asList("count", "none").contains(failType);
+    
+        thresholdDefs = Arrays.asList(Arrays.stream(ThresholdFeatureKeys.values())
+        .collect(Collectors.toMap(
+            key -> key.name().toLowerCase().replace('_','-'), 
+            key -> key == ThresholdFeatureKeys.THRESHOLD_NAME ? "spec" : "10")));
+
+        findingsDefs = new ArrayList<>();
+
+        Map<String, String> map = new HashMap<>();
+        map.put("name", "findings-severity");
+        Arrays.stream(Severity.values())
+            .forEach(key -> map.put(key.name().toLowerCase(), isPassSeverity ? "5" : "15"));
+        findingsDefs.add(map);
+        
+        configureThreshold("spec");
+        scaResults = getFakeSCAResults("findings-severity");
+
+        Double findingsScore = generateScoreThresholds(isPassScore ? "under" : "over");
+        scaResults.getSummary().setRiskScore(findingsScore);
     }
 
     private SCAResults getFakeSCAResults(String findingsName) {
