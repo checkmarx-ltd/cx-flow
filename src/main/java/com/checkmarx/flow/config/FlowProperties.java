@@ -311,6 +311,7 @@ public class FlowProperties {
         private Integer port = 25;
         private String username;
         private String password;
+        private List<String> cc;
         private boolean enabled = false;
 
         public String getHost() {
@@ -353,6 +354,11 @@ public class FlowProperties {
             this.enabled = enabled;
         }
 
+        public List<String> getCc() { return this.cc; }
+
+        public void setCc(List<String> cc) {
+            this.cc = cc;
+        }
     }
 
 }

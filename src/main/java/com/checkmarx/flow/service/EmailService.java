@@ -40,19 +40,24 @@ public class EmailService {
      * @param template
      */
     public void sendmail(List<String> recipients, @NotNull String subject, @NotNull Map<String, Object> ctx, String template){
-        if(ScanUtils.empty(recipients)){
-            log.info("Email not sent - no recipients listed");
-            return;
-        }
+
         MimeMessagePreparator messagePreparator = mimeMessage -> {
-            log.info("Sending email");
+            log.info("Sending email notification.");
             MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage);
 
             String contact = properties.getContact();
             if(!ScanUtils.empty(contact)){
                 messageHelper.setFrom(contact);
             }
-            messageHelper.setTo(recipients.toArray(new String[0]));
+
+            if(!ScanUtils.empty(recipients)) {
+                messageHelper.setTo(recipients.toArray(new String[0]));
+                messageHelper.setCc((properties.getMail().getCc()).toArray(new String[0]));
+            }else
+            {
+                messageHelper.setTo((properties.getMail().getCc()).toArray(new String[0]));
+            }
+
             messageHelper.setSubject(subject);
             String content = generateContent(ctx, template);
             messageHelper.setText(content, true);
@@ -63,7 +68,7 @@ public class EmailService {
                 emailSender.send(messagePreparator);
             }
         } catch (MailException e) {
-            log.error("Error occured while attempting to send an email",e);
+            log.error("Error occurred while attempting to send an email",e);
         }
 
 
