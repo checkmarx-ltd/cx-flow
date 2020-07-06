@@ -8,10 +8,22 @@ import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.EventResponse;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.dto.github.*;
+import com.checkmarx.flow.dto.github.Commit;
+import com.checkmarx.flow.dto.github.DeleteEvent;
+import com.checkmarx.flow.dto.github.PullEvent;
+import com.checkmarx.flow.dto.github.PullRequest;
+import com.checkmarx.flow.dto.github.PushEvent;
+import com.checkmarx.flow.dto.github.Repo;
+import com.checkmarx.flow.dto.github.Repository;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
-import com.checkmarx.flow.service.*;
+import com.checkmarx.flow.service.ConfigurationOverrider;
+import com.checkmarx.flow.service.FilterFactory;
+import com.checkmarx.flow.service.FlowService;
+import com.checkmarx.flow.service.GitHubAuthService;
+import com.checkmarx.flow.service.GitHubService;
+import com.checkmarx.flow.service.HelperService;
+import com.checkmarx.flow.service.SastScanner;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
@@ -25,7 +37,13 @@ import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.PostConstruct;
 import javax.crypto.Mac;
@@ -65,6 +83,7 @@ public class GitHubController extends WebhookController {
     private final FlowService flowService;
     private final HelperService helperService;
     private final GitHubService gitHubService;
+    private final GitHubAuthService gitHubAuthService;
     private final SastScanner sastScanner;
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
@@ -164,7 +183,7 @@ public class GitHubController extends WebhookController {
             String gitUrl = Optional.ofNullable(pullRequest.getHead().getRepo())
                     .map(Repo::getCloneUrl)
                     .orElse(repository.getCloneUrl());
-            String token = scmConfigOverrider.determineConfigToken(properties, controllerRequest.getScmInstance());
+            String token = gitHubAuthService.getBasicAuth(controllerRequest.getScmInstance());
             log.info("Using url: {}", gitUrl);
             String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(token).concat("@"));
             gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(token).concat("@"));
@@ -280,7 +299,7 @@ public class GitHubController extends WebhookController {
             Repository repository = event.getRepository();
             String gitUrl = repository.getCloneUrl();
             log.debug("Using url: {}", gitUrl);
-            String token = scmConfigOverrider.determineConfigToken(properties, controllerRequest.getScmInstance());
+            String token = gitHubAuthService.getBasicAuth(controllerRequest.getScmInstance());
             if(ScanUtils.empty(token)){
                 log.error("No token was provided for Github");
                 throw new MachinaRuntimeException();

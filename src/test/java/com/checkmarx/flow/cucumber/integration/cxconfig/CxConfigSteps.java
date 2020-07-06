@@ -530,6 +530,7 @@ public class CxConfigSteps {
                 helperService,
                 gitHubService,
                 null,
+                null,
                 filterFactory,
                 configOverrider,
                 scmConfigOverrider));
@@ -548,7 +549,8 @@ public class CxConfigSteps {
                 gitHubProperties,
                 flowProperties,
                 thresholdValidator,
-                scmConfigOverrider);
+                scmConfigOverrider,
+                null);
 
         this.resultsService = new ResultsService(
                 cxClientMock,

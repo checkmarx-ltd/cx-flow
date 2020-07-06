@@ -262,7 +262,8 @@ public class ThresholdsSteps {
                 gitHubProperties,
                 flowProperties,
                 thresholdValidator,
-                scmConfigOverrider);
+                scmConfigOverrider,
+                null);
 
         ADOService adoService = new ADOService(restTemplateMock,
                 adoProperties,

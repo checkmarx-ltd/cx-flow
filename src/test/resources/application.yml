@@ -159,7 +159,7 @@ github:
   webhook-token: 1234
   token: xxxx
   url: https://github.com
-  api-url: https://api.github.com/repos/
+  api-url: https://api.github.com
   block-merge: true
   error-merge: true
   cx-summary: true

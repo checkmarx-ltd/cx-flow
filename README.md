@@ -88,25 +88,27 @@ java -jar ${AUTOMATION_JAR} \
 
 **Workflow**
 
-<li>Webhook is registered at the namespace level (aka group, organization) or at the individual project/repository level within GitLab, GitHub, or Bitbucket using a shared key/token and pointing to the Automation Service
+- Webhook is registered at the namespace level (aka group, organization) or at the individual project/repository level within GitLab, GitHub, or Bitbucket using a shared key/token and pointing to the Automation Service
 Developer commit's code (PUSH Request)
-<li>WebHook fires a request to the Service along with commit details
-<li>All developers identified within the commit(s) of a PUSH request are notified via email that the scan has been submitted (note: email can be disabled)
-<li>Service determines if the branch is applicable to the service (see Branch details below)
-<li>Service creates a new team (if multi-tenant mode is on) and a project for the particular organization/repository within Checkmarx.  If a project already exists with the same name, the existing project is used
-<li>Project is set to use specific scanning rules (Preset)
-<li>Repository details are updated in the project within Checkmarx
-<li>Scan request is submitted for the project in Checkmarx
-<li>Service monitors the state of the scan, and waits until it is finished
-<li>Once scan is finished, a report is generated and retrieved by the Service
-<li>Findings are filtered based on defined criteria (see Filter details below)
-<li>Service sends an email notification to all committers that scan is complete
-<li>Email includes direct links to issues based on Filtering (optional)
-<li>Service publishes findings to defined Bug Tracking tool
-<li>Issues are collapsed (multiple issues of the same type in the same file are updated within 1 ticket) - See Bug Tracking details below
-<li>Tickets are closed if the issue is remediated on next iteration of scan
-<li>Tickets are re-opened in the event an issue is reintroduced
-<li>All references within a ticket must be addressed before the Ticket is closed
+- WebHook fires a request to the Service along with commit details
+- All developers identified within the commit(s) of a PUSH request are notified via email that the scan has been submitted (note: email can be disabled)
+- Service determines if the branch is applicable to the service (see Branch details below)
+- Service creates a new team (if multi-tenant mode is on) and a project for the particular organization/repository within Checkmarx.  If a project already exists with the same name, the existing project is used
+- Project is set to use specific scanning rules (Preset)
+- Repository details are updated in the project within Checkmarx
+- Scan request is submitted for the project in Checkmarx
+- Service monitors the state of the scan, and waits until it is finished
+- Once scan is finished, a report is generated and retrieved by the Service
+- Findings are filtered based on defined criteria (see Filter details below)
+- Service sends an email notification to all committers that scan is complete
+- Email includes direct links to issues based on Filtering (optional)
+- Service publishes findings to defined Bug Tracking tool
+- Issues are collapsed (multiple issues of the same type in the same file are updated within 1 ticket) - See Bug Tracking details below
+- Tickets are closed if the issue is remediated on next iteration of scan
+- Tickets are re-opened in the event an issue is reintroduced
+- All references within a ticket must be addressed before the Ticket is closed
+
+An example using GitHub is [here](docs/github_example.md)
 
 **Branch**
 Branches are applicable to the scanning platform can be specified through global configuration, url parameter overrides, JSON override file (both repository based and Base64 encoded url parameter)
