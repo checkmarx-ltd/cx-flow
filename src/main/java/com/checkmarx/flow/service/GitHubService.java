@@ -51,10 +51,11 @@ public class GitHubService extends RepoService {
     private final FlowProperties flowProperties;
     private final ThresholdValidator thresholdValidator;
     private final ScmConfigOverrider scmConfigOverrider;
+    private final GitHubAuthService gitHubAuthService;
 
-    private static final String FILE_CONTENT = "/{namespace}/{repo}/contents/{config}?ref={branch}";
-    private static final String LANGUAGE_TYPES = "/{namespace}/{repo}/languages";
-    private static final String REPO_CONTENT = "/{namespace}/{repo}/contents?ref={branch}";
+    private static final String FILE_CONTENT = "/repos/{namespace}/{repo}/contents/{config}?ref={branch}";
+    private static final String LANGUAGE_TYPES = "/repos/{namespace}/{repo}/languages";
+    private static final String REPO_CONTENT = "/repos/{namespace}/{repo}/contents?ref={branch}";
 
     private static final String API_REQUEST = "API request: {}";
     private static final String API_RESPONSE = "API response: {}";
@@ -67,35 +68,31 @@ public class GitHubService extends RepoService {
                          GitHubProperties properties,
                          FlowProperties flowProperties,
                          ThresholdValidator thresholdValidator,
-                         ScmConfigOverrider scmConfigOverrider) {
+                         ScmConfigOverrider scmConfigOverrider,
+                         GitHubAuthService gitHubAuthService) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.flowProperties = flowProperties;
         this.thresholdValidator = thresholdValidator;
         this.scmConfigOverrider = scmConfigOverrider;
-    }
-
-    private HttpHeaders createAuthHeaders(ScanRequest scanRequest){
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.set(HttpHeaders.AUTHORIZATION, "token ".concat(scmConfigOverrider.determineConfigToken(properties, scanRequest.getScmInstance())));
-        return httpHeaders;
+        this.gitHubAuthService = gitHubAuthService;
     }
 
     void processPull(ScanRequest request, ScanResults results) {
-            String comment = HTMLHelper.getMergeCommentMD(request, results, properties);
-            log.debug("comment: {}", comment);
-            sendMergeComment(request, comment);
+        String comment = HTMLHelper.getMergeCommentMD(request, results, properties);
+        log.debug("comment: {}", comment);
+        sendMergeComment(request, comment);
     }
 
     private void updateComment(String baseUrl, String comment, ScanRequest scanRequest) {
         log.debug("Updating exisiting comment. url: {}", baseUrl);
         log.debug("Updated comment: {}" , comment);
-        HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONComment("body",comment).toString(), createAuthHeaders(scanRequest));
+        HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONComment("body",comment).toString(), gitHubAuthService.createAuthHeaders(scanRequest));
         restTemplate.exchange(baseUrl, HttpMethod.PATCH, httpEntity, String.class);
     }
 
     public List<RepoComment> getComments(ScanRequest scanRequest) throws IOException  {
-        HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders(scanRequest));
+        HttpEntity<?> httpEntity = new HttpEntity<>(gitHubAuthService.createAuthHeaders(scanRequest));
         ResponseEntity<String> response = restTemplate.exchange(scanRequest.getMergeNoteUri(), HttpMethod.GET, httpEntity , String.class);
         List<RepoComment> result = new ArrayList<>();
         ObjectMapper objMapper = new ObjectMapper();
@@ -112,7 +109,7 @@ public class GitHubService extends RepoService {
     }
 
     public void deleteComment(String url, ScanRequest scanRequest) {
-        HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders(scanRequest));
+        HttpEntity<?> httpEntity = new HttpEntity<>(gitHubAuthService.createAuthHeaders(scanRequest));
         restTemplate.exchange(url, HttpMethod.DELETE, httpEntity, String.class);
     }
 
@@ -157,7 +154,7 @@ public class GitHubService extends RepoService {
 
     private void addComment(ScanRequest request, String comment) {
         log.debug("Adding a new comment");
-        HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONComment("body",comment).toString(), createAuthHeaders(request));
+        HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONComment("body",comment).toString(), gitHubAuthService.createAuthHeaders(request));
         restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
@@ -166,7 +163,7 @@ public class GitHubService extends RepoService {
             final String PULL_REQUEST_STATUS = "pending";
             HttpEntity<?> httpEntity = new HttpEntity<>(
                     getJSONStatus(PULL_REQUEST_STATUS, url, "Checkmarx Scan Initiated").toString(),
-                    createAuthHeaders(request)
+                    gitHubAuthService.createAuthHeaders(request)
             );
             String statusApiUrl = request.getAdditionalMetadata(STATUSES_URL_KEY);
             if (ScanUtils.empty(statusApiUrl)) {
@@ -263,14 +260,14 @@ public class GitHubService extends RepoService {
 
         log.debug("Setting pull request status to '{}'.", statusForApi);
         JSONObject requestBody = getJSONStatus(statusForApi, results.getLink(), pullRequestReport.getPullRequestResult().getMessage());
-        return new HttpEntity<>(requestBody.toString(), createAuthHeaders(scanRequest));
+        return new HttpEntity<>(requestBody.toString(), gitHubAuthService.createAuthHeaders(scanRequest));
     }
 
     void failBlockMerge(ScanRequest request, String url){
         if(properties.isBlockMerge()) {
             HttpEntity<?> httpEntity = new HttpEntity<>(
                     getJSONStatus(MERGE_FAILURE, url, "Checkmarx Issue Threshold Met").toString(),
-                    createAuthHeaders(request)
+                    gitHubAuthService.createAuthHeaders(request)
             );
             String statusApiUrl = request.getAdditionalMetadata(STATUSES_URL_KEY);
             if (ScanUtils.empty(statusApiUrl)) {
@@ -299,7 +296,7 @@ public class GitHubService extends RepoService {
     void errorBlockMerge(ScanRequest request, String targetURL, String description){
         if(properties.isBlockMerge()) {
             JSONObject jsonRequestBody = getJSONStatus(MERGE_ERROR, targetURL, description);
-            HttpEntity<?> httpEntity = new HttpEntity<>(jsonRequestBody.toString(), createAuthHeaders(request));
+            HttpEntity<?> httpEntity = new HttpEntity<>(jsonRequestBody.toString(), gitHubAuthService.createAuthHeaders(request));
             String statusApiUrl = request.getAdditionalMetadata(STATUSES_URL_KEY);
             if (ScanUtils.empty(statusApiUrl)) {
                 log.error(STATUSES_URL_NOT_PROVIDED);
@@ -335,7 +332,7 @@ public class GitHubService extends RepoService {
         Sources sources = new Sources();
         Map<String, Long> langs = new HashMap<>();
         Map<String, Integer> langsPercent = new HashMap<>();
-        HttpHeaders headers = createAuthHeaders(request);
+        HttpHeaders headers = gitHubAuthService.createAuthHeaders(request);
 
         String urlTemplate = scmConfigOverrider.determineConfigApiUrl(properties, request).concat(LANGUAGE_TYPES);
         String url = new DefaultUriBuilderFactory()
@@ -384,7 +381,7 @@ public class GitHubService extends RepoService {
     private List<Content> getRepoContent(String endpoint, ScanRequest scanRequest) {
         log.info("Getting repo content from {}", endpoint);
         //"/{namespace}/{repo}/languages"
-        HttpHeaders headers = createAuthHeaders(scanRequest);
+        HttpHeaders headers = gitHubAuthService.createAuthHeaders(scanRequest);
         try {
             ResponseEntity<Content[]> response = restTemplate.exchange(
                     endpoint,
@@ -462,7 +459,7 @@ public class GitHubService extends RepoService {
         ResponseEntity<String> response = null;
 
         if (StringUtils.isNotEmpty(branch)) {
-            HttpHeaders headers = createAuthHeaders(request);
+            HttpHeaders headers = gitHubAuthService.createAuthHeaders(request);
             String urlTemplate = scmConfigOverrider.determineConfigApiUrl(properties, request).concat(FILE_CONTENT);
 
             response = restTemplate.exchange(

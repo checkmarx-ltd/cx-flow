@@ -10,6 +10,7 @@ import com.checkmarx.flow.dto.github.LabelsItem;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.utils.HTMLHelper;
+import com.checkmarx.flow.service.GitHubAuthService;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
 import org.json.JSONException;
@@ -17,7 +18,11 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -38,14 +43,16 @@ public class GitHubIssueTracker implements IssueTracker {
     private final GitHubProperties properties;
     private final FlowProperties flowProperties;
     private final ScmConfigOverrider scmConfigOverrider;
+    private final GitHubAuthService gitHubAuthService;
 
 
     public GitHubIssueTracker(@Qualifier("flowRestTemplate") RestTemplate restTemplate, GitHubProperties properties, FlowProperties flowProperties,
-                              ScmConfigOverrider scmConfigOverrider) {
+                              ScmConfigOverrider scmConfigOverrider, GitHubAuthService gitHubAuthService) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.flowProperties = flowProperties;
         this.scmConfigOverrider = scmConfigOverrider;
+        this.gitHubAuthService = gitHubAuthService;
     }
 
     @Override
@@ -77,7 +84,7 @@ public class GitHubIssueTracker implements IssueTracker {
 
         log.info("Executing getIssues GitHub API call: {}", apiUrl);
         List<Issue> issues = new ArrayList<>();
-        HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders(request));
+        HttpEntity<?> httpEntity = new HttpEntity<>(gitHubAuthService.createAuthHeaders(request));
 
         ResponseEntity<com.checkmarx.flow.dto.github.Issue[]> response = restTemplate.exchange(apiUrl,
                 HttpMethod.GET, httpEntity, com.checkmarx.flow.dto.github.Issue[].class);
@@ -140,7 +147,7 @@ public class GitHubIssueTracker implements IssueTracker {
      */
     private Issue getIssue(String issueUrl, ScanRequest scanRequest) {
         log.info("Executing getIssue GitHub API call");
-        HttpEntity<Object> httpEntity = new HttpEntity<>(createAuthHeaders(scanRequest));
+        HttpEntity<Object> httpEntity = new HttpEntity<>(gitHubAuthService.createAuthHeaders(scanRequest));
         ResponseEntity<com.checkmarx.flow.dto.github.Issue> response =
                 restTemplate.exchange(issueUrl, HttpMethod.GET, httpEntity, com.checkmarx.flow.dto.github.Issue.class);
 
@@ -155,7 +162,7 @@ public class GitHubIssueTracker implements IssueTracker {
      */
     private void addComment(String issueUrl, String comment, ScanRequest scanRequest) {
         log.debug("Executing add comment GitHub API call with following comment {}", comment);
-        HttpEntity<String> httpEntity = new HttpEntity<>(getJSONComment(comment).toString(), createAuthHeaders(scanRequest));
+        HttpEntity<String> httpEntity = new HttpEntity<>(getJSONComment(comment).toString(), gitHubAuthService.createAuthHeaders(scanRequest));
         restTemplate.exchange(issueUrl.concat("/comments"), HttpMethod.POST, httpEntity, String.class);
     }
 
@@ -168,7 +175,7 @@ public class GitHubIssueTracker implements IssueTracker {
                 .concat("/issues");
         ResponseEntity<com.checkmarx.flow.dto.github.Issue> response;
         try {
-            HttpEntity<String> httpEntity = new HttpEntity<>(getJSONCreateIssue(resultIssue, request).toString(), createAuthHeaders(request));
+            HttpEntity<String> httpEntity = new HttpEntity<>(getJSONCreateIssue(resultIssue, request).toString(), gitHubAuthService.createAuthHeaders(request));
             response = restTemplate.exchange(apiUrl, HttpMethod.POST, httpEntity, com.checkmarx.flow.dto.github.Issue.class);
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while creating GitHub Issue", e);
@@ -183,14 +190,14 @@ public class GitHubIssueTracker implements IssueTracker {
     @Override
     public void closeIssue(Issue issue, ScanRequest request) throws MachinaException {
         log.info("Executing closeIssue GitHub API call");
-        HttpEntity httpEntity = new HttpEntity<>(getJSONCloseIssue().toString(), createAuthHeaders(request));
+        HttpEntity httpEntity = new HttpEntity<>(getJSONCloseIssue().toString(), gitHubAuthService.createAuthHeaders(request));
         restTemplate.exchange(issue.getUrl(), HttpMethod.POST, httpEntity, Issue.class);
     }
 
     @Override
     public Issue updateIssue(Issue issue, ScanResults.XIssue resultIssue, ScanRequest request) throws MachinaException {
         log.info("Executing updateIssue GitHub API call");
-        HttpEntity<String> httpEntity = new HttpEntity<>(getJSONUpdateIssue(resultIssue, request).toString(), createAuthHeaders(request));
+        HttpEntity<String> httpEntity = new HttpEntity<>(getJSONUpdateIssue(resultIssue, request).toString(), gitHubAuthService.createAuthHeaders(request));
         ResponseEntity<com.checkmarx.flow.dto.github.Issue> response;
         try {
             response = restTemplate.exchange(issue.getUrl(), HttpMethod.POST, httpEntity, com.checkmarx.flow.dto.github.Issue.class);
@@ -340,15 +347,6 @@ public class GitHubIssueTracker implements IssueTracker {
             log.error("Error creating JSON Close Issue Object - JSON object will be empty", e);
         }
         return requestBody;
-    }
-
-    /**
-     * @return Header consisting of API token used for authentication
-     */
-    private HttpHeaders createAuthHeaders(ScanRequest scanRequest) {
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.set(HttpHeaders.AUTHORIZATION, "token ".concat(scmConfigOverrider.determineConfigToken(properties, scanRequest.getScmInstance())));
-        return httpHeaders;
     }
 
     private static String getNextURIFromHeaders(HttpHeaders headers, final String headerName, final String rel) {
