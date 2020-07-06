@@ -1,6 +1,5 @@
 package com.checkmarx.flow.service;
 
-import com.checkmarx.flow.bug_tracker_trigger.BugTrackerTriggerEvent;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.report.ScanReport;
@@ -31,7 +30,6 @@ import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 import static com.checkmarx.flow.exception.ExitThrowable.exit;
 import static com.checkmarx.sdk.config.Constants.UNKNOWN;
@@ -53,7 +51,7 @@ public class SastScanner implements VulnerabilityScanner {
     private final CxOsaClient osaService;
     private final EmailService emailService;
     private final ScanRequestConverter scanRequestConverter;
-    private final BugTrackerTriggerEvent bugTrackerTriggerEvent;
+    private final BugTrackerEventTrigger bugTrackerEventTrigger;
     private final ProjectNameGenerator projectNameGenerator;
 
     private ScanDetails scanDetails = null;
@@ -61,7 +59,7 @@ public class SastScanner implements VulnerabilityScanner {
 
     @Override
     public ScanResults scan(ScanRequest scanRequest) {
-        ScanResults scanResults = null;
+        ScanResults scanResults;
         log.info("--------------------- Initiating new {} scan ---------------------", SCAN_TYPE);
         checkScanSubmitEmailDelivery(scanRequest);
 
@@ -88,7 +86,7 @@ public class SastScanner implements VulnerabilityScanner {
                 scanId = cxService.createScan(cxScanParams, CXFLOW_SCAN_MSG);
             }
 
-            BugTracker.Type bugTrackerType = bugTrackerTriggerEvent.triggerBugTrackerEvent(scanRequest);
+            BugTracker.Type bugTrackerType = bugTrackerEventTrigger.triggerBugTrackerEvent(scanRequest);
             if (bugTrackerType.equals(BugTracker.Type.NONE)) {
                 scanDetails = handleNoneBugTrackerCase(scanRequest, null, scanId, projectId);
             } else {
@@ -143,11 +141,11 @@ public class SastScanner implements VulnerabilityScanner {
     }
 
     public CompletableFuture<ScanResults> executeCxScanFlow(ScanRequest request, File cxFile) throws MachinaException {
-        ScanDetails scanDetails = executeCxScan(request, cxFile);
-        if (scanDetails.processResults()) {
-            return resultsService.processScanResultsAsync(request, scanDetails.getProjectId(), scanDetails.getScanId(), scanDetails.getOsaScanId(), request.getFilter());
+        ScanDetails details = executeCxScan(request, cxFile);
+        if (details.processResults()) {
+            return resultsService.processScanResultsAsync(request, details.getProjectId(), details.getScanId(), details.getOsaScanId(), request.getFilter());
         } else {
-            return scanDetails.getResults();
+            return details.getResults();
         }
     }
 
@@ -168,7 +166,7 @@ public class SastScanner implements VulnerabilityScanner {
 
             scanId = cxService.createScan(params, CXFLOW_SCAN_MSG);
 
-            BugTracker.Type bugTrackerType = bugTrackerTriggerEvent.triggerBugTrackerEvent(request);
+            BugTracker.Type bugTrackerType = bugTrackerEventTrigger.triggerBugTrackerEvent(request);
             if (bugTrackerType.equals(BugTracker.Type.NONE)) {
                 return handleNoneBugTrackerCase(request, cxFile, scanId, projectId);
             } else {
@@ -364,17 +362,6 @@ public class SastScanner implements VulnerabilityScanner {
         emailService.sendmail(request.getEmail(), "Checkmarx Scan Submitted for ".concat(request.getNamespace()).concat("/").concat(request.getRepoName()), emailCtx, "message.html");
     }
 
-    private void sendErrorScanEmail(ScanRequest request, MachinaException e) {
-        Map<String, Object> emailCtx = new HashMap<>();
-
-        log.error("Machina Exception has occurred.", e);
-        emailCtx.put("message", "Error occurred during scan/bug tracking process for "
-                .concat(request.getNamespace()).concat("/").concat(request.getRepoName()).concat(" - ")
-                .concat(request.getRepoUrl()).concat("  Error: ").concat(e.getMessage()));
-        emailCtx.put("heading", "Error occurred during scan");
-        emailService.sendmail(request.getEmail(), "Error occurred for ".concat(request.getNamespace()).concat("/").concat(request.getRepoName()), emailCtx, "message-error.html");
-    }
-
     private ScanDetails handleNoneBugTrackerCase(ScanRequest request, File cxFile, Integer scanId, Integer projectId) {
         log.info("Not waiting for scan completion as Bug Tracker type is NONE");
         CompletableFuture<ScanResults> results = CompletableFuture.completedFuture(null);
@@ -389,16 +376,6 @@ public class SastScanner implements VulnerabilityScanner {
         return projectId;
     }
 
-    private ScanResults getResults(ScanResults scanResults, CompletableFuture<ScanResults> futureResults) {
-        try {
-            scanResults = futureResults.get();
-        } catch (InterruptedException | ExecutionException e) {
-            log.error("Thread was interrupted while trying to get scan results", e);
-            Thread.currentThread().interrupt();
-        }
-        return scanResults;
-    }
-
     private void checkScanSubmitEmailDelivery(ScanRequest scanRequest) {
         if (!ScanUtils.anyEmpty(scanRequest.getNamespace(), scanRequest.getRepoName(), scanRequest.getRepoUrl())) {
             sendSubmittedScanEmail(scanRequest);
@@ -407,11 +384,11 @@ public class SastScanner implements VulnerabilityScanner {
 
     private String createOsaScan(ScanRequest request, Integer projectId) throws GitAPIException, CheckmarxException {
         String osaScanId = null;
-        if (cxProperties.getEnableOsa()) {
+        if (Boolean.TRUE.equals(cxProperties.getEnableOsa())) {
             String path = cxProperties.getGitClonePath().concat("/").concat(UUID.randomUUID().toString());
             File pathFile = new File(path);
 
-            Git git = Git.cloneRepository()
+            Git.cloneRepository()
                     .setURI(request.getRepoUrlWithAuth())
                     .setBranch(request.getBranch())
                     .setBranchesToClone(Collections.singleton(Constants.CX_BRANCH_PREFIX.concat(request.getBranch())))

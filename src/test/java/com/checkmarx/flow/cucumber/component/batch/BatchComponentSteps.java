@@ -14,6 +14,7 @@ import com.checkmarx.test.flow.config.CxFlowMocksConfig;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
@@ -26,6 +27,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest(classes = {CxFlowMocksConfig.class, CxFlowApplication.class})
+@RequiredArgsConstructor
 public class BatchComponentSteps {
     private final FlowProperties flowProperties;
     private final CxProperties cxProperties;
@@ -40,28 +42,13 @@ public class BatchComponentSteps {
     private final ResultsService resultsService;
     private final OsaScannerService osaScannerService;
     private final FilterFactory filterFactory;
+    private final ConfigurationOverrider configOverrider;
+
     private CxFlowRunner cxFlowRunner;
     private String projectName;
     private String teamName;
     private SastScanner sastScanner;
 
-    public BatchComponentSteps(FlowProperties flowProperties, CxProperties cxProperties, JiraProperties jiraProperties, GitHubProperties gitHubProperties, GitLabProperties gitLabProperties,
-                               ADOProperties adoProperties, FlowService flowService, HelperService helperService, CxClient cxClient, List<ThreadPoolTaskExecutor> executors,
-                               SastScanner sastScanner, ResultsService resultsService, OsaScannerService osaScannerService, FilterFactory filterFactory) {
-        this.flowProperties = flowProperties;
-        this.cxProperties = cxProperties;
-        this.jiraProperties = jiraProperties;
-        this.gitHubProperties = gitHubProperties;
-        this.gitLabProperties = gitLabProperties;
-        this.adoProperties = adoProperties;
-        this.flowService = flowService;
-        this.helperService = helperService;
-        this.cxClient = cxClient;
-        this.executors = executors;
-        this.resultsService = resultsService;
-        this.osaScannerService = osaScannerService;
-        this.filterFactory = filterFactory;
-    }
 
     @Given("SAST client is mocked - to allow tests to pass without active SAST environment")
     public void sastClientIsMocked() throws CheckmarxException {
@@ -82,7 +69,8 @@ public class BatchComponentSteps {
                 executors,
                 resultsService,
                 osaScannerService,
-                filterFactory);
+                filterFactory,
+                configOverrider);
     }
 
     @Given("project is provided: {string} and team: {string}")

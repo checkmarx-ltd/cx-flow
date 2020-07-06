@@ -62,6 +62,7 @@ public class Github2AdoSteps {
     private final GitHubProperties gitHubProperties;
     private final HelperService helperService;
     private final FilterFactory filterFactory;
+    private final ConfigurationOverrider configOverrider;
 
     private ScanResults scanResultsToInject;
     
@@ -79,22 +80,23 @@ public class Github2AdoSteps {
     
     public Github2AdoSteps(FlowProperties flowProperties, GitHubService gitHubService,
                            CxProperties cxProperties, GitHubProperties gitHubProperties,
-                           FlowService flowService, ADOProperties adoProperties, FilterFactory filterFactory, AzureDevopsClient azureDevopsClient) {
+                           ConfigurationOverrider configOverrider, FlowService flowService, ADOProperties adoProperties, FilterFactory filterFactory, AzureDevopsClient azureDevopsClient) {
         this.filterFactory = filterFactory;
 
         this.cxClientMock = mock(CxClient.class);
-        
+
         this.flowProperties = flowProperties;
-        
+
         this.cxProperties = cxProperties;
 
- 
+
         this.helperService = mock(HelperService.class);
         this.flowService = flowService;
         this.gitHubService = gitHubService;
         this.azureDevopsClient = azureDevopsClient;
         this.gitHubProperties = gitHubProperties;
         this.adoProperties = adoProperties;
+        this.configOverrider = configOverrider;
         initGitHubProperties();
     }
 
@@ -276,7 +278,8 @@ public class Github2AdoSteps {
                 helperService,
                 gitHubService,
                 null,
-                filterFactory));
+                filterFactory,
+                configOverrider));
         
         //results service will be a Mock and will work with gitHubService Mock
         //and will not not connect to any external 

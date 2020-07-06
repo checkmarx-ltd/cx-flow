@@ -11,6 +11,7 @@ import com.checkmarx.flow.dto.azure.PullEvent;
 import com.checkmarx.flow.dto.azure.Repository;
 import com.checkmarx.flow.dto.azure.Resource;
 import com.checkmarx.flow.exception.InvalidTokenException;
+import com.checkmarx.flow.service.ConfigurationOverrider;
 import com.checkmarx.flow.service.FilterFactory;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.HelperService;
@@ -46,6 +47,7 @@ public class TfsController extends AdoControllerBase {
     private final FlowService flowService;
     private final HelperService helperService;
     private final FilterFactory filterFactory;
+    private final ConfigurationOverrider configOverrider;
 
     @PostMapping(value = {"/{product}/tfs/pull", "/tfs/pull", "/{product}/tfs/push", "/tfs/push"})
     public ResponseEntity<EventResponse> pullPushRequest(
@@ -154,7 +156,7 @@ public class TfsController extends AdoControllerBase {
         }
         ScanRequest request = requestBuilder.build();
 
-        request = ScanUtils.overrideMap(request, o);
+        request = configOverrider.overrideScanRequestProperties(o, request);
         if (ACTION_PULL.equals(action)) {
             request.putAdditionalMetadata("statuses_url", resource.getUrl().concat("/statuses"));
         }

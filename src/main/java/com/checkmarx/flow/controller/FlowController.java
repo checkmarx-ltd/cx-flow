@@ -4,10 +4,7 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
-import com.checkmarx.flow.service.FilterFactory;
-import com.checkmarx.flow.service.FlowService;
-import com.checkmarx.flow.service.HelperService;
-import com.checkmarx.flow.service.ResultsService;
+import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
@@ -55,6 +52,7 @@ public class FlowController {
     private final JiraProperties jiraProperties;
     private final ResultsService resultsService;
     private final FilterFactory filterFactory;
+    private final ConfigurationOverrider configOverrider;
 
     @GetMapping(value = "/scanresults", produces = "application/json")
     public ScanResults latestScanResults(
@@ -98,7 +96,7 @@ public class FlowController {
         // If an override blob/file is provided, substitute these values
         if (!ScanUtils.empty(override)) {
             FlowOverride ovr = ScanUtils.getMachinaOverride(override);
-            scanRequest = ScanUtils.overrideMap(scanRequest, ovr);
+            scanRequest = configOverrider.overrideScanRequestProperties(ovr, scanRequest);
         }
 
         // Fetch the Checkmarx Scan Results based on given ScanRequest.

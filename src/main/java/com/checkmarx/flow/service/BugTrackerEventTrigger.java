@@ -1,11 +1,7 @@
-package com.checkmarx.flow.bug_tracker_trigger;
+package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.service.ADOService;
-import com.checkmarx.flow.service.BitBucketService;
-import com.checkmarx.flow.service.GitHubService;
-import com.checkmarx.flow.service.GitLabService;
 import com.checkmarx.sdk.config.CxProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +10,7 @@ import org.springframework.stereotype.Component;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-public class BugTrackerTriggerEvent {
+public class BugTrackerEventTrigger {
 
     private static final String SCAN_MESSAGE = "Scan submitted to Checkmarx";
 
@@ -25,6 +21,7 @@ public class BugTrackerTriggerEvent {
     private final CxProperties cxProperties;
 
     public BugTracker.Type triggerBugTrackerEvent(ScanRequest request) {
+        boolean eventsWereTriggered = true;
         BugTracker.Type bugTrackerType = request.getBugTracker().getType();
 
         switch (bugTrackerType) {
@@ -57,14 +54,22 @@ public class BugTrackerTriggerEvent {
                 break;
 
             case JIRA:
-                break; // No action is needed
-
             case CUSTOM:
+                eventsWereTriggered = false;
                 break; // No action is needed
 
             default:
+                eventsWereTriggered = false;
                 log.warn("Bug-Tracker type: {} is not supported", bugTrackerType);
         }
+
+        if (eventsWereTriggered) {
+            log.debug("Completed triggering events for the '{}' bug tracker.", bugTrackerType);
+        }
+        else {
+            log.debug("Bug tracker events were not triggered, because bug tracker type is '{}'.", bugTrackerType);
+        }
+
         return bugTrackerType;
     }
 }

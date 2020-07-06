@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import static com.checkmarx.flow.exception.ExitThrowable.exit;
 
@@ -54,6 +53,7 @@ public class CxFlowRunner implements ApplicationRunner {
     private final ResultsService resultsService;
     private final OsaScannerService osaScannerService;
     private final FilterFactory filterFactory;
+    private final ConfigurationOverrider configOverrider;
 
     @Override
     public void run(ApplicationArguments args) throws InvocationTargetException {
@@ -315,7 +315,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 .forceScan(force)
                 .build();
 
-        request = ScanUtils.overrideMap(request, o);
+        request = configOverrider.overrideScanRequestProperties(o, request);
         /*Determine if BitBucket Cloud/Server is being used - this will determine formatting of URL that links to file/line in repository */
         request.setId(uid);
         if(bb){

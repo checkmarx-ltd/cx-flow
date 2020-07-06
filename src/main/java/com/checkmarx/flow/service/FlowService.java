@@ -32,11 +32,6 @@ public class FlowService {
         String effectiveProjectName = projectNameGenerator.determineProjectName(scanRequest);
         scanRequest.setProject(effectiveProjectName);
         List<VulnerabilityScanner> enabledScanners = getEnabledScanners();
-
-        if (enabledScanners.isEmpty()) {
-            log.error("The defined scanners are not supported.");
-            return;
-        }
         runScanRequest(scanRequest, enabledScanners);
     }
 

@@ -6,6 +6,7 @@ import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.azure.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
+import com.checkmarx.flow.service.ConfigurationOverrider;
 import com.checkmarx.flow.service.FilterFactory;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.HelperService;
@@ -41,6 +42,7 @@ public class ADOController extends AdoControllerBase {
     private final FlowService flowService;
     private final HelperService helperService;
     private final FilterFactory filterFactory;
+    private final ConfigurationOverrider configOverrider;
 
     /**
      * Pull Request event submitted (JSON)
@@ -150,7 +152,7 @@ public class ADOController extends AdoControllerBase {
                     .filter(filter)
                     .build();
 
-            request = ScanUtils.overrideMap(request, o);
+            request = configOverrider.overrideScanRequestProperties(o, request);
             request.putAdditionalMetadata("statuses_url", pullUrl.concat("/statuses"));
             addMetadataToScanRequest(adoDetailsRequest, request);
             request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body.toString());
@@ -272,7 +274,7 @@ public class ADOController extends AdoControllerBase {
             addMetadataToScanRequest(adoDetailsRequest, request);
             request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body.toString());
             //if an override blob/file is provided, substitute these values
-            request = ScanUtils.overrideMap(request, o);
+            request = configOverrider.overrideScanRequestProperties(o, request);
 
             request.setId(uid);
             //only initiate scan/automation if target branch is applicable
