@@ -7,6 +7,7 @@ import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.bitbucketserver.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
+import com.checkmarx.flow.service.ConfigurationOverrider;
 import com.checkmarx.flow.service.FilterFactory;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.HelperService;
@@ -62,6 +63,8 @@ public class BitbucketServerController extends WebhookController {
     private final FlowService flowService;
     private final HelperService helperService;
     private final FilterFactory filterFactory;
+    private final ConfigurationOverrider configOverrider;
+
     private Mac hmac;
 
     @PostConstruct
@@ -218,7 +221,7 @@ public class BitbucketServerController extends WebhookController {
                     .filter(filter)
                     .build();
 
-            request = ScanUtils.overrideMap(request, o);
+            request = configOverrider.overrideScanRequestProperties(o, request);
             request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body);
             request.putAdditionalMetadata("buildStatusUrl", buildStatusEndpoint);
             request.putAdditionalMetadata("cxBaseUrl", cxProperties.getBaseUrl());
@@ -326,7 +329,7 @@ public class BitbucketServerController extends WebhookController {
                     .filter(filter)
                     .build();
             setBrowseUrl(repository, request);
-            request = ScanUtils.overrideMap(request, o);
+            request = configOverrider.overrideScanRequestProperties(o, request);
             request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body);
             request.setId(uid);
             //only initiate scan/automation if target branch is applicable

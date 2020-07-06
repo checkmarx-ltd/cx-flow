@@ -9,10 +9,7 @@ import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.github.*;
-import com.checkmarx.flow.service.FilterFactory;
-import com.checkmarx.flow.service.FlowService;
-import com.checkmarx.flow.service.GitHubService;
-import com.checkmarx.flow.service.HelperService;
+import com.checkmarx.flow.service.*;
 import com.checkmarx.jira.PublishUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
@@ -48,6 +45,7 @@ public class CxConfigBugTrackerSteps {
     private static final String PULL_REQUEST_STATUSES_URL = "statuses url stub";
     public static final String BRANCH_NAME = "udi-tests";
     public static final String CUSTOM_BEAN_NAME = "GitHub";
+    public static final String GITHUB_USER = "cxflowtestuser";
 
     @Autowired
     private CxClient cxClientMock;
@@ -59,6 +57,8 @@ public class CxConfigBugTrackerSteps {
     private final GitHubProperties gitHubProperties;
     private final HelperService helperService;
     private final FilterFactory filterFactory;
+    private final ConfigurationOverrider configOverrider;
+
     private ScanResults scanResultsToInject;
 
     private String branch;
@@ -69,7 +69,7 @@ public class CxConfigBugTrackerSteps {
     public CxConfigBugTrackerSteps(FlowProperties flowProperties, GitHubService gitHubService,
                                    CxProperties cxProperties, GitHubProperties gitHubProperties,
                                    JiraProperties jiraProperties, GitHubController gitHubController,
-                                   FilterFactory filterFactory) {
+                                   FilterFactory filterFactory, ConfigurationOverrider configOverrider) {
 
 
         this.flowProperties = flowProperties;
@@ -82,6 +82,7 @@ public class CxConfigBugTrackerSteps {
 
         this.gitHubProperties = gitHubProperties;
         this.gitHubControllerSpy = gitHubController;
+        this.configOverrider = configOverrider;
         initGitHubProperties();
     }
 
@@ -154,10 +155,23 @@ public class CxConfigBugTrackerSteps {
         assertFlowPropertiesBugTracker("Json");
         ArgumentCaptor<ScanRequest> ac = ArgumentCaptor.forClass(ScanRequest.class);
         FlowService flowServiceMock = Mockito.mock(FlowService.class);
-        gitHubControllerSpy = new GitHubController(gitHubProperties,flowProperties, cxProperties, jiraProperties, flowServiceMock,helperService, gitHubService, null, filterFactory);
+        gitHubControllerSpy = new GitHubController(gitHubProperties,flowProperties, cxProperties, jiraProperties, flowServiceMock,helperService, gitHubService, null, filterFactory, configOverrider);
         gitHubControllerSpy = spy(gitHubControllerSpy);
         initGitHubControllerSpy();
         buildPullRequest();
+        verify(flowServiceMock, times(1)).initiateAutomation(ac.capture());
+        request = ac.getValue();
+    }
+
+    @When("push event arrives")
+    public void sendPushEvent() {
+        assertFlowPropertiesBugTracker("Json");
+        ArgumentCaptor<ScanRequest> ac = ArgumentCaptor.forClass(ScanRequest.class);
+        FlowService flowServiceMock = Mockito.mock(FlowService.class);
+        gitHubControllerSpy = new GitHubController(gitHubProperties,flowProperties, cxProperties, jiraProperties, flowServiceMock,helperService, gitHubService, null, filterFactory, configOverrider);
+        gitHubControllerSpy = spy(gitHubControllerSpy);
+        initGitHubControllerSpy();
+        buildPushRequest();
         verify(flowServiceMock, times(1)).initiateAutomation(ac.capture());
         request = ac.getValue();
     }
@@ -166,10 +180,15 @@ public class CxConfigBugTrackerSteps {
         Assert.assertEquals(expected, flowProperties.getBugTracker());
     }
 
-    @Then("scan request should have CUSTOM bug tracker, and GitHub custom bean name")
-    public void assertIssuesInGitHb() {
+    @Then("scan request should have GitHub bug tracker")
+    public void assertIssuesInGitHub() {
         Assert.assertEquals(BugTracker.Type.CUSTOM, request.getBugTracker().getType());
         Assert.assertEquals(CUSTOM_BEAN_NAME, request.getBugTracker().getCustomBean());
+    }
+
+    @Then("scan request should have GITHUBPULL bug tracker")
+    public void assertBugtrackerType() {
+        Assert.assertEquals(BugTracker.Type.GITHUBPULL, request.getBugTracker().getType());
     }
 
     public void buildPullRequest() {
@@ -180,7 +199,7 @@ public class CxConfigBugTrackerSteps {
         repo.setCloneUrl(gitHubProperties.getUrl());
         Owner owner = new Owner();
         owner.setName("");
-        owner.setLogin("cxflowtestuser");
+        owner.setLogin(GITHUB_USER);
         repo.setOwner(owner);
         pullEvent.setRepository(repo);
         pullEvent.setAction("opened");
@@ -210,6 +229,42 @@ public class CxConfigBugTrackerSteps {
 
         } catch (JsonProcessingException e) {
             fail("Unable to parse " + pullEvent.toString());
+        }
+    }
+
+    public void buildPushRequest() {
+        PushEvent pushEvent = new PushEvent();
+        pushEvent.setCommits(new LinkedList<>());
+
+        Repository repo = new Repository();
+        repo.setName("CxConfigTests");
+        repo.setCloneUrl(gitHubProperties.getUrl());
+        Owner owner = new Owner();
+        owner.setName(GITHUB_USER);
+        owner.setLogin(GITHUB_USER);
+        repo.setOwner(owner);
+        pushEvent.setRepository(repo);
+
+        Pusher pusher = new Pusher();
+        pusher.setEmail("some@email");
+        pushEvent.setPusher(pusher);
+
+        pushEvent.setRef("refs/head/" + BRANCH_NAME);
+        try {
+            String pullEventStr = mapper.writeValueAsString(pushEvent);
+            ControllerRequest request = ControllerRequest.builder()
+                    .application("CxConfigTests")
+                    .branch(Collections.singletonList(branch))
+                    .project("CxConfigTests")
+                    .team("\\CxServer\\SP")
+                    .assignee("")
+                    .preset("default")
+                    .build();
+
+            gitHubControllerSpy.pushRequest(pullEventStr, "SIGNATURE", "CX", request);
+
+        } catch (JsonProcessingException e) {
+            fail("Unable to parse " + pushEvent.toString());
         }
     }
 

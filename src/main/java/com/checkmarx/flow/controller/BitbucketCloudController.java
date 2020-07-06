@@ -6,6 +6,7 @@ import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.bitbucket.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
+import com.checkmarx.flow.service.ConfigurationOverrider;
 import com.checkmarx.flow.service.FilterFactory;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.HelperService;
@@ -40,6 +41,7 @@ public class BitbucketCloudController extends WebhookController {
     private final FlowService flowService;
     private final HelperService helperService;
     private final FilterFactory filterFactory;
+    private final ConfigurationOverrider configOverrider;
 
     /**
      * Push Request event webhook submitted.
@@ -121,7 +123,7 @@ public class BitbucketCloudController extends WebhookController {
                     .filter(filter)
                     .build();
 
-            request = ScanUtils.overrideMap(request, o);
+            request = configOverrider.overrideScanRequestProperties(o, request);
             request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body.toString());
             request.setId(uid);
 
@@ -223,7 +225,7 @@ public class BitbucketCloudController extends WebhookController {
                     .filter(filter)
                     .build();
 
-            request = ScanUtils.overrideMap(request, o);
+            request = configOverrider.overrideScanRequestProperties(o, request);
             request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body.toString());
             request.setId(uid);
 

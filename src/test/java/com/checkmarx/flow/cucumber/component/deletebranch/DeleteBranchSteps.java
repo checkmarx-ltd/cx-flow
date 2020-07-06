@@ -56,8 +56,7 @@ public class DeleteBranchSteps {
     private final GitHubProperties gitHubProperties;
     private final HelperService helperService;
     private final FilterFactory filterFactory;
-
-    private ProjectNameGenerator projectNameGeneratorSpy;
+    private final ConfigurationOverrider configOverrider;
 
     private String branch;
     
@@ -65,26 +64,27 @@ public class DeleteBranchSteps {
     private String repoName;
 
     private int actualProjectId;
-    private int projectId;
     private String trigger;
     private String calculatedProjectName;
-    
+
     public DeleteBranchSteps(FlowProperties flowProperties, GitHubService gitHubService,
-                             CxProperties cxProperties, GitHubProperties gitHubProperties, FilterFactory filterFactory) {
+                             CxProperties cxProperties, GitHubProperties gitHubProperties, FilterFactory filterFactory,
+                             ConfigurationOverrider configOverrider) {
         this.filterFactory = filterFactory;
 
+        this.configOverrider = configOverrider;
+
         this.cxClientMock = mock(CxClient.class);
-        
+
         this.flowProperties = flowProperties;
-        
+
         this.cxProperties = cxProperties;
 
         this.helperService = mock(HelperService.class);
 
         this.gitHubService = gitHubService;
-        
-        this.gitHubProperties = gitHubProperties;
 
+        this.gitHubProperties = gitHubProperties;
     }
 
     private void initGitHubProperties() {
@@ -154,12 +154,12 @@ public class DeleteBranchSteps {
         
         buildDeleteRequest(trigger);
 
-        if(trigger.equals(BRANCH_STR)){
-            assertEquals(deleteCalled, Boolean.TRUE);
-            assertEquals(actualProjectId,EXISTING_PROJECT_ID );
-        }else{
-            assertEquals(deleteCalled, Boolean.FALSE);
-            assertEquals(actualProjectId,Constants.UNKNOWN_INT);
+        if (trigger.equals(BRANCH_STR)) {
+            assertEquals(Boolean.TRUE, deleteCalled);
+            assertEquals(EXISTING_PROJECT_ID, actualProjectId);
+        } else {
+            assertEquals(Boolean.FALSE, deleteCalled);
+            assertEquals(Constants.UNKNOWN_INT, actualProjectId);
         }
     }
     
@@ -177,10 +177,11 @@ public class DeleteBranchSteps {
     
     @And("a project {string} {string} in SAST")
     public void setProjectId(String projectName, String exists){
+        int projectId;
         if(Boolean.parseBoolean(exists)){
-            this.projectId = EXISTING_PROJECT_ID;
+            projectId = EXISTING_PROJECT_ID;
         }else{
-            this.projectId = Constants.UNKNOWN_INT;
+            projectId = Constants.UNKNOWN_INT;
         }
         when(cxClientMock.getProjectId(anyString(),anyString())).thenReturn(projectId);
     }
@@ -191,11 +192,11 @@ public class DeleteBranchSteps {
         buildDeleteRequest(BRANCH_STR);
         
         if(Boolean.parseBoolean(methodCalled)){
-            assertEquals(deleteCalled, Boolean.TRUE);
-            assertEquals(actualProjectId,EXISTING_PROJECT_ID );
+            assertEquals(Boolean.TRUE, deleteCalled);
+            assertEquals(EXISTING_PROJECT_ID,actualProjectId );
         }else{
-            assertEquals(deleteCalled, Boolean.FALSE);
-            assertEquals(actualProjectId,Constants.UNKNOWN_INT);
+            assertEquals(Boolean.FALSE, deleteCalled);
+            assertEquals(Constants.UNKNOWN_INT,actualProjectId);
         }
     }
     
@@ -238,7 +239,7 @@ public class DeleteBranchSteps {
     
     private void initServices() {
 
-        projectNameGeneratorSpy = spy(new ProjectNameGenerator(helperService, cxProperties, null));
+        ProjectNameGenerator projectNameGeneratorSpy = spy(new ProjectNameGenerator(helperService, cxProperties, null));
 
         try {
             initProjectNameGeneratorSpy(projectNameGeneratorSpy);
@@ -264,7 +265,8 @@ public class DeleteBranchSteps {
                 helperService,
                 gitHubService,
                 sastScanner,
-                filterFactory));
+                filterFactory,
+                configOverrider));
         
     }
 
