@@ -7,7 +7,9 @@ import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.FlowOverride;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.CxConfig;
+import com.checkmarx.sdk.dto.Sca;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,7 @@ public class ConfigurationOverrider {
             BugTracker.Type.GITLABMERGE));
 
     private final FlowProperties flowProperties;
+    private final ScaProperties scaProperties;
 
     public ScanRequest overrideScanRequestProperties(CxConfig override, ScanRequest request) {
         if (override == null || request == null || Boolean.FALSE.equals(override.getActive())) {
@@ -185,6 +188,54 @@ public class ConfigurationOverrider {
                 overrideReport.put("exclude files", sf);
             });
         });
+        overridePropertiesSca(Optional.ofNullable(override.getSca()), overrideReport);
+    }
+
+    private void overridePropertiesSca(Optional<Sca> sca, Map<String, String> overrideReport) {
+        if (!sca.isPresent()) {
+          return;
+        }
+
+        sca.map(Sca::getAccessControlUrl).ifPresent(accessControlUrl -> {
+            scaProperties.setAccessControlUrl(accessControlUrl);
+            overrideReport.put("accessControlUrl", accessControlUrl);
+        });
+
+        sca.map(Sca::getApiUrl).ifPresent(apiUrl -> {
+            scaProperties.setApiUrl(apiUrl);
+            overrideReport.put("apiUrl", apiUrl);
+        });
+
+        sca.map(Sca::getAppUrl).ifPresent(appUrl -> {
+            scaProperties.setAppUrl(appUrl);
+            overrideReport.put("appUrl", appUrl);
+        });
+
+        sca.map(Sca::getTenant).ifPresent(tenant -> {
+            scaProperties.setTenant(tenant);
+            overrideReport.put("tenant", tenant);
+        });
+
+        sca.map(Sca::getThresholdsSeverity).ifPresent(thresholdsSeverity -> {
+            scaProperties.setThresholdsSeverity(thresholdsSeverity);
+            overrideReport.put("thresholdsSeverity", convertMapToString(thresholdsSeverity));
+        });
+
+        sca.map(Sca::getThresholdsScore).ifPresent(thresholdsScore -> {
+            scaProperties.setThresholdsScore(thresholdsScore);
+            overrideReport.put("thresholdsScore", String.valueOf(thresholdsScore));
+        });
+
+        sca.map(Sca::getFilterSeverity).ifPresent(filterSeverity -> {
+            scaProperties.setFilterSeverity(filterSeverity);
+            overrideReport.put("filterSeverity", filterSeverity.toString());
+        });
+
+        sca.map(Sca::getFilterScore).ifPresent(filterScore -> {
+            scaProperties.setFilterScore(filterScore);
+            overrideReport.put("filterScore", String.valueOf(filterScore));
+        });
+
     }
 
     /**
