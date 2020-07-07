@@ -44,9 +44,11 @@ public class ConfigurationOverrider {
             Optional.ofNullable(override.getAdditionalProperties()).ifPresent(ap -> {
                 Object flow = ap.get("cxFlow");
                 ObjectMapper mapper = new ObjectMapper();
-                FlowOverride flowOverride = mapper.convertValue(flow, FlowOverride.class);
+                Optional.ofNullable(mapper.convertValue(flow, FlowOverride.class)).ifPresent(flowOverride -> {
+                    applyFlowOverride(flowOverride, request, overrideReport);
 
-                applyFlowOverride(flowOverride, request, overrideReport);
+                });
+
             });
 
             String overriddenProperties = convertMapToString(overrideReport);
@@ -58,38 +60,47 @@ public class ConfigurationOverrider {
         return request;
     }
 
-    private void applyFlowOverride(FlowOverride flowOverride, ScanRequest request, Map<String, String> overrideReport) {
-        Optional.ofNullable(flowOverride).ifPresent(fo -> {
-            BugTracker bt = getBugTracker(fo, request, overrideReport);
-            /*Override only applicable to Simple JIRA bug*/
-            if (bt.getType().equals(BugTracker.Type.JIRA) && fo.getJira() != null) {
-                overrideJiraBugProperties(fo, bt);
-            }
+    private void applyFlowOverride(FlowOverride fo, ScanRequest request, Map<String, String> overrideReport) {
+        BugTracker bt = getBugTracker(fo, request, overrideReport);
+        /*Override only applicable to Simple JIRA bug*/
+        if (bt.getType().equals(BugTracker.Type.JIRA) && fo.getJira() != null) {
+            overrideJiraBugProperties(fo, bt);
+        }
 
-            request.setBugTracker(bt);
+        request.setBugTracker(bt);
 
-            Optional.ofNullable(fo.getApplication())
-                    .filter(StringUtils::isNotBlank)
-                    .ifPresent(a -> {
-                        request.setApplication(a);
-                        overrideReport.put("application", a);
-                    });
+        Optional.ofNullable(fo.getApplication())
+                .filter(StringUtils::isNotBlank)
+                .ifPresent(a -> {
+                    request.setApplication(a);
+                    overrideReport.put("application", a);
+                });
 
-            Optional.ofNullable(fo.getBranches())
-                    .filter(CollectionUtils::isNotEmpty)
-                    .ifPresent(br -> {
-                        request.setActiveBranches(br);
-                        overrideReport.put("active branches", Arrays.toString(br.toArray()));
-                    });
+        Optional.ofNullable(fo.getBranches())
+                .filter(CollectionUtils::isNotEmpty)
+                .ifPresent(br -> {
+                    request.setActiveBranches(br);
+                    overrideReport.put("active branches", Arrays.toString(br.toArray()));
+                });
 
-            Optional.ofNullable(fo.getEmails())
-                    .ifPresent(e -> request.setEmail(e.isEmpty() ? null : e));
+        Optional.ofNullable(fo.getEmails())
+                .ifPresent(e -> request.setEmail(e.isEmpty() ? null : e));
 
-            overrideFilters(fo, request, overrideReport);
+        overrideFilters(fo, request, overrideReport);
 
-            overrideThresholds(flowOverride, overrideReport);
+        overrideThresholds(fo, overrideReport);
+
+        Optional.ofNullable(fo.getVulnerabilityScanners()).ifPresent(vulnerabilityScanners -> {
+            overrideVulnerabilityScanners(vulnerabilityScanners, overrideReport);
         });
+
     }
+
+    private void overrideVulnerabilityScanners(List<String> vulnerabilityScanners, Map<String, String> overrideReport) {
+        flowProperties.setEnabledVulnerabilityScanners(vulnerabilityScanners);
+        overrideReport.put("vulnerabilityScanners", vulnerabilityScanners.toString());
+    }
+
 
     private void overrideThresholds(FlowOverride flowOverride, Map<String, String> overrideReport) {
         Optional.ofNullable(flowOverride.getThresholds()).ifPresent(thresholds -> {
