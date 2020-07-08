@@ -80,6 +80,7 @@ public class GenericEndToEndSteps {
     public void setScanEngine(String engine) {
         this.engine = engine;
         FlowProperties flowProperties = (FlowProperties)appContext.getBean("flowProperties");
+        log.info("Running engine is {}", engine);
         flowProperties.setEnabledVulnerabilityScanners(Collections.singletonList(engine));
 
         if (engine.equalsIgnoreCase(ScaProperties.CONFIG_PREFIX)) {
