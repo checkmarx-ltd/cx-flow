@@ -27,8 +27,18 @@ public class FlowOverride {
     public Filters filters;
     @JsonProperty("thresholds")
     public Thresholds thresholds;
+    @JsonProperty("vulnerabilityScanners")
+    public List<String> vulnerabilityScanners = null;
     
     public FlowOverride() {
+    }
+
+    public List<String> getVulnerabilityScanners() {
+        return vulnerabilityScanners;
+    }
+
+    public void setVulnerabilityScanners(List<String> vulnerabilityScanners) {
+        this.vulnerabilityScanners = vulnerabilityScanners;
     }
 
     public String getApplication() {
