@@ -21,6 +21,7 @@ import com.atlassian.jira.rest.client.api.domain.SearchResult;
 import com.atlassian.jira.rest.client.internal.async.CustomAsynchronousJiraRestClientFactory;
 import com.checkmarx.flow.config.JiraProperties;
 
+import com.checkmarx.sdk.config.CxProperties;
 import io.atlassian.util.concurrent.Promise;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,9 +29,9 @@ import lombok.extern.slf4j.Slf4j;
 enum BugTracker {
     JIRA {
         private JiraProperties jiraProperties;
-        private List<String> issueCreatedKeys = new ArrayList<>();
         private JiraRestClient client;
         private SearchRestClient searchClient;
+        private String jqlQuery;
 
 
         @Override
@@ -50,16 +51,18 @@ enum BugTracker {
         }
 
         @Override
-        void verifyIssueCreated(String severities) {
-            String jql = String.format("project = %s and priority  in %s", jiraProperties.getProject(), severities);
-            log.info("filtering issue with jql: {}", jql);
+        void verifyIssueCreated(String severities, String engine) {
+            jqlQuery =  (CxProperties.CONFIG_PREFIX.equalsIgnoreCase(engine))
+                    ? String.format("project = %s and priority  in %s", jiraProperties.getProject(), severities)
+                    : String.format("project = %s and summary ~\"CVE-?\"", jiraProperties.getProject());
+            log.info("filtering issue with jql: {}", jqlQuery);
             Set<String> fields = new HashSet<>();
             fields.addAll(
                     Arrays.asList("key", "project", "issuetype", "summary", "labels", "created", "updated", "status"));
             SearchResult result = null;
             boolean found = false;
             for (int retries = 0; retries < 20; retries++) {
-                Promise<SearchResult> temp = searchClient.searchJql(jql, 10, 0, fields);
+                Promise<SearchResult> temp = searchClient.searchJql(jqlQuery, 10, 0, fields);
                 try {
                     TimeUnit.SECONDS.sleep(5);
                 } catch (Exception e) {
@@ -73,11 +76,6 @@ enum BugTracker {
 
                 if (result != null && result.getTotal() > 0) {
                     found = true;
-                    Iterator<Issue> itr = result.getIssues().iterator();
-                    assertTrue(itr.hasNext(), "Jira is missing the issues");
-                    while (itr.hasNext()) {
-                        this.issueCreatedKeys.add(itr.next().getKey());
-                    }
                     break;
                 }
             }
@@ -91,9 +89,29 @@ enum BugTracker {
 
         @Override
         void deleteIssues() {
-            Optional.ofNullable(issueCreatedKeys).ifPresent(ks -> ks.forEach(
-                k->   client.getIssueClient().deleteIssue(k, false)
-            ));
+            try {
+                Set<String> fields = new HashSet<>();
+                fields.addAll(
+                        Arrays.asList("key", "project", "issuetype", "summary", "labels", "created", "updated", "status"));
+                Promise<SearchResult> temp = searchClient.searchJql(jqlQuery, 10, 0, fields);
+                SearchResult result = temp.get(500, TimeUnit.MILLISECONDS);
+
+                boolean isfound = false;
+                for (Issue currentIssue : result.getIssues()) {
+                    isfound = true;
+                    client.getIssueClient().deleteIssue(currentIssue.getKey(), false);
+                }
+                if (isfound) {
+                    try {
+                        TimeUnit.SECONDS.sleep(5);
+                    } catch (Exception e) {
+                        Thread.currentThread().interrupt();
+                    }
+                    deleteIssues();
+                }
+            } catch (Exception e) {
+                log.warn("Failed to clean tickets from Jira");
+            }
         }
     };
 
@@ -104,7 +122,7 @@ enum BugTracker {
         return bt;
     }
 
-    abstract void verifyIssueCreated(String severities);
+    abstract void verifyIssueCreated(String severities, String engine);
 
     abstract void deleteIssues();
 

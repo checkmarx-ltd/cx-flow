@@ -32,6 +32,7 @@ import java.util.Base64;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.StringJoiner;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.fail;
@@ -55,6 +56,7 @@ public class GenericEndToEndSteps {
     private Repository repository;
     private BugTracker bugTracker;
     private ConfigurableApplicationContext appContext;
+    private String engine;
 
     @Given("CxFlow is running as a service")
     public void runAsService() {
@@ -76,6 +78,7 @@ public class GenericEndToEndSteps {
 
     @And("Scan engine is {word}")
     public void setScanEngine(String engine) {
+        this.engine = engine;
         FlowProperties flowProperties = (FlowProperties)appContext.getBean("flowProperties");
         flowProperties.setEnabledVulnerabilityScanners(Collections.singletonList(engine));
 
@@ -116,7 +119,7 @@ public class GenericEndToEndSteps {
     @Then("bug-tracker issues are updated")
     public void validateIssueOnBugTracker() {
         String severities = "(" + flowProperties.getFilterSeverity().stream().collect(Collectors.joining(",")) + ")";
-        bugTracker.verifyIssueCreated(severities);
+        bugTracker.verifyIssueCreated(severities, engine);
     }
 
     @Then("pull-request is updated")
@@ -127,9 +130,12 @@ public class GenericEndToEndSteps {
     @After
     public void cleanUp() {
         repository.cleanup();
-        //TO DO: move to bt
         Optional.ofNullable(bugTracker).ifPresent(BugTracker::deleteIssues);
         SpringApplication.exit(appContext);
+    }
+
+    String getEngine() {
+        return engine;
     }
 
     private String getFileInBase64() throws IOException {

@@ -10,7 +10,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.Map;
 import java.util.Objects;
@@ -25,9 +24,9 @@ import com.checkmarx.flow.dto.azure.ConsumerInputs;
 import com.checkmarx.flow.dto.azure.PublisherInputs;
 import com.checkmarx.flow.dto.azure.Subscription;
 import com.checkmarx.flow.dto.github.Committer;
-import com.checkmarx.flow.dto.github.Config;
 import com.checkmarx.flow.dto.github.Hook;
 import com.checkmarx.flow.dto.rally.Object;
+import com.checkmarx.sdk.config.ScaProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -59,15 +58,9 @@ enum Repository {
 
         @Override
         Boolean hasWebHook() {
-            String repoHooksBaseUrl = getHooksFormat();
-            JSONArray hooks = getJSONArray(repoHooksBaseUrl);
+            JSONArray hooks = api.getHooks(getHeaders(), gitHubProperties.getApiUrl(), namespace, repo);
             assertNotNull(hooks, "could not create webhook configuration");
             return !hooks.isEmpty();
-        }
-
-        private String getHooksFormat() {
-            return String.format("%s/%s/%s/hooks",
-                    gitHubProperties.getApiUrl(), namespace, repo);
         }
 
         JSONArray getJSONArray(String uri) {
@@ -79,29 +72,18 @@ enum Repository {
             return new JSONArray(body);
         }
 
-        JSONObject getJSONObject(String uri) {
-            ResponseEntity<String> response = getResponseEntity(uri);
-            String body = response.getBody();
-            if (body == null) {
-                return null;
-            }
-            return new JSONObject(body);
-        }
-
-
         @Override
         void generateHook(HookType hookType) {
-            Hook data = null;
+            HttpEntity<Hook> request = null;
             try {
-                data = generateHookData(hookTargetURL, gitHubProperties.getWebhookToken(), hookType);
+                request = api.generateHookEntity(getHeaders(), hookTargetURL, gitHubProperties.getWebhookToken(), hookType);
             } catch (Exception e) {
                 fail("can not create web hook, check parameters");
             }
-            final HttpHeaders headers = getHeaders();
-            final HttpEntity<Hook> request = new HttpEntity<>(data, headers);
+        
             try {
                 RestTemplate restTemplate = new RestTemplate();
-                String url = getHooksFormat();
+                String url = api.getWebhookURL(gitHubProperties.getApiUrl(), namespace, repo);
                 final ResponseEntity<String> response = restTemplate.postForEntity(url, request,
                         String.class);
                 assertEquals(HttpStatus.CREATED, response.getStatusCode());
@@ -109,30 +91,7 @@ enum Repository {
             } catch (Exception e) {
                 fail("failed to create hook " + e.getMessage());
             }
-        }
-
-        private Hook generateHookData(String url, String secret, HookType hookType) {
-            Hook hook = new Hook();
-            hook.setName("web");
-            hook.setActive(true);
-            switch (hookType) {
-                case PUSH:
-                    hook.setEvents(Arrays.asList("push"));
-                    break;
-                case PULL_REQUEST:
-                    hook.setEvents(Arrays.asList("pull_request"));    
-                    break;
-                default:
-                    throw new PendingException();
-            }
-            Config config = new Config();
-            config.setUrl(url);
-            config.setContentType("json");
-            config.setInsecureSsl("0");
-            config.setSecret(secret);
-            hook.setConfig(config);
-            return hook;
-        }
+        }        
 
         @Override
         void deleteHook() {
@@ -140,7 +99,7 @@ enum Repository {
                 RestTemplate restTemplate = new RestTemplate();
                 final HttpHeaders headers = getHeaders();
                 HttpEntity<String> requestEntity = new HttpEntity<>(null, headers);
-                String url = getHooksFormat();
+                String url = api.getWebhookURL(gitHubProperties.getApiUrl(), namespace, repo);
                 restTemplate.exchange(url + "/" + hookId, HttpMethod.DELETE, requestEntity, Object.class);
             });
         }
@@ -239,17 +198,17 @@ enum Repository {
         }
 
         private String createPRData(boolean isDelete) {
-            Properties prProperties = getProperties("PullRequestProperties");
-            //TO DO: replace parameters 
+            // Properties prProperties = getProperties("PullRequestProperties");
+             
             ObjectMapper mapper = new ObjectMapper();
             ObjectNode pr = mapper.createObjectNode();
             if (isDelete) {
                 pr.put("state", "closed");
             } else {
-                pr.put("title", prProperties.getProperty("title"))
-                        .put("body", prProperties.getProperty("body"))
-                        .put("base", prProperties.getProperty("base"))
-                        .put("head", prProperties.getProperty("head"));
+                pr.put("title", "cxflow GitHub e2e test" /*prProperties.getProperty("title")*/)
+                        .put("body", "This is an automated test" /*prProperties.getProperty("body")*/)
+                        .put("base", "master" /*prProperties.getProperty("base")*/)
+                        .put("head", "develop" /*prProperties.getProperty("head")*/);
             }
             String data = null;
             try {
@@ -665,8 +624,8 @@ enum Repository {
 
     protected void init(GenericEndToEndSteps genericEndToEndSteps) {
         String upperCaseName = name().toUpperCase();
+        boolean isSca = ScaProperties.CONFIG_PREFIX.equalsIgnoreCase(genericEndToEndSteps.getEngine());
         if (
-
                 System.getenv(upperCaseName + "_HOOK_NAMESPACE") == null ||
                 System.getenv(upperCaseName + "_HOOK_REPO") == null ||
                 System.getenv(upperCaseName + "_HOOK_TARGET") == null
@@ -674,12 +633,12 @@ enum Repository {
             log.info("running with property file");
             Properties properties = getProperties("HookProperties");
             namespace = properties.getProperty(upperCaseName + "_namespace");
-            repo = properties.getProperty(upperCaseName + "_repo");
+            repo = properties.getProperty(upperCaseName + "_repo" + (isSca ? "_SCA" : "" ) );
             hookTargetURL = properties.getProperty(upperCaseName + "_target");
         } else {
             log.info("running with system variables");
             namespace = System.getenv(upperCaseName + "_HOOK_NAMESPACE");
-            repo = System.getenv(upperCaseName + "_HOOK_REPO");
+            repo = System.getenv(upperCaseName + "_HOOK_REPO" + (isSca ? "_SCA" : "" ));
             hookTargetURL = System.getenv(upperCaseName + "_HOOK_TARGET");
         }
     }
@@ -698,13 +657,14 @@ enum Repository {
                 .add("cucumber")
                 .add("features")
                 .add("e2eTests")
-                .add(String.format("%s_%s.properties", propertiesName, name()))
+                .add(String.format("%s_%s.properties", propertiesName, name().toUpperCase()))
                 .toString();
         try (InputStream is = getClass().getClassLoader().getResourceAsStream(path)) {
             prop.load(is);
         } catch (NullPointerException | FileNotFoundException e) {
             log.info("to run this test you need a file called {}", path);
             log.info("the file should have the following properties: \nnamespace\nrepo\ntarget");
+            log.info("class loader used {}", getClass().getClassLoader());
             fail("property file not found (" + path + ") " + e.getMessage());
         } catch (IOException e) {
             log.error("please verify that the file {} is ok", path);
