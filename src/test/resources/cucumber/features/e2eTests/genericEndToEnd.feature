@@ -3,8 +3,8 @@
 Feature: Cxflow generic end-2-end tests
 
   Scenario Outline: Check cxflow end-2-end <scan-engine> flow between <repository> webhook and <bug-tracker>
-    Given CxFlow is running as a service
-    And Scan engine is <scan-engine>
+    Given Scan engine is <scan-engine>
+    And CxFlow is running as a service
     And repository is <repository>
     And bug-tracker is <bug-tracker>
     And webhook is configured for push event
@@ -17,8 +17,8 @@ Feature: Cxflow generic end-2-end tests
       | sca         | GitHub     | JIRA        |
 
   Scenario Outline: Check cxflow pull-request end-2-end <scan-engine> of <repository>
-    Given CxFlow is running as a service
-    And Scan engine is <scan-engine>
+    Given Scan engine is <scan-engine>
+    And CxFlow is running as a service
     And repository is <repository>
     And webhook is configured for pull-request
     When creating pull-request

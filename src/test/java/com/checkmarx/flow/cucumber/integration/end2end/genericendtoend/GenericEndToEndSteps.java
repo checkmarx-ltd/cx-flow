@@ -7,9 +7,7 @@ import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 
-import com.checkmarx.sdk.config.ScaProperties;
 import io.cucumber.java.After;
-import io.cucumber.java.PendingException;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
@@ -17,7 +15,6 @@ import io.cucumber.java.en.When;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.SpringApplication;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ConfigurableApplicationContext;
 
@@ -29,10 +26,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.Base64;
-import java.util.Collections;
 import java.util.Optional;
 import java.util.StringJoiner;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.fail;
@@ -58,10 +53,10 @@ public class GenericEndToEndSteps {
     private ConfigurableApplicationContext appContext;
     private String engine;
 
-    @Given("CxFlow is running as a service")
+    @And("CxFlow is running as a service")
     public void runAsService() {
-        log.info("runnning cx-flow as a service");
-        appContext = TestUtils.runCxFlowAsService();
+        log.info("runnning cx-flow as a service (active profile: {})", engine);
+        appContext = TestUtils.runCxFlowAsServiceWithAdditionalProfiles(engine);
     }
 
     @And("repository is {word}")
@@ -76,19 +71,10 @@ public class GenericEndToEndSteps {
         flowProperties.setBugTracker(bugTracker);
     }
 
-    @And("Scan engine is {word}")
+    @Given("Scan engine is {word}")
     public void setScanEngine(String engine) {
         this.engine = engine;
-        FlowProperties flowProperties = (FlowProperties)appContext.getBean("flowProperties");
-        log.info("Running engine is {}", engine);
-        flowProperties.setEnabledVulnerabilityScanners(Collections.singletonList(engine));
-
-        if (engine.equalsIgnoreCase(ScaProperties.CONFIG_PREFIX)) {
-            ScaProperties scaProperties = (ScaProperties)appContext.getBean("scaProperties");
-            scaProperties.setAppUrl("https://sca.scacheckmarx.com");
-            scaProperties.setApiUrl("https://api.scacheckmarx.com");
-            scaProperties.setAccessControlUrl("https://platform.checkmarx.net");
-        }
+        log.info("setting scan engine to {word}" , engine);
     }
 
     @And("webhook is configured for push event")
@@ -132,7 +118,8 @@ public class GenericEndToEndSteps {
     public void cleanUp() {
         repository.cleanup();
         Optional.ofNullable(bugTracker).ifPresent(BugTracker::deleteIssues);
-        SpringApplication.exit(appContext);
+        TestUtils.exitCxFlowService(appContext);
+        log.info("finished clean-up");
     }
 
     String getEngine() {
