@@ -272,10 +272,6 @@ public class ADOIssueTracker implements IssueTracker {
         log.debug("Determining target ADO project.");
 
         String adoProject = properties.getProjectName();
-        if(StringUtils.isEmpty(adoProject)) {
-            adoProject = request.getProject();
-            log.debug("Checking scan request: {}", adoProject);
-        }
 
         if (StringUtils.isEmpty(adoProject)) {
             adoProject = request.getAltProject();

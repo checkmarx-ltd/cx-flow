@@ -34,6 +34,8 @@ public class ADOController extends AdoControllerBase {
     private static final String HTTPS = "https://";
     private static final List<String> PULL_EVENT = Arrays.asList("git.pullrequest.created", "git.pullrequest.updated");
     private static final String AUTHORIZATION = "authorization";
+    private static final int NAMESPACE_INDEX = 0;
+    private static final int PROJ_INDEX = 1;
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(ADOController.class);
     private final ADOProperties properties;
     private final FlowProperties flowProperties;
@@ -255,6 +257,7 @@ public class ADOController extends AdoControllerBase {
                     .project(controllerRequest.getProject())
                     .team(controllerRequest.getTeam())
                     .namespace(determineNamespace(repository))
+                    .altProject(determineAzureProject(repository))
                     .repoName(repository.getName())
                     .repoUrl(gitUrl)
                     .repoUrlWithAuth(gitAuthUrl)
@@ -303,9 +306,19 @@ public class ADOController extends AdoControllerBase {
     }
 
     private String determineNamespace(Repository repository) {
-        String result = repository.getProject().getName().replace(" ", "_");
-        log.debug("Using namespace based on repository.project.name: {}", result);
-        return result;
+        String remoteUrl = repository.getRemoteUrl();
+        String nameSpace = remoteUrl.replace("https://dev.azure.com/", "").split("/")[NAMESPACE_INDEX];
+
+        log.info("using namespace: {}", nameSpace);
+        return nameSpace;
+    }
+
+    private String determineAzureProject(Repository repository) {
+        String remoteUrl = repository.getRemoteUrl();
+        String azureProject = remoteUrl.replace("https://dev.azure.com/", "").split("/")[PROJ_INDEX];
+
+        log.info("using azure project: {}", azureProject);
+        return azureProject;
     }
 
     /**
