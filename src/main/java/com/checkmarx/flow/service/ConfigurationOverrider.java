@@ -66,7 +66,7 @@ public class ConfigurationOverrider {
     private void applyFlowOverride(FlowOverride fo, ScanRequest request, Map<String, String> overrideReport) {
         BugTracker bt = getBugTracker(fo, request, overrideReport);
         /*Override only applicable to Simple JIRA bug*/
-        if (bt.getType().equals(BugTracker.Type.JIRA) && fo.getJira() != null) {
+        if (BugTracker.Type.JIRA.equals(bt.getType()) && fo.getJira() != null) {
             overrideJiraBugProperties(fo, bt);
         }
 
