@@ -1,4 +1,5 @@
 @ComponentTest @PullRequestAnalyticsFeature
+@Skip
 Feature: Analytics report should be logged correctly when CxFlow approves or fails a pull request
 
 
