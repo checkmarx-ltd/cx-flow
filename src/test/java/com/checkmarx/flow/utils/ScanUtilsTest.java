@@ -6,6 +6,7 @@ import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.service.ConfigurationOverrider;
 import com.checkmarx.sdk.config.Constants;
+import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.utils.ScanUtils;
 import org.junit.Before;
@@ -21,15 +22,17 @@ public class ScanUtilsTest {
 
     private FlowProperties flowProperties;
     private JiraProperties jiraProperties;
+    private ScaProperties scaProperties;
     private ConfigurationOverrider configOverrider;
 
     @Before
     public void setup(){
         flowProperties = new FlowProperties();
         flowProperties.setBugTrackerImpl(Arrays.asList("JIRA","GitHub","GitLab"));
+        scaProperties = new ScaProperties();
 
         jiraProperties = new JiraProperties();
-        configOverrider = new ConfigurationOverrider(flowProperties);
+        configOverrider = new ConfigurationOverrider(flowProperties, scaProperties);
     }
     @Test
     public void testCxConfigOverride(){
