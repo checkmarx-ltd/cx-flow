@@ -46,8 +46,6 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
 
     @Override
     public boolean isMergeAllowed(ScanResults scanResults, RepoProperties repoProperties, PullRequestReport pullRequestReport) {
-        log.info("getEnabledVulnerabilityScanners: {}", flowProperties.getEnabledVulnerabilityScanners());
-        log.info("flowProperties {}", flowProperties);
         OperationResult requestResult = new OperationResult(OperationStatus.SUCCESS, MERGE_SUCCESS_DESCRIPTION);
         boolean isMergeAllowed = isAllowed(scanResults, repoProperties, pullRequestReport);
 
