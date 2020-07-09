@@ -64,7 +64,7 @@ public class EmailService {
         };
         try {
             FlowProperties.Mail mail = properties.getMail();
-            if(mail != null && mail.isEnabled()) {
+            if(mail != null) {
                 emailSender.send(messagePreparator);
             }
         } catch (MailException e) {

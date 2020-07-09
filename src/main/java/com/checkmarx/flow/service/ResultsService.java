@@ -211,24 +211,14 @@ public class ResultsService {
                 adoService.endBlockMerge(request, results, scanDetails);
                 break;
             case EMAIL:
-                if(!flowProperties.getMail().isEnabled()) {
-                    Map<String, Object> emailCtx = new HashMap<>();
-                    String namespace = request.getNamespace();
-                    String repoName = request.getRepoName();
-                    emailCtx.put(MESSAGE_KEY, "Checkmarx Scan Results "
-                            .concat(namespace).concat("/").concat(repoName).concat(" - ")
-                            .concat(request.getRepoUrl()));
-                    emailCtx.put("heading", "Scan Successfully Completed");
-
-                    if (results != null) {
-                        emailCtx.put("issues", results.getXIssues());
+                if(flowProperties.getMail() != null) {
+                    if (ScanUtils.empty(results.getXIssues())) {
+                        if (flowProperties.getMail().isEmptyMailAllowed()) {
+                            prepareAndSendEmail(request, results);
+                        }
+                    } else {
+                        prepareAndSendEmail(request, results);
                     }
-                    if (results != null && !ScanUtils.empty(results.getLink())) {
-                        emailCtx.put("link", results.getLink());
-                    }
-                    emailCtx.put("repo", request.getRepoUrl());
-                    emailCtx.put("repo_fullname", namespace.concat("/").concat(repoName));
-                    emailService.sendmail(request.getEmail(), COMPLETED_PROCESSING.concat(namespace).concat("/").concat(repoName), emailCtx, "template-demo.html");
                 }
                 break;
             case CUSTOM:
@@ -256,37 +246,32 @@ public class ResultsService {
     }
 
     void sendEmailNotification(ScanRequest request, ScanResults results) {
-        Map<String, Object> emailCtx = new HashMap<>();
         BugTracker.Type bugTrackerType = request.getBugTracker().getType();
-        log.info("bugTrackerType : {}", bugTrackerType);
-        //Send email (if EMAIL was enabled and EMAIL was not main feedback option
-        if (flowProperties.getMail() != null && flowProperties.getMail().isEnabled() &&
+           if(flowProperties.getMail() != null && flowProperties.getMail().isNotificationEnabled() &&
                 !bugTrackerType.equals(BugTracker.Type.NONE) &&
                 !bugTrackerType.equals(BugTracker.Type.EMAIL)) {
-            String namespace = request.getNamespace();
-            String repoName = request.getRepoName();
-            String concat = COMPLETED_PROCESSING
-                    .concat(namespace).concat("/").concat(repoName);
-            if (!ScanUtils.empty(namespace) && !ScanUtils.empty(request.getBranch())) {
-                emailCtx.put(MESSAGE_KEY, concat.concat(" - ")
-                        .concat(request.getRepoUrl()));
-            } else if (!ScanUtils.empty(request.getApplication())) {
-                emailCtx.put(MESSAGE_KEY, COMPLETED_PROCESSING
-                        .concat(request.getApplication()));
-            }
-            emailCtx.put("heading", "Scan Successfully Completed");
-
-            if (results != null) {
-                emailCtx.put("issues", results.getXIssues());
-            }
-            if (results != null && !ScanUtils.empty(results.getLink())) {
-                emailCtx.put("link", results.getLink());
-            }
-            emailCtx.put("repo", request.getRepoUrl());
-            emailCtx.put("repo_fullname", namespace.concat("/").concat(repoName));
-            emailService.sendmail(request.getEmail(), concat, emailCtx, "template-demo.html");
-            log.info("Successfully completed automation for repository {} under namespace {}", repoName, namespace);
+            prepareAndSendEmail(request,results);
         }
+    }
+
+    void prepareAndSendEmail(ScanRequest request, ScanResults results)
+    {
+        Map<String, Object> emailCtx = new HashMap<>();
+        String namespace = request.getNamespace();
+        String repoName = request.getRepoName();
+        emailCtx.put("heading", "Scan Successfully Completed");
+
+        String message = "Checkmarx Scan Results: ".concat(namespace).concat("/").concat(repoName);
+        emailCtx.put(MESSAGE_KEY, message);
+
+        if (results != null && !ScanUtils.empty(results.getLink())) {
+            emailCtx.put("issues", results.getXIssues());
+            emailCtx.put("link", results.getLink());
+        }
+        emailCtx.put("repo", request.getRepoUrl());
+        emailCtx.put("repo_fullname", namespace.concat("/").concat(repoName));
+        emailService.sendmail(request.getEmail(), message, emailCtx, "template-demo.html");
+        log.info ("Email notification sent.");
     }
 
     ScanResults getOSAScan(ScanRequest request, Integer projectId, String osaScanId, FilterConfiguration filter, ScanResults results) throws CheckmarxException {

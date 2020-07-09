@@ -312,7 +312,8 @@ public class FlowProperties {
         private String username;
         private String password;
         private List<String> cc;
-        private boolean enabled = false;
+        private boolean notification = false;
+        private boolean allowEmptyMail = false;
 
         public String getHost() {
             return this.host;
@@ -330,9 +331,11 @@ public class FlowProperties {
             return this.password;
         }
 
-        public boolean isEnabled() {
-            return this.enabled;
+        public boolean isNotificationEnabled() {
+            return this.notification;
         }
+
+        public boolean isEmptyMailAllowed() { return this.allowEmptyMail; }
 
         public void setHost(String host) {
             this.host = host;
@@ -350,14 +353,18 @@ public class FlowProperties {
             this.password = password;
         }
 
-        public void setEnabled(boolean enabled) {
-            this.enabled = enabled;
+        public void setNotification(boolean notification) {
+            this.notification = notification;
         }
 
         public List<String> getCc() { return this.cc; }
 
         public void setCc(List<String> cc) {
             this.cc = cc;
+        }
+
+        public void setAllowEmptyMail(boolean allowEmptyMail) {
+            this.allowEmptyMail = allowEmptyMail;
         }
     }
 

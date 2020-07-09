@@ -353,13 +353,14 @@ public class SastScanner implements VulnerabilityScanner {
     }
 
     private void sendSubmittedScanEmail(ScanRequest request) {
-        Map<String, Object> emailCtx = new HashMap<>();
-
-        emailCtx.put("message", "Checkmarx Scan has been submitted for "
-                .concat(request.getNamespace()).concat("/").concat(request.getRepoName()).concat(" - ")
-                .concat(request.getRepoUrl()));
-        emailCtx.put("heading", "Scan Request Submitted");
-        emailService.sendmail(request.getEmail(), "Checkmarx Scan Submitted for ".concat(request.getNamespace()).concat("/").concat(request.getRepoName()), emailCtx, "message.html");
+        if (flowProperties.getMail() != null && flowProperties.getMail().isNotificationEnabled()) {
+            Map<String, Object> emailCtx = new HashMap<>();
+            emailCtx.put("message", "Checkmarx Scan has been submitted for "
+                    .concat(request.getNamespace()).concat("/").concat(request.getRepoName()).concat(" - ")
+                    .concat(request.getRepoUrl()));
+            emailCtx.put("heading", "Scan Request Submitted");
+            emailService.sendmail(request.getEmail(), "Checkmarx Scan Submitted for ".concat(request.getNamespace()).concat("/").concat(request.getRepoName()), emailCtx, "message.html");
+        }
     }
 
     private ScanDetails handleNoneBugTrackerCase(ScanRequest request, File cxFile, Integer scanId, Integer projectId) {
@@ -377,9 +378,9 @@ public class SastScanner implements VulnerabilityScanner {
     }
 
     private void checkScanSubmitEmailDelivery(ScanRequest scanRequest) {
-        if (!ScanUtils.anyEmpty(scanRequest.getNamespace(), scanRequest.getRepoName(), scanRequest.getRepoUrl())) {
-            sendSubmittedScanEmail(scanRequest);
-        }
+            if(!ScanUtils.anyEmpty(scanRequest.getNamespace(), scanRequest.getRepoName(), scanRequest.getRepoUrl())) {
+                sendSubmittedScanEmail(scanRequest);
+            }
     }
 
     private String createOsaScan(ScanRequest request, Integer projectId) throws GitAPIException, CheckmarxException {

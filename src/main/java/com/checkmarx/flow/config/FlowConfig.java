@@ -48,7 +48,7 @@ public class FlowConfig {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
 
         FlowProperties.Mail mail = properties.getMail();
-        if (mail == null || !mail.isEnabled()) {
+        if (mail == null) {
             return mailSender;
         }
         Properties props = mailSender.getJavaMailProperties();
