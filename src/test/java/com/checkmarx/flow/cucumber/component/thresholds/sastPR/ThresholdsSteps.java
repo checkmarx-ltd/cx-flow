@@ -103,6 +103,9 @@ public class ThresholdsSteps {
 
     @Before("@ThresholdsFeature")
     public void prepareServices() {
+        log.info("setting scan engine to CxSAST");
+        flowProperties.setEnabledVulnerabilityScanners(Collections.singletonList(CxProperties.CONFIG_PREFIX));
+
         initMock(cxClientMock);
         initMock(restTemplateMock);
         scanResultsToInject = createFakeScanResults();
