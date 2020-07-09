@@ -42,10 +42,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -214,7 +211,7 @@ public class ThresholdsSteps {
         ScanRequest scanRequest = new ScanRequest();
         BugTracker.Type issueTruckerType;
 
-        Map<String, String> additionalMetadata = new HashMap<String, String>();
+        Map<String, String> additionalMetadata = new HashMap<>();
         additionalMetadata.put(STATUSES_URL_KEY, PULL_REQUEST_STATUSES_URL);
         
         if(isGitHub) {
@@ -242,14 +239,9 @@ public class ThresholdsSteps {
                 anyString(), eq(HttpMethod.POST), any(HttpEntity.class), ArgumentMatchers.<Class<String>>any());
   
         when(sendingPostRequest).thenAnswer(interceptor);
-        when(restTemplateMock.exchange(anyString(),eq(HttpMethod.GET),any(), any(Class.class) )).thenReturn(createResponseForGetComments());
+        when(restTemplateMock.exchange(anyString(),eq(HttpMethod.GET),any(), any(Class.class) ))
+                .thenReturn(new ResponseEntity<>("{}", HttpStatus.OK));
     }
-
-    private ResponseEntity<String> createResponseForGetComments() {
-        ResponseEntity<String> result = new ResponseEntity<>("{}", HttpStatus.OK);
-        return result;
-    }
-
 
     private void initMock(CxClient cxClientMock) {
         try {
