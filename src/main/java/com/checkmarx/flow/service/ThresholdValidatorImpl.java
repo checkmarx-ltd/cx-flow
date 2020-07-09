@@ -29,7 +29,7 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
 
     private static final String MERGE_SUCCESS_DESCRIPTION = "Checkmarx Scan Completed";
     private static final String MERGE_FAILURE_DESCRIPTION = "Checkmarx Scan completed. Vulnerability scan failed";
-    
+
     private final FlowProperties flowProperties;
     private final ScaProperties scaProperties;
     private final SastScanner sastScanner;
@@ -46,19 +46,20 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
 
     @Override
     public boolean isMergeAllowed(ScanResults scanResults, RepoProperties repoProperties, PullRequestReport pullRequestReport) {
+        log.info("getEnabledVulnerabilityScanners: {}", flowProperties.getEnabledVulnerabilityScanners());
 
         OperationResult requestResult = new OperationResult(OperationStatus.SUCCESS, MERGE_SUCCESS_DESCRIPTION);
         boolean isMergeAllowed = isAllowed(scanResults, repoProperties, pullRequestReport);
-        
+
         if (!isMergeAllowed) {
             requestResult = new OperationResult(OperationStatus.FAILURE, MERGE_FAILURE_DESCRIPTION);
         }
 
         pullRequestReport.setPullRequestResult(requestResult);
-        
+
         return isMergeAllowed;
     }
-    
+
     private boolean isAllowed(ScanResults scanResults, RepoProperties repoProperties, PullRequestReport pullRequestReport) {
         if (!repoProperties.isErrorMerge()) {
             log.info("Merge is allowed, because error-merge is set to false.");
@@ -185,6 +186,14 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
 
 
     private static boolean isExceedsScaThresholdsScore(ScanResults scanResults, Double scaThresholdsScore) {
+        if (scanResults == null) {
+            log.info("scanResults is null");
+        } else if (scanResults.getScaResults() == null) {
+            log.info("getScaResults is null");
+        } else if (scanResults.getScaResults().getSummary() == null) {
+            log.info("getSummary is null");
+        }
+
         double summaryRiskScore = scanResults.getScaResults().getSummary().getRiskScore();
 
         boolean isExceeded = scaThresholdsScore != null && (summaryRiskScore > scaThresholdsScore);
