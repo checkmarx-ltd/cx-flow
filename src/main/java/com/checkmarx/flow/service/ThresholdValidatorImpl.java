@@ -47,7 +47,7 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
     @Override
     public boolean isMergeAllowed(ScanResults scanResults, RepoProperties repoProperties, PullRequestReport pullRequestReport) {
         log.info("getEnabledVulnerabilityScanners: {}", flowProperties.getEnabledVulnerabilityScanners());
-
+        log.info("flowProperties {}", flowProperties);
         OperationResult requestResult = new OperationResult(OperationStatus.SUCCESS, MERGE_SUCCESS_DESCRIPTION);
         boolean isMergeAllowed = isAllowed(scanResults, repoProperties, pullRequestReport);
 
@@ -83,12 +83,12 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
     }
 
     private boolean isAllowedSca(ScanResults scanResults, PullRequestReport pullRequestReport) {
-        log.debug("Checking if Cx-SCA pull request merge is allowed.");
+        log.debug("Checking if CxSCA pull request merge is allowed.");
         Map<Severity, Integer> scaThresholdsSeverity = getScaEffectiveThresholdsSeverity();
         Double scaThresholdsScore = getScaEffectiveThresholdsScore();
 
-        writeMapToLog(scaThresholdsSeverity, "Using Cx-SCA thresholds severity");
-        writeMapToLog(scaThresholdsScore, "Using Cx-SCA thresholds score");
+        writeMapToLog(scaThresholdsSeverity, "Using CxSCA thresholds severity");
+        writeMapToLog(scaThresholdsScore, "Using CxSCA thresholds score");
         pullRequestReport.setScaThresholdsSeverity(scaThresholdsSeverity);
         pullRequestReport.setScaThresholdsScore(scaThresholdsScore);
 
@@ -99,9 +99,9 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
     }
 
     private boolean isAllowedSast(ScanResults scanResults, PullRequestReport pullRequestReport) {
-        log.debug("Checking if Cx-SAST pull request merge is allowed.");
+        log.debug("Checking if CxSAST pull request merge is allowed.");
         Map<FindingSeverity, Integer> thresholds = getSastEffectiveThresholds();
-        writeMapToLog(thresholds, "Using Cx-SAST thresholds");
+        writeMapToLog(thresholds, "Using CxSAST thresholds");
         pullRequestReport.setThresholds(thresholds);
 
         boolean isAllowed = !isAnySastThresholdExceeded(scanResults, thresholds, pullRequestReport);
@@ -124,21 +124,23 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
     }
 
     private Map<Severity, Integer> getScaEffectiveThresholdsSeverity() {
-        Map<Severity, Integer> defult = isScaThresholdsScoreDefined()
-        ? passScaPrForAnyFindings()
-        : failScaPrIfResultHasAnyFindings();
+        Map<Severity, Integer> defaultThresholds = isScaThresholdsScoreDefined()
+                ? passScaPrForAnyFindings()
+                : failScaPrIfResultHasAnyFindings();
+
         return (areScaThresholdsSeverityDefined())
                 ? scaProperties.getThresholdsSeverity()
-                : defult;
+                : defaultThresholds;
     }
 
     private Double getScaEffectiveThresholdsScore() {
-        double defult = areScaThresholdsSeverityDefined()
-        ? 10.0
-        : 0.0;
+        double defaultThresholds = areScaThresholdsSeverityDefined()
+                ? 10.0
+                : 0.0;
+
         return (isScaThresholdsScoreDefined())
                 ? scaProperties.getThresholdsScore()
-                : defult;
+                : defaultThresholds;
     }
 
     private boolean areSastThresholdsDefined() {
@@ -186,12 +188,10 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
 
 
     private static boolean isExceedsScaThresholdsScore(ScanResults scanResults, Double scaThresholdsScore) {
-        if (scanResults == null) {
-            log.info("scanResults is null");
-        } else if (scanResults.getScaResults() == null) {
-            log.info("getScaResults is null");
-        } else if (scanResults.getScaResults().getSummary() == null) {
-            log.info("getSummary is null");
+        if (scanResults == null
+                || scanResults.getScaResults() == null
+                || scanResults.getScaResults().getSummary() == null) {
+            throw new IllegalStateException("Unable to check SCA thresholds: CxSCA scan results are missing.");
         }
 
         double summaryRiskScore = scanResults.getScaResults().getSummary().getRiskScore();
@@ -215,7 +215,7 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
     }
 
     private static Map<Severity, Integer> getScaFindingsCountsPerSeverity(ScanResults scanResults) {
-        log.debug("Calculating Cx-SCA finding counts per severity, after the filters were applied.");
+        log.debug("Calculating CxSCA finding counts per severity, after the filters were applied.");
 
         EnumMap<Severity, Integer> countsSeverityMap = new EnumMap<>(Severity.class);
         scanResults.getScaResults().getFindings().stream()
@@ -226,7 +226,7 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
     }
 
     public static Map<FindingSeverity, Integer> getSastFindingCountPerSeverity(ScanResults scanResults) {
-        log.debug("Calculating Cx-SAST finding counts per severity, after the filters were applied.");
+        log.debug("Calculating CxSAST finding counts per severity, after the filters were applied.");
         Map<FindingSeverity, Integer> result = new EnumMap<>(FindingSeverity.class);
 
         Map<?,?> cxFlowSummary = extractSummary(scanResults);
@@ -306,9 +306,9 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
         } else {
             String message;
             if (exceedsThreshold) {
-                message = "Cx-SCA findings summary's score: ({}) is exceeded the thresholds score defined: ({})";
+                message = "CxSCA findings summary's score: ({}) is exceeded the thresholds score defined: ({})";
             } else {
-                message = "Cx-SCA findings summary's score: ({}) doesn't exceeded the thresholds score defined: ({})";
+                message = "CxSCA findings summary's score: ({}) doesn't exceeded the thresholds score defined: ({})";
             }
             log.info(message, scaSummaryScore, thresholdsScore);
         }
@@ -318,9 +318,9 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
                                                      Integer thresholdCount, Integer findingsCount) {
         String message;
         if (exceedsThreshold) {
-            message = "Cx-SCA findings count: ({}) is exceeded the thresholds's severity counts: ({}) for severity: ({})";
+            message = "CxSCA findings count: ({}) is exceeded the thresholds's severity counts: ({}) for severity: ({})";
         } else {
-            message = "Cx-SCA findings count: ({}) doesn't exceeded the thresholds's severity counts: ({}) for severity: ({})";
+            message = "CxSCA findings count: ({}) doesn't exceeded the thresholds's severity counts: ({}) for severity: ({})";
         }
         log.info(message, findingsCount, thresholdCount, severity);
     }
