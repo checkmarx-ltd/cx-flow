@@ -35,6 +35,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 @Slf4j
 @SpringBootTest(classes = {CxFlowApplication.class})
 public class GenericEndToEndSteps {
+    static final String E2E_CONFIG = "e2e.config";
     @Autowired
     private FlowProperties flowProperties;
     /*
@@ -72,7 +73,7 @@ public class GenericEndToEndSteps {
     }
 
     @Given("Scan engine is {word}")
-    public void setScanEngine(String engine) {
+    public void setScanEngine(String engine) throws IOException {
         this.engine = engine;
         log.info("setting scan engine to {word}" , engine);
     }
@@ -133,6 +134,20 @@ public class GenericEndToEndSteps {
                 .add("input-files-toscan")
                 .add("e2e.src")
                 .toString();
+        return readAsBase64(path);
+    }
+
+    String getConfigAsCodeInBase64() throws IOException {
+        String path = new StringJoiner(File.separator)
+                .add("cucumber")
+                .add("data")
+                .add("input-files-toscan")
+                .add(E2E_CONFIG + ".src")
+                .toString();
+        return readAsBase64(path);
+    }
+
+    private String readAsBase64(String path) throws IOException {
         try (InputStream is = getClass().getClassLoader().getResourceAsStream(path)) {
             try (
                     InputStreamReader isr = new InputStreamReader(is, Charset.forName("UTF-8"));
@@ -143,5 +158,9 @@ public class GenericEndToEndSteps {
                 return encodedString;
             }
         }
+    }
+
+    public ConfigurableApplicationContext getAppContext() {
+        return appContext;
     }
 }

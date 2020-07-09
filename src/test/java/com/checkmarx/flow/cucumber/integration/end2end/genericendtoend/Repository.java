@@ -11,6 +11,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -31,10 +32,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.cucumber.java.PendingException;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.platform.commons.PreconditionViolationException;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -44,15 +45,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-
+import io.cucumber.java.PendingException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 enum Repository {
     GITHUB {
+        final String CONFIG_FILE_PATH = "/" + GenericEndToEndSteps.E2E_CONFIG.intern();
+
         GitHubProperties gitHubProperties;
         private Integer hookId;
-        private String createdFileSha;
+        private Map<String, String> createdFilesSha = new HashMap<>();
         private Integer prId;
         private GitHubApiHandler api;
 
@@ -76,22 +79,22 @@ enum Repository {
         void generateHook(HookType hookType) {
             HttpEntity<Hook> request = null;
             try {
-                request = api.generateHookEntity(getHeaders(), hookTargetURL, gitHubProperties.getWebhookToken(), hookType);
+                request = api.generateHookEntity(getHeaders(), hookTargetURL, gitHubProperties.getWebhookToken(),
+                        hookType);
             } catch (Exception e) {
                 fail("can not create web hook, check parameters");
             }
-        
+
             try {
                 RestTemplate restTemplate = new RestTemplate();
                 String url = api.getWebhookURL(gitHubProperties.getApiUrl(), namespace, repo);
-                final ResponseEntity<String> response = restTemplate.postForEntity(url, request,
-                        String.class);
+                final ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
                 assertEquals(HttpStatus.CREATED, response.getStatusCode());
                 hookId = new JSONObject(response.getBody()).getInt("id");
             } catch (Exception e) {
                 fail("failed to create hook " + e.getMessage());
             }
-        }        
+        }
 
         @Override
         void deleteHook() {
@@ -114,19 +117,25 @@ enum Repository {
 
         @Override
         void pushFile(String content) {
+            pushFile(content , filePath);
+        }
+
+        private void pushFile(String content, String theFilePath) {
             Committer committer = new Committer();
             committer.setName("CxFlowTestUser");
             committer.setEmail("CxFlowTestUser@checkmarx.com");
             try {
-                JSONObject response = api.pushFile(content, "GitHubToJira test message", committer, getHeaders(), gitHubProperties.getApiUrl(), namespace, repo, filePath);
-                createdFileSha = response.getJSONObject("content").getString("sha");
+                JSONObject response = api.pushFile(content, "GitHubToJira test message", committer, getHeaders(),
+                        gitHubProperties.getApiUrl(), namespace, repo, theFilePath);
+                createdFilesSha.put( response.getJSONObject("content").getString("sha") , theFilePath);
             } catch (JsonProcessingException e) {
                 String msg = "faild to create file for push";
                 log.error(msg);
                 fail(msg);
             } catch (HttpClientErrorException e) {
                 if (e.getRawStatusCode() == HttpStatus.UNPROCESSABLE_ENTITY.value()) {
-                    String message = "There is already a file with the specified name (" + filePath + "). please delete the file before running the test";
+                    String message = "There is already a file with the specified name (" + theFilePath
+                            + "). please delete the file before running the test";
                     log.error(message);
                     throw new PreconditionViolationException(message);
                 } else {
@@ -137,13 +146,20 @@ enum Repository {
             }
         }
 
-        private String getContentsFormat() {
-            return String.format("%s/%s/%s/contents/%s",
-                    gitHubProperties.getApiUrl(), namespace, repo, filePath);
+        private String getContentsFormat(String path) {
+            return String.format("%s/%s/%s/contents/%s", 
+                gitHubProperties.getApiUrl(), namespace, repo, path);
         }
 
         @Override
         void deleteFile() {
+            createdFilesSha.entrySet().forEach(entry -> {
+                deleteFile(entry.getKey() , entry.getValue());
+            });
+            createdFilesSha.clear();
+        }
+
+        void deleteFile(String Sha, String path) {
             RestTemplate restTemplate = new RestTemplate();
             final HttpHeaders headers = getHeaders();
             String data = null;
@@ -155,7 +171,7 @@ enum Repository {
                 committer.setName("CxFlowTestUser");
                 committer.setEmail("CxFlowTestUser@checkmarx.com");
                 jo.putPOJO("committer", committer);
-                jo.put("sha", createdFileSha);
+                jo.put("sha", Sha);
 
                 data = mapper.writeValueAsString(jo);
             } catch (Exception e) {
@@ -165,8 +181,7 @@ enum Repository {
             }
 
             HttpEntity<String> requestEntity = new HttpEntity<>(data, headers);
-            String path = getContentsFormat();
-            restTemplate.exchange(path, HttpMethod.DELETE, requestEntity, String.class);
+            restTemplate.exchange(getContentsFormat(path), HttpMethod.DELETE, requestEntity, String.class);
         }
 
         @Override
@@ -174,6 +189,19 @@ enum Repository {
             gitHubProperties = genericEndToEndSteps.gitHubProperties;
             api = new GitHubApiHandler();
             super.init(genericEndToEndSteps);
+            if ("sca".equalsIgnoreCase(genericEndToEndSteps.getEngine())) {
+                String confFile;
+                try {
+                    confFile = genericEndToEndSteps.getConfigAsCodeInBase64();
+                    pushFile(confFile , CONFIG_FILE_PATH);
+                } catch (IOException e) {
+                    fail("failed to read config file in base 64 needed by github for sca");
+                }
+                ConfigurableApplicationContext appContext = genericEndToEndSteps.getAppContext();
+                GitHubProperties gitHubProperties = (GitHubProperties) appContext.getBean("gitHubProperties");
+                gitHubProperties.setConfigAsCode(GenericEndToEndSteps.E2E_CONFIG);
+
+            }
         }
 
         @Override
