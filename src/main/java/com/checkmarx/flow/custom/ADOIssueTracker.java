@@ -290,6 +290,8 @@ public class ADOIssueTracker implements IssueTracker {
         if (StringUtils.isEmpty(request.getNamespace())) {
             throw new MachinaException("Namespace must be specified.");
         }
+
+        log.debug("Returning azure project name: {}", adoProject);
         return adoProject;
     }
 
@@ -333,6 +335,7 @@ public class ADOIssueTracker implements IssueTracker {
             result = request.getNamespace();
             log.debug("Using namespace from the scan request: {}", result);
         }
+        log.debug("Returning azure namespace: {}", result);
 
         return result;
     }
