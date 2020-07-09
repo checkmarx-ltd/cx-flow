@@ -82,6 +82,7 @@ public class RunPublishProcessSteps {
         issueUpdateVulnerabilityType = "";
         issueUpdateFilename = "";
         useOneFindingForUpdateClose = false;
+        jiraProperties.setProject("JIT");
     }
 
     @Before("@PublishProcessing")
