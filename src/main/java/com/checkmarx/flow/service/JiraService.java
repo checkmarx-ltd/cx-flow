@@ -60,6 +60,7 @@ public class JiraService {
     private static final String LABEL_FIELD_TYPE = "labels";
     private static final String SECURITY_FIELD_TYPE = "security";
     private static final String VALUE_FIELD_TYPE = "value";
+    private static final String NAME_FIELD_TYPE = "name";
     private static final String CHILD_FIELD_TYPE = "child";
     private static final String CASCADE_PARENT_CHILD_DELIMITER  = ";";
     private static final int MAX_RESULTS_ALLOWED = 1000000;
@@ -657,6 +658,20 @@ public class JiraService {
                             log.debug("cascading select list field");
                             log.debug("cascading values {}", value);
                             addCascadingSelect(issueBuilder, f, customField, value);
+                            break;
+                        case "single-version-picker":
+                            log.debug("single version picker");
+                            issueBuilder.setFieldValue(customField, ComplexIssueInputFieldValue.with(NAME_FIELD_TYPE, value));
+                            break;
+                        case "multi-version-picker":
+                            log.debug("multi version picker");
+                            String[] selectedVersions = StringUtils.split(value, ",");
+                            List<ComplexIssueInputFieldValue> versionList = new ArrayList<>();
+                            for (String version : selectedVersions) {
+                                ComplexIssueInputFieldValue fieldValue = ComplexIssueInputFieldValue.with(NAME_FIELD_TYPE, version.trim());
+                                versionList.add(fieldValue);
+                            }
+                            issueBuilder.setFieldValue(customField, versionList);
                             break;
                         default:
                             log.warn("{} not a valid option for jira field type", f.getJiraFieldType());
