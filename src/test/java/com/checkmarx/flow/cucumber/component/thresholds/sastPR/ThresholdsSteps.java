@@ -10,10 +10,10 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.service.ADOService;
 import com.checkmarx.flow.service.GitHubService;
-import com.checkmarx.flow.service.ThresholdValidator;
 import com.checkmarx.flow.service.ResultsService;
 import com.checkmarx.flow.service.SCAScanner;
 import com.checkmarx.flow.service.SastScanner;
+import com.checkmarx.flow.service.ThresholdValidator;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.ScaProperties;
@@ -42,7 +42,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -243,7 +247,7 @@ public class ThresholdsSteps {
   
         when(sendingPostRequest).thenAnswer(interceptor);
         when(restTemplateMock.exchange(anyString(),eq(HttpMethod.GET),any(), any(Class.class) ))
-                .thenReturn(new ResponseEntity<>("{}", HttpStatus.OK));
+                .thenReturn(ResponseEntity.ok("{}"));
     }
 
     private void initMock(CxClient cxClientMock) {

@@ -19,7 +19,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.EnumMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -166,12 +170,13 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
         Map<Severity, Integer> scaFindingsCountsPerSeverity = getScaFindingsCountsPerSeverity(scanResults);
         pullRequestReport.setScaFindingsSeverityCount(scaFindingsCountsPerSeverity);
 
-        for (Severity severity : scaFindingsCountsPerSeverity.keySet()) {
+        for (Map.Entry<Severity, Integer> entry : scaFindingsCountsPerSeverity.entrySet()) {
+            Severity severity = entry.getKey();
             Integer thresholdCount = scaThresholds.get(severity);
             if (thresholdCount == null) {
                 continue;
             }
-            Integer findingsCount = scaFindingsCountsPerSeverity.get(severity);
+            Integer findingsCount = entry.getValue();
             if (findingsCount > thresholdCount) {
                 isExceeded = true;
                 logScaThresholdExceedsCounts(true, severity, thresholdCount, findingsCount);
@@ -186,12 +191,6 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
 
 
     private static boolean isExceedsScaThresholdsScore(ScanResults scanResults, Double scaThresholdsScore) {
-        if (scanResults == null
-                || scanResults.getScaResults() == null
-                || scanResults.getScaResults().getSummary() == null) {
-            throw new IllegalStateException("Unable to check SCA thresholds: CxSCA scan results are missing.");
-        }
-
         double summaryRiskScore = scanResults.getScaResults().getSummary().getRiskScore();
 
         boolean isExceeded = scaThresholdsScore != null && (summaryRiskScore > scaThresholdsScore);
