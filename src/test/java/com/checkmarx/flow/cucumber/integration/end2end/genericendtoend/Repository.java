@@ -737,6 +737,7 @@ enum Repository {
                 case PULL_REQUEST:
                     deleteHook();
                     deletePR();
+                    deleteFile();
                     break;
             }
         });
