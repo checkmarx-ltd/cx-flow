@@ -26,3 +26,4 @@ Feature: Cxflow generic end-2-end tests
     Examples:
       | repository | scan-engine |
       | GitHub     | sca         |
+      | GitHub     | sast        |
