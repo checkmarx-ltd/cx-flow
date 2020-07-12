@@ -91,5 +91,20 @@ Feature: CxFlow should read configuration from cx.config file in the root of rep
     Examples:
       | branch |
       # branch12 contain cxconfig with invalid field
-      | test12 | 
-      
+      | test12 |
+
+  @Sca_cx_config
+  Scenario: Cx-Flow will set sca configuration sections according to the cx.config file
+    Given cx-flow receives a new scanRequest from repo
+    When scan request do contain an existing cxConfig object to override
+    Then cx-flow configurations are getting overridden with the following parameters:
+      | vulnerabilityScanners |
+      | appUrl                |
+      | apiUrl                |
+      | accessControlUrl      |
+      | tenant                |
+      | thresholdsSeverity    |
+      | thresholdsScore       |
+      | filterSeverity        |
+      | filterScore           |
+
