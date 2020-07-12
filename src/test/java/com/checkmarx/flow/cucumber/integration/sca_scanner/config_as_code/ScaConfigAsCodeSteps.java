@@ -38,18 +38,18 @@ public class ScaConfigAsCodeSteps {
         setGitHubProperties();
     }
 
-    @Given("cx-flow receives a new scanRequest from repo")
+    @Given("cx-flow has a scan request")
     public void getScanRequest() {
         scanRequest = initCxConfigScanRequest();
     }
 
-    @When("scan request do contain an existing cxConfig object to override")
+    @When("target repo contains a configuration file")
     public void getRepoCxConfig() {
         CxConfig cxConfigOverride = gitHubService.getCxConfigOverride(scanRequest);
         configOverrider.overrideScanRequestProperties(cxConfigOverride, scanRequest);
     }
 
-    @Then("cx-flow configurations are getting overridden with the following parameters:")
+    @Then("cx-flow configurations properties are getting overridden with the following parameters:")
     public void validatePropertiesAreOverridden(List<String> listOfParameters) {
         listOfParameters.forEach(currentParameter -> {
             String failMsg;

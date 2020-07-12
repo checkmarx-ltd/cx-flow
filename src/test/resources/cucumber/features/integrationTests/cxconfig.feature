@@ -95,9 +95,9 @@ Feature: CxFlow should read configuration from cx.config file in the root of rep
 
   @Sca_cx_config
   Scenario: Cx-Flow will set sca configuration sections according to the cx.config file
-    Given cx-flow receives a new scanRequest from repo
-    When scan request do contain an existing cxConfig object to override
-    Then cx-flow configurations are getting overridden with the following parameters:
+    Given cx-flow has a scan request
+    When target repo contains a configuration file
+    Then cx-flow configurations properties are getting overridden with the following parameters:
       | vulnerabilityScanners |
       | appUrl                |
       | apiUrl                |
