@@ -71,16 +71,10 @@ public class GenericEndToEndSteps {
         FlowProperties flowProperties = (FlowProperties)appContext.getBean("flowProperties");
         flowProperties.setBugTracker(bugTracker);
         log.info("Active scanners are: {}", flowProperties.getEnabledVulnerabilityScanners().toString());
-        printOutSysVars();
-    }
-
-    private void printOutSysVars() {
-        log.info("SCA tenant is: " + System.getenv("SCA_TENANT"));
-        log.info("Jira project is: " + System.getenv("JIRA_PROJECT"));
     }
 
     @Given("Scan engine is {word}")
-    public void setScanEngine(String engine) throws IOException {
+    public void setScanEngine(String engine) {
         this.engine = engine;
         log.info("setting scan engine to {word}" , engine);
     }
