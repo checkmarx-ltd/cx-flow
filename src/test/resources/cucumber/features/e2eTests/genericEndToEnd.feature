@@ -16,7 +16,6 @@ Feature: Cxflow generic end-2-end tests
 #      | sast        | ADO        | JIRA        |
       | sca         | GitHub     | JIRA        |
 
-  @Skip
   Scenario Outline: Check cxflow pull-request end-2-end <scan-engine> of <repository>
     Given Scan engine is <scan-engine>
     And CxFlow is running as a service
@@ -27,4 +26,4 @@ Feature: Cxflow generic end-2-end tests
     Examples:
       | repository | scan-engine |
       | GitHub     | sca         |
-      | GitHub     | sast        |
+#      | GitHub     | sast        |
