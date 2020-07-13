@@ -8,7 +8,6 @@ import com.checkmarx.sdk.dto.ScanResults;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -98,8 +97,8 @@ public class EmailService {
     public void sendScanSubmittedEmail(ScanRequest request) {
         if (isEmailNotificationAllowed()) {
             String prefixMessage = "Checkmarx Scan submitted for %s/%s ";
-            String scanSubmittedSubject = String.format(prefixMessage,request.getNamespace(),request.getRepoName());
-            String scanSubmittedMessage = String.format(prefixMessage,request.getNamespace(),request.getRepoName());
+            String scanSubmittedSubject = String.format(prefixMessage, request.getNamespace(), request.getRepoName());
+            String scanSubmittedMessage = String.format(prefixMessage, request.getNamespace(), request.getRepoName());
             Map<String, Object> emailCtx = prepareEmailContext("Scan Request Submitted", scanSubmittedMessage, request.getRepoUrl());
             sendmail(request.getEmail(), scanSubmittedSubject, emailCtx, "message.html");
         }
@@ -133,7 +132,7 @@ public class EmailService {
         String namespace = request.getNamespace();
         String repoName = request.getRepoName();
         String scanCompletedMessage = COMPLETED_PROCESSING.concat(namespace).concat("/").concat(repoName);
-        String scanCompletedSubject = String.format("Checkmarx Scan Results: %s/%s",namespace, repoName);
+        String scanCompletedSubject = String.format("Checkmarx Scan Results: %s/%s", namespace, repoName);
 
         Map<String, Object> emailCtx = prepareEmailContext("Scan Successfully Completed", scanCompletedMessage, request.getRepoUrl());
 
