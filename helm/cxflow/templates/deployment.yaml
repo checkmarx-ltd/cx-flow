@@ -53,8 +53,6 @@ spec:
               value: {{ .Values.cxflow.azureToken | quote }}
             - name: CHECKMARX_TEAM
               value: {{ .Values.cxflow.checkmarxTeam }}
-            - name: SCA_TENANT
-              value: {{ .Values.cxflow.scaTenant }}
           envFrom:
             - secretRef:
                 name: {{ .Release.Name }}-external-secret
