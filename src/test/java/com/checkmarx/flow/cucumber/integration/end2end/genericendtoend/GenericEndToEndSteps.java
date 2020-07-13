@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 @Slf4j
 @SpringBootTest(classes = {CxFlowApplication.class})
 public class GenericEndToEndSteps {
-    static final String E2E_CONFIG = "e2e.config";
+    static final String E2E_CONFIG = "cx.config";
     @Autowired
     private FlowProperties flowProperties;
     /*
@@ -70,7 +70,6 @@ public class GenericEndToEndSteps {
         this.bugTracker = BugTracker.setTo(bugTracker, this);
         FlowProperties flowProperties = (FlowProperties)appContext.getBean("flowProperties");
         flowProperties.setBugTracker(bugTracker);
-
         log.info("Active scanners are: {}", flowProperties.getEnabledVulnerabilityScanners().toString());
     }
 
