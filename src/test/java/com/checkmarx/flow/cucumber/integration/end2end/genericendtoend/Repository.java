@@ -128,6 +128,7 @@ enum Repository {
                 JSONObject response = api.pushFile(content, "GitHubToJira test message", committer, getHeaders(),
                         gitHubProperties.getApiUrl(), namespace, repo, theFilePath);
                 createdFilesSha.put( response.getJSONObject("content").getString("sha") , theFilePath);
+                log.info("New file pushed successfully");
             } catch (JsonProcessingException e) {
                 String msg = "faild to create file for push";
                 log.error(msg);
