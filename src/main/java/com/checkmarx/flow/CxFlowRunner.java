@@ -262,7 +262,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 repoType = ScanRequest.Repository.GITHUB;
 
                 if(ScanUtils.empty(namespace) ||ScanUtils.empty(repoName)||ScanUtils.empty(mergeId)){
-                    log.error("Namespace/Repo/MergeId must be provided for GITHUBPULL bug tracking");
+                    log.error("--namespace, --repo and --merge-id must be provided for GITHUBPULL bug tracking");
                     exit(1);
                 }
                 mergeNoteUri = gitHubProperties.getMergeNoteUri(namespace, repoName, mergeId);
