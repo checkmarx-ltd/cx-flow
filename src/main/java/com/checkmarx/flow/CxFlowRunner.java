@@ -271,8 +271,17 @@ public class CxFlowRunner implements ApplicationRunner {
                 break;
             case GITLABMERGE:
             case gitlabmerge:
-                log.info("GitLab Merge not currently supported from command line");
-                exit(1);
+                bugType = BugTracker.Type.GITLABMERGE;
+                bt = BugTracker.builder()
+                        .type(bugType)
+                        .build();
+                repoType = ScanRequest.Repository.GITLAB;
+
+                if(ScanUtils.empty(projectId)||ScanUtils.empty(mergeId)){
+                    log.error("--project-id and --merge-id must be provided for GITLABMERGE bug tracking");
+                    exit(1);
+                }
+                mergeNoteUri = gitLabProperties.getMergeNoteUri(projectId, mergeId);
                 break;
             case BITBUCKETPULL:
             case bitbucketserverpull:
