@@ -88,6 +88,7 @@ public class CxFlowRunner implements ApplicationRunner {
         String branch;
         String mergeId;
         String mergeNoteUri = null;
+        String projectId;
         String assignee;
         List<String> emails;
         String file;
@@ -142,6 +143,7 @@ public class CxFlowRunner implements ApplicationRunner {
         repoUrl = getOptionValues(args,"repo-url");
         branch = getOptionValues(args,"branch");
         namespace = getOptionValues(args,"namespace");
+        projectId = getOptionValues(args,"project-id");
         team = getOptionValues(args,"cx-team");
 		altProject = getOptionValues(args,"alt-project");
         altFields = getOptionValues(args,"alt-fields");
