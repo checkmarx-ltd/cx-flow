@@ -105,10 +105,12 @@ public class EmailService {
     }
 
     public void sendScanCompletedEmail(ScanRequest request, ScanResults results) {
-        BugTracker.Type bugTrackerType = request.getBugTracker().getType();
-        if (isEmailNotificationAllowed() && !bugTrackerType.equals(BugTracker.Type.NONE) &&
-                !bugTrackerType.equals(BugTracker.Type.EMAIL)) {
-            prepareAndSendEmail(request, results);
+        if(request.getBugTracker()!=null) {
+            BugTracker.Type bugTrackerType = request.getBugTracker().getType();
+            if (isEmailNotificationAllowed() && !bugTrackerType.equals(BugTracker.Type.NONE) &&
+                    !bugTrackerType.equals(BugTracker.Type.EMAIL)) {
+                prepareAndSendEmail(request, results);
+            }
         }
     }
 
