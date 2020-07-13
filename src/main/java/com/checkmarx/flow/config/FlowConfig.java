@@ -71,17 +71,17 @@ public class FlowConfig {
     public TemplateEngine getTemplateEngine() {
 
         TemplateEngine templateEngine = new TemplateEngine();
-        templateEngine.setTemplateResolver(fileTemplateResolver());
+        templateEngine.setTemplateResolver(getFileTemplateResolver());
 
         return templateEngine;
 
     }
 
-    public FileTemplateResolver fileTemplateResolver() {
+    private FileTemplateResolver getFileTemplateResolver() {
         FileTemplateResolver fileTemplateResolver = new FileTemplateResolver();
         fileTemplateResolver.setSuffix(".html");
         fileTemplateResolver.setTemplateMode(TemplateMode.HTML);
-        fileTemplateResolver.setCharacterEncoding("UTF-8");
+        fileTemplateResolver.setCharacterEncoding(StandardCharsets.UTF_8.toString());
         fileTemplateResolver.setOrder(1);
         fileTemplateResolver.setCheckExistence(true);
 

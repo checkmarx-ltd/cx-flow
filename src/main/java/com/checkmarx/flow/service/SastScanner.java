@@ -370,7 +370,7 @@ public class SastScanner implements VulnerabilityScanner {
     }
 
     private void checkScanSubmitEmailDelivery(ScanRequest scanRequest) {
-        if (!ScanUtils.anyEmpty(scanRequest.getNamespace(), scanRequest.getRepoName(), scanRequest.getRepoUrl())) {
+        if (StringUtils.isNoneEmpty(scanRequest.getNamespace(), scanRequest.getRepoName(), scanRequest.getRepoUrl())) {
             emailService.sendScanSubmittedEmail(scanRequest);
         }
     }

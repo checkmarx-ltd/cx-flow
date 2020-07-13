@@ -5,6 +5,9 @@ import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -20,13 +23,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service
 public class EmailService {
 
     public static final String MESSAGE_KEY = "message";
     public static final String HEADING_KEY = "heading";
     public static final String COMPLETED_PROCESSING = "Successfully completed processing for ";
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(EmailService.class);
     private final FlowProperties flowProperties;
     private final TemplateEngine templateEngine;
     private final JavaMailSender emailSender;
@@ -53,15 +56,16 @@ public class EmailService {
             MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage);
 
             String contact = flowProperties.getContact();
-            if (!ScanUtils.empty(contact)) {
+            if (StringUtils.isNotEmpty(contact)) {
                 messageHelper.setFrom(contact);
             }
 
-            if (!ScanUtils.empty(recipients)) {
+            String[] ccList = (flowProperties.getMail().getCc()).toArray(new String[0]);
+            if (CollectionUtils.isNotEmpty(recipients)) {
                 messageHelper.setTo(recipients.toArray(new String[0]));
-                messageHelper.setCc((flowProperties.getMail().getCc()).toArray(new String[0]));
+                messageHelper.setCc(ccList);
             } else {
-                messageHelper.setTo((flowProperties.getMail().getCc()).toArray(new String[0]));
+                messageHelper.setTo(ccList);
             }
 
             messageHelper.setSubject(subject);
@@ -93,9 +97,9 @@ public class EmailService {
 
     public void sendScanSubmittedEmail(ScanRequest request) {
         if (isEmailNotificationAllowed()) {
-            String scanSubmittedSubject = "Checkmarx Scan Submitted for ".concat(request.getNamespace()).concat("/").concat(request.getRepoName());
-            String scanSubmittedMessage = "Checkmarx Scan has been submitted for ".concat(request.getNamespace()).concat("/").concat(request.getRepoName())
-                    .concat(" - ");
+            String prefixMessage = "Checkmarx Scan submitted for %s/%s ";
+            String scanSubmittedSubject = String.format(prefixMessage,request.getNamespace(),request.getRepoName());
+            String scanSubmittedMessage = String.format(prefixMessage,request.getNamespace(),request.getRepoName());
             Map<String, Object> emailCtx = prepareEmailContext("Scan Request Submitted", scanSubmittedMessage, request.getRepoUrl());
             sendmail(request.getEmail(), scanSubmittedSubject, emailCtx, "message.html");
         }
@@ -129,7 +133,7 @@ public class EmailService {
         String namespace = request.getNamespace();
         String repoName = request.getRepoName();
         String scanCompletedMessage = COMPLETED_PROCESSING.concat(namespace).concat("/").concat(repoName);
-        String scanCompletedSubject = "Checkmarx Scan Results: ".concat(namespace).concat("/").concat(repoName);
+        String scanCompletedSubject = String.format("Checkmarx Scan Results: %s/%s",namespace, repoName);
 
         Map<String, Object> emailCtx = prepareEmailContext("Scan Successfully Completed", scanCompletedMessage, request.getRepoUrl());
 
