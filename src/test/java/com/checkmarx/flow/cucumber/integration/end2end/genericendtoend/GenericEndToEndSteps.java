@@ -70,6 +70,7 @@ public class GenericEndToEndSteps {
         this.bugTracker = BugTracker.setTo(bugTracker, this);
         FlowProperties flowProperties = (FlowProperties)appContext.getBean("flowProperties");
         flowProperties.setBugTracker(bugTracker);
+
         log.info("Active scanners are: {}", flowProperties.getEnabledVulnerabilityScanners().toString());
     }
 
