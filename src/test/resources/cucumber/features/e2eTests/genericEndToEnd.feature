@@ -12,8 +12,8 @@ Feature: Cxflow generic end-2-end tests
     Then bug-tracker issues are updated
     Examples:
       | scan-engine | repository | bug-tracker |
-#      | sast        | GitHub     | JIRA        |
-#      | sast        | ADO        | JIRA        |
+      | sast        | GitHub     | JIRA        |
+      | sast        | ADO        | JIRA        |
       | sca         | GitHub     | JIRA        |
 
   Scenario Outline: Check cxflow pull-request end-2-end <scan-engine> of <repository>
@@ -26,4 +26,4 @@ Feature: Cxflow generic end-2-end tests
     Examples:
       | repository | scan-engine |
       | GitHub     | sca         |
-#      | GitHub     | sast        |
+      | GitHub     | sast        |
