@@ -88,6 +88,7 @@ public class CxFlowRunner implements ApplicationRunner {
         String branch;
         String mergeId;
         String mergeNoteUri = null;
+        String projectId;
         String assignee;
         List<String> emails;
         String file;
@@ -142,6 +143,7 @@ public class CxFlowRunner implements ApplicationRunner {
         repoUrl = getOptionValues(args,"repo-url");
         branch = getOptionValues(args,"branch");
         namespace = getOptionValues(args,"namespace");
+        projectId = getOptionValues(args,"project-id");
         team = getOptionValues(args,"cx-team");
 		altProject = getOptionValues(args,"alt-project");
         altFields = getOptionValues(args,"alt-fields");
@@ -262,15 +264,24 @@ public class CxFlowRunner implements ApplicationRunner {
                 repoType = ScanRequest.Repository.GITHUB;
 
                 if(ScanUtils.empty(namespace) ||ScanUtils.empty(repoName)||ScanUtils.empty(mergeId)){
-                    log.error("Namespace/Repo/MergeId must be provided for GITHUBPULL bug tracking");
+                    log.error("--namespace, --repo and --merge-id must be provided for GITHUBPULL bug tracking");
                     exit(1);
                 }
                 mergeNoteUri = gitHubProperties.getMergeNoteUri(namespace, repoName, mergeId);
                 break;
             case GITLABMERGE:
             case gitlabmerge:
-                log.info("GitLab Merge not currently supported from command line");
-                exit(1);
+                bugType = BugTracker.Type.GITLABMERGE;
+                bt = BugTracker.builder()
+                        .type(bugType)
+                        .build();
+                repoType = ScanRequest.Repository.GITLAB;
+
+                if(ScanUtils.empty(projectId)||ScanUtils.empty(mergeId)){
+                    log.error("--project-id and --merge-id must be provided for GITLABMERGE bug tracking");
+                    exit(1);
+                }
+                mergeNoteUri = gitLabProperties.getMergeNoteUri(projectId, mergeId);
                 break;
             case BITBUCKETPULL:
             case bitbucketserverpull:
