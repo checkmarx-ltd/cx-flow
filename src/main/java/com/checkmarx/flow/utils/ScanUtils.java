@@ -9,10 +9,12 @@ import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
+import com.checkmarx.sdk.dto.ast.Finding;
+import com.checkmarx.sdk.dto.ast.Package;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
-import com.checkmarx.sdk.dto.sca.SCAResults;
-import com.cx.restclient.sca.dto.report.Finding;
-import com.cx.restclient.sca.dto.report.Package;
+import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
+import com.checkmarx.sdk.dto.ast.SCAResults;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.EnumUtils;
@@ -447,8 +449,8 @@ public class ScanUtils {
                 String issuePrefix = extraTags[0];
                 String issuePostfix = extraTags[1];
 
-                Finding detailsFindings = scaDetails.getFinding();
-                Package vulnerabilityPackage = scaDetails.getVulnerabilityPackage();
+                com.checkmarx.sdk.dto.ast.Finding detailsFindings = scaDetails.getFinding();
+                com.checkmarx.sdk.dto.ast.Package vulnerabilityPackage = scaDetails.getVulnerabilityPackage();
 
                 return getJiraScaSummaryIssueKey(request, issuePrefix, issuePostfix, detailsFindings, vulnerabilityPackage);
             case "CUSTOM":

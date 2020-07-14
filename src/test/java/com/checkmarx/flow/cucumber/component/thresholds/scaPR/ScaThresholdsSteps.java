@@ -25,11 +25,12 @@ import com.checkmarx.flow.service.ThresholdValidatorImpl;
 import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
-import com.checkmarx.sdk.dto.sca.SCAResults;
-import com.checkmarx.sdk.dto.sca.Summary;
+import com.checkmarx.sdk.dto.ast.Finding;
+import com.checkmarx.sdk.dto.ast.SCAResults;
+import com.checkmarx.sdk.dto.ast.Summary;
 import com.checkmarx.test.flow.config.CxFlowMocksConfig;
 import com.cx.restclient.dto.scansummary.Severity;
-import com.cx.restclient.sca.dto.report.Finding;
+
 
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -151,7 +152,7 @@ public class ScaThresholdsSteps {
         summary.setRiskScore(findingsScore);
         List<Finding> findings = new ArrayList<>();
         Stream<com.checkmarx.sdk.dto.Filter.Severity> severityStream = Arrays.stream(Filter.Severity.values());
-        Arrays.stream(Severity.values()).forEach(severity -> populateFindings(findings, severity, 10));
+        Arrays.stream(Filter.Severity.values()).forEach(severity -> populateFindings(findings, severity, 10));
         scaResults.setFindings(findings);
         Map<Filter.Severity, Integer> findingCounts = severityStream
         .collect(Collectors.toMap(Function.identity(), v -> 10));
@@ -205,7 +206,7 @@ public class ScaThresholdsSteps {
         Map<String, String> specMap = findingsDefs.stream()
                 .filter(findingsDef -> findingsDef.get("name").equals(findingsName)).findAny().get();
 
-        EnumSet.allOf(Severity.class).forEach(severity -> {
+        EnumSet.allOf(Filter.Severity.class).forEach(severity -> {
             String spec = specMap.get(severity.name().toLowerCase());
             log.info("{}-spec: {}", severity, spec);
 
@@ -223,9 +224,9 @@ public class ScaThresholdsSteps {
         return scaResults;
     }
 
-    private void populateFindings(List<Finding> findings, Severity severity, Integer count) {
+    private void populateFindings(List<com.checkmarx.sdk.dto.ast.Finding> findings, Filter.Severity severity, Integer count) {
         for (int i = 0; i < count; i++) {
-            Finding fnd = new Finding();
+            com.checkmarx.sdk.dto.ast.Finding fnd = new com.checkmarx.sdk.dto.ast.Finding();
             fnd.setSeverity(severity);
             fnd.setPackageId("");
             findings.add(fnd);

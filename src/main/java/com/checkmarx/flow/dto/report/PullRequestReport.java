@@ -13,6 +13,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,7 +32,7 @@ public class PullRequestReport extends AnalyticsReport {
     private Map<FindingSeverity, Integer> findingsPerSeverity = null;
     private Map<FindingSeverity, Integer> thresholds = null;
     private Map<Severity, Integer> scaThresholdsSeverity = null;
-    private Map<Severity, Integer> scaFindingsSeverityCount = null;
+    private EnumMap<Filter.Severity, Integer> scaFindingsSeverityCount = null;
     private Double scaThresholdsScore = null;
 
     private OperationResult pullRequestResult;
