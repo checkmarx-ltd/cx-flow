@@ -1,0 +1,8 @@
+cx-flow:
+  enabled-vulnerability-scanners:
+    - sca
+
+sca:
+  appUrl: https://sca.scacheckmarx.com
+  apiUrl: https://api.scacheckmarx.com
+  accessControlUrl: https://platform.checkmarx.net

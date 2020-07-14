@@ -75,4 +75,14 @@ public class TestUtils {
     public static ConfigurableApplicationContext runCxFlowAsService() {
         return SpringApplication.run(CxFlowApplication.class, "--web");
     }
+
+    public static ConfigurableApplicationContext runCxFlowAsServiceWithAdditionalProfiles(String... additionalProfiles) {
+        SpringApplication springApplication=new SpringApplication(CxFlowApplication.class);
+        springApplication.setAdditionalProfiles(additionalProfiles); 
+        return springApplication.run("--web"); 
+    }
+
+    public static void exitCxFlowService(ConfigurableApplicationContext appContext) {
+        SpringApplication.exit(appContext);
+    }
 }
