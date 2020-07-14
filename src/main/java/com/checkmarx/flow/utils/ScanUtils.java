@@ -10,6 +10,9 @@ import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
+import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
+import com.checkmarx.sdk.dto.ast.SCAResults;
+
 import com.checkmarx.sdk.dto.ast.SCAResults;
 import com.cx.restclient.ast.dto.sca.report.Finding;
 import com.cx.restclient.ast.dto.sca.report.Package;
@@ -876,11 +879,11 @@ public class ScanUtils {
             if(!ScanUtils.empty(flowProperties.getMitreUrl())) {
                 body.append(DETAILS)
                         .append(
-                                String.format(
-                                        flowProperties.getMitreUrl(),
-                                        issue.getCwe()
-                                )
-                        ).append(" - Vulnerability details and guidance").append(CRLF);
+                        String.format(
+                                flowProperties.getMitreUrl(),
+                                issue.getCwe()
+                        )
+                ).append(" - Vulnerability details and guidance").append(CRLF);
             }
         }
         if(!ScanUtils.empty(flowProperties.getWikiUrl())) {
@@ -889,11 +892,6 @@ public class ScanUtils {
         if(!ScanUtils.empty(issue.getLink())){
             body.append(DETAILS).append(issue.getLink()).append(" - Checkmarx").append(CRLF);
         }
-        Map<String, Object> additionalDetails = issue.getAdditionalDetails();
-        if (!MapUtils.isEmpty(additionalDetails) && additionalDetails.containsKey(ScanUtils.RECOMMENDED_FIX)) {
-            body.append(DETAILS).append(additionalDetails.get(ScanUtils.RECOMMENDED_FIX)).append(" - Recommended Fix").append(CRLF);
-        }
-
         if(issue.getDetails() != null && !issue.getDetails().isEmpty()) {
             Map<Integer, ScanResults.IssueDetails> trueIssues = issue.getDetails().entrySet().stream()
                     .filter(x -> x.getKey( ) != null && x.getValue() != null && !x.getValue().isFalsePositive())
