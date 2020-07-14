@@ -7,9 +7,7 @@ import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 
-import com.checkmarx.sdk.config.ScaProperties;
 import io.cucumber.java.After;
-import io.cucumber.java.PendingException;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
@@ -17,7 +15,6 @@ import io.cucumber.java.en.When;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.SpringApplication;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ConfigurableApplicationContext;
 
@@ -29,7 +26,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.Base64;
-import java.util.Collections;
 import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
@@ -39,6 +35,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 @Slf4j
 @SpringBootTest(classes = {CxFlowApplication.class})
 public class GenericEndToEndSteps {
+    static final String E2E_CONFIG = "cx.config";
     @Autowired
     private FlowProperties flowProperties;
     /*
@@ -55,11 +52,12 @@ public class GenericEndToEndSteps {
     private Repository repository;
     private BugTracker bugTracker;
     private ConfigurableApplicationContext appContext;
+    private String engine;
 
-    @Given("CxFlow is running as a service")
+    @And("CxFlow is running as a service")
     public void runAsService() {
-        log.info("runnning cx-flow as a service");
-        appContext = TestUtils.runCxFlowAsService();
+        log.info("runnning cx-flow as a service (active profile: {})", engine);
+        appContext = TestUtils.runCxFlowAsServiceWithAdditionalProfiles(engine);
     }
 
     @And("repository is {word}")
@@ -72,19 +70,13 @@ public class GenericEndToEndSteps {
         this.bugTracker = BugTracker.setTo(bugTracker, this);
         FlowProperties flowProperties = (FlowProperties)appContext.getBean("flowProperties");
         flowProperties.setBugTracker(bugTracker);
+        log.info("Active scanners are: {}", flowProperties.getEnabledVulnerabilityScanners().toString());
     }
 
-    @And("Scan engine is {word}")
+    @Given("Scan engine is {word}")
     public void setScanEngine(String engine) {
-        FlowProperties flowProperties = (FlowProperties)appContext.getBean("flowProperties");
-        flowProperties.setEnabledVulnerabilityScanners(Collections.singletonList(engine));
-
-        if (engine.equalsIgnoreCase(ScaProperties.CONFIG_PREFIX)) {
-            ScaProperties scaProperties = (ScaProperties)appContext.getBean("scaProperties");
-            scaProperties.setAppUrl("https://sca.scacheckmarx.com");
-            scaProperties.setApiUrl("https://api.scacheckmarx.com");
-            scaProperties.setAccessControlUrl("https://v2.ac-checkmarx.com");
-        }
+        this.engine = engine;
+        log.info("setting scan engine to {word}" , engine);
     }
 
     @And("webhook is configured for push event")
@@ -116,7 +108,7 @@ public class GenericEndToEndSteps {
     @Then("bug-tracker issues are updated")
     public void validateIssueOnBugTracker() {
         String severities = "(" + flowProperties.getFilterSeverity().stream().collect(Collectors.joining(",")) + ")";
-        bugTracker.verifyIssueCreated(severities);
+        bugTracker.verifyIssueCreated(severities, engine);
     }
 
     @Then("pull-request is updated")
@@ -127,9 +119,13 @@ public class GenericEndToEndSteps {
     @After
     public void cleanUp() {
         repository.cleanup();
-        //TO DO: move to bt
         Optional.ofNullable(bugTracker).ifPresent(BugTracker::deleteIssues);
-        SpringApplication.exit(appContext);
+        TestUtils.exitCxFlowService(appContext);
+        log.info("finished clean-up");
+    }
+
+    String getEngine() {
+        return engine;
     }
 
     private String getFileInBase64() throws IOException {
@@ -139,6 +135,20 @@ public class GenericEndToEndSteps {
                 .add("input-files-toscan")
                 .add("e2e.src")
                 .toString();
+        return readAsBase64(path);
+    }
+
+    String getConfigAsCodeInBase64() throws IOException {
+        String path = new StringJoiner(File.separator)
+                .add("cucumber")
+                .add("data")
+                .add("input-files-toscan")
+                .add(E2E_CONFIG + ".src")
+                .toString();
+        return readAsBase64(path);
+    }
+
+    private String readAsBase64(String path) throws IOException {
         try (InputStream is = getClass().getClassLoader().getResourceAsStream(path)) {
             try (
                     InputStreamReader isr = new InputStreamReader(is, Charset.forName("UTF-8"));
@@ -149,5 +159,9 @@ public class GenericEndToEndSteps {
                 return encodedString;
             }
         }
+    }
+
+    public ConfigurableApplicationContext getAppContext() {
+        return appContext;
     }
 }
