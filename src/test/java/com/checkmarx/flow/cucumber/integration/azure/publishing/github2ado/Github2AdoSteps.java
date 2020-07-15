@@ -61,6 +61,7 @@ public class Github2AdoSteps {
     private final CxProperties cxProperties;
     private final GitHubProperties gitHubProperties;
     private final HelperService helperService;
+    private final EmailService emailService;
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
 
@@ -80,7 +81,7 @@ public class Github2AdoSteps {
     
     public Github2AdoSteps(FlowProperties flowProperties, GitHubService gitHubService,
                            CxProperties cxProperties, GitHubProperties gitHubProperties,
-                           ConfigurationOverrider configOverrider, FlowService flowService, ADOProperties adoProperties, FilterFactory filterFactory, AzureDevopsClient azureDevopsClient) {
+                           ConfigurationOverrider configOverrider, FlowService flowService, ADOProperties adoProperties, FilterFactory filterFactory, AzureDevopsClient azureDevopsClient, EmailService emailService) {
         this.filterFactory = filterFactory;
 
         this.cxClientMock = mock(CxClient.class);
@@ -89,7 +90,6 @@ public class Github2AdoSteps {
 
         this.cxProperties = cxProperties;
 
-
         this.helperService = mock(HelperService.class);
         this.flowService = flowService;
         this.gitHubService = gitHubService;
@@ -97,6 +97,7 @@ public class Github2AdoSteps {
         this.gitHubProperties = gitHubProperties;
         this.adoProperties = adoProperties;
         this.configOverrider = configOverrider;
+        this.emailService = emailService;
         initGitHubProperties();
     }
 
@@ -298,7 +299,7 @@ public class Github2AdoSteps {
                 null,
                 null,
                 null,
-                null,
+                emailService,
                 cxProperties,
                 flowProperties));
     }
