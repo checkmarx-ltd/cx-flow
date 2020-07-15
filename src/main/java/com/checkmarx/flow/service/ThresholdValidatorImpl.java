@@ -14,7 +14,7 @@ import com.checkmarx.sdk.dto.ScanResults;
 
 
 import com.cx.restclient.dto.scansummary.Severity;
-import com.cx.restclient.ast.dto.sca.report.Finding;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
