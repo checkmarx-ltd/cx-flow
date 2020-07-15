@@ -62,26 +62,6 @@ public class ScaConfigAsCodeSteps {
                     expected = Collections.singletonList("sca");
                     actual = flowProperties.getEnabledVulnerabilityScanners();
                     break;
-                case "appUrl":
-                    failMsg = "SCA App-Url from configuration as code is not as expected";
-                    expected = "scaAppUrlTestSample";
-                    actual = scaProperties.getAppUrl();
-                    break;
-                case "apiUrl":
-                    failMsg = "SCA Api-Url from configuration as code is not as expected";
-                    expected = "scaApiUrlTestSample";
-                    actual = scaProperties.getApiUrl();
-                    break;
-                case "accessControlUrl":
-                    failMsg = "SCA AC-Url from configuration as code is not as expected";
-                    expected = "scaAcUrlTestSample";
-                    actual = scaProperties.getAccessControlUrl();
-                    break;
-                case "tenant":
-                    failMsg = "SCA tenant from configuration as code is not as expected";
-                    expected = "sampleTenant";
-                    actual = scaProperties.getTenant();
-                    break;
                 case "thresholdsSeverity":
                     failMsg = "SCA thresholds severity from configuration as code is not as expected";
                     expected = "{HIGH=10, MEDIUM=6, LOW=3}";
