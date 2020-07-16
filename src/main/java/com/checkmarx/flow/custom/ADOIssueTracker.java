@@ -324,20 +324,20 @@ public class ADOIssueTracker implements IssueTracker {
         boolean canUseProperties = !StringUtils.isEmpty(properties.getNamespace()) &&
                 !StringUtils.isEmpty(properties.getProjectName());
 
-        String result;
+        String namespace;
         if (canUseProperties) {
             // We use namespace from ado.properties only if the projectName in ado.properties is not empty as well.
-            result = properties.getNamespace();
+            namespace = properties.getNamespace();
             log.debug("Using the namespace from ADO properties ({}), because both namespace and project name " +
                     "are specified in the properties.",
-                    result);
+                    namespace);
         } else {
-            result = request.getNamespace();
-            log.debug("Using namespace from the scan request: {}", result);
+            namespace = request.getNamespace();
+            log.debug("Using namespace from the scan request: {}", namespace);
         }
-        log.debug("Returning azure namespace: {}", result);
+        log.debug("Returning azure namespace: {}", namespace);
 
-        return result;
+        return namespace;
     }
 
     @Override

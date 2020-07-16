@@ -315,7 +315,7 @@ public class ADOController extends AdoControllerBase {
             namespace = projectUrl.split("/")[NAMESPACE_INDEX];
         }
         catch (Exception e){
-            log.warn("can't find namespace in body resource containers");
+            log.warn("can't find namespace in body resource containers: {}", e.getMessage());
         }
 
         log.info("using namespace: {}", namespace);
