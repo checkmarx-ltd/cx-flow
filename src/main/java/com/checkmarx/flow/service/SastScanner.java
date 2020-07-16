@@ -195,8 +195,8 @@ public class SastScanner implements VulnerabilityScanner {
         return scanDetails;
     }
 
-    public void cxFullScan(ScanRequest request, String path) throws ExitThrowable {
-
+    public ScanDetails cxFullScan(ScanRequest request, String path) throws ExitThrowable {
+        ScanDetails scanDetails = null;
         try {
             String cxZipFile = FileSystems.getDefault().getPath("cx.".concat(UUID.randomUUID().toString()).concat(".zip")).toAbsolutePath().toString();
             ZipUtils.zipFile(path, cxZipFile, flowProperties.getZipExclude());
@@ -205,13 +205,9 @@ public class SastScanner implements VulnerabilityScanner {
             log.debug("free space {}", f.getFreeSpace());
             log.debug("total space {}", f.getTotalSpace());
             log.debug(f.getAbsolutePath());
-            CompletableFuture<ScanResults> future = executeCxScanFlow(request, f);
-            log.debug("Waiting for scan to complete");
-            ScanResults results = future.join();
-            if (flowProperties.isBreakBuild() && resultsService.filteredIssuesPresent(results)) {
-                log.error(ERROR_BREAK_MSG);
-                exit(10);
-            }
+
+            scanDetails = executeCxScan(request, f);
+
         } catch (IOException e) {
             log.error("Error occurred while attempting to zip path {}", path, e);
             exit(3);
@@ -219,31 +215,18 @@ public class SastScanner implements VulnerabilityScanner {
             log.error("Error occurred", e);
             exit(3);
         }
+        return scanDetails;
     }
 
-    public void cxFullScan(ScanRequest request) throws ExitThrowable {
-
+    public ScanDetails cxFullScan(ScanRequest request) throws ExitThrowable {
+        ScanDetails scanDetails = null;
         try {
-            CompletableFuture<ScanResults> future = executeCxScanFlow(request, null);
-
-            if (future.isCompletedExceptionally()) {
-                log.error("An error occurred while executing process");
-            } else {
-                if (log.isInfoEnabled()) {
-                    log.info("Finished processing the request");
-                }
-            }
-
-            log.debug("Waiting for scan to complete");
-            ScanResults results = future.join();
-            if (flowProperties.isBreakBuild() && resultsService.filteredIssuesPresent(results)) {
-                log.error(ERROR_BREAK_MSG);
-                exit(10);
-            }
+            scanDetails = executeCxScan(request, null);
         } catch (MachinaException e) {
             log.error("Error occurred", e);
             exit(3);
         }
+        return scanDetails;
     }
 
     public void cxParseResults(ScanRequest request, File file) throws ExitThrowable {
