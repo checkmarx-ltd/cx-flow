@@ -8,12 +8,7 @@ import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaException;
-import com.checkmarx.flow.service.ADOService;
-import com.checkmarx.flow.service.GitHubService;
-import com.checkmarx.flow.service.ResultsService;
-import com.checkmarx.flow.service.SCAScanner;
-import com.checkmarx.flow.service.SastScanner;
-import com.checkmarx.flow.service.ThresholdValidator;
+import com.checkmarx.flow.service.*;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.ScaProperties;
@@ -75,6 +70,7 @@ public class ThresholdsSteps {
     private final ScaProperties scaProperties;
     private final SastScanner sastScanner;
     private final SCAScanner scaScanner;
+    private final EmailService emailService;
 
     private ScanResults scanResultsToInject;
     private ResultsService resultsService;
@@ -83,7 +79,7 @@ public class ThresholdsSteps {
 
     public ThresholdsSteps(CxClient cxClientMock, RestTemplate restTemplateMock, FlowProperties flowProperties, ADOProperties adoProperties,
                            CxProperties cxProperties, GitHubProperties gitHubProperties, ThresholdValidator thresholdValidator,
-                           ScaProperties scaProperties, SastScanner sastScanner, SCAScanner scaScanner) {
+                           ScaProperties scaProperties, SastScanner sastScanner, SCAScanner scaScanner, EmailService emailService) {
 
         this.cxClientMock = cxClientMock;
         this.restTemplateMock = restTemplateMock;
@@ -103,6 +99,8 @@ public class ThresholdsSteps {
 
         this.sastScanner = sastScanner;
         this.scaScanner = scaScanner;
+
+        this.emailService = emailService;
     }
 
     @Before("@ThresholdsFeature")
@@ -283,7 +281,7 @@ public class ThresholdsSteps {
                 null,
                 null,
                 adoService,
-                null,
+                emailService,
                 cxProperties,
                 flowProperties);
     }
