@@ -66,6 +66,7 @@ public class CxConfigSteps {
     private final ThresholdValidator thresholdValidator;
     private final FlowProperties flowProperties;
     private final CxProperties cxProperties;
+    private final EmailService emailService;
     private final GitHubProperties gitHubProperties;
     private final HelperService helperService;
     private final FilterFactory filterFactory;
@@ -83,7 +84,7 @@ public class CxConfigSteps {
 
     public CxConfigSteps(FlowProperties flowProperties, GitHubService gitHubService,
                          CxProperties cxProperties, GitHubProperties gitHubProperties, ConfigurationOverrider configOverrider, JiraProperties jiraProperties,
-                         ThresholdValidator thresholdValidator, FilterFactory filterFactory, FlowService flowService) {
+                         ThresholdValidator thresholdValidator, FilterFactory filterFactory, FlowService flowService, EmailService emailService) {
 
         this.cxClientMock = mock(CxClient.class);
 
@@ -95,6 +96,7 @@ public class CxConfigSteps {
         this.helperService = mock(HelperService.class);
         this.flowService = flowService;
         this.gitHubService = gitHubService;
+        this.emailService = emailService;
 
         this.gitHubProperties = gitHubProperties;
         this.filterFactory = filterFactory;
@@ -550,8 +552,7 @@ public class CxConfigSteps {
                 gitHubServiceMock,
                 null,
                 null,
-                null,
-                null,
+                null, emailService,
                 cxProperties,
                 flowProperties);
     }
