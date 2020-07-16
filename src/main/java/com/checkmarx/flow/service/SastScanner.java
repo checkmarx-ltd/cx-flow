@@ -224,6 +224,8 @@ public class SastScanner implements VulnerabilityScanner {
     public void cxFullScan(ScanRequest request) throws ExitThrowable {
 
         try {
+            String effectiveProjectName = projectNameGenerator.determineProjectName(request);
+            request.setProject(effectiveProjectName);
             CompletableFuture<ScanResults> future = executeCxScanFlow(request, null);
 
             if (future.isCompletedExceptionally()) {
