@@ -1,33 +1,35 @@
 <!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml"
+>
 <head>
-  <meta charset="utf-8"> <!-- utf-8 works for most cases -->
-  <meta name="viewport" content="width=device-width"> <!-- Forcing initial-scale shouldn't be necessary -->
-  <meta http-equiv="X-UA-Compatible" content="IE=edge"> <!-- Use the latest (edge) version of IE rendering engine -->
-  <meta name="x-apple-disable-message-reformatting">  <!-- Disable auto-scale in iOS 10 Mail entirely -->
-  <title></title> <!-- The title tag shows in email notifications, like Android 4.4. -->
+    <meta charset="utf-8"> <!-- utf-8 works for most cases -->
+    <meta content="width=device-width" name="viewport"> <!-- Forcing initial-scale shouldn't be necessary -->
+    <meta content="IE=edge" http-equiv="X-UA-Compatible"> <!-- Use the latest (edge) version of IE rendering engine -->
+    <meta name="x-apple-disable-message-reformatting">  <!-- Disable auto-scale in iOS 10 Mail entirely -->
+    <title></title> <!-- The title tag shows in email notifications, like Android 4.4. -->
 
-  <!-- Web Font / @font-face : BEGIN -->
-  <!-- NOTE: If web fonts are not required, lines 10 - 27 can be safely removed. -->
+    <!-- Web Font / @font-face : BEGIN -->
+    <!-- NOTE: If web fonts are not required, lines 10 - 27 can be safely removed. -->
 
-  <!-- Desktop Outlook chokes on web font references and defaults to Times New Roman, so we force a safe fallback font. -->
-  <!--[if mso]>
-  <style>
+    <!-- Desktop Outlook chokes on web font references and defaults to Times New Roman, so we force a safe fallback font. -->
+    <!--[if mso]>
+    <style>
     * {
       font-family: sans-serif !important;
     }
-  </style>
-  <![endif]-->
+
+    </style>
+    <![endif]-->
 
 
-  <!--[if !mso]><!-->
-  <link href='https://fonts.googleapis.com/css?family=Roboto:400,700' rel='stylesheet' type='text/css'>
-  <!--<![endif]-->
+    <!--[if !mso]><!-->
+    <link href='https://fonts.googleapis.com/css?family=Roboto:400,700' rel='stylesheet' type='text/css'>
+    <!--<![endif]-->
 
-  <!-- Web Font / @font-face : END -->
+    <!-- Web Font / @font-face : END -->
 
-  <!-- CSS Reset : BEGIN -->
-  <style>
+    <!-- CSS Reset : BEGIN -->
+    <style>
 
     /* What it does: Remove spaces around the email design added by some email clients. */
     /* Beware: It can remove the padding / margin and add a background color to the compose a reply window. */
@@ -279,11 +281,12 @@
       color: darkcyan;
       font-weight: bold;
     }
-  </style>
-  <!-- CSS Reset : END -->
-  <!-- Reset list spacing because Outlook ignores much of our inline CSS. -->
-  <!--[if mso]>
-  <style type="text/css">
+
+    </style>
+    <!-- CSS Reset : END -->
+    <!-- Reset list spacing because Outlook ignores much of our inline CSS. -->
+    <!--[if mso]>
+    <style type="text/css">
     ul,
     ol {
       margin: 0 !important;
@@ -297,11 +300,12 @@
     li.list-item-last {
       margin-bottom: 10px !important;
     }
-  </style>
-  <![endif]-->
 
-  <!-- Progressive Enhancements : BEGIN -->
-  <style>
+    </style>
+    <![endif]-->
+
+    <!-- Progressive Enhancements : BEGIN -->
+    <style>
 
     /* What it does: Hover styles for buttons */
     .button-td,
@@ -358,18 +362,19 @@
       }
     }
 
-  </style>
-  <!-- Progressive Enhancements : END -->
 
-  <!-- What it does: Makes background images in 72ppi Outlook render at correct size. -->
-  <!--[if gte mso 9]>
-  <xml>
-    <o:OfficeDocumentSettings>
-      <o:AllowPNG/>
-      <o:PixelsPerInch>96</o:PixelsPerInch>
-    </o:OfficeDocumentSettings>
-  </xml>
-  <![endif]-->
+    </style>
+    <!-- Progressive Enhancements : END -->
+
+    <!-- What it does: Makes background images in 72ppi Outlook render at correct size. -->
+    <!--[if gte mso 9]>
+    <xml>
+        <o:OfficeDocumentSettings>
+            <o:AllowPNG/>
+            <o:PixelsPerInch>96</o:PixelsPerInch>
+        </o:OfficeDocumentSettings>
+    </xml>
+    <![endif]-->
 
 </head>
 <!--
@@ -378,100 +383,97 @@
 	2. center tag: for Gmail and Inbox mobile apps and web versions of Gmail, GSuite, Inbox, Yahoo, AOL, Libero, Comcast, freenet, Mail.ru, Orange.fr
 	3. mso conditional: For Windows 10 Mail
 -->
-<body width="100%" style="margin: 0; padding: 0 !important; mso-line-height-rule: exactly; background-color: #222222;">
-<center style="width: 100%; background-color: #222222;">
-  <!--[if mso | IE]>
-  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #222222;">
-    <tr>
-      <td>
-  <![endif]-->
-
-  <!-- Visually Hidden Preheader Text : BEGIN -->
-  <div style="display: none; font-size: 1px; line-height: 1px; max-height: 0px; max-width: 0px; opacity: 0; overflow: hidden; mso-hide: all; font-family: sans-serif;">
-    (Optional) This text will appear in the inbox preview, but not the email body. It can be used to supplement the email subject line or even summarize the email's contents. Extended text preheaders (~490 characters) seems like a better UX for anyone using a screenreader or voice-command apps like Siri to dictate the contents of an email. If this text is not included, email clients will automatically populate it using the text (including image alt text) at the start of the email's body.
-  </div>
-  <!-- Visually Hidden Preheader Text : END -->
-
-  <!-- Create white space after the desired preview text so email clients don’t pull other distracting text into the inbox preview. Extend as necessary. -->
-  <!-- Preview Text Spacing Hack : BEGIN -->
-  <div style="display: none; font-size: 1px; line-height: 1px; max-height: 0px; max-width: 0px; opacity: 0; overflow: hidden; mso-hide: all; font-family: sans-serif;">
-    &zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;
-  </div>
-  <!-- Preview Text Spacing Hack : END -->
-
-  <!--
-      Set the email width. Defined in two places:
-      1. max-width for all clients except Desktop Windows Outlook, allowing the email to squish on narrow but never go wider than 680px.
-      2. MSO tags for Desktop Windows Outlook enforce a 680px width.
-      Note: The Fluid and Responsive templates have a different width (600px). The hybrid grid is more "fragile", and I've found that 680px is a good width. Change with caution.
-  -->
-  <div style="max-width: 680px; margin: 0 auto;" class="email-container">
-    <!--[if mso]>
-    <table align="center" role="presentation" cellspacing="0" cellpadding="0" border="0" width="680">
-      <tr>
-        <td>
+<body style="margin: 0; padding: 0 !important; mso-line-height-rule: exactly; background-color: white;" width="100%">
+<center style="width: 100%; background-color: white;">
+    <!--[if mso | IE]>
+    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"
+           style="background-color: white;">
+        <tr>
+            <td>
     <![endif]-->
 
-    <!-- Email Body : BEGIN -->
-    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 0 auto;">
+    <!-- Visually Hidden Preheader Text : BEGIN -->
+    <div style="display: none; font-size: 1px; line-height: 1px; max-height: 0px; max-width: 0px; opacity: 0; overflow: hidden; mso-hide: all; font-family: sans-serif;">
+        (Optional) This text will appear in the inbox preview, but not the email body. It can be used to supplement the
+        email subject line or even summarize the email's contents. Extended text preheaders (~490 characters) seems like
+        a better UX for anyone using a screenreader or voice-command apps like Siri to dictate the contents of an email.
+        If this text is not included, email clients will automatically populate it using the text (including image alt
+        text) at the start of the email's body.
+    </div>
+    <!-- Visually Hidden Preheader Text : END -->
 
-      <tr>
-        <td style="background-color: #ffffff;">
-          <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+    <!-- Create white space after the desired preview text so email clients don’t pull other distracting text into the inbox preview. Extend as necessary. -->
+    <!-- Preview Text Spacing Hack : BEGIN -->
+    <div style="display: none; font-size: 1px; line-height: 1px; max-height: 0px; max-width: 0px; opacity: 0; overflow: hidden; mso-hide: all; font-family: sans-serif;">
+        &zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;
+    </div>
+    <!-- Preview Text Spacing Hack : END -->
+
+    <!--
+        Set the email width. Defined in two places:
+        1. max-width for all clients except Desktop Windows Outlook, allowing the email to squish on narrow but never go wider than 680px.
+        2. MSO tags for Desktop Windows Outlook enforce a 680px width.
+        Note: The Fluid and Responsive templates have a different width (600px). The hybrid grid is more "fragile", and I've found that 680px is a good width. Change with caution.
+    -->
+    <div class="email-container" style="max-width: 680px; margin: 0 auto;">
+        <!--[if mso]>
+        <table align="center" role="presentation" cellspacing="0" cellpadding="0" border="0" width="680">
             <tr>
-              <td style="width: 25%; padding: 5px;">
-                <img src="https://custodela.com/wp-content/uploads/2017/04/logo-main-1.png" width="200" height="" alt="alt_text" border="0"  class="fluid g-img">
-              </td>
-              <td style="padding: 20px; font-family: sans-serif; font-size: 15px; line-height: 20px; color: #555555;">
-                <h1  style="text-shadow: 1px 1px 2px #000025; text-align: center;">An error occurred during scan</h1>
-              </td>
+                <td>
+        <![endif]-->
+
+        <!-- Email Body : BEGIN -->
+        <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin: 0 auto;" width="100%">
+
+            <tr>
+                <td style="background-color: #ffffff;">
+                    <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%">
+                        <tr width="100%">
+                            <td style="padding: 20px; font-family: sans-serif; font-size: 15px; line-height: 20px; color: #555555;" width="100%">
+                                <h1 style="text-shadow: 1px 1px 2px #000025; text-align: center;">An error occurred during the scan.</h1>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2"
+                                style="padding: 20px; font-family: sans-serif; font-size: 15px; line-height: 20px; color: #555555;">
+                                <h3 style="text-shadow: 0.5px 0.5px 2px #000025; text-align: center;"><span
+                                        style="color: #CC0000">[[${message}]]</span></h3>
+                            </td>
+                        </tr>
+
+                    </table>
+                </td>
             </tr>
-            <tr><td colspan="2" style="padding: 20px; font-family: sans-serif; font-size: 15px; line-height: 20px; color: #555555;">
-              <h3  style="text-shadow: 0.5px 0.5px 2px #000025; text-align: center;"><span style="color: #CC0000">[[${message}]]</span></h3>
-             </td>
+
+
+        </table>
+        <!-- Email Body : END -->
+
+        <!-- Email Footer : BEGIN -->
+        <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="max-width: 680px;" width="100%">
+            <tr>
+                <td style="width: 60px;"><br>
+                    <img alt="Generated by Checkmarx"
+                         border="0" class="fluid g-img" height="" src="https://www.checkmarx.com/wp-content/uploads/2019/10/Checkmarx-logo-2019-horizontal-4.png" width="80">
+                    <br>
+                </td>
             </tr>
+        </table>
+        <!-- Email Footer : END -->
 
-          </table>
+        <!--[if mso]>
         </td>
-      </tr>
+        </tr>
+        </table>
+        <![endif]-->
+    </div>
 
 
-    </table>
-    <!-- Email Body : END -->
-
-    <!-- Email Footer : BEGIN -->
-    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="max-width: 680px;">
-      <tr>
-
-
-        <td style="width: 60px;"><br>
-          <img src="https://custodela.com/wp-content/uploads/2017/04/logo-main-white.png" width="60" height="" alt="alt_text" border="0"  class="fluid g-img">
-          <br>
-        </td>
-
-        <td style="padding: 10px;  font-size: 12px; line-height: 15px; text-align: center; color: #FFFFFF;font-family: sans-serif;">
-          <strong>Automatically Generated by Custodela Machina</strong><br>
-          © 2018 Custodela Inc. or its affiliates<br>
-
-        </td>
-      </tr>
-    </table>
-    <!-- Email Footer : END -->
-
-    <!--[if mso]>
+    <!--[if mso | IE]>
     </td>
     </tr>
     </table>
     <![endif]-->
-  </div>
-
-
-
-  <!--[if mso | IE]>
-  </td>
-  </tr>
-  </table>
-  <![endif]-->
 </center>
 </body>
 </html>

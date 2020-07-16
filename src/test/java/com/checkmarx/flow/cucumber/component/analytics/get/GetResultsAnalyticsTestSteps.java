@@ -8,6 +8,7 @@ import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.report.ScanResultsReport;
 import com.checkmarx.flow.exception.MachinaException;
+import com.checkmarx.flow.service.EmailService;
 import com.checkmarx.flow.service.ResultsService;
 import com.checkmarx.jira.PublishUtils;
 import com.checkmarx.sdk.config.Constants;
@@ -50,17 +51,19 @@ public class GetResultsAnalyticsTestSteps {
     private static final String MERGE_NOTE_URL = "merge note url stub";
     private final CxClient cxClientMock;
     private final FlowProperties flowProperties;
+    private final EmailService emailService;
     private final CxProperties cxProperties;
     private ScanResults scanResultsToInject;
     private ResultsService resultsService;
 
 
     public GetResultsAnalyticsTestSteps(CxClient cxClientMock, FlowProperties flowProperties,
-                                        CxProperties cxProperties) {
+                                        CxProperties cxProperties, EmailService emailService) {
         this.cxClientMock = cxClientMock;
         flowProperties.setThresholds(new HashMap<>());
         this.flowProperties = flowProperties;
         this.cxProperties = cxProperties;
+        this.emailService = emailService;
     }
 
     @Before()
@@ -79,8 +82,7 @@ public class GetResultsAnalyticsTestSteps {
                 null,
                 null,
                 null,
-                null,
-                null,
+                null, emailService,
                 cxProperties,
                 flowProperties);
     }
