@@ -1,5 +1,4 @@
 @ThresholdsFeature
-@Skip
 Feature: CxFlow should fail builds and pull requests if the number of findings with certain severity is above threshold
   
   Scenario Outline: CxFlow should approve or fail GitHub pull request, depending on whether threshold is exceeded
