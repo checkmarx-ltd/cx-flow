@@ -1,5 +1,6 @@
 package com.checkmarx.flow.cucumber.component.thresholds.scaPR;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
@@ -77,7 +78,7 @@ public class ScaThresholdsSteps {
 
     @Before("@ThresholdsFeature")
     public void prepareServices() {
-        log.info("setting scan engine to CxSca");
+        log.info("setting scan engine to CxSCA");
         flowProperties.setEnabledVulnerabilityScanners(Collections.singletonList(ScaProperties.CONFIG_PREFIX));
     }
 
@@ -85,13 +86,12 @@ public class ScaThresholdsSteps {
     public void the_following_thresholds_severitys(List<Map<String, String>> thresholds) {
         log.info("found {} threshold-severitys definitions", thresholds.size());
         if (log.isDebugEnabled()) {
-            thresholds.forEach(threshold -> {
-                log.debug("{} --> high: {}, medium: {}, low: {}",
-                        threshold.get(ThresholdFeatureKeys.THRESHOLD_NAME.toKey()),
-                        threshold.get(ThresholdFeatureKeys.THRESHOLD_FOR_HIGH.toKey()),
-                        threshold.get(ThresholdFeatureKeys.THRESHOLD_FOR_MEDIUM.toKey()),
-                        threshold.get(ThresholdFeatureKeys.THRESHOLD_FOR_LOW.toKey()));
-            });
+            thresholds.forEach(threshold ->
+                    log.debug("{} --> high: {}, medium: {}, low: {}",
+                            threshold.get(ThresholdFeatureKeys.THRESHOLD_NAME.toKey()),
+                            threshold.get(ThresholdFeatureKeys.THRESHOLD_FOR_HIGH.toKey()),
+                            threshold.get(ThresholdFeatureKeys.THRESHOLD_FOR_MEDIUM.toKey()),
+                            threshold.get(ThresholdFeatureKeys.THRESHOLD_FOR_LOW.toKey())));
         }
         thresholdDefs = thresholds;
     }
@@ -100,10 +100,8 @@ public class ScaThresholdsSteps {
     public void the_following_scan_findings(List<Map<String, String>> findings) {
         log.info("found {} findings definitions", findings.size());
         if (log.isDebugEnabled()) {
-            findings.forEach(finding -> {
-                log.debug("{} --> high: {}, medium: {}, low: {}", finding.get("name"), finding.get("high"),
-                        finding.get("medium"), finding.get("low"));
-            });
+            findings.forEach(finding -> log.debug("{} --> high: {}, medium: {}, low: {}", finding.get("name"), finding.get("high"),
+                    finding.get("medium"), finding.get("low")));
         }
         findingsDefs = findings;
     }
@@ -141,7 +139,7 @@ public class ScaThresholdsSteps {
         PullRequestReport pullRequestReport = new PullRequestReport();
         boolean actual = thresholdValidatorImpl.isMergeAllowed(scanResults, repoProperties, pullRequestReport);
         log.info("is merged allowed = {} (expecting: {})", actual, expected);
-        assertTrue(expected.equals("pass") ? actual : !actual, "is merged allowed = " + actual + ", but was expecting: " + expected);
+        assertEquals(expected.equals("pass"), actual, "is merged allowed = " + actual + ", but was expecting: " + expected);
     }
 
     @When("max findings score is {word} threshold-score")
@@ -178,10 +176,10 @@ public class ScaThresholdsSteps {
         boolean isPassSeverity = Arrays.asList("score", "none").contains(failType);
         boolean isPassScore = Arrays.asList("count", "none").contains(failType);
     
-        thresholdDefs = Arrays.asList(Arrays.stream(ThresholdFeatureKeys.values())
-        .collect(Collectors.toMap(
-            key -> key.name().toLowerCase().replace('_','-'), 
-            key -> key == ThresholdFeatureKeys.THRESHOLD_NAME ? "spec" : "10")));
+        thresholdDefs = Collections.singletonList(Arrays.stream(ThresholdFeatureKeys.values())
+                .collect(Collectors.toMap(
+                        key -> key.name().toLowerCase().replace('_', '-'),
+                        key -> key == ThresholdFeatureKeys.THRESHOLD_NAME ? "spec" : "10")));
 
         findingsDefs = new ArrayList<>();
 
@@ -203,7 +201,7 @@ public class ScaThresholdsSteps {
         scaResults.setScanId("1");
         Summary summary = new Summary();
         Map<Filter.Severity, Integer> summaryMap = new EnumMap<>(Filter.Severity.class);
-        List<Finding> findings = new LinkedList<Finding>();
+        List<Finding> findings = new LinkedList<>();
         Map<String, String> specMap = findingsDefs.stream()
                 .filter(findingsDef -> findingsDef.get("name").equals(findingsName)).findAny().get();
 
@@ -212,8 +210,8 @@ public class ScaThresholdsSteps {
             log.info("{}-spec: {}", severity, spec);
 
             /* create findings */
-            Integer count = Arrays.asList(spec.split("-than-")).stream()
-                    .mapToInt(v -> "more".equals(v) ? 3 : "less".equals(v) ? -3 : Integer.valueOf((String) v))
+            Integer count = Arrays.stream(spec.split("-than-"))
+                    .mapToInt(v -> "more".equals(v) ? 3 : "less".equals(v) ? -3 : Integer.parseInt(v))
                     .reduce(0, Integer::sum);
             log.info("going to generate {} issues with {} severity", count, severity);
             summaryMap.put(Filter.Severity.valueOf(severity.name()), count);
