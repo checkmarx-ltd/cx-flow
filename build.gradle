@@ -145,25 +145,15 @@ sonarqube {
 task unitTest(type: Test) {
     useJUnitPlatform() {
         systemProperty "testprofile", "unit"
-        if (System.properties['testprofile'] != 'integration' | System.properties['testprofile'] != 'component' | System.properties['testprofile'] != 'e2e') {
-            exclude 'com/checkmarx/flow/cucumber/integration/**'
-            exclude 'com/checkmarx/flow/cucumber/component/**'
-            exclude 'com/checkmarx/flow/cucumber/integration/end2end/github2jira/'
-            exclude 'com/checkmarx/flow/cucumber/component/**'
-            exclude 'com/checkmarx/flow/cucumber/integration/jira'
-            exclude 'com/checkmarx/flow/cucumber/integration/scan'
-            exclude 'com/checkmarx/flow/cucumber/integration/end2end/genericendtoend/**'
-        } else {
-            //exclude 'com/checkmarx/**'
-            include 'com/checkmarx/flow/test/flow**'
-            include 'com/checkmarx/flow/exception/**'
-            include 'com/checkmarx/flow/custom/**'
-            include 'com/checkmarx/flow/controller**'
-            include 'com/checkmarx/flow/filter/**'
-            include 'com/checkmarx/flow/service/**'
-            include 'com/checkmarx/flow/utils/**'
 
-        }
+        include 'com/checkmarx/flow/test/flow**'
+        include 'com/checkmarx/flow/exception/**'
+        include 'com/checkmarx/flow/custom/**'
+        include 'com/checkmarx/flow/controller**'
+        include 'com/checkmarx/flow/filter/**'
+        include 'com/checkmarx/flow/service/**'
+        include 'com/checkmarx/flow/utils/**'
+
         testLogging {
             events "passed", "skipped", "failed"
         }
@@ -173,11 +163,9 @@ task unitTest(type: Test) {
 task componentTest(type: Test) {
     useJUnitPlatform() {
         systemProperty "testprofile", "component"
-        if (System.properties['testprofile'] != 'integration' | System.properties['testprofile'] != 'unit' | System.properties['testprofile'] != 'e2e') {
-            include 'com/checkmarx/flow/cucumber/component/**'
-        } else {
-            include 'com/checkmarx/flow/cucumber/component/**'
-        }
+
+        include 'com/checkmarx/flow/cucumber/component/**'
+
         testLogging {
             events "passed", "skipped", "failed"
         }
@@ -188,14 +176,10 @@ task componentTest(type: Test) {
 
 task e2eTests(type: Test) {
     useJUnitPlatform() {
-
         systemProperty "testprofile", "e2e"
-        if (System.properties['testprofile'] != 'integration' | System.properties['testprofile'] != 'unit' | System.properties['testprofile'] != 'component') {
-            include 'com/checkmarx/flow/cucumber/integration/end2end/genericendtoend/**'
-        } else {
-            //exclude 'com/checkmarx/**'
-            include 'com/checkmarx/flow/cucumber/integration/end2end/genericendtoend/**'
-        }
+
+        include 'com/checkmarx/flow/cucumber/integration/end2end/genericendtoend/**'
+
         testLogging {
             events "passed", "skipped", "failed"
         }
@@ -207,13 +191,13 @@ task e2eTests(type: Test) {
 task integrationTest(type: Test) {
     useJUnitPlatform() {
         systemProperty "testprofile", "integration"
-        if (System.properties['testprofile'] != 'unit') {
-            include 'com/checkmarx/flow/cucumber/integration/github/**'
-            include 'com/checkmarx/flow/cucumber/integration/azure/publishing/**'
-            include 'com/checkmarx/flow/cucumber/integration/azure/publishing/github2ado/*'
-            include 'com/checkmarx/flow/cucumber/integration/cxconfig/*'
-            include 'com/checkmarx/flow/cucumber/integration/cxconfigbugtracker/**'
-        }
+
+        include 'com/checkmarx/flow/cucumber/integration/github/**'
+        include 'com/checkmarx/flow/cucumber/integration/azure/publishing/**'
+        include 'com/checkmarx/flow/cucumber/integration/azure/publishing/github2ado/*'
+        include 'com/checkmarx/flow/cucumber/integration/cxconfig/*'
+        include 'com/checkmarx/flow/cucumber/integration/cxconfigbugtracker/**'
+
         testLogging {
             events "passed", "skipped", "failed"
         }
@@ -223,9 +207,9 @@ task integrationTest(type: Test) {
 task ScaIntegrationTest(type: Test) {
     useJUnitPlatform() {
         systemProperty "testprofile", "scaIntegration"
-        if (System.properties['testprofile'] != 'unit' ) {
-            include 'com/checkmarx/flow/cucumber/integration/sca_scanner/**'
-        }
+
+        include 'com/checkmarx/flow/cucumber/integration/sca_scanner/**'
+
         testLogging {
             events "passed", "skipped", "failed"
         }
@@ -235,13 +219,13 @@ task ScaIntegrationTest(type: Test) {
 task JiraIntegrationTest(type: Test) {
     useJUnitPlatform() {
         systemProperty "testprofile", "jiraIntegration"
-        if (System.properties['testprofile'] != 'unit') {
-            include 'com/checkmarx/flow/cucumber/integration/jira/manualconfig/**'
-            include 'com/checkmarx/flow/cucumber/integration/jira/autoconfig/*'
-            include 'com/checkmarx/flow/cucumber/integration/jira/analytics/*'
-            include 'com/checkmarx/flow/cucumber/integration/publishprocess/**'
-            include 'com/checkmarx/flow/cucumber/integration/negative_tests/**'
-        }
+
+        include 'com/checkmarx/flow/cucumber/integration/jira/manualconfig/**'
+        include 'com/checkmarx/flow/cucumber/integration/jira/autoconfig/*'
+        include 'com/checkmarx/flow/cucumber/integration/jira/analytics/*'
+        include 'com/checkmarx/flow/cucumber/integration/publishprocess/**'
+        include 'com/checkmarx/flow/cucumber/integration/negative_tests/**'
+
         testLogging {
             events "passed", "skipped", "failed"
         }
@@ -251,9 +235,8 @@ task JiraIntegrationTest(type: Test) {
 task PullRequestCommnetsIntegrationTest(type: Test) {
     useJUnitPlatform() {
         systemProperty "testprofile", "pullrequestCommentIntegration"
-        if (System.properties['testprofile'] != 'unit') {
-            include 'com/checkmarx/flow/cucumber/integration/pullrequest/updatecomments/**'
-        }
+        include 'com/checkmarx/flow/cucumber/integration/pullrequest/updatecomments/**'
+
         testLogging {
             events "passed", "skipped", "failed"
         }

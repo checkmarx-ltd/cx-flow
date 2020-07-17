@@ -118,12 +118,6 @@ test {
     }
 }
 
-task integrationTest(type: Test) {
-    useJUnit {
-        systemProperty "testprofile", "integration"
-    }
-}
-
 bootJar {
     mainClassName = "${mainClass}"
 }
