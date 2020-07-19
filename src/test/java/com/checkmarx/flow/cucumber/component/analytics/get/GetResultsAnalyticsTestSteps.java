@@ -21,8 +21,6 @@ import com.checkmarx.sdk.dto.ast.Summary;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
 import com.checkmarx.test.flow.config.CxFlowMocksConfig;
-import com.cx.restclient.dto.scansummary.Severity;
-import com.cx.restclient.ast.dto.sca.report.Finding;
 
 import io.cucumber.java.Before;
 import io.cucumber.java.en.Then;
@@ -32,6 +30,7 @@ import org.junit.Assert;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.springframework.boot.test.context.SpringBootTest;
+
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -108,10 +107,10 @@ public class GetResultsAnalyticsTestSteps {
 
         scaResults.setScanId("" + SCAN_ID);
 
-        List<Finding> findings = new LinkedList<Finding>();
-        addFinding(high, findingCounts, findings, Severity.HIGH, Filter.Severity.HIGH);
-        addFinding(medium, findingCounts, findings, Severity.MEDIUM, Filter.Severity.MEDIUM);
-        addFinding(low, findingCounts, findings, Severity.LOW, Filter.Severity.LOW);
+        List<com.checkmarx.sdk.dto.ast.Finding> findings = new LinkedList<>();
+        addFinding(high, findingCounts, findings, Filter.Severity.HIGH, Filter.Severity.HIGH);
+        addFinding(medium, findingCounts, findings, Filter.Severity.MEDIUM, Filter.Severity.MEDIUM);
+        addFinding(low, findingCounts, findings, Filter.Severity.LOW, Filter.Severity.LOW);
 
         Summary summary = new Summary();
         summary.setFindingCounts(findingCounts);
@@ -127,9 +126,9 @@ public class GetResultsAnalyticsTestSteps {
                 .build();
     }
 
-    private static void addFinding(Integer countFindingsPerSeverity, Map<Filter.Severity, Integer> findingCounts, List<Finding> findings, Severity severity, Filter.Severity filterSeverity) {
+    private static void addFinding(Integer countFindingsPerSeverity, Map<Filter.Severity, Integer> findingCounts, List<com.checkmarx.sdk.dto.ast.Finding> findings, Filter.Severity severity, Filter.Severity filterSeverity) {
         for ( int i=0; i <countFindingsPerSeverity; i++) {
-            Finding fnd = new Finding();
+            com.checkmarx.sdk.dto.ast.Finding fnd = new com.checkmarx.sdk.dto.ast.Finding();
             fnd.setSeverity(severity);
             fnd.setPackageId("");
             findings.add(fnd);
@@ -137,7 +136,7 @@ public class GetResultsAnalyticsTestSteps {
 
         findingCounts.put(filterSeverity, countFindingsPerSeverity);
     }
-
+    
     private void initMock(CxClient cxClientMock) {
         try {
             ScanResultsAnswerer answerer = new ScanResultsAnswerer();
@@ -257,7 +256,7 @@ public class GetResultsAnalyticsTestSteps {
             Assert.fail(message);
         }
     }
-
+    
     @When("doing get results operation on SAST scan with {int} {int} {int} {int} results and filter is {string}")
     public void getResultsWithFilter(int high, int medium, int low, int info, String filter) throws InterruptedException  {
         try {
@@ -289,7 +288,7 @@ public class GetResultsAnalyticsTestSteps {
         assertScanSCASummary(report);
         Assert.assertEquals("Scan ID does not match !", Integer.valueOf(SCAN_ID), Integer.valueOf(report.getScanId()));
     }
-
+    
     private void assertScanSASTResults(ScanResultsReport report) {
         Assert.assertEquals("Error getting high severity flow results", getFlowSummaryField("High") , getScanResultsBySeverity(report, FindingSeverity.HIGH));
         Assert.assertEquals("Error getting medium severity flow results", getFlowSummaryField("Medium") , getScanResultsBySeverity(report, FindingSeverity.MEDIUM));
