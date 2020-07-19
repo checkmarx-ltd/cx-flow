@@ -1,5 +1,6 @@
 package com.checkmarx.flow.cucumber.integration.azure.publishing;
 
+import com.checkmarx.flow.config.ADOProperties;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -20,11 +21,16 @@ public abstract class PublishingStepsBase {
     @Autowired
     private AzureDevopsClient adoClient;
 
+    @Autowired
+    private ADOProperties adoProperties;
+
     @PostConstruct
     private void initAdoClient() throws IOException {
         Properties testProperties = TestUtils.getPropertiesFromResource(PROPERTIES_FILE_PATH);
         projectName = testProperties.getProperty("projectName");
         organizationName = testProperties.getProperty("organization");
         adoClient.init(organizationName, projectName);
+
+        adoProperties.setProjectName(projectName);
     }
 }

@@ -10,6 +10,9 @@ import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.web.client.RestTemplate;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.templatemode.TemplateMode;
+import org.thymeleaf.templateresolver.FileTemplateResolver;
 
 import java.beans.ConstructorProperties;
 import java.nio.charset.StandardCharsets;
@@ -45,8 +48,7 @@ public class FlowConfig {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
 
         FlowProperties.Mail mail = properties.getMail();
-
-        if (mail == null || !mail.isEnabled()) {
+        if (mail == null) {
             return mailSender;
         }
         Properties props = mailSender.getJavaMailProperties();
@@ -64,6 +66,26 @@ public class FlowConfig {
         props.put("mail.smtp.starttls.enable", "true");
 
         return mailSender;
+    }
+
+    public TemplateEngine getTemplateEngine() {
+
+        TemplateEngine templateEngine = new TemplateEngine();
+        templateEngine.setTemplateResolver(getFileTemplateResolver());
+
+        return templateEngine;
+
+    }
+
+    private FileTemplateResolver getFileTemplateResolver() {
+        FileTemplateResolver fileTemplateResolver = new FileTemplateResolver();
+        fileTemplateResolver.setSuffix(".html");
+        fileTemplateResolver.setTemplateMode(TemplateMode.HTML);
+        fileTemplateResolver.setCharacterEncoding(StandardCharsets.UTF_8.toString());
+        fileTemplateResolver.setOrder(1);
+        fileTemplateResolver.setCheckExistence(true);
+
+        return fileTemplateResolver;
     }
 
     /**

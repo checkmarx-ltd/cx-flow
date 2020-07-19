@@ -272,10 +272,6 @@ public class ADOIssueTracker implements IssueTracker {
         log.debug("Determining target ADO project.");
 
         String adoProject = properties.getProjectName();
-        if(StringUtils.isEmpty(adoProject)) {
-            adoProject = request.getProject();
-            log.debug("Checking scan request: {}", adoProject);
-        }
 
         if (StringUtils.isEmpty(adoProject)) {
             adoProject = request.getAltProject();
@@ -294,6 +290,8 @@ public class ADOIssueTracker implements IssueTracker {
         if (StringUtils.isEmpty(request.getNamespace())) {
             throw new MachinaException("Namespace must be specified.");
         }
+
+        log.debug("Returning azure project name: {}", adoProject);
         return adoProject;
     }
 
@@ -326,19 +324,20 @@ public class ADOIssueTracker implements IssueTracker {
         boolean canUseProperties = !StringUtils.isEmpty(properties.getNamespace()) &&
                 !StringUtils.isEmpty(properties.getProjectName());
 
-        String result;
+        String namespace;
         if (canUseProperties) {
             // We use namespace from ado.properties only if the projectName in ado.properties is not empty as well.
-            result = properties.getNamespace();
+            namespace = properties.getNamespace();
             log.debug("Using the namespace from ADO properties ({}), because both namespace and project name " +
                     "are specified in the properties.",
-                    result);
+                    namespace);
         } else {
-            result = request.getNamespace();
-            log.debug("Using namespace from the scan request: {}", result);
+            namespace = request.getNamespace();
+            log.debug("Using namespace from the scan request: {}", namespace);
         }
+        log.debug("Returning azure namespace: {}", namespace);
 
-        return result;
+        return namespace;
     }
 
     @Override

@@ -99,10 +99,6 @@ Feature: CxFlow should read configuration from cx.config file in the root of rep
     When target repo contains a configuration file
     Then cx-flow configurations properties are getting overridden with the following parameters:
       | vulnerabilityScanners |
-      | appUrl                |
-      | apiUrl                |
-      | accessControlUrl      |
-      | tenant                |
       | thresholdsSeverity    |
       | thresholdsScore       |
       | filterSeverity        |

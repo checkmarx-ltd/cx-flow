@@ -34,6 +34,8 @@ public class ADOController extends AdoControllerBase {
     private static final String HTTPS = "https://";
     private static final List<String> PULL_EVENT = Arrays.asList("git.pullrequest.created", "git.pullrequest.updated");
     private static final String AUTHORIZATION = "authorization";
+    private static final int NAMESPACE_INDEX = 3;
+    private static final String EMPTY_STRING = "";
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(ADOController.class);
     private final ADOProperties properties;
     private final FlowProperties flowProperties;
@@ -61,6 +63,7 @@ public class ADOController extends AdoControllerBase {
         validateBasicAuth(auth);
         controllerRequest = ensureNotNull(controllerRequest);
         adoDetailsRequest = ensureDetailsNotNull(adoDetailsRequest);
+        ResourceContainers resourceContainers = body.getResourceContainers();
 
         if (!PULL_EVENT.contains(body.getEventType()) || !body.getResource().getStatus().equals("active")) {
             log.info("Pull requested not processed.  Event was not opened ({})", body.getEventType());
@@ -134,7 +137,7 @@ public class ADOController extends AdoControllerBase {
                     .product(p)
                     .project(controllerRequest.getProject())
                     .team(controllerRequest.getTeam())
-                    .namespace(determineNamespace(repository))
+                    .namespace(determineNamespace(resourceContainers))
                     .repoName(repository.getName())
                     .repoUrl(gitUrl)
                     .repoUrlWithAuth(gitAuthUrl)
@@ -187,6 +190,7 @@ public class ADOController extends AdoControllerBase {
         validateBasicAuth(auth);
         controllerRequest = ensureNotNull(controllerRequest);
         adoDetailsRequest = ensureDetailsNotNull(adoDetailsRequest);
+        ResourceContainers resourceContainers = body.getResourceContainers();
 
         FlowOverride o = ScanUtils.getMachinaOverride(controllerRequest.getOverride());
 
@@ -254,7 +258,8 @@ public class ADOController extends AdoControllerBase {
                     .product(p)
                     .project(controllerRequest.getProject())
                     .team(controllerRequest.getTeam())
-                    .namespace(determineNamespace(repository))
+                    .namespace(determineNamespace(resourceContainers))
+                    .altProject(determineAzureProject(repository))
                     .repoName(repository.getName())
                     .repoUrl(gitUrl)
                     .repoUrlWithAuth(gitAuthUrl)
@@ -302,10 +307,26 @@ public class ADOController extends AdoControllerBase {
         return emails;
     }
 
-    private String determineNamespace(Repository repository) {
-        String result = repository.getProject().getName().replace(" ", "_");
-        log.debug("Using namespace based on repository.project.name: {}", result);
-        return result;
+    private String determineNamespace(ResourceContainers resourceContainers) {
+        String namespace = EMPTY_STRING;
+        try {
+            log.debug("Trying to extract namespace from request body");
+            String projectUrl = resourceContainers.getProject().getBaseUrl();
+            namespace = projectUrl.split("/")[NAMESPACE_INDEX];
+        }
+        catch (Exception e){
+            log.warn("can't find namespace in body resource containers: {}", e.getMessage());
+        }
+
+        log.info("using namespace: {}", namespace);
+        return namespace;
+    }
+
+    private String determineAzureProject(Repository repository) {
+        String azureProject = repository.getProject().getName();
+
+        log.info("using azure project: {}", azureProject);
+        return azureProject;
     }
 
     /**

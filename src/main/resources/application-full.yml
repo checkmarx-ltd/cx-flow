@@ -34,7 +34,9 @@ cx-flow:
     port: 587
     username: xxx
     password: xxx
-    enabled: true
+    cc: emailList1@...com, emailList2@...com
+    notification: false
+    allow-empty-mail: false
 
 checkmarx:
   username:

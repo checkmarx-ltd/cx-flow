@@ -8,12 +8,7 @@ import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaException;
-import com.checkmarx.flow.service.ADOService;
-import com.checkmarx.flow.service.GitHubService;
-import com.checkmarx.flow.service.ThresholdValidator;
-import com.checkmarx.flow.service.ResultsService;
-import com.checkmarx.flow.service.SCAScanner;
-import com.checkmarx.flow.service.SastScanner;
+import com.checkmarx.flow.service.*;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.ScaProperties;
@@ -43,6 +38,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -74,6 +70,7 @@ public class ThresholdsSteps {
     private final ScaProperties scaProperties;
     private final SastScanner sastScanner;
     private final SCAScanner scaScanner;
+    private final EmailService emailService;
 
     private ScanResults scanResultsToInject;
     private ResultsService resultsService;
@@ -82,7 +79,7 @@ public class ThresholdsSteps {
 
     public ThresholdsSteps(CxClient cxClientMock, RestTemplate restTemplateMock, FlowProperties flowProperties, ADOProperties adoProperties,
                            CxProperties cxProperties, GitHubProperties gitHubProperties, ThresholdValidator thresholdValidator,
-                           ScaProperties scaProperties, SastScanner sastScanner, SCAScanner scaScanner) {
+                           ScaProperties scaProperties, SastScanner sastScanner, SCAScanner scaScanner, EmailService emailService) {
 
         this.cxClientMock = cxClientMock;
         this.restTemplateMock = restTemplateMock;
@@ -102,10 +99,15 @@ public class ThresholdsSteps {
 
         this.sastScanner = sastScanner;
         this.scaScanner = scaScanner;
+
+        this.emailService = emailService;
     }
 
     @Before("@ThresholdsFeature")
     public void prepareServices() {
+        log.info("setting scan engine to CxSAST");
+        flowProperties.setEnabledVulnerabilityScanners(Collections.singletonList(CxProperties.CONFIG_PREFIX));
+
         initMock(cxClientMock);
         initMock(restTemplateMock);
         scanResultsToInject = createFakeScanResults();
@@ -214,7 +216,7 @@ public class ThresholdsSteps {
         ScanRequest scanRequest = new ScanRequest();
         BugTracker.Type issueTruckerType;
 
-        Map<String, String> additionalMetadata = new HashMap<String, String>();
+        Map<String, String> additionalMetadata = new HashMap<>();
         additionalMetadata.put(STATUSES_URL_KEY, PULL_REQUEST_STATUSES_URL);
         
         if(isGitHub) {
@@ -242,14 +244,9 @@ public class ThresholdsSteps {
                 anyString(), eq(HttpMethod.POST), any(HttpEntity.class), ArgumentMatchers.<Class<String>>any());
   
         when(sendingPostRequest).thenAnswer(interceptor);
-        when(restTemplateMock.exchange(anyString(),eq(HttpMethod.GET),any(), any(Class.class) )).thenReturn(createResponseForGetComments());
+        when(restTemplateMock.exchange(anyString(),eq(HttpMethod.GET),any(), any(Class.class) ))
+                .thenReturn(ResponseEntity.ok("{}"));
     }
-
-    private ResponseEntity<String> createResponseForGetComments() {
-        ResponseEntity<String> result = new ResponseEntity<>("{}", HttpStatus.OK);
-        return result;
-    }
-
 
     private void initMock(CxClient cxClientMock) {
         try {
@@ -284,7 +281,7 @@ public class ThresholdsSteps {
                 null,
                 null,
                 adoService,
-                null,
+                emailService,
                 cxProperties,
                 flowProperties);
     }

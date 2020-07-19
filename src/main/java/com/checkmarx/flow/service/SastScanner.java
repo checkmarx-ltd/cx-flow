@@ -28,7 +28,10 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 import static com.checkmarx.flow.exception.ExitThrowable.exit;
@@ -224,6 +227,8 @@ public class SastScanner implements VulnerabilityScanner {
     public void cxFullScan(ScanRequest request) throws ExitThrowable {
 
         try {
+            String effectiveProjectName = projectNameGenerator.determineProjectName(request);
+            request.setProject(effectiveProjectName);
             CompletableFuture<ScanResults> future = executeCxScanFlow(request, null);
 
             if (future.isCompletedExceptionally()) {
@@ -352,16 +357,6 @@ public class SastScanner implements VulnerabilityScanner {
         return repoUrl;
     }
 
-    private void sendSubmittedScanEmail(ScanRequest request) {
-        Map<String, Object> emailCtx = new HashMap<>();
-
-        emailCtx.put("message", "Checkmarx Scan has been submitted for "
-                .concat(request.getNamespace()).concat("/").concat(request.getRepoName()).concat(" - ")
-                .concat(request.getRepoUrl()));
-        emailCtx.put("heading", "Scan Request Submitted");
-        emailService.sendmail(request.getEmail(), "Checkmarx Scan Submitted for ".concat(request.getNamespace()).concat("/").concat(request.getRepoName()), emailCtx, "message.html");
-    }
-
     private ScanDetails handleNoneBugTrackerCase(ScanRequest request, File cxFile, Integer scanId, Integer projectId) {
         log.info("Not waiting for scan completion as Bug Tracker type is NONE");
         CompletableFuture<ScanResults> results = CompletableFuture.completedFuture(null);
@@ -377,8 +372,8 @@ public class SastScanner implements VulnerabilityScanner {
     }
 
     private void checkScanSubmitEmailDelivery(ScanRequest scanRequest) {
-        if (!ScanUtils.anyEmpty(scanRequest.getNamespace(), scanRequest.getRepoName(), scanRequest.getRepoUrl())) {
-            sendSubmittedScanEmail(scanRequest);
+        if (StringUtils.isNoneEmpty(scanRequest.getNamespace(), scanRequest.getRepoName(), scanRequest.getRepoUrl())) {
+            emailService.sendScanSubmittedEmail(scanRequest);
         }
     }
 
