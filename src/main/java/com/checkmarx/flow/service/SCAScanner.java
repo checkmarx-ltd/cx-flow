@@ -25,6 +25,8 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -63,21 +65,23 @@ public class SCAScanner implements VulnerabilityScanner {
     public ScanResults cxFullScan(ScanRequest scanRequest, String path) throws ExitThrowable {
         ScanResults result = null;
         log.info("--------------------- Initiating new {} scan ---------------------", SCAN_TYPE);
-        SCAParams internalScaParams = toScaZipParams(scanRequest, path);
         SCAResults internalResults = new SCAResults();
 
         try {
             String cxZipFile = FileSystems.getDefault().getPath("cx.".concat(UUID.randomUUID().toString()).concat(".zip")).toAbsolutePath().toString();
             ZipUtils.zipFile(path, cxZipFile, flowProperties.getZipExclude());
             File f = new File(cxZipFile);
-            log.debug(f.getPath());
+            log.debug("Creating temp file {}", f.getPath());
             log.debug("free space {}", f.getFreeSpace());
             log.debug("total space {}", f.getTotalSpace());
             log.debug(f.getAbsolutePath());
+            SCAParams internalScaParams = toScaZipParams(scanRequest, cxZipFile);
 
             internalResults = scaClient.scanLocalSource(internalScaParams);
             logRequest(scanRequest, internalResults.getScanId(),  OperationResult.successful());
             result = toScanResults(internalResults);
+            log.debug("Deleting temp file {}", f.getPath());
+            Files.deleteIfExists(Paths.get(cxZipFile));
 
         } catch (Exception e) {
             final String message = "SCA scan failed.";
