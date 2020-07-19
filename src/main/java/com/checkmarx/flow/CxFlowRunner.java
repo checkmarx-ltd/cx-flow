@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.MDC;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -490,7 +491,7 @@ public class CxFlowRunner implements ApplicationRunner {
         handleScanResults(request, sastScanDetails, sastScanResults, scaScanResults);
     }
 
-    private void handleScanResults(ScanRequest request, ScanDetails sastScanDetails, ScanResults sastScanResults, ScanResults scaScanResults) {
+    private void handleScanResults(ScanRequest request, ScanDetails sastScanDetails, ScanResults sastScanResults, ScanResults scaScanResults) throws ExitThrowable {
         if(sastScanDetails != null){
             if (sastScanDetails.getResults().isCompletedExceptionally()) {
                 log.error("An error occurred while executing process");
@@ -525,7 +526,7 @@ public class CxFlowRunner implements ApplicationRunner {
         }
     }
 
-    private void processResults(ScanRequest request, ScanResults results){
+    private void processResults(ScanRequest request, ScanResults results) throws ExitThrowable {
         try {
             resultsService.processResults(request, results, null);
             if (flowProperties.isBreakBuild() && resultsService.filteredIssuesPresent(results)) {
@@ -533,8 +534,8 @@ public class CxFlowRunner implements ApplicationRunner {
                 exit(10);
             }
 
-        } catch (MachinaException | ExitThrowable e) {
-            e.printStackTrace();
+        } catch (MachinaException e) {
+            log.error("An error has occurred.", ExceptionUtils.getRootCause(e));
         }
     }
 }
