@@ -28,6 +28,8 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
@@ -204,11 +206,13 @@ public class SastScanner implements VulnerabilityScanner {
             String cxZipFile = FileSystems.getDefault().getPath("cx.".concat(UUID.randomUUID().toString()).concat(".zip")).toAbsolutePath().toString();
             ZipUtils.zipFile(path, cxZipFile, flowProperties.getZipExclude());
             File f = new File(cxZipFile);
-            log.debug(f.getPath());
+            log.debug("Creating temp file {}", f.getPath());
             log.debug("free space {}", f.getFreeSpace());
             log.debug("total space {}", f.getTotalSpace());
             log.debug(f.getAbsolutePath());
             scanDetails = new ScanDetails(UNKNOWN_INT, UNKNOWN_INT, executeCxScanFlow(request, f), true);
+            log.debug("Deleting temp file {}", f.getPath());
+            Files.deleteIfExists(Paths.get(cxZipFile));
         } catch (IOException e) {
             log.error("Error occurred while attempting to zip path {}", path, e);
             exit(3);
