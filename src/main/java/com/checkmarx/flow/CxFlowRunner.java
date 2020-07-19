@@ -3,6 +3,7 @@ package com.checkmarx.flow;
 import com.checkmarx.flow.config.*;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.exception.ExitThrowable;
+import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
@@ -18,7 +19,6 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
-
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -40,6 +40,8 @@ public class CxFlowRunner implements ApplicationRunner {
 
     public static final String PARSE_OPTION = "parse";
     public static final String BATCH_OPTION = "batch";
+    private static final String SAST_SCANNER = "sast";
+    private static final String SCA_SCANNER = "sca";
 
     private final FlowProperties flowProperties;
     private final CxProperties cxProperties;
@@ -49,11 +51,13 @@ public class CxFlowRunner implements ApplicationRunner {
     private final ADOProperties adoProperties;
     private final HelperService helperService;
     private final SastScanner sastScanner;
+    private final SCAScanner scaScanner;
     private final List<ThreadPoolTaskExecutor> executors;
     private final ResultsService resultsService;
     private final OsaScannerService osaScannerService;
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
+    private static final String ERROR_BREAK_MSG = "Exiting with Error code 10 due to issues present";
 
     @Override
     public void run(ApplicationArguments args) throws InvocationTargetException {
@@ -447,6 +451,9 @@ public class CxFlowRunner implements ApplicationRunner {
     }
 
     private void cxScan(ScanRequest request, String gitUrl, String gitAuthUrl, String branch, ScanRequest.Repository repoType) throws ExitThrowable {
+        ScanDetails sastScanDetails = null;
+        ScanResults sastScanResults = null;
+        ScanResults scaScanResults = null;
         log.info("Initiating scan using Checkmarx git clone");
         request.setRepoType(repoType);
         log.info("Git url: {}", gitUrl);
@@ -454,24 +461,62 @@ public class CxFlowRunner implements ApplicationRunner {
         request.setRepoUrl(gitUrl);
         request.setRepoUrlWithAuth(gitAuthUrl);
         request.setRefs(Constants.CX_BRANCH_PREFIX.concat(branch));
-        sastScanner.cxFullScan(request);
+
+        if(flowProperties.getEnabledVulnerabilityScanners() == null ||
+                flowProperties.getEnabledVulnerabilityScanners().contains(SAST_SCANNER)) {
+            sastScanDetails = sastScanner.cxFullScan(request);
+        }
+        if(flowProperties.getEnabledVulnerabilityScanners().contains(SCA_SCANNER)) {
+            scaScanResults = scaScanner.scan(request);
+        }
+        handleScanResults(request, sastScanDetails, sastScanResults, scaScanResults);
     }
+
     private void cxScan(ScanRequest request, String path) throws ExitThrowable {
+        ScanDetails sastScanDetails = null;
+        ScanResults sastScanResults = null;
+        ScanResults scaScanResults = null;
         if(ScanUtils.empty(request.getProject())){
             log.error("Please provide --cx-project to define the project in Checkmarx");
             exit(2);
         }
-        sastScanner.cxFullScan(request, path);
+        if(flowProperties.getEnabledVulnerabilityScanners() == null ||
+                flowProperties.getEnabledVulnerabilityScanners().contains(SAST_SCANNER)) {
+            sastScanDetails = sastScanner.cxFullScan(request, path);
+        }
+        if(flowProperties.getEnabledVulnerabilityScanners().contains(SCA_SCANNER)) {
+             scaScanResults = scaScanner.cxFullScan(request, path);
+        }
+        handleScanResults(request, sastScanDetails, sastScanResults, scaScanResults);
     }
+
+    private void handleScanResults(ScanRequest request, ScanDetails sastScanDetails, ScanResults sastScanResults, ScanResults scaScanResults) {
+        if(sastScanDetails != null){
+            if (sastScanDetails.getResults().isCompletedExceptionally()) {
+                log.error("An error occurred while executing process");
+            } else {
+                if (log.isInfoEnabled()) {
+                    log.info("Finished processing the request");
+                }
+            }
+            sastScanResults = sastScanDetails.getResults().join();
+        }
+        ScanResults scanResults = resultsService.joinResults(sastScanResults, scaScanResults);
+        processResults(request, scanResults);
+    }
+
     private void cxOsaParse(ScanRequest request, File file, File libs) throws ExitThrowable {
         osaScannerService.cxOsaParseResults(request, file, libs);
     }
+
     private void cxParse(ScanRequest request, File file) throws ExitThrowable {
         sastScanner.cxParseResults(request, file);
     }
+
     private void cxBatch(ScanRequest request) throws ExitThrowable {
         sastScanner.cxBatch(request);
     }
+
     private void cxResults(ScanRequest request) throws ExitThrowable {
         ScanResults results = resultsService.cxGetResults(request, null).join();
         if(flowProperties.isBreakBuild() && resultsService.filteredIssuesPresent(results)){
@@ -480,4 +525,16 @@ public class CxFlowRunner implements ApplicationRunner {
         }
     }
 
+    private void processResults(ScanRequest request, ScanResults results){
+        try {
+            resultsService.processResults(request, results, null);
+            if (flowProperties.isBreakBuild() && resultsService.filteredIssuesPresent(results)) {
+                log.error(ERROR_BREAK_MSG);
+                exit(10);
+            }
+
+        } catch (MachinaException | ExitThrowable e) {
+            e.printStackTrace();
+        }
+    }
 }
