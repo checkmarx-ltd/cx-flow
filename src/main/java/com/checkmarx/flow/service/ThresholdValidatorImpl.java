@@ -317,7 +317,7 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
         }
     }
 
-    private static void logScaThresholdExceedsCounts(boolean exceedsThreshold, Severity severity,
+    private static void logScaThresholdExceedsCounts(boolean exceedsThreshold, Filter.Severity severity,
                                                      Integer thresholdCount, Integer findingsCount) {
         String message;
         if (exceedsThreshold) {
