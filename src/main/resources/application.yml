@@ -50,6 +50,7 @@ cx-flow:
     - Azure
     - Rally
     - ServiceNow
+    - Sarif
   branches:
     - develop
     - master
@@ -143,6 +144,9 @@ gitlab:
   api-url: https://gitlab.com/api/v4/
   false-positive-label: false-positive
   block-merge: true
+
+sarif:
+  file-path: "/tmp/cxflow/sarif-integration.json"
 
 azure:
   webhook-token: xxxx
