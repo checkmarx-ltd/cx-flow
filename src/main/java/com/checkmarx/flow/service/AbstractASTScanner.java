@@ -13,7 +13,7 @@ import com.checkmarx.sdk.dto.ast.SCAResults;
 import com.checkmarx.sdk.dto.ast.ScanParams;
 import com.checkmarx.sdk.service.AstClient;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -84,7 +84,10 @@ public abstract class AbstractASTScanner  implements VulnerabilityScanner{
     @Override
     public boolean isEnabled() {
         List<String> enabledScanners = flowProperties.getEnabledVulnerabilityScanners();
-        return enabledScanners != null && (StringUtils.containsIgnoreCase(enabledScanners.toString(), scanType));
+        
+        return enabledScanners != null 
+                && enabledScanners.stream().anyMatch(scanner -> scanner.equalsIgnoreCase(scanType));
+ 
     }
     
     private void logRequest(ScanRequest request, String scanId, OperationResult scanCreationResult) {
