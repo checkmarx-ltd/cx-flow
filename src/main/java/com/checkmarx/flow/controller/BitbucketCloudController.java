@@ -6,13 +6,11 @@ import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.bitbucket.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
-import com.checkmarx.flow.service.ConfigurationOverrider;
-import com.checkmarx.flow.service.FilterFactory;
-import com.checkmarx.flow.service.FlowService;
-import com.checkmarx.flow.service.HelperService;
+import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
+import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -40,6 +38,7 @@ public class BitbucketCloudController extends WebhookController {
     private final JiraProperties jiraProperties;
     private final FlowService flowService;
     private final HelperService helperService;
+    private final BitBucketService bitbucketService;
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
 
@@ -58,7 +57,6 @@ public class BitbucketCloudController extends WebhookController {
         MDC.put("cx", uid);
         validateBitBucketRequest(token);
         log.info("Processing BitBucket MERGE request");
-        FlowOverride o = ScanUtils.getMachinaOverride(controllerRequest.getOverride());
         controllerRequest = ensureNotNull(controllerRequest);
 
         try {
@@ -85,6 +83,7 @@ public class BitbucketCloudController extends WebhookController {
             String currentBranch = pullRequest.getSource().getBranch().getName();
             String targetBranch = pullRequest.getDestination().getBranch().getName();
             List<String> branches = getBranches(controllerRequest, flowProperties);
+            String hash = pullRequest.getSource().getCommit().getHash();
 
             BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
 
@@ -121,9 +120,14 @@ public class BitbucketCloudController extends WebhookController {
                     .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)
                     .filter(filter)
+                    .hash(hash)
                     .build();
 
-            request = configOverrider.overrideScanRequestProperties(o, request);
+            String repoSelfUrl= repository.getLinks().getSelf().getHref();
+            request.putAdditionalMetadata("repo-self-url", repoSelfUrl );
+            
+            CxConfig cxConfig =  bitbucketService.getCxConfigOverride(request);
+            request = configOverrider.overrideScanRequestProperties(cxConfig, request);
             request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body.toString());
             request.setId(uid);
 
@@ -154,8 +158,6 @@ public class BitbucketCloudController extends WebhookController {
         validateBitBucketRequest(token);
         controllerRequest = ensureNotNull(controllerRequest);
 
-        FlowOverride o = ScanUtils.getMachinaOverride(controllerRequest.getOverride());
-
         try {
             Repository repository = body.getRepository();
             String app = repository.getName();
@@ -178,6 +180,7 @@ public class BitbucketCloudController extends WebhookController {
             List<Change> changeList =  body.getPush().getChanges();
             String currentBranch = changeList.get(0).getNew().getName();
             List<String> branches = getBranches(controllerRequest, flowProperties);
+            String hash = changeList.get(0).getNew().getTarget().getHash();
 
             BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
 
@@ -223,9 +226,14 @@ public class BitbucketCloudController extends WebhookController {
                     .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)
                     .filter(filter)
+                    .hash(hash)
                     .build();
 
-            request = configOverrider.overrideScanRequestProperties(o, request);
+            String repoSelfUrl= repository.getLinks().getSelf().getHref();
+            request.putAdditionalMetadata("repo-self-url", repoSelfUrl );
+
+            CxConfig cxConfig =  bitbucketService.getCxConfigOverride(request);
+            request = configOverrider.overrideScanRequestProperties(cxConfig, request);
             request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body.toString());
             request.setId(uid);
 
