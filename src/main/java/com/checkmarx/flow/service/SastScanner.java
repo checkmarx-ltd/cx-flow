@@ -28,10 +28,9 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 import static com.checkmarx.flow.exception.ExitThrowable.exit;
@@ -193,28 +192,27 @@ public class SastScanner implements VulnerabilityScanner {
         }
 
         logRequest(request, scanId, cxFile, OperationResult.successful());
-
+        
         this.scanDetails = new ScanDetails(projectId, scanId, osaScanId);
         return scanDetails;
     }
 
-    public void cxFullScan(ScanRequest request, String path) throws ExitThrowable {
-
+    public ScanDetails cxFullScan(ScanRequest request, String path) throws ExitThrowable {
+        ScanDetails cliScanDetails = null;
         try {
+            String effectiveProjectName = projectNameGenerator.determineProjectName(request);
+            request.setProject(effectiveProjectName);
+
             String cxZipFile = FileSystems.getDefault().getPath("cx.".concat(UUID.randomUUID().toString()).concat(".zip")).toAbsolutePath().toString();
             ZipUtils.zipFile(path, cxZipFile, flowProperties.getZipExclude());
             File f = new File(cxZipFile);
-            log.debug(f.getPath());
+            log.debug("Creating temp file {}", f.getPath());
             log.debug("free space {}", f.getFreeSpace());
             log.debug("total space {}", f.getTotalSpace());
             log.debug(f.getAbsolutePath());
-            CompletableFuture<ScanResults> future = executeCxScanFlow(request, f);
-            log.debug("Waiting for scan to complete");
-            ScanResults results = future.join();
-            if (flowProperties.isBreakBuild() && resultsService.filteredIssuesPresent(results)) {
-                log.error(ERROR_BREAK_MSG);
-                exit(10);
-            }
+            cliScanDetails = new ScanDetails(UNKNOWN_INT, UNKNOWN_INT, executeCxScanFlow(request, f), true);
+            log.debug("Deleting temp file {}", f.getPath());
+            Files.deleteIfExists(Paths.get(cxZipFile));
         } catch (IOException e) {
             log.error("Error occurred while attempting to zip path {}", path, e);
             exit(3);
@@ -222,33 +220,20 @@ public class SastScanner implements VulnerabilityScanner {
             log.error("Error occurred", e);
             exit(3);
         }
+        return cliScanDetails;
     }
 
-    public void cxFullScan(ScanRequest request) throws ExitThrowable {
-
+    public ScanDetails cxFullScan(ScanRequest request) throws ExitThrowable {
+        ScanDetails cliScanDetails = null;
         try {
             String effectiveProjectName = projectNameGenerator.determineProjectName(request);
             request.setProject(effectiveProjectName);
-            CompletableFuture<ScanResults> future = executeCxScanFlow(request, null);
-
-            if (future.isCompletedExceptionally()) {
-                log.error("An error occurred while executing process");
-            } else {
-                if (log.isInfoEnabled()) {
-                    log.info("Finished processing the request");
-                }
-            }
-
-            log.debug("Waiting for scan to complete");
-            ScanResults results = future.join();
-            if (flowProperties.isBreakBuild() && resultsService.filteredIssuesPresent(results)) {
-                log.error(ERROR_BREAK_MSG);
-                exit(10);
-            }
+            cliScanDetails = new ScanDetails(UNKNOWN_INT, UNKNOWN_INT, executeCxScanFlow(request, null), true);
         } catch (MachinaException e) {
             log.error("Error occurred", e);
             exit(3);
         }
+        return cliScanDetails;
     }
 
     public void cxParseResults(ScanRequest request, File file) throws ExitThrowable {

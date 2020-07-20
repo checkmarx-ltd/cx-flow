@@ -421,5 +421,25 @@ public class ResultsService {
         return flow == null || !flow.isEmpty();
     }
 
+    /**
+     * Join any number of results together
+     * @param results combined results object
+     * @return
+     */
+    public ScanResults joinResults(ScanResults... results){
+        ScanResults scanResults = null;
+        for(ScanResults r: results){
+            if(r != null){
+                if(scanResults != null){
+                    scanResults.mergeWith(r);
+                }
+                else{
+                    scanResults = r;
+                }
+            }
+        }
+        return scanResults;
+    }
+
 }
 

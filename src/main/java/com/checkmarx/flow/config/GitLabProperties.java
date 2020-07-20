@@ -9,7 +9,7 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 public class GitLabProperties extends RepoProperties {
 
-    public static final String MERGE_NOTE = "%s/projects/%s/merge_requests/%s/notes";
+    private static final String MERGE_NOTE = "%s/projects/%s/merge_requests/%s/notes";
 
     public String getGitUri(String namespace, String repo){
         String format = "%s/%s/%s.git";
