@@ -4,11 +4,15 @@ import com.checkmarx.flow.config.BitBucketProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.ScanDetails;
 import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.dto.Sources;
 import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.exception.BitBucketClientException;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -26,7 +30,7 @@ import java.util.Map;
 
 
 @Service
-public class BitBucketService {
+public class BitBucketService  extends RepoService{
 
     private static final Logger log = LoggerFactory.getLogger(BitBucketService.class);
     private static final String LOG_COMMENT = "comment: {}";
@@ -42,6 +46,9 @@ public class BitBucketService {
 
     public static final String CX_USER_SCAN_QUEUE = "/CxWebClient/UserQueue.aspx";
 
+    private static final String FILE_CONTENT = "/src/{hash}/{config}";
+    private static final String HTTP_BODY_IS_NULL = "HTTP Body is null for src api ";
+    private static final String CONTENT_NOT_FOUND_IN_RESPONSE = "Content not found in JSON response";
     @ConstructorProperties({"restTemplate", "properties", "thresholdValidator"})
     public BitBucketService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, BitBucketProperties properties, ThresholdValidator thresholdValidator) {
         this.restTemplate = restTemplate;
@@ -267,4 +274,50 @@ public class BitBucketService {
         return requestBody;
     }
 
+    @Override
+    public Sources getRepoContent(ScanRequest request) {
+        return null;
+    }
+
+    @Override
+    public CxConfig getCxConfigOverride(ScanRequest request) {
+        CxConfig result = null;
+        if (StringUtils.isNotBlank(properties.getConfigAsCode())) {
+            try {
+                result = loadCxConfigFromBitbucket(properties.getConfigAsCode(), request);
+            } catch (NullPointerException e) {
+                log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
+            } catch (HttpClientErrorException.NotFound e) {
+                log.info(String.format("No Config As code was found : %s", properties.getConfigAsCode()));
+            } catch (Exception e) {
+                log.error(ExceptionUtils.getRootCauseMessage(e));
+            }
+        }
+        return result;
+    }
+
+    private CxConfig loadCxConfigFromBitbucket(String filename, ScanRequest request) {
+        HttpHeaders headers = createAuthHeaders();
+        String repoSelfUrl = request.getAdditionalMetadata("repo-self-url");
+        String urlTemplate = repoSelfUrl.concat(FILE_CONTENT);
+        ResponseEntity<String> response = restTemplate.exchange(
+                urlTemplate,
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
+                String.class,
+                request.getHash(),
+                filename
+        );
+        if (response.getBody() == null) {
+            log.warn(HTTP_BODY_IS_NULL);
+            return null;
+        } else {
+            JSONObject json = new JSONObject(response.getBody());
+            if (ScanUtils.empty(json.toString())) {
+                log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
+                return null;
+            }
+            return com.checkmarx.sdk.utils.ScanUtils.getConfigAsCode(json.toString());
+        }
+    }
 }
