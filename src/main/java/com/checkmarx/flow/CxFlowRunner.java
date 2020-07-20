@@ -521,7 +521,7 @@ public class CxFlowRunner implements ApplicationRunner {
     private void cxResults(ScanRequest request) throws ExitThrowable {
         ScanResults results = resultsService.cxGetResults(request, null).join();
         if(flowProperties.isBreakBuild() && resultsService.filteredIssuesPresent(results)){
-            log.error("Exiting with Error code 10 due to issues present");
+            log.error(ERROR_BREAK_MSG);
             exit(10);
         }
     }
