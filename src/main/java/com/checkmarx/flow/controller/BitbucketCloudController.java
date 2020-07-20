@@ -3,7 +3,10 @@ package com.checkmarx.flow.controller;
 import com.checkmarx.flow.config.BitBucketProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
-import com.checkmarx.flow.dto.*;
+import com.checkmarx.flow.dto.BugTracker;
+import com.checkmarx.flow.dto.ControllerRequest;
+import com.checkmarx.flow.dto.EventResponse;
+import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.bitbucket.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.service.*;
@@ -25,7 +28,7 @@ import java.util.Locale;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping(value = "/" )
+@RequestMapping(value = "/")
 public class BitbucketCloudController extends WebhookController {
 
     private static final String EVENT = "X-Event-Key";
@@ -53,7 +56,7 @@ public class BitbucketCloudController extends WebhookController {
             ControllerRequest controllerRequest,
             @RequestParam(value = "token") String token
 
-    ){
+    ) {
         String uid = helperService.getShortUid();
         MDC.put("cx", uid);
         validateBitBucketRequest(token);
@@ -63,7 +66,7 @@ public class BitbucketCloudController extends WebhookController {
         try {
             Repository repository = body.getRepository();
             String app = repository.getName();
-            if(!ScanUtils.empty(controllerRequest.getApplication())){
+            if (!ScanUtils.empty(controllerRequest.getApplication())) {
                 app = controllerRequest.getApplication();
             }
 
@@ -72,11 +75,11 @@ public class BitbucketCloudController extends WebhookController {
                 bugType = ScanUtils.getBugTypeEnum(controllerRequest.getBug(), flowProperties.getBugTrackerImpl());
             }
 
-            if(controllerRequest.getAppOnly() != null){
+            if (controllerRequest.getAppOnly() != null) {
                 flowProperties.setTrackApplicationOnly(controllerRequest.getAppOnly());
             }
 
-            if(ScanUtils.empty(product)){
+            if (ScanUtils.empty(product)) {
                 product = ScanRequest.Product.CX.getProduct();
             }
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
@@ -96,7 +99,7 @@ public class BitbucketCloudController extends WebhookController {
             String mergeEndpoint = pullRequest.getLinks().getComments().getHref();
 
             String scanPreset = cxProperties.getScanPreset();
-            if(!ScanUtils.empty(controllerRequest.getPreset())){
+            if (!ScanUtils.empty(controllerRequest.getPreset())) {
                 scanPreset = controllerRequest.getPreset();
             }
 
@@ -105,7 +108,7 @@ public class BitbucketCloudController extends WebhookController {
                     .product(p)
                     .project(controllerRequest.getProject())
                     .team(controllerRequest.getTeam())
-                    .namespace(repository.getOwner().getDisplayName().replace(" ","_"))
+                    .namespace(repository.getOwner().getDisplayName().replace(" ", "_"))
                     .repoName(repository.getName())
                     .repoUrl(gitUrl)
                     .repoUrlWithAuth(gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(properties.getToken()).concat("@")))
@@ -124,12 +127,8 @@ public class BitbucketCloudController extends WebhookController {
                     .hash(hash)
                     .build();
 
-            String repoSelfUrl= repository.getLinks().getSelf().getHref();
-            request.putAdditionalMetadata("repo-self-url", repoSelfUrl );
-            
-            CxConfig cxConfig =  bitbucketService.getCxConfigOverride(request);
-            request = configOverrider.overrideScanRequestProperties(cxConfig, request);
-            request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, body.toString());
+            fillRequestWithAdditionalData(request, repository, body.toString());
+            checkForConfigAsCode(request);
             request.setId(uid);
 
             if (helperService.isBranch2Scan(request, branches)) {
@@ -153,7 +152,7 @@ public class BitbucketCloudController extends WebhookController {
             ControllerRequest controllerRequest,
             @RequestParam(value = "token") String token
 
-    ){
+    ) {
         String uid = helperService.getShortUid();
         MDC.put("cx", uid);
         validateBitBucketRequest(token);
@@ -162,7 +161,7 @@ public class BitbucketCloudController extends WebhookController {
         try {
             Repository repository = body.getRepository();
             String app = repository.getName();
-            if(!ScanUtils.empty(controllerRequest.getApplication())){
+            if (!ScanUtils.empty(controllerRequest.getApplication())) {
                 app = controllerRequest.getApplication();
             }
 
@@ -170,15 +169,15 @@ public class BitbucketCloudController extends WebhookController {
             setBugTracker(flowProperties, controllerRequest);
             BugTracker.Type bugType = ScanUtils.getBugTypeEnum(controllerRequest.getBug(), flowProperties.getBugTrackerImpl());
 
-            if(controllerRequest.getAppOnly() != null){
+            if (controllerRequest.getAppOnly() != null) {
                 flowProperties.setTrackApplicationOnly(controllerRequest.getAppOnly());
             }
 
-            if(ScanUtils.empty(product)){
+            if (ScanUtils.empty(product)) {
                 product = ScanRequest.Product.CX.getProduct();
             }
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
-            List<Change> changeList =  body.getPush().getChanges();
+            List<Change> changeList = body.getPush().getChanges();
             String currentBranch = changeList.get(0).getNew().getName();
             List<String> branches = getBranches(controllerRequest, flowProperties);
             String hash = changeList.get(0).getNew().getTarget().getHash();
@@ -192,10 +191,10 @@ public class BitbucketCloudController extends WebhookController {
             /*Determine emails*/
             List<String> emails = new ArrayList<>();
 
-            for(Change ch: changeList){
-                for(Commit c: ch.getCommits()){
+            for (Change ch : changeList) {
+                for (Commit c : ch.getCommits()) {
                     String author = c.getAuthor().getRaw();
-                    if(!ScanUtils.empty(author)){
+                    if (!ScanUtils.empty(author)) {
                         emails.add(author);
                     }
                 }
@@ -204,7 +203,7 @@ public class BitbucketCloudController extends WebhookController {
             String gitUrl = repository.getLinks().getHtml().getHref().concat(".git");
 
             String scanPreset = cxProperties.getScanPreset();
-            if(!ScanUtils.empty(controllerRequest.getPreset())){
+            if (!ScanUtils.empty(controllerRequest.getPreset())) {
                 scanPreset = controllerRequest.getPreset();
             }
 
@@ -213,7 +212,7 @@ public class BitbucketCloudController extends WebhookController {
                     .product(p)
                     .project(controllerRequest.getProject())
                     .team(controllerRequest.getTeam())
-                    .namespace(repository.getOwner().getDisplayName().replace(" ","_"))
+                    .namespace(repository.getOwner().getDisplayName().replace(" ", "_"))
                     .repoName(repository.getName())
                     .repoUrl(gitUrl)
                     .repoUrlWithAuth(gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(properties.getToken()).concat("@")))
@@ -230,12 +229,8 @@ public class BitbucketCloudController extends WebhookController {
                     .hash(hash)
                     .build();
 
-            String repoSelfUrl= repository.getLinks().getSelf().getHref();
-            request.putAdditionalMetadata("repo-self-url", repoSelfUrl );
-
-            CxConfig cxConfig =  bitbucketService.getCxConfigOverride(request);
-            request = configOverrider.overrideScanRequestProperties(cxConfig, request);
-            request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, body.toString());
+            fillRequestWithAdditionalData(request, repository, body.toString());
+            checkForConfigAsCode(request);
             request.setId(uid);
 
             if (helperService.isBranch2Scan(request, branches)) {
@@ -250,12 +245,24 @@ public class BitbucketCloudController extends WebhookController {
     /**
      * Token/Credential validation
      */
-    private void validateBitBucketRequest(String token){
+    private void validateBitBucketRequest(String token) {
         log.info("Validating BitBucket request token");
-        if(!properties.getWebhookToken().equals(token)){
+        if (!properties.getWebhookToken().equals(token)) {
             log.error("BitBucket request token validation failed");
             throw new InvalidTokenException();
         }
         log.info("Validation successful");
     }
+
+    private void checkForConfigAsCode(ScanRequest request) {
+        CxConfig cxConfig = bitbucketService.getCxConfigOverride(request);
+        configOverrider.overrideScanRequestProperties(cxConfig, request);
+    }
+
+    private void fillRequestWithAdditionalData(ScanRequest request, Repository repository, String hookPayload) {
+        String repoSelfUrl = repository.getLinks().getSelf().getHref();
+        request.putAdditionalMetadata("repo-self-url", repoSelfUrl);
+        request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, hookPayload);
+    }
+
 }
