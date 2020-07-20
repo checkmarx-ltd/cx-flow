@@ -48,6 +48,7 @@ public class BatchComponentSteps {
     private String projectName;
     private String teamName;
     private SastScanner sastScanner;
+    private SCAScanner scaScanner;
 
 
     @Given("SAST client is mocked - to allow tests to pass without active SAST environment")
@@ -66,6 +67,7 @@ public class BatchComponentSteps {
                 adoProperties,
                 helperService,
                 sastScanner,
+                scaScanner,
                 executors,
                 resultsService,
                 osaScannerService,
