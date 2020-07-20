@@ -198,7 +198,7 @@ public class SastScanner implements VulnerabilityScanner {
     }
 
     public ScanDetails cxFullScan(ScanRequest request, String path) throws ExitThrowable {
-        ScanDetails scanDetails = null;
+        ScanDetails cliScanDetails = null;
         try {
             String effectiveProjectName = projectNameGenerator.determineProjectName(request);
             request.setProject(effectiveProjectName);
@@ -210,7 +210,7 @@ public class SastScanner implements VulnerabilityScanner {
             log.debug("free space {}", f.getFreeSpace());
             log.debug("total space {}", f.getTotalSpace());
             log.debug(f.getAbsolutePath());
-            scanDetails = new ScanDetails(UNKNOWN_INT, UNKNOWN_INT, executeCxScanFlow(request, f), true);
+            cliScanDetails = new ScanDetails(UNKNOWN_INT, UNKNOWN_INT, executeCxScanFlow(request, f), true);
             log.debug("Deleting temp file {}", f.getPath());
             Files.deleteIfExists(Paths.get(cxZipFile));
         } catch (IOException e) {
@@ -220,20 +220,20 @@ public class SastScanner implements VulnerabilityScanner {
             log.error("Error occurred", e);
             exit(3);
         }
-        return scanDetails;
+        return cliScanDetails;
     }
 
     public ScanDetails cxFullScan(ScanRequest request) throws ExitThrowable {
-        ScanDetails scanDetails = null;
+        ScanDetails cliScanDetails = null;
         try {
             String effectiveProjectName = projectNameGenerator.determineProjectName(request);
             request.setProject(effectiveProjectName);
-            scanDetails = new ScanDetails(UNKNOWN_INT, UNKNOWN_INT, executeCxScanFlow(request, null), true);
+            cliScanDetails = new ScanDetails(UNKNOWN_INT, UNKNOWN_INT, executeCxScanFlow(request, null), true);
         } catch (MachinaException e) {
             log.error("Error occurred", e);
             exit(3);
         }
-        return scanDetails;
+        return cliScanDetails;
     }
 
     public void cxParseResults(ScanRequest request, File file) throws ExitThrowable {
