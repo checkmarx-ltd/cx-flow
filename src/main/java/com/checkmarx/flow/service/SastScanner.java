@@ -181,7 +181,7 @@ public class SastScanner implements VulnerabilityScanner {
         }
 
         logRequest(request, scanId, cxFile, OperationResult.successful());
-        
+
         this.scanDetails = new ScanDetails(projectId, scanId, osaScanId);
         return scanDetails;
     }
@@ -231,7 +231,7 @@ public class SastScanner implements VulnerabilityScanner {
         try {
             ScanResults results = cxService.getReportContent(file, request.getFilter());
             resultsService.processResults(request, results, scanDetails);
-            if (flowProperties.isBreakBuild() && results != null && results.getXIssues() != null && !results.getXIssues().isEmpty()) {
+            if ((flowProperties.isBreakBuild() || request.isBreakBuildArgument()) && results != null && results.getXIssues() != null && !results.getXIssues().isEmpty()) {
                 log.error(ERROR_BREAK_MSG);
                 exit(10);
             }

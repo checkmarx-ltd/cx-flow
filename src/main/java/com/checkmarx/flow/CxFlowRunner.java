@@ -15,6 +15,7 @@ import com.google.common.base.Strings;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -59,6 +60,8 @@ public class CxFlowRunner implements ApplicationRunner {
     private final ConfigurationOverrider configOverrider;
     private static final String ERROR_BREAK_MSG = "Exiting with Error code 10 due to issues present";
 
+    private boolean breakBuildArgument;
+
     @Override
     public void run(ApplicationArguments args) throws InvocationTargetException {
         if (!args.getOptionNames().isEmpty()) {
@@ -76,7 +79,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 }
                 System.exit(ee.getExitCode());
             } finally {
-                if (executors != null && (args.containsOption("scan") || args.containsOption(PARSE_OPTION) || args.containsOption(BATCH_OPTION))) {
+                if ((executors != null) && (args.containsOption("scan") || args.containsOption(PARSE_OPTION) || args.containsOption(BATCH_OPTION)) && !args.containsOption(THROW_INSTEAD_OF_EXIT_OPTION)) {
                     executors.forEach(ThreadPoolTaskExecutor::shutdown);
                 }
             }
@@ -103,6 +106,7 @@ public class CxFlowRunner implements ApplicationRunner {
 		String altProject;
         String altFields;
         String config;
+        String breakBuild;
         List<String> severity;
         List<String> cwe;
         List<String> category;
@@ -112,6 +116,7 @@ public class CxFlowRunner implements ApplicationRunner {
         ScanRequest.Repository repoType = ScanRequest.Repository.NA;
         boolean osa;
         boolean force;
+
         FlowOverride o = null;
         ObjectMapper mapper = new ObjectMapper();
         String uid = helperService.getShortUid();
@@ -156,6 +161,7 @@ public class CxFlowRunner implements ApplicationRunner {
         assignee = getOptionValues(args,"assignee");
         mergeId = getOptionValues(args,"merge-id");
         preset = getOptionValues(args,"preset");
+        breakBuild = getOptionValues(args, "break-build");
         osa = args.getOptionValues("osa") != null;
         force = args.getOptionValues("forcescan") != null;
         /*Collect command line options (List of Strings)*/
@@ -173,6 +179,16 @@ public class CxFlowRunner implements ApplicationRunner {
                 ScanUtils.empty(application)) && !args.containsOption(BATCH_OPTION)) {
             log.error("Namespace/Repo/Branch or Application (app) must be provided");
             exit(1);
+        }
+
+        if(breakBuild != null && !breakBuild.isEmpty()) {
+            if (StringUtils.containsIgnoreCase("true", breakBuild)){
+                breakBuildArgument = true;
+            }
+            else{
+                breakBuildArgument = false;
+            }
+            log.info("setting break-build value to {}", breakBuildArgument);
         }
 
         ControllerRequest controllerRequest = new ControllerRequest(severity, cwe, category, status);
@@ -328,6 +344,7 @@ public class CxFlowRunner implements ApplicationRunner {
 				.altProject(altProject)
                 .altFields(altFields)
                 .forceScan(force)
+                .breakBuildArgument(breakBuildArgument)
                 .build();
 
         request = configOverrider.overrideScanRequestProperties(o, request);
@@ -506,6 +523,8 @@ public class CxFlowRunner implements ApplicationRunner {
         ScanResults results = resultsService.cxGetResults(request, null).join();
         if(flowProperties.isBreakBuild() && resultsService.filteredIssuesPresent(results)){
             log.error(ERROR_BREAK_MSG);
+        if((flowProperties.isBreakBuild() || breakBuildArgument) && resultsService.filteredIssuesPresent(results)){
+            log.error("Exiting with Error code 10 due to issues present");
             exit(10);
         }
     }

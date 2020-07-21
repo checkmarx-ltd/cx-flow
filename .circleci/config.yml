@@ -338,6 +338,26 @@ jobs:
       - store_artifacts:
           path: ~/test-results/junit
 
+  CLI-integration-tests:
+    docker:
+      - image: "circleci/openjdk:8-jdk"
+    steps:
+      - checkout
+      - run:
+          name: Run CLI Integration Tests
+          command: |
+            export HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
+            ./gradlew clean CliIntegrationTest --info -Dtarget=${HOOK_TARGET} -Drepo=${HOOK_REPO} -Dnamespace=${HOOK_NAMESPACE}
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/test-results/junit/
+            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/test-results
+      - store_artifacts:
+          path: ~/test-results/junit
 
   cleanup:
     executor: aws-eks/python3
@@ -506,6 +526,9 @@ workflows:
       - pullRequestComments-integration-tests:
           requires:
             - deploy-cxflow
+      - CLI-integration-tests:
+          requires:
+            - deploy-cxflow
       - docker-push-stable:
           filters:
             branches:
@@ -516,6 +539,7 @@ workflows:
             - sca-integration-tests
             - jira-integration-tests
             - pullRequestComments-integration-tests
+            - CLI-integration-tests
       - publish-github-release:
           filters:
             branches:
@@ -526,6 +550,7 @@ workflows:
             - sca-integration-tests
             - jira-integration-tests
             - pullRequestComments-integration-tests
+            - CLI-integration-tests
       - cleanup:
           cluster-name: eks-cxflow-ci
           namespace: cxflow-${CIRCLE_SHA1::7}
@@ -544,6 +569,7 @@ workflows:
             - sca-integration-tests
             - jira-integration-tests
             - pullRequestComments-integration-tests
+            - CLI-integration-tests
   nightly-cleanup:
     triggers:
       - schedule:

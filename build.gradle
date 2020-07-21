@@ -243,6 +243,18 @@ task PullRequestCommnetsIntegrationTest(type: Test) {
     }
 }
 
+task CliIntegrationTest(type: Test) {
+    useJUnitPlatform() {
+        systemProperty "testprofile", "cliIntegration"
+
+        include 'com/checkmarx/flow/cucumber/integration/cli/**'
+
+        testLogging {
+            events "passed", "skipped", "failed"
+        }
+    }
+}
+
 task getVersion {
     doLast {
         println "${version}"

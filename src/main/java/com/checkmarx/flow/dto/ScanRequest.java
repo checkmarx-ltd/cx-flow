@@ -52,6 +52,7 @@ public class ScanRequest {
      */
     @Builder.Default
     private boolean scanPresetOverride = false;
+    private boolean breakBuildArgument = false;
 
     /**
     Also known as scan engine configuration.
@@ -100,6 +101,7 @@ public class ScanRequest {
         this.activeBranches = other.activeBranches;
         this.filter = other.filter;
         this.forceScan = other.forceScan;
+        this.breakBuildArgument = other.breakBuildArgument;
     }
 
     public Map<String,String> getAltFields() {
