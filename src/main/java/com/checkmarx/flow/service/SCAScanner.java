@@ -55,8 +55,8 @@ public class SCAScanner implements VulnerabilityScanner {
         return result;
     }
 
-    public ScanResults cxFullScan(ScanRequest scanRequest, String path) throws ExitThrowable {
-        ScanResults result = null;
+    public ScanResults scan(ScanRequest scanRequest, String path) throws ExitThrowable {
+        ScanResults result;
         log.info("--------------------- Initiating new {} scan ---------------------", SCAN_TYPE);
         SCAResults internalResults = new SCAResults();
 
@@ -73,6 +73,7 @@ public class SCAScanner implements VulnerabilityScanner {
             internalResults = scaClient.scanLocalSource(internalScaParams);
             logRequest(scanRequest, internalResults.getScanId(),  OperationResult.successful());
             result = toScanResults(internalResults);
+
             log.debug("Deleting temp file {}", f.getPath());
             Files.deleteIfExists(Paths.get(cxZipFile));
 
@@ -85,7 +86,6 @@ public class SCAScanner implements VulnerabilityScanner {
         }
         return result;
     }
-
 
     private void logRequest(ScanRequest request, String scanId, OperationResult scanCreationResult) {
         ScanReport report = new ScanReport(scanId, request,request.getRepoUrl(), scanCreationResult, ScanReport.SCA);
