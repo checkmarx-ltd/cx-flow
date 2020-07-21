@@ -194,7 +194,13 @@ Line #222:
         String statusLine = issue.getDescription().split(System.lineSeparator())[13];
         return statusLine;
     }
-    
+
+    @Override
+    public String getIssueRecommendedFixLink(String projectKey) {
+        Issue issue = getFirstIssue(projectKey);
+        return  Objects.requireNonNull(issue.getDescription()).split(System.lineSeparator())[21];
+    }
+
     @Override
     public int getFirstIssueNumOfFindings(String projectKey) {
         SearchResult result = searchForAllIssues(projectKey);

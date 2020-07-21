@@ -247,6 +247,14 @@ public class RunPublishProcessSteps {
         
         Assert.assertTrue( vulStatus.contains("URGENT"));
     }
+
+    @And("the updated issue has a recommended fix link")
+    public void validateIssueContainsRecommendedFixLink() {
+        String issueRecommendedFixLink = jiraUtils.getIssueRecommendedFixLink(jiraProperties.getProject());
+
+        Assert.assertTrue(issueRecommendedFixLink.contains("Recommended Fix"));
+    }
+
     @Then("the issue should be closed")
     public void assertIssueIsClosed() {
         Assert.assertTrue("Issue is not in closed status", jiraProperties.getClosedStatus().contains(jiraUtils.getIssueStatus(jiraProperties.getProject())));
