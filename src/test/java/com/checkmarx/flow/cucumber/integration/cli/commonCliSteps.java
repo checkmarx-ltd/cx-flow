@@ -57,7 +57,7 @@ public class commonCliSteps {
 
     @Given("repository is github-sca")
     public void initGithubSCAArguments(){
-        commandlineConstantArgs = GITHUB_REPO_ARGS;
+        // Need to add the correct SCA repo
     }
 
     @After("@SAST_CLI_SCAN")
