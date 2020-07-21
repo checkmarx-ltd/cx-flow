@@ -521,18 +521,17 @@ public class CxFlowRunner implements ApplicationRunner {
 
     private void cxResults(ScanRequest request) throws ExitThrowable {
         ScanResults results = resultsService.cxGetResults(request, null).join();
-        if(flowProperties.isBreakBuild() && resultsService.filteredIssuesPresent(results)){
+        if ((flowProperties.isBreakBuild() || breakBuildArgument) && resultsService.filteredIssuesPresent(results)){
             log.error(ERROR_BREAK_MSG);
-        if((flowProperties.isBreakBuild() || breakBuildArgument) && resultsService.filteredIssuesPresent(results)){
-            log.error("Exiting with Error code 10 due to issues present");
             exit(10);
+
         }
     }
 
     private void processResults(ScanRequest request, ScanResults results) throws ExitThrowable {
         try {
             resultsService.processResults(request, results, null);
-            if (flowProperties.isBreakBuild() && resultsService.filteredIssuesPresent(results)) {
+            if ((flowProperties.isBreakBuild() || breakBuildArgument) && resultsService.filteredIssuesPresent(results)) {
                 log.error(ERROR_BREAK_MSG);
                 exit(10);
             }

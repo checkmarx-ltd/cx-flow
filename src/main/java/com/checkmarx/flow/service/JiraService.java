@@ -243,7 +243,7 @@ public class JiraService {
         while (issueTypes.hasNext()) {
             IssueType it = issueTypes.next();
             issueTypesList.add(it.getName());
-            log.info("getIssueType iterator: {}", it.getName());
+            log.debug("getIssueType iterator: {}", it.getName());
             if (it.getName().equals(type)) {
                 return it;
             }
