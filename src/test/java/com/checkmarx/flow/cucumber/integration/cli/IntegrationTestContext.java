@@ -1,4 +1,4 @@
-package com.checkmarx.flow.cucumber.integration.cli.sast;
+package com.checkmarx.flow.cucumber.integration.cli;
 
 import com.checkmarx.flow.CxFlowRunner;
 import com.checkmarx.flow.custom.JsonProperties;

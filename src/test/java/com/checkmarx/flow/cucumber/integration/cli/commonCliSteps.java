@@ -1,9 +1,10 @@
-package com.checkmarx.flow.cucumber.integration.cli.sast;
+package com.checkmarx.flow.cucumber.integration.cli;
 
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
+import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.jira.IJiraTestUtils;
 import com.checkmarx.jira.JiraTestUtils;
@@ -21,14 +22,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Collections;
 
 @SpringBootTest(classes = {CxFlowApplication.class, JiraTestUtils.class})
 @Slf4j
 @RequiredArgsConstructor
-public class sastCliSteps {
+public class commonCliSteps {
 
     private final IntegrationTestContext testContext;
+    private final FlowProperties flowProperties;
     private static final String GITHUB_REPO_ARGS = " --repo-url=https://github.com/cxflowtestuser/CLI-Integration-Tests --repo-name=CLI-Integration-Tests --github --branch=master --namespace=cxflowtestuser --blocksysexit";
     private static final String JIRA_PROJECT = "CIT";
     private String commandlineConstantArgs;
@@ -39,8 +40,11 @@ public class sastCliSteps {
     @Autowired
     private IJiraTestUtils jiraUtils;
 
-    @Before("@SAST_CLI")
+    @Before("@SAST_CLI_SCAN")
     public void beforeEachScenario() throws IOException {
+        log.info("Setting bugTracker: Jira");
+        flowProperties.setBugTracker("JIRA");
+        log.info("Jira project key: {}", JIRA_PROJECT);
         jiraProperties.setProject(JIRA_PROJECT);
         initJiraBugTracker();
         testContext.reset();
@@ -51,8 +55,9 @@ public class sastCliSteps {
         commandlineConstantArgs = GITHUB_REPO_ARGS;
     }
 
-    @After("@SAST_CLI")
+    @After("@SAST_CLI_SCAN")
     public void afterEachScenario() throws IOException {
+        log.info("cleaning jira project: {}", jiraProperties.getProject());
         jiraUtils.cleanProject(jiraProperties.getProject());
     }
 
