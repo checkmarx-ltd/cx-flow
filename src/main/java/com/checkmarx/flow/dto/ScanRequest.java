@@ -44,7 +44,9 @@ public class ScanRequest {
     private List<String> email;
     private boolean forceScan;
     private boolean incremental;
+    private boolean breakBuildArgument;
     private String scanPreset;
+    private List<String> scanners;
 
     /**
      * Indicates whether scan preset has been overridden.
@@ -52,7 +54,6 @@ public class ScanRequest {
      */
     @Builder.Default
     private boolean scanPresetOverride = false;
-    private boolean breakBuildArgument = false;
 
     /**
     Also known as scan engine configuration.
@@ -102,6 +103,7 @@ public class ScanRequest {
         this.filter = other.filter;
         this.forceScan = other.forceScan;
         this.breakBuildArgument = other.breakBuildArgument;
+        this.scanners = other.scanners;
     }
 
     public Map<String,String> getAltFields() {

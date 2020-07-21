@@ -60,7 +60,7 @@ public class CxFlowRunner implements ApplicationRunner {
     private final ConfigurationOverrider configOverrider;
     private static final String ERROR_BREAK_MSG = "Exiting with Error code 10 due to issues present";
 
-    private boolean breakBuildArgument;
+    private boolean breakBuildArgument = false;
 
     @Override
     public void run(ApplicationArguments args) throws InvocationTargetException {
@@ -113,6 +113,7 @@ public class CxFlowRunner implements ApplicationRunner {
         List<String> status;
         List<String> excludeFiles;
         List<String> excludeFolders;
+        List<String> cliScanners;
         ScanRequest.Repository repoType = ScanRequest.Repository.NA;
         boolean osa;
         boolean force;
@@ -172,6 +173,7 @@ public class CxFlowRunner implements ApplicationRunner {
         status = args.getOptionValues("status");
         excludeFiles = args.getOptionValues("exclude-files");
         excludeFolders = args.getOptionValues("exclude-folders");
+        cliScanners = args.getOptionValues("scanner");
         boolean bb = args.containsOption("bb"); //BitBucket Cloud
         boolean bbs = args.containsOption("bbs"); //BitBucket Server
 
@@ -345,6 +347,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 .altFields(altFields)
                 .forceScan(force)
                 .breakBuildArgument(breakBuildArgument)
+                .scanners(cliScanners)
                 .build();
 
         request = configOverrider.overrideScanRequestProperties(o, request);

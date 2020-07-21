@@ -26,7 +26,7 @@ import java.lang.reflect.InvocationTargetException;
 @SpringBootTest(classes = {CxFlowApplication.class, JiraTestUtils.class})
 @Slf4j
 @RequiredArgsConstructor
-public class commonCliSteps {
+public class CommonCliSteps {
 
     private final IntegrationTestContext testContext;
     private final FlowProperties flowProperties;
