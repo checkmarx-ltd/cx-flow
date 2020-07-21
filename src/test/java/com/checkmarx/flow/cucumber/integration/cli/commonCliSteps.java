@@ -55,8 +55,13 @@ public class commonCliSteps {
         commandlineConstantArgs = GITHUB_REPO_ARGS;
     }
 
+    @Given("repository is github-sca")
+    public void initGithubSCAArguments(){
+        commandlineConstantArgs = GITHUB_REPO_ARGS;
+    }
+
     @After("@SAST_CLI_SCAN")
-    public void afterEachScenario() throws IOException {
+    public void afterEachScenario() {
         log.info("cleaning jira project: {}", jiraProperties.getProject());
         jiraUtils.cleanProject(jiraProperties.getProject());
     }
@@ -90,10 +95,11 @@ public class commonCliSteps {
         log.info("CxFlow exited with expected exit code: {}", expectedExitCode);
     }
 
-    @And("each bugTracker contains {} issues")
+    @And("bugTracker contains {} issues")
     public void validateNumberOfissuesInBugTracker(int expectedNumOfIssues) {
-        int numberOfJiraIssues = jiraUtils.getNumberOfIssuesInProject(jiraProperties.getProject());
 
+        int numberOfJiraIssues = jiraUtils.getNumberOfIssuesInProject(jiraProperties.getProject());
+        log.info("validating number of issues. expected: {}, numboer of issues in bug rtacker: {}", expectedNumOfIssues, numberOfJiraIssues);
         Assert.assertEquals(expectedNumOfIssues, numberOfJiraIssues);
     }
 

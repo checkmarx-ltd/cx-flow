@@ -247,7 +247,7 @@ task CliIntegrationTest(type: Test) {
     useJUnitPlatform() {
         systemProperty "testprofile", "cliIntegration"
 
-        include 'com/checkmarx/flow/cucumber/integration/cli/**'
+        include 'com/checkmarx/flow/cucumber/integration/cli/sast**'
 
         testLogging {
             events "passed", "skipped", "failed"

@@ -6,7 +6,7 @@ Feature: Cx-Flow CLI Sast Integration tests
     Given repository is github
     When running CxFlow scan with command line: "<command line>"
     Then CxFlow exits with exit code <exit code>
-    And each bugTracker contains <number of issue> issues
+    And bugTracker contains <number of issue> issues
     Examples:
       | command line                                                                                                                                                                                        | exit code | number of issue |
       | --scan  --severity=High --severity=Medium                      | 0         | 6    |
