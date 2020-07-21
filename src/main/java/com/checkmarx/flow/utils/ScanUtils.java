@@ -14,6 +14,7 @@ import com.checkmarx.sdk.dto.sca.SCAResults;
 import com.cx.restclient.sca.dto.report.Finding;
 import com.cx.restclient.sca.dto.report.Package;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
@@ -51,6 +52,7 @@ public class ScanUtils {
     public static final String VERSION = "Version: ";
     public static final String DESCRIPTION = "Description: ";
     public static final String RECOMMENDATION = "Recommendation: ";
+    public static final String RECOMMENDED_FIX = "recommendedFix";
     public static final String URL = "URL: ";
     public static final String DETAILS = "Details - ";
     public static final String SEVERITY = "Severity: ";
@@ -477,6 +479,11 @@ public class ScanUtils {
         if(!ScanUtils.empty(issue.getLink())){
             body.append("[Checkmarx](").append(issue.getLink()).append(")").append(CRLF).append(CRLF);
         }
+        Map<String, Object> additionalDetails = issue.getAdditionalDetails();
+        if (!MapUtils.isEmpty(additionalDetails) && additionalDetails.containsKey(RECOMMENDED_FIX)) {
+            body.append("[Recommended Fix](").append(additionalDetails.get(ScanUtils.RECOMMENDED_FIX)).append(")").append(ScanUtils.CRLF).append(CRLF);
+        }
+
         if(issue.getDetails() != null && !issue.getDetails().isEmpty()) {
             Map<Integer, ScanResults.IssueDetails> trueIssues = issue.getDetails().entrySet().stream()
                     .filter(x -> x.getKey( ) != null && x.getValue() != null && !x.getValue().isFalsePositive())
@@ -594,6 +601,11 @@ public class ScanUtils {
         if(!ScanUtils.empty(issue.getLink())){
             body.append(DIV_A_HREF).append(issue.getLink()).append("\'>Checkmarx</a></div>");
         }
+        Map<String, Object> additionalDetails = issue.getAdditionalDetails();
+        if (!MapUtils.isEmpty(additionalDetails) && additionalDetails.containsKey(ScanUtils.RECOMMENDED_FIX)) {
+            body.append(DIV_A_HREF).append(additionalDetails.get(ScanUtils.RECOMMENDED_FIX)).append("\'>Recommended Fix</a></div>");
+        }
+
         if(issue.getDetails() != null && !issue.getDetails().isEmpty()) {
             Map<Integer, ScanResults.IssueDetails> trueIssues = issue.getDetails().entrySet().stream()
                     .filter(x -> x.getKey( ) != null && x.getValue() != null && !x.getValue().isFalsePositive())
@@ -877,6 +889,11 @@ public class ScanUtils {
         if(!ScanUtils.empty(issue.getLink())){
             body.append(DETAILS).append(issue.getLink()).append(" - Checkmarx").append(CRLF);
         }
+        Map<String, Object> additionalDetails = issue.getAdditionalDetails();
+        if (!MapUtils.isEmpty(additionalDetails) && additionalDetails.containsKey(ScanUtils.RECOMMENDED_FIX)) {
+            body.append(DETAILS).append(additionalDetails.get(ScanUtils.RECOMMENDED_FIX)).append(" - Recommended Fix").append(CRLF);
+        }
+
         if(issue.getDetails() != null && !issue.getDetails().isEmpty()) {
             Map<Integer, ScanResults.IssueDetails> trueIssues = issue.getDetails().entrySet().stream()
                     .filter(x -> x.getKey( ) != null && x.getValue() != null && !x.getValue().isFalsePositive())
