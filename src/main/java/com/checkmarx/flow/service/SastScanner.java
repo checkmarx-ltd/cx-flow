@@ -24,7 +24,6 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.springframework.stereotype.Service;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
@@ -32,7 +31,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-
 import static com.checkmarx.flow.exception.ExitThrowable.exit;
 import static com.checkmarx.sdk.config.Constants.UNKNOWN;
 import static com.checkmarx.sdk.config.Constants.UNKNOWN_INT;
@@ -142,15 +140,6 @@ public class SastScanner implements VulnerabilityScanner {
         return result;
     }
 
-    public CompletableFuture<ScanResults> executeCxScanFlow(ScanRequest request, File cxFile) throws MachinaException {
-        ScanDetails details = executeCxScan(request, cxFile);
-        if (details.processResults()) {
-            return resultsService.processScanResultsAsync(request, details.getProjectId(), details.getScanId(), details.getOsaScanId(), request.getFilter());
-        } else {
-            return details.getResults();
-        }
-    }
-
     public ScanDetails executeCxScan(ScanRequest request, File cxFile) throws MachinaException {
 
         String osaScanId;
@@ -197,8 +186,8 @@ public class SastScanner implements VulnerabilityScanner {
         return scanDetails;
     }
 
-    public ScanDetails cxFullScan(ScanRequest request, String path) throws ExitThrowable {
-        ScanDetails cliScanDetails = null;
+    public ScanResults cxFullScan(ScanRequest request, String path) throws ExitThrowable {
+        ScanResults results = null;
         try {
             String effectiveProjectName = projectNameGenerator.determineProjectName(request);
             request.setProject(effectiveProjectName);
@@ -210,30 +199,32 @@ public class SastScanner implements VulnerabilityScanner {
             log.debug("free space {}", f.getFreeSpace());
             log.debug("total space {}", f.getTotalSpace());
             log.debug(f.getAbsolutePath());
-            cliScanDetails = new ScanDetails(UNKNOWN_INT, UNKNOWN_INT, executeCxScanFlow(request, f), true);
+            ScanDetails details = executeCxScan(request, f);
+            results = cxService.getReportContentByScanId(details.getScanId(), request.getFilter());
             log.debug("Deleting temp file {}", f.getPath());
             Files.deleteIfExists(Paths.get(cxZipFile));
         } catch (IOException e) {
             log.error("Error occurred while attempting to zip path {}", path, e);
             exit(3);
-        } catch (MachinaException e) {
+        } catch (MachinaException | CheckmarxException e) {
             log.error("Error occurred", e);
             exit(3);
         }
-        return cliScanDetails;
+        return results;
     }
 
-    public ScanDetails cxFullScan(ScanRequest request) throws ExitThrowable {
-        ScanDetails cliScanDetails = null;
+    public ScanResults cxFullScan(ScanRequest request) throws ExitThrowable {
+        ScanResults results = null;
         try {
             String effectiveProjectName = projectNameGenerator.determineProjectName(request);
             request.setProject(effectiveProjectName);
-            cliScanDetails = new ScanDetails(UNKNOWN_INT, UNKNOWN_INT, executeCxScanFlow(request, null), true);
-        } catch (MachinaException e) {
+            ScanDetails details = executeCxScan(request, null);
+            results = cxService.getReportContentByScanId(details.getScanId(), request.getFilter());
+        } catch (MachinaException | CheckmarxException e) {
             log.error("Error occurred", e);
             exit(3);
         }
-        return cliScanDetails;
+        return results;
     }
 
     public void cxParseResults(ScanRequest request, File file) throws ExitThrowable {

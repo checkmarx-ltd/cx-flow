@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.List;
-
 import static com.checkmarx.flow.exception.ExitThrowable.exit;
 
 @Component
@@ -452,7 +451,6 @@ public class CxFlowRunner implements ApplicationRunner {
     }
 
     private void cxScan(ScanRequest request, String gitUrl, String gitAuthUrl, String branch, ScanRequest.Repository repoType) throws ExitThrowable {
-        ScanDetails sastScanDetails = null;
         ScanResults sastScanResults = null;
         ScanResults scaScanResults = null;
         log.info("Initiating scan using Checkmarx git clone");
@@ -465,16 +463,16 @@ public class CxFlowRunner implements ApplicationRunner {
 
         if(flowProperties.getEnabledVulnerabilityScanners() == null ||
                 flowProperties.getEnabledVulnerabilityScanners().contains(SAST_SCANNER)) {
-            sastScanDetails = sastScanner.cxFullScan(request);
+            sastScanResults = sastScanner.cxFullScan(request);
         }
         if(flowProperties.getEnabledVulnerabilityScanners().contains(SCA_SCANNER)) {
             scaScanResults = scaScanner.scan(request);
         }
-        handleScanResults(request, sastScanDetails, sastScanResults, scaScanResults);
+        ScanResults scanResults = resultsService.joinResults(sastScanResults, scaScanResults);
+        processResults(request, scanResults);
     }
 
     private void cxScan(ScanRequest request, String path) throws ExitThrowable {
-        ScanDetails sastScanDetails = null;
         ScanResults sastScanResults = null;
         ScanResults scaScanResults = null;
         if(ScanUtils.empty(request.getProject())){
@@ -483,24 +481,10 @@ public class CxFlowRunner implements ApplicationRunner {
         }
         if(flowProperties.getEnabledVulnerabilityScanners() == null ||
                 flowProperties.getEnabledVulnerabilityScanners().contains(SAST_SCANNER)) {
-            sastScanDetails = sastScanner.cxFullScan(request, path);
+            sastScanResults = sastScanner.cxFullScan(request, path);
         }
         if(flowProperties.getEnabledVulnerabilityScanners().contains(SCA_SCANNER)) {
-             scaScanResults = scaScanner.cxFullScan(request, path);
-        }
-        handleScanResults(request, sastScanDetails, sastScanResults, scaScanResults);
-    }
-
-    private void handleScanResults(ScanRequest request, ScanDetails sastScanDetails, ScanResults sastScanResults, ScanResults scaScanResults) throws ExitThrowable {
-        if(sastScanDetails != null){
-            if (sastScanDetails.getResults().isCompletedExceptionally()) {
-                log.error("An error occurred while executing process");
-            } else {
-                if (log.isInfoEnabled()) {
-                    log.info("Finished processing the request");
-                }
-            }
-            sastScanResults = sastScanDetails.getResults().join();
+             scaScanResults = scaScanner.scan(request, path);
         }
         ScanResults scanResults = resultsService.joinResults(sastScanResults, scaScanResults);
         processResults(request, scanResults);
