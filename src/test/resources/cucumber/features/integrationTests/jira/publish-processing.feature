@@ -87,6 +87,7 @@ Feature: parse, and then publish processing given SAST XML results, findings sho
     And issue's updated field is set to a more recent timestamp
     And issue has the same vulnerability type and filename
     And the updated issue has the new status field in the body
+    And the updated issue has a recommended fix link
 
   @Update_issue @NegativeTest
     # Change scenario name
