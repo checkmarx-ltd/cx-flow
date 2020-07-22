@@ -25,7 +25,7 @@ import java.util.Objects;
 public class ScaFiltersSteps extends ScaCommonSteps {
 
     private static final String PROJECT_NAME = "Filters-Tests-Repo";
-    private static final String GIT_REPO_URL = "https://github.com/cxflowtestuser/htmx.git";
+    private static final String GIT_REPO_URL = "https://github.com/cxflowtestuser/public-rest-repo.git";
 
     private ScanRequest scanRequest;
     private SCAResults scaResults;
