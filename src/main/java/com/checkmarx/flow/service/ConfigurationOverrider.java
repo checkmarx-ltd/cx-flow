@@ -7,6 +7,7 @@ import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.FlowOverride;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.Sca;
@@ -34,6 +35,8 @@ public class ConfigurationOverrider {
 
     private final FlowProperties flowProperties;
     private final ScaProperties scaProperties;
+    private final SCAScanner scaScanner;
+    private final SastScanner sastScanner;
 
     public ScanRequest overrideScanRequestProperties(CxConfig override, ScanRequest request) {
         if (override == null || request == null || Boolean.FALSE.equals(override.getActive())) {
@@ -47,10 +50,9 @@ public class ConfigurationOverrider {
             Optional.ofNullable(override.getAdditionalProperties()).ifPresent(ap -> {
                 Object flow = ap.get("cxFlow");
                 ObjectMapper mapper = new ObjectMapper();
-                Optional.ofNullable(mapper.convertValue(flow, FlowOverride.class)).ifPresent(flowOverride -> {
-                    applyFlowOverride(flowOverride, request, overrideReport);
-
-                });
+                Optional.ofNullable(mapper.convertValue(flow, FlowOverride.class)).ifPresent(flowOverride ->
+                    applyFlowOverride(flowOverride, request, overrideReport)
+                );
 
             });
 
@@ -94,16 +96,21 @@ public class ConfigurationOverrider {
         overrideThresholds(fo, overrideReport);
 
         Optional.ofNullable(fo.getVulnerabilityScanners()).ifPresent(vulnerabilityScanners -> {
-            overrideVulnerabilityScanners(vulnerabilityScanners, overrideReport);
+            List<VulnerabilityScanner> scanRequestVulnerabilityScanner = new ArrayList<>();
+
+            vulnerabilityScanners.forEach(vs -> {
+                if (vs.equalsIgnoreCase(ScaProperties.CONFIG_PREFIX)) {
+                    scanRequestVulnerabilityScanner.add(scaScanner);
+                }
+                if (vs.equalsIgnoreCase(CxProperties.CONFIG_PREFIX)) {
+                    scanRequestVulnerabilityScanner.add(sastScanner);
+                }
+            });
+            request.setVulnerabilityScanners(scanRequestVulnerabilityScanner);
+            overrideReport.put("vulnerabilityScanners", vulnerabilityScanners.toString());
         });
 
     }
-
-    private void overrideVulnerabilityScanners(List<String> vulnerabilityScanners, Map<String, String> overrideReport) {
-        flowProperties.setEnabledVulnerabilityScanners(vulnerabilityScanners);
-        overrideReport.put("vulnerabilityScanners", vulnerabilityScanners.toString());
-    }
-
 
     private void overrideThresholds(FlowOverride flowOverride, Map<String, String> overrideReport) {
         Optional.ofNullable(flowOverride.getThresholds()).ifPresent(thresholds -> {
