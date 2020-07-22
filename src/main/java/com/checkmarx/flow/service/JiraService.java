@@ -954,7 +954,7 @@ public class JiraService {
             body.append("[Guidance|").append(flowProperties.getWikiUrl()).append("]").append(ScanUtils.CRLF);
         }
         Map<String, Object> additionalDetails = issue.getAdditionalDetails();
-        if (!MapUtils.isEmpty(additionalDetails) && additionalDetails.containsKey(ScanUtils.RECOMMENDED_FIX)) {
+        if (MapUtils.isNotEmpty(additionalDetails) && additionalDetails.containsKey(ScanUtils.RECOMMENDED_FIX)) {
            body.append("[Recommended Fix|").append(additionalDetails.get(ScanUtils.RECOMMENDED_FIX)).append("]").append(ScanUtils.CRLF);
         }
 
