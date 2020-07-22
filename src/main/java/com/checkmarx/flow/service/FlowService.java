@@ -4,6 +4,7 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.sdk.dto.ScanResults;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -31,7 +32,7 @@ public class FlowService {
     public void initiateAutomation(ScanRequest scanRequest) {
         String effectiveProjectName = projectNameGenerator.determineProjectName(scanRequest);
         scanRequest.setProject(effectiveProjectName);
-        List<VulnerabilityScanner> enabledScanners = getEnabledScanners();
+        List<VulnerabilityScanner> enabledScanners = getEnabledScanners(scanRequest);
         runScanRequest(scanRequest, enabledScanners);
     }
 
@@ -45,14 +46,20 @@ public class FlowService {
         resultsService.publishCombinedResults(scanRequest, combinedResults);
     }
 
-    private List<VulnerabilityScanner> getEnabledScanners() {
+    private List<VulnerabilityScanner> getEnabledScanners(ScanRequest scanRequest) {
         List<VulnerabilityScanner> enabledScanners = new ArrayList<>();
 
-        scanners.forEach(scanner -> {
-            if (scanner.isEnabled()) {
-                enabledScanners.add(scanner);
-            }
-        });
+        List<VulnerabilityScanner> scanRequestVulnerabilityScanners = scanRequest.getVulnerabilityScanners();
+        if (CollectionUtils.isNotEmpty(scanRequestVulnerabilityScanners)) {
+            enabledScanners.addAll(scanRequestVulnerabilityScanners);
+        } else {
+            scanners.forEach(scanner -> {
+                if (scanner.isEnabled()) {
+                    enabledScanners.add(scanner);
+                }
+            });
+        }
+
         return enabledScanners;
     }
 }

@@ -59,33 +59,35 @@ public class ScaConfigAsCodeSteps {
             switch (currentParameter) {
                 case "vulnerabilityScanners":
                     failMsg = "vulnerability scanners from configuration as code are not as expected";
-                    expected = Collections.singletonList("sca");
-                    actual = flowProperties.getEnabledVulnerabilityScanners();
+                    Assert.assertTrue(failMsg, scanRequest.getVulnerabilityScanners().toString().contains("SCAScanner"));
                     break;
                 case "thresholdsSeverity":
                     failMsg = "SCA thresholds severity from configuration as code is not as expected";
                     expected = "{HIGH=10, MEDIUM=6, LOW=3}";
                     actual = StringUtils.join(scaProperties.getThresholdsSeverity());
+                    Assert.assertEquals(failMsg , expected , actual);
                     break;
                 case "thresholdsScore":
                     failMsg = "SCA thresholds score from configuration as code is not as expected";
                     expected = new Double(8.5);
                     actual = scaProperties.getThresholdsScore();
+                    Assert.assertEquals(failMsg , expected , actual);
                     break;
                 case "filterSeverity":
                     failMsg = "SCA filter severity from configuration as code is not as expected";
                     expected = "[high, medium, low]";
                     actual = scaProperties.getFilterSeverity().toString();
+                    Assert.assertEquals(failMsg , expected , actual);
                     break;
                 case "filterScore":
                     failMsg = "SCA filter score from configuration as code is not as expected";
                     expected = new Double(7.5);
                     actual = scaProperties.getFilterScore();
+                    Assert.assertEquals(failMsg , expected , actual);
                     break;
                 default:
                     throw new PendingException("The support for this parameter is not yet implemented: " + currentParameter);
             }
-            Assert.assertEquals(failMsg , expected , actual);
         });
     }
 
