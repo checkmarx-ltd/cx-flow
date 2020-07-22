@@ -29,5 +29,11 @@ public class SCAScanner extends  AbstractASTScanner{
     }
 
 
+    @Override
+    protected String getScanId(ASTResultsWrapper internalResults) {
+        return internalResults.getScaResults().getScanId();
+    }
+
+
 
 }
