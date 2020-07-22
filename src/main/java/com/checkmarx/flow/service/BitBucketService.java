@@ -11,12 +11,11 @@ import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -28,11 +27,10 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
-
+@Slf4j
 @Service
 public class BitBucketService  extends RepoService{
 
-    private static final Logger log = LoggerFactory.getLogger(BitBucketService.class);
     private static final String LOG_COMMENT = "comment: {}";
     private final RestTemplate restTemplate;
     private final BitBucketProperties properties;
@@ -42,13 +40,14 @@ public class BitBucketService  extends RepoService{
     private static final String BUILD_IN_PROGRESS = "INPROGRESS";
     private static final String BUILD_SUCCESSFUL = "SUCCESSFUL";
     private static final String BUILD_FAILED = "FAILED";
+    public static final String REPO_SELF_URL = "repo-self-url";
     private static final String BUILD_STATUS_KEY_FOR_CXFLOW = "cxflow";
 
     public static final String CX_USER_SCAN_QUEUE = "/CxWebClient/UserQueue.aspx";
 
     private static final String FILE_CONTENT = "/src/{hash}/{config}";
-    private static final String HTTP_BODY_IS_NULL = "HTTP Body is null for src api ";
-    private static final String CONTENT_NOT_FOUND_IN_RESPONSE = "Content not found in JSON response";
+    private static final String HTTP_BODY_IS_NULL = "Unable to download Config as code file. Response body is null.";
+    private static final String CONTENT_NOT_FOUND_IN_RESPONSE = "Content not found in JSON response for Config as code";
     @ConstructorProperties({"restTemplate", "properties", "thresholdValidator"})
     public BitBucketService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, BitBucketProperties properties, ThresholdValidator thresholdValidator) {
         this.restTemplate = restTemplate;
@@ -276,7 +275,7 @@ public class BitBucketService  extends RepoService{
 
     @Override
     public Sources getRepoContent(ScanRequest request) {
-        return null;
+        return new Sources();
     }
 
     @Override
@@ -288,17 +287,18 @@ public class BitBucketService  extends RepoService{
             } catch (NullPointerException e) {
                 log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
             } catch (HttpClientErrorException.NotFound e) {
-                log.info(String.format("No Config As code was found : %s", properties.getConfigAsCode()));
+                log.info(String.format("No Config as code was found with the name: %s", properties.getConfigAsCode()));
             } catch (Exception e) {
-                log.error(ExceptionUtils.getRootCauseMessage(e));
+                log.error(String.format("Error in getting config as code from the repo. Error details : %s", ExceptionUtils.getRootCauseMessage(e)));
             }
         }
         return result;
     }
 
     private CxConfig loadCxConfigFromBitbucket(String filename, ScanRequest request) {
+        CxConfig cxConfig;
         HttpHeaders headers = createAuthHeaders();
-        String repoSelfUrl = request.getAdditionalMetadata("repo-self-url");
+        String repoSelfUrl = request.getAdditionalMetadata(REPO_SELF_URL);
         String urlTemplate = repoSelfUrl.concat(FILE_CONTENT);
         ResponseEntity<String> response = restTemplate.exchange(
                 urlTemplate,
@@ -310,14 +310,16 @@ public class BitBucketService  extends RepoService{
         );
         if (response.getBody() == null) {
             log.warn(HTTP_BODY_IS_NULL);
-            return null;
+            cxConfig = null;
         } else {
             JSONObject json = new JSONObject(response.getBody());
             if (ScanUtils.empty(json.toString())) {
                 log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
-                return null;
+                cxConfig = null;
+            }else {
+                cxConfig = com.checkmarx.sdk.utils.ScanUtils.getConfigAsCode(json.toString());
             }
-            return com.checkmarx.sdk.utils.ScanUtils.getConfigAsCode(json.toString());
         }
+        return cxConfig;
     }
 }

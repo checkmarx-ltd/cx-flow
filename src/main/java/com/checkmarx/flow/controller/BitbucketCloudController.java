@@ -17,7 +17,7 @@ import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-
+@Slf4j
 @RequiredArgsConstructor
 @RestController
 @RequestMapping(value = "/")
@@ -34,7 +34,6 @@ public class BitbucketCloudController extends WebhookController {
     private static final String EVENT = "X-Event-Key";
     private static final String PUSH = EVENT + "=repo:push";
     private static final String MERGE = EVENT + "=pullrequest:created";
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(BitbucketCloudController.class);
 
     private final FlowProperties flowProperties;
     private final BitBucketProperties properties;
@@ -261,7 +260,7 @@ public class BitbucketCloudController extends WebhookController {
 
     private void fillRequestWithAdditionalData(ScanRequest request, Repository repository, String hookPayload) {
         String repoSelfUrl = repository.getLinks().getSelf().getHref();
-        request.putAdditionalMetadata("repo-self-url", repoSelfUrl);
+        request.putAdditionalMetadata(BitBucketService.REPO_SELF_URL, repoSelfUrl);
         request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, hookPayload);
     }
 
