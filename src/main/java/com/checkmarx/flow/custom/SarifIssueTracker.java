@@ -30,9 +30,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class SarifIssueTracker extends ImmutableIssueTracker {
-    private static final String ISSUE_FORMAT = "%s @ %s : %d";
     private final SarifProperties properties;
-    private final FlowProperties flowProperties;
     private final FilenameFormatter filenameFormatter;
 
     @Override
@@ -56,94 +54,117 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
     public void complete(ScanRequest request, ScanResults results) throws MachinaException {
         log.info("Finalizing SARIF output");
 
-        // removed duplicates (by link) and false positive
+        // Filter issues with all fals-positives
         List<ScanResults.XIssue> filteredXIssues =
                 results.getXIssues()
                         .stream()
-                        .collect(Collectors.toCollection(() ->
-                                new TreeSet<>(Comparator.comparing(ScanResults.XIssue::getLink))))
-                        .stream()
-                        .filter(x -> x.getFalsePositiveCount() == 0)
+                        .filter(x -> !x.isAllFalsePositive())
                         .collect(Collectors.toList());
-
-        // Build collection of the results -> locations
-        List<Location> resultLocations = Lists.newArrayList();
+        //Distinct list of Vulns
+        List<ScanResults.XIssue> filteredByVulns =
+                results.getXIssues()
+                        .stream()
+                        .collect(Collectors.toCollection(() ->
+                                new TreeSet<>(Comparator.comparing(ScanResults.XIssue::getVulnerability))))
+                        .stream()
+                        .filter(x -> !x.isAllFalsePositive())
+                        .collect(Collectors.toList());
+        //Distinct list of files in the result set
+        List<ScanResults.XIssue> filteredByFile =
+                results.getXIssues()
+                        .stream()
+                        .collect(Collectors.toCollection(() ->
+                                new TreeSet<>(Comparator.comparing(ScanResults.XIssue::getFilename))))
+                        .stream()
+                        .filter(x -> !x.isAllFalsePositive())
+                        .collect(Collectors.toList());
+        // Build the collection of the rules objects (Vulnerabilities)
+        List<Rule> rules = filteredByVulns.stream().map(xss -> Rule.builder()
+                .id(xss.getVulnerability())
+                .shortDescription(ShortDescription.builder().text(xss.getVulnerability()).build())
+                .helpUri((String) xss.getAdditionalDetails().get("recommendedFix"))
+                .properties(Properties.builder()
+                        .category((String) xss.getAdditionalDetails().get("categories"))
+                        .build())
+                .build()).collect(Collectors.toList());
         // Build collection of the atrifacts
         List<SarifIssueTracker.Artifact> artifacts = Lists.newArrayList();
-        filteredXIssues.stream().forEach(xss ->
-            ((Map<String, Map<String, Map<String, String>>>)
-                    xss.getAdditionalDetails()
-                            .get("results"))
-                            .entrySet().stream()
-                            .filter(v -> v.getKey().equalsIgnoreCase("source"))
-                            .forEach(r -> {
-                                    artifacts.add(
-                                            Artifact.builder().location(
-                                                ArtifactLocation.builder()
-                                                                .uri("file:///" + r.getValue().get("file"))
-                                                                .build())
-                                            .build()
-                                            );
+        //Unique files (artifacts) in the result set
+        filteredByFile.forEach(
+                issue -> {
+                    artifacts.add(
+                            Artifact.builder().location(
+                                    ArtifactLocation.builder()
+                                            .uri("file:///".concat(issue.getFilename()))
+                                            .build())
+                                    .build()
+                    );
+                }
+        );
+        //All issues to create the results/locations that are not all false positive
+        List<Result> resultList = Lists.newArrayList();
+        filteredXIssues.forEach(
+                issue -> {
+                    List<Location> locations = Lists.newArrayList();
+                    Integer column = null;
+                    List<Map<String, Map<String, String>>> vulnPathList = (List<Map<String, Map<String, String>>>) issue.getAdditionalDetails().get("results");
+                    if(vulnPathList != null && !vulnPathList.isEmpty()) {
+                        Map<String, String> sourceMap = vulnPathList.get(0).get("source");
+                        if(sourceMap != null){
+                            column = Integer.parseInt(sourceMap.get("column"));
+                        }
+                    }
+                    Integer finalColumn = column;
+                    issue.getDetails().forEach((k, v) -> {
+                                locations.add(Location.builder()
+                                        .physicalLocation(PhysicalLocation.builder()
+                                                .artifactLocation(ArtifactLocation.builder()
+                                                        .uri("file:///".concat(issue.getFilename()))
+                                                        //.index(0) Artifact
+                                                        .build())
+                                                .region(Region.builder()
+                                                        .startLine(k)
+                                                        .startColumn(finalColumn)
+                                                        .build())
+                                                .build())
+                                        .build());
+                    });
+                    // Build collection of the results -> locations
+                    resultList.add(
+                            Result.builder()
+                            .level(issue.getSeverity())
+                            .locations(locations)
+                            .message(Message.builder()
+                                    .text(issue.getDescription())
+                                    .build())
+                            .ruleId(issue.getVulnerability())
+                            //.ruleIndex(0) Rule
+                            .build()
+                    );
 
-                                    resultLocations.add(
-                                            Location.builder()
-                                                    .physicalLocation(
-                                                            PhysicalLocation.builder()
-                                                                    .artifactLocation(
-                                                                            ArtifactLocation.builder()
-                                                                            .uri("file:///" + r.getValue().get("file"))
-                                                                            .index(0)
-                                                                            .build())
-                                                                    .region(Region.builder()
-                                                                            .startColumn(String.valueOf(r.getValue().get("column")))
-                                                                            .startLine(String.valueOf(r.getValue().get("line")))
-                                                                            .build())
-                                                                    .build())
-                                                    .build());
-                            })
+                }
         );
 
-        // Build the collection of the tool -> driver -> rules objects
-        List<SarifIssueTracker.Rule> rules = Lists.newArrayList();
-        filteredXIssues.stream().forEach(xss ->
-                rules.add(Rule.builder()
-                            .id(xss.getVulnerability())
-                            .shortDescription(ShortDescription.builder().text(xss.getDescription()).build())
-                            .helpUri((String) xss.getAdditionalDetails().get("recommendedFix"))
-                            .properties(Properties.builder()
-                                        .category((String) xss.getAdditionalDetails().get("categories"))
-                                        .build())
-                            .build())
-        );
-
-        // Build the collection of the SARIF results
-        List<SarifIssueTracker.Result> sarifResults = filteredXIssues
-                .stream().map(xss ->
-                        SarifIssueTracker.Result
-                                .builder()
-                                .level(xss.getSeverity())
-                                .message(Message.builder().text(xss.getDescription()).build())
-                                .locations(resultLocations)
-                                .ruleId("")
-                                .ruleIndex("0")
-                                .build())
-                .collect(Collectors.toList());
-
-        // Build the root object
-        SarifIssueTracker.SarifVulnerability report =
+        // Build the run object
+        SarifVulnerability run =
                 SarifVulnerability
                         .builder()
                         .tool(Tool.builder()
                                 .driver(Driver
                                             .builder()
-                                            .name(results.getTeam())
-                                            .informationUri(results.getLink())
+                                            .name(properties.getScannerName())
+                                            //.informationUri(properties.getDriverInfoUrl())
                                             .rules(rules)
                                             .build())
                                 .build())
                         .artifacts(artifacts)
-                        .results(sarifResults)
+                        .results(resultList)
                         .build();
+
+        SarifReport report = SarifReport.builder()
+                .runs(Collections.singletonList(run))
+                .build();
+
         try {
             ObjectMapper mapper = new ObjectMapper();
             mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -171,20 +192,30 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
 
     @Data
     @Builder
+    public static class SarifReport {
+        @Builder.Default
+        @JsonProperty("version")
+        String version = "2.1.0";
+        @JsonProperty("runs")
+        List<SarifVulnerability> runs;
+    }
+
+    @Data
+    @Builder
     public static class SarifVulnerability {
         @JsonProperty("tool")
-        public SarifIssueTracker.Tool tool;
+        public Tool tool;
         @JsonProperty("artifacts")
-        public List<SarifIssueTracker.Artifact> artifacts;
+        public List<Artifact> artifacts;
         @JsonProperty("results")
-        public List<SarifIssueTracker.Result> results;
+        public List<Result> results;
     }
 
     @Data
     @Builder
     public static class Artifact {
         @JsonProperty("location")
-        public SarifIssueTracker.ArtifactLocation location;
+        public ArtifactLocation location;
     }
 
     @Data
@@ -217,6 +248,8 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
     public static class Properties {
         @JsonProperty("category")
         public String category;
+        @JsonProperty("cwe")
+        public String cwe;
     }
 
     @Data
@@ -225,11 +258,11 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
         @JsonProperty("id")
         public String id;
         @JsonProperty("shortDescription")
-        public SarifIssueTracker.ShortDescription shortDescription;
+        public ShortDescription shortDescription;
         @JsonProperty("helpUri")
         public String helpUri;
         @JsonProperty("properties")
-        public SarifIssueTracker.Properties properties;
+        public Properties properties;
     }
 
     @Data
@@ -251,14 +284,14 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
         @JsonProperty("ruleId")
         private String ruleId;
         @JsonProperty("ruleIndex")
-        private String ruleIndex;
+        private Integer ruleIndex;
     }
 
     @Data
     @Builder
     public static class Location {
         @JsonProperty("physicalLocation")
-        public SarifIssueTracker.PhysicalLocation physicalLocation;
+        public PhysicalLocation physicalLocation;
     }
 
     @Data
@@ -274,17 +307,17 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
     @Builder
     public static class Region {
         @JsonProperty("startLine")
-        public String startLine;
+        public Integer startLine;
         @JsonProperty("startColumn")
-        public String startColumn;
+        public Integer startColumn;
     }
 
     @Data
     @Builder
     public static class PhysicalLocation {
         @JsonProperty("artifactLocation")
-        public SarifIssueTracker.ArtifactLocation artifactLocation;
+        public ArtifactLocation artifactLocation;
         @JsonProperty("region")
-        public SarifIssueTracker.Region region;
+        public Region region;
     }
 }
