@@ -527,15 +527,17 @@ public class JiraService {
                                 break;
                             case "loc":
                                 value = "";
-                                List<Integer> lines = issue.getDetails().entrySet()
-                                        .stream()
-                                        .filter(x -> x.getKey() != null && x.getValue() != null && !x.getValue().isFalsePositive())
-                                        .map(Map.Entry::getKey)
-                                        .collect(Collectors.toList());
-                                if (!lines.isEmpty()) {
-                                    Collections.sort(lines);
-                                    value = StringUtils.join(lines, ",");
-                                    log.debug("loc: {}", value);
+                                if(issue.getDetails() != null) {
+                                    List<Integer> lines = issue.getDetails().entrySet()
+                                            .stream()
+                                            .filter(x -> x.getKey() != null && x.getValue() != null && !x.getValue().isFalsePositive())
+                                            .map(Map.Entry::getKey)
+                                            .collect(Collectors.toList());
+                                    if (!lines.isEmpty()) {
+                                        Collections.sort(lines);
+                                        value = StringUtils.join(lines, ",");
+                                        log.debug("loc: {}", value);
+                                    }
                                 }
                                 break;
                             case "not-exploitable":
