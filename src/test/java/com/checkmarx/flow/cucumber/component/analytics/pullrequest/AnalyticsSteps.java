@@ -26,7 +26,7 @@ import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
 import com.checkmarx.test.flow.config.CxFlowMocksConfig;
 import com.cx.restclient.dto.scansummary.Severity;
-import com.checkmarx.sdk.dto.ast.Finding;
+import com.cx.restclient.ast.dto.sca.report.Finding;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
@@ -297,7 +297,7 @@ public class AnalyticsSteps {
     private static void addFinding(Integer countFindingsPerSeverity, Map<Filter.Severity, Integer> findingCounts, List<Finding> findings, Severity severity, Filter.Severity filterSeverity) {
         for ( int i=0; i <countFindingsPerSeverity; i++) {
             Finding fnd = new Finding();
-            fnd.setSeverity(filterSeverity);
+            fnd.setSeverity(severity);
             fnd.setPackageId("");
             findings.add(fnd);
         }
