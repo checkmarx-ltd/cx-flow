@@ -8,7 +8,9 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "sarif")
 @Validated
 public class SarifProperties {
-    private String filePath;
+    private String filePath = "./cx.json";
+    private String scannerName = "Checkmarx";
+    private String scannerFullName = "Checkmarx SAST";
 
     public String getFilePath() {
         return filePath;
@@ -16,5 +18,21 @@ public class SarifProperties {
 
     public void setFilePath(String filePath) {
         this.filePath = filePath;
+    }
+
+    public String getScannerName() {
+        return scannerName;
+    }
+
+    public void setScannerName(String scannerName) {
+        this.scannerName = scannerName;
+    }
+
+    public String getScannerFullName() {
+        return scannerFullName;
+    }
+
+    public void setScannerFullName(String scannerFullName) {
+        this.scannerFullName = scannerFullName;
     }
 }
