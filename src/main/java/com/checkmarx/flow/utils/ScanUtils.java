@@ -10,8 +10,9 @@ import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
-import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.checkmarx.sdk.dto.ast.SCAResults;
+import com.cx.restclient.ast.dto.sca.report.Finding;
+import com.cx.restclient.ast.dto.sca.report.Package;
 
 import com.checkmarx.sdk.dto.ast.SCAResults;
 import com.cx.restclient.ast.dto.sca.report.Finding;
@@ -604,11 +605,6 @@ public class ScanUtils {
         if(!ScanUtils.empty(issue.getLink())){
             body.append(DIV_A_HREF).append(issue.getLink()).append("\'>Checkmarx</a></div>");
         }
-        Map<String, Object> additionalDetails = issue.getAdditionalDetails();
-        if (!MapUtils.isEmpty(additionalDetails) && additionalDetails.containsKey(ScanUtils.RECOMMENDED_FIX)) {
-            body.append(DIV_A_HREF).append(additionalDetails.get(ScanUtils.RECOMMENDED_FIX)).append("\'>Recommended Fix</a></div>");
-        }
-
         if(issue.getDetails() != null && !issue.getDetails().isEmpty()) {
             Map<Integer, ScanResults.IssueDetails> trueIssues = issue.getDetails().entrySet().stream()
                     .filter(x -> x.getKey( ) != null && x.getValue() != null && !x.getValue().isFalsePositive())
