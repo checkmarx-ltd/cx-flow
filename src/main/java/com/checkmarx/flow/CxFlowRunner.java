@@ -1,10 +1,33 @@
 package com.checkmarx.flow;
 
-import com.checkmarx.flow.config.*;
-import com.checkmarx.flow.dto.*;
+import static com.checkmarx.flow.exception.ExitThrowable.exit;
+
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Function;
+
+import com.checkmarx.flow.config.ADOProperties;
+import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.config.GitHubProperties;
+import com.checkmarx.flow.config.GitLabProperties;
+import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.dto.BugTracker;
+import com.checkmarx.flow.dto.ControllerRequest;
+import com.checkmarx.flow.dto.ExitCode;
+import com.checkmarx.flow.dto.FlowOverride;
+import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.flow.exception.MachinaException;
-import com.checkmarx.flow.service.*;
+import com.checkmarx.flow.exception.MachinaRuntimeException;
+import com.checkmarx.flow.service.ConfigurationOverrider;
+import com.checkmarx.flow.service.FilterFactory;
+import com.checkmarx.flow.service.HelperService;
+import com.checkmarx.flow.service.OsaScannerService;
+import com.checkmarx.flow.service.ResultsService;
+import com.checkmarx.flow.service.VulnerabilityScanner;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
@@ -12,20 +35,16 @@ import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.MDC;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
-import java.util.List;
-import static com.checkmarx.flow.exception.ExitThrowable.exit;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor
@@ -40,9 +59,6 @@ public class CxFlowRunner implements ApplicationRunner {
 
     public static final String PARSE_OPTION = "parse";
     public static final String BATCH_OPTION = "batch";
-    private static final String SAST_SCANNER = "sast";
-    private static final String SCA_SCANNER = "sca";
-    private static final String AST_SCANNER = "ast";
     
     private final FlowProperties flowProperties;
     private final CxProperties cxProperties;
@@ -51,14 +67,12 @@ public class CxFlowRunner implements ApplicationRunner {
     private final GitLabProperties gitLabProperties;
     private final ADOProperties adoProperties;
     private final HelperService helperService;
-    private final SastScanner sastScanner;
-    private final SCAScanner scaScanner;
-    private final ASTScanner astScanner;
     private final List<ThreadPoolTaskExecutor> executors;
     private final ResultsService resultsService;
     private final OsaScannerService osaScannerService;
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
+    private final List<VulnerabilityScanner> scanners;
     private static final String ERROR_BREAK_MSG = "Exiting with Error code 10 due to issues present";
 
     @Override
@@ -453,7 +467,6 @@ public class CxFlowRunner implements ApplicationRunner {
     }
 
     private void cxScan(ScanRequest request, String gitUrl, String gitAuthUrl, String branch, ScanRequest.Repository repoType) throws ExitThrowable {
-
         log.info("Initiating scan using Checkmarx git clone");
         request.setRepoType(repoType);
         log.info("Git url: {}", gitUrl);
@@ -462,68 +475,16 @@ public class CxFlowRunner implements ApplicationRunner {
         request.setRepoUrlWithAuth(gitAuthUrl);
         request.setRefs(Constants.CX_BRANCH_PREFIX.concat(branch));
 
-        ScanResults scanResults = scan(request);
-        processResults(request, scanResults);
+        processResults(request, runOnActiveScanners(scanner -> scanner.scanCli(request, "Scan-git-clone")));
     }
 
-    private ScanResults scan(ScanRequest request) throws ExitThrowable {
-        ScanResults sastScanResults = null; 
-        ScanResults scaScanResults = null;
-        ScanResults astScanResults = null;
-        
-        if(isSastEnabled()) {
-            sastScanResults = sastScanner.cxFullScan(request);
-        }
-        if(isScaEnabled()) {
-            scaScanResults = scaScanner.scan(request);
-        }
-        if(isAstEnabled()) {
-            astScanResults = astScanner.scan(request);
-        }
-        return resultsService.joinResults(sastScanResults, scaScanResults, astScanResults);
-    }
-
-    private boolean isScaEnabled() {
-        return (flowProperties.getEnabledVulnerabilityScanners() != null)
-          && flowProperties.getEnabledVulnerabilityScanners().contains(SCA_SCANNER);
-    }
-
-    private boolean isAstEnabled() {
-        return (flowProperties.getEnabledVulnerabilityScanners() != null)
-                && flowProperties.getEnabledVulnerabilityScanners().contains(AST_SCANNER);
-    }
-    
     private void cxScan(ScanRequest request, String path) throws ExitThrowable {
   
         if(ScanUtils.empty(request.getProject())){
             log.error("Please provide --cx-project to define the project in Checkmarx");
             exit(2);
         }
-        ScanResults scanResults = scan(request, path);
-        processResults(request, scanResults);
-    }
-
-    private ScanResults scan(ScanRequest request, String path) throws ExitThrowable {
-        
-        ScanResults sastScanResults = null;
-        ScanResults scaScanResults = null;
-        ScanResults astScanResults = null;
-        
-        if(isSastEnabled()) {
-            sastScanResults = sastScanner.cxFullScan(request, path);
-        }
-        if(isScaEnabled()) {
-             scaScanResults = scaScanner.scan(request, path);
-        }
-        if(isAstEnabled()) {
-            astScanResults = astScanner.scan(request, path);
-        }
-        return resultsService.joinResults(sastScanResults, scaScanResults, astScanResults);
-    }
-
-    private boolean isSastEnabled() {
-        return flowProperties.getEnabledVulnerabilityScanners() == null ||
-                flowProperties.getEnabledVulnerabilityScanners().contains(SAST_SCANNER);
+        processResults(request, runOnActiveScanners(scanner -> scanner.scanCli(request , "cxFullScan", new File(path))));
     }
 
     private void cxOsaParse(ScanRequest request, File file, File libs) throws ExitThrowable {
@@ -531,11 +492,11 @@ public class CxFlowRunner implements ApplicationRunner {
     }
 
     private void cxParse(ScanRequest request, File file) throws ExitThrowable {
-        sastScanner.cxParseResults(request, file);
+        runOnActiveScanners(scanner -> scanner.scanCli(request , "cxParse", file));
     }
 
     private void cxBatch(ScanRequest request) throws ExitThrowable {
-        sastScanner.cxBatch(request);
+        runOnActiveScanners(scanner -> scanner.scanCli(request , "cxBatch"));
     }
 
     private void cxResults(ScanRequest request) throws ExitThrowable {
@@ -556,6 +517,18 @@ public class CxFlowRunner implements ApplicationRunner {
 
         } catch (MachinaException e) {
             log.error("An error has occurred.", ExceptionUtils.getRootCause(e));
+        }
+    }
+
+    private ScanResults runOnActiveScanners(Function<? super VulnerabilityScanner, ScanResults> action) throws ExitThrowable {
+        try {
+            ScanResults[] scanResultslist = scanners.stream()
+                .filter(VulnerabilityScanner::isEnabled)
+                .map(action)
+                .toArray(ScanResults[]::new);
+            return resultsService.joinResults(scanResultslist);
+        } catch (MachinaRuntimeException e) {
+            throw (ExitThrowable)(e.getCause());
         }
     }
 }
