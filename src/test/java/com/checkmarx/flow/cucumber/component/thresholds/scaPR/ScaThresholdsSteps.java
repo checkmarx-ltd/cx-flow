@@ -25,11 +25,11 @@ import com.checkmarx.flow.service.ThresholdValidatorImpl;
 import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
-import com.checkmarx.sdk.dto.sca.SCAResults;
-import com.checkmarx.sdk.dto.sca.Summary;
+import com.checkmarx.sdk.dto.ast.SCAResults;
+import com.checkmarx.sdk.dto.ast.Summary;
 import com.checkmarx.test.flow.config.CxFlowMocksConfig;
 import com.cx.restclient.dto.scansummary.Severity;
-import com.cx.restclient.sca.dto.report.Finding;
+import com.cx.restclient.ast.dto.sca.report.Finding;
 
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -66,9 +66,9 @@ public class ScaThresholdsSteps {
     private ScaProperties scaProperties;
     private ThresholdValidatorImpl thresholdValidatorImpl;
 
-    public ScaThresholdsSteps(ThresholdValidatorImpl thresholdValidatorImpl, 
-            FlowProperties flowProperties, ThresholdValidator thresholdValidator,
-            ScaProperties scaProperties) {
+    public ScaThresholdsSteps(ThresholdValidatorImpl thresholdValidatorImpl,
+                              FlowProperties flowProperties, ThresholdValidator thresholdValidator,
+                              ScaProperties scaProperties) {
         flowProperties.setThresholds(new HashMap<>());
         this.flowProperties = flowProperties;
         this.scaProperties = scaProperties;
@@ -154,7 +154,7 @@ public class ScaThresholdsSteps {
         Arrays.stream(Severity.values()).forEach(severity -> populateFindings(findings, severity, 10));
         scaResults.setFindings(findings);
         Map<Filter.Severity, Integer> findingCounts = severityStream
-        .collect(Collectors.toMap(Function.identity(), v -> 10));
+                .collect(Collectors.toMap(Function.identity(), v -> 10));
         summary.setFindingCounts(findingCounts);
         scaResults.setSummary(summary);
     }
@@ -163,8 +163,8 @@ public class ScaThresholdsSteps {
         double thresholdScore = 7.5;
         scaProperties.setThresholdsScore(thresholdScore);
         Double findingsScore = thresholdScore + (scoreType.equals("over") ? 1.0
-                : scoreType.equals("under") ? -1.0 
-                : scoreType.equals("exact") ? 0.0 
+                : scoreType.equals("under") ? -1.0
+                : scoreType.equals("exact") ? 0.0
                 : null);
 
         log.info("findings score is {} -> score: {} threshold: {}", scoreType, findingsScore, thresholdScore);
@@ -175,7 +175,7 @@ public class ScaThresholdsSteps {
     public void the_folowing_threshold_fails(String failType) {
         boolean isPassSeverity = Arrays.asList("score", "none").contains(failType);
         boolean isPassScore = Arrays.asList("count", "none").contains(failType);
-    
+
         thresholdDefs = Collections.singletonList(Arrays.stream(ThresholdFeatureKeys.values())
                 .collect(Collectors.toMap(
                         key -> key.name().toLowerCase().replace('_', '-'),
@@ -186,9 +186,9 @@ public class ScaThresholdsSteps {
         Map<String, String> map = new HashMap<>();
         map.put("name", "findings-severity");
         Arrays.stream(Severity.values())
-            .forEach(key -> map.put(key.name().toLowerCase(), isPassSeverity ? "5" : "15"));
+                .forEach(key -> map.put(key.name().toLowerCase(), isPassSeverity ? "5" : "15"));
         findingsDefs.add(map);
-        
+
         configureThreshold("spec");
         scaResults = getFakeSCAResults("findings-severity");
 

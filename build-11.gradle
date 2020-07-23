@@ -2,7 +2,7 @@ import org.gradle.api.tasks.testing.Test
 
 buildscript {
 	ext {
-        CxSBSDK = "0.4.30"
+        CxSBSDK = "0.4.32"
         //cxVersion = "8.90.5"
         springBootVersion = '2.2.6.RELEASE'
         sonarqubeVersion = '2.8'
@@ -78,6 +78,7 @@ dependencies {
     compile ("org.apache.httpcomponents:httpclient:4.5.10")
     compile ("org.codehaus.groovy:groovy-all:2.5.8")
     compile ("org.apache.ivy:ivy:2.5.0")
+    compile ("org.apache.commons:commons-lang3:3.11")
     compile ("org.eclipse.jgit:org.eclipse.jgit:5.5.1.201910021850-r")
     compile group: 'com.sun.xml.bind', name: 'jaxb-impl', version: '2.4.0-b180830.0438'
     compile group: 'javax.xml.ws', name: 'jaxws-api', version: '2.3.1'

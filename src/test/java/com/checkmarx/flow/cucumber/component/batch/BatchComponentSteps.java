@@ -49,7 +49,7 @@ public class BatchComponentSteps {
     private String teamName;
     private SastScanner sastScanner;
     private SCAScanner scaScanner;
-
+    private ASTScanner astScanner;
 
     @Given("SAST client is mocked - to allow tests to pass without active SAST environment")
     public void sastClientIsMocked() throws CheckmarxException {
@@ -68,6 +68,7 @@ public class BatchComponentSteps {
                 helperService,
                 sastScanner,
                 scaScanner,
+                astScanner,
                 executors,
                 resultsService,
                 osaScannerService,

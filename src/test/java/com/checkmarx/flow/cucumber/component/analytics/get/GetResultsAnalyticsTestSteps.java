@@ -16,13 +16,14 @@ import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
-import com.checkmarx.sdk.dto.sca.SCAResults;
-import com.checkmarx.sdk.dto.sca.Summary;
+import com.checkmarx.sdk.dto.ast.SCAResults;
+import com.checkmarx.sdk.dto.ast.Summary;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
 import com.checkmarx.test.flow.config.CxFlowMocksConfig;
 import com.cx.restclient.dto.scansummary.Severity;
-import com.cx.restclient.sca.dto.report.Finding;
+import com.cx.restclient.ast.dto.sca.report.Finding;
+
 import io.cucumber.java.Before;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -136,7 +137,7 @@ public class GetResultsAnalyticsTestSteps {
 
         findingCounts.put(filterSeverity, countFindingsPerSeverity);
     }
-    
+
     private void initMock(CxClient cxClientMock) {
         try {
             ScanResultsAnswerer answerer = new ScanResultsAnswerer();
@@ -256,7 +257,7 @@ public class GetResultsAnalyticsTestSteps {
             Assert.fail(message);
         }
     }
-    
+
     @When("doing get results operation on SAST scan with {int} {int} {int} {int} results and filter is {string}")
     public void getResultsWithFilter(int high, int medium, int low, int info, String filter) throws InterruptedException  {
         try {
@@ -288,7 +289,7 @@ public class GetResultsAnalyticsTestSteps {
         assertScanSCASummary(report);
         Assert.assertEquals("Scan ID does not match !", Integer.valueOf(SCAN_ID), Integer.valueOf(report.getScanId()));
     }
-    
+
     private void assertScanSASTResults(ScanResultsReport report) {
         Assert.assertEquals("Error getting high severity flow results", getFlowSummaryField("High") , getScanResultsBySeverity(report, FindingSeverity.HIGH));
         Assert.assertEquals("Error getting medium severity flow results", getFlowSummaryField("Medium") , getScanResultsBySeverity(report, FindingSeverity.MEDIUM));
