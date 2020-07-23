@@ -471,28 +471,19 @@ public class CxFlowRunner implements ApplicationRunner {
         ScanResults scaScanResults = null;
         ScanResults astScanResults = null;
         
-        if(isSastEnabled()) {
+        if(sastScanner.isEnabled()) {
             sastScanResults = sastScanner.cxFullScan(request);
         }
-        if(isScaEnabled()) {
+        if(scaScanner.isEnabled()) {
             scaScanResults = scaScanner.scan(request);
         }
-        if(isAstEnabled()) {
+        if(astScanner.isEnabled()) {
             astScanResults = astScanner.scan(request);
         }
         return resultsService.joinResults(sastScanResults, scaScanResults, astScanResults);
     }
 
-    private boolean isScaEnabled() {
-        return (flowProperties.getEnabledVulnerabilityScanners() != null)
-          && flowProperties.getEnabledVulnerabilityScanners().contains(SCA_SCANNER);
-    }
-
-    private boolean isAstEnabled() {
-        return (flowProperties.getEnabledVulnerabilityScanners() != null)
-                && flowProperties.getEnabledVulnerabilityScanners().contains(AST_SCANNER);
-    }
-    
+  
     private void cxScan(ScanRequest request, String path) throws ExitThrowable {
   
         if(ScanUtils.empty(request.getProject())){
@@ -509,23 +500,18 @@ public class CxFlowRunner implements ApplicationRunner {
         ScanResults scaScanResults = null;
         ScanResults astScanResults = null;
         
-        if(isSastEnabled()) {
+        if(sastScanner.isEnabled()) {
             sastScanResults = sastScanner.cxFullScan(request, path);
         }
-        if(isScaEnabled()) {
+        if(scaScanner.isEnabled()) {
              scaScanResults = scaScanner.scan(request, path);
         }
-        if(isAstEnabled()) {
+        if(astScanner.isEnabled()) {
             astScanResults = astScanner.scan(request, path);
         }
         return resultsService.joinResults(sastScanResults, scaScanResults, astScanResults);
     }
-
-    private boolean isSastEnabled() {
-        return flowProperties.getEnabledVulnerabilityScanners() == null ||
-                flowProperties.getEnabledVulnerabilityScanners().contains(SAST_SCANNER);
-    }
-
+    
     private void cxOsaParse(ScanRequest request, File file, File libs) throws ExitThrowable {
         osaScannerService.cxOsaParseResults(request, file, libs);
     }
