@@ -45,14 +45,14 @@ Feature: Cx-Flow SCA Integration permutation tests
 
     Examples:
       | severities    | score | expected_vulnerabilities |
-      | HIGH          | 7.5   | 3                        |
-      | High, medium  | 5.6   | 4                        |
-      | high, invalid | 9.2   | 2                        |
-      |               | 5.6   | 4                        |
-      | medium        | 0.0   | 6                        |
-      |               | 0.0   | 9                        |
+      | HIGH          | 7.5   | 6                        |
+      | High, medium  | 6.3   | 8                        |
+      | high, invalid | 8.7   | 2                        |
+      |               | 6.4   | 7                        |
+      | medium        | 0.0   | 9                        |
+      |               | 0.0   | 15                       |
       | low           | 0.0   | 0                        |
-      |               | -0.3  | 9                        |
+      |               | -0.3  | 15                       |
 
 
   @SCA_Issues_Creation

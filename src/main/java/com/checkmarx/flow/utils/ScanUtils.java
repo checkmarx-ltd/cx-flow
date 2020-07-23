@@ -480,7 +480,7 @@ public class ScanUtils {
             body.append("[Checkmarx](").append(issue.getLink()).append(")").append(CRLF).append(CRLF);
         }
         Map<String, Object> additionalDetails = issue.getAdditionalDetails();
-        if (!MapUtils.isEmpty(additionalDetails) && additionalDetails.containsKey(RECOMMENDED_FIX)) {
+        if (MapUtils.isNotEmpty(additionalDetails) && additionalDetails.containsKey(RECOMMENDED_FIX)) {
             body.append("[Recommended Fix](").append(additionalDetails.get(ScanUtils.RECOMMENDED_FIX)).append(")").append(ScanUtils.CRLF).append(CRLF);
         }
 
@@ -602,7 +602,7 @@ public class ScanUtils {
             body.append(DIV_A_HREF).append(issue.getLink()).append("\'>Checkmarx</a></div>");
         }
         Map<String, Object> additionalDetails = issue.getAdditionalDetails();
-        if (!MapUtils.isEmpty(additionalDetails) && additionalDetails.containsKey(ScanUtils.RECOMMENDED_FIX)) {
+        if (MapUtils.isNotEmpty(additionalDetails) && additionalDetails.containsKey(ScanUtils.RECOMMENDED_FIX)) {
             body.append(DIV_A_HREF).append(additionalDetails.get(ScanUtils.RECOMMENDED_FIX)).append("\'>Recommended Fix</a></div>");
         }
 
@@ -890,7 +890,7 @@ public class ScanUtils {
             body.append(DETAILS).append(issue.getLink()).append(" - Checkmarx").append(CRLF);
         }
         Map<String, Object> additionalDetails = issue.getAdditionalDetails();
-        if (!MapUtils.isEmpty(additionalDetails) && additionalDetails.containsKey(ScanUtils.RECOMMENDED_FIX)) {
+        if (MapUtils.isNotEmpty(additionalDetails) && additionalDetails.containsKey(ScanUtils.RECOMMENDED_FIX)) {
             body.append(DETAILS).append(additionalDetails.get(ScanUtils.RECOMMENDED_FIX)).append(" - Recommended Fix").append(CRLF);
         }
 
