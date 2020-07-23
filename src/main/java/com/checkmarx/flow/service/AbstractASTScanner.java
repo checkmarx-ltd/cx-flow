@@ -58,6 +58,30 @@ public abstract class AbstractASTScanner  implements VulnerabilityScanner{
         return result;
     }
 
+    @Override
+    public ScanResults scanCli(ScanRequest request, String scanType, File... files) {
+        ScanResults scanResults = null;
+        try {
+            switch (scanType) {
+                case "Scan-git-clone":
+                    scanResults = scan(request);
+                    break;
+                case "cxFullScan":
+                    scanResults = scan(request, files[0].getPath());
+                    break;
+                case "cxParse":
+                case "cxBatch":
+                default:
+                    log.warn("ScaScanner does not support scanType of {}, ignoring.");
+                    break;
+            }
+        } catch (ExitThrowable e) {
+            throw new MachinaRuntimeException(e);
+        }
+
+        return scanResults;
+    }
+
     private ScanResults treatError(ScanRequest scanRequest, ASTResultsWrapper internalResults, Exception e) {
         final String message = scanType + " scan failed.";
         log.error(message, e);
