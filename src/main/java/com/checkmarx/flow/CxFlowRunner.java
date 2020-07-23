@@ -484,11 +484,13 @@ public class CxFlowRunner implements ApplicationRunner {
     }
 
     private boolean isScaEnabled() {
-        return flowProperties.getEnabledVulnerabilityScanners().contains(SCA_SCANNER);
+        return (flowProperties.getEnabledVulnerabilityScanners() != null)
+          && flowProperties.getEnabledVulnerabilityScanners().contains(SCA_SCANNER);
     }
 
     private boolean isAstEnabled() {
-        return flowProperties.getEnabledVulnerabilityScanners().contains(AST_SCANNER);
+        return (flowProperties.getEnabledVulnerabilityScanners() != null)
+                && flowProperties.getEnabledVulnerabilityScanners().contains(AST_SCANNER);
     }
     
     private void cxScan(ScanRequest request, String path) throws ExitThrowable {
