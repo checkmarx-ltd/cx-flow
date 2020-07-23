@@ -53,13 +53,17 @@ public abstract class AbstractASTScanner  implements VulnerabilityScanner{
             logRequest(scanRequest, getScanId(internalResults),  OperationResult.successful());
             result = toScanResults(internalResults);
         } catch (Exception e) {
-            final String message = "SCA scan failed.";
-            log.error(message, e);
-            OperationResult scanCreationFailure = new OperationResult(OperationStatus.FAILURE, e.getMessage());
-            logRequest(scanRequest, getScanId(internalResults),  scanCreationFailure);
-            throw new MachinaRuntimeException(message);
+            return treatError(scanRequest, internalResults, e);
         }
         return result;
+    }
+
+    private ScanResults treatError(ScanRequest scanRequest, ASTResultsWrapper internalResults, Exception e) {
+        final String message = scanType + " scan failed.";
+        log.error(message, e);
+        OperationResult scanCreationFailure = new OperationResult(OperationStatus.FAILURE, e.getMessage());
+        logRequest(scanRequest, getScanId(internalResults),  scanCreationFailure);
+        throw new MachinaRuntimeException(message);
     }
 
     public ScanResults scan(ScanRequest scanRequest, String path) throws ExitThrowable {
@@ -85,11 +89,7 @@ public abstract class AbstractASTScanner  implements VulnerabilityScanner{
             Files.deleteIfExists(Paths.get(cxZipFile));
 
         } catch (Exception e) {
-            final String message = "SCA scan failed.";
-            log.error(message, e);
-            OperationResult scanCreationFailure = new OperationResult(OperationStatus.FAILURE, e.getMessage());
-            logRequest(scanRequest, getScanId(internalResults),  scanCreationFailure);
-            throw new MachinaRuntimeException(message);
+            return treatError(scanRequest, internalResults, e);
         }
         return result;
     }
