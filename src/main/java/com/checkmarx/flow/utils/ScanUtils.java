@@ -10,9 +10,9 @@ import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
-import com.checkmarx.sdk.dto.sca.SCAResults;
-import com.cx.restclient.sca.dto.report.Finding;
-import com.cx.restclient.sca.dto.report.Package;
+import com.checkmarx.sdk.dto.ast.SCAResults;
+import com.cx.restclient.ast.dto.sca.report.Finding;
+import com.cx.restclient.ast.dto.sca.report.Package;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.EnumUtils;
@@ -876,11 +876,11 @@ public class ScanUtils {
             if(!ScanUtils.empty(flowProperties.getMitreUrl())) {
                 body.append(DETAILS)
                         .append(
-                        String.format(
-                                flowProperties.getMitreUrl(),
-                                issue.getCwe()
-                        )
-                ).append(" - Vulnerability details and guidance").append(CRLF);
+                                String.format(
+                                        flowProperties.getMitreUrl(),
+                                        issue.getCwe()
+                                )
+                        ).append(" - Vulnerability details and guidance").append(CRLF);
             }
         }
         if(!ScanUtils.empty(flowProperties.getWikiUrl())) {

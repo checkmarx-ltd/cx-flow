@@ -11,7 +11,7 @@ import com.checkmarx.flow.dto.report.AnalyticsReport;
 import com.checkmarx.flow.dto.report.ScanReport;
 import com.checkmarx.flow.service.SCAScanner;
 import com.checkmarx.sdk.config.ScaProperties;
-import com.checkmarx.sdk.dto.sca.SCAResults;
+import com.checkmarx.sdk.dto.ast.SCAResults;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
