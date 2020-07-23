@@ -47,9 +47,7 @@ public class BatchComponentSteps {
     private CxFlowRunner cxFlowRunner;
     private String projectName;
     private String teamName;
-    private SastScanner sastScanner;
-    private SCAScanner scaScanner;
-    private ASTScanner astScanner;
+    private final List<VulnerabilityScanner> scanners;
 
     @Given("SAST client is mocked - to allow tests to pass without active SAST environment")
     public void sastClientIsMocked() throws CheckmarxException {
@@ -66,14 +64,12 @@ public class BatchComponentSteps {
                 gitLabProperties,
                 adoProperties,
                 helperService,
-                sastScanner,
-                scaScanner,
-                astScanner,
                 executors,
                 resultsService,
                 osaScannerService,
                 filterFactory,
-                configOverrider);
+                configOverrider,
+                scanners);
     }
 
     @Given("project is provided: {string} and team: {string}")

@@ -6,6 +6,7 @@ import com.checkmarx.flow.dto.report.ScanReport;
 import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.flow.exception.GitHubRepoUnavailableException;
 import com.checkmarx.flow.exception.MachinaException;
+import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.sastscanning.ScanRequestConverter;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.flow.utils.ZipUtils;
@@ -116,8 +117,35 @@ public class SastScanner implements VulnerabilityScanner {
             report.log();
             return getEmptyScanResults();
         }
-    }
+    } 
 
+    @Override
+    public ScanResults scanCli(ScanRequest request, String scanType, File... files) {
+        ScanResults scanResults = null;
+        try {
+            switch (scanType) {
+                case "Scan-git-clone":
+                    scanResults = cxFullScan(request);
+                    break;
+                case "cxFullScan":
+                    scanResults = cxFullScan(request, files[0].getPath());
+                    break;
+                case "cxParse":
+                    cxParseResults(request, files[0]);
+                    break;
+                case "cxBatch":
+                    cxBatch(request);
+                    break;
+                default:
+                    log.warn("SastScanner does not support scanType of {}, ignoring.");
+                    break;
+            }
+        } catch (ExitThrowable e) {
+            throw new MachinaRuntimeException(e);
+        }
+        return scanResults;
+    }
+    
     private ScanResults getEmptyScanResults() {
         ScanResults scanResults;
         scanResults = new ScanResults();
