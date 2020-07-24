@@ -81,9 +81,8 @@ public class SarifIssueTrackerTest {
     }
 
     private SarifIssueTracker getInstance() {
-        SarifProperties jsonProperties = new SarifProperties();
-        FlowProperties flowProperties = new FlowProperties();
+        SarifProperties sarifProperties = new SarifProperties();
         FilenameFormatter filenameFormatter = new SanitizingFilenameFormatter();
-        return new SarifIssueTracker(jsonProperties, flowProperties, filenameFormatter);
+        return new SarifIssueTracker(sarifProperties, filenameFormatter);
     }
 }
