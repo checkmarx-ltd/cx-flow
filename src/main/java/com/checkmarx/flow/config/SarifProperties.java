@@ -10,7 +10,9 @@ import org.springframework.validation.annotation.Validated;
 public class SarifProperties {
     private String filePath = "./cx.json";
     private String scannerName = "Checkmarx";
-    private String scannerFullName = "Checkmarx SAST";
+    private String organization = "Checkmarx";
+    private String sarifSchema="https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json";
+    private String sarifVersion = "2.1.0";
 
     public String getFilePath() {
         return filePath;
@@ -28,11 +30,27 @@ public class SarifProperties {
         this.scannerName = scannerName;
     }
 
-    public String getScannerFullName() {
-        return scannerFullName;
+    public String getOrganization() {
+        return organization;
     }
 
-    public void setScannerFullName(String scannerFullName) {
-        this.scannerFullName = scannerFullName;
+    public void setOrganization(String organization) {
+        this.organization = organization;
+    }
+
+    public String getSarifSchema() {
+        return sarifSchema;
+    }
+
+    public void setSarifSchema(String sarifSchema) {
+        this.sarifSchema = sarifSchema;
+    }
+
+    public String getSarifVersion() {
+        return sarifVersion;
+    }
+
+    public void setSarifVersion(String sarifVersion) {
+        this.sarifVersion = sarifVersion;
     }
 }

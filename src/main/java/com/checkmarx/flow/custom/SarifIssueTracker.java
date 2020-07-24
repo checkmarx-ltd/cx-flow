@@ -26,6 +26,10 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Output according to the following Spec (SARIF)
+ * https://docs.github.com/en/github/finding-security-vulnerabilities-and-errors-in-your-code/sarif-support-for-code-scanning
+ */
 @Service("Sarif")
 @RequiredArgsConstructor
 @Slf4j
@@ -54,13 +58,13 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
     public void complete(ScanRequest request, ScanResults results) throws MachinaException {
         log.info("Finalizing SARIF output");
 
-        // Filter issues with all fals-positives
+        // Filter issues without false-positives
         List<ScanResults.XIssue> filteredXIssues =
                 results.getXIssues()
                         .stream()
                         .filter(x -> !x.isAllFalsePositive())
                         .collect(Collectors.toList());
-        //Distinct list of Vulns
+        //Distinct list of Vulns (Rules)
         List<ScanResults.XIssue> filteredByVulns =
                 results.getXIssues()
                         .stream()
@@ -69,43 +73,22 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                         .stream()
                         .filter(x -> !x.isAllFalsePositive())
                         .collect(Collectors.toList());
-        //Distinct list of files in the result set
-        List<ScanResults.XIssue> filteredByFile =
-                results.getXIssues()
-                        .stream()
-                        .collect(Collectors.toCollection(() ->
-                                new TreeSet<>(Comparator.comparing(ScanResults.XIssue::getFilename))))
-                        .stream()
-                        .filter(x -> !x.isAllFalsePositive())
-                        .collect(Collectors.toList());
         // Build the collection of the rules objects (Vulnerabilities)
-        List<Rule> rules = filteredByVulns.stream().map(xss -> Rule.builder()
-                .id(xss.getVulnerability())
-                .shortDescription(ShortDescription.builder().text(xss.getVulnerability()).build())
-                .helpUri((String) xss.getAdditionalDetails().get("recommendedFix"))
+        List<Rule> rules = filteredByVulns.stream().map(i -> Rule.builder()
+                .id(i.getVulnerability())
+                .shortDescription(ShortDescription.builder().text(i.getVulnerability()).build())
+                .fullDescription(FullDescription.builder().text((String) i.getAdditionalDetails().get("recommendedFix")).build())
                 .properties(Properties.builder()
-                        .category((String) xss.getAdditionalDetails().get("categories"))
+                        .tags(Arrays.asList("security", "external/cwe/cwe-".concat(i.getCwe())))
                         .build())
                 .build()).collect(Collectors.toList());
-        // Build collection of the atrifacts
-        List<SarifIssueTracker.Artifact> artifacts = Lists.newArrayList();
-        //Unique files (artifacts) in the result set
-        filteredByFile.forEach(
-                issue -> {
-                    artifacts.add(
-                            Artifact.builder().location(
-                                    ArtifactLocation.builder()
-                                            .uri("file:///".concat(issue.getFilename()))
-                                            .build())
-                                    .build()
-                    );
-                }
-        );
+
         //All issues to create the results/locations that are not all false positive
         List<Result> resultList = Lists.newArrayList();
         filteredXIssues.forEach(
                 issue -> {
                     List<Location> locations = Lists.newArrayList();
+                    /* TODO start/end colum required?
                     Integer column = null;
                     List<Map<String, Map<String, String>>> vulnPathList = (List<Map<String, Map<String, String>>>) issue.getAdditionalDetails().get("results");
                     if(vulnPathList != null && !vulnPathList.isEmpty()) {
@@ -114,20 +97,23 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                             column = Integer.parseInt(sourceMap.get("column"));
                         }
                     }
-                    Integer finalColumn = column;
+                    Integer finalColumn = column;*/
                     issue.getDetails().forEach((k, v) -> {
-                                locations.add(Location.builder()
-                                        .physicalLocation(PhysicalLocation.builder()
-                                                .artifactLocation(ArtifactLocation.builder()
-                                                        .uri("file:///".concat(issue.getFilename()))
-                                                        //.index(0) Artifact
-                                                        .build())
-                                                .region(Region.builder()
-                                                        .startLine(k)
-                                                        .startColumn(finalColumn)
-                                                        .build())
-                                                .build())
-                                        .build());
+                        if(!v.isFalsePositive()) {
+                            locations.add(Location.builder()
+                                    .physicalLocation(PhysicalLocation.builder()
+                                            .artifactLocation(ArtifactLocation.builder()
+                                                    .uri(issue.getFilename())
+                                                    .build())
+                                            .region(Region.builder()
+                                                    .startLine(k)
+                                                    .endLine(k)
+                                                    //.startColumn(finalColumn)
+                                                    //.endColumn(x)
+                                                    .build())
+                                            .build())
+                                    .build());
+                        }
                     });
                     // Build collection of the results -> locations
                     resultList.add(
@@ -138,7 +124,6 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                                     .text(issue.getDescription())
                                     .build())
                             .ruleId(issue.getVulnerability())
-                            //.ruleIndex(0) Rule
                             .build()
                     );
 
@@ -150,18 +135,19 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                 SarifVulnerability
                         .builder()
                         .tool(Tool.builder()
-                                .driver(Driver
-                                            .builder()
-                                            .name(properties.getScannerName())
-                                            //.informationUri(properties.getDriverInfoUrl())
-                                            .rules(rules)
-                                            .build())
+                                .driver(Driver.builder()
+                                    .name(properties.getScannerName())
+                                    .organization(properties.getOrganization())
+                                    .rules(rules)
+                                    .build())
                                 .build())
-                        .artifacts(artifacts)
                         .results(resultList)
                         .build();
 
+        // Build the report
         SarifReport report = SarifReport.builder()
+                .schema(properties.getSarifSchema())
+                .version(properties.getSarifVersion())
                 .runs(Collections.singletonList(run))
                 .build();
 
@@ -193,9 +179,10 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
     @Data
     @Builder
     public static class SarifReport {
-        @Builder.Default
+        @JsonProperty("$schema")
+        private String schema;
         @JsonProperty("version")
-        String version = "2.1.0";
+        String version;
         @JsonProperty("runs")
         List<SarifVulnerability> runs;
     }
@@ -205,24 +192,15 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
     public static class SarifVulnerability {
         @JsonProperty("tool")
         public Tool tool;
-        @JsonProperty("artifacts")
-        public List<Artifact> artifacts;
         @JsonProperty("results")
         public List<Result> results;
     }
 
     @Data
     @Builder
-    public static class Artifact {
-        @JsonProperty("location")
-        public ArtifactLocation location;
-    }
-
-    @Data
-    @Builder
     public static class Tool {
         @JsonProperty("driver")
-        public SarifIssueTracker.Driver driver;
+        public Driver driver;
     }
 
     @Data
@@ -230,10 +208,12 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
     public static class Driver {
         @JsonProperty("name")
         public String name;
-        @JsonProperty("informationUri")
-        public String informationUri;
+        @JsonProperty("organization")
+        public String organization;
+        @JsonProperty("semanticVersion")
+        public String semanticVersion;
         @JsonProperty("rules")
-        public List<SarifIssueTracker.Rule> rules;
+        public List<Rule> rules;
     }
 
     @Data
@@ -245,11 +225,35 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
 
     @Data
     @Builder
+    public static class FullDescription {
+        @JsonProperty("text")
+        public String text;
+    }
+
+    @Data
+    @Builder
+    public static class DefaultConfiguration {
+        @JsonProperty("level")
+        public String level;
+    }
+
+    @Data
+    @Builder
+    public static class Help {
+        @JsonProperty("text")
+        public String text;
+        @JsonProperty("markdown")
+        public String markdown;
+    }
+
+    @Data
+    @Builder
     public static class Properties {
-        @JsonProperty("category")
-        public String category;
-        @JsonProperty("cwe")
-        public String cwe;
+        @JsonProperty("tags")
+        List<String> tags;
+        @JsonProperty("precision")
+        @Builder.Default
+        private String precision = "unknown";
     }
 
     @Data
@@ -257,10 +261,14 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
     public static class Rule {
         @JsonProperty("id")
         public String id;
+        @JsonProperty("name")
+        public String name;
         @JsonProperty("shortDescription")
         public ShortDescription shortDescription;
-        @JsonProperty("helpUri")
-        public String helpUri;
+        @JsonProperty("fullDescription")
+        public FullDescription fullDescription;
+        @JsonProperty("help")
+        public Help help;
         @JsonProperty("properties")
         public Properties properties;
     }
@@ -275,16 +283,18 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
     @Data
     @Builder
     public static class Result {
-        @JsonProperty("level")
+        @JsonProperty("ruleId")
+        private String ruleId;
+        @JsonProperty("ruleIndex")
+        private Integer ruleIndex;
+        @JsonProperty("level") //TODO validate Warning/Error vs High/Medium
         public String level;
         @JsonProperty("message")
         public Message message;
         @JsonProperty("locations")
         private List<Location> locations;
-        @JsonProperty("ruleId")
-        private String ruleId;
-        @JsonProperty("ruleIndex")
-        private Integer ruleIndex;
+        @JsonProperty("partialFingerprints")
+        private PartialFingerprints partialFingerprints;
     }
 
     @Data
@@ -292,6 +302,8 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
     public static class Location {
         @JsonProperty("physicalLocation")
         public PhysicalLocation physicalLocation;
+        @JsonProperty("message")
+        public Message message;
     }
 
     @Data
@@ -299,8 +311,13 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
     public static class ArtifactLocation {
         @JsonProperty("uri")
         public String uri;
-        @JsonProperty("index")
-        public int index;
+    }
+
+    @Data
+    @Builder
+    public static class PartialFingerprints {
+        @JsonProperty("primaryLocationLineHash")
+        public String primaryLocationLineHash;
     }
 
     @Data
@@ -308,8 +325,12 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
     public static class Region {
         @JsonProperty("startLine")
         public Integer startLine;
+        @JsonProperty("endLine")
+        public Integer endLine;
         @JsonProperty("startColumn")
         public Integer startColumn;
+        @JsonProperty("endColumn")
+        public Integer endColumn;
     }
 
     @Data
