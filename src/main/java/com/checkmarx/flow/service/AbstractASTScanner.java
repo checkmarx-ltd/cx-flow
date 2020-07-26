@@ -53,7 +53,7 @@ public abstract class AbstractASTScanner  implements VulnerabilityScanner{
             logRequest(scanRequest, getScanId(internalResults),  OperationResult.successful());
             result = toScanResults(internalResults);
         } catch (Exception e) {
-            return treatError(scanRequest, internalResults, e);
+             treatError(scanRequest, internalResults, e);
         }
         return result;
     }
@@ -85,7 +85,7 @@ public abstract class AbstractASTScanner  implements VulnerabilityScanner{
         return scanResults;
     }
 
-    private ScanResults treatError(ScanRequest scanRequest, ASTResultsWrapper internalResults, Exception e) {
+    private void treatError(ScanRequest scanRequest, ASTResultsWrapper internalResults, Exception e) {
         final String message = scanType + " scan failed.";
         log.error(message, e);
         OperationResult scanCreationFailure = new OperationResult(OperationStatus.FAILURE, e.getMessage());
@@ -94,7 +94,7 @@ public abstract class AbstractASTScanner  implements VulnerabilityScanner{
     }
 
     public ScanResults scan(ScanRequest scanRequest, String path) throws ExitThrowable {
-        ScanResults result;
+        ScanResults result = null;
         log.info("--------------------- Initiating new {} scan ---------------------", scanType);
         ASTResultsWrapper internalResults = new ASTResultsWrapper(new SCAResults(), new ASTResults());
 
@@ -116,7 +116,7 @@ public abstract class AbstractASTScanner  implements VulnerabilityScanner{
             Files.deleteIfExists(Paths.get(cxZipFile));
 
         } catch (Exception e) {
-            return treatError(scanRequest, internalResults, e);
+             treatError(scanRequest, internalResults, e);
         }
         return result;
     }

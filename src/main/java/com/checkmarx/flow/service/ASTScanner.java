@@ -35,7 +35,7 @@ public class ASTScanner extends AbstractASTScanner  {
 
     @Override
     protected String getScanId(ASTResultsWrapper internalResults) {
-        return internalResults.getAstResults().getScanId();
+        return internalResults.getAstResults().getResults().getScanId();
     }
     
 
