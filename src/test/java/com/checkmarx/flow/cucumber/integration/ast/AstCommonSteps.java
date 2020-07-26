@@ -17,8 +17,6 @@ public class AstCommonSteps {
     protected final AstProperties astProperties;
     protected final ScaProperties scaProperties;
 
-
-
     protected void initAstConfig() {
         astProperties.setIncremental("false");
         //astProperties.setApiUrl("https://api.scacheckmarx.com");
