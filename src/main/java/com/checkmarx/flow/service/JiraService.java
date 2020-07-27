@@ -287,15 +287,15 @@ public class JiraService {
 
             boolean useBranch = isUseBranch(request);
 
-            if (useBranch) {
-                List<ScanResults.ScaDetails> scaDetails = issue.getScaDetails();
-                if (scaDetails != null) {
-                    summary = ScanUtils.getScaSummaryIssueKey(request, issue, issuePrefix, issuePostfix);
-                } else {
-                    summary = String.format(JiraConstants.JIRA_ISSUE_TITLE_KEY_WITH_BRANCH, issuePrefix, vulnerability, filename, branch, issuePostfix);
-                }
+            List<ScanResults.ScaDetails> scaDetails = issue.getScaDetails();
+            if (scaDetails != null) {
+                summary = ScanUtils.getScaSummaryIssueKey(request, issue, issuePrefix, issuePostfix);
             } else {
-                summary = String.format(JiraConstants.JIRA_ISSUE_TITLE_KEY, issuePrefix, vulnerability, filename, issuePostfix);
+                if (useBranch) {
+                    summary = String.format(JiraConstants.JIRA_ISSUE_TITLE_KEY_WITH_BRANCH, issuePrefix, vulnerability, filename, branch, issuePostfix);
+                } else {
+                    summary = String.format(JiraConstants.JIRA_ISSUE_TITLE_KEY, issuePrefix, vulnerability, filename, issuePostfix);
+                }
             }
             String fileUrl = ScanUtils.getFileUrl(request, issue.getFilename());
             summary = checkSummaryLength(summary);

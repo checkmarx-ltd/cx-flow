@@ -454,7 +454,10 @@ public class ScanUtils {
                 ? getJiraScaSummaryIssueKeyWithoutBranch(request, issuePrefix, issuePostfix, detailsFindings, vulnerabilityPackage)
                 : getJiraScaSummaryIssueKey(request, issuePrefix, issuePostfix, detailsFindings, vulnerabilityPackage);
             case "CUSTOM":
-                return getCustomScaSummaryIssueKey(request, scaDetails);
+                return anyEmpty(request.getBranch(), request.getNamespace(), request.getRepoName())
+                        ? getCustomScaSummaryIssueKeyWithoutBranch(request, scaDetails)
+                        : getCustomScaSummaryIssueKey(request, scaDetails);
+
             default:
                 throw new NotImplementedException("Summary issue key wasn't implemented yet for bug type: {}", bugType);
         }
@@ -697,6 +700,13 @@ public class ScanUtils {
                 scaDetails.getFinding().getScore(), scaDetails.getFinding().getId(),
                 scaDetails.getVulnerabilityPackage().getName(),
                 scaDetails.getVulnerabilityPackage().getVersion(), request.getRepoName(), request.getBranch());
+    }
+
+    private static String getCustomScaSummaryIssueKeyWithoutBranch(ScanRequest request, ScanResults.ScaDetails scaDetails) {
+        return String.format(SCATicketingConstants.SCA_SUMMARY_CUSTOM_ISSUE_KEY_WITHOUT_BRANCH, scaDetails.getFinding().getSeverity(),
+                scaDetails.getFinding().getScore(), scaDetails.getFinding().getId(),
+                scaDetails.getVulnerabilityPackage().getName(),
+                scaDetails.getVulnerabilityPackage().getVersion(), request.getRepoName());
     }
 
     private static String getJiraScaSummaryIssueKey(ScanRequest request, String issuePrefix, String issuePostfix, Finding detailsFindings, Package vulnerabilityPackage) {
