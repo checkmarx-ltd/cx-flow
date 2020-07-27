@@ -11,5 +11,7 @@ public class SCATicketingConstants {
     public static final String SCA_CUSTOM_ISSUE_BODY = "**%s Vulnerable Package** issue exists @ **%s** in branch **%s**";
 
     public static final String SCA_JIRA_ISSUE_KEY = "%s%s %.1f: %s in %s and %s @ %s.%s%s";
+    public static final String SCA_JIRA_ISSUE_KEY_WITHOUT_BRANCH = "%s%s %.1f: %s in %s and %s @ %s%s";
     public static final String SCA_JIRA_ISSUE_BODY = "*%s Vulnerable Package* issue exists @ *%s* in branch *%s*";
+    public static final String SCA_JIRA_ISSUE_BODY_WITHOUT_BRANCH = "*%s Vulnerable Package* issue exists @ *%s*";
 }

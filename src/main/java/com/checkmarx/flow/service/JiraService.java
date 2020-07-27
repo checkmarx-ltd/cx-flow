@@ -879,7 +879,9 @@ public class JiraService {
                         ? String.format(JiraConstants.JIRA_ISSUE_TITLE_KEY_WITH_BRANCH, issuePrefix, issue.getVulnerability(), issue.getFilename(), request.getBranch(), issuePostfix)
                         : getScaDetailsIssueTitleFormat(request, issuePrefix, issuePostfix, issue);
             } else {
-                key = String.format(JiraConstants.JIRA_ISSUE_TITLE_KEY, issuePrefix, issue.getVulnerability(), issue.getFilename(), issuePostfix);
+                key = issue.getScaDetails() == null
+                        ? String.format(JiraConstants.JIRA_ISSUE_TITLE_KEY, issuePrefix, issue.getVulnerability(), issue.getFilename(), issuePostfix)
+                        : getScaDetailsIssueTitleWithoutBranchFormat(request, issuePrefix, issuePostfix, issue);
             }
             map.put(key, issue);
         }
@@ -893,6 +895,15 @@ public class JiraService {
         scaDetails.getFinding().getScore(), scaDetails.getFinding().getId(),
         scaDetails.getVulnerabilityPackage().getName(),
         scaDetails.getVulnerabilityPackage().getVersion(), request.getRepoName(), request.getBranch(), issuePostfix);
+    }
+
+    private String getScaDetailsIssueTitleWithoutBranchFormat(ScanRequest request, String issuePrefix, String issuePostfix, ScanResults.XIssue issue) {
+        ScanResults.ScaDetails scaDetails = issue.getScaDetails().get(0);
+
+        return String.format(SCATicketingConstants.SCA_JIRA_ISSUE_KEY_WITHOUT_BRANCH, issuePrefix, scaDetails.getFinding().getSeverity(),
+                scaDetails.getFinding().getScore(), scaDetails.getFinding().getId(),
+                scaDetails.getVulnerabilityPackage().getName(),
+                scaDetails.getVulnerabilityPackage().getVersion(), request.getRepoName(), issuePostfix);
     }
 
     private String getBody(ScanResults.XIssue issue, ScanRequest request, String fileUrl) {
@@ -913,7 +924,15 @@ public class JiraService {
             }
 
         } else {
-            body.append(String.format(JiraConstants.JIRA_ISSUE_BODY, issue.getVulnerability(), issue.getFilename())).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
+            if (Optional.ofNullable(issue.getScaDetails()).isPresent() ) {
+                issue.getScaDetails().stream().findAny().ifPresent(any -> {
+                    body.append(any.getFinding().getDescription()).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
+                    body.append(String.format(SCATicketingConstants.SCA_JIRA_ISSUE_BODY_WITHOUT_BRANCH, any.getFinding().getSeverity(), any.getVulnerabilityPackage().getName())).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
+                });
+            } else {
+                body.append(String.format(JiraConstants.JIRA_ISSUE_BODY, issue.getVulnerability(), issue.getFilename())).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
+            }
+
         }
         Optional.ofNullable(issue.getDescription())
                 .ifPresent(d -> body.append(d.trim()).append(ScanUtils.CRLF).append(ScanUtils.CRLF));
