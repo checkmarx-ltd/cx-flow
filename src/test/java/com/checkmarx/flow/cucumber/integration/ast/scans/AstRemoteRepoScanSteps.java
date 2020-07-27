@@ -3,24 +3,20 @@ package com.checkmarx.flow.cucumber.integration.ast.scans;
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
-import com.checkmarx.flow.cucumber.common.JsonLoggerTestUtils;
+
 import com.checkmarx.flow.cucumber.integration.ast.AstCommonSteps;
-import com.checkmarx.flow.dto.OperationStatus;
+
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.dto.report.AnalyticsReport;
-import com.checkmarx.flow.dto.report.ScanReport;
+
 import com.checkmarx.flow.service.*;
-import com.checkmarx.flow.utils.ScanUtils;
+
 import com.checkmarx.sdk.config.AstProperties;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.ScanResults;
-import com.checkmarx.sdk.exception.CheckmarxException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.cucumber.java.Before;
-import io.cucumber.java.en.And;
+
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.spring.CucumberContextConfiguration;
@@ -28,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.*;
@@ -52,12 +49,19 @@ public class AstRemoteRepoScanSteps extends AstCommonSteps {
 
     private final GitHubProperties gitHubProperties;
 
+
     private ScanRequest scanRequest;
 
     private ScanResults scanResults;
     private boolean isScaEnabled;
     private boolean isAstEnabled;
 
+    @Autowired
+    private SCAScanner scaScanner;
+    
+    @Autowired
+    private ASTScanner astScanner;
+    
     public AstRemoteRepoScanSteps(FlowProperties flowProperties, AstProperties astProperties, ScaProperties scaProperteis,
                                   GitHubProperties gitHubProperties) {
         super(flowProperties, astProperties, scaProperteis);
@@ -91,6 +95,7 @@ public class AstRemoteRepoScanSteps extends AstCommonSteps {
     @Given("scan initiator list is {string}")
     public void setScanInitiator(String initiatorList) {
         String[] intiators ;
+        List<VulnerabilityScanner> scanners = new LinkedList<>();
         if(!initiatorList.contains(SEPARATOR)){
             intiators = new String[1];
             intiators[0] = initiatorList;
@@ -102,18 +107,21 @@ public class AstRemoteRepoScanSteps extends AstCommonSteps {
            if(scanType.equalsIgnoreCase(ScaProperties.CONFIG_PREFIX)){
                 flowProperties.setEnabledVulnerabilityScanners(Collections.singletonList(ScaProperties.CONFIG_PREFIX));
                 this.isScaEnabled = true;
+                //scanners.add(new SCAScanner(new ScaClientImpl(scaProperties),flowProperties));
+               scanners.add(scaScanner);
             }
             if(scanType.equalsIgnoreCase(AstProperties.CONFIG_PREFIX)){
                 flowProperties.setEnabledVulnerabilityScanners(Collections.singletonList(AstProperties.CONFIG_PREFIX));
                 this.isAstEnabled = true;
+                //scanners.add(new ASTScanner(new AstClientImpl(astProperties),flowProperties));
+                scanners.add(astScanner);
             }
             
         }
 
-        startScan();
+        startScan(scanners);
 
     }
-
 
 
     @Then("the returned contain populated results for all initiators")
@@ -129,7 +137,7 @@ public class AstRemoteRepoScanSteps extends AstCommonSteps {
      }
 
 
-    public void startScan() {
+    public void startScan(List<VulnerabilityScanner> scanners) {
         
         CxProperties cxProperties = new CxProperties();
         ExternalScriptService scriptService = new ExternalScriptService();
@@ -139,6 +147,8 @@ public class AstRemoteRepoScanSteps extends AstCommonSteps {
         FlowService flowService = new FlowService(new ArrayList<>(), projectNameGenerator, resultsService);
 
         scanRequest = getBasicScanRequest(PUBLIC_PROJECT_NAME, PUBLIC_REPO);
+
+        scanRequest.setVulnerabilityScanners(scanners);
         flowService.initiateAutomation(scanRequest);
     }
 
