@@ -450,7 +450,9 @@ public class ScanUtils {
                 Finding detailsFindings = scaDetails.getFinding();
                 Package vulnerabilityPackage = scaDetails.getVulnerabilityPackage();
 
-                return getJiraScaSummaryIssueKey(request, issuePrefix, issuePostfix, detailsFindings, vulnerabilityPackage);
+                return anyEmpty(request.getNamespace(), request.getRepoName(), request.getBranch())
+                ? getJiraScaSummaryIssueKeyWithoutBranch(request, issuePrefix, issuePostfix, detailsFindings, vulnerabilityPackage)
+                : getJiraScaSummaryIssueKey(request, issuePrefix, issuePostfix, detailsFindings, vulnerabilityPackage);
             case "CUSTOM":
                 return getCustomScaSummaryIssueKey(request, scaDetails);
             default:
@@ -702,6 +704,13 @@ public class ScanUtils {
                 detailsFindings.getScore(), detailsFindings.getId(),
                 vulnerabilityPackage.getName(),
                 vulnerabilityPackage.getVersion(), request.getRepoName(), request.getBranch(), issuePostfix);
+    }
+
+    private static String getJiraScaSummaryIssueKeyWithoutBranch(ScanRequest request, String issuePrefix, String issuePostfix, Finding detailsFindings, Package vulnerabilityPackage) {
+        return String.format(SCATicketingConstants.SCA_JIRA_ISSUE_KEY_WITHOUT_BRANCH, issuePrefix, detailsFindings.getSeverity(),
+                detailsFindings.getScore(), detailsFindings.getId(),
+                vulnerabilityPackage.getName(),
+                vulnerabilityPackage.getVersion(), request.getRepoName(), issuePostfix);
     }
 
     private static void appendOsaDetails(StringBuilder body, ScanResults.OsaDetails o) {
