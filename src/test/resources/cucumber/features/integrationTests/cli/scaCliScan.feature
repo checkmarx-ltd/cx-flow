@@ -1,4 +1,3 @@
-@Skip
 @SCA_CLI_SCAN  @IntegrationTest
 Feature: Cx-Flow CLI SCA Integration tests
 
@@ -13,9 +12,7 @@ Feature: Cx-Flow CLI SCA Integration tests
             | issue-type                  | exit-code-number |
             | success                     | 0                |
             | missing-mandatory-parameter | 1                |
-            | missing-file                | 2                |
             | missing-project             | 2                |
-            | error-processing-results    | 3                |
             | error-processing-request    | 10               |
 
     Scenario Outline: Testing cli filter functionality

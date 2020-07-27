@@ -7,7 +7,7 @@ import org.junit.runner.RunWith;
 @RunWith(Cucumber.class)
 @CucumberOptions(
         features = "src/test/resources/cucumber/features/integrationTests/cli/scaCliScan.feature",
-        glue = {"com.checkmarx.flow.cucumber.integration.cli"},
+        glue = {"com.checkmarx.flow.cucumber.integration.cli.sca"},
         tags = "@SCA_CLI_SCAN and not @Skip")
 public class ScaCliStepsRunner {
 }
