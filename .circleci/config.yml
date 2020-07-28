@@ -338,6 +338,47 @@ jobs:
       - store_artifacts:
           path: ~/test-results/junit
 
+  SAST-CLI-integration-tests:
+    docker:
+    - image: "circleci/openjdk:8-jdk"
+    steps:
+    - checkout
+    - run:
+        name: Run SAST CLI Integration Tests
+        command: |
+          export HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
+          ./gradlew clean SastCliIntegrationTest --info -Dtarget=${HOOK_TARGET} -Drepo=${HOOK_REPO} -Dnamespace=${HOOK_NAMESPACE}
+    - run:
+        name: Save test results
+        command: |
+          mkdir -p ~/test-results/junit/
+          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ \;
+        when: always
+    - store_test_results:
+        path: ~/test-results
+    - store_artifacts:
+        path: ~/test-results/junit
+
+  SCA-CLI-integration-tests:
+    docker:
+    - image: "circleci/openjdk:8-jdk"
+    steps:
+    - checkout
+    - run:
+        name: Run SAST CLI Integration Tests
+        command: |
+          export HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
+          ./gradlew clean ScaCliIntegrationTest --info -Dtarget=${HOOK_TARGET} -Drepo=${HOOK_REPO} -Dnamespace=${HOOK_NAMESPACE}
+    - run:
+        name: Save test results
+        command: |
+          mkdir -p ~/test-results/junit/
+          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ \;
+        when: always
+    - store_test_results:
+        path: ~/test-results
+    - store_artifacts:
+        path: ~/test-results/junit
 
   cleanup:
     executor: aws-eks/python3
