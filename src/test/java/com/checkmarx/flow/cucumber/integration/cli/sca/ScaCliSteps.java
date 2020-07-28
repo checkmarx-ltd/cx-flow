@@ -31,7 +31,7 @@ import java.util.Collections;
 public class ScaCliSteps {
     private static final String REPO_ARGS = " --repo-url=https://github.com/cxflowtestuser/public-rest-repo --repo-name=CLI-public-rest-repo --branch=master --blocksysexit";
     private static final String GITHUB_REPO_ARGS = REPO_ARGS.intern() + " --github ";
-    private static final String JIRA_PROJECT = "CIT";
+    private static final String JIRA_PROJECT = "SCIT";
 
     private final FlowProperties flowProperties;
     private final JiraProperties jiraProperties;
