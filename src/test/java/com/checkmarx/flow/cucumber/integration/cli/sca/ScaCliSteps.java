@@ -35,6 +35,7 @@ public class ScaCliSteps {
 
     private final FlowProperties flowProperties;
     private final JiraProperties jiraProperties;
+    private final ScaProperties scaProperties;
     private final IntegrationTestContext testContext;
 
     private String commandlineConstantArgs;
@@ -49,6 +50,7 @@ public class ScaCliSteps {
     public void beforeEachScenario() throws IOException {
         log.info("Setting bugTracker: Jira");
         flowProperties.setBugTracker("JIRA");
+        initSCAConfig();
         flowProperties.setEnabledVulnerabilityScanners(Collections.singletonList(ScaProperties.CONFIG_PREFIX));
 
         log.info("Jira project key: {}", JIRA_PROJECT);
@@ -172,5 +174,11 @@ public class ScaCliSteps {
         log.info("Cleaning jira project before test: {}", jiraProperties.getProject());
         jiraUtils.ensureProjectExists(jiraProperties.getProject());
         jiraUtils.cleanProject(jiraProperties.getProject());
+    }
+
+    protected void initSCAConfig() {
+        scaProperties.setAppUrl("https://sca.scacheckmarx.com");
+        scaProperties.setApiUrl("https://api.scacheckmarx.com");
+        scaProperties.setAccessControlUrl("https://platform.checkmarx.net");
     }
 }
