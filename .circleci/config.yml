@@ -550,7 +550,7 @@ workflows:
       - SAST-CLI-integration-tests:
           requires:
             - deploy-cxflow
-      -SCA-CLI-integration-tests:
+      - SCA-CLI-integration-tests:
           requires:
             - deploy-cxflow
       - docker-push-stable:
