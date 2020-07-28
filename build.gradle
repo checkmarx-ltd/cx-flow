@@ -243,6 +243,31 @@ task PullRequestCommnetsIntegrationTest(type: Test) {
     }
 }
 
+task SastCliIntegrationTest(type: Test) {
+    useJUnitPlatform() {
+        systemProperty "testprofile", "sastCliIntegration"
+
+        include 'com/checkmarx/flow/cucumber/integration/cli/sast/**'
+
+        testLogging {
+            events "passed", "skipped", "failed"
+        }
+    }
+}
+
+task ScaCliIntegrationTest(type: Test) {
+    useJUnitPlatform() {
+        systemProperty "testprofile", "scaCliIntegration"
+
+        include 'com/checkmarx/flow/cucumber/integration/cli/sca/**'
+
+        testLogging {
+            events "passed", "skipped", "failed"
+        }
+    }
+}
+
+
 task getVersion {
     doLast {
         println "${version}"
