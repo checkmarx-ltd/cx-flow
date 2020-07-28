@@ -17,6 +17,7 @@ import com.checkmarx.sdk.dto.ScanResults;
 
 import io.cucumber.java.Before;
 
+import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.spring.CucumberContextConfiguration;
@@ -129,11 +130,25 @@ public class AstRemoteRepoScanSteps extends AstCommonSteps {
         if(isScaEnabled) {
             assertNotNull("SCA results are not null.", scanResults.getScaResults());
             assertNotEquals("SCA scan ID is not empty", StringUtils.isEmpty(scanResults.getScaResults().getScanId()));
+            assertEquals("Sca vulnerable packages: ", 13, scanResults.getScaResults().getPackages().size() );
         }
         if(isAstEnabled) {
             assertNotNull("AST results are not null.", scanResults.getAstResults());
             assertNotEquals("AST scan ID is not empty", StringUtils.isEmpty(scanResults.getAstResults().getResults().getScanId()));
         }
+     }
+     
+     @And("sca finding count will be {string} and ast findings count {string} will be accordingly")
+     public void validateNumberOfFindings(String scaFindings, String astFindings){
+         if(isScaEnabled) {
+             assertEquals("Sca vulnerable packages: ", 13, scanResults.getScaResults().getPackages().size() );
+             assertEquals("Sca findings: ", 13, scanResults.getScaResults().getFindings().size() );
+
+         }
+         if(isAstEnabled) {
+             assertEquals("AST findings: ", 11, scanResults.getAstResults().getResults().getFindings().size() );
+
+         }
      }
 
 
