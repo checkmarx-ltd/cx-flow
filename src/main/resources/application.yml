@@ -145,9 +145,6 @@ gitlab:
   false-positive-label: false-positive
   block-merge: true
 
-sarif:
-  file-path: "/tmp/cxflow/sarif-integration.json"
-
 azure:
   webhook-token: xxxx
   token: xxxx
