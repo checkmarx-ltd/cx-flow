@@ -547,6 +547,12 @@ workflows:
       - pullRequestComments-integration-tests:
           requires:
             - deploy-cxflow
+      - SAST-CLI-integration-tests:
+          requires:
+            - deploy-cxflow
+      -SCA-CLI-integration-tests:
+          requires:
+            - deploy-cxflow
       - docker-push-stable:
           filters:
             branches:
@@ -557,6 +563,8 @@ workflows:
             - sca-integration-tests
             - jira-integration-tests
             - pullRequestComments-integration-tests
+            - SAST-CLI-integration-tests
+            - SCA-CLI-integration-tests
       - publish-github-release:
           filters:
             branches:
@@ -567,6 +575,8 @@ workflows:
             - sca-integration-tests
             - jira-integration-tests
             - pullRequestComments-integration-tests
+            - SAST-CLI-integration-tests
+            - SCA-CLI-integration-tests
       - cleanup:
           cluster-name: eks-cxflow-ci
           namespace: cxflow-${CIRCLE_SHA1::7}
@@ -585,6 +595,8 @@ workflows:
             - sca-integration-tests
             - jira-integration-tests
             - pullRequestComments-integration-tests
+            - SAST-CLI-integration-tests
+            - SCA-CLI-integration-tests
   nightly-cleanup:
     triggers:
       - schedule:
