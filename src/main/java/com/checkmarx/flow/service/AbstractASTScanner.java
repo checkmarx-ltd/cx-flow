@@ -75,6 +75,9 @@ public abstract class AbstractASTScanner  implements VulnerabilityScanner{
                     log.warn("ScaScanner does not support scanType of {}, ignoring.");
                     break;
             }
+        } catch (MachinaRuntimeException me) {
+            log.error(me.getMessage());
+            throw new MachinaRuntimeException(new ExitThrowable(10));
         } catch (ExitThrowable e) {
             throw new MachinaRuntimeException(e);
         }
