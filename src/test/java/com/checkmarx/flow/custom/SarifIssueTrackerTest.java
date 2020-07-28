@@ -1,6 +1,5 @@
 package com.checkmarx.flow.custom;
 
-import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.SarifProperties;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaException;
@@ -11,7 +10,6 @@ import com.checkmarx.sdk.dto.ScanResults.XIssue;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.junit.Test;
-
 import java.util.List;
 import java.util.Map;
 
