@@ -127,14 +127,14 @@ public class ScaCliSteps {
 
         switch (filter) {
             case "no-filter":
-                commandBuilder.append(" --scan  --scanner=sca --severity=High --severity=Medium --severity=Low --app=MyApp --cx-project=test").append(commandlineConstantArgs);
+                commandBuilder.append(" --scan  --scanner=sca --app=MyApp --cx-project=test").append(commandlineConstantArgs);
                 break;
-            case "filter-High-and-Medium":
-                commandBuilder.append(" --scan  --scanner=sca --severity=High --severity=Medium --app=MyApp --cx-project=test").append(commandlineConstantArgs);
-                break;
-            case "filter-only-Medium":
-                commandBuilder.append(" --scan  --scanner=sca --severity=Medium --app=MyApp --cx-project=test").append(commandlineConstantArgs);
-                break;
+            // case "filter-High-and-Medium":
+            //     commandBuilder.append(" --scan  --scanner=sca --app=MyApp --cx-project=test").append(commandlineConstantArgs);
+            //     break;
+            // case "filter-only-Medium":
+            //     commandBuilder.append(" --scan  --scanner=sca --app=MyApp --cx-project=test").append(commandlineConstantArgs);
+            //     break;
             default:
                 throw new PendingException("Filter " + filter + " isn't supported");
         }

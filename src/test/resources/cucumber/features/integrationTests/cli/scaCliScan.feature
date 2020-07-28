@@ -15,7 +15,6 @@ Feature: Cx-Flow CLI SCA Integration tests
             | missing-project             | 2                |
             | error-processing-request    | 10               |
 
-    @Skip
     Scenario Outline: Testing cli filter functionality
         Given code has x High, y Medium and z low issues
         When running sca scan <filter>
@@ -24,5 +23,5 @@ Feature: Cx-Flow CLI SCA Integration tests
         Examples:
             | filter                 | number of issue |
             | no-filter              | x+y+z           |
-            | filter-High-and-Medium | x+y             |
-            | filter-only-Medium     | y               |
+            # | filter-High-and-Medium | x+y             |
+            # | filter-only-Medium     | y               |
