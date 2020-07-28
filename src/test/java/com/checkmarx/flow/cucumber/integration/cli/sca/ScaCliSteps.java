@@ -71,7 +71,6 @@ public class ScaCliSteps {
     public void runningWithBreakBuild(String issueType) {
         StringBuilder commandBuilder = new StringBuilder();
 
-
         switch (issueType) {
             case "success":
                 commandBuilder.append("--scan  --severity=High --app=MyApp --cx-project=test").append(commandlineConstantArgs);
