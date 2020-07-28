@@ -3,8 +3,6 @@ package com.checkmarx.flow.custom;
 import com.checkmarx.flow.config.SarifProperties;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.sdk.dto.ScanResults;
-
-import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.service.FilenameFormatter;
@@ -16,6 +14,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -36,6 +35,7 @@ import java.util.stream.Collectors;
 public class SarifIssueTracker extends ImmutableIssueTracker {
     private final SarifProperties properties;
     private final FilenameFormatter filenameFormatter;
+    private final String DEFAULT_LEVEL = "error";
 
     @Override
     public void init(ScanRequest request, ScanResults results) throws MachinaException {
@@ -76,13 +76,19 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
         // Build the collection of the rules objects (Vulnerabilities)
         List<Rule> rules = filteredByVulns.stream().map(i -> Rule.builder()
                 .id(i.getVulnerability())
+                .name(i.getVulnerability())
                 .shortDescription(ShortDescription.builder().text(i.getVulnerability()).build())
-                .fullDescription(FullDescription.builder().text((String) i.getAdditionalDetails().get("recommendedFix")).build())
+                .fullDescription(FullDescription.builder().text(i.getVulnerability()).build())
+                .help(Help.builder()
+                        .markdown(String.format("[%s Details](%s)",
+                                i.getVulnerability(),
+                                i.getAdditionalDetails().get("recommendedFix")))
+                        .text((String) i.getAdditionalDetails().get("recommendedFix"))
+                        .build())
                 .properties(Properties.builder()
                         .tags(Arrays.asList("security", "external/cwe/cwe-".concat(i.getCwe())))
                         .build())
                 .build()).collect(Collectors.toList());
-
         //All issues to create the results/locations that are not all false positive
         List<Result> resultList = Lists.newArrayList();
         filteredXIssues.forEach(
@@ -113,17 +119,25 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                                                     .build())
                                             .build())
                                     .build());
+
                         }
                     });
                     // Build collection of the results -> locations
                     resultList.add(
                             Result.builder()
-                            .level(issue.getSeverity())
+                            .level(properties.getSeverityMap().get(issue.getSeverity()) != null ? properties.getSeverityMap().get(issue.getSeverity()) : DEFAULT_LEVEL)
                             .locations(locations)
                             .message(Message.builder()
                                     .text(issue.getDescription())
                                     .build())
                             .ruleId(issue.getVulnerability())
+                            .partialFingerprints(
+                                    PartialFingerprints.builder()
+                                    .primaryLocationLineHash(
+                                            DigestUtils.sha256Hex(issue.getVulnerability().concat(issue.getFilename()))
+                                    )
+                                    .build()
+                            )
                             .build()
                     );
 
@@ -287,7 +301,7 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
         private String ruleId;
         @JsonProperty("ruleIndex")
         private Integer ruleIndex;
-        @JsonProperty("level") //TODO validate Warning/Error vs High/Medium
+        @JsonProperty("level")
         public String level;
         @JsonProperty("message")
         public Message message;
@@ -302,8 +316,6 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
     public static class Location {
         @JsonProperty("physicalLocation")
         public PhysicalLocation physicalLocation;
-        @JsonProperty("message")
-        public Message message;
     }
 
     @Data
