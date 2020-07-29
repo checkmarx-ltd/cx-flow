@@ -188,10 +188,17 @@ public class GitLabController extends WebhookController {
         controllerRequest = ensureNotNull(controllerRequest);
 
         try {
-            String app = body.getRepository().getName();
+            String app;
+            if (body != null && body.getRepository() != null) {
+                app = body.getRepository().getName();
+            } else {
+                throw new IllegalArgumentException("Request body or request repository cannot be null");
+            }
+
             if(StringUtils.isNotEmpty(controllerRequest.getApplication())){
                 app = controllerRequest.getApplication();
             }
+
 
             //set the default bug tracker as per yml
             setBugTracker(flowProperties, controllerRequest);
