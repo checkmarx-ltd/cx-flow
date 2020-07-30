@@ -25,16 +25,16 @@ logging:
     com:
       checkmarx:
         flow:
-          service: info
-          utils: info
+          service: INFO
+          utils: INFO
     org:
       apache:
         http:
-          wire: TRACE
+          wire: INFO
       springframework:
         web:
           client:
-            RestTemplate: TRACE
+            RestTemplate: INFO
 
 cx-flow:
   # Agreed upon shared API token

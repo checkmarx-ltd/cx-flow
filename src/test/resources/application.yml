@@ -9,15 +9,15 @@ logging:
     com:
       checkmarx:
         flow:
-          service: DEBUG
+          service: INFO
     org:
       apache:
         http:
-          wire: DEBUG
+          wire: INFO
       springframework:
         web:
           client:
-            RestTemplate: DEBUG
+            RestTemplate: INFO
 
 cx-flow:
   # Agreed upon shared API token
