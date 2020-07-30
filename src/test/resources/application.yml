@@ -5,19 +5,19 @@ logging:
   file:
     name: cx-flow.log
     path: c:/temp/
-#  level:
-#    com:
-#      checkmarx:
-#        flow:
-#          service: TRACE
-#    org:
-#      apache:
-#        http:
-#          wire: TRACE
-#      springframework:
-#        web:
-#          client:
-#            RestTemplate: TRACE
+  level:
+    com:
+      checkmarx:
+        flow:
+          service: DEBUG
+    org:
+      apache:
+        http:
+          wire: DEBUG
+      springframework:
+        web:
+          client:
+            RestTemplate: DEBUG
 
 cx-flow:
   # Agreed upon shared API token

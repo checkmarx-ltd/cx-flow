@@ -21,20 +21,20 @@ logging:
   file:
     name: cx-flow.log
 
-#  level:
-#    com:
-#      checkmarx:
-#        flow:
-#          service: info
-#          utils: info
-#    org:
-#      apache:
-#        http:
-#          wire: TRACE
-#      springframework:
-#        web:
-#          client:
-#            RestTemplate: TRACE
+  level:
+    com:
+      checkmarx:
+        flow:
+          service: info
+          utils: info
+    org:
+      apache:
+        http:
+          wire: TRACE
+      springframework:
+        web:
+          client:
+            RestTemplate: TRACE
 
 cx-flow:
   # Agreed upon shared API token
