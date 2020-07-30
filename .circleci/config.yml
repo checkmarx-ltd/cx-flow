@@ -459,7 +459,7 @@ jobs:
           name: Delete namespace
           command: |
             kubectl get ns
-            NS_TO_DELETE=$(kubectl get ns -o jsonpath="{.items[*].metadata.name}" | sed 's/default//g' | sed 's/kube-node-lease//g' | sed 's/kube-public//g' | sed 's/kube-system//g' | sed 's/nginx-kibana-ci//g' | sed 's/test//g')
+            NS_TO_DELETE=$(kubectl get ns -o jsonpath="{.items[*].metadata.name}" | sed 's/default//g' | sed 's/kube-node-lease//g' | sed 's/kube-public//g' | sed 's/kube-system//g' | sed 's/nginx-kibana-ci//g')
             echo "NS_TO_DELETE: ${NS_TO_DELETE}"
             if [[ $NS_TO_DELETE =~ ^\ +$ ]] ;then 
               # There are no namespaces to delete (NS_TO_DELETE contain only whitespaces) 
