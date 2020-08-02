@@ -196,38 +196,19 @@ public class JiraService {
         }
         log.debug("jql query : {}", jql);
         HashSet<String> fields = new HashSet<>();
-        fields.add("key");
-        fields.add("project");
-        fields.add("issuetype");
-        fields.add("summary");
-        fields.add(LABEL_FIELD_TYPE);
-        fields.add("created");
-        fields.add("updated");
-        fields.add("status");
-        int startAt = 0;
+        Collections.addAll(fields, "key","project","issuetype","summary",LABEL_FIELD_TYPE,"created","updated","status");
+        
 
         SearchResult searchResults;
-        int totalResultsCount;
+        int totalResultsCount = MAX_RESULTS_ALLOWED;
+        SearchRestClient searchClient = this.client.getSearchClient();
         //Retrieve JQL results through pagination (jira.max-jql-results per page -> default 50)
-        do {
-            searchResults = this.client.getSearchClient().searchJql(jql, jiraProperties.getMaxJqlResults(), startAt, fields).claim();
-            for (Issue issue : searchResults.getIssues()) {
-                issues.add(issue);
-            }
-            startAt += jiraProperties.getMaxJqlResults();
-            totalResultsCount = validateTotalResultCount(searchResults.getTotal());
-        }while(startAt < totalResultsCount);
-        return issues;
-    }
-
-    private int validateTotalResultCount(int total) {
-        int totalResultCount = 0;
-        if (total> MAX_RESULTS_ALLOWED) {
-            totalResultCount = MAX_RESULTS_ALLOWED;
-        } else {
-            totalResultCount = total;
+        for ( int startAt = 0 ; startAt < totalResultsCount ; startAt += jiraProperties.getMaxJqlResults() ) {
+            searchResults = searchClient.searchJql(jql, jiraProperties.getMaxJqlResults(), startAt, fields).claim();
+            searchResults.getIssues().forEach(issues::add);
+            totalResultsCount = Integer.min(searchResults.getTotal(), MAX_RESULTS_ALLOWED);
         }
-        return totalResultCount;
+        return issues;
     }
 
     private Issue getIssue(String bugId) {
