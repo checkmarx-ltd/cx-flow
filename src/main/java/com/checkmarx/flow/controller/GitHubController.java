@@ -180,6 +180,7 @@ public class GitHubController extends WebhookController {
                     .repoUrlWithAuth(gitAuthUrl)
                     .repoType(ScanRequest.Repository.GITHUB)
                     .branch(currentBranch)
+                    .defaultBranch(repository.getDefaultBranch())
                     .refs(Constants.CX_BRANCH_PREFIX.concat(currentBranch))
                     .mergeNoteUri(event.getPullRequest().getIssueUrl().concat("/comments"))
                     .mergeTargetBranch(targetBranch)
