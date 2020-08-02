@@ -242,7 +242,7 @@ jobs:
           command: |
             export GITHUB_HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
             export ADO_HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
-            ./gradlew clean e2eTests --logging.level.com.checkmarx=Debug -DGITHUB_target=${GITHUB_HOOK_TARGET} -DGITHUB_repo=${GITHUB_HOOK_REPO} -DGITHUB_repo_SCA=${GITHUB_HOOK_REPO_SCA} -DGITHUB_namespace=${GITHUB_HOOK_NAMESPACE} -DADO_target=${ADO_HOOK_TARGET} -DADO_repo=${ADO_HOOK_REPO}-DADO_namespace=${ADO_HOOK_NAMESPACE}
+            ./gradlew clean e2eTests -Dlogging.level.com.checkmarx=Debug -DGITHUB_target=${GITHUB_HOOK_TARGET} -DGITHUB_repo=${GITHUB_HOOK_REPO} -DGITHUB_repo_SCA=${GITHUB_HOOK_REPO_SCA} -DGITHUB_namespace=${GITHUB_HOOK_NAMESPACE} -DADO_target=${ADO_HOOK_TARGET} -DADO_repo=${ADO_HOOK_REPO}-DADO_namespace=${ADO_HOOK_NAMESPACE}
       - run:
           name: Save test results
           command: |
