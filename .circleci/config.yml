@@ -254,7 +254,9 @@ jobs:
       - store_artifacts:
           path: ~/test-results/junit
       - store_artifacts:
-          path: ./cx-flow.log
+          path: ./cx-flow-main.log
+      - store_artifacts:
+          path: ./cx-flow-test.log
 
   integration-tests:
     docker:

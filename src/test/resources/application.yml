@@ -3,7 +3,7 @@ server:
 
 logging:
   file:
-    name: cx-flow.log
+    name: cx-flow-test.log
     path: c:/temp/
   level:
     com:
