@@ -104,7 +104,7 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
 
     private boolean isAllowedSast(ScanResults scanResults, PullRequestReport pullRequestReport) {
         log.debug("Checking if CxSAST pull request merge is allowed.");
-        Map<FindingSeverity, Integer> thresholds = getSastEffectiveThresholds();
+        Map<FindingSeverity, Integer> thresholds = getSastEffectiveThresholds(pullRequestReport.getScanRequest());
         writeMapToLog(thresholds, "Using CxSAST thresholds");
         pullRequestReport.setThresholds(thresholds);
 
@@ -119,12 +119,24 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
                 "Merge is not allowed, because some of the thresholds were exceeded.");
     }
 
-    private Map<FindingSeverity, Integer> getSastEffectiveThresholds() {
-        if (areSastThresholdsDefined()) {
-            return flowProperties.getThresholds();
+    private Map<FindingSeverity, Integer> getSastEffectiveThresholds(ScanRequest scanRequest) {
+        Map<FindingSeverity, Integer> res;
+
+        if (areSastThresholdsFromRequestDefined(scanRequest)) {
+            res = scanRequest.getThresholds();
+        } else if (areSastThresholdsDefined()) {
+            res = flowProperties.getThresholds();
         } else {
-            return failSastPrIfResultHasAnyFindings();
+            res = failSastPrIfResultHasAnyFindings();
         }
+
+        return res;
+    }
+
+    private boolean areSastThresholdsFromRequestDefined(ScanRequest scanRequest) {
+        return Optional.ofNullable(scanRequest.getThresholds())
+                .map(map -> !map.isEmpty())
+                .orElse(false);
     }
 
     private Map<Severity, Integer> getScaEffectiveThresholdsSeverity(ScanRequest scanRequest) {

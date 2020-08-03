@@ -94,7 +94,7 @@ public class ConfigurationOverrider {
 
         overrideFilters(fo, request, overrideReport);
 
-        overrideThresholds(fo, overrideReport);
+        overrideThresholds(fo, overrideReport, request);
 
         Optional.ofNullable(fo.getVulnerabilityScanners()).ifPresent(vulnerabilityScanners -> {
             List<VulnerabilityScanner> scanRequestVulnerabilityScanner = new ArrayList<>();
@@ -113,19 +113,11 @@ public class ConfigurationOverrider {
 
     }
 
-    private void overrideThresholds(FlowOverride flowOverride, Map<String, String> overrideReport) {
+    private void overrideThresholds(FlowOverride flowOverride, Map<String, String> overrideReport, ScanRequest request) {
         Optional.ofNullable(flowOverride.getThresholds()).ifPresent(thresholds -> {
-            if (!(
-                    thresholds.getHigh() == null &&
-                            thresholds.getMedium() == null &&
-                            thresholds.getLow() == null &&
-                            thresholds.getInfo() == null
-            )) {
-                Map<FindingSeverity, Integer> thresholdsMap = getThresholdsMap(thresholds);
-                if (!thresholdsMap.isEmpty()) {
-                    flowProperties.setThresholds(thresholdsMap);
-                }
-
+            Map<FindingSeverity, Integer> thresholdsMap = getThresholdsMap(thresholds);
+            if (!thresholdsMap.isEmpty()) {
+                request.setThresholds(thresholdsMap);
                 overrideReport.put("thresholds", convertMapToString(thresholdsMap));
             }
         });
