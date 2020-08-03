@@ -287,13 +287,13 @@ public class GitHubController extends WebhookController {
             String scanPreset = cxProperties.getScanPreset();
 
             ScanRequest request = ScanRequest.builder()
-                    .application(app)
+                    .application("Test")
                     .product(p)
                     .project(controllerRequest.getProject())
                     .team(controllerRequest.getTeam())
                     .namespace(repository.getOwner().getName().replace(" ","_"))
-                    .repoName(repository.getName())
-                    .repoUrl(repository.getCloneUrl())
+                    .repoName("Test")
+                    .repoUrl("Test")
                     .repoUrlWithAuth(gitAuthUrl)
                     .repoType(ScanRequest.Repository.GITHUB)
                     .branch(currentBranch)

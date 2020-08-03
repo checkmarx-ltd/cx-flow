@@ -275,10 +275,6 @@ jobs:
       - store_artifacts:
           path: ~/test-results/junit
       - store_artifacts:
-          path: ./cx-flow-main.log
-      - store_artifacts:
-          path: ./cx-flow-test.log
-      - store_artifacts:
           path: ~/application-logs
 
   integration-tests:
