@@ -252,15 +252,17 @@ jobs:
             find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ \;
           when: always
       - aws-eks/update-kubeconfig-with-authenticator:
-            cluster-name: cx-flow
-            install-kubectl: true
-            when: always
+          cluster-name: << parameters.cluster-name >>
+          install-kubectl: true
+            - helm/install-helm-client:
+                version: << parameters.version >>
+          when: always
       - run:
           name: Save application logs
           command: |
-            export POD_NAME=$(kubectl get pods -o custom-columns=:metadata.name -n cx-flow | grep -v ingress | grep -v external-dns | tr -d '\n')
-            mkdir -p ~/application-logs/
-            kubectl logs ${POD_NAME} -n cx-flow ~/application-logs/${POD_NAME}.log
+             export POD_NAME=$(kubectl get pods -o custom-columns=:metadata.name -n << parameters.namespace >> | grep -v ingress | grep -v external-dns | tr -d '\n')
+             mkdir -p ~/application-logs/
+             kubectl logs ${POD_NAME} -n << parameters.namespace >> > ~/application-logs/${POD_NAME}.log
           when: always
       - store_test_results:
           path: ~/test-results
