@@ -263,7 +263,7 @@ jobs:
       - aws-eks/update-kubeconfig-with-authenticator:
           cluster-name: << parameters.cluster-name >>
           install-kubectl: true
-          when: always
+
       - run:
           name: Save application logs
           command: |
