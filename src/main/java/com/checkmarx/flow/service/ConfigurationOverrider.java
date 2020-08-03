@@ -8,6 +8,7 @@ import com.checkmarx.flow.dto.FlowOverride;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.CxProperties;
+import com.checkmarx.sdk.config.ScaConfig;
 import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.Sca;
@@ -195,31 +196,34 @@ public class ConfigurationOverrider {
                 overrideReport.put("exclude files", sf);
             });
         });
-        overridePropertiesSca(Optional.ofNullable(override.getSca()), overrideReport);
+        overridePropertiesSca(Optional.ofNullable(override.getSca()), overrideReport, request);
     }
 
-    private void overridePropertiesSca(Optional<Sca> sca, Map<String, String> overrideReport) {
+    private void overridePropertiesSca(Optional<Sca> sca, Map<String, String> overrideReport, ScanRequest request) {
         if (!sca.isPresent()) {
           return;
         }
 
+        ScaConfig scaConfig = ScaConfig.builder()
+                .build();
+
         sca.map(Sca::getAccessControlUrl).ifPresent(accessControlUrl -> {
-            scaProperties.setAccessControlUrl(accessControlUrl);
+            scaConfig.setAccessControlUrl(accessControlUrl);
             overrideReport.put("accessControlUrl", accessControlUrl);
         });
 
         sca.map(Sca::getApiUrl).ifPresent(apiUrl -> {
-            scaProperties.setApiUrl(apiUrl);
+            scaConfig.setApiUrl(apiUrl);
             overrideReport.put("apiUrl", apiUrl);
         });
 
         sca.map(Sca::getAppUrl).ifPresent(appUrl -> {
-            scaProperties.setAppUrl(appUrl);
+            scaConfig.setAppUrl(appUrl);
             overrideReport.put("appUrl", appUrl);
         });
 
         sca.map(Sca::getTenant).ifPresent(tenant -> {
-            scaProperties.setTenant(tenant);
+            scaConfig.setTenant(tenant);
             overrideReport.put("tenant", tenant);
         });
 
@@ -234,15 +238,16 @@ public class ConfigurationOverrider {
         });
 
         sca.map(Sca::getFilterSeverity).ifPresent(filterSeverity -> {
-            scaProperties.setFilterSeverity(filterSeverity);
+            scaConfig.setFilterSeverity(filterSeverity);
             overrideReport.put("filterSeverity", filterSeverity.toString());
         });
 
         sca.map(Sca::getFilterScore).ifPresent(filterScore -> {
-            scaProperties.setFilterScore(filterScore);
+            scaConfig.setFilterScore(filterScore);
             overrideReport.put("filterScore", String.valueOf(filterScore));
         });
 
+        request.setScaConfig(scaConfig);
     }
 
     /**

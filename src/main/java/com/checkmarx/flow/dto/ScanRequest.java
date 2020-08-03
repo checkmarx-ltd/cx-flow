@@ -1,6 +1,7 @@
 package com.checkmarx.flow.dto;
 
 import com.checkmarx.flow.service.VulnerabilityScanner;
+import com.checkmarx.sdk.config.ScaConfig;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import lombok.*;
 
@@ -69,6 +70,7 @@ public class ScanRequest {
     private FilterConfiguration filter;
     private Map<String, String> additionalMetadata;
     private List<VulnerabilityScanner> vulnerabilityScanners;
+    private ScaConfig scaConfig;
 
     public ScanRequest(ScanRequest other) {
         this.namespace = other.namespace;
@@ -103,6 +105,7 @@ public class ScanRequest {
         this.filter = other.filter;
         this.forceScan = other.forceScan;
         this.vulnerabilityScanners = other.vulnerabilityScanners;
+        this.scaConfig = other.scaConfig;
     }
 
     public Map<String,String> getAltFields() {
