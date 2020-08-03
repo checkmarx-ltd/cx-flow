@@ -260,7 +260,7 @@ jobs:
           command: |
             export POD_NAME=$(kubectl get pods -o custom-columns=:metadata.name -n cx-flow | grep -v ingress | grep -v external-dns | tr -d '\n')
             mkdir -p ~/application-logs/
-            kubectl logs ${POD_NAME} -n << parameters.namespace >> > ~/application-logs/${POD_NAME}.log
+            kubectl logs ${POD_NAME} -n cx-flow ~/application-logs/${POD_NAME}.log
           when: always
       - store_test_results:
           path: ~/test-results
