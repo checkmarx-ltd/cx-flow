@@ -295,7 +295,7 @@ public class GitHubController extends WebhookController {
                     .repoName("Test")
                     .repoUrl("Test")
                     .repoUrlWithAuth(gitAuthUrl)
-                    .repoType(ScanRequest.Repository.GITHUB)
+                    .repoType(ScanRequest.Repository.BITBUCKET)
                     .branch(currentBranch)
                     .defaultBranch(repository.getDefaultBranch())
                     .refs(event.getRef())
@@ -319,7 +319,7 @@ public class GitHubController extends WebhookController {
 
             //only initiate scan/automation if branch is applicable
             if(helperService.isBranch2Scan(request, branches)){
-                flowService.initiateAutomation(request);
+                //flowService.initiateAutomation(request);
             }
 
         }
