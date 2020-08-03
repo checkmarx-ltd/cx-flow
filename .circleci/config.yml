@@ -261,8 +261,9 @@ jobs:
             find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ \;
           when: always
       - aws-eks/update-kubeconfig-with-authenticator:
-          cluster-name: << parameters.cluster-name >>
-          install-kubectl: true
+            cluster-name: << parameters.cluster-name >>
+            install-kubectl: true
+          when: always
       - run:
           name: Save application logs
           command: |
