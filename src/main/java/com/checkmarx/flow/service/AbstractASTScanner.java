@@ -90,7 +90,7 @@ public abstract class AbstractASTScanner  implements VulnerabilityScanner{
         log.error(message, e);
         OperationResult scanCreationFailure = new OperationResult(OperationStatus.FAILURE, e.getMessage());
         logRequest(scanRequest, getScanId(internalResults),  scanCreationFailure);
-        throw new MachinaRuntimeException(message);
+        throw new MachinaRuntimeException(message + "\n" + e.getMessage());
     }
 
     public ScanResults scan(ScanRequest scanRequest, String path) throws ExitThrowable {

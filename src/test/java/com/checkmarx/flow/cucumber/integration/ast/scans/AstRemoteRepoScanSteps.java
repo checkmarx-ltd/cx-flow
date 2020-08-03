@@ -15,6 +15,7 @@ import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.ScanResults;
 
+import com.cx.restclient.AstClientImpl;
 import io.cucumber.java.Before;
 
 import io.cucumber.java.en.And;
@@ -45,10 +46,12 @@ public class AstRemoteRepoScanSteps extends AstCommonSteps {
 
     private static final String PUBLIC_REPO = "https://github.com/cxflowtestuser/testsAST.git";
     private static final String SEPARATOR = ",";
+    private static final String EXPIRED_TOKEN = "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJrdkdrM1k5ODBrM29VV0VxM2NscjlOeEIwbTlCbE90N3k0TlRWbHBRRFFNIn0.eyJleHAiOjE1OTU5NTI0MTgsImlhdCI6MTU5NTkxNjQxOCwiYXV0aF90aW1lIjoxNTk1OTE2NDE4LCJqdGkiOiI4MDc5NzAyMy0xMzJlLTQzODktYmE0Yy04YjEzOTc4NTcwZTgiLCJpc3MiOiJodHRwOi8vMTAuMzIuNC4zMy9hdXRoL3JlYWxtcy9vcmdhbml6YXRpb24iLCJhdWQiOlsicmVhbG0tbWFuYWdlbWVudCIsImFjY291bnQiXSwic3ViIjoiMTg4MzE1MWUtNzI5Yi00MTQ4LThjYmUtYzcxOTUwMWEzNDRkIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoiYXN0LWFwcCIsIm5vbmNlIjoiNDliYmNhYjctOGUzYy00OWIxLTlkYTgtZWVlMjE5NTg5NGJmIiwic2Vzc2lvbl9zdGF0ZSI6IjU5NGJhMTliLTU5NDUtNDgxMC05ZTYxLTc1ZjBlNWEzNThkMSIsImFjciI6IjEiLCJhbGxvd2VkLW9yaWdpbnMiOlsiKiJdLCJzY29wZSI6Im9wZW5pZCBpYW0tYXBpIHByb2ZpbGUgZW1haWwgYXN0LWFwaSByb2xlcyIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwicm9sZXMiOlsib2ZmbGluZV9hY2Nlc3MiLCJ1bWFfYXV0aG9yaXphdGlvbiIsInVzZXIiLCJpYW0tYWRtaW4iXSwicm9sZXNfYXN0IjpbImNyZWF0ZS1wcm9qZWN0Iiwidmlldy1wcm9qZWN0cyIsImRlbGV0ZS1hcHBsaWNhdGlvbiIsInZpZXctYXBwbGljYXRpb25zIiwibWFuYWdlLXdvcmtzcGFjZSIsImNyZWF0ZS1hcHBsaWNhdGlvbiIsIm1hbmFnZS1yZXN1bHQiLCJtYW5hZ2UtcHJvamVjdCIsInZpZXctcmVzdWx0cyIsImNyZWF0ZS13b3Jrc3BhY2UiLCJkZWxldGUtcHJvamVjdCIsInZpZXctc2NhbnMiLCJkZWxldGUtd29ya3NwYWNlIiwiYXN0LWFkbWluIiwiY3JlYXRlLXNjYW4iLCJkZWxldGUtc2NhbiIsIm1hbmFnZS1hcHBsaWNhdGlvbiIsInZpZXctd29ya3NwYWNlcyIsInZpZXctaGVhbHRoY2hlY2siLCJ2aWV3LWVuZ2luZeKAi3MiXSwicHJlZmVycmVkX3VzZXJuYW1lIjoib3JnX2FkbWluIn0.Zw4GuU5BKeklBtBQAqmhjqBKo3VHPCzxjan6BFCPHCv70E5o34zjF-Df0eG71c87jYq6hC-7N6ce6m-MH28Ab8cYa1ZOKN22PqEO88WftoYOoHOA-PlSV4NrH9ybAObVymdYNb_LtTpvWGhyv3Dx4G4sEQ6v5N-apOiP5fSoVbCmmzfcVqIjkbWlXm1_h6AUfmyn16bImAYix_YuZAnQdw2Bs19cQFH824Y8-v8oGVrqZbNk9D-7sUuJsamcGWALyv3OF3SaZJndlYaGGsZtL6a6_iLuRiT27k-mAzY306k-4BVbBRoCKSakGEG-0qVcZX1XT8dQHzwiv7qBXT6kVA";
 
     private static ResultsService resultsService;
 
     private final GitHubProperties gitHubProperties;
+    private final CxProperties cxProperties;
 
 
     private ScanRequest scanRequest;
@@ -64,9 +67,10 @@ public class AstRemoteRepoScanSteps extends AstCommonSteps {
     private ASTScanner astScanner;
     
     public AstRemoteRepoScanSteps(FlowProperties flowProperties, AstProperties astProperties, ScaProperties scaProperteis,
-                                  GitHubProperties gitHubProperties) {
+                                  GitHubProperties gitHubProperties, CxProperties cxProperties) {
         super(flowProperties, astProperties, scaProperteis);
         this.gitHubProperties = gitHubProperties;
+        this.cxProperties = cxProperties;
 
     }
 
@@ -91,6 +95,47 @@ public class AstRemoteRepoScanSteps extends AstCommonSteps {
         resultsService = mock(ResultsService.class);
         ResultsServiceAnswerer answerer = new ResultsServiceAnswerer();
         when(resultsService.publishCombinedResults(any(), any())).thenAnswer(answerer);
+    }
+
+    @Given("AST scan with expired token")
+    public void configureToken(){
+        astProperties.setToken(EXPIRED_TOKEN);
+        flowProperties.setEnabledVulnerabilityScanners(Collections.singletonList(AstProperties.CONFIG_PREFIX));
+        this.isAstEnabled = true;
+    }
+
+    @Given("AST scan is initiated when AST is not available")
+    public void configureAstInvalidMachine(){
+        
+        astProperties.setApiUrl(cxProperties.getBaseUrl());
+        flowProperties.setEnabledVulnerabilityScanners(Collections.singletonList(AstProperties.CONFIG_PREFIX));
+        this.isAstEnabled = true;
+    }
+    
+    @Then("expired token expected error will be returned {string}")
+    public void astScanWithExpiredtoken(String error){
+        List<VulnerabilityScanner> scanners = new LinkedList<>();
+        scanners.add(new ASTScanner(new AstClientImpl(astProperties),flowProperties));
+        scanners.add(astScanner);
+        try {
+            startScan(scanners);
+            fail("no exception was thrown");
+        }catch(Exception e){
+            assertTrue(e.getMessage().contains("error"));
+        }
+    }
+
+    @Then("unavailable AST server expected error will be returned {string}")
+    public void astScanWithInvalidAstMachine(String error){
+        List<VulnerabilityScanner> scanners = new LinkedList<>();
+        scanners.add(new ASTScanner(new AstClientImpl(astProperties),flowProperties));
+        scanners.add(astScanner);
+        try {
+            startScan(scanners);
+            fail("no exception was thrown");
+        }catch(Exception e){
+            assertEquals(error, e.getMessage());
+        }
     }
 
     @Given("scan initiator list is {string}")
