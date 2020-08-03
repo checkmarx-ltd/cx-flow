@@ -235,6 +235,15 @@ jobs:
   e2e-tests:
     docker:
       - image: "circleci/openjdk:8-jdk"
+    parameters:
+      cluster-name:
+        type: string
+      namespace:
+        type: string
+      release-name:
+        type: string
+      version:
+        type: string
     steps:
       - checkout
       - run:
@@ -543,6 +552,10 @@ workflows:
             - docker-build
             - component-tests
       - e2e-tests:
+          cluster-name: eks-cxflow-ci
+          namespace: cxflow-${CIRCLE_SHA1::7}
+          release-name: cxflow-${CIRCLE_SHA1::7}
+          version: v3.2.1
           filters:
             branches:
               only: 
