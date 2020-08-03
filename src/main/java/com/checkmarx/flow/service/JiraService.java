@@ -1,7 +1,44 @@
 package com.checkmarx.flow.service;
 
-import com.atlassian.jira.rest.client.api.*;
-import com.atlassian.jira.rest.client.api.domain.*;
+import java.beans.ConstructorProperties;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import javax.annotation.PostConstruct;
+
+import com.atlassian.jira.rest.client.api.GetCreateIssueMetadataOptions;
+import com.atlassian.jira.rest.client.api.GetCreateIssueMetadataOptionsBuilder;
+import com.atlassian.jira.rest.client.api.IssueRestClient;
+import com.atlassian.jira.rest.client.api.JiraRestClient;
+import com.atlassian.jira.rest.client.api.MetadataRestClient;
+import com.atlassian.jira.rest.client.api.ProjectRestClient;
+import com.atlassian.jira.rest.client.api.RestClientException;
+import com.atlassian.jira.rest.client.api.SearchRestClient;
+import com.atlassian.jira.rest.client.api.domain.BasicIssue;
+import com.atlassian.jira.rest.client.api.domain.CimFieldInfo;
+import com.atlassian.jira.rest.client.api.domain.CimProject;
+import com.atlassian.jira.rest.client.api.domain.Comment;
+import com.atlassian.jira.rest.client.api.domain.Field;
+import com.atlassian.jira.rest.client.api.domain.Issue;
+import com.atlassian.jira.rest.client.api.domain.IssueType;
+import com.atlassian.jira.rest.client.api.domain.Project;
+import com.atlassian.jira.rest.client.api.domain.SearchResult;
+import com.atlassian.jira.rest.client.api.domain.SecurityLevel;
+import com.atlassian.jira.rest.client.api.domain.Status;
+import com.atlassian.jira.rest.client.api.domain.Transition;
+import com.atlassian.jira.rest.client.api.domain.User;
 import com.atlassian.jira.rest.client.api.domain.input.ComplexIssueInputFieldValue;
 import com.atlassian.jira.rest.client.api.domain.input.FieldInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
@@ -21,19 +58,12 @@ import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.google.common.collect.ImmutableMap;
+
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
-import javax.annotation.PostConstruct;
-import java.beans.ConstructorProperties;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class JiraService {
@@ -196,38 +226,20 @@ public class JiraService {
         }
         log.debug("jql query : {}", jql);
         HashSet<String> fields = new HashSet<>();
-        fields.add("key");
-        fields.add("project");
-        fields.add("issuetype");
-        fields.add("summary");
-        fields.add(LABEL_FIELD_TYPE);
-        fields.add("created");
-        fields.add("updated");
-        fields.add("status");
-        int startAt = 0;
+        Collections.addAll(fields, "key","project","issuetype","summary",LABEL_FIELD_TYPE,"created","updated","status");
+        
 
         SearchResult searchResults;
-        int totalResultsCount;
-        //Retrieve JQL results through pagination (jira.max-jql-results per page -> default 50)
-        do {
-            searchResults = this.client.getSearchClient().searchJql(jql, jiraProperties.getMaxJqlResults(), startAt, fields).claim();
-            for (Issue issue : searchResults.getIssues()) {
-                issues.add(issue);
-            }
-            startAt += jiraProperties.getMaxJqlResults();
-            totalResultsCount = validateTotalResultCount(searchResults.getTotal());
-        }while(startAt < totalResultsCount);
-        return issues;
-    }
-
-    private int validateTotalResultCount(int total) {
-        int totalResultCount = 0;
-        if (total> MAX_RESULTS_ALLOWED) {
-            totalResultCount = MAX_RESULTS_ALLOWED;
-        } else {
-            totalResultCount = total;
+        int totalResultsCount = MAX_RESULTS_ALLOWED;
+        SearchRestClient searchClient = this.client.getSearchClient();
+        //Retrieve JQL results through pagination (jira.max-jql-results per page -> default 50), don't allow less than 10.
+        int maxJqlResultsPerPage = Integer.max(10, jiraProperties.getMaxJqlResults());
+        for ( int startAt = 0 ; startAt < totalResultsCount ; startAt += maxJqlResultsPerPage ) {
+            searchResults = searchClient.searchJql(jql, maxJqlResultsPerPage, startAt, fields).claim();
+            searchResults.getIssues().forEach(issues::add);
+            totalResultsCount = Integer.min(searchResults.getTotal(), MAX_RESULTS_ALLOWED);
         }
-        return totalResultCount;
+        return issues;
     }
 
     private Issue getIssue(String bugId) {
@@ -242,7 +254,7 @@ public class JiraService {
         while (issueTypes.hasNext()) {
             IssueType it = issueTypes.next();
             issueTypesList.add(it.getName());
-            log.info("getIssueType iterator: {}", it.getName());
+            log.debug("getIssueType iterator: {}", it.getName());
             if (it.getName().equals(type)) {
                 return it;
             }
