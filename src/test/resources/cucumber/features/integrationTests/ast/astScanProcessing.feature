@@ -2,7 +2,7 @@
 Feature: Cx-Flow AST Integration permutation tests
   
 
-  @ASTRemoteRepoScan @Skip
+  @ASTRemoteRepoScan 
   Scenario Outline: scan multiple initiators
     Given scan initiator list is "<initiators>"
     Then the returned contain populated results for all initiators
@@ -29,4 +29,4 @@ Feature: Cx-Flow AST Integration permutation tests
     Then unavailable AST server expected error will be returned "<message>"
     Examples:
       | message |
-      | some    |
+      | The resource you are looking for might have been removed, had its name changed, or is temporarily unavailable    |

@@ -121,7 +121,7 @@ public class AstRemoteRepoScanSteps extends AstCommonSteps {
             startScan(scanners);
             fail("no exception was thrown");
         }catch(Exception e){
-            assertTrue(e.getMessage().contains("error"));
+            assertTrue(e.getMessage().contains(error));
         }
     }
 
@@ -134,7 +134,7 @@ public class AstRemoteRepoScanSteps extends AstCommonSteps {
             startScan(scanners);
             fail("no exception was thrown");
         }catch(Exception e){
-            assertEquals(error, e.getMessage());
+            assertTrue(e.getMessage().contains(error));
         }
     }
 
