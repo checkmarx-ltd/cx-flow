@@ -134,7 +134,8 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
     }
 
     private boolean areSastThresholdsFromRequestDefined(ScanRequest scanRequest) {
-        return Optional.ofNullable(scanRequest.getThresholds())
+        return Optional.ofNullable(scanRequest)
+                .map(ScanRequest::getThresholds)
                 .map(map -> !map.isEmpty())
                 .orElse(false);
     }
@@ -155,7 +156,8 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
     }
 
     private boolean areScaThresholdsSeverityFromRequestDefined(ScanRequest scanRequest) {
-        return Optional.ofNullable(scanRequest.getScaConfig())
+        return Optional.ofNullable(scanRequest)
+                .map(ScanRequest::getScaConfig)
                 .map(ScaConfig::getThresholdsSeverity)
                 .map(map -> !map.isEmpty())
                 .orElse(false);
@@ -178,7 +180,8 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
     }
 
     private boolean areScaThresholdScoreFromRequestDefined(ScanRequest scanRequest) {
-        return Optional.ofNullable(scanRequest.getScaConfig())
+        return Optional.ofNullable(scanRequest)
+                .map(ScanRequest::getScaConfig)
                 .map(ScaConfig::getThresholdsScore).isPresent();
     }
 
@@ -190,14 +193,16 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
     }
 
     private boolean isScaThresholdsScoreDefined(ScanRequest scanRequest) {
-        return Optional.ofNullable(scanRequest.getScaConfig())
+        return Optional.ofNullable(scanRequest)
+                .map(ScanRequest::getScaConfig)
                 .map(ScaConfig::getThresholdsScore)
                 .map(any -> true)
                 .orElse(scaProperties.getThresholdsScore() != null);
     }
 
     private boolean areScaThresholdsSeverityDefined(ScanRequest scanRequest) {
-        return Optional.ofNullable(scanRequest.getScaConfig())
+        return Optional.ofNullable(scanRequest)
+                .map(ScanRequest::getScaConfig)
                 .map(ScaConfig::getThresholdsSeverity)
                 .map(map -> !map.isEmpty())
                 .orElse(areScaThresholdsSeverityDefinedFromProperties());
