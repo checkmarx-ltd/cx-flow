@@ -235,8 +235,20 @@ jobs:
   e2e-tests:
     docker:
       - image: "circleci/openjdk:8-jdk"
+    parameters:
+      cluster-name:
+        type: string
+      namespace:
+        type: string
+      release-name:
+        type: string
+      version:
+        type: string
     steps:
       - checkout
+      - aws-eks/update-kubeconfig-with-authenticator:
+          cluster-name: << parameters.cluster-name >>
+          install-kubectl: true
       - run:
           name: Run E2E Tests
           command: |
@@ -249,10 +261,19 @@ jobs:
             mkdir -p ~/test-results/junit/
             find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ \;
           when: always
+      - run:
+          name: Save application logs
+          command: |
+            export POD_NAME=$(kubectl get pods -o custom-columns=:metadata.name -n << parameters.namespace >> | grep -v ingress | grep -v external-dns | tr -d '\n')
+            mkdir -p ~/application-logs/
+            kubectl logs ${POD_NAME} -n << parameters.namespace >> > ~/application-logs/${POD_NAME}.log
+          when: always
       - store_test_results:
           path: ~/test-results
       - store_artifacts:
           path: ~/test-results/junit
+      - store_artifacts:
+          path: ~/application-logs
 
   integration-tests:
     docker:
@@ -276,25 +297,25 @@ jobs:
           path: ~/test-results/junit
 
   sca-integration-tests:
-   docker:
-     - image: "circleci/openjdk:8-jdk"
-   steps:
-     - checkout
-     - run:
-         name: Run SCA Integration Tests
-         command: |
-           export HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
-           ./gradlew clean ScaIntegrationTest --info -Dtarget=${HOOK_TARGET} -Drepo=${HOOK_REPO} -Dnamespace=${HOOK_NAMESPACE}
-     - run:
-         name: Save test results
-         command: |
-           mkdir -p ~/test-results/junit/
-           find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ \;
-         when: always
-     - store_test_results:
-         path: ~/test-results
-     - store_artifacts:
-         path: ~/test-results/junit
+    docker:
+      - image: "circleci/openjdk:8-jdk"
+    steps:
+      - checkout
+      - run:
+          name: Run SCA Integration Tests
+          command: |
+            export HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
+            ./gradlew clean ScaIntegrationTest --info -Dtarget=${HOOK_TARGET} -Drepo=${HOOK_REPO} -Dnamespace=${HOOK_NAMESPACE}
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/test-results/junit/
+            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/test-results
+      - store_artifacts:
+          path: ~/test-results/junit
 
   jira-integration-tests:
     docker:
@@ -342,43 +363,43 @@ jobs:
     docker:
     - image: "circleci/openjdk:8-jdk"
     steps:
-    - checkout
-    - run:
-        name: Run SAST CLI Integration Tests
-        command: |
-          export HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
-          ./gradlew clean SastCliIntegrationTest --info -Dtarget=${HOOK_TARGET} -Drepo=${HOOK_REPO} -Dnamespace=${HOOK_NAMESPACE}
-    - run:
-        name: Save test results
-        command: |
-          mkdir -p ~/test-results/junit/
-          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ \;
-        when: always
-    - store_test_results:
-        path: ~/test-results
-    - store_artifacts:
-        path: ~/test-results/junit
+      - checkout
+      - run:
+          name: Run SAST CLI Integration Tests
+          command: |
+            export HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
+            ./gradlew clean SastCliIntegrationTest --info -Dtarget=${HOOK_TARGET} -Drepo=${HOOK_REPO} -Dnamespace=${HOOK_NAMESPACE}
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/test-results/junit/
+            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/test-results
+      - store_artifacts:
+          path: ~/test-results/junit
 
   SCA-CLI-integration-tests:
     docker:
-    - image: "circleci/openjdk:8-jdk"
+      - image: "circleci/openjdk:8-jdk"
     steps:
-    - checkout
-    - run:
-        name: Run SAST CLI Integration Tests
-        command: |
-          export HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
-          ./gradlew clean ScaCliIntegrationTest --info -Dtarget=${HOOK_TARGET} -Drepo=${HOOK_REPO} -Dnamespace=${HOOK_NAMESPACE}
-    - run:
-        name: Save test results
-        command: |
-          mkdir -p ~/test-results/junit/
-          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ \;
-        when: always
-    - store_test_results:
-        path: ~/test-results
-    - store_artifacts:
-        path: ~/test-results/junit
+      - checkout
+      - run:
+          name: Run SAST CLI Integration Tests
+          command: |
+            export HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
+            ./gradlew clean ScaCliIntegrationTest --info -Dtarget=${HOOK_TARGET} -Drepo=${HOOK_REPO} -Dnamespace=${HOOK_NAMESPACE}
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/test-results/junit/
+            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/test-results
+      - store_artifacts:
+          path: ~/test-results/junit
 
   cleanup:
     executor: aws-eks/python3
@@ -461,10 +482,10 @@ jobs:
             kubectl get ns
             NS_TO_DELETE=$(kubectl get ns -o jsonpath="{.items[*].metadata.name}" | sed 's/default//g' | sed 's/kube-node-lease//g' | sed 's/kube-public//g' | sed 's/kube-system//g' | sed 's/nginx-kibana-ci//g')
             echo "NS_TO_DELETE: ${NS_TO_DELETE}"
-            if [[ $NS_TO_DELETE =~ ^\ +$ ]] ;then 
-              # There are no namespaces to delete (NS_TO_DELETE contain only whitespaces) 
+            if [[ $NS_TO_DELETE =~ ^\ +$ ]] ;then
+              # There are no namespaces to delete (NS_TO_DELETE contain only whitespaces)
               echo "No namespaces to delete."
-            else 
+            else
               kubectl delete namespace ${NS_TO_DELETE}
             fi
 
@@ -517,7 +538,7 @@ workflows:
           version: v3.2.1
           filters:
             branches:
-              only: 
+              only:
                 - master
                 - develop
                 - /pr-.*/
@@ -526,9 +547,13 @@ workflows:
             - docker-build
             - component-tests
       - e2e-tests:
+          cluster-name: eks-cxflow-ci
+          namespace: cxflow-${CIRCLE_SHA1::7}
+          release-name: cxflow-${CIRCLE_SHA1::7}
+          version: v3.2.1
           filters:
             branches:
-              only: 
+              only:
                 - master
                 - develop
                 - /pr-.*/
@@ -584,7 +609,7 @@ workflows:
           version: v3.2.1
           filters:
             branches:
-              only: 
+              only:
                 - master
                 - develop
                 - /pr-.*/
