@@ -36,9 +36,11 @@ public class PullRequestReport extends AnalyticsReport {
     private Double scaThresholdsScore = null;
 
     private OperationResult pullRequestResult;
+    private ScanRequest scanRequest;
 
     public PullRequestReport(ScanDetails scanDetails, ScanRequest request) {
         super(scanDetails.getScanId(), request);
+        this.scanRequest = request;
 
         setEncryptedRepoUrl(request.getRepoUrl());
         if(scanDetails.isOsaScan()){
@@ -66,7 +68,11 @@ public class PullRequestReport extends AnalyticsReport {
         findingMapReport.put(FindingSeverity.INFO, findingsMap.get(Filter.Severity.INFO));
         setFindingsPerSeverity(findingMapReport);
     }
-    
+
+    public ScanRequest getScanRequest() {
+        return scanRequest;
+    }
+
     @Override
     protected String _getOperation() {
         return OPERATION;

@@ -368,7 +368,7 @@ public class CxConfigSteps {
         }
 
         if (!asExpected) {
-            fail("Invalid Filter for branch " + branch + ": " + flowProperties.getThresholds().toString());
+            fail("Invalid Filter for branch " + branch + ": " + request.getThresholds().toString());
         }
 
     }
@@ -390,21 +390,21 @@ public class CxConfigSteps {
         switch (branch) {
             case "test1":
                 //High: 3  Medium: 8  Low: 15
-                asExpected = flowProperties.getThresholds().get(FindingSeverity.HIGH) == 3 &&
-                        flowProperties.getThresholds().get(FindingSeverity.MEDIUM) == 8 &&
-                        flowProperties.getThresholds().get(FindingSeverity.LOW) == 15;
+                asExpected = request.getThresholds().get(FindingSeverity.HIGH) == 3 &&
+                        request.getThresholds().get(FindingSeverity.MEDIUM) == 8 &&
+                        request.getThresholds().get(FindingSeverity.LOW) == 15;
                 break;
             case "test2":
                 //High: not set  Medium: 8  Low: 15
-                asExpected = flowProperties.getThresholds().get(FindingSeverity.HIGH) == null &&
-                        flowProperties.getThresholds().get(FindingSeverity.MEDIUM) == 8 &&
-                        flowProperties.getThresholds().get(FindingSeverity.LOW) == 15;
+                asExpected = request.getThresholds().get(FindingSeverity.HIGH) == null &&
+                        request.getThresholds().get(FindingSeverity.MEDIUM) == 8 &&
+                        request.getThresholds().get(FindingSeverity.LOW) == 15;
                 break;
             case "test3":
                 //High: 3  Medium: 8  Low: 15
-                asExpected = flowProperties.getThresholds().get(FindingSeverity.HIGH) == 3 &&
-                        flowProperties.getThresholds().get(FindingSeverity.MEDIUM) == null &&
-                        flowProperties.getThresholds().get(FindingSeverity.LOW) == 15;
+                asExpected = request.getThresholds().get(FindingSeverity.HIGH) == 3 &&
+                        request.getThresholds().get(FindingSeverity.MEDIUM) == null &&
+                        request.getThresholds().get(FindingSeverity.LOW) == 15;
                 break;
             case "test4":
             case "test5":
@@ -422,7 +422,7 @@ public class CxConfigSteps {
         }
 
         if (!asExpected) {
-            fail("Invalid Threshods for branch " + branch + ": " + flowProperties.getThresholds().toString());
+            fail("Invalid Threshods for branch " + branch + ": " + request.getThresholds().toString());
         }
 
     }
@@ -464,6 +464,7 @@ public class CxConfigSteps {
         additionalMetdata.put("statuses_url", PULL_REQUEST_STATUSES_URL);
 
         scanRequest.setAdditionalMetadata(additionalMetdata);
+        scanRequest.setThresholds(request.getThresholds());
 
         return scanRequest;
     }
