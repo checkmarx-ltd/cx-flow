@@ -960,15 +960,15 @@ public class ScanUtils {
     }
 
     private static Package getScaPackageByFinding(List<Package> packageList, Finding finding) {
-        return packageList.stream().filter(p -> p.id.equals(finding.getPackageId())).findFirst().orElse(new Package());
+        return packageList.stream().filter(p -> p.getId().equals(finding.getPackageId())).findFirst().orElse(new Package());
     }
 
     private static String extractPackageNameFromFindings(SCAResults r, Finding f) {
-        return r.getPackages().stream().filter(p -> p.id.equals(f.getPackageId())).map(Package::getName).findFirst().orElse("");
+        return r.getPackages().stream().filter(p -> p.getId().equals(f.getPackageId())).map(Package::getName).findFirst().orElse("");
     }
 
     private static String extractPackageVersionFromFindings(SCAResults r, Finding f) {
-        return r.getPackages().stream().filter(p -> p.id.equals(f.getPackageId())).map(Package::getVersion).findFirst().orElse("");
+        return r.getPackages().stream().filter(p -> p.getId().equals(f.getPackageId())).map(Package::getVersion).findFirst().orElse("");
     }
 
     private static List<ScanResults.ScaDetails> getScaDetailsListBySeverity(SCAResults scaResults, List<Finding> scaFindingsBySeverity) {
