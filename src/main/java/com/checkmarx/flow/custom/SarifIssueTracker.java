@@ -131,13 +131,13 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                                     .text(issue.getDescription())
                                     .build())
                             .ruleId(issue.getVulnerability())
-                            .partialFingerprints(
+                            /*.partialFingerprints(
                                     PartialFingerprints.builder()
                                     .primaryLocationLineHash(
                                             DigestUtils.sha256Hex(issue.getVulnerability().concat(issue.getFilename()))
                                     )
                                     .build()
-                            )
+                            )*/
                             .build()
                     );
 
@@ -267,7 +267,7 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
         List<String> tags;
         @JsonProperty("precision")
         @Builder.Default
-        private String precision = "unknown";
+        private String precision = "";
     }
 
     @Data
