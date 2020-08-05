@@ -9,6 +9,7 @@ import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
+import com.checkmarx.sdk.dto.ast.ASTResults;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
 import com.checkmarx.sdk.dto.ast.SCAResults;
 import com.cx.restclient.ast.dto.sca.report.Finding;
@@ -81,6 +82,37 @@ public class ScanUtils {
         return false;
     }
 
+
+
+    public static List<ScanResults.XIssue>  astToXIssus( ASTResults cxResults) {
+        List<ScanResults.XIssue> issueList = new LinkedList<ScanResults.XIssue>();
+
+        ScanResults.XIssue.XIssueBuilder xIssueBuilder = ScanResults.XIssue.builder();
+
+        for (com.cx.restclient.ast.dto.sast.report.Finding finding : cxResults.getResults().getFindings()) {
+
+            xIssueBuilder.cwe("" + finding.getCweID());
+
+            xIssueBuilder.severity(finding.getSeverity());
+            xIssueBuilder.vulnerability(finding.getQueryName());
+            xIssueBuilder.file(finding.getNodes().get(0).getFileName());
+
+            xIssueBuilder.vulnerabilityStatus(finding.getStatus());
+
+            Map<Integer, ScanResults.IssueDetails> details = new HashMap<>();
+
+            xIssueBuilder.description("");
+            xIssueBuilder.similarityId("" + finding.getSimilarityID());
+
+            xIssueBuilder.details(details);
+            ScanResults.XIssue issue = xIssueBuilder.build();
+            issueList.add(issue);
+        }
+
+        return issueList;
+    }
+
+    
     public static List<ScanResults.XIssue> scaToXIssues(SCAResults scaResults) {
         List<ScanResults.XIssue> issueList = new ArrayList<>();
 

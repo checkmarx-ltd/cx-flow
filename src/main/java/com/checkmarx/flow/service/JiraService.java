@@ -869,6 +869,12 @@ public class JiraService {
     private Map<String, ScanResults.XIssue> getIssueMap(ScanResults results, ScanRequest request) {
         List<ScanResults.XIssue> issues = new ArrayList<>();
 
+
+        Optional.ofNullable(results.getAstResults()).ifPresent( s -> {
+            List<ScanResults.XIssue> scaIssues = ScanUtils.astToXIssus(s);
+            issues.addAll(scaIssues);
+        });
+        
         Optional.ofNullable(results.getScaResults()).ifPresent( s -> {
             List<ScanResults.XIssue> scaIssues = ScanUtils.scaToXIssues(s);
             issues.addAll(scaIssues);
