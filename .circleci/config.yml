@@ -188,6 +188,9 @@ jobs:
       - run:
           name: Install cxflow service on cluster
           command: |
+            kubectl create ns << parameters.namespace >>
+            helm upgrade --install external-secret external-secrets/kubernetes-external-secrets --set env.AWS_REGION=eu-west-1 --namespace << parameters.namespace >>
+            kubectl get all -n << parameters.namespace >>
             helm upgrade --install --atomic --create-namespace --namespace << parameters.namespace >> << parameters.release-name >> \
               --set cxflow.githubToken=${GITHUB_TOKEN} \
               --set cxflow.githubWebhookToken=${GITHUB_WEBHOOK_TOKEN} \
