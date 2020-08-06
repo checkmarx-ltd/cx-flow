@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 
 
 @Service
@@ -32,11 +33,7 @@ public class SCAScanner extends  AbstractASTScanner{
     @Override
     protected String getScanId(ASTResultsWrapper internalResults) {
 
-        if (internalResults.getScaResults() != null){
-            return internalResults.getScaResults().getScanId();
-        }else{
-            return "";
-        }
+        return Optional.ofNullable(internalResults.getScaResults().getScanId()).orElse("");
     }
 
 

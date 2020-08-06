@@ -81,13 +81,15 @@ public class ScanUtils {
         return false;
     }
 
-
-
-    public static List<ScanResults.XIssue> setXIssuesInScanResults(ScanResults results) {
+    public static List<ScanResults.XIssue> setASTXIssuesInScanResults(ScanResults results) {
         List<ScanResults.XIssue> issueList = new LinkedList<ScanResults.XIssue>();
 
         ScanResults.XIssue.XIssueBuilder xIssueBuilder = ScanResults.XIssue.builder();
 
+        HashMap<String, Object> mapAdditionalDetails = new HashMap<>();
+        mapAdditionalDetails.put("scanId", results.getAstResults().getResults().getScanId());
+        results.setAdditionalDetails(mapAdditionalDetails);
+        
         setAstScanSummary(results);
         
         for (com.cx.restclient.ast.dto.sast.report.Finding finding : results.getAstResults().getResults().getFindings()) {
@@ -235,7 +237,7 @@ public class ScanUtils {
             log.debug("Building merge comment MD for SAST scanner");
 
             if(results.isAstResults()){
-                setXIssuesInScanResults(results);
+                setASTXIssuesInScanResults(results);
             }
             
             addScanSummarySection(request, results, properties, body);

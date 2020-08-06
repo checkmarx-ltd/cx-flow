@@ -871,7 +871,7 @@ public class JiraService {
 
 
         Optional.ofNullable(results.getAstResults()).ifPresent( s -> {
-            List<ScanResults.XIssue> scaIssues = ScanUtils.setXIssuesInScanResults(results);
+            List<ScanResults.XIssue> scaIssues = ScanUtils.setASTXIssuesInScanResults(results);
             issues.addAll(scaIssues);
         });
         
