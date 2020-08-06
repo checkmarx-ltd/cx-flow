@@ -268,7 +268,7 @@ jobs:
       - run:
           name: Save application logs
           command: |
-            export POD_NAME=$(kubectl get pods -o custom-columns=:metadata.name -n << parameters.namespace >> | grep -v ingress | grep -v external-dns | tr -d '\n')
+            export POD_NAME=$(kubectl get pods -o custom-columns=:metadata.name -n << parameters.namespace >> | grep cxflow | tr -d '\n')
             mkdir -p ~/application-logs/
             kubectl logs ${POD_NAME} -n << parameters.namespace >> > ~/application-logs/${POD_NAME}.log
           when: always
@@ -425,7 +425,7 @@ jobs:
       - run:
           name: Save application logs
           command: |
-            export POD_NAME=$(kubectl get pods -o custom-columns=:metadata.name -n << parameters.namespace >> | grep -v ingress | grep -v external-dns | tr -d '\n')
+            export POD_NAME=$(kubectl get pods -o custom-columns=:metadata.name -n << parameters.namespace >> | grep cxflow | tr -d '\n')
             mkdir -p ~/application-logs/
             kubectl logs ${POD_NAME} -n << parameters.namespace >> > ~/application-logs/${POD_NAME}.log
       - run:
