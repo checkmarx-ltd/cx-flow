@@ -5,8 +5,10 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.RepoProperties;
 import com.checkmarx.flow.dto.OperationResult;
 import com.checkmarx.flow.dto.OperationStatus;
+import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.sdk.config.Constants;
+import com.checkmarx.sdk.config.ScaConfig;
 import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.cx.restclient.dto.scansummary.Severity;
@@ -86,8 +88,8 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
 
     private boolean isAllowedSca(ScanResults scanResults, PullRequestReport pullRequestReport) {
         log.debug("Checking if CxSCA pull request merge is allowed.");
-        Map<Severity, Integer> scaThresholdsSeverity = getScaEffectiveThresholdsSeverity();
-        Double scaThresholdsScore = getScaEffectiveThresholdsScore();
+        Map<Severity, Integer> scaThresholdsSeverity = getScaEffectiveThresholdsSeverity(pullRequestReport.getScanRequest());
+        Double scaThresholdsScore = getScaEffectiveThresholdsScore(pullRequestReport.getScanRequest());
 
         writeMapToLog(scaThresholdsSeverity, "Using CxSCA thresholds severity");
         writeMapToLog(scaThresholdsScore, "Using CxSCA thresholds score");
@@ -102,7 +104,7 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
 
     private boolean isAllowedSast(ScanResults scanResults, PullRequestReport pullRequestReport) {
         log.debug("Checking if CxSAST pull request merge is allowed.");
-        Map<FindingSeverity, Integer> thresholds = getSastEffectiveThresholds();
+        Map<FindingSeverity, Integer> thresholds = getSastEffectiveThresholds(pullRequestReport.getScanRequest());
         writeMapToLog(thresholds, "Using CxSAST thresholds");
         pullRequestReport.setThresholds(thresholds);
 
@@ -117,32 +119,70 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
                 "Merge is not allowed, because some of the thresholds were exceeded.");
     }
 
-    private Map<FindingSeverity, Integer> getSastEffectiveThresholds() {
-        if (areSastThresholdsDefined()) {
-            return flowProperties.getThresholds();
+    private Map<FindingSeverity, Integer> getSastEffectiveThresholds(ScanRequest scanRequest) {
+        Map<FindingSeverity, Integer> res;
+
+        if (areSastThresholdsFromRequestDefined(scanRequest)) {
+            res = scanRequest.getThresholds();
+        } else if (areSastThresholdsDefined()) {
+            res = flowProperties.getThresholds();
         } else {
-            return failSastPrIfResultHasAnyFindings();
+            res = failSastPrIfResultHasAnyFindings();
         }
+
+        return res;
     }
 
-    private Map<Severity, Integer> getScaEffectiveThresholdsSeverity() {
-        Map<Severity, Integer> defaultThresholds = isScaThresholdsScoreDefined()
-                ? passScaPrForAnyFindings()
-                : failScaPrIfResultHasAnyFindings();
-
-        return (areScaThresholdsSeverityDefined())
-                ? scaProperties.getThresholdsSeverity()
-                : defaultThresholds;
+    private boolean areSastThresholdsFromRequestDefined(ScanRequest scanRequest) {
+        return Optional.ofNullable(scanRequest)
+                .map(ScanRequest::getThresholds)
+                .map(map -> !map.isEmpty())
+                .orElse(false);
     }
 
-    private Double getScaEffectiveThresholdsScore() {
-        double defaultThresholds = areScaThresholdsSeverityDefined()
-                ? 10.0
-                : 0.0;
+    private Map<Severity, Integer> getScaEffectiveThresholdsSeverity(ScanRequest scanRequest) {
+        Map<Severity, Integer> res;
 
-        return (isScaThresholdsScoreDefined())
-                ? scaProperties.getThresholdsScore()
-                : defaultThresholds;
+        if (areScaThresholdsSeverityFromRequestDefined(scanRequest)) {
+            res = scanRequest.getScaConfig().getThresholdsSeverity();
+        } else if(areScaThresholdsSeverityDefined(scanRequest)) {
+            res = scaProperties.getThresholdsSeverity();
+        } else {
+            res = isScaThresholdsScoreDefined(scanRequest)
+                    ? passScaPrForAnyFindings()
+                    : failScaPrIfResultHasAnyFindings();
+        }
+        return res;
+    }
+
+    private boolean areScaThresholdsSeverityFromRequestDefined(ScanRequest scanRequest) {
+        return Optional.ofNullable(scanRequest)
+                .map(ScanRequest::getScaConfig)
+                .map(ScaConfig::getThresholdsSeverity)
+                .map(map -> !map.isEmpty())
+                .orElse(false);
+    }
+
+    private Double getScaEffectiveThresholdsScore(ScanRequest scanRequest) {
+        Double res;
+
+        if (areScaThresholdScoreFromRequestDefined(scanRequest)) {
+            res = scanRequest.getScaConfig().getThresholdsScore();
+        } else if (isScaThresholdsScoreDefined(scanRequest)) {
+            res = scaProperties.getThresholdsScore();
+        } else {
+            res = areScaThresholdsSeverityDefined(scanRequest)
+                    ? 10.0
+                    : 0.0;
+        }
+
+        return res;
+    }
+
+    private boolean areScaThresholdScoreFromRequestDefined(ScanRequest scanRequest) {
+        return Optional.ofNullable(scanRequest)
+                .map(ScanRequest::getScaConfig)
+                .map(ScaConfig::getThresholdsScore).isPresent();
     }
 
     private boolean areSastThresholdsDefined() {
@@ -152,11 +192,23 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
                 && thresholds.values().stream().anyMatch(Objects::nonNull);
     }
 
-    private boolean isScaThresholdsScoreDefined() {
-        return scaProperties.getThresholdsScore() != null;
+    private boolean isScaThresholdsScoreDefined(ScanRequest scanRequest) {
+        return Optional.ofNullable(scanRequest)
+                .map(ScanRequest::getScaConfig)
+                .map(ScaConfig::getThresholdsScore)
+                .map(any -> true)
+                .orElse(scaProperties.getThresholdsScore() != null);
     }
 
-    private boolean areScaThresholdsSeverityDefined() {
+    private boolean areScaThresholdsSeverityDefined(ScanRequest scanRequest) {
+        return Optional.ofNullable(scanRequest)
+                .map(ScanRequest::getScaConfig)
+                .map(ScaConfig::getThresholdsSeverity)
+                .map(map -> !map.isEmpty())
+                .orElse(areScaThresholdsSeverityDefinedFromProperties());
+    }
+
+    private boolean areScaThresholdsSeverityDefinedFromProperties() {
         Map<Severity, Integer> thresholdsSeverity = scaProperties.getThresholdsSeverity();
         return thresholdsSeverity != null
                 && !thresholdsSeverity.isEmpty()
