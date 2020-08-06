@@ -9,7 +9,6 @@ import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
-import com.checkmarx.sdk.dto.ast.ASTResults;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
 import com.checkmarx.sdk.dto.ast.SCAResults;
 import com.cx.restclient.ast.dto.sca.report.Finding;
@@ -84,14 +83,14 @@ public class ScanUtils {
 
 
 
-    public static List<ScanResults.XIssue>  astToXIssus(ASTResults cxResults, ScanResults results) {
+    public static List<ScanResults.XIssue> setXIssuesInScanResults(ScanResults results) {
         List<ScanResults.XIssue> issueList = new LinkedList<ScanResults.XIssue>();
 
         ScanResults.XIssue.XIssueBuilder xIssueBuilder = ScanResults.XIssue.builder();
 
         setAstScanSummary(results);
         
-        for (com.cx.restclient.ast.dto.sast.report.Finding finding : cxResults.getResults().getFindings()) {
+        for (com.cx.restclient.ast.dto.sast.report.Finding finding : results.getAstResults().getResults().getFindings()) {
 
             xIssueBuilder.cwe("" + finding.getCweID());
 
@@ -110,7 +109,7 @@ public class ScanUtils {
             ScanResults.XIssue issue = xIssueBuilder.build();
             issueList.add(issue);
         }
-
+        results.setXIssues(issueList);
         return issueList;
     }
 
@@ -119,6 +118,7 @@ public class ScanUtils {
         scanSummary.setHighSeverity(results.getAstResults().getResults().getSummary().getHighVulnerabilityCount() );
         scanSummary.setMediumSeverity(results.getAstResults().getResults().getSummary().getMediumVulnerabilityCount() );
         scanSummary.setLowSeverity(results.getAstResults().getResults().getSummary().getLowVulnerabilityCount() );
+        scanSummary.setInfoSeverity(0);
 
         results.setScanSummary( scanSummary);
     }
@@ -235,8 +235,9 @@ public class ScanUtils {
             log.debug("Building merge comment MD for SAST scanner");
 
             if(results.isAstResults()){
-                setAstScanSummary(results);
+                setXIssuesInScanResults(results);
             }
+            
             addScanSummarySection(request, results, properties, body);
             addFlowSummarySection(results, properties, body);
             addDetailsSection(request, results, properties, body);
