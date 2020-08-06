@@ -12,6 +12,7 @@ public class RepoProperties {
     private String apiUrl;
     private String falsePositiveLabel = "false-positive";
     private String configAsCode = "cx.config";
+    private boolean useConfigAsCodeFromDefaultBranch;
     private String openTransition = "open";
     private String closeTransition = "closed";
     private String filePath = ".";
@@ -171,12 +172,18 @@ public class RepoProperties {
         this.cxSummaryHeader = cxSummaryHeader;
     }
 
+    public boolean isUseConfigAsCodeFromDefaultBranch() {
+        return useConfigAsCodeFromDefaultBranch;
+    }
+
+    public void setUseConfigAsCodeFromDefaultBranch(boolean useConfigAsCodeFromDefaultBranch) {
+        this.useConfigAsCodeFromDefaultBranch = useConfigAsCodeFromDefaultBranch;
+    }
+
     @PostConstruct
     private void postConstruct() {
-        if(this.apiUrl != null){
-            if(this.apiUrl.endsWith("/")){
-                this.setApiUrl(StringUtils.chop(apiUrl));
-            }
+        if(apiUrl != null && apiUrl.endsWith("/")){
+            setApiUrl(StringUtils.chop(apiUrl));
         }
     }
 }
