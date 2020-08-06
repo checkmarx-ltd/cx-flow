@@ -89,12 +89,8 @@ public class ScanUtils {
 
         ScanResults.XIssue.XIssueBuilder xIssueBuilder = ScanResults.XIssue.builder();
 
-        CxScanSummary scanSummary = new CxScanSummary();
-        scanSummary.setHighSeverity(cxResults.getResults().getSummary().getHighVulnerabilityCount() );
-        scanSummary.setMediumSeverity(cxResults.getResults().getSummary().getMediumVulnerabilityCount() );
-        scanSummary.setLowSeverity(cxResults.getResults().getSummary().getLowVulnerabilityCount() );
- 
-        results.setScanSummary( scanSummary);
+        setAstScanSummary(results);
+        
         for (com.cx.restclient.ast.dto.sast.report.Finding finding : cxResults.getResults().getFindings()) {
 
             xIssueBuilder.cwe("" + finding.getCweID());
@@ -118,7 +114,16 @@ public class ScanUtils {
         return issueList;
     }
 
-    
+    private static void setAstScanSummary( ScanResults results) {
+        CxScanSummary scanSummary = new CxScanSummary();
+        scanSummary.setHighSeverity(results.getAstResults().getResults().getSummary().getHighVulnerabilityCount() );
+        scanSummary.setMediumSeverity(results.getAstResults().getResults().getSummary().getMediumVulnerabilityCount() );
+        scanSummary.setLowSeverity(results.getAstResults().getResults().getSummary().getLowVulnerabilityCount() );
+
+        results.setScanSummary( scanSummary);
+    }
+
+
     public static List<ScanResults.XIssue> scaToXIssues(SCAResults scaResults) {
         List<ScanResults.XIssue> issueList = new ArrayList<>();
 
@@ -229,60 +234,76 @@ public class ScanUtils {
         if (results.isSastRestuls() || results.isAstResults()) {
             log.debug("Building merge comment MD for SAST scanner");
 
-            CxScanSummary summary = results.getScanSummary();
-            body.append(MD_H3).append(" Checkmarx SAST Scan Summary").append(CRLF);
-            body.append("[Full Scan Details](").append(results.getLink()).append(")").append(CRLF);
-            if (properties.isCxSummary() && !request.getProduct().equals(ScanRequest.Product.CXOSA)) {
-                if (!ScanUtils.empty(properties.getCxSummaryHeader())) {
-                    body.append(MD_H4).append(" ").append(properties.getCxSummaryHeader()).append(CRLF);
-                }
-                body.append("Severity|Count").append(CRLF);
-                body.append("---|---").append(CRLF);
-                body.append("High|").append(summary.getHighSeverity().toString()).append(CRLF);
-                body.append("Medium|").append(summary.getMediumSeverity().toString()).append(CRLF);
-                body.append("Low|").append(summary.getLowSeverity().toString()).append(CRLF);
-                body.append("Informational|").append(summary.getInfoSeverity().toString()).append(CRLF).append(CRLF);
+            if(results.isAstResults()){
+                setAstScanSummary(results);
             }
-            if (properties.isFlowSummary()) {
-                if (!ScanUtils.empty(properties.getFlowSummaryHeader())) {
-                    body.append(MD_H4).append(" ").append(properties.getFlowSummaryHeader()).append(CRLF);
-                }
-                body.append("Severity|Count").append(CRLF);
-                body.append("---|---").append(CRLF);
-                Map<String, Integer> flow = (Map<String, Integer>) results.getAdditionalDetails().get(Constants.SUMMARY_KEY);
-                if (flow != null) {
-                    for (Map.Entry<String, Integer> severity : flow.entrySet()) {
-                        body.append(severity.getKey()).append("|").append(severity.getValue().toString()).append(CRLF);
-                    }
-                }
-                body.append(CRLF);
-            }
-            if (properties.isDetailed()) {
-                if (!ScanUtils.empty(properties.getDetailHeader())) {
-                    body.append(MD_H4).append(" ").append(properties.getDetailHeader()).append(CRLF);
-                }
-                body.append("|Lines|Severity|Category|File|Link|").append(CRLF);
-                body.append("---|---|---|---|---").append(CRLF);
-
-                Map<String, ScanResults.XIssue> xMap;
-                xMap = getXIssueMap(results.getXIssues(), request);
-                log.info("Creating Merge/Pull Request Markdown comment");
-
-                Comparator<ScanResults.XIssue> issueComparator = Comparator
-                        .comparing(ScanResults.XIssue::getSeverity)
-                        .thenComparing(ScanResults.XIssue::getVulnerability);
-          
-                addSastAstBody(request, body, xMap, issueComparator);
-
-                addOsaBody(results, body, xMap, issueComparator);
-            }
+            addScanSummarySection(request, results, properties, body);
+            addFlowSummarySection(results, properties, body);
+            addDetailsSection(request, results, properties, body);
         }
 
         addScaBody(results, body);
         return body.toString();
     }
 
+    private static void addScanSummarySection(ScanRequest request, ScanResults results, RepoProperties properties, StringBuilder body) {
+        CxScanSummary summary = results.getScanSummary();
+        body.append(MD_H3).append(" Checkmarx SAST Scan Summary").append(CRLF);
+        body.append("[Full Scan Details](").append(results.getLink()).append(")").append(CRLF);
+        if (properties.isCxSummary() && !request.getProduct().equals(ScanRequest.Product.CXOSA)) {
+            if (!ScanUtils.empty(properties.getCxSummaryHeader())) {
+                body.append(MD_H4).append(" ").append(properties.getCxSummaryHeader()).append(CRLF);
+            }
+            body.append("Severity|Count").append(CRLF);
+            body.append("---|---").append(CRLF);
+            body.append("High|").append(summary.getHighSeverity().toString()).append(CRLF);
+            body.append("Medium|").append(summary.getMediumSeverity().toString()).append(CRLF);
+            body.append("Low|").append(summary.getLowSeverity().toString()).append(CRLF);
+            body.append("Informational|").append(summary.getInfoSeverity().toString()).append(CRLF).append(CRLF);
+        }
+    }
+
+    private static void addDetailsSection(ScanRequest request, ScanResults results, RepoProperties properties, StringBuilder body) {
+        if (properties.isDetailed()) {
+            if (!ScanUtils.empty(properties.getDetailHeader())) {
+                body.append(MD_H4).append(" ").append(properties.getDetailHeader()).append(CRLF);
+            }
+            body.append("|Lines|Severity|Category|File|Link|").append(CRLF);
+            body.append("---|---|---|---|---").append(CRLF);
+
+            Map<String, ScanResults.XIssue> xMap;
+            xMap = getXIssueMap(results.getXIssues(), request);
+            log.info("Creating Merge/Pull Request Markdown comment");
+
+            Comparator<ScanResults.XIssue> issueComparator = Comparator
+                    .comparing(ScanResults.XIssue::getSeverity)
+                    .thenComparing(ScanResults.XIssue::getVulnerability);
+      
+            addSastAstDetailesBody(request, body, xMap, issueComparator);
+
+            addOsaDetailesBody(results, body, xMap, issueComparator);
+        }
+    }
+
+    private static void addFlowSummarySection(ScanResults results, RepoProperties properties, StringBuilder body) {
+        if (properties.isFlowSummary()) {
+            if (!ScanUtils.empty(properties.getFlowSummaryHeader())) {
+                body.append(MD_H4).append(" ").append(properties.getFlowSummaryHeader()).append(CRLF);
+            }
+            body.append("Severity|Count").append(CRLF);
+            body.append("---|---").append(CRLF);
+            Map<String, Integer> flow = (Map<String, Integer>) results.getAdditionalDetails().get(Constants.SUMMARY_KEY);
+            if (flow != null) {
+                for (Entry<String, Integer> severity : flow.entrySet()) {
+                    body.append(severity.getKey()).append("|").append(severity.getValue().toString()).append(CRLF);
+                }
+            }
+            body.append(CRLF);
+        }
+    }
+
     private static void addScaBody(ScanResults results, StringBuilder body) {
+        
         Optional.ofNullable(results.getScaResults()).ifPresent(r -> {
             log.debug("Building merge comment MD for SCA scanner");
             if (body.length() > 0) {
@@ -347,7 +368,7 @@ public class ScanUtils {
         });
     }
 
-    private static void addSastAstBody(ScanRequest request, StringBuilder body, Map<String, ScanResults.XIssue> xMap, Comparator<ScanResults.XIssue> issueComparator) {
+    private static void addSastAstDetailesBody(ScanRequest request, StringBuilder body, Map<String, ScanResults.XIssue> xMap, Comparator<ScanResults.XIssue> issueComparator) {
         xMap.entrySet().stream()
                 .filter(x -> x.getValue() != null && x.getValue().getDetails() != null)
                 .sorted(Entry.comparingByValue(issueComparator))
@@ -384,7 +405,7 @@ public class ScanUtils {
                 });
     }
 
-    private static void addOsaBody(ScanResults results, StringBuilder body, Map<String, ScanResults.XIssue> xMap, Comparator<ScanResults.XIssue> issueComparator) {
+    private static void addOsaDetailesBody(ScanResults results, StringBuilder body, Map<String, ScanResults.XIssue> xMap, Comparator<ScanResults.XIssue> issueComparator) {
         if (results.getOsa() != null && results.getOsa()) {
             log.debug("Building merge comment MD for OSA scanner");
             body.append(CRLF);
