@@ -139,6 +139,7 @@ public abstract class AbstractASTScanner  implements VulnerabilityScanner{
         return ScanParams.builder()
                 .projectName(scanRequest.getProject())
                 .remoteRepoUrl(parsedUrl)
+                .scaConfig(scanRequest.getScaConfig())
                 .build();
     }
 

@@ -9,6 +9,6 @@ import org.junit.runner.RunWith;
         plugin = { "pretty", "summary", "html:build/cucumber/integration/cxconfig"},
         features = "src/test/resources/cucumber/features/integrationTests/cxconfig.feature",
         glue = { "com.checkmarx.flow.cucumber.integration.cxconfig" },
-        tags = "@CxConfigFeature and not @Skip")
+        tags = "@CxConfigFeature and not @Skip and not @Sca_cx_config")
 public class CxConfigTestRunner {
 }

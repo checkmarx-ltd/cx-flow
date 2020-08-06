@@ -28,8 +28,6 @@ public class ScaConfigAsCodeSteps {
     private final GitHubProperties gitHubProperties;
     private final GitHubService gitHubService;
     private final ConfigurationOverrider configOverrider;
-    private final ScaProperties scaProperties;
-    private final FlowProperties flowProperties;
 
     private ScanRequest scanRequest;
 
@@ -64,25 +62,25 @@ public class ScaConfigAsCodeSteps {
                 case "thresholdsSeverity":
                     failMsg = "SCA thresholds severity from configuration as code is not as expected";
                     expected = "{HIGH=10, MEDIUM=6, LOW=3}";
-                    actual = StringUtils.join(scaProperties.getThresholdsSeverity());
+                    actual = StringUtils.join(scanRequest.getScaConfig().getThresholdsSeverity());
                     Assert.assertEquals(failMsg , expected , actual);
                     break;
                 case "thresholdsScore":
                     failMsg = "SCA thresholds score from configuration as code is not as expected";
                     expected = new Double(8.5);
-                    actual = scaProperties.getThresholdsScore();
+                    actual = scanRequest.getScaConfig().getThresholdsScore();
                     Assert.assertEquals(failMsg , expected , actual);
                     break;
                 case "filterSeverity":
                     failMsg = "SCA filter severity from configuration as code is not as expected";
                     expected = "[high, medium, low]";
-                    actual = scaProperties.getFilterSeverity().toString();
+                    actual = scanRequest.getScaConfig().getFilterSeverity().toString();
                     Assert.assertEquals(failMsg , expected , actual);
                     break;
                 case "filterScore":
                     failMsg = "SCA filter score from configuration as code is not as expected";
                     expected = new Double(7.5);
-                    actual = scaProperties.getFilterScore();
+                    actual = scanRequest.getScaConfig().getFilterScore();
                     Assert.assertEquals(failMsg , expected , actual);
                     break;
                 default:
