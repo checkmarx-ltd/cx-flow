@@ -5,15 +5,20 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.ScanDetails;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.Sources;
+import com.checkmarx.flow.dto.bitbucketserver.Content;
+import com.checkmarx.flow.dto.bitbucketserver.Value;
 import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.exception.BitBucketClientException;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.logging.log4j.util.Strings;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -25,6 +30,7 @@ import org.springframework.web.client.RestTemplate;
 import java.beans.ConstructorProperties;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -41,13 +47,19 @@ public class BitBucketService extends RepoService {
     private static final String BUILD_IN_PROGRESS = "INPROGRESS";
     private static final String BUILD_SUCCESSFUL = "SUCCESSFUL";
     private static final String BUILD_FAILED = "FAILED";
+    private static final String BITBUCKET_DIRECTORY = "DIRECTORY";
+    private static final String BITBUCKET_FILE = "FILE";
     private static final String FILE_CONTENT_FOR_BB_CLOUD = "/src/{hash}/{config}";
     private static final String FILE_CONTENT_FOR_BB_SERVER = "/raw/{config}?at={hash}";
+    private static final String BROWSE_CONTENT_FOR_BB_SERVER = "/projects/{namespace}/repos/{repo}/browse/{path}?at={branch}";
     public static final String REPO_SELF_URL = "repo-self-url";
     private static final String BUILD_STATUS_KEY_FOR_CXFLOW = "cxflow";
     public static final String CX_USER_SCAN_QUEUE = "/CxWebClient/UserQueue.aspx";
     private static final String HTTP_BODY_IS_NULL = "Unable to download Config as code file. Response body is null.";
     private static final String CONTENT_NOT_FOUND_IN_RESPONSE = "Content not found in JSON response for Config as code";
+    public static final String PATH_SEPERATOR = "/";
+    private String browseRepoEndpoint = "";
+
     @ConstructorProperties({"restTemplate", "properties", "thresholdValidator"})
     public BitBucketService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, BitBucketProperties properties, ThresholdValidator thresholdValidator) {
         this.restTemplate = restTemplate;
@@ -262,7 +274,80 @@ public class BitBucketService extends RepoService {
 
     @Override
     public Sources getRepoContent(ScanRequest request) {
-        return new Sources();
+
+        log.debug("Auto profiling is enabled");
+        if(ScanUtils.anyEmpty(request.getNamespace(), request.getRepoName(), request.getBranch())){
+            return null;
+        }
+        Sources sources =  new Sources();
+        browseRepoEndpoint = getBitbucketServerBrowseEndPoint(request);
+        scanGitContent(0, browseRepoEndpoint, sources);
+        return sources;
+    }
+
+    private String getBitbucketServerBrowseEndPoint(ScanRequest request) {
+        String endpoint = properties.getUrl().concat(properties.getApiPath()).concat(BROWSE_CONTENT_FOR_BB_SERVER);
+        endpoint = endpoint.replace("{namespace}", request.getNamespace());
+        endpoint = endpoint.replace("{repo}", request.getRepoName());
+        endpoint = endpoint.replace("{branch}", request.getBranch());
+        return endpoint;
+    }
+
+    private Content getRepoContent(String endpoint) {
+        log.info("Getting repo content from {}", endpoint);
+        HttpHeaders headers = createAuthHeaders();
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(
+                    endpoint,
+                    HttpMethod.GET,
+                    new HttpEntity<>(headers),
+                    String.class
+            );
+            if(response.getBody() == null){
+                log.warn(HTTP_BODY_IS_NULL);
+            }
+            ObjectMapper objectMapper = new ObjectMapper();
+
+            return objectMapper.readValue(response.getBody(), Content.class);
+        } catch (NullPointerException e) {
+            log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
+        } catch (HttpClientErrorException e) {
+            log.warn("Repo content is unavailable. The reason can be that branch has been deleted.");
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private void scanGitContent(int depth, String endpoint, Sources sources){
+
+        if(depth >= flowProperties.getProfilingDepth()){
+            return;
+        }
+
+        if(depth == 0) {
+            endpoint = endpoint.replace("{path}", Strings.EMPTY);
+        }
+
+        Content content = getRepoContent(endpoint);
+        List<Value> values = content.getChildren().getValues();
+
+        for(Value value: values){
+            String type = value.getType();
+            if(type.equals(BITBUCKET_DIRECTORY)){
+                String directoryName = value.getPath().getToString();
+                String fullDirectoryPath = content.getPath().getToString();
+                fullDirectoryPath = fullDirectoryPath + PATH_SEPERATOR + directoryName;
+                String directoryURL = browseRepoEndpoint.replace("{path}",fullDirectoryPath);
+                scanGitContent(depth + 1, directoryURL, sources);
+            }
+            else if (type.equals(BITBUCKET_FILE)){
+                String directoryName = content.getPath().getToString();
+                String fileName = value.getPath().getToString();
+                String fullPath = directoryName.concat("/").concat(fileName);
+                sources.addSource(fullPath, fileName);
+            }
+        }
     }
 
     @Override

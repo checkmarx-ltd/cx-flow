@@ -3,6 +3,7 @@ package com.checkmarx.flow.sastscanning;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.Sources;
+import com.checkmarx.flow.service.BitBucketService;
 import com.checkmarx.flow.service.GitHubService;
 import com.checkmarx.flow.service.GitLabService;
 import com.checkmarx.flow.service.HelperService;
@@ -34,6 +35,7 @@ public class ScanRequestConverter {
     private final FlowProperties flowProperties;
     private final GitHubService gitService;
     private final GitLabService gitLabService;
+    private final BitBucketService bitBucketService;
 
     public CxScanParams toScanParams(ScanRequest scanRequest) throws CheckmarxException {
         String ownerId = determineTeamAndOwnerID(scanRequest);
@@ -161,7 +163,7 @@ public class ScanRequestConverter {
                 log.warn("Profiling is not available for BitBucket Cloud");
                 break;
             case BITBUCKETSERVER:
-                log.warn("Profiling is not available for BitBucket Server");
+                sources = bitBucketService.getRepoContent(request);
                 break;
             case ADO:
                 log.warn("Profiling is not available for Azure DevOps");
