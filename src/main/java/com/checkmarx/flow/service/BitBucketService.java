@@ -9,7 +9,6 @@ import com.checkmarx.flow.exception.BitBucketClientException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +19,9 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.beans.ConstructorProperties;
-import java.util.*;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 
 
 @Service
@@ -36,6 +37,8 @@ public class BitBucketService {
     private static final String BUILD_IN_PROGRESS = "INPROGRESS";
     private static final String BUILD_SUCCESSFUL = "SUCCESSFUL";
     private static final String BUILD_FAILED = "FAILED";
+
+    public static final String CX_USER_SCAN_QUEUE = "/CxWebClient/UserQueue.aspx";
 
     @ConstructorProperties({"restTemplate", "properties", "flowProperties", "thresholdValidator"})
     public BitBucketService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, BitBucketProperties properties, FlowProperties flowProperties, ThresholdValidator thresholdValidator) {
@@ -95,10 +98,7 @@ public class BitBucketService {
         if(properties.isBlockMerge()) {
 
             String cxBaseUrl = request.getAdditionalMetadata("cxBaseUrl");
-            String scanQueueUrl = "/CxWebClient/UserQueue.aspx";
-
-            JSONObject buildStatusBody = createBuildStatusRequestBody(BUILD_IN_PROGRESS,"cxflow","Checkmarx Scan Initiated", cxBaseUrl.concat(scanQueueUrl) ,"Waiting for scan to complete..");
-
+            JSONObject buildStatusBody = createBuildStatusRequestBody(BUILD_IN_PROGRESS,"cxflow","Checkmarx Scan Initiated", cxBaseUrl.concat(CX_USER_SCAN_QUEUE) ,"Waiting for scan to complete..");
             sendBuildStatus(request,buildStatusBody.toString());
         }
     }
@@ -114,6 +114,13 @@ public class BitBucketService {
 
             JSONObject buildStatusBody = createBuildStatusRequestBody(status,"cxflow","Checkmarx Scan Results", results.getLink(),results.getScanSummary().toString());
 
+            sendBuildStatus(request,buildStatusBody.toString());
+        }
+    }
+
+    public void setBuildFailedStatus(ScanRequest request, String buildName, String buildUrl, String description){
+        if(properties.isBlockMerge()) {
+            JSONObject buildStatusBody = createBuildStatusRequestBody(BUILD_FAILED,"cxflow", buildName , buildUrl , description);
             sendBuildStatus(request,buildStatusBody.toString());
         }
     }
@@ -245,7 +252,7 @@ public class BitBucketService {
         restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
-    private static JSONObject getJSONComment(String comment) throws JSONException {
+    private static JSONObject getJSONComment(String comment) {
         JSONObject requestBody = new JSONObject();
         JSONObject content = new JSONObject();
         content.put("raw", comment);
@@ -253,7 +260,7 @@ public class BitBucketService {
         return requestBody;
     }
 
-    private static JSONObject getServerJSONComment(String comment) throws JSONException {
+    private static JSONObject getServerJSONComment(String comment) {
         JSONObject requestBody = new JSONObject();
         requestBody.put("text", comment);
         return requestBody;
