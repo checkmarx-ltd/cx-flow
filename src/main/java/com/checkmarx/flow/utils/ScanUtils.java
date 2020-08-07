@@ -9,8 +9,8 @@ import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
-import com.checkmarx.sdk.dto.cx.CxScanSummary;
 import com.checkmarx.sdk.dto.ast.SCAResults;
+import com.checkmarx.sdk.dto.cx.CxScanSummary;
 import com.cx.restclient.ast.dto.sca.report.Finding;
 import com.cx.restclient.ast.dto.sca.report.Package;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -82,37 +82,45 @@ public class ScanUtils {
     }
 
     public static List<ScanResults.XIssue> setASTXIssuesInScanResults(ScanResults results) {
-        List<ScanResults.XIssue> issueList = new LinkedList<ScanResults.XIssue>();
-
+        List<ScanResults.XIssue> issueList = new ArrayList<>();
+        HashMap<String, Object> mapAdditionalDetails = new HashMap<>();
         ScanResults.XIssue.XIssueBuilder xIssueBuilder = ScanResults.XIssue.builder();
 
-        HashMap<String, Object> mapAdditionalDetails = new HashMap<>();
         mapAdditionalDetails.put("scanId", results.getAstResults().getResults().getScanId());
         results.setAdditionalDetails(mapAdditionalDetails);
         
         setAstScanSummary(results);
-        
-        for (com.cx.restclient.ast.dto.sast.report.Finding finding : results.getAstResults().getResults().getFindings()) {
+
+        List<com.cx.restclient.ast.dto.sast.report.Finding> findings = results.getAstResults().getResults().getFindings();
+        findings.forEach(finding -> {
+            Map<Integer, ScanResults.IssueDetails> details = new HashMap<>();
 
             xIssueBuilder.cwe("" + finding.getCweID());
-
             xIssueBuilder.severity(finding.getSeverity());
             xIssueBuilder.vulnerability(finding.getQueryName());
             xIssueBuilder.file(finding.getNodes().get(0).getFileName());
-
             xIssueBuilder.vulnerabilityStatus(finding.getStatus());
-
-            Map<Integer, ScanResults.IssueDetails> details = new HashMap<>();
-
             xIssueBuilder.description("");
             xIssueBuilder.similarityId("" + finding.getSimilarityID());
 
+            details.put(finding.getNodes().get(0).getLine(), null);
             xIssueBuilder.details(details);
             ScanResults.XIssue issue = xIssueBuilder.build();
+            removeDuplicateIssues(issueList, issue, issue.getDetails());
+        });
+
+        results.setXIssues(issueList);
+
+        return issueList;
+    }
+
+    private static void removeDuplicateIssues(List<ScanResults.XIssue> issueList, ScanResults.XIssue issue, Map<Integer, ScanResults.IssueDetails> details) {
+        if (issueList.contains(issue)) {
+            ScanResults.XIssue existingIssue = issueList.get(issueList.indexOf(issue));
+            existingIssue.getDetails().putAll(details);
+        } else {
             issueList.add(issue);
         }
-        results.setXIssues(issueList);
-        return issueList;
     }
 
     private static void setAstScanSummary( ScanResults results) {
