@@ -37,6 +37,7 @@ public class BitBucketService {
     private static final String BUILD_IN_PROGRESS = "INPROGRESS";
     private static final String BUILD_SUCCESSFUL = "SUCCESSFUL";
     private static final String BUILD_FAILED = "FAILED";
+    private static final String BUILD_STATUS_KEY_FOR_CXFLOW = "cxflow";
 
     public static final String CX_USER_SCAN_QUEUE = "/CxWebClient/UserQueue.aspx";
 
@@ -98,7 +99,7 @@ public class BitBucketService {
         if(properties.isBlockMerge()) {
 
             String cxBaseUrl = request.getAdditionalMetadata("cxBaseUrl");
-            JSONObject buildStatusBody = createBuildStatusRequestBody(BUILD_IN_PROGRESS,"cxflow","Checkmarx Scan Initiated", cxBaseUrl.concat(CX_USER_SCAN_QUEUE) ,"Waiting for scan to complete..");
+            JSONObject buildStatusBody = createBuildStatusRequestBody(BUILD_IN_PROGRESS,BUILD_STATUS_KEY_FOR_CXFLOW,"Checkmarx Scan Initiated", cxBaseUrl.concat(CX_USER_SCAN_QUEUE) ,"Waiting for scan to complete..");
             sendBuildStatus(request,buildStatusBody.toString());
         }
     }
@@ -112,7 +113,7 @@ public class BitBucketService {
                 status = BUILD_FAILED;
             }
 
-            JSONObject buildStatusBody = createBuildStatusRequestBody(status,"cxflow","Checkmarx Scan Results", results.getLink(),results.getScanSummary().toString());
+            JSONObject buildStatusBody = createBuildStatusRequestBody(status,BUILD_STATUS_KEY_FOR_CXFLOW,"Checkmarx Scan Results", results.getLink(),results.getScanSummary().toString());
 
             sendBuildStatus(request,buildStatusBody.toString());
         }
@@ -120,7 +121,7 @@ public class BitBucketService {
 
     public void setBuildFailedStatus(ScanRequest request, String buildName, String buildUrl, String description){
         if(properties.isBlockMerge()) {
-            JSONObject buildStatusBody = createBuildStatusRequestBody(BUILD_FAILED,"cxflow", buildName , buildUrl , description);
+            JSONObject buildStatusBody = createBuildStatusRequestBody(BUILD_FAILED,BUILD_STATUS_KEY_FOR_CXFLOW, buildName , buildUrl , description);
             sendBuildStatus(request,buildStatusBody.toString());
         }
     }
