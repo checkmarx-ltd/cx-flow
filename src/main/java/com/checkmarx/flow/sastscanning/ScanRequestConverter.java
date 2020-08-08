@@ -160,8 +160,6 @@ public class ScanRequestConverter {
                 sources = gitLabService.getRepoContent(request);
                 break;
             case BITBUCKET:
-                log.warn("Profiling is not available for BitBucket Cloud");
-                break;
             case BITBUCKETSERVER:
                 sources = bitBucketService.getRepoContent(request);
                 break;

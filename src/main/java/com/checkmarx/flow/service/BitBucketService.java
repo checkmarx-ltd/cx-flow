@@ -49,15 +49,17 @@ public class BitBucketService extends RepoService {
     private static final String BUILD_FAILED = "FAILED";
     private static final String BITBUCKET_DIRECTORY = "DIRECTORY";
     private static final String BITBUCKET_FILE = "FILE";
+    private static final String BITBUCKET_CLOUD_FILE = "commit_file";
     private static final String FILE_CONTENT_FOR_BB_CLOUD = "/src/{hash}/{config}";
     private static final String FILE_CONTENT_FOR_BB_SERVER = "/raw/{config}?at={hash}";
-    private static final String BROWSE_CONTENT_FOR_BB_SERVER = "/projects/{namespace}/repos/{repo}/browse/{path}?at={branch}";
+    private static final String BROWSE_CONTENT_FOR_BB_SERVER = "/browse/{path}?at={branch}";
+    private static final String BROWSE_CONTENT_FOR_BB_CLOUD_WITH_DEPTH_PARAM = "/src/{hash}/?pagelen=100&max_depth={depth}";
     public static final String REPO_SELF_URL = "repo-self-url";
     private static final String BUILD_STATUS_KEY_FOR_CXFLOW = "cxflow";
     public static final String CX_USER_SCAN_QUEUE = "/CxWebClient/UserQueue.aspx";
     private static final String HTTP_BODY_IS_NULL = "Unable to download Config as code file. Response body is null.";
     private static final String CONTENT_NOT_FOUND_IN_RESPONSE = "Content not found in JSON response for Config as code";
-    public static final String PATH_SEPERATOR = "/";
+    public static final String PATH_SEPARATOR = "/";
     private String browseRepoEndpoint = "";
 
     @ConstructorProperties({"restTemplate", "properties", "thresholdValidator"})
@@ -280,20 +282,74 @@ public class BitBucketService extends RepoService {
             return null;
         }
         Sources sources =  new Sources();
-        browseRepoEndpoint = getBitbucketServerBrowseEndPoint(request);
-        scanGitContent(0, browseRepoEndpoint, sources);
+        browseRepoEndpoint = getBitbucketEndPoint(request);
+        if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)) {
+            scanGitContentFromBitbucketServer(0, browseRepoEndpoint, sources);
+        }
+        else
+        {
+            scanGitContentFromBBCloud(browseRepoEndpoint, sources);
+        }
         return sources;
     }
 
-    private String getBitbucketServerBrowseEndPoint(ScanRequest request) {
-        String endpoint = properties.getUrl().concat(properties.getApiPath()).concat(BROWSE_CONTENT_FOR_BB_SERVER);
-        endpoint = endpoint.replace("{namespace}", request.getNamespace());
-        endpoint = endpoint.replace("{repo}", request.getRepoName());
-        endpoint = endpoint.replace("{branch}", request.getBranch());
+    private String getBitbucketEndPoint(ScanRequest request) {
+        String repoSelfUrl = request.getAdditionalMetadata(REPO_SELF_URL);
+        String endpoint = "";
+
+        if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)) {
+            endpoint = repoSelfUrl.concat(BROWSE_CONTENT_FOR_BB_SERVER);
+            endpoint = endpoint.replace("{branch}", request.getBranch());
+        }
+        else {
+            endpoint = repoSelfUrl.concat(BROWSE_CONTENT_FOR_BB_CLOUD_WITH_DEPTH_PARAM);
+            endpoint = endpoint.replace("{hash}", request.getHash());
+            endpoint = endpoint.replace("{depth}", flowProperties.getProfilingDepth().toString());
+        }
         return endpoint;
     }
 
-    private Content getRepoContent(String endpoint) {
+    private void scanGitContentFromBBCloud(String endpoint, Sources sources){
+
+        com.checkmarx.flow.dto.bitbucket.Content content = getRepoContentFromBBCloud(endpoint);
+        List<com.checkmarx.flow.dto.bitbucket.Value> values = content.getValues();
+
+        for(com.checkmarx.flow.dto.bitbucket.Value value: values){
+            String type = value.getType();
+            if (type.equals(BITBUCKET_CLOUD_FILE)){
+                String fileName = value.getEscapedPath();
+                String filePath = value.getPath();
+                sources.addSource(filePath, fileName);
+            }
+        }
+    }
+
+    private com.checkmarx.flow.dto.bitbucket.Content getRepoContentFromBBCloud(String endpoint) {
+        log.info("Getting repo content from {}", endpoint);
+        HttpHeaders headers = createAuthHeaders();
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(
+                    endpoint,
+                    HttpMethod.GET,
+                    new HttpEntity<>(headers),
+                    String.class
+            );
+            if(response.getBody() == null){
+                log.warn(HTTP_BODY_IS_NULL);
+            }
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.readValue(response.getBody(), com.checkmarx.flow.dto.bitbucket.Content.class);
+        } catch (NullPointerException e) {
+            log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
+        } catch (HttpClientErrorException e) {
+            log.warn("Repo content is unavailable. The reason can be that branch has been deleted.");
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private Content getRepoContentFromBitbucketServer(String endpoint) {
         log.info("Getting repo content from {}", endpoint);
         HttpHeaders headers = createAuthHeaders();
         try {
@@ -319,17 +375,16 @@ public class BitBucketService extends RepoService {
         return null;
     }
 
-    private void scanGitContent(int depth, String endpoint, Sources sources){
+    private void scanGitContentFromBitbucketServer(int depth, String endpoint, Sources sources){
 
         if(depth >= flowProperties.getProfilingDepth()){
             return;
         }
-
         if(depth == 0) {
             endpoint = endpoint.replace("{path}", Strings.EMPTY);
         }
 
-        Content content = getRepoContent(endpoint);
+        Content content = getRepoContentFromBitbucketServer(endpoint);
         List<Value> values = content.getChildren().getValues();
 
         for(Value value: values){
@@ -337,9 +392,9 @@ public class BitBucketService extends RepoService {
             if(type.equals(BITBUCKET_DIRECTORY)){
                 String directoryName = value.getPath().getToString();
                 String fullDirectoryPath = content.getPath().getToString();
-                fullDirectoryPath = fullDirectoryPath + PATH_SEPERATOR + directoryName;
+                fullDirectoryPath = fullDirectoryPath + PATH_SEPARATOR + directoryName;
                 String directoryURL = browseRepoEndpoint.replace("{path}",fullDirectoryPath);
-                scanGitContent(depth + 1, directoryURL, sources);
+                scanGitContentFromBitbucketServer(depth + 1, directoryURL, sources);
             }
             else if (type.equals(BITBUCKET_FILE)){
                 String directoryName = content.getPath().getToString();
