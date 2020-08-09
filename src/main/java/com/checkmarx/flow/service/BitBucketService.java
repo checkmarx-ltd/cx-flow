@@ -6,6 +6,7 @@ import com.checkmarx.flow.dto.ScanDetails;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.exception.BitBucketClientException;
+import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
 import org.json.JSONArray;
@@ -56,7 +57,7 @@ public class BitBucketService {
 
     void processMerge(ScanRequest request,ScanResults results) throws BitBucketClientException {
         try {
-            String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties, properties);
+            String comment = HTMLHelper.getMergeCommentMD(request, results, flowProperties, properties);
             log.debug(LOG_COMMENT, comment);
             sendMergeComment(request, comment);
         } catch (HttpClientErrorException e){
@@ -67,7 +68,7 @@ public class BitBucketService {
 
     void processServerMerge(ScanRequest request,ScanResults results, ScanDetails scanDetails) throws BitBucketClientException {
         try {
-            String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties, properties);
+            String comment = HTMLHelper.getMergeCommentMD(request, results, flowProperties, properties);
             log.debug(LOG_COMMENT, comment);
 
             if(properties.isBlockMerge()) {
@@ -229,7 +230,7 @@ public class BitBucketService {
 
     void processCommit(ScanRequest request, ScanResults results) throws BitBucketClientException {
         try {
-            String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties, properties);
+            String comment = HTMLHelper.getMergeCommentMD(request, results, flowProperties, properties);
             log.debug(LOG_COMMENT, comment);
             sendCommitComment(request, comment);
         } catch (HttpClientErrorException e){

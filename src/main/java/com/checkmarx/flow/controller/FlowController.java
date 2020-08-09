@@ -5,6 +5,7 @@ import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.service.*;
+import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
@@ -205,7 +206,7 @@ public class FlowController {
                     .build();
             request.setId(uid);
 
-            request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, scanRequest.toString());
+            request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, scanRequest.toString());
             if(!ScanUtils.empty(scanRequest.getResultUrl())){
                 request.putAdditionalMetadata("result_url", scanRequest.getResultUrl());
             }

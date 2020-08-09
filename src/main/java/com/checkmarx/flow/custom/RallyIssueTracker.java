@@ -9,6 +9,7 @@ import com.checkmarx.flow.dto.rally.QueryResult;
 import com.checkmarx.flow.dto.rally.Result;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
+import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -279,7 +280,7 @@ public class RallyIssueTracker implements IssueTracker {
         JSONObject requestBody = new JSONObject();
         JSONObject createBody = new JSONObject();
         String fileUrl = ScanUtils.getFileUrl(request, resultIssue.getFilename());
-        String body = ScanUtils.getHTMLBody(resultIssue, request, flowProperties);
+        String body = HTMLHelper.getHTMLBody(resultIssue, request, flowProperties);
         //String body = ScanUtils.getHTMLBody(resultIssue, request.getBranch(), fileUrl, flowProperties);
         String title = getXIssueKey(resultIssue, request);
         try {
