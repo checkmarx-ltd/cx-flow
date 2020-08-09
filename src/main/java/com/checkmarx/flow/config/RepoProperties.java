@@ -1,5 +1,7 @@
 package com.checkmarx.flow.config;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.PostConstruct;
@@ -12,7 +14,11 @@ public class RepoProperties {
     private String apiUrl;
     private String falsePositiveLabel = "false-positive";
     private String configAsCode = "cx.config";
+
+    @Getter
+    @Setter
     private boolean useConfigAsCodeFromDefaultBranch;
+
     private String openTransition = "open";
     private String closeTransition = "closed";
     private String filePath = ".";
@@ -170,14 +176,6 @@ public class RepoProperties {
 
     public void setCxSummaryHeader(String cxSummaryHeader) {
         this.cxSummaryHeader = cxSummaryHeader;
-    }
-
-    public boolean isUseConfigAsCodeFromDefaultBranch() {
-        return useConfigAsCodeFromDefaultBranch;
-    }
-
-    public void setUseConfigAsCodeFromDefaultBranch(boolean useConfigAsCodeFromDefaultBranch) {
-        this.useConfigAsCodeFromDefaultBranch = useConfigAsCodeFromDefaultBranch;
     }
 
     @PostConstruct

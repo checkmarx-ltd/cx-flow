@@ -138,7 +138,7 @@ public class SastScanner implements VulnerabilityScanner {
                     cxBatch(request);
                     break;
                 default:
-                    log.warn("SastScanner does not support scanType of {}, ignoring.");
+                    log.warn("SastScanner does not support scanType of {}, ignoring.", scanType);
                     break;
             }
         } catch (ExitThrowable e) {
@@ -307,9 +307,7 @@ public class SastScanner implements VulnerabilityScanner {
     }
 
     public void deleteProject(ScanRequest request) {
-
         try {
-
             String ownerId = scanRequestConverter.determineTeamAndOwnerID(request);
 
             String projectName = projectNameGenerator.determineProjectName(request);
@@ -320,7 +318,6 @@ public class SastScanner implements VulnerabilityScanner {
             if (projectId != UNKNOWN_INT) {
                 cxService.deleteProject(projectId);
             }
-
         } catch (CheckmarxException e) {
             log.error("Error delete branch " + e.getMessage());
         }

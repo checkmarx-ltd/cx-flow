@@ -441,7 +441,8 @@ public class GitHubService extends RepoService {
     private CxConfig loadConfigAsCode(String filename, ScanRequest request) {
         CxConfig result = null;
 
-        String fileContent = downloadFileContent(filename, request);
+        String effectiveBranch = determineConfigAsCodeBranch(request);
+        String fileContent = downloadFileContent(filename, request, effectiveBranch);
         if (fileContent == null) {
             log.warn(HTTP_BODY_IS_NULL);
         } else {
@@ -458,11 +459,10 @@ public class GitHubService extends RepoService {
         return result;
     }
 
-    private String downloadFileContent(String filename, ScanRequest request) {
+    private String downloadFileContent(String filename, ScanRequest request, String branch) {
         ResponseEntity<String> response = null;
-        String effectiveBranch = determineConfigAsCodeBranch(request);
 
-        if (StringUtils.isNotEmpty(effectiveBranch)) {
+        if (StringUtils.isNotEmpty(branch)) {
             HttpHeaders headers = createAuthHeaders();
             String urlTemplate = properties.getApiUrl().concat(FILE_CONTENT);
 
@@ -474,35 +474,47 @@ public class GitHubService extends RepoService {
                     request.getNamespace(),
                     request.getRepoName(),
                     filename,
-                    effectiveBranch);
+                    branch);
         } else {
-            log.warn("Unable to load config-as-code: source branch could not be determined.");
+            log.warn("Unable to load config-as-code.");
         }
 
         return response != null ? response.getBody() : null;
     }
 
     private String determineConfigAsCodeBranch(ScanRequest request) {
-        String result = null;
+        String result;
         log.debug("Determining a branch to get config-as-code from.");
         if (properties.isUseConfigAsCodeFromDefaultBranch()) {
-            if (StringUtils.isNotEmpty(request.getDefaultBranch())) {
-                result = request.getDefaultBranch();
-                log.debug("Using the default branch ({}) to get config-as-code.", result);
-            }
-            else {
-                log.warn("Configuration indicates that default branch must be used to get config-as-code. " +
-                        "However, default branch couldn't be determined.");
-            }
+            result = tryGetDefaultBranch(request);
         } else {
-            if (StringUtils.isNotEmpty(request.getBranch())) {
-                result = request.getBranch();
-                log.debug("Using the current branch ({}) to get config-as-code.", result);
-            }
-            else {
-                log.warn("Tried to use current branch to get config-as-code. " +
-                        "However, current branch couldn't be determined.");
-            }
+            result = tryGetCurrentBranch(request);
+        }
+        return result;
+    }
+
+    private static String tryGetCurrentBranch(ScanRequest request) {
+        String result = null;
+        if (StringUtils.isNotEmpty(request.getBranch())) {
+            result = request.getBranch();
+            log.debug("Using the current branch ({}) to get config-as-code.", result);
+        }
+        else {
+            log.warn("Tried to use current branch to get config-as-code. " +
+                    "However, current branch couldn't be determined.");
+        }
+        return result;
+    }
+
+    private static String tryGetDefaultBranch(ScanRequest request) {
+        String result = null;
+        if (StringUtils.isNotEmpty(request.getDefaultBranch())) {
+            result = request.getDefaultBranch();
+            log.debug("Using the default branch ({}) to get config-as-code.", result);
+        }
+        else {
+            log.warn("Configuration indicates that default branch must be used to get config-as-code. " +
+                    "However, default branch couldn't be determined.");
         }
         return result;
     }
