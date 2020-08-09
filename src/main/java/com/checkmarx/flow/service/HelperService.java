@@ -97,52 +97,44 @@ public class HelperService {
         return false;
     }
 
-    public String getCxTeam(ScanRequest request){
+    public String getCxTeam(ScanRequest request) {
         String scriptFile = cxProperties.getTeamScript();
         String team = request.getTeam();
-        //note:  if script is provided, it is highest priority
-        if(!ScanUtils.empty(scriptFile)){
-            log.info("executing external script to determine the Team in Checkmarx to be used ({})", scriptFile);
-            try {
-                String script = getStringFromFile(scriptFile);
-                HashMap<String, Object> bindings = new HashMap<>();
-                bindings.put(REQUEST, request);
-                Object result = scriptService.runScript(script, bindings);
-                if (result instanceof String) {
-                    return ((String) result);
-                }
-            }catch (IOException e){
-                log.error("Error reading script file for checkmarx team {}", scriptFile, e);
-            }
-        }
-        else if(!ScanUtils.empty(team)){
-            return team;
-        }
-        return null;  //null will indicate no override of team will take place
+        return getEffectiveEntityName(request, scriptFile, team, "team");
     }
 
-    public String getCxProject(ScanRequest request){
+    public String getCxProject(ScanRequest request) {
         String scriptFile = cxProperties.getProjectScript();
         String project = request.getProject();
+        return getEffectiveEntityName(request, scriptFile, project, "project");
+    }
+
+    private String getEffectiveEntityName(ScanRequest request, String scriptFile, String defaultName, String entity) {
+        String result = null;
         //note:  if script is provided, it is highest priority
-        if(!ScanUtils.empty(scriptFile)){
-            log.info("executing external script to determine the Project in Checkmarx to be used ({})", scriptFile);
-            try {
-                String script = getStringFromFile(scriptFile);
-                HashMap<String, Object> bindings = new HashMap<>();
-                bindings.put(REQUEST, request);
-                Object result = scriptService.runScript(script, bindings);
-                if (result instanceof String) {
-                    return ((String) result);
-                }
-            }catch (IOException e){
-                log.error("Error reading script file for checkmarx project {}", scriptFile, e);
+        if (!ScanUtils.empty(scriptFile)) {
+            result = getScriptExecutionResult(request, scriptFile, entity);
+        } else if (!ScanUtils.empty(defaultName)) {
+            result = defaultName;
+        }
+        return result;  //null will indicate no override will take place
+    }
+
+    private String getScriptExecutionResult(ScanRequest request, String scriptFile, String entity) {
+        String result = null;
+        log.info("executing external script to determine the {} in Checkmarx to be used ({})", entity, scriptFile);
+        try {
+            String script = getStringFromFile(scriptFile);
+            HashMap<String, Object> bindings = new HashMap<>();
+            bindings.put(REQUEST, request);
+            Object rawResult = scriptService.runScript(script, bindings);
+            if (rawResult instanceof String) {
+                result = ((String) rawResult);
             }
+        } catch (IOException e) {
+            log.error("Error reading script file for Checkmarx {} {}", entity, scriptFile, e);
         }
-        else if(!ScanUtils.empty(project)){
-            return project;
-        }
-        return null;  //null will indicate no override of team will take place
+        return result;
     }
 
     public String getShortUid(ScanRequest request){
@@ -161,8 +153,6 @@ public class HelperService {
 
     /**
      * Determine what preset to use based on Sources and Profile mappings
-     * @param sources
-     * @return
      */
     public String getPresetFromSources(Sources sources){
         if(sources == null || profiles == null || sources.getLanguageStats() == null || sources.getSources() == null){
@@ -225,9 +215,6 @@ public class HelperService {
 
     /**
      * Go through each possible pattern and determine if a match exists within the Sources list
-     * @param sources
-     * @param regex
-     * @return
      */
     private boolean checkFileRegex(List<Sources.Source> sources, List<String> regex){
         if(sources == null || sources.isEmpty() || regex == null || regex.isEmpty()){
@@ -243,9 +230,6 @@ public class HelperService {
 
     /**
      * Go through list of Sources (file names/paths) and determine if a match exists with a pattern
-     * @param sources
-     * @param patternStr
-     * @return
      */
     private boolean strListMatches(List<Sources.Source> sources, String patternStr){
         for(Sources.Source s: sources) {
@@ -258,9 +242,6 @@ public class HelperService {
 
     /**
      * Regex String match
-     * @param patternStr
-     * @param str
-     * @return
      */
     private boolean strMatches(String patternStr, String str){
         Pattern pattern = Pattern.compile(patternStr);
