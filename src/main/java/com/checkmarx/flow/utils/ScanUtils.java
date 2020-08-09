@@ -1,16 +1,20 @@
 package com.checkmarx.flow.utils;
 
+import checkmarx.wsdl.portal.ScanType;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.config.RepoProperties;
 import com.checkmarx.flow.constants.SCATicketingConstants;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
+import com.checkmarx.sdk.config.AstProperties;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
-import com.checkmarx.sdk.dto.ast.SCAResults;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
+import com.checkmarx.sdk.dto.ast.SCAResults;
+import com.checkmarx.sdk.dto.cx.xml.PathNodeType;
+import com.cx.restclient.ast.dto.sast.report.FindingNode;
 import com.cx.restclient.ast.dto.sca.report.Finding;
 import com.cx.restclient.ast.dto.sca.report.Package;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,6 +24,9 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.slf4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.validation.constraints.NotNull;
@@ -61,7 +68,8 @@ public class ScanUtils {
     private static final String ITALIC_CLOSING_DIV = "</i></div>";
     private static final String LINE_BREAK = "<br>";
     private static final String NVD_URL_PREFIX = "https://nvd.nist.gov/vuln/detail/";
-
+    
+    
     private ScanUtils() {
         // this is to hide the public constractor
     }
@@ -82,45 +90,49 @@ public class ScanUtils {
     }
 
     public static List<ScanResults.XIssue> setASTXIssuesInScanResults(ScanResults results) {
-        List<ScanResults.XIssue> issueList = new ArrayList<>();
-        HashMap<String, Object> mapAdditionalDetails = new HashMap<>();
+        List<ScanResults.XIssue> issueList = new LinkedList<ScanResults.XIssue>();
+
         ScanResults.XIssue.XIssueBuilder xIssueBuilder = ScanResults.XIssue.builder();
 
+        HashMap<String, Object> mapAdditionalDetails = new HashMap<>();
         mapAdditionalDetails.put("scanId", results.getAstResults().getResults().getScanId());
         results.setAdditionalDetails(mapAdditionalDetails);
         
         setAstScanSummary(results);
 
-        List<com.cx.restclient.ast.dto.sast.report.Finding> findings = results.getAstResults().getResults().getFindings();
-        findings.forEach(finding -> {
-            Map<Integer, ScanResults.IssueDetails> details = new HashMap<>();
+
+//        if(Boolean.TRUE.toString().equals(astProperties.getIncremental())){
+//            results.setScanType("incremental");
+//        }else {
+//            results.setScanType("full");
+//        }
+        
+        for (com.cx.restclient.ast.dto.sast.report.Finding finding : results.getAstResults().getResults().getFindings()) {
 
             xIssueBuilder.cwe("" + finding.getCweID());
+
             xIssueBuilder.severity(finding.getSeverity());
             xIssueBuilder.vulnerability(finding.getQueryName());
             xIssueBuilder.file(finding.getNodes().get(0).getFileName());
-            xIssueBuilder.vulnerabilityStatus(finding.getStatus());
+
+            xIssueBuilder.vulnerabilityStatus("TBD");
+
+            Map<Integer, ScanResults.IssueDetails> details = new HashMap<>();
+
             xIssueBuilder.description("");
             xIssueBuilder.similarityId("" + finding.getSimilarityID());
 
-            details.put(finding.getNodes().get(0).getLine(), null);
             xIssueBuilder.details(details);
+            
+            // Add additional details
+            Map<String, Object> additionalDetails = getAdditionalIssueDetails(finding);
+            xIssueBuilder.additionalDetails(additionalDetails);
+            
             ScanResults.XIssue issue = xIssueBuilder.build();
-            removeDuplicateIssues(issueList, issue, issue.getDetails());
-        });
-
-        results.setXIssues(issueList);
-
-        return issueList;
-    }
-
-    private static void removeDuplicateIssues(List<ScanResults.XIssue> issueList, ScanResults.XIssue issue, Map<Integer, ScanResults.IssueDetails> details) {
-        if (issueList.contains(issue)) {
-            ScanResults.XIssue existingIssue = issueList.get(issueList.indexOf(issue));
-            existingIssue.getDetails().putAll(details);
-        } else {
             issueList.add(issue);
         }
+        results.setXIssues(issueList);
+        return issueList;
     }
 
     private static void setAstScanSummary( ScanResults results) {
@@ -290,12 +302,41 @@ public class ScanUtils {
                     .comparing(ScanResults.XIssue::getSeverity)
                     .thenComparing(ScanResults.XIssue::getVulnerability);
       
-            addSastAstDetailesBody(request, body, xMap, issueComparator);
+            addSastAstDetailsBody(request, body, xMap, issueComparator);
 
             addOsaDetailesBody(results, body, xMap, issueComparator);
         }
     }
 
+    private static Map<String, Object> getAdditionalIssueDetails(com.cx.restclient.ast.dto.sast.report.Finding finding) {
+        Map<String, Object> additionalDetails = new HashMap<>();
+         additionalDetails.put("categories", "TBD");
+        additionalDetails.put("recommendedFix", "TBD");
+
+        List<Map<String, Object>> results = new ArrayList<>();
+        // Source / Sink data
+        Map<String, Object> result = new HashMap<>();
+        result.put("state", "TBD");
+
+        result.put("source", getNodeData(finding.getNodes(), 0));
+        result.put("sink", getNodeData(finding.getNodes(), finding.getNodes().size() - 1)); // Last node in dataFlow
+        
+        results.add(result);
+        additionalDetails.put("results", results);
+        return additionalDetails;
+    }
+
+    private static Map<String, String> getNodeData(List<FindingNode> nodes, int nodeIndex) {
+        // Node data: file/line/object
+        Map<String, String> nodeData = new HashMap<>();
+        FindingNode node = nodes.get(nodeIndex);
+        nodeData.put("file", node.getFileName());
+        nodeData.put("line", "" + node.getLine());
+        nodeData.put("column", "" + node.getColumn());
+        nodeData.put("object", node.getName());
+        return nodeData;
+    }
+    
     private static void addFlowSummarySection(ScanResults results, RepoProperties properties, StringBuilder body) {
         if (properties.isFlowSummary()) {
             if (!ScanUtils.empty(properties.getFlowSummaryHeader())) {
@@ -379,7 +420,7 @@ public class ScanUtils {
         });
     }
 
-    private static void addSastAstDetailesBody(ScanRequest request, StringBuilder body, Map<String, ScanResults.XIssue> xMap, Comparator<ScanResults.XIssue> issueComparator) {
+    private static void addSastAstDetailsBody(ScanRequest request, StringBuilder body, Map<String, ScanResults.XIssue> xMap, Comparator<ScanResults.XIssue> issueComparator) {
         xMap.entrySet().stream()
                 .filter(x -> x.getValue() != null && x.getValue().getDetails() != null)
                 .sorted(Entry.comparingByValue(issueComparator))
