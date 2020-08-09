@@ -49,6 +49,12 @@ public class ScanUtils {
     public static final String SEVERITY = "Severity: ";
 
     private static final String TBD = "TBD";
+    private static final String CATEGORIES = "categories";
+    private static final String STATE = "state";
+    private static final String SOURCE = "source";
+    private static final String SINK = "sink";
+    private static final String RESULTS = "results";
+    private static final String SCAN_ID = "scanId";
 
 
     private ScanUtils() {
@@ -75,7 +81,7 @@ public class ScanUtils {
         HashMap<String, Object> mapAdditionalDetails = new HashMap<>();
         ScanResults.XIssue.XIssueBuilder xIssueBuilder = ScanResults.XIssue.builder();
 
-        mapAdditionalDetails.put("scanId", results.getAstResults().getResults().getScanId());
+        mapAdditionalDetails.put(SCAN_ID, results.getAstResults().getResults().getScanId());
         results.setAdditionalDetails(mapAdditionalDetails);
         
         setAstScanSummary(results);
@@ -228,19 +234,19 @@ public class ScanUtils {
 
     private static Map<String, Object> getAdditionalIssueDetails(com.cx.restclient.ast.dto.sast.report.Finding finding) {
         Map<String, Object> additionalDetails = new HashMap<>();
-         additionalDetails.put("categories", TBD);
-        additionalDetails.put("recommendedFix", TBD);
+         additionalDetails.put(CATEGORIES, TBD);
+        additionalDetails.put(RECOMMENDED_FIX, TBD);
 
         List<Map<String, Object>> results = new ArrayList<>();
         // Source / Sink data
         Map<String, Object> result = new HashMap<>();
-        result.put("state", TBD);
+        result.put(STATE, TBD);
 
-        result.put("source", getNodeData(finding.getNodes(), 0));
-        result.put("sink", getNodeData(finding.getNodes(), finding.getNodes().size() - 1)); // Last node in dataFlow
+        result.put(SOURCE, getNodeData(finding.getNodes(), 0));
+        result.put(SINK, getNodeData(finding.getNodes(), finding.getNodes().size() - 1)); // Last node in dataFlow
         
         results.add(result);
-        additionalDetails.put("results", results);
+        additionalDetails.put(RESULTS, results);
         return additionalDetails;
     }
 
