@@ -102,8 +102,6 @@ public class ScanUtils {
 
         List<com.cx.restclient.ast.dto.sast.report.Finding> findings = results.getAstResults().getResults().getFindings();
         findings.forEach(finding -> {
-
-
             xIssueBuilder.cwe("" + finding.getCweID());
             xIssueBuilder.severity(finding.getSeverity());
             xIssueBuilder.vulnerability(finding.getQueryName());
@@ -121,7 +119,7 @@ public class ScanUtils {
                     .comment(TBD)
                     .falsePositive(Boolean.FALSE);
             
-            details.put(finding.getNodes().get(0).getLine(), null);
+            details.put(finding.getNodes().get(0).getLine(), issueDetails);
             xIssueBuilder.details(details);
             
             // Add additional details
