@@ -6,6 +6,7 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.Sources;
 import com.checkmarx.flow.dto.gitlab.Note;
 import com.checkmarx.flow.exception.GitLabClientException;
+import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
@@ -47,13 +48,13 @@ public class GitLabService extends RepoService {
     private static final String ERROR_OCCURRED = "Error occurred";
     private final RestTemplate restTemplate;
     private final GitLabProperties properties;
-    private final FlowProperties flowProperties;
 
-    @ConstructorProperties({"restTemplate", "properties", "flowProperties"})
-    public GitLabService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, GitLabProperties properties, FlowProperties flowProperties) {
+
+    @ConstructorProperties({"restTemplate", "properties"})
+    public GitLabService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, GitLabProperties properties) {
         this.restTemplate = restTemplate;
         this.properties = properties;
-        this.flowProperties = flowProperties;
+
     }
 
 
@@ -101,7 +102,7 @@ public class GitLabService extends RepoService {
 
     void processMerge(ScanRequest request,ScanResults results) throws GitLabClientException {
         try {
-            String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties, properties);
+            String comment = HTMLHelper.getMergeCommentMD(request, results,  properties);
             log.debug("comment: {}", comment);
             sendMergeComment(request, comment);
         } catch (HttpClientErrorException e){
@@ -120,7 +121,7 @@ public class GitLabService extends RepoService {
 
     void processCommit(ScanRequest request, ScanResults results) throws GitLabClientException {
         try {
-            String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties, properties);
+            String comment = HTMLHelper.getMergeCommentMD(request, results,  properties);
             log.debug("comment: {}", comment);
             sendCommitComment(request, comment);
         } catch (HttpClientErrorException e){

@@ -7,6 +7,7 @@ import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.github.Content;
 import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.exception.GitHubClientRunTimeException;
+import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
@@ -78,7 +79,7 @@ public class GitHubService extends RepoService {
     }
 
     void processPull(ScanRequest request, ScanResults results) {
-            String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties, properties);
+            String comment = HTMLHelper.getMergeCommentMD(request, results, properties);
             log.debug("comment: {}", comment);
             sendMergeComment(request, comment);
     }

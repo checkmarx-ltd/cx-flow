@@ -5,6 +5,7 @@ import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.service.FilenameFormatter;
+import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
 import lombok.RequiredArgsConstructor;
@@ -42,7 +43,7 @@ public class CsvIssueTracker extends ImmutableIssueTracker {
             Files.createFile(Paths.get(filename));
             if(properties.isIncludeHeader()) {
                 log.debug("Writing headers for CSV");
-                String headers = getHeaders(request, properties.getFields()).concat(ScanUtils.CRLF);
+                String headers = getHeaders(request, properties.getFields()).concat(HTMLHelper.CRLF);
                 Files.write(Paths.get(request.getFilename()), headers.getBytes());
             }
         } catch (IOException e){
@@ -196,7 +197,7 @@ public class CsvIssueTracker extends ImmutableIssueTracker {
             }
             values.add(value);
         }
-        String csv = convertToCSV(values).concat(ScanUtils.CRLF);
+        String csv = convertToCSV(values).concat(HTMLHelper.CRLF);
 
         try {
             Files.write(Paths.get(request.getFilename()), csv.getBytes(), StandardOpenOption.APPEND);
