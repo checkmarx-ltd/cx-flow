@@ -79,7 +79,7 @@ public class ADOService {
 
     void processPull(ScanRequest request, ScanResults results) throws ADOClientException {
         try {
-            String comment = HTMLHelper.getMergeCommentMD(request, results, flowProperties, properties);
+            String comment = HTMLHelper.getMergeCommentMD(request, results, properties);
             log.debug("comment: {}", comment);
             sendMergeComment(request, comment);
         } catch (HttpClientErrorException e){

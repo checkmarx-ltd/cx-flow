@@ -47,7 +47,9 @@ public class HTMLHelper {
 
     private static final String DIV_A_HREF = "<div><a href='";
     
-    public static String getMergeCommentMD(ScanRequest request, ScanResults results, FlowProperties flowProperties,
+    private HTMLHelper(){}
+    
+    public static String getMergeCommentMD(ScanRequest request, ScanResults results, 
                                            RepoProperties properties) {
         StringBuilder body = new StringBuilder();
 
@@ -261,6 +263,11 @@ public class HTMLHelper {
             body.append(DIV_A_HREF).append(additionalDetails.get(ScanUtils.RECOMMENDED_FIX)).append("\'>Recommended Fix</a></div>");
         }
 
+        appendsSastAstDetails(issue, flowProperties, body);
+        appendOsaDetailsHTML(issue, body);
+    }
+
+    private static void appendsSastAstDetails(ScanResults.XIssue issue, FlowProperties flowProperties, StringBuilder body) {
         if(issue.getDetails() != null && !issue.getDetails().isEmpty()) {
             Map<Integer, ScanResults.IssueDetails> trueIssues = issue.getDetails().entrySet().stream()
                     .filter(x -> x.getKey( ) != null && x.getValue() != null && !x.getValue().isFalsePositive())
@@ -268,32 +275,15 @@ public class HTMLHelper {
             Map<Integer, ScanResults.IssueDetails> fpIssues = issue.getDetails().entrySet().stream()
                     .filter(x -> x.getKey( ) != null && x.getValue() != null && x.getValue().isFalsePositive())
                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-            if(!trueIssues.isEmpty()) {
-                body.append("<div><b>Lines: </b>");
-                for (Map.Entry<Integer, ScanResults.IssueDetails> entry : trueIssues.entrySet()) {
-                    body.append(entry.getKey()).append(" ");
-                }
-                body.append(DIV_CLOSING_TAG);
-            }
-            if(flowProperties.isListFalsePositives() && !fpIssues.isEmpty()) {//List the false positives / not exploitable
-                body.append("<div><b>Lines Marked Not Exploitable: </b>");
-                for (Map.Entry<Integer, ScanResults.IssueDetails> entry : fpIssues.entrySet()) {
-                    body.append(entry.getKey()).append(" ");
-                }
-                body.append(DIV_CLOSING_TAG);
-            }
-            for (Map.Entry<Integer, ScanResults.IssueDetails> entry : trueIssues.entrySet()) {
-                if (!ScanUtils.empty(entry.getValue().getCodeSnippet())) {
-                    body.append("<hr/>");
-                    body.append("<b>Line #").append(entry.getKey()).append("</b>");
-                    body.append("<pre><code><div>");
-                    String codeSnippet = entry.getValue().getCodeSnippet();
-                    body.append(StringEscapeUtils.escapeHtml4(codeSnippet));
-                    body.append("</div></code></pre><div>");
-                }
-            }
+            
+            appendLinesHTML(body, trueIssues);
+            appendNotExploitableHTML(flowProperties, body, fpIssues);
+            appendCodeSnippetHTML(body, trueIssues);
             body.append("<hr/>");
         }
+    }
+
+    private static void appendOsaDetailsHTML(ScanResults.XIssue issue, StringBuilder body) {
         if(issue.getOsaDetails()!=null){
             for(ScanResults.OsaDetails o: issue.getOsaDetails()){
                 body.append(CRLF);
@@ -307,6 +297,40 @@ public class HTMLHelper {
             }
         }
     }
+
+    private static void appendCodeSnippetHTML(StringBuilder body, Map<Integer, ScanResults.IssueDetails> trueIssues) {
+        for (Map.Entry<Integer, ScanResults.IssueDetails> entry : trueIssues.entrySet()) {
+            if (!ScanUtils.empty(entry.getValue().getCodeSnippet())) {
+                body.append("<hr/>");
+                body.append("<b>Line #").append(entry.getKey()).append("</b>");
+                body.append("<pre><code><div>");
+                String codeSnippet = entry.getValue().getCodeSnippet();
+                body.append(StringEscapeUtils.escapeHtml4(codeSnippet));
+                body.append("</div></code></pre><div>");
+            }
+        }
+    }
+    private static void appendLinesHTML(StringBuilder body, Map<Integer, ScanResults.IssueDetails> trueIssues) {
+        if(!trueIssues.isEmpty()) {
+            body.append("<div><b>Lines: </b>");
+            for (Map.Entry<Integer, ScanResults.IssueDetails> entry : trueIssues.entrySet()) {
+                body.append(entry.getKey()).append(" ");
+            }
+            body.append(DIV_CLOSING_TAG);
+        }
+    }
+
+    private static void appendNotExploitableHTML(FlowProperties flowProperties, StringBuilder body, Map<Integer, ScanResults.IssueDetails> fpIssues) {
+        if(flowProperties.isListFalsePositives() && !fpIssues.isEmpty()) {//List the false positives / not exploitable
+            body.append("<div><b>Lines Marked Not Exploitable: </b>");
+            for (Map.Entry<Integer, ScanResults.IssueDetails> entry : fpIssues.entrySet()) {
+                body.append(entry.getKey()).append(" ");
+            }
+            body.append(DIV_CLOSING_TAG);
+        }
+    }
+
+    
 
     private static void setSCAHtmlBody(ScanResults.XIssue issue, ScanRequest request, StringBuilder body) {
         log.debug("Building HTML body for SCA scanner");
@@ -372,49 +396,70 @@ public class HTMLHelper {
             body.append("[Recommended Fix](").append(additionalDetails.get(ScanUtils.RECOMMENDED_FIX)).append(")").append(CRLF).append(CRLF);
         }
 
-        if(issue.getDetails() != null && !issue.getDetails().isEmpty()) {
+        appendSastAstDetails(issue, fileUrl, flowProperties, body);
+        appendOsaDetails(issue, body);
+    }
+
+    private static void appendSastAstDetails(ScanResults.XIssue issue, String fileUrl, FlowProperties flowProperties, StringBuilder body) {
+        if (issue.getDetails() != null && !issue.getDetails().isEmpty()) {
             Map<Integer, ScanResults.IssueDetails> trueIssues = issue.getDetails().entrySet().stream()
-                    .filter(x -> x.getKey( ) != null && x.getValue() != null && !x.getValue().isFalsePositive())
+                    .filter(x -> x.getKey() != null && x.getValue() != null && !x.getValue().isFalsePositive())
                     .sorted(comparingByKey())
                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
             Map<Integer, ScanResults.IssueDetails> fpIssues = issue.getDetails().entrySet().stream()
-                    .filter(x -> x.getKey( ) != null && x.getValue() != null && x.getValue().isFalsePositive())
+                    .filter(x -> x.getKey() != null && x.getValue() != null && x.getValue().isFalsePositive())
                     .sorted(comparingByKey())
                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-            if(!trueIssues.isEmpty()) {
-                body.append("Lines: ");
-                for (Map.Entry<Integer, ScanResults.IssueDetails> entry : trueIssues.entrySet()) {
-                    if (fileUrl != null) {  //[<line>](<url>)
-                        body.append("[").append(entry.getKey()).append("](").append(fileUrl).append("#L").append(entry.getKey()).append(") ");
-                    } else { //if the fileUrl is not provided, simply putting the line number (no link) - ADO for example
-                        body.append(entry.getKey()).append(" ");
-                    }
-                }
-                body.append(CRLF).append(CRLF);
-            }
-            if(flowProperties.isListFalsePositives() && !fpIssues.isEmpty()) {//List the false positives / not exploitable
-                body.append(CRLF);
-                body.append("Lines Marked Not Exploitable: ");
-                for (Map.Entry<Integer, ScanResults.IssueDetails> entry : fpIssues.entrySet()) {
-                    if (fileUrl != null) {  //[<line>](<url>)
-                        body.append("[").append(entry.getKey()).append("](").append(fileUrl).append("#L").append(entry.getKey()).append(") ");
-                    } else { //if the fileUrl is not provided, simply putting the line number (no link) - ADO for example
-                        body.append(entry.getKey()).append(" ");
-                    }
-                }
-                body.append(CRLF).append(CRLF);
-            }
-            for (Map.Entry<Integer, ScanResults.IssueDetails> entry : trueIssues.entrySet()) {
-                if (entry.getValue() != null && entry.getValue().getCodeSnippet() != null) {
-                    body.append("---").append(CRLF);
-                    body.append("[Code (Line #").append(entry.getKey()).append("):](").append(fileUrl).append("#L").append(entry.getKey()).append(")").append(CRLF);
-                    body.append("```").append(CRLF);
-                    body.append(entry.getValue().getCodeSnippet()).append(CRLF);
-                    body.append("```").append(CRLF);
-                }
-            }
+            
+            appendLines(fileUrl, body, trueIssues);
+            appendNotExploitable(fileUrl, flowProperties, body, fpIssues);
+            appendCodeSnippet(fileUrl, body, trueIssues);
             body.append("---").append(CRLF);
         }
+    }
+
+    private static void appendLines(String fileUrl, StringBuilder body, Map<Integer, ScanResults.IssueDetails> trueIssues) {
+        if (!trueIssues.isEmpty()) {
+            body.append("Lines: ");
+            for (Map.Entry<Integer, ScanResults.IssueDetails> entry : trueIssues.entrySet()) {
+                if (fileUrl != null) {  //[<line>](<url>)
+                    body.append("[").append(entry.getKey()).append("](").append(fileUrl).append("#L").append(entry.getKey()).append(") ");
+                } else { //if the fileUrl is not provided, simply putting the line number (no link) - ADO for example
+                    body.append(entry.getKey()).append(" ");
+                }
+            }
+            body.append(CRLF).append(CRLF);
+        }
+    }
+
+    private static void appendCodeSnippet(String fileUrl, StringBuilder body, Map<Integer, ScanResults.IssueDetails> trueIssues) {
+        for (Map.Entry<Integer, ScanResults.IssueDetails> entry : trueIssues.entrySet()) {
+            if (entry.getValue() != null && entry.getValue().getCodeSnippet() != null) {
+                body.append("---").append(CRLF);
+                body.append("[Code (Line #").append(entry.getKey()).append("):](").append(fileUrl).append("#L").append(entry.getKey()).append(")").append(CRLF);
+                body.append("```").append(CRLF);
+                body.append(entry.getValue().getCodeSnippet()).append(CRLF);
+                body.append("```").append(CRLF);
+            }
+        }
+    }
+
+    private static void appendNotExploitable(String fileUrl, FlowProperties flowProperties, StringBuilder body, Map<Integer, ScanResults.IssueDetails> fpIssues) {
+        if (flowProperties.isListFalsePositives() && !fpIssues.isEmpty()) {//List the false positives / not exploitable
+            body.append(CRLF);
+            body.append("Lines Marked Not Exploitable: ");
+            for (Map.Entry<Integer, ScanResults.IssueDetails> entry : fpIssues.entrySet()) {
+                if (fileUrl != null) {  //[<line>](<url>)
+                    body.append("[").append(entry.getKey()).append("](").append(fileUrl).append("#L").append(entry.getKey()).append(") ");
+                } else { //if the fileUrl is not provided, simply putting the line number (no link) - ADO for example
+                    body.append(entry.getKey()).append(" ");
+                }
+            }
+            body.append(CRLF).append(CRLF);
+        }
+    }
+
+    private static void appendOsaDetails(ScanResults.XIssue issue, StringBuilder body) {
         if(issue.getOsaDetails()!=null){
             for(ScanResults.OsaDetails o: issue.getOsaDetails()){
                 body.append(CRLF);
@@ -447,6 +492,35 @@ public class HTMLHelper {
         if(!ScanUtils.empty(issue.getSeverity())) {
             body.append(SEVERITY).append(issue.getSeverity()).append(CRLF);
         }
+        appendCWE(issue, flowProperties, body);
+        
+        if(!ScanUtils.empty(flowProperties.getWikiUrl())) {
+            body.append(DETAILS).append(flowProperties.getWikiUrl()).append(" - Internal Guidance ").append(CRLF);
+        }
+        if(!ScanUtils.empty(issue.getLink())){
+            body.append(DETAILS).append(issue.getLink()).append(" - Checkmarx").append(CRLF);
+        }
+        Map<String, Object> additionalDetails = issue.getAdditionalDetails();
+        if (MapUtils.isNotEmpty(additionalDetails) && additionalDetails.containsKey(ScanUtils.RECOMMENDED_FIX)) {
+            body.append(DETAILS).append(additionalDetails.get(ScanUtils.RECOMMENDED_FIX)).append(" - Recommended Fix").append(CRLF);
+        }
+
+        appendSastAstDetials(issue, flowProperties, body);
+        
+        if(issue.getOsaDetails()!=null){
+            for(ScanResults.OsaDetails o: issue.getOsaDetails()){
+                body.append(CRLF);
+                if(!ScanUtils.empty(o.getCve())) {
+                    body.append(o.getCve()).append(CRLF);
+                }
+                appendOsaDetails(body, o);
+                body.append(CRLF);
+            }
+        }
+        return body.toString();
+    }
+
+    private static void appendCWE(ScanResults.XIssue issue, FlowProperties flowProperties, StringBuilder body) {
         if(!ScanUtils.empty(issue.getCwe())) {
             body.append("CWE: ").append(issue.getCwe()).append(CRLF);
             if(!ScanUtils.empty(flowProperties.getMitreUrl())) {
@@ -459,17 +533,9 @@ public class HTMLHelper {
                         ).append(" - Vulnerability details and guidance").append(CRLF);
             }
         }
-        if(!ScanUtils.empty(flowProperties.getWikiUrl())) {
-            body.append(DETAILS).append(flowProperties.getWikiUrl()).append(" - Internal Guidance ").append(CRLF);
-        }
-        if(!ScanUtils.empty(issue.getLink())){
-            body.append(DETAILS).append(issue.getLink()).append(" - Checkmarx").append(CRLF);
-        }
-        Map<String, Object> additionalDetails = issue.getAdditionalDetails();
-        if (MapUtils.isNotEmpty(additionalDetails) && additionalDetails.containsKey(ScanUtils.RECOMMENDED_FIX)) {
-            body.append(DETAILS).append(additionalDetails.get(ScanUtils.RECOMMENDED_FIX)).append(" - Recommended Fix").append(CRLF);
-        }
+    }
 
+    private static void appendSastAstDetials(ScanResults.XIssue issue, FlowProperties flowProperties, StringBuilder body) {
         if(issue.getDetails() != null && !issue.getDetails().isEmpty()) {
             Map<Integer, ScanResults.IssueDetails> trueIssues = issue.getDetails().entrySet().stream()
                     .filter(x -> x.getKey( ) != null && x.getValue() != null && !x.getValue().isFalsePositive())
@@ -497,19 +563,7 @@ public class HTMLHelper {
                 }
             }
         }
-        if(issue.getOsaDetails()!=null){
-            for(ScanResults.OsaDetails o: issue.getOsaDetails()){
-                body.append(CRLF);
-                if(!ScanUtils.empty(o.getCve())) {
-                    body.append(o.getCve()).append(CRLF);
-                }
-                appendOsaDetails(body, o);
-                body.append(CRLF);
-            }
-        }
-        return body.toString();
     }
-
 
 
     private static void appendOsaDetails(StringBuilder body, ScanResults.OsaDetails o) {

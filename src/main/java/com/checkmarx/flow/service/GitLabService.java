@@ -102,7 +102,7 @@ public class GitLabService extends RepoService {
 
     void processMerge(ScanRequest request,ScanResults results) throws GitLabClientException {
         try {
-            String comment = HTMLHelper.getMergeCommentMD(request, results, flowProperties, properties);
+            String comment = HTMLHelper.getMergeCommentMD(request, results,  properties);
             log.debug("comment: {}", comment);
             sendMergeComment(request, comment);
         } catch (HttpClientErrorException e){
@@ -121,7 +121,7 @@ public class GitLabService extends RepoService {
 
     void processCommit(ScanRequest request, ScanResults results) throws GitLabClientException {
         try {
-            String comment = HTMLHelper.getMergeCommentMD(request, results, flowProperties, properties);
+            String comment = HTMLHelper.getMergeCommentMD(request, results,  properties);
             log.debug("comment: {}", comment);
             sendCommitComment(request, comment);
         } catch (HttpClientErrorException e){
