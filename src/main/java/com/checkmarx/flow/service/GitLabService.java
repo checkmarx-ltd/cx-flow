@@ -51,7 +51,7 @@ public class GitLabService extends RepoService {
 
 
     @ConstructorProperties({"restTemplate", "properties"})
-    public GitLabService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, GitLabProperties properties, FlowProperties flowProperties) {
+    public GitLabService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, GitLabProperties properties) {
         this.restTemplate = restTemplate;
         this.properties = properties;
 
