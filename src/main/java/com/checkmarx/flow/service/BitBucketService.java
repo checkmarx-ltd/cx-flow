@@ -39,7 +39,7 @@ public class BitBucketService {
     private static final String BUILD_FAILED = "FAILED";
 
     @ConstructorProperties({"restTemplate", "properties", "thresholdValidator"})
-    public BitBucketService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, BitBucketProperties properties, FlowProperties flowProperties, ThresholdValidator thresholdValidator) {
+    public BitBucketService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, BitBucketProperties properties, ThresholdValidator thresholdValidator) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.thresholdValidator = thresholdValidator;
