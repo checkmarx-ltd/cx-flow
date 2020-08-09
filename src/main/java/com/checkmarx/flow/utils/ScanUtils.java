@@ -11,10 +11,10 @@ import com.checkmarx.sdk.config.AstProperties;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
-import com.checkmarx.sdk.dto.cx.CxScanSummary;
 import com.checkmarx.sdk.dto.ast.SCAResults;
 import com.checkmarx.sdk.dto.cx.xml.PathNodeType;
 import com.cx.restclient.ast.dto.sast.report.FindingNode;
+import com.checkmarx.sdk.dto.cx.CxScanSummary;
 import com.cx.restclient.ast.dto.sca.report.Finding;
 import com.cx.restclient.ast.dto.sca.report.Package;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -68,8 +68,9 @@ public class ScanUtils {
     private static final String ITALIC_CLOSING_DIV = "</i></div>";
     private static final String LINE_BREAK = "<br>";
     private static final String NVD_URL_PREFIX = "https://nvd.nist.gov/vuln/detail/";
-    
-    
+    private static final String TBD = "TBD";
+
+
     private ScanUtils() {
         // this is to hide the public constractor
     }
@@ -90,38 +91,37 @@ public class ScanUtils {
     }
 
     public static List<ScanResults.XIssue> setASTXIssuesInScanResults(ScanResults results) {
-        List<ScanResults.XIssue> issueList = new LinkedList<ScanResults.XIssue>();
-
+        List<ScanResults.XIssue> issueList = new ArrayList<>();
+        HashMap<String, Object> mapAdditionalDetails = new HashMap<>();
         ScanResults.XIssue.XIssueBuilder xIssueBuilder = ScanResults.XIssue.builder();
 
-        HashMap<String, Object> mapAdditionalDetails = new HashMap<>();
         mapAdditionalDetails.put("scanId", results.getAstResults().getResults().getScanId());
         results.setAdditionalDetails(mapAdditionalDetails);
         
         setAstScanSummary(results);
 
+        List<com.cx.restclient.ast.dto.sast.report.Finding> findings = results.getAstResults().getResults().getFindings();
+        findings.forEach(finding -> {
 
-//        if(Boolean.TRUE.toString().equals(astProperties.getIncremental())){
-//            results.setScanType("incremental");
-//        }else {
-//            results.setScanType("full");
-//        }
-        
-        for (com.cx.restclient.ast.dto.sast.report.Finding finding : results.getAstResults().getResults().getFindings()) {
 
             xIssueBuilder.cwe("" + finding.getCweID());
-
             xIssueBuilder.severity(finding.getSeverity());
             xIssueBuilder.vulnerability(finding.getQueryName());
             xIssueBuilder.file(finding.getNodes().get(0).getFileName());
+            xIssueBuilder.vulnerabilityStatus(finding.getStatus());
 
-            xIssueBuilder.vulnerabilityStatus("TBD");
+            xIssueBuilder.vulnerabilityStatus(TBD);
 
-            Map<Integer, ScanResults.IssueDetails> details = new HashMap<>();
-
-            xIssueBuilder.description("");
+            xIssueBuilder.description(TBD);
             xIssueBuilder.similarityId("" + finding.getSimilarityID());
 
+            Map<Integer, ScanResults.IssueDetails> details = new HashMap<>();
+            ScanResults.IssueDetails issueDetails = new ScanResults.IssueDetails()
+                    .codeSnippet(null)
+                    .comment(TBD)
+                    .falsePositive(Boolean.FALSE);
+            
+            details.put(finding.getNodes().get(0).getLine(), null);
             xIssueBuilder.details(details);
             
             // Add additional details
@@ -129,10 +129,21 @@ public class ScanUtils {
             xIssueBuilder.additionalDetails(additionalDetails);
             
             ScanResults.XIssue issue = xIssueBuilder.build();
+            removeDuplicateIssues(issueList, issue, issue.getDetails());
+        });
+
+        results.setXIssues(issueList);
+
+        return issueList;
+    }
+
+    private static void removeDuplicateIssues(List<ScanResults.XIssue> issueList, ScanResults.XIssue issue, Map<Integer, ScanResults.IssueDetails> details) {
+        if (issueList.contains(issue)) {
+            ScanResults.XIssue existingIssue = issueList.get(issueList.indexOf(issue));
+            existingIssue.getDetails().putAll(details);
+        } else {
             issueList.add(issue);
         }
-        results.setXIssues(issueList);
-        return issueList;
     }
 
     private static void setAstScanSummary( ScanResults results) {
@@ -310,13 +321,13 @@ public class ScanUtils {
 
     private static Map<String, Object> getAdditionalIssueDetails(com.cx.restclient.ast.dto.sast.report.Finding finding) {
         Map<String, Object> additionalDetails = new HashMap<>();
-         additionalDetails.put("categories", "TBD");
-        additionalDetails.put("recommendedFix", "TBD");
+         additionalDetails.put("categories", TBD);
+        additionalDetails.put("recommendedFix", TBD);
 
         List<Map<String, Object>> results = new ArrayList<>();
         // Source / Sink data
         Map<String, Object> result = new HashMap<>();
-        result.put("state", "TBD");
+        result.put("state", TBD);
 
         result.put("source", getNodeData(finding.getNodes(), 0));
         result.put("sink", getNodeData(finding.getNodes(), finding.getNodes().size() - 1)); // Last node in dataFlow
