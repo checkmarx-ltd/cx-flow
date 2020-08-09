@@ -10,6 +10,7 @@ import com.checkmarx.flow.service.ConfigurationOverrider;
 import com.checkmarx.flow.service.FilterFactory;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.HelperService;
+import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
@@ -158,7 +159,7 @@ public class ADOController extends AdoControllerBase {
             request = configOverrider.overrideScanRequestProperties(o, request);
             request.putAdditionalMetadata("statuses_url", pullUrl.concat("/statuses"));
             addMetadataToScanRequest(adoDetailsRequest, request);
-            request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body.toString());
+            request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, body.toString());
             request.setId(uid);
             //only initiate scan/automation if target branch is applicable
             if (helperService.isBranch2Scan(request, branches)) {
@@ -277,7 +278,7 @@ public class ADOController extends AdoControllerBase {
                     .build();
 
             addMetadataToScanRequest(adoDetailsRequest, request);
-            request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body.toString());
+            request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, body.toString());
             //if an override blob/file is provided, substitute these values
             request = configOverrider.overrideScanRequestProperties(o, request);
 

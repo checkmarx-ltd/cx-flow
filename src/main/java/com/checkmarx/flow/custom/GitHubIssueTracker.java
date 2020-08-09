@@ -8,6 +8,7 @@ import com.checkmarx.flow.dto.github.IssueStatus;
 import com.checkmarx.flow.dto.github.LabelsItem;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
+import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
 import org.json.JSONException;
@@ -231,7 +232,7 @@ public class GitHubIssueTracker implements IssueTracker {
     private JSONObject getJSONUpdateIssue(ScanResults.XIssue resultIssue, ScanRequest request) {
         JSONObject requestBody = new JSONObject();
         String fileUrl = ScanUtils.getFileUrl(request, resultIssue.getFilename());
-        String body = ScanUtils.getMDBody(resultIssue, request.getBranch(), fileUrl, flowProperties);
+        String body = HTMLHelper.getMDBody(resultIssue, request.getBranch(), fileUrl, flowProperties);
         String title = getXIssueKey(resultIssue, request);
 
         try {
@@ -252,7 +253,7 @@ public class GitHubIssueTracker implements IssueTracker {
     private JSONObject getJSONCreateIssue(ScanResults.XIssue resultIssue, ScanRequest request) {
         JSONObject requestBody = new JSONObject();
         String fileUrl = ScanUtils.getFileUrl(request, resultIssue.getFilename());
-        String body = ScanUtils.getMDBody(resultIssue, request.getBranch(), fileUrl, flowProperties);
+        String body = HTMLHelper.getMDBody(resultIssue, request.getBranch(), fileUrl, flowProperties);
         String title = getXIssueKey(resultIssue, request);
 
         try {

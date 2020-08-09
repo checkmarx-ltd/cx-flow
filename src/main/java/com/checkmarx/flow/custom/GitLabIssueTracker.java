@@ -6,6 +6,7 @@ import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.gitlab.Note;
 import com.checkmarx.flow.exception.MachinaException;
+import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
 import org.json.JSONArray;
@@ -292,7 +293,7 @@ public class GitLabIssueTracker implements IssueTracker {
     private JSONObject getJSONUpdateIssue(ScanResults.XIssue resultIssue, ScanRequest request) {
         JSONObject requestBody = new JSONObject();
         String fileUrl = getFileUrl(request, resultIssue.getFilename());
-        String body = ScanUtils.getMDBody(resultIssue, request.getBranch(), fileUrl, flowProperties);
+        String body = HTMLHelper.getMDBody(resultIssue, request.getBranch(), fileUrl, flowProperties);
         String title = getXIssueKey(resultIssue, request);
 
         try {
@@ -313,7 +314,7 @@ public class GitLabIssueTracker implements IssueTracker {
     private JSONObject getJSONCreateIssue(ScanResults.XIssue resultIssue, ScanRequest request) {
         JSONObject requestBody = new JSONObject();
         String fileUrl = getFileUrl(request, resultIssue.getFilename());
-        String body = ScanUtils.getMDBody(resultIssue, request.getBranch(), fileUrl, flowProperties);
+        String body = HTMLHelper.getMDBody(resultIssue, request.getBranch(), fileUrl, flowProperties);
         String title = getXIssueKey(resultIssue, request);
 
         try {

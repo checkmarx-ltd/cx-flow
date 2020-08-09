@@ -8,6 +8,7 @@ import com.checkmarx.flow.dto.servicenow.Incident;
 import com.checkmarx.flow.dto.servicenow.Result;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
+import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.google.common.collect.Lists;
@@ -361,7 +362,7 @@ public class ServiceNowTracker implements IssueTracker {
     private Incident getCreateIncident(ScanResults.XIssue resultIssue, ScanRequest request) {
         String tag   = createServiceNowTag(request);
         String title = getXIssueKey(resultIssue, request);
-        String body  = ScanUtils.getTextBody(resultIssue, request, flowProperties);
+        String body  = HTMLHelper.getTextBody(resultIssue, request, flowProperties);
 
         Incident incident = new Incident();
         incident.setShortDescription(title);
