@@ -314,7 +314,7 @@ public class ScanUtils {
     private static Map<String, Object> getAdditionalIssueDetails(com.cx.restclient.ast.dto.sast.report.Finding finding) {
         Map<String, Object> additionalDetails = new HashMap<>();
          additionalDetails.put("categories", TBD);
-        additionalDetails.put("recommendedFix", TBD);
+        additionalDetails.put(RECOMMENDED_FIX, TBD);
 
         List<Map<String, Object>> results = new ArrayList<>();
         // Source / Sink data
