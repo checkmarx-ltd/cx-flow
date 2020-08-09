@@ -48,13 +48,13 @@ public class GitLabService extends RepoService {
     private static final String ERROR_OCCURRED = "Error occurred";
     private final RestTemplate restTemplate;
     private final GitLabProperties properties;
-    private final FlowProperties flowProperties;
 
-    @ConstructorProperties({"restTemplate", "properties", "flowProperties"})
+
+    @ConstructorProperties({"restTemplate", "properties"})
     public GitLabService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, GitLabProperties properties, FlowProperties flowProperties) {
         this.restTemplate = restTemplate;
         this.properties = properties;
-        this.flowProperties = flowProperties;
+
     }
 
 

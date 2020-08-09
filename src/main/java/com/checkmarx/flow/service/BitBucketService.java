@@ -31,18 +31,17 @@ public class BitBucketService {
     private static final String LOG_COMMENT = "comment: {}";
     private final RestTemplate restTemplate;
     private final BitBucketProperties properties;
-    private final FlowProperties flowProperties;
+
     private final ThresholdValidator thresholdValidator;
 
     private static final String BUILD_IN_PROGRESS = "INPROGRESS";
     private static final String BUILD_SUCCESSFUL = "SUCCESSFUL";
     private static final String BUILD_FAILED = "FAILED";
 
-    @ConstructorProperties({"restTemplate", "properties", "flowProperties", "thresholdValidator"})
+    @ConstructorProperties({"restTemplate", "properties", "thresholdValidator"})
     public BitBucketService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, BitBucketProperties properties, FlowProperties flowProperties, ThresholdValidator thresholdValidator) {
         this.restTemplate = restTemplate;
         this.properties = properties;
-        this.flowProperties = flowProperties;
         this.thresholdValidator = thresholdValidator;
     }
 
