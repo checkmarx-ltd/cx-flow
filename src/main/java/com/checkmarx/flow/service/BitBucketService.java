@@ -346,7 +346,7 @@ public class BitBucketService extends RepoService {
         } catch (HttpClientErrorException e) {
             log.warn("Repo content is unavailable. The reason can be that branch has been deleted.");
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
+            log.error(String.format("Error in processing the JSON response from the repo. Error details : %s", ExceptionUtils.getRootCauseMessage(e)));
         }
         return content;
     }
@@ -373,7 +373,7 @@ public class BitBucketService extends RepoService {
         } catch (HttpClientErrorException e) {
             log.warn("Repo content is unavailable. The reason can be that branch has been deleted.");
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
+            log.error(String.format("Error in processing the JSON response from the repo. Error details : %s", ExceptionUtils.getRootCauseMessage(e)));
         }
         return content;
     }
