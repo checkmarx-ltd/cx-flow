@@ -41,7 +41,7 @@ public class AstTicketsCreationViaJiraSteps {
 
     private static final String INPUT_BASE_PATH = CUCUMBER_DATA_DIR + "/sample-ast-results/";
     private static final String INPUT_FILE = "5-findings-2-high-3-medium.json";
-    private static final String PROJECT_KEY = "CIT";
+    private static final String PROJECT_KEY = "AIT";
     private static final String JIRA_URL = "https://cxflow.atlassian.net/";
     private static final int EXPECTED_TICKETS_NUM = 3;
 
