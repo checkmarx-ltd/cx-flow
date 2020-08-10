@@ -41,7 +41,7 @@ public class BitBucketService extends RepoService {
     private static final String LOG_COMMENT = "comment: {}";
     private final RestTemplate restTemplate;
     private final BitBucketProperties properties;
-
+    private final FlowProperties flowProperties;
     private final ThresholdValidator thresholdValidator;
 
     private static final String BUILD_IN_PROGRESS = "INPROGRESS";
@@ -62,10 +62,11 @@ public class BitBucketService extends RepoService {
     public static final String PATH_SEPARATOR = "/";
     private String browseRepoEndpoint = "";
 
-    @ConstructorProperties({"restTemplate", "properties", "thresholdValidator"})
-    public BitBucketService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, BitBucketProperties properties, ThresholdValidator thresholdValidator) {
+    @ConstructorProperties({"restTemplate", "properties","flowProperties", "thresholdValidator"})
+    public BitBucketService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, BitBucketProperties properties, FlowProperties flowProperties, ThresholdValidator thresholdValidator) {
         this.restTemplate = restTemplate;
         this.properties = properties;
+        this.flowProperties = flowProperties;
         this.thresholdValidator = thresholdValidator;
     }
 
@@ -295,7 +296,7 @@ public class BitBucketService extends RepoService {
 
     private String getBitbucketEndPoint(ScanRequest request) {
         String repoSelfUrl = request.getAdditionalMetadata(REPO_SELF_URL);
-        String endpoint = "";
+        String endpoint;
 
         if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)) {
             endpoint = repoSelfUrl.concat(BROWSE_CONTENT_FOR_BB_SERVER);
