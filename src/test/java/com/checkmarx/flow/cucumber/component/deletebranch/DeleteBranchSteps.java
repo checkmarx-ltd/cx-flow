@@ -45,11 +45,11 @@ public class DeleteBranchSteps {
     private static final String PROJECT_NAME = "VB_3845-test1";
     private static final String PRESET = "Default Preset";
     private static final String BRANCH_STR = "branch";
-    public static final String GITHUB_USER = "cxflowtestuser";
+    private static final String GITHUB_USER = "cxflowtestuser";
     private final CxClient cxClientMock;
     private final GitHubService gitHubService;
     private GitHubController gitHubControllerSpy;
-    private final ObjectMapper mapper = new ObjectMapper();
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     private final FlowProperties flowProperties;
     private final CxProperties cxProperties;
@@ -117,8 +117,7 @@ public class DeleteBranchSteps {
         }
     }
 
-    private class ScanResultsAnswerer implements Answer {
-
+    private class ScanResultsAnswerer implements Answer<Object> {
         @Override
         public Object answer(InvocationOnMock invocation) {
             actualProjectId = invocation.getArgument(0);
@@ -152,7 +151,7 @@ public class DeleteBranchSteps {
     @And("CxFlow will call the SAST delete API only if trigger is branch")
     public void callDelete(){
         
-        buildDeleteRequest(trigger);
+        sendDeleteRequest(trigger);
 
         if (trigger.equals(BRANCH_STR)) {
             assertEquals(Boolean.TRUE, deleteCalled);
@@ -185,22 +184,21 @@ public class DeleteBranchSteps {
         }
         when(cxClientMock.getProjectId(anyString(),anyString())).thenReturn(projectId);
     }
-    
+
     @And("CxFlow will call or not call the SAST delete API based on the fact whether the project {string} or not in SAST")
-    public void checkIfDeleteMethodIsCalled(String methodCalled)        
-    {
-        buildDeleteRequest(BRANCH_STR);
-        
-        if(Boolean.parseBoolean(methodCalled)){
+    public void checkIfDeleteMethodIsCalled(String methodCalled) {
+        sendDeleteRequest(BRANCH_STR);
+
+        if (Boolean.parseBoolean(methodCalled)) {
             assertEquals(Boolean.TRUE, deleteCalled);
-            assertEquals(EXISTING_PROJECT_ID,actualProjectId );
-        }else{
+            assertEquals(EXISTING_PROJECT_ID, actualProjectId);
+        } else {
             assertEquals(Boolean.FALSE, deleteCalled);
-            assertEquals(Constants.UNKNOWN_INT,actualProjectId);
+            assertEquals(Constants.UNKNOWN_INT, actualProjectId);
         }
     }
     
-    public void buildDeleteRequest(String refType) {
+    private void sendDeleteRequest(String refType) {
         DeleteEvent deleteEvent = new DeleteEvent();
         Repository repo = new Repository();
         repo.setName(repoName);
@@ -224,29 +222,23 @@ public class DeleteBranchSteps {
             fail("Unable to parse " + deleteEvent.toString());
         }
     }
-     private void initHelperServiceMock() {
-         when(helperService.getShortUid()).thenReturn("123456");
-         when(helperService.getCxTeam(any())).thenReturn(TEAM);
-         when(helperService.getCxProject(any())).thenReturn(PROJECT_NAME);
-         when(helperService.getPresetFromSources(any())).thenReturn(PRESET);
-                 
+
+    private void initHelperServiceMock() {
+        when(helperService.getShortUid()).thenReturn("123456");
+        when(helperService.getCxTeam(any())).thenReturn(TEAM);
+        when(helperService.getCxProject(any())).thenReturn(PROJECT_NAME);
+        when(helperService.getPresetFromSources(any())).thenReturn(PRESET);
     }
 
     private void initMockGitHubController() {
         doNothing().when(gitHubControllerSpy).verifyHmacSignature(any(), any());
-        
     }
     
     private void initServices() {
 
         ProjectNameGenerator projectNameGeneratorSpy = spy(new ProjectNameGenerator(helperService, cxProperties, null));
+        initProjectNameGeneratorSpy(projectNameGeneratorSpy);
 
-        try {
-            initProjectNameGeneratorSpy(projectNameGeneratorSpy);
-        } catch (MachinaException e) {
-            fail(e.getMessage());
-        }
-        
         ScanRequestConverter scanRequestConverter = new ScanRequestConverter(helperService, cxProperties, cxClientMock, flowProperties, gitHubService, null);
         SastScanner sastScanner = new SastScanner(null, cxClientMock, helperService, cxProperties, flowProperties, null, null, scanRequestConverter, null, projectNameGeneratorSpy);
         List<VulnerabilityScanner> scanners= new LinkedList<>();
@@ -270,22 +262,16 @@ public class DeleteBranchSteps {
         
     }
 
-    private void initProjectNameGeneratorSpy(ProjectNameGenerator projectNameGenerator) throws MachinaException {
-        ProjectNameGeneratorAnswered answered = new ProjectNameGeneratorAnswered();
-        doAnswer(answered).when(projectNameGenerator).determineProjectName(any());
+    private void initProjectNameGeneratorSpy(ProjectNameGenerator projectNameGenerator) {
+        doAnswer(this::interceptProjectName).when(projectNameGenerator).determineProjectName(any());
     }
 
-    private class ProjectNameGeneratorAnswered implements Answer {
-
-        @Override
-        public Object answer(InvocationOnMock invocation)  {
-            try {
-                calculatedProjectName = (String)invocation.callRealMethod();
-            } catch (Throwable throwable) {
-                fail(throwable.getMessage());
-            }
-
-            return calculatedProjectName;
+    public Object interceptProjectName(InvocationOnMock invocation) {
+        try {
+            calculatedProjectName = (String) invocation.callRealMethod();
+        } catch (Throwable throwable) {
+            fail(throwable.getMessage());
         }
+        return calculatedProjectName;
     }
 }

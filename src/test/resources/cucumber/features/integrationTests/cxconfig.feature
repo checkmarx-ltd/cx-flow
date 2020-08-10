@@ -4,7 +4,7 @@ Feature: CxFlow should read configuration from cx.config file in the root of rep
   @Thresholds
   Scenario Outline: CxFlow should approve or fail GitHub pull request, depending on whether threshold is exceeded in cx.config
   GitHub notifies CxFlow that a pull request was created. CxFlow then executes a SAST scan.
-    Given github branch is "<branch>" and threshods section is not set application.yml
+    Given github branch is "<branch>" and thresholds section is not set application.yml
     And SAST detects <high count> findings of "High" severity
     And <medium count> findings of "Medium" severity
     And <low count> findings of "Low" severity
@@ -104,3 +104,13 @@ Feature: CxFlow should read configuration from cx.config file in the root of rep
       | filterSeverity        |
       | filterScore           |
 
+  @Skip
+  Scenario Outline: CxFlow should use config-as-code from a correct branch
+    Given use-config-as-code-from-default-branch property in application.yml is set to "<use default>"
+    And GitHub repo default branch is "master"
+    When GitHub notifies CxFlow that a pull request was created for the "test1" branch
+    Then CxFlow should get config-as-code from the "<branch>" branch
+    Examples:
+      | use default | branch |
+      | true        | master |
+      | false       | test1  |

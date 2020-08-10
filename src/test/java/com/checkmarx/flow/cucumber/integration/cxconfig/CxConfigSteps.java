@@ -132,22 +132,22 @@ public class CxConfigSteps {
         flowProperties.setFilterStatus(null);
     }
 
-    @Given("github branch is {string} and threshods section is not set application.yml")
-    public void setBranchAndCreatePullReqeust(String branch) {
+    @Given("github branch is {string} and thresholds section is not set application.yml")
+    public void setBranchAndCreatePullRequest(String branch) {
         this.branch = branch;
         buildPullRequest();
     }
 
     @And("github branch is {string} with cx.config")
     public void setBranchAppSet(String branch) {
-        setBranchAndCreatePullReqeust(branch);
+        setBranchAndCreatePullRequest(branch);
     }
 
     @Given("github branch is {string} with invalid cx.config")
     public void setBranchInvalid(String branch) {
         //set filter from application.yml
         setCurrentFilter("severity");
-        setBranchAndCreatePullReqeust(branch);
+        setBranchAndCreatePullRequest(branch);
     }
 
     public void buildPullRequest() {

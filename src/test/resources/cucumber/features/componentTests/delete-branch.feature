@@ -1,7 +1,7 @@
 @DeleteBranchFeature @ComponentTest
 Feature: CxFlow should delete SAST project when corresponding GitHub branch is deleted
   
-  Scenario Outline: CxFlow SAST project when GitHub branch is deleted
+  Scenario Outline: CxFlow deletes SAST project when GitHub branch is deleted
     Given GitHub repoName is "<repoName>"
     And GitHub webhook is configured for delete branch or tag
     And github branch is "<branch>" and it is set "<set_in_app>" application.yml
@@ -29,4 +29,13 @@ Feature: CxFlow should delete SAST project when corresponding GitHub branch is d
       | repoName | trigger | exists |
       | VB_3845  | branch  | true   |
       | VB_3845  | tag     | true   |
-  
+
+
+  @Skip
+  Scenario: CxFlow should not allow automatic deletion of a SAST project when it corresponds
+  to a protected branch
+    Given GitHub repoName is "VB_3845"
+    And a project "VB_3845-test1" exists in SAST
+    And the "test1" branch is specified as protected in application.yml
+    When GitHub notifies cxFlow that a "test1" branch was deleted
+    Then CxFlow will not call the SAST delete API
