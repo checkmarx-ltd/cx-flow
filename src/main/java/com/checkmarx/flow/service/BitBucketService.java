@@ -326,6 +326,7 @@ public class BitBucketService extends RepoService {
 
     private com.checkmarx.flow.dto.bitbucket.Content getRepoContentFromBBCloud(String endpoint) {
         log.info("Getting repo content from {}", endpoint);
+        com.checkmarx.flow.dto.bitbucket.Content content = new com.checkmarx.flow.dto.bitbucket.Content();
         HttpHeaders headers = createAuthHeaders();
         try {
             ResponseEntity<String> response = restTemplate.exchange(
@@ -338,7 +339,8 @@ public class BitBucketService extends RepoService {
                 log.warn(HTTP_BODY_IS_NULL);
             }
             ObjectMapper objectMapper = new ObjectMapper();
-            return objectMapper.readValue(response.getBody(), com.checkmarx.flow.dto.bitbucket.Content.class);
+            content =  objectMapper.readValue(response.getBody(), com.checkmarx.flow.dto.bitbucket.Content.class);
+            return content;
         } catch (NullPointerException e) {
             log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
         } catch (HttpClientErrorException e) {
@@ -346,11 +348,12 @@ public class BitBucketService extends RepoService {
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
-        return null;
+        return content;
     }
 
     private Content getRepoContentFromBitbucketServer(String endpoint) {
         log.info("Getting repo content from {}", endpoint);
+        Content content = new Content();
         HttpHeaders headers = createAuthHeaders();
         try {
             ResponseEntity<String> response = restTemplate.exchange(
@@ -363,8 +366,8 @@ public class BitBucketService extends RepoService {
                 log.warn(HTTP_BODY_IS_NULL);
             }
             ObjectMapper objectMapper = new ObjectMapper();
-
-            return objectMapper.readValue(response.getBody(), Content.class);
+            content = objectMapper.readValue(response.getBody(), Content.class);
+            return content;
         } catch (NullPointerException e) {
             log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
         } catch (HttpClientErrorException e) {
@@ -372,7 +375,7 @@ public class BitBucketService extends RepoService {
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
-        return null;
+        return content;
     }
 
     private void scanGitContentFromBitbucketServer(int depth, String endpoint, Sources sources){

@@ -53,8 +53,8 @@ public class BitbucketServerController extends WebhookController {
     private static final String PR_SOURCE_BRANCH_UPDATED = EVENT + "=pr:from_ref_updated";
     private static final String HMAC_ALGORITHM = "HMACSha256";
     private static final String PROJECT_REPO_PATH = "/projects/{project}/repos/{repo}";
-    private static final String MERGE_COMMENT = "/projects/{project}/repos/{repo}/pull-requests/{id}/comments";
-    private static final String BLOCKER_COMMENT = "/projects/{project}/repos/{repo}/pull-requests/{id}/blocker-comments";
+    private static final String MERGE_COMMENT = "/pull-requests/{id}/comments";
+    private static final String BLOCKER_COMMENT = "/pull-requests/{id}/blocker-comments";
     private static final String BUILD_API_PATH = "/rest/build-status/latest/commits/{commit}";
     private static final Charset CHARSET = StandardCharsets.UTF_8;
     private static final int INDEX_FROM_CHANGES = 0;
@@ -183,19 +183,16 @@ public class BitbucketServerController extends WebhookController {
             String gitUrl = getGitUrl(fromRefRepository);
             String gitAuthUrl = getGitAuthUrl(gitUrl);
 
-            String mergeEndpoint = properties.getUrl().concat(properties.getApiPath()).concat(MERGE_COMMENT);
-            mergeEndpoint = mergeEndpoint.replace("{project}", toRefRepository.getProject().getKey());
-            mergeEndpoint = mergeEndpoint.replace("{repo}", toRefRepository.getSlug());
+            String repoSelfUrl = getRepoSelfUrl(toRefRepository.getProject().getKey(), toRefRepository.getSlug());
+
+            String mergeEndpoint = repoSelfUrl.concat(MERGE_COMMENT);
             mergeEndpoint = mergeEndpoint.replace("{id}", pullRequest.getId().toString());
 
             String buildStatusEndpoint = properties.getUrl().concat(BUILD_API_PATH);
             buildStatusEndpoint = buildStatusEndpoint.replace("{commit}", fromRefLatestCommit);
 
-            String blockerCommentUrl = properties.getUrl().concat(BLOCKER_COMMENT);
-            blockerCommentUrl = blockerCommentUrl.replace("{project}", toRefRepository.getProject().getKey());
-            blockerCommentUrl = blockerCommentUrl.replace("{repo}", toRefRepository.getSlug());
+            String blockerCommentUrl = repoSelfUrl.concat(BLOCKER_COMMENT);
             blockerCommentUrl = blockerCommentUrl.replace("{id}", pullRequest.getId().toString());
-
 
             String scanPreset = cxProperties.getScanPreset();
             if (!ScanUtils.empty(controllerRequest.getPreset())) {
@@ -225,10 +222,6 @@ public class BitbucketServerController extends WebhookController {
                     .filter(filter)
                     .hash(fromRefLatestCommit)
                     .build();
-
-            String repoSelfUrl = properties.getUrl().concat(properties.getApiPath()).concat(PROJECT_REPO_PATH);
-            repoSelfUrl = repoSelfUrl.replace("{project}", toRefRepository.getProject().getKey());
-            repoSelfUrl = repoSelfUrl.replace("{repo}", toRefRepository.getSlug());
 
             request.putAdditionalMetadata(BitBucketService.REPO_SELF_URL, repoSelfUrl);
             setBrowseUrl(fromRefRepository, request);
@@ -341,15 +334,10 @@ public class BitbucketServerController extends WebhookController {
                     .hash(latestCommit)
                     .build();
 
-            String repoSelfUrl = properties.getUrl().concat(properties.getApiPath()).concat(PROJECT_REPO_PATH);
-            repoSelfUrl = repoSelfUrl.replace("{project}", event.getRepository().getProject().getKey());
-            repoSelfUrl = repoSelfUrl.replace("{repo}", event.getRepository().getSlug());
 
-            request.putAdditionalMetadata(BitBucketService.REPO_SELF_URL, repoSelfUrl);
             setBrowseUrl(repository, request);
             checkForConfigAsCode(request);
-
-            request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, body);
+            fillRequestWithAdditionalData(request, repository, body);
             request.setId(uid);
             //only initiate scan/automation if target branch is applicable
             if (helperService.isBranch2Scan(request, branches)) {
@@ -401,6 +389,19 @@ public class BitbucketServerController extends WebhookController {
     private void checkForConfigAsCode(ScanRequest request) {
         CxConfig cxConfig = bitbucketService.getCxConfigOverride(request);
         configOverrider.overrideScanRequestProperties(cxConfig, request);
+    }
+
+    private void fillRequestWithAdditionalData(ScanRequest request, Repository repository, String hookPayload) {
+        String repoSelfUrl = getRepoSelfUrl(repository.getProject().getKey(), repository.getSlug());
+        request.putAdditionalMetadata(BitBucketService.REPO_SELF_URL, repoSelfUrl);
+        request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, hookPayload);
+    }
+
+    String getRepoSelfUrl(String projectKey, String repoSlug){
+        String repoSelfUrl = properties.getUrl().concat(properties.getApiPath()).concat(PROJECT_REPO_PATH);
+        repoSelfUrl = repoSelfUrl.replace("{project}", projectKey);
+        repoSelfUrl = repoSelfUrl.replace("{repo}", repoSlug);
+        return repoSelfUrl;
     }
 }
 
