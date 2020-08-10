@@ -47,6 +47,7 @@ public class GitHubService extends RepoService {
 
     public static final String MERGE_SUCCESS = "success";
     public static final String MERGE_FAILURE = "failure";
+    private static final String MERGE_ERROR = "error";
 
     private final RestTemplate restTemplate;
     private final GitHubProperties properties;
@@ -61,6 +62,8 @@ public class GitHubService extends RepoService {
     private static final String API_RESPONSE = "API response: {}";
     private static final String API_RESPONSE_CODE = "API response code: {}";
     private static final String REQUEST_DETAILS = "; request details: %s";
+
+    public static final String CX_USER_SCAN_QUEUE = "/CxWebClient/UserQueue.aspx";
 
     public GitHubService(@Qualifier("flowRestTemplate") RestTemplate restTemplate,
                          GitHubProperties properties,
@@ -287,10 +290,29 @@ public class GitHubService extends RepoService {
     private static JSONObject getJSONStatus(String state, String url, String description){
         JSONObject requestBody = new JSONObject();
         requestBody.put("state", state);
-        requestBody.put("target_url", url);
-        requestBody.put("description", description);
         requestBody.put("context", "checkmarx");
+
+        if(!ScanUtils.empty(url)) {
+            requestBody.put("target_url", url);
+        }
+        if(!ScanUtils.empty(description)) {
+            requestBody.put("description", description);
+        }
         return requestBody;
+    }
+
+    void errorBlockMerge(ScanRequest request, String targetURL, String description){
+        if(properties.isBlockMerge()) {
+            JSONObject jsonRequestBody = getJSONStatus(MERGE_ERROR, targetURL, description);
+            HttpEntity<?> httpEntity = new HttpEntity<>(jsonRequestBody.toString(), createAuthHeaders());
+            String statusApiUrl = request.getAdditionalMetadata(STATUSES_URL_KEY);
+            if (ScanUtils.empty(statusApiUrl)) {
+                log.error(STATUSES_URL_NOT_PROVIDED);
+                return;
+            }
+            log.debug("Setting pull request status: {}", statusApiUrl);
+            statusExchange(request, httpEntity, statusApiUrl, "failed to set merge status to failure");
+        }
     }
 
     @Override
