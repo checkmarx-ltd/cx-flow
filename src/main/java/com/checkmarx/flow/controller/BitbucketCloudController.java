@@ -10,6 +10,7 @@ import com.checkmarx.flow.service.ConfigurationOverrider;
 import com.checkmarx.flow.service.FilterFactory;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.HelperService;
+import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
@@ -124,7 +125,7 @@ public class BitbucketCloudController extends WebhookController {
                     .build();
 
             request = configOverrider.overrideScanRequestProperties(o, request);
-            request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body.toString());
+            request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, body.toString());
             request.setId(uid);
 
             if (helperService.isBranch2Scan(request, branches)) {
@@ -226,7 +227,7 @@ public class BitbucketCloudController extends WebhookController {
                     .build();
 
             request = configOverrider.overrideScanRequestProperties(o, request);
-            request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body.toString());
+            request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, body.toString());
             request.setId(uid);
 
             if (helperService.isBranch2Scan(request, branches)) {

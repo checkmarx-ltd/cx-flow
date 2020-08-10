@@ -64,6 +64,11 @@ public class IssueService implements ApplicationContextAware {
             issues.addAll(scaIssues);
         });
 
+        Optional.ofNullable(results.getAstResults()).ifPresent( s -> {
+            List<ScanResults.XIssue> astIssues = ScanUtils.setASTXIssuesInScanResults(results);
+            issues.addAll(astIssues);
+        });
+
         Optional.ofNullable(results.getXIssues()).ifPresent(i ->
                 issues.addAll(results.getXIssues())
         );

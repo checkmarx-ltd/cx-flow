@@ -9,6 +9,7 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.azure.CreateWorkItemAttr;
 import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.exception.ADOClientException;
+import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.ScaProperties;
@@ -78,7 +79,7 @@ public class ADOService {
 
     void processPull(ScanRequest request, ScanResults results) throws ADOClientException {
         try {
-            String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties, properties);
+            String comment = HTMLHelper.getMergeCommentMD(request, results, properties);
             log.debug("comment: {}", comment);
             sendMergeComment(request, comment);
         } catch (HttpClientErrorException e){

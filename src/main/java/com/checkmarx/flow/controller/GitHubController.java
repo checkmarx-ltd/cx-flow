@@ -11,6 +11,7 @@ import com.checkmarx.flow.dto.github.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.service.*;
+import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
@@ -199,7 +200,7 @@ public class GitHubController extends WebhookController {
             CxConfig cxConfig =  gitHubService.getCxConfigOverride(request);
             request = configOverrider.overrideScanRequestProperties(cxConfig, request);
 
-            request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body);
+            request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, body);
             request.putAdditionalMetadata("statuses_url", event.getPullRequest().getStatusesUrl());
             request.setId(uid);
             //only initiate scan/automation if target branch is applicable
@@ -315,7 +316,7 @@ public class GitHubController extends WebhookController {
             CxConfig cxConfig =  gitHubService.getCxConfigOverride(request);
             request = configOverrider.overrideScanRequestProperties(cxConfig, request);
 
-            request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body);
+            request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, body);
             request.setId(uid);
 
             //only initiate scan/automation if branch is applicable

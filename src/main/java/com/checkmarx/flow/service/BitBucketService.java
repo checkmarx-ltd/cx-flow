@@ -6,6 +6,7 @@ import com.checkmarx.flow.dto.ScanDetails;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.exception.BitBucketClientException;
+import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
 import org.json.JSONArray;
@@ -31,7 +32,7 @@ public class BitBucketService {
     private static final String LOG_COMMENT = "comment: {}";
     private final RestTemplate restTemplate;
     private final BitBucketProperties properties;
-    private final FlowProperties flowProperties;
+
     private final ThresholdValidator thresholdValidator;
 
     private static final String BUILD_IN_PROGRESS = "INPROGRESS";
@@ -41,11 +42,10 @@ public class BitBucketService {
 
     public static final String CX_USER_SCAN_QUEUE = "/CxWebClient/UserQueue.aspx";
 
-    @ConstructorProperties({"restTemplate", "properties", "flowProperties", "thresholdValidator"})
-    public BitBucketService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, BitBucketProperties properties, FlowProperties flowProperties, ThresholdValidator thresholdValidator) {
+    @ConstructorProperties({"restTemplate", "properties", "thresholdValidator"})
+    public BitBucketService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, BitBucketProperties properties, ThresholdValidator thresholdValidator) {
         this.restTemplate = restTemplate;
         this.properties = properties;
-        this.flowProperties = flowProperties;
         this.thresholdValidator = thresholdValidator;
     }
 
@@ -60,7 +60,7 @@ public class BitBucketService {
 
     void processMerge(ScanRequest request,ScanResults results) throws BitBucketClientException {
         try {
-            String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties, properties);
+            String comment = HTMLHelper.getMergeCommentMD(request, results, properties);
             log.debug(LOG_COMMENT, comment);
             sendMergeComment(request, comment);
         } catch (HttpClientErrorException e){
@@ -71,7 +71,7 @@ public class BitBucketService {
 
     void processServerMerge(ScanRequest request,ScanResults results, ScanDetails scanDetails) throws BitBucketClientException {
         try {
-            String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties, properties);
+            String comment = HTMLHelper.getMergeCommentMD(request, results, properties);
             log.debug(LOG_COMMENT, comment);
 
             if(properties.isBlockMerge()) {
@@ -237,7 +237,7 @@ public class BitBucketService {
 
     void processCommit(ScanRequest request, ScanResults results) throws BitBucketClientException {
         try {
-            String comment = ScanUtils.getMergeCommentMD(request, results, flowProperties, properties);
+            String comment = HTMLHelper.getMergeCommentMD(request, results, properties);
             log.debug(LOG_COMMENT, comment);
             sendCommitComment(request, comment);
         } catch (HttpClientErrorException e){
