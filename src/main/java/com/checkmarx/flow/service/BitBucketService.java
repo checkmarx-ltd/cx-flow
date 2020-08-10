@@ -54,7 +54,6 @@ public class BitBucketService extends RepoService {
     private static final String FILE_CONTENT_FOR_BB_SERVER = "/raw/{config}?at={hash}";
     private static final String BROWSE_CONTENT_FOR_BB_SERVER = "/browse/{path}?at={branch}";
     private static final String BROWSE_CONTENT_FOR_BB_CLOUD_WITH_DEPTH_PARAM = "/src/{hash}/?pagelen=100&max_depth={depth}";
-    public static final String REPO_SELF_URL = "repo-self-url";
     private static final String BUILD_STATUS_KEY_FOR_CXFLOW = "cxflow";
     public static final String CX_USER_SCAN_QUEUE = "/CxWebClient/UserQueue.aspx";
     private static final String HTTP_BODY_IS_NULL = "Unable to download Config as code file. Response body is null.";
