@@ -209,6 +209,18 @@ task ScaIntegrationTest(type: Test) {
         systemProperty "testprofile", "scaIntegration"
 
         include 'com/checkmarx/flow/cucumber/integration/sca_scanner/**'
+        
+        testLogging {
+            events "passed", "skipped", "failed"
+        }
+    }
+}
+
+task ASTIntegrationTest(type: Test) {
+    useJUnitPlatform() {
+        systemProperty "testprofile", "astIntegration"
+
+        include 'com/checkmarx/flow/cucumber/integration/ast/bugtrackers/jira/**'
         exclude  'com/checkmarx/flow/cucumber/integration/ast/scans/**'
 
         testLogging {

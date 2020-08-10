@@ -30,3 +30,10 @@ Feature: Cx-Flow AST Integration permutation tests
     Examples:
       | message |
       | The resource you are looking for might have been removed, had its name changed, or is temporarily unavailable    |
+
+  @AST_JIRA_issue_creation
+  Scenario: Publish AST results and check JIRA tickets are getting created
+    Given scan initiator is AST
+    And bug tracker is JIRA
+    When publishing new known unfiltered AST results
+    Then new JIRA tickets should be open respectively

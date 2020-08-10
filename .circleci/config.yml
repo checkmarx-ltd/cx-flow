@@ -323,6 +323,27 @@ jobs:
       - store_artifacts:
           path: ~/test-results/junit
 
+  ast-integration-tests:
+    docker:
+    - image: "circleci/openjdk:8-jdk"
+    steps:
+    - checkout
+    - run:
+        name: Run AST Integration Tests
+        command: |
+          export HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
+          ./gradlew clean ASTIntegrationTest --info -Dtarget=${HOOK_TARGET} -Drepo=${HOOK_REPO} -Dnamespace=${HOOK_NAMESPACE}
+    - run:
+        name: Save test results
+        command: |
+          mkdir -p ~/test-results/junit/
+          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ \;
+        when: always
+    - store_test_results:
+        path: ~/test-results
+    - store_artifacts:
+        path: ~/test-results/junit
+
   jira-integration-tests:
     docker:
       - image: "circleci/openjdk:8-jdk"
@@ -572,6 +593,9 @@ workflows:
       - sca-integration-tests:
           requires:
             - deploy-cxflow
+      - ast-integration-tests:
+          requires:
+          - deploy-cxflow
       - jira-integration-tests:
           requires:
             - deploy-cxflow
@@ -592,6 +616,7 @@ workflows:
             - e2e-tests
             - integration-tests
             - sca-integration-tests
+            - ast-integration-tests
             - jira-integration-tests
             - pullRequestComments-integration-tests
             - SAST-CLI-integration-tests
@@ -604,6 +629,7 @@ workflows:
             - e2e-tests
             - integration-tests
             - sca-integration-tests
+            - ast-integration-tests
             - jira-integration-tests
             - pullRequestComments-integration-tests
             - SAST-CLI-integration-tests
@@ -624,6 +650,7 @@ workflows:
             - e2e-tests
             - integration-tests
             - sca-integration-tests
+            - ast-integration-tests
             - jira-integration-tests
             - pullRequestComments-integration-tests
             - SAST-CLI-integration-tests
