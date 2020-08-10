@@ -8,6 +8,7 @@ import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
@@ -56,15 +57,15 @@ public class HelperService {
         }
     }
 
-    public boolean isBranch2Scan(ScanRequest request, List<String> branches){
+    public boolean isBranch2Scan(ScanRequest request, List<String> branches) {
         String scriptFile = properties.getBranchScript();
         String branch = request.getBranch();
         String targetBranch = request.getMergeTargetBranch();
-        if(!ScanUtils.empty(targetBranch)){ //if targetBranch is set, it is a merge request
+        if (!ScanUtils.empty(targetBranch)) { //if targetBranch is set, it is a merge request
             branch = targetBranch;
         }
         //note:  if script is provided, it is highest priority
-        if(!ScanUtils.empty(scriptFile)){
+        if (!ScanUtils.empty(scriptFile)) {
             log.info("executing external script to determine if branch should be scanned ({})", scriptFile);
             try {
                 String script = getStringFromFile(scriptFile);
@@ -75,21 +76,20 @@ public class HelperService {
                 if (result instanceof Boolean) {
                     return ((boolean) result);
                 }
-            }catch (IOException e){
+            } catch (IOException e) {
                 log.error("Error reading script file {}", scriptFile, e);
             }
         }
         /*Override branches if provided in the request*/
-        if(request.getActiveBranches() != null && !request.getActiveBranches().isEmpty()){
+        if (CollectionUtils.isNotEmpty(request.getActiveBranches())) {
             branches = request.getActiveBranches();
         }
         //If the script fails above, default to base property check functionality (regex list)
-        for( String b: branches){
-            if(strMatches(b, branch)) return true;
+        for (String b : branches) {
+            if (strMatches(b, branch)) return true;
         }
 
-        if (branches.isEmpty() && branch.equalsIgnoreCase(request.getDefaultBranch()))
-        {
+        if (branches.isEmpty() && branch.equalsIgnoreCase(request.getDefaultBranch())) {
             log.info("Scanning default branch - {}", request.getDefaultBranch());
             return true;
         }

@@ -1,8 +1,6 @@
 package com.checkmarx.flow.service;
 
-import com.checkmarx.flow.config.FindingSeverity;
-import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.config.GitHubProperties;
+import com.checkmarx.flow.config.*;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.github.Content;
 import com.checkmarx.flow.dto.report.AnalyticsReport;
@@ -12,23 +10,17 @@ import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.*;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 
 import java.io.IOException;
@@ -37,9 +29,8 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Service
+@Slf4j
 public class GitHubService extends RepoService {
-    private static final Logger log = LoggerFactory.getLogger(GitHubService.class);
-
     private static final String HTTP_BODY_IS_NULL = "HTTP Body is null for content api ";
     private static final String CONTENT_NOT_FOUND_IN_RESPONSE = "Content not found in JSON response";
     private static final String STATUSES_URL_KEY = "statuses_url";

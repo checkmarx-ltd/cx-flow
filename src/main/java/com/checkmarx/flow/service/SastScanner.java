@@ -106,9 +106,9 @@ public class SastScanner implements VulnerabilityScanner {
             //the repository is unavailable - can happen for a push event of a deleted branch - nothing to do
 
             //the error message is printed when the exception is thrown
-            //usually should occur during push event occuring on delete branch
+            //usually should occur during push event occurring on delete branch
             //therefore need to eliminate the scan process but do not want to create
-            //an error stuck trace in the log
+            //an error stack trace in the log
             return getEmptyScanResults();
 
         } catch (Exception e) {
@@ -315,12 +315,27 @@ public class SastScanner implements VulnerabilityScanner {
 
             Integer projectId = scanRequestConverter.determinePresetAndProjectId(request, ownerId);
 
-            if (projectId != UNKNOWN_INT) {
+            if (canDeleteProject(projectId, request)) {
                 cxService.deleteProject(projectId);
             }
         } catch (CheckmarxException e) {
             log.error("Error delete branch " + e.getMessage());
         }
+    }
+
+    private boolean canDeleteProject(Integer projectId, ScanRequest request) {
+        boolean result = false;
+        if (projectId == null || projectId == UNKNOWN_INT) {
+            log.warn("Project with the provided name is not found, nothing to delete.");
+        } else {
+            boolean branchIsProtected = helperService.isBranch2Scan(request, flowProperties.getBranches());
+            if (branchIsProtected) {
+                log.warn("Unable to delete project, because the corresponding repo branch is protected.");
+            } else {
+                result = true;
+            }
+        }
+        return result;
     }
 
     private String treatFailure(ScanRequest request, File cxFile, Integer scanId, Exception e) {

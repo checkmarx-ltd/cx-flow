@@ -15,10 +15,6 @@ public class RepoProperties {
     private String falsePositiveLabel = "false-positive";
     private String configAsCode = "cx.config";
 
-    @Getter
-    @Setter
-    private boolean useConfigAsCodeFromDefaultBranch;
-
     private String openTransition = "open";
     private String closeTransition = "closed";
     private String filePath = ".";
