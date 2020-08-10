@@ -10,6 +10,7 @@ import com.checkmarx.sdk.config.CxProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
@@ -58,43 +59,57 @@ public class HelperService {
     }
 
     public boolean isBranch2Scan(ScanRequest request, List<String> branches) {
+        String branchToCheck = getBranchToCheck(request);
+
+        // If script is provided, it is highest priority
         String scriptFile = properties.getBranchScript();
-        String branch = request.getBranch();
-        String targetBranch = request.getMergeTargetBranch();
-        if (!ScanUtils.empty(targetBranch)) { //if targetBranch is set, it is a merge request
-            branch = targetBranch;
-        }
-        //note:  if script is provided, it is highest priority
         if (!ScanUtils.empty(scriptFile)) {
-            log.info("executing external script to determine if branch should be scanned ({})", scriptFile);
-            try {
-                String script = getStringFromFile(scriptFile);
-                HashMap<String, Object> bindings = new HashMap<>();
-                bindings.put(REQUEST, request);
-                bindings.put("branches", branches);
-                Object result = scriptService.runScript(script, bindings);
-                if (result instanceof Boolean) {
-                    return ((boolean) result);
-                }
-            } catch (IOException e) {
-                log.error("Error reading script file {}", scriptFile, e);
+            Object branchShouldBeScanned = executeBranchScript(scriptFile, request, branches);
+            if (branchShouldBeScanned instanceof Boolean) {
+                return ((boolean) branchShouldBeScanned);
             }
         }
-        /*Override branches if provided in the request*/
+
+        // Override branches if provided in the request
         if (CollectionUtils.isNotEmpty(request.getActiveBranches())) {
             branches = request.getActiveBranches();
         }
-        //If the script fails above, default to base property check functionality (regex list)
-        for (String b : branches) {
-            if (strMatches(b, branch)) return true;
+
+        // If the script fails above, default to base property check functionality (regex list)
+        for (String aBranch : branches) {
+            if (strMatches(aBranch, branchToCheck)) return true;
         }
 
-        if (branches.isEmpty() && branch.equalsIgnoreCase(request.getDefaultBranch())) {
+        if (branches.isEmpty() && branchToCheck.equalsIgnoreCase(request.getDefaultBranch())) {
             log.info("Scanning default branch - {}", request.getDefaultBranch());
             return true;
         }
-        log.info("Branch {} did not meet the scanning criteria [{}]", branch, branches);
+        log.info("Branch {} did not meet the scanning criteria [{}]", branchToCheck, branches);
         return false;
+    }
+
+    private Object executeBranchScript(String scriptFile, ScanRequest request, List<String> branches) {
+        Object result = null;
+        log.info("executing external script to determine if branch should be scanned ({})", scriptFile);
+        try {
+            String script = getStringFromFile(scriptFile);
+            HashMap<String, Object> bindings = new HashMap<>();
+            bindings.put(REQUEST, request);
+            bindings.put("branches", branches);
+            result = scriptService.runScript(script, bindings);
+        } catch (IOException e) {
+            log.error("Error reading script file {}", scriptFile, e);
+        }
+        return result;
+    }
+
+    private static String getBranchToCheck(ScanRequest request) {
+        String result = request.getBranch();
+        String targetBranch = request.getMergeTargetBranch();
+        if (StringUtils.isNotEmpty(targetBranch)) { //if targetBranch is set, it is a merge request
+            result = targetBranch;
+        }
+        return result;
     }
 
     public String getCxTeam(ScanRequest request) {
