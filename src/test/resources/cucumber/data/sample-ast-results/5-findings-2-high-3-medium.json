@@ -1,0 +1,314 @@
+{
+  "osa" : false,
+  "projectId" : null,
+  "team" : null,
+  "project" : null,
+  "link" : null,
+  "files" : null,
+  "loc" : null,
+  "scanType" : null,
+  "output" : null,
+  "additionalDetails" : null,
+  "scanSummary" : null,
+  "scaResults" : null,
+  "astResults" : {
+    "results" : {
+      "scanId" : "c173eeb1-8399-4fcd-904c-95cb732406fb",
+      "summary" : {
+        "highVulnerabilityCount" : 2,
+        "mediumVulnerabilityCount" : 3,
+        "lowVulnerabilityCount" : 0,
+        "statusCounters" : [ {
+          "status" : "RECURRENT",
+          "counter" : 5
+        } ],
+        "totalCounter" : 5
+      },
+      "findings" : [ {
+        "queryID" : "12463999220258399563",
+        "queryName" : "Hardcoded_password_in_Connection_String",
+        "severity" : "MEDIUM",
+        "cweID" : 547,
+        "similarityID" : -626598861,
+        "uniqueID" : -626598861,
+        "nodes" : [ {
+          "column" : 11,
+          "fileName" : "/encode.frm",
+          "fullName" : "\"\"connection string\"\"",
+          "length" : 19,
+          "line" : 67,
+          "methodLine" : 1,
+          "name" : "\"\"connection string\"\"",
+          "nodeSystemID" : "gNDdjNuVlQeB893ppDoLmeRJOcU="
+        }, {
+          "column" : 5,
+          "fileName" : "/encode.frm",
+          "fullName" : "CxNamespace_Vb6_encode_1153866329.CxClass_Vb6_encode_1153866329.conn.open",
+          "length" : 1,
+          "line" : 67,
+          "methodLine" : 1,
+          "name" : "open",
+          "nodeSystemID" : "fQyEGkbcgemWAQvINL4BAuYLb80="
+        } ],
+        "pathSystemID" : "UI6GBuRbVP/regaPpT79+g3EBK8=",
+        "firstScanID" : "c173eeb1-8399-4fcd-904c-95cb732406fb",
+        "firstFoundAt" : "2020-08-10T06:11:34Z",
+        "foundAt" : "2020-08-10T06:11:34Z",
+        "status" : "RECURRENT"
+      }, {
+        "queryID" : "11457039317287737367",
+        "queryName" : "Privacy_Violation",
+        "severity" : "MEDIUM",
+        "cweID" : 359,
+        "similarityID" : 1944286477,
+        "uniqueID" : 1944286477,
+        "nodes" : [ {
+          "column" : 5,
+          "fileName" : "/encode.frm",
+          "fullName" : "CxNamespace_Vb6_encode_1153866329.CxClass_Vb6_encode_1153866329.cmdsafe_click.password",
+          "length" : 8,
+          "line" : 11,
+          "methodLine" : 3,
+          "name" : "password",
+          "nodeSystemID" : "QFUQQnwb7hIBD2Qv51BJKu41sKE="
+        }, {
+          "column" : 30,
+          "fileName" : "/encode.frm",
+          "fullName" : "CxNamespace_Vb6_encode_1153866329.CxClass_Vb6_encode_1153866329.cmdsafe_click.password",
+          "length" : 8,
+          "line" : 16,
+          "methodLine" : 3,
+          "name" : "password",
+          "nodeSystemID" : "a2jUsiIP5HqAB2jLt+B7IDcDpfQ="
+        }, {
+          "column" : 5,
+          "fileName" : "/encode.frm",
+          "fullName" : "CxNamespace_Vb6_encode_1153866329.CxClass_Vb6_encode_1153866329.cmdsafe_click.query",
+          "length" : 5,
+          "line" : 14,
+          "methodLine" : 3,
+          "name" : "query",
+          "nodeSystemID" : "mMg+hYuD1qjlUqVpKLns/89NRXU="
+        }, {
+          "column" : 21,
+          "fileName" : "/encode.frm",
+          "fullName" : "CxNamespace_Vb6_encode_1153866329.CxClass_Vb6_encode_1153866329.cmdsafe_click.query",
+          "length" : 5,
+          "line" : 17,
+          "methodLine" : 3,
+          "name" : "query",
+          "nodeSystemID" : "KArNZ5adSSUAsOOdrf0Om516PMc="
+        }, {
+          "column" : 13,
+          "fileName" : "/encode.frm",
+          "fullName" : "txtquery.text",
+          "length" : 1,
+          "line" : 17,
+          "methodLine" : 3,
+          "name" : "text",
+          "nodeSystemID" : "BjvbPFjVkE/Z/zCe7vcRq4AYg+M="
+        } ],
+        "pathSystemID" : "OsYfXLVJWoKLZVdOYzY8CP0tql0=",
+        "firstScanID" : "c173eeb1-8399-4fcd-904c-95cb732406fb",
+        "firstFoundAt" : "2020-08-10T06:11:34Z",
+        "foundAt" : "2020-08-10T06:11:34Z",
+        "status" : "RECURRENT"
+      }, {
+        "queryID" : "11457039317287737367",
+        "queryName" : "Privacy_Violation",
+        "severity" : "MEDIUM",
+        "cweID" : 359,
+        "similarityID" : -36350875,
+        "uniqueID" : -36350875,
+        "nodes" : [ {
+          "column" : 5,
+          "fileName" : "/encode.frm",
+          "fullName" : "CxNamespace_Vb6_encode_1153866329.CxClass_Vb6_encode_1153866329.cmdunsafe_click.password",
+          "length" : 8,
+          "line" : 42,
+          "methodLine" : 34,
+          "name" : "password",
+          "nodeSystemID" : "jIY3CKRBmfcfWag6Bzh+5VUGW4Y="
+        }, {
+          "column" : 30,
+          "fileName" : "/encode.frm",
+          "fullName" : "CxNamespace_Vb6_encode_1153866329.CxClass_Vb6_encode_1153866329.cmdunsafe_click.password",
+          "length" : 8,
+          "line" : 47,
+          "methodLine" : 34,
+          "name" : "password",
+          "nodeSystemID" : "KEZ8th5JNI2xpy8UvIXmtICJLcA="
+        }, {
+          "column" : 5,
+          "fileName" : "/encode.frm",
+          "fullName" : "CxNamespace_Vb6_encode_1153866329.CxClass_Vb6_encode_1153866329.cmdunsafe_click.query",
+          "length" : 5,
+          "line" : 45,
+          "methodLine" : 34,
+          "name" : "query",
+          "nodeSystemID" : "n5NxdErwSZ/6B2LiWet7ZGrNP4E="
+        }, {
+          "column" : 21,
+          "fileName" : "/encode.frm",
+          "fullName" : "CxNamespace_Vb6_encode_1153866329.CxClass_Vb6_encode_1153866329.cmdunsafe_click.query",
+          "length" : 5,
+          "line" : 48,
+          "methodLine" : 34,
+          "name" : "query",
+          "nodeSystemID" : "lD4StoqgWY3oxKxuzRoHV8NAPSQ="
+        }, {
+          "column" : 13,
+          "fileName" : "/encode.frm",
+          "fullName" : "txtquery.text",
+          "length" : 1,
+          "line" : 48,
+          "methodLine" : 34,
+          "name" : "text",
+          "nodeSystemID" : "/ivjez54dzYAKxMqiNO+hPOezAk="
+        } ],
+        "pathSystemID" : "fd+nxkGRs3VivkiMu50BNSE72Y4=",
+        "firstScanID" : "c173eeb1-8399-4fcd-904c-95cb732406fb",
+        "firstFoundAt" : "2020-08-10T06:11:34Z",
+        "foundAt" : "2020-08-10T06:11:34Z",
+        "status" : "RECURRENT"
+      }, {
+        "queryID" : "10495540618558827425",
+        "queryName" : "SQL_Injection",
+        "severity" : "HIGH",
+        "cweID" : 89,
+        "similarityID" : 1197064592,
+        "uniqueID" : 1197064592,
+        "nodes" : [ {
+          "column" : 28,
+          "fileName" : "/encode.frm",
+          "fullName" : "txtusername.text",
+          "length" : 1,
+          "line" : 41,
+          "methodLine" : 34,
+          "name" : "text",
+          "nodeSystemID" : "oY1vW+zkAXzmZqX9n9+XnYuJxeE="
+        }, {
+          "column" : 5,
+          "fileName" : "/encode.frm",
+          "fullName" : "CxNamespace_Vb6_encode_1153866329.CxClass_Vb6_encode_1153866329.cmdunsafe_click.user_name",
+          "length" : 9,
+          "line" : 41,
+          "methodLine" : 34,
+          "name" : "user_name",
+          "nodeSystemID" : "Ic25BhgQdJaEGEf379YmvFBDDpk="
+        }, {
+          "column" : 30,
+          "fileName" : "/encode.frm",
+          "fullName" : "CxNamespace_Vb6_encode_1153866329.CxClass_Vb6_encode_1153866329.cmdunsafe_click.user_name",
+          "length" : 9,
+          "line" : 46,
+          "methodLine" : 34,
+          "name" : "user_name",
+          "nodeSystemID" : "hYZpBOxa785Zs3rNza3efSvdxHs="
+        }, {
+          "column" : 5,
+          "fileName" : "/encode.frm",
+          "fullName" : "CxNamespace_Vb6_encode_1153866329.CxClass_Vb6_encode_1153866329.cmdunsafe_click.query",
+          "length" : 5,
+          "line" : 45,
+          "methodLine" : 34,
+          "name" : "query",
+          "nodeSystemID" : "n5NxdErwSZ/6B2LiWet7ZGrNP4E="
+        }, {
+          "column" : 33,
+          "fileName" : "/encode.frm",
+          "fullName" : "CxNamespace_Vb6_encode_1153866329.CxClass_Vb6_encode_1153866329.cmdunsafe_click.query",
+          "length" : 5,
+          "line" : 52,
+          "methodLine" : 34,
+          "name" : "query",
+          "nodeSystemID" : "ghWTWiBTzDyvrtOZBKNOvCf6Ur0="
+        }, {
+          "column" : 18,
+          "fileName" : "/encode.frm",
+          "fullName" : "m_db.openrecordset",
+          "length" : 1,
+          "line" : 52,
+          "methodLine" : 34,
+          "name" : "openrecordset",
+          "nodeSystemID" : "Ix7coiDTukbExBgstsipqmlhLKU="
+        } ],
+        "pathSystemID" : "L7DYsTO1Q2mp5ziu0w3mrK3P+Us=",
+        "firstScanID" : "c173eeb1-8399-4fcd-904c-95cb732406fb",
+        "firstFoundAt" : "2020-08-10T06:11:34Z",
+        "foundAt" : "2020-08-10T06:11:34Z",
+        "status" : "RECURRENT"
+      }, {
+        "queryID" : "10495540618558827425",
+        "queryName" : "SQL_Injection",
+        "severity" : "HIGH",
+        "cweID" : 89,
+        "similarityID" : -989265411,
+        "uniqueID" : -989265411,
+        "nodes" : [ {
+          "column" : 27,
+          "fileName" : "/encode.frm",
+          "fullName" : "txtpassword.text",
+          "length" : 1,
+          "line" : 42,
+          "methodLine" : 34,
+          "name" : "text",
+          "nodeSystemID" : "p7ZMWPc8hqimll9tqH5wk/1TwWs="
+        }, {
+          "column" : 5,
+          "fileName" : "/encode.frm",
+          "fullName" : "CxNamespace_Vb6_encode_1153866329.CxClass_Vb6_encode_1153866329.cmdunsafe_click.password",
+          "length" : 8,
+          "line" : 42,
+          "methodLine" : 34,
+          "name" : "password",
+          "nodeSystemID" : "jIY3CKRBmfcfWag6Bzh+5VUGW4Y="
+        }, {
+          "column" : 30,
+          "fileName" : "/encode.frm",
+          "fullName" : "CxNamespace_Vb6_encode_1153866329.CxClass_Vb6_encode_1153866329.cmdunsafe_click.password",
+          "length" : 8,
+          "line" : 47,
+          "methodLine" : 34,
+          "name" : "password",
+          "nodeSystemID" : "KEZ8th5JNI2xpy8UvIXmtICJLcA="
+        }, {
+          "column" : 5,
+          "fileName" : "/encode.frm",
+          "fullName" : "CxNamespace_Vb6_encode_1153866329.CxClass_Vb6_encode_1153866329.cmdunsafe_click.query",
+          "length" : 5,
+          "line" : 45,
+          "methodLine" : 34,
+          "name" : "query",
+          "nodeSystemID" : "n5NxdErwSZ/6B2LiWet7ZGrNP4E="
+        }, {
+          "column" : 33,
+          "fileName" : "/encode.frm",
+          "fullName" : "CxNamespace_Vb6_encode_1153866329.CxClass_Vb6_encode_1153866329.cmdunsafe_click.query",
+          "length" : 5,
+          "line" : 52,
+          "methodLine" : 34,
+          "name" : "query",
+          "nodeSystemID" : "ghWTWiBTzDyvrtOZBKNOvCf6Ur0="
+        }, {
+          "column" : 18,
+          "fileName" : "/encode.frm",
+          "fullName" : "m_db.openrecordset",
+          "length" : 1,
+          "line" : 52,
+          "methodLine" : 34,
+          "name" : "openrecordset",
+          "nodeSystemID" : "Ix7coiDTukbExBgstsipqmlhLKU="
+        } ],
+        "pathSystemID" : "o0JUHW8QdajHV+Hs8BpU9WR3nV8=",
+        "firstScanID" : "c173eeb1-8399-4fcd-904c-95cb732406fb",
+        "firstFoundAt" : "2020-08-10T06:11:34Z",
+        "foundAt" : "2020-08-10T06:11:34Z",
+        "status" : "RECURRENT"
+      } ]
+    }
+  },
+  "xissues" : null,
+  "sastScanId" : null,
+  "sastRestuls" : false
+}
