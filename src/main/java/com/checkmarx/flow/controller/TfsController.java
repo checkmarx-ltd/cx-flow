@@ -15,6 +15,7 @@ import com.checkmarx.flow.service.ConfigurationOverrider;
 import com.checkmarx.flow.service.FilterFactory;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.HelperService;
+import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
@@ -161,7 +162,7 @@ public class TfsController extends AdoControllerBase {
             request.putAdditionalMetadata("statuses_url", resource.getUrl().concat("/statuses"));
         }
         addMetadataToScanRequest(adoDetailsRequest, request);
-        request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body.toString());
+        request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, body.toString());
         request.setId(uid);
         //only initiate scan/automation if target branch is applicable
         List<String> branches = new ArrayList<>();

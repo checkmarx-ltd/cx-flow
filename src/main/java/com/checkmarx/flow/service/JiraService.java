@@ -55,6 +55,7 @@ import com.checkmarx.flow.dto.report.JiraTicketsReport;
 import com.checkmarx.flow.exception.JiraClientException;
 import com.checkmarx.flow.exception.JiraClientRunTimeException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
+import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.google.common.collect.ImmutableMap;
@@ -524,16 +525,16 @@ public class JiraService {
                             case "recommendation":
                                 StringBuilder recommendation = new StringBuilder();
                                 if (issue.getLink() != null && !issue.getLink().isEmpty()) {
-                                    recommendation.append("Checkmarx Link: ").append(issue.getLink()).append(ScanUtils.CRLF);
+                                    recommendation.append("Checkmarx Link: ").append(issue.getLink()).append(HTMLHelper.CRLF);
                                 }
                                 if (!ScanUtils.empty(issue.getCwe())) {
-                                    recommendation.append("Mitre Details: ").append(String.format(flowProperties.getMitreUrl(), issue.getCwe())).append(ScanUtils.CRLF);
+                                    recommendation.append("Mitre Details: ").append(String.format(flowProperties.getMitreUrl(), issue.getCwe())).append(HTMLHelper.CRLF);
                                 }
                                 if (!ScanUtils.empty(flowProperties.getCodebashUrl())) {
-                                    recommendation.append("Training: ").append(flowProperties.getCodebashUrl()).append(ScanUtils.CRLF);
+                                    recommendation.append("Training: ").append(flowProperties.getCodebashUrl()).append(HTMLHelper.CRLF);
                                 }
                                 if (!ScanUtils.empty(flowProperties.getWikiUrl())) {
-                                    recommendation.append("Guidance: ").append(flowProperties.getWikiUrl()).append(ScanUtils.CRLF);
+                                    recommendation.append("Guidance: ").append(flowProperties.getWikiUrl()).append(HTMLHelper.CRLF);
                                 }
                                 value = recommendation.toString();
                                 break;
@@ -587,7 +588,7 @@ public class JiraService {
                             case "comment":
                                 value = "";
                                 StringBuilder comments = new StringBuilder();
-                                String commentFmt = "[Line %s]: [%s]".concat(ScanUtils.CRLF);
+                                String commentFmt = "[Line %s]: [%s]".concat(HTMLHelper.CRLF);
                                 if (issue.getDetails() != null) {
                                     issue.getDetails().entrySet()
                                             .stream()
@@ -871,6 +872,12 @@ public class JiraService {
     private Map<String, ScanResults.XIssue> getIssueMap(ScanResults results, ScanRequest request) {
         List<ScanResults.XIssue> issues = new ArrayList<>();
 
+
+        Optional.ofNullable(results.getAstResults()).ifPresent( s -> {
+            List<ScanResults.XIssue> scaIssues = ScanUtils.setASTXIssuesInScanResults(results);
+            issues.addAll(scaIssues);
+        });
+        
         Optional.ofNullable(results.getScaResults()).ifPresent( s -> {
             List<ScanResults.XIssue> scaIssues = ScanUtils.scaToXIssues(s);
             issues.addAll(scaIssues);
@@ -930,26 +937,26 @@ public class JiraService {
         if (useBranch) {
             if (Optional.ofNullable(issue.getScaDetails()).isPresent() ) {
                 issue.getScaDetails().stream().findAny().ifPresent(any -> {
-                    body.append(any.getFinding().getDescription()).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
-                    body.append(String.format(SCATicketingConstants.SCA_JIRA_ISSUE_BODY, any.getFinding().getSeverity(), any.getVulnerabilityPackage().getName(), request.getBranch())).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
+                    body.append(any.getFinding().getDescription()).append(HTMLHelper.CRLF).append(HTMLHelper.CRLF);
+                    body.append(String.format(SCATicketingConstants.SCA_JIRA_ISSUE_BODY, any.getFinding().getSeverity(), any.getVulnerabilityPackage().getName(), request.getBranch())).append(HTMLHelper.CRLF).append(HTMLHelper.CRLF);
                 });
             } else {
-                body.append(String.format(JiraConstants.JIRA_ISSUE_BODY_WITH_BRANCH, issue.getVulnerability(), issue.getFilename(), request.getBranch())).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
+                body.append(String.format(JiraConstants.JIRA_ISSUE_BODY_WITH_BRANCH, issue.getVulnerability(), issue.getFilename(), request.getBranch())).append(HTMLHelper.CRLF).append(HTMLHelper.CRLF);
             }
 
         } else {
             if (Optional.ofNullable(issue.getScaDetails()).isPresent() ) {
                 issue.getScaDetails().stream().findAny().ifPresent(any -> {
-                    body.append(any.getFinding().getDescription()).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
-                    body.append(String.format(SCATicketingConstants.SCA_JIRA_ISSUE_BODY_WITHOUT_BRANCH, any.getFinding().getSeverity(), any.getVulnerabilityPackage().getName())).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
+                    body.append(any.getFinding().getDescription()).append(HTMLHelper.CRLF).append(HTMLHelper.CRLF);
+                    body.append(String.format(SCATicketingConstants.SCA_JIRA_ISSUE_BODY_WITHOUT_BRANCH, any.getFinding().getSeverity(), any.getVulnerabilityPackage().getName())).append(HTMLHelper.CRLF).append(HTMLHelper.CRLF);
                 });
             } else {
-                body.append(String.format(JiraConstants.JIRA_ISSUE_BODY, issue.getVulnerability(), issue.getFilename())).append(ScanUtils.CRLF).append(ScanUtils.CRLF);
+                body.append(String.format(JiraConstants.JIRA_ISSUE_BODY, issue.getVulnerability(), issue.getFilename())).append(HTMLHelper.CRLF).append(HTMLHelper.CRLF);
             }
 
         }
         Optional.ofNullable(issue.getDescription())
-                .ifPresent(d -> body.append(d.trim()).append(ScanUtils.CRLF).append(ScanUtils.CRLF));
+                .ifPresent(d -> body.append(d.trim()).append(HTMLHelper.CRLF).append(HTMLHelper.CRLF));
 
         Map<String, String> displayedParametersMap = new LinkedHashMap <>();
 
@@ -966,29 +973,29 @@ public class JiraService {
         
         displayedParametersMap.forEach((k, v ) -> {
             if (!ScanUtils.empty(v)) {
-                body.append(k).append(v).append(ScanUtils.CRLF);
+                body.append(k).append(v).append(HTMLHelper.CRLF);
             }
         });
 
-        body.append(ScanUtils.CRLF)
-                .append("*Addition Info*").append(ScanUtils.CRLF)
-                .append("----").append(ScanUtils.CRLF);
+        body.append(HTMLHelper.CRLF)
+                .append("*Addition Info*").append(HTMLHelper.CRLF)
+                .append("----").append(HTMLHelper.CRLF);
 
         if (!ScanUtils.empty(issue.getLink()) ) {
-            body.append("[Checkmarx|").append(issue.getLink()).append("]").append(ScanUtils.CRLF);
+            body.append("[Checkmarx|").append(issue.getLink()).append("]").append(HTMLHelper.CRLF);
         }
         if (!ScanUtils.anyEmpty(issue.getCwe(), flowProperties.getMitreUrl())) {
-            body.append("[Mitre Details|").append(String.format(flowProperties.getMitreUrl(), issue.getCwe())).append("]").append(ScanUtils.CRLF);
+            body.append("[Mitre Details|").append(String.format(flowProperties.getMitreUrl(), issue.getCwe())).append("]").append(HTMLHelper.CRLF);
         }
         if (!ScanUtils.empty(flowProperties.getCodebashUrl())) {
-            body.append("[Training|").append(flowProperties.getCodebashUrl()).append("]").append(ScanUtils.CRLF);
+            body.append("[Training|").append(flowProperties.getCodebashUrl()).append("]").append(HTMLHelper.CRLF);
         }
         if (!ScanUtils.empty(flowProperties.getWikiUrl())) {
-            body.append("[Guidance|").append(flowProperties.getWikiUrl()).append("]").append(ScanUtils.CRLF);
+            body.append("[Guidance|").append(flowProperties.getWikiUrl()).append("]").append(HTMLHelper.CRLF);
         }
         Map<String, Object> additionalDetails = issue.getAdditionalDetails();
         if (MapUtils.isNotEmpty(additionalDetails) && additionalDetails.containsKey(ScanUtils.RECOMMENDED_FIX)) {
-           body.append("[Recommended Fix|").append(additionalDetails.get(ScanUtils.RECOMMENDED_FIX)).append("]").append(ScanUtils.CRLF);
+           body.append("[Recommended Fix|").append(additionalDetails.get(ScanUtils.RECOMMENDED_FIX)).append("]").append(HTMLHelper.CRLF);
         }
 
         if (issue.getDetails() != null && !issue.getDetails().isEmpty()) {
@@ -1004,7 +1011,7 @@ public class JiraService {
                     );
 
             if (flowProperties.isListFalsePositives()) {//List the false positives / not exploitable
-                body.append(ScanUtils.CRLF);
+                body.append(HTMLHelper.CRLF);
                 if (issue.getDetails().entrySet().stream().anyMatch(x -> x.getKey() != null && x.getValue() != null && x.getValue().isFalsePositive())) {
                     body.append("Lines Marked Not Exploitable: ");
                 }
@@ -1015,57 +1022,57 @@ public class JiraService {
                                 isFileUrlEmpty(request, fileUrl, body, lines, entry)
                         );
             }
-            body.append(ScanUtils.CRLF).append(ScanUtils.CRLF);
+            body.append(HTMLHelper.CRLF).append(HTMLHelper.CRLF);
             issue.getDetails().entrySet().stream()
                     .filter(x -> x.getKey() != null && x.getValue() != null && !x.getValue().isFalsePositive())
                     .sorted(Map.Entry.comparingByKey())
                     .forEach(entry -> {
                         if (!ScanUtils.empty(entry.getValue().getCodeSnippet())) {
-                            body.append("----").append(ScanUtils.CRLF);
+                            body.append("----").append(HTMLHelper.CRLF);
                             if (!ScanUtils.empty(fileUrl)) {
                                 String line = "[Line #";
                                 if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)) {
-                                    body.append(line).append(entry.getKey()).append(":|").append(fileUrl).append("#").append(entry.getKey()).append("]").append(ScanUtils.CRLF);
+                                    body.append(line).append(entry.getKey()).append(":|").append(fileUrl).append("#").append(entry.getKey()).append("]").append(HTMLHelper.CRLF);
                                 } else if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)) { //BB Cloud
-                                    body.append(line).append(entry.getKey()).append(":|").append(fileUrl).append(lines).append(entry.getKey()).append("]").append(ScanUtils.CRLF);
+                                    body.append(line).append(entry.getKey()).append(":|").append(fileUrl).append(lines).append(entry.getKey()).append("]").append(HTMLHelper.CRLF);
                                 } else {
-                                    body.append(line).append(entry.getKey()).append(":|").append(fileUrl).append("#L").append(entry.getKey()).append("]").append(ScanUtils.CRLF);
+                                    body.append(line).append(entry.getKey()).append(":|").append(fileUrl).append("#L").append(entry.getKey()).append("]").append(HTMLHelper.CRLF);
                                 }
                             } else {
-                                body.append("Line #").append(entry.getKey()).append(ScanUtils.CRLF);
+                                body.append("Line #").append(entry.getKey()).append(HTMLHelper.CRLF);
                             }
-                            body.append("{code}").append(ScanUtils.CRLF);
-                            body.append(entry.getValue().getCodeSnippet()).append(ScanUtils.CRLF);
-                            body.append("{code}").append(ScanUtils.CRLF);
+                            body.append("{code}").append(HTMLHelper.CRLF);
+                            body.append(entry.getValue().getCodeSnippet()).append(HTMLHelper.CRLF);
+                            body.append("{code}").append(HTMLHelper.CRLF);
                         }
                     });
-            body.append("----").append(ScanUtils.CRLF);
+            body.append("----").append(HTMLHelper.CRLF);
         }
 
         if (issue.getOsaDetails() != null) {
             for (ScanResults.OsaDetails o : issue.getOsaDetails()) {
-                body.append(ScanUtils.CRLF);
+                body.append(HTMLHelper.CRLF);
                 if (!ScanUtils.empty(o.getCve())) {
-                    body.append("h3.").append(o.getCve()).append(ScanUtils.CRLF);
+                    body.append("h3.").append(o.getCve()).append(HTMLHelper.CRLF);
                 }
                 body.append("{noformat}");
                 if (!ScanUtils.empty(o.getSeverity())) {
-                    body.append("Severity: ").append(o.getSeverity()).append(ScanUtils.CRLF);
+                    body.append("Severity: ").append(o.getSeverity()).append(HTMLHelper.CRLF);
                 }
                 if (!ScanUtils.empty(o.getVersion())) {
-                    body.append("Version: ").append(o.getVersion()).append(ScanUtils.CRLF);
+                    body.append("Version: ").append(o.getVersion()).append(HTMLHelper.CRLF);
                 }
                 if (!ScanUtils.empty(o.getDescription())) {
-                    body.append("Description: ").append(o.getDescription()).append(ScanUtils.CRLF);
+                    body.append("Description: ").append(o.getDescription()).append(HTMLHelper.CRLF);
                 }
                 if (!ScanUtils.empty(o.getRecommendation())) {
-                    body.append("Recommendation: ").append(o.getRecommendation()).append(ScanUtils.CRLF);
+                    body.append("Recommendation: ").append(o.getRecommendation()).append(HTMLHelper.CRLF);
                 }
                 if (!ScanUtils.empty(o.getUrl())) {
                     body.append("URL: ").append(o.getUrl());
                 }
                 body.append("{noformat}");
-                body.append(ScanUtils.CRLF);
+                body.append(HTMLHelper.CRLF);
             }
         }
 
@@ -1085,14 +1092,14 @@ public class JiraService {
             );
 
             scaDetailsMap.forEach((key, value) ->
-                    body.append(key).append(": ").append(value).append(ScanUtils.CRLF)
+                    body.append(key).append(": ").append(value).append(HTMLHelper.CRLF)
             );
             String findingLink = ScanUtils.constructVulnerabilityUrl(scaDetails.getVulnerabilityLink(), scaDetails.getFinding());
-            body.append("[Link To SCA|").append(findingLink).append("]").append(ScanUtils.CRLF);
+            body.append("[Link To SCA|").append(findingLink).append("]").append(HTMLHelper.CRLF);
 
             String cveName = scaDetails.getFinding().getCveName();
             if (!ScanUtils.empty(cveName)) {
-                body.append("[Reference – NVD link|").append("https://nvd.nist.gov/vuln/detail/").append(cveName).append("]").append(ScanUtils.CRLF).append(ScanUtils.CRLF);
+                body.append("[Reference – NVD link|").append("https://nvd.nist.gov/vuln/detail/").append(cveName).append("]").append(HTMLHelper.CRLF).append(HTMLHelper.CRLF);
             }
         });
 

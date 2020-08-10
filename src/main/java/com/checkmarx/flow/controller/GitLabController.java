@@ -10,6 +10,7 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.gitlab.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.service.*;
+import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
@@ -155,7 +156,7 @@ public class GitLabController extends WebhookController {
             CxConfig cxConfig =  gitLabService.getCxConfigOverride(request);
             request = configOverrider.overrideScanRequestProperties(cxConfig, request);
 
-            request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body.toString());
+            request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, body.toString());
             request.putAdditionalMetadata("merge_id",objectAttributes.getIid().toString());
             request.putAdditionalMetadata("merge_title", objectAttributes.getTitle());
             if(proj.getId() != null) {
@@ -280,7 +281,7 @@ public class GitLabController extends WebhookController {
             CxConfig cxConfig =  gitLabService.getCxConfigOverride(request);
             request = configOverrider.overrideScanRequestProperties(cxConfig, request);
 
-            request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body.toString());
+            request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, body.toString());
             request.setId(uid);
             if(proj.getId() != null) {
                 request.setRepoProjectId(proj.getId());

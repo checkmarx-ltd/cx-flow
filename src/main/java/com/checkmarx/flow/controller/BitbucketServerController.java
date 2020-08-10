@@ -11,6 +11,7 @@ import com.checkmarx.flow.service.ConfigurationOverrider;
 import com.checkmarx.flow.service.FilterFactory;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.HelperService;
+import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
@@ -222,7 +223,7 @@ public class BitbucketServerController extends WebhookController {
                     .build();
 
             request = configOverrider.overrideScanRequestProperties(o, request);
-            request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body);
+            request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, body);
             request.putAdditionalMetadata("buildStatusUrl", buildStatusEndpoint);
             request.putAdditionalMetadata("cxBaseUrl", cxProperties.getBaseUrl());
             request.putAdditionalMetadata("blocker-comment-url", blockerCommentUrl);
@@ -330,7 +331,7 @@ public class BitbucketServerController extends WebhookController {
                     .build();
             setBrowseUrl(repository, request);
             request = configOverrider.overrideScanRequestProperties(o, request);
-            request.putAdditionalMetadata(ScanUtils.WEB_HOOK_PAYLOAD, body);
+            request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, body);
             request.setId(uid);
             //only initiate scan/automation if target branch is applicable
             if(helperService.isBranch2Scan(request, branches)){
