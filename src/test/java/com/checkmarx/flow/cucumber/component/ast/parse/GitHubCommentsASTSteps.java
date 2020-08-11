@@ -1,4 +1,4 @@
-package com.checkmarx.flow.cucumber.component.parse.ast;
+package com.checkmarx.flow.cucumber.component.ast.parse;
 
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.FindingSeverity;
