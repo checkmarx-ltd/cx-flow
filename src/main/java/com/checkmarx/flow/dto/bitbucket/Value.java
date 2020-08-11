@@ -24,7 +24,7 @@ public class Value {
     @JsonProperty("type")
     private String type;
     @JsonProperty("links")
-    private Links_ links;
+    private Links links;
     @JsonProperty("commit")
     private Commit_ commit;
     @JsonProperty("mimetype")
@@ -57,12 +57,12 @@ public class Value {
     }
 
     @JsonProperty("links")
-    public Links_ getLinks() {
+    public Links getLinks() {
         return links;
     }
 
     @JsonProperty("links")
-    public void setLinks(Links_ links) {
+    public void setLinks(Links links) {
         this.links = links;
     }
 

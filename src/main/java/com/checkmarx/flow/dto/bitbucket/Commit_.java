@@ -17,7 +17,7 @@ public class Commit_ {
     @JsonProperty("hash")
     private String hash;
     @JsonProperty("links")
-    private Links__ links;
+    private Links links;
 
     @JsonProperty("type")
     public String getType() {
@@ -40,12 +40,12 @@ public class Commit_ {
     }
 
     @JsonProperty("links")
-    public Links__ getLinks() {
+    public Links getLinks() {
         return links;
     }
 
     @JsonProperty("links")
-    public void setLinks(Links__ links) {
+    public void setLinks(Links links) {
         this.links = links;
     }
 
