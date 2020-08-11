@@ -36,6 +36,9 @@ import static org.junit.jupiter.api.Assertions.fail;
 @SpringBootTest(classes = {CxFlowApplication.class})
 public class GenericEndToEndSteps {
     static final String E2E_CONFIG = "cx.config";
+    static final String BRANCH_MASTER = "master";
+    static final String BRANCH_DEVELOP = "develop";
+
     @Autowired
     private FlowProperties flowProperties;
     /*
@@ -56,7 +59,7 @@ public class GenericEndToEndSteps {
 
     @And("CxFlow is running as a service")
     public void runAsService() {
-        log.info("runnning cx-flow as a service (active profile: {})", engine);
+        log.info("running cx-flow as a service (active profile: {})", engine);
         appContext = TestUtils.runCxFlowAsServiceWithAdditionalProfiles(engine);
     }
 
@@ -76,16 +79,20 @@ public class GenericEndToEndSteps {
     @Given("Scan engine is {word}")
     public void setScanEngine(String engine) {
         this.engine = engine;
-        log.info("setting scan engine to {word}" , engine);
+        log.info("setting scan engine to {}" , engine);
     }
 
     @And("webhook is configured for push event")
     public void generatePushWebHook() {
+        repository.setActiveBranch(BRANCH_MASTER);
+        repository.generateConfigAsCode(this);
         repository.generateWebHook(HookType.PUSH);
     }
 
     @And("webhook is configured for pull-request")
     public void generatePRWebHook() {
+        repository.setActiveBranch(BRANCH_DEVELOP);
+        repository.generateConfigAsCode(this);
         repository.generateWebHook(HookType.PULL_REQUEST);
     }
 
@@ -113,7 +120,7 @@ public class GenericEndToEndSteps {
 
     @Then("pull-request is updated")
     public void checkPRUpdate() {
-        repository.verifyPRUpdated();
+        repository.verifyPRUpdated(engine);
     }
 
     @After
