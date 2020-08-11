@@ -151,6 +151,7 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                                 .driver(Driver.builder()
                                     .name(properties.getScannerName())
                                     .organization(properties.getOrganization())
+                                    .semanticVersion(properties.getSemanticVersion())
                                     .rules(rules)
                                     .build())
                                 .build())

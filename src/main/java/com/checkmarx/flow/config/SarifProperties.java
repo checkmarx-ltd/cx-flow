@@ -16,6 +16,7 @@ public class SarifProperties {
     private String organization = "Checkmarx";
     private String sarifSchema="https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json";
     private String sarifVersion = "2.1.0";
+    private String semanticVersion = "1.0.0";
     private Map<String, String> severityMap = new HashMap<String, String>(){
         {
             put("High", "error");
@@ -63,6 +64,14 @@ public class SarifProperties {
 
     public void setSarifVersion(String sarifVersion) {
         this.sarifVersion = sarifVersion;
+    }
+
+    public String getSemanticVersion() {
+        return semanticVersion;
+    }
+
+    public void setSemanticVersion(String semanticVersion) {
+        this.semanticVersion = semanticVersion;
     }
 
     public Map<String, String> getSeverityMap() {
