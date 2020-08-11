@@ -5,14 +5,13 @@ import com.checkmarx.flow.config.FindingSeverity;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.cucumber.common.JsonLoggerTestUtils;
-import com.checkmarx.flow.cucumber.integration.pullrequest.updatecomments.UpdatePullRequestCommentsSteps;
 import com.checkmarx.flow.dto.BugTracker;
-import com.checkmarx.flow.dto.RepoComment;
+
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.report.ScanResultsReport;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.service.*;
-import com.checkmarx.jira.PublishUtils;
+
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.Filter;
@@ -34,6 +33,7 @@ import io.cucumber.java.en.And;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -41,7 +41,7 @@ import org.mockito.stubbing.Answer;
 import org.springframework.boot.test.context.SpringBootTest;
 import com.cx.restclient.ast.dto.sast.report.Finding;
 
-import java.io.IOException;
+
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -55,7 +55,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
 @Slf4j
-@SpringBootTest(classes = {CxFlowMocksConfig.class, CxFlowApplication.class, PublishUtils.class})
+@SpringBootTest(classes = {CxFlowMocksConfig.class, CxFlowApplication.class})
 public class GitHubCommentsASTSteps {
 
     private final static int PROJECT_ID = 101;
@@ -391,37 +391,34 @@ public class GitHubCommentsASTSteps {
         }
     }
 
-//    private List<RepoComment> getRepoComments()  {
-//        List<RepoComment> listComments = new LinkedList<>();
-//        
-//        if (repo.equals(ScanRequest.Repository.GITHUB))  {
-//
-//            String[] commentsStrings = comment.split(REGEX);
-//            for(String comment : commentsStrings) {
-//                if(!comment.trim().isEmpty()) {
-//                    //return gitHubService.getComments(UpdatePullRequestCommentsSteps.PULL_REQUEST_COMMENTS_URL);
-//                    RepoComment repoComment = new RepoComment(1, REGEX + this.comment, null, null, null);
-//                    listComments.add(repoComment);
-//                }
-//            }
-//
-//           
-//            return listComments; 
-//            
-//        }
-//        throw new UnsupportedOperationException();
-//       
-//    }
 
 
     @Then("we should see the expected number of results in comments")
     public void verifyComments(){
 
+        int highCounter = StringUtils.countMatches(comment, "HIGH");
+        int mediumCounter = StringUtils.countMatches(comment, "MEDIUM");
+        int lowCounter = StringUtils.countMatches(comment, "LOW");
+
+        
         if (scannerType.equalsIgnoreCase(AST_SCA)) {
             Assert.assertTrue(PullRequestCommentsHelper.isSastAndScaComment(comment) );
+            
+            Assert.assertEquals(scanResultsToInject.getAstResults().getResults().getSummary().getHighVulnerabilityCount()+
+                    scanResultsToInject.getScaResults().getSummary().getFindingCounts().get(Filter.Severity.HIGH), highCounter);
+            Assert.assertEquals(scanResultsToInject.getAstResults().getResults().getSummary().getMediumVulnerabilityCount() +
+                    scanResultsToInject.getScaResults().getSummary().getFindingCounts().get(Filter.Severity.MEDIUM), mediumCounter);
+            Assert.assertEquals(scanResultsToInject.getAstResults().getResults().getSummary().getLowVulnerabilityCount()+
+                    scanResultsToInject.getScaResults().getSummary().getFindingCounts().get(Filter.Severity.LOW), lowCounter);
+
         }
         else if (scannerType.equalsIgnoreCase(AST)) {
             Assert.assertTrue(PullRequestCommentsHelper.isSastFindingsComment(comment));
+
+            Assert.assertEquals(scanResultsToInject.getAstResults().getResults().getSummary().getHighVulnerabilityCount(), highCounter);
+            Assert.assertEquals(scanResultsToInject.getAstResults().getResults().getSummary().getMediumVulnerabilityCount(), mediumCounter);
+            Assert.assertEquals(scanResultsToInject.getAstResults().getResults().getSummary().getLowVulnerabilityCount(), lowCounter);
+
         }
         
     }

@@ -1,9 +1,6 @@
 @Component
 Feature: Test analytics for get results operation
 
-
-
-
   Scenario Outline: do get results operation for a known project, and validate the analytics created for the operation.
     When repository is "<repo>" and scanner is "<scanner>"
     And doing get results operation on scan with <high> <medium> <low> <info> results
