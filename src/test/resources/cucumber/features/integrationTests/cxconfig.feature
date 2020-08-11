@@ -104,7 +104,6 @@ Feature: CxFlow should read configuration from cx.config file in the root of rep
       | filterSeverity        |
       | filterScore           |
 
-  @Skip
   Scenario Outline: CxFlow should use config-as-code from a correct branch
     Given use-config-as-code-from-default-branch property in application.yml is set to "<use default>"
     And GitHub repo default branch is "master"
