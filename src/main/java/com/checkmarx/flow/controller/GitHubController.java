@@ -431,13 +431,13 @@ public class GitHubController extends WebhookController {
         //deletes a project which is not in the middle of a scan, otherwise it will not be deleted
         sastScanner.deleteProject(request);
 
-        log.info("Process of delete branch has finished successfully");
+        final String MESSAGE = "Branch deletion event was handled successfully.";
+        log.info(MESSAGE);
 
         return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
-                .message("Delete Branch Successfully finished")
+                .message(MESSAGE)
                 .success(true)
                 .build());
-
     }
 
 

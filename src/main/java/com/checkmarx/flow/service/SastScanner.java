@@ -326,11 +326,14 @@ public class SastScanner implements VulnerabilityScanner {
     private boolean canDeleteProject(Integer projectId, ScanRequest request) {
         boolean result = false;
         if (projectId == null || projectId == UNKNOWN_INT) {
-            log.warn("Project with the provided name is not found, nothing to delete.");
+            log.warn("{} project with the provided name is not found, nothing to delete.", SCAN_TYPE);
         } else {
-            boolean branchIsProtected = helperService.isBranch2Scan(request, flowProperties.getBranches());
+            boolean branchIsProtected = helperService.isBranchProtected(request.getBranch(),
+                    flowProperties.getBranches(),
+                    request);
+
             if (branchIsProtected) {
-                log.warn("Unable to delete project, because the corresponding repo branch is protected.");
+                log.info("Unable to delete {} project, because the corresponding repo branch is protected.", SCAN_TYPE);
             } else {
                 result = true;
             }

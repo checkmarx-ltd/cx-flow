@@ -76,16 +76,23 @@ public class HelperService {
         }
 
         // If the script fails above, default to base property check functionality (regex list)
-        for (String aBranch : branches) {
-            if (strMatches(aBranch, branchToCheck)) return true;
-        }
-
-        if (branches.isEmpty() && branchToCheck.equalsIgnoreCase(request.getDefaultBranch())) {
-            log.info("Scanning default branch - {}", request.getDefaultBranch());
+        if (isBranchProtected(branchToCheck, branches, request)) {
             return true;
         }
+
         log.info("Branch {} did not meet the scanning criteria [{}]", branchToCheck, branches);
         return false;
+    }
+
+    public boolean isBranchProtected(String branchToCheck, List<String> protectedBranchPatterns, ScanRequest request) {
+        boolean result;
+        if (protectedBranchPatterns.isEmpty() && branchToCheck.equalsIgnoreCase(request.getDefaultBranch())) {
+            result = true;
+            log.info("Scanning default branch - {}", request.getDefaultBranch());
+        } else {
+            result = protectedBranchPatterns.stream().anyMatch(aBranch -> strMatches(aBranch, branchToCheck));
+        }
+        return result;
     }
 
     private Object executeBranchScript(String scriptFile, ScanRequest request, List<String> branches) {
