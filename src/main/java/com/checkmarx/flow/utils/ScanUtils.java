@@ -88,10 +88,13 @@ public class ScanUtils {
 
         List<com.cx.restclient.ast.dto.sast.report.Finding> findings = results.getAstResults().getResults().getFindings();
         findings.forEach(finding -> {
+            
             xIssueBuilder.cwe("" + finding.getCweID());
             xIssueBuilder.severity(finding.getSeverity());
             xIssueBuilder.vulnerability(finding.getQueryName());
-            xIssueBuilder.file(finding.getNodes().get(0).getFileName());
+            if(finding.getNodes().size() >0) {
+                xIssueBuilder.file(finding.getNodes().get(0).getFileName());
+            }
             xIssueBuilder.vulnerabilityStatus(finding.getStatus());
 
             xIssueBuilder.vulnerabilityStatus(TBD);
@@ -101,7 +104,7 @@ public class ScanUtils {
 
             Map<Integer, ScanResults.IssueDetails> details = new HashMap<>();
             ScanResults.IssueDetails issueDetails = new ScanResults.IssueDetails()
-                    .codeSnippet(null)
+                    .codeSnippet(TBD)
                     .comment(TBD)
                     .falsePositive(Boolean.FALSE);
             
