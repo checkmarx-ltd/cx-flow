@@ -41,7 +41,9 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
         Path fullPath = Paths.get(properties.getFilePath());
         Path parentDir = fullPath.getParent();
         Path filename = fullPath.getFileName();
-
+        if(request == null || results == null){
+            throw new MachinaException("Request or Results object is missing");
+        }
         String formattedPath = filenameFormatter.formatPath(request, filename.toString(), parentDir.toString());
         request.setFilename(formattedPath);
         log.info("Creating file {}", formattedPath);
@@ -93,7 +95,7 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
         filteredXIssues.forEach(
                 issue -> {
                     List<Location> locations = Lists.newArrayList();
-                    /* TODO start/end colum required?
+                    /*
                     Integer column = null;
                     List<Map<String, Map<String, String>>> vulnPathList = (List<Map<String, Map<String, String>>>) issue.getAdditionalDetails().get("results");
                     if(vulnPathList != null && !vulnPathList.isEmpty()) {
