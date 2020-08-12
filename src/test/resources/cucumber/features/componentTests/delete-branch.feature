@@ -1,41 +1,33 @@
 @DeleteBranchFeature @ComponentTest
 Feature: CxFlow should delete SAST project when corresponding GitHub branch is deleted
-  
+
   Scenario Outline: CxFlow deletes SAST project when GitHub branch is deleted
-    Given GitHub repoName is "<repoName>"
-    And GitHub webhook is configured for delete branch or tag
-    And github branch is "<branch>" and it is set "<set_in_app>" application.yml
-    And a project "<projectName>" "<exists>" in SAST
-    Then CxFlow will call or not call the SAST delete API based on the fact whether the project "<exists>" or not in SAST
-    And SAST delete API will be called for project "<projectName>"
-    And no exception will be thrown
-
-    Examples:
-      | repoName | branch | projectName   | exists | set_in_app |
-      | VB_3845  | test1  | VB_3845-test1 | true   | false      |
-      | VB_3845  | test1  | VB_3845-test1 | true   | true       |
-      | VB_3845  | test1  | VB_3845-test1 | false  | false      |
-    
-  Scenario Outline: Github triggers delete event both when branch and tag are deleted,
-                    but CxFlow will call SAST delete API only when branch is deleted
-    Given GitHub repoName is "<repoName>"
-    And GitHub webhook is configured for delete branch or tag
-    And github trigger can be branch or tag "<trigger>" 
-    And a project "<projectName>" "<exists>" in SAST
-    Then CxFlow will call the SAST delete API only if trigger is branch
-    And no exception will be thrown
-
-    Examples:
-      | repoName | trigger | exists |
-      | VB_3845  | branch  | true   |
-      | VB_3845  | tag     | true   |
-
-
-  @Skip
-  Scenario: CxFlow should not allow automatic deletion of a SAST project when it corresponds
-  to a protected branch
-    Given GitHub repoName is "VB_3845"
-    And a project "VB_3845-test1" exists in SAST
-    And the "test1" branch is specified as protected in application.yml
+    Given GitHub repo name is "VB_3845"
+    And GitHub branch is "test1"
+    And the "test1" branch is "<protected>" as determined by application.yml
+    And a project "VB_3845-test1" "<exists>" in SAST
     When GitHub notifies cxFlow that a "test1" branch was deleted
-    Then CxFlow will not call the SAST delete API
+    Then CxFlow will "<call>" the SAST delete API for the "VB_3845-test1" project
+    And no exception will be thrown
+
+    Examples:
+      | exists | protected | call  |
+      | true   | true      | false |
+      | true   | false     | true  |
+      | false  | true      | false |
+      | false  | false     | false |
+
+  Scenario Outline: Github triggers delete event both when branch and tag are deleted,
+  but CxFlow will call SAST delete API only when branch is deleted
+    Given GitHub repo name is "VB_3845"
+    And GitHub trigger is "<trigger>"
+    And the "test2" branch is "not protected" as determined by application.yml
+    And a project "VB_3845-test2" "exists" in SAST
+    When GitHub notifies cxFlow that a "test2" branch was deleted
+    Then CxFlow will "<call>" the SAST delete API for the "VB_3845-test2" project
+    And no exception will be thrown
+
+    Examples:
+      | trigger | call  |
+      | branch  | true  |
+      | tag     | false |
