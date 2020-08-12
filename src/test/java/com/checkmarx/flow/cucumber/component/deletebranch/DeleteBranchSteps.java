@@ -50,7 +50,7 @@ public class DeleteBranchSteps {
     private final ConfigurationOverrider configOverrider;
 
     private String branch;
-
+    
     private Boolean deleteCalled;
     private String repoName;
 
@@ -99,7 +99,7 @@ public class DeleteBranchSteps {
         ScanResultsAnswerer answerer = new ScanResultsAnswerer();
         doAnswer(answerer).when(cxClientMock).deleteProject(any());
         try {
-            when(cxClientMock.getTeamId(anyString(), anyString())).thenReturn(TEAM);
+            when(cxClientMock.getTeamId(anyString(),anyString())).thenReturn(TEAM);
             when(cxClientMock.getTeamId(anyString())).thenReturn(TEAM);
         } catch (CheckmarxException e) {
             fail(e.getMessage());
@@ -115,7 +115,7 @@ public class DeleteBranchSteps {
     }
 
     @Given("GitHub repo name is {string}")
-    public void setRepoName(String repoName) {
+    public void setRepoName(String repoName){
         this.repoName = repoName;
         initGitHubProperties();
     }
@@ -124,28 +124,28 @@ public class DeleteBranchSteps {
     public void validateNoException() {
         // If we have arrived here, no exception was thrown.
     }
-
+    
     @And("GitHub trigger is {string}")
-    public void setTrigger(String trigger) {
+    public void setTrigger(String trigger){
         this.trigger = trigger;
     }
-
+    
     @And("GitHub branch is {string}")
     public void setBranch(String branch) {
         this.branch = branch;
     }
-
+    
     @And("a project {string} {string} in SAST")
-    public void setProjectId(String projectName, String exists) {
+    public void setProjectId(String projectName, String exists){
         int projectId;
         if (exists.equals("exists") || Boolean.parseBoolean(exists)) {
             projectId = EXISTING_PROJECT_ID;
-        } else {
+        }else{
             projectId = Constants.UNKNOWN_INT;
         }
         when(cxClientMock.getProjectId(anyString(), any())).thenReturn(projectId);
     }
-
+    
     @And("the {string} branch is {string} as determined by application.yml")
     public void theBranchIsSpecifiedAsProtected(String branch, String protectedOrNot) {
         List<String> protectedBranches = flowProperties.getBranches();
@@ -155,7 +155,7 @@ public class DeleteBranchSteps {
             protectedBranches.remove(branch);
         }
     }
-
+        
     @When("GitHub notifies cxFlow that a {string} branch/ref was deleted")
     public void githubNotifiesCxFlowThatABranchWasDeleted(String deletedBranch) {
         branch = deletedBranch;
@@ -175,11 +175,11 @@ public class DeleteBranchSteps {
     private void verifyDeleteApiCall(boolean expectingCall) {
         if (expectingCall) {
             assertEquals(Boolean.TRUE, deleteCalled);
-        } else {
+        }else{
             assertEquals(Boolean.FALSE, deleteCalled);
         }
     }
-
+    
     private void sendDeleteEvent() {
         DeleteEvent deleteEvent = new DeleteEvent();
         Repository repo = new Repository();
@@ -193,56 +193,41 @@ public class DeleteBranchSteps {
         deleteEvent.setRepository(repo);
         deleteEvent.setRefType(trigger);
         deleteEvent.setRef(branch);
-
+                
         try {
             String deleteEventStr = mapper.writeValueAsString(deleteEvent);
 
             gitHubControllerSpy.deleteBranchRequest(
-                    deleteEventStr, "SIGNATURE", "CX", null, null, TEAM);
+                    deleteEventStr,"SIGNATURE", "CX", null, null, TEAM );
 
         } catch (JsonProcessingException e) {
             fail("Unable to parse " + deleteEvent.toString());
         }
     }
 
-    private void initHelperServiceMock() {
-        when(helperService.getShortUid()).thenReturn("123456");
-        when(helperService.getCxTeam(any())).thenReturn(TEAM);
-        when(helperService.getCxProject(any())).thenReturn(PROJECT_NAME);
-        when(helperService.getPresetFromSources(any())).thenReturn(PRESET);
+     private void initHelperServiceMock() {
+         when(helperService.getShortUid()).thenReturn("123456");
+         when(helperService.getCxTeam(any())).thenReturn(TEAM);
+         when(helperService.getCxProject(any())).thenReturn(PROJECT_NAME);
+         when(helperService.getPresetFromSources(any())).thenReturn(PRESET);
         when(helperService.isBranchProtected(anyString(), anyList(), any())).thenCallRealMethod();
     }
 
     private void initMockGitHubController() {
         doNothing().when(gitHubControllerSpy).verifyHmacSignature(any(), any());
     }
-
+    
     private void initServices() {
         ProjectNameGenerator projectNameGeneratorSpy = spy(new ProjectNameGenerator(helperService, cxProperties, null));
-        initProjectNameGeneratorSpy(projectNameGeneratorSpy);
-
-        ScanRequestConverter scanRequestConverter = new ScanRequestConverter(helperService,
-                cxProperties,
-                cxClientMock,
-                flowProperties,
-                gitHubService,
-                null);
-
-        SastScanner sastScanner = new SastScanner(null,
-                cxClientMock,
-                helperService,
-                cxProperties,
-                flowProperties,
-                null,
-                null,
-                scanRequestConverter,
-                null,
-                projectNameGeneratorSpy);
-        List<VulnerabilityScanner> scanners = new LinkedList<>();
+            initProjectNameGeneratorSpy(projectNameGeneratorSpy);
+        
+        ScanRequestConverter scanRequestConverter = new ScanRequestConverter(helperService, cxProperties, cxClientMock, flowProperties, gitHubService, null,null);
+        SastScanner sastScanner = new SastScanner(null, cxClientMock, helperService, cxProperties, flowProperties, null, null, scanRequestConverter, null, projectNameGeneratorSpy);
+        List<VulnerabilityScanner> scanners= new LinkedList<>();
         scanners.add(sastScanner);
-
+        
         FlowService flowServiceSpy = spy(new FlowService(scanners, projectNameGeneratorSpy, null));
-
+        
         //gitHubControllerSpy is a spy which will run real methods.
         //It will connect to a real github repository to read a real cx.config file
         //And thus it will work with real gitHubService
@@ -256,7 +241,7 @@ public class DeleteBranchSteps {
                 sastScanner,
                 filterFactory,
                 configOverrider));
-
+        
     }
 
     private void initProjectNameGeneratorSpy(ProjectNameGenerator projectNameGenerator) {
@@ -264,11 +249,11 @@ public class DeleteBranchSteps {
     }
 
     public Object interceptProjectName(InvocationOnMock invocation) {
-        try {
-            calculatedProjectName = (String) invocation.callRealMethod();
-        } catch (Throwable throwable) {
-            fail(throwable.getMessage());
-        }
+            try {
+                calculatedProjectName = (String)invocation.callRealMethod();
+            } catch (Throwable throwable) {
+                fail(throwable.getMessage());
+            }
         return null;
+        }
     }
-}
