@@ -97,23 +97,28 @@ public class HelperService {
         return false;
     }
 
+    private String getStringValueFromScript(String scriptFile, ScanRequest request) {
+        log.info("executing external script to determine the Team in Checkmarx to be used ({})", scriptFile);
+        try {
+            String script = getStringFromFile(scriptFile);
+            HashMap<String, Object> bindings = new HashMap<>();
+            bindings.put(REQUEST, request);
+            Object result = scriptService.runScript(script, bindings);
+            if (result instanceof String) {
+                return ((String) result);
+            }
+        }catch (IOException e){
+            log.error("Error reading script file for checkmarx team {}", scriptFile, e);
+        }
+        return null;
+    }
+
     public String getCxTeam(ScanRequest request){
         String scriptFile = cxProperties.getTeamScript();
         String team = request.getTeam();
         //note:  if script is provided, it is highest priority
         if(!ScanUtils.empty(scriptFile)){
-            log.info("executing external script to determine the Team in Checkmarx to be used ({})", scriptFile);
-            try {
-                String script = getStringFromFile(scriptFile);
-                HashMap<String, Object> bindings = new HashMap<>();
-                bindings.put(REQUEST, request);
-                Object result = scriptService.runScript(script, bindings);
-                if (result instanceof String) {
-                    return ((String) result);
-                }
-            }catch (IOException e){
-                log.error("Error reading script file for checkmarx team {}", scriptFile, e);
-            }
+            return getStringValueFromScript(scriptFile, request);
         }
         else if(!ScanUtils.empty(team)){
             return team;
@@ -126,18 +131,7 @@ public class HelperService {
         String project = request.getProject();
         //note:  if script is provided, it is highest priority
         if(!ScanUtils.empty(scriptFile)){
-            log.info("executing external script to determine the Project in Checkmarx to be used ({})", scriptFile);
-            try {
-                String script = getStringFromFile(scriptFile);
-                HashMap<String, Object> bindings = new HashMap<>();
-                bindings.put(REQUEST, request);
-                Object result = scriptService.runScript(script, bindings);
-                if (result instanceof String) {
-                    return ((String) result);
-                }
-            }catch (IOException e){
-                log.error("Error reading script file for checkmarx project {}", scriptFile, e);
-            }
+            return getStringValueFromScript(scriptFile, request);
         }
         else if(!ScanUtils.empty(project)){
             return project;
