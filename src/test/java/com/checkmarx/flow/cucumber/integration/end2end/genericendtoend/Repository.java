@@ -54,8 +54,8 @@ enum Repository {
         final String CONFIG_FILE_PATH = "/" + GenericEndToEndSteps.E2E_CONFIG;
         final String SAST_ENGINE= "sast";
         final String SCA_ENGINE= "sca";
-        static final String PR_COMMENT_TITLE_SAST = "Checkmarx SAST Scan Summary";
-        static final String PR_COMMENT_TITLE_SCA = "Checkmarx Dependency (CxSCA) Scan Summary";
+        static final String PR_COMMENT_TITLE_SAST = "### Checkmarx SAST Scan Summary";
+        static final String PR_COMMENT_TITLE_SCA = "### Checkmarx Dependency (CxSCA) Scan Summary";
         final String EMPTY_STRING = "";
         GitHubProperties gitHubProperties;
         private Integer hookId;
@@ -303,7 +303,7 @@ enum Repository {
             else if(engine.equals((SCA_ENGINE))){
                 commentPrefix = PR_COMMENT_TITLE_SCA;
             }
-            for (int retries = 0 ; retries < 20 && !isFound ; retries++) {
+            for (int retries = 0 ; retries < 25 && !isFound ; retries++) {
                 log.info("checking for {} pull request comment in {}", engine, url);
                 try {
                     TimeUnit.SECONDS.sleep(5);
@@ -314,7 +314,7 @@ enum Repository {
                     JSONArray comments = getJSONArray(url);
                     for (java.lang.Object c : Objects.requireNonNull(comments)) {
                         if (((JSONObject) c).getString("body").startsWith(commentPrefix)) {
-                            log.info("Relevant PR comment was found");
+                            log.info("found {} comment on pull request!", engine);
                             isFound = true;
                             break;
                         }
