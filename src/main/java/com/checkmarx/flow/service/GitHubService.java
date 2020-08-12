@@ -1,33 +1,26 @@
 package com.checkmarx.flow.service;
 
-import com.checkmarx.flow.config.FindingSeverity;
-import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.config.GitHubProperties;
+import com.checkmarx.flow.config.*;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.github.Content;
+import com.checkmarx.flow.dto.report.AnalyticsReport;
 import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.exception.GitHubClientRunTimeException;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.*;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 
 import java.io.IOException;
@@ -36,9 +29,8 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Service
+@Slf4j
 public class GitHubService extends RepoService {
-    private static final Logger log = LoggerFactory.getLogger(GitHubService.class);
-
     private static final String HTTP_BODY_IS_NULL = "HTTP Body is null for content api ";
     private static final String CONTENT_NOT_FOUND_IN_RESPONSE = "Content not found in JSON response";
     private static final String STATUSES_URL_KEY = "statuses_url";
@@ -196,9 +188,8 @@ public class GitHubService extends RepoService {
     }
 
     void endBlockMerge(ScanRequest request, ScanResults results, ScanDetails scanDetails) {
+        logPullRequestWithScaResults(request, results);
 
-        logPullRequestWithScaResutls(request, results);
-        
         if (properties.isBlockMerge()) {
             String statusApiUrl = request.getAdditionalMetadata(STATUSES_URL_KEY);
             if (ScanUtils.empty(statusApiUrl)) {
@@ -207,9 +198,9 @@ public class GitHubService extends RepoService {
             }
 
             PullRequestReport report = new PullRequestReport(scanDetails, request);
-            
+
             HttpEntity<String> httpEntity = getStatusRequestEntity(results, report);
-            
+
             logPullRequestWithSastOsa(results, report);
 
             log.debug("Updating pull request status: {}", statusApiUrl);
@@ -239,7 +230,6 @@ public class GitHubService extends RepoService {
     }
 
     private void logPullRequestWithSastOsa(ScanResults results, PullRequestReport report) {
-        
         //Report pull request only if there was SAST/OSA scan
         //Otherwise it would be only SCA
         if(hasSastOsaScan(results)) {
@@ -247,17 +237,14 @@ public class GitHubService extends RepoService {
         }
     }
 
-    private void logPullRequestWithScaResutls(ScanRequest request, ScanResults results) {
+    private void logPullRequestWithScaResults(ScanRequest request, ScanResults results) {
         if(results.getScaResults() != null ) {
-            PullRequestReport report = new PullRequestReport(results.getScaResults().getScanId(), request, PullRequestReport.SCA);
+            PullRequestReport report = new PullRequestReport(results.getScaResults().getScanId(), request, AnalyticsReport.SCA);
             report.setFindingsPerSeveritySca(results);
             report.setPullRequestResult(OperationResult.successful());
             report.log();
         }
-         
     }
-
-
 
     private HttpEntity<String> getStatusRequestEntity(ScanResults results, PullRequestReport pullRequestReport) {
         String statusForApi = MERGE_SUCCESS;
@@ -367,7 +354,10 @@ public class GitHubService extends RepoService {
                 }
                 for (Map.Entry<String,Long> entry : langs.entrySet()){
                     Long bytes = entry.getValue();
-                    double percentage = (Double.valueOf(bytes) / Double.valueOf(total) * 100);
+                    double percentage = 0;
+                    if (total != 0L) {
+                        percentage = (Double.valueOf(bytes) / (double) total * 100);
+                    }
                     langsPercent.put(entry.getKey(), (int) percentage);
                 }
                 sources.setLanguageStats(langsPercent);
@@ -427,7 +417,7 @@ public class GitHubService extends RepoService {
         CxConfig result = null;
         if (StringUtils.isNotBlank(properties.getConfigAsCode())) {
             try {
-                result = loadCxConfigFromGitHub(properties.getConfigAsCode(), request);
+                result = loadConfigAsCode(properties.getConfigAsCode(), request);
             } catch (NullPointerException e) {
                 log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
             } catch (HttpClientErrorException.NotFound e) {
@@ -439,31 +429,84 @@ public class GitHubService extends RepoService {
         return result;
     }
 
-    private CxConfig loadCxConfigFromGitHub(String filename, ScanRequest request) {
-        HttpHeaders headers = createAuthHeaders();
-        String urlTemplate = properties.getApiUrl().concat(FILE_CONTENT);
-        ResponseEntity<String> response = restTemplate.exchange(
-                urlTemplate,
-                HttpMethod.GET,
-                new HttpEntity<>(headers),
-                String.class,
-                request.getNamespace(),
-                request.getRepoName(),
-                filename,
-                request.getBranch()
-        );
-        if (response.getBody() == null) {
+    private CxConfig loadConfigAsCode(String filename, ScanRequest request) {
+        CxConfig result = null;
+
+        String effectiveBranch = determineConfigAsCodeBranch(request);
+        String fileContent = downloadFileContent(filename, request, effectiveBranch);
+        if (fileContent == null) {
             log.warn(HTTP_BODY_IS_NULL);
-            return null;
         } else {
-            JSONObject json = new JSONObject(response.getBody());
+            JSONObject json = new JSONObject(fileContent);
             String content = json.getString("content");
             if (ScanUtils.empty(content)) {
                 log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
-                return null;
+            } else {
+                String decodedContent = new String(Base64.decodeBase64(content.trim()));
+                result = com.checkmarx.sdk.utils.ScanUtils.getConfigAsCode(decodedContent);
             }
-            String decodedContent = new String(Base64.decodeBase64(content.trim()));
-            return com.checkmarx.sdk.utils.ScanUtils.getConfigAsCode(decodedContent);
         }
+
+        return result;
+    }
+
+    private String downloadFileContent(String filename, ScanRequest request, String branch) {
+        ResponseEntity<String> response = null;
+
+        if (StringUtils.isNotEmpty(branch)) {
+            HttpHeaders headers = createAuthHeaders();
+            String urlTemplate = properties.getApiUrl().concat(FILE_CONTENT);
+
+            response = restTemplate.exchange(
+                    urlTemplate,
+                    HttpMethod.GET,
+                    new HttpEntity<>(headers),
+                    String.class,
+                    request.getNamespace(),
+                    request.getRepoName(),
+                    filename,
+                    branch);
+        } else {
+            log.warn("Unable to load config-as-code.");
+        }
+
+        return response != null ? response.getBody() : null;
+    }
+
+    private String determineConfigAsCodeBranch(ScanRequest request) {
+        String result;
+        log.debug("Determining a branch to get config-as-code from.");
+        if (properties.isUseConfigAsCodeFromDefaultBranch()) {
+            result = tryGetDefaultBranch(request);
+        } else {
+            result = tryGetCurrentBranch(request);
+        }
+        return result;
+    }
+
+    private static String tryGetCurrentBranch(ScanRequest request) {
+        String result = null;
+        if (StringUtils.isNotEmpty(request.getBranch())) {
+            result = request.getBranch();
+            log.debug("Using the current branch ({}) to get config-as-code.", result);
+        }
+        else {
+            log.warn("Tried to use current branch to get config-as-code. " +
+                    "However, current branch couldn't be determined.");
+        }
+        return result;
+    }
+
+    private static String tryGetDefaultBranch(ScanRequest request) {
+        String result = null;
+        if (StringUtils.isNotEmpty(request.getDefaultBranch())) {
+            result = request.getDefaultBranch();
+            log.debug("Using the default branch ({}) to get config-as-code.", result);
+        }
+        else {
+            log.warn("Configuration indicates that default branch must be used to get config-as-code. " +
+                    "However, default branch couldn't be determined.");
+        }
+        return result;
     }
 }

@@ -1,5 +1,7 @@
 package com.checkmarx.flow.config;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.PostConstruct;
@@ -12,6 +14,7 @@ public class RepoProperties {
     private String apiUrl;
     private String falsePositiveLabel = "false-positive";
     private String configAsCode = "cx.config";
+
     private String openTransition = "open";
     private String closeTransition = "closed";
     private String filePath = ".";
@@ -173,10 +176,8 @@ public class RepoProperties {
 
     @PostConstruct
     private void postConstruct() {
-        if(this.apiUrl != null){
-            if(this.apiUrl.endsWith("/")){
-                this.setApiUrl(StringUtils.chop(apiUrl));
-            }
+        if(apiUrl != null && apiUrl.endsWith("/")){
+            setApiUrl(StringUtils.chop(apiUrl));
         }
     }
 }

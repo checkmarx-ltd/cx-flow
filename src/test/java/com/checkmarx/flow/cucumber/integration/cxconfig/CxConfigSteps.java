@@ -23,9 +23,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cucumber.java.Before;
-import io.cucumber.java.en.And;
-import io.cucumber.java.en.Given;
-import io.cucumber.java.en.Then;
+import io.cucumber.java.en.*;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.util.StringUtils;
 import org.junit.Assert;
@@ -58,11 +56,11 @@ public class CxConfigSteps {
     public static final String SQL_INJECTION = "SQL_INJECTION";
     public static final String CWE_79 = "79";
     public static final String CWE_89 = "89";
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     private final CxClient cxClientMock;
     private final GitHubService gitHubService;
     private GitHubController gitHubControllerSpy;
-    private final ObjectMapper mapper = new ObjectMapper();
     private final ThresholdValidator thresholdValidator;
     private final FlowProperties flowProperties;
     private final CxProperties cxProperties;
@@ -79,6 +77,7 @@ public class CxConfigSteps {
 
     private final FlowService flowService;
     private String branch;
+
     private ScanRequest request;
     private final JiraProperties jiraProperties;
 
@@ -132,30 +131,53 @@ public class CxConfigSteps {
         flowProperties.setFilterStatus(null);
     }
 
-    @Given("github branch is {string} and threshods section is not set application.yml")
-    public void setBranchAndCreatePullReqeust(String branch) {
+    @Given("github branch is {string} and thresholds section is not set application.yml")
+    public void setBranchAndSendPullRequest(String branch) {
         this.branch = branch;
-        buildPullRequest();
+        PullEvent pullEvent = createPullEventDto(branch, null, gitHubProperties);
+        sendPullRequest(pullEvent, gitHubControllerSpy, branch);
     }
 
     @And("github branch is {string} with cx.config")
     public void setBranchAppSet(String branch) {
-        setBranchAndCreatePullReqeust(branch);
+        setBranchAndSendPullRequest(branch);
     }
 
     @Given("github branch is {string} with invalid cx.config")
     public void setBranchInvalid(String branch) {
         //set filter from application.yml
         setCurrentFilter("severity");
-        setBranchAndCreatePullReqeust(branch);
+        setBranchAndSendPullRequest(branch);
     }
 
-    public void buildPullRequest() {
+    static void sendPullRequest(PullEvent pullEvent, GitHubController gitHubController, String sourceBranch) {
+        log.info("Sending pull request event to controller.");
+        try {
+            String pullEventStr = mapper.writeValueAsString(pullEvent);
+
+            ControllerRequest request = ControllerRequest.builder()
+                    .branch(Collections.singletonList(sourceBranch))
+                    .application("VB")
+                    .team("\\CxServer\\SP")
+                    .assignee("")
+                    .preset("default")
+                    .build();
+
+            gitHubController.pullRequest(pullEventStr, "SIGNATURE", "CX", request);
+
+        } catch (JsonProcessingException e) {
+            fail("Unable to parse " + pullEvent.toString());
+        }
+    }
+
+    static PullEvent createPullEventDto(String sourceBranch, String defaultBranch, GitHubProperties gitHubProperties) {
+        log.info("Creating pull event DTO.");
         PullEvent pullEvent = new PullEvent();
         Repository repo = new Repository();
         repo.setName("CxConfigTests");
-
         repo.setCloneUrl(gitHubProperties.getUrl());
+        repo.setDefaultBranch(defaultBranch);
+
         Owner owner = new Owner();
         owner.setName("");
         owner.setLogin("cxflowtestuser");
@@ -165,30 +187,14 @@ public class CxConfigSteps {
         PullRequest pullRequest = new PullRequest();
         pullRequest.setIssueUrl("");
         Head headBranch = new Head();
-        headBranch.setRef(branch);
+        headBranch.setRef(sourceBranch);
 
         pullRequest.setHead(headBranch);
         pullRequest.setBase(new Base());
         pullRequest.setStatusesUrl("");
 
         pullEvent.setPullRequest(pullRequest);
-
-        try {
-            String pullEventStr = mapper.writeValueAsString(pullEvent);
-
-            ControllerRequest request = ControllerRequest.builder()
-                    .branch(Collections.singletonList(branch))
-                    .application("VB")
-                    .team("\\CxServer\\SP")
-                    .assignee("")
-                    .preset("default")
-                    .build();
-
-            gitHubControllerSpy.pullRequest(pullEventStr, "SIGNATURE", "CX", request);
-
-        } catch (JsonProcessingException e) {
-            fail("Unable to parse " + pullEvent.toString());
-        }
+        return pullEvent;
     }
 
     @Given("application.xml contains high thresholds {string} medium thresholds {string} and low thresholds {string}")
@@ -482,7 +488,6 @@ public class CxConfigSteps {
         return new ResponseEntity<>("{}", HttpStatus.OK);
     }
 
-
     private void initCxClientMock() {
         try {
             ScanResultsAnswerer answerer = new ScanResultsAnswerer();
@@ -491,7 +496,6 @@ public class CxConfigSteps {
             Assert.fail("Error initializing mock." + e);
         }
     }
-
 
     /**
      * Returns scan results as if they were produced by SAST.
@@ -502,7 +506,6 @@ public class CxConfigSteps {
             return scanResultsToInject;
         }
     }
-
 
     private void initHelperServiceMock() {
         HelperServiceAnswerer answerer = new HelperServiceAnswerer();
@@ -516,9 +519,9 @@ public class CxConfigSteps {
 
     private void initServices() {
 
-        //gitHubControllerSpy is a spy which will run real methods.
-        //It will connect to a real github repository toread a real cx.config file
-        //And thus it will work with real gitHubService
+        // gitHubControllerSpy is a spy which will run real methods.
+        // It will connect to a real github repository to read a real cx.config file
+        // And thus it will work with real gitHubService
         this.gitHubControllerSpy = spy(new GitHubController(gitHubProperties,
                 flowProperties,
                 cxProperties,
@@ -530,8 +533,8 @@ public class CxConfigSteps {
                 filterFactory,
                 configOverrider));
 
-        //results service will be a Mock and will work with gitHubService Mock
-        //and will not not connect to any external 
+        // results service will be a Mock and will work with gitHubService Mock
+        // and will not connect to any external service.
         initResultsServiceMock();
     }
 
