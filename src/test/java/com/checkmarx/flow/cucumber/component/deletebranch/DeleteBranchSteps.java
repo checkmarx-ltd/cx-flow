@@ -156,7 +156,7 @@ public class DeleteBranchSteps {
         }
     }
 
-    @When("GitHub notifies cxFlow that a {string} branch was deleted")
+    @When("GitHub notifies cxFlow that a {string} branch/ref was deleted")
     public void githubNotifiesCxFlowThatABranchWasDeleted(String deletedBranch) {
         branch = deletedBranch;
         sendDeleteEvent();
