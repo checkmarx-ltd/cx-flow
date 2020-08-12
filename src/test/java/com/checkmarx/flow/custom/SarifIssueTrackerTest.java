@@ -14,11 +14,15 @@ import java.util.List;
 import java.util.Map;
 
 public class SarifIssueTrackerTest {
+
     @Test
     public void initWithNullPropertiesNullParameters() {
-        JsonIssueTracker jsonIssueTracker = new JsonIssueTracker(null, null);
+        SarifProperties properties = new SarifProperties();
+        properties.setFilePath("./cx.sarif");
+        FilenameFormatter filenameFormatter = new SanitizingFilenameFormatter() ;
+        SarifIssueTracker sarifIssueTracker = new SarifIssueTracker(properties, filenameFormatter);
         try {
-            jsonIssueTracker.init(null, null);
+            sarifIssueTracker.init(null, null);
             assert false;
         } catch (MachinaException e) {
             assert true;
@@ -29,13 +33,13 @@ public class SarifIssueTrackerTest {
     public void completeWithParameters() {
         SarifIssueTracker issueTracker = getInstance();
         try {
+            ScanRequest request = getRequest();
             ScanResults results = getResults();
-            ScanRequest request = new ScanRequest();
-            request.setFilename("c:\\temp\\sarif-result.json");
+            request.setFilename("./sarif-result.json");
             issueTracker.complete(request, results);
             assert true;
         } catch (MachinaException e) {
-            assert true;
+            assert false;
         }
     }
 
@@ -52,30 +56,48 @@ public class SarifIssueTrackerTest {
         addDetResMap.put("sink", sinkMap);
         addDetResMap.put("source", sourceMap);
 
-        List<ScanResults.OsaDetails> details = Lists.newArrayList();
-        List<ScanResults.ScaDetails> scaDetails = Lists.newArrayList();
         Map<String, Object> addDetails = Maps.newHashMap();
         addDetails.put("results", addDetResMap);
         addDetails.put("recommendedFix", "https://ast.dev.checkmarx-ts.com/CxWebClient/ScanQueryDescription.aspx?");
         addDetails.put("categories", "PCI DSS v3.2;PCI DSS (3.2) - 6.5.7 - Cross-site scripting (XSS),OWASP Top 10 2013;A3-Cross-Sit");
         Map<Integer, ScanResults.IssueDetails> issueDetails = Maps.newHashMap();
-
-        XIssue i =
+        issueDetails.put(22, new ScanResults.IssueDetails());
+        XIssue i1 =
                 XIssue.builder()
-                        .vulnerability("dsd")
+                        .vulnerability("Stored_XSS")
                         .additionalDetails(addDetails)
-                        .scaDetails(scaDetails)
                         .details(issueDetails)
-                        .osaDetails(details)
                         .severity("High")
-                        .description("Method rs=stmt.executeQuery at line 16 of src\\\\main\\\\webapp")
+                        .cwe("79")
+                        .description("Method rs=stmt.executeQuery at line 22 of src\\\\main\\\\webapp")
                         .link("https://ast.dev.checkmarx-ts.com/CxWebClient/ViewerMain.aspx?scanid=1000194&projec")
                         .build();
+        XIssue i2 =
+                XIssue.builder()
+                    .vulnerability("SQL_Injection")
+                    .additionalDetails(addDetails)
+                    .details(issueDetails)
+                    .severity("Medium")
+                    .cwe("89")
+                    .description("Method rs=stmt.executeQuery at line 22 of src\\\\main\\\\webapp")
+                    .link("https://ast.dev.checkmarx-ts.com/CxWebClient/ViewerMain.aspx?scanid=1000194&projec")
+                    .build();
         List<XIssue> issues = Lists.newArrayList();
-        issues.add(i);
+        issues.add(i1);
+        issues.add(i2);
         ScanResults results = new ScanResults();
         results.setXIssues(issues);
         return results;
+    }
+
+    private ScanRequest getRequest() {
+        return ScanRequest.builder()
+                .application("test_app")
+                .repoName("test_repo")
+                .namespace("checkmarx")
+                .product(ScanRequest.Product.CX)
+                .branch("develop")
+                .team("\\CxServer\\SP\\Checkmarx").build();
     }
 
     private SarifIssueTracker getInstance() {
