@@ -26,7 +26,7 @@ public class Value {
     @JsonProperty("links")
     private Links links;
     @JsonProperty("commit")
-    private Commit_ commit;
+    private Commit commit;
     @JsonProperty("mimetype")
     private Object mimetype;
     @JsonProperty("escaped_path")
@@ -67,12 +67,12 @@ public class Value {
     }
 
     @JsonProperty("commit")
-    public Commit_ getCommit() {
+    public Commit getCommit() {
         return commit;
     }
 
     @JsonProperty("commit")
-    public void setCommit(Commit_ commit) {
+    public void setCommit(Commit commit) {
         this.commit = commit;
     }
 
