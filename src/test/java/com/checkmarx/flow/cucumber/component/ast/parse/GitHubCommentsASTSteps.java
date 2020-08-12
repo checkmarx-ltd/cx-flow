@@ -261,6 +261,7 @@ public class GitHubCommentsASTSteps {
         this.gitHubProperties.setUrl(GIT_URL);
         this.gitHubProperties.setWebhookToken("1234");
         this.gitHubProperties.setApiUrl("https://api.github.com/repos");
+        this.gitHubProperties.setBlockMerge(false);
     }
 
 
