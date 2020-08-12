@@ -10,7 +10,9 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "commits",
     "self",
     "comments",
-    "html"
+    "html",
+    "meta",
+    "history"
 })
 public class Links {
 
@@ -22,6 +24,10 @@ public class Links {
     private Html html;
     @JsonProperty("comments")
     private Comments comments;
+    @JsonProperty("meta")
+    private Meta meta;
+    @JsonProperty("history")
+    private History history;
 
 
     @JsonProperty("commits")
@@ -62,5 +68,25 @@ public class Links {
     @JsonProperty("comments")
     public Comments getComments() {
         return this.comments;
+    }
+
+    @JsonProperty("meta")
+    public Meta getMeta() {
+        return meta;
+    }
+
+    @JsonProperty("meta")
+    public void setMeta(Meta meta) {
+        this.meta = meta;
+    }
+
+    @JsonProperty("history")
+    public History getHistory() {
+        return history;
+    }
+
+    @JsonProperty("history")
+    public void setHistory(History history) {
+        this.history = history;
     }
 }

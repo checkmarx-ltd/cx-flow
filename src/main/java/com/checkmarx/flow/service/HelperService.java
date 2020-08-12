@@ -177,7 +177,7 @@ public class HelperService {
      * Determine what preset to use based on Sources and Profile mappings
      */
     public String getPresetFromSources(Sources sources){
-        if(sources == null || profiles == null || sources.getLanguageStats() == null || sources.getSources() == null){
+        if(sources == null || profiles == null || sources.getSources() == null){
             return cxProperties.getScanPreset();
         }
 
