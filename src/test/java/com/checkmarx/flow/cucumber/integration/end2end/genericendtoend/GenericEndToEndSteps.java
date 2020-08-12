@@ -93,6 +93,7 @@ public class GenericEndToEndSteps {
     public void generatePRWebHook() {
         repository.setActiveBranch(BRANCH_DEVELOP);
         repository.generateConfigAsCode(this);
+        pushChange();
         repository.generateWebHook(HookType.PULL_REQUEST);
     }
 
