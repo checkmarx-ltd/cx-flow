@@ -6,7 +6,7 @@ import org.junit.runner.RunWith;
 
 @RunWith(Cucumber.class)
 @CucumberOptions(
-        features = "src/test/resources/cucumber/features/componentTests/deletBranch.feature",
+        features = "src/test/resources/cucumber/features/componentTests/delete-branch.feature",
         tags = "not @Skip")
 public class DeleteBranchRunner {
 }

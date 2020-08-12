@@ -1,5 +1,7 @@
 package com.checkmarx.flow.config;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
@@ -8,6 +10,9 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "github")
 @Validated
 public class GitHubProperties extends RepoProperties {
+    @Getter
+    @Setter
+    private boolean useConfigAsCodeFromDefaultBranch;
 
     public String getMergeNoteUri(String namespace, String repo, String mergeId){
         String format = "%s/%s/%s/issues/%s/comments";
@@ -20,5 +25,4 @@ public class GitHubProperties extends RepoProperties {
         return String.format(format, getUrl(), namespace, repo);
         //sample: https://github.com/namespace/repo.git
     }
-
 }
