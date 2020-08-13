@@ -51,8 +51,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 enum Repository {
     GITHUB {
-        final String CONFIG_FILE_PATH = "/" + GenericEndToEndSteps.E2E_CONFIG.intern();
-
+        final String CONFIG_FILE_PATH = "/" + GenericEndToEndSteps.E2E_CONFIG;
+        final String SAST_ENGINE= "sast";
+        final String SCA_ENGINE= "sca";
+        static final String PR_COMMENT_TITLE_SAST = "### Checkmarx SAST Scan Summary";
+        static final String PR_COMMENT_TITLE_SCA = "### Checkmarx Dependency (CxSCA) Scan Summary";
+        final String EMPTY_STRING = "";
         GitHubProperties gitHubProperties;
         private Integer hookId;
         private Map<String, String> createdFilesSha = new HashMap<>();
@@ -97,6 +101,26 @@ enum Repository {
         }
 
         @Override
+        void generateConfigAsCode(GenericEndToEndSteps genericEndToEndSteps) {
+            if (SCA_ENGINE.equalsIgnoreCase(genericEndToEndSteps.getEngine())) {
+                log.info("Adding config as code file for SCA scanner");
+
+                String confFile;
+                try {
+                    confFile = genericEndToEndSteps.getConfigAsCodeInBase64();
+                    pushFile(confFile , CONFIG_FILE_PATH);
+                } catch (IOException e) {
+                    fail("failed to read config file in base 64 needed by github for sca");
+                }
+                ConfigurableApplicationContext appContext = genericEndToEndSteps.getAppContext();
+                GitHubProperties gitHubProperties = (GitHubProperties) appContext.getBean("gitHubProperties");
+                gitHubProperties.setConfigAsCode(GenericEndToEndSteps.E2E_CONFIG);
+                return;
+            }
+            log.info("config as code file for sast scanner not required");
+        }
+
+        @Override
         void deleteHook() {
             Optional.ofNullable(hookId).ifPresent(id -> {
                 RestTemplate restTemplate = new RestTemplate();
@@ -125,12 +149,18 @@ enum Repository {
             committer.setName("CxFlowTestUser");
             committer.setEmail("CxFlowTestUser@checkmarx.com");
             try {
-                JSONObject response = api.pushFile(content, "GitHubToJira test message", committer, getHeaders(),
-                        gitHubProperties.getApiUrl(), namespace, repo, theFilePath);
-                createdFilesSha.put( response.getJSONObject("content").getString("sha") , theFilePath);
-                log.info("New file pushed successfully");
+                if (activeBranch.equals(EMPTY_STRING)){
+                    JSONObject response = api.pushFile(content, "GitHubToJira test message", committer, getHeaders(),
+                            gitHubProperties.getApiUrl(), namespace, repo, theFilePath);
+                    createdFilesSha.put( response.getJSONObject("content").getString("sha") , theFilePath);
+                }else{
+                    JSONObject response = api.pushFile(content, "GitHubToJira test message", committer, getHeaders(),
+                            gitHubProperties.getApiUrl(), namespace, repo, theFilePath, activeBranch);
+                    createdFilesSha.put( response.getJSONObject("content").getString("sha") , theFilePath);
+                }
+                log.info("New file pushed successfully. namespace: {}, repo: {}, branch:{}, file path: {}", namespace, repo, activeBranch, theFilePath);
             } catch (JsonProcessingException e) {
-                String msg = "faild to create file for push";
+                String msg = "failed to create file for push";
                 log.error(msg);
                 fail(msg);
             } catch (HttpClientErrorException e) {
@@ -143,7 +173,7 @@ enum Repository {
                     throw e;
                 }
             } catch (Exception e) {
-                fail("faild to push a file: " + e.getMessage());
+                fail("failed to push a file: " + e.getMessage());
             }
         }
 
@@ -167,16 +197,17 @@ enum Repository {
             try {
                 ObjectMapper mapper = new ObjectMapper();
                 ObjectNode jo = mapper.createObjectNode();
-                jo.put("message", "deleting test commited file");
+                jo.put("message", "deleting test committed file");
                 Committer committer = new Committer();
                 committer.setName("CxFlowTestUser");
                 committer.setEmail("CxFlowTestUser@checkmarx.com");
                 jo.putPOJO("committer", committer);
                 jo.put("sha", Sha);
+                jo.put("branch", activeBranch);
 
                 data = mapper.writeValueAsString(jo);
             } catch (Exception e) {
-                String msg = "faild to delete file of push";
+                String msg = "failed to delete file of push";
                 log.error(msg);
                 fail(msg);
             }
@@ -190,19 +221,6 @@ enum Repository {
             gitHubProperties = genericEndToEndSteps.gitHubProperties;
             api = new GitHubApiHandler();
             super.init(genericEndToEndSteps);
-            if ("sca".equalsIgnoreCase(genericEndToEndSteps.getEngine())) {
-                String confFile;
-                try {
-                    confFile = genericEndToEndSteps.getConfigAsCodeInBase64();
-                    pushFile(confFile , CONFIG_FILE_PATH);
-                } catch (IOException e) {
-                    fail("failed to read config file in base 64 needed by github for sca");
-                }
-                ConfigurableApplicationContext appContext = genericEndToEndSteps.getAppContext();
-                GitHubProperties gitHubProperties = (GitHubProperties) appContext.getBean("gitHubProperties");
-                gitHubProperties.setConfigAsCode(GenericEndToEndSteps.E2E_CONFIG);
-
-            }
         }
 
         @Override
@@ -214,13 +232,11 @@ enum Repository {
                 RestTemplate restTemplate = new RestTemplate();
                 String url = String.format("%s/%s/%s/pulls", 
                     gitHubProperties.getApiUrl(), namespace, repo);
-//                if (log.isInfoEnabled()) {
-//                    throw new PendingException("createPR is waiting on parameters");
-//                }
                 final ResponseEntity<String> response = restTemplate.postForEntity(url, request,
                     String.class);
                 assertEquals(HttpStatus.CREATED, response.getStatusCode());
                 prId = new JSONObject(response.getBody()).getInt("number");
+                log.info("PR created successfully ID:{}. repo: {}", prId, repo);
             } catch (Exception e) {
                 fail("failed to create PR " + e.getMessage());
             }
@@ -243,7 +259,7 @@ enum Repository {
             try {
                 data = mapper.writeValueAsString(pr);
             } catch (JsonProcessingException e) {
-                String msg = "faild to create GitHub PR data";
+                String msg = "failed to create GitHub PR data";
                 log.error(msg);
                 fail(msg);
             }
@@ -276,10 +292,19 @@ enum Repository {
         }
 
         @Override
-        void verifyPRUpdated() {
+        void verifyPRUpdated(String engine) {
             String url = getPRCommentsUrl();
             boolean isFound = false;
-            for (int retries = 0 ; retries < 20 && !isFound ; retries++) {
+            String commentPrefix = EMPTY_STRING;
+
+            if (engine.equals(SAST_ENGINE)){
+                commentPrefix = PR_COMMENT_TITLE_SAST;
+            }
+            else if(engine.equals((SCA_ENGINE))){
+                commentPrefix = PR_COMMENT_TITLE_SCA;
+            }
+            for (int retries = 0 ; retries < 25 && !isFound ; retries++) {
+                log.info("checking for {} pull request comment in {}", engine, url);
                 try {
                     TimeUnit.SECONDS.sleep(5);
                 } catch (Exception e) {
@@ -288,8 +313,8 @@ enum Repository {
                 try {
                     JSONArray comments = getJSONArray(url);
                     for (java.lang.Object c : Objects.requireNonNull(comments)) {
-                        if (((JSONObject) c).getString("body").startsWith("### Checkmarx Dependency (CxSCA)")) {
-                            log.info("Relevant PR comment was found");
+                        if (((JSONObject) c).getString("body").startsWith(commentPrefix)) {
+                            log.info("found {} comment on pull request!", engine);
                             isFound = true;
                             break;
                         }
@@ -359,6 +384,11 @@ enum Repository {
             } catch (Exception e) {
                 fail("failed to create hook " + e.getMessage());
             }
+        }
+
+        @Override
+        void generateConfigAsCode(GenericEndToEndSteps genericEndToEndSteps) {
+            // ignore
         }
 
 
@@ -433,7 +463,7 @@ enum Repository {
 
 
             } catch (Exception e) {
-                String msg = "faild to create file for push";
+                String msg = "failed to create file for push";
                 log.error(msg);
                 fail(msg);
                 data = null;
@@ -447,7 +477,7 @@ enum Repository {
                         String.class);
                 log.info("Pushed response body={}", response.getBody());
             } catch (Exception e) {
-                String msg = "faild to push a file:";
+                String msg = "failed to push a file:";
                 log.error(msg);
                 fail(msg + e.getMessage());
 
@@ -522,7 +552,7 @@ enum Repository {
                 data = data.replace("\\\"", "");
 
             } catch (Exception e) {
-                String msg = "faild to create  json data for Delete file";
+                String msg = "failed to create  json data for Delete file";
                 log.error(msg);
                 fail(msg);
                 data = null;
@@ -634,7 +664,7 @@ enum Repository {
         }
 
         @Override
-        void verifyPRUpdated() {
+        void verifyPRUpdated(String engine) {
             throw new PendingException();
         }
 
@@ -705,6 +735,7 @@ enum Repository {
     abstract Boolean hasWebHook();
 
     abstract void generateHook(HookType hookType);
+    abstract void generateConfigAsCode(GenericEndToEndSteps genericEndToEndSteps);
     abstract void deleteHook();
 
     abstract HttpHeaders getHeaders();
@@ -722,11 +753,17 @@ enum Repository {
     
     abstract void createPR();
     abstract void deletePR();
-    abstract void verifyPRUpdated();
+    abstract void verifyPRUpdated(String engine);
 
     protected String namespace = null;
     protected String repo = null;
     protected String hookTargetURL = null;
+    protected String activeBranch;
+
+    public void setActiveBranch(String branch){
+        log.info("setting active branch to: {}", branch);
+        activeBranch = branch;
+    }
 
     public void cleanup() {
         Optional.ofNullable(hookType).ifPresent(h -> {
