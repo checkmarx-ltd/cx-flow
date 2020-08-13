@@ -8,7 +8,9 @@ import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
@@ -56,87 +58,105 @@ public class HelperService {
         }
     }
 
-    public boolean isBranch2Scan(ScanRequest request, List<String> branches){
+    public boolean isBranch2Scan(ScanRequest request, List<String> branches) {
+        String branchToCheck = getBranchToCheck(request);
+
+        // If script is provided, it is highest priority
         String scriptFile = properties.getBranchScript();
-        String branch = request.getBranch();
-        String targetBranch = request.getMergeTargetBranch();
-        if(!ScanUtils.empty(targetBranch)){ //if targetBranch is set, it is a merge request
-            branch = targetBranch;
-        }
-        //note:  if script is provided, it is highest priority
-        if(!ScanUtils.empty(scriptFile)){
-            log.info("executing external script to determine if branch should be scanned ({})", scriptFile);
-            try {
-                String script = getStringFromFile(scriptFile);
-                HashMap<String, Object> bindings = new HashMap<>();
-                bindings.put(REQUEST, request);
-                bindings.put("branches", branches);
-                Object result = scriptService.runScript(script, bindings);
-                if (result instanceof Boolean) {
-                    return ((boolean) result);
-                }
-            }catch (IOException e){
-                log.error("Error reading script file {}", scriptFile, e);
+        if (!ScanUtils.empty(scriptFile)) {
+            Object branchShouldBeScanned = executeBranchScript(scriptFile, request, branches);
+            if (branchShouldBeScanned instanceof Boolean) {
+                return ((boolean) branchShouldBeScanned);
             }
         }
-        /*Override branches if provided in the request*/
-        if(request.getActiveBranches() != null && !request.getActiveBranches().isEmpty()){
+
+        // Override branches if provided in the request
+        if (CollectionUtils.isNotEmpty(request.getActiveBranches())) {
             branches = request.getActiveBranches();
         }
-        //If the script fails above, default to base property check functionality (regex list)
-        for( String b: branches){
-            if(strMatches(b, branch)) return true;
-        }
 
-        if (branches.isEmpty() && branch.equalsIgnoreCase(request.getDefaultBranch()))
-        {
-            log.info("Scanning default branch - {}", request.getDefaultBranch());
+        // If the script fails above, default to base property check functionality (regex list)
+        if (isBranchProtected(branchToCheck, branches, request)) {
             return true;
         }
-        log.info("Branch {} did not meet the scanning criteria [{}]", branch, branches);
+
+        log.info("Branch {} did not meet the scanning criteria [{}]", branchToCheck, branches);
         return false;
     }
 
-    private String getStringValueFromScript(String scriptFile, ScanRequest request) {
-        log.info("executing external script to determine the Team in Checkmarx to be used ({})", scriptFile);
+    public boolean isBranchProtected(String branchToCheck, List<String> protectedBranchPatterns, ScanRequest request) {
+        boolean result;
+        if (protectedBranchPatterns.isEmpty() && branchToCheck.equalsIgnoreCase(request.getDefaultBranch())) {
+            result = true;
+            log.info("Scanning default branch - {}", request.getDefaultBranch());
+        } else {
+            result = protectedBranchPatterns.stream().anyMatch(aBranch -> strMatches(aBranch, branchToCheck));
+        }
+        return result;
+    }
+
+    private Object executeBranchScript(String scriptFile, ScanRequest request, List<String> branches) {
+        Object result = null;
+        log.info("executing external script to determine if branch should be scanned ({})", scriptFile);
         try {
             String script = getStringFromFile(scriptFile);
             HashMap<String, Object> bindings = new HashMap<>();
             bindings.put(REQUEST, request);
-            Object result = scriptService.runScript(script, bindings);
-            if (result instanceof String) {
-                return ((String) result);
-            }
-        }catch (IOException e){
-            log.error("Error reading script file for checkmarx team {}", scriptFile, e);
+            bindings.put("branches", branches);
+            result = scriptService.runScript(script, bindings);
+        } catch (IOException e) {
+            log.error("Error reading script file {}", scriptFile, e);
         }
-        return null;
+        return result;
     }
 
-    public String getCxTeam(ScanRequest request){
+    private static String getBranchToCheck(ScanRequest request) {
+        String result = request.getBranch();
+        String targetBranch = request.getMergeTargetBranch();
+        if (StringUtils.isNotEmpty(targetBranch)) { //if targetBranch is set, it is a merge request
+            result = targetBranch;
+        }
+        return result;
+    }
+
+    public String getCxTeam(ScanRequest request) {
         String scriptFile = cxProperties.getTeamScript();
         String team = request.getTeam();
-        //note:  if script is provided, it is highest priority
-        if(!ScanUtils.empty(scriptFile)){
-            return getStringValueFromScript(scriptFile, request);
-        }
-        else if(!ScanUtils.empty(team)){
-            return team;
-        }
-        return null;  //null will indicate no override of team will take place
+        return getEffectiveEntityName(request, scriptFile, team, "team");
     }
 
-    public String getCxProject(ScanRequest request){
+    public String getCxProject(ScanRequest request) {
         String scriptFile = cxProperties.getProjectScript();
         String project = request.getProject();
+        return getEffectiveEntityName(request, scriptFile, project, "project");
+    }
+
+    private String getEffectiveEntityName(ScanRequest request, String scriptFile, String defaultName, String entity) {
+        String result = null;
         //note:  if script is provided, it is highest priority
-        if(!ScanUtils.empty(scriptFile)){
-            return getStringValueFromScript(scriptFile, request);
+        if (!ScanUtils.empty(scriptFile)) {
+            result = getScriptExecutionResult(request, scriptFile, entity);
+        } else if (!ScanUtils.empty(defaultName)) {
+            result = defaultName;
         }
-        else if(!ScanUtils.empty(project)){
-            return project;
+        return result;  //null will indicate no override will take place
+    }
+
+    private String getScriptExecutionResult(ScanRequest request, String scriptFile, String entity) {
+        String result = null;
+        log.info("executing external script to determine the {} in Checkmarx to be used ({})", entity, scriptFile);
+        try {
+            String script = getStringFromFile(scriptFile);
+            HashMap<String, Object> bindings = new HashMap<>();
+            bindings.put(REQUEST, request);
+            Object rawResult = scriptService.runScript(script, bindings);
+            if (rawResult instanceof String) {
+                result = ((String) rawResult);
+            }
+        } catch (IOException e) {
+            log.error("Error reading script file for Checkmarx {} {}", entity, scriptFile, e);
         }
-        return null;  //null will indicate no override of team will take place
+        return result;
     }
 
     public String getShortUid(ScanRequest request){
@@ -155,11 +175,9 @@ public class HelperService {
 
     /**
      * Determine what preset to use based on Sources and Profile mappings
-     * @param sources
-     * @return
      */
     public String getPresetFromSources(Sources sources){
-        if(sources == null || profiles == null || sources.getLanguageStats() == null || sources.getSources() == null){
+        if(sources == null || profiles == null || sources.getSources() == null){
             return cxProperties.getScanPreset();
         }
 
@@ -219,9 +237,6 @@ public class HelperService {
 
     /**
      * Go through each possible pattern and determine if a match exists within the Sources list
-     * @param sources
-     * @param regex
-     * @return
      */
     private boolean checkFileRegex(List<Sources.Source> sources, List<String> regex){
         if(sources == null || sources.isEmpty() || regex == null || regex.isEmpty()){
@@ -237,9 +252,6 @@ public class HelperService {
 
     /**
      * Go through list of Sources (file names/paths) and determine if a match exists with a pattern
-     * @param sources
-     * @param patternStr
-     * @return
      */
     private boolean strListMatches(List<Sources.Source> sources, String patternStr){
         for(Sources.Source s: sources) {
@@ -252,9 +264,6 @@ public class HelperService {
 
     /**
      * Regex String match
-     * @param patternStr
-     * @param str
-     * @return
      */
     private boolean strMatches(String patternStr, String str){
         Pattern pattern = Pattern.compile(patternStr);
