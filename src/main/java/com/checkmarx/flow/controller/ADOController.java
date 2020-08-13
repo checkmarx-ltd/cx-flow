@@ -6,17 +6,15 @@ import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.azure.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
-import com.checkmarx.flow.service.ConfigurationOverrider;
-import com.checkmarx.flow.service.FilterFactory;
-import com.checkmarx.flow.service.FlowService;
-import com.checkmarx.flow.service.HelperService;
+import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.CxProperties;
+import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +25,7 @@ import java.util.*;
 /**
  * Handles Azure DevOps (ADO) webhook requests.
  */
+@Slf4j
 @RequiredArgsConstructor
 @RestController
 @RequestMapping(value = "/")
@@ -37,7 +36,6 @@ public class ADOController extends AdoControllerBase {
     private static final String AUTHORIZATION = "authorization";
     private static final int NAMESPACE_INDEX = 3;
     private static final String EMPTY_STRING = "";
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(ADOController.class);
     private final ADOProperties properties;
     private final FlowProperties flowProperties;
     private final CxProperties cxProperties;
@@ -46,6 +44,7 @@ public class ADOController extends AdoControllerBase {
     private final HelperService helperService;
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
+    private final ADOService adoService;
 
     /**
      * Pull Request event submitted (JSON)
@@ -74,8 +73,6 @@ public class ADOController extends AdoControllerBase {
                     .build());
         }
 
-        FlowOverride o = ScanUtils.getMachinaOverride(controllerRequest.getOverride());
-
         try {
             Resource resource = body.getResource();
             Repository repository = resource.getRepository();
@@ -102,7 +99,6 @@ public class ADOController extends AdoControllerBase {
             }
 
             initAdoSpecificParams(adoDetailsRequest);
-
 
             if (StringUtils.isEmpty(product)) {
                 product = ScanRequest.Product.CX.getProduct();
@@ -156,10 +152,10 @@ public class ADOController extends AdoControllerBase {
                     .filter(filter)
                     .build();
 
-            request = configOverrider.overrideScanRequestProperties(o, request);
+            fillRequestWithAdditionalData(request, repository, body.toString());
+            checkForConfigAsCode(request);
             request.putAdditionalMetadata("statuses_url", pullUrl.concat("/statuses"));
             addMetadataToScanRequest(adoDetailsRequest, request);
-            request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, body.toString());
             request.setId(uid);
             //only initiate scan/automation if target branch is applicable
             if (helperService.isBranch2Scan(request, branches)) {
@@ -192,8 +188,6 @@ public class ADOController extends AdoControllerBase {
         controllerRequest = ensureNotNull(controllerRequest);
         adoDetailsRequest = ensureDetailsNotNull(adoDetailsRequest);
         ResourceContainers resourceContainers = body.getResourceContainers();
-
-        FlowOverride o = ScanUtils.getMachinaOverride(controllerRequest.getOverride());
 
         try {
             Resource resource = body.getResource();
@@ -278,10 +272,9 @@ public class ADOController extends AdoControllerBase {
                     .build();
 
             addMetadataToScanRequest(adoDetailsRequest, request);
-            request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, body.toString());
+            fillRequestWithAdditionalData(request,repository, body.toString());
             //if an override blob/file is provided, substitute these values
-            request = configOverrider.overrideScanRequestProperties(o, request);
-
+            checkForConfigAsCode(request);
             request.setId(uid);
             //only initiate scan/automation if target branch is applicable
             if (helperService.isBranch2Scan(request, branches)) {
@@ -354,4 +347,15 @@ public class ADOController extends AdoControllerBase {
             request.setAdoClosed(properties.getClosedStatus());
         }
     }
+
+    private void checkForConfigAsCode(ScanRequest request) {
+        CxConfig cxConfig = adoService.getCxConfigOverride(request);
+        configOverrider.overrideScanRequestProperties(cxConfig, request);
+    }
+
+    private void fillRequestWithAdditionalData(ScanRequest request, Repository repository, String hookPayload) {
+        request.putAdditionalMetadata(ADOService.REPO_SELF_URL, repository.getUrl());
+        request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, hookPayload);
+    }
+
 }

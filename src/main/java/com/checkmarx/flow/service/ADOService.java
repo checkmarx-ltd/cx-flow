@@ -13,13 +13,15 @@ import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.ScaProperties;
+import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpEntity;
@@ -36,12 +38,16 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
 
+@Slf4j
 @Service
 public class ADOService {
-    private static final Logger log = LoggerFactory.getLogger(ADOService.class);
     private static final String API_VERSION = "?api-version=";
+    public static final String REPO_SELF_URL = "repo-self-url";
+    private static final String GET_ITEM_CONTENT = "/items?path={filePath}&version={branch}&$format=text&api-version={apiVersion}";
     private static final String ADO_COMMENT_CONTENT_FIELD_NAME = "content";
     private static final String IS_DELETED_FIELD_NAME = "isDeleted";
+    private static final String CONTENT_NOT_FOUND_IN_RESPONSE = "Content not found in JSON response for Config as code";
+    private static final String HTTP_BODY_IS_NULL = "Unable to download Config as code file. Response body is null.";
     private final RestTemplate restTemplate;
     private final ADOProperties properties;
     private final FlowProperties flowProperties;
@@ -305,5 +311,53 @@ public class ADOService {
         url = getFullAdoApiUrl(url);
         HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders());
         restTemplate.exchange(url, HttpMethod.DELETE, httpEntity, String.class);
+    }
+
+    public CxConfig getCxConfigOverride(ScanRequest request) {
+        CxConfig result = null;
+        if (StringUtils.isNotBlank(properties.getConfigAsCode())) {
+            try {
+                result = loadCxConfigFromADO(request);
+            } catch (NullPointerException e) {
+                log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
+            } catch (HttpClientErrorException.NotFound e) {
+                log.info(String.format("No Config as code was found with the name: %s", properties.getConfigAsCode()));
+            } catch (Exception e) {
+                log.error(String.format("Error in getting config as code from the repo. Error details : %s", ExceptionUtils.getRootCauseMessage(e)));
+            }
+        }
+        return result;
+    }
+
+    private CxConfig loadCxConfigFromADO(ScanRequest request) {
+        CxConfig cxConfig;
+        HttpHeaders headers = createAuthHeaders();
+        String repoSelfUrl = request.getAdditionalMetadata(REPO_SELF_URL);
+        String urlTemplate = repoSelfUrl.concat(GET_ITEM_CONTENT);
+
+        Map<String, String> uriVariables = new HashMap<>();
+        uriVariables.put("branch", request.getBranch());
+        uriVariables.put("filePath", properties.getConfigAsCode());
+        uriVariables.put("apiVersion", properties.getApiVersion());
+
+        ResponseEntity<String> response = restTemplate.exchange(
+                urlTemplate,
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
+                String.class, uriVariables
+        );
+        if (response.getBody() == null) {
+            log.warn(HTTP_BODY_IS_NULL);
+            cxConfig = null;
+        } else {
+            JSONObject json = new JSONObject(response.getBody());
+            if (ScanUtils.empty(json.toString())) {
+                log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
+                cxConfig = null;
+            } else {
+                cxConfig = com.checkmarx.sdk.utils.ScanUtils.getConfigAsCode(json.toString());
+            }
+        }
+        return cxConfig;
     }
 }
