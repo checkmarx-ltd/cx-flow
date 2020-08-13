@@ -38,6 +38,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 /**
  * Class used to manage Controller for GitHub WebHooks
@@ -311,6 +312,7 @@ public class GitHubController extends WebhookController {
                     .build();
 
             overrideScanPreset(controllerRequest, request);
+            setScmInstance(controllerRequest, request);
 
             /*Check for Config as code (cx.config) and override*/
             CxConfig cxConfig =  gitHubService.getCxConfigOverride(request);
@@ -330,6 +332,10 @@ public class GitHubController extends WebhookController {
         }
         
         return getSuccessMessage();
+    }
+
+    private void setScmInstance(ControllerRequest controllerRequest, ScanRequest request) {
+        Optional.ofNullable(controllerRequest.getScmInstance()).ifPresent(request::setScmInstance);
     }
 
     private List<String> determineEmails(PushEvent event) {

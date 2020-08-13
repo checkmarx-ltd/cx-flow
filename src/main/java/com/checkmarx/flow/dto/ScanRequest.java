@@ -50,6 +50,13 @@ public class ScanRequest {
     private String scanPreset;
 
     /**
+     * Getting populated from the ControllerRequest.
+     * Indicates whether we got a scm-instance parameter from a webhook event.
+     * In case not null it will override the configuration default scm credentials
+     */
+    private String scmInstance;
+
+    /**
      * Indicates whether scan preset has been overridden.
      * Overrides may come from a webhook parameter or config-as-code.
      */
