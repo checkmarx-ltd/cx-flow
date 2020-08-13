@@ -1,26 +1,17 @@
 package com.checkmarx.flow.custom;
 
 import com.checkmarx.flow.config.SarifProperties;
-import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.service.FilenameFormatter;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -34,25 +25,11 @@ import java.util.stream.Collectors;
 public class SarifIssueTracker extends ImmutableIssueTracker {
     private final SarifProperties properties;
     private final FilenameFormatter filenameFormatter;
-    private final String DEFAULT_LEVEL = "error";
+    private static final String DEFAULT_LEVEL = "error";
 
     @Override
     public void init(ScanRequest request, ScanResults results) throws MachinaException {
-        Path fullPath = Paths.get(properties.getFilePath());
-        Path parentDir = fullPath.getParent();
-        Path filename = fullPath.getFileName();
-        if(request == null || results == null){
-            throw new MachinaException("Request or Results object is missing");
-        }
-        String formattedPath = filenameFormatter.formatPath(request, filename.toString(), parentDir.toString());
-        request.setFilename(formattedPath);
-        log.info("Creating file {}", formattedPath);
-        try {
-            Files.deleteIfExists(Paths.get(formattedPath));
-            Files.createFile(Paths.get(formattedPath));
-        } catch (IOException e) {
-            log.error("Issue deleting existing file or writing initial {}", filename, e);
-        }
+        fileInit(request, results, properties.getFilePath(), filenameFormatter, log);
     }
 
     @Override
@@ -95,16 +72,6 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
         filteredXIssues.forEach(
                 issue -> {
                     List<Location> locations = Lists.newArrayList();
-                    /*
-                    Integer column = null;
-                    List<Map<String, Map<String, String>>> vulnPathList = (List<Map<String, Map<String, String>>>) issue.getAdditionalDetails().get("results");
-                    if(vulnPathList != null && !vulnPathList.isEmpty()) {
-                        Map<String, String> sourceMap = vulnPathList.get(0).get("source");
-                        if(sourceMap != null){
-                            column = Integer.parseInt(sourceMap.get("column"));
-                        }
-                    }
-                    Integer finalColumn = column;*/
                     issue.getDetails().forEach((k, v) -> {
                         if(!v.isFalsePositive()) {
                             locations.add(Location.builder()
@@ -115,8 +82,6 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                                             .region(Region.builder()
                                                     .startLine(k)
                                                     .endLine(k)
-                                                    //.startColumn(finalColumn)
-                                                    //.endColumn(x)
                                                     .build())
                                             .build())
                                     .build());
@@ -132,13 +97,6 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                                     .text(issue.getDescription())
                                     .build())
                             .ruleId(issue.getVulnerability())
-                            /*.partialFingerprints(
-                                    PartialFingerprints.builder()
-                                    .primaryLocationLineHash(
-                                            DigestUtils.sha256Hex(issue.getVulnerability().concat(issue.getFilename()))
-                                    )
-                                    .build()
-                            )*/
                             .build()
                     );
 
@@ -167,29 +125,7 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                 .runs(Collections.singletonList(run))
                 .build();
 
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-            mapper.writeValue(new File(request.getFilename()), report);
-        } catch (IOException e) {
-            log.error("Issue occurred while writing file {}", request.getFilename(), e);
-            throw new MachinaException();
-        }
-    }
-
-    @Override
-    public String getFalsePositiveLabel() throws MachinaException {
-        return null;
-    }
-
-    @Override
-    public List<Issue> getIssues(ScanRequest request) throws MachinaException {
-        return new ArrayList<>();
-    }
-
-    @Override
-    public Issue createIssue(ScanResults.XIssue issue, ScanRequest request) throws MachinaException {
-        return null;
+        writeJsonOutput(request, report, log);
     }
 
     @Data
