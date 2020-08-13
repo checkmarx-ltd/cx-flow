@@ -53,7 +53,7 @@ public class HelperService {
                 CxProfile[] cxProfiles = mapper.readValue(profileConfig, CxProfile[].class);
                 this.profiles = Arrays.asList(cxProfiles);
             }catch (IOException e){
-                log.warn("No CxProfile found - {}", properties.getProfileConfig(), e);
+                log.warn("No CxProfile found - {}", e.getMessage());
             }
         }
     }
