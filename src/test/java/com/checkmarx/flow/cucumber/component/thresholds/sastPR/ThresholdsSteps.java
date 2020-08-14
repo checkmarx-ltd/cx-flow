@@ -261,7 +261,8 @@ public class ThresholdsSteps {
         GitHubService gitService = new GitHubService(restTemplateMock,
                 gitHubProperties,
                 flowProperties,
-                thresholdValidator);
+                thresholdValidator,
+                null);
 
         ADOService adoService = new ADOService(restTemplateMock,
                 adoProperties,

@@ -546,7 +546,8 @@ public class CxConfigSteps {
         GitHubService gitHubServiceMock = new GitHubService(restTemplateMock,
                 gitHubProperties,
                 flowProperties,
-                thresholdValidator);
+                thresholdValidator,
+                null);
 
         this.resultsService = new ResultsService(
                 cxClientMock,
