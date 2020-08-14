@@ -5,6 +5,7 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.azure.*;
+import com.checkmarx.flow.dto.azure.Collection;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.HTMLHelper;
@@ -152,6 +153,7 @@ public class ADOController extends AdoControllerBase {
                     .filter(filter)
                     .build();
 
+            request.putAdditionalMetadata(ADOService.PROJECT_SELF_URL, getTheProjectURL(request, body.getResourceContainers()));
             fillRequestWithAdditionalData(request, repository, body.toString());
             checkForConfigAsCode(request);
             request.putAdditionalMetadata("statuses_url", pullUrl.concat("/statuses"));
@@ -168,6 +170,8 @@ public class ADOController extends AdoControllerBase {
 
         return getSuccessMessage();
     }
+
+
 
     /**
      * Push Request event submitted (JSON), along with the Product (cx for example)
@@ -358,4 +362,9 @@ public class ADOController extends AdoControllerBase {
         request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, hookPayload);
     }
 
+    private String getTheProjectURL(ScanRequest request, ResourceContainers resourceContainers) {
+        String projectId = resourceContainers.getProject().getId();
+        String baseUrl = resourceContainers.getProject().getBaseUrl();
+        return baseUrl.concat(projectId);
+    }
 }
