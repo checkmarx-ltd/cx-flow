@@ -32,10 +32,11 @@ public class ScmConfigOverrider {
     }
 
     private String getScmOverriddenConfig(RepoProperties properties, ScmConfigParams configParams, String key) {
-        String value = null;
+        String value;
         OptionalScmInstanceProperties optionalInstanceKey = properties.getOptionalInstances().get(key);
         if (optionalInstanceKey == null) {
-            log.warn("scm-instance key: {} does not exists on configuration file. Using default configuration", key);
+            log.error("scm-instance key: {} does not exists on configuration file.", key);
+            throw new MachinaRuntimeException();
         } else {
             switch (configParams) {
                 case TOKEN:
