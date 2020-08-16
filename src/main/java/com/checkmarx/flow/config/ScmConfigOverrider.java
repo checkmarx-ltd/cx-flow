@@ -47,12 +47,15 @@ public class ScmConfigOverrider {
         } else {
             switch (configParams) {
                 case TOKEN:
+                    log.info("Overriding token for SCM instance key: {}", key);
                     value = optionalInstanceKey.getToken();
                     break;
                 case WEBHOOK_TOKEN:
+                    log.info("Overriding webhook-token for SCM instance key: {}", key);
                     value = optionalInstanceKey.getWebhookToken();
                     break;
                 case API_URL:
+                    log.info("Overriding api-url for SCM instance key: {}", key);
                     value = optionalInstanceKey.getApiUrl();
                     break;
                 default:
