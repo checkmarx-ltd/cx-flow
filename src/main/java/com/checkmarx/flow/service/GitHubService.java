@@ -323,7 +323,7 @@ public class GitHubService extends RepoService {
     }
 
     private String getGitHubEndPoint(ScanRequest request) {
-        String endpoint = properties.getApiUrl().concat(REPO_CONTENT);
+        String endpoint = scmConfigOverrider.determineConfigApiUrl(properties, request).concat(REPO_CONTENT);
         endpoint = endpoint.replace("{namespace}", request.getNamespace());
         endpoint = endpoint.replace("{repo}", request.getRepoName());
         endpoint = endpoint.replace("{branch}", request.getBranch());
@@ -337,7 +337,7 @@ public class GitHubService extends RepoService {
         Map<String, Integer> langsPercent = new HashMap<>();
         HttpHeaders headers = createAuthHeaders(request);
 
-        String urlTemplate = properties.getApiUrl().concat(LANGUAGE_TYPES);
+        String urlTemplate = scmConfigOverrider.determineConfigApiUrl(properties, request).concat(LANGUAGE_TYPES);
         String url = new DefaultUriBuilderFactory()
                 .expand(urlTemplate, request.getNamespace(), request.getRepoName())
                 .toString();

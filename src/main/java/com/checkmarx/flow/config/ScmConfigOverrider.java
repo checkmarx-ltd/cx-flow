@@ -20,7 +20,7 @@ public class ScmConfigOverrider {
 
     public String determineConfigApiUrl(RepoProperties properties, ScanRequest scanRequest) {
         return Optional.ofNullable(scanRequest.getScmInstance())
-                .map(key -> getScmOverriddenConfig(properties, ScmConfigParams.API_URI, key))
+                .map(key -> getScmOverriddenConfig(properties, ScmConfigParams.API_URL, key))
                 .orElse(properties.getApiUrl());
     }
 
@@ -42,11 +42,11 @@ public class ScmConfigOverrider {
                 case TOKEN:
                     value = optionalInstanceKey.getToken();
                     break;
-                case API_URI:
-                    value = optionalInstanceKey.getApiUrl();
-                    break;
                 case WEBHOOK_TOKEN:
                     value = optionalInstanceKey.getWebhookToken();
+                    break;
+                case API_URL:
+                    value = optionalInstanceKey.getApiUrl();
                     break;
                 default:
                     throw new MachinaRuntimeException("Scm key: " + key + "is not supported");

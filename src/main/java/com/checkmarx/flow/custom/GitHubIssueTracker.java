@@ -2,6 +2,7 @@ package com.checkmarx.flow.custom;
 
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
+import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.github.IssueStatus;
@@ -36,12 +37,15 @@ public class GitHubIssueTracker implements IssueTracker {
     private final RestTemplate restTemplate;
     private final GitHubProperties properties;
     private final FlowProperties flowProperties;
+    private final ScmConfigOverrider scmConfigOverrider;
 
 
-    public GitHubIssueTracker(@Qualifier("flowRestTemplate") RestTemplate restTemplate, GitHubProperties properties, FlowProperties flowProperties) {
+    public GitHubIssueTracker(@Qualifier("flowRestTemplate") RestTemplate restTemplate, GitHubProperties properties, FlowProperties flowProperties,
+                              ScmConfigOverrider scmConfigOverrider) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.flowProperties = flowProperties;
+        this.scmConfigOverrider = scmConfigOverrider;
     }
 
     @Override
@@ -66,7 +70,7 @@ public class GitHubIssueTracker implements IssueTracker {
     @Override
     public List<Issue> getIssues(ScanRequest request) {
         String apiUrl = String.format("%s/%s/%s/issues?state=all&per_page=%s",
-                properties.getApiUrl(),
+                scmConfigOverrider.determineConfigApiUrl(properties, request),
                 request.getNamespace(),
                 request.getRepoName(),
                 ISSUES_PER_PAGE);
@@ -156,9 +160,12 @@ public class GitHubIssueTracker implements IssueTracker {
     }
 
     @Override
-    public Issue createIssue(ScanResults.XIssue resultIssue, ScanRequest request) throws MachinaException {
+    public Issue createIssue(ScanResults.XIssue resultIssue, ScanRequest request) {
         log.debug("Executing createIssue GitHub API call");
-        String apiUrl = properties.getApiUrl().concat("/").concat(request.getNamespace().concat("/").concat(request.getRepoName())).concat("/issues");
+        String apiUrl = scmConfigOverrider.determineConfigApiUrl(properties, request)
+                .concat("/").concat(request.getNamespace()
+                .concat("/").concat(request.getRepoName()))
+                .concat("/issues");
         ResponseEntity<com.checkmarx.flow.dto.github.Issue> response;
         try {
             HttpEntity<String> httpEntity = new HttpEntity<>(getJSONCreateIssue(resultIssue, request).toString(), createAuthHeaders());
