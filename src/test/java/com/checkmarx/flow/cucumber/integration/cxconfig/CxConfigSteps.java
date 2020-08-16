@@ -532,7 +532,7 @@ public class CxConfigSteps {
                 null,
                 filterFactory,
                 configOverrider,
-                null));
+                scmConfigOverrider));
 
         // results service will be a Mock and will work with gitHubService Mock
         // and will not connect to any external service.
