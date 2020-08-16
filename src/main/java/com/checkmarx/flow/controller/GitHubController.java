@@ -194,6 +194,7 @@ public class GitHubController extends WebhookController {
                     .build();
 
             overrideScanPreset(controllerRequest, request);
+            setScmInstance(controllerRequest, request);
 
             /*Check for Config as code (cx.config) and override*/
             CxConfig cxConfig =  gitHubService.getCxConfigOverride(request);
