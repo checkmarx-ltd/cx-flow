@@ -1,5 +1,6 @@
 package com.checkmarx.flow.config;
 
+import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +24,13 @@ public class ScmConfigOverrider {
                 .orElse(properties.getApiUrl());
     }
 
+    public String determineConfigWebhookToken(RepoProperties properties, ControllerRequest controllerRequest) {
+        return Optional.ofNullable(controllerRequest)
+                .map(ControllerRequest::getScmInstance)
+                .map(key -> getScmOverriddenConfig(properties, ScmConfigParams.WEBHOOK_TOKEN, key))
+                .orElse(properties.getWebhookToken());
+    }
+
     private String getScmOverriddenConfig(RepoProperties properties, ScmConfigParams configParams, String key) {
         String value = null;
         OptionalScmInstanceProperties optionalInstanceKey = properties.getOptionalInstances().get(key);
@@ -35,6 +43,9 @@ public class ScmConfigOverrider {
                     break;
                 case API_URI:
                     value = optionalInstanceKey.getApiUrl();
+                    break;
+                case WEBHOOK_TOKEN:
+                    value = optionalInstanceKey.getWebhookToken();
                     break;
                 default:
                     throw new MachinaRuntimeException("Scm key: " + key + "is not supported");

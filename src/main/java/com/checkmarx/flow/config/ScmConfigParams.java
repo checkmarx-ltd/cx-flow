@@ -1,5 +1,5 @@
 package com.checkmarx.flow.config;
 
 public enum ScmConfigParams {
-    TOKEN, API_URI
+    TOKEN, API_URI, WEBHOOK_TOKEN
 }

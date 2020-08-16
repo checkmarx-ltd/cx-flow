@@ -296,7 +296,7 @@ public class UpdatePullRequestCommentsSteps {
     }
 
     private void initGitHubControllerSpy() {
-        doNothing().when(gitHubControllerSpy).verifyHmacSignature(any(), any());
+        doNothing().when(gitHubControllerSpy).verifyHmacSignature(any(), any(), any());
     }
 
     private void initHelperServiceMock() {

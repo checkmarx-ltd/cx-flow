@@ -74,8 +74,9 @@ public class ConfigAsCodeBranchSteps {
                 gitHubService,
                 null,
                 filterFactory,
-                configOverrider));
-        doNothing().when(gitHubControllerSpy).verifyHmacSignature(any(), any());
+                configOverrider,
+                null));
+        doNothing().when(gitHubControllerSpy).verifyHmacSignature(any(), any(), any());
 
         return gitHubControllerSpy;
     }

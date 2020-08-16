@@ -263,7 +263,7 @@ public class Github2AdoSteps {
     }
 
     private void initMockGitHubController() {
-        doNothing().when(gitHubControllerSpy).verifyHmacSignature(any(), any());
+        doNothing().when(gitHubControllerSpy).verifyHmacSignature(any(), any(), any());
     }
     
     private void initServices() {
@@ -280,7 +280,8 @@ public class Github2AdoSteps {
                 gitHubService,
                 null,
                 filterFactory,
-                configOverrider));
+                configOverrider,
+                null));
         
         //results service will be a Mock and will work with gitHubService Mock
         //and will not not connect to any external 
