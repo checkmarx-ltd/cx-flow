@@ -2,6 +2,7 @@ package com.checkmarx.flow.cucumber.integration.cxconfig;
 
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
+import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.controller.GitHubController;
 import com.checkmarx.flow.dto.github.PullEvent;
 import com.checkmarx.flow.service.*;
@@ -30,6 +31,7 @@ public class ConfigAsCodeBranchSteps {
     private final HelperService helperService;
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
+    private final ScmConfigOverrider scmConfigOverrider;
 
     private String defaultBranch;
     private String actualBranch;
@@ -75,7 +77,7 @@ public class ConfigAsCodeBranchSteps {
                 null,
                 filterFactory,
                 configOverrider,
-                null));
+                scmConfigOverrider));
         doNothing().when(gitHubControllerSpy).verifyHmacSignature(any(), any(), any());
 
         return gitHubControllerSpy;

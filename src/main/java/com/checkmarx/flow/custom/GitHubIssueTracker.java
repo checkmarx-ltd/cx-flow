@@ -140,7 +140,7 @@ public class GitHubIssueTracker implements IssueTracker {
      */
     private Issue getIssue(String issueUrl, ScanRequest scanRequest) {
         log.info("Executing getIssue GitHub API call");
-        HttpEntity httpEntity = new HttpEntity<>(createAuthHeaders(scanRequest));
+        HttpEntity<Object> httpEntity = new HttpEntity<>(createAuthHeaders(scanRequest));
         ResponseEntity<com.checkmarx.flow.dto.github.Issue> response =
                 restTemplate.exchange(issueUrl, HttpMethod.GET, httpEntity, com.checkmarx.flow.dto.github.Issue.class);
 
@@ -190,7 +190,7 @@ public class GitHubIssueTracker implements IssueTracker {
     @Override
     public Issue updateIssue(Issue issue, ScanResults.XIssue resultIssue, ScanRequest request) throws MachinaException {
         log.info("Executing updateIssue GitHub API call");
-        HttpEntity httpEntity = new HttpEntity<>(getJSONUpdateIssue(resultIssue, request).toString(), createAuthHeaders(request));
+        HttpEntity<String> httpEntity = new HttpEntity<>(getJSONUpdateIssue(resultIssue, request).toString(), createAuthHeaders(request));
         ResponseEntity<com.checkmarx.flow.dto.github.Issue> response;
         try {
             response = restTemplate.exchange(issue.getUrl(), HttpMethod.POST, httpEntity, com.checkmarx.flow.dto.github.Issue.class);

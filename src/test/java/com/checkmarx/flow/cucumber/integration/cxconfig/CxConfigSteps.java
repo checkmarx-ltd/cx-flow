@@ -1,10 +1,7 @@
 package com.checkmarx.flow.cucumber.integration.cxconfig;
 
 import com.checkmarx.flow.CxFlowApplication;
-import com.checkmarx.flow.config.FindingSeverity;
-import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.config.GitHubProperties;
-import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.config.*;
 import com.checkmarx.flow.controller.GitHubController;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ControllerRequest;
@@ -80,10 +77,12 @@ public class CxConfigSteps {
 
     private ScanRequest request;
     private final JiraProperties jiraProperties;
+    private final ScmConfigOverrider scmConfigOverrider;
 
     public CxConfigSteps(FlowProperties flowProperties, GitHubService gitHubService,
                          CxProperties cxProperties, GitHubProperties gitHubProperties, ConfigurationOverrider configOverrider, JiraProperties jiraProperties,
-                         ThresholdValidator thresholdValidator, FilterFactory filterFactory, FlowService flowService, EmailService emailService) {
+                         ThresholdValidator thresholdValidator, FilterFactory filterFactory, FlowService flowService, EmailService emailService,
+                         ScmConfigOverrider scmConfigOverrider) {
 
         this.cxClientMock = mock(CxClient.class);
 
@@ -100,6 +99,7 @@ public class CxConfigSteps {
         this.gitHubProperties = gitHubProperties;
         this.filterFactory = filterFactory;
         this.configOverrider = configOverrider;
+        this.scmConfigOverrider = scmConfigOverrider;
         initGitHubProperties();
     }
 
@@ -548,7 +548,7 @@ public class CxConfigSteps {
                 gitHubProperties,
                 flowProperties,
                 thresholdValidator,
-                null);
+                scmConfigOverrider);
 
         this.resultsService = new ResultsService(
                 cxClientMock,
