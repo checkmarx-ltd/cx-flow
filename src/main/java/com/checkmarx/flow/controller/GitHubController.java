@@ -162,7 +162,7 @@ public class GitHubController extends WebhookController {
             setExclusionProperties(cxProperties, controllerRequest);
             //build request object
             String gitUrl = repository.getCloneUrl();
-            String token = properties.getToken();
+            String token = scmConfigOverrider.determineConfigToken(properties, controllerRequest);
             log.info("Using url: {}", gitUrl);
             String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(token).concat("@"));
             gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(token).concat("@"));
@@ -277,7 +277,7 @@ public class GitHubController extends WebhookController {
             Repository repository = event.getRepository();
             String gitUrl = repository.getCloneUrl();
             log.debug("Using url: {}", gitUrl);
-            String token = properties.getToken();
+            String token = scmConfigOverrider.determineConfigToken(properties, controllerRequest);
             if(ScanUtils.empty(token)){
                 log.error("No token was provided for Github");
                 throw new MachinaRuntimeException();

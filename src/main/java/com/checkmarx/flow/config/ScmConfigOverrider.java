@@ -18,6 +18,13 @@ public class ScmConfigOverrider {
                 .orElse(properties.getToken());
     }
 
+    public String determineConfigToken(RepoProperties properties, ControllerRequest controllerRequest) {
+        return Optional.ofNullable(controllerRequest)
+                .map(ControllerRequest::getScmInstance)
+                .map(key -> getScmOverriddenConfig(properties, ScmConfigParams.TOKEN, key))
+                .orElse(properties.getToken());
+    }
+
     public String determineConfigApiUrl(RepoProperties properties, ScanRequest scanRequest) {
         return Optional.ofNullable(scanRequest.getScmInstance())
                 .map(key -> getScmOverriddenConfig(properties, ScmConfigParams.API_URL, key))
