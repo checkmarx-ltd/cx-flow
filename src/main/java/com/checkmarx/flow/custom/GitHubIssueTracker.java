@@ -56,7 +56,7 @@ public class GitHubIssueTracker implements IssueTracker {
                 ScanUtils.empty(request.getBranch())){
             throw new MachinaException("Namespace / RepoName / Branch are required");
         }
-        if(ScanUtils.empty(properties.getApiUrl())){
+        if((ScanUtils.empty(properties.getApiUrl()) && ScanUtils.empty(request.getScmInstance()))){
             throw new MachinaException("GitHub API Url must be provided in property config");
         }
     }
