@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-class OptionalScmInstanceProperties {
+public class OptionalScmInstanceProperties {
 
     private String webhookToken;
     private String token;
