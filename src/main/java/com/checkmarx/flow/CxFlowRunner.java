@@ -397,7 +397,7 @@ public class CxFlowRunner implements ApplicationRunner {
                     log.error("cx-project must be provided when --project option is used");
                     exit(2);
                 }
-                cxResults(request);
+                publishLatestScanResults(request);
             }
             else if(args.containsOption("scan")){
                 log.info("Executing scan process");
@@ -432,7 +432,7 @@ public class CxFlowRunner implements ApplicationRunner {
             }
         }catch (Exception e){
             log.error("An error occurred while processing request", e);
-            exit(10);
+            exit(ExitCode.BUILD_INTERRUPTED);
         }
         log.info("Completed Successfully");
         exit(ExitCode.SUCCESS);
@@ -499,11 +499,11 @@ public class CxFlowRunner implements ApplicationRunner {
         runOnActiveScanners(scanner -> scanner.scanCli(request , "cxBatch"));
     }
 
-    private void cxResults(ScanRequest request) throws ExitThrowable {
+    private void publishLatestScanResults(ScanRequest request) throws ExitThrowable {
         ScanResults results = resultsService.cxGetResults(request, null).join();
         if(flowProperties.isBreakBuild() && resultsService.filteredIssuesPresent(results)){
             log.error(ERROR_BREAK_MSG);
-            exit(10);
+            exit(ExitCode.BUILD_INTERRUPTED);
         }
     }
 
@@ -512,7 +512,7 @@ public class CxFlowRunner implements ApplicationRunner {
             resultsService.processResults(request, results, null);
             if (flowProperties.isBreakBuild() && resultsService.filteredIssuesPresent(results)) {
                 log.error(ERROR_BREAK_MSG);
-                exit(10);
+                exit(ExitCode.BUILD_INTERRUPTED);
             }
 
         } catch (MachinaException e) {

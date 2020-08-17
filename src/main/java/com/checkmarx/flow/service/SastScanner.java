@@ -262,7 +262,7 @@ public class SastScanner implements VulnerabilityScanner {
             resultsService.processResults(request, results, scanDetails);
             if (flowProperties.isBreakBuild() && results != null && results.getXIssues() != null && !results.getXIssues().isEmpty()) {
                 log.error(ERROR_BREAK_MSG);
-                exit(10);
+                exit(ExitCode.BUILD_INTERRUPTED);
             }
         } catch (MachinaException | CheckmarxException e) {
             log.error("Error occurred while processing results file", e);
