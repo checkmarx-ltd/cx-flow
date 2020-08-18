@@ -3,8 +3,9 @@ package com.checkmarx.flow.service;
 import com.checkmarx.flow.config.ADOProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.*;
+import com.checkmarx.flow.dto.azure.Content;
 import com.checkmarx.flow.dto.azure.CreateWorkItemAttr;
-import com.checkmarx.flow.dto.github.Content;
+import com.checkmarx.flow.dto.azure.Value;
 import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.exception.ADOClientException;
 import com.checkmarx.flow.utils.HTMLHelper;
@@ -13,9 +14,11 @@ import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.logging.log4j.util.Strings;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.json.JSONArray;
@@ -29,7 +32,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.DefaultUriBuilderFactory;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -42,8 +44,10 @@ import java.util.*;
 public class ADOService {
     private static final String API_VERSION = "?api-version=";
     public static final String REPO_SELF_URL = "repo-self-url";
+    public static final String REPO_ID = "repo-id";
     public static final String PROJECT_SELF_URL = "project-self-url";
-    private static final String GET_ITEM_CONTENT = "/items?path={filePath}&version={branch}&$format=text&api-version={apiVersion}";
+    private static final String GET_FILE_CONTENT = "/items?path={filePath}&version={branch}&$format=text&api-version={apiVersion}";
+    private static final String GET_DIRECTORY_CONTENT = "/items?scopePath={filePath}&version={branch}&api-version={apiVersion}&recursionLevel={recursionLevel}";
     private static final String LANGUAGE_METRICS = "/_apis/projectanalysis/languagemetrics";
     private static final String ADO_COMMENT_CONTENT_FIELD_NAME = "content";
     private static final String IS_DELETED_FIELD_NAME = "isDeleted";
@@ -56,6 +60,7 @@ public class ADOService {
     private final ScaProperties scaProperties;
     private final SastScanner sastScanner;
     private final SCAScanner scaScanner;
+    private String browseRepoEndpoint = "";
 
     public ADOService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, ADOProperties properties,
                       FlowProperties flowProperties, CxProperties cxProperties, ScaProperties scaProperties,
@@ -189,7 +194,7 @@ public class ADOService {
 
             ThresholdValidatorImpl evaluator = new ThresholdValidatorImpl(sastScanner, scaScanner, flowProperties, scaProperties);
             boolean isMergeAllowed = evaluator.isMergeAllowed(results, properties, new PullRequestReport(scanDetails, request));
-            
+
             if(!isMergeAllowed){
                 log.debug("Creating status of failed to {}", url);
                 createStatus("failed", "Checkmarx Scan Completed", url, results.getLink());
@@ -334,7 +339,7 @@ public class ADOService {
         CxConfig cxConfig;
         HttpHeaders headers = createAuthHeaders();
         String repoSelfUrl = request.getAdditionalMetadata(REPO_SELF_URL);
-        String urlTemplate = repoSelfUrl.concat(GET_ITEM_CONTENT);
+        String urlTemplate = repoSelfUrl.concat(GET_FILE_CONTENT);
 
         Map<String, String> uriVariables = new HashMap<>();
         uriVariables.put("branch", request.getBranch());
@@ -368,90 +373,117 @@ public class ADOService {
             return null;
         }
         Sources sources = getRepoLanguagePercentages(request);
-//        String endpoint = getGitHubEndPoint(request);
-//        scanGitContent(0, endpoint, sources);
+        browseRepoEndpoint = getADOEndPoint(request);
+        scanGitContent(0, browseRepoEndpoint, sources);
         return sources;
     }
 
-//    private String getGitHubEndPoint(ScanRequest request) {
-//        String endpoint = properties.getApiUrl().concat(REPO_CONTENT);
-//        endpoint = endpoint.replace("{namespace}", request.getNamespace());
-//        endpoint = endpoint.replace("{repo}", request.getRepoName());
-//        endpoint = endpoint.replace("{branch}", request.getBranch());
-//        return endpoint;
-//    }
+    private String getADOEndPoint(ScanRequest request) {
+
+        String projectUrl = request.getAdditionalMetadata(REPO_SELF_URL);
+        String endpoint = projectUrl.concat(GET_DIRECTORY_CONTENT);
+
+        endpoint = endpoint.replace("{apiVersion}", properties.getApiVersion());
+        endpoint = endpoint.replace("{recursionLevel}", "OneLevel");
+        endpoint = endpoint.replace("{branch}", request.getBranch());
+        return endpoint;
+    }
 
     private Sources getRepoLanguagePercentages(ScanRequest request) {
         Sources sources = new Sources();
-//        Map<String, Long> langs = new HashMap<>();
-//        Map<String, Integer> langsPercent = new HashMap<>();
-//        HttpHeaders headers = createAuthHeaders();
-//
-//        String urlTemplate = properties.getApiUrl().concat(LANGUAGE_METRICS);
-//        String url = new DefaultUriBuilderFactory()
-//                .expand(urlTemplate, request.getNamespace(), request.getRepoName())
-//                .toString();
-//
-//        log.info("Getting repo languages from {}", url);
-//        try {
-//            ResponseEntity<String> response = restTemplate.exchange(
-//                    url, HttpMethod.GET, new HttpEntity<>(headers), String.class);
-//
-//            if(response.getBody() == null){
-//                log.warn(HTTP_BODY_IS_NULL);
-//            }
-//            else {
-//                JSONObject json = new JSONObject(response.getBody());
-//                Iterator<String> keys = json.keys();
-//                long total = 0L;
-//                while(keys.hasNext()) {
-//                    String key = keys.next();
-//                    long bytes = json.getLong(key);
-//                    langs.put(key, bytes);
-//                    total += bytes;
-//                }
-//                for (Map.Entry<String,Long> entry : langs.entrySet()){
-//                    Long bytes = entry.getValue();
-//                    double percentage = 0;
-//                    if (total != 0L) {
-//                        percentage = (Double.valueOf(bytes) / (double) total * 100);
-//                    }
-//                    langsPercent.put(entry.getKey(), (int) percentage);
-//                }
-//                sources.setLanguageStats(langsPercent);
-//            }
-//        } catch (NullPointerException e) {
-//            log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
-//        }catch (HttpClientErrorException.NotFound e){
-//            String error = "Got 404 'Not Found' error. GitHub endpoint: " + getGitHubEndPoint(request) + " is invalid.";
-//            log.warn(error);
-//        }catch (HttpClientErrorException e){
-//            log.error(ExceptionUtils.getRootCauseMessage(e));
-//        }
+        Map<String, Integer> languagePercent = new HashMap<>();
+        HttpHeaders headers = createAuthHeaders();
+
+        String projectUrl = request.getAdditionalMetadata(PROJECT_SELF_URL);
+        String urlTemplate = projectUrl.concat(LANGUAGE_METRICS);
+
+        log.info("Getting repo languages from {}", urlTemplate);
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(
+                    urlTemplate, HttpMethod.GET, new HttpEntity<>(headers), String.class);
+
+            if(response.getBody() == null){
+                log.warn(HTTP_BODY_IS_NULL);
+            }
+            else {
+                JSONObject jsonBody = new JSONObject(response.getBody());
+                JSONArray repoLanguageStats = jsonBody.getJSONArray("repositoryLanguageAnalytics");
+
+                for(Object repo : repoLanguageStats){
+                    String repoId = ((JSONObject)repo).getString("id");
+                    if(repoId.equals(request.getAdditionalMetadata(REPO_ID)))
+                    {
+                        JSONArray languageBreakdown = ((JSONObject)repo).getJSONArray("languageBreakdown");
+                        for(Object language : languageBreakdown){
+                            String key = ((JSONObject)language).getString("name");
+                            if(((JSONObject)language).has("languagePercentage")) {
+                                Integer percentage = ((JSONObject) language).getInt("languagePercentage");
+                                languagePercent.put(key, percentage);
+                            }
+                        }
+                    }
+                }
+                sources.setLanguageStats(languagePercent);
+            }
+        } catch (NullPointerException e) {
+            log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
+        }catch (HttpClientErrorException.NotFound e){
+            String error = "Got 404 'Not Found' error. Azure endpoint: " + urlTemplate + " is invalid.";
+            log.warn(error);
+        }catch (HttpClientErrorException e){
+            log.error(ExceptionUtils.getRootCauseMessage(e));
+        }
         return sources;
     }
 
-    private List<Content> getRepoContent(String endpoint) {
-//        log.info("Getting repo content from {}", endpoint);
-//        HttpHeaders headers = createAuthHeaders();
-//        try {
-//            ResponseEntity<Content[]> response = restTemplate.exchange(
-//                    endpoint,
-//                    HttpMethod.GET,
-//                    new HttpEntity<>(headers),
-//                    Content[].class
-//            );
-//            if(response.getBody() == null){
-//                log.warn(HTTP_BODY_IS_NULL);
-//            }
-//            return Arrays.asList(response.getBody());
-//        } catch (NullPointerException e) {
-//            log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
-//        } catch (HttpClientErrorException e) {
-//            log.warn("Repo content is unavailable. The reason can be that branch has been deleted.");
-//        }
-        return Collections.emptyList();
+    private void scanGitContent(int depth, String endpoint, Sources sources){
+        if(depth >= flowProperties.getProfilingDepth()){
+            return;
+        }
+
+        if(depth == 0) {
+            endpoint = endpoint.replace("{filePath}", Strings.EMPTY);
+        }
+
+        Content contents = getRepoContent(endpoint);
+        List<Value> values = contents.getValue();
+
+        for(int i=1; i< values.size(); i++){
+            Value value =  values.get(i);
+            if(value.getIsFolder()){
+                String fullDirectoryUrl = browseRepoEndpoint.replace("{filePath}", value.getPath());
+                scanGitContent(depth + 1, fullDirectoryUrl, sources);
+            }
+            else {
+                sources.addSource(value.getPath(), value.getPath());
+            }
+        }
     }
 
-
+    private Content getRepoContent(String endpoint) {
+        log.info("Getting repo content from {}", endpoint);
+        Content contents = new Content();
+        HttpHeaders headers = createAuthHeaders();
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(
+                    endpoint,
+                    HttpMethod.GET,
+                    new HttpEntity<>(headers),
+                    String.class
+            );
+            if(response.getBody() == null){
+                log.warn(HTTP_BODY_IS_NULL);
+            }
+            com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            contents = objectMapper.readValue(response.getBody(), Content.class);
+            return contents;
+        } catch (NullPointerException e) {
+            log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
+        } catch (HttpClientErrorException e) {
+            log.warn("Repo content is unavailable. The reason can be that branch has been deleted.");
+        } catch (JsonProcessingException e) {
+            log.error(String.format("Error in processing the JSON response from the repo. Error details : %s", ExceptionUtils.getRootCauseMessage(e)));
+        }
+        return contents;
+    }
 }

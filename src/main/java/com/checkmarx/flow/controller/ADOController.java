@@ -3,9 +3,11 @@ package com.checkmarx.flow.controller;
 import com.checkmarx.flow.config.ADOProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
-import com.checkmarx.flow.dto.*;
+import com.checkmarx.flow.dto.BugTracker;
+import com.checkmarx.flow.dto.ControllerRequest;
+import com.checkmarx.flow.dto.EventResponse;
+import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.azure.*;
-import com.checkmarx.flow.dto.azure.Collection;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.HTMLHelper;
@@ -153,7 +155,7 @@ public class ADOController extends AdoControllerBase {
                     .filter(filter)
                     .build();
 
-            request.putAdditionalMetadata(ADOService.PROJECT_SELF_URL, getTheProjectURL(request, body.getResourceContainers()));
+            request.putAdditionalMetadata(ADOService.PROJECT_SELF_URL, getTheProjectURL(body.getResourceContainers()));
             fillRequestWithAdditionalData(request, repository, body.toString());
             checkForConfigAsCode(request);
             request.putAdditionalMetadata("statuses_url", pullUrl.concat("/statuses"));
@@ -275,6 +277,7 @@ public class ADOController extends AdoControllerBase {
                     .filter(filter)
                     .build();
 
+            request.putAdditionalMetadata(ADOService.PROJECT_SELF_URL, getTheProjectURL(body.getResourceContainers()));
             addMetadataToScanRequest(adoDetailsRequest, request);
             fillRequestWithAdditionalData(request,repository, body.toString());
             //if an override blob/file is provided, substitute these values
@@ -358,11 +361,12 @@ public class ADOController extends AdoControllerBase {
     }
 
     private void fillRequestWithAdditionalData(ScanRequest request, Repository repository, String hookPayload) {
+        request.putAdditionalMetadata(ADOService.REPO_ID, repository.getId());
         request.putAdditionalMetadata(ADOService.REPO_SELF_URL, repository.getUrl());
         request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, hookPayload);
     }
 
-    private String getTheProjectURL(ScanRequest request, ResourceContainers resourceContainers) {
+    private String getTheProjectURL(ResourceContainers resourceContainers) {
         String projectId = resourceContainers.getProject().getId();
         String baseUrl = resourceContainers.getProject().getBaseUrl();
         return baseUrl.concat(projectId);
