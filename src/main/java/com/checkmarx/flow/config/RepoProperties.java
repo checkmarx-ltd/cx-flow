@@ -1,10 +1,9 @@
 package com.checkmarx.flow.config;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.PostConstruct;
+import java.util.Map;
 
 public class RepoProperties {
     private boolean enabled;
@@ -26,6 +25,15 @@ public class RepoProperties {
     private String flowSummaryHeader = "Violation Summary";
     private boolean cxSummary = false;
     private String cxSummaryHeader = "Checkmarx Scan Summary";
+    private Map<String, OptionalScmInstanceProperties> optionalInstances;
+
+    public Map<String, OptionalScmInstanceProperties> getOptionalInstances() {
+        return optionalInstances;
+    }
+
+    public void setOptionalInstances(Map<String, OptionalScmInstanceProperties> optionalInstances) {
+        this.optionalInstances = optionalInstances;
+    }
 
     public boolean isEnabled() {
         return enabled;

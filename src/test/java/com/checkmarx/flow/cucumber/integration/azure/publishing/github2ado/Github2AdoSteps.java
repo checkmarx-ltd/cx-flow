@@ -4,6 +4,7 @@ import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.ADOProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
+import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.controller.GitHubController;
 import com.checkmarx.flow.cucumber.integration.azure.publishing.AzureDevopsClient;
 import com.checkmarx.flow.cucumber.integration.azure.publishing.githubflow.ScanResultsBuilder;
@@ -64,6 +65,7 @@ public class Github2AdoSteps {
     private final EmailService emailService;
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
+    private ScmConfigOverrider scmConfigOverrider;
 
     private ScanResults scanResultsToInject;
     
@@ -81,7 +83,10 @@ public class Github2AdoSteps {
     
     public Github2AdoSteps(FlowProperties flowProperties, GitHubService gitHubService,
                            CxProperties cxProperties, GitHubProperties gitHubProperties,
-                           ConfigurationOverrider configOverrider, FlowService flowService, ADOProperties adoProperties, FilterFactory filterFactory, AzureDevopsClient azureDevopsClient, EmailService emailService) {
+                           ConfigurationOverrider configOverrider, FlowService flowService,
+                           ADOProperties adoProperties, FilterFactory filterFactory,
+                           AzureDevopsClient azureDevopsClient, EmailService emailService,
+                           ScmConfigOverrider scmConfigOverrider) {
         this.filterFactory = filterFactory;
 
         this.cxClientMock = mock(CxClient.class);
@@ -98,6 +103,7 @@ public class Github2AdoSteps {
         this.adoProperties = adoProperties;
         this.configOverrider = configOverrider;
         this.emailService = emailService;
+        this.scmConfigOverrider = scmConfigOverrider;
         initGitHubProperties();
     }
 
@@ -263,7 +269,7 @@ public class Github2AdoSteps {
     }
 
     private void initMockGitHubController() {
-        doNothing().when(gitHubControllerSpy).verifyHmacSignature(any(), any());
+        doNothing().when(gitHubControllerSpy).verifyHmacSignature(any(), any(), any());
     }
     
     private void initServices() {
@@ -280,7 +286,8 @@ public class Github2AdoSteps {
                 gitHubService,
                 null,
                 filterFactory,
-                configOverrider));
+                configOverrider,
+                scmConfigOverrider));
         
         //results service will be a Mock and will work with gitHubService Mock
         //and will not not connect to any external 

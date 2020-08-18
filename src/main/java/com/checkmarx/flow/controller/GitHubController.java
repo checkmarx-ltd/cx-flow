@@ -3,6 +3,7 @@ package com.checkmarx.flow.controller;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.EventResponse;
@@ -38,6 +39,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 /**
  * Class used to manage Controller for GitHub WebHooks
@@ -66,17 +68,14 @@ public class GitHubController extends WebhookController {
     private final SastScanner sastScanner;
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
+    private final ScmConfigOverrider scmConfigOverrider;
 
     private Mac hmac;
 
     @PostConstruct
     public void init() throws NoSuchAlgorithmException, InvalidKeyException {
         // initialize HMAC with SHA1 algorithm and secret
-        if(properties != null && !ScanUtils.empty(properties.getWebhookToken())) {
-            SecretKeySpec secret = new SecretKeySpec(properties.getWebhookToken().getBytes(CHARSET), HMAC_ALGORITHM);
-            hmac = Mac.getInstance(HMAC_ALGORITHM);
-            hmac.init(secret);
-        }
+        setHmacToken(properties.getWebhookToken());
     }
 
     /**
@@ -88,7 +87,7 @@ public class GitHubController extends WebhookController {
             @PathVariable(value = "product", required = false) String product,
             @RequestHeader(value = SIGNATURE) String signature){
         log.info("Processing GitHub PING request");
-        verifyHmacSignature(body, signature);
+        verifyHmacSignature(body, signature, null);
 
         return "ok";
     }
@@ -116,7 +115,7 @@ public class GitHubController extends WebhookController {
             throw new MachinaRuntimeException(e);
         }
         //verify message signature
-        verifyHmacSignature(body, signature);
+        verifyHmacSignature(body, signature, controllerRequest);
 
         try {
             String action = event.getAction();
@@ -163,7 +162,7 @@ public class GitHubController extends WebhookController {
             setExclusionProperties(cxProperties, controllerRequest);
             //build request object
             String gitUrl = repository.getCloneUrl();
-            String token = properties.getToken();
+            String token = scmConfigOverrider.determineConfigToken(properties, controllerRequest.getScmInstance());
             log.info("Using url: {}", gitUrl);
             String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(token).concat("@"));
             gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(token).concat("@"));
@@ -195,6 +194,7 @@ public class GitHubController extends WebhookController {
                     .build();
 
             overrideScanPreset(controllerRequest, request);
+            setScmInstance(controllerRequest, request);
 
             /*Check for Config as code (cx.config) and override*/
             CxConfig cxConfig =  gitHubService.getCxConfigOverride(request);
@@ -241,7 +241,7 @@ public class GitHubController extends WebhookController {
             throw new MachinaRuntimeException();
         }
         //verify message signature
-        verifyHmacSignature(body, signature);
+        verifyHmacSignature(body, signature, controllerRequest);
 
         try {
             String app = event.getRepository().getName();
@@ -278,7 +278,7 @@ public class GitHubController extends WebhookController {
             Repository repository = event.getRepository();
             String gitUrl = repository.getCloneUrl();
             log.debug("Using url: {}", gitUrl);
-            String token = properties.getToken();
+            String token = scmConfigOverrider.determineConfigToken(properties, controllerRequest.getScmInstance());
             if(ScanUtils.empty(token)){
                 log.error("No token was provided for Github");
                 throw new MachinaRuntimeException();
@@ -311,6 +311,7 @@ public class GitHubController extends WebhookController {
                     .build();
 
             overrideScanPreset(controllerRequest, request);
+            setScmInstance(controllerRequest, request);
 
             /*Check for Config as code (cx.config) and override*/
             CxConfig cxConfig =  gitHubService.getCxConfigOverride(request);
@@ -328,8 +329,12 @@ public class GitHubController extends WebhookController {
         catch (IllegalArgumentException e){
             return getBadRequestMessage(e, controllerRequest, product);
         }
-        
+
         return getSuccessMessage();
+    }
+
+    private void setScmInstance(ControllerRequest controllerRequest, ScanRequest request) {
+        Optional.ofNullable(controllerRequest.getScmInstance()).ifPresent(request::setScmInstance);
     }
 
     private List<String> determineEmails(PushEvent event) {
@@ -378,7 +383,7 @@ public class GitHubController extends WebhookController {
             throw new MachinaRuntimeException();
         }
         //verify message signature
-        verifyHmacSignature(body, signature);
+        verifyHmacSignature(body, signature, null);
 
         if(!event.getRefType().equalsIgnoreCase("branch")){
             log.error("Nothing to do for delete tag");
@@ -442,7 +447,7 @@ public class GitHubController extends WebhookController {
 
 
     /** Validates the received body using the Github hook secret. */
-    public void verifyHmacSignature(String message, String signature) {
+    public void verifyHmacSignature(String message, String signature, ControllerRequest controllerRequest) {
         if(hmac == null) {
             log.error("Hmac was not initialized. Trying to initialize...");
             try {
@@ -451,6 +456,12 @@ public class GitHubController extends WebhookController {
                 log.error(e.getMessage(), e);
             }
         }
+        try {
+            setHmacToken(scmConfigOverrider.determineConfigWebhookToken(properties, controllerRequest));
+        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+            log.error(e.getMessage());
+        }
+
         if(hmac != null) {
             if(message != null) {
                 byte[] sig = hmac.doFinal(message.getBytes(CHARSET));
@@ -467,6 +478,14 @@ public class GitHubController extends WebhookController {
         } else {
             log.error("Unable to initialize Hmac. Signature cannot be verified.");
             throw new InvalidTokenException();
+        }
+    }
+
+    private void setHmacToken(String webhookToken) throws NoSuchAlgorithmException, InvalidKeyException {
+        if(properties != null && !ScanUtils.empty(webhookToken)) {
+            SecretKeySpec secret = new SecretKeySpec(webhookToken.getBytes(CHARSET), HMAC_ALGORITHM);
+            hmac = Mac.getInstance(HMAC_ALGORITHM);
+            hmac.init(secret);
         }
     }
 }

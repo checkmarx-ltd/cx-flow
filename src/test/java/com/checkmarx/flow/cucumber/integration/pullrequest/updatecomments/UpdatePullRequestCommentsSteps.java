@@ -7,6 +7,7 @@ import com.checkmarx.flow.controller.ADOController;
 import com.checkmarx.flow.controller.GitHubController;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.RepoComment;
+import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.azure.AdoDetailsRequest;
 import com.checkmarx.flow.dto.azure.Project;
 import com.checkmarx.flow.dto.azure.Resource;
@@ -170,13 +171,13 @@ public class UpdatePullRequestCommentsSteps {
     private void deleteGitHubComments() throws IOException {
         List<RepoComment> comments = getRepoComments();
         for (RepoComment comment: comments) {
-            gitHubService.deleteComment(comment.getCommentUrl());
+            gitHubService.deleteComment(comment.getCommentUrl(), getBasicRequest());
         }
     }
 
     private List<RepoComment> getRepoComments() throws IOException {
         if (sourceControl.equals(SourceControlType.GITHUB)) {
-            return gitHubService.getComments(PULL_REQUEST_COMMENTS_URL);
+            return gitHubService.getComments(getBasicRequest());
         }
         else if (sourceControl.equals(SourceControlType.ADO)){
             return adoService.getComments(ADO_PR_COMMENTS_URL);
@@ -295,7 +296,7 @@ public class UpdatePullRequestCommentsSteps {
     }
 
     private void initGitHubControllerSpy() {
-        doNothing().when(gitHubControllerSpy).verifyHmacSignature(any(), any());
+        doNothing().when(gitHubControllerSpy).verifyHmacSignature(any(), any(), any());
     }
 
     private void initHelperServiceMock() {
@@ -303,6 +304,11 @@ public class UpdatePullRequestCommentsSteps {
         when(helperService.getShortUid()).thenReturn("123456");
     }
 
+    private ScanRequest getBasicRequest() {
+        return ScanRequest.builder()
+                .mergeNoteUri(PULL_REQUEST_COMMENTS_URL)
+                .build();
+    }
 
     private void initGitHubProperties() {
         this.gitHubProperties.setCxSummary(false);

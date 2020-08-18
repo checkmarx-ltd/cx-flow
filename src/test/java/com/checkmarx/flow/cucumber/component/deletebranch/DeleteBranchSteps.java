@@ -214,7 +214,7 @@ public class DeleteBranchSteps {
     }
 
     private void initMockGitHubController() {
-        doNothing().when(gitHubControllerSpy).verifyHmacSignature(any(), any());
+        doNothing().when(gitHubControllerSpy).verifyHmacSignature(any(), any(), any());
     }
     
     private void initServices() {
@@ -240,7 +240,8 @@ public class DeleteBranchSteps {
                 gitHubService,
                 sastScanner,
                 filterFactory,
-                configOverrider));
+                configOverrider,
+                null));
         
     }
 
