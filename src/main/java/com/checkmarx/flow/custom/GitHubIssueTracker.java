@@ -347,7 +347,7 @@ public class GitHubIssueTracker implements IssueTracker {
      */
     private HttpHeaders createAuthHeaders(ScanRequest scanRequest) {
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.set(HttpHeaders.AUTHORIZATION, "token ".concat(scmConfigOverrider.determineConfigToken(properties, scanRequest)));
+        httpHeaders.set(HttpHeaders.AUTHORIZATION, "token ".concat(scmConfigOverrider.determineConfigToken(properties, scanRequest.getScmInstance())));
         return httpHeaders;
     }
 

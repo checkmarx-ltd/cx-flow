@@ -12,15 +12,8 @@ import java.util.Optional;
 @Slf4j
 public class ScmConfigOverrider {
 
-    public String determineConfigToken(RepoProperties properties, ScanRequest scanRequest) {
-        return Optional.ofNullable(scanRequest.getScmInstance())
-                .map(key -> getScmOverriddenConfig(properties, ScmConfigParams.TOKEN, key))
-                .orElse(properties.getToken());
-    }
-
-    public String determineConfigToken(RepoProperties properties, ControllerRequest controllerRequest) {
-        return Optional.ofNullable(controllerRequest)
-                .map(ControllerRequest::getScmInstance)
+    public String determineConfigToken(RepoProperties properties, String scmInstance) {
+        return Optional.ofNullable(scmInstance)
                 .map(key -> getScmOverriddenConfig(properties, ScmConfigParams.TOKEN, key))
                 .orElse(properties.getToken());
     }
