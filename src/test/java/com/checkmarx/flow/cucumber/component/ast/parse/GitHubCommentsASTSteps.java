@@ -135,8 +135,7 @@ public class GitHubCommentsASTSteps {
                     null,
                     null,
                     null, emailService,
-                    cxProperties,
-                    flowProperties);
+                    cxProperties);
         }
         
         throw new UnsupportedOperationException();
@@ -148,7 +147,7 @@ public class GitHubCommentsASTSteps {
         ASTResults astResults = new ASTResults();
         AstSastResults astSastResults = new AstSastResults();
 
-        List<Finding> findings = new LinkedList<Finding>();
+        List<Finding> findings = new LinkedList<>();
 
         astSastResults.setScanId("" + SCAN_ID);
 
@@ -156,7 +155,7 @@ public class GitHubCommentsASTSteps {
         if(highCount + mediumCount + lowCount > 0){
             addNodes = true;
         }
-        List<StatusCounter> findingCounts= new  LinkedList<StatusCounter> ();
+        List<StatusCounter> findingCounts = new LinkedList<> ();
         addFinding(highCount, findingCounts, findings, Severity.HIGH.name(),addNodes, "SQL_INJECTION");
         addFinding(mediumCount, findingCounts, findings, Severity.MEDIUM.name(), addNodes, "Hardcoded_password_in_Connection_String");
         addFinding(lowCount, findingCounts, findings, Severity.LOW.name(),addNodes, "Open_Redirect");
@@ -180,7 +179,7 @@ public class GitHubCommentsASTSteps {
 
     private static ScanResults createFakeSCAScanResults(int high, int medium, int low) {
 
-        Map<Filter.Severity, Integer> findingCounts= new HashMap<Filter.Severity, Integer>() ;
+        Map<Filter.Severity, Integer> findingCounts= new HashMap<>() ;
 
         SCAResults scaResults = new SCAResults();
 

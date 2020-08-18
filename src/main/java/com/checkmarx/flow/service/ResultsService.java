@@ -1,10 +1,8 @@
 package com.checkmarx.flow.service;
 
 import com.atlassian.jira.rest.client.api.RestClientException;
-import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.dto.Field;
-import com.checkmarx.flow.dto.ScanDetails;
-import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.dto.*;
+import com.checkmarx.flow.dto.report.AnalyticsReport;
 import com.checkmarx.flow.dto.report.ScanResultsReport;
 import com.checkmarx.flow.exception.*;
 import com.checkmarx.flow.utils.ScanUtils;
@@ -23,9 +21,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 import static com.checkmarx.sdk.config.Constants.UNKNOWN_INT;
@@ -45,7 +41,6 @@ public class ResultsService {
     private final ADOService adoService;
     private final EmailService emailService;
     private final CxProperties cxProperties;
-    private final FlowProperties flowProperties;
 
     @Async("scanRequest")
     public CompletableFuture<ScanResults> processScanResultsAsync(ScanRequest request, Integer projectId,
@@ -78,7 +73,7 @@ public class ResultsService {
             new ScanResultsReport(scanId, request, results).log();
         }
         if (results.getScaResults() != null) {
-            new ScanResultsReport(results.getScaResults().getScanId(), request, results, ScanResultsReport.SCA).log();
+            new ScanResultsReport(results.getScaResults().getScanId(), request, results, AnalyticsReport.SCA).log();
         }
     }
 
@@ -114,58 +109,10 @@ public class ResultsService {
         }
     }
 
-    public CompletableFuture<ScanResults> cxGetResults(ScanRequest request, CxProject cxProject) {
-        try {
-            CxProject project;
 
-            if (cxProject == null) {
-                String team = request.getTeam();
-                if (ScanUtils.empty(team)) {
-                    //if the team is not provided, use the default
-                    team = cxProperties.getTeam();
-                    request.setTeam(team);
-                }
-                if (!team.startsWith(cxProperties.getTeamPathSeparator())) {
-                    team = cxProperties.getTeamPathSeparator().concat(team);
-                }
-                String teamId = cxService.getTeamId(team);
-                Integer projectId = cxService.getProjectId(teamId, request.getProject());
-                if (projectId.equals(UNKNOWN_INT)) {
-                    log.warn("No project found for {}", request.getProject());
-                    CompletableFuture<ScanResults> x = new CompletableFuture<>();
-                    x.complete(null);
-                    return x;
-                }
-                project = cxService.getProject(projectId);
-
-            } else {
-                project = cxProject;
-            }
-            Integer scanId = cxService.getLastScanId(project.getId());
-            if (scanId.equals(UNKNOWN_INT)) {
-                log.warn("No Scan Results to process for project {}", project.getName());
-                CompletableFuture<ScanResults> x = new CompletableFuture<>();
-                x.complete(null);
-                return x;
-            } else {
-                getCxFields(project, request);
-                //null is passed for osaScanId as it is not applicable here and will be ignored
-                return processScanResultsAsync(request, project.getId(), scanId, null, request.getFilter());
-            }
-
-        } catch (MachinaException | CheckmarxException e) {
-            log.error("Error occurred while processing results for {}{}", request.getTeam(), request.getProject(), e);
-            CompletableFuture<ScanResults> x = new CompletableFuture<>();
-            x.completeExceptionally(e);
-            return x;
-        }
-    }
 
     public void processResults(ScanRequest request, ScanResults results, ScanDetails scanDetails) throws MachinaException {
-
-        if (scanDetails == null) {
-            scanDetails = new ScanDetails();
-        }
+        scanDetails = Optional.ofNullable(scanDetails).orElseGet(ScanDetails::new);
         if (!cxProperties.getOffline()) {
             getCxFields(request, results);
         }
@@ -245,45 +192,7 @@ public class ResultsService {
         return results;
     }
 
-    private void getCxFields(CxProject project, ScanRequest request) {
-        if (project == null) {
-            return;
-        }
 
-        Map<String, String> fields = new HashMap<>();
-        for (CxProject.CustomField field : project.getCustomFields()) {
-            String name = field.getName();
-            String value = field.getValue();
-            if (!ScanUtils.empty(name) && !ScanUtils.empty(value)) {
-                fields.put(name, value);
-            }
-        }
-        if (!ScanUtils.empty(cxProperties.getJiraProjectField())) {
-            String jiraProject = fields.get(cxProperties.getJiraProjectField());
-            if (!ScanUtils.empty(jiraProject)) {
-                request.getBugTracker().setProjectKey(jiraProject);
-            }
-        }
-        if (!ScanUtils.empty(cxProperties.getJiraIssuetypeField())) {
-            String jiraIssuetype = fields.get(cxProperties.getJiraIssuetypeField());
-            if (!ScanUtils.empty(jiraIssuetype)) {
-                request.getBugTracker().setIssueType(jiraIssuetype);
-            }
-        }
-        if (!ScanUtils.empty(cxProperties.getJiraCustomField()) &&
-                (fields.get(cxProperties.getJiraCustomField()) != null) && !fields.get(cxProperties.getJiraCustomField()).isEmpty()) {
-            request.getBugTracker().setFields(ScanUtils.getCustomFieldsFromCx(fields.get(cxProperties.getJiraCustomField())));
-        }
-
-        if (!ScanUtils.empty(cxProperties.getJiraAssigneeField())) {
-            String assignee = fields.get(cxProperties.getJiraAssigneeField());
-            if (!ScanUtils.empty(assignee)) {
-                request.getBugTracker().setAssignee(assignee);
-            }
-        }
-
-        request.setCxFields(fields);
-    }
 
     private void handleCustomIssueTracker(ScanRequest request, ScanResults results) throws MachinaException {
         try {
@@ -424,7 +333,6 @@ public class ResultsService {
     /**
      * Join any number of results together
      * @param results combined results object
-     * @return
      */
     public ScanResults joinResults(ScanResults... results){
         ScanResults scanResults = null;

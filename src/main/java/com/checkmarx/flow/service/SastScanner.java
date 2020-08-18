@@ -146,7 +146,12 @@ public class SastScanner implements VulnerabilityScanner {
         }
         return scanResults;
     }
-    
+
+    @Override
+    public ScanResults getLatestScanResults(ScanRequest request) {
+        return cxGetResults(request, null).join();
+    }
+
     private ScanResults getEmptyScanResults() {
         ScanResults scanResults;
         scanResults = new ScanResults();
@@ -199,10 +204,10 @@ public class SastScanner implements VulnerabilityScanner {
                 }
             }
         } catch (GitHubRepoUnavailableException e) {
-            //the error message is printed when the exception is thrown
-            //usually should occur during push event occuring on delete branch
-            //therefore need to eliminate the scan process but do not want to create
-            //an error stuck trace in the log
+            // The error message is printed when the exception is thrown.
+            // Usually should occur during push event occurring on delete branch.
+            // Therefore need to eliminate the scan process but do not want to create
+            // an error stack trace in the log.
             return new ScanDetails(UNKNOWN_INT, UNKNOWN_INT, new CompletableFuture<>(), false);
         } catch (CheckmarxException | GitAPIException e) {
             String extendedMessage = treatFailure(request, cxFile, scanId, e);
@@ -295,7 +300,7 @@ public class SastScanner implements VulnerabilityScanner {
                 helperService.getShortUid(request); //update new request object with a unique id for thread log monitoring
                 request.setProject(name);
                 request.setApplication(name);
-                processes.add(resultsService.cxGetResults(request, project));
+                processes.add(cxGetResults(request, project));
             }
             log.info("Waiting for processing to complete");
             processes.forEach(CompletableFuture::join);
@@ -412,5 +417,92 @@ public class SastScanner implements VulnerabilityScanner {
             osaScanId = osaService.createScan(projectId, path);
         }
         return osaScanId;
+    }
+
+    public CompletableFuture<ScanResults> cxGetResults(ScanRequest request, CxProject cxProject) {
+        try {
+            CxProject project;
+
+            if (cxProject == null) {
+                String team = request.getTeam();
+                if (ScanUtils.empty(team)) {
+                    //if the team is not provided, use the default
+                    team = cxProperties.getTeam();
+                    request.setTeam(team);
+                }
+                if (!team.startsWith(cxProperties.getTeamPathSeparator())) {
+                    team = cxProperties.getTeamPathSeparator().concat(team);
+                }
+                String teamId = cxService.getTeamId(team);
+                Integer projectId = cxService.getProjectId(teamId, request.getProject());
+                if (projectId.equals(UNKNOWN_INT)) {
+                    log.warn("No project found for {}", request.getProject());
+                    CompletableFuture<ScanResults> x = new CompletableFuture<>();
+                    x.complete(null);
+                    return x;
+                }
+                project = cxService.getProject(projectId);
+
+            } else {
+                project = cxProject;
+            }
+            Integer scanId = cxService.getLastScanId(project.getId());
+            if (scanId.equals(UNKNOWN_INT)) {
+                log.warn("No Scan Results to process for project {}", project.getName());
+                CompletableFuture<ScanResults> x = new CompletableFuture<>();
+                x.complete(null);
+                return x;
+            } else {
+                getCxFields(project, request);
+                //null is passed for osaScanId as it is not applicable here and will be ignored
+                return resultsService.processScanResultsAsync(request, project.getId(), scanId, null, request.getFilter());
+            }
+
+        } catch (MachinaException | CheckmarxException e) {
+            log.error("Error occurred while processing results for {}{}", request.getTeam(), request.getProject(), e);
+            CompletableFuture<ScanResults> x = new CompletableFuture<>();
+            x.completeExceptionally(e);
+            return x;
+        }
+    }
+
+    private void getCxFields(CxProject project, ScanRequest request) {
+        if (project == null) {
+            return;
+        }
+
+        Map<String, String> fields = new HashMap<>();
+        for (CxProject.CustomField field : project.getCustomFields()) {
+            String name = field.getName();
+            String value = field.getValue();
+            if (!ScanUtils.empty(name) && !ScanUtils.empty(value)) {
+                fields.put(name, value);
+            }
+        }
+        if (!ScanUtils.empty(cxProperties.getJiraProjectField())) {
+            String jiraProject = fields.get(cxProperties.getJiraProjectField());
+            if (!ScanUtils.empty(jiraProject)) {
+                request.getBugTracker().setProjectKey(jiraProject);
+            }
+        }
+        if (!ScanUtils.empty(cxProperties.getJiraIssuetypeField())) {
+            String jiraIssuetype = fields.get(cxProperties.getJiraIssuetypeField());
+            if (!ScanUtils.empty(jiraIssuetype)) {
+                request.getBugTracker().setIssueType(jiraIssuetype);
+            }
+        }
+        if (!ScanUtils.empty(cxProperties.getJiraCustomField()) &&
+                (fields.get(cxProperties.getJiraCustomField()) != null) && !fields.get(cxProperties.getJiraCustomField()).isEmpty()) {
+            request.getBugTracker().setFields(ScanUtils.getCustomFieldsFromCx(fields.get(cxProperties.getJiraCustomField())));
+        }
+
+        if (!ScanUtils.empty(cxProperties.getJiraAssigneeField())) {
+            String assignee = fields.get(cxProperties.getJiraAssigneeField());
+            if (!ScanUtils.empty(assignee)) {
+                request.getBugTracker().setAssignee(assignee);
+            }
+        }
+
+        request.setCxFields(fields);
     }
 }

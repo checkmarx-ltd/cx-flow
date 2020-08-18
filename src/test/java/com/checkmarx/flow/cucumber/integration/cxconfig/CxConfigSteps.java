@@ -558,9 +558,9 @@ public class CxConfigSteps {
                 gitHubServiceMock,
                 null,
                 null,
-                null, emailService,
-                cxProperties,
-                flowProperties);
+                null,
+                emailService,
+                cxProperties);
     }
 
     private static ScanResults createFakeScanResults() {
