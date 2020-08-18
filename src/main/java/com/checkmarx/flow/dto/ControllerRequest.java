@@ -33,6 +33,7 @@ public class ControllerRequest {
     private List<String> excludeFiles;
     private List<String> excludeFolders;
     private String override;
+    private String scmInstance;
 
     // Bug tracker.
     private String bug;
