@@ -103,7 +103,7 @@ public class FlowController {
         // Fetch the Checkmarx Scan Results based on given ScanRequest.
         // The cxProject parameter is null because the required project metadata
         // is already contained in the scanRequest parameter.
-        ScanResults scanResults = sastScanner.cxGetResults(scanRequest, null).join();
+        ScanResults scanResults = sastScanner.getLatestScanResults(scanRequest);
         log.debug("ScanResults {}", scanResults);
 
         return scanResults;

@@ -87,7 +87,7 @@ public class FlowControllerTest {
     public void testSSuccessfulScanResult(String severity, String cwe, String category, String status, String assignee, String override, String bug) {
         ScanResults results = new ScanResults();
         CompletableFuture<ScanResults> cf = CompletableFuture.completedFuture(results);
-        when(sastScanner.cxGetResults(any(ScanRequest.class), isNull())).thenReturn(cf);
+        when(sastScanner.getLatestScanResultsAsync(any(ScanRequest.class), isNull())).thenReturn(cf);
 
         ArgumentCaptor<ScanRequest> captor = ArgumentCaptor.forClass(ScanRequest.class);
         List<String> severityFilters = TestsParseUtils.parseCsvToList(severity);
@@ -96,7 +96,7 @@ public class FlowControllerTest {
         List<String> statusFilters = TestsParseUtils.parseCsvToList(status);
         ScanResults scanResults = flowController.latestScanResults(testProps.getProject(), flowProperties.getToken(), ScanFixture.TEAM_ID, testProps.getApplication(), severityFilters,
                 cweFilters, categoryFilters, statusFilters, assignee, override, bug);
-        verify(sastScanner, times(1)).cxGetResults(captor.capture(), isNull());
+        verify(sastScanner, times(1)).getLatestScanResultsAsync(captor.capture(), isNull());
         ScanRequest actual = captor.getValue();
         assertScanResultsRequest(actual, testProps.getApplication(), ScanFixture.TEAM_ID, severityFilters, cweFilters, categoryFilters, statusFilters);
     }
@@ -167,15 +167,15 @@ public class FlowControllerTest {
         assert400Response(response);
     }
 
-    private void assertOKResponse(ResponseEntity response) {
+    private void assertOKResponse(ResponseEntity<?> response) {
         assertHttpResponse(response, HttpStatus.OK);
     }
 
-    private void assert400Response(ResponseEntity response) {
+    private void assert400Response(ResponseEntity<?> response) {
         assertHttpResponse(response, HttpStatus.BAD_REQUEST);
     }
 
-    private void assertHttpResponse(ResponseEntity response, HttpStatus desiredStatus) {
+    private void assertHttpResponse(ResponseEntity<?> response, HttpStatus desiredStatus) {
         Assert.assertEquals("Received wrong HTTP status",desiredStatus, response.getStatusCode());
     }
 
@@ -224,7 +224,7 @@ public class FlowControllerTest {
                 .collect(Collectors.toList());
 
         for (String wantedStr : wanted) {
-            boolean found = !(filtersForType.stream().filter(f -> f.getValue().equals(wantedStr)).count() == 0);
+            boolean found = !(filtersForType.stream().noneMatch(f -> f.getValue().equals(wantedStr)));
             Assert.assertTrue(String.format("Filter from type: %s and value %s was not found in call to FlowService", filterType, wanted), found);
         }
     }

@@ -149,7 +149,7 @@ public class SastScanner implements VulnerabilityScanner {
 
     @Override
     public ScanResults getLatestScanResults(ScanRequest request) {
-        return cxGetResults(request, null).join();
+        return getLatestScanResultsAsync(request, null).join();
     }
 
     private ScanResults getEmptyScanResults() {
@@ -300,7 +300,7 @@ public class SastScanner implements VulnerabilityScanner {
                 helperService.getShortUid(request); //update new request object with a unique id for thread log monitoring
                 request.setProject(name);
                 request.setApplication(name);
-                processes.add(cxGetResults(request, project));
+                processes.add(getLatestScanResultsAsync(request, project));
             }
             log.info("Waiting for processing to complete");
             processes.forEach(CompletableFuture::join);
@@ -419,7 +419,7 @@ public class SastScanner implements VulnerabilityScanner {
         return osaScanId;
     }
 
-    public CompletableFuture<ScanResults> cxGetResults(ScanRequest request, CxProject cxProject) {
+    public CompletableFuture<ScanResults> getLatestScanResultsAsync(ScanRequest request, CxProject cxProject) {
         try {
             CxProject project;
 
