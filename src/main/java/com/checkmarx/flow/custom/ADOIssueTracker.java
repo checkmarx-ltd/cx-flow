@@ -6,6 +6,7 @@ import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.azure.CreateWorkItemAttr;
 import com.checkmarx.flow.exception.MachinaException;
+import com.checkmarx.flow.utils.ADOUtils;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
@@ -151,7 +152,7 @@ public class ADOIssueTracker implements IssueTracker {
         log.debug(wiq);
         JSONObject wiqJson = new JSONObject();
         wiqJson.put("query", wiq);
-        HttpEntity<String> httpEntity = new HttpEntity<>(wiqJson.toString(), createAuthHeaders());
+        HttpEntity<String> httpEntity = new HttpEntity<>(wiqJson.toString(), ADOUtils.createAuthHeaders(properties.getToken()));
 
         ResponseEntity<String> response = restTemplate.exchange(endpoint,
                 HttpMethod.POST, httpEntity, String.class);
@@ -174,7 +175,7 @@ public class ADOIssueTracker implements IssueTracker {
     }
 
     private Issue getIssue(String uri, String issueBody){
-        HttpEntity<Void> httpEntity = new HttpEntity<>(createAuthHeaders());
+        HttpEntity<Void> httpEntity = new HttpEntity<>(ADOUtils.createAuthHeaders(properties.getToken()));
         log.debug("Getting issue at uri {}", uri);
         ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, httpEntity, String.class);
         String r = response.getBody();
@@ -253,7 +254,7 @@ public class ADOIssueTracker implements IssueTracker {
         }
 
         log.debug("Request body: {}", body);
-        HttpEntity<List<CreateWorkItemAttr>> httpEntity = new HttpEntity<>(body, createPatchAuthHeaders());
+        HttpEntity<List<CreateWorkItemAttr>> httpEntity = new HttpEntity<>(body, ADOUtils.createPatchAuthHeaders(properties.getToken()));
 
         ResponseEntity<String> response = restTemplate.exchange(endpoint, HttpMethod.POST, httpEntity, String.class);
         try {
@@ -354,7 +355,7 @@ public class ADOIssueTracker implements IssueTracker {
 
         List<CreateWorkItemAttr> body = new ArrayList<>(Collections.singletonList(state));
 
-        HttpEntity<List<CreateWorkItemAttr>> httpEntity = new HttpEntity<>(body, createPatchAuthHeaders());
+        HttpEntity<List<CreateWorkItemAttr>> httpEntity = new HttpEntity<>(body, ADOUtils.createPatchAuthHeaders(properties.getToken()));
 
         restTemplate.exchange(endpoint, HttpMethod.PATCH, httpEntity, String.class);
     }
@@ -378,7 +379,7 @@ public class ADOIssueTracker implements IssueTracker {
 
         List<CreateWorkItemAttr> body = new ArrayList<>(Arrays.asList(state, description));
 
-        HttpEntity<List<CreateWorkItemAttr>> httpEntity = new HttpEntity<>(body, createPatchAuthHeaders());
+        HttpEntity<List<CreateWorkItemAttr>> httpEntity = new HttpEntity<>(body, ADOUtils.createPatchAuthHeaders(properties.getToken()));
 
         restTemplate.exchange(endpoint, HttpMethod.PATCH, httpEntity, String.class);
         return getIssue(issue.getUrl(), issueBody);
@@ -430,18 +431,7 @@ public class ADOIssueTracker implements IssueTracker {
         log.info("Finalizing Azure Processing");
     }
 
-    private HttpHeaders createAuthHeaders(){
-        String encoding = Base64.getEncoder().encodeToString(":".concat(properties.getToken()).getBytes());
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.set("Content-Type", "application/json");
-        httpHeaders.set("Authorization", "Basic ".concat(encoding));
-        httpHeaders.set("Accept", "application/json");
-        return httpHeaders;
-    }
 
-    private HttpHeaders createPatchAuthHeaders(){
-        HttpHeaders httpHeaders = createAuthHeaders();
-        httpHeaders.set("Content-Type", "application/json-patch+json");
-        return httpHeaders;
-    }
+
+
 }

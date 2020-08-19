@@ -8,6 +8,7 @@ import com.checkmarx.flow.dto.azure.CreateWorkItemAttr;
 import com.checkmarx.flow.dto.azure.Value;
 import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.exception.ADOClientException;
+import com.checkmarx.flow.utils.ADOUtils;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.CxProperties;
@@ -74,20 +75,9 @@ public class ADOService {
         this.scaScanner = scaScanner;
     }
 
-    private HttpHeaders createAuthHeaders(){
-        String encoding = Base64.getEncoder().encodeToString(":".concat(properties.getToken()).getBytes());
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.set("Content-Type", "application/json");
-        httpHeaders.set("Authorization", "Basic ".concat(encoding));
-        httpHeaders.set("Accept", "application/json");
-        return httpHeaders;
-    }
 
-    private HttpHeaders createPatchAuthHeaders(){
-        HttpHeaders httpHeaders = createAuthHeaders();
-        httpHeaders.set("Content-Type", "application/json-patch+json");
-        return httpHeaders;
-    }
+
+
 
     void processPull(ScanRequest request, ScanResults results) throws ADOClientException {
         try {
@@ -114,7 +104,7 @@ public class ADOService {
             } else if (commentToUpdate == null){
                 String threadId = request.getAdditionalMetadata("ado_thread_id");
                 if (ScanUtils.empty(threadId)) {
-                    HttpEntity<String> httpEntity = new HttpEntity<>(getJSONThread(comment).toString(), createAuthHeaders());
+                    HttpEntity<String> httpEntity = new HttpEntity<>(getJSONThread(comment).toString(), ADOUtils.createAuthHeaders(properties.getToken()));
                     log.debug("Creating new thread for comments");
                     ResponseEntity<String> response = restTemplate.exchange(getFullAdoApiUrl(mergeUrl),
                             HttpMethod.POST, httpEntity, String.class);
@@ -125,7 +115,7 @@ public class ADOService {
                         log.debug("Created new thread with Id {}", id);
                     }
                 } else {
-                    HttpEntity<String> httpEntity = new HttpEntity<>(getJSONComment(comment).toString(), createAuthHeaders());
+                    HttpEntity<String> httpEntity = new HttpEntity<>(getJSONComment(comment).toString(), ADOUtils.createAuthHeaders(properties.getToken()));
                     mergeUrl = mergeUrl.concat("/").concat(threadId).concat("/comments");
                     log.debug("Adding comment to thread Id {}", threadId);
                     restTemplate.exchange(getFullAdoApiUrl(mergeUrl),
@@ -146,7 +136,7 @@ public class ADOService {
     private void updateComment(RepoComment repoComment, String newComment) {
         log.debug("Updating exisiting comment. url: {}", repoComment.getCommentUrl());
         log.debug("Updated comment: {}" , repoComment);
-        HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONComment(ADO_COMMENT_CONTENT_FIELD_NAME,newComment).toString(), createAuthHeaders());
+        HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONComment(ADO_COMMENT_CONTENT_FIELD_NAME,newComment).toString(), ADOUtils.createAuthHeaders(properties.getToken()));
         restTemplate.exchange(getFullAdoApiUrl(repoComment.getCommentUrl()), HttpMethod.PATCH, httpEntity, String.class);
     }
 
@@ -181,7 +171,7 @@ public class ADOService {
 
             HttpEntity<List<CreateWorkItemAttr>> httpEntity = new HttpEntity<>(
                     list,
-                    createPatchAuthHeaders()
+                    ADOUtils.createPatchAuthHeaders(properties.getToken())
             );
             if(ScanUtils.empty(url)){
                 log.error("statuses_url was not provided within the request object, which is required for blocking / unblocking pull requests");
@@ -209,7 +199,7 @@ public class ADOService {
     int createStatus(String state, String description, String url, String sastUrl){
         HttpEntity<String> httpEntity = new HttpEntity<>(
                 getJSONStatus(state, sastUrl, description).toString(),
-                createAuthHeaders()
+                ADOUtils.createAuthHeaders(properties.getToken())
         );
         //TODO remove preview once applicable
         log.info("Adding pending status to pull {}", url);
@@ -263,7 +253,7 @@ public class ADOService {
     }
 
     public List<RepoComment> getComments(String url) throws IOException {
-        HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders());
+        HttpEntity<?> httpEntity = new HttpEntity<>(ADOUtils.createAuthHeaders(properties.getToken()));
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, httpEntity , String.class);
         List<RepoComment> result = new ArrayList<>();
         ObjectMapper objMapper = new ObjectMapper();
@@ -315,7 +305,7 @@ public class ADOService {
 
     public void deleteComment(String url) {
         url = getFullAdoApiUrl(url);
-        HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders());
+        HttpEntity<?> httpEntity = new HttpEntity<>(ADOUtils.createAuthHeaders(properties.getToken()));
         restTemplate.exchange(url, HttpMethod.DELETE, httpEntity, String.class);
     }
 
@@ -337,7 +327,7 @@ public class ADOService {
 
     private CxConfig loadCxConfigFromADO(ScanRequest request) {
         CxConfig cxConfig;
-        HttpHeaders headers = createAuthHeaders();
+        HttpHeaders headers = ADOUtils.createAuthHeaders(properties.getToken());
         String repoSelfUrl = request.getAdditionalMetadata(REPO_SELF_URL);
         String urlTemplate = repoSelfUrl.concat(GET_FILE_CONTENT);
 
@@ -392,7 +382,7 @@ public class ADOService {
     private Sources getRepoLanguagePercentages(ScanRequest request) {
         Sources sources = new Sources();
         Map<String, Integer> languagePercent = new HashMap<>();
-        HttpHeaders headers = createAuthHeaders();
+        HttpHeaders headers = ADOUtils.createAuthHeaders(properties.getToken());
 
         String projectUrl = request.getAdditionalMetadata(PROJECT_SELF_URL);
         String urlTemplate = projectUrl.concat(LANGUAGE_METRICS);
@@ -463,7 +453,7 @@ public class ADOService {
     private Content getRepoContent(String endpoint) {
         log.info("Getting repo content from {}", endpoint);
         Content contents = new Content();
-        HttpHeaders headers = createAuthHeaders();
+        HttpHeaders headers = ADOUtils.createAuthHeaders(properties.getToken());
         try {
             ResponseEntity<String> response = restTemplate.exchange(
                     endpoint,
