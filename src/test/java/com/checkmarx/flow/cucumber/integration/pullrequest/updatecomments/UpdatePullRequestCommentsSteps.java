@@ -8,9 +8,9 @@ import com.checkmarx.flow.controller.GitHubController;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.RepoComment;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.dto.azure.AdoDetailsRequest;
-import com.checkmarx.flow.dto.azure.Project;
-import com.checkmarx.flow.dto.azure.Resource;
+import com.checkmarx.flow.dto.azure.*;
+import com.checkmarx.flow.dto.github.PullEvent;
+import com.checkmarx.flow.dto.github.Repository;
 import com.checkmarx.flow.dto.github.*;
 import com.checkmarx.flow.service.ADOService;
 import com.checkmarx.flow.service.GitHubService;
@@ -38,10 +38,10 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.fail;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.*;
 
 
@@ -371,6 +371,15 @@ public class UpdatePullRequestCommentsSteps {
         pullEvent.setId("4519989c-c157-4bf8-9651-e94b8d0fca27");
         pullEvent.setSubscriptionId("25aa3b80-54ed-4b26-976a-b74f94940852");
         pullEvent.setPublisherId("tfs");
+
+        Project_ project = new Project_();
+        project.setId("3172109f-8bcb-4f21-a8f7-4f94d4a825b0");
+        project.setBaseUrl("https://dev.azure.com/OrgName/");
+
+        ResourceContainers resourceContainers = new ResourceContainers();
+        resourceContainers.setProject(project);
+
+        pullEvent.setResourceContainers(resourceContainers);
         Resource resource = new Resource();
         resource.setStatus("active");
         resource.setSourceRefName("refs/heads/master");
