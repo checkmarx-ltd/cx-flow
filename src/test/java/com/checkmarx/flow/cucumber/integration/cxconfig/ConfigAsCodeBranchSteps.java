@@ -65,7 +65,7 @@ public class ConfigAsCodeBranchSteps {
         // Don't start automation.
         FlowService flowServiceMock = mock(FlowService.class);
 
-        GitHubService gitHubService = new GitHubService(restTemplateMock, gitHubProperties, flowProperties, null, scmConfigOverrider);
+        GitHubService gitHubService = new GitHubService(restTemplateMock, gitHubProperties, flowProperties, null, scmConfigOverrider, null);
 
         GitHubController gitHubControllerSpy = Mockito.spy(new GitHubController(gitHubProperties,
                 flowProperties,
@@ -74,6 +74,7 @@ public class ConfigAsCodeBranchSteps {
                 flowServiceMock,
                 helperService,
                 gitHubService,
+                null,
                 null,
                 filterFactory,
                 configOverrider,

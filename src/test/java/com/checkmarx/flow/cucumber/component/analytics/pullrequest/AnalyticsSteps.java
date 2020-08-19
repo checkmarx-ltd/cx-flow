@@ -232,6 +232,7 @@ public class AnalyticsSteps {
                 gitHubProperties,
                 flowProperties,
                 thresholdValidator,
+                null,
                 null);
 
         return new ResultsService(
