@@ -95,18 +95,12 @@ public class PublishTicketsWithOptionalScmConfSteps {
         OptionalScmInstanceProperties instanceProperties = new OptionalScmInstanceProperties();
         instanceProperties.setWebhookToken("1234");
         instanceProperties.setToken(gitHubProperties.getToken());
-        instanceProperties.setApiUrl("https://api.github.com/repos/");
-        instanceProperties.setUrl("https://github.com");
+        instanceProperties.setApiUrl(gitHubProperties.getApiUrl());
+        instanceProperties.setUrl(gitHubProperties.getUrl());
 
         Map<String, OptionalScmInstanceProperties> instancePropertiesMap = new LinkedHashMap<>();
         instancePropertiesMap.put(SCM_INSTANCE_NAME, instanceProperties);
         gitHubProperties.setOptionalInstances(instancePropertiesMap);
-
-        // Comment-out default configuration
-        gitHubProperties.setWebhookToken(null);
-        gitHubProperties.setToken(null);
-        gitHubProperties.setUrl(null);
-        gitHubProperties.setApiUrl(null);
     }
 
     private ScanRequest getBasicScanRequest() {
