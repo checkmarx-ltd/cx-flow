@@ -71,8 +71,11 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
 
     @Override
     public ScanResults getLatestScanResults(ScanRequest request) {
-        // stub
-        return new ScanResults();
+        ScanParams internalScanParams = ScanParams.builder()
+                .projectName(request.getProject())
+                .build();
+        ASTResultsWrapper internalResults = client.getLatestScanResults(internalScanParams);
+        return toScanResults(internalResults);
     }
 
     private void treatError(ScanRequest scanRequest, ASTResultsWrapper internalResults, Exception e) {
@@ -96,9 +99,9 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
             log.debug("free space {}", f.getFreeSpace());
             log.debug("total space {}", f.getTotalSpace());
             log.debug(f.getAbsolutePath());
-            ScanParams internalScaParams = toParams(scanRequest, cxZipFile);
+            ScanParams internalScanParams = toParams(scanRequest, cxZipFile);
 
-            internalResults = client.scanLocalSource(internalScaParams);
+            internalResults = client.scanLocalSource(internalScanParams);
             logRequest(scanRequest, getScanId(internalResults), OperationResult.successful());
             result = toScanResults(internalResults);
 
