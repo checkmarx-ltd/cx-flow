@@ -59,7 +59,7 @@ public class ScmConfigOverrider {
     }
 
     private String validateOptionalInstanceValue(ScmConfigParams configParams, String key, String value) {
-        if (Optional.ofNullable(value).isPresent()) {
+        if (value != null) {
             return value;
         } else {
             log.error("Value type: {} for scm-instance key: {} must be initiated", configParams, key);
