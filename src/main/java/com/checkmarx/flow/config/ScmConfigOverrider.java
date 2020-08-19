@@ -41,20 +41,29 @@ public class ScmConfigOverrider {
             switch (configParams) {
                 case TOKEN:
                     log.info("Overriding token for SCM instance key: {}", key);
-                    value = optionalInstanceKey.getToken();
+                    value = validateOptionalInstanceValue(configParams, key, optionalInstanceKey.getToken());
                     break;
                 case WEBHOOK_TOKEN:
                     log.info("Overriding webhook-token for SCM instance key: {}", key);
-                    value = optionalInstanceKey.getWebhookToken();
+                    value = validateOptionalInstanceValue(configParams, key, optionalInstanceKey.getWebhookToken());
                     break;
                 case API_URL:
                     log.info("Overriding api-url for SCM instance key: {}", key);
-                    value = optionalInstanceKey.getApiUrl();
+                    value = validateOptionalInstanceValue(configParams, key, optionalInstanceKey.getApiUrl());
                     break;
                 default:
                     throw new MachinaRuntimeException("Scm key: " + key + "is not supported");
             }
         }
         return value;
+    }
+
+    private String validateOptionalInstanceValue(ScmConfigParams configParams, String key, String value) {
+        if (value != null) {
+            return value;
+        } else {
+            log.error("Value type: {} for scm-instance key: {} must be initiated", configParams, key);
+            throw new MachinaRuntimeException();
+        }
     }
 }
