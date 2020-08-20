@@ -1,11 +1,8 @@
 @SCA_CLI_SCAN  @IntegrationTest
-Feature: Cx-Flow CLI SCA Integration tests
-
-    Background: running Sca scan
-        Given repository is github-sca
+Feature: SCA support in CxFlow command-line
 
     Scenario Outline: Testing break-build functionality
-        When running with break-build on <issue-type>
+        When running a SCA scan with break-build on <issue-type>
         Then run should exit with exit code <exit-code-number>
 
         Examples:
