@@ -414,8 +414,6 @@ public class GitHubController extends WebhookController {
             namespace = repository.getOwner().getName().replace(" ", "_");
         }
 
-        flowProperties.setAutoProfile(true);
-
         ScanRequest request = ScanRequest.builder()
                 .application(app)
                 .product(p)
