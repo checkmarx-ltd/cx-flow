@@ -3,10 +3,7 @@ package com.checkmarx.flow.sastscanning;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.Sources;
-import com.checkmarx.flow.service.BitBucketService;
-import com.checkmarx.flow.service.GitHubService;
-import com.checkmarx.flow.service.GitLabService;
-import com.checkmarx.flow.service.HelperService;
+import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
@@ -36,6 +33,7 @@ public class ScanRequestConverter {
     private final GitHubService gitService;
     private final GitLabService gitLabService;
     private final BitBucketService bitBucketService;
+    private final ADOService adoService;
 
     public CxScanParams toScanParams(ScanRequest scanRequest) throws CheckmarxException {
         String ownerId = determineTeamAndOwnerID(scanRequest);
@@ -164,7 +162,7 @@ public class ScanRequestConverter {
                 sources = bitBucketService.getRepoContent(request);
                 break;
             case ADO:
-                log.warn("Profiling is not available for Azure DevOps");
+                sources = adoService.getRepoContent(request);
                 break;
             default:
                 log.info("Nothing to profile");
