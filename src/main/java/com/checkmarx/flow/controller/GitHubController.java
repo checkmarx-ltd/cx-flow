@@ -161,7 +161,7 @@ public class GitHubController extends WebhookController {
 
             setExclusionProperties(cxProperties, controllerRequest);
             //build request object
-            String gitUrl = pullRequest.getHead().getRepo().getCloneUrl()
+            String gitUrl = pullRequest.getHead().getRepo().getCloneUrl();
             String token = scmConfigOverrider.determineConfigToken(properties, controllerRequest.getScmInstance());
             log.info("Using url: {}", gitUrl);
             String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(token).concat("@"));
