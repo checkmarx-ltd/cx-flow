@@ -13,7 +13,7 @@ import org.springframework.web.client.RestTemplate;
 @TestConfiguration
 public class UpdatePullRequestConfiguration {
 
-    @Bean
+    @Bean("updatePullTestRequestBean")
     @Primary
     public CxService getCxService(CxAuthClient authClient,
                                   CxProperties cxProperties,
