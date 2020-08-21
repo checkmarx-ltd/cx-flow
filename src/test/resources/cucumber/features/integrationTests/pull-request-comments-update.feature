@@ -35,7 +35,6 @@
     Scenario Outline: Pull request arrives from ADO to CxFlow, then scan is initiated, pull request should be without comments, and we should verify that the comments are new.
       Given scanner is set to "<scanner>"
       Given source control is ADO
-#      Given branch is udi-test-2
       And no comments on pull request
       When pull request arrives to CxFlow
       Then Wait for comments
