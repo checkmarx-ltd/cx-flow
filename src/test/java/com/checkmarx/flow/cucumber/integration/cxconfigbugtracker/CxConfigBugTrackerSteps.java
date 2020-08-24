@@ -30,8 +30,10 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import javax.annotation.Resource;
 import java.util.*;
 
 import static org.junit.Assert.fail;
@@ -42,12 +44,12 @@ import static org.mockito.Mockito.*;
 @SpringBootTest(classes = {CxFlowApplication.class, CxConfigBugTrackerConfiguration.class, PublishUtils.class})
 @Slf4j
 public class CxConfigBugTrackerSteps {
-    private static final String PULL_REQUEST_STATUSES_URL = "statuses url stub";
     public static final String BRANCH_NAME = "udi-tests";
     public static final String CUSTOM_BEAN_NAME = "GitHub";
     public static final String GITHUB_USER = "cxflowtestuser";
 
     @Autowired
+    @Qualifier("cxConfigurationTestBean")
     private CxClient cxClientMock;
     private final GitHubService gitHubService;
     private GitHubController gitHubControllerSpy;

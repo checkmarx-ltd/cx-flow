@@ -74,6 +74,7 @@ public class UpdatePullRequestCommentsSteps {
     private SourceControlType sourceControl;
     private FlowProperties flowProperties;
     private CxProperties cxProperties;
+    private CxAuthClient authClient;
     private String branchGitHub;
     private ScannerType scannerType;
 
@@ -92,6 +93,7 @@ public class UpdatePullRequestCommentsSteps {
         this.flowProperties = flowProperties;
         this.cxProperties = cxProperties;
         this.scaProperties = scaProperties;
+        this.authClient = authClient;
         sastFile = toFullResourcePath(filePath);
     }
 
