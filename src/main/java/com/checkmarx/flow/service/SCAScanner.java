@@ -14,8 +14,8 @@ import java.util.Optional;
 @Service
 @Slf4j
 public class SCAScanner extends AbstractASTScanner {
-    public SCAScanner(ScaClientImpl astClient, FlowProperties flowProperties) {
-        super(astClient, flowProperties, ScaProperties.CONFIG_PREFIX);
+    public SCAScanner(ScaClientImpl scaClient, FlowProperties flowProperties) {
+        super(scaClient, flowProperties, ScaProperties.CONFIG_PREFIX);
     }
 
     @Override

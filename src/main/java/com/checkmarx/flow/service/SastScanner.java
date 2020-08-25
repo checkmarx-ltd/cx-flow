@@ -3,10 +3,7 @@ package com.checkmarx.flow.service;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.report.ScanReport;
-import com.checkmarx.flow.exception.ExitThrowable;
-import com.checkmarx.flow.exception.GitHubRepoUnavailableException;
-import com.checkmarx.flow.exception.MachinaException;
-import com.checkmarx.flow.exception.MachinaRuntimeException;
+import com.checkmarx.flow.exception.*;
 import com.checkmarx.flow.sastscanning.ScanRequestConverter;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.flow.utils.ZipUtils;
@@ -25,13 +22,13 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.springframework.stereotype.Service;
+
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+
 import static com.checkmarx.flow.exception.ExitThrowable.exit;
 import static com.checkmarx.sdk.config.Constants.UNKNOWN;
 import static com.checkmarx.sdk.config.Constants.UNKNOWN_INT;
@@ -226,17 +223,12 @@ public class SastScanner implements VulnerabilityScanner {
             String effectiveProjectName = projectNameGenerator.determineProjectName(request);
             request.setProject(effectiveProjectName);
 
-            String cxZipFile = FileSystems.getDefault().getPath("cx.".concat(UUID.randomUUID().toString()).concat(".zip")).toAbsolutePath().toString();
-            ZipUtils.zipFile(path, cxZipFile, flowProperties.getZipExclude());
-            File f = new File(cxZipFile);
-            log.debug("Creating temp file {}", f.getPath());
-            log.debug("free space {}", f.getFreeSpace());
-            log.debug("total space {}", f.getTotalSpace());
-            log.debug(f.getAbsolutePath());
-            ScanDetails details = executeCxScan(request, f);
+            File zipFile = ZipUtils.zipToTempFile(path, flowProperties.getZipExclude());
+            ScanDetails details = executeCxScan(request, zipFile);
             results = cxService.getReportContentByScanId(details.getScanId(), request.getFilter());
-            log.debug("Deleting temp file {}", f.getPath());
-            Files.deleteIfExists(Paths.get(cxZipFile));
+
+            log.debug("Deleting temp file {}", zipFile.getPath());
+            Files.deleteIfExists(zipFile.toPath());
         } catch (IOException e) {
             log.error("Error occurred while attempting to zip path {}", path, e);
             exit(3);

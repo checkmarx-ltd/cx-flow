@@ -18,6 +18,21 @@ public class ZipUtils {
     private ZipUtils() {
     }
 
+    public static File zipToTempFile(String fileToZip, String excludePatterns) throws IOException {
+        String targetFilename = "cx.".concat(UUID.randomUUID().toString()).concat(".zip");
+        String targetPath = FileSystems.getDefault()
+                .getPath(targetFilename)
+                .toAbsolutePath()
+                .toString();
+        zipFile(fileToZip, targetPath, excludePatterns);
+        File zippedFile = new File(targetPath);
+        log.debug("Creating temp file {}", zippedFile.getPath());
+        log.debug("free space {}", zippedFile.getFreeSpace());
+        log.debug("total space {}", zippedFile.getTotalSpace());
+        log.debug(zippedFile.getAbsolutePath());
+        return zippedFile;
+    }
+
     public static void zipFile(String fileToZip, String zipFile, String excludePatterns)
             throws IOException {
         List<String> excludeList = null;
