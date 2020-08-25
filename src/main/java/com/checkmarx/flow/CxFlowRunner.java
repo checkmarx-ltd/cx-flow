@@ -182,8 +182,8 @@ public class CxFlowRunner implements ApplicationRunner {
         status = args.getOptionValues("status");
         excludeFiles = args.getOptionValues("exclude-files");
         excludeFolders = args.getOptionValues("exclude-folders");
-        boolean bb = args.containsOption("bb"); //BitBucket Cloud
-        boolean bbs = args.containsOption("bbs"); //BitBucket Server
+        boolean usingBitBucketCloud = args.containsOption("bb");
+        boolean usingBitBucketServer = args.containsOption("bbs");
 
         if(((ScanUtils.empty(namespace) && ScanUtils.empty(repoName) && ScanUtils.empty(branch)) &&
                 ScanUtils.empty(application)) && !args.containsOption(BATCH_OPTION)) {
@@ -201,26 +201,19 @@ public class CxFlowRunner implements ApplicationRunner {
         if(excludeFolders == null && !ScanUtils.empty(cxProperties.getExcludeFolders())){
             excludeFolders = Arrays.asList(cxProperties.getExcludeFolders().split(","));
         }
-        //set the default bug tracker as per yml
-        BugTracker.Type bugType = null;
         if (ScanUtils.empty(bugTracker)) {
             bugTracker =  flowProperties.getBugTracker();
         }
-        try {
-            bugType = ScanUtils.getBugTypeEnum(bugTracker, flowProperties.getBugTrackerImpl());
-        }catch (IllegalArgumentException e){
-            log.error("No valid bug tracker was provided", e);
-            exit(1);
-        }
-        ScanRequest.Product p;
-        if(osa){
-            if(libFile == null){
+        BugTracker.Type bugType = getBugTrackerType(bugTracker);
+        ScanRequest.Product product;
+        if (osa) {
+            if (libFile == null) {
                 log.error("Both vulnerabilities file (f) and libraries file (lib-file) must be provided for OSA");
                 exit(1);
             }
-            p = ScanRequest.Product.CXOSA;
+            product = ScanRequest.Product.CXOSA;
         } else {
-            p = ScanRequest.Product.CX;
+            product = ScanRequest.Product.CX;
         }
 
         if(ScanUtils.empty(preset)){
@@ -246,19 +239,9 @@ public class CxFlowRunner implements ApplicationRunner {
                         .build();
                 break;
             case JIRA:
-                bt = BugTracker.builder()
+                bt = jiraPropertiesToBugTracker()
                         .type(bugType)
-                        .projectKey(jiraProperties.getProject())
-                        .issueType(jiraProperties.getIssueType())
                         .assignee(assignee)
-                        .priorities(jiraProperties.getPriorities())
-                        .closeTransitionField(jiraProperties.getCloseTransitionField())
-                        .closeTransitionValue(jiraProperties.getCloseTransitionValue())
-                        .closedStatus(jiraProperties.getClosedStatus())
-                        .closeTransition(jiraProperties.getCloseTransition())
-                        .openStatus(jiraProperties.getOpenStatus())
-                        .openTransition(jiraProperties.getOpenTransition())
-                        .fields(jiraProperties.getFields())
                         .build();
                 break;
             case ADOPULL:
@@ -323,7 +306,7 @@ public class CxFlowRunner implements ApplicationRunner {
 
         ScanRequest request = ScanRequest.builder()
                 .application(application)
-                .product(p)
+                .product(product)
                 .namespace(namespace)
                 .team(team)
                 .project(cxProject)
@@ -349,24 +332,18 @@ public class CxFlowRunner implements ApplicationRunner {
         request = configOverrider.overrideScanRequestProperties(o, request);
         /*Determine if BitBucket Cloud/Server is being used - this will determine formatting of URL that links to file/line in repository */
         request.setId(uid);
-        if(bb){
+        if(usingBitBucketCloud){
             request.setRepoType(ScanRequest.Repository.BITBUCKETSERVER);
             //TODO create browse code url
         }
-        else if(bbs){
+        else if(usingBitBucketServer){
             request.setRepoType(ScanRequest.Repository.BITBUCKETSERVER);
-            if(repoUrl != null) {
-                repoUrl = repoUrl.replace("/scm/", "/projects/");
-                repoUrl = repoUrl.replaceAll("/[\\w-]+.git$", "/repos$0");
-                repoUrl = repoUrl.replaceAll(".git$", "");
-                repoUrl = repoUrl.concat("/browse");
-            }
+            repoUrl = getBitBuckerServerBrowseUrl(repoUrl);
             request.putAdditionalMetadata("BITBUCKET_BROWSE", repoUrl);
         }
 
         try {
             if(args.containsOption(PARSE_OPTION)){
-
                 File f = new File(file);
                 if(!f.exists()){
                     log.error("Result File not found {}", file);
@@ -436,6 +413,43 @@ public class CxFlowRunner implements ApplicationRunner {
         }
         log.info("Completed Successfully");
         exit(ExitCode.SUCCESS);
+    }
+
+    private String getBitBuckerServerBrowseUrl(String repoUrl) {
+        if(repoUrl != null) {
+            repoUrl = repoUrl.replace("/scm/", "/projects/");
+            repoUrl = repoUrl.replaceAll("/[\\w-]+.git$", "/repos$0");
+            repoUrl = repoUrl.replaceAll(".git$", "");
+            repoUrl = repoUrl.concat("/browse");
+        }
+        return repoUrl;
+    }
+
+    private BugTracker.BugTrackerBuilder jiraPropertiesToBugTracker() {
+        return BugTracker.builder()
+                .projectKey(jiraProperties.getProject())
+                .issueType(jiraProperties.getIssueType())
+                .priorities(jiraProperties.getPriorities())
+                .closeTransitionField(jiraProperties.getCloseTransitionField())
+                .closeTransitionValue(jiraProperties.getCloseTransitionValue())
+                .closedStatus(jiraProperties.getClosedStatus())
+                .closeTransition(jiraProperties.getCloseTransition())
+                .openStatus(jiraProperties.getOpenStatus())
+                .openTransition(jiraProperties.getOpenTransition())
+                .fields(jiraProperties.getFields());
+    }
+
+    private BugTracker.Type getBugTrackerType(String bugTracker) throws ExitThrowable {
+        //set the default bug tracker as per yml
+        BugTracker.Type bugTypeEnum;
+        try {
+            bugTypeEnum = ScanUtils.getBugTypeEnum(bugTracker, flowProperties.getBugTrackerImpl());
+        }catch (IllegalArgumentException e){
+            log.error("No valid bug tracker was provided", e);
+            bugTypeEnum = BugTracker.Type.NONE;
+            exit(1);
+        }
+        return bugTypeEnum;
     }
 
     private String getNoneEmptyRepoUrl(String namespace, String repoName, String repoUrl, String gitUri) throws ExitThrowable {
