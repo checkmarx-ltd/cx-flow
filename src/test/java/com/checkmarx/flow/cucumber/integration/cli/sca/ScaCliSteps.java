@@ -182,7 +182,7 @@ public class ScaCliSteps {
         log.info("Assuming finding count: {} for the previous scan.", count);
     }
 
-    @When("running CxFlow with `publish latest scan results` options for the project")
+    @When("running CxFlow with `publish latest scan results` options")
     public void runningCxFlowWithPublishLatestScanResultsOptions() {
         String commandLine = String.format("--project --cx-project=%s --app=MyApp --blocksysexit", customScaProjectName);
         tryRunCxFlow(commandLine);

@@ -29,7 +29,7 @@ Feature: SCA support in CxFlow command-line
         # Normal flow. Make sure that only the latest scan is used.
         Given previous scan for a SCA project contains 2 findings
         And last scan for the project contains <latest count> findings
-        When running CxFlow with `publish latest scan results` options for the project
+        When running CxFlow with `publish latest scan results` options
         Then bug tracker contains <latest count> issues
         Examples:
             | latest count |
@@ -40,16 +40,13 @@ Feature: SCA support in CxFlow command-line
     Scenario: Trying to publish latest scan results for a non-existent project
         # Make sure CxFlow doesn't crash in this case.
         Given the "ci-non-existent-project-test" project doesn't exist in SCA
-        When running CxFlow with `publish latest scan results` options for the project
+        When running CxFlow with `publish latest scan results` options
         Then bug tracker contains no issues
         And no exception is thrown
 
     Scenario: Trying to publish latest scan results for a project with no scans
         # Make sure CxFlow doesn't crash in this case either.
         Given the "ci-project-no-scans-test" project exists in SCA but doesn't have any scans
-        When running CxFlow with `publish latest scan results` options for the project
+        When running CxFlow with `publish latest scan results` options
         Then bug tracker contains no issues
         And no exception is thrown
-
-    @Skip
-    Scenario: While publishing latest scan results, CxFlow must respect SCA filters
