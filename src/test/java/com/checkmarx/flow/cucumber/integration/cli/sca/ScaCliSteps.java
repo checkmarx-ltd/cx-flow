@@ -22,6 +22,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * This step implementation relies on specific projects that already exist in SCA (see customScaProjectName).
+ */
 @SpringBootTest(classes = {CxFlowApplication.class, JiraTestUtils.class})
 @Slf4j
 @RequiredArgsConstructor
