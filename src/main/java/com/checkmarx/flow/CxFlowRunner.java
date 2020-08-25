@@ -364,20 +364,20 @@ public class CxFlowRunner implements ApplicationRunner {
                     gitAuthUrl = repoUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(token).concat("@"));
                     gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(token).concat("@"));
 
-                    cxScan(request, repoUrl, gitAuthUrl, branch, ScanRequest.Repository.GITHUB);
+                    scanRemoteRepo(request, repoUrl, gitAuthUrl, branch, ScanRequest.Repository.GITHUB);
                 } //GitLab Scan with Git Clone
                 else if (args.containsOption("gitlab") && !ScanUtils.anyEmpty(namespace, repoName)) {
                     repoUrl = getNoneEmptyRepoUrl(namespace, repoName, repoUrl, gitLabProperties.getGitUri(namespace, repoName));
                     String token = gitLabProperties.getToken();
                     gitAuthUrl = repoUrl.replace(Constants.HTTPS, Constants.HTTPS_OAUTH2.concat(token).concat("@"));
                     gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP_OAUTH2.concat(token).concat("@"));
-                    cxScan(request, repoUrl, gitAuthUrl, branch, ScanRequest.Repository.GITLAB);
+                    scanRemoteRepo(request, repoUrl, gitAuthUrl, branch, ScanRequest.Repository.GITLAB);
                 } else if (args.containsOption("bitbucket") && containsRepoArgs(namespace, repoName, branch)) {
                     log.warn("Bitbucket git clone scan not implemented");
                 } else if (args.containsOption("ado") && containsRepoArgs(namespace, repoName, branch)) {
                     log.warn("Azure DevOps git clone scan not implemented");
                 } else if (file != null) {
-                    cxScan(request, file);
+                    scanLocalPath(request, file);
                 } else {
                     log.error("No valid option was provided for driving scan");
                 }
@@ -455,7 +455,7 @@ public class CxFlowRunner implements ApplicationRunner {
         }
     }
 
-    private void cxScan(ScanRequest request, String gitUrl, String gitAuthUrl, String branch, ScanRequest.Repository repoType) throws ExitThrowable {
+    private void scanRemoteRepo(ScanRequest request, String gitUrl, String gitAuthUrl, String branch, ScanRequest.Repository repoType) throws ExitThrowable {
         log.info("Initiating scan using Checkmarx git clone");
         request.setRepoType(repoType);
         log.info("Git url: {}", gitUrl);
@@ -464,16 +464,17 @@ public class CxFlowRunner implements ApplicationRunner {
         request.setRepoUrlWithAuth(gitAuthUrl);
         request.setRefs(Constants.CX_BRANCH_PREFIX.concat(branch));
 
-        processResults(request, runOnActiveScanners(scanner -> scanner.scanCli(request, "Scan-git-clone")));
+        ScanResults scanResults = runOnActiveScanners(scanner -> scanner.scanCli(request, "Scan-git-clone"));
+        processResults(request, scanResults);
     }
 
-    private void cxScan(ScanRequest request, String path) throws ExitThrowable {
-
+    private void scanLocalPath(ScanRequest request, String path) throws ExitThrowable {
         if (ScanUtils.empty(request.getProject())) {
             log.error("Please provide --cx-project to define the project in Checkmarx");
             exit(2);
         }
-        processResults(request, runOnActiveScanners(scanner -> scanner.scanCli(request, "cxFullScan", new File(path))));
+        ScanResults scanResults = runOnActiveScanners(scanner -> scanner.scanCli(request, "cxFullScan", new File(path)));
+        processResults(request, scanResults);
     }
 
     private void cxOsaParse(ScanRequest request, File file, File libs) throws ExitThrowable {
@@ -489,8 +490,8 @@ public class CxFlowRunner implements ApplicationRunner {
     }
 
     private void publishLatestScanResults(ScanRequest request) throws ExitThrowable {
-        ScanResults results = runOnActiveScanners(scanner -> scanner.getLatestScanResults(request));
-        processResults(request, results);
+        ScanResults scanResults = runOnActiveScanners(scanner -> scanner.getLatestScanResults(request));
+        processResults(request, scanResults);
     }
 
     private void processResults(ScanRequest request, ScanResults results) throws ExitThrowable {
