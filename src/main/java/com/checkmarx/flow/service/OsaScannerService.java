@@ -1,7 +1,9 @@
 package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.dto.*;
+import com.checkmarx.flow.dto.ExitCode;
+import com.checkmarx.flow.dto.ScanDetails;
+import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.sdk.dto.ScanResults;

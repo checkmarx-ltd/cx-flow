@@ -422,24 +422,11 @@ public class SastScanner implements VulnerabilityScanner {
     public CompletableFuture<ScanResults> getLatestScanResultsAsync(ScanRequest request, CxProject cxProject) {
         try {
             CxProject project;
-
             if (cxProject == null) {
-                String team = request.getTeam();
-                if (ScanUtils.empty(team)) {
-                    //if the team is not provided, use the default
-                    team = cxProperties.getTeam();
-                    request.setTeam(team);
-                }
-                if (!team.startsWith(cxProperties.getTeamPathSeparator())) {
-                    team = cxProperties.getTeamPathSeparator().concat(team);
-                }
-                String teamId = cxService.getTeamId(team);
-                Integer projectId = cxService.getProjectId(teamId, request.getProject());
+                Integer projectId = getProjectId(request);
                 if (projectId.equals(UNKNOWN_INT)) {
                     log.warn("No project found for {}", request.getProject());
-                    CompletableFuture<ScanResults> x = new CompletableFuture<>();
-                    x.complete(null);
-                    return x;
+                    return CompletableFuture.completedFuture(null);
                 }
                 project = cxService.getProject(projectId);
 
@@ -452,11 +439,10 @@ public class SastScanner implements VulnerabilityScanner {
                 CompletableFuture<ScanResults> x = new CompletableFuture<>();
                 x.complete(null);
                 return x;
-            } else {
-                getCxFields(project, request);
-                //null is passed for osaScanId as it is not applicable here and will be ignored
-                return resultsService.processScanResultsAsync(request, project.getId(), scanId, null, request.getFilter());
             }
+            setCxFields(project, request);
+            //null is passed for osaScanId as it is not applicable here and will be ignored
+            return resultsService.processScanResultsAsync(request, project.getId(), scanId, null, request.getFilter());
 
         } catch (MachinaException | CheckmarxException e) {
             log.error("Error occurred while processing results for {}{}", request.getTeam(), request.getProject(), e);
@@ -466,7 +452,21 @@ public class SastScanner implements VulnerabilityScanner {
         }
     }
 
-    private void getCxFields(CxProject project, ScanRequest request) {
+    private Integer getProjectId(ScanRequest request) throws CheckmarxException {
+        String team = request.getTeam();
+        if (ScanUtils.empty(team)) {
+            //if the team is not provided, use the default
+            team = cxProperties.getTeam();
+            request.setTeam(team);
+        }
+        if (!team.startsWith(cxProperties.getTeamPathSeparator())) {
+            team = cxProperties.getTeamPathSeparator().concat(team);
+        }
+        String teamId = cxService.getTeamId(team);
+        return cxService.getProjectId(teamId, request.getProject());
+    }
+
+    private void setCxFields(CxProject project, ScanRequest request) {
         if (project == null) {
             return;
         }
@@ -475,7 +475,7 @@ public class SastScanner implements VulnerabilityScanner {
         for (CxProject.CustomField field : project.getCustomFields()) {
             String name = field.getName();
             String value = field.getValue();
-            if (!ScanUtils.empty(name) && !ScanUtils.empty(value)) {
+            if (StringUtils.isNoneEmpty(name, value)) {
                 fields.put(name, value);
             }
         }

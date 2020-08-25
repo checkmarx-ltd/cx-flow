@@ -1,10 +1,16 @@
 package com.checkmarx.flow.service;
 
 import com.atlassian.jira.rest.client.api.RestClientException;
-import com.checkmarx.flow.dto.*;
+import com.checkmarx.flow.dto.Field;
+import com.checkmarx.flow.dto.ScanDetails;
+import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.report.AnalyticsReport;
 import com.checkmarx.flow.dto.report.ScanResultsReport;
-import com.checkmarx.flow.exception.*;
+import com.checkmarx.flow.exception.InvalidCredentialsException;
+import com.checkmarx.flow.exception.JiraClientException;
+import com.checkmarx.flow.exception.JiraClientRunTimeException;
+import com.checkmarx.flow.exception.MachinaException;
+import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
@@ -21,7 +27,10 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import static com.checkmarx.sdk.config.Constants.UNKNOWN_INT;

@@ -214,7 +214,7 @@ public class AnalyticsSteps {
     }
 
     private ResponseEntity<String> createResponseForGetComments() {
-        return new ResponseEntity<>("{}", HttpStatus.OK);
+        return ResponseEntity.ok("{}");
     }
 
     private void initMock(CxClient cxClientMock) {
