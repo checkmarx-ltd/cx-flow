@@ -307,8 +307,7 @@ public class Github2AdoSteps {
                 null,
                 null,
                 emailService,
-                cxProperties,
-                flowProperties));
+                cxProperties));
     }
 
     private ScanResults createFakeResults() {

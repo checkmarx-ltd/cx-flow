@@ -283,8 +283,7 @@ public class ThresholdsSteps {
                 null,
                 adoService,
                 emailService,
-                cxProperties,
-                flowProperties);
+                cxProperties);
     }
 
     private static ScanResults createFakeScanResults() {

@@ -5,9 +5,7 @@ import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.cucumber.component.scan.ScanFixture;
 import com.checkmarx.flow.dto.EventResponse;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.service.FlowService;
-import com.checkmarx.flow.service.HelperService;
-import com.checkmarx.flow.service.ResultsService;
+import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.ApiFlowControllerComponentTestProperties;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.Filter;
@@ -72,6 +70,9 @@ public class FlowControllerTest {
     @Autowired
     ResultsService resultsService;
 
+    @Autowired
+    SastScanner sastScanner;
+
     @BeforeEach
     public void initMocks() throws CheckmarxException {
         when(cxClient.getTeamId(anyString())).thenReturn(ScanFixture.TEAM_ID);
@@ -83,10 +84,10 @@ public class FlowControllerTest {
 
     @ParameterizedTest
     @MethodSource("generateDataForSuccessfulScanResults")
-    public void testSSuccessfullScanResult(String severity, String cwe, String category, String status, String assignee, String override, String bug) {
+    public void testSSuccessfulScanResult(String severity, String cwe, String category, String status, String assignee, String override, String bug) {
         ScanResults results = new ScanResults();
         CompletableFuture<ScanResults> cf = CompletableFuture.completedFuture(results);
-        when(resultsService.cxGetResults(any(ScanRequest.class), isNull())).thenReturn(cf);
+        when(sastScanner.getLatestScanResultsAsync(any(ScanRequest.class), isNull())).thenReturn(cf);
 
         ArgumentCaptor<ScanRequest> captor = ArgumentCaptor.forClass(ScanRequest.class);
         List<String> severityFilters = TestsParseUtils.parseCsvToList(severity);
@@ -95,7 +96,7 @@ public class FlowControllerTest {
         List<String> statusFilters = TestsParseUtils.parseCsvToList(status);
         ScanResults scanResults = flowController.latestScanResults(testProps.getProject(), flowProperties.getToken(), ScanFixture.TEAM_ID, testProps.getApplication(), severityFilters,
                 cweFilters, categoryFilters, statusFilters, assignee, override, bug);
-        verify(resultsService, times(1)).cxGetResults(captor.capture(), isNull());
+        verify(sastScanner, times(1)).getLatestScanResultsAsync(captor.capture(), isNull());
         ScanRequest actual = captor.getValue();
         assertScanResultsRequest(actual, testProps.getApplication(), ScanFixture.TEAM_ID, severityFilters, cweFilters, categoryFilters, statusFilters);
     }
@@ -166,15 +167,15 @@ public class FlowControllerTest {
         assert400Response(response);
     }
 
-    private void assertOKResponse(ResponseEntity response) {
+    private void assertOKResponse(ResponseEntity<?> response) {
         assertHttpResponse(response, HttpStatus.OK);
     }
 
-    private void assert400Response(ResponseEntity response) {
+    private void assert400Response(ResponseEntity<?> response) {
         assertHttpResponse(response, HttpStatus.BAD_REQUEST);
     }
 
-    private void assertHttpResponse(ResponseEntity response, HttpStatus desiredStatus) {
+    private void assertHttpResponse(ResponseEntity<?> response, HttpStatus desiredStatus) {
         Assert.assertEquals("Received wrong HTTP status",desiredStatus, response.getStatusCode());
     }
 
@@ -223,7 +224,7 @@ public class FlowControllerTest {
                 .collect(Collectors.toList());
 
         for (String wantedStr : wanted) {
-            boolean found = !filtersForType.stream().filter(f -> f.getValue().equals(wantedStr)).collect(Collectors.toList()).isEmpty();
+            boolean found = !(filtersForType.stream().noneMatch(f -> f.getValue().equals(wantedStr)));
             Assert.assertTrue(String.format("Filter from type: %s and value %s was not found in call to FlowService", filterType, wanted), found);
         }
     }
@@ -232,12 +233,12 @@ public class FlowControllerTest {
         if (wanted == null) {
             Assert.assertNull(actual);
         } else {
-            Assert.assertTrue("Filters does not match", actual != null);
+            Assert.assertNotNull("Filters does not match", actual);
         }
         for(Filter wantedFilter: wanted) {
-            Assert.assertFalse(String.format("Filter Type %s with value %s not found in actual call", wantedFilter.getType(), wantedFilter.getValue()),actual.stream().filter(f ->
+            Assert.assertNotEquals(String.format("Filter Type %s with value %s not found in actual call", wantedFilter.getType(), wantedFilter.getValue()), 0, actual.stream().filter(f ->
                     f.getType().equals(wantedFilter.getType()) &&
-                    f.getValue().equals(wantedFilter.getValue())).collect(Collectors.toList()).isEmpty());
+                            f.getValue().equals(wantedFilter.getValue())).count());
         }
     }
 

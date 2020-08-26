@@ -412,7 +412,8 @@ When providing --config override file you can override many elements associated 
 "severity": ["High", "Medium"],
  "cwe": ["79", "89"],
  "category": ["XSS_Reflected", "SQL_Injection"],
- "status": ["Confirmed", "New"]
+ "status": ["New", "Reoccured"],
+ "state": ["Urgent", "Confirmed"]
 }
 }
 ```
