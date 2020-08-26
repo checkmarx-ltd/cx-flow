@@ -16,13 +16,13 @@ public class LabelsItem{
 	private String name;
 
 	@JsonProperty("id")
-	private int id;
+	private long id;
 
 	@JsonProperty("url")
 	private String url;
 
     @ConstructorProperties({"jsonMemberDefault", "color", "name", "id", "url"})
-    public LabelsItem(boolean jsonMemberDefault, String color, String name, int id, String url) {
+    public LabelsItem(boolean jsonMemberDefault, String color, String name, long id, String url) {
         this.jsonMemberDefault = jsonMemberDefault;
         this.color = color;
         this.name = name;
@@ -49,7 +49,7 @@ public class LabelsItem{
         return this.name;
     }
 
-    public int getId() {
+    public long getId() {
         return this.id;
     }
 
@@ -69,7 +69,7 @@ public class LabelsItem{
         this.name = name;
     }
 
-    public void setId(int id) {
+    public void setId(long id) {
         this.id = id;
     }
 
@@ -85,7 +85,7 @@ public class LabelsItem{
         private boolean jsonMemberDefault;
         private String color;
         private String name;
-        private int id;
+        private long id;
         private String url;
 
         LabelsItemBuilder() {
@@ -106,7 +106,7 @@ public class LabelsItem{
             return this;
         }
 
-        public LabelsItem.LabelsItemBuilder id(int id) {
+        public LabelsItem.LabelsItemBuilder id(long id) {
             this.id = id;
             return this;
         }
