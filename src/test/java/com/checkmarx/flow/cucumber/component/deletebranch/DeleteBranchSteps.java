@@ -214,14 +214,14 @@ public class DeleteBranchSteps {
     }
 
     private void initMockGitHubController() {
-        doNothing().when(gitHubControllerSpy).verifyHmacSignature(any(), any());
+        doNothing().when(gitHubControllerSpy).verifyHmacSignature(any(), any(), any());
     }
     
     private void initServices() {
         ProjectNameGenerator projectNameGeneratorSpy = spy(new ProjectNameGenerator(helperService, cxProperties, null));
             initProjectNameGeneratorSpy(projectNameGeneratorSpy);
         
-        ScanRequestConverter scanRequestConverter = new ScanRequestConverter(helperService, cxProperties, cxClientMock, flowProperties, gitHubService, null,null);
+        ScanRequestConverter scanRequestConverter = new ScanRequestConverter(helperService, cxProperties, cxClientMock, flowProperties, gitHubService, null, null, null);
         SastScanner sastScanner = new SastScanner(null, cxClientMock, helperService, cxProperties, flowProperties, null, null, scanRequestConverter, null, projectNameGeneratorSpy);
         List<VulnerabilityScanner> scanners= new LinkedList<>();
         scanners.add(sastScanner);
@@ -240,7 +240,8 @@ public class DeleteBranchSteps {
                 gitHubService,
                 sastScanner,
                 filterFactory,
-                configOverrider));
+                configOverrider,
+                null));
         
     }
 

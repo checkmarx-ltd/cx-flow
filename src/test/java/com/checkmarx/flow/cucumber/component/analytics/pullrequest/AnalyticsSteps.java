@@ -214,8 +214,7 @@ public class AnalyticsSteps {
     }
 
     private ResponseEntity<String> createResponseForGetComments() {
-        ResponseEntity<String> result = new ResponseEntity<>("{}", HttpStatus.OK);
-        return result;
+        return ResponseEntity.ok("{}");
     }
 
     private void initMock(CxClient cxClientMock) {
@@ -231,7 +230,8 @@ public class AnalyticsSteps {
         GitHubService gitService = new GitHubService(restTemplateMock,
                 gitHubProperties,
                 flowProperties,
-                thresholdValidator);
+                thresholdValidator,
+                null);
 
         return new ResultsService(
                 cxClientMock,
@@ -243,8 +243,7 @@ public class AnalyticsSteps {
                 null,
                 null,
                 null,
-                cxProperties,
-                flowProperties);
+                cxProperties);
     }
 
     private static ScanResults createFakeSASTScanResults(Map<FindingSeverity, Integer> findingsPerSeverity) {
@@ -269,13 +268,13 @@ public class AnalyticsSteps {
 
     private static ScanResults createFakeSCAScanResults(Map<FindingSeverity, Integer> findingsPerSeverity, int scanId) {
 
-        Map<Filter.Severity, Integer> findingCounts= new HashMap<Filter.Severity, Integer>() ;
+        Map<Filter.Severity, Integer> findingCounts= new HashMap<>() ;
 
         SCAResults scaResults = new SCAResults();
 
         scaResults.setScanId("" + scanId);
 
-        List<Finding> findings = new LinkedList<Finding>();
+        List<Finding> findings = new LinkedList<>();
         addFinding(findingsPerSeverity.get(FindingSeverity.HIGH), findingCounts, findings, Severity.HIGH, Filter.Severity.HIGH);
         addFinding(findingsPerSeverity.get(FindingSeverity.MEDIUM), findingCounts, findings, Severity.MEDIUM, Filter.Severity.MEDIUM);
         addFinding(findingsPerSeverity.get(FindingSeverity.LOW), findingCounts, findings, Severity.LOW, Filter.Severity.LOW);

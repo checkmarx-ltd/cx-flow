@@ -50,6 +50,7 @@ cx-flow:
     - Azure
     - Rally
     - ServiceNow
+    - Sarif
   branches:
     - develop
     - master

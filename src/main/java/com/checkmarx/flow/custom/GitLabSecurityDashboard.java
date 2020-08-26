@@ -2,25 +2,16 @@ package com.checkmarx.flow.custom;
 
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitLabProperties;
-import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.service.FilenameFormatter;
 import com.checkmarx.sdk.dto.ScanResults;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,19 +27,7 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
 
     @Override
     public void init(ScanRequest request, ScanResults results) throws MachinaException {
-        Path fullPath = Paths.get(properties.getFilePath());
-        Path parentDir = fullPath.getParent();
-        Path filename = fullPath.getFileName();
-
-        String formattedPath = filenameFormatter.formatPath(request, filename.toString(), parentDir.toString());
-        request.setFilename(formattedPath);
-        log.info("Creating file {}", formattedPath);
-        try {
-            Files.deleteIfExists(Paths.get(formattedPath));
-            Files.createFile(Paths.get(formattedPath));
-        } catch (IOException e) {
-            log.error("Issue deleting existing file or writing initial {}", filename, e);
-        }
+        fileInit(request, results, properties.getFilePath(), filenameFormatter, log);
     }
 
     @Override
@@ -84,14 +63,8 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
         SecurityDashboard report  = SecurityDashboard.builder()
                 .vulnerabilities(vulns)
                 .build();
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-            mapper.writeValue(new File(request.getFilename()), report);
-        } catch (IOException e) {
-            log.error("Issue occurred while writing file {}", request.getFilename(), e);
-            throw new MachinaException();
-        }
+
+        writeJsonOutput(request, report, log);
     }
 
     private List<Identifier> getIdentifiers(ScanResults.XIssue issue){
@@ -113,21 +86,6 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
                         .build()
         );
         return identifiers;
-    }
-
-    @Override
-    public String getFalsePositiveLabel() throws MachinaException {
-        return null;
-    }
-
-    @Override
-    public List<Issue> getIssues(ScanRequest request) throws MachinaException {
-        return new ArrayList<>();
-    }
-
-    @Override
-    public Issue createIssue(ScanResults.XIssue issue, ScanRequest request) throws MachinaException {
-        return null;
     }
 
     @Data

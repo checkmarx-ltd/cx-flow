@@ -18,9 +18,14 @@ import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.*;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 
 import java.io.IOException;
@@ -45,6 +50,7 @@ public class GitHubService extends RepoService {
     private final GitHubProperties properties;
     private final FlowProperties flowProperties;
     private final ThresholdValidator thresholdValidator;
+    private final ScmConfigOverrider scmConfigOverrider;
 
     private static final String FILE_CONTENT = "/{namespace}/{repo}/contents/{config}?ref={branch}";
     private static final String LANGUAGE_TYPES = "/{namespace}/{repo}/languages";
@@ -60,16 +66,18 @@ public class GitHubService extends RepoService {
     public GitHubService(@Qualifier("flowRestTemplate") RestTemplate restTemplate,
                          GitHubProperties properties,
                          FlowProperties flowProperties,
-                         ThresholdValidator thresholdValidator) {
+                         ThresholdValidator thresholdValidator,
+                         ScmConfigOverrider scmConfigOverrider) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.flowProperties = flowProperties;
         this.thresholdValidator = thresholdValidator;
+        this.scmConfigOverrider = scmConfigOverrider;
     }
 
-    private HttpHeaders createAuthHeaders(){
+    private HttpHeaders createAuthHeaders(ScanRequest scanRequest){
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.set(HttpHeaders.AUTHORIZATION, "token ".concat(properties.getToken()));
+        httpHeaders.set(HttpHeaders.AUTHORIZATION, "token ".concat(scmConfigOverrider.determineConfigToken(properties, scanRequest.getScmInstance())));
         return httpHeaders;
     }
 
@@ -79,16 +87,16 @@ public class GitHubService extends RepoService {
             sendMergeComment(request, comment);
     }
 
-    private void updateComment(String baseUrl, String comment) {
+    private void updateComment(String baseUrl, String comment, ScanRequest scanRequest) {
         log.debug("Updating exisiting comment. url: {}", baseUrl);
         log.debug("Updated comment: {}" , comment);
-        HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONComment("body",comment).toString(), createAuthHeaders());
+        HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONComment("body",comment).toString(), createAuthHeaders(scanRequest));
         restTemplate.exchange(baseUrl, HttpMethod.PATCH, httpEntity, String.class);
     }
 
-    public List<RepoComment> getComments(String url) throws IOException  {
-        HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders());
-        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, httpEntity , String.class);
+    public List<RepoComment> getComments(ScanRequest scanRequest) throws IOException  {
+        HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders(scanRequest));
+        ResponseEntity<String> response = restTemplate.exchange(scanRequest.getMergeNoteUri(), HttpMethod.GET, httpEntity , String.class);
         List<RepoComment> result = new ArrayList<>();
         ObjectMapper objMapper = new ObjectMapper();
         JsonNode root = objMapper.readTree(response.getBody());
@@ -103,8 +111,8 @@ public class GitHubService extends RepoService {
         return result;
     }
 
-    public void deleteComment(String url) {
-        HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders());
+    public void deleteComment(String url, ScanRequest scanRequest) {
+        HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders(scanRequest));
         restTemplate.exchange(url, HttpMethod.DELETE, httpEntity, String.class);
     }
 
@@ -127,7 +135,7 @@ public class GitHubService extends RepoService {
 
     public void sendMergeComment(ScanRequest request, String comment) {
         try {
-            RepoComment commentToUpdate = PullRequestCommentsHelper.getCommentToUpdate(getComments(request.getMergeNoteUri()), comment);
+            RepoComment commentToUpdate = PullRequestCommentsHelper.getCommentToUpdate(getComments(request), comment);
             if (commentToUpdate !=  null) {
                 log.debug("Got candidate comment to update. comment: {}", commentToUpdate.getComment());
                 if (!PullRequestCommentsHelper.shouldUpdateComment(comment, commentToUpdate.getComment())) {
@@ -135,7 +143,7 @@ public class GitHubService extends RepoService {
                     return;
                 }
                 log.debug("sendMergeComment: Going to update GitHub pull request comment");
-                updateComment(commentToUpdate.getCommentUrl(), comment);
+                updateComment(commentToUpdate.getCommentUrl(), comment, request);
             } else {
                 log.debug("sendMergeComment: Going to create a new GitHub pull request comment");
                 addComment(request, comment);
@@ -149,7 +157,7 @@ public class GitHubService extends RepoService {
 
     private void addComment(ScanRequest request, String comment) {
         log.debug("Adding a new comment");
-        HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONComment("body",comment).toString(), createAuthHeaders());
+        HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONComment("body",comment).toString(), createAuthHeaders(request));
         restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
@@ -158,7 +166,7 @@ public class GitHubService extends RepoService {
             final String PULL_REQUEST_STATUS = "pending";
             HttpEntity<?> httpEntity = new HttpEntity<>(
                     getJSONStatus(PULL_REQUEST_STATUS, url, "Checkmarx Scan Initiated").toString(),
-                    createAuthHeaders()
+                    createAuthHeaders(request)
             );
             String statusApiUrl = request.getAdditionalMetadata(STATUSES_URL_KEY);
             if (ScanUtils.empty(statusApiUrl)) {
@@ -199,7 +207,7 @@ public class GitHubService extends RepoService {
 
             PullRequestReport report = new PullRequestReport(scanDetails, request);
 
-            HttpEntity<String> httpEntity = getStatusRequestEntity(results, report);
+            HttpEntity<String> httpEntity = getStatusRequestEntity(results, report, request);
 
             logPullRequestWithSastOsa(results, report);
 
@@ -246,7 +254,7 @@ public class GitHubService extends RepoService {
         }
     }
 
-    private HttpEntity<String> getStatusRequestEntity(ScanResults results, PullRequestReport pullRequestReport) {
+    private HttpEntity<String> getStatusRequestEntity(ScanResults results, PullRequestReport pullRequestReport, ScanRequest scanRequest) {
         String statusForApi = MERGE_SUCCESS;
 
         if (!thresholdValidator.isMergeAllowed(results, properties, pullRequestReport)) {
@@ -255,14 +263,14 @@ public class GitHubService extends RepoService {
 
         log.debug("Setting pull request status to '{}'.", statusForApi);
         JSONObject requestBody = getJSONStatus(statusForApi, results.getLink(), pullRequestReport.getPullRequestResult().getMessage());
-        return new HttpEntity<>(requestBody.toString(), createAuthHeaders());
+        return new HttpEntity<>(requestBody.toString(), createAuthHeaders(scanRequest));
     }
 
     void failBlockMerge(ScanRequest request, String url){
         if(properties.isBlockMerge()) {
             HttpEntity<?> httpEntity = new HttpEntity<>(
                     getJSONStatus(MERGE_FAILURE, url, "Checkmarx Issue Threshold Met").toString(),
-                    createAuthHeaders()
+                    createAuthHeaders(request)
             );
             String statusApiUrl = request.getAdditionalMetadata(STATUSES_URL_KEY);
             if (ScanUtils.empty(statusApiUrl)) {
@@ -291,7 +299,7 @@ public class GitHubService extends RepoService {
     void errorBlockMerge(ScanRequest request, String targetURL, String description){
         if(properties.isBlockMerge()) {
             JSONObject jsonRequestBody = getJSONStatus(MERGE_ERROR, targetURL, description);
-            HttpEntity<?> httpEntity = new HttpEntity<>(jsonRequestBody.toString(), createAuthHeaders());
+            HttpEntity<?> httpEntity = new HttpEntity<>(jsonRequestBody.toString(), createAuthHeaders(request));
             String statusApiUrl = request.getAdditionalMetadata(STATUSES_URL_KEY);
             if (ScanUtils.empty(statusApiUrl)) {
                 log.error(STATUSES_URL_NOT_PROVIDED);
@@ -310,12 +318,12 @@ public class GitHubService extends RepoService {
         }
         Sources sources = getRepoLanguagePercentages(request);
         String endpoint = getGitHubEndPoint(request);
-        scanGitContent(0, endpoint, sources);
+        scanGitContent(0, endpoint, sources, request);
         return sources;
     }
 
     private String getGitHubEndPoint(ScanRequest request) {
-        String endpoint = properties.getApiUrl().concat(REPO_CONTENT);
+        String endpoint = scmConfigOverrider.determineConfigApiUrl(properties, request).concat(REPO_CONTENT);
         endpoint = endpoint.replace("{namespace}", request.getNamespace());
         endpoint = endpoint.replace("{repo}", request.getRepoName());
         endpoint = endpoint.replace("{branch}", request.getBranch());
@@ -327,9 +335,9 @@ public class GitHubService extends RepoService {
         Sources sources = new Sources();
         Map<String, Long> langs = new HashMap<>();
         Map<String, Integer> langsPercent = new HashMap<>();
-        HttpHeaders headers = createAuthHeaders();
+        HttpHeaders headers = createAuthHeaders(request);
 
-        String urlTemplate = properties.getApiUrl().concat(LANGUAGE_TYPES);
+        String urlTemplate = scmConfigOverrider.determineConfigApiUrl(properties, request).concat(LANGUAGE_TYPES);
         String url = new DefaultUriBuilderFactory()
                 .expand(urlTemplate, request.getNamespace(), request.getRepoName())
                 .toString();
@@ -373,10 +381,10 @@ public class GitHubService extends RepoService {
         return sources;
     }
 
-    private List<Content> getRepoContent(String endpoint) {
+    private List<Content> getRepoContent(String endpoint, ScanRequest scanRequest) {
         log.info("Getting repo content from {}", endpoint);
         //"/{namespace}/{repo}/languages"
-        HttpHeaders headers = createAuthHeaders();
+        HttpHeaders headers = createAuthHeaders(scanRequest);
         try {
             ResponseEntity<Content[]> response = restTemplate.exchange(
                     endpoint,
@@ -397,14 +405,14 @@ public class GitHubService extends RepoService {
     }
 
 
-    private void scanGitContent(int depth, String endpoint, Sources sources){
+    private void scanGitContent(int depth, String endpoint, Sources sources, ScanRequest scanRequest){
         if(depth >= flowProperties.getProfilingDepth()){
             return;
         }
-        List<Content> contents = getRepoContent(endpoint);
+        List<Content> contents = getRepoContent(endpoint, scanRequest);
         for(Content content: contents){
             if(content.getType().equals("dir")){
-                scanGitContent(depth + 1, content.getUrl(), sources);
+                scanGitContent(depth + 1, content.getUrl(), sources, scanRequest);
             }
             else if (content.getType().equals("file")){
                 sources.addSource(content.getPath(), content.getName());
@@ -454,8 +462,8 @@ public class GitHubService extends RepoService {
         ResponseEntity<String> response = null;
 
         if (StringUtils.isNotEmpty(branch)) {
-            HttpHeaders headers = createAuthHeaders();
-            String urlTemplate = properties.getApiUrl().concat(FILE_CONTENT);
+            HttpHeaders headers = createAuthHeaders(request);
+            String urlTemplate = scmConfigOverrider.determineConfigApiUrl(properties, request).concat(FILE_CONTENT);
 
             response = restTemplate.exchange(
                     urlTemplate,

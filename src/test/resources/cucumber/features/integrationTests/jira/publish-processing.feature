@@ -144,5 +144,10 @@ Feature: parse, and then publish processing given SAST XML results, findings sho
     When updating a new Jira issue via the command line
     Then a matching ticket updating data should be recorded in the analytics json file
 
-
+  @Scm_Optional_Instance
+  Scenario: Open new GitHub tickets while GitHub default configuration is in comment-out and an optional scm-instance is defined
+    Given bug tracker is GitHub
+    And GitHub optional instance configuration is defined
+    When processing the results
+    Then new GitHub Issues should be open respectively
 

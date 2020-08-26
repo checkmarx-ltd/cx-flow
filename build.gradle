@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        CxSBSDK = "0.4.36"
+        CxSBSDK = "0.4.37"
         //cxVersion = "8.90.5"
         springBootVersion = '2.2.6.RELEASE'
         sonarqubeVersion = '2.8'
@@ -46,7 +46,7 @@ apply plugin: 'io.spring.dependency-management'
 apply plugin: 'com.gorylenko.gradle-git-properties'
 
 group = 'com.checkmarx'
-version = '1.6.5'
+version = '1.6.6'
 sourceCompatibility = 1.8
 def cucumberVersion = '5.7.0'
 def junitVersion = '5.5.0'
@@ -197,6 +197,7 @@ task integrationTest(type: Test) {
         include 'com/checkmarx/flow/cucumber/integration/azure/publishing/github2ado/*'
         include 'com/checkmarx/flow/cucumber/integration/cxconfig/*'
         include 'com/checkmarx/flow/cucumber/integration/cxconfigbugtracker/**'
+        include 'com/checkmarx/flow/cucumber/integration/multiScmInstances/**'
 
         testLogging {
             events "passed", "skipped", "failed"

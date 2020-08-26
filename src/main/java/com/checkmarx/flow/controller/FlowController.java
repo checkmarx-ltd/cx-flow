@@ -51,9 +51,9 @@ public class FlowController {
     private final FlowService scanService;
     private final HelperService helperService;
     private final JiraProperties jiraProperties;
-    private final ResultsService resultsService;
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
+    private final SastScanner sastScanner;
 
     @GetMapping(value = "/scanresults", produces = "application/json")
     public ScanResults latestScanResults(
@@ -103,7 +103,7 @@ public class FlowController {
         // Fetch the Checkmarx Scan Results based on given ScanRequest.
         // The cxProject parameter is null because the required project metadata
         // is already contained in the scanRequest parameter.
-        ScanResults scanResults = resultsService.cxGetResults(scanRequest, null).join();
+        ScanResults scanResults = sastScanner.getLatestScanResults(scanRequest);
         log.debug("ScanResults {}", scanResults);
 
         return scanResults;

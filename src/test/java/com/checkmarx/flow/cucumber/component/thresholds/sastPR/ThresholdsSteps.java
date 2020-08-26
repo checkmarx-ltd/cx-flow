@@ -1,10 +1,7 @@
 package com.checkmarx.flow.cucumber.component.thresholds.sastPR;
 
 import com.checkmarx.flow.CxFlowApplication;
-import com.checkmarx.flow.config.ADOProperties;
-import com.checkmarx.flow.config.FindingSeverity;
-import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.config.GitHubProperties;
+import com.checkmarx.flow.config.*;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaException;
@@ -71,6 +68,7 @@ public class ThresholdsSteps {
     private final SastScanner sastScanner;
     private final SCAScanner scaScanner;
     private final EmailService emailService;
+    private final ScmConfigOverrider scmConfigOverrider;
 
     private ScanResults scanResultsToInject;
     private ResultsService resultsService;
@@ -79,7 +77,8 @@ public class ThresholdsSteps {
 
     public ThresholdsSteps(CxClient cxClientMock, RestTemplate restTemplateMock, FlowProperties flowProperties, ADOProperties adoProperties,
                            CxProperties cxProperties, GitHubProperties gitHubProperties, ThresholdValidator thresholdValidator,
-                           ScaProperties scaProperties, SastScanner sastScanner, SCAScanner scaScanner, EmailService emailService) {
+                           ScaProperties scaProperties, SastScanner sastScanner, SCAScanner scaScanner, EmailService emailService,
+                           ScmConfigOverrider scmConfigOverrider) {
 
         this.cxClientMock = cxClientMock;
         this.restTemplateMock = restTemplateMock;
@@ -101,6 +100,7 @@ public class ThresholdsSteps {
         this.scaScanner = scaScanner;
 
         this.emailService = emailService;
+        this.scmConfigOverrider = scmConfigOverrider;
     }
 
     @Before("@ThresholdsFeature")
@@ -261,7 +261,8 @@ public class ThresholdsSteps {
         GitHubService gitService = new GitHubService(restTemplateMock,
                 gitHubProperties,
                 flowProperties,
-                thresholdValidator);
+                thresholdValidator,
+                scmConfigOverrider);
 
         ADOService adoService = new ADOService(restTemplateMock,
                 adoProperties,
@@ -282,8 +283,7 @@ public class ThresholdsSteps {
                 null,
                 adoService,
                 emailService,
-                cxProperties,
-                flowProperties);
+                cxProperties);
     }
 
     private static ScanResults createFakeScanResults() {

@@ -1,10 +1,7 @@
 package com.checkmarx.flow.cucumber.integration.cxconfig;
 
 import com.checkmarx.flow.CxFlowApplication;
-import com.checkmarx.flow.config.FindingSeverity;
-import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.config.GitHubProperties;
-import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.config.*;
 import com.checkmarx.flow.controller.GitHubController;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ControllerRequest;
@@ -80,10 +77,12 @@ public class CxConfigSteps {
 
     private ScanRequest request;
     private final JiraProperties jiraProperties;
+    private final ScmConfigOverrider scmConfigOverrider;
 
     public CxConfigSteps(FlowProperties flowProperties, GitHubService gitHubService,
                          CxProperties cxProperties, GitHubProperties gitHubProperties, ConfigurationOverrider configOverrider, JiraProperties jiraProperties,
-                         ThresholdValidator thresholdValidator, FilterFactory filterFactory, FlowService flowService, EmailService emailService) {
+                         ThresholdValidator thresholdValidator, FilterFactory filterFactory, FlowService flowService, EmailService emailService,
+                         ScmConfigOverrider scmConfigOverrider) {
 
         this.cxClientMock = mock(CxClient.class);
 
@@ -100,6 +99,7 @@ public class CxConfigSteps {
         this.gitHubProperties = gitHubProperties;
         this.filterFactory = filterFactory;
         this.configOverrider = configOverrider;
+        this.scmConfigOverrider = scmConfigOverrider;
         initGitHubProperties();
     }
 
@@ -514,7 +514,7 @@ public class CxConfigSteps {
     }
 
     private void initMockGitHubController() {
-        doNothing().when(gitHubControllerSpy).verifyHmacSignature(any(), any());
+        doNothing().when(gitHubControllerSpy).verifyHmacSignature(any(), any(), any());
     }
 
     private void initServices() {
@@ -531,7 +531,8 @@ public class CxConfigSteps {
                 gitHubService,
                 null,
                 filterFactory,
-                configOverrider));
+                configOverrider,
+                scmConfigOverrider));
 
         // results service will be a Mock and will work with gitHubService Mock
         // and will not connect to any external service.
@@ -546,7 +547,8 @@ public class CxConfigSteps {
         GitHubService gitHubServiceMock = new GitHubService(restTemplateMock,
                 gitHubProperties,
                 flowProperties,
-                thresholdValidator);
+                thresholdValidator,
+                scmConfigOverrider);
 
         this.resultsService = new ResultsService(
                 cxClientMock,
@@ -556,9 +558,9 @@ public class CxConfigSteps {
                 gitHubServiceMock,
                 null,
                 null,
-                null, emailService,
-                cxProperties,
-                flowProperties);
+                null,
+                emailService,
+                cxProperties);
     }
 
     private static ScanResults createFakeScanResults() {

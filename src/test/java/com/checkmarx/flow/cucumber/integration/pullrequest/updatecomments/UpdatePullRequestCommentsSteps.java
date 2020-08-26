@@ -7,9 +7,9 @@ import com.checkmarx.flow.controller.ADOController;
 import com.checkmarx.flow.controller.GitHubController;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.RepoComment;
-import com.checkmarx.flow.dto.azure.AdoDetailsRequest;
-import com.checkmarx.flow.dto.azure.Project;
-import com.checkmarx.flow.dto.azure.Resource;
+import com.checkmarx.flow.dto.azure.*;
+import com.checkmarx.flow.dto.github.PullEvent;
+import com.checkmarx.flow.dto.github.Repository;
 import com.checkmarx.flow.dto.github.*;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.sdk.config.Constants;
@@ -43,8 +43,10 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.*;
+
 import static org.junit.Assert.fail;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.*;
 
 
@@ -234,13 +236,13 @@ public class UpdatePullRequestCommentsSteps {
     private void deleteGitHubComments() throws IOException {
         List<RepoComment> comments = getRepoComments();
         for (RepoComment comment: comments) {
-            gitHubService.deleteComment(comment.getCommentUrl());
+            gitHubService.deleteComment(comment.getCommentUrl(), getBasicRequest());
         }
     }
 
     private List<RepoComment> getRepoComments() throws IOException {
         if (sourceControl.equals(SourceControlType.GITHUB)) {
-            return gitHubService.getComments(PULL_REQUEST_COMMENTS_URL);
+            return gitHubService.getComments(getBasicRequest());
         }
         else if (sourceControl.equals(SourceControlType.ADO)){
             return adoService.getComments(ADO_PR_COMMENTS_URL);
@@ -378,7 +380,7 @@ public class UpdatePullRequestCommentsSteps {
     }
 
     private void initGitHubControllerSpy() {
-        doNothing().when(gitHubControllerSpy).verifyHmacSignature(any(), any());
+        doNothing().when(gitHubControllerSpy).verifyHmacSignature(any(), any(), any());
     }
 
     private void initHelperServiceMock() {
@@ -386,6 +388,11 @@ public class UpdatePullRequestCommentsSteps {
         when(helperService.getShortUid()).thenReturn("123456");
     }
 
+    private ScanRequest getBasicRequest() {
+        return ScanRequest.builder()
+                .mergeNoteUri(PULL_REQUEST_COMMENTS_URL)
+                .build();
+    }
 
     private void initGitHubProperties() {
         this.gitHubProperties.setCxSummary(false);
@@ -448,6 +455,15 @@ public class UpdatePullRequestCommentsSteps {
         pullEvent.setId("4519989c-c157-4bf8-9651-e94b8d0fca27");
         pullEvent.setSubscriptionId("25aa3b80-54ed-4b26-976a-b74f94940852");
         pullEvent.setPublisherId("tfs");
+
+        Project_ project = new Project_();
+        project.setId("3172109f-8bcb-4f21-a8f7-4f94d4a825b0");
+        project.setBaseUrl("https://dev.azure.com/OrgName/");
+
+        ResourceContainers resourceContainers = new ResourceContainers();
+        resourceContainers.setProject(project);
+
+        pullEvent.setResourceContainers(resourceContainers);
         Resource resource = new Resource();
         resource.setStatus("active");
         resource.setSourceRefName("refs/heads/master");
