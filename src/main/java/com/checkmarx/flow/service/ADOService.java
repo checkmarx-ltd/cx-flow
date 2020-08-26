@@ -52,8 +52,8 @@ public class ADOService {
     private static final String LANGUAGE_METRICS = "/_apis/projectanalysis/languagemetrics";
     private static final String ADO_COMMENT_CONTENT_FIELD_NAME = "content";
     private static final String IS_DELETED_FIELD_NAME = "isDeleted";
-    private static final String CONTENT_NOT_FOUND_IN_RESPONSE = "Content not found in JSON response for Config as code";
-    private static final String HTTP_BODY_IS_NULL = "Unable to download Config as code file. Response body is null.";
+    private static final String NO_CONTENT_FOUND_IN_RESPONSE = "No content found in JSON response.";
+    private static final String HTTP_RESPONSE_BODY_IS_NULL = "Response body is empty.";
     private final RestTemplate restTemplate;
     private final ADOProperties properties;
     private final FlowProperties flowProperties;
@@ -315,7 +315,7 @@ public class ADOService {
             try {
                 result = loadCxConfigFromADO(request);
             } catch (NullPointerException e) {
-                log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
+                log.warn(NO_CONTENT_FOUND_IN_RESPONSE);
             } catch (HttpClientErrorException.NotFound e) {
                 log.info(String.format("No Config as code was found with the name: %s", properties.getConfigAsCode()));
             } catch (Exception e) {
@@ -329,29 +329,27 @@ public class ADOService {
         CxConfig cxConfig;
         HttpHeaders headers = ADOUtils.createAuthHeaders(properties.getToken());
         String repoSelfUrl = request.getAdditionalMetadata(REPO_SELF_URL);
-        String urlTemplate = repoSelfUrl.concat(GET_FILE_CONTENT);
-
-        Map<String, String> uriVariables = new HashMap<>();
-        uriVariables.put("branch", request.getBranch());
-        uriVariables.put("filePath", properties.getConfigAsCode());
-        uriVariables.put("apiVersion", properties.getApiVersion());
+        String url = repoSelfUrl.concat(GET_FILE_CONTENT);
 
         ResponseEntity<String> response = restTemplate.exchange(
-                urlTemplate,
+                url,
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
-                String.class, uriVariables
+                String.class,
+                properties.getConfigAsCode(),
+                request.getBranch(),
+                properties.getApiVersion()
         );
         if (response.getBody() == null) {
-            log.warn(HTTP_BODY_IS_NULL);
+            log.warn(HTTP_RESPONSE_BODY_IS_NULL);
             cxConfig = null;
         } else {
-            JSONObject json = new JSONObject(response.getBody());
-            if (ScanUtils.empty(json.toString())) {
-                log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
+            JSONObject jsonResponse = new JSONObject(response.getBody());
+            if (ScanUtils.empty(jsonResponse.toString())) {
+                log.warn(NO_CONTENT_FOUND_IN_RESPONSE);
                 cxConfig = null;
             } else {
-                cxConfig = com.checkmarx.sdk.utils.ScanUtils.getConfigAsCode(json.toString());
+                cxConfig = com.checkmarx.sdk.utils.ScanUtils.getConfigAsCode(jsonResponse.toString());
             }
         }
         return cxConfig;
@@ -393,7 +391,7 @@ public class ADOService {
                     urlTemplate, HttpMethod.GET, new HttpEntity<>(headers), String.class);
 
             if(response.getBody() == null){
-                log.warn(HTTP_BODY_IS_NULL);
+                log.warn(HTTP_RESPONSE_BODY_IS_NULL);
             }
             else {
                 JSONObject jsonBody = new JSONObject(response.getBody());
@@ -416,7 +414,7 @@ public class ADOService {
                 sources.setLanguageStats(languagePercent);
             }
         } catch (NullPointerException e) {
-            log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
+            log.warn(NO_CONTENT_FOUND_IN_RESPONSE);
         }catch (HttpClientErrorException.NotFound e){
             String error = "Got 404 'Not Found' error. Azure endpoint: " + urlTemplate + " is invalid.";
             log.warn(error);
@@ -462,13 +460,13 @@ public class ADOService {
                     String.class
             );
             if(response.getBody() == null){
-                log.warn(HTTP_BODY_IS_NULL);
+                log.warn(HTTP_RESPONSE_BODY_IS_NULL);
             }
             com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
             contents = objectMapper.readValue(response.getBody(), Content.class);
             return contents;
         } catch (NullPointerException e) {
-            log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
+            log.warn(NO_CONTENT_FOUND_IN_RESPONSE);
         } catch (HttpClientErrorException e) {
             log.warn("Repo content is unavailable. The reason can be that branch has been deleted.");
         } catch (JsonProcessingException e) {
