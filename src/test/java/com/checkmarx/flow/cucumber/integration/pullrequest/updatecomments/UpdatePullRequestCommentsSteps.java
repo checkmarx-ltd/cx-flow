@@ -5,6 +5,7 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.controller.ADOController;
 import com.checkmarx.flow.controller.GitHubController;
+import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.RepoComment;
 import com.checkmarx.flow.dto.ScanRequest;
@@ -37,11 +38,9 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.io.ClassPathResource;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.*;
 
@@ -65,11 +64,11 @@ public class UpdatePullRequestCommentsSteps {
     public static final String PULL_REQUEST_COMMENTS_URL = GITHUB_PR_BASE_URL + "/issues/"+ GITHUB_PR_ID + "/comments";
     private static final String GIT_URL = "https://github.com/cxflowtestuser/" + GIT_PROJECT_NAME;
     private static final String ADO_PR_COMMENTS_URL = "https://dev.azure.com/CxNamespace/d50fc6e5-a5ab-4123-9bc9-ccb756c0bf16/_apis/git/repositories/a89a9d2f-ab67-4bda-9c56-a571224c2c66/pullRequests/" + ADO_PR_ID + "/threads";
-    private final String filePath = "sample-sast-results" + "/" + "3-findings-filter-script-test.xml";
+    private static final String filePath = "sample-sast-results" + "/" + "3-findings-filter-script-test.xml";
     private final GitHubService gitHubService;
     private final ADOService adoService;
-    private GitHubController gitHubControllerSpy;
-    private ADOController adoControllerSpy;
+    private final GitHubController gitHubControllerSpy;
+    private final ADOController adoControllerSpy;
     private final ObjectMapper mapper = new ObjectMapper();
     private final GitHubProperties gitHubProperties;
     private final HelperService helperService;
@@ -77,13 +76,12 @@ public class UpdatePullRequestCommentsSteps {
     private SourceControlType sourceControl;
     private FlowProperties flowProperties;
     private CxProperties cxProperties;
-    private CxAuthClient authClient;
     private String branchGitHub;
     private ScannerType scannerType;
 
-    private File sastFile;
-    private FilterConfiguration filterMedium = FilterConfiguration.fromSimpleFilters(Collections.singletonList(new Filter(Filter.Type.SEVERITY, "Medium")));
-    private FilterConfiguration filterLow = FilterConfiguration.fromSimpleFilters(Collections.singletonList(new Filter(Filter.Type.SEVERITY, "Low")));
+    private File sastFile = TestUtils.getFileFromResource(filePath);
+    private FilterConfiguration filterMedium = setSeverityFilter("Medium");
+    private FilterConfiguration filterLow = setSeverityFilter("Low");
 
     public UpdatePullRequestCommentsSteps(GitHubService gitHubService, GitHubProperties gitHubProperties, GitHubController gitHubController, ADOService adoService,
                                           ADOController adoController, FlowProperties flowProperties, CxProperties cxProperties, ScaProperties scaProperties, CxAuthClient authClient) throws IOException {
@@ -96,13 +94,10 @@ public class UpdatePullRequestCommentsSteps {
         this.flowProperties = flowProperties;
         this.cxProperties = cxProperties;
         this.scaProperties = scaProperties;
-        this.authClient = authClient;
-        sastFile = toFullResourcePath(filePath);
     }
 
-    private static File toFullResourcePath(String relativePath) throws IOException {
-        String path = Paths.get(com.checkmarx.flow.cucumber.common.Constants.CUCUMBER_DATA_DIR, relativePath).toString();
-        return new ClassPathResource(path).getFile();
+    private FilterConfiguration setSeverityFilter(String filter){
+        return FilterConfiguration.fromSimpleFilters(Collections.singletonList(new Filter(Filter.Type.SEVERITY, filter)));
     }
 
     private void initSca() {
@@ -116,12 +111,7 @@ public class UpdatePullRequestCommentsSteps {
         private FilterConfiguration filterConfiguration;
 
         private FilterConfiguration switchFilterConfiguration(){
-            if(filterConfiguration == filterMedium){
-                return filterLow;
-            }
-            else{
-                return filterMedium;
-            }
+            return filterConfiguration == filterMedium ? filterLow : filterMedium ;
         }
 
         @Override
@@ -129,12 +119,9 @@ public class UpdatePullRequestCommentsSteps {
 
             filterConfiguration = switchFilterConfiguration();
             ScanResults results = cxClientMock.getReportContent(sastFile, filterConfiguration);
-            CxScanSummary summary =  new CxScanSummary();
-            results.setScanSummary(summary);
+            results.setScanSummary(new CxScanSummary());
 
-            Map<String, Object> details = new HashMap<>();
-            details.put(Constants.SUMMARY_KEY, new HashMap<>());
-            results.setAdditionalDetails(details);
+            results.setAdditionalDetails(Collections.singletonMap(Constants.SUMMARY_KEY, new HashMap<>()));
 
             return results;
         }
