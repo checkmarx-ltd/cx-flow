@@ -7,6 +7,7 @@ import com.checkmarx.flow.controller.ADOController;
 import com.checkmarx.flow.controller.GitHubController;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.RepoComment;
+import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.azure.*;
 import com.checkmarx.flow.dto.github.PullEvent;
 import com.checkmarx.flow.dto.github.Repository;
