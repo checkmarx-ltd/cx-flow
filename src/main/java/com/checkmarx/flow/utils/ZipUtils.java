@@ -1,24 +1,18 @@
 package com.checkmarx.flow.utils;
 
 import com.google.common.base.Strings;
-import org.slf4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.FileSystems;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+@Slf4j
 public class ZipUtils {
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(ZipUtils.class);
-
     private static final int DEFAULT_BUFFER_SIZE = 1024 * 4;
 
     private ZipUtils() {

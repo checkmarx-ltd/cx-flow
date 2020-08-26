@@ -1,7 +1,7 @@
 @SAST_CLI_SCAN @IntegrationTest
 Feature: Cx-Flow CLI SAST Integration tests
 
-  Background: running Sca scan
+  Background: running SAST scan
     Given repository is github-sast
 
   Scenario Outline: Testing break-build functionality

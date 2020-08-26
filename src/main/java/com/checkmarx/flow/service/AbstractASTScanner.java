@@ -4,6 +4,7 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.OperationResult;
 import com.checkmarx.flow.dto.OperationStatus;
 import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.dto.report.AnalyticsReport;
 import com.checkmarx.flow.dto.report.ScanReport;
 import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
@@ -13,9 +14,8 @@ import com.checkmarx.sdk.dto.ast.ASTResults;
 import com.checkmarx.sdk.dto.ast.ASTResultsWrapper;
 import com.checkmarx.sdk.dto.ast.SCAResults;
 import com.checkmarx.sdk.dto.ast.ScanParams;
-import com.checkmarx.sdk.service.AstClient;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -26,23 +26,14 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
 
-
 @Slf4j
-public abstract class AbstractASTScanner  implements VulnerabilityScanner{
-    
-    private String scanType ;
-    private com.checkmarx.sdk.service.AstClient client;
-    private FlowProperties flowProperties;
-    
-    public AbstractASTScanner() {
-    }
+@RequiredArgsConstructor
+public abstract class AbstractASTScanner implements VulnerabilityScanner {
+    private final com.checkmarx.sdk.service.AstClient client;
+    private final FlowProperties flowProperties;
+    private final String scanType;
 
-    public AbstractASTScanner(AstClient astClient, FlowProperties flowProperties, String scanType) {
-        this.client = astClient;
-        this.flowProperties = flowProperties;
-        this.scanType = scanType;
-    }
-
+    @Override
     public ScanResults scan(ScanRequest scanRequest) {
         ScanResults result = null;
         log.info("--------------------- Initiating new {} scan ---------------------", scanType);
@@ -50,10 +41,10 @@ public abstract class AbstractASTScanner  implements VulnerabilityScanner{
         ASTResultsWrapper internalResults = new ASTResultsWrapper(new SCAResults(), new ASTResults());
         try {
             internalResults = client.scanRemoteRepo(internalScaParams);
-            logRequest(scanRequest, getScanId(internalResults),  OperationResult.successful());
+            logRequest(scanRequest, getScanId(internalResults), OperationResult.successful());
             result = toScanResults(internalResults);
         } catch (Exception e) {
-             treatError(scanRequest, internalResults, e);
+            treatError(scanRequest, internalResults, e);
         }
         return result;
     }
@@ -72,7 +63,7 @@ public abstract class AbstractASTScanner  implements VulnerabilityScanner{
                 case "cxParse":
                 case "cxBatch":
                 default:
-                    log.warn("ScaScanner does not support scanType of {}, ignoring.");
+                    log.warn("ScaScanner does not support scanType of {}, ignoring.", scanType);
                     break;
             }
         } catch (MachinaRuntimeException me) {
@@ -85,11 +76,20 @@ public abstract class AbstractASTScanner  implements VulnerabilityScanner{
         return scanResults;
     }
 
+    @Override
+    public ScanResults getLatestScanResults(ScanRequest request) {
+        ScanParams internalScanParams = ScanParams.builder()
+                .projectName(request.getProject())
+                .build();
+        ASTResultsWrapper internalResults = client.getLatestScanResults(internalScanParams);
+        return toScanResults(internalResults);
+    }
+
     private void treatError(ScanRequest scanRequest, ASTResultsWrapper internalResults, Exception e) {
         final String message = scanType + " scan failed.";
         log.error(message, e);
         OperationResult scanCreationFailure = new OperationResult(OperationStatus.FAILURE, e.getMessage());
-        logRequest(scanRequest, getScanId(internalResults),  scanCreationFailure);
+        logRequest(scanRequest, getScanId(internalResults), scanCreationFailure);
         throw new MachinaRuntimeException(message + "\n" + e.getMessage());
     }
 
@@ -106,22 +106,22 @@ public abstract class AbstractASTScanner  implements VulnerabilityScanner{
             log.debug("free space {}", f.getFreeSpace());
             log.debug("total space {}", f.getTotalSpace());
             log.debug(f.getAbsolutePath());
-            ScanParams internalScaParams = toParams(scanRequest, cxZipFile);
+            ScanParams internalScanParams = toParams(scanRequest, cxZipFile);
 
-            internalResults = client.scanLocalSource(internalScaParams);
-            logRequest(scanRequest, getScanId(internalResults),  OperationResult.successful());
+            internalResults = client.scanLocalSource(internalScanParams);
+            logRequest(scanRequest, getScanId(internalResults), OperationResult.successful());
             result = toScanResults(internalResults);
 
             log.debug("Deleting temp file {}", f.getPath());
             Files.deleteIfExists(Paths.get(cxZipFile));
 
         } catch (Exception e) {
-             treatError(scanRequest, internalResults, e);
+            treatError(scanRequest, internalResults, e);
         }
         return result;
     }
 
-    protected abstract String getScanId(ASTResultsWrapper internalResults) ;
+    protected abstract String getScanId(ASTResultsWrapper internalResults);
 
     private ScanParams toParams(ScanRequest scanRequest, String zipPath) {
         return ScanParams.builder()
@@ -129,7 +129,7 @@ public abstract class AbstractASTScanner  implements VulnerabilityScanner{
                 .zipPath(zipPath)
                 .build();
     }
-    
+
     protected abstract ScanResults toScanResults(ASTResultsWrapper internalResults);
 
 
@@ -143,9 +143,6 @@ public abstract class AbstractASTScanner  implements VulnerabilityScanner{
                 .build();
     }
 
-
-
-
     private URL getRepoUrl(ScanRequest scanRequest) {
         URL parsedUrl;
         try {
@@ -156,22 +153,19 @@ public abstract class AbstractASTScanner  implements VulnerabilityScanner{
         }
         return parsedUrl;
     }
-    
+
     @Override
     public boolean isEnabled() {
         List<String> enabledScanners = flowProperties.getEnabledVulnerabilityScanners();
-        
-        return enabledScanners != null 
+
+        return enabledScanners != null
                 && enabledScanners.stream().anyMatch(scanner -> scanner.equalsIgnoreCase(scanType));
- 
+
     }
-    
+
     private void logRequest(ScanRequest request, String scanId, OperationResult scanCreationResult) {
-        ScanReport report = new ScanReport(scanId, request,request.getRepoUrl(), scanCreationResult, ScanReport.SCA);
+        ScanReport report = new ScanReport(scanId, request, request.getRepoUrl(), scanCreationResult, AnalyticsReport.SCA);
         report.log();
     }
-
-
-
-   
 }
+

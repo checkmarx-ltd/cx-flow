@@ -10,7 +10,8 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum ExitCode {
-    SUCCESS(0);
+    SUCCESS(0),
+    BUILD_INTERRUPTED(10);
 
     private final int value;
 }

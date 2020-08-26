@@ -51,7 +51,6 @@ public class GetResultsAnalyticsTestSteps {
     private static final String PULL_REQUEST_STATUSES_URL = "statuses url stub";
     private static final String MERGE_NOTE_URL = "merge note url stub";
     private final CxClient cxClientMock;
-    private final FlowProperties flowProperties;
     private final EmailService emailService;
     private final CxProperties cxProperties;
     private ScanResults scanResultsToInject;
@@ -62,7 +61,6 @@ public class GetResultsAnalyticsTestSteps {
                                         CxProperties cxProperties, EmailService emailService) {
         this.cxClientMock = cxClientMock;
         flowProperties.setThresholds(new HashMap<>());
-        this.flowProperties = flowProperties;
         this.cxProperties = cxProperties;
         this.emailService = emailService;
     }
@@ -83,9 +81,9 @@ public class GetResultsAnalyticsTestSteps {
                 null,
                 null,
                 null,
-                null, emailService,
-                cxProperties,
-                flowProperties);
+                null,
+                emailService,
+                cxProperties);
     }
 
 
@@ -108,7 +106,7 @@ public class GetResultsAnalyticsTestSteps {
 
         scaResults.setScanId("" + SCAN_ID);
 
-        List<Finding> findings = new LinkedList<Finding>();
+        List<Finding> findings = new LinkedList<>();
         addFinding(high, findingCounts, findings, Severity.HIGH, Filter.Severity.HIGH);
         addFinding(medium, findingCounts, findings, Severity.MEDIUM, Filter.Severity.MEDIUM);
         addFinding(low, findingCounts, findings, Severity.LOW, Filter.Severity.LOW);

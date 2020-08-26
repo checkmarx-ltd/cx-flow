@@ -397,7 +397,7 @@ public class CxFlowRunner implements ApplicationRunner {
                     log.error("cx-project must be provided when --project option is used");
                     exit(2);
                 }
-                cxResults(request);
+                publishLatestScanResults(request);
             }
             else if(args.containsOption("scan")){
                 log.info("Executing scan process");
@@ -432,7 +432,7 @@ public class CxFlowRunner implements ApplicationRunner {
             }
         }catch (Exception e){
             log.error("An error occurred while processing request", e);
-            exit(10);
+            exit(ExitCode.BUILD_INTERRUPTED);
         }
         log.info("Completed Successfully");
         exit(ExitCode.SUCCESS);
@@ -484,7 +484,7 @@ public class CxFlowRunner implements ApplicationRunner {
             log.error("Please provide --cx-project to define the project in Checkmarx");
             exit(2);
         }
-        processResults(request, runOnActiveScanners(scanner -> scanner.scanCli(request , "cxFullScan", new File(path))));
+        processResults(request, runOnActiveScanners(scanner -> scanner.scanCli(request, "cxFullScan", new File(path))));
     }
 
     private void cxOsaParse(ScanRequest request, File file, File libs) throws ExitThrowable {
@@ -492,19 +492,16 @@ public class CxFlowRunner implements ApplicationRunner {
     }
 
     private void cxParse(ScanRequest request, File file) throws ExitThrowable {
-        runOnActiveScanners(scanner -> scanner.scanCli(request , "cxParse", file));
+        runOnActiveScanners(scanner -> scanner.scanCli(request, "cxParse", file));
     }
 
     private void cxBatch(ScanRequest request) throws ExitThrowable {
-        runOnActiveScanners(scanner -> scanner.scanCli(request , "cxBatch"));
+        runOnActiveScanners(scanner -> scanner.scanCli(request, "cxBatch"));
     }
 
-    private void cxResults(ScanRequest request) throws ExitThrowable {
-        ScanResults results = resultsService.cxGetResults(request, null).join();
-        if(flowProperties.isBreakBuild() && resultsService.filteredIssuesPresent(results)){
-            log.error(ERROR_BREAK_MSG);
-            exit(10);
-        }
+    private void publishLatestScanResults(ScanRequest request) throws ExitThrowable {
+        ScanResults results = runOnActiveScanners(scanner -> scanner.getLatestScanResults(request));
+        processResults(request, results);
     }
 
     private void processResults(ScanRequest request, ScanResults results) throws ExitThrowable {
@@ -512,7 +509,7 @@ public class CxFlowRunner implements ApplicationRunner {
             resultsService.processResults(request, results, null);
             if (flowProperties.isBreakBuild() && resultsService.filteredIssuesPresent(results)) {
                 log.error(ERROR_BREAK_MSG);
-                exit(10);
+                exit(ExitCode.BUILD_INTERRUPTED);
             }
 
         } catch (MachinaException e) {
