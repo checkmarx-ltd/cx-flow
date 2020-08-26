@@ -80,8 +80,8 @@ public class UpdatePullRequestCommentsSteps {
     private ScannerType scannerType;
 
     private File sastFile = TestUtils.getFileFromResource(filePath);
-    private FilterConfiguration filterMedium = setSeverityFilter("Medium");
-    private FilterConfiguration filterLow = setSeverityFilter("Low");
+    private FilterConfiguration filterMedium = getSeverityFilter("Medium");
+    private FilterConfiguration filterLow = getSeverityFilter("Low");
 
     public UpdatePullRequestCommentsSteps(GitHubService gitHubService, GitHubProperties gitHubProperties, GitHubController gitHubController, ADOService adoService,
                                           ADOController adoController, FlowProperties flowProperties, CxProperties cxProperties, ScaProperties scaProperties, CxAuthClient authClient) throws IOException {
@@ -94,10 +94,6 @@ public class UpdatePullRequestCommentsSteps {
         this.flowProperties = flowProperties;
         this.cxProperties = cxProperties;
         this.scaProperties = scaProperties;
-    }
-
-    private FilterConfiguration setSeverityFilter(String filter){
-        return FilterConfiguration.fromSimpleFilters(Collections.singletonList(new Filter(Filter.Type.SEVERITY, filter)));
     }
 
     private void initSca() {
@@ -476,6 +472,10 @@ public class UpdatePullRequestCommentsSteps {
         controllerRequest.setTeam("\\CxServer\\SP");
         AdoDetailsRequest adoRequest = new AdoDetailsRequest();
         adoControllerSpy.pullRequest(pullEvent,"Basic Y3hmbG93OjEyMzQ=", null, controllerRequest, adoRequest);
+    }
+
+    private FilterConfiguration getSeverityFilter(String filter){
+        return FilterConfiguration.fromSimpleFilters(Collections.singletonList(new Filter(Filter.Type.SEVERITY, filter)));
     }
 
     enum SourceControlType {
