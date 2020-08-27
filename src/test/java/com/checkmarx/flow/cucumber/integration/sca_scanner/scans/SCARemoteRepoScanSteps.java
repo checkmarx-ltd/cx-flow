@@ -45,16 +45,18 @@ public class SCARemoteRepoScanSteps extends ScaCommonSteps {
 
     private ScanRequest scanRequest;
     private SCAResults scaResults;
+    private ScaProperties scaProperties;
 
     public SCARemoteRepoScanSteps(FlowProperties flowProperties, ScaProperties scaProperties,
                                   SCAScanner scaScanner, GitHubProperties gitHubProperties) {
-        super(flowProperties, scaProperties, scaScanner);
+        super(flowProperties, scaScanner);
         this.gitHubProperties = gitHubProperties;
+        this.scaProperties = scaProperties;
     }
 
     @Before("@SCARemoteRepoScan")
     public void init() {
-        initSCAConfig();
+        initSCAConfig(scaProperties);
     }
 
     @Given("scan initiator is SCA")

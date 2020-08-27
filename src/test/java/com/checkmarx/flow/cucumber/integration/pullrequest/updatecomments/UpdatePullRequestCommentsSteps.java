@@ -5,6 +5,8 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.controller.ADOController;
 import com.checkmarx.flow.controller.GitHubController;
+import com.checkmarx.flow.cucumber.common.utils.TestUtils;
+import com.checkmarx.flow.cucumber.integration.sca_scanner.ScaCommonSteps;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.RepoComment;
 import com.checkmarx.flow.dto.ScanRequest;
@@ -12,13 +14,16 @@ import com.checkmarx.flow.dto.azure.*;
 import com.checkmarx.flow.dto.github.PullEvent;
 import com.checkmarx.flow.dto.github.Repository;
 import com.checkmarx.flow.dto.github.*;
-import com.checkmarx.flow.service.ADOService;
-import com.checkmarx.flow.service.GitHubService;
-import com.checkmarx.flow.service.HelperService;
-import com.checkmarx.flow.service.PullRequestCommentsHelper;
+import com.checkmarx.flow.service.*;
+import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.ScaProperties;
+import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
+import com.checkmarx.sdk.dto.cx.CxScanSummary;
+import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
+import com.checkmarx.sdk.exception.CheckmarxException;
+import com.checkmarx.sdk.service.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cucumber.java.After;
@@ -32,12 +37,13 @@ import org.junit.Assert;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.io.File;
 import java.io.IOException;
 import java.time.Duration;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
@@ -45,11 +51,12 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.*;
 
 
-@SpringBootTest(classes = {CxFlowApplication.class})
+@SpringBootTest(classes = {CxFlowApplication.class, UpdatePullRequestConfiguration.class})
 @Slf4j
 public class UpdatePullRequestCommentsSteps {
 
-
+    @Autowired
+    private CxClient cxClientMock;
     public static final int COMMENTS_POLL_INTERVAL = 5;
     private static final String GIT_PROJECT_NAME = "vb_test_pr_comments";
     private static final String GITHUB_PR_BASE_URL = "https://api.github.com/repos/cxflowtestuser/" + GIT_PROJECT_NAME;
@@ -58,24 +65,27 @@ public class UpdatePullRequestCommentsSteps {
     public static final String PULL_REQUEST_COMMENTS_URL = GITHUB_PR_BASE_URL + "/issues/"+ GITHUB_PR_ID + "/comments";
     private static final String GIT_URL = "https://github.com/cxflowtestuser/" + GIT_PROJECT_NAME;
     private static final String ADO_PR_COMMENTS_URL = "https://dev.azure.com/CxNamespace/d50fc6e5-a5ab-4123-9bc9-ccb756c0bf16/_apis/git/repositories/a89a9d2f-ab67-4bda-9c56-a571224c2c66/pullRequests/" + ADO_PR_ID + "/threads";
+    private static final String filePath = "sample-sast-results/3-findings-filter-script-test.xml";
     private final GitHubService gitHubService;
     private final ADOService adoService;
-    private GitHubController gitHubControllerSpy;
-    private ADOController adoControllerSpy;
+    private final GitHubController gitHubControllerSpy;
+    private final ADOController adoControllerSpy;
     private final ObjectMapper mapper = new ObjectMapper();
     private final GitHubProperties gitHubProperties;
     private final HelperService helperService;
-    private ScanResults scanResultsToInject;
+    private final ScaProperties scaProperties;
     private SourceControlType sourceControl;
     private FlowProperties flowProperties;
     private CxProperties cxProperties;
-    private String branchAdo;
     private String branchGitHub;
     private ScannerType scannerType;
-    private final ScaProperties scaProperties;
 
+    private File sastFile = TestUtils.getFileFromResource(filePath);
+    private FilterConfiguration filterMedium = getSeverityFilter("Medium");
+    private FilterConfiguration filterLow = getSeverityFilter("Low");
 
-    public UpdatePullRequestCommentsSteps(GitHubService gitHubService, GitHubProperties gitHubProperties, GitHubController gitHubController, ADOService adoService, ADOController adoController, FlowProperties flowProperties, CxProperties cxProperties, ScaProperties scaProperties) {
+    public UpdatePullRequestCommentsSteps(GitHubService gitHubService, GitHubProperties gitHubProperties, GitHubController gitHubController, ADOService adoService,
+                                          ADOController adoController, FlowProperties flowProperties, CxProperties cxProperties, ScaProperties scaProperties) throws IOException {
         this.helperService = mock(HelperService.class);
         this.gitHubService = gitHubService;
         this.gitHubProperties = gitHubProperties;
@@ -85,33 +95,82 @@ public class UpdatePullRequestCommentsSteps {
         this.flowProperties = flowProperties;
         this.cxProperties = cxProperties;
         this.scaProperties = scaProperties;
-
     }
 
-    private void initSca() {
-        scaProperties.setAppUrl("https://sca.scacheckmarx.com");
-        scaProperties.setApiUrl("https://api.scacheckmarx.com");
-        scaProperties.setAccessControlUrl("https://platform.checkmarx.net");
+    private class ScanResultsAnswerer implements Answer<ScanResults> {
+
+        private FilterConfiguration filterConfiguration;
+
+        private FilterConfiguration switchFilterConfiguration(){
+            return filterConfiguration == filterMedium ? filterLow : filterMedium ;
+        }
+
+        @Override
+        public ScanResults answer(InvocationOnMock invocation) throws CheckmarxException {
+
+            filterConfiguration = switchFilterConfiguration();
+            ScanResults results = cxClientMock.getReportContent(sastFile, filterConfiguration);
+            results.setScanSummary(new CxScanSummary());
+
+            results.setAdditionalDetails(Collections.singletonMap(Constants.SUMMARY_KEY, new HashMap<>()));
+
+            return results;
+        }
     }
+
 
     @Before
-    public void initMocks() {
+    public void initConfiguration(){
         initGitHubProperties();
-        initSca();
+        ScaCommonSteps.initSCAConfig(scaProperties);
         flowProperties.getBranches().add("udi-tests-2");
         flowProperties.setEnabledVulnerabilityScanners(Arrays.asList("sast"));
+        cxProperties.setOffline(true);
         initGitHubControllerSpy();
         initHelperServiceMock();
         setBranches();
+        initCxClientMock();
+    }
+
+    private void initCxClientMock() {
+        try {
+            ScanResultsAnswerer answerWithExistingScanResult = new ScanResultsAnswerer();
+            when(cxClientMock.getReportContentByScanId(anyInt(), any())).thenAnswer(answerWithExistingScanResult);
+            when(cxClientMock.getScanIdOfExistingScanIfExists(anyInt())).thenReturn(-1);
+            when(cxClientMock.getTeamId(anyString())).thenReturn("teamId");
+            when(cxClientMock.getReportContent(sastFile, filterLow)).thenCallRealMethod();
+            when(cxClientMock.getReportContent(sastFile, filterMedium)).thenCallRealMethod();
+        } catch (CheckmarxException e) {
+            Assert.fail("Error initializing mock." + e);
+        }
+    }
+
+    @Given("different filters configuration is set")
+    public void setConfigAsCodeFilters() {
+        /*
+        This is required to test 'comment updated' flow
+        However mockito mockers are initialized in the beginning of the test, including the answerer and all the fields and properties inside for example (sastFile, filterConfiguration)
+        Using ScanResultsAnswerer::switchFilterConfiguration to change filter configuration in the between steps in same test scenario
+         */
+    }
+
+    @Given("no comments on pull request")
+    public void deletePRComments() throws IOException, InterruptedException {
+
+        if (sourceControl.equals(SourceControlType.GITHUB)) {
+            deleteGitHubComments();
+        } else if (sourceControl.equals(SourceControlType.ADO)) {
+            deleteADOComments();
+        }
     }
 
     private void setBranches() {
-        branchAdo =  "udi-tests-2";
         branchGitHub = "pr-comments-tests";
+        // ADO repo and branch defined by the ADO_PR_COMMENTS_URL
     }
 
     @After
-    public void cleanUp() throws IOException, InterruptedException {
+    public void cleanUp() throws IOException {
         if (sourceControl.equals(SourceControlType.GITHUB)) {
             deleteGitHubComments();
         } else if (sourceControl.equals(SourceControlType.ADO)) {
@@ -136,11 +195,6 @@ public class UpdatePullRequestCommentsSteps {
         }
     }
 
-    @Given("different filters configuration is set")
-    public void setConfigAsCodeFilters() {
-        gitHubProperties.setConfigAsCode("cx.config.high.json");
-    }
-
     @Given("source control is GitHub")
     public void scGitHub() {
         sourceControl = SourceControlType.GITHUB;
@@ -149,16 +203,6 @@ public class UpdatePullRequestCommentsSteps {
     @Given("source control is ADO")
     public void scAdo() {
         sourceControl = SourceControlType.ADO;
-    }
-
-
-    @Given("no comments on pull request")
-    public void deletePRComments() throws IOException, InterruptedException {
-        if (sourceControl.equals(SourceControlType.GITHUB)) {
-            deleteGitHubComments();
-        } else if (sourceControl.equals(SourceControlType.ADO)) {
-            deleteADOComments();
-        }
     }
 
     private void deleteADOComments() throws IOException {
@@ -196,17 +240,25 @@ public class UpdatePullRequestCommentsSteps {
 
     @Then("Wait for comments")
     public void waitForNewComments() {
+        log.info("waiting for new comments. scanner type {}", scannerType);
+
         int minutesToWait = scannerType == ScannerType.BOTH ? 3 : 2;
-        Awaitility.await().atMost(Duration.ofMinutes(minutesToWait)).pollInterval(Duration.ofSeconds(COMMENTS_POLL_INTERVAL)).until(this::areThereCommentsAtAll);
+        Awaitility.await()
+                .atMost(Duration.ofMinutes(minutesToWait))
+                .pollInterval(Duration.ofSeconds(COMMENTS_POLL_INTERVAL))
+                .until(this::areThereCommentsAtAll);
     }
 
     @Then("verify new comments")
     public void verifyNewComments() throws IOException {
+        log.info("verifying comments. scanner type: {} source control type: {}", scannerType, sourceControl);
+
         int expectedNumOfComments = getExpectedNumOfNewComments();
         List<RepoComment> comments = getRepoComments();
         Assert.assertEquals("Wrong number of comments", expectedNumOfComments, comments.size());
-        comments.stream().forEach(c -> Assert.assertTrue("Comment is not new (probably updated", isCommentNew(c)));
+        comments.stream().forEach(c -> Assert.assertTrue("Comment is not new (probably updated)", isCommentNew(c)));
 
+        log.info("Found the correct comments in pull request !!");
     }
 
     private int getExpectedNumOfNewComments() {
@@ -222,11 +274,19 @@ public class UpdatePullRequestCommentsSteps {
 
     @Then("Wait for updated comment")
     public void waitForUpdatedComment() {
-        Awaitility.await().pollInterval(Duration.ofSeconds(COMMENTS_POLL_INTERVAL)).atMost(Duration.ofSeconds(125)).until(this::isThereUpdatedComment);
+        Awaitility.await()
+                .pollInterval(Duration.ofSeconds(COMMENTS_POLL_INTERVAL))
+                .atMost(Duration.ofSeconds(125))
+                .until(this::isThereUpdatedComment);
+
+        log.info("Found the correct comments in pull request !!");
     }
 
     private boolean areThereCommentsAtAll() throws IOException {
         List<RepoComment> comments = getRepoComments();
+
+        log.info("found {} comments in {}", comments.size(), sourceControl);
+
         if (scannerType == ScannerType.SCA) {
             if (comments.size() < 1) {
                 return false;
@@ -238,6 +298,7 @@ public class UpdatePullRequestCommentsSteps {
         } else {
             throw new IllegalArgumentException("Wrong Scanner Type: " + scannerType.name());
         }
+
         return areThereCorrectComments(comments, scannerType);
     }
 
@@ -248,8 +309,10 @@ public class UpdatePullRequestCommentsSteps {
             boolean foundScanStarted = false;
             for (RepoComment comment : comments) {
                 if (PullRequestCommentsHelper.isScanStartedComment(comment.getComment())) {
+                    log.info("BOTH: found pull request 'scan started' comment");
                     foundScanStarted = true;
                 } else if (PullRequestCommentsHelper.isSastAndScaComment(comment.getComment())) {
+                    log.info("BOTH: found pull request Sca&Sast comment");
                     foundScaAndSast = true;
                 }
             }
@@ -260,8 +323,10 @@ public class UpdatePullRequestCommentsSteps {
             boolean foundScanStarted = false;
             for (RepoComment comment : comments) {
                 if (PullRequestCommentsHelper.isSastFindingsComment(comment.getComment())) {
+                    log.info("SAST: found pull request sast comment");
                     foundSast = true;
                 } else if (PullRequestCommentsHelper.isScanStartedComment(comment.getComment())) {
+                    log.info("SAST: found pull request 'scan started' comment");
                     foundScanStarted = true;
                 }
             }
@@ -270,6 +335,7 @@ public class UpdatePullRequestCommentsSteps {
         else if (sct.equals(ScannerType.SCA)) {
             for (RepoComment comment : comments) {
                 if (PullRequestCommentsHelper.isScaComment(comment.getComment())) {
+                    log.info("SCA: found pull request comment");
                     return true;
                 }
             }
@@ -279,11 +345,14 @@ public class UpdatePullRequestCommentsSteps {
 
     private boolean isThereUpdatedComment() throws IOException {
         List<RepoComment> comments = getRepoComments();
+        log.info("isThereUpdatedComment: found {} comments", comments.size());
         for (RepoComment comment: comments) {
             if (isCommentUpdated(comment)) {
+                log.info("isThereUpdatedComment: True");
                 return true;
             }
         }
+        log.info("isThereUpdatedComment: False");
         return false;
     }
 
@@ -406,11 +475,8 @@ public class UpdatePullRequestCommentsSteps {
         adoControllerSpy.pullRequest(pullEvent,"Basic Y3hmbG93OjEyMzQ=", null, controllerRequest, adoRequest);
     }
 
-    private class ScanResultsAnswerer implements Answer<ScanResults> {
-        @Override
-        public ScanResults answer(InvocationOnMock invocation) {
-            return scanResultsToInject;
-        }
+    private FilterConfiguration getSeverityFilter(String filter){
+        return FilterConfiguration.fromSimpleFilters(Collections.singletonList(new Filter(Filter.Type.SEVERITY, filter)));
     }
 
     enum SourceControlType {
