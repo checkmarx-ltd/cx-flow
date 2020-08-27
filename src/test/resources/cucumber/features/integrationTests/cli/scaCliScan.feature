@@ -7,6 +7,7 @@ Feature: SCA support in CxFlow command-line
         Given source directory contains vulnerable files
         When running CxFlow with `scan local sources` options
         Then bug tracker contains some issues
+        And no exception is thrown
 
     Scenario Outline: Testing break-build functionality
         When running a SCA scan with break-build on <issue-type>
@@ -23,7 +24,6 @@ Feature: SCA support in CxFlow command-line
         Given code has x High, y Medium and z low issues
         When running sca scan <filter>
         Then bug tracker contains <number of issue> issues
-        And no exception is thrown
 
         Examples:
             | filter                 | number of issue |
