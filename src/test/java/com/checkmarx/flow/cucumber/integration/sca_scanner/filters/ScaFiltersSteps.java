@@ -29,14 +29,16 @@ public class ScaFiltersSteps extends ScaCommonSteps {
 
     private ScanRequest scanRequest;
     private SCAResults scaResults;
+    private ScaProperties scaProperties;
 
     public ScaFiltersSteps(FlowProperties flowProperties, ScaProperties scaProperties, SCAScanner scaScanner) {
-        super(flowProperties, scaProperties, scaScanner);
+        super(flowProperties, scaScanner);
+        this.scaProperties = scaProperties;
     }
 
     @Before("@SCA_Filtering")
     public void init() {
-        initSCAConfig();
+        initSCAConfig(scaProperties);
         scanRequest = getBasicScanRequest(PROJECT_NAME, GIT_REPO_URL);
     }
 

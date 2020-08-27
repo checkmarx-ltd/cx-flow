@@ -6,6 +6,7 @@ import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.controller.ADOController;
 import com.checkmarx.flow.controller.GitHubController;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
+import com.checkmarx.flow.cucumber.integration.sca_scanner.ScaCommonSteps;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.RepoComment;
 import com.checkmarx.flow.dto.ScanRequest;
@@ -64,7 +65,7 @@ public class UpdatePullRequestCommentsSteps {
     public static final String PULL_REQUEST_COMMENTS_URL = GITHUB_PR_BASE_URL + "/issues/"+ GITHUB_PR_ID + "/comments";
     private static final String GIT_URL = "https://github.com/cxflowtestuser/" + GIT_PROJECT_NAME;
     private static final String ADO_PR_COMMENTS_URL = "https://dev.azure.com/CxNamespace/d50fc6e5-a5ab-4123-9bc9-ccb756c0bf16/_apis/git/repositories/a89a9d2f-ab67-4bda-9c56-a571224c2c66/pullRequests/" + ADO_PR_ID + "/threads";
-    private static final String filePath = "sample-sast-results" + "/" + "3-findings-filter-script-test.xml";
+    private static final String filePath = "sample-sast-results/3-findings-filter-script-test.xml";
     private final GitHubService gitHubService;
     private final ADOService adoService;
     private final GitHubController gitHubControllerSpy;
@@ -84,7 +85,7 @@ public class UpdatePullRequestCommentsSteps {
     private FilterConfiguration filterLow = getSeverityFilter("Low");
 
     public UpdatePullRequestCommentsSteps(GitHubService gitHubService, GitHubProperties gitHubProperties, GitHubController gitHubController, ADOService adoService,
-                                          ADOController adoController, FlowProperties flowProperties, CxProperties cxProperties, ScaProperties scaProperties, CxAuthClient authClient) throws IOException {
+                                          ADOController adoController, FlowProperties flowProperties, CxProperties cxProperties, ScaProperties scaProperties) throws IOException {
         this.helperService = mock(HelperService.class);
         this.gitHubService = gitHubService;
         this.gitHubProperties = gitHubProperties;
@@ -94,12 +95,6 @@ public class UpdatePullRequestCommentsSteps {
         this.flowProperties = flowProperties;
         this.cxProperties = cxProperties;
         this.scaProperties = scaProperties;
-    }
-
-    private void initSca() {
-        scaProperties.setAppUrl("https://sca.scacheckmarx.com");
-        scaProperties.setApiUrl("https://api.scacheckmarx.com");
-        scaProperties.setAccessControlUrl("https://platform.checkmarx.net");
     }
 
     private class ScanResultsAnswerer implements Answer<ScanResults> {
@@ -125,9 +120,9 @@ public class UpdatePullRequestCommentsSteps {
 
 
     @Before
-    public void initMocks(){
+    public void initConfiguration(){
         initGitHubProperties();
-        initSca();
+        ScaCommonSteps.initSCAConfig(scaProperties);
         flowProperties.getBranches().add("udi-tests-2");
         flowProperties.setEnabledVulnerabilityScanners(Arrays.asList("sast"));
         cxProperties.setOffline(true);
@@ -139,8 +134,8 @@ public class UpdatePullRequestCommentsSteps {
 
     private void initCxClientMock() {
         try {
-            ScanResultsAnswerer answerer = new ScanResultsAnswerer();
-            when(cxClientMock.getReportContentByScanId(anyInt(), any())).thenAnswer(answerer);
+            ScanResultsAnswerer answerWithExistingScanResult = new ScanResultsAnswerer();
+            when(cxClientMock.getReportContentByScanId(anyInt(), any())).thenAnswer(answerWithExistingScanResult);
             when(cxClientMock.getScanIdOfExistingScanIfExists(anyInt())).thenReturn(-1);
             when(cxClientMock.getTeamId(anyString())).thenReturn("teamId");
             when(cxClientMock.getReportContent(sastFile, filterLow)).thenCallRealMethod();
@@ -175,7 +170,7 @@ public class UpdatePullRequestCommentsSteps {
     }
 
     @After
-    public void cleanUp() throws IOException, InterruptedException {
+    public void cleanUp() throws IOException {
         if (sourceControl.equals(SourceControlType.GITHUB)) {
             deleteGitHubComments();
         } else if (sourceControl.equals(SourceControlType.ADO)) {
@@ -248,7 +243,10 @@ public class UpdatePullRequestCommentsSteps {
         log.info("waiting for new comments. scanner type {}", scannerType);
 
         int minutesToWait = scannerType == ScannerType.BOTH ? 3 : 2;
-        Awaitility.await().atMost(Duration.ofMinutes(minutesToWait)).pollInterval(Duration.ofSeconds(COMMENTS_POLL_INTERVAL)).until(this::areThereCommentsAtAll);
+        Awaitility.await()
+                .atMost(Duration.ofMinutes(minutesToWait))
+                .pollInterval(Duration.ofSeconds(COMMENTS_POLL_INTERVAL))
+                .until(this::areThereCommentsAtAll);
     }
 
     @Then("verify new comments")
@@ -276,7 +274,10 @@ public class UpdatePullRequestCommentsSteps {
 
     @Then("Wait for updated comment")
     public void waitForUpdatedComment() {
-        Awaitility.await().pollInterval(Duration.ofSeconds(COMMENTS_POLL_INTERVAL)).atMost(Duration.ofSeconds(125)).until(this::isThereUpdatedComment);
+        Awaitility.await()
+                .pollInterval(Duration.ofSeconds(COMMENTS_POLL_INTERVAL))
+                .atMost(Duration.ofSeconds(125))
+                .until(this::isThereUpdatedComment);
 
         log.info("Found the correct comments in pull request !!");
     }

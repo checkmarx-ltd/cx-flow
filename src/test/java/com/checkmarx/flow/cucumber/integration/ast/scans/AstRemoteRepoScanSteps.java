@@ -6,6 +6,7 @@ import com.checkmarx.flow.config.GitHubProperties;
 
 import com.checkmarx.flow.cucumber.integration.ast.AstCommonSteps;
 
+import com.checkmarx.flow.cucumber.integration.sca_scanner.ScaCommonSteps;
 import com.checkmarx.flow.dto.ScanRequest;
 
 import com.checkmarx.flow.service.*;
@@ -91,7 +92,7 @@ public class AstRemoteRepoScanSteps extends AstCommonSteps {
     @Before("@ASTRemoteRepoScan")
     public void init() {
         initAstConfig();
-        initSCAConfig();
+        ScaCommonSteps.initSCAConfig(scaProperties);
         resultsService = mock(ResultsService.class);
         ResultsServiceAnswerer answerer = new ResultsServiceAnswerer();
         when(resultsService.publishCombinedResults(any(), any())).thenAnswer(answerer);

@@ -1,7 +1,7 @@
 @PullRequestUpdateComment @Integration
   Feature: After scan that was initiated by pull request, CxFlow should update the PR comments, instead of creating new one.
 
-    Scenario Outline: Pull request arrives to CxFlow, then scan is initiated, pull request should be without comments, and we should verify that the comments are new.
+    Scenario Outline: CxFlow should create new comments on Github Pull request with scan results summary
       Given scanner is set to "<scanner>"
       Given source control is GitHub
       And no comments on pull request
@@ -16,7 +16,7 @@
         | both    |
 
 
-    Scenario Outline: Pull request arrives to CxFlow, then scan is initiated, and pull request comments should be updated.
+    Scenario Outline: CxFlow should update existing comments on Github Pull request with scan results summary
       Given scanner is set to "<scanner>"
       Given source control is GitHub
       And no comments on pull request
@@ -32,7 +32,7 @@
         | sast   |
         | both    |
 
-    Scenario Outline: Pull request arrives from ADO to CxFlow, then scan is initiated, pull request should be without comments, and we should verify that the comments are new.
+    Scenario Outline: CxFlow should create new comments on Github Pull request with scan results summary
       Given scanner is set to "<scanner>"
       Given source control is ADO
       And no comments on pull request

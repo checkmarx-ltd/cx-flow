@@ -13,10 +13,9 @@ import java.util.Arrays;
 public class ScaCommonSteps {
 
     protected final FlowProperties flowProperties;
-    protected final ScaProperties scaProperties;
     protected final SCAScanner scaScanner;
 
-    protected void initSCAConfig() {
+    public static void initSCAConfig(ScaProperties scaProperties) {
         scaProperties.setAppUrl("https://sca.scacheckmarx.com");
         scaProperties.setApiUrl("https://api.scacheckmarx.com");
         scaProperties.setAccessControlUrl("https://platform.checkmarx.net");
