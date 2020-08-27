@@ -209,9 +209,12 @@ public class ScaCliSteps {
 
     @When("running CxFlow with `scan local sources` options")
     public void runningCxFlowWithScanLocalSourcesOptions() {
+        customScaProjectName = "ci-local-scan-test";
+
         String commandLine = String.format("--scan --cx-project=%s --app=MyApp --f=%s --blocksysexit",
                 customScaProjectName,
                 directoryToScan);
+
         tryRunCxFlow(commandLine);
     }
 
