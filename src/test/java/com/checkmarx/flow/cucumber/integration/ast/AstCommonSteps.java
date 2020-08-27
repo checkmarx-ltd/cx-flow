@@ -23,14 +23,6 @@ public class AstCommonSteps {
         astProperties.setPreset("Default");
     }
 
-
-    protected void initSCAConfig() {
-        scaProperties.setAppUrl("https://sca.scacheckmarx.com");
-        scaProperties.setApiUrl("https://api.scacheckmarx.com");
-        scaProperties.setAccessControlUrl("https://platform.checkmarx.net");
-    }
-
-
     protected ScanRequest getBasicScanRequest(String projectName, String repoWithAuth) {
         return ScanRequest.builder()
                 .project(projectName)

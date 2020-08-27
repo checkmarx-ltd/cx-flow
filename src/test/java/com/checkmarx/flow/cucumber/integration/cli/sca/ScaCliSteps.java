@@ -5,6 +5,7 @@ import com.checkmarx.flow.CxFlowRunner;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
+import com.checkmarx.flow.cucumber.integration.sca_scanner.ScaCommonSteps;
 import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.jira.IJiraTestUtils;
 import com.checkmarx.jira.JiraTestUtils;
@@ -52,7 +53,7 @@ public class ScaCliSteps {
     public void beforeEachScenario() throws IOException {
         log.info("Setting bugTracker: Jira");
         flowProperties.setBugTracker("JIRA");
-        initSCAConfig();
+        ScaCommonSteps.initSCAConfig(scaProperties);
 
         List<String> scaOnly = Collections.singletonList(ScaProperties.CONFIG_PREFIX);
         flowProperties.setEnabledVulnerabilityScanners(scaOnly);
@@ -223,11 +224,5 @@ public class ScaCliSteps {
         log.info("Cleaning jira project before test: {}", jiraProperties.getProject());
         jiraUtils.ensureProjectExists(jiraProperties.getProject());
         jiraUtils.cleanProject(jiraProperties.getProject());
-    }
-
-    private void initSCAConfig() {
-        scaProperties.setAppUrl("https://sca.scacheckmarx.com");
-        scaProperties.setApiUrl("https://api.scacheckmarx.com");
-        scaProperties.setAccessControlUrl("https://platform.checkmarx.net");
     }
 }
