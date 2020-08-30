@@ -3,6 +3,8 @@ package com.checkmarx.flow.config;
 import com.checkmarx.flow.filter.CaseTransformingFilter;
 import com.checkmarx.flow.utils.ScanUtils;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
@@ -11,6 +13,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.web.client.RestTemplate;
 import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.spring5.templateresolver.SpringResourceTemplateResolver;
 import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.FileTemplateResolver;
 
@@ -22,6 +25,9 @@ import java.util.Properties;
 public class FlowConfig {
 
     private final FlowProperties properties;
+
+    @Autowired
+    private ApplicationContext applicationContext;
 
     @ConstructorProperties({"properties"})
     public FlowConfig(FlowProperties properties) {
@@ -68,13 +74,28 @@ public class FlowConfig {
         return mailSender;
     }
 
+    @Bean("cxFlowTemplateEngine")
     public TemplateEngine getTemplateEngine() {
 
         TemplateEngine templateEngine = new TemplateEngine();
-        templateEngine.setTemplateResolver(getFileTemplateResolver());
-
+        templateEngine.addTemplateResolver(getSpringTemplateResolver());
+        templateEngine.addTemplateResolver(getFileTemplateResolver());
         return templateEngine;
 
+    }
+
+    private SpringResourceTemplateResolver getSpringTemplateResolver() {
+        SpringResourceTemplateResolver springTemplateResolver = new SpringResourceTemplateResolver();
+        springTemplateResolver.setPrefix("classpath:/templates/");
+        springTemplateResolver.setSuffix(".html");
+        springTemplateResolver.setTemplateMode(TemplateMode.HTML);
+        springTemplateResolver.setCharacterEncoding(StandardCharsets.UTF_8.toString());
+        springTemplateResolver.setOrder(1);
+        springTemplateResolver.setCheckExistence(true);
+        springTemplateResolver.setCacheable(false);
+        springTemplateResolver.setApplicationContext(applicationContext);
+
+        return springTemplateResolver;
     }
 
     private FileTemplateResolver getFileTemplateResolver() {
@@ -82,7 +103,7 @@ public class FlowConfig {
         fileTemplateResolver.setSuffix(".html");
         fileTemplateResolver.setTemplateMode(TemplateMode.HTML);
         fileTemplateResolver.setCharacterEncoding(StandardCharsets.UTF_8.toString());
-        fileTemplateResolver.setOrder(1);
+        fileTemplateResolver.setOrder(2);
         fileTemplateResolver.setCheckExistence(true);
 
         return fileTemplateResolver;
