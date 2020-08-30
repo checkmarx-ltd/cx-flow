@@ -11,6 +11,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum ExitCode {
     SUCCESS(0),
+    ARGUMENT_NOT_PROVIDED(2),
     BUILD_INTERRUPTED(10);
 
     private final int value;

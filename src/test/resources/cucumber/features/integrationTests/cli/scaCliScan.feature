@@ -3,6 +3,12 @@ Feature: SCA support in CxFlow command-line
     Background: Only SCA vulnerability scanner is enabled in CxFlow
         Bug tracker doesn't contain any issues at the beginning of each test run.
 
+    Scenario: SCA CLI scan of a local directory
+        Given source directory contains vulnerable files
+        When running CxFlow with `scan local sources` options
+        Then bug tracker contains some issues
+        And no exception is thrown
+
     Scenario Outline: Testing break-build functionality
         When running a SCA scan with break-build on <issue-type>
         Then run should exit with exit code <exit-code-number>
