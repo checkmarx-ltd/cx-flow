@@ -88,6 +88,8 @@ public class ProjectNameGenerator {
                 Object result = scriptService.runScript(script, bindings);
                 if (result instanceof String) {
                     return ((String) result);
+                } else {
+                    throw new IOException("Script must return a result of type 'java.lang.String'");
                 }
             } catch (IOException e) {
                 log.error("Error reading script file for checkmarx project {}", scriptFile, e);
