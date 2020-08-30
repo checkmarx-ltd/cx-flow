@@ -123,10 +123,10 @@ public class SastScanner implements VulnerabilityScanner {
         try {
             switch (scanType) {
                 case "Scan-git-clone":
-                    scanResults = cxFullScan(request);
+                    scanResults = scanRemoteRepo(request);
                     break;
                 case "cxFullScan":
-                    scanResults = cxFullScan(request, files[0].getPath());
+                    scanResults = scanLocalPath(request, files[0].getPath());
                     break;
                 case "cxParse":
                     cxParseResults(request, files[0]);
@@ -217,7 +217,7 @@ public class SastScanner implements VulnerabilityScanner {
         return scanDetails;
     }
 
-    public ScanResults cxFullScan(ScanRequest request, String path) throws ExitThrowable {
+    private ScanResults scanLocalPath(ScanRequest request, String path) throws ExitThrowable {
         ScanResults results = null;
         try {
             String effectiveProjectName = projectNameGenerator.determineProjectName(request);
@@ -239,7 +239,7 @@ public class SastScanner implements VulnerabilityScanner {
         return results;
     }
 
-    public ScanResults cxFullScan(ScanRequest request) throws ExitThrowable {
+    private ScanResults scanRemoteRepo(ScanRequest request) throws ExitThrowable {
         ScanResults results = null;
         try {
             String effectiveProjectName = projectNameGenerator.determineProjectName(request);
