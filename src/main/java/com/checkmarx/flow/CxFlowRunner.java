@@ -329,13 +329,13 @@ public class CxFlowRunner implements ApplicationRunner {
                 File f = new File(file);
                 if (!f.exists()) {
                     log.error("Result File not found {}", file);
-                    exit(2);
+                    exit(ExitCode.ARGUMENT_NOT_PROVIDED);
                 }
                 if (osa) { //grab the libs file if OSA results
                     File libs = new File(libFile);
                     if (!libs.exists()) {
                         log.error("Library File not found {}", file);
-                        exit(2);
+                        exit(ExitCode.ARGUMENT_NOT_PROVIDED);
                     }
                     cxOsaParse(request, f, libs);
                 } else { //SAST
@@ -352,7 +352,7 @@ public class CxFlowRunner implements ApplicationRunner {
             } else if (args.containsOption("project")) {
                 if (ScanUtils.empty(cxProject)) {
                     log.error("cx-project must be provided when --project option is used");
-                    exit(2);
+                    exit(ExitCode.ARGUMENT_NOT_PROVIDED);
                 }
                 publishLatestScanResults(request);
             } else if (args.containsOption("scan")) {
@@ -433,7 +433,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 repoUrl = gitUri;
             } else {
                 log.error("Unable to determine git url for scanning, exiting...");
-                exit(2);
+                exit(ExitCode.ARGUMENT_NOT_PROVIDED);
                 throw new IllegalArgumentException("repo url is null");
             }
         }
@@ -471,7 +471,7 @@ public class CxFlowRunner implements ApplicationRunner {
     private void scanLocalPath(ScanRequest request, String path) throws ExitThrowable {
         if (ScanUtils.empty(request.getProject())) {
             log.error("Please provide --cx-project to define the project in Checkmarx");
-            exit(2);
+            exit(ExitCode.ARGUMENT_NOT_PROVIDED);
         }
         ScanResults scanResults = runOnActiveScanners(scanner -> scanner.scanCli(request, "cxFullScan", new File(path)));
         processResults(request, scanResults);
