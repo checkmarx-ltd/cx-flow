@@ -10,18 +10,29 @@ import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.jira.IJiraTestUtils;
 import com.checkmarx.jira.JiraTestUtils;
 import com.checkmarx.sdk.config.ScaProperties;
-import io.cucumber.java.*;
-import io.cucumber.java.en.*;
+import io.cucumber.java.After;
+import io.cucumber.java.Before;
+import io.cucumber.java.PendingException;
+import io.cucumber.java.en.And;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.file.PathUtils;
 import org.junit.Assert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * This step implementation relies on specific projects that already exist in SCA (see customScaProjectName).
@@ -33,6 +44,8 @@ public class ScaCliSteps {
     private static final String REPO_ARGS = " --repo-url=https://github.com/cxflowtestuser/public-rest-repo --repo-name=CLI-public-rest-repo --branch=master --blocksysexit";
     private static final String GITHUB_REPO_ARGS = REPO_ARGS + " --github ";
     private static final String JIRA_PROJECT = "SCIT";
+    private static final String DIRECTORY_TO_SCAN = "input-code-for-sca";
+    private static final int AT_LEAST_ONE = Integer.MAX_VALUE;
 
     private final FlowProperties flowProperties;
     private final JiraProperties jiraProperties;
@@ -45,6 +58,7 @@ public class ScaCliSteps {
     private int expectedMedium;
     private int expectedLow;
     private String customScaProjectName;
+    private Path directoryToScan;
 
     @Autowired
     private IJiraTestUtils jiraUtils;
@@ -64,9 +78,20 @@ public class ScaCliSteps {
     }
 
     @After
-    public void afterEachScenario() {
+    public void afterEachScenario() throws IOException {
         log.info("Cleaning JIRA project: {}", jiraProperties.getProject());
         jiraUtils.cleanProject(jiraProperties.getProject());
+
+        if (directoryToScan != null) {
+            log.info("Deleting temp directory: {}", directoryToScan);
+            PathUtils.deleteDirectory(directoryToScan);
+        }
+    }
+
+    @Given("source directory contains vulnerable files")
+    public void sourceDirectoryContainsVulnerableFiles() throws IOException {
+        directoryToScan = getTempDir();
+        copyTestProjectTo(directoryToScan);
     }
 
     @When("running a SCA scan with break-build on {word}")
@@ -143,28 +168,15 @@ public class ScaCliSteps {
     }
 
     @Then("bug tracker contains {word} issues")
-    public void validateBugTrackerIssues(String numberOfIssues) {
-        int expectedIssuesNumber;
+    public void validateBugTrackerIssues(String description) {
+        int expectedIssueCount = getExpectedIssueCount(description);
+        int actualIssueCount = jiraUtils.getNumberOfIssuesInProject(jiraProperties.getProject());
 
-        switch (numberOfIssues) {
-            case "x+y+z":
-                expectedIssuesNumber = expectedHigh + expectedMedium + expectedLow;
-                break;
-            case "x+y":
-                expectedIssuesNumber = expectedHigh + expectedMedium;
-                break;
-            case "y":
-                expectedIssuesNumber = expectedMedium;
-                break;
-            case "no":
-                expectedIssuesNumber = 0;
-                break;
-            default:
-                expectedIssuesNumber = Integer.parseInt(numberOfIssues);
+        if (expectedIssueCount == AT_LEAST_ONE) {
+            Assert.assertTrue("Expected at least one issue in bug tracker.", actualIssueCount > 0);
+        } else {
+            Assert.assertEquals("Wrong issue count in bug tracker.", expectedIssueCount, actualIssueCount);
         }
-
-        int actualOfJiraIssues = jiraUtils.getNumberOfIssuesInProject(jiraProperties.getProject());
-        Assert.assertEquals("Wrong issue count in bug tracker.", expectedIssuesNumber, actualOfJiraIssues);
     }
 
     @And("last scan for the project contains {int} findings")
@@ -192,6 +204,17 @@ public class ScaCliSteps {
     @When("running CxFlow with `publish latest scan results` options")
     public void runningCxFlowWithPublishLatestScanResultsOptions() {
         String commandLine = String.format("--project --cx-project=%s --app=MyApp --blocksysexit", customScaProjectName);
+        tryRunCxFlow(commandLine);
+    }
+
+    @When("running CxFlow with `scan local sources` options")
+    public void runningCxFlowWithScanLocalSourcesOptions() {
+        customScaProjectName = "ci-local-scan-test";
+
+        String commandLine = String.format("--scan --cx-project=%s --app=MyApp --f=%s --blocksysexit",
+                customScaProjectName,
+                directoryToScan);
+
         tryRunCxFlow(commandLine);
     }
 
@@ -224,5 +247,41 @@ public class ScaCliSteps {
         log.info("Cleaning jira project before test: {}", jiraProperties.getProject());
         jiraUtils.ensureProjectExists(jiraProperties.getProject());
         jiraUtils.cleanProject(jiraProperties.getProject());
+    }
+
+    private int getExpectedIssueCount(String countDescription) {
+        int result;
+        switch (countDescription) {
+            case "x+y+z":
+                result = expectedHigh + expectedMedium + expectedLow;
+                break;
+            case "x+y":
+                result = expectedHigh + expectedMedium;
+                break;
+            case "y":
+                result = expectedMedium;
+                break;
+            case "no":
+                result = 0;
+                break;
+            case "some":
+                result = AT_LEAST_ONE;
+                break;
+            default:
+                result = Integer.parseInt(countDescription);
+        }
+        return result;
+    }
+
+    private static Path getTempDir() {
+        String systemTempDir = FileUtils.getTempDirectoryPath();
+        String subdir = String.format("sca-cli-test-%s", UUID.randomUUID());
+        return Paths.get(systemTempDir, subdir);
+    }
+
+    private void copyTestProjectTo(Path targetDir) throws IOException {
+        log.info("Copying test project files from resources ({}) into a temp directory: {}", DIRECTORY_TO_SCAN, targetDir);
+        File directory = TestUtils.getFileFromResource(DIRECTORY_TO_SCAN);
+        FileUtils.copyDirectory(directory, targetDir.toFile());
     }
 }
