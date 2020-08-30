@@ -821,28 +821,37 @@ public class JiraService {
         return null;
     }
 
-    private void loadCustomFields(String jiraProject, String issueType, boolean force) {
-        log.debug("Loading all custom fields");
-        Map<String, String> fields = new HashMap<>();
-        String customFieldKey = jiraProject.concat(issueType);
-        if(!force && this.customFields.containsKey(customFieldKey)){
-            return;
-        }
-        GetCreateIssueMetadataOptions options;
-        options = new GetCreateIssueMetadataOptionsBuilder()
-                .withExpandedIssueTypesFields()
-                .withProjectKeys(jiraProject)
-                .withIssueTypeNames(issueType)
-                .build();
-        Iterable<CimProject> metadata = this.issueClient.getCreateIssueMetadata(options).claim();
-        CimProject cim = metadata.iterator().next();
-        cim.getIssueTypes().forEach(issueTypes ->
-                issueTypes.getFields().forEach((id, value) -> {
-                    String name = value.getName();
-                    fields.put(name, id);
-                })
-        );
-        this.customFields.put(customFieldKey, fields);
+    private void loadCustomFields(String jiraProject, String issueType) {
+        log.info("Preparing to loading custom fields");
+        
+        this.customFields.computeIfAbsent(jiraProject.concat(issueType), customFieldKey -> {
+            log.info("Loading all custom fields for project: {} , with issueType: {}", jiraProject, issueType);
+            GetCreateIssueMetadataOptions options = new GetCreateIssueMetadataOptionsBuilder()
+                    .withExpandedIssueTypesFields()
+                    .withProjectKeys(jiraProject)
+                    .withIssueTypeNames(issueType)
+                    .build();
+
+            Iterable<CimProject> metadata = this.issueClient.getCreateIssueMetadata(options).claim();
+            Iterator<CimProject> iterator = metadata.iterator();
+
+            if (!iterator.hasNext()) {
+                log.error("Failed to load custom fields, The Jira project ({}) is not accessible", jiraProject);
+                throw new IllegalArgumentException("The Jira project " + jiraProject + " is not accessible");
+            }
+            Map<String, String> fields = new HashMap<>();
+            CimProject cim = iterator.next();
+            cim.getIssueTypes().forEach(issueTypes ->
+                issueTypes.getFields().forEach((id, value) -> 
+                    fields.put(value.getName(), id)
+                ) 
+            );
+            
+            log.info("finished Loading {} new custom fields", fields.size());
+            
+            return fields;
+        });
+
     }
 
     private String getCustomFieldByName(String jiraProject, String issueType, String fieldName) {
@@ -1133,7 +1142,7 @@ public class JiraService {
         List<String> closedIssues = new ArrayList<>();
 
         getAndModifyRequestApplication(request);
-        loadCustomFields(request.getBugTracker().getProjectKey(), request.getBugTracker().getIssueType(), false);
+        loadCustomFields(request.getBugTracker().getProjectKey(), request.getBugTracker().getIssueType());
         if (this.jiraProperties.isChild()) {
             ScanRequest parent = new ScanRequest(request);
             ScanRequest grandparent = new ScanRequest(request);
