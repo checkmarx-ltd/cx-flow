@@ -314,6 +314,7 @@ public class FlowProperties {
         private List<String> cc;
         private boolean notificationEnabled = false;
         private boolean allowEmptyMail = false;
+        private String template;
 
         public String getHost() {
             return this.host;
@@ -366,6 +367,10 @@ public class FlowProperties {
         public void setAllowEmptyMail(boolean allowEmptyMail) {
             this.allowEmptyMail = allowEmptyMail;
         }
+
+        public String getTemplate() { return template; }
+
+        public void setTemplate(String template) { this.template = template; }
     }
 
 }

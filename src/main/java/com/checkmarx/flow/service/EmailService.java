@@ -8,6 +8,7 @@ import com.checkmarx.sdk.dto.ScanResults;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -34,7 +35,7 @@ public class EmailService {
     private final JavaMailSender emailSender;
 
     @ConstructorProperties({"flowProperties", "templateEngine", "emailSender"})
-    public EmailService(FlowProperties flowProperties, TemplateEngine templateEngine, JavaMailSender emailSender) {
+    public EmailService(FlowProperties flowProperties, @Qualifier("cxFlowTemplateEngine") TemplateEngine templateEngine, JavaMailSender emailSender) {
         this.flowProperties = flowProperties;
         this.templateEngine = templateEngine;
         this.emailSender = emailSender;
@@ -143,7 +144,16 @@ public class EmailService {
             emailCtx.put("link", results.getLink());
         }
         emailCtx.put("repo_fullname", namespace.concat("/").concat(repoName));
-        sendmail(request.getEmail(), scanCompletedSubject, emailCtx, "template-demo.html");
+
+        String template = flowProperties.getMail().getTemplate();
+
+        if(ScanUtils.empty(template)) {
+            sendmail(request.getEmail(), scanCompletedSubject, emailCtx, "template-demo.html");
+        }
+        else
+        {
+            sendmail(request.getEmail(), scanCompletedSubject, emailCtx, template);
+        }
         log.info("Email notification sent.");
     }
 
