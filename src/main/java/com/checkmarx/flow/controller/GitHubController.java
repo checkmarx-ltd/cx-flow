@@ -333,10 +333,6 @@ public class GitHubController extends WebhookController {
         return getSuccessMessage();
     }
 
-    private void setScmInstance(ControllerRequest controllerRequest, ScanRequest request) {
-        Optional.ofNullable(controllerRequest.getScmInstance()).ifPresent(request::setScmInstance);
-    }
-
     private List<String> determineEmails(PushEvent event) {
         /*Determine emails*/
         List<String> emails = new ArrayList<>();
