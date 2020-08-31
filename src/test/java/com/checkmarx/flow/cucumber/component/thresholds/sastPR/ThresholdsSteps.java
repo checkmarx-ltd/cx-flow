@@ -68,7 +68,6 @@ public class ThresholdsSteps {
     private final SastScanner sastScanner;
     private final SCAScanner scaScanner;
     private final EmailService emailService;
-    private final ScmConfigOverrider scmConfigOverrider;
 
     private ScanResults scanResultsToInject;
     private ResultsService resultsService;
@@ -77,8 +76,7 @@ public class ThresholdsSteps {
 
     public ThresholdsSteps(CxClient cxClientMock, RestTemplate restTemplateMock, FlowProperties flowProperties, ADOProperties adoProperties,
                            CxProperties cxProperties, GitHubProperties gitHubProperties, ThresholdValidator thresholdValidator,
-                           ScaProperties scaProperties, SastScanner sastScanner, SCAScanner scaScanner, EmailService emailService,
-                           ScmConfigOverrider scmConfigOverrider) {
+                           ScaProperties scaProperties, SastScanner sastScanner, SCAScanner scaScanner, EmailService emailService) {
 
         this.cxClientMock = cxClientMock;
         this.restTemplateMock = restTemplateMock;
@@ -100,7 +98,6 @@ public class ThresholdsSteps {
         this.scaScanner = scaScanner;
 
         this.emailService = emailService;
-        this.scmConfigOverrider = scmConfigOverrider;
     }
 
     @Before("@ThresholdsFeature")
@@ -261,8 +258,7 @@ public class ThresholdsSteps {
         GitHubService gitService = new GitHubService(restTemplateMock,
                 gitHubProperties,
                 flowProperties,
-                thresholdValidator,
-                scmConfigOverrider);
+                thresholdValidator);
 
         ADOService adoService = new ADOService(restTemplateMock,
                 adoProperties,

@@ -240,8 +240,7 @@ public class DeleteBranchSteps {
                 gitHubService,
                 sastScanner,
                 filterFactory,
-                configOverrider,
-                null));
+                configOverrider));
         
     }
 

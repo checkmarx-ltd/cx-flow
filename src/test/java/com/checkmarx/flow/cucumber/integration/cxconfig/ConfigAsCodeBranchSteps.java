@@ -2,7 +2,6 @@ package com.checkmarx.flow.cucumber.integration.cxconfig;
 
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
-import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.controller.GitHubController;
 import com.checkmarx.flow.dto.github.PullEvent;
 import com.checkmarx.flow.service.*;
@@ -31,7 +30,6 @@ public class ConfigAsCodeBranchSteps {
     private final HelperService helperService;
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
-    private final ScmConfigOverrider scmConfigOverrider;
 
     private String defaultBranch;
     private String actualBranch;
@@ -65,7 +63,7 @@ public class ConfigAsCodeBranchSteps {
         // Don't start automation.
         FlowService flowServiceMock = mock(FlowService.class);
 
-        GitHubService gitHubService = new GitHubService(restTemplateMock, gitHubProperties, flowProperties, null, scmConfigOverrider);
+        GitHubService gitHubService = new GitHubService(restTemplateMock, gitHubProperties, flowProperties, null);
 
         GitHubController gitHubControllerSpy = Mockito.spy(new GitHubController(gitHubProperties,
                 flowProperties,
@@ -76,8 +74,7 @@ public class ConfigAsCodeBranchSteps {
                 gitHubService,
                 null,
                 filterFactory,
-                configOverrider,
-                scmConfigOverrider));
+                configOverrider));
         doNothing().when(gitHubControllerSpy).verifyHmacSignature(any(), any(), any());
 
         return gitHubControllerSpy;

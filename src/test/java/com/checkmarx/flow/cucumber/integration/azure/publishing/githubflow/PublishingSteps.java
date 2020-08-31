@@ -3,7 +3,6 @@ package com.checkmarx.flow.cucumber.integration.azure.publishing.githubflow;
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
-import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.controller.GitHubController;
 import com.checkmarx.flow.cucumber.integration.azure.publishing.AzureDevopsClient;
 import com.checkmarx.flow.cucumber.integration.azure.publishing.PublishingStepsBase;
@@ -58,8 +57,6 @@ public class PublishingSteps extends PublishingStepsBase {
     private final VulnerabilityScanner sastScanner;
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
-    private final ScmConfigOverrider scmConfigOverrider;
-
 
     @MockBean
     private final CxClient cxClientMock;
@@ -144,7 +141,7 @@ public class PublishingSteps extends PublishingStepsBase {
         FlowService flowService = new FlowService(vulnerabilityScannerList, projectNameGenerator, resultsService);
 
         return new GitHubController(gitHubProperties, flowProperties, cxProperties,
-                null, flowService, helperService, gitHubService, null, filterFactory, configOverrider, scmConfigOverrider);
+                null, flowService, helperService, gitHubService, null, filterFactory, configOverrider);
     }
 
     private static GitHubTestUtils.EventType determineEventType(String eventName) {

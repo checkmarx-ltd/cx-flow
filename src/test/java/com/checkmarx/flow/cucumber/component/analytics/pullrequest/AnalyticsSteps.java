@@ -230,8 +230,7 @@ public class AnalyticsSteps {
         GitHubService gitService = new GitHubService(restTemplateMock,
                 gitHubProperties,
                 flowProperties,
-                thresholdValidator,
-                null);
+                thresholdValidator);
 
         return new ResultsService(
                 cxClientMock,
