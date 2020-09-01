@@ -58,17 +58,17 @@ public class GitLabService extends RepoService {
     }
 
 
-    Integer getProjectDetails(String namespace, String repoName){
+    Integer getProjectDetails(ScanRequest scanRequest, String namespace, String repoName){
 
         try {
-            String url = properties.getApiUrl().concat(PROJECT);
+            String url = properties.getConfigApiUrl(scanRequest).concat(PROJECT);
 
             url = url.replace("{namespace}", namespace);
             url = url.replace("{x}", "%2F");
             url = url.replace("{repo}", repoName);
             URI uri = new URI(url);
 
-            HttpEntity httpEntity = new HttpEntity<>(createAuthHeaders());
+            HttpEntity httpEntity = new HttpEntity<>(createAuthHeaders(scanRequest));
             ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, httpEntity, String.class);
             JSONObject obj = new JSONObject(response.getBody());
             return obj.getInt("id");
@@ -92,10 +92,10 @@ public class GitLabService extends RepoService {
      * https://gitlab.msu.edu/help/integration/oauth_provider.md
      * @return HttpHeaders for authentication
      */
-    private HttpHeaders createAuthHeaders(){
+    private HttpHeaders createAuthHeaders(ScanRequest scanRequest){
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        httpHeaders.set("PRIVATE-TOKEN", properties.getToken());
+        httpHeaders.set("PRIVATE-TOKEN", properties.getConfigToken(scanRequest.getScmInstance()));
         httpHeaders.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
         return httpHeaders;
     }
@@ -115,7 +115,7 @@ public class GitLabService extends RepoService {
         Note note = Note.builder()
                 .body(comment)
                 .build();
-        HttpEntity<Note> httpEntity = new HttpEntity<>(note, createAuthHeaders());
+        HttpEntity<Note> httpEntity = new HttpEntity<>(note, createAuthHeaders(request));
         restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
@@ -133,7 +133,7 @@ public class GitLabService extends RepoService {
     public void sendCommitComment(ScanRequest request, String comment){
         JSONObject note = new JSONObject();
         note.put("note", comment);
-        HttpEntity<String> httpEntity = new HttpEntity<>(note.toString(), createAuthHeaders());
+        HttpEntity<String> httpEntity = new HttpEntity<>(note.toString(), createAuthHeaders(request));
         restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
@@ -144,13 +144,13 @@ public class GitLabService extends RepoService {
                 log.error("merge_id and merge_title was not provided within the request object, which is required for blocking / unblocking merge requests");
                 return;
             }
-            String endpoint = properties.getApiUrl().concat(MERGE_PATH);
+            String endpoint = properties.getConfigApiUrl(request).concat(MERGE_PATH);
             endpoint = endpoint.replace("{id}", request.getRepoProjectId().toString());
             endpoint = endpoint.replace("{iid}", mergeId);
 
             HttpEntity httpEntity = new HttpEntity<>(
                     getJSONMergeTitle("WIP:CX|".concat(request.getAdditionalMetadata(MERGE_TITLE))).toString(),
-                    createAuthHeaders()
+                    createAuthHeaders(request)
             );
             restTemplate.exchange(endpoint,
                     HttpMethod.PUT, httpEntity, String.class);
@@ -164,14 +164,14 @@ public class GitLabService extends RepoService {
                 log.error("merge_id and merge_title was not provided within the request object, which is required for blocking / unblocking merge requests");
                 return;
             }
-            String endpoint = properties.getApiUrl().concat(MERGE_PATH);
+            String endpoint = properties.getConfigApiUrl(request).concat(MERGE_PATH);
             endpoint = endpoint.replace("{id}", request.getRepoProjectId().toString());
             endpoint = endpoint.replace("{iid}", mergeId);
 
             HttpEntity httpEntity = new HttpEntity<>(
                     getJSONMergeTitle(request.getAdditionalMetadata(MERGE_TITLE)
                             .replace("WIP:CX|","")).toString(),
-                    createAuthHeaders()
+                    createAuthHeaders(request)
             );
             restTemplate.exchange(endpoint,
                     HttpMethod.PUT, httpEntity, String.class);
@@ -198,10 +198,10 @@ public class GitLabService extends RepoService {
     private Sources getRepoLanguagePercentages(ScanRequest request) {
         Sources sources = new Sources();
         Map<String, Integer> langs = new HashMap<>();
-        HttpHeaders headers = createAuthHeaders();
+        HttpHeaders headers = createAuthHeaders(request);
         try {
             ResponseEntity<String> response = restTemplate.exchange(
-                    properties.getApiUrl().concat(LANGUAGE_TYPES),
+                    properties.getConfigApiUrl(request).concat(LANGUAGE_TYPES),
                     HttpMethod.GET,
                     new HttpEntity(headers),
                     String.class,
@@ -229,10 +229,10 @@ public class GitLabService extends RepoService {
     }
 
     private void scanGitContent(Sources sources, ScanRequest request){
-        HttpHeaders headers = createAuthHeaders();
+        HttpHeaders headers = createAuthHeaders(request);
         try {
             ResponseEntity<String> response = restTemplate.exchange(
-                    properties.getApiUrl().concat(REPO_CONTENT),
+                    properties.getConfigApiUrl(request).concat(REPO_CONTENT),
                     HttpMethod.GET,
                     new HttpEntity(headers),
                     String.class,
@@ -258,10 +258,10 @@ public class GitLabService extends RepoService {
 
     @Override
     public CxConfig getCxConfigOverride(ScanRequest request) {
-        HttpHeaders headers = createAuthHeaders();
+        HttpHeaders headers = createAuthHeaders(request);
         try {
             ResponseEntity<String> response = restTemplate.exchange(
-                    properties.getApiUrl().concat(FILE_CONTENT),
+                    properties.getConfigApiUrl(request).concat(FILE_CONTENT),
                     HttpMethod.GET,
                     new HttpEntity(headers),
                     String.class,

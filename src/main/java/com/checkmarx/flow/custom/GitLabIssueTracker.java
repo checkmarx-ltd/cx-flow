@@ -59,11 +59,11 @@ public class GitLabIssueTracker implements IssueTracker {
                 ScanUtils.empty(request.getBranch())){
             throw new MachinaException("Namespace / RepoName / Branch are required");
         }
-        if(ScanUtils.empty(properties.getApiUrl())){
+        if(ScanUtils.empty(properties.getConfigApiUrl(request))){
             throw new MachinaException("GitLab API Url must be provided in property config");
         }
         if(request.getRepoProjectId() == null) {
-            Integer projectId = getProjectId(request.getNamespace(), request.getRepoName());
+            Integer projectId = getProjectId(request);
             if (projectId.equals(UNKNOWN_INT)) {
                 log.error("Could not obtain GitLab Project Id for {}/{}/{}", request.getNamespace(), request.getRepoName(), request.getBranch());
                 throw new MachinaException("Could not obtain GitLab Project Id");
@@ -72,15 +72,16 @@ public class GitLabIssueTracker implements IssueTracker {
         }
     }
 
-    private Integer getProjectId(String targetNamespace, String targetRepoName) {
+    private Integer getProjectId(ScanRequest request) {
         try {
             int projectId = 0;
-            JSONArray candidateProjects = getProjectSearchResults(targetRepoName);
+            String targetRepoName = request.getRepoName();
+            JSONArray candidateProjects = getProjectSearchResults(request);
             log.debug("Projects found: {}. Looking for exact match.", candidateProjects.length());
             // The search is fuzzy, so we need to additionally filter search results here for strict match.
             for (Object project : candidateProjects) {
                 JSONObject projectJson = (JSONObject) project;
-                if (isTargetProject(projectJson, targetNamespace, targetRepoName)) {
+                if (isTargetProject(projectJson, request.getNamespace(), targetRepoName)) {
                     projectId = projectJson.getInt("id");
                     log.debug("Using GitLab project ID: {}", projectId);
                     break;
@@ -111,13 +112,14 @@ public class GitLabIssueTracker implements IssueTracker {
         return result;
     }
 
-    private JSONArray getProjectSearchResults(String targetRepoName) throws URISyntaxException {
+    private JSONArray getProjectSearchResults(ScanRequest scanRequest) throws URISyntaxException {
+        String targetRepoName = scanRequest.getRepoName();
         log.debug("Searching repo by query: {}", targetRepoName);
-        String url = properties.getApiUrl()
+        String url = properties.getConfigApiUrl(scanRequest)
                 .concat(PROJECT)
                 .replace("{repo}", targetRepoName);
         URI uri = new URI(url);
-        HttpEntity<Void> httpEntity = new HttpEntity<>(createAuthHeaders());
+        HttpEntity<Void> httpEntity = new HttpEntity<>(createAuthHeaders(scanRequest));
         ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, httpEntity, String.class);
         return new JSONArray(response.getBody());
     }
@@ -129,8 +131,8 @@ public class GitLabIssueTracker implements IssueTracker {
     public List<Issue> getIssues(ScanRequest request) {
         log.info("Executing getIssues GitLab API call");
         List<Issue> issues = new ArrayList<>();
-        HttpEntity<Void> httpEntity = new HttpEntity<>(createAuthHeaders());
-        String endpoint = properties.getApiUrl().concat(ISSUES_PATH);
+        HttpEntity<Void> httpEntity = new HttpEntity<>(createAuthHeaders(request));
+        String endpoint = properties.getConfigApiUrl(request).concat(ISSUES_PATH);
         ResponseEntity<com.checkmarx.flow.dto.gitlab.Issue[]> response = restTemplate.exchange(endpoint,
                 HttpMethod.GET, httpEntity, com.checkmarx.flow.dto.gitlab.Issue[].class, request.getRepoProjectId());
         if(response.getBody() == null) {
@@ -177,10 +179,10 @@ public class GitLabIssueTracker implements IssueTracker {
      *
      * @return GitLab Issue
      */
-    private Issue getIssue(Integer projectId, Integer iid) {
+    private Issue getIssue(ScanRequest scanRequest, Integer projectId, Integer iid) {
         log.debug("Executing getIssue GitLab API call");
-        String endpoint = properties.getApiUrl().concat(ISSUE_PATH);
-        HttpEntity<Void> httpEntity = new HttpEntity<>(createAuthHeaders());
+        String endpoint = properties.getConfigApiUrl(scanRequest).concat(ISSUE_PATH);
+        HttpEntity<Void> httpEntity = new HttpEntity<>(createAuthHeaders(scanRequest));
         ResponseEntity<com.checkmarx.flow.dto.gitlab.Issue> response =
                 restTemplate.exchange(endpoint, HttpMethod.GET, httpEntity, com.checkmarx.flow.dto.gitlab.Issue.class, projectId, iid);
 
@@ -191,13 +193,13 @@ public class GitLabIssueTracker implements IssueTracker {
     /**
      *  Adds a comment (Note) to an issue
      */
-    private void addComment(Integer projectId, Integer iid, String comment) {
+    private void addComment(ScanRequest scanRequest, Integer projectId, Integer iid, String comment) {
         log.debug("Executing add comment GitLab API call");
-        String endpoint = properties.getApiUrl().concat(COMMENT_PATH);
+        String endpoint = properties.getConfigApiUrl(scanRequest).concat(COMMENT_PATH);
         Note note = Note.builder()
                 .body(comment)
                 .build();
-        HttpEntity<Note> httpEntity = new HttpEntity<>(note, createAuthHeaders());
+        HttpEntity<Note> httpEntity = new HttpEntity<>(note, createAuthHeaders(scanRequest));
         restTemplate.exchange(endpoint, HttpMethod.POST, httpEntity, String.class, projectId, iid);
     }
 
@@ -205,11 +207,11 @@ public class GitLabIssueTracker implements IssueTracker {
     public Issue createIssue(ScanResults.XIssue resultIssue, ScanRequest request) throws MachinaException {
         log.debug("Executing createIssue GitLab API call");
 
-        String endpoint = properties.getApiUrl().concat(NEW_ISSUE_PATH);
+        String endpoint = properties.getConfigApiUrl(request).concat(NEW_ISSUE_PATH);
         ResponseEntity<com.checkmarx.flow.dto.gitlab.Issue> response;
 
         try {
-            HttpEntity<String> httpEntity = new HttpEntity<>(getJSONCreateIssue(resultIssue, request).toString(), createAuthHeaders());
+            HttpEntity<String> httpEntity = new HttpEntity<>(getJSONCreateIssue(resultIssue, request).toString(), createAuthHeaders(request));
             response = restTemplate.exchange(endpoint, HttpMethod.POST, httpEntity, com.checkmarx.flow.dto.gitlab.Issue.class, request.getRepoProjectId());
         }
         catch (HttpClientErrorException e){
@@ -226,40 +228,40 @@ public class GitLabIssueTracker implements IssueTracker {
 
     @Override
     public void closeIssue(Issue issue, ScanRequest request) throws MachinaException {
-        closeIssue(request.getRepoProjectId(), Integer.parseInt(issue.getId()));
+        closeIssue(request, Integer.parseInt(issue.getId()));
     }
 
-    private com.checkmarx.flow.dto.gitlab.Issue closeIssue(Integer projectId, Integer iid) {
+    private com.checkmarx.flow.dto.gitlab.Issue closeIssue(ScanRequest request, Integer iid) {
         log.debug("Executing closeIssue GitHub API call");
-        String endpoint = properties.getApiUrl().concat(ISSUE_PATH);
-        HttpEntity<String> httpEntity = new HttpEntity<>(getJSONCloseIssue().toString(), createAuthHeaders());
+        String endpoint = properties.getConfigApiUrl(request).concat(ISSUE_PATH);
+        HttpEntity<String> httpEntity = new HttpEntity<>(getJSONCloseIssue().toString(), createAuthHeaders(request));
         ResponseEntity<com.checkmarx.flow.dto.gitlab.Issue> response = restTemplate.exchange(endpoint, HttpMethod.PUT, httpEntity,
-                com.checkmarx.flow.dto.gitlab.Issue.class, projectId, iid);
+                com.checkmarx.flow.dto.gitlab.Issue.class, request.getRepoProjectId(), iid);
         return response.getBody();
     }
 
     @Override
     public Issue updateIssue(Issue issue, ScanResults.XIssue resultIssue, ScanRequest request) throws MachinaException {
-        return  updateIssue(getJSONUpdateIssue(resultIssue, request), request.getRepoProjectId(), Integer.parseInt(issue.getId()));
+        return  updateIssue(request, getJSONUpdateIssue(resultIssue, request), request.getRepoProjectId(), Integer.parseInt(issue.getId()));
     }
 
     /**
      * Update existing issue in GitLab
      */
-    private Issue updateIssue(JSONObject issue, Integer projectId, Integer iid) {
+    private Issue updateIssue(ScanRequest scanRequest, JSONObject issue, Integer projectId, Integer iid) {
         log.debug("Executing updateIssue GitLab API call");
-        String endpoint = properties.getApiUrl().concat(ISSUE_PATH);
+        String endpoint = properties.getConfigApiUrl(scanRequest).concat(ISSUE_PATH);
 
-        HttpEntity<String> httpEntity = new HttpEntity<>(issue.toString(), createAuthHeaders());
+        HttpEntity<String> httpEntity = new HttpEntity<>(issue.toString(), createAuthHeaders(scanRequest));
         ResponseEntity<com.checkmarx.flow.dto.gitlab.Issue> response;
         try {
             response = restTemplate.exchange(endpoint, HttpMethod.PUT, httpEntity, com.checkmarx.flow.dto.gitlab.Issue.class, projectId, iid);
-            this.addComment(projectId, iid,"Issue still exists. ");
+            this.addComment(scanRequest, projectId, iid,"Issue still exists. ");
             return mapToIssue(response.getBody());
         } catch (HttpClientErrorException e) {
-            this.addComment(projectId, iid, "This issue still exists.  Please add label 'false-positive' to remove from scope of SAST results");
+            this.addComment(scanRequest, projectId, iid, "This issue still exists.  Please add label 'false-positive' to remove from scope of SAST results");
         }
-        return this.getIssue(projectId, iid);
+        return this.getIssue(scanRequest, projectId, iid);
     }
 
     private String getFileUrl(ScanRequest request, String filename) {
@@ -377,10 +379,10 @@ public class GitLabIssueTracker implements IssueTracker {
      * https://gitlab.msu.edu/help/integration/oauth_provider.md
      * @return HttpHeaders for authentication
      */
-    private HttpHeaders createAuthHeaders(){
+    private HttpHeaders createAuthHeaders(ScanRequest scanRequest){
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        httpHeaders.set("PRIVATE-TOKEN", properties.getToken());
+        httpHeaders.set("PRIVATE-TOKEN", properties.getConfigToken(scanRequest.getScmInstance()));
         httpHeaders.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
         return httpHeaders;
     }
