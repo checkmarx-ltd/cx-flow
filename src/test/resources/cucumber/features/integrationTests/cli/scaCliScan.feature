@@ -20,16 +20,19 @@ Feature: SCA support in CxFlow command-line
             | missing-project             | 2                |
             | error-processing-request    | 10               |
 
+
     Scenario Outline: Testing cli filter functionality
-        Given code has x High, y Medium and z low issues
+        Given code has 6 High, 9 Medium and 0 low issues
         When running sca scan <filter>
         Then bug tracker contains <number of issue> issues
 
         Examples:
             | filter                 | number of issue |
-            | no-filter              | x+y+z           |
-            # | filter-High-and-Medium | x+y             |
-            # | filter-only-Medium     | y               |
+            | none                   | 15              |
+            | High                   | 6               |
+            | Medium,Low             | 9               |
+            | Low                    | 0               |
+
 
     Scenario Outline: Publishing latest scan results
         # Normal flow. Make sure that only the latest scan is used.
@@ -50,9 +53,21 @@ Feature: SCA support in CxFlow command-line
         Then bug tracker contains no issues
         And no exception is thrown
 
+
     Scenario: Trying to publish latest scan results for a project with no scans
         # Make sure CxFlow doesn't crash in this case either.
         Given the "ci-project-no-scans-test" project exists in SCA but doesn't have any scans
         When running CxFlow with `publish latest scan results` options
         Then bug tracker contains no issues
         And no exception is thrown
+
+
+    Scenario Outline: While publishing latest scan results, CxFlow must respect SCA filters
+        Given last scan for a project "ci-sca-cli-integration-tests" contains 49 High, 3 Medium and 1 Low-severity findings
+        When run CxFlow with `publish latest scan results` options and <filters>
+        Then bug tracker contains <expected issue count> issues
+        Examples:
+            | filters         | expected issue count |
+            | Medium          | 3                    |
+            | Medium,Low      | 4                    |
+            | none            | 53                   |
