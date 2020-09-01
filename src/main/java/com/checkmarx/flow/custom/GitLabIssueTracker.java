@@ -231,13 +231,12 @@ public class GitLabIssueTracker implements IssueTracker {
         closeIssue(request, Integer.parseInt(issue.getId()));
     }
 
-    private com.checkmarx.flow.dto.gitlab.Issue closeIssue(ScanRequest request, Integer iid) {
+    private void closeIssue(ScanRequest request, Integer iid) {
         log.debug("Executing closeIssue GitHub API call");
         String endpoint = properties.getConfigApiUrl(request).concat(ISSUE_PATH);
         HttpEntity<String> httpEntity = new HttpEntity<>(getJSONCloseIssue().toString(), createAuthHeaders(request));
-        ResponseEntity<com.checkmarx.flow.dto.gitlab.Issue> response = restTemplate.exchange(endpoint, HttpMethod.PUT, httpEntity,
+        restTemplate.exchange(endpoint, HttpMethod.PUT, httpEntity,
                 com.checkmarx.flow.dto.gitlab.Issue.class, request.getRepoProjectId(), iid);
-        return response.getBody();
     }
 
     @Override
