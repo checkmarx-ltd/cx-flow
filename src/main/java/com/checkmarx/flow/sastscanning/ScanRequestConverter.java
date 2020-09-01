@@ -5,6 +5,8 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.Sources;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.ShardManager.ShardSession;
+import com.checkmarx.sdk.ShardManager.ShardSessionTracker;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.cx.CxScanParams;
@@ -34,6 +36,7 @@ public class ScanRequestConverter {
     private final GitLabService gitLabService;
     private final BitBucketService bitBucketService;
     private final ADOService adoService;
+    private final ShardSessionTracker sessionTracker;
 
     public CxScanParams toScanParams(ScanRequest scanRequest) throws CheckmarxException {
         String ownerId = determineTeamAndOwnerID(scanRequest);
@@ -72,16 +75,25 @@ public class ScanRequestConverter {
             if (!team.startsWith(cxProperties.getTeamPathSeparator()))
                 team = cxProperties.getTeamPathSeparator().concat(team);
             log.info("Overriding team with {}", team);
+            if(cxProperties.getEnableShardManager()) {
+                ShardSession shard = sessionTracker.getShardSession();
+                shard.setTeam(team);
+                shard.setProject(request.getProject());
+            }
             ownerId = cxService.getTeamId(team);
         } else {
             team = cxProperties.getTeam();
             if (!team.startsWith(cxProperties.getTeamPathSeparator()))
                 team = cxProperties.getTeamPathSeparator().concat(team);
             log.info("Using Checkmarx team: {}", team);
+            String fullTeamName = cxProperties.getTeam().concat(cxProperties.getTeamPathSeparator()).concat(namespace);
+            if(cxProperties.getEnableShardManager()) {
+                ShardSession shard = sessionTracker.getShardSession();
+                shard.setTeam(fullTeamName);
+                shard.setProject(request.getProject());
+            }
             ownerId = cxService.getTeamId(team);
-
             if (cxProperties.isMultiTenant() && !ScanUtils.empty(namespace)) {
-                String fullTeamName = cxProperties.getTeam().concat(cxProperties.getTeamPathSeparator()).concat(namespace);
                 log.info("Using multi tenant team name: {}", fullTeamName);
                 request.setTeam(fullTeamName);
                 String tmpId = cxService.getTeamId(fullTeamName);
