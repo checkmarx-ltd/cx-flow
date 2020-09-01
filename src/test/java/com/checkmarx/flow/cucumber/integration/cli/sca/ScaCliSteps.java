@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -45,6 +46,7 @@ public class ScaCliSteps {
     private static final String GITHUB_REPO_ARGS = REPO_ARGS + " --github ";
     private static final String JIRA_PROJECT = "SCIT";
     private static final String DIRECTORY_TO_SCAN = "input-code-for-sca";
+    private static final String NO_FILTERS = "none";
     private static final int AT_LEAST_ONE = Integer.MAX_VALUE;
 
     private final FlowProperties flowProperties;
@@ -53,10 +55,6 @@ public class ScaCliSteps {
 
     private final CxFlowRunner cxFlowRunner;
     private Throwable cxFlowExecutionException;
-
-    private int expectedHigh;
-    private int expectedMedium;
-    private int expectedLow;
     private String customScaProjectName;
     private Path directoryToScan;
 
@@ -75,6 +73,8 @@ public class ScaCliSteps {
         log.info("Jira project key: {}", JIRA_PROJECT);
         jiraProperties.setProject(JIRA_PROJECT);
         initJiraBugTracker();
+        log.info("reset sca filters");
+        scaProperties.setFilterSeverity(Collections.emptyList());
     }
 
     @After
@@ -94,22 +94,27 @@ public class ScaCliSteps {
         copyTestProjectTo(directoryToScan);
     }
 
-    @When("running a SCA scan with break-build on {word}")
+    @Given("code has 6 High, 9 Medium and 0 low issues")
+    public void setProject() {
+        customScaProjectName = "test";
+    }
+
+    @When("running a SCA scan with break-build on {}")
     public void runningWithBreakBuild(String issueType) {
         StringBuilder commandBuilder = new StringBuilder();
-
+        setFilters("High");
         switch (issueType) {
             case "success":
                 commandBuilder.append("--scan  --severity=High --app=MyApp --cx-project=test").append(GITHUB_REPO_ARGS);
                 break;
             case "missing-mandatory-parameter":
-                commandBuilder.append("--severity=High --severity=Medium").append(GITHUB_REPO_ARGS);
+                commandBuilder.append(GITHUB_REPO_ARGS);
                 break;
             case "error-processing-request":
-                commandBuilder.append("--scan  --severity=High --app=MyApp").append(GITHUB_REPO_ARGS);
+                commandBuilder.append("--scan --app=MyApp").append(GITHUB_REPO_ARGS);
                 break;
             case "missing-project":
-                commandBuilder.append("--scan  --severity=High --app=MyApp --f=nofile").append(REPO_ARGS);
+                commandBuilder.append("--scan --app=MyApp --f=nofile").append(REPO_ARGS);
                 break;
             default:
                 throw new PendingException("Issues type " + issueType + " isn't supported");
@@ -125,7 +130,7 @@ public class ScaCliSteps {
         cxFlowExecutionException = exception;
     }
 
-    @Then("run should exit with exit code {int}")
+    @Then("run should exit with exit code {}")
     public void validateExitCode(int expectedExitCode) {
         Assert.assertNotNull("Expected an exception to be thrown.", cxFlowExecutionException);
         Assert.assertEquals(InvocationTargetException.class, cxFlowExecutionException.getClass());
@@ -138,40 +143,27 @@ public class ScaCliSteps {
         Assert.assertEquals("The expected exit code did not match", expectedExitCode, actualExitCode);
     }
 
-    @Given("code has x High, y Medium and z low issues")
-    public void setIssues() {
-        expectedHigh = 6;
-        expectedMedium = 9;
-        expectedLow = 0;
+    @Given("last scan for a project {string} contains 49 High, 3 Medium and 1 Low-severity findings")
+    public void setProjectWithFindings(String projectName){
+        customScaProjectName = projectName;
     }
 
     @When("running sca scan {word}")
-    public void runnningScanWithFilter(String filter) {
-        StringBuilder commandBuilder = new StringBuilder();
+    public void runnningScanWithFilter(String filters) {
+        StringBuilder commandLine = new StringBuilder();
+        commandLine.append(" --scan --app=MyApp --cx-project=test").append(GITHUB_REPO_ARGS);
 
-        switch (filter) {
-            case "no-filter":
-                commandBuilder.append(" --scan --app=MyApp --cx-project=test").append(GITHUB_REPO_ARGS);
-                break;
-            // case "filter-High-and-Medium":
-            //     commandBuilder.append(" --scan --app=MyApp --cx-project=test").append(GITHUB_REPO_ARGS);
-            //     break;
-            // case "filter-only-Medium":
-            //     commandBuilder.append(" --scan --app=MyApp --cx-project=test").append(GITHUB_REPO_ARGS);
-            //     break;
-            default:
-                throw new PendingException("Filter " + filter + " isn't supported");
-        }
+        setFilters(filters);
 
-        String commandLine = commandBuilder.toString();
-        tryRunCxFlow(commandLine);
+        tryRunCxFlow(commandLine.toString());
     }
 
-    @Then("bug tracker contains {word} issues")
+    @Then("bug tracker contains {} issues")
     public void validateBugTrackerIssues(String description) {
         int expectedIssueCount = getExpectedIssueCount(description);
         int actualIssueCount = jiraUtils.getNumberOfIssuesInProject(jiraProperties.getProject());
 
+        log.info("comparing expected number of issues: {}, to actual bug tracker issues; {}", expectedIssueCount, actualIssueCount);
         if (expectedIssueCount == AT_LEAST_ONE) {
             Assert.assertTrue("Expected at least one issue in bug tracker.", actualIssueCount > 0);
         } else {
@@ -179,7 +171,7 @@ public class ScaCliSteps {
         }
     }
 
-    @And("last scan for the project contains {int} findings")
+    @And("last scan for the project contains {} findings")
     public void lastScanForProjectContainsFindings(int findingCount) {
         switch (findingCount) {
             case 0:
@@ -202,9 +194,25 @@ public class ScaCliSteps {
     }
 
     @When("running CxFlow with `publish latest scan results` options")
-    public void runningCxFlowWithPublishLatestScanResultsOptions() {
+    public void runCxFlowWithPublishLatestScanResultsOptions() {
         String commandLine = String.format("--project --cx-project=%s --app=MyApp --blocksysexit", customScaProjectName);
         tryRunCxFlow(commandLine);
+    }
+
+    @When("run CxFlow with `publish latest scan results` options and {}")
+    public void runCxFlowGetLatestProjectResultsWithFilters(String filters){
+        setFilters(filters);
+        runCxFlowWithPublishLatestScanResultsOptions();
+    }
+
+    private void setFilters(String filters){
+        String[] filtersList = filters.split(",");
+        if (!filters.equals(NO_FILTERS)){
+            scaProperties.setFilterSeverity(Arrays.asList(filtersList));
+        }
+        else {
+            scaProperties.setFilterSeverity(Collections.emptyList());
+        }
     }
 
     @When("running CxFlow with `scan local sources` options")
@@ -252,24 +260,16 @@ public class ScaCliSteps {
     private int getExpectedIssueCount(String countDescription) {
         int result;
         switch (countDescription) {
-            case "x+y+z":
-                result = expectedHigh + expectedMedium + expectedLow;
-                break;
-            case "x+y":
-                result = expectedHigh + expectedMedium;
-                break;
-            case "y":
-                result = expectedMedium;
+            case "some":
+                result = AT_LEAST_ONE;
                 break;
             case "no":
                 result = 0;
                 break;
-            case "some":
-                result = AT_LEAST_ONE;
-                break;
             default:
                 result = Integer.parseInt(countDescription);
         }
+
         return result;
     }
 
