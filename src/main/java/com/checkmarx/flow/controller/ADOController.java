@@ -36,6 +36,7 @@ public class ADOController extends AdoControllerBase {
     private static final String HTTP = "http://";
     private static final String HTTPS = "https://";
     private static final List<String> PULL_EVENT = Arrays.asList("git.pullrequest.created", "git.pullrequest.updated");
+    private static final String BRANCH_DELETED_REF = "0000000000000000000000000000000000000000";
     private static final String AUTHORIZATION = "authorization";
     private static final int NAMESPACE_INDEX = 3;
     private static final String EMPTY_STRING = "";
@@ -48,6 +49,8 @@ public class ADOController extends AdoControllerBase {
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
     private final ADOService adoService;
+    private final SastScanner sastScanner;
+
 
     /**
      * Pull Request event submitted (JSON)
@@ -287,6 +290,9 @@ public class ADOController extends AdoControllerBase {
             if (helperService.isBranch2Scan(request, branches)) {
                 flowService.initiateAutomation(request);
             }
+            else if(isDeleteBranchEvent(resource) && sastScanner.isEnabled() && properties.getDeleteCxProject()){
+                sastScanner.deleteProject(request);
+            }
 
         } catch (IllegalArgumentException e) {
             return getBadRequestMessage(e, controllerRequest, product);
@@ -295,6 +301,21 @@ public class ADOController extends AdoControllerBase {
         return getSuccessMessage();
     }
 
+    private Boolean isDeleteBranchEvent(Resource resource){
+        if (resource.getRefUpdates().size() == 1){
+            String newBranchRef = resource.getRefUpdates().get(0).getNewObjectId();
+
+            if (newBranchRef.equals(BRANCH_DELETED_REF)){
+                log.info("new-branch ref is empty - detect ADO DELETE event");
+                return true;
+            }
+            return false;
+        }
+
+        log.info("unexpected number of refUpdates in push event");
+
+        return false;
+    }
     private List<String> determineEmails(Resource resource) {
         List<String> emails = new ArrayList<>();
         if (resource.getCommits() != null) {

@@ -20,6 +20,7 @@ public class ADOProperties extends RepoProperties{
     private String closedStatus = "Done";
     private String projectName;
     private String namespace;
+    private boolean deleteCxProject = false;
     
     public String getNamespace() {
         return namespace;
@@ -115,6 +116,14 @@ public class ADOProperties extends RepoProperties{
 
     public void setTestRepository(String testRepository) {
         this.testRepository = testRepository;
+    }
+
+    public boolean getDeleteCxProject(){
+        return deleteCxProject;
+    }
+
+    public void setDeleteCxProject(boolean deleteProject){
+        this.deleteCxProject = deleteProject;
     }
 
     public String getMergeNoteUri(String namespace, String repo, String mergeId){
