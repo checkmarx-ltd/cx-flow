@@ -49,7 +49,6 @@ public class ADOController extends AdoControllerBase {
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
     private final ADOService adoService;
-    private final SastScanner sastScanner;
 
 
     /**
@@ -290,8 +289,8 @@ public class ADOController extends AdoControllerBase {
             if (helperService.isBranch2Scan(request, branches)) {
                 flowService.initiateAutomation(request);
             }
-            else if(isDeleteBranchEvent(resource) && sastScanner.isEnabled() && properties.getDeleteCxProject()){
-                sastScanner.deleteProject(request);
+            else if(isDeleteBranchEvent(resource) && properties.getDeleteCxProject()){
+                flowService.deleteProject(request);
             }
 
         } catch (IllegalArgumentException e) {
