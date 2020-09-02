@@ -60,12 +60,12 @@ public class ADOService {
     private final FlowProperties flowProperties;
     private final CxProperties cxProperties;
     private final ScmConfigOverrider scmConfigOverrider;
-    private final ThresholdValidatorImpl thresholdValidator;
+    private final ThresholdValidator thresholdValidator;
     private String browseRepoEndpoint = "";
 
     public ADOService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, ADOProperties properties,
                       FlowProperties flowProperties, CxProperties cxProperties,
-                      ScmConfigOverrider scmConfigOverrider, ThresholdValidatorImpl thresholdValidator) {
+                      ScmConfigOverrider scmConfigOverrider, ThresholdValidator thresholdValidator) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.flowProperties = flowProperties;
