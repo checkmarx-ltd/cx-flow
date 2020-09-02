@@ -3,6 +3,7 @@ package com.checkmarx.flow.cucumber.component.deletebranch;
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
+import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.controller.GitHubController;
 import com.checkmarx.flow.dto.github.*;
 import com.checkmarx.flow.sastscanning.ScanRequestConverter;
@@ -48,6 +49,7 @@ public class DeleteBranchSteps {
     private final HelperService helperService;
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
+    private final ScmConfigOverrider scmConfigOverrider;
 
     private String branch;
     
@@ -59,7 +61,7 @@ public class DeleteBranchSteps {
 
     public DeleteBranchSteps(FlowProperties flowProperties, GitHubService gitHubService,
                              CxProperties cxProperties, GitHubProperties gitHubProperties, FilterFactory filterFactory,
-                             ConfigurationOverrider configOverrider) {
+                             ConfigurationOverrider configOverrider, ScmConfigOverrider scmConfigOverrider) {
         this.filterFactory = filterFactory;
 
         this.configOverrider = configOverrider;
@@ -75,6 +77,7 @@ public class DeleteBranchSteps {
         this.gitHubService = gitHubService;
 
         this.gitHubProperties = gitHubProperties;
+        this.scmConfigOverrider = scmConfigOverrider;
     }
 
     private void initGitHubProperties() {
@@ -241,7 +244,7 @@ public class DeleteBranchSteps {
                 sastScanner,
                 filterFactory,
                 configOverrider,
-                null));
+                scmConfigOverrider));
         
     }
 

@@ -4,6 +4,7 @@ import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.FindingSeverity;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
+import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.cucumber.common.JsonLoggerTestUtils;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.OperationResult;
@@ -63,6 +64,7 @@ public class AnalyticsSteps {
     private final GitHubProperties gitHubProperties;
     private final FlowProperties flowProperties;
     private final ThresholdValidator thresholdValidator;
+    private final ScmConfigOverrider scmConfigOverrider;
 
     private final CxClient cxClientMock;
     private final CxProperties cxProperties;
@@ -231,7 +233,7 @@ public class AnalyticsSteps {
                 gitHubProperties,
                 flowProperties,
                 thresholdValidator,
-                null);
+                scmConfigOverrider);
 
         return new ResultsService(
                 cxClientMock,

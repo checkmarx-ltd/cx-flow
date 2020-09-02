@@ -65,7 +65,7 @@ public class Github2AdoSteps {
     private final EmailService emailService;
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
-    private ScmConfigOverrider scmConfigOverrider;
+    private final ScmConfigOverrider scmConfigOverrider;
 
     private ScanResults scanResultsToInject;
     

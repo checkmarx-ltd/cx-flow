@@ -66,6 +66,7 @@ public class CxConfigSteps {
     private final HelperService helperService;
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
+    private final ScmConfigOverrider scmConfigOverrider;
 
     private ScanResults scanResultsToInject;
 
@@ -77,7 +78,6 @@ public class CxConfigSteps {
 
     private ScanRequest request;
     private final JiraProperties jiraProperties;
-    private final ScmConfigOverrider scmConfigOverrider;
 
     public CxConfigSteps(FlowProperties flowProperties, GitHubService gitHubService,
                          CxProperties cxProperties, GitHubProperties gitHubProperties, ConfigurationOverrider configOverrider, JiraProperties jiraProperties,

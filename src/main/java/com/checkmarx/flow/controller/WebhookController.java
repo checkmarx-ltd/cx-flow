@@ -83,4 +83,8 @@ public abstract class WebhookController {
         return Optional.ofNullable(requestToCheck)
                 .orElseGet(() -> ControllerRequest.builder().build());
     }
+
+    protected void setScmInstance(ControllerRequest controllerRequest, ScanRequest request) {
+        Optional.ofNullable(controllerRequest.getScmInstance()).ifPresent(request::setScmInstance);
+    }
 }

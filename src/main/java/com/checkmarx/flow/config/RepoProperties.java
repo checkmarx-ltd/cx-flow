@@ -6,6 +6,7 @@ import javax.annotation.PostConstruct;
 import java.util.Map;
 
 public class RepoProperties {
+
     private boolean enabled;
     private String webhookToken;
     private String token;
