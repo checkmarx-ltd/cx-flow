@@ -71,7 +71,7 @@ public class GitLabService extends RepoService {
             url = url.replace("{repo}", repoName);
             URI uri = new URI(url);
 
-            HttpEntity httpEntity = new HttpEntity<>(createAuthHeaders(scanRequest));
+            HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders(scanRequest));
             ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, httpEntity, String.class);
             JSONObject obj = new JSONObject(response.getBody());
             return obj.getInt("id");

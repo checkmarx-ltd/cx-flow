@@ -59,28 +59,20 @@ public class ADOService {
     private final ADOProperties properties;
     private final FlowProperties flowProperties;
     private final CxProperties cxProperties;
-    private final ScaProperties scaProperties;
-    private final SastScanner sastScanner;
-    private final SCAScanner scaScanner;
     private final ScmConfigOverrider scmConfigOverrider;
+    private final ThresholdValidatorImpl thresholdValidator;
     private String browseRepoEndpoint = "";
 
     public ADOService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, ADOProperties properties,
-                      FlowProperties flowProperties, CxProperties cxProperties, ScaProperties scaProperties,
-                      @Lazy SastScanner sastScanner, @Lazy SCAScanner scaScanner, ScmConfigOverrider scmConfigOverrider) {
+                      FlowProperties flowProperties, CxProperties cxProperties,
+                      ScmConfigOverrider scmConfigOverrider, ThresholdValidatorImpl thresholdValidator) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.flowProperties = flowProperties;
         this.cxProperties = cxProperties;
-        this.scaProperties = scaProperties;
-        this.sastScanner = sastScanner;
-        this.scaScanner = scaScanner;
         this.scmConfigOverrider = scmConfigOverrider;
+        this.thresholdValidator = thresholdValidator;
     }
-
-
-
-
 
     void processPull(ScanRequest request, ScanResults results) throws ADOClientException {
         try {
@@ -185,8 +177,7 @@ public class ADOService {
             restTemplate.exchange(getFullAdoApiUrl(url).concat("-preview"),
                     HttpMethod.PATCH, httpEntity, Void.class);
 
-            ThresholdValidatorImpl evaluator = new ThresholdValidatorImpl(sastScanner, scaScanner, flowProperties, scaProperties);
-            boolean isMergeAllowed = evaluator.isMergeAllowed(results, properties, new PullRequestReport(scanDetails, request));
+            boolean isMergeAllowed = thresholdValidator.isMergeAllowed(results, properties, new PullRequestReport(scanDetails, request));
 
             if(!isMergeAllowed){
                 log.debug("Creating status of failed to {}", url);
