@@ -2,6 +2,7 @@ package com.checkmarx.flow.custom;
 
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
+import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.github.IssueStatus;
@@ -36,11 +37,14 @@ public class GitHubIssueTracker implements IssueTracker {
     private final RestTemplate restTemplate;
     private final GitHubProperties properties;
     private final FlowProperties flowProperties;
+    private final ScmConfigOverrider scmConfigOverrider;
 
-    public GitHubIssueTracker(@Qualifier("flowRestTemplate") RestTemplate restTemplate, GitHubProperties properties, FlowProperties flowProperties) {
+    public GitHubIssueTracker(@Qualifier("flowRestTemplate") RestTemplate restTemplate, GitHubProperties properties, FlowProperties flowProperties,
+                              ScmConfigOverrider scmConfigOverrider) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.flowProperties = flowProperties;
+        this.scmConfigOverrider = scmConfigOverrider;
     }
 
     @Override
@@ -52,7 +56,7 @@ public class GitHubIssueTracker implements IssueTracker {
             throw new MachinaException("Namespace / RepoName / Branch are required");
         }
 
-        if (ScanUtils.empty(properties.getConfigApiUrl(request))) {
+        if (ScanUtils.empty(scmConfigOverrider.determineConfigApiUrl(properties, request))) {
             throw new MachinaException("GitHub API Url must be provided in property config");
         }
     }
@@ -66,7 +70,7 @@ public class GitHubIssueTracker implements IssueTracker {
     @Override
     public List<Issue> getIssues(ScanRequest request) {
         String apiUrl = String.format("%s/%s/%s/issues?state=all&per_page=%s",
-                properties.getConfigApiUrl(request),
+                scmConfigOverrider.determineConfigApiUrl(properties, request),
                 request.getNamespace(),
                 request.getRepoName(),
                 ISSUES_PER_PAGE);
@@ -158,7 +162,7 @@ public class GitHubIssueTracker implements IssueTracker {
     @Override
     public Issue createIssue(ScanResults.XIssue resultIssue, ScanRequest request) {
         log.debug("Executing createIssue GitHub API call");
-        String apiUrl = properties.getConfigApiUrl(request)
+        String apiUrl = scmConfigOverrider.determineConfigApiUrl(properties, request)
                 .concat("/").concat(request.getNamespace()
                 .concat("/").concat(request.getRepoName()))
                 .concat("/issues");
@@ -343,7 +347,7 @@ public class GitHubIssueTracker implements IssueTracker {
      */
     private HttpHeaders createAuthHeaders(ScanRequest scanRequest) {
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.set(HttpHeaders.AUTHORIZATION, "token ".concat(properties.getConfigToken(scanRequest.getScmInstance())));
+        httpHeaders.set(HttpHeaders.AUTHORIZATION, "token ".concat(scmConfigOverrider.determineConfigToken(properties, scanRequest.getScmInstance())));
         return httpHeaders;
     }
 

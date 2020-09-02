@@ -2,6 +2,7 @@ package com.checkmarx.flow.custom;
 
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitLabProperties;
+import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.gitlab.Note;
@@ -44,11 +45,14 @@ public class GitLabIssueTracker implements IssueTracker {
     private final RestTemplate restTemplate;
     private final GitLabProperties properties;
     private final FlowProperties flowProperties;
+    private final ScmConfigOverrider scmConfigOverrider;
 
-    public GitLabIssueTracker(@Qualifier("flowRestTemplate") RestTemplate restTemplate, GitLabProperties properties, FlowProperties flowProperties) {
+    public GitLabIssueTracker(@Qualifier("flowRestTemplate") RestTemplate restTemplate, GitLabProperties properties, FlowProperties flowProperties,
+                              ScmConfigOverrider scmConfigOverrider) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.flowProperties = flowProperties;
+        this.scmConfigOverrider = scmConfigOverrider;
     }
 
     @Override
@@ -59,7 +63,8 @@ public class GitLabIssueTracker implements IssueTracker {
                 ScanUtils.empty(request.getBranch())){
             throw new MachinaException("Namespace / RepoName / Branch are required");
         }
-        if(ScanUtils.empty(properties.getConfigApiUrl(request))){
+
+        if(ScanUtils.empty(scmConfigOverrider.determineConfigApiUrl(properties, request))){
             throw new MachinaException("GitLab API Url must be provided in property config");
         }
         if(request.getRepoProjectId() == null) {
@@ -115,7 +120,7 @@ public class GitLabIssueTracker implements IssueTracker {
     private JSONArray getProjectSearchResults(ScanRequest scanRequest) throws URISyntaxException {
         String targetRepoName = scanRequest.getRepoName();
         log.debug("Searching repo by query: {}", targetRepoName);
-        String url = properties.getConfigApiUrl(scanRequest)
+        String url = scmConfigOverrider.determineConfigApiUrl(properties, scanRequest)
                 .concat(PROJECT)
                 .replace("{repo}", targetRepoName);
         URI uri = new URI(url);
@@ -132,7 +137,7 @@ public class GitLabIssueTracker implements IssueTracker {
         log.info("Executing getIssues GitLab API call");
         List<Issue> issues = new ArrayList<>();
         HttpEntity<Void> httpEntity = new HttpEntity<>(createAuthHeaders(request));
-        String endpoint = properties.getConfigApiUrl(request).concat(ISSUES_PATH);
+        String endpoint = scmConfigOverrider.determineConfigApiUrl(properties, request).concat(ISSUES_PATH);
         ResponseEntity<com.checkmarx.flow.dto.gitlab.Issue[]> response = restTemplate.exchange(endpoint,
                 HttpMethod.GET, httpEntity, com.checkmarx.flow.dto.gitlab.Issue[].class, request.getRepoProjectId());
         if(response.getBody() == null) {
@@ -181,7 +186,7 @@ public class GitLabIssueTracker implements IssueTracker {
      */
     private Issue getIssue(ScanRequest scanRequest, Integer projectId, Integer iid) {
         log.debug("Executing getIssue GitLab API call");
-        String endpoint = properties.getConfigApiUrl(scanRequest).concat(ISSUE_PATH);
+        String endpoint = scmConfigOverrider.determineConfigApiUrl(properties, scanRequest).concat(ISSUE_PATH);
         HttpEntity<Void> httpEntity = new HttpEntity<>(createAuthHeaders(scanRequest));
         ResponseEntity<com.checkmarx.flow.dto.gitlab.Issue> response =
                 restTemplate.exchange(endpoint, HttpMethod.GET, httpEntity, com.checkmarx.flow.dto.gitlab.Issue.class, projectId, iid);
@@ -195,7 +200,7 @@ public class GitLabIssueTracker implements IssueTracker {
      */
     private void addComment(ScanRequest scanRequest, Integer projectId, Integer iid, String comment) {
         log.debug("Executing add comment GitLab API call");
-        String endpoint = properties.getConfigApiUrl(scanRequest).concat(COMMENT_PATH);
+        String endpoint = scmConfigOverrider.determineConfigApiUrl(properties, scanRequest).concat(COMMENT_PATH);
         Note note = Note.builder()
                 .body(comment)
                 .build();
@@ -207,7 +212,7 @@ public class GitLabIssueTracker implements IssueTracker {
     public Issue createIssue(ScanResults.XIssue resultIssue, ScanRequest request) throws MachinaException {
         log.debug("Executing createIssue GitLab API call");
 
-        String endpoint = properties.getConfigApiUrl(request).concat(NEW_ISSUE_PATH);
+        String endpoint = scmConfigOverrider.determineConfigApiUrl(properties, request).concat(NEW_ISSUE_PATH);
         ResponseEntity<com.checkmarx.flow.dto.gitlab.Issue> response;
 
         try {
@@ -233,7 +238,7 @@ public class GitLabIssueTracker implements IssueTracker {
 
     private void closeIssue(ScanRequest request, Integer iid) {
         log.debug("Executing closeIssue GitHub API call");
-        String endpoint = properties.getConfigApiUrl(request).concat(ISSUE_PATH);
+        String endpoint = scmConfigOverrider.determineConfigApiUrl(properties, request).concat(ISSUE_PATH);
         HttpEntity<String> httpEntity = new HttpEntity<>(getJSONCloseIssue().toString(), createAuthHeaders(request));
         restTemplate.exchange(endpoint, HttpMethod.PUT, httpEntity,
                 com.checkmarx.flow.dto.gitlab.Issue.class, request.getRepoProjectId(), iid);
@@ -249,7 +254,7 @@ public class GitLabIssueTracker implements IssueTracker {
      */
     private Issue updateIssue(ScanRequest scanRequest, JSONObject issue, Integer projectId, Integer iid) {
         log.debug("Executing updateIssue GitLab API call");
-        String endpoint = properties.getConfigApiUrl(scanRequest).concat(ISSUE_PATH);
+        String endpoint = scmConfigOverrider.determineConfigApiUrl(properties, scanRequest).concat(ISSUE_PATH);
 
         HttpEntity<String> httpEntity = new HttpEntity<>(issue.toString(), createAuthHeaders(scanRequest));
         ResponseEntity<com.checkmarx.flow.dto.gitlab.Issue> response;
@@ -381,7 +386,7 @@ public class GitLabIssueTracker implements IssueTracker {
     private HttpHeaders createAuthHeaders(ScanRequest scanRequest){
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        httpHeaders.set("PRIVATE-TOKEN", properties.getConfigToken(scanRequest.getScmInstance()));
+        httpHeaders.set("PRIVATE-TOKEN", scmConfigOverrider.determineConfigToken(properties, scanRequest.getScmInstance()));
         httpHeaders.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
         return httpHeaders;
     }

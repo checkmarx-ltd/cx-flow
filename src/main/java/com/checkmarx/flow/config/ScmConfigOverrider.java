@@ -12,19 +12,19 @@ import java.util.Optional;
 @Slf4j
 public class ScmConfigOverrider {
 
-    String determineConfigToken(RepoProperties properties, String scmInstance) {
+    public String determineConfigToken(RepoProperties properties, String scmInstance) {
         return Optional.ofNullable(scmInstance)
                 .map(key -> getScmOverriddenConfig(properties, ScmConfigParams.TOKEN, key))
                 .orElse(properties.getToken());
     }
 
-    String determineConfigApiUrl(RepoProperties properties, ScanRequest scanRequest) {
+    public String determineConfigApiUrl(RepoProperties properties, ScanRequest scanRequest) {
         return Optional.ofNullable(scanRequest.getScmInstance())
                 .map(key -> getScmOverriddenConfig(properties, ScmConfigParams.API_URL, key))
                 .orElse(properties.getApiUrl());
     }
 
-    String determineConfigWebhookToken(RepoProperties properties, ControllerRequest controllerRequest) {
+    public String determineConfigWebhookToken(RepoProperties properties, ControllerRequest controllerRequest) {
         return Optional.ofNullable(controllerRequest)
                 .map(ControllerRequest::getScmInstance)
                 .map(key -> getScmOverriddenConfig(properties, ScmConfigParams.WEBHOOK_TOKEN, key))
@@ -36,7 +36,7 @@ public class ScmConfigOverrider {
         OptionalScmInstanceProperties optionalInstanceKey = properties.getOptionalInstances().get(key);
 
         if (optionalInstanceKey == null) {
-            log.error("scm-instance key: {} does not exists on configuration file.", key);
+            log.error("scm-instance key: {} does not exist on configuration file.", key);
             throw new MachinaRuntimeException();
         } else {
             switch (configParams) {

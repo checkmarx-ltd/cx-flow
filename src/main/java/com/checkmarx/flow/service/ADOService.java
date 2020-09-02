@@ -2,6 +2,7 @@ package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.config.ADOProperties;
 import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.azure.Content;
 import com.checkmarx.flow.dto.azure.CreateWorkItemAttr;
@@ -61,11 +62,12 @@ public class ADOService {
     private final ScaProperties scaProperties;
     private final SastScanner sastScanner;
     private final SCAScanner scaScanner;
+    private final ScmConfigOverrider scmConfigOverrider;
     private String browseRepoEndpoint = "";
 
     public ADOService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, ADOProperties properties,
                       FlowProperties flowProperties, CxProperties cxProperties, ScaProperties scaProperties,
-                      @Lazy SastScanner sastScanner, @Lazy SCAScanner scaScanner) {
+                      @Lazy SastScanner sastScanner, @Lazy SCAScanner scaScanner, ScmConfigOverrider scmConfigOverrider) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.flowProperties = flowProperties;
@@ -73,6 +75,7 @@ public class ADOService {
         this.scaProperties = scaProperties;
         this.sastScanner = sastScanner;
         this.scaScanner = scaScanner;
+        this.scmConfigOverrider = scmConfigOverrider;
     }
 
 
@@ -104,7 +107,7 @@ public class ADOService {
             } else if (commentToUpdate == null){
                 String threadId = request.getAdditionalMetadata("ado_thread_id");
                 if (ScanUtils.empty(threadId)) {
-                    HttpEntity<String> httpEntity = new HttpEntity<>(getJSONThread(comment).toString(), ADOUtils.createAuthHeaders(properties.getConfigToken(request.getScmInstance())));
+                    HttpEntity<String> httpEntity = new HttpEntity<>(getJSONThread(comment).toString(), ADOUtils.createAuthHeaders(scmConfigOverrider.determineConfigToken(properties, request.getScmInstance())));
                     log.debug("Creating new thread for comments");
                     ResponseEntity<String> response = restTemplate.exchange(getFullAdoApiUrl(mergeUrl),
                             HttpMethod.POST, httpEntity, String.class);
@@ -115,7 +118,7 @@ public class ADOService {
                         log.debug("Created new thread with Id {}", id);
                     }
                 } else {
-                    HttpEntity<String> httpEntity = new HttpEntity<>(getJSONComment(comment).toString(), ADOUtils.createAuthHeaders(properties.getConfigToken(request.getScmInstance())));
+                    HttpEntity<String> httpEntity = new HttpEntity<>(getJSONComment(comment).toString(), ADOUtils.createAuthHeaders(scmConfigOverrider.determineConfigToken(properties, request.getScmInstance())));
                     mergeUrl = mergeUrl.concat("/").concat(threadId).concat("/comments");
                     log.debug("Adding comment to thread Id {}", threadId);
                     restTemplate.exchange(getFullAdoApiUrl(mergeUrl),
@@ -136,7 +139,7 @@ public class ADOService {
     private void updateComment(RepoComment repoComment, String newComment, ScanRequest scanRequest) {
         log.debug("Updating exisiting comment. url: {}", repoComment.getCommentUrl());
         log.debug("Updated comment: {}" , repoComment);
-        HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONComment(ADO_COMMENT_CONTENT_FIELD_NAME,newComment).toString(), ADOUtils.createAuthHeaders(properties.getConfigToken(scanRequest.getScmInstance())));
+        HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONComment(ADO_COMMENT_CONTENT_FIELD_NAME,newComment).toString(), ADOUtils.createAuthHeaders(scmConfigOverrider.determineConfigToken(properties, scanRequest.getScmInstance())));
         restTemplate.exchange(getFullAdoApiUrl(repoComment.getCommentUrl()), HttpMethod.PATCH, httpEntity, String.class);
     }
 
@@ -171,7 +174,7 @@ public class ADOService {
 
             HttpEntity<List<CreateWorkItemAttr>> httpEntity = new HttpEntity<>(
                     list,
-                    ADOUtils.createPatchAuthHeaders(properties.getConfigToken(request.getScmInstance())
+                    ADOUtils.createPatchAuthHeaders(scmConfigOverrider.determineConfigToken(properties, request.getScmInstance())
                     ));
             if(ScanUtils.empty(url)){
                 log.error("statuses_url was not provided within the request object, which is required for blocking / unblocking pull requests");
@@ -199,7 +202,7 @@ public class ADOService {
     int createStatus(String state, String description, String url, String sastUrl, ScanRequest scanRequest){
         HttpEntity<String> httpEntity = new HttpEntity<>(
                 getJSONStatus(state, sastUrl, description).toString(),
-                ADOUtils.createAuthHeaders(properties.getConfigToken(scanRequest.getScmInstance())
+                ADOUtils.createAuthHeaders(scmConfigOverrider.determineConfigToken(properties, scanRequest.getScmInstance())
         ));
         //TODO remove preview once applicable
         log.info("Adding pending status to pull {}", url);
@@ -253,7 +256,7 @@ public class ADOService {
     }
 
     public List<RepoComment> getComments(String url, ScanRequest scanRequest) throws IOException {
-        HttpEntity<?> httpEntity = new HttpEntity<>(ADOUtils.createAuthHeaders(properties.getConfigToken(scanRequest.getScmInstance())));
+        HttpEntity<?> httpEntity = new HttpEntity<>(ADOUtils.createAuthHeaders(scmConfigOverrider.determineConfigToken(properties, scanRequest.getScmInstance())));
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, httpEntity , String.class);
         List<RepoComment> result = new ArrayList<>();
         ObjectMapper objMapper = new ObjectMapper();
@@ -305,7 +308,7 @@ public class ADOService {
 
     public void deleteComment(String url, ScanRequest scanRequest) {
         url = getFullAdoApiUrl(url);
-        HttpEntity<?> httpEntity = new HttpEntity<>(ADOUtils.createAuthHeaders(properties.getConfigToken(scanRequest.getScmInstance())));
+        HttpEntity<?> httpEntity = new HttpEntity<>(ADOUtils.createAuthHeaders(scmConfigOverrider.determineConfigToken(properties, scanRequest.getScmInstance())));
         restTemplate.exchange(url, HttpMethod.DELETE, httpEntity, String.class);
     }
 
@@ -327,7 +330,7 @@ public class ADOService {
 
     private CxConfig loadCxConfigFromADO(ScanRequest request) {
         CxConfig cxConfig;
-        HttpHeaders headers = ADOUtils.createAuthHeaders(properties.getConfigToken(request.getScmInstance()));
+        HttpHeaders headers = ADOUtils.createAuthHeaders(scmConfigOverrider.determineConfigToken(properties, request.getScmInstance()));
         String repoSelfUrl = request.getAdditionalMetadata(REPO_SELF_URL);
         String url = repoSelfUrl.concat(GET_FILE_CONTENT);
 
@@ -380,7 +383,7 @@ public class ADOService {
     private Sources getRepoLanguagePercentages(ScanRequest request) {
         Sources sources = new Sources();
         Map<String, Integer> languagePercent = new HashMap<>();
-        HttpHeaders headers = ADOUtils.createAuthHeaders(properties.getConfigToken(request.getScmInstance()));
+        HttpHeaders headers = ADOUtils.createAuthHeaders(scmConfigOverrider.determineConfigToken(properties, request.getScmInstance()));
 
         String projectUrl = request.getAdditionalMetadata(PROJECT_SELF_URL);
         String urlTemplate = projectUrl.concat(LANGUAGE_METRICS);
@@ -451,7 +454,7 @@ public class ADOService {
     private Content getRepoContent(String endpoint, ScanRequest scanRequest) {
         log.info("Getting repo content from {}", endpoint);
         Content contents = new Content();
-        HttpHeaders headers = ADOUtils.createAuthHeaders(properties.getConfigToken(scanRequest.getScmInstance()));
+        HttpHeaders headers = ADOUtils.createAuthHeaders(scmConfigOverrider.determineConfigToken(properties, scanRequest.getScmInstance()));
         try {
             ResponseEntity<String> response = restTemplate.exchange(
                     endpoint,

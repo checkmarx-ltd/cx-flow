@@ -66,6 +66,7 @@ public class CxConfigSteps {
     private final HelperService helperService;
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
+    private final ScmConfigOverrider scmConfigOverrider;
 
     private ScanResults scanResultsToInject;
 
@@ -80,7 +81,8 @@ public class CxConfigSteps {
 
     public CxConfigSteps(FlowProperties flowProperties, GitHubService gitHubService,
                          CxProperties cxProperties, GitHubProperties gitHubProperties, ConfigurationOverrider configOverrider, JiraProperties jiraProperties,
-                         ThresholdValidator thresholdValidator, FilterFactory filterFactory, FlowService flowService, EmailService emailService) {
+                         ThresholdValidator thresholdValidator, FilterFactory filterFactory, FlowService flowService, EmailService emailService,
+                         ScmConfigOverrider scmConfigOverrider) {
 
         this.cxClientMock = mock(CxClient.class);
 
@@ -97,6 +99,7 @@ public class CxConfigSteps {
         this.gitHubProperties = gitHubProperties;
         this.filterFactory = filterFactory;
         this.configOverrider = configOverrider;
+        this.scmConfigOverrider = scmConfigOverrider;
         initGitHubProperties();
     }
 
@@ -528,7 +531,8 @@ public class CxConfigSteps {
                 gitHubService,
                 null,
                 filterFactory,
-                configOverrider));
+                configOverrider,
+                scmConfigOverrider));
 
         // results service will be a Mock and will work with gitHubService Mock
         // and will not connect to any external service.
@@ -543,7 +547,8 @@ public class CxConfigSteps {
         GitHubService gitHubServiceMock = new GitHubService(restTemplateMock,
                 gitHubProperties,
                 flowProperties,
-                thresholdValidator);
+                thresholdValidator,
+                scmConfigOverrider);
 
         this.resultsService = new ResultsService(
                 cxClientMock,

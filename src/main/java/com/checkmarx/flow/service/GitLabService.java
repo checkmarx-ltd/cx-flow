@@ -2,6 +2,7 @@ package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitLabProperties;
+import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.Sources;
 import com.checkmarx.flow.dto.gitlab.Note;
@@ -48,12 +49,14 @@ public class GitLabService extends RepoService {
     private static final String ERROR_OCCURRED = "Error occurred";
     private final RestTemplate restTemplate;
     private final GitLabProperties properties;
+    private final ScmConfigOverrider scmConfigOverrider;
 
 
     @ConstructorProperties({"restTemplate", "properties"})
-    public GitLabService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, GitLabProperties properties) {
+    public GitLabService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, GitLabProperties properties, ScmConfigOverrider scmConfigOverrider) {
         this.restTemplate = restTemplate;
         this.properties = properties;
+        this.scmConfigOverrider = scmConfigOverrider;
 
     }
 
@@ -61,7 +64,7 @@ public class GitLabService extends RepoService {
     Integer getProjectDetails(ScanRequest scanRequest, String namespace, String repoName){
 
         try {
-            String url = properties.getConfigApiUrl(scanRequest).concat(PROJECT);
+            String url = scmConfigOverrider.determineConfigApiUrl(properties, scanRequest).concat(PROJECT);
 
             url = url.replace("{namespace}", namespace);
             url = url.replace("{x}", "%2F");
@@ -95,7 +98,7 @@ public class GitLabService extends RepoService {
     private HttpHeaders createAuthHeaders(ScanRequest scanRequest){
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        httpHeaders.set("PRIVATE-TOKEN", properties.getConfigToken(scanRequest.getScmInstance()));
+        httpHeaders.set("PRIVATE-TOKEN", scmConfigOverrider.determineConfigToken(properties, scanRequest.getScmInstance()));
         httpHeaders.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
         return httpHeaders;
     }
@@ -144,7 +147,7 @@ public class GitLabService extends RepoService {
                 log.error("merge_id and merge_title was not provided within the request object, which is required for blocking / unblocking merge requests");
                 return;
             }
-            String endpoint = properties.getConfigApiUrl(request).concat(MERGE_PATH);
+            String endpoint = scmConfigOverrider.determineConfigApiUrl(properties, request).concat(MERGE_PATH);
             endpoint = endpoint.replace("{id}", request.getRepoProjectId().toString());
             endpoint = endpoint.replace("{iid}", mergeId);
 
@@ -164,7 +167,7 @@ public class GitLabService extends RepoService {
                 log.error("merge_id and merge_title was not provided within the request object, which is required for blocking / unblocking merge requests");
                 return;
             }
-            String endpoint = properties.getConfigApiUrl(request).concat(MERGE_PATH);
+            String endpoint = scmConfigOverrider.determineConfigApiUrl(properties, request).concat(MERGE_PATH);
             endpoint = endpoint.replace("{id}", request.getRepoProjectId().toString());
             endpoint = endpoint.replace("{iid}", mergeId);
 
@@ -201,7 +204,7 @@ public class GitLabService extends RepoService {
         HttpHeaders headers = createAuthHeaders(request);
         try {
             ResponseEntity<String> response = restTemplate.exchange(
-                    properties.getConfigApiUrl(request).concat(LANGUAGE_TYPES),
+                    scmConfigOverrider.determineConfigApiUrl(properties, request).concat(LANGUAGE_TYPES),
                     HttpMethod.GET,
                     new HttpEntity(headers),
                     String.class,
@@ -232,7 +235,7 @@ public class GitLabService extends RepoService {
         HttpHeaders headers = createAuthHeaders(request);
         try {
             ResponseEntity<String> response = restTemplate.exchange(
-                    properties.getConfigApiUrl(request).concat(REPO_CONTENT),
+                    scmConfigOverrider.determineConfigApiUrl(properties, request).concat(REPO_CONTENT),
                     HttpMethod.GET,
                     new HttpEntity(headers),
                     String.class,
@@ -261,7 +264,7 @@ public class GitLabService extends RepoService {
         HttpHeaders headers = createAuthHeaders(request);
         try {
             ResponseEntity<String> response = restTemplate.exchange(
-                    properties.getConfigApiUrl(request).concat(FILE_CONTENT),
+                    scmConfigOverrider.determineConfigApiUrl(properties, request).concat(FILE_CONTENT),
                     HttpMethod.GET,
                     new HttpEntity(headers),
                     String.class,

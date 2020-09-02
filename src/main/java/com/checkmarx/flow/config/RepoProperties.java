@@ -1,17 +1,11 @@
 package com.checkmarx.flow.config;
 
-import com.checkmarx.flow.dto.ControllerRequest;
-import com.checkmarx.flow.dto.ScanRequest;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
 import java.util.Map;
 
 public class RepoProperties {
-
-    @Autowired
-    private ScmConfigOverrider scmConfigOverrider;
 
     private boolean enabled;
     private String webhookToken;
@@ -54,20 +48,12 @@ public class RepoProperties {
         return webhookToken;
     }
 
-    public String getConfigWebhookToken(ControllerRequest controllerRequest) {
-        return scmConfigOverrider.determineConfigWebhookToken(this, controllerRequest);
-    }
-
     public void setWebhookToken(String webhookToken) {
         this.webhookToken = webhookToken;
     }
 
     public String getToken() {
         return token;
-    }
-
-    public String getConfigToken(String scmInstance) {
-        return scmConfigOverrider.determineConfigToken(this, scmInstance);
     }
 
     public void setToken(String token) {
@@ -84,10 +70,6 @@ public class RepoProperties {
 
     public String getApiUrl() {
         return apiUrl;
-    }
-
-    public String getConfigApiUrl(ScanRequest scanRequest) {
-        return scmConfigOverrider.determineConfigApiUrl(this, scanRequest);
     }
 
     public void setApiUrl(String apiUrl) {

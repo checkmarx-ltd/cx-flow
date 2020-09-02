@@ -3,6 +3,7 @@ package com.checkmarx.flow.controller;
 import com.checkmarx.flow.config.ADOProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.EventResponse;
@@ -48,6 +49,7 @@ public class ADOController extends AdoControllerBase {
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
     private final ADOService adoService;
+    private final ScmConfigOverrider scmConfigOverrider;
 
     /**
      * Pull Request event submitted (JSON)
@@ -122,7 +124,7 @@ public class ADOController extends AdoControllerBase {
 
             //build request object
             String gitUrl = repository.getWebUrl();
-            String token = properties.getConfigToken(controllerRequest.getScmInstance());
+            String token = scmConfigOverrider.determineConfigToken(properties, controllerRequest.getScmInstance());
             log.info("Using url: {}", gitUrl);
             String gitAuthUrl = gitUrl.replace(HTTPS, HTTPS.concat(token).concat("@"));
             gitAuthUrl = gitAuthUrl.replace(HTTP, HTTP.concat(token).concat("@"));
@@ -240,9 +242,8 @@ public class ADOController extends AdoControllerBase {
             //build request object
             String gitUrl = repository.getRemoteUrl();
             log.debug("Using url: {}", gitUrl);
-            String configToken = properties.getConfigToken(controllerRequest.getScmInstance());
-            String gitAuthUrl = gitUrl.replace(HTTPS, HTTPS.concat(configToken).concat("@"));
-            gitAuthUrl = gitAuthUrl.replace(HTTP, HTTP.concat(configToken).concat("@"));
+            String configToken = scmConfigOverrider.determineConfigToken(properties, controllerRequest.getScmInstance());
+            String gitAuthUrl = gitUrl.replace(HTTPS, HTTPS.concat(configToken).concat("@")).replace(HTTP, HTTP.concat(configToken).concat("@"));
 
             String scanPreset = cxProperties.getScanPreset();
             if (StringUtils.isNotEmpty(controllerRequest.getPreset())) {
@@ -337,7 +338,7 @@ public class ADOController extends AdoControllerBase {
      * Validates the base64 / basic auth received in the request.
      */
     private void validateBasicAuth(String token, ControllerRequest controllerRequest) {
-        String auth = "Basic ".concat(Base64.getEncoder().encodeToString(properties.getConfigWebhookToken(controllerRequest).getBytes()));
+        String auth = "Basic ".concat(Base64.getEncoder().encodeToString(scmConfigOverrider.determineConfigWebhookToken(properties, controllerRequest).getBytes()));
         if (!auth.equals(token)) {
             throw new InvalidTokenException();
         }

@@ -3,6 +3,7 @@ package com.checkmarx.flow.controller;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.EventResponse;
@@ -67,6 +68,7 @@ public class GitHubController extends WebhookController {
     private final SastScanner sastScanner;
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
+    private final ScmConfigOverrider scmConfigOverrider;
 
     private Mac hmac;
 
@@ -162,7 +164,7 @@ public class GitHubController extends WebhookController {
             String gitUrl = Optional.ofNullable(pullRequest.getHead().getRepo())
                     .map(Repo::getCloneUrl)
                     .orElse(repository.getCloneUrl());
-            String token = properties.getConfigToken(controllerRequest.getScmInstance());
+            String token = scmConfigOverrider.determineConfigToken(properties, controllerRequest.getScmInstance());
             log.info("Using url: {}", gitUrl);
             String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(token).concat("@"));
             gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(token).concat("@"));
@@ -278,7 +280,7 @@ public class GitHubController extends WebhookController {
             Repository repository = event.getRepository();
             String gitUrl = repository.getCloneUrl();
             log.debug("Using url: {}", gitUrl);
-            String token = properties.getConfigToken(controllerRequest.getScmInstance());
+            String token = scmConfigOverrider.determineConfigToken(properties, controllerRequest.getScmInstance());
             if(ScanUtils.empty(token)){
                 log.error("No token was provided for Github");
                 throw new MachinaRuntimeException();
@@ -451,7 +453,7 @@ public class GitHubController extends WebhookController {
             }
         }
         try {
-            setHmacToken(properties.getConfigWebhookToken(controllerRequest));
+            setHmacToken(scmConfigOverrider.determineConfigWebhookToken(properties, controllerRequest));
         } catch (NoSuchAlgorithmException | InvalidKeyException e) {
             log.error(e.getMessage());
         }

@@ -3,6 +3,7 @@ package com.checkmarx.flow.controller;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitLabProperties;
 import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.EventResponse;
@@ -48,6 +49,7 @@ public class GitLabController extends WebhookController {
     private final GitLabService gitLabService;
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
+    private final ScmConfigOverrider scmConfigOverrider;
 
     @GetMapping(value = "/test")
     public String getTest() {
@@ -116,7 +118,7 @@ public class GitLabController extends WebhookController {
             String gitUrl = proj.getGitHttpUrl();
 
             log.info("Using url: {}", gitUrl);
-            String configToken = properties.getConfigToken(controllerRequest.getScmInstance());
+            String configToken = scmConfigOverrider.determineConfigToken(properties, controllerRequest.getScmInstance());
             String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS_OAUTH2.concat(configToken).concat("@"));
             gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP_OAUTH2.concat(configToken).concat("@"));
             String scanPreset = cxProperties.getScanPreset();
@@ -148,10 +150,7 @@ public class GitLabController extends WebhookController {
                     .filter(filter)
                     .build();
 
-            String mergeEndpoint = properties.getConfigApiUrl(request).concat(GitLabService.MERGE_NOTE_PATH);
-            mergeEndpoint = mergeEndpoint.replace("{id}", proj.getId().toString());
-            mergeEndpoint = mergeEndpoint.replace("{iid}", objectAttributes.getIid().toString());
-            request.setMergeNoteUri(mergeEndpoint);
+            setMergeEndPointUri(objectAttributes, proj, request);
 
             overrideScanPreset(controllerRequest, request);
             setScmInstance(controllerRequest, request);
@@ -229,7 +228,7 @@ public class GitLabController extends WebhookController {
 
             String gitUrl = proj.getGitHttpUrl();
             log.debug("Using url: {}", gitUrl);
-            String configToken = properties.getConfigToken(controllerRequest.getScmInstance());
+            String configToken = scmConfigOverrider.determineConfigToken(properties, controllerRequest.getScmInstance());
             String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS_OAUTH2.concat(configToken).concat("@"));
             gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP_OAUTH2.concat(configToken).concat("@"));
 
@@ -262,20 +261,7 @@ public class GitLabController extends WebhookController {
             /*Determine emails*/
             List<String> emails = new ArrayList<>();
             String commitEndpoint = null;
-            for (Commit c : body.getCommits()) {
-                Author author = c.getAuthor();
-                if (author != null && StringUtils.isNotEmpty(author.getEmail())) {
-                    emails.add(author.getEmail());
-                }
-                if (StringUtils.isNotEmpty(c.getUrl()) && bugType.equals(BugTracker.Type.GITLABCOMMIT)) {
-                    commitEndpoint = properties.getConfigApiUrl(request).concat(GitLabService.COMMIT_PATH);
-                    commitEndpoint = commitEndpoint.replace("{id}", proj.getId().toString());
-                    commitEndpoint = commitEndpoint.replace("{sha}", c.getId());
-                }
-            }
-            if(StringUtils.isNotEmpty(body.getUserEmail())) {
-                emails.add(body.getUserEmail());
-            }
+            commitEndpoint = setUserEmail(body, bugType, proj, request, emails, commitEndpoint);
 
             request.setMergeNoteUri(commitEndpoint);
             request.setEmail(emails);
@@ -305,9 +291,34 @@ public class GitLabController extends WebhookController {
         return getSuccessMessage();
     }
 
+    private String setUserEmail(@RequestBody PushEvent body, BugTracker.Type bugType, Project proj, ScanRequest request, List<String> emails, String commitEndpoint) {
+        for (Commit c : body.getCommits()) {
+            Author author = c.getAuthor();
+            if (author != null && StringUtils.isNotEmpty(author.getEmail())) {
+                emails.add(author.getEmail());
+            }
+            if (StringUtils.isNotEmpty(c.getUrl()) && bugType.equals(BugTracker.Type.GITLABCOMMIT)) {
+                commitEndpoint = scmConfigOverrider.determineConfigApiUrl(properties, request).concat(GitLabService.COMMIT_PATH);
+                commitEndpoint = commitEndpoint.replace("{id}", proj.getId().toString());
+                commitEndpoint = commitEndpoint.replace("{sha}", c.getId());
+            }
+        }
+        if(StringUtils.isNotEmpty(body.getUserEmail())) {
+            emails.add(body.getUserEmail());
+        }
+        return commitEndpoint;
+    }
+
+    private void setMergeEndPointUri(ObjectAttributes objectAttributes, Project proj, ScanRequest request) {
+        String mergeEndpoint = scmConfigOverrider.determineConfigApiUrl(properties, request).concat(GitLabService.MERGE_NOTE_PATH);
+        mergeEndpoint = mergeEndpoint.replace("{id}", proj.getId().toString());
+        mergeEndpoint = mergeEndpoint.replace("{iid}", objectAttributes.getIid().toString());
+        request.setMergeNoteUri(mergeEndpoint);
+    }
+
     private void validateGitLabRequest(String token, ControllerRequest controllerRequest){
         log.info("Validating GitLab request token");
-        if(!properties.getConfigWebhookToken(controllerRequest).equals(token)){
+        if(!scmConfigOverrider.determineConfigWebhookToken(properties, controllerRequest).equals(token)){
             log.error("GitLab request token validation failed");
             throw new InvalidTokenException();
         }

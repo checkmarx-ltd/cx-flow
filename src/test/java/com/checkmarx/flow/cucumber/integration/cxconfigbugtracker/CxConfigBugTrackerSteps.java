@@ -4,6 +4,7 @@ import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.controller.GitHubController;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ControllerRequest;
@@ -60,6 +61,7 @@ public class CxConfigBugTrackerSteps {
     private final HelperService helperService;
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
+    private final ScmConfigOverrider scmConfigOverrider;
 
     private ScanResults scanResultsToInject;
 
@@ -71,7 +73,8 @@ public class CxConfigBugTrackerSteps {
     public CxConfigBugTrackerSteps(FlowProperties flowProperties, GitHubService gitHubService,
                                    CxProperties cxProperties, GitHubProperties gitHubProperties,
                                    JiraProperties jiraProperties, GitHubController gitHubController,
-                                   FilterFactory filterFactory, ConfigurationOverrider configOverrider) {
+                                   FilterFactory filterFactory, ConfigurationOverrider configOverrider,
+                                   ScmConfigOverrider scmConfigOverrider) {
 
 
         this.flowProperties = flowProperties;
@@ -85,6 +88,7 @@ public class CxConfigBugTrackerSteps {
         this.gitHubProperties = gitHubProperties;
         this.gitHubControllerSpy = gitHubController;
         this.configOverrider = configOverrider;
+        this.scmConfigOverrider = scmConfigOverrider;
         initGitHubProperties();
     }
 
@@ -157,7 +161,7 @@ public class CxConfigBugTrackerSteps {
         assertFlowPropertiesBugTracker("Json");
         ArgumentCaptor<ScanRequest> ac = ArgumentCaptor.forClass(ScanRequest.class);
         FlowService flowServiceMock = Mockito.mock(FlowService.class);
-        gitHubControllerSpy = new GitHubController(gitHubProperties,flowProperties, cxProperties, jiraProperties, flowServiceMock,helperService, gitHubService, null, filterFactory, configOverrider);
+        gitHubControllerSpy = new GitHubController(gitHubProperties,flowProperties, cxProperties, jiraProperties, flowServiceMock,helperService, gitHubService, null, filterFactory, configOverrider, scmConfigOverrider);
         gitHubControllerSpy = spy(gitHubControllerSpy);
         initGitHubControllerSpy();
         buildPullRequest();
@@ -170,7 +174,7 @@ public class CxConfigBugTrackerSteps {
         assertFlowPropertiesBugTracker("Json");
         ArgumentCaptor<ScanRequest> ac = ArgumentCaptor.forClass(ScanRequest.class);
         FlowService flowServiceMock = Mockito.mock(FlowService.class);
-        gitHubControllerSpy = new GitHubController(gitHubProperties,flowProperties, cxProperties, jiraProperties, flowServiceMock,helperService, gitHubService, null, filterFactory, configOverrider);
+        gitHubControllerSpy = new GitHubController(gitHubProperties,flowProperties, cxProperties, jiraProperties, flowServiceMock,helperService, gitHubService, null, filterFactory, configOverrider, scmConfigOverrider);
         gitHubControllerSpy = spy(gitHubControllerSpy);
         initGitHubControllerSpy();
         buildPushRequest();

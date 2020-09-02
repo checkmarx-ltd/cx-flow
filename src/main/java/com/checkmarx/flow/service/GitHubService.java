@@ -50,6 +50,7 @@ public class GitHubService extends RepoService {
     private final GitHubProperties properties;
     private final FlowProperties flowProperties;
     private final ThresholdValidator thresholdValidator;
+    private final ScmConfigOverrider scmConfigOverrider;
 
     private static final String FILE_CONTENT = "/{namespace}/{repo}/contents/{config}?ref={branch}";
     private static final String LANGUAGE_TYPES = "/{namespace}/{repo}/languages";
@@ -65,16 +66,18 @@ public class GitHubService extends RepoService {
     public GitHubService(@Qualifier("flowRestTemplate") RestTemplate restTemplate,
                          GitHubProperties properties,
                          FlowProperties flowProperties,
-                         ThresholdValidator thresholdValidator) {
+                         ThresholdValidator thresholdValidator,
+                         ScmConfigOverrider scmConfigOverrider) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.flowProperties = flowProperties;
         this.thresholdValidator = thresholdValidator;
+        this.scmConfigOverrider = scmConfigOverrider;
     }
 
     private HttpHeaders createAuthHeaders(ScanRequest scanRequest){
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.set(HttpHeaders.AUTHORIZATION, "token ".concat(properties.getConfigToken(scanRequest.getScmInstance())));
+        httpHeaders.set(HttpHeaders.AUTHORIZATION, "token ".concat(scmConfigOverrider.determineConfigToken(properties, scanRequest.getScmInstance())));
         return httpHeaders;
     }
 
@@ -320,7 +323,7 @@ public class GitHubService extends RepoService {
     }
 
     private String getGitHubEndPoint(ScanRequest request) {
-        String endpoint = properties.getConfigApiUrl(request).concat(REPO_CONTENT);
+        String endpoint = scmConfigOverrider.determineConfigApiUrl(properties, request).concat(REPO_CONTENT);
         endpoint = endpoint.replace("{namespace}", request.getNamespace());
         endpoint = endpoint.replace("{repo}", request.getRepoName());
         endpoint = endpoint.replace("{branch}", request.getBranch());
@@ -334,7 +337,7 @@ public class GitHubService extends RepoService {
         Map<String, Integer> langsPercent = new HashMap<>();
         HttpHeaders headers = createAuthHeaders(request);
 
-        String urlTemplate = properties.getConfigApiUrl(request).concat(LANGUAGE_TYPES);
+        String urlTemplate = scmConfigOverrider.determineConfigApiUrl(properties, request).concat(LANGUAGE_TYPES);
         String url = new DefaultUriBuilderFactory()
                 .expand(urlTemplate, request.getNamespace(), request.getRepoName())
                 .toString();
@@ -460,7 +463,7 @@ public class GitHubService extends RepoService {
 
         if (StringUtils.isNotEmpty(branch)) {
             HttpHeaders headers = createAuthHeaders(request);
-            String urlTemplate = properties.getConfigApiUrl(request).concat(FILE_CONTENT);
+            String urlTemplate = scmConfigOverrider.determineConfigApiUrl(properties, request).concat(FILE_CONTENT);
 
             response = restTemplate.exchange(
                     urlTemplate,

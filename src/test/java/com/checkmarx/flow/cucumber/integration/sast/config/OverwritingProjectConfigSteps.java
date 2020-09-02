@@ -3,6 +3,7 @@ package com.checkmarx.flow.cucumber.integration.sast.config;
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
+import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.controller.GitHubController;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.service.*;
@@ -62,6 +63,7 @@ public class OverwritingProjectConfigSteps {
     private final SastScanner sastScanner;
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
+    private final ScmConfigOverrider scmConfigOverrider;
 
     private Integer projectId;
     private Integer interceptedScanId;
@@ -124,7 +126,8 @@ public class OverwritingProjectConfigSteps {
     public void githubNotifiesCxFlowAboutAPullRequest(String projectName) {
 
         GitHubController gitHubController = new GitHubController(gitHubProperties, flowProperties, cxProperties,
-                null, flowService, helperService, gitHubService, sastScanner, filterFactory, configOverrider);
+                null, flowService, helperService, gitHubService, sastScanner, filterFactory, configOverrider,
+                scmConfigOverrider);
 
         gitHubTestUtils.callController(gitHubController, GitHubTestUtils.EventType.PULL_REQUEST, projectName);
     }
