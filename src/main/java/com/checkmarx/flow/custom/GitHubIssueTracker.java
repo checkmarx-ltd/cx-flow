@@ -39,7 +39,6 @@ public class GitHubIssueTracker implements IssueTracker {
     private final FlowProperties flowProperties;
     private final ScmConfigOverrider scmConfigOverrider;
 
-
     public GitHubIssueTracker(@Qualifier("flowRestTemplate") RestTemplate restTemplate, GitHubProperties properties, FlowProperties flowProperties,
                               ScmConfigOverrider scmConfigOverrider) {
         this.restTemplate = restTemplate;

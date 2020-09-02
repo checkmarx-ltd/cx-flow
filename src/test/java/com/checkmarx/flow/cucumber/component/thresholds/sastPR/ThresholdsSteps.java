@@ -64,9 +64,6 @@ public class ThresholdsSteps {
     private final CxProperties cxProperties;
     private final GitHubProperties gitHubProperties;
     private final ADOProperties adoProperties;
-    private final ScaProperties scaProperties;
-    private final SastScanner sastScanner;
-    private final SCAScanner scaScanner;
     private final EmailService emailService;
     private final ScmConfigOverrider scmConfigOverrider;
 
@@ -77,8 +74,7 @@ public class ThresholdsSteps {
 
     public ThresholdsSteps(CxClient cxClientMock, RestTemplate restTemplateMock, FlowProperties flowProperties, ADOProperties adoProperties,
                            CxProperties cxProperties, GitHubProperties gitHubProperties, ThresholdValidator thresholdValidator,
-                           ScaProperties scaProperties, SastScanner sastScanner, SCAScanner scaScanner, EmailService emailService,
-                           ScmConfigOverrider scmConfigOverrider) {
+                           EmailService emailService, ScmConfigOverrider scmConfigOverrider) {
 
         this.cxClientMock = cxClientMock;
         this.restTemplateMock = restTemplateMock;
@@ -94,10 +90,6 @@ public class ThresholdsSteps {
         this.adoProperties = adoProperties;
 
         this.thresholdValidator = thresholdValidator;
-        this.scaProperties = scaProperties;
-
-        this.sastScanner = sastScanner;
-        this.scaScanner = scaScanner;
 
         this.emailService = emailService;
         this.scmConfigOverrider = scmConfigOverrider;
@@ -268,9 +260,8 @@ public class ThresholdsSteps {
                 adoProperties,
                 flowProperties,
                 cxProperties,
-                scaProperties,
-                sastScanner,
-                scaScanner);
+                scmConfigOverrider,
+                thresholdValidator);
 
         
         return new ResultsService(

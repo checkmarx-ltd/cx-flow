@@ -60,7 +60,6 @@ public class PublishingSteps extends PublishingStepsBase {
     private final ConfigurationOverrider configOverrider;
     private final ScmConfigOverrider scmConfigOverrider;
 
-
     @MockBean
     private final CxClient cxClientMock;
 
@@ -144,7 +143,8 @@ public class PublishingSteps extends PublishingStepsBase {
         FlowService flowService = new FlowService(vulnerabilityScannerList, projectNameGenerator, resultsService);
 
         return new GitHubController(gitHubProperties, flowProperties, cxProperties,
-                null, flowService, helperService, gitHubService, null, filterFactory, configOverrider, scmConfigOverrider);
+                null, flowService, helperService, gitHubService, null, filterFactory, configOverrider,
+                scmConfigOverrider);
     }
 
     private static GitHubTestUtils.EventType determineEventType(String eventName) {

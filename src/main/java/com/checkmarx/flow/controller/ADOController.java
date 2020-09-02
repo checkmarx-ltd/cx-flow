@@ -3,6 +3,7 @@ package com.checkmarx.flow.controller;
 import com.checkmarx.flow.config.ADOProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.EventResponse;
@@ -48,6 +49,7 @@ public class ADOController extends AdoControllerBase {
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
     private final ADOService adoService;
+    private final ScmConfigOverrider scmConfigOverrider;
 
     /**
      * Pull Request event submitted (JSON)
@@ -63,8 +65,8 @@ public class ADOController extends AdoControllerBase {
         String uid = helperService.getShortUid();
         MDC.put("cx", uid);
         log.info("Processing Azure PULL request");
-        validateBasicAuth(auth);
         controllerRequest = ensureNotNull(controllerRequest);
+        validateBasicAuth(auth, controllerRequest);
         adoDetailsRequest = ensureDetailsNotNull(adoDetailsRequest);
         ResourceContainers resourceContainers = body.getResourceContainers();
 
@@ -122,7 +124,7 @@ public class ADOController extends AdoControllerBase {
 
             //build request object
             String gitUrl = repository.getWebUrl();
-            String token = properties.getToken();
+            String token = scmConfigOverrider.determineConfigToken(properties, controllerRequest.getScmInstance());
             log.info("Using url: {}", gitUrl);
             String gitAuthUrl = gitUrl.replace(HTTPS, HTTPS.concat(token).concat("@"));
             gitAuthUrl = gitAuthUrl.replace(HTTP, HTTP.concat(token).concat("@"));
@@ -155,6 +157,7 @@ public class ADOController extends AdoControllerBase {
                     .filter(filter)
                     .build();
 
+            setScmInstance(controllerRequest, request);
             request.putAdditionalMetadata(ADOService.PROJECT_SELF_URL, getTheProjectURL(body.getResourceContainers()));
             fillRequestWithAdditionalData(request, repository, body.toString());
             checkForConfigAsCode(request);
@@ -190,8 +193,8 @@ public class ADOController extends AdoControllerBase {
         String uid = helperService.getShortUid();
         MDC.put("cx", uid);
         log.info("Processing Azure Push request");
-        validateBasicAuth(auth);
         controllerRequest = ensureNotNull(controllerRequest);
+        validateBasicAuth(auth, controllerRequest);
         adoDetailsRequest = ensureDetailsNotNull(adoDetailsRequest);
         ResourceContainers resourceContainers = body.getResourceContainers();
 
@@ -239,8 +242,8 @@ public class ADOController extends AdoControllerBase {
             //build request object
             String gitUrl = repository.getRemoteUrl();
             log.debug("Using url: {}", gitUrl);
-            String gitAuthUrl = gitUrl.replace(HTTPS, HTTPS.concat(properties.getToken()).concat("@"));
-            gitAuthUrl = gitAuthUrl.replace(HTTP, HTTP.concat(properties.getToken()).concat("@"));
+            String configToken = scmConfigOverrider.determineConfigToken(properties, controllerRequest.getScmInstance());
+            String gitAuthUrl = gitUrl.replace(HTTPS, HTTPS.concat(configToken).concat("@")).replace(HTTP, HTTP.concat(configToken).concat("@"));
 
             String scanPreset = cxProperties.getScanPreset();
             if (StringUtils.isNotEmpty(controllerRequest.getPreset())) {
@@ -277,6 +280,7 @@ public class ADOController extends AdoControllerBase {
                     .filter(filter)
                     .build();
 
+            setScmInstance(controllerRequest, request);
             request.putAdditionalMetadata(ADOService.PROJECT_SELF_URL, getTheProjectURL(body.getResourceContainers()));
             addMetadataToScanRequest(adoDetailsRequest, request);
             fillRequestWithAdditionalData(request,repository, body.toString());
@@ -333,8 +337,8 @@ public class ADOController extends AdoControllerBase {
     /**
      * Validates the base64 / basic auth received in the request.
      */
-    private void validateBasicAuth(String token) {
-        String auth = "Basic ".concat(Base64.getEncoder().encodeToString(properties.getWebhookToken().getBytes()));
+    private void validateBasicAuth(String token, ControllerRequest controllerRequest) {
+        String auth = "Basic ".concat(Base64.getEncoder().encodeToString(scmConfigOverrider.determineConfigWebhookToken(properties, controllerRequest).getBytes()));
         if (!auth.equals(token)) {
             throw new InvalidTokenException();
         }

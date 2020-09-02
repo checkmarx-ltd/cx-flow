@@ -208,7 +208,7 @@ public class UpdatePullRequestCommentsSteps {
     private void deleteADOComments() throws IOException {
         List<RepoComment> adoComments = getRepoComments();
         for (RepoComment rc: adoComments) {
-            adoService.deleteComment(rc.getCommentUrl());
+            adoService.deleteComment(rc.getCommentUrl(), getBasicRequest());
         }
     }
 
@@ -224,7 +224,7 @@ public class UpdatePullRequestCommentsSteps {
             return gitHubService.getComments(getBasicRequest());
         }
         else if (sourceControl.equals(SourceControlType.ADO)){
-            return adoService.getComments(ADO_PR_COMMENTS_URL);
+            return adoService.getComments(ADO_PR_COMMENTS_URL, getBasicRequest());
         }
         throw new IllegalArgumentException("Unknown source control: " + sourceControl);
     }
