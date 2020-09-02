@@ -52,7 +52,7 @@ public class GitLabService extends RepoService {
     private final ScmConfigOverrider scmConfigOverrider;
 
 
-    @ConstructorProperties({"restTemplate", "properties"})
+    @ConstructorProperties({"restTemplate", "properties", "scmConfigOverrider"})
     public GitLabService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, GitLabProperties properties, ScmConfigOverrider scmConfigOverrider) {
         this.restTemplate = restTemplate;
         this.properties = properties;
