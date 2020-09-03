@@ -192,14 +192,13 @@ public class ServiceNowTracker implements IssueTracker {
             Incident incident = getCreateIncident(resultIssue, request);
             String query = String.format("%s%s", properties.getApiUrl(), INCIDENTS);
 
-            return Optional.ofNullable(restOperations.postForLocation(query, incident))
-                    .map(uri -> getSysID(uri.getPath()))
-                    .map(this::getIncidentByIDConvertToIssue)
-                    .map(Optional::get)
-                    .orElseThrow(() -> new MachinaRuntimeException(errorMessage +" - URI returned NULL"));
+            URI uri = Optional.ofNullable(restOperations.postForLocation(query, incident))
+                    .orElseThrow(() -> new MachinaRuntimeException(errorMessage + " - URI returned NULL"));
+            String sysId = getSysID(uri.getPath());
+            return getIncidentByIDConvertToIssue(sysId).orElseThrow(() -> new MachinaRuntimeException(errorMessage + " - could not convert to issue"));
 
         } catch (HttpClientErrorException e) {
-            log.error(errorMessage);
+            log.error("Error occurred while creating ServiceNow Issue");
             log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaRuntimeException();
         }
