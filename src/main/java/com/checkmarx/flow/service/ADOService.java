@@ -309,35 +309,36 @@ public class ADOService {
         restTemplate.exchange(url, HttpMethod.DELETE, httpEntity, String.class);
     }
 
-    public CxConfig getCxConfigOverride(ScanRequest request) {
+    public CxConfig getCxConfigOverride(ScanRequest request, String branch) {
         CxConfig result = null;
         if (StringUtils.isNotBlank(properties.getConfigAsCode())) {
             try {
-                result = loadCxConfigFromADO(request);
+                result = loadCxConfigFromADO(request, branch);
             } catch (NullPointerException e) {
                 log.warn(NO_CONTENT_FOUND_IN_RESPONSE);
             } catch (HttpClientErrorException.NotFound e) {
-                log.info(String.format("No Config as code was found with the name: %s", properties.getConfigAsCode()));
+                log.info("No Config as code was found with the name: {}, in branch {}", properties.getConfigAsCode(), branch);
             } catch (Exception e) {
-                log.error(String.format("Error in getting config as code from the repo. Error details : %s", ExceptionUtils.getRootCauseMessage(e)));
+                log.error("Error in getting config as code from the repo. Error details : {}", ExceptionUtils.getRootCauseMessage(e));
             }
         }
         return result;
     }
 
-    private CxConfig loadCxConfigFromADO(ScanRequest request) {
+    private CxConfig loadCxConfigFromADO(ScanRequest request, String branch) {
         CxConfig cxConfig;
         HttpHeaders headers = ADOUtils.createAuthHeaders(properties.getToken());
         String repoSelfUrl = request.getAdditionalMetadata(REPO_SELF_URL);
         String url = repoSelfUrl.concat(GET_FILE_CONTENT);
 
+        log.info("Trying to load config-as-code from '{}' branch", branch);
         ResponseEntity<String> response = restTemplate.exchange(
                 url,
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
                 String.class,
                 properties.getConfigAsCode(),
-                request.getBranch(),
+                branch,
                 properties.getApiVersion()
         );
         if (response.getBody() == null) {

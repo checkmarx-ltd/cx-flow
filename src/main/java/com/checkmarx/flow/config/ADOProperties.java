@@ -1,5 +1,7 @@
 package com.checkmarx.flow.config;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
@@ -8,6 +10,8 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "azure")
 @Validated
 public class ADOProperties extends RepoProperties{
+
+    private boolean deleteCxProject = false;
     private String issueType = "issue";
     private String issueBody = "Description";
     private String appTagPrefix = "app";
@@ -20,7 +24,6 @@ public class ADOProperties extends RepoProperties{
     private String closedStatus = "Done";
     private String projectName;
     private String namespace;
-    private boolean deleteCxProject = false;
     
     public String getNamespace() {
         return namespace;

@@ -65,6 +65,7 @@ public class ADOController extends AdoControllerBase {
         String uid = helperService.getShortUid();
         MDC.put("cx", uid);
         log.info("Processing Azure PULL request");
+        Action action = Action.PULL;
         validateBasicAuth(auth);
         controllerRequest = ensureNotNull(controllerRequest);
         adoDetailsRequest = ensureDetailsNotNull(adoDetailsRequest);
@@ -159,7 +160,7 @@ public class ADOController extends AdoControllerBase {
 
             request.putAdditionalMetadata(ADOService.PROJECT_SELF_URL, getTheProjectURL(body.getResourceContainers()));
             fillRequestWithAdditionalData(request, repository, body.toString());
-            checkForConfigAsCode(request);
+            checkForConfigAsCode(request, getConfigBranch(request, resource, action));
             request.putAdditionalMetadata("statuses_url", pullUrl.concat("/statuses"));
             addMetadataToScanRequest(adoDetailsRequest, request);
             request.setId(uid);
@@ -192,6 +193,7 @@ public class ADOController extends AdoControllerBase {
         String uid = helperService.getShortUid();
         MDC.put("cx", uid);
         log.info("Processing Azure Push request");
+        Action action = Action.PUSH;
         validateBasicAuth(auth);
         controllerRequest = ensureNotNull(controllerRequest);
         adoDetailsRequest = ensureDetailsNotNull(adoDetailsRequest);
@@ -249,12 +251,7 @@ public class ADOController extends AdoControllerBase {
                 scanPreset = controllerRequest.getPreset();
             }
 
-            String defaultBranch = repository.getDefaultBranch();
-            String[] branchPath = repository.getDefaultBranch().split("/");
-
-            if (branchPath.length == 3) {
-                defaultBranch = branchPath[2];
-            }
+            String defaultBranch = ScanUtils.getBranchFromRef(Optional.ofNullable(repository.getDefaultBranch()).orElse(ref));
 
             ScanRequest request = ScanRequest.builder()
                     .application(app)
@@ -283,7 +280,7 @@ public class ADOController extends AdoControllerBase {
             addMetadataToScanRequest(adoDetailsRequest, request);
             fillRequestWithAdditionalData(request,repository, body.toString());
             //if an override blob/file is provided, substitute these values
-            checkForConfigAsCode(request);
+            checkForConfigAsCode(request, getConfigBranch(request, resource, action));
             request.setId(uid);
             //only initiate scan/automation if target branch is applicable
             if (helperService.isBranch2Scan(request, branches)) {
@@ -350,6 +347,20 @@ public class ADOController extends AdoControllerBase {
         return azureProject;
     }
 
+    private String getConfigBranch(ScanRequest request, Resource resource, Action action){
+        String branch = request.getBranch();
+        try{
+
+            if (isDeleteBranchEvent(resource) && action.equals(Action.PUSH)){
+                branch = request.getDefaultBranch();
+                log.debug("branch to read config-as-code: {}", branch);
+            }
+        }
+        catch (Exception ex){
+            log.error("failed to get branch for config as code. using default");
+        }
+        return branch;
+    }
     /**
      * Validates the base64 / basic auth received in the request.
      */
@@ -375,8 +386,8 @@ public class ADOController extends AdoControllerBase {
         }
     }
 
-    private void checkForConfigAsCode(ScanRequest request) {
-        CxConfig cxConfig = adoService.getCxConfigOverride(request);
+    private void checkForConfigAsCode(ScanRequest request, String branch) {
+        CxConfig cxConfig = adoService.getCxConfigOverride(request, branch);
         configOverrider.overrideScanRequestProperties(cxConfig, request);
     }
 
@@ -390,5 +401,9 @@ public class ADOController extends AdoControllerBase {
         String projectId = resourceContainers.getProject().getId();
         String baseUrl = resourceContainers.getProject().getBaseUrl();
         return baseUrl.concat(projectId);
+    }
+    private enum Action {
+        PULL,
+        PUSH
     }
 }
