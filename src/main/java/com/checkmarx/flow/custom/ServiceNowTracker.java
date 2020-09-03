@@ -194,7 +194,8 @@ public class ServiceNowTracker implements IssueTracker {
 
             return Optional.ofNullable(restOperations.postForLocation(query, incident))
                     .map(uri -> getSysID(uri.getPath()))
-                    .map(sysId -> getIncidentByIDConvertToIssue(sysId).get())
+                    .map(this::getIncidentByIDConvertToIssue)
+                    .map(Optional::get)
                     .orElseThrow(() -> new MachinaRuntimeException(errorMessage +" - URI returned NULL"));
 
         } catch (HttpClientErrorException e) {
