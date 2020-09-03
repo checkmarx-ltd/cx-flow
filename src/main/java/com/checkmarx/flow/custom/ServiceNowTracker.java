@@ -186,14 +186,19 @@ public class ServiceNowTracker implements IssueTracker {
     @Override
     public Issue createIssue(ScanResults.XIssue resultIssue, ScanRequest request) throws MachinaException {
         log.debug("Executing createIssue ServiceNow API call");
+        String errorMessage = "Error occurred while creating ServiceNow Issue";
+
         try {
             Incident incident = getCreateIncident(resultIssue, request);
             String query = String.format("%s%s", properties.getApiUrl(), INCIDENTS);
-            URI uri = restOperations.postForLocation(query, incident);
-            String sysId = getSysID(uri.getPath());
-            return getIncidentByIDConvertToIssue(sysId).get();
+
+            return Optional.ofNullable(restOperations.postForLocation(query, incident))
+                    .map(uri -> getSysID(uri.getPath()))
+                    .map(sysId -> getIncidentByIDConvertToIssue(sysId).get())
+                    .orElseThrow(() -> new MachinaRuntimeException(errorMessage +" - URI returned NULL"));
+
         } catch (HttpClientErrorException e) {
-            log.error("Error occurred while creating ServiceNow Issue");
+            log.error(errorMessage);
             log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaRuntimeException();
         }
