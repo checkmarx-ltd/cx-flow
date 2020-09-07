@@ -1,5 +1,7 @@
 package com.checkmarx.flow.config;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
@@ -8,6 +10,8 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "azure")
 @Validated
 public class ADOProperties extends RepoProperties{
+
+    private boolean deleteCxProject = false;
     private String issueType = "issue";
     private String issueBody = "Description";
     private String appTagPrefix = "app";
@@ -115,6 +119,14 @@ public class ADOProperties extends RepoProperties{
 
     public void setTestRepository(String testRepository) {
         this.testRepository = testRepository;
+    }
+
+    public boolean getDeleteCxProject(){
+        return deleteCxProject;
+    }
+
+    public void setDeleteCxProject(boolean deleteProject){
+        this.deleteCxProject = deleteProject;
     }
 
     public String getMergeNoteUri(String namespace, String repo, String mergeId){
