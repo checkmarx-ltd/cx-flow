@@ -313,7 +313,8 @@ public class ADOController extends AdoControllerBase {
             return false;
         }
 
-        log.info("unexpected number of refUpdates in push event");
+        int refCount = Optional.ofNullable(resource.getRefUpdates().size()).orElse(0);
+        log.warn("unexpected number of refUpdates in push event: {}", refCount);
 
         return false;
     }

@@ -67,6 +67,7 @@ public class DeleteBranchSteps {
     private final ADOProperties adoProperties;
     private final EmailService emailService;
     private final ScmConfigOverrider scmConfigOverrider;
+    private final BugTrackerEventTrigger bugTrackerEventTrigger;
 
     private final ADOService adoServiceMock;
     private final ResultsService resultsServiceMock;
@@ -82,7 +83,8 @@ public class DeleteBranchSteps {
 
     public DeleteBranchSteps(FlowProperties flowProperties, GitHubService gitHubService,
                              CxProperties cxProperties, GitHubProperties gitHubProperties, FilterFactory filterFactory,
-                             ConfigurationOverrider configOverrider, ADOProperties adoProperties, EmailService emailService, ScmConfigOverrider scmConfigOverrider) {
+                             ConfigurationOverrider configOverrider, ADOProperties adoProperties, EmailService emailService,
+                             BugTrackerEventTrigger bugTrackerEventTrigger, ScmConfigOverrider scmConfigOverrider) {
 
         this.filterFactory = filterFactory;
         this.configOverrider = configOverrider;
@@ -93,6 +95,7 @@ public class DeleteBranchSteps {
         this.adoProperties = adoProperties;
         this.cxConfig = new CxConfig();
         this.emailService = emailService;
+        this.bugTrackerEventTrigger = bugTrackerEventTrigger;
 
         this.adoServiceMock = mock(ADOService.class);
         this.resultsServiceMock = mock(ResultsService.class);
@@ -325,7 +328,7 @@ public class DeleteBranchSteps {
             initProjectNameGeneratorSpy(projectNameGeneratorSpy);
 
         ScanRequestConverter scanRequestConverter = new ScanRequestConverter(helperService, cxProperties, cxClientMock, flowProperties, gitHubService, null, null, null);
-        SastScanner sastScanner = new SastScanner(null, cxClientMock, helperService, cxProperties, flowProperties, null, emailService, scanRequestConverter, null, projectNameGeneratorSpy);
+        SastScanner sastScanner = new SastScanner(null, cxClientMock, helperService, cxProperties, flowProperties, null, emailService, scanRequestConverter, bugTrackerEventTrigger, projectNameGeneratorSpy);
         List<VulnerabilityScanner> scanners= new LinkedList<>();
         scanners.add(sastScanner);
         

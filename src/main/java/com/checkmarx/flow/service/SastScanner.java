@@ -310,7 +310,7 @@ public class SastScanner implements VulnerabilityScanner {
             String projectName = projectNameGenerator.determineProjectName(request);
             request.setProject(projectName);
 
-            log.info("going to delete CxProject: {}", projectName);
+            log.info("Going to delete CxProject: {}", projectName);
             Integer projectId = scanRequestConverter.determinePresetAndProjectId(request, ownerId);
 
             if (canDeleteProject(projectId, request)) {
