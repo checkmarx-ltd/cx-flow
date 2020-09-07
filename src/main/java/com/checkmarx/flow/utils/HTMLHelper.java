@@ -660,10 +660,10 @@ public class HTMLHelper {
     private static String countSastTotalVulnerabilities(CxScanSummary summary) {
         Integer totalVulnerabilities = 0;
 
-        totalVulnerabilities += summary.getHighSeverity();
-        totalVulnerabilities += summary.getMediumSeverity();
-        totalVulnerabilities += summary.getLowSeverity();
-        totalVulnerabilities += summary.getInfoSeverity();
+        totalVulnerabilities += Optional.ofNullable(summary.getHighSeverity()).orElse(0);
+        totalVulnerabilities += Optional.ofNullable(summary.getMediumSeverity()).orElse(0);
+        totalVulnerabilities += Optional.ofNullable(summary.getLowSeverity()).orElse(0);
+        totalVulnerabilities += Optional.ofNullable(summary.getInfoSeverity()).orElse(0);
 
         return String.valueOf(totalVulnerabilities);
     }
