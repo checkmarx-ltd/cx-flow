@@ -12,10 +12,10 @@ import java.util.List;
 public class PullRequestCommentsHelper {
 
     public static final String COMMENT_TYPE_SAST_FINDINGS_2 = "Violation Summary";
+    public static final String COMMENT_TYPE_SCA_FINDINGS = "Cx-SCA vulnerability result overview";
 
     private static final String COMMENT_TYPE_SAST_SCAN_STARTED = "Scan submitted to Checkmarx";
     private static final String COMMENT_TYPE_SAST_FINDINGS_1 = MarkDownHelper.SCAN_SUMMARY_DETAILS;
-    private static final String COMMENT_TYPE_SCA_FINDINGS = "CxSCA vulnerability result overview";
     private static final String COMMENT_TYPE_SAST_SCAN_NOT_SUBMITTED = "Scan not submitted to Checkmarx due to existing Active scan for the same project.";
 
     public static boolean isCheckMarxComment(RepoComment comment) {

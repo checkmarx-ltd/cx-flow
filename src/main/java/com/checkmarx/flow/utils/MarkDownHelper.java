@@ -9,13 +9,12 @@ public class MarkDownHelper {
 
     static final String MD_H3 = "### ";
     static final String MD_H4 = "#### ";
-    static final String SAST_DETAILS_HEADER = "SAST Details";
+    static final String SAST_DETAILS_HEADER = "Cx-SAST Details";
     static final String AST_DETAILS_HEADER = "AST-SAST Details";
-    static final String SCA_DETAILS_HEADER = "SCA-SAST Details";
 
-    static final String SAST_SUMMARY_HEADER = "SAST Summary";
+    static final String SAST_SUMMARY_HEADER = "Cx-SAST Summary";
     static final String AST_SUMMARY_HEADER = "AST Summary";
-    static final String SCA_SUMMARY_HEADER = "CX-SCA Summary";
+    static final String SCA_SUMMARY_HEADER = "Cx-SCA Summary";
 
     static final String LINE_BREAK = "<br>";
     static final String NBSP = "&nbsp;";

@@ -26,6 +26,7 @@ import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.checkmarx.flow.service.PullRequestCommentsHelper.COMMENT_TYPE_SCA_FINDINGS;
 import static java.util.Map.Entry.comparingByKey;
 
 
@@ -128,7 +129,7 @@ public class HTMLHelper {
 
             appendAll(body, MarkDownHelper.getCheckmarxLogoFromLink(), CRLF, MarkDownHelper.getScaBoldHeader(), CRLF);
             scaSummaryBuilder(body, r);
-            appendAll(body, MarkDownHelper.MD_H3, "CxSCA vulnerability result overview", CRLF);
+            appendAll(body, MarkDownHelper.MD_H3, COMMENT_TYPE_SCA_FINDINGS, CRLF);
 
             if (r.getFindings().isEmpty()) {
                 appendAll(body, MarkDownHelper.MD_H4, NO_PACKAGE_VIOLATION_MESSAGE, CRLF);
@@ -155,8 +156,8 @@ public class HTMLHelper {
 
     private static void scaSummaryBuilder(StringBuilder body, SCAResults r) {
         appendAll(body, MarkDownHelper.MD_H3,  MarkDownHelper.SCA_SUMMARY_HEADER, CRLF);
-        appendAll(body, MarkDownHelper.getBoldText(String.valueOf(r.getSummary().getTotalPackages())), " ", MarkDownHelper.getBoldText("Total Packages Identified"), CRLF);
-        appendAll(body, MarkDownHelper.getBoldText("Scan risk score is"), " ", MarkDownHelper.getBoldText(String.format("%.2f", r.getSummary().getRiskScore())), CRLF);
+        appendAll(body, MarkDownHelper.getBoldText("Total Packages Identified"), ": ", MarkDownHelper.getBoldText(String.valueOf(r.getSummary().getTotalPackages())), CRLF);
+        appendAll(body, MarkDownHelper.getBoldText("Scan Risk Score"), ": ", MarkDownHelper.getBoldText(String.format("%.2f", r.getSummary().getRiskScore())), CRLF, CRLF);
 
         Arrays.asList("High", "Medium", "Low").forEach(v ->
                 appendAll(body, MarkDownHelper.getSeverityIconFromLinkByText(v), MarkDownHelper.NBSP, MarkDownHelper.getBoldText(String.valueOf(r.getSummary().getFindingCounts().get(Severity.valueOf(v.toUpperCase())))),
