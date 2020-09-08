@@ -3,6 +3,7 @@ package com.checkmarx.flow.service;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.sdk.dto.ScanResults;
+import jline.internal.Log;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * High level business logic for CxFlow automation.
@@ -72,5 +74,20 @@ public class FlowService {
         }
 
         return enabledScanners;
+    }
+
+    public void deleteProject(ScanRequest request) {
+
+        Optional<SastScanner> sastScanner = getEnabledScanners(request)
+                .stream().filter(scanner -> scanner instanceof SastScanner)
+                .map(scanner -> ((SastScanner) scanner))
+                .findFirst();
+
+        if(!sastScanner.isPresent()){
+            log.warn("Delete branch for non-SAST scanner is not supported");
+            return;
+         }
+
+        sastScanner.ifPresent(scanner -> scanner.deleteProject(request));
     }
 }

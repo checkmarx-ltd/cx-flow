@@ -430,7 +430,7 @@ public class GitHubController extends WebhookController {
         request = configOverrider.overrideScanRequestProperties(cxConfig, request);
 
         //deletes a project which is not in the middle of a scan, otherwise it will not be deleted
-        sastScanner.deleteProject(request);
+        flowService.deleteProject(request);
 
         final String MESSAGE = "Branch deletion event was handled successfully.";
         log.info(MESSAGE);
