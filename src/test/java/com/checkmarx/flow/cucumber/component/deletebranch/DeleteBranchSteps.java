@@ -1,15 +1,23 @@
 package com.checkmarx.flow.cucumber.component.deletebranch;
 
 import com.checkmarx.flow.CxFlowApplication;
+import com.checkmarx.flow.config.ADOProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
+import com.checkmarx.flow.controller.ADOController;
 import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.controller.GitHubController;
+import com.checkmarx.flow.dto.BugTracker;
+import com.checkmarx.flow.dto.ControllerRequest;
+import com.checkmarx.flow.dto.azure.*;
 import com.checkmarx.flow.dto.github.*;
+import com.checkmarx.flow.dto.github.Repository;
 import com.checkmarx.flow.sastscanning.ScanRequestConverter;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
+import com.checkmarx.sdk.dto.CxConfig;
+import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -17,12 +25,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.*;
 import lombok.extern.slf4j.Slf4j;
+import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -38,20 +46,34 @@ public class DeleteBranchSteps {
     private static final String PRESET = "Default Preset";
     private static final String BRANCH_REF_TYPE = "branch";
     private static final String GITHUB_USER = "cxflowtestuser";
+    private static final String AZURE_WEBHOOK_TOKEN = "cxflow:1234";
+    private static final String AZURE_WEBHOOK_TOKEN_AUTH = "Basic Y3hmbG93OjEyMzQ=";
+    private static final String AZURE_PUSH_EVENT_TYPE = "git.push";
+    private static final String AZURE_DELETED_BRANCH_OBJ_ID = "0000000000000000000000000000000000000000";
+    private static final String GIT_DEFAULT_BRANCH = "refs/heads/master";
+    private static final int SCAN_ID_EXISTING_SCAN_NOT_EXIST = -1;
     private final CxClient cxClientMock;
     private final GitHubService gitHubService;
     private GitHubController gitHubControllerSpy;
-    private static final ObjectMapper mapper = new ObjectMapper();
+    private ADOController adoControllerSpy;
 
+    private static final ObjectMapper mapper = new ObjectMapper();
     private final FlowProperties flowProperties;
     private final CxProperties cxProperties;
     private final GitHubProperties gitHubProperties;
     private final HelperService helperService;
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
+    private final ADOProperties adoProperties;
+    private final EmailService emailService;
     private final ScmConfigOverrider scmConfigOverrider;
+    private final BugTrackerEventTrigger bugTrackerEventTrigger;
 
-    private String branch;
+    private final ADOService adoServiceMock;
+    private final ResultsService resultsServiceMock;
+    private CxConfig cxConfig;
+    private String adoRepo;
+    private String githubBranch;
     
     private Boolean deleteCalled;
     private String repoName;
@@ -61,22 +83,24 @@ public class DeleteBranchSteps {
 
     public DeleteBranchSteps(FlowProperties flowProperties, GitHubService gitHubService,
                              CxProperties cxProperties, GitHubProperties gitHubProperties, FilterFactory filterFactory,
-                             ConfigurationOverrider configOverrider, ScmConfigOverrider scmConfigOverrider) {
+                             ConfigurationOverrider configOverrider, ADOProperties adoProperties, EmailService emailService,
+                             BugTrackerEventTrigger bugTrackerEventTrigger, ScmConfigOverrider scmConfigOverrider) {
+
         this.filterFactory = filterFactory;
-
         this.configOverrider = configOverrider;
-
-        this.cxClientMock = mock(CxClient.class);
-
         this.flowProperties = flowProperties;
-
         this.cxProperties = cxProperties;
-
-        this.helperService = mock(HelperService.class);
-
         this.gitHubService = gitHubService;
-
         this.gitHubProperties = gitHubProperties;
+        this.adoProperties = adoProperties;
+        this.cxConfig = new CxConfig();
+        this.emailService = emailService;
+        this.bugTrackerEventTrigger = bugTrackerEventTrigger;
+
+        this.adoServiceMock = mock(ADOService.class);
+        this.resultsServiceMock = mock(ResultsService.class);
+        this.cxClientMock = mock(CxClient.class);
+        this.helperService = mock(HelperService.class, Mockito.withSettings().useConstructor(flowProperties, cxProperties, null));
         this.scmConfigOverrider = scmConfigOverrider;
     }
 
@@ -88,25 +112,40 @@ public class DeleteBranchSteps {
         this.gitHubProperties.setApiUrl("https://api.github.com/repos");
     }
 
+    private void initAdoProperties() {
+        this.adoProperties.setNamespace("TestNameSpace");
+        this.adoProperties.setWebhookToken(AZURE_WEBHOOK_TOKEN);
+    }
+
     @Before("@DeleteBranchFeature")
-    public void prepareServices() {
+    public void prepareServices() throws CheckmarxException {
         deleteCalled = Boolean.FALSE;
         trigger = BRANCH_REF_TYPE;
-        initCxClientMock();
-        initHelperServiceMock();
+        flowProperties.setBugTracker(BugTracker.Type.CUSTOM.toString());
+        initMockers();
         initServices();
         initMockGitHubController();
     }
 
-    private void initCxClientMock() {
+    private void initMockers() throws CheckmarxException {
+
         ScanResultsAnswerer answerer = new ScanResultsAnswerer();
         doAnswer(answerer).when(cxClientMock).deleteProject(any());
-        try {
-            when(cxClientMock.getTeamId(anyString(),anyString())).thenReturn(TEAM);
-            when(cxClientMock.getTeamId(anyString())).thenReturn(TEAM);
-        } catch (CheckmarxException e) {
-            fail(e.getMessage());
-        }
+
+        when(helperService.getShortUid()).thenReturn("12345");
+        when(helperService.getCxTeam(any())).thenReturn(TEAM);
+        when(helperService.getCxProject(any())).thenReturn(PROJECT_NAME);
+        when(helperService.getPresetFromSources(any())).thenReturn(PRESET);
+        when(helperService.isBranchProtected(anyString(), anyList(), any())).thenCallRealMethod();
+        when(helperService.isBranch2Scan(any(), anyList())).thenCallRealMethod();
+
+        when(cxClientMock.getTeamId(anyString(),anyString())).thenReturn(TEAM);
+        when(cxClientMock.getTeamId(anyString())).thenReturn(TEAM);
+        when(cxClientMock.getScanIdOfExistingScanIfExists(anyInt())).thenReturn(SCAN_ID_EXISTING_SCAN_NOT_EXIST);
+        when(cxClientMock.getReportContentByScanId(anyInt(), any())).thenReturn(new ScanResults());
+
+        when(adoServiceMock.getCxConfigOverride(any(), anyString())).thenReturn(cxConfig);
+        when(resultsServiceMock.publishCombinedResults(any(), any())).thenReturn(null);
     }
 
     private class ScanResultsAnswerer implements Answer<Object> {
@@ -117,8 +156,19 @@ public class DeleteBranchSteps {
         }
     }
 
+    @Given("Azure repo name is {string}")
+    public void setAdoRepoName(String repo){
+        adoRepo = repo;
+        initAdoProperties();
+    }
+
+    @And("Azure branch is {}")
+    public void setAdoBranch(String branch){
+
+    }
+
     @Given("GitHub repo name is {string}")
-    public void setRepoName(String repoName){
+    public void setGithubRepoName(String repoName){
         this.repoName = repoName;
         initGitHubProperties();
     }
@@ -134,8 +184,8 @@ public class DeleteBranchSteps {
     }
     
     @And("GitHub branch is {string}")
-    public void setBranch(String branch) {
-        this.branch = branch;
+    public void setGithubBranch(String branch) {
+        this.githubBranch = branch;
     }
     
     @And("a project {string} {string} in SAST")
@@ -149,7 +199,7 @@ public class DeleteBranchSteps {
         when(cxClientMock.getProjectId(anyString(), any())).thenReturn(projectId);
     }
     
-    @And("the {string} branch is {string} as determined by application.yml")
+    @And("the {string} branch is {} as determined by application.yml")
     public void theBranchIsSpecifiedAsProtected(String branch, String protectedOrNot) {
         List<String> protectedBranches = flowProperties.getBranches();
         if (Boolean.parseBoolean(protectedOrNot)) {
@@ -158,14 +208,32 @@ public class DeleteBranchSteps {
             protectedBranches.remove(branch);
         }
     }
-        
-    @When("GitHub notifies cxFlow that a {string} branch/ref was deleted")
-    public void githubNotifiesCxFlowThatABranchWasDeleted(String deletedBranch) {
-        branch = deletedBranch;
-        sendDeleteEvent();
+
+    @And("the Azure properties is {} by application.yml")
+    public void theBranchIsSpecifiedAsProtected(boolean deleteBranch) {
+        adoProperties.setDeleteCxProject(deleteBranch);
     }
 
-    @Then("CxFlow will {string} the SAST delete API for the {string} project")
+    @And("config-as-code in azure default branch include Cx-project {}")
+    public void setAzureConfigAsCodeProject(String cxProject) {
+        if (!cxProject.equals("none")){
+            cxConfig.setProject(cxProject);
+        }
+    }
+
+    @When("GitHub notifies cxFlow that a {string} branch/ref was deleted")
+    public void githubNotifiesCxFlowThatABranchWasDeleted(String deletedBranch) {
+        githubBranch = deletedBranch;
+        sendGithubDeleteEvent();
+    }
+
+    @When("Azure notifies cxFlow that a {string} branch was deleted")
+    public void azureNotifiesCxFlowThatABranchWasDeleted(String deletedBranch) {
+        sendAzureDeleteEvent(deletedBranch);
+    }
+
+
+    @Then("CxFlow will {} the SAST delete API for the {string} project")
     public void cxflowWillNotCallTheSASTDeleteAPI(String willCall, String projectName) {
         boolean expectingCall = Boolean.parseBoolean(willCall);
         verifyDeleteApiCall(expectingCall);
@@ -183,7 +251,7 @@ public class DeleteBranchSteps {
         }
     }
     
-    private void sendDeleteEvent() {
+    private void sendGithubDeleteEvent() {
         DeleteEvent deleteEvent = new DeleteEvent();
         Repository repo = new Repository();
         repo.setName(repoName);
@@ -195,7 +263,7 @@ public class DeleteBranchSteps {
         repo.setOwner(owner);
         deleteEvent.setRepository(repo);
         deleteEvent.setRefType(trigger);
-        deleteEvent.setRef(branch);
+        deleteEvent.setRef(githubBranch);
                 
         try {
             String deleteEventStr = mapper.writeValueAsString(deleteEvent);
@@ -208,28 +276,63 @@ public class DeleteBranchSteps {
         }
     }
 
-     private void initHelperServiceMock() {
-         when(helperService.getShortUid()).thenReturn("123456");
-         when(helperService.getCxTeam(any())).thenReturn(TEAM);
-         when(helperService.getCxProject(any())).thenReturn(PROJECT_NAME);
-         when(helperService.getPresetFromSources(any())).thenReturn(PRESET);
-        when(helperService.isBranchProtected(anyString(), anyList(), any())).thenCallRealMethod();
+    public void sendAzureDeleteEvent(String deletedBranch) {
+
+        String meaningless_string = "some_string";
+        com.checkmarx.flow.dto.azure.PushEvent pushEvent = new com.checkmarx.flow.dto.azure.PushEvent();
+        pushEvent.setEventType(AZURE_PUSH_EVENT_TYPE);
+
+        Project_ project = new Project_();
+        project.setId(meaningless_string);
+        project.setBaseUrl("https://dev.azure.com/OrgName/");
+
+        ResourceContainers resourceContainers = new ResourceContainers();
+        resourceContainers.setProject(project);
+
+        pushEvent.setResourceContainers(resourceContainers);
+        RefUpdate refUpdate = new RefUpdate();
+        refUpdate.setName("refs/heads/" + deletedBranch);
+        refUpdate.setOldObjectId(meaningless_string);
+        refUpdate.setNewObjectId(AZURE_DELETED_BRANCH_OBJ_ID);
+
+        Resource resource = new Resource();
+        resource.setRefUpdates(Collections.singletonList(refUpdate));
+        resource.setStatus(meaningless_string);
+        resource.setUrl(meaningless_string);
+        com.checkmarx.flow.dto.azure.Repository repo = new com.checkmarx.flow.dto.azure.Repository();
+        repo.setId(meaningless_string);
+        repo.setName(adoRepo);
+        repo.setUrl(meaningless_string);
+        repo.setRemoteUrl(meaningless_string);
+
+        repo.setDefaultBranch(GIT_DEFAULT_BRANCH);
+        Project pr = new Project();
+        pr.setId(meaningless_string);
+        pr.setName(meaningless_string);
+        repo.setProject(pr);
+        resource.setRepository(repo);
+
+        pushEvent.setResource(resource);
+        ControllerRequest controllerRequest = new ControllerRequest();
+        AdoDetailsRequest adoRequest = new AdoDetailsRequest();
+        adoControllerSpy.pushRequest(pushEvent, AZURE_WEBHOOK_TOKEN_AUTH, null, controllerRequest, adoRequest);
     }
+
 
     private void initMockGitHubController() {
         doNothing().when(gitHubControllerSpy).verifyHmacSignature(any(), any(), any());
     }
-    
+
     private void initServices() {
         ProjectNameGenerator projectNameGeneratorSpy = spy(new ProjectNameGenerator(helperService, cxProperties, null));
             initProjectNameGeneratorSpy(projectNameGeneratorSpy);
-        
+
         ScanRequestConverter scanRequestConverter = new ScanRequestConverter(helperService, cxProperties, cxClientMock, flowProperties, gitHubService, null, null, null);
-        SastScanner sastScanner = new SastScanner(null, cxClientMock, helperService, cxProperties, flowProperties, null, null, scanRequestConverter, null, projectNameGeneratorSpy);
+        SastScanner sastScanner = new SastScanner(null, cxClientMock, helperService, cxProperties, flowProperties, null, emailService, scanRequestConverter, bugTrackerEventTrigger, projectNameGeneratorSpy);
         List<VulnerabilityScanner> scanners= new LinkedList<>();
         scanners.add(sastScanner);
         
-        FlowService flowServiceSpy = spy(new FlowService(scanners, projectNameGeneratorSpy, null));
+        FlowService flowServiceSpy = spy(new FlowService(scanners, projectNameGeneratorSpy, resultsServiceMock));
         
         //gitHubControllerSpy is a spy which will run real methods.
         //It will connect to a real github repository to read a real cx.config file
@@ -244,8 +347,18 @@ public class DeleteBranchSteps {
                 sastScanner,
                 filterFactory,
                 configOverrider,
+                null));
+
+        this.adoControllerSpy = spy(new ADOController(adoProperties,
+                flowProperties,
+                cxProperties,
+                null,
+                flowServiceSpy,
+                helperService,
+                filterFactory,
+                configOverrider,
+                adoServiceMock,
                 scmConfigOverrider));
-        
     }
 
     private void initProjectNameGeneratorSpy(ProjectNameGenerator projectNameGenerator) {
@@ -258,6 +371,8 @@ public class DeleteBranchSteps {
             } catch (Throwable throwable) {
                 fail(throwable.getMessage());
             }
-        return null;
+        return calculatedProjectName;
         }
     }
+
+
