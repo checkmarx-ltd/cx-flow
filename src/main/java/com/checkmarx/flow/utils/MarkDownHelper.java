@@ -15,7 +15,7 @@ public class MarkDownHelper {
 
     static final String SAST_SUMMARY_HEADER = "SAST Summary";
     static final String AST_SUMMARY_HEADER = "AST Summary";
-    static final String SCA_SUMMARY_HEADER = "SCA Summary";
+    static final String SCA_SUMMARY_HEADER = "CX-SCA Summary";
 
     static final String LINE_BREAK = "<br>";
     static final String NBSP = "&nbsp;";
@@ -31,6 +31,7 @@ public class MarkDownHelper {
     private static final String INFO_ICON = "https://user-images.githubusercontent.com/23239410/92157090-97c0ec80-ee32-11ea-9b2e-aa6b32b03d54.png";
     private static final String ICON_ICON = "https://user-images.githubusercontent.com/23239410/92355607-3d06e980-f0ed-11ea-8bb7-9029eb8716b9.png";
     private static final String SAST_BOLD_HEADER = "Checkmarx SAST - " + SCAN_SUMMARY_DETAILS;
+    private static final String SCA_BOLD_HEADER = "Checkmarx SCA - " + SCAN_SUMMARY_DETAILS;
 
 
     private MarkDownHelper() {
@@ -62,6 +63,10 @@ public class MarkDownHelper {
 
     static String getSastBoldHeader() {
         return getBoldText(SAST_BOLD_HEADER);
+    }
+
+    static String getScaBoldHeader() {
+        return getBoldText(SCA_BOLD_HEADER);
     }
 
     static String getBoldText(String text) {

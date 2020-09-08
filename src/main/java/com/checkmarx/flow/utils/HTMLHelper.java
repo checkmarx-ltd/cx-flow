@@ -5,7 +5,6 @@ import com.checkmarx.flow.config.RepoProperties;
 import com.checkmarx.flow.constants.SCATicketingConstants;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.sdk.config.Constants;
-import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.Filter.Severity;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.ast.SCAResults;
@@ -17,7 +16,12 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -47,6 +51,7 @@ public class HTMLHelper {
 
     private static final String DIV_A_HREF = "<div><a href='";
     private static final String NO_POLICY_VIOLATION_MESSAGE = "No policy violation found";
+    private static final String NO_PACKAGE_VIOLATION_MESSAGE = "No package violation found";
 
     private HTMLHelper() {
     }
@@ -115,48 +120,21 @@ public class HTMLHelper {
     }
 
     private static void addScaBody(ScanResults results, StringBuilder body) {
-
         Optional.ofNullable(results.getScaResults()).ifPresent(r -> {
             log.debug("Building merge comment MD for SCA scanner");
             if (body.length() > 0) {
                 appendAll(body, "***", CRLF);
             }
 
-            appendAll(body, MarkDownHelper.MD_H3, "Checkmarx Dependency (CxSCA) Scan Summary", CRLF);
-            appendAll(body, "[Full Scan Details](", r.getWebReportLink(), ")  ", CRLF);
-            appendAll(body, MarkDownHelper.MD_H4, "Summary  ", CRLF);
-            appendMDtableHeaders(body, " Total Packages Identified ",
-                    String.valueOf(r.getSummary().getTotalPackages()));
+            appendAll(body, MarkDownHelper.getCheckmarxLogoFromLink(), CRLF, MarkDownHelper.getScaBoldHeader(), CRLF);
+            scaSummaryBuilder(body, r);
+            appendAll(body, MarkDownHelper.MD_H3, "CxSCA vulnerability result overview", CRLF);
 
-            Map<Severity, Integer> findingCounts = r.getSummary().getFindingCounts();
-            Arrays.asList("High", "Medium", "Low")
-                    .forEach(v -> appendMDtableHeaders(body, v + " severity vulnerabilities ",
-                            String.valueOf(findingCounts.get(Filter.Severity.valueOf(v.toUpperCase()))), " "));
-
-            appendMDtableRow(body, "Scan risk score", String.format("%.2f", r.getSummary().getRiskScore()));
-            body.append(CRLF);
-            appendAll(body, MarkDownHelper.MD_H4, "CxSCA vulnerability result overview", CRLF);
-
-            appendMDtableHeaders(body, "Vulnerability ID", "Package", SEVERITY,
-                    // "CWE / Category",
-                    "CVSS score", "Publish date", "Current version", "Recommended version", "Link in CxSCA",
-                    "Reference – NVD link");
-
-            r.getFindings().stream().sorted(Comparator.comparingDouble(o -> -o.getScore()))
-                    .sorted(Comparator.comparingInt(o -> -o.getSeverity().ordinal())).forEach(
-                            f -> appendMDtableRow(body, '`' + f.getId() + '`', extractPackageNameFromFindings(r, f),
-                                    f.getSeverity().name(),
-                                    // "N\\A",
-                                    String.valueOf(f.getScore()), f.getPublishDate(),
-                                    extractPackageVersionFromFindings(r, f),
-                                    Optional.ofNullable(f.getRecommendations()).orElse(""),
-                                    " [Vulnerability Link]("
-                                            + ScanUtils.constructVulnerabilityUrl(r.getWebReportLink(), f) + ")",
-                                    (StringUtils.isEmpty(f.getCveName())) ? "N\\A"
-                                            : appendAll(new StringBuilder(), '[', f.getCveName(),
-                                                    "](https://nvd.nist.gov/vuln/detail/", f.getCveName(), ")")
-                                                            .toString()));
-
+            if (r.getFindings().isEmpty()) {
+                appendAll(body, MarkDownHelper.MD_H4, NO_PACKAGE_VIOLATION_MESSAGE, CRLF);
+            } else {
+                scaVulnerabilitiesTableBuilder(body, r);
+            }
         });
     }
 
@@ -173,6 +151,40 @@ public class HTMLHelper {
         }
 
         return body.toString();
+    }
+
+    private static void scaSummaryBuilder(StringBuilder body, SCAResults r) {
+        appendAll(body, MarkDownHelper.MD_H3,  MarkDownHelper.SCA_SUMMARY_HEADER, CRLF);
+        appendAll(body, MarkDownHelper.getBoldText(String.valueOf(r.getSummary().getTotalPackages())), " ", MarkDownHelper.getBoldText("Total Packages Identified"), CRLF);
+        appendAll(body, MarkDownHelper.getBoldText("Scan risk score is"), " ", MarkDownHelper.getBoldText(String.format("%.2f", r.getSummary().getRiskScore())), CRLF);
+
+        Arrays.asList("High", "Medium", "Low").forEach(v ->
+                appendAll(body, MarkDownHelper.getSeverityIconFromLinkByText(v), MarkDownHelper.NBSP, MarkDownHelper.getBoldText(String.valueOf(r.getSummary().getFindingCounts().get(Severity.valueOf(v.toUpperCase())))),
+                        " ", MarkDownHelper.getBoldText(v), " " ,MarkDownHelper.getBoldText("severity vulnerabilities"), CRLF));
+
+        appendAll(body, MarkDownHelper.getTextLink(MarkDownHelper.MORE_DETAILS_LINK_HEADER, r.getWebReportLink()), CRLF);
+    }
+
+    private static void scaVulnerabilitiesTableBuilder(StringBuilder body, SCAResults r) {
+        appendMDtableHeaders(body, "Vulnerability ID", "Package", SEVERITY,
+                // "CWE / Category",
+                "CVSS score", "Publish date", "Current version", "Recommended version", "Link in CxSCA",
+                "Reference – NVD link");
+
+        r.getFindings().stream().sorted(Comparator.comparingDouble(o -> -o.getScore()))
+                .sorted(Comparator.comparingInt(o -> -o.getSeverity().ordinal())).forEach(
+                f -> appendMDtableRow(body, '`' + f.getId() + '`', extractPackageNameFromFindings(r, f),
+                        f.getSeverity().name(),
+                        // "N\\A",
+                        String.valueOf(f.getScore()), f.getPublishDate(),
+                        extractPackageVersionFromFindings(r, f),
+                        Optional.ofNullable(f.getRecommendations()).orElse(""),
+                        " [Vulnerability Link]("
+                                + ScanUtils.constructVulnerabilityUrl(r.getWebReportLink(), f) + ")",
+                        (StringUtils.isEmpty(f.getCveName())) ? "N\\A"
+                                : appendAll(new StringBuilder(), '[', f.getCveName(),
+                                "](https://nvd.nist.gov/vuln/detail/", f.getCveName(), ")")
+                                .toString()));
     }
 
     private static String extractPackageNameFromFindings(SCAResults r, Finding f) {
