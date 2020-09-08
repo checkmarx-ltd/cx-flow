@@ -106,7 +106,7 @@ public class RunningCxFlowSteps {
         }
         testContext.setOutputFilename(outputFilename);
 
-        String commandLineArgs = String.format("--parse --offline --%s --app=ABC --f=%s %s",
+        String commandLineArgs = String.format("--parse --offline --%s --app=ABC --bug-tracker=Json --f=%s %s",
                 CxFlowRunner.THROW_INSTEAD_OF_EXIT_OPTION,
                 inputFilePath,
                 customCommandLineArgs);
