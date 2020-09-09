@@ -608,11 +608,17 @@ public class HTMLHelper {
                         body.append("|");
                         body.append(currentIssue.getSeverity()).append("|");
                         body.append(currentIssue.getVulnerability()).append("|");
-                        body.append(currentIssue.getFilename()).append("|");
+                        body.append(getEffectiveFileName(currentIssue.getFilename())).append("|");
                         body.append("[Checkmarx](").append(currentIssue.getLink()).append(")");
                         body.append(CRLF);
                     }
                 });
+    }
+
+    private static String getEffectiveFileName(String fileName) {
+        return fileName.startsWith("/")
+                ? fileName.substring(1)
+                : fileName;
     }
 
     private static void addOsaDetailesBody(ScanResults results, StringBuilder body, Map<String, ScanResults.XIssue> xMap, Comparator<ScanResults.XIssue> issueComparator) {
