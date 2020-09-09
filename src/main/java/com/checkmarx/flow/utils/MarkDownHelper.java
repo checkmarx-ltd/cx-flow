@@ -4,16 +4,16 @@ import com.checkmarx.flow.exception.MachinaRuntimeException;
 
 public class MarkDownHelper {
 
-    public static final String MORE_DETAILS_LINK_HEADER = "View more details on Checkmarx UI";
     public static final String SCAN_SUMMARY_DETAILS = "Scan Summary & Details";
+    public static final String AST_DETAILS_HEADER = "Cx-AST-SAST Details";
 
+    static final String MORE_DETAILS_LINK_HEADER = "View more details on Checkmarx UI";
     static final String MD_H3 = "### ";
     static final String MD_H4 = "#### ";
     static final String SAST_DETAILS_HEADER = "Cx-SAST Details";
-    static final String AST_DETAILS_HEADER = "AST-SAST Details";
 
     static final String SAST_SUMMARY_HEADER = "Cx-SAST Summary";
-    static final String AST_SUMMARY_HEADER = "AST Summary";
+    static final String AST_SUMMARY_HEADER = "Cx-AST-SAST Summary";
     static final String SCA_SUMMARY_HEADER = "Cx-SCA Summary";
 
     static final String LINE_BREAK = "<br>";
@@ -29,8 +29,10 @@ public class MarkDownHelper {
     private static final String LOW_ICON = "https://user-images.githubusercontent.com/23239410/92157091-98598300-ee32-11ea-8498-19bd7d62019b.png";
     private static final String INFO_ICON = "https://user-images.githubusercontent.com/23239410/92157090-97c0ec80-ee32-11ea-9b2e-aa6b32b03d54.png";
     private static final String ICON_ICON = "https://user-images.githubusercontent.com/23239410/92355607-3d06e980-f0ed-11ea-8bb7-9029eb8716b9.png";
-    private static final String SAST_BOLD_HEADER = "Checkmarx SAST - " + SCAN_SUMMARY_DETAILS;
-    private static final String SCA_BOLD_HEADER = "Checkmarx SCA - " + SCAN_SUMMARY_DETAILS;
+
+    private static final String SAST_HEADER = "Checkmarx SAST - " + SCAN_SUMMARY_DETAILS;
+    private static final String AST_SAST_HEADER = "Checkmarx AST-SAST - " + SCAN_SUMMARY_DETAILS;
+    private static final String SCA_HEADER = "Checkmarx SCA - " + SCAN_SUMMARY_DETAILS;
 
 
     private MarkDownHelper() {
@@ -60,12 +62,16 @@ public class MarkDownHelper {
         return getImageFromLink("Icon", ICON_ICON);
     }
 
-    static String getSastBoldHeader() {
-        return getBoldText(SAST_BOLD_HEADER);
+    static String getSastHeader() {
+        return getBoldText(SAST_HEADER);
     }
 
-    static String getScaBoldHeader() {
-        return getBoldText(SCA_BOLD_HEADER);
+    static String getAstBoldHeader() {
+        return getBoldText(AST_SAST_HEADER);
+    }
+
+    static String getScaHeader() {
+        return getBoldText(SCA_HEADER);
     }
 
     static String getBoldText(String text) {

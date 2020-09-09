@@ -98,7 +98,7 @@ public class HTMLHelper {
     }
 
     private static void addFlowSummarySection(ScanResults results, RepoProperties properties, StringBuilder body) {
-        if (properties.isFlowSummary()) {
+        if (results.getAstResults() == null && properties.isFlowSummary()) {
             if (!ScanUtils.empty(properties.getFlowSummaryHeader())) {
                 appendAll(body, MarkDownHelper.MD_H3, properties.getFlowSummaryHeader(), CRLF);
             }
@@ -127,7 +127,7 @@ public class HTMLHelper {
                 appendAll(body, "***", CRLF);
             }
 
-            appendAll(body, MarkDownHelper.getCheckmarxLogoFromLink(), CRLF, MarkDownHelper.getScaBoldHeader(), CRLF);
+            appendAll(body, MarkDownHelper.getCheckmarxLogoFromLink(), CRLF, MarkDownHelper.getScaHeader(), CRLF);
             scaSummaryBuilder(body, r);
             appendAll(body, MarkDownHelper.MD_H3, COMMENT_TYPE_SCA_FINDINGS, CRLF);
 
@@ -643,7 +643,7 @@ public class HTMLHelper {
 
 
     private static void addScanSummarySection(ScanRequest request, ScanResults results, RepoProperties properties, StringBuilder body) {
-        appendAll(body, MarkDownHelper.getCheckmarxLogoFromLink(), CRLF, MarkDownHelper.getSastBoldHeader(), CRLF);
+        setScannerLogoHeader(results, body);
         setScannerSummaryHeader(results, body);
 
         CxScanSummary summary = results.getScanSummary();
@@ -702,19 +702,27 @@ public class HTMLHelper {
         }
     }
 
-    private static void setScannerSummaryHeader(ScanResults results, StringBuilder body) {
-        if (results.isSastRestuls()) {
-            appendAll(body, MarkDownHelper.MD_H3,  MarkDownHelper.SAST_SUMMARY_HEADER, CRLF);
+    private static void setScannerLogoHeader(ScanResults results, StringBuilder body) {
+        if (Optional.ofNullable(results.getAstResults()).isPresent()) {
+            appendAll(body, MarkDownHelper.getCheckmarxLogoFromLink(), CRLF, MarkDownHelper.getAstBoldHeader(), CRLF);
         } else {
+            appendAll(body, MarkDownHelper.getCheckmarxLogoFromLink(), CRLF, MarkDownHelper.getSastHeader(), CRLF);
+        }
+    }
+
+    private static void setScannerSummaryHeader(ScanResults results, StringBuilder body) {
+        if (Optional.ofNullable(results.getAstResults()).isPresent()) {
             appendAll(body, MarkDownHelper.MD_H3,  MarkDownHelper.AST_SUMMARY_HEADER, CRLF);
+        } else {
+            appendAll(body, MarkDownHelper.MD_H3,  MarkDownHelper.SAST_SUMMARY_HEADER, CRLF);
         }
     }
 
     private static void setScannerDetailsHeader(ScanResults results, StringBuilder body) {
-        if (results.isSastRestuls()) {
-            appendAll(body, MarkDownHelper.MD_H3, MarkDownHelper.SAST_DETAILS_HEADER, CRLF);
-        } else {
+        if (Optional.ofNullable(results.getAstResults()).isPresent()) {
             appendAll(body, MarkDownHelper.MD_H3, MarkDownHelper.AST_DETAILS_HEADER, CRLF);
+        } else {
+            appendAll(body, MarkDownHelper.MD_H3, MarkDownHelper.SAST_DETAILS_HEADER, CRLF);
         }
     }
 

@@ -13,6 +13,7 @@ public class PullRequestCommentsHelper {
 
     public static final String COMMENT_TYPE_SAST_FINDINGS_2 = "Violation Summary";
     public static final String COMMENT_TYPE_SCA_FINDINGS = "Cx-SCA vulnerability result overview";
+    public static final String COMMENT_TYPE_AST_FINDINGS_DETAILS = MarkDownHelper.AST_DETAILS_HEADER;
 
     private static final String COMMENT_TYPE_SAST_SCAN_STARTED = "Scan submitted to Checkmarx";
     private static final String COMMENT_TYPE_SAST_FINDINGS_1 = MarkDownHelper.SCAN_SUMMARY_DETAILS;
@@ -21,7 +22,7 @@ public class PullRequestCommentsHelper {
     public static boolean isCheckMarxComment(RepoComment comment) {
         return comment.getComment().contains(COMMENT_TYPE_SAST_FINDINGS_2) && comment.getComment().contains(COMMENT_TYPE_SAST_FINDINGS_1) ||
                 comment.getComment().contains(COMMENT_TYPE_SAST_SCAN_STARTED) || comment.getComment().contains(COMMENT_TYPE_SAST_SCAN_NOT_SUBMITTED)
-                || comment.getComment().contains(COMMENT_TYPE_SCA_FINDINGS);
+                || comment.getComment().contains(COMMENT_TYPE_SCA_FINDINGS) || comment.getComment().contains(COMMENT_TYPE_AST_FINDINGS_DETAILS);
     }
 
     public static RepoComment getCommentToUpdate(List<RepoComment> existingComments, String newComment) {
