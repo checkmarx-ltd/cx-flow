@@ -16,7 +16,7 @@ public class MarkDownHelper {
     static final String AST_SUMMARY_HEADER = "Cx-AST-SAST Summary";
     static final String SCA_SUMMARY_HEADER = "Cx-SCA Summary";
 
-    static final String LINE_BREAK = "<br>";
+    static final String LINE_BREAK = "<br />";
     static final String NBSP = "&nbsp;";
 
     private static final String IMAGE_TEMPLATE = "![%s](%s)";

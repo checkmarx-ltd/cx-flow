@@ -112,7 +112,7 @@ public class HTMLHelper {
                             String severityKey = severity.getKey();
                             appendAll(body, MarkDownHelper.getSeverityIconFromLinkByText(severityKey),
                                     MarkDownHelper.NBSP, MarkDownHelper.getBoldText(severity.getValue().toString()),
-                                    " ", MarkDownHelper.getBoldText(severityKey), CRLF);
+                                    " ", MarkDownHelper.getBoldText(severityKey), MarkDownHelper.LINE_BREAK);
                         }));
                 body.append(CRLF);
                 appendAll(body, MarkDownHelper.getTextLink(MarkDownHelper.MORE_DETAILS_LINK_HEADER, results.getLink()), CRLF);
@@ -663,11 +663,11 @@ public class HTMLHelper {
     }
 
     private static void setScannerTotalVulnerabilities(StringBuilder body, CxScanSummary summary) {
-        appendAll(body, "Total of " + countSastTotalVulnerabilities(summary) + " vulnerabilities", CRLF);
-        appendAll(body, MarkDownHelper.getHighIconFromLink(), MarkDownHelper.NBSP, MarkDownHelper.getBoldText(summary.getHighSeverity() + " High"), CRLF);
-        appendAll(body, MarkDownHelper.getMediumIconFromLink(), MarkDownHelper.NBSP, MarkDownHelper.getBoldText(summary.getMediumSeverity() + " Medium"), CRLF);
-        appendAll(body, MarkDownHelper.getLowIconFromLink(), MarkDownHelper.NBSP, MarkDownHelper.getBoldText(summary.getLowSeverity() + " Low"), CRLF);
-        appendAll(body, MarkDownHelper.getInfoIconFromLink(), MarkDownHelper.NBSP, MarkDownHelper.getBoldText(summary.getInfoSeverity() + " Info"), CRLF);
+        appendAll(body, "Total of " + countSastTotalVulnerabilities(summary) + " vulnerabilities", MarkDownHelper.LINE_BREAK);
+        appendAll(body, MarkDownHelper.getHighIconFromLink(), MarkDownHelper.NBSP, MarkDownHelper.getBoldText(summary.getHighSeverity() + " High"), MarkDownHelper.LINE_BREAK);
+        appendAll(body, MarkDownHelper.getMediumIconFromLink(), MarkDownHelper.NBSP, MarkDownHelper.getBoldText(summary.getMediumSeverity() + " Medium"), MarkDownHelper.LINE_BREAK);
+        appendAll(body, MarkDownHelper.getLowIconFromLink(), MarkDownHelper.NBSP, MarkDownHelper.getBoldText(summary.getLowSeverity() + " Low"), MarkDownHelper.LINE_BREAK);
+        appendAll(body, MarkDownHelper.getInfoIconFromLink(), MarkDownHelper.NBSP, MarkDownHelper.getBoldText(summary.getInfoSeverity() + " Info"), MarkDownHelper.LINE_BREAK, CRLF);
     }
 
     private static String countSastTotalVulnerabilities(CxScanSummary summary) {
@@ -706,7 +706,7 @@ public class HTMLHelper {
         if (Optional.ofNullable(results.getAstResults()).isPresent()) {
             appendAll(body, MarkDownHelper.getCheckmarxLogoFromLink(), CRLF, MarkDownHelper.getAstBoldHeader(), CRLF);
         } else {
-            appendAll(body, MarkDownHelper.getCheckmarxLogoFromLink(), CRLF, MarkDownHelper.getSastHeader(), CRLF);
+            appendAll(body, MarkDownHelper.getCheckmarxLogoFromLink(), MarkDownHelper.LINE_BREAK, MarkDownHelper.getSastHeader(), CRLF);
         }
     }
 
