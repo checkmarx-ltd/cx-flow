@@ -581,7 +581,7 @@ public class HTMLHelper {
     private static void addSastAstDetailsBody(ScanRequest request, StringBuilder body, Map<String, ScanResults.XIssue> xMap, Comparator<ScanResults.XIssue> issueComparator) {
         xMap.entrySet().stream()
                 .filter(x -> x.getValue() != null && x.getValue().getDetails() != null)
-                .sorted(Map.Entry.comparingByValue(issueComparator))
+                .sorted(Map.Entry.comparingByValue(issueComparator.reversed()))
                 .forEach(xIssue -> {
                     ScanResults.XIssue currentIssue = xIssue.getValue();
                     String fileUrl = ScanUtils.getFileUrl(request, currentIssue.getFilename());
@@ -606,7 +606,7 @@ public class HTMLHelper {
                             });
                     if (currentIssue.getDetails().entrySet().stream().anyMatch(x -> x.getKey() != null && x.getValue() != null && !x.getValue().isFalsePositive())) {
                         body.append("|");
-                        body.append(currentIssue.getSeverity()).append("|");
+                        body.append(StringUtils.capitalize(currentIssue.getSeverity().toLowerCase())).append("|");
                         body.append(currentIssue.getVulnerability()).append("|");
                         body.append(getEffectiveFileName(currentIssue.getFilename())).append("|");
                         body.append("[Checkmarx](").append(currentIssue.getLink()).append(")");
