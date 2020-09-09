@@ -606,7 +606,7 @@ public class HTMLHelper {
                             });
                     if (currentIssue.getDetails().entrySet().stream().anyMatch(x -> x.getKey() != null && x.getValue() != null && !x.getValue().isFalsePositive())) {
                         body.append("|");
-                        body.append(StringUtils.capitalize(currentIssue.getSeverity().toLowerCase())).append("|");
+                        body.append(currentIssue.getSeverity()).append("|");
                         body.append(currentIssue.getVulnerability()).append("|");
                         body.append(getEffectiveFileName(currentIssue.getFilename())).append("|");
                         body.append("[Checkmarx](").append(currentIssue.getLink()).append(")");
