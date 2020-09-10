@@ -2,19 +2,26 @@ package com.checkmarx.flow.utils;
 
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
 public class MarkDownHelper {
 
+    private static final String SAST_SCANNER = "SAST";
+    private static final String AST_SAST_SCANNER = "AST-" + SAST_SCANNER;
+    private static final String SCA_SCANNER = "SCA";
+
     public static final String SCAN_SUMMARY_DETAILS = "Scan Summary & Details";
-    public static final String AST_DETAILS_HEADER = "Cx-AST-SAST Details";
+    private static final String CX_PREFIX = "Cx-";
+    public static final String AST_DETAILS_HEADER = CX_PREFIX + AST_SAST_SCANNER + " Details";
 
     static final String MORE_DETAILS_LINK_HEADER = "View more details on Checkmarx UI";
-    static final String MD_H3 = "### ";
-    static final String MD_H4 = "#### ";
-    static final String SAST_DETAILS_HEADER = "Cx-SAST Details";
+    static final String SAST_DETAILS_HEADER = CX_PREFIX + SAST_SCANNER + " Details";
 
-    static final String SAST_SUMMARY_HEADER = "Cx-SAST Summary";
-    static final String AST_SUMMARY_HEADER = "Cx-AST-SAST Summary";
-    static final String SCA_SUMMARY_HEADER = "Cx-SCA Summary";
+    private static final String SUMMARY_SUFFIX = " Summary";
+    static final String SAST_SUMMARY_HEADER = CX_PREFIX + SAST_SCANNER + SUMMARY_SUFFIX;
+    static final String AST_SUMMARY_HEADER = CX_PREFIX + AST_SAST_SCANNER + SUMMARY_SUFFIX;
+    static final String SCA_SUMMARY_HEADER = CX_PREFIX + SCA_SCANNER + SUMMARY_SUFFIX;
 
     static final String LINE_BREAK = "<br />";
     static final String NBSP = "&nbsp;";
@@ -23,19 +30,36 @@ public class MarkDownHelper {
     private static final String BOLD_TEMPLATE = "**%s**";
     private static final String LINK_TEMPLATE = "[%s](%s)";
 
-    private static final String CHECKMARX_LOGO_URL = "https://user-images.githubusercontent.com/23239410/92153465-ff743900-ee2c-11ea-9c8d-8141e38feb41.png";
-    private static final String HIGH_ICON = "https://user-images.githubusercontent.com/23239410/92157087-97285600-ee32-11ea-988f-0aca12c4c126.png";
-    private static final String MEDIUM_ICON = "https://user-images.githubusercontent.com/23239410/92157093-98598300-ee32-11ea-83d7-af52251a011b.png";
-    private static final String LOW_ICON = "https://user-images.githubusercontent.com/23239410/92157091-98598300-ee32-11ea-8498-19bd7d62019b.png";
-    private static final String INFO_ICON = "https://user-images.githubusercontent.com/23239410/92157090-97c0ec80-ee32-11ea-9b2e-aa6b32b03d54.png";
-    private static final String ICON_ICON = "https://user-images.githubusercontent.com/23239410/92355607-3d06e980-f0ed-11ea-8bb7-9029eb8716b9.png";
+    private static final String GITHUB_USER_PREFIX = "https://user-images.githubusercontent.com/23239410/";
+    private static final String CHECKMARX_LOGO_URL = GITHUB_USER_PREFIX + "92153465-ff743900-ee2c-11ea-9c8d-8141e38feb41.png";
+    private static final String HIGH_ICON = GITHUB_USER_PREFIX + "92157087-97285600-ee32-11ea-988f-0aca12c4c126.png";
+    private static final String MEDIUM_ICON = GITHUB_USER_PREFIX + "92157093-98598300-ee32-11ea-83d7-af52251a011b.png";
+    private static final String LOW_ICON = GITHUB_USER_PREFIX + "92157091-98598300-ee32-11ea-8498-19bd7d62019b.png";
+    private static final String INFO_ICON = GITHUB_USER_PREFIX + "92157090-97c0ec80-ee32-11ea-9b2e-aa6b32b03d54.png";
+    private static final String ICON_ICON = GITHUB_USER_PREFIX + "92355607-3d06e980-f0ed-11ea-8bb7-9029eb8716b9.png";
 
-    private static final String SAST_HEADER = "Checkmarx SAST - " + SCAN_SUMMARY_DETAILS;
-    private static final String AST_SAST_HEADER = "Checkmarx AST-SAST - " + SCAN_SUMMARY_DETAILS;
-    private static final String SCA_HEADER = "Checkmarx SCA - " + SCAN_SUMMARY_DETAILS;
+    private static final String CHECKMARX_PREFIX = "Checkmarx ";
+    private static final String SAST_HEADER = CHECKMARX_PREFIX + SAST_SCANNER + " - " + SCAN_SUMMARY_DETAILS;
+    private static final String AST_SAST_HEADER = CHECKMARX_PREFIX + AST_SAST_SCANNER + " - " + SCAN_SUMMARY_DETAILS;
+    private static final String SCA_HEADER = CHECKMARX_PREFIX + SCA_SCANNER + " - " + SCAN_SUMMARY_DETAILS;
 
 
     private MarkDownHelper() {
+    }
+
+    /**
+     *
+     * @param headerTypeNumber Header type size. Must be between 3-6. In case of number out of range, default '3' will be returned
+     * @param text             The header text
+     * @return  A string reflect the new header type text
+     */
+    static String getMdHeaderType(int headerTypeNumber, String text) {
+        StringBuilder builder = new StringBuilder("###");
+
+        for (int i=builder.length(); i < headerTypeNumber; i++) {
+            builder.append("#");
+        }
+        return builder.append(" ").append(text).toString();
     }
 
     static String getCheckmarxLogoFromLink() {
@@ -99,5 +123,14 @@ public class MarkDownHelper {
 
     private static String getImageFromLink(String text, String url) {
         return String.format(IMAGE_TEMPLATE, text, url);
+    }
+
+    static void appendMDtableRow(StringBuilder sb, String... data) {
+        sb.append(String.join("|", data)).append(HTMLHelper.CRLF);
+    }
+
+    static void appendMDtableHeaders(StringBuilder sb, String... hedears) {
+        sb.append(Arrays.stream(hedears).collect(Collectors.joining("|","|","|"))).append(HTMLHelper.CRLF);
+        sb.append(Arrays.stream(hedears).map(h -> "---").collect(Collectors.joining("|"))).append(HTMLHelper.CRLF);
     }
 }
