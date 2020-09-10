@@ -1,0 +1,210 @@
+server:
+  port: 8585
+
+#management:
+#  endpoint:
+#    shutdown:
+#      enabled: true
+#    beans:
+#      enabled: true
+#    env:
+#      enabled: true
+#  endpoints:
+#    web:
+#      exposure:
+#        include: "shutdown,beans,env,info,health"
+
+logging:
+  pattern:
+    console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{15}){cyan}  [%clr(%X{cx}){blue}] %clr(:){faint} %replace(%m){'([\\|])','\\$1'}%n%wEx"
+    file: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{15}){cyan}  [%clr(%X{cx}){blue}] %clr(:){faint} %replace(%m){'([\\|])','\\$1'}%n%wEx"
+  file:
+    name: cx-flow.log
+
+#  level:
+#    com:
+#      checkmarx:
+#        flow:
+#          service: info
+#          utils: info
+#    org:
+#      apache:
+#        http:
+#          wire: TRACE
+#      springframework:
+#        web:
+#          client:
+#            RestTemplate: TRACE
+
+cx-flow:
+  # Agreed upon shared API token
+  token: x12345x
+  bug-tracker: GitHub
+  bug-tracker-impl:
+    - Json
+    - GitLab
+    - GitHub
+    - Csv
+  branches:
+    - develop
+    - master
+    - security
+  filter-severity:
+#    - High
+  filter-category:
+  filter-cwe:
+  filter-status:
+# track-application-only: false
+  mitre-url: https://cwe.mitre.org/data/definitions/%s.html
+#  break-build: true
+#  wiki-url: https://custodela.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
+#  codebash-url: https://cxa.codebashing.com/courses/
+#  mail:
+ #    host: smtp.gmail.com
+ #    port: 587
+ #    username: xxx
+ #    password: xxx
+ #    enabled:
+
+checkmarx:
+    enable-shard-manager: true
+    username: jarmstrong
+    #username: jeff.armstrong@checkmarx.com
+    #password: cx1NotGonnaWork!
+    password: junkpassword
+    client-secret: 014DF517-39D1-4453-B7B3-9930C563627C
+    # base-url: http://172.25.188.124/CxWebClient/
+    # base-url: http://172.25.188.124
+    base-url: https://localhost
+    configuration: Default Configuration
+    scan-preset: Checkmarx Default
+    url: ${checkmarx.base-url}/cxrestapi
+    #
+    ## Sharding test options
+    #
+    version: 9.0
+    scope: access_control_api sast_rest_api
+    multi-tenant: true
+    team: CxServer/SP/Checkmarx/Users
+    # team: \CxServer\SP\Checkmarx\Users\jarmstrong
+    #preserve-xml: true
+    #incremental: true
+  #WSDL Config
+    portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
+    #team-script:
+    #project-script:
+
+shardmanager:
+  # Currently supports: Postgres = postgres, Mysql = mysql, MS Sql Server = mssql
+  db-engine: mssql
+  db-username: sa
+  db-password: p@ssword1
+  #db-engine: postgres
+  #db-username: postgres
+  #db-password: cx12345
+  db-host: localhost
+  db-name: cxshards
+  #db-engine: mysql
+  #db-username: root
+  #db-password: password1
+  script-path: "/Users/jeffarmstrong/IdeaProjects/checkmarx-spring-boot-java-sdk/src/main/resources/shard-manager"
+  script-name: "ShardManager.groovy"
+  script-setup: "ShardSetup.groovy"
+  shardConfig:
+    - name: Shard A
+      url: http://cx9xshard1.dev.checkmarx-ts.com
+      is-credential-override: 1
+      username: cxadmin
+      password: "Cxadmin123$"
+      project-limit: 2
+      team-limit: 2
+      is-disabled: 1
+      force-setting-reload: 1
+    - name: Shard B
+      url: http://cx9xshard2.dev.checkmarx-ts.com
+      project-limit: 1
+      is-credential-override: 1
+      username: cxadmin
+      password: "Cxadmin123$"
+      team-limit: 5
+      is-disabled: 0
+      force-setting-reload: 1
+    - name: Shard C
+      url: https://ast.dev.checkmarx-ts.com
+      is-credential-override: 1
+      username: jeff.armstrong@checkmarx.com
+      password: "!cX123567"
+      project-limit: 4
+      team-limit: 2
+      is-disabled: 1
+      force-setting-reload: 1
+    - name: Shard D
+      url: http://cx9xshard3.dev.checkmarx-ts.com
+      is-credential-override: 1
+      username: cxadmin
+      password: "Cxadmin123$"
+      project-limit: 8
+      team-limit: 2
+      is-disabled: 0
+      force-setting-reload: 1
+
+github:
+  webhook-token: 514DF417-39D1-4453-B2B3-9930CC563627C
+  token: b20ac77badd5e3e53a5f2f40fd085e9924d01e7d
+  url: https://github.com
+  api-url: https://api.github.com/repos/
+  false-positive-label: false-positive
+  block-merge: true
+
+gitlab:
+  webhook-token: 514DF417-39D1-4453-B2B3-9930CC563627C
+  token: GKatZ7qXjRH81B7usU1_
+  #token: n183vvz4JuRBCajkjJJA
+  url: https://gitlab.com
+  api-url: https://gitlab.com/api/v4/
+  false-positive-label: false-positive
+  #block-merge: true
+  #config-as-code: "cx.config"
+
+json:
+  file-name-format: "[TEAM]-[PROJECT]-[TIME].json"
+  data-folder: "/tmp"
+
+cx-xml:
+  file-name-format: "[TEAM]-[PROJECT]-[TIME].xml"
+  data-folder: "/tmp/cxflow"
+
+csv:
+  file-name-format: "[TEAM]-[PROJECT]-[TIME].csv"
+  data-folder: "/tmp/cxflow"
+  include-header: true
+  fields:
+    - header: Application
+      name: application
+      default-value: unknown
+      #- header: Primary URL
+      #name: static
+      #default-value: ${tmp.url}
+    - header: severity
+      name: severity
+    - header: Vulnerability ID
+      name: summary
+      prefix: "[APP]:"
+    - header: file
+      name: filename
+    - header: Vulnerability ID
+      name: summary
+    - header: Vulnerability Name
+      name: category
+    - header: Category ID
+      name: cwe
+    - header: Description
+      name: description
+      #prefix: "*"
+      #postfix: "*"
+    - header: Severity
+      name: severity
+    - header: recommendation
+      name: recommendation
+    - header: Similarity ID
+      name: similarity-id
