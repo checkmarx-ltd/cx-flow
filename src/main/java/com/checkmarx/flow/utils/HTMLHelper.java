@@ -5,7 +5,6 @@ import com.checkmarx.flow.config.RepoProperties;
 import com.checkmarx.flow.constants.SCATicketingConstants;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.sdk.config.Constants;
-import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.Filter.Severity;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.ast.SCAResults;
@@ -22,14 +21,13 @@ import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.checkmarx.flow.service.PullRequestCommentsHelper.COMMENT_TYPE_SCA_FINDINGS;
 import static java.util.Map.Entry.comparingByKey;
 
 
 @Slf4j
 public class HTMLHelper {
 
-    public static final String MD_H3 = "###";
-    public static final String MD_H4 = "####";
     public static final String VERSION = "Version: ";
     public static final String DESCRIPTION = "Description: ";
     public static final String RECOMMENDATION = "Recommendation: ";
@@ -42,13 +40,14 @@ public class HTMLHelper {
     public static final String WEB_HOOK_PAYLOAD = "web-hook-payload";
     private static final String ITALIC_OPENING_DIV = "<div><i>";
     private static final String ITALIC_CLOSING_DIV = "</i></div>";
-    private static final String LINE_BREAK = "<br>";
     private static final String NVD_URL_PREFIX = "https://nvd.nist.gov/vuln/detail/";
 
     public static final String ISSUE_BODY = "**%s** issue exists @ **%s** in branch **%s**";
     public static final String ISSUE_BODY_TEXT = "%s issue exists @ %s in branch %s";
 
     private static final String DIV_A_HREF = "<div><a href='";
+    private static final String NO_POLICY_VIOLATION_MESSAGE = "No policy violation found";
+    private static final String NO_PACKAGE_VIOLATION_MESSAGE = "No package violation found";
 
     private HTMLHelper() {
     }
@@ -94,61 +93,44 @@ public class HTMLHelper {
     }
 
     private static void addFlowSummarySection(ScanResults results, RepoProperties properties, StringBuilder body) {
-        if (properties.isFlowSummary()) {
+        if (properties.isFlowSummary() && results.getAstResults() == null) {
             if (!ScanUtils.empty(properties.getFlowSummaryHeader())) {
-                appendAll(body, MD_H4, " ", properties.getFlowSummaryHeader(), CRLF);
+                appendAll(body, MarkDownHelper.getMdHeaderType(3, properties.getFlowSummaryHeader()), CRLF);
             }
-            appendMDtableHeaders(body, SEVERITY, "Count");
-            Optional.ofNullable((Map<String, Integer>) results.getAdditionalDetails().get(Constants.SUMMARY_KEY))
-                    .map(Map::entrySet).ifPresent(eSet -> eSet.forEach(
-                            severity -> appendMDtableRow(body, severity.getKey(), severity.getValue().toString())));
-            body.append(CRLF);
+            Map<String, Integer> flowSummaryToMap = (Map<String, Integer>) results.getAdditionalDetails().get(Constants.SUMMARY_KEY);
+
+            if (flowSummaryToMap.isEmpty()) {
+                appendAll(body, MarkDownHelper.getMdHeaderType(4, NO_POLICY_VIOLATION_MESSAGE), CRLF);
+            } else {
+                flowSummaryToMap.forEach((severityKey, value) ->
+                    appendAll(body,
+                            MarkDownHelper.getSeverityIconFromLinkByText(severityKey),
+                            MarkDownHelper.NBSP, MarkDownHelper.getBoldText(value.toString()),
+                            " ",
+                            MarkDownHelper.getBoldText(severityKey), MarkDownHelper.LINE_BREAK)
+                );
+                body.append(CRLF);
+                appendAll(body, MarkDownHelper.getTextLink(MarkDownHelper.MORE_DETAILS_LINK_HEADER, results.getLink()), CRLF);
+            }
         }
     }
 
     private static void addScaBody(ScanResults results, StringBuilder body) {
-
         Optional.ofNullable(results.getScaResults()).ifPresent(r -> {
             log.debug("Building merge comment MD for SCA scanner");
             if (body.length() > 0) {
                 appendAll(body, "***", CRLF);
             }
 
-            appendAll(body, MD_H3, " Checkmarx Dependency (CxSCA) Scan Summary", CRLF);
-            appendAll(body, "[Full Scan Details](", r.getWebReportLink(), ")  ", CRLF);
-            appendAll(body, MD_H4, " Summary  ", CRLF);
-            appendMDtableHeaders(body, " Total Packages Identified ",
-                    String.valueOf(r.getSummary().getTotalPackages()));
+            appendAll(body, MarkDownHelper.getCheckmarxLogoFromLink(), CRLF, MarkDownHelper.getScaHeader(), CRLF);
+            scaSummaryBuilder(body, r);
+            appendAll(body, MarkDownHelper.getMdHeaderType(3, COMMENT_TYPE_SCA_FINDINGS), CRLF);
 
-            Map<Severity, Integer> findingCounts = r.getSummary().getFindingCounts();
-            Arrays.asList("High", "Medium", "Low")
-                    .forEach(v -> appendMDtableHeaders(body, v + " severity vulnerabilities ",
-                            String.valueOf(findingCounts.get(Filter.Severity.valueOf(v.toUpperCase()))), " "));
-
-            appendMDtableRow(body, "Scan risk score", String.format("%.2f", r.getSummary().getRiskScore()));
-            body.append(CRLF);
-            appendAll(body, MD_H4, " CxSCA vulnerability result overview", CRLF);
-
-            appendMDtableHeaders(body, "Vulnerability ID", "Package", SEVERITY,
-                    // "CWE / Category",
-                    "CVSS score", "Publish date", "Current version", "Recommended version", "Link in CxSCA",
-                    "Reference – NVD link");
-
-            r.getFindings().stream().sorted(Comparator.comparingDouble(o -> -o.getScore()))
-                    .sorted(Comparator.comparingInt(o -> -o.getSeverity().ordinal())).forEach(
-                            f -> appendMDtableRow(body, '`' + f.getId() + '`', extractPackageNameFromFindings(r, f),
-                                    f.getSeverity().name(),
-                                    // "N\\A",
-                                    String.valueOf(f.getScore()), f.getPublishDate(),
-                                    extractPackageVersionFromFindings(r, f),
-                                    Optional.ofNullable(f.getRecommendations()).orElse(""),
-                                    " [Vulnerability Link]("
-                                            + ScanUtils.constructVulnerabilityUrl(r.getWebReportLink(), f) + ")",
-                                    (StringUtils.isEmpty(f.getCveName())) ? "N\\A"
-                                            : appendAll(new StringBuilder(), '[', f.getCveName(),
-                                                    "](https://nvd.nist.gov/vuln/detail/", f.getCveName(), ")")
-                                                            .toString()));
-
+            if (r.getFindings().isEmpty()) {
+                appendAll(body, MarkDownHelper.getMdHeaderType(4, NO_PACKAGE_VIOLATION_MESSAGE), CRLF);
+            } else {
+                scaVulnerabilitiesTableBuilder(body, r);
+            }
         });
     }
 
@@ -165,6 +147,40 @@ public class HTMLHelper {
         }
 
         return body.toString();
+    }
+
+    private static void scaSummaryBuilder(StringBuilder body, SCAResults r) {
+        appendAll(body, MarkDownHelper.getMdHeaderType(3, MarkDownHelper.SCA_SUMMARY_HEADER), CRLF);
+        appendAll(body, MarkDownHelper.getBoldText("Total Packages Identified"), ": ", MarkDownHelper.getBoldText(String.valueOf(r.getSummary().getTotalPackages())), CRLF);
+        appendAll(body, MarkDownHelper.getBoldText("Scan Risk Score"), ": ", MarkDownHelper.getBoldText(String.format("%.2f", r.getSummary().getRiskScore())), CRLF, CRLF);
+
+        Arrays.asList("High", "Medium", "Low").forEach(v ->
+                appendAll(body, MarkDownHelper.getSeverityIconFromLinkByText(v), MarkDownHelper.NBSP, MarkDownHelper.getBoldText(String.valueOf(r.getSummary().getFindingCounts().get(Severity.valueOf(v.toUpperCase())))),
+                        " ", MarkDownHelper.getBoldText(v), " " ,MarkDownHelper.getBoldText("severity vulnerabilities"), CRLF));
+
+        appendAll(body, MarkDownHelper.getTextLink(MarkDownHelper.MORE_DETAILS_LINK_HEADER, r.getWebReportLink()), CRLF);
+    }
+
+    private static void scaVulnerabilitiesTableBuilder(StringBuilder body, SCAResults r) {
+        MarkDownHelper.appendMDtableHeaders(body, "Vulnerability ID", "Package", SEVERITY,
+                // "CWE / Category",
+                "CVSS score", "Publish date", "Current version", "Recommended version", "Link in CxSCA",
+                "Reference – NVD link");
+
+        r.getFindings().stream().sorted(Comparator.comparingDouble(o -> -o.getScore()))
+                .sorted(Comparator.comparingInt(o -> -o.getSeverity().ordinal())).forEach(
+                f -> MarkDownHelper.appendMDtableRow(body, '`' + f.getId() + '`', extractPackageNameFromFindings(r, f),
+                        f.getSeverity().name(),
+                        // "N\\A",
+                        String.valueOf(f.getScore()), f.getPublishDate(),
+                        extractPackageVersionFromFindings(r, f),
+                        Optional.ofNullable(f.getRecommendations()).orElse(""),
+                        " [Vulnerability Link]("
+                                + ScanUtils.constructVulnerabilityUrl(r.getWebReportLink(), f) + ")",
+                        (StringUtils.isEmpty(f.getCveName())) ? "N\\A"
+                                : appendAll(new StringBuilder(), '[', f.getCveName(),
+                                "](https://nvd.nist.gov/vuln/detail/", f.getCveName(), ")")
+                                .toString()));
     }
 
     private static String extractPackageNameFromFindings(SCAResults r, Finding f) {
@@ -313,10 +329,10 @@ public class HTMLHelper {
         log.debug("Building HTML body for SCA scanner");
         issue.getScaDetails().stream().findAny().ifPresent(any -> {
             body.append(ITALIC_OPENING_DIV).append(any.getFinding().getDescription()).append(ITALIC_CLOSING_DIV)
-                    .append(LINE_BREAK);
+                    .append(MarkDownHelper.LINE_BREAK);
             body.append(String.format(SCATicketingConstants.SCA_HTML_ISSUE_BODY, any.getFinding().getSeverity(),
                     any.getVulnerabilityPackage().getName(), request.getBranch())).append(DIV_CLOSING_TAG)
-                    .append(LINE_BREAK);
+                    .append(MarkDownHelper.LINE_BREAK);
         });
 
         Map<String, String> scaDetailsMap = new LinkedHashMap<>();
@@ -332,7 +348,7 @@ public class HTMLHelper {
 
                     );
 
-            scaDetailsMap.forEach((key, value) -> body.append(key).append(":</b> ").append(value).append(LINE_BREAK));
+            scaDetailsMap.forEach((key, value) -> body.append(key).append(":</b> ").append(value).append(MarkDownHelper.LINE_BREAK));
 
             String findingLink = ScanUtils.constructVulnerabilityUrl(any.getVulnerabilityLink(), any.getFinding());
             body.append(DIV_A_HREF).append(findingLink).append("\'>Link To SCA</a></div>");
@@ -560,7 +576,7 @@ public class HTMLHelper {
     private static void addSastAstDetailsBody(ScanRequest request, StringBuilder body, Map<String, ScanResults.XIssue> xMap, Comparator<ScanResults.XIssue> issueComparator) {
         xMap.entrySet().stream()
                 .filter(x -> x.getValue() != null && x.getValue().getDetails() != null)
-                .sorted(Map.Entry.comparingByValue(issueComparator))
+                .sorted(Map.Entry.comparingByValue(issueComparator.reversed()))
                 .forEach(xIssue -> {
                     ScanResults.XIssue currentIssue = xIssue.getValue();
                     String fileUrl = ScanUtils.getFileUrl(request, currentIssue.getFilename());
@@ -587,18 +603,24 @@ public class HTMLHelper {
                         body.append("|");
                         body.append(currentIssue.getSeverity()).append("|");
                         body.append(currentIssue.getVulnerability()).append("|");
-                        body.append(currentIssue.getFilename()).append("|");
+                        body.append(getEffectiveFileName(currentIssue.getFilename())).append("|");
                         body.append("[Checkmarx](").append(currentIssue.getLink()).append(")");
                         body.append(CRLF);
                     }
                 });
     }
 
+    private static String getEffectiveFileName(String fileName) {
+        return fileName.startsWith("/")
+                ? fileName.substring(1)
+                : fileName;
+    }
+
     private static void addOsaDetailesBody(ScanResults results, StringBuilder body, Map<String, ScanResults.XIssue> xMap, Comparator<ScanResults.XIssue> issueComparator) {
         if (results.getOsa() != null && results.getOsa()) {
             log.debug("Building merge comment MD for OSA scanner");
             body.append(CRLF);
-            appendMDtableHeaders(body, "Library", SEVERITY, "CVE");
+            MarkDownHelper.appendMDtableHeaders(body, "Library", SEVERITY, "CVE");
 
             //OSA
             xMap.entrySet().stream()
@@ -620,42 +642,88 @@ public class HTMLHelper {
         }
     }
 
-    
+
     private static void addScanSummarySection(ScanRequest request, ScanResults results, RepoProperties properties, StringBuilder body) {
+        setScannerLogoHeader(results, body);
+        setScannerSummaryHeader(results, body);
+
         CxScanSummary summary = results.getScanSummary();
-        body.append(MD_H3).append(" Checkmarx SAST Scan Summary").append(CRLF);
-        body.append("[Full Scan Details](").append(results.getLink()).append(")").append(CRLF);
+        setScannerTotalVulnerabilities(body, summary);
+
         if (properties.isCxSummary() && !request.getProduct().equals(ScanRequest.Product.CXOSA)) {
             if (!ScanUtils.empty(properties.getCxSummaryHeader())) {
-                appendAll(body, MD_H4, " ", properties.getCxSummaryHeader(), CRLF);
+                appendAll(body, MarkDownHelper.getMdHeaderType(4, properties.getCxSummaryHeader()), CRLF);
             }
-            appendMDtableHeaders(body, SEVERITY, "Count");
-            appendMDtableRow(body, "High", summary.getHighSeverity().toString());
-            appendMDtableRow(body, "Medium", summary.getMediumSeverity().toString());
-            appendMDtableRow(body, "Low", summary.getLowSeverity().toString());
-            appendMDtableRow(body, "Informational", summary.getInfoSeverity().toString());
+            MarkDownHelper.appendMDtableHeaders(body, SEVERITY, "Count");
+            MarkDownHelper.appendMDtableRow(body, "High", summary.getHighSeverity().toString());
+            MarkDownHelper.appendMDtableRow(body, "Medium", summary.getMediumSeverity().toString());
+            MarkDownHelper.appendMDtableRow(body, "Low", summary.getLowSeverity().toString());
+            MarkDownHelper.appendMDtableRow(body, "Informational", summary.getInfoSeverity().toString());
             body.append(CRLF);
         }
     }
 
+    private static void setScannerTotalVulnerabilities(StringBuilder body, CxScanSummary summary) {
+        appendAll(body, "Total of " + countSastTotalVulnerabilities(summary) + " vulnerabilities", MarkDownHelper.LINE_BREAK);
+        appendAll(body, MarkDownHelper.getHighIconFromLink(), MarkDownHelper.NBSP, MarkDownHelper.getBoldText(summary.getHighSeverity() + " High"), MarkDownHelper.LINE_BREAK);
+        appendAll(body, MarkDownHelper.getMediumIconFromLink(), MarkDownHelper.NBSP, MarkDownHelper.getBoldText(summary.getMediumSeverity() + " Medium"), MarkDownHelper.LINE_BREAK);
+        appendAll(body, MarkDownHelper.getLowIconFromLink(), MarkDownHelper.NBSP, MarkDownHelper.getBoldText(summary.getLowSeverity() + " Low"), MarkDownHelper.LINE_BREAK);
+        appendAll(body, MarkDownHelper.getInfoIconFromLink(), MarkDownHelper.NBSP, MarkDownHelper.getBoldText(summary.getInfoSeverity() + " Info"), MarkDownHelper.LINE_BREAK, CRLF);
+    }
+
+    private static String countSastTotalVulnerabilities(CxScanSummary summary) {
+        Integer totalVulnerabilities = 0;
+
+        totalVulnerabilities += Optional.ofNullable(summary.getHighSeverity()).orElse(0);
+        totalVulnerabilities += Optional.ofNullable(summary.getMediumSeverity()).orElse(0);
+        totalVulnerabilities += Optional.ofNullable(summary.getLowSeverity()).orElse(0);
+        totalVulnerabilities += Optional.ofNullable(summary.getInfoSeverity()).orElse(0);
+
+        return String.valueOf(totalVulnerabilities);
+    }
+
     private static void addDetailsSection(ScanRequest request, ScanResults results, RepoProperties properties, StringBuilder body) {
         if (properties.isDetailed()) {
-            if (!ScanUtils.empty(properties.getDetailHeader())) {
-                appendAll(body, MD_H4, " ", properties.getDetailHeader(), CRLF);
-            }
-            appendMDtableHeaders(body,"Lines",SEVERITY,"Category","File","Link");
-
             Map<String, ScanResults.XIssue> xMap;
             xMap = ScanUtils.getXIssueMap(results.getXIssues(), request);
-            log.info("Creating Merge/Pull Request Markdown comment");
 
-            Comparator<ScanResults.XIssue> issueComparator = Comparator
-                    .comparing(ScanResults.XIssue::getSeverity)
-                    .thenComparing(ScanResults.XIssue::getVulnerability);
+            if (xMap.size() > 0) {
+                setScannerDetailsHeader(results, body);
+                MarkDownHelper.appendMDtableHeaders(body,"Lines",SEVERITY,"Category","File","Link");
+                log.info("Creating Merge/Pull Request Markdown comment");
 
-            addSastAstDetailsBody(request, body, xMap, issueComparator);
+                Comparator<ScanResults.XIssue> issueComparator = Comparator
+                        .comparing(ScanResults.XIssue::getSeverity)
+                        .thenComparing(ScanResults.XIssue::getVulnerability);
 
-            addOsaDetailesBody(results, body, xMap, issueComparator);
+                addSastAstDetailsBody(request, body, xMap, issueComparator);
+
+                addOsaDetailesBody(results, body, xMap, issueComparator);
+            }
+        }
+    }
+
+    private static void setScannerLogoHeader(ScanResults results, StringBuilder body) {
+        if (Optional.ofNullable(results.getAstResults()).isPresent()) {
+            appendAll(body, MarkDownHelper.getCheckmarxLogoFromLink(), CRLF, MarkDownHelper.getAstBoldHeader(), CRLF);
+        } else {
+            appendAll(body, MarkDownHelper.getCheckmarxLogoFromLink(), MarkDownHelper.LINE_BREAK, MarkDownHelper.getSastHeader(), CRLF);
+        }
+    }
+
+    private static void setScannerSummaryHeader(ScanResults results, StringBuilder body) {
+        if (Optional.ofNullable(results.getAstResults()).isPresent()) {
+            appendAll(body, MarkDownHelper.getMdHeaderType(3, MarkDownHelper.AST_SUMMARY_HEADER), CRLF);
+        } else {
+            appendAll(body, MarkDownHelper.getMdHeaderType(3, MarkDownHelper.SAST_SUMMARY_HEADER), CRLF);
+        }
+    }
+
+    private static void setScannerDetailsHeader(ScanResults results, StringBuilder body) {
+        if (Optional.ofNullable(results.getAstResults()).isPresent()) {
+            appendAll(body, MarkDownHelper.getMdHeaderType(3, MarkDownHelper.AST_DETAILS_HEADER), CRLF);
+        } else {
+            appendAll(body, MarkDownHelper.getMdHeaderType(3, MarkDownHelper.SAST_DETAILS_HEADER), CRLF);
         }
     }
 
@@ -664,12 +732,4 @@ public class HTMLHelper {
         return sb;
     }
 
-    private static void appendMDtableHeaders(StringBuilder sb, String... hedears) {
-        sb.append(Arrays.stream(hedears).collect(Collectors.joining("|","|","|"))).append(CRLF);
-        sb.append(Arrays.stream(hedears).map(h -> "---").collect(Collectors.joining("|"))).append(CRLF);
-    }
-
-    private static void appendMDtableRow(StringBuilder sb, String... data) {
-        sb.append(Arrays.stream(data).collect(Collectors.joining("|"))).append(CRLF);
-    }
 }

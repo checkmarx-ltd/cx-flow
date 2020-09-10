@@ -27,6 +27,7 @@ import com.checkmarx.flow.dto.azure.Subscription;
 import com.checkmarx.flow.dto.github.Committer;
 import com.checkmarx.flow.dto.github.Hook;
 import com.checkmarx.flow.dto.rally.Object;
+import com.checkmarx.flow.utils.MarkDownHelper;
 import com.checkmarx.sdk.config.ScaProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -54,8 +55,8 @@ enum Repository {
         final String CONFIG_FILE_PATH = "/" + GenericEndToEndSteps.E2E_CONFIG;
         final String SAST_ENGINE= "sast";
         final String SCA_ENGINE= "sca";
-        static final String PR_COMMENT_TITLE_SAST = "### Checkmarx SAST Scan Summary";
-        static final String PR_COMMENT_TITLE_SCA = "### Checkmarx Dependency (CxSCA) Scan Summary";
+        static final String PR_COMMENT_TITLE_SAST = "**" + MarkDownHelper.SAST_HEADER + "**";
+        static final String PR_COMMENT_TITLE_SCA = "**" + MarkDownHelper.SCA_HEADER + "**";
         final String EMPTY_STRING = "";
         GitHubProperties gitHubProperties;
         private Integer hookId;
@@ -313,7 +314,7 @@ enum Repository {
                 try {
                     JSONArray comments = getJSONArray(url);
                     for (java.lang.Object c : Objects.requireNonNull(comments)) {
-                        if (((JSONObject) c).getString("body").startsWith(commentPrefix)) {
+                        if (((JSONObject) c).getString("body").contains(commentPrefix)) {
                             log.info("found {} comment on pull request!", engine);
                             isFound = true;
                             break;
