@@ -54,11 +54,8 @@ public class MarkDownHelper {
      * @return  A string reflect the new header type text
      */
     static String getMdHeaderType(int headerTypeNumber, String text) {
-        StringBuilder builder = new StringBuilder("###");
-
-        for (int i=builder.length(); i < headerTypeNumber; i++) {
-            builder.append("#");
-        }
+        StringBuilder builder = new StringBuilder("######");
+        builder.setLength(headerTypeNumber);
         return builder.append(" ").append(text).toString();
     }
 

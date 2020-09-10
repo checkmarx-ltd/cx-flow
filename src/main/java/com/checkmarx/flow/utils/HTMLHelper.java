@@ -16,12 +16,7 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -103,17 +98,17 @@ public class HTMLHelper {
                 appendAll(body, MarkDownHelper.getMdHeaderType(3, properties.getFlowSummaryHeader()), CRLF);
             }
             Map<String, Integer> flowSummaryToMap = (Map<String, Integer>) results.getAdditionalDetails().get(Constants.SUMMARY_KEY);
+
             if (flowSummaryToMap.isEmpty()) {
                 appendAll(body, MarkDownHelper.getMdHeaderType(4, NO_POLICY_VIOLATION_MESSAGE), CRLF);
             } else {
-                Optional.of(flowSummaryToMap)
-                        .map(Map::entrySet).ifPresent(eSet -> eSet.forEach(
-                        severity -> {
-                            String severityKey = severity.getKey();
-                            appendAll(body, MarkDownHelper.getSeverityIconFromLinkByText(severityKey),
-                                    MarkDownHelper.NBSP, MarkDownHelper.getBoldText(severity.getValue().toString()),
-                                    " ", MarkDownHelper.getBoldText(severityKey), MarkDownHelper.LINE_BREAK);
-                        }));
+                flowSummaryToMap.forEach((severityKey, value) ->
+                    appendAll(body,
+                            MarkDownHelper.getSeverityIconFromLinkByText(severityKey),
+                            MarkDownHelper.NBSP, MarkDownHelper.getBoldText(value.toString()),
+                            " ",
+                            MarkDownHelper.getBoldText(severityKey), MarkDownHelper.LINE_BREAK)
+                );
                 body.append(CRLF);
                 appendAll(body, MarkDownHelper.getTextLink(MarkDownHelper.MORE_DETAILS_LINK_HEADER, results.getLink()), CRLF);
             }
