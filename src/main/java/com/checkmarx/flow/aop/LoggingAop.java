@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 public class LoggingAop {
     @Before(value = "(execution(* com.checkmarx.flow.service.FlowService.initiateAutomation(.., com.checkmarx.flow.dto.ScanRequest, ..)) ||" +
             "execution(* com.checkmarx.flow.service.ResultsService.processScanResultsAsync(.., com.checkmarx.flow.dto.ScanRequest, ..)) ||" +
-            "execution(* com.checkmarx.flow.service.SastScanner.executeCxScanFlow(com.checkmarx.flow.dto.ScanRequest, ..)) ||" +
+            "execution(* com.checkmarx.flow.service.SastScanner.executeCxScan(com.checkmarx.flow.dto.ScanRequest, ..)) ||" +
             "execution(* com.checkmarx.flow.service.SCAScanner.scan(com.checkmarx.flow.dto.ScanRequest, ..)) ||" +
             "execution(* com.checkmarx.flow.service.ASTScanner.scan(com.checkmarx.flow.dto.ScanRequest, ..)) ||" +
             "execution(* com.checkmarx.flow.service.ResultsService.publishCombinedResults(com.checkmarx.flow.dto.ScanRequest, ..)) ||" +
