@@ -2,6 +2,7 @@ package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.dto.RepoComment;
 import com.checkmarx.flow.exception.PullRequestCommentUnknownException;
+import com.checkmarx.flow.utils.MarkDownHelper;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -10,16 +11,23 @@ import java.util.List;
 
 public class PullRequestCommentsHelper {
 
+    public static final String COMMENT_TYPE_SAST_FINDINGS_2 = "Violation Summary";
+    public static final String COMMENT_TYPE_SCA_FINDINGS = "Cx-SCA vulnerability result overview";
+
+    private static final String COMMENT_TYPE_AST_FINDINGS_DETAILS = MarkDownHelper.AST_DETAILS_HEADER;
+    private static final String SAST_SUMMARY_HEADER = MarkDownHelper.SAST_SUMMARY_HEADER;
     private static final String COMMENT_TYPE_SAST_SCAN_STARTED = "Scan submitted to Checkmarx";
-    private static final String COMMENT_TYPE_SAST_FINDINGS_1 = "Checkmarx SAST Scan Summary";
-    private static final String COMMENT_TYPE_SAST_FINDINGS_2 = "Full Scan Details";
-    private static final String COMMENT_TYPE_SCA_FINDINGS = "CxSCA vulnerability result overview";
+    private static final String COMMENT_TYPE_SAST_FINDINGS_1 = MarkDownHelper.SCAN_SUMMARY_DETAILS;
     private static final String COMMENT_TYPE_SAST_SCAN_NOT_SUBMITTED = "Scan not submitted to Checkmarx due to existing Active scan for the same project.";
 
     public static boolean isCheckMarxComment(RepoComment comment) {
-        return comment.getComment().contains(COMMENT_TYPE_SAST_FINDINGS_2) && comment.getComment().contains(COMMENT_TYPE_SAST_FINDINGS_1) ||
-                comment.getComment().contains(COMMENT_TYPE_SAST_SCAN_STARTED) || comment.getComment().contains(COMMENT_TYPE_SAST_SCAN_NOT_SUBMITTED)
-                || comment.getComment().contains(COMMENT_TYPE_SCA_FINDINGS);
+        String currentComment = comment.getComment();
+        return currentComment.contains(COMMENT_TYPE_SAST_FINDINGS_2) && currentComment.contains(COMMENT_TYPE_SAST_FINDINGS_1) ||
+                currentComment.contains(COMMENT_TYPE_SAST_SCAN_STARTED) ||
+                currentComment.contains(COMMENT_TYPE_SAST_SCAN_NOT_SUBMITTED) ||
+                currentComment.contains(COMMENT_TYPE_SCA_FINDINGS) ||
+                currentComment.contains(COMMENT_TYPE_AST_FINDINGS_DETAILS) ||
+                currentComment.contains(SAST_SUMMARY_HEADER);
     }
 
     public static RepoComment getCommentToUpdate(List<RepoComment> existingComments, String newComment) {
@@ -52,12 +60,8 @@ public class PullRequestCommentsHelper {
 
 
     private static boolean isCommentType(String comment, CommentType type) {
-        for (String text: type.getTexts()) {
-            if (!comment.contains(text)) {
-                return false;
-            }
-        }
-        return true;
+        return type.getTexts().stream()
+                .anyMatch(comment::contains);
     }
 
     public static boolean isScaComment(String comment) {

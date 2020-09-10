@@ -1,5 +1,6 @@
 package com.checkmarx.flow.config;
 
+import com.checkmarx.flow.service.PullRequestCommentsHelper;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.PostConstruct;
@@ -21,9 +22,8 @@ public class RepoProperties {
     private boolean blockMerge = false;
     private boolean errorMerge = false;
     private boolean detailed = true;
-    private String detailHeader = "Details";
     private boolean flowSummary = true;
-    private String flowSummaryHeader = "Violation Summary";
+    private String flowSummaryHeader = PullRequestCommentsHelper.COMMENT_TYPE_SAST_FINDINGS_2;
     private boolean cxSummary = false;
     private String cxSummaryHeader = "Checkmarx Scan Summary";
     private Map<String, OptionalScmInstanceProperties> optionalInstances;
@@ -157,14 +157,6 @@ public class RepoProperties {
 
     public void setFlowSummary(boolean flowSummary) {
         this.flowSummary = flowSummary;
-    }
-
-    public String getDetailHeader() {
-        return detailHeader;
-    }
-
-    public void setDetailHeader(String detailHeader) {
-        this.detailHeader = detailHeader;
     }
 
     public String getFlowSummaryHeader() {
