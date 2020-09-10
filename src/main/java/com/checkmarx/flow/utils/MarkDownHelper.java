@@ -39,9 +39,9 @@ public class MarkDownHelper {
     private static final String ICON_ICON = GITHUB_USER_PREFIX + "92355607-3d06e980-f0ed-11ea-8bb7-9029eb8716b9.png";
 
     private static final String CHECKMARX_PREFIX = "Checkmarx ";
-    private static final String SAST_HEADER = CHECKMARX_PREFIX + SAST_SCANNER + " - " + SCAN_SUMMARY_DETAILS;
+    public static final String SAST_HEADER = CHECKMARX_PREFIX + SAST_SCANNER + " - " + SCAN_SUMMARY_DETAILS;
+    public static final String SCA_HEADER = CHECKMARX_PREFIX + SCA_SCANNER + " - " + SCAN_SUMMARY_DETAILS;
     private static final String AST_SAST_HEADER = CHECKMARX_PREFIX + AST_SAST_SCANNER + " - " + SCAN_SUMMARY_DETAILS;
-    private static final String SCA_HEADER = CHECKMARX_PREFIX + SCA_SCANNER + " - " + SCAN_SUMMARY_DETAILS;
 
 
     private MarkDownHelper() {
