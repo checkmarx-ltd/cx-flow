@@ -93,7 +93,7 @@ public class HTMLHelper {
     }
 
     private static void addFlowSummarySection(ScanResults results, RepoProperties properties, StringBuilder body) {
-        if (results.getAstResults() == null && properties.isFlowSummary()) {
+        if (properties.isFlowSummary() && results.getAstResults() == null) {
             if (!ScanUtils.empty(properties.getFlowSummaryHeader())) {
                 appendAll(body, MarkDownHelper.getMdHeaderType(3, properties.getFlowSummaryHeader()), CRLF);
             }
