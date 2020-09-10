@@ -22,7 +22,8 @@ public class PullRequestCommentsHelper {
     public static boolean isCheckMarxComment(RepoComment comment) {
         return comment.getComment().contains(COMMENT_TYPE_SAST_FINDINGS_2) && comment.getComment().contains(COMMENT_TYPE_SAST_FINDINGS_1) ||
                 comment.getComment().contains(COMMENT_TYPE_SAST_SCAN_STARTED) || comment.getComment().contains(COMMENT_TYPE_SAST_SCAN_NOT_SUBMITTED)
-                || comment.getComment().contains(COMMENT_TYPE_SCA_FINDINGS) || comment.getComment().contains(COMMENT_TYPE_AST_FINDINGS_DETAILS);
+                || comment.getComment().contains(COMMENT_TYPE_SCA_FINDINGS) || comment.getComment().contains(COMMENT_TYPE_AST_FINDINGS_DETAILS) ||
+                comment.getComment().contains(MarkDownHelper.SAST_SUMMARY_HEADER);
     }
 
     public static RepoComment getCommentToUpdate(List<RepoComment> existingComments, String newComment) {

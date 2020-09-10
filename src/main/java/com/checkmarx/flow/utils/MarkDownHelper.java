@@ -19,7 +19,7 @@ public class MarkDownHelper {
     static final String SAST_DETAILS_HEADER = CX_PREFIX + SAST_SCANNER + " Details";
 
     private static final String SUMMARY_SUFFIX = " Summary";
-    static final String SAST_SUMMARY_HEADER = CX_PREFIX + SAST_SCANNER + SUMMARY_SUFFIX;
+    public static final String SAST_SUMMARY_HEADER = CX_PREFIX + SAST_SCANNER + SUMMARY_SUFFIX;
     static final String AST_SUMMARY_HEADER = CX_PREFIX + AST_SAST_SCANNER + SUMMARY_SUFFIX;
     static final String SCA_SUMMARY_HEADER = CX_PREFIX + SCA_SCANNER + SUMMARY_SUFFIX;
 
