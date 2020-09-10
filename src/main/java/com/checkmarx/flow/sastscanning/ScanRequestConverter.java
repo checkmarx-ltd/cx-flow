@@ -19,6 +19,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
+import java.util.Optional;
 
 import static com.checkmarx.sdk.config.Constants.UNKNOWN;
 import static com.checkmarx.sdk.config.Constants.UNKNOWN_INT;
@@ -37,6 +38,7 @@ public class ScanRequestConverter {
     private final BitBucketService bitBucketService;
     private final ADOService adoService;
     private final ShardSessionTracker sessionTracker;
+    private final String EMPTY_STRING = "";
 
     public CxScanParams toScanParams(ScanRequest scanRequest) throws CheckmarxException {
         String ownerId = determineTeamAndOwnerID(scanRequest);
@@ -68,7 +70,7 @@ public class ScanRequestConverter {
 
     public String determineTeamAndOwnerID(ScanRequest request) throws CheckmarxException {
         String ownerId;
-        String namespace = request.getNamespace();
+        String namespace = Optional.ofNullable(request.getNamespace()).orElse(EMPTY_STRING) ;
 
         String team = helperService.getCxTeam(request);
         if (!ScanUtils.empty(team)) {
