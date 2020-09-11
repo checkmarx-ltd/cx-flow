@@ -76,28 +76,6 @@ public class ProjectNameGenerator {
     }
 
     private String tryGetProjectNameFromScript(ScanRequest request) {
-        String scriptFile = cxProperties.getProjectScript();
-        String project = request.getProject();
-        //note:  if script is provided, it is highest priority
-        if (StringUtils.isNotEmpty(scriptFile)) {
-            log.info("executing external script to determine the Project in Checkmarx to be used ({})", scriptFile);
-            try {
-                String script = helperService.getStringFromFile(scriptFile);
-                HashMap<String, Object> bindings = new HashMap<>();
-                bindings.put("request", request);
-                Object result = scriptService.runScript(script, bindings);
-                if (result instanceof String) {
-                    return ((String) result);
-                } else {
-                    throw new IOException("Script must return a result of type 'java.lang.String'");
-                }
-            } catch (IOException e) {
-                log.error("Error reading script file for checkmarx project {}", scriptFile, e);
-            }
-        } else if (StringUtils.isNotEmpty(project)) {
-            log.info("External script is not specified. Using project name from scan request: {}", project);
-            return project;
-        }
-        return null;  //null will indicate no override of team will take place
+        return helperService.getCxProject(request);
     }
 }
