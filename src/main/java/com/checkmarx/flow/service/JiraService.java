@@ -116,7 +116,7 @@ public class JiraService {
                 this.metaClient = this.client.getMetadataClient();
                 configJira();
             } catch (URISyntaxException | RestClientException e) {
-                log.error("Error constructing URI for JIRA", e);
+                log.error("Error constructing URI for JIRA: {}", e.getMessage());
             }
         }
     }
