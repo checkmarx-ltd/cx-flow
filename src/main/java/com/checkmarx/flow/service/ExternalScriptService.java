@@ -5,8 +5,8 @@ import com.checkmarx.flow.utils.ScanUtils;
 import groovy.lang.Binding;
 import groovy.lang.GroovyRuntimeException;
 import groovy.lang.GroovyShell;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -17,9 +17,9 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+@Slf4j
 public class ExternalScriptService {
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(ExternalScriptService.class);
-    private static final String REQUEST = "request";
+    private static final String SCAN_REQUEST_VARIABLE = "request";
 
     public String getScriptExecutionResult(ScanRequest request, String scriptFile, String entity) {
         String result = null;
@@ -27,10 +27,13 @@ public class ExternalScriptService {
         try {
             String script = getStringFromFile(scriptFile);
             HashMap<String, Object> bindings = new HashMap<>();
-            bindings.put(REQUEST, request);
+            bindings.put(SCAN_REQUEST_VARIABLE, request);
             Object rawResult = runScript(script, bindings);
             if (rawResult instanceof String) {
                 result = ((String) rawResult);
+            }
+            else {
+                log.error("Script must return a result of type 'java.lang.String'");
             }
         } catch (IOException e) {
             log.error("Error reading script file for Checkmarx {} {}", entity, scriptFile, e);
@@ -44,7 +47,7 @@ public class ExternalScriptService {
         try {
             String script = getStringFromFile(scriptFile);
             HashMap<String, Object> bindings = new HashMap<>();
-            bindings.put(REQUEST, request);
+            bindings.put(SCAN_REQUEST_VARIABLE, request);
             bindings.put("branches", branches);
             result = runScript(script, bindings);
         } catch (IOException e) {
@@ -53,7 +56,7 @@ public class ExternalScriptService {
         return result;
     }
 
-    private String getStringFromFile(String path) throws IOException {
+    private static String getStringFromFile(String path) throws IOException {
         return new String(Files.readAllBytes(Paths.get(path.intern())));
     }
 
@@ -72,7 +75,7 @@ public class ExternalScriptService {
             GroovyShell shell = new GroovyShell(binding);
             return shell.evaluate(script);
         }catch (GroovyRuntimeException e){
-            log.error("Error occurred while executing external script, returning null - {}", ExceptionUtils.getMessage(e), e);
+            log.error("Error occurred while executing external script, returning null - {}", ExceptionUtils.getMessage(e));
             return null;
         }
     }

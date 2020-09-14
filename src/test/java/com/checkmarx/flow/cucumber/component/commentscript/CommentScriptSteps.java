@@ -5,6 +5,7 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.controller.FlowController;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
+import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.sastscanning.ScanRequestConverter;
 import com.checkmarx.flow.service.*;
@@ -39,16 +40,16 @@ import static org.mockito.Mockito.*;
 public class CommentScriptSteps {
 
     private final static String MEANINGLESS_STRING = "meaningless-string";
-    private final static String TOKEN = "Token";
+    private final static String WEBHOOK_TOKEN = "Token";
     private final static  String EMPTY_STRING = "";
+    final private CxClient cxClientMock;
+    private final ScanRequestConverter scanRequestConverterMock;
+    private final SastScanner sastScanner;
+    private final CxProperties cxProperties;
+    private final FlowController flowController;
+    private final FlowProperties flowProperties;
     private String branchName;
     private String commentMessageFromRequest;
-    private CxClient cxClientMock;
-    ScanRequestConverter scanRequestConverterMock;
-    SastScanner sastScanner;
-    CxProperties cxProperties;
-    private FlowController flowController;
-    private FlowProperties flowProperties;
 
     public CommentScriptSteps(FlowProperties flowProperties, CxProperties cxProperties, HelperService helperService,
                               JiraProperties jiraProperties, FilterFactory filterFactory, ConfigurationOverrider configOverrider,
@@ -70,11 +71,12 @@ public class CommentScriptSteps {
     }
 
 
-    @Before("@DeleteBranchFeature")
+    @Before("@ConfigureSastComment")
     public void setMockers() throws CheckmarxException {
-        CreateScanAnswerer createScanAnswerer = new CreateScanAnswerer();
         when(cxClientMock.getScanIdOfExistingScanIfExists(anyInt())).thenReturn(-1);
-        when(cxClientMock.createScan(any(), anyString())).thenAnswer(createScanAnswerer);
+        when(cxClientMock.createScan(any(), anyString())).thenAnswer( invocation-> {
+            commentMessageFromRequest = invocation.getArgument(1);
+            return null;});
         when(cxClientMock.getReportContentByScanId(nullable(Integer.class), any())).thenReturn(new ScanResults());
 
         when(sastScanner.isEnabled()).thenReturn(true);
@@ -85,25 +87,19 @@ public class CommentScriptSteps {
         when(scanRequestConverterMock.toScanParams(any())).thenReturn(cxScanParams);
 
         cxProperties.setProjectScript(EMPTY_STRING);
+        flowProperties.setBugTracker(BugTracker.Type.NONE.toString());
         commentMessageFromRequest = EMPTY_STRING;
         branchName = EMPTY_STRING;
     }
-
-    private class CreateScanAnswerer implements Answer<Object> {
-        @Override
-        public Object answer(InvocationOnMock invocation) {
-
-            commentMessageFromRequest = invocation.getArgument(1);
-            return null;
-        }
-    }
-
 
     @Given("given 'sast-comment' script name is {string}")
     public void setCommentScriptName(String scriptName) {
         if(!scriptName.equals("empty")) {
             String commentScript = getScriptFullPath(scriptName + ".groovy");
             flowProperties.setCommentScript(commentScript);
+        }
+        else{
+            flowProperties.setCommentScript(EMPTY_STRING);
         }
     }
 
@@ -137,15 +133,15 @@ public class CommentScriptSteps {
 
         String branch = ScanUtils.empty(branchName) ? MEANINGLESS_STRING : branchName;
         cxScanRequest.setBranch(branch);
-        flowProperties.setToken(TOKEN);
+        flowProperties.setToken(WEBHOOK_TOKEN);
 
-        flowController.initiateScan(cxScanRequest, TOKEN);
+        flowController.initiateScan(cxScanRequest, WEBHOOK_TOKEN);
     }
 
     @Then("CxFlow scan comment is equal to {string}")
     public void compareComments(String expectedComment){
-        log.info("Comparing expected comment '{} to actual comment '{}", expectedComment, commentMessageFromRequest);
+        log.info("Comparing expected comment '{} to actual comment '{}'", expectedComment, commentMessageFromRequest);
 
-        assertEquals(expectedComment, commentMessageFromRequest);
+        assertEquals(expectedComment, commentMessageFromRequest, "fail comparing expected comment to actual comment in scan request");
     }
 }

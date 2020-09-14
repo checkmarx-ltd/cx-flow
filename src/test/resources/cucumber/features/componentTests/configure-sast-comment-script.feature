@@ -1,4 +1,4 @@
-@DeleteBranchFeature @ComponentTest
+@ConfigureSastComment @ComponentTest
 Feature: Using Groovy script to configure SAST comment on scan request
 
   Scenario Outline: Configuring SAST comment using a script result
@@ -8,11 +8,12 @@ Feature: Using Groovy script to configure SAST comment on scan request
 
 
     Examples:
-      | comment script                           | comment                                  |
+      | comment script                          | comment                                  |
       | sast-standard-comment                   | standard comment                         |
-      | special-characters-script               | comment_with-special/characters*$@!66 ^* |
-      | invalid-return-type-script              | CxFlow Automated Scan                    |
+      | special-characters-comment-script       | comment_with-special/characters*$@!66 ^* |
+      | invalid-return-type-comment-script      | CxFlow Automated Scan                    |
       | script-not-exist                        | CxFlow Automated Scan                    |
+      | invalid-syntax-script-comment           | CxFlow Automated Scan                    |
       | empty                                   | CxFlow Automated Scan                    |
 
 
