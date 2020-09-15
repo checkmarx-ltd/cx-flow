@@ -37,7 +37,7 @@ public class ADOController extends AdoControllerBase {
     private static final String HTTP = "http://";
     private static final String HTTPS = "https://";
     private static final List<String> PULL_EVENT = Arrays.asList("git.pullrequest.created", "git.pullrequest.updated");
-    private static final String BRANCH_DELETED_REF = "0000000000000000000000000000000000000000";
+    private static final String BRANCH_DELETED_REF = StringUtils.repeat('0', 40);
     private static final String AUTHORIZATION = "authorization";
     private static final int NAMESPACE_INDEX = 3;
     private static final String EMPTY_STRING = "";
@@ -363,7 +363,7 @@ public class ADOController extends AdoControllerBase {
             }
         }
         catch (Exception ex){
-            log.error("failed to get branch for config as code. using default");
+            log.info("failed to get branch for config as code. using default");
         }
         return branch;
     }

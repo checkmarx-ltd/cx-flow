@@ -41,6 +41,8 @@ public class CommentScriptSteps {
 
     private final static String MEANINGLESS_STRING = "meaningless-string";
     private final static String WEBHOOK_TOKEN = "Token";
+    private final static  String EMPTY_SCRIPT = "empty";
+    private final static  String INVALID_SCRIPT = "invalid-syntax-script-comment";
     private final static  String EMPTY_STRING = "";
     final private CxClient cxClientMock;
     private final ScanRequestConverter scanRequestConverterMock;
@@ -94,8 +96,14 @@ public class CommentScriptSteps {
 
     @Given("given 'sast-comment' script name is {string}")
     public void setCommentScriptName(String scriptName) {
-        if(!scriptName.equals("empty")) {
-            String commentScript = getScriptFullPath(scriptName + ".groovy");
+        if(!scriptName.equals(EMPTY_SCRIPT)) {
+            String fullName = scriptName + ".groovy";
+
+            if (scriptName.equals(INVALID_SCRIPT)){
+                fullName = fullName + ".invalid";
+            }
+
+            String commentScript = getScriptFullPath(fullName);
             flowProperties.setCommentScript(commentScript);
         }
         else{
