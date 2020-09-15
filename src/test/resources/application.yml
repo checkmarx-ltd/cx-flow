@@ -88,6 +88,13 @@ sca:
   username: xxxxx
   password: xxxxx
 
+ast:
+  apiUrl: http://xxxxx
+  clientId: xxxxx
+  clientSecret: xxxxx
+  preset: Checkmarx Default
+  incremental: false
+
 jira:
   url: http://localhost:8080
   username: xxxx

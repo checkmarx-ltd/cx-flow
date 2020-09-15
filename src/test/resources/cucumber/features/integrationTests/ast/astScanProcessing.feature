@@ -1,8 +1,8 @@
 @AstIntegrationTests @IntegrationTest
 Feature: Cx-Flow AST Integration permutation tests
-  
 
-  @ASTRemoteRepoScan 
+
+  @ASTRemoteRepoScan
   Scenario Outline: scan multiple initiators
     Given scan initiator list is "<initiators>"
     Then the returned contain populated results for all initiators
@@ -15,21 +15,25 @@ Feature: Cx-Flow AST Integration permutation tests
       | AST,SCA    | 13           | 11           |
 
   @ASTRemoteRepoScan
-  Scenario Outline: check error message on expired AST token
-    Given AST scan with expired token
-    Then expired token expected error will be returned "<message>"
+  Scenario Outline: Trying to scan with invalid credentials
+    When CxFlow tries to start AST scan with the "<client id>" and "<client secret>" credentials
+    Then an error will be thrown with the message containing "<message>"
     Examples:
-      | message      |
-      | Unauthorized |
-      
+    # <valid-xxx> values are replaced with actual values from the test config.
+      | client id          | client secret   | message                           |
+      | <valid-client-id>  | my-wrong-secret | unauthorized                      |
+      | my-wrong-client-id | <valid-secret>  | unauthorized                      |
+      | <valid-client-id>  | <empty>         | AST client secret wasn't provided |
+      | <empty>            | <valid-secret>  | AST client ID wasn't provided     |
+
 
   @ASTRemoteRepoScan
   Scenario Outline: check error message when AST is down
     Given AST scan is initiated when AST is not available
     Then unavailable AST server expected error will be returned "<message>"
     Examples:
-      | message |
-      | The resource you are looking for might have been removed, had its name changed, or is temporarily unavailable    |
+      | message                                                                                                       |
+      | The resource you are looking for might have been removed, had its name changed, or is temporarily unavailable |
 
   @AST_JIRA_issue_creation
   Scenario: Publish AST results and check JIRA tickets are getting created
