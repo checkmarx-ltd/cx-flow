@@ -134,7 +134,7 @@ public class DeleteBranchSteps {
 
         when(helperService.getShortUid()).thenReturn("12345");
         when(helperService.getCxTeam(any())).thenReturn(TEAM);
-        when(helperService.getCxProject(any())).thenReturn(PROJECT_NAME);
+        when(helperService.getCxProject(any())).thenCallRealMethod();
         when(helperService.getPresetFromSources(any())).thenReturn(PRESET);
         when(helperService.isBranchProtected(anyString(), anyList(), any())).thenCallRealMethod();
         when(helperService.isBranch2Scan(any(), anyList())).thenCallRealMethod();

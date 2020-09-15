@@ -75,14 +75,14 @@ public class SastScanner implements VulnerabilityScanner {
                     log.info("Aborting the ongoing scan with id {} for Project: {}", existingScanId, projectId);
                     cxService.cancelScan(existingScanId);
                     log.info("Resubmitting the scan for Project: {}", projectId);
-                    scanId = cxService.createScan(cxScanParams, CXFLOW_SCAN_MSG);
+                    scanId = cxService.createScan(cxScanParams, getComment(scanRequest));
                 } else {
                     log.warn("Property scan-resubmit set to {} : New scan not submitted, due to existing ongoing scan for the same Project id {}", flowProperties.getScanResubmit(), projectId);
                     bugTrackerEventTrigger.triggerScanNotSubmittedBugTrackerEvent(scanRequest, getEmptyScanResults());
                     throw new CheckmarxException(String.format("Active Scan with Id %d already exists for Project: %d", existingScanId, projectId));
                 }
             } else {
-                scanId = cxService.createScan(cxScanParams, CXFLOW_SCAN_MSG);
+                scanId = cxService.createScan(cxScanParams, getComment(scanRequest));
             }
 
             BugTracker.Type bugTrackerType = bugTrackerEventTrigger.triggerBugTrackerEvent(scanRequest);
@@ -115,7 +115,7 @@ public class SastScanner implements VulnerabilityScanner {
             report.log();
             return getEmptyScanResults();
         }
-    } 
+    }
 
     @Override
     public ScanResults scanCli(ScanRequest request, String scanType, File... files) {
@@ -186,7 +186,7 @@ public class SastScanner implements VulnerabilityScanner {
 
             CxScanParams params = scanRequestConverter.prepareScanParamsObject(request, cxFile, ownerId, projectId);
 
-            scanId = cxService.createScan(params, CXFLOW_SCAN_MSG);
+            scanId = cxService.createScan(params, getComment(request));
 
             BugTracker.Type bugTrackerType = bugTrackerEventTrigger.triggerBugTrackerEvent(request);
             if (bugTrackerType.equals(BugTracker.Type.NONE)) {
@@ -215,6 +215,10 @@ public class SastScanner implements VulnerabilityScanner {
         
         this.scanDetails = new ScanDetails(projectId, scanId, osaScanId);
         return scanDetails;
+    }
+
+    private String getComment(ScanRequest request){
+        return  helperService.getCxComment(request, CXFLOW_SCAN_MSG);
     }
 
     private ScanResults scanLocalPath(ScanRequest request, String path) throws ExitThrowable {

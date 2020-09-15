@@ -19,10 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,7 +27,6 @@ import java.util.regex.Pattern;
 public class HelperService {
 
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(HelperService.class);
-    private static final String REQUEST = "request";
     private final FlowProperties properties;
     private final CxProperties cxProperties;
     private final ExternalScriptService scriptService;
@@ -64,7 +60,7 @@ public class HelperService {
         // If script is provided, it is highest priority
         String scriptFile = properties.getBranchScript();
         if (!ScanUtils.empty(scriptFile)) {
-            Object branchShouldBeScanned = executeBranchScript(scriptFile, request, branches);
+            Object branchShouldBeScanned = scriptService.executeBranchScript(scriptFile, request, branches);
             if (branchShouldBeScanned instanceof Boolean) {
                 return ((boolean) branchShouldBeScanned);
             }
@@ -95,21 +91,6 @@ public class HelperService {
         return result;
     }
 
-    private Object executeBranchScript(String scriptFile, ScanRequest request, List<String> branches) {
-        Object result = null;
-        log.info("executing external script to determine if branch should be scanned ({})", scriptFile);
-        try {
-            String script = getStringFromFile(scriptFile);
-            HashMap<String, Object> bindings = new HashMap<>();
-            bindings.put(REQUEST, request);
-            bindings.put("branches", branches);
-            result = scriptService.runScript(script, bindings);
-        } catch (IOException e) {
-            log.error("Error reading script file {}", scriptFile, e);
-        }
-        return result;
-    }
-
     private static String getBranchToCheck(ScanRequest request) {
         String result = request.getBranch();
         String targetBranch = request.getMergeTargetBranch();
@@ -131,32 +112,22 @@ public class HelperService {
         return getEffectiveEntityName(request, scriptFile, project, "project");
     }
 
+    public String getCxComment(ScanRequest request, String defaultValue){
+        String scriptFile = properties.getCommentScript();
+        String comment = getEffectiveEntityName(request, scriptFile, defaultValue,"comment");
+
+        return comment;
+    }
+
     private String getEffectiveEntityName(ScanRequest request, String scriptFile, String defaultName, String entity) {
         String result = null;
         //note:  if script is provided, it is highest priority
         if (!ScanUtils.empty(scriptFile)) {
-            result = getScriptExecutionResult(request, scriptFile, entity);
+            result = Optional.ofNullable(scriptService.getScriptExecutionResult(request, scriptFile, entity)).orElse(defaultName) ;
         } else if (!ScanUtils.empty(defaultName)) {
             result = defaultName;
         }
         return result;  //null will indicate no override will take place
-    }
-
-    private String getScriptExecutionResult(ScanRequest request, String scriptFile, String entity) {
-        String result = null;
-        log.info("executing external script to determine the {} in Checkmarx to be used ({})", entity, scriptFile);
-        try {
-            String script = getStringFromFile(scriptFile);
-            HashMap<String, Object> bindings = new HashMap<>();
-            bindings.put(REQUEST, request);
-            Object rawResult = scriptService.runScript(script, bindings);
-            if (rawResult instanceof String) {
-                result = ((String) rawResult);
-            }
-        } catch (IOException e) {
-            log.error("Error reading script file for Checkmarx {} {}", entity, scriptFile, e);
-        }
-        return result;
     }
 
     public String getShortUid(ScanRequest request){
@@ -167,10 +138,6 @@ public class HelperService {
 
     public String getShortUid(){
         return RandomStringUtils.random(Constants.SHORT_ID_LENGTH, true, true) ;
-    }
-
-    public String getStringFromFile(String path) throws IOException {
-        return new String(Files.readAllBytes(Paths.get(path.intern())));
     }
 
     /**
