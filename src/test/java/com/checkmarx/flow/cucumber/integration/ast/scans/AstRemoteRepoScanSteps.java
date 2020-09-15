@@ -3,8 +3,6 @@ package com.checkmarx.flow.cucumber.integration.ast.scans;
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.FlowProperties;
 
-import com.checkmarx.flow.cucumber.integration.ast.AstCommonSteps;
-
 import com.checkmarx.flow.cucumber.integration.sca_scanner.ScaCommonSteps;
 import com.checkmarx.flow.dto.ScanRequest;
 
@@ -22,6 +20,7 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import io.cucumber.spring.CucumberContextConfiguration;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mockito.invocation.InvocationOnMock;
@@ -40,7 +39,8 @@ import static org.mockito.Mockito.when;
 @CucumberContextConfiguration
 @SpringBootTest(classes = {CxFlowApplication.class})
 @Slf4j
-public class AstRemoteRepoScanSteps extends AstCommonSteps {
+@RequiredArgsConstructor
+public class AstRemoteRepoScanSteps {
     final String EMPTY_STRING_INDICATOR = "<empty>";
     private static final String PUBLIC_PROJECT_NAME = "Public-Test-Test-Repo";
 
@@ -50,6 +50,9 @@ public class AstRemoteRepoScanSteps extends AstCommonSteps {
     private ResultsService resultsServiceMock;
 
     private final CxProperties cxProperties;
+    private final FlowProperties flowProperties;
+    private final AstProperties astProperties;
+    private final ScaProperties scaProperties;
 
     private ScanResults scanResults;
     private boolean isScaEnabled;
@@ -62,12 +65,6 @@ public class AstRemoteRepoScanSteps extends AstCommonSteps {
     @Autowired
     private ASTScanner astScanner;
 
-    public AstRemoteRepoScanSteps(FlowProperties flowProperties, AstProperties astProperties, ScaProperties scaProperteis,
-                                  CxProperties cxProperties) {
-        super(flowProperties, astProperties, scaProperteis);
-        this.cxProperties = cxProperties;
-    }
-
     private class ScanResultsInterceptor implements Answer<CompletableFuture<ScanResults>> {
         @Override
         public CompletableFuture<ScanResults> answer(InvocationOnMock invocation) {
@@ -78,7 +75,6 @@ public class AstRemoteRepoScanSteps extends AstCommonSteps {
  
     @Before("@ASTRemoteRepoScan")
     public void init() {
-        initAstConfig();
         ScaCommonSteps.initSCAConfig(scaProperties);
         resultsServiceMock = mock(ResultsService.class);
         ScanResultsInterceptor answerer = new ScanResultsInterceptor();
@@ -151,15 +147,14 @@ public class AstRemoteRepoScanSteps extends AstCommonSteps {
         }
     }
 
-    @Given("scan initiator list is {string}")
+    @Given("enabled vulnerability scanners are {string}")
     public void setScanInitiator(String initiatorList) {
         String[] intiators ;
         List<VulnerabilityScanner> scanners = new LinkedList<>();
         if(!initiatorList.contains(SEPARATOR)){
             intiators = new String[1];
             intiators[0] = initiatorList;
-        }
-        else{
+        } else {
             intiators = initiatorList.split(SEPARATOR);
         }
         for (String scanType: intiators) {
@@ -182,7 +177,7 @@ public class AstRemoteRepoScanSteps extends AstCommonSteps {
     }
 
 
-    @Then("the returned contain populated results for all initiators")
+    @Then("scan results contain populated results for all scanners")
     public void validateResults() {
         if(isScaEnabled) {
             assertNotNull("SCA results are null", scanResults.getScaResults());
@@ -214,9 +209,18 @@ public class AstRemoteRepoScanSteps extends AstCommonSteps {
         ProjectNameGenerator projectNameGenerator = new ProjectNameGenerator(helperService, cxProperties, scriptService);
         FlowService flowService = new FlowService(new ArrayList<>(), projectNameGenerator, resultsServiceMock);
 
-        ScanRequest scanRequest = getBasicScanRequest(PUBLIC_PROJECT_NAME, PUBLIC_REPO);
+        ScanRequest scanRequest = getBasicScanRequest();
 
         scanRequest.setVulnerabilityScanners(scanners);
         flowService.initiateAutomation(scanRequest);
+    }
+
+    private static ScanRequest getBasicScanRequest() {
+        return ScanRequest.builder()
+                .project(PUBLIC_PROJECT_NAME)
+                .repoUrlWithAuth(PUBLIC_REPO)
+                .branch("master")
+                .repoType(ScanRequest.Repository.GITHUB)
+                .build();
     }
 }
