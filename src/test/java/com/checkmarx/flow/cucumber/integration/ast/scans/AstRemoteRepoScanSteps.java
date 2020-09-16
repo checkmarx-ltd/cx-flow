@@ -135,9 +135,13 @@ public class AstRemoteRepoScanSteps {
         return result;
     }
 
-    @Given("AST scan is initiated when AST is not available")
-    public void configureAstInvalidMachine(){
-        astProperties.setApiUrl(cxProperties.getBaseUrl());
+    @When("AST scan is initiated with API url: {string}")
+    public void configureAstInvalidMachine(String url) {
+        String effectiveUrl = url.replace("<ast url>", astProperties.getApiUrl())
+                .replace("<sast url>", cxProperties.getBaseUrl());
+
+        log.info("Setting url to {}", effectiveUrl);
+        astProperties.setApiUrl(effectiveUrl);
         flowProperties.setEnabledVulnerabilityScanners(Collections.singletonList(AstProperties.CONFIG_PREFIX));
         isAstEnabled = true;
     }
@@ -153,15 +157,19 @@ public class AstRemoteRepoScanSteps {
         assertTrue(testFailureMessage, StringUtils.containsIgnoreCase(scanException.getMessage(), messageSubstring));
     }
 
-    @Then("unavailable AST server expected error will be returned {string}")
-    public void astScanWithInvalidAstMachine(String error){
+    @Then("an exception of type {string} will be thrown with the message containing {string}")
+    public void astScanWithInvalidAstMachine(String exceptionType, String errorSubstring) {
         List<VulnerabilityScanner> scanners = new LinkedList<>();
         scanners.add(astScanner);
         try {
             startScan(scanners);
             fail("no exception was thrown");
-        }catch(Exception e){
-            assertTrue(e.getMessage().contains(error));
+        } catch (Exception e) {
+            assertEquals("Unexpected exception type.",exceptionType, e.getClass().getSimpleName());
+
+            String message = String.format("Expected error message to contain '%s'.", errorSubstring);
+            boolean containsSubstring = StringUtils.containsIgnoreCase(e.getMessage(), errorSubstring);
+            assertTrue(message, containsSubstring);
         }
     }
 

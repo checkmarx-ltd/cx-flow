@@ -29,12 +29,16 @@ Feature: Cx-Flow AST Integration permutation tests
 
 
   @ASTRemoteRepoScan
-  Scenario Outline: check error message when AST is down
-    Given AST scan is initiated when AST is not available
-    Then unavailable AST server expected error will be returned "<message>"
+  Scenario Outline: AST is not accessible
+    When AST scan is initiated with API url: "<url>"
+    Then an exception of type "MachinaRuntimeException" will be thrown with the message containing "ast scan failed"
     Examples:
-      | message                                                                                                       |
-      | The resource you are looking for might have been removed, had its name changed, or is temporarily unavailable |
+      | url                        |
+      | not a url!                 |
+      | <sast url>                 |
+      | https://example.com        |
+      | <ast url>/nonexistent/path |
+      | http://192.168.199.200     |
 
   @AST_JIRA_issue_creation
   Scenario: Publish AST results and check JIRA tickets are getting created
