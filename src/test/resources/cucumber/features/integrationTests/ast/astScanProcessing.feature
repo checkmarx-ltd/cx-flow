@@ -9,12 +9,13 @@ Feature: Cx-Flow AST Integration permutation tests
     And sca finding count will be "<sca_findings>" and ast findings count "<ast_findings>" will be accordingly
 
     Examples:
+    # Cannot rely on an exact number of findings, because it may change after backend version updates.
       | scanners | sca_findings | ast_findings |
-      | SCA      | 13           | 0            |
-      | AST      | 0            | 11           |
-      | AST,SCA  | 13           | 11           |
+      | SCA      | > 0          | 0            |
+      | AST      | 0            | > 0          |
+      | AST,SCA  | > 0          | > 0          |
 
-  @ASTRemoteRepoScan
+  @ASTRemoteRepoScan @InvalidCredentials
   Scenario Outline: Trying to scan with invalid credentials
     When CxFlow tries to start AST scan with the "<client id>" and "<client secret>" credentials
     Then an error will be thrown with the message containing "<message>"

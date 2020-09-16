@@ -2,19 +2,15 @@ package com.checkmarx.flow.cucumber.integration.ast.scans;
 
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.FlowProperties;
-
 import com.checkmarx.flow.cucumber.integration.sca_scanner.ScaCommonSteps;
 import com.checkmarx.flow.dto.ScanRequest;
-
 import com.checkmarx.flow.service.*;
-
 import com.checkmarx.sdk.config.AstProperties;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.ScanResults;
-
+import io.cucumber.java.After;
 import io.cucumber.java.Before;
-
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
@@ -28,7 +24,10 @@ import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.Assert.*;
@@ -65,6 +64,9 @@ public class AstRemoteRepoScanSteps {
     @Autowired
     private ASTScanner astScanner;
 
+    private String validClientId;
+    private String validClientSecret;
+
     private class ScanResultsInterceptor implements Answer<CompletableFuture<ScanResults>> {
         @Override
         public CompletableFuture<ScanResults> answer(InvocationOnMock invocation) {
@@ -79,6 +81,22 @@ public class AstRemoteRepoScanSteps {
         resultsServiceMock = mock(ResultsService.class);
         ScanResultsInterceptor answerer = new ScanResultsInterceptor();
         when(resultsServiceMock.publishCombinedResults(any(), any())).thenAnswer(answerer);
+    }
+
+    @Before("@InvalidCredentials")
+    public void backupValidCredentials() {
+        log.info("Saving valid credentials.");
+        validClientId = astProperties.getClientId();
+        validClientSecret = astProperties.getClientSecret();
+    }
+
+    @After("@InvalidCredentials")
+    public void restoreValidCredentials() {
+        // The @InvalidCredentials changes credentials in astProperties,
+        // so here we need to restore them for other tests to work.
+        log.info("Restoring valid credentials.");
+        astProperties.setClientId(validClientId);
+        astProperties.setClientSecret(validClientSecret);
     }
 
     @When("CxFlow tries to start AST scan with the {string} and {string} credentials")
@@ -98,7 +116,7 @@ public class AstRemoteRepoScanSteps {
         if (clientSecretDescr.equals(EMPTY_STRING_INDICATOR)) {
             result = "";
         } else if (clientSecretDescr.equals("<valid-secret>")) {
-            result = astProperties.getClientSecret();
+            result = validClientSecret;
         } else {
             result = clientSecretDescr;
         }
@@ -110,7 +128,7 @@ public class AstRemoteRepoScanSteps {
         if (clientIdDescr.equals(EMPTY_STRING_INDICATOR)) {
             result = "";
         } else if (clientIdDescr.equals("<valid-client-id>")) {
-            result = astProperties.getClientId();
+            result = validClientId;
         } else {
             result = clientIdDescr;
         }
@@ -182,7 +200,6 @@ public class AstRemoteRepoScanSteps {
         if(isScaEnabled) {
             assertNotNull("SCA results are null", scanResults.getScaResults());
             assertTrue("SCA scan ID is empty", StringUtils.isNotEmpty(scanResults.getScaResults().getScanId()));
-            assertEquals("Unexpected SCA vulnerable package count", 13, scanResults.getScaResults().getPackages().size() );
         }
         if(isAstEnabled) {
             assertNotNull("AST results are null.", scanResults.getAstResults());
@@ -193,12 +210,21 @@ public class AstRemoteRepoScanSteps {
     @And("sca finding count will be {string} and ast findings count {string} will be accordingly")
     public void validateNumberOfFindings(String scaFindings, String astFindings) {
         if (isScaEnabled) {
-            assertEquals("Sca vulnerable packages: ", 13, scanResults.getScaResults().getPackages().size());
-            assertEquals("Sca findings: ", 13, scanResults.getScaResults().getFindings().size());
+            validateFindingCount(scaFindings, scanResults.getScaResults().getFindings(), "SCA");
         }
         if (isAstEnabled) {
-            assertEquals("AST findings: ", 11, scanResults.getAstResults().getResults().getFindings().size());
+            validateFindingCount(astFindings, scanResults.getAstResults().getResults().getFindings(), "AST");
         }
+    }
+
+    private void validateFindingCount(String expectedCountDescr, List<?> actualFindings, String scannerType) {
+        int actualSize = actualFindings.size();
+        String message = String.format("Expected that %s finding count would be %s, but got %d.",
+                scannerType,
+                expectedCountDescr,
+                actualSize);
+        boolean countIsExpected = expectedCountDescr.equals("0") ? actualSize == 0 : actualSize > 0;
+        assertTrue(message, countIsExpected);
     }
 
     public void startScan(List<VulnerabilityScanner> scanners) {
