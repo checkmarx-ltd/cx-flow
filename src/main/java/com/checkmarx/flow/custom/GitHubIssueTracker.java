@@ -5,7 +5,6 @@ import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.dto.github.IssueStatus;
 import com.checkmarx.flow.dto.github.LabelsItem;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
