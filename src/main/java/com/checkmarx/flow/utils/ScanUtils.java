@@ -96,16 +96,10 @@ public class ScanUtils {
                 xIssueBuilder.file(finding.getNodes().get(0).getFileName());
             }
             xIssueBuilder.vulnerabilityStatus(finding.getStatus());
-
-            xIssueBuilder.vulnerabilityStatus(TBD);
-
-            xIssueBuilder.description(TBD);
             xIssueBuilder.similarityId("" + finding.getSimilarityID());
 
             Map<Integer, ScanResults.IssueDetails> details = new HashMap<>();
             ScanResults.IssueDetails issueDetails = new ScanResults.IssueDetails()
-                    .codeSnippet(TBD)
-                    .comment(TBD)
                     .falsePositive(Boolean.FALSE);
             
             details.put(finding.getNodes().get(0).getLine(), issueDetails);

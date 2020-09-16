@@ -5,7 +5,6 @@ import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.dto.github.IssueStatus;
 import com.checkmarx.flow.dto.github.LabelsItem;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
@@ -194,31 +193,13 @@ public class GitHubIssueTracker implements IssueTracker {
         ResponseEntity<com.checkmarx.flow.dto.github.Issue> response;
         try {
             response = restTemplate.exchange(issue.getUrl(), HttpMethod.POST, httpEntity, com.checkmarx.flow.dto.github.Issue.class);
-            GitHubIssueCommentFormatter newCommentFormatter = createNewCommentFormatter(issue, resultIssue, response);
-            this.addComment(newCommentFormatter.getIssueUrl(), newCommentFormatter.getIssueDescription().toString(), request);
+            this.addComment(Objects.requireNonNull(response.getBody()).getUrl(),"Issue still exists.", request);
             return mapToIssue(response.getBody());
         } catch (HttpClientErrorException e) {
             handleIssueUpdateError(e);
             this.addComment(issue.getUrl(), "This issue still exists.  Please add label 'false-positive' to remove from scope of SAST results", request);
         }
         return this.getIssue(issue.getUrl(), request);
-    }
-
-    private GitHubIssueCommentFormatter createNewCommentFormatter(Issue issue, ScanResults.XIssue resultIssue,
-                                                                  ResponseEntity<com.checkmarx.flow.dto.github.Issue> response) {
-        GitHubIssueCommentFormatter commentFormatter = GitHubIssueCommentFormatter.builder()
-                .issueUrl(Objects.requireNonNull(response.getBody()).getUrl())
-                .resultIssue(resultIssue)
-                .gitHubIssueBeforeUpdate(issue)
-                .gitHubIssueAfterUpdate(response.getBody())
-                .build();
-
-        IssueStatus newIssueStatus = commentFormatter.createNewIssueStatus(issue, resultIssue, response.getBody());
-        commentFormatter.setIssueStatus(newIssueStatus);
-        StringBuilder updatedIssueComment = commentFormatter.getUpdatedIssueComment(commentFormatter.getIssueStatus());
-        commentFormatter.setIssueDescription(updatedIssueComment);
-
-        return commentFormatter;
     }
 
     private void handleIssueUpdateError(HttpClientErrorException e) {
