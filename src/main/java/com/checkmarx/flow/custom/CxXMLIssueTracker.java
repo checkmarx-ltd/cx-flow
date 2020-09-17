@@ -4,12 +4,15 @@ import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.service.FilenameFormatter;
+import com.checkmarx.flow.utils.JAXBHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
+import com.checkmarx.sdk.dto.ast.SCAResults;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
+import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -39,11 +42,14 @@ public class CxXMLIssueTracker extends ImmutableIssueTracker {
     @Override
     public void complete(ScanRequest request, ScanResults results) throws MachinaException {
         try {
-            if(!ScanUtils.empty(results.getOutput())) {
+            if (!ScanUtils.empty(results.getOutput())) {
                 Files.write(Paths.get(request.getFilename()), results.getOutput().getBytes());
             }
-        } catch (IOException e) {
-            log.error("Issue occurred while writing file {}", request.getFilename(), e);
+
+            marshalScaResults(request, results);
+
+        } catch (IOException | JAXBException e) {
+            log.error("Issue occurred while writing file: {} with error message: {}", request.getFilename(), e.getMessage());
         }
     }
 
@@ -60,5 +66,12 @@ public class CxXMLIssueTracker extends ImmutableIssueTracker {
     @Override
     public Issue createIssue(ScanResults.XIssue resultIssue, ScanRequest request) throws MachinaException {
         return null;
+    }
+
+    private void marshalScaResults(ScanRequest request, ScanResults results) throws JAXBException {
+        SCAResults scaResults = results.getScaResults();
+        if (scaResults != null) {
+            JAXBHelper.convertObjectIntoXml(scaResults, request.getFilename());
+        }
     }
 }
