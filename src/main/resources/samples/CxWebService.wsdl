@@ -12959,10 +12959,10 @@
   </wsdl:binding>
   <wsdl:service name="CxPortalWebService">
     <wsdl:port name="CxPortalWebServiceSoap" binding="tns:CxPortalWebServiceSoap">
-      <soap:address location="https://***REMOVED***/cxwebinterface/Portal/CxWebService.asmx" />
+      <soap:address location="https://CXMANAGER/cxwebinterface/Portal/CxWebService.asmx" />
     </wsdl:port>
     <wsdl:port name="CxPortalWebServiceSoap12" binding="tns:CxPortalWebServiceSoap12">
-      <soap12:address location="https://***REMOVED***/cxwebinterface/Portal/CxWebService.asmx" />
+      <soap12:address location="https://CXMANAGER/cxwebinterface/Portal/CxWebService.asmx" />
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
