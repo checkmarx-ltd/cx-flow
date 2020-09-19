@@ -48,11 +48,11 @@ public class GitHubService extends RepoService {
     private static final String STATUSES_URL_KEY = "statuses_url";
     private static final String STATUSES_URL_NOT_PROVIDED = "statuses_url was not provided within the request object, which is required for blocking / unblocking pull requests";
 
-
     public static final String MERGE_SUCCESS = "success";
     public static final String MERGE_FAILURE = "failure";
     private static final String MERGE_ERROR = "error";
 
+    private final GitHubAppAuthService gitHubAppAuthService;
     private final RestTemplate restTemplate;
     private final GitHubProperties properties;
     private final FlowProperties flowProperties;
@@ -74,17 +74,26 @@ public class GitHubService extends RepoService {
                          GitHubProperties properties,
                          FlowProperties flowProperties,
                          ThresholdValidator thresholdValidator,
-                         ScmConfigOverrider scmConfigOverrider) {
+                         ScmConfigOverrider scmConfigOverrider,
+                         GitHubAppAuthService gitHubAppAuthService) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.flowProperties = flowProperties;
         this.thresholdValidator = thresholdValidator;
         this.scmConfigOverrider = scmConfigOverrider;
+        this.gitHubAppAuthService = gitHubAppAuthService;
     }
 
     private HttpHeaders createAuthHeaders(ScanRequest scanRequest){
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.set(HttpHeaders.AUTHORIZATION, "token ".concat(scmConfigOverrider.determineConfigToken(properties, scanRequest.getScmInstance())));
+        HttpHeaders httpHeaders;;
+        if(!StringUtils.isEmpty(properties.getAppId()) && !StringUtils.isEmpty(properties.getAppKeyFile())){
+            log.debug("Using GitHub AppId: {}", properties.getAppId());
+            httpHeaders = gitHubAppAuthService.createAuthHeaders();
+        }
+        else{
+            httpHeaders = new HttpHeaders();
+            httpHeaders.set(HttpHeaders.AUTHORIZATION, "token ".concat(scmConfigOverrider.determineConfigToken(properties, scanRequest.getScmInstance())));
+        }
         return httpHeaders;
     }
 
