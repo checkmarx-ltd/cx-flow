@@ -13,6 +13,12 @@ public class GitHubProperties extends RepoProperties {
     @Getter
     @Setter
     private boolean useConfigAsCodeFromDefaultBranch;
+    @Getter
+    @Setter
+    private String appId;
+    @Getter
+    @Setter
+    private String appKeyFile;
 
     public String getMergeNoteUri(String namespace, String repo, String mergeId){
         String format = "%s/%s/%s/issues/%s/comments";
