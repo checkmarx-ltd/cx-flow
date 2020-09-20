@@ -32,9 +32,10 @@ public class ConfigAsCodeBranchSteps {
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
     private final ScmConfigOverrider scmConfigOverrider;
-
+    private final GitHubAppAuthService gitHubAppAuthService;
     private String defaultBranch;
     private String actualBranch;
+
 
     @Given("use-config-as-code-from-default-branch property in application.yml is set to {string}")
     public void useConfigAsCodeFromDefaultBranch(String useDefaultBranch) {
@@ -65,7 +66,7 @@ public class ConfigAsCodeBranchSteps {
         // Don't start automation.
         FlowService flowServiceMock = mock(FlowService.class);
 
-        GitHubService gitHubService = new GitHubService(restTemplateMock, gitHubProperties, flowProperties, null, scmConfigOverrider);
+        GitHubService gitHubService = new GitHubService(restTemplateMock, gitHubProperties, flowProperties, null, scmConfigOverrider, gitHubAppAuthService);
 
         GitHubController gitHubControllerSpy = Mockito.spy(new GitHubController(gitHubProperties,
                 flowProperties,

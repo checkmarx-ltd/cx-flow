@@ -78,11 +78,12 @@ public class CxConfigSteps {
 
     private ScanRequest request;
     private final JiraProperties jiraProperties;
+    private GitHubAppAuthService gitHubAppAuthService;
 
     public CxConfigSteps(FlowProperties flowProperties, GitHubService gitHubService,
                          CxProperties cxProperties, GitHubProperties gitHubProperties, ConfigurationOverrider configOverrider, JiraProperties jiraProperties,
                          ThresholdValidator thresholdValidator, FilterFactory filterFactory, FlowService flowService, EmailService emailService,
-                         ScmConfigOverrider scmConfigOverrider) {
+                         ScmConfigOverrider scmConfigOverrider, GitHubAppAuthService gitHubAppAuthService) {
 
         this.cxClientMock = mock(CxClient.class);
 
@@ -100,6 +101,7 @@ public class CxConfigSteps {
         this.filterFactory = filterFactory;
         this.configOverrider = configOverrider;
         this.scmConfigOverrider = scmConfigOverrider;
+        this.gitHubAppAuthService = gitHubAppAuthService;
         initGitHubProperties();
     }
 
@@ -549,7 +551,8 @@ public class CxConfigSteps {
                 gitHubProperties,
                 flowProperties,
                 thresholdValidator,
-                scmConfigOverrider);
+                scmConfigOverrider,
+                gitHubAppAuthService);
 
         this.resultsService = new ResultsService(
                 cxClientMock,
