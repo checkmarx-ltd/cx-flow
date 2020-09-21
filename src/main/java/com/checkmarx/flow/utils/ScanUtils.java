@@ -280,7 +280,7 @@ public class ScanUtils {
                 }
             }
             else if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)) {
-                return repoUrl.concat("src/").concat(branch).concat("/").concat(filename);
+                return repoUrl.concat("src/").concat(request.getHash()).concat("/").concat(filename);
             }
             else if (request.getRepoType().equals(ScanRequest.Repository.ADO)) {
                 return null;
