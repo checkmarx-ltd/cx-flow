@@ -413,7 +413,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Run SAST CLI Integration Tests
+          name: Run SCA CLI Integration Tests
           command: |
             export HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
             ./gradlew clean ScaCliIntegrationTest --info -Dtarget=${HOOK_TARGET} -Drepo=${HOOK_REPO} -Dnamespace=${HOOK_NAMESPACE}
@@ -434,7 +434,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Run SAST CLI Integration Tests
+          name: Run AST CLI Integration Tests
           command: |
             export HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
             ./gradlew clean AstCliIntegrationTest --info -Dtarget=${HOOK_TARGET} -Drepo=${HOOK_REPO} -Dnamespace=${HOOK_NAMESPACE}
