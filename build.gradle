@@ -273,7 +273,7 @@ task AstCliIntegrationTest(type: Test) {
     useJUnitPlatform() {
         systemProperty "testprofile", "astCliIntegration"
 
-        exclude 'com/checkmarx/flow/cucumber/integration/cli/ast/**'
+        include 'com/checkmarx/flow/cucumber/integration/cli/ast/**'
 
         testLogging {
             events "passed", "skipped", "failed"
