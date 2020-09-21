@@ -9,7 +9,6 @@ import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
@@ -20,7 +19,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -124,18 +123,23 @@ public class CsvIssueTracker extends ImmutableIssueTracker {
                     value = String.format(flowProperties.getMitreUrl(), issue.getCwe());
                     break;
                 case "loc":
-                    value = "";
                     List<String> lines = new ArrayList<>();
-                    if (issue.getDetails() != null && !issue.getDetails().isEmpty()) {
-                        for (Map.Entry<Integer, ScanResults.IssueDetails> entry : issue.getDetails().entrySet()) {
-                            if (entry.getKey() != null && entry.getValue() != null && !entry.getValue().isFalsePositive() && !ScanUtils.empty(entry.getValue().getCodeSnippet())) {
-                                lines.add(entry.getKey().toString());
-                            }
+
+                    Optional.ofNullable(issue.getDetails())
+                    .filter(current -> !current.isEmpty())
+                    .ifPresent(details -> {
+                            details.forEach((k , v) ->
+                                Optional.ofNullable(k)
+                                .map(key -> v)
+                                .filter(ScanResults.IssueDetails::isFalsePositive)
+                                .filter(val-> !ScanUtils.empty(val.getCodeSnippet()))
+                                .ifPresent(key -> lines.add(key.toString()))
+                            );
+                            Collections.sort(lines);
                         }
-                        Collections.sort(lines);
-                        value = StringUtils.join(lines, ",");
-                        log.debug("loc: {}", value);
-                    }
+                    );
+                    value = String.join(",", lines);
+                    log.debug("loc: {}", value);
                     break;
                 case "site":
                     log.debug("site: {}", request.getSite());
@@ -162,32 +166,40 @@ public class CsvIssueTracker extends ImmutableIssueTracker {
                     value = issue.getDescription();
                     break;
                 default:
-                    if (request.getCxFields() != null) {
+                    value = Optional.ofNullable(request.getCxFields())
+                    .map(fields -> {
                         log.debug("Checking for Checkmarx custom field {}", f.getName());
-                        value = request.getCxFields().get(f.getName());
-                        if(ScanUtils.empty(value)){
-                            log.warn("field value for {} not found", f.getName());
-                        }
-                        log.debug("Cx Field value: {}",value);
-                    }
-                    else {
+                        String v = fields.get(f.getName());
+                        return ScanUtils.empty(v) ? null : v;
+                    })
+                    .map(v -> {
+                        log.debug("Cx Field value: {}",v);
+                        return v;
+                    })
+                    .orElseGet( () -> {
                         log.warn("field value for {} not found", f.getName());
-                        value = "";
-                    }
+                        return "";
+                    });
+
             }
-            if (ScanUtils.empty(value)) {
+            value = Optional.of(value)
+            .filter(v -> !ScanUtils.empty(v))
+            .orElseGet(() -> {
                 log.debug("Value is empty, defaulting to configured default (if applicable)");
                 if (!ScanUtils.empty(f.getDefaultValue())) {
-                    value = f.getDefaultValue();
-                    log.debug("Default value is {}", value);
+                    String v = Optional.ofNullable(f.getDefaultValue()).orElse("");
+                    log.debug("Default value is {}", v);
+                    return v;
                 }
-            }
-            if(value == null){
-                value = "";
-            }
-            if(!ScanUtils.empty(f.getPrefix())){
-                value = subValues(request, f.getPrefix()).concat(value);
-            }
+                return "";
+            });
+
+            value = Optional.ofNullable(f.getPrefix())
+            .filter(prefix -> !ScanUtils.empty(prefix))
+            .map(prefix -> subValues(request, prefix))
+            .orElse("")
+            .concat(value);
+
             if(!ScanUtils.empty(f.getPostfix())){
                 value = value.concat(subValues(request, f.getPostfix()));
             }
@@ -237,7 +249,7 @@ public class CsvIssueTracker extends ImmutableIssueTracker {
 
         if(!ScanUtils.empty(request.getTeam())){
             String team = request.getTeam();
-            team = team.replaceAll("\\\\","_");
+            team = team.replace("\\","_");
             team = team.replace("/","_");
             value = value.replace("[TEAM]", team);
         }
