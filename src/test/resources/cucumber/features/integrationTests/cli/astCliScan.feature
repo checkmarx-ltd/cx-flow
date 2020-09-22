@@ -1,7 +1,7 @@
 @AST_CLI_SCAN  @IntegrationTest
 Feature: AST support in CxFlow command-line
 
-    @Skip
+    #@Skip
     Scenario Outline: AST CLI scan of a local directory
         Given scanner is <scanner>
         And source directory contains vulnerable files
@@ -10,23 +10,22 @@ Feature: AST support in CxFlow command-line
         And no exception is thrown
         Examples:
             | scanner | issueNumber |
-            #| SCA     | 5           |
             | AST     | 32          |
             | AST,SCA | 37          |
     
 
-    Scenario Outline: Testing break-build functionality
+    Scenario Outline: Running a AST scan with break-build enabled and command line arguments
         When running a AST scan with break-build on <issue-type>
         Then run should exit with exit code <exit-code-number>
 
         Examples:
             | issue-type                  | exit-code-number |
-            #| success                     | 0                |
+            | success                     | 0                |
             | missing-mandatory-parameter | 1                |
             | missing-project             | 2                |
 
 
-    @Skip
+    #@Skip
     Scenario Outline: AST CLI scan of github repo
         Given scanner is <scanner>
         And  repository is github
