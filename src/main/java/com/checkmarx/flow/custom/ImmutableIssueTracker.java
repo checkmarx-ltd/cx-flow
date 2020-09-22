@@ -4,6 +4,7 @@ import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.service.FilenameFormatter;
+import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -49,7 +50,9 @@ public abstract class ImmutableIssueTracker implements IssueTracker {
 
     @Override
     public String getXIssueKey(ScanResults.XIssue issue, ScanRequest request) {
-        return issue.getFilename();
+        return ScanUtils.isSAST(issue)
+                ? issue.getFilename()
+                : ScanUtils.getScaSummaryIssueKey(request, issue);
     }
 
     @Override

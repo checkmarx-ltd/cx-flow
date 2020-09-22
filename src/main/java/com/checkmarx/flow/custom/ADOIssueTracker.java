@@ -405,7 +405,7 @@ public class ADOIssueTracker implements IssueTracker {
             return String.format(ScanUtils.ISSUE_TITLE_KEY, request.getProduct().getProduct(), issue.getVulnerability(), issue.getFilename());
         }
         else {
-            return issue.getScaDetails() == null
+            return ScanUtils.isSAST(issue)
                     ? String.format(ScanUtils.ISSUE_TITLE_KEY_WITH_BRANCH, request.getProduct().getProduct(), issue.getVulnerability(), issue.getFilename(), request.getBranch())
                     : ScanUtils.getScaSummaryIssueKey(request, issue);
         }

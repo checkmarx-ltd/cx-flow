@@ -76,6 +76,10 @@ public class ScanUtils {
         return false;
     }
 
+    public static boolean isSAST(ScanResults.XIssue issue) {
+        return issue.getScaDetails() == null;
+    }
+
     public static List<ScanResults.XIssue> setASTXIssuesInScanResults(ScanResults results) {
         List<ScanResults.XIssue> issueList = new ArrayList<>();
         HashMap<String, Object> mapAdditionalDetails = new HashMap<>();

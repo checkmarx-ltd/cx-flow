@@ -265,12 +265,15 @@ public class GitHubIssueTracker implements IssueTracker {
 
     @Override
     public String getXIssueKey(ScanResults.XIssue issue, ScanRequest request) {
-        if(flowProperties.isTrackApplicationOnly() || ScanUtils.empty(request.getBranch())){
-            return String.format(ScanUtils.ISSUE_TITLE_KEY, request.getProduct().getProduct(), issue.getVulnerability(), issue.getFilename());
-        }
-        else {
-            return String.format(ScanUtils.ISSUE_TITLE_KEY_WITH_BRANCH, request.getProduct().getProduct(), issue.getVulnerability(), issue.getFilename(), request.getBranch());
-        }
+        return ScanUtils.isSAST(issue)
+                ? getSastIssueKey(issue, request)
+                : ScanUtils.getScaSummaryIssueKey(request, issue);
+    }
+
+    private String getSastIssueKey(ScanResults.XIssue issue, ScanRequest request) {
+        return flowProperties.isTrackApplicationOnly() || ScanUtils.empty(request.getBranch())
+                ? String.format(ScanUtils.ISSUE_TITLE_KEY, request.getProduct().getProduct(), issue.getVulnerability(), issue.getFilename())
+                : String.format(ScanUtils.ISSUE_TITLE_KEY_WITH_BRANCH, request.getProduct().getProduct(), issue.getVulnerability(), issue.getFilename(), request.getBranch());
     }
 
     @Override
