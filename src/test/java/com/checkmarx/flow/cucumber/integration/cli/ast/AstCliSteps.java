@@ -80,12 +80,16 @@ public class AstCliSteps  {
 
     @After
     public void afterEachScenario() throws IOException {
-        log.info("Cleaning JIRA project: {}", jiraProperties.getProject());
-        jiraUtils.cleanProject(jiraProperties.getProject());
+        try {
+            log.info("Cleaning JIRA project: {}", jiraProperties.getProject());
+            jiraUtils.cleanProject(jiraProperties.getProject());
 
-        if (directoryToScan != null) {
-            log.info("Deleting temp directory: {}", directoryToScan);
-            PathUtils.deleteDirectory(directoryToScan);
+            if (directoryToScan != null) {
+                log.info("Deleting temp directory: {}", directoryToScan);
+                PathUtils.deleteDirectory(directoryToScan);
+            }
+        }catch(Exception e){
+            log.warn("AstCliSteps.afterEachScenario(): Failed to clean issues: " + e.getMessage());
         }
     }
 
