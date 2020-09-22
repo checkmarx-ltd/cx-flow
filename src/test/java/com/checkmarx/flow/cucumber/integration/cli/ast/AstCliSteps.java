@@ -91,27 +91,8 @@ public class AstCliSteps  {
 
     @Given("scanner is {}")
     public void setScanInitiator(String initiatorList) {
-        String[] intiators ;
 
-        if(!initiatorList.contains(SEPARATOR)){
-            intiators = new String[1];
-            intiators[0] = initiatorList;
-        }
-        else{
-            intiators = initiatorList.split(SEPARATOR);
-        }
-
-        List<String> scanners = new LinkedList<>();
-        
-        for (String scanType: intiators) {
-            if(scanType.equalsIgnoreCase(ScaProperties.CONFIG_PREFIX)){
-                scanners.add(ScaProperties.CONFIG_PREFIX);
-            }
-            if(scanType.equalsIgnoreCase(AstProperties.CONFIG_PREFIX)){
-                scanners.add(AstProperties.CONFIG_PREFIX);
-            }
-
-        }
+        List<String> scanners = Arrays.asList(initiatorList.toLowerCase().split(SEPARATOR));
         flowProperties.setEnabledVulnerabilityScanners(scanners);
 
     }
@@ -146,9 +127,8 @@ public class AstCliSteps  {
         try {
             TestUtils.runCxFlow(cxFlowRunner, commandBuilder.toString());
         } catch (Throwable e) {
-            exception = e;
+            cxFlowExecutionException = e;
         }
-        cxFlowExecutionException = exception;
     }
 
     @Then("run should exit with exit code {}")
