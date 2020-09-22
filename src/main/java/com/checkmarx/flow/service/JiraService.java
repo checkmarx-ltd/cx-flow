@@ -905,11 +905,11 @@ public class JiraService {
         for (ScanResults.XIssue issue : issues) {
             String key;
             if (useBranch) {
-                key = issue.getScaDetails() == null
+                key = ScanUtils.isSCA(issue)
                         ? String.format(JiraConstants.JIRA_ISSUE_TITLE_KEY_WITH_BRANCH, issuePrefix, issue.getVulnerability(), issue.getFilename(), request.getBranch(), issuePostfix)
                         : getScaDetailsIssueTitleFormat(request, issuePrefix, issuePostfix, issue);
             } else {
-                key = issue.getScaDetails() == null
+                key = ScanUtils.isSCA(issue)
                         ? String.format(JiraConstants.JIRA_ISSUE_TITLE_KEY, issuePrefix, issue.getVulnerability(), issue.getFilename(), issuePostfix)
                         : getScaDetailsIssueTitleWithoutBranchFormat(request, issuePrefix, issuePostfix, issue);
             }
