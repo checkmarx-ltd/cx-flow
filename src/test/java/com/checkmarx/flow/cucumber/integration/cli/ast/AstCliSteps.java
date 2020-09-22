@@ -163,13 +163,17 @@ public class AstCliSteps  {
     }
 
     @Then("bug tracker contains {} issues")
-    public void validateBugTrackerIssues(int expectedIssuesCount) {
+    public void validateBugTrackerIssues(int countIssues) {
 
+        int expectedIssueCount = countIssues;
         int actualIssueCount = jiraUtils.getNumberOfIssuesInProject(jiraProperties.getProject());
 
-        log.info("comparing expected number of issues: {}, to actual bug tracker issues; {}", expectedIssuesCount, actualIssueCount);
-        Assert.assertEquals("Wrong issue count in bug tracker.", expectedIssuesCount, actualIssueCount);
-        
+        log.info("comparing expected number of issues: {}, to actual bug tracker issues; {}", expectedIssueCount, actualIssueCount);
+        if (expectedIssueCount == AT_LEAST_ONE) {
+            Assert.assertTrue("Expected at least one issue in bug tracker.", actualIssueCount > 0);
+        } else {
+            Assert.assertEquals("Wrong issue count in bug tracker.", expectedIssueCount, actualIssueCount);
+        }
     }
 
 
