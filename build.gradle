@@ -269,6 +269,18 @@ task SastCliIntegrationTest(type: Test) {
     }
 }
 
+task AstCliIntegrationTest(type: Test) {
+    useJUnitPlatform() {
+        systemProperty "testprofile", "astCliIntegration"
+
+        include 'com/checkmarx/flow/cucumber/integration/cli/ast/**'
+
+        testLogging {
+            events "passed", "skipped", "failed"
+        }
+    }
+}
+
 task ScaCliIntegrationTest(type: Test) {
     useJUnitPlatform() {
         systemProperty "testprofile", "scaCliIntegration"

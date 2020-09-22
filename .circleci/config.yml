@@ -413,7 +413,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Run SAST CLI Integration Tests
+          name: Run SCA CLI Integration Tests
           command: |
             export HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
             ./gradlew clean ScaCliIntegrationTest --info -Dtarget=${HOOK_TARGET} -Drepo=${HOOK_REPO} -Dnamespace=${HOOK_NAMESPACE}
@@ -428,6 +428,27 @@ jobs:
       - store_artifacts:
           path: ~/test-results/junit
 
+  AST-CLI-integration-tests:
+    docker:
+      - image: "circleci/openjdk:8-jdk"
+    steps:
+      - checkout
+      - run:
+          name: Run AST CLI Integration Tests
+          command: |
+            export HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
+            ./gradlew clean AstCliIntegrationTest --info -Dtarget=${HOOK_TARGET} -Drepo=${HOOK_REPO} -Dnamespace=${HOOK_NAMESPACE}
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/test-results/junit/
+            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/test-results
+      - store_artifacts:
+          path: ~/test-results/junit
+          
   cleanup:
     executor: aws-eks/python3
     parameters:
@@ -608,6 +629,9 @@ workflows:
       - SCA-CLI-integration-tests:
           requires:
             - deploy-cxflow
+      - AST-CLI-integration-tests:
+          requires:
+            - deploy-cxflow      
       - docker-push-stable:
           filters:
             branches:
@@ -620,7 +644,7 @@ workflows:
             - jira-integration-tests
             - pullRequestComments-integration-tests
             - SAST-CLI-integration-tests
-            - SCA-CLI-integration-tests
+            - AST-CLI-integration-tests
       - publish-github-release:
           filters:
             branches:
@@ -634,6 +658,7 @@ workflows:
             - pullRequestComments-integration-tests
             - SAST-CLI-integration-tests
             - SCA-CLI-integration-tests
+            - AST-CLI-integration-tests
       - cleanup:
           cluster-name: eks-cxflow-ci
           namespace: cxflow-${CIRCLE_SHA1::7}
@@ -655,6 +680,7 @@ workflows:
             - pullRequestComments-integration-tests
             - SAST-CLI-integration-tests
             - SCA-CLI-integration-tests
+            - AST-CLI-integration-tests
   nightly-cleanup:
     triggers:
       - schedule:
