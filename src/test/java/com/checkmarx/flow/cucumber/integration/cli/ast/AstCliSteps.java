@@ -123,12 +123,14 @@ public class AstCliSteps  {
         }
 
         log.info("Running CxFlow scan with command line: {}", commandBuilder.toString());
-        Throwable exception = null;
+  
         try {
             TestUtils.runCxFlow(cxFlowRunner, commandBuilder.toString());
         } catch (Throwable e) {
             cxFlowExecutionException = e;
         }
+
+        cxFlowExecutionException = null;
     }
 
     @Then("run should exit with exit code {}")
