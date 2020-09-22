@@ -76,7 +76,7 @@ public class ScanUtils {
         return false;
     }
 
-    public static boolean isSCA(ScanResults.XIssue issue) {
+    public static boolean isSAST(ScanResults.XIssue issue) {
         return issue.getScaDetails() == null;
     }
 

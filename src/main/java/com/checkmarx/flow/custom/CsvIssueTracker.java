@@ -67,7 +67,7 @@ public class CsvIssueTracker extends ImmutableIssueTracker {
 
     @Override
     public Issue createIssue(ScanResults.XIssue issue, ScanRequest request) throws MachinaException {
-        List<String> values = ScanUtils.isSCA(issue)
+        List<String> values = ScanUtils.isSAST(issue)
                 ? createSASTIssue(issue, request)
                 : createScaIssue(issue, request);
         String csv = convertToCSV(values).concat(HTMLHelper.CRLF);

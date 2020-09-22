@@ -265,7 +265,7 @@ public class GitHubIssueTracker implements IssueTracker {
 
     @Override
     public String getXIssueKey(ScanResults.XIssue issue, ScanRequest request) {
-        return ScanUtils.isSCA(issue)
+        return ScanUtils.isSAST(issue)
                 ? getSastIssueKey(issue, request)
                 : ScanUtils.getScaSummaryIssueKey(request, issue);
     }
