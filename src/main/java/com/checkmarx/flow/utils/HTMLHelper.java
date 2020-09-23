@@ -63,11 +63,11 @@ public class HTMLHelper {
             }
 
             addScanSummarySection(request, results, properties, body);
-            addFlowSummarySection(results, properties, body);
+            addFlowSummarySection(results, properties, body, request);
             addDetailsSection(request, results, properties, body);
         }
 
-        addScaBody(results, body);
+        addScaBody(results, body, request);
         return body.toString();
     }
 
@@ -92,7 +92,7 @@ public class HTMLHelper {
         return body.toString();
     }
 
-    private static void addFlowSummarySection(ScanResults results, RepoProperties properties, StringBuilder body) {
+    private static void addFlowSummarySection(ScanResults results, RepoProperties properties, StringBuilder body, ScanRequest request) {
         if (properties.isFlowSummary() && results.getAstResults() == null) {
             if (!ScanUtils.empty(properties.getFlowSummaryHeader())) {
                 appendAll(body, MarkDownHelper.getMdHeaderType(3, properties.getFlowSummaryHeader()), CRLF);
@@ -104,10 +104,10 @@ public class HTMLHelper {
             } else {
                 flowSummaryToMap.forEach((severityKey, value) ->
                     appendAll(body,
-                            MarkDownHelper.getSeverityIconFromLinkByText(severityKey),
-                            MarkDownHelper.NBSP, MarkDownHelper.getBoldText(value.toString()),
+                            MarkDownHelper.getSeverityIconFromLinkByText(severityKey, request),
+                            MarkDownHelper.getNonBreakingSpace(request), MarkDownHelper.getBoldText(value.toString()),
                             " ",
-                            MarkDownHelper.getBoldText(severityKey), MarkDownHelper.LINE_BREAK)
+                            MarkDownHelper.getBoldText(severityKey), MarkDownHelper.getLineBreak(request))
                 );
                 body.append(CRLF);
                 appendAll(body, MarkDownHelper.getTextLink(MarkDownHelper.MORE_DETAILS_LINK_HEADER, results.getLink()), CRLF);
@@ -115,15 +115,15 @@ public class HTMLHelper {
         }
     }
 
-    private static void addScaBody(ScanResults results, StringBuilder body) {
+    private static void addScaBody(ScanResults results, StringBuilder body, ScanRequest request) {
         Optional.ofNullable(results.getScaResults()).ifPresent(r -> {
             log.debug("Building merge comment MD for SCA scanner");
             if (body.length() > 0) {
                 appendAll(body, "***", CRLF);
             }
 
-            appendAll(body, MarkDownHelper.getCheckmarxLogoFromLink(), CRLF, MarkDownHelper.getScaHeader(), CRLF);
-            scaSummaryBuilder(body, r);
+            appendAll(body, MarkDownHelper.getCheckmarxLogoFromLink(request), CRLF, MarkDownHelper.getScaHeader(), CRLF);
+            scaSummaryBuilder(body, r, request);
             appendAll(body, MarkDownHelper.getMdHeaderType(3, COMMENT_TYPE_SCA_FINDINGS), CRLF);
 
             if (r.getFindings().isEmpty()) {
@@ -149,13 +149,13 @@ public class HTMLHelper {
         return body.toString();
     }
 
-    private static void scaSummaryBuilder(StringBuilder body, SCAResults r) {
+    private static void scaSummaryBuilder(StringBuilder body, SCAResults r, ScanRequest request) {
         appendAll(body, MarkDownHelper.getMdHeaderType(3, MarkDownHelper.SCA_SUMMARY_HEADER), CRLF);
         appendAll(body, MarkDownHelper.getBoldText("Total Packages Identified"), ": ", MarkDownHelper.getBoldText(String.valueOf(r.getSummary().getTotalPackages())), CRLF);
         appendAll(body, MarkDownHelper.getBoldText("Scan Risk Score"), ": ", MarkDownHelper.getBoldText(String.format("%.2f", r.getSummary().getRiskScore())), CRLF, CRLF);
 
         Arrays.asList("High", "Medium", "Low").forEach(v ->
-                appendAll(body, MarkDownHelper.getSeverityIconFromLinkByText(v), MarkDownHelper.NBSP, MarkDownHelper.getBoldText(String.valueOf(r.getSummary().getFindingCounts().get(Severity.valueOf(v.toUpperCase())))),
+                appendAll(body, MarkDownHelper.getSeverityIconFromLinkByText(v, request), MarkDownHelper.getNonBreakingSpace(request), MarkDownHelper.getBoldText(String.valueOf(r.getSummary().getFindingCounts().get(Severity.valueOf(v.toUpperCase())))),
                         " ", MarkDownHelper.getBoldText(v), " " ,MarkDownHelper.getBoldText("severity vulnerabilities"), CRLF));
 
         appendAll(body, MarkDownHelper.getTextLink(MarkDownHelper.MORE_DETAILS_LINK_HEADER, r.getWebReportLink()), CRLF);
@@ -329,10 +329,10 @@ public class HTMLHelper {
         log.debug("Building HTML body for SCA scanner");
         issue.getScaDetails().stream().findAny().ifPresent(any -> {
             body.append(ITALIC_OPENING_DIV).append(any.getFinding().getDescription()).append(ITALIC_CLOSING_DIV)
-                    .append(MarkDownHelper.LINE_BREAK);
+                    .append(MarkDownHelper.getLineBreak(request));
             body.append(String.format(SCATicketingConstants.SCA_HTML_ISSUE_BODY, any.getFinding().getSeverity(),
                     any.getVulnerabilityPackage().getName(), request.getBranch())).append(DIV_CLOSING_TAG)
-                    .append(MarkDownHelper.LINE_BREAK);
+                    .append(MarkDownHelper.getLineBreak(request));
         });
 
         Map<String, String> scaDetailsMap = new LinkedHashMap<>();
@@ -348,7 +348,7 @@ public class HTMLHelper {
 
                     );
 
-            scaDetailsMap.forEach((key, value) -> body.append(key).append(":</b> ").append(value).append(MarkDownHelper.LINE_BREAK));
+            scaDetailsMap.forEach((key, value) -> body.append(key).append(":</b> ").append(value).append(MarkDownHelper.getLineBreak(request)));
 
             String findingLink = ScanUtils.constructVulnerabilityUrl(any.getVulnerabilityLink(), any.getFinding());
             body.append(DIV_A_HREF).append(findingLink).append("\'>Link To SCA</a></div>");
@@ -644,11 +644,11 @@ public class HTMLHelper {
 
 
     private static void addScanSummarySection(ScanRequest request, ScanResults results, RepoProperties properties, StringBuilder body) {
-        setScannerLogoHeader(results, body);
+        setScannerLogoHeader(request, results, body);
         setScannerSummaryHeader(results, body);
 
         CxScanSummary summary = results.getScanSummary();
-        setScannerTotalVulnerabilities(body, summary);
+        setScannerTotalVulnerabilities(body, summary, request);
 
         if (properties.isCxSummary() && !request.getProduct().equals(ScanRequest.Product.CXOSA)) {
             if (!ScanUtils.empty(properties.getCxSummaryHeader())) {
@@ -663,12 +663,12 @@ public class HTMLHelper {
         }
     }
 
-    private static void setScannerTotalVulnerabilities(StringBuilder body, CxScanSummary summary) {
-        appendAll(body, "Total of " + countSastTotalVulnerabilities(summary) + " vulnerabilities", MarkDownHelper.LINE_BREAK);
-        appendAll(body, MarkDownHelper.getHighIconFromLink(), MarkDownHelper.NBSP, MarkDownHelper.getBoldText(summary.getHighSeverity() + " High"), MarkDownHelper.LINE_BREAK);
-        appendAll(body, MarkDownHelper.getMediumIconFromLink(), MarkDownHelper.NBSP, MarkDownHelper.getBoldText(summary.getMediumSeverity() + " Medium"), MarkDownHelper.LINE_BREAK);
-        appendAll(body, MarkDownHelper.getLowIconFromLink(), MarkDownHelper.NBSP, MarkDownHelper.getBoldText(summary.getLowSeverity() + " Low"), MarkDownHelper.LINE_BREAK);
-        appendAll(body, MarkDownHelper.getInfoIconFromLink(), MarkDownHelper.NBSP, MarkDownHelper.getBoldText(summary.getInfoSeverity() + " Info"), MarkDownHelper.LINE_BREAK, CRLF);
+    private static void setScannerTotalVulnerabilities(StringBuilder body, CxScanSummary summary, ScanRequest request) {
+        appendAll(body, "Total of " + countSastTotalVulnerabilities(summary) + " vulnerabilities", MarkDownHelper.getLineBreak(request));
+        appendAll(body, MarkDownHelper.getHighIconFromLink(request), MarkDownHelper.getNonBreakingSpace(request), MarkDownHelper.getBoldText(summary.getHighSeverity() + " High"), MarkDownHelper.getLineBreak(request));
+        appendAll(body, MarkDownHelper.getMediumIconFromLink(request), MarkDownHelper.getNonBreakingSpace(request), MarkDownHelper.getBoldText(summary.getMediumSeverity() + " Medium"), MarkDownHelper.getLineBreak(request));
+        appendAll(body, MarkDownHelper.getLowIconFromLink(request), MarkDownHelper.getNonBreakingSpace(request), MarkDownHelper.getBoldText(summary.getLowSeverity() + " Low"), MarkDownHelper.getLineBreak(request));
+        appendAll(body, MarkDownHelper.getInfoIconFromLink(request), MarkDownHelper.getNonBreakingSpace(request), MarkDownHelper.getBoldText(summary.getInfoSeverity() + " Info"), MarkDownHelper.getLineBreak(request), CRLF);
     }
 
     private static String countSastTotalVulnerabilities(CxScanSummary summary) {
@@ -703,11 +703,11 @@ public class HTMLHelper {
         }
     }
 
-    private static void setScannerLogoHeader(ScanResults results, StringBuilder body) {
+    private static void setScannerLogoHeader(ScanRequest request, ScanResults results, StringBuilder body) {
         if (Optional.ofNullable(results.getAstResults()).isPresent()) {
-            appendAll(body, MarkDownHelper.getCheckmarxLogoFromLink(), CRLF, MarkDownHelper.getAstBoldHeader(), CRLF);
+            appendAll(body, MarkDownHelper.getCheckmarxLogoFromLink(request), CRLF, MarkDownHelper.getAstBoldHeader(), CRLF);
         } else {
-            appendAll(body, MarkDownHelper.getCheckmarxLogoFromLink(), MarkDownHelper.LINE_BREAK, MarkDownHelper.getSastHeader(), CRLF);
+            appendAll(body, MarkDownHelper.getCheckmarxLogoFromLink(request), MarkDownHelper.getLineBreak(request), MarkDownHelper.getSastHeader(), CRLF);
         }
     }
 
