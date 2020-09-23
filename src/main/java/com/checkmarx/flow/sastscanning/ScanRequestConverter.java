@@ -38,7 +38,7 @@ public class ScanRequestConverter {
     private final BitBucketService bitBucketService;
     private final ADOService adoService;
     private final ShardSessionTracker sessionTracker;
-    private final String EMPTY_STRING = "";
+    private static final String EMPTY_STRING = "";
 
     public CxScanParams toScanParams(ScanRequest scanRequest) throws CheckmarxException {
         String ownerId = determineTeamAndOwnerID(scanRequest);

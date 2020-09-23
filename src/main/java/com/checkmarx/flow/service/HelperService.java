@@ -114,9 +114,7 @@ public class HelperService {
 
     public String getCxComment(ScanRequest request, String defaultValue){
         String scriptFile = properties.getCommentScript();
-        String comment = getEffectiveEntityName(request, scriptFile, defaultValue,"comment");
-
-        return comment;
+        return getEffectiveEntityName(request, scriptFile, defaultValue,"comment");
     }
 
     private String getEffectiveEntityName(ScanRequest request, String scriptFile, String defaultName, String entity) {
