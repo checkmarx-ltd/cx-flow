@@ -465,6 +465,7 @@ public class CxConfigSteps {
 
         scanRequest.setBugTracker(BugTracker.builder().type(BugTracker.Type.GITHUBPULL).build());
         scanRequest.setMergeNoteUri(MERGE_NOTE_URL);
+        scanRequest.setRepoType(ScanRequest.Repository.GITHUB);
 
         HashMap<String, String> additionalMetdata = new HashMap<>();
         additionalMetdata.put("statuses_url", PULL_REQUEST_STATUSES_URL);

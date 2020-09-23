@@ -1,5 +1,6 @@
 package com.checkmarx.flow.utils;
 
+import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 
 import java.util.Arrays;
@@ -23,9 +24,8 @@ public class MarkDownHelper {
     static final String AST_SUMMARY_HEADER = CX_PREFIX + AST_SAST_SCANNER + SUMMARY_SUFFIX;
     static final String SCA_SUMMARY_HEADER = CX_PREFIX + SCA_SCANNER + SUMMARY_SUFFIX;
 
-    static final String LINE_BREAK = "<br />";
-    static final String NBSP = "&nbsp;";
-
+    private static final String NBSP = "&nbsp;";
+    private static final String LINE_BREAK = "<br />";
     private static final String IMAGE_TEMPLATE = "![%s](%s)";
     private static final String BOLD_TEMPLATE = "**%s**";
     private static final String LINK_TEMPLATE = "[%s](%s)";
@@ -59,28 +59,69 @@ public class MarkDownHelper {
         return builder.append(" ").append(text).toString();
     }
 
-    static String getCheckmarxLogoFromLink() {
-        return getImageFromLink("Logo", CHECKMARX_LOGO_URL);
+    static String getCheckmarxLogoFromLink(ScanRequest request) {
+        return request.getRepoType() == ScanRequest.Repository.BITBUCKET
+                ? getMdHeaderType(1, "Checkmarx")
+                : getImageFromLink("Logo", CHECKMARX_LOGO_URL, request);
     }
 
-    static String getHighIconFromLink() {
-        return getImageFromLink("High", HIGH_ICON);
+    static String getNonBreakingSpace(ScanRequest scanRequest) {
+        String nbsp;
+
+        switch (scanRequest.getRepoType()) {
+            case BITBUCKET:
+                nbsp = " ";
+                break;
+            case GITHUB:
+            case GITLAB:
+            case ADO:
+                nbsp = NBSP;
+                break;
+            default:
+                nbsp = NBSP;
+                break;
+        }
+        return nbsp;
     }
 
-    static String getMediumIconFromLink() {
-        return getImageFromLink("Medium", MEDIUM_ICON);
+    static String getLineBreak(ScanRequest scanRequest) {
+        String lineBreak;
+
+        switch (scanRequest.getRepoType()) {
+            case BITBUCKET:
+                lineBreak = "  " + HTMLHelper.CRLF;
+                break;
+            case GITHUB:
+            case GITLAB:
+            case ADO:
+                lineBreak = LINE_BREAK;
+                break;
+            default:
+                lineBreak = HTMLHelper.CRLF + HTMLHelper.CRLF;
+                break;
+
+        }
+        return lineBreak;
     }
 
-    static String getLowIconFromLink() {
-        return getImageFromLink("Low", LOW_ICON);
+    static String getHighIconFromLink(ScanRequest request) {
+        return getImageFromLink("High", HIGH_ICON, request);
     }
 
-    static String getInfoIconFromLink() {
-        return getImageFromLink("Info", INFO_ICON);
+    static String getMediumIconFromLink(ScanRequest request) {
+        return getImageFromLink("Medium", MEDIUM_ICON, request);
     }
 
-    static String getIconFromLink() {
-        return getImageFromLink("Icon", ICON_ICON);
+    static String getLowIconFromLink(ScanRequest request) {
+        return getImageFromLink("Low", LOW_ICON, request);
+    }
+
+    static String getInfoIconFromLink(ScanRequest request) {
+        return getImageFromLink("Info", INFO_ICON, request);
+    }
+
+    static String getIconFromLink(ScanRequest request) {
+        return getImageFromLink("Icon", ICON_ICON, request);
     }
 
     static String getSastHeader() {
@@ -103,23 +144,25 @@ public class MarkDownHelper {
         return String.format(LINK_TEMPLATE, text, link);
     }
 
-    static String getSeverityIconFromLinkByText(String severity) {
+    static String getSeverityIconFromLinkByText(String severity, ScanRequest request) {
         switch (severity) {
             case "High":
-                return getHighIconFromLink();
+                return getHighIconFromLink(request);
             case "Medium":
-                return getMediumIconFromLink();
+                return getMediumIconFromLink(request);
             case "Low":
-                return getLowIconFromLink();
+                return getLowIconFromLink(request);
             case "Info":
-                return getInfoIconFromLink();
+                return getInfoIconFromLink(request);
             default:
                 throw new MachinaRuntimeException(severity + " is not a valid severity");
         }
     }
 
-    private static String getImageFromLink(String text, String url) {
-        return String.format(IMAGE_TEMPLATE, text, url);
+    private static String getImageFromLink(String text, String url, ScanRequest request) {
+        return request.getRepoType() == ScanRequest.Repository.BITBUCKET
+                ? ""
+                : String.format(IMAGE_TEMPLATE, text, url);
     }
 
     static void appendMDtableRow(StringBuilder sb, String... data) {

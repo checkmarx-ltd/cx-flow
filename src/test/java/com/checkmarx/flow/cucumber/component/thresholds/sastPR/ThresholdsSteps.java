@@ -210,13 +210,15 @@ public class ThresholdsSteps {
 
         Map<String, String> additionalMetadata = new HashMap<>();
         additionalMetadata.put(STATUSES_URL_KEY, PULL_REQUEST_STATUSES_URL);
-        
-        if(isGitHub) {
+
+        if (isGitHub) {
             issueTruckerType = BugTracker.Type.GITHUBPULL;
             scanRequest.setMergeNoteUri(MERGE_NOTE_URL);
-        }else{
+            scanRequest.setRepoType(ScanRequest.Repository.GITHUB);
+        } else {
             issueTruckerType = BugTracker.Type.ADOPULL;
             additionalMetadata.put("status_id", Integer.toString(1));
+            scanRequest.setRepoType(ScanRequest.Repository.ADO);
     }
         BugTracker issueTracker = BugTracker.builder().type(issueTruckerType).build();
         scanRequest.setBugTracker(issueTracker);
