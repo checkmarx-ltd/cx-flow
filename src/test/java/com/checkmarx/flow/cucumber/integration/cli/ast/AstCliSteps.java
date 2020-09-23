@@ -43,7 +43,7 @@ public class AstCliSteps  {
     private static final String REPO_ARGS = " --repo-url=https://github.com/cxflowtestuser/testsAST.git --repo-name=CLI-public-rest-repo --branch=master --blocksysexit";
 
     private static final String GITHUB_REPO_ARGS = REPO_ARGS + " --github ";
-    private static final String JIRA_PROJECT = "SCIT";
+    private static final String JIRA_PROJECT = "ASTCLITEST";
     private static final String DIRECTORY_TO_SCAN = "input-code-for-sca";
     private static final String NO_FILTERS = "none";
     private static final int AT_LEAST_ONE = Integer.MAX_VALUE;
