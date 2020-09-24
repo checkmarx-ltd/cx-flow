@@ -146,3 +146,19 @@ Feature: CxFlow should fail builds and pull requests if the number of findings w
     And 14 findings of "Medium" severity
     And 23 findings of "Low" severity
     Then CxFlow "approves" the pull request on Azure
+
+
+  Scenario Outline: CxFlow should approve or fail cli build operation, depending on whether threshold is exceeded
+    Given thresholds section <exist> in cxflow configuration
+    And thresholds <exceeded> by scan findings
+    And scan findings are <present> after filter
+    When cxflow called with scan cli command
+    Then cxflow should exit with the correct <exit code>
+
+    Examples:
+      |exist   | exceeded   | present    | exit code |
+      | true   | true       | true       | 10        |
+      | false  | false      | true       | 10        |
+      | false  | false      | false      | 0         |
+      | true   | false      | false      | 0         |
+      | true   | false      | true       | 0         |
