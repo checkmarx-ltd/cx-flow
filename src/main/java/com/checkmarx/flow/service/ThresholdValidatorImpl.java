@@ -10,6 +10,7 @@ import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.ScaConfig;
 import com.checkmarx.sdk.config.ScaProperties;
+import com.checkmarx.sdk.dto.Sca;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.cx.restclient.dto.scansummary.Severity;
 import com.cx.restclient.ast.dto.sca.report.Finding;
@@ -63,6 +64,7 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
             isMergeAllowed = isAllowed(scanResults, pullRequestReport.getScanRequest());
 
             if (!isMergeAllowed) {
+                log.info("Merge is not allowed, because some thresholds were exceeded.");
                 requestResult = new OperationResult(OperationStatus.FAILURE, MERGE_FAILURE_DESCRIPTION);
             }
         }
@@ -76,6 +78,24 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
     public boolean thresholdsExceeded(ScanRequest request, ScanResults results){
         return !isAllowed(results, request);
     }
+
+    @Override
+    public boolean isThresholdsConfigurationExist(ScanRequest scanRequest){
+        boolean sastThresholds = false;
+        boolean scaThresholds = false;
+
+        sastThresholds = scanRequest.getThresholds() != null || flowProperties.getThresholds() != null;
+        if(scaProperties != null){
+            scaThresholds = scaProperties.getThresholdsSeverity() != null || scaProperties.getThresholdsScore() != null;
+        }
+
+        if (!scaThresholds && scanRequest.getScaConfig() != null) {
+            scaThresholds = scanRequest.getScaConfig().getThresholdsSeverity() != null || scanRequest.getScaConfig().getThresholdsScore() != null;
+        }
+
+        return  sastThresholds || scaThresholds;
+    }
+
 
     private boolean isAllowed(ScanResults scanResults, ScanRequest request) {
 
@@ -121,8 +141,8 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
     }
 
     private void isAllowedScannerToLog(boolean isAllowedScanner) {
-        log.info(isAllowedScanner ? "Merge is allowed, because no thresholds were exceeded." :
-                "Merge is not allowed, because some of the thresholds were exceeded.");
+        log.info(isAllowedScanner ? "No thresholds were exceeded." :
+                "Thresholds were exceeded.");
     }
 
     private Map<FindingSeverity, Integer> getSastEffectiveThresholds(ScanRequest scanRequest) {

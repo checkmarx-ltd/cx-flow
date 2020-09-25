@@ -185,9 +185,16 @@ public class ThresholdsSteps {
 
     @And("scan findings are {} after filter")
     public void severityFilterIsSetTo(boolean findingsPresentedAfterFilter) {
-        int findingsCount = findingsPresentedAfterFilter? DEFAULT_FINDINGS_COUNT : 0;
+        if (findingsPresentedAfterFilter){
+            addFindingsTo(scanResultsToInject, DEFAULT_FINDINGS_COUNT, DEFAULT_SEVERITY_HIGH);
+        }else{
+            scanResultsToInject = createFakeScanResults();
+        }
+    }
 
-        addFindingsTo(scanResultsToInject, findingsCount, DEFAULT_SEVERITY_HIGH);
+    @And("break-build property is set to {}")
+    public void setBreakBuildProperty(boolean breakBuild){
+        flowProperties.setBreakBuild(breakBuild);
     }
 
     @And("no severity filter is specified")

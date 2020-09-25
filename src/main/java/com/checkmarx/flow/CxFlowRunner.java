@@ -511,11 +511,12 @@ public class CxFlowRunner implements ApplicationRunner {
     private boolean checkIfBreakBuild(ScanRequest request, ScanResults results){
         boolean breakBuildResult = false;
 
-        if(thresholdValidator.thresholdsExceeded(request, results)){
-            log.info("Fail build on Thresholds exceeded.");
-            breakBuildResult = true;
-        }
-        else if(flowProperties.isBreakBuild() && resultsService.filteredIssuesPresent(results)){
+        if(thresholdValidator.isThresholdsConfigurationExist(request)){
+            if(thresholdValidator.thresholdsExceeded(request, results)){
+                log.info("Fail build on Thresholds exceeded.");
+                breakBuildResult = true;
+            }
+        } else if(flowProperties.isBreakBuild() && resultsService.filteredIssuesPresent(results)){
             log.info("Fail build on issues presented after executing filters");
             breakBuildResult = true;
         }
