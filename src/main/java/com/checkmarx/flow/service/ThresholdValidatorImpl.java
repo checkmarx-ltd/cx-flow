@@ -81,7 +81,7 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
 
     @Override
     public boolean isThresholdsConfigurationExist(ScanRequest scanRequest){
-        boolean sastThresholds = false;
+        boolean sastThresholds;
         boolean scaThresholds = false;
 
         sastThresholds = scanRequest.getThresholds() != null || flowProperties.getThresholds() != null;
@@ -93,9 +93,9 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
             scaThresholds = scanRequest.getScaConfig().getThresholdsSeverity() != null || scanRequest.getScaConfig().getThresholdsScore() != null;
         }
 
+        log.info("Checking Thresholds exists. sast thresholds: {}. sca thresholds: {}", sastThresholds, scaThresholds);
         return  sastThresholds || scaThresholds;
     }
-
 
     private boolean isAllowed(ScanResults scanResults, ScanRequest request) {
 

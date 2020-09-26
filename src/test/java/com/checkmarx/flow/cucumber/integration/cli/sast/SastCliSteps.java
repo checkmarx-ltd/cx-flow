@@ -8,6 +8,7 @@ import com.checkmarx.flow.cucumber.integration.cli.IntegrationTestContext;
 import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.jira.IJiraTestUtils;
 import com.checkmarx.jira.JiraTestUtils;
+import com.checkmarx.sdk.config.ScaProperties;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.PendingException;
@@ -34,6 +35,7 @@ public class SastCliSteps {
     private final FlowProperties flowProperties;
     private final JiraProperties jiraProperties;
     private final IntegrationTestContext testContext;
+    private final ScaProperties scaProperties;
 
     private String commandlineConstantArgs;
     private int expectedHigh;
@@ -47,7 +49,7 @@ public class SastCliSteps {
     public void beforeEachScenario() throws IOException {
         log.info("Setting bugTracker: Jira");
         flowProperties.setBugTracker("JIRA");
-        flowProperties.setThresholds(null);
+        resetThresholds();
 
         log.info("Jira project key: {}", JIRA_PROJECT);
         jiraProperties.setProject(JIRA_PROJECT);
@@ -175,5 +177,11 @@ public class SastCliSteps {
         log.info("Cleaning jira project before test: {}", jiraProperties.getProject());
         jiraUtils.ensureProjectExists(jiraProperties.getProject());
         jiraUtils.cleanProject(jiraProperties.getProject());
+    }
+
+    private void resetThresholds() {
+        flowProperties.setThresholds(null);
+        scaProperties.setThresholdsSeverity(null);
+        scaProperties.setThresholdsScore(null);
     }
 }

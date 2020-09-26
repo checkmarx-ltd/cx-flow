@@ -11,6 +11,7 @@ import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
+import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxProject;
@@ -74,6 +75,7 @@ public class ThresholdsSteps {
     private final ADOProperties adoProperties;
     private final EmailService emailService;
     private final ScmConfigOverrider scmConfigOverrider;
+    private final ScaProperties scaProperties;
 
     private ScanResults scanResultsToInject;
     private ResultsService resultsService;
@@ -83,7 +85,7 @@ public class ThresholdsSteps {
 
     public ThresholdsSteps(IntegrationTestContext testContext, CxClient cxClientMock, RestTemplate restTemplateMock, FlowProperties flowProperties, ADOProperties adoProperties,
                            CxProperties cxProperties, GitHubProperties gitHubProperties, ThresholdValidator thresholdValidator,
-                           EmailService emailService, ScmConfigOverrider scmConfigOverrider) {
+                           EmailService emailService, ScmConfigOverrider scmConfigOverrider, ScaProperties scaProperties) {
 
         this.cxClientMock = cxClientMock;
         this.restTemplateMock = restTemplateMock;
@@ -91,6 +93,7 @@ public class ThresholdsSteps {
 
         this.flowProperties = flowProperties;
         this.cxProperties = cxProperties;
+        this.scaProperties = scaProperties;
         flowProperties.setThresholds(new HashMap<>());
         gitHubProperties.setCxSummary(false);
         this.gitHubProperties = gitHubProperties;
@@ -131,7 +134,7 @@ public class ThresholdsSteps {
                 thresholdForFindingsOfSeverityIs(DEFAULT_SEVERITY_HIGH, String.valueOf(DEFAULT_FINDINGS_COUNT + 1));
             }
         }
-        else{ theWholeThresholdsSectionIsOmittedFromConfig(); }
+        else{ resetThresholds(); }
     }
 
     @Given("threshold for findings of {string} severity is {string}")
@@ -144,8 +147,10 @@ public class ThresholdsSteps {
     }
 
     @Given("the whole 'thresholds' section is omitted from config")
-    public void theWholeThresholdsSectionIsOmittedFromConfig() {
+    public void resetThresholds() {
         flowProperties.setThresholds(null);
+        scaProperties.setThresholdsSeverity(null);
+        scaProperties.setThresholdsScore(null);
     }
 
     @When("cxflow called with scan cli command")
