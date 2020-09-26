@@ -47,6 +47,7 @@ public class SastCliSteps {
     public void beforeEachScenario() throws IOException {
         log.info("Setting bugTracker: Jira");
         flowProperties.setBugTracker("JIRA");
+        flowProperties.setThresholds(null);
 
         log.info("Jira project key: {}", JIRA_PROJECT);
         jiraProperties.setProject(JIRA_PROJECT);

@@ -75,6 +75,9 @@ public class ScaCliSteps {
         initJiraBugTracker();
         log.info("reset sca filters");
         scaProperties.setFilterSeverity(Collections.emptyList());
+        flowProperties.setThresholds(null);
+        scaProperties.setThresholdsSeverity(null);
+        scaProperties.setThresholdsScore(null);
     }
 
     @After
