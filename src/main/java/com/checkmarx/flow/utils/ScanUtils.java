@@ -571,4 +571,14 @@ public class ScanUtils {
 
         return vulnerabilityUrl.toString();
     }
+
+    /**
+     * Returns the string with first letter in uppercase and the remainder in lowercase
+     * @param s
+     * @return
+     */
+    public static String toProperCase(String s) {
+        return s.substring(0, 1).toUpperCase() +
+                s.substring(1).toLowerCase();
+    }
 }

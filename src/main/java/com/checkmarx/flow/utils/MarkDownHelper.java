@@ -145,14 +145,14 @@ public class MarkDownHelper {
     }
 
     static String getSeverityIconFromLinkByText(String severity, ScanRequest request) {
-        switch (severity) {
-            case "High":
+        switch (severity.toUpperCase()) {
+            case "HIGH":
                 return getHighIconFromLink(request);
-            case "Medium":
+            case "MEDIUM":
                 return getMediumIconFromLink(request);
-            case "Low":
+            case "LOW":
                 return getLowIconFromLink(request);
-            case "Info":
+            case "INFO":
                 return getInfoIconFromLink(request);
             default:
                 throw new MachinaRuntimeException(severity + " is not a valid severity");
