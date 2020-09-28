@@ -502,7 +502,7 @@ public class JiraService {
                                 break;
                             case "severity":
                                 log.debug("severity: {}", issue.getSeverity());
-                                value = issue.getSeverity();
+                                value = ScanUtils.toProperCase(issue.getSeverity());
                                 break;
                             case "category":
                                 log.debug("category: {}", issue.getVulnerability());
