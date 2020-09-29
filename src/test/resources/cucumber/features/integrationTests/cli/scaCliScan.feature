@@ -22,16 +22,16 @@ Feature: SCA support in CxFlow command-line
 
 
     Scenario Outline: Testing cli filter functionality
-        Given code has 6 High, 9 Medium and 0 low issues
+        Given code has 6 High, 11 Medium and 1 low issues
         When running sca scan <filter>
         Then bug tracker contains <number of issue> issues
 
         Examples:
-            | filter                 | number of issue |
-            | none                   | 15              |
-            | High                   | 6               |
-            | Medium,Low             | 9               |
-            | Low                    | 0               |
+            | filter     | number of issue |
+            | none       | 18              |
+            | High       | 6               |
+            | Medium,Low | 12              |
+            | Low        | 1               |
 
 
     Scenario Outline: Publishing latest scan results
