@@ -101,7 +101,8 @@ public class ScanUtils {
             }
             xIssueBuilder.vulnerabilityStatus(finding.getStatus());
             xIssueBuilder.similarityId("" + finding.getSimilarityID());
-
+            xIssueBuilder.description("" + finding.getDescription());
+     
             Map<Integer, ScanResults.IssueDetails> details = new HashMap<>();
             ScanResults.IssueDetails issueDetails = new ScanResults.IssueDetails()
                     .falsePositive(Boolean.FALSE);
