@@ -121,6 +121,7 @@ public class Github2AdoSteps {
         this.flowProperties.setBugTracker(AZURE);
         this.flowProperties.setBugTrackerImpl(Collections.singletonList(AZURE));
         this.adoProperties.setUrl("https://dev.azure.com/");
+        
         issueService = new IssueService(flowProperties);
         issueService.setApplicationContext(applicationContext);
         scanResultsToInject = createFakeResults();
@@ -209,7 +210,14 @@ public class Github2AdoSteps {
             fail(e.getMessage());
         }
     }
-    
+
+    @And("description field is populated")
+    public void validateDescription() throws IOException {
+        azureDevopsClient.getIssues().forEach(issue -> {
+            issue.getBody().toLowerCase().contains("description");
+        });
+    }
+
     @And("project {string} exists in Azure under namespace {string}")
     public void validateProjectName(String project, String namespace) {
 
