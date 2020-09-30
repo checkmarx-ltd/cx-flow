@@ -99,10 +99,10 @@ public class ScanUtils {
             if(finding.getNodes().size() >0) {
                 xIssueBuilder.file(finding.getNodes().get(0).getFileName());
             }
-            xIssueBuilder.vulnerabilityStatus(finding.getStatus());
+            xIssueBuilder.vulnerabilityStatus(finding.getState());
             xIssueBuilder.similarityId("" + finding.getSimilarityID());
-            xIssueBuilder.description("" + finding.getDescription());
-     
+            xIssueBuilder.description(finding.getDescription());
+                 
             Map<Integer, ScanResults.IssueDetails> details = new HashMap<>();
             ScanResults.IssueDetails issueDetails = new ScanResults.IssueDetails()
                     .falsePositive(Boolean.FALSE);
@@ -138,7 +138,7 @@ public class ScanUtils {
         scanSummary.setMediumSeverity(results.getAstResults().getResults().getSummary().getMediumVulnerabilityCount() );
         scanSummary.setLowSeverity(results.getAstResults().getResults().getSummary().getLowVulnerabilityCount() );
         scanSummary.setInfoSeverity(0);
-
+        results.setLink(results.getAstResults().getResults().getWebReportLink());
         results.setScanSummary( scanSummary);
     }
 
