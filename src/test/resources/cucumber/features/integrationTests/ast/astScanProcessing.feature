@@ -23,9 +23,8 @@ Feature: Cx-Flow AST Integration permutation tests
     And finding with the same queryId will have the same description and there will be a unique finding description for each queryId  
 
     Examples:
-    # Cannot rely on an exact number of findings, because it may change after backend version updates.
-      | scanners | branch |
-      | AST      |testAstDescription| 
+      | scanners | 
+      | AST      |
       
     
   @ASTRemoteRepoScan @InvalidCredentials

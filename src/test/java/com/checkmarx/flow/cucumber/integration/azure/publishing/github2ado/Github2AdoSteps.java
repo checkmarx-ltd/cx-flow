@@ -214,7 +214,7 @@ public class Github2AdoSteps {
     @And("description field is populated")
     public void validateDescription() throws IOException {
         azureDevopsClient.getIssues().forEach(issue -> {
-            issue.getBody().toLowerCase().contains("description");
+            Assert.assertTrue(issue.getBody().toLowerCase().contains("description"));
         });
     }
 

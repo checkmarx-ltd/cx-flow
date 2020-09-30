@@ -2,7 +2,6 @@ package com.checkmarx.flow.cucumber.integration.ast.scans;
 
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.cucumber.common.utils.AstUtils;
 import com.checkmarx.flow.cucumber.integration.sca_scanner.ScaCommonSteps;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.service.*;
@@ -46,7 +45,7 @@ public class AstRemoteRepoScanSteps {
 
     private static final String BRANCH = "master";
 
-    private static final String REPO_DESCRIPTION = "https://github.com/cxflowtestuser/public-rest-repo";
+    private static final String GITHUB_REPO_FOR_DESCRIPTION_TEST = "https://github.com/cxflowtestuser/public-rest-repo";
     
     private static final String PUBLIC_REPO = "https://github.com/cxflowtestuser/testsAST.git";
     private static final String SEPARATOR = ",";
@@ -181,17 +180,42 @@ public class AstRemoteRepoScanSteps {
     @Given("enabled vulnerability scanners are {string} and branch is {string}")
     public void setScanInitiatorAndBranch(String initiatorList, String branch) {
         List<VulnerabilityScanner> scanners = setScanInitiator(initiatorList);
-        startScan(scanners, branch, REPO_DESCRIPTION);
+        startScan(scanners, branch, GITHUB_REPO_FOR_DESCRIPTION_TEST);
     }
     
     @And("each finding will contain AST populated description field")
     public void validateAdditionalFields(){
-        assertTrue("AST scan ID is empty", StringUtils.isNotEmpty(scanResults.getAstResults().getResults().getFindings().get(0).getDescription()));
+        assertTrue("AST description field is empty", StringUtils.isNotEmpty(scanResults.getAstResults().getResults().getFindings().get(0).getDescription()));
     }
 
     @And("finding with the same queryId will have the same description and there will be a unique finding description for each queryId")
     public void validateDescriptions() {
-        AstUtils.validateDescriptions(scanResults.getAstResults().getResults().getFindings());
+        validateDescriptions(scanResults.getAstResults().getResults().getFindings());
+    }
+
+    private void validateDescriptions(List<Finding> findings) {
+
+        Map<String, Set<String>> mapDescriptions = new HashMap<>();
+
+        findings.forEach(finding -> {
+            Set<String> listDescriptions = mapDescriptions.get(finding.getQueryID());
+            if(listDescriptions == null){
+                listDescriptions = new HashSet<>();
+            }
+            listDescriptions.add(finding.getDescription());
+            mapDescriptions.put(finding.getQueryID(), listDescriptions);
+        });
+
+        Set<String> uniqueDescriptions = new HashSet<>();
+
+        //validate for each queryId there is exactly one corresponding description
+        for( Map.Entry<String, Set<String>> entry :mapDescriptions.entrySet()){
+            Assert.assertEquals( 1, entry.getValue().size());
+            uniqueDescriptions.add((String)entry.getValue().toArray()[0]);
+        }
+
+        //validate all descriptions are unique
+        Assert.assertEquals(uniqueDescriptions.size(),mapDescriptions.size() );
     }
     
     @Given("enabled vulnerability scanners are {string}")
@@ -202,15 +226,10 @@ public class AstRemoteRepoScanSteps {
     }
 
     private List<VulnerabilityScanner> setScanInitiator(String initiatorList) {
-        String[] intiators ;
+        String[] initiators  = initiatorList.split(SEPARATOR);
         List<VulnerabilityScanner> scanners = new LinkedList<>();
-        if(!initiatorList.contains(SEPARATOR)){
-            intiators = new String[1];
-            intiators[0] = initiatorList;
-        } else {
-            intiators = initiatorList.split(SEPARATOR);
-        }
-        for (String scanType: intiators) {
+        
+        for (String scanType: initiators) {
            if(scanType.equalsIgnoreCase(ScaProperties.CONFIG_PREFIX)){
                 flowProperties.setEnabledVulnerabilityScanners(Collections.singletonList(ScaProperties.CONFIG_PREFIX));
                 this.isScaEnabled = true;
