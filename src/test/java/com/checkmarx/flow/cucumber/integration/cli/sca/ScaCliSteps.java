@@ -95,7 +95,7 @@ public class ScaCliSteps {
         copyTestProjectTo(directoryToScan);
     }
 
-    @Given("code has 6 High, 9 Medium and 0 low issues")
+    @Given("code has 6 High, 11 Medium and 1 low issues")
     public void setProject() {
         customScaProjectName = "test";
     }
