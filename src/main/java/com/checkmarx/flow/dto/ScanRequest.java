@@ -1,6 +1,7 @@
 package com.checkmarx.flow.dto;
 
 import com.checkmarx.flow.config.FindingSeverity;
+import com.checkmarx.flow.config.external.ASTConfig;
 import com.checkmarx.flow.service.VulnerabilityScanner;
 import com.checkmarx.sdk.config.ScaConfig;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
@@ -80,6 +81,7 @@ public class ScanRequest {
     private Map<String, String> additionalMetadata;
     private List<VulnerabilityScanner> vulnerabilityScanners;
     private ScaConfig scaConfig;
+    private ASTConfig astConfig;
 
     public ScanRequest(ScanRequest other) {
         this.namespace = other.namespace;
@@ -115,6 +117,7 @@ public class ScanRequest {
         this.forceScan = other.forceScan;
         this.vulnerabilityScanners = other.vulnerabilityScanners;
         this.scaConfig = other.scaConfig;
+        this.astConfig = other.astConfig;
         this.thresholds = other.thresholds;
     }
 

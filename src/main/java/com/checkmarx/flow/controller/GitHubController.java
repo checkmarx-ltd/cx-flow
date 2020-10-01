@@ -1,5 +1,8 @@
 package com.checkmarx.flow.controller;
 
+import com.checkmarx.configprovider.ConfigProvider;
+import com.checkmarx.configprovider.dto.SourceProviderType;
+import com.checkmarx.configprovider.readers.RepoReader;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.config.JiraProperties;
@@ -30,6 +33,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.PostConstruct;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import javax.naming.ConfigurationException;
 import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -238,10 +242,26 @@ public class GitHubController extends WebhookController {
             throw new MachinaRuntimeException(e);
         }
 
+        if (properties != null) {
+            try {
+                ConfigProvider configProvider = ConfigProvider.getInstance();
+                Repository repository = event.getRepository();
+                String ref = event.getRef();
+
+                configProvider.init(uid, new RepoReader(properties.getApiUrl(), repository.getOwner().getName(),
+                        repository.getName(), ref.substring(ref.lastIndexOf('/') + 1),
+                        properties.getToken(), SourceProviderType.GITHUB));
+            } catch (ConfigurationException e) {
+                log.warn("Failed to init config provider with the following error: {}", e.getMessage());
+            }
+        }
+
         if (flowProperties == null || cxProperties == null) {
             log.error("Properties have null values");
             throw new MachinaRuntimeException();
         }
+
+
         //verify message signature
         verifyHmacSignature(body, signature, controllerRequest);
 

@@ -1,7 +1,9 @@
 package com.checkmarx.flow.service;
 
+import com.checkmarx.configprovider.ConfigProvider;
 import com.checkmarx.flow.config.FindingSeverity;
 import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.config.external.ASTConfig;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.FlowOverride;
@@ -18,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -40,15 +43,17 @@ public class ConfigurationOverrider {
     private final SastScanner sastScanner;
 
     public ScanRequest overrideScanRequestProperties(CxConfig override, ScanRequest request) {
-        if (override == null || request == null || Boolean.FALSE.equals(override.getActive())) {
+        ConfigProvider configProvider = ConfigProvider.getInstance();
+        if (request == null || (!configProvider.hasAnyConfiguration(MDC.get("cx")) && (override == null || Boolean.FALSE.equals(override.getActive())))) {
             return request;
         }
 
         Map<String, String> overrideReport = new HashMap<>();
-        overrideMainProperties(override, request, overrideReport);
+        overrideMainProperties(Optional.ofNullable(override), request, overrideReport);
 
         try {
-            Optional.ofNullable(override.getAdditionalProperties()).ifPresent(ap -> {
+            Optional.ofNullable(override)
+                .map(CxConfig::getAdditionalProperties).ifPresent(ap -> {
                 Object flow = ap.get("cxFlow");
                 ObjectMapper mapper = new ObjectMapper();
                 Optional.ofNullable(mapper.convertValue(flow, FlowOverride.class)).ifPresent(flowOverride ->
@@ -146,8 +151,8 @@ public class ConfigurationOverrider {
         });
     }
 
-    private void overrideMainProperties(CxConfig override, ScanRequest request, Map<String, String> overrideReport) {
-        Optional.ofNullable(override.getProject())
+    private void overrideMainProperties(Optional<CxConfig> override, ScanRequest request, Map<String, String> overrideReport) {
+        override.map(CxConfig::getProject)
                 .filter(StringUtils::isNotBlank)
                 .ifPresent(p -> {
                     /*Replace ${repo} and ${branch}  with the actual reponame and branch - then strip out non-alphanumeric (-_ are allowed)*/
@@ -157,13 +162,13 @@ public class ConfigurationOverrider {
                     request.setProject(project);
                     overrideReport.put("project", project);
                 });
-        Optional.ofNullable(override.getTeam())
+        override.map(CxConfig::getTeam)
                 .filter(StringUtils::isNotBlank)
                 .ifPresent(t -> {
                     request.setTeam(t);
                     overrideReport.put("team", t);
                 });
-        Optional.ofNullable(override.getSast()).ifPresent(s -> {
+        override.map(CxConfig::getSast).ifPresent(s -> {
             Optional.ofNullable(s.getIncremental()).ifPresent(si -> {
                 request.setIncremental(si);
                 overrideReport.put("incremental", si.toString());
@@ -188,7 +193,42 @@ public class ConfigurationOverrider {
                 overrideReport.put("exclude files", sf);
             });
         });
-        overridePropertiesSca(Optional.ofNullable(override.getSca()), overrideReport, request);
+        ConfigProvider configProvider = ConfigProvider.getInstance();
+        String uid = MDC.get("cx");
+        if (configProvider.hasConfiguration(uid, "sca")) {
+            ScaConfig scaConfiguration = configProvider.getConfiguration(uid, "sca", ScaConfig.class);
+            log.info("Overriding SCA properties from config provider configuration");
+            overridePropertiesSca(scaConfiguration, overrideReport, request);
+        } else {
+            overridePropertiesSca(override.map(CxConfig::getSca), overrideReport, request);
+        }
+
+        if (configProvider.hasConfiguration(uid, "ast")) {
+            ASTConfig astConfiguration = configProvider.getConfiguration(uid, "ast", ASTConfig.class);
+            log.info("Overriding AST properties from config provider configuration");
+            overriderPropertiesAst(astConfiguration, overrideReport, request);
+        }
+    }
+
+    private void overriderPropertiesAst(ASTConfig astConfiguration, Map<String, String> overrideReport, ScanRequest request) {
+        overrideReport.put("AST apiUrl", astConfiguration.getApiUrl());
+        overrideReport.put("AST preset", astConfiguration.getPreset());
+        overrideReport.put("AST incremental", String.valueOf(astConfiguration.isIncremental()));
+
+        request.setAstConfig(astConfiguration);
+    }
+
+    private void overridePropertiesSca(ScaConfig scaConfiguration, Map<String, String> overrideReport, ScanRequest request) {
+        overrideReport.put("accessControlUrl", scaConfiguration.getAccessControlUrl());
+        overrideReport.put("apiUrl", scaConfiguration.getApiUrl());
+        overrideReport.put("appUrl", scaConfiguration.getAppUrl());
+        overrideReport.put("tenant", scaConfiguration.getTenant());
+        overrideReport.put("thresholdsSeverity", convertMapToString(scaConfiguration.getThresholdsSeverity()));
+        overrideReport.put("thresholdsScore", String.valueOf(scaConfiguration.getThresholdsScore()));
+        overrideReport.put("filterSeverity", scaConfiguration.getFilterSeverity().toString());
+        overrideReport.put("filterScore", String.valueOf(scaConfiguration.getFilterScore()));
+
+        request.setScaConfig(scaConfiguration);
     }
 
     private void overridePropertiesSca(Optional<Sca> sca, Map<String, String> overrideReport, ScanRequest request) {
