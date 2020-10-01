@@ -1,5 +1,6 @@
 package com.checkmarx.flow.cucumber.integration.cli.ast;
 
+import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.CxFlowRunner;
 import com.checkmarx.flow.config.FlowProperties;
@@ -13,6 +14,7 @@ import com.checkmarx.jira.IJiraTestUtils;
 import com.checkmarx.jira.JiraTestUtils;
 import com.checkmarx.sdk.config.AstProperties;
 import com.checkmarx.sdk.config.ScaProperties;
+import com.checkmarx.sdk.dto.Filter;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.PendingException;
@@ -25,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.file.PathUtils;
 import org.junit.Assert;
+import org.junit.platform.commons.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -167,6 +170,24 @@ public class AstCliSteps  {
     public void validateBugTrackerIssues(int expectedIssuesCount) {
 
         int actualIssueCount = jiraUtils.getNumberOfIssuesInProject(jiraProperties.getProject());
+        Iterable<Issue> actualIssues = jiraUtils.searchForAllIssues(jiraProperties.getProject()).getIssues();
+
+        actualIssues.forEach(issue -> {
+            
+            if(flowProperties.getEnabledVulnerabilityScanners().size() ==1 && flowProperties.getEnabledVulnerabilityScanners().get(0).equalsIgnoreCase("AST")) {
+                
+                //validate state
+                Assert.assertTrue(issue.getDescription().contains("TO_VERIFY"));
+
+                //validate description
+                if (issue.getDescription().contains("Cross_Site_History_Manipulation")) {
+                    Assert.assertTrue(issue.getDescription().contains("Method @SourceMethod at line @SourceLine of @SourceFile may leak server-side conditional values, enabling user tracking from another website. This may constitute a Privacy Violation."));
+                }
+                if (issue.getDescription().contains("Hardcoded_password_in_Connection_String")) {
+                    Assert.assertTrue(issue.getDescription().contains("The application contains hardcoded connection details, @SourceElement, at lineÂ @SourceLine ofÂ @SourceFile. This connection string contains a hardcoded password,Â which is used in @DestinationMethod at line @DestinationLine of @DestinationFile to connect to a database server with @DestinationElement. This can expose the database password, and impede proper password management."));
+                }
+            }
+        });
 
         log.info("comparing expected number of issues: {}, to actual bug tracker issues; {}", expectedIssuesCount, actualIssueCount);
         Assert.assertEquals("Wrong issue count in bug tracker.", expectedIssuesCount, actualIssueCount);

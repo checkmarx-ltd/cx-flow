@@ -1,5 +1,6 @@
 package com.checkmarx.jira;
 
+import com.atlassian.jira.rest.client.api.domain.SearchResult;
 import com.checkmarx.sdk.dto.Filter;
 
 import java.io.IOException;
@@ -40,4 +41,6 @@ public interface IJiraTestUtils {
     Long getFirstIssueId(String projectKey);
 
     Map<String, Integer> getIssuesByStatus(String projectKey);
+
+    SearchResult searchForAllIssues(String projectKey) ;
 }

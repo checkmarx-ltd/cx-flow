@@ -9,7 +9,8 @@ Feature: CxFlow should read configuration from cx.config file in the root of rep
     And project "<outputProject>" exists in Azure under namespace "<outputNamespace>"
     And SAST scan produces high and medium results
     Then CxFlow will create appropriate tickets in project "<outputProject>" in namespace "<outputNamespace>" in Azure
-
+    And description field is populated
+    
     Examples:
       | repo     | branch | inputProject | inputNamespace | outputProject | outputNamespace |
       | testsAdo | master | CxTest1      | CxNamespace    | CxTest1       | CxNamespace     |
