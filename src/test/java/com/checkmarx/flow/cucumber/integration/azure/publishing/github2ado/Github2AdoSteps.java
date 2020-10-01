@@ -225,6 +225,8 @@ public class Github2AdoSteps {
     public void validateDescription() throws IOException {
         azureDevopsClient.getIssues().forEach(issue -> {
             Assert.assertTrue(issue.getBody().toLowerCase().contains(DESCRIPTION_AST));
+            Assert.assertTrue(issue.getBody().toLowerCase().contains(TO_VERIFY));
+
         });
     }
 
