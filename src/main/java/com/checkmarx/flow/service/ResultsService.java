@@ -335,8 +335,11 @@ public class ResultsService {
     }
 
     public boolean filteredIssuesPresent(ScanResults results) {
-        Map<String, Integer> flow = (Map<String, Integer>) results.getAdditionalDetails().get(Constants.SUMMARY_KEY);
-        return flow == null || !flow.isEmpty();
+        if(results.getAdditionalDetails()!=null) {
+            Map<String, Integer> flow = (Map<String, Integer>) results.getAdditionalDetails().get(Constants.SUMMARY_KEY);
+            return flow == null || !flow.isEmpty();
+        }
+        return false;
     }
 
     /**
