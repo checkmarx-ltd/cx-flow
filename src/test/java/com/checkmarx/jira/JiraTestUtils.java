@@ -432,7 +432,7 @@ Line #222:
         return result.getIssues().iterator().next();
     }
 
-    private SearchResult searchForAllIssues(String projectKey) {
+    public SearchResult searchForAllIssues(String projectKey) {
         return search(getSearchAllProjectJql(projectKey));
     }
 

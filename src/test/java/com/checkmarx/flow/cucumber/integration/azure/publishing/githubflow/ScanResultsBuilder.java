@@ -48,6 +48,7 @@ public class ScanResultsBuilder {
                 .severity("High")
                 .link("http://example.local/CxWebClient/ViewerMain.aspx?scanid=1000026&projectid=6&pathid=2")
                 .file("DOS_Login.java")
+                .description("Description: Reflected_XSS_All_Clients")
                 .details(getIssueDetails())
                 .additionalDetails(Collections.emptyMap())
                 .build();
@@ -70,6 +71,7 @@ public class ScanResultsBuilder {
                 .severity("High")
                 .link("http://example.local/CxWebClient/ViewerMain.aspx?scanid=1000026&projectid=6&pathid=2")
                 .file("DOS_Login.java")
+                .description("Description: SQL_Injection")
                 .details(getIssueDetails())
                 .additionalDetails(Collections.emptyMap())
                 .build();

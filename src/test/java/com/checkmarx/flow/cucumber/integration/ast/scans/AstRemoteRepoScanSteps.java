@@ -9,6 +9,7 @@ import com.checkmarx.sdk.config.AstProperties;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.ScanResults;
+import com.cx.restclient.ast.dto.sast.report.Finding;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
@@ -19,15 +20,13 @@ import io.cucumber.spring.CucumberContextConfiguration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.junit.Assert;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.Assert.*;
@@ -40,9 +39,14 @@ import static org.mockito.Mockito.when;
 @Slf4j
 @RequiredArgsConstructor
 public class AstRemoteRepoScanSteps {
+
     final String EMPTY_STRING_INDICATOR = "<empty>";
     private static final String PUBLIC_PROJECT_NAME = "Public-Test-Test-Repo";
 
+    private static final String BRANCH = "master";
+
+    private static final String GITHUB_REPO_FOR_DESCRIPTION_TEST = "https://github.com/cxflowtestuser/public-rest-repo";
+    
     private static final String PUBLIC_REPO = "https://github.com/cxflowtestuser/testsAST.git";
     private static final String SEPARATOR = ",";
 
@@ -105,7 +109,7 @@ public class AstRemoteRepoScanSteps {
         astProperties.setClientSecret(toActualClientSecret(clientSecretDescr));
         isAstEnabled = true;
         try {
-            startScan(Collections.singletonList(astScanner));
+            startScan(Collections.singletonList(astScanner), BRANCH, PUBLIC_REPO);
         } catch (Exception e) {
             scanException = e;
         }
@@ -162,7 +166,7 @@ public class AstRemoteRepoScanSteps {
         List<VulnerabilityScanner> scanners = new LinkedList<>();
         scanners.add(astScanner);
         try {
-            startScan(scanners);
+            startScan(scanners, BRANCH, PUBLIC_REPO);
             fail("no exception was thrown");
         } catch (Exception e) {
             assertEquals("Unexpected exception type.",exceptionType, e.getClass().getSimpleName());
@@ -173,17 +177,59 @@ public class AstRemoteRepoScanSteps {
         }
     }
 
-    @Given("enabled vulnerability scanners are {string}")
-    public void setScanInitiator(String initiatorList) {
-        String[] intiators ;
-        List<VulnerabilityScanner> scanners = new LinkedList<>();
-        if(!initiatorList.contains(SEPARATOR)){
-            intiators = new String[1];
-            intiators[0] = initiatorList;
-        } else {
-            intiators = initiatorList.split(SEPARATOR);
+    @Given("enabled vulnerability scanners are {string} and branch is {string}")
+    public void setScanInitiatorAndBranch(String initiatorList, String branch) {
+        List<VulnerabilityScanner> scanners = setScanInitiator(initiatorList);
+        startScan(scanners, branch, GITHUB_REPO_FOR_DESCRIPTION_TEST);
+    }
+    
+    @And("each finding will contain AST populated description field")
+    public void validateAdditionalFields(){
+        assertTrue("AST description field is empty", StringUtils.isNotEmpty(scanResults.getAstResults().getResults().getFindings().get(0).getDescription()));
+    }
+
+    @And("finding with the same queryId will have the same description and there will be a unique finding description for each queryId")
+    public void validateDescriptions() {
+        validateDescriptions(scanResults.getAstResults().getResults().getFindings());
+    }
+
+    private void validateDescriptions(List<Finding> findings) {
+
+        Map<String, Set<String>> mapDescriptions = new HashMap<>();
+
+        findings.forEach(finding -> {
+            Set<String> listDescriptions = mapDescriptions.get(finding.getQueryID());
+            if(listDescriptions == null){
+                listDescriptions = new HashSet<>();
+            }
+            listDescriptions.add(finding.getDescription());
+            mapDescriptions.put(finding.getQueryID(), listDescriptions);
+        });
+
+        Set<String> uniqueDescriptions = new HashSet<>();
+
+        //validate for each queryId there is exactly one corresponding description
+        for( Map.Entry<String, Set<String>> entry :mapDescriptions.entrySet()){
+            Assert.assertEquals( 1, entry.getValue().size());
+            uniqueDescriptions.add((String)entry.getValue().toArray()[0]);
         }
-        for (String scanType: intiators) {
+
+        //validate all descriptions are unique
+        Assert.assertEquals(uniqueDescriptions.size(),mapDescriptions.size() );
+    }
+    
+    @Given("enabled vulnerability scanners are {string}")
+    public void startScanForInitiator(String initiatorList) {
+        List<VulnerabilityScanner> scanners = setScanInitiator(initiatorList);
+        startScan(scanners, BRANCH, PUBLIC_REPO);
+
+    }
+
+    private List<VulnerabilityScanner> setScanInitiator(String initiatorList) {
+        String[] initiators  = initiatorList.split(SEPARATOR);
+        List<VulnerabilityScanner> scanners = new LinkedList<>();
+        
+        for (String scanType: initiators) {
            if(scanType.equalsIgnoreCase(ScaProperties.CONFIG_PREFIX)){
                 flowProperties.setEnabledVulnerabilityScanners(Collections.singletonList(ScaProperties.CONFIG_PREFIX));
                 this.isScaEnabled = true;
@@ -197,9 +243,7 @@ public class AstRemoteRepoScanSteps {
             }
             
         }
-
-        startScan(scanners);
-
+        return scanners;
     }
 
 
@@ -235,7 +279,7 @@ public class AstRemoteRepoScanSteps {
         assertTrue(message, countIsExpected);
     }
 
-    public void startScan(List<VulnerabilityScanner> scanners) {
+    public void startScan(List<VulnerabilityScanner> scanners, String branch, String repo) {
         CxProperties cxProperties = new CxProperties();
         ExternalScriptService scriptService = new ExternalScriptService();
         HelperService helperService = new HelperService(flowProperties, cxProperties, scriptService);
@@ -243,17 +287,17 @@ public class AstRemoteRepoScanSteps {
         ProjectNameGenerator projectNameGenerator = new ProjectNameGenerator(helperService, cxProperties, scriptService);
         FlowService flowService = new FlowService(new ArrayList<>(), projectNameGenerator, resultsServiceMock);
 
-        ScanRequest scanRequest = getBasicScanRequest();
+        ScanRequest scanRequest = getBasicScanRequest(branch, repo);
 
         scanRequest.setVulnerabilityScanners(scanners);
         flowService.initiateAutomation(scanRequest);
     }
 
-    private static ScanRequest getBasicScanRequest() {
+    private static ScanRequest getBasicScanRequest(String branch, String repo) {
         return ScanRequest.builder()
                 .project(PUBLIC_PROJECT_NAME)
-                .repoUrlWithAuth(PUBLIC_REPO)
-                .branch("master")
+                .repoUrlWithAuth(repo)
+                .branch(branch)
                 .repoType(ScanRequest.Repository.GITHUB)
                 .build();
     }
