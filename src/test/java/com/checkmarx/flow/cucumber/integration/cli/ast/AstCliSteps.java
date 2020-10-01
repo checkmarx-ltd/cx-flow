@@ -173,7 +173,20 @@ public class AstCliSteps  {
         Iterable<Issue> actualIssues = jiraUtils.searchForAllIssues(jiraProperties.getProject()).getIssues();
 
         actualIssues.forEach(issue -> {
-            Assert.assertTrue(StringUtils.isNotBlank(issue.getDescription()));
+            
+            if(flowProperties.getEnabledVulnerabilityScanners().size() ==1 && flowProperties.getEnabledVulnerabilityScanners().get(0).equalsIgnoreCase("AST")) {
+                
+                //validate state
+                Assert.assertTrue(issue.getDescription().contains("TO_VERIFY"));
+
+                //validate description
+                if (issue.getDescription().contains("Cross_Site_History_Manipulation")) {
+                    Assert.assertTrue(issue.getDescription().contains("Method @SourceMethod at line @SourceLine of @SourceFile may leak server-side conditional values, enabling user tracking from another website. This may constitute a Privacy Violation."));
+                }
+                if (issue.getDescription().contains("Hardcoded_password_in_Connection_String")) {
+                    Assert.assertTrue(issue.getDescription().contains("The application contains hardcoded connection details, @SourceElement, at lineÂ @SourceLine ofÂ @SourceFile. This connection string contains a hardcoded password,Â which is used in @DestinationMethod at line @DestinationLine of @DestinationFile to connect to a database server with @DestinationElement. This can expose the database password, and impede proper password management."));
+                }
+            }
         });
 
         log.info("comparing expected number of issues: {}, to actual bug tracker issues; {}", expectedIssuesCount, actualIssueCount);
