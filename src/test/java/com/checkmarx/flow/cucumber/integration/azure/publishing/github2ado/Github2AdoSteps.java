@@ -17,11 +17,13 @@ import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.ast.ASTResults;
+import com.cx.restclient.ast.dto.sast.report.AstSastSummaryResults;
 import com.cx.restclient.ast.dto.sast.report.Finding;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
 import com.cx.restclient.ast.dto.sast.AstSastResults;
+import com.cx.restclient.ast.dto.sast.report.FindingNode;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cucumber.java.Before;
@@ -134,7 +136,7 @@ public class Github2AdoSteps {
         
         issueService = new IssueService(flowProperties);
         issueService.setApplicationContext(applicationContext);
-        scanResultsToInject = createFakeResults();
+       
         initCxClientMock();
         initServices();
         initHelperServiceMock();
@@ -214,20 +216,18 @@ public class Github2AdoSteps {
             assertTrue(azureDevopsClient.projectExists());
             assertEquals(2, azureDevopsClient.getIssues().size());
             
-            azureDevopsClient.deleteProjectIssues();
-            
         } catch (IOException e) {
             fail(e.getMessage());
         }
     }
 
-    @And("description field is populated")
-    public void validateDescription() throws IOException {
+    @And("Additional fields are populated")
+    public void validateAdditionalFields() throws IOException {
         azureDevopsClient.getIssues().forEach(issue -> {
-            Assert.assertTrue(issue.getBody().toLowerCase().contains(DESCRIPTION_AST));
-            Assert.assertTrue(issue.getBody().toLowerCase().contains(TO_VERIFY));
-
+            Assert.assertTrue(issue.getBody().contains(DESCRIPTION_AST));
         });
+
+        azureDevopsClient.deleteProjectIssues();
     }
 
     @And("project {string} exists in Azure under namespace {string}")
@@ -334,12 +334,14 @@ public class Github2AdoSteps {
     public void setScannerAST(){
         this.scannerType = AST;
         flowProperties.setEnabledVulnerabilityScanners(Arrays.asList(AST));
+        scanResultsToInject = createFakeResults();
     }
 
-    @And("Scanner is CX-SAST")
+    @And("Scanner is SAST")
     public void setScannerSAST(){
         this.scannerType = SAST;
         flowProperties.setEnabledVulnerabilityScanners(Arrays.asList(SAST));
+        scanResultsToInject = createFakeResults();
 
     }
     
@@ -352,7 +354,7 @@ public class Github2AdoSteps {
         details.put(Constants.SUMMARY_KEY, new HashMap<>());
 
         if(scannerType.equals(AST)){
-            createAftFindings(result);
+            createAstFindings(result);
         }
         result.setAdditionalDetails(details);
         
@@ -361,24 +363,37 @@ public class Github2AdoSteps {
         return result;
     }
 
-    private void createAftFindings(ScanResults result) {
+    private void createAstFindings(ScanResults result) {
         result.setAstResults(new ASTResults());
         result.getAstResults().setResults(new AstSastResults());
         result.getAstResults().getResults().setScanId("111");
         result.getAstResults().getResults().setWebReportLink(WEB_REPORT_LINK);
         LinkedList<Finding> findings = new LinkedList();
-        Finding f1 = new Finding();
-        f1.setDescription(DESCRIPTION_AST + " 1");
-        f1.setState(TO_VERIFY);
-
-        Finding f2 = new Finding();
-        f2.setDescription(DESCRIPTION_AST + " 2");
-        f2.setState(TO_VERIFY);
-
-        findings.add(f1);
-        findings.add(f2);
-
+        
+        findings.add(createAstFinding(1));
+        findings.add(createAstFinding(2));
+        
         result.getAstResults().getResults().setFindings(findings);
+
+        result.setScanSummary(new CxScanSummary());
+
+        result.getAstResults().getResults().setSummary(new AstSastSummaryResults());
+    
+ 
+    }
+
+    private Finding createAstFinding(int index) {
+        Finding f1 = new Finding();
+        f1.setDescription(DESCRIPTION_AST + index);
+        f1.setState(TO_VERIFY);
+        f1.setQueryName("Query Name " + index);
+        f1.setSeverity("HIGH");
+        f1.setCweID(index);
+        f1.setSimilarityID(index);
+        f1.setUniqueID(index);
+        f1.setNodes(Arrays.asList(new FindingNode()));
+        f1.getNodes().get(0).setFileName(index + "file.java");
+        return f1;
     }
 
 
