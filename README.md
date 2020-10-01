@@ -1,3 +1,5 @@
+![CircleCI](https://img.shields.io/circleci/build/github/checkmarx-ltd/cx-flow)
+
 ## Release Notes
 Please read latest features and fixes from the Release.txt file
 
