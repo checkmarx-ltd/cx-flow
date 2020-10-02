@@ -152,7 +152,7 @@ public class MarkDownHelper {
                 return getMediumIconFromLink(request);
             case "Low":
                 return getLowIconFromLink(request);
-            case "Info":
+            case "Information":
                 return getInfoIconFromLink(request);
             default:
                 throw new MachinaRuntimeException(severity + " is not a valid severity");
