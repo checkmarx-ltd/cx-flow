@@ -9,6 +9,7 @@ import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.FlowOverride;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.config.AstProperties;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.ScaConfig;
 import com.checkmarx.sdk.config.ScaProperties;
@@ -195,30 +196,38 @@ public class ConfigurationOverrider {
         });
         ConfigProvider configProvider = ConfigProvider.getInstance();
         String uid = MDC.get("cx");
-        if (configProvider.hasConfiguration(uid, "sca")) {
-            ScaConfig scaConfiguration = configProvider.getConfiguration(uid, "sca", ScaConfig.class);
+        if (configProvider.hasConfiguration(uid, ScaProperties.CONFIG_PREFIX)) {
+            ScaConfig scaConfiguration = configProvider.getConfiguration(uid, ScaProperties.CONFIG_PREFIX, ScaConfig.class);
             log.info("Overriding SCA properties from config provider configuration");
             overridePropertiesSca(scaConfiguration, overrideReport, request);
         } else {
             overridePropertiesSca(override.map(CxConfig::getSca), overrideReport, request);
         }
 
-        if (configProvider.hasConfiguration(uid, "ast")) {
-            ASTConfig astConfiguration = configProvider.getConfiguration(uid, "ast", ASTConfig.class);
+        if (configProvider.hasConfiguration(uid, AstProperties.CONFIG_PREFIX)) {
+            ASTConfig astConfiguration = configProvider.getConfiguration(uid, AstProperties.CONFIG_PREFIX, ASTConfig.class);
             log.info("Overriding AST properties from config provider configuration");
             overriderPropertiesAst(astConfiguration, overrideReport, request);
         }
     }
 
     private void overriderPropertiesAst(ASTConfig astConfiguration, Map<String, String> overrideReport, ScanRequest request) {
-        overrideReport.put("AST apiUrl", astConfiguration.getApiUrl());
-        overrideReport.put("AST preset", astConfiguration.getPreset());
-        overrideReport.put("AST incremental", String.valueOf(astConfiguration.isIncremental()));
-
+        setOverriderReportWithASTProperties(astConfiguration, overrideReport);
         request.setAstConfig(astConfiguration);
     }
 
     private void overridePropertiesSca(ScaConfig scaConfiguration, Map<String, String> overrideReport, ScanRequest request) {
+        setOverriderReportWithScaProperties(scaConfiguration, overrideReport);
+        request.setScaConfig(scaConfiguration);
+    }
+
+    private void setOverriderReportWithASTProperties(ASTConfig astConfiguration, Map<String, String> overrideReport) {
+        overrideReport.put("AST apiUrl", astConfiguration.getApiUrl());
+        overrideReport.put("AST preset", astConfiguration.getPreset());
+        overrideReport.put("AST incremental", String.valueOf(astConfiguration.isIncremental()));
+    }
+
+    private void setOverriderReportWithScaProperties(ScaConfig scaConfiguration, Map<String, String> overrideReport) {
         overrideReport.put("accessControlUrl", scaConfiguration.getAccessControlUrl());
         overrideReport.put("apiUrl", scaConfiguration.getApiUrl());
         overrideReport.put("appUrl", scaConfiguration.getAppUrl());
@@ -227,8 +236,6 @@ public class ConfigurationOverrider {
         overrideReport.put("thresholdsScore", String.valueOf(scaConfiguration.getThresholdsScore()));
         overrideReport.put("filterSeverity", scaConfiguration.getFilterSeverity().toString());
         overrideReport.put("filterScore", String.valueOf(scaConfiguration.getFilterScore()));
-
-        request.setScaConfig(scaConfiguration);
     }
 
     private void overridePropertiesSca(Optional<Sca> sca, Map<String, String> overrideReport, ScanRequest request) {
