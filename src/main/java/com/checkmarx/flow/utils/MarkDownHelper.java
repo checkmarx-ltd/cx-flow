@@ -152,6 +152,7 @@ public class MarkDownHelper {
                 return getMediumIconFromLink(request);
             case "LOW":
                 return getLowIconFromLink(request);
+            case "INFORMATION":
             case "INFO":
                 return getInfoIconFromLink(request);
             default:
