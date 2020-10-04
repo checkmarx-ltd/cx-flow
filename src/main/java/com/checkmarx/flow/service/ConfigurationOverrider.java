@@ -196,16 +196,16 @@ public class ConfigurationOverrider {
         });
         ConfigProvider configProvider = ConfigProvider.getInstance();
         String uid = MDC.get("cx");
-        if (configProvider.hasConfiguration(uid, ScaProperties.CONFIG_PREFIX)) {
-            ScaConfig scaConfiguration = configProvider.getConfiguration(uid, ScaProperties.CONFIG_PREFIX, ScaConfig.class);
+        ScaConfig scaConfiguration = configProvider.getConfiguration(uid, ScaProperties.CONFIG_PREFIX, ScaConfig.class);
+        if (scaConfiguration != null) {
             log.info("Overriding SCA properties from config provider configuration");
             overridePropertiesSca(scaConfiguration, overrideReport, request);
         } else {
             overridePropertiesSca(override.map(CxConfig::getSca), overrideReport, request);
         }
 
-        if (configProvider.hasConfiguration(uid, AstProperties.CONFIG_PREFIX)) {
-            ASTConfig astConfiguration = configProvider.getConfiguration(uid, AstProperties.CONFIG_PREFIX, ASTConfig.class);
+        ASTConfig astConfiguration = configProvider.getConfiguration(uid, AstProperties.CONFIG_PREFIX, ASTConfig.class);
+        if (astConfiguration != null) {
             log.info("Overriding AST properties from config provider configuration");
             overriderPropertiesAst(astConfiguration, overrideReport, request);
         }
