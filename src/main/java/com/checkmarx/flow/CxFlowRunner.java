@@ -359,7 +359,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 log.info("Executing scan process");
                 //GitHub Scan with Git Clone
                 if (args.containsOption("github")) {
-                    repoUrl = getNoneEmptyRepoUrl(namespace, repoName, repoUrl, gitHubProperties.getGitUri(namespace, repoName));
+                    repoUrl = getNonEmptyRepoUrl(namespace, repoName, repoUrl, gitHubProperties.getGitUri(namespace, repoName));
                     String token = gitHubProperties.getToken();
                     gitAuthUrl = repoUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(token).concat("@"));
                     gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(token).concat("@"));
@@ -367,7 +367,7 @@ public class CxFlowRunner implements ApplicationRunner {
                     scanRemoteRepo(request, repoUrl, gitAuthUrl, branch, ScanRequest.Repository.GITHUB);
                 } //GitLab Scan with Git Clone
                 else if (args.containsOption("gitlab") && !ScanUtils.anyEmpty(namespace, repoName)) {
-                    repoUrl = getNoneEmptyRepoUrl(namespace, repoName, repoUrl, gitLabProperties.getGitUri(namespace, repoName));
+                    repoUrl = getNonEmptyRepoUrl(namespace, repoName, repoUrl, gitLabProperties.getGitUri(namespace, repoName));
                     String token = gitLabProperties.getToken();
                     gitAuthUrl = repoUrl.replace(Constants.HTTPS, Constants.HTTPS_OAUTH2.concat(token).concat("@"));
                     gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP_OAUTH2.concat(token).concat("@"));
@@ -427,7 +427,7 @@ public class CxFlowRunner implements ApplicationRunner {
         return bugTypeEnum;
     }
 
-    private String getNoneEmptyRepoUrl(String namespace, String repoName, String repoUrl, String gitUri) throws ExitThrowable {
+    private String getNonEmptyRepoUrl(String namespace, String repoName, String repoUrl, String gitUri) throws ExitThrowable {
         if (Strings.isNullOrEmpty(repoUrl)) {
             if (!ScanUtils.anyEmpty(namespace, repoName)) {
                 repoUrl = gitUri;

@@ -104,13 +104,14 @@ public class GitLabIssueTracker implements IssueTracker {
     }
 
     private static boolean isTargetProject(JSONObject projectJson, String targetNamespace, String targetRepo) {
-        // Using paths, because they are more well-defined (this is what appears in browser's address bar).
+        // Cannot use the 'name' property here, because it's for display only and may be different from 'path'.
         String repoPath = projectJson.getString("path");
 
-        // Namespace name may look like: "My Good Old Namespace", whereas its path cannot contain spaces
-        // and may look like: "my-good-old-namespace".
+        // Cannot use the 'name' or 'path' properties here.
+        // 'name' is for display only. 'path' only includes the last segment.
+        // E.g. "path": "my-good-old-namespace", "full_path": "dir1/dir2/my-good-old-namespace"
         String namespacePath = projectJson.getJSONObject("namespace")
-                .getString("path");
+                .getString("full_path");
 
         boolean result = repoPath.equals(targetRepo) && namespacePath.equals(targetNamespace);
         log.debug("Checking {}/{}... {}", namespacePath, repoPath, result ? "match!" : "no match.");
@@ -237,7 +238,7 @@ public class GitLabIssueTracker implements IssueTracker {
     }
 
     private void closeIssue(ScanRequest request, Integer iid) {
-        log.debug("Executing closeIssue GitHub API call");
+        log.debug("Executing closeIssue GitLab API call");
         String endpoint = scmConfigOverrider.determineConfigApiUrl(properties, request).concat(ISSUE_PATH);
         HttpEntity<String> httpEntity = new HttpEntity<>(getJSONCloseIssue().toString(), createAuthHeaders(request));
         restTemplate.exchange(endpoint, HttpMethod.PUT, httpEntity,
