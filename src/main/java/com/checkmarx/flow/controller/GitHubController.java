@@ -118,6 +118,21 @@ public class GitHubController extends WebhookController {
         } catch (IOException e) {
             throw new MachinaRuntimeException(e);
         }
+
+        if (properties != null) {
+            try {
+                ConfigProvider configProvider = ConfigProvider.getInstance();
+                Repository repository = event.getRepository();
+                String branch = event.getPullRequest().getHead().getRef();
+
+                configProvider.init(uid, new RepoReader(properties.getApiUrl(), repository.getOwner().getLogin(),
+                        repository.getName(), branch,
+                        properties.getToken(), SourceProviderType.GITHUB));
+            } catch (ConfigurationException e) {
+                log.warn("Failed to init config provider with the following error: {}", e.getMessage());
+            }
+        }
+
         //verify message signature
         verifyHmacSignature(body, signature, controllerRequest);
 
