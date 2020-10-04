@@ -197,7 +197,7 @@ task integrationTest(type: Test) {
         include 'com/checkmarx/flow/cucumber/integration/azure/publishing/**'
         include 'com/checkmarx/flow/cucumber/integration/azure/publishing/github2ado/*'
         include 'com/checkmarx/flow/cucumber/integration/cxconfig/*'
-        include 'com/checkmarx/flow/cucumber/integration/config_provider/*'
+        include 'com/checkmarx/flow/cucumber/integration/config_provider/**'
         include 'com/checkmarx/flow/cucumber/integration/cxconfigbugtracker/**'
         include 'com/checkmarx/flow/cucumber/integration/multiScmInstances/**'
 
