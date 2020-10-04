@@ -100,6 +100,7 @@ dependencies {
     compile("ch.qos.logback.contrib:logback-json-classic:0.1.5")
     compile("ch.qos.logback.contrib:logback-jackson:0.1.5")
     compile("net.logstash.logback:logstash-logback-encoder:5.2")
+    compile("com.checkmarx:cx-config-provider:1.0.7")
     compile("org.jasypt:jasypt:1.9.3")
     compileJava.dependsOn(processResources)
 }
