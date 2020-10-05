@@ -38,8 +38,15 @@ public class ConfigProviderRemoteRepoSteps {
     }
 
     @When("initializing config provider")
-    public void initConfigProvider() {
-        init();
+    public void initConfigProvider() throws ConfigurationException {
+        String nameSpace = "cxflowtestuser";
+        String repoName = "configProviderTestRepo";
+        String branchName = "main";
+
+        ConfigProvider configProvider = ConfigProvider.getInstance();
+        configProvider.init(uid, new RepoReader(gitHubProperties.getApiUrl(),
+                nameSpace, repoName, branchName,
+                gitHubProperties.getToken(), sourceProviderType));
     }
 
     @And("getting {string} config provider configuration")
@@ -89,20 +96,5 @@ public class ConfigProviderRemoteRepoSteps {
         Assert.assertEquals((Double)8.5, scaConfiguration.getThresholdsScore());
         Assert.assertEquals("[high, medium, low]", scaConfiguration.getFilterSeverity().toString());
         Assert.assertEquals((Double)7.5, scaConfiguration.getFilterScore());
-    }
-
-    private void init() {
-        String nameSpace = "cxflowtestuser";
-        String repoName = "configProviderTestRepo";
-        String branchName = "main";
-
-        try {
-            ConfigProvider configProvider = ConfigProvider.getInstance();
-            configProvider.init(uid, new RepoReader(gitHubProperties.getApiUrl(), nameSpace,
-                    repoName, branchName,
-                    gitHubProperties.getToken(), sourceProviderType));
-        } catch (ConfigurationException e) {
-            Assert.fail("Failed to init config provider with the following error: " + e.getMessage());
-        }
     }
 }
