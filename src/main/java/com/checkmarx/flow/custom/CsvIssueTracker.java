@@ -91,7 +91,7 @@ public class CsvIssueTracker extends ImmutableIssueTracker {
     private List<String> createSASTIssue(ScanResults.XIssue issue, ScanRequest request) {
         List<String> values = new ArrayList<>();
         for (CsvProperties.Field f : properties.getFields()) {
-            String value;
+            String value = "";
             switch (f.getName()) {
                 case "summary":
                     value = issue.getVulnerability().concat(" @ ").concat(issue.getFilename());
@@ -142,7 +142,9 @@ public class CsvIssueTracker extends ImmutableIssueTracker {
                     value = issue.getCve();
                     break;
                 case "recommendation":
-                    value = String.format(flowProperties.getMitreUrl(), issue.getCwe());
+                    if (!ScanUtils.anyEmpty(flowProperties.getMitreUrl(), issue.getCwe())) {
+                        value = String.format(flowProperties.getMitreUrl(), issue.getCwe());
+                    }
                     break;
                 case "loc":
                     List<String> lines = new ArrayList<>();

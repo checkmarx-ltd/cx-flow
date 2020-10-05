@@ -5,6 +5,7 @@ import com.checkmarx.flow.config.GitLabProperties;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.service.FilenameFormatter;
+import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
@@ -77,14 +78,17 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
                         .url(issue.getLink())
                         .build()
         );
-        identifiers.add(
-                Identifier.builder()
-                        .type("cwe")
-                        .name("CWE-".concat(issue.getCwe()))
-                        .value(issue.getCwe())
-                        .url(String.format(flowProperties.getMitreUrl(), issue.getCwe()))
-                        .build()
-        );
+        if (!ScanUtils.empty(flowProperties.getMitreUrl())) {
+            identifiers.add(
+                    Identifier.builder()
+                            .type("cwe")
+                            .name("CWE-".concat(issue.getCwe()))
+                            .value(issue.getCwe())
+                            .url(String.format(flowProperties.getMitreUrl(), issue.getCwe()))
+                            .build()
+            );
+        }else {log.info("mitre-url property is empty");}
+
         return identifiers;
     }
 
