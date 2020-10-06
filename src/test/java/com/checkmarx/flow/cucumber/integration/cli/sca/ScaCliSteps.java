@@ -143,19 +143,15 @@ public class ScaCliSteps {
         Assert.assertEquals("The expected exit code did not match", expectedExitCode, actualExitCode);
     }
 
-    @Given("last scan for a project {string} contains 49 High, 3 Medium and 1 Low-severity findings")
+    @Given("last scan for a project {string} contains 50 High, 3 Medium and 1 Low-severity findings")
     public void setProjectWithFindings(String projectName){
         customScaProjectName = projectName;
     }
 
     @When("running sca scan {word}")
     public void runnningScanWithFilter(String filters) {
-        StringBuilder commandLine = new StringBuilder();
-        commandLine.append(" --scan --app=MyApp --cx-project=test").append(GITHUB_REPO_ARGS);
-
         setFilters(filters);
-
-        tryRunCxFlow(commandLine.toString());
+        tryRunCxFlow(" --scan --app=MyApp --cx-project=test" + GITHUB_REPO_ARGS);
     }
 
     @Then("bug tracker contains {} issues")
