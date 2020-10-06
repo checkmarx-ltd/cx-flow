@@ -46,7 +46,7 @@ public class ConfigurationOverrider {
 
     public ScanRequest overrideScanRequestProperties(CxConfig override, ScanRequest request) {
         ConfigProvider configProvider = ConfigProvider.getInstance();
-        if (request == null || (!isConfigAsCodeAvailable(configProvider) && isLegacyConfigAsCodeAvailable(override))) {
+        if (request == null || (!isConfigAsCodeAvailable(configProvider) && isLegacyConfigAsCodeNotAvailable(override))) {
             return request;
         }
 
@@ -77,7 +77,7 @@ public class ConfigurationOverrider {
         return configProvider.hasAnyConfiguration(MDC.get(FlowConstants.MAIN_MDC_ENTRY));
     }
 
-    private boolean isLegacyConfigAsCodeAvailable(CxConfig override) {
+    private boolean isLegacyConfigAsCodeNotAvailable(CxConfig override) {
         return override == null || Boolean.FALSE.equals(override.getActive());
     }
 
