@@ -7,6 +7,7 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.config.ScmConfigOverrider;
+import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.EventResponse;
@@ -107,7 +108,7 @@ public class GitHubController extends WebhookController {
             ControllerRequest controllerRequest
     ){
         String uid = helperService.getShortUid();
-        MDC.put("cx", uid);
+        MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
         log.info("Processing GitHub PULL request");
         PullEvent event;
         ObjectMapper mapper = new ObjectMapper();
@@ -119,19 +120,7 @@ public class GitHubController extends WebhookController {
             throw new MachinaRuntimeException(e);
         }
 
-        if (properties != null) {
-            try {
-                ConfigProvider configProvider = ConfigProvider.getInstance();
-                Repository repository = event.getRepository();
-                String branch = event.getPullRequest().getHead().getRef();
-
-                configProvider.init(uid, new RepoReader(properties.getApiUrl(), repository.getOwner().getLogin(),
-                        repository.getName(), branch,
-                        properties.getToken(), SourceProviderType.GITHUB));
-            } catch (ConfigurationException e) {
-                log.warn("Failed to init config provider with the following error: {}", e.getMessage());
-            }
-        }
+        gitHubService.initConfigProviderOnPullEvent(uid, event);
 
         //verify message signature
         verifyHmacSignature(body, signature, controllerRequest);
@@ -245,7 +234,7 @@ public class GitHubController extends WebhookController {
             @PathVariable(value = "product", required = false) String product,
             ControllerRequest controllerRequest) {
         String uid = helperService.getShortUid();
-        MDC.put("cx", uid);
+        MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
         log.info("Processing GitHub PUSH request");
         PushEvent event;
         ObjectMapper mapper = new ObjectMapper();
@@ -257,21 +246,7 @@ public class GitHubController extends WebhookController {
             throw new MachinaRuntimeException(e);
         }
 
-        if (properties != null) {
-            try {
-                ConfigProvider configProvider = ConfigProvider.getInstance();
-                Repository repository = event.getRepository();
-                String ref = event.getRef();
-
-                // According to GitHub the recommended way to extract the branch name
-                // is by using the 'ref' parameter which is in the following format: 'refs/heads/<branch>'
-                configProvider.init(uid, new RepoReader(properties.getApiUrl(), repository.getOwner().getName(),
-                        repository.getName(), ref.substring(ref.lastIndexOf('/') + 1),
-                        properties.getToken(), SourceProviderType.GITHUB));
-            } catch (ConfigurationException e) {
-                log.warn("Failed to init config provider with the following error: {}", e.getMessage());
-            }
-        }
+        gitHubService.initConfigProviderOnPushEvent(uid, event);
 
         if (flowProperties == null || cxProperties == null) {
             log.error("Properties have null values");
@@ -401,7 +376,7 @@ public class GitHubController extends WebhookController {
             @RequestParam(value = "team", required = false) String team
     ){
         String uid = helperService.getShortUid();
-        MDC.put("cx", uid);
+        MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
         log.info("Processing GitHub DELETE Branch request");
         DeleteEvent event;
         ObjectMapper mapper = new ObjectMapper();

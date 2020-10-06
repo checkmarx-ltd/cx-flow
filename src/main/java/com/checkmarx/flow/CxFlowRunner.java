@@ -1,6 +1,7 @@
 package com.checkmarx.flow;
 
 import com.checkmarx.flow.config.*;
+import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.exception.*;
 import com.checkmarx.flow.service.*;
@@ -114,7 +115,7 @@ public class CxFlowRunner implements ApplicationRunner {
         FlowOverride o = null;
         ObjectMapper mapper = new ObjectMapper();
         String uid = helperService.getShortUid();
-        MDC.put("cx", uid);
+        MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
 
         if (args.containsOption("branch-create")) {
             exit(ExitCode.SUCCESS);

@@ -1,5 +1,6 @@
 package com.checkmarx.flow.aop;
 
+import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.dto.ScanRequest;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.After;
@@ -21,7 +22,7 @@ public class LoggingAop {
     public void beforeAdvice(JoinPoint joinPoint, ScanRequest request) {
         if(request != null) {
             String id = request.getId();
-            MDC.put("cx", id);
+            MDC.put(FlowConstants.MAIN_MDC_ENTRY, id);
         }
     }
     @After(value = "execution(* com.checkmarx.flow.service.ResultsService.processScanResultsAsync(.., com.checkmarx.flow.dto.ScanRequest, ..)) &&  (args(.., request) || args(request, ..))")
