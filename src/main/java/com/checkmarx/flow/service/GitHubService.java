@@ -1,8 +1,14 @@
 package com.checkmarx.flow.service;
 
+import com.checkmarx.configprovider.ConfigProvider;
+import com.checkmarx.configprovider.dto.SourceProviderType;
+import com.checkmarx.configprovider.readers.RepoReader;
 import com.checkmarx.flow.config.*;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.github.Content;
+import com.checkmarx.flow.dto.github.PullEvent;
+import com.checkmarx.flow.dto.github.PushEvent;
+import com.checkmarx.flow.dto.github.Repository;
 import com.checkmarx.flow.dto.report.AnalyticsReport;
 import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.exception.GitHubClientRunTimeException;
@@ -28,6 +34,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 
+import javax.naming.ConfigurationException;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -109,6 +116,40 @@ public class GitHubService extends RepoService {
             }
         }
         return result;
+    }
+
+    public void initConfigProviderOnPushEvent(String uid, PushEvent event) {
+        if (properties != null) {
+            try {
+                ConfigProvider configProvider = ConfigProvider.getInstance();
+                Repository repository = event.getRepository();
+                String ref = event.getRef();
+
+                // According to GitHub the recommended way to extract the branch name
+                // is by using the 'ref' parameter which is in the following format: 'refs/heads/<branch>'
+                configProvider.init(uid, new RepoReader(properties.getApiUrl(), repository.getOwner().getName(),
+                        repository.getName(), ref.substring(ref.lastIndexOf('/') + 1),
+                        properties.getToken(), SourceProviderType.GITHUB));
+            } catch (ConfigurationException e) {
+                log.warn("Failed to init config provider with the following error: {}", e.getMessage());
+            }
+        }
+    }
+
+    public void initConfigProviderOnPullEvent(String uid, PullEvent event) {
+        if (properties != null) {
+            try {
+                ConfigProvider configProvider = ConfigProvider.getInstance();
+                Repository repository = event.getRepository();
+                String branch = event.getPullRequest().getHead().getRef();
+
+                configProvider.init(uid, new RepoReader(properties.getApiUrl(), repository.getOwner().getLogin(),
+                        repository.getName(), branch,
+                        properties.getToken(), SourceProviderType.GITHUB));
+            } catch (ConfigurationException e) {
+                log.warn("Failed to init config provider with the following error: {}", e.getMessage());
+            }
+        }
     }
 
     public void deleteComment(String url, ScanRequest scanRequest) {

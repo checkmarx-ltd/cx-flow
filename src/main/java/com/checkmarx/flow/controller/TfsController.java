@@ -3,6 +3,7 @@ package com.checkmarx.flow.controller;
 import com.checkmarx.flow.config.ADOProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.ScanRequest.Product;
 import com.checkmarx.flow.dto.ScanRequest.ScanRequestBuilder;
@@ -62,7 +63,7 @@ public class TfsController extends AdoControllerBase {
         String action = getAction(httpRequest);
 
         String uid = helperService.getShortUid();
-        MDC.put("cx", uid);
+        MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
         if (log.isInfoEnabled()) {
             log.info(String.format("Processing TFS %s request", action));
         }

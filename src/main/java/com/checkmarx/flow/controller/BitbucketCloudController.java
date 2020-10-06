@@ -3,6 +3,7 @@ package com.checkmarx.flow.controller;
 import com.checkmarx.flow.config.BitBucketProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.EventResponse;
@@ -57,7 +58,7 @@ public class BitbucketCloudController extends WebhookController {
 
     ) {
         String uid = helperService.getShortUid();
-        MDC.put("cx", uid);
+        MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
         validateBitBucketRequest(token);
         log.info("Processing BitBucket MERGE request");
         controllerRequest = ensureNotNull(controllerRequest);
@@ -153,7 +154,7 @@ public class BitbucketCloudController extends WebhookController {
 
     ) {
         String uid = helperService.getShortUid();
-        MDC.put("cx", uid);
+        MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
         validateBitBucketRequest(token);
         controllerRequest = ensureNotNull(controllerRequest);
 

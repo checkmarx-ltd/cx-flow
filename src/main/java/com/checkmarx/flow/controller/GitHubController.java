@@ -1,9 +1,13 @@
 package com.checkmarx.flow.controller;
 
+import com.checkmarx.configprovider.ConfigProvider;
+import com.checkmarx.configprovider.dto.SourceProviderType;
+import com.checkmarx.configprovider.readers.RepoReader;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.config.ScmConfigOverrider;
+import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.EventResponse;
@@ -30,6 +34,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.PostConstruct;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import javax.naming.ConfigurationException;
 import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -103,7 +108,7 @@ public class GitHubController extends WebhookController {
             ControllerRequest controllerRequest
     ){
         String uid = helperService.getShortUid();
-        MDC.put("cx", uid);
+        MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
         log.info("Processing GitHub PULL request");
         PullEvent event;
         ObjectMapper mapper = new ObjectMapper();
@@ -114,6 +119,9 @@ public class GitHubController extends WebhookController {
         } catch (IOException e) {
             throw new MachinaRuntimeException(e);
         }
+
+        gitHubService.initConfigProviderOnPullEvent(uid, event);
+
         //verify message signature
         verifyHmacSignature(body, signature, controllerRequest);
 
@@ -226,7 +234,7 @@ public class GitHubController extends WebhookController {
             @PathVariable(value = "product", required = false) String product,
             ControllerRequest controllerRequest) {
         String uid = helperService.getShortUid();
-        MDC.put("cx", uid);
+        MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
         log.info("Processing GitHub PUSH request");
         PushEvent event;
         ObjectMapper mapper = new ObjectMapper();
@@ -238,10 +246,13 @@ public class GitHubController extends WebhookController {
             throw new MachinaRuntimeException(e);
         }
 
+        gitHubService.initConfigProviderOnPushEvent(uid, event);
+
         if (flowProperties == null || cxProperties == null) {
             log.error("Properties have null values");
             throw new MachinaRuntimeException();
         }
+
         //verify message signature
         verifyHmacSignature(body, signature, controllerRequest);
 
@@ -365,7 +376,7 @@ public class GitHubController extends WebhookController {
             @RequestParam(value = "team", required = false) String team
     ){
         String uid = helperService.getShortUid();
-        MDC.put("cx", uid);
+        MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
         log.info("Processing GitHub DELETE Branch request");
         DeleteEvent event;
         ObjectMapper mapper = new ObjectMapper();

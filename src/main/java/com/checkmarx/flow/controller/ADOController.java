@@ -4,6 +4,7 @@ import com.checkmarx.flow.config.ADOProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.config.ScmConfigOverrider;
+import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.EventResponse;
@@ -65,7 +66,7 @@ public class ADOController extends AdoControllerBase {
             AdoDetailsRequest adoDetailsRequest
     ) {
         String uid = helperService.getShortUid();
-        MDC.put("cx", uid);
+        MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
         log.info("Processing Azure PULL request");
         Action action = Action.PULL;
         controllerRequest = ensureNotNull(controllerRequest);
@@ -194,7 +195,7 @@ public class ADOController extends AdoControllerBase {
     ) {
         //TODO handle different state (Active/Closed)
         String uid = helperService.getShortUid();
-        MDC.put("cx", uid);
+        MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
         log.info("Processing Azure Push request");
         Action action = Action.PUSH;
 

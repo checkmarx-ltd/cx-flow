@@ -189,6 +189,7 @@ public class Github2AdoSteps {
         Pusher pusher = new Pusher();
         pusher.setEmail("some@email");
         pushEvent.setPusher(pusher);
+        pushEvent.setRef("refs/heads/master");
 
 
         try {

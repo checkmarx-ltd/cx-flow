@@ -1,6 +1,7 @@
 package com.checkmarx.flow.service;
 
 import com.atlassian.jira.rest.client.api.RestClientException;
+import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.dto.Field;
 import com.checkmarx.flow.dto.ScanDetails;
 import com.checkmarx.flow.dto.ScanRequest;
@@ -327,7 +328,7 @@ public class ResultsService {
             return false;
         }
         for (Field f : fields) {
-            if (f.getType().equals("cx")) {
+            if (f.getType().equals(FlowConstants.MAIN_MDC_ENTRY)) {
                 return true;
             }
         }
