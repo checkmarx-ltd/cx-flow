@@ -84,7 +84,6 @@ dependencies {
     compile group: 'javax.xml.ws', name: 'jaxws-api', version: '2.3.1'
     compile group: 'com.sun.xml.bind', name: 'jaxb-core', version: '2.3.0.1'
     compile group: 'com.sun.xml.messaging.saaj', name: 'saaj-impl', version: '1.4.0'
-    compile("com.checkmarx:cx-config-provider:1.0.8")
     compileOnly ('org.springframework.boot:spring-boot-configuration-processor')
 
     runtime('org.springframework.boot:spring-boot-devtools')
