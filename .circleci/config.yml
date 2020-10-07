@@ -538,7 +538,7 @@ jobs:
             fi
 
 orbs:
-  aws-eks: circleci/aws-eks@0.2.6
+  aws-eks: circleci/aws-eks@1.0.0
   kubernetes: circleci/kubernetes@0.4.0
   helm: circleci/helm@0.2.3
   checkmarx: checkmarx/circleci-kpi-shipper@0.10.0
