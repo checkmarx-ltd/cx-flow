@@ -67,6 +67,9 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
                 log.info("Merge is not allowed, because some thresholds were exceeded.");
                 requestResult = new OperationResult(OperationStatus.FAILURE, MERGE_FAILURE_DESCRIPTION);
             }
+            else{
+                log.info("Merge is allowed, because no thresholds were exceeded.");
+            }
         }
 
         pullRequestReport.setPullRequestResult(requestResult);
@@ -100,6 +103,7 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
     private boolean isAllowed(ScanResults scanResults, ScanRequest request) {
 
         boolean isAllowed = true;
+
         if (isSast()) {
             isAllowed = isAllowedSast(scanResults, request);
         }
