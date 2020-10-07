@@ -179,7 +179,7 @@ jobs:
       - aws-eks/update-kubeconfig-with-authenticator:
           cluster-name: << parameters.cluster-name >>
           install-kubectl: true
-          verbose: true
+          authenticator-release-tag: v0.5.1
       - run:
           name: Change appVersion
           command: |
@@ -256,6 +256,7 @@ jobs:
       - aws-eks/update-kubeconfig-with-authenticator:
           cluster-name: << parameters.cluster-name >>
           install-kubectl: true
+          authenticator-release-tag: v0.5.1
       - run:
           name: Run E2E Tests
           command: |
@@ -465,6 +466,7 @@ jobs:
       - aws-eks/update-kubeconfig-with-authenticator:
           cluster-name: << parameters.cluster-name >>
           install-kubectl: true
+          authenticator-release-tag: v0.5.1
       - helm/install-helm-client:
           version: << parameters.version >>
       - run:
@@ -525,6 +527,7 @@ jobs:
       - aws-eks/update-kubeconfig-with-authenticator:
           cluster-name: eks-cxflow-ci
           install-kubectl: true
+          authenticator-release-tag: v0.5.1
       - run:
           name: Delete namespace
           command: |
