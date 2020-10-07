@@ -127,8 +127,8 @@ public class OverwritingProjectConfigSteps {
     public void githubNotifiesCxFlowAboutAPullRequest(String projectName) {
 
         GitHubController gitHubController = new GitHubController(gitHubProperties, flowProperties, cxProperties,
-                null, flowService, helperService, gitHubService, gitHubAppAuthService,
-                sastScanner, filterFactory, configOverrider, scmConfigOverrider);
+                null, flowService, helperService, gitHubService,  gitHubAppAuthService, filterFactory, configOverrider,
+                scmConfigOverrider);
 
         gitHubTestUtils.callController(gitHubController, GitHubTestUtils.EventType.PULL_REQUEST, projectName);
     }

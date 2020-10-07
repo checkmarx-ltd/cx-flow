@@ -144,7 +144,7 @@ public class PublishingSteps extends PublishingStepsBase {
         FlowService flowService = new FlowService(vulnerabilityScannerList, projectNameGenerator, resultsService);
 
         return new GitHubController(gitHubProperties, flowProperties, cxProperties,
-                null, flowService, helperService, gitHubService, gitHubAppAuthService,null, filterFactory, configOverrider,
+                null, flowService, helperService, gitHubAppAuthService, filterFactory, configOverrider,
                 scmConfigOverrider);
     }
 

@@ -347,7 +347,6 @@ public class DeleteBranchSteps {
                 helperService,
                 gitHubService,
                 gitHubAppAuthService,
-                sastScanner,
                 filterFactory,
                 configOverrider,
                 null));

@@ -308,7 +308,6 @@ public class Github2AdoSteps {
                 helperService,
                 gitHubService,
                 gitHubAppAuthService,
-                null,
                 filterFactory,
                 configOverrider,
                 scmConfigOverrider));

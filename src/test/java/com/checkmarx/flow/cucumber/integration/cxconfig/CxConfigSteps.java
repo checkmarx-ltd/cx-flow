@@ -533,7 +533,6 @@ public class CxConfigSteps {
                 helperService,
                 gitHubService,
                 gitHubAppAuthService,
-                null,
                 filterFactory,
                 configOverrider,
                 scmConfigOverrider));

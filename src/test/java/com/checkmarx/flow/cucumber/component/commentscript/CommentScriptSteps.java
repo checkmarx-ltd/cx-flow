@@ -47,6 +47,7 @@ public class CommentScriptSteps {
     final private CxClient cxClientMock;
     private final ScanRequestConverter scanRequestConverterMock;
     private final SastScanner sastScanner;
+    private final CxGoScanner cxgoScanner;
     private final CxProperties cxProperties;
     private final FlowController flowController;
     private final FlowProperties flowProperties;
@@ -66,10 +67,13 @@ public class CommentScriptSteps {
         sastScanner = mock(SastScanner.class, Mockito.withSettings().useConstructor(resultService, cxClientMock,
                 helperService, cxProperties, flowProperties, null, null, scanRequestConverterMock, btet, null));
 
+        cxgoScanner = mock(CxGoScanner.class, Mockito.withSettings().useConstructor(resultService, cxClientMock,
+                helperService, cxProperties, flowProperties, null, null, scanRequestConverterMock, btet, null));
+
         this.cxProperties = cxProperties;
         FlowService flowService = new FlowService(Collections.singletonList(sastScanner), projectNameGenerator, resultService);
 
-        this.flowController = new FlowController(flowProperties, cxProperties, flowService, helperService, jiraProperties, filterFactory, configOverrider, sastScanner);
+        this.flowController = new FlowController(flowProperties, cxProperties, flowService, helperService, jiraProperties, filterFactory, configOverrider, sastScanner, cxgoScanner);
     }
 
 
