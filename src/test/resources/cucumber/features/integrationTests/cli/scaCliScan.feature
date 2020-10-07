@@ -63,11 +63,11 @@ Feature: SCA support in CxFlow command-line
 
 
     Scenario Outline: While publishing latest scan results, CxFlow must respect SCA filters
-        Given last scan for a project "ci-sca-cli-integration-tests" contains 49 High, 3 Medium and 1 Low-severity findings
+        Given last scan for a project "ci-sca-cli-integration-tests" contains 50 High, 3 Medium and 1 Low-severity findings
         When run CxFlow with `publish latest scan results` options and <filters>
         Then bug tracker contains <expected issue count> issues
         Examples:
             | filters         | expected issue count |
             | Medium          | 3                    |
             | Medium,Low      | 4                    |
-            | none            | 53                   |
+            | none            | 54                   |

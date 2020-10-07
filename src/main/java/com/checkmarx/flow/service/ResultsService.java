@@ -334,14 +334,14 @@ public class ResultsService {
         return false;
     }
 
-    public boolean filteredIssuesPresent(ScanResults results) {
+    public boolean filteredSastIssuesPresent(ScanResults results) {
         if(results.getAdditionalDetails()==null) {
             // assuming SCA results only
             return false;
         }
 
-        Map<String, Integer> flow = (Map<String, Integer>) results.getAdditionalDetails().get(Constants.SUMMARY_KEY);
-        return flow == null || !flow.isEmpty();
+        Map<String, Integer> findingCountPerSeverity = (Map<String, Integer>) results.getAdditionalDetails().get(Constants.SUMMARY_KEY);
+        return findingCountPerSeverity == null || !findingCountPerSeverity.isEmpty();
     }
 
     /**

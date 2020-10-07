@@ -144,7 +144,7 @@ public class ScaCliSteps {
         Assert.assertEquals("The expected exit code did not match", expectedExitCode, actualExitCode);
     }
 
-    @Given("last scan for a project {string} contains 49 High, 3 Medium and 1 Low-severity findings")
+    @Given("last scan for a project {string} contains 50 High, 3 Medium and 1 Low-severity findings")
     public void setProjectWithFindings(String projectName){
         customScaProjectName = projectName;
     }

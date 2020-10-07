@@ -516,8 +516,8 @@ public class CxFlowRunner implements ApplicationRunner {
                 log.info("Fail build on Thresholds exceeded.");
                 breakBuildResult = true;
             }
-        } else if(flowProperties.isBreakBuild() && resultsService.filteredIssuesPresent(results)){
-            log.info("Fail build on issues presented after executing filters");
+        } else if(flowProperties.isBreakBuild() && resultsService.filteredSastIssuesPresent(results)){
+            log.info("Build failed because some issues were found");
             breakBuildResult = true;
         }
         else {

@@ -12,6 +12,7 @@ import com.checkmarx.sdk.config.ScaProperties;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.PendingException;
+import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -38,6 +39,7 @@ public class SastCliSteps {
     private final ScaProperties scaProperties;
 
     private String commandlineConstantArgs;
+    private Throwable cxFlowExecutionException;
     private int expectedHigh;
     private int expectedMedium;
     private int expectedLow;
@@ -49,6 +51,7 @@ public class SastCliSteps {
     public void beforeEachScenario() throws IOException {
         log.info("Setting bugTracker: Jira");
         flowProperties.setBugTracker("JIRA");
+        flowProperties.setBreakBuild(true);
         resetThresholds();
 
         log.info("Jira project key: {}", JIRA_PROJECT);
@@ -74,7 +77,7 @@ public class SastCliSteps {
 
         switch (issueType) {
             case "success":
-                commandBuilder.append("--scan  --severity=High --app=MyApp").append(commandlineConstantArgs);
+                commandBuilder.append("--scan  --severity=High --cwe=1 --app=MyApp").append(commandlineConstantArgs);
                 break;
             case "missing-mandatory-parameter":
                 commandBuilder.append("--severity=High --severity=Medium").append(commandlineConstantArgs);
@@ -141,13 +144,22 @@ public class SastCliSteps {
                 throw new PendingException("Filter " + filter + " isn't supported");
         }
 
+        Throwable exception = null;
         try {
             TestUtils.runCxFlow(testContext.getCxFlowRunner(), commandBuilder.toString());
         } catch (Throwable e) {
+            exception = e;
         }
+        testContext.setCxFlowExecutionException(exception);
     }
 
-    @Then("bugTracker contains {word} issues")
+    @And("cxflow should exit with {}")
+    public void checkReturnCode(int returnCode) {
+        validateExitCode(returnCode);
+    }
+
+
+    @Then("bugTracker contains {} issues")
     public void validateBugTrackerIssues(String numberOfIssues) {
         int expectedIssuesNumber;
 
