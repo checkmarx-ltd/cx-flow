@@ -45,7 +45,7 @@ apply plugin: 'io.spring.dependency-management'
 apply plugin: 'com.gorylenko.gradle-git-properties'
 
 group = 'com.checkmarx'
-version = 'cxgo-1.6.9'
+version = 'cxgo-1.6.10'
 sourceCompatibility = 1.8
 def cucumberVersion = '5.7.0'
 def junitVersion = '5.5.0'
