@@ -10,10 +10,7 @@ import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.FlowOverride;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.utils.ScanUtils;
-import com.checkmarx.sdk.config.AstProperties;
-import com.checkmarx.sdk.config.CxProperties;
-import com.checkmarx.sdk.config.ScaConfig;
-import com.checkmarx.sdk.config.ScaProperties;
+import com.checkmarx.sdk.config.*;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.Sca;
@@ -44,7 +41,8 @@ public class ConfigurationOverrider {
     private final FlowProperties flowProperties;
     private final SCAScanner scaScanner;
     private final SastScanner sastScanner;
-
+    private final CxGoScanner cxgoScanner;
+    
     public ScanRequest overrideScanRequestProperties(CxConfig override, ScanRequest request) {
         ConfigProvider configProvider = ConfigProvider.getInstance();
         if (request == null || (!configProviderResultsAreAvailable(configProvider) && !configAsCodeIsAvailable(override))) {
@@ -123,6 +121,9 @@ public class ConfigurationOverrider {
                 }
                 if (vs.equalsIgnoreCase(CxProperties.CONFIG_PREFIX)) {
                     scanRequestVulnerabilityScanner.add(sastScanner);
+                }
+                if (vs.equalsIgnoreCase(CxGoProperties.CONFIG_PREFIX)) {
+                    scanRequestVulnerabilityScanner.add(cxgoScanner);
                 }
             });
             request.setVulnerabilityScanners(scanRequestVulnerabilityScanner);

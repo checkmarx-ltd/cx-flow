@@ -60,7 +60,8 @@ public class FlowController {
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
     private final SastScanner sastScanner;
-
+    private final CxGoScanner cxgoScanner;
+    
     @GetMapping(value = "/scanresults", produces = "application/json")
     public ScanResults latestScanResults(
             // Mandatory parameters
@@ -109,7 +110,14 @@ public class FlowController {
         // Fetch the Checkmarx Scan Results based on given ScanRequest.
         // The cxProject parameter is null because the required project metadata
         // is already contained in the scanRequest parameter.
-        ScanResults scanResults = sastScanner.getLatestScanResults(scanRequest);
+
+        ScanResults scanResults;
+        
+        if(cxgoScanner.isEnabled()){
+            scanResults = cxgoScanner.getLatestScanResults(scanRequest);
+        }else {
+            scanResults = sastScanner.getLatestScanResults(scanRequest);
+        }
         log.debug("ScanResults {}", scanResults);
 
         return scanResults;

@@ -16,6 +16,7 @@ import com.checkmarx.sdk.service.CxClient;
 import com.checkmarx.sdk.service.CxOsaClient;
 import com.cx.restclient.ScannerClient;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.springframework.stereotype.Service;
@@ -43,6 +44,18 @@ public class SastScanner extends AbstractVulnerabilityScanner {
         this.cxService = cxService;
     }
 
+    @Override
+    public boolean isEnabled() {
+        boolean result = false;
+        List<String> enabledScanners = flowProperties.getEnabledVulnerabilityScanners();
+        if (enabledScanners == null || enabledScanners.isEmpty()) {
+            log.info("None of the vulnerability scanners is enabled in the configuration. Using CxSAST scanner by default.");
+            result = true;
+        } else if (StringUtils.containsIgnoreCase(enabledScanners.toString(), CxProperties.CONFIG_PREFIX)) {
+            result = true;
+        }
+        return result;
+    }
 
     public ScannerClient getScannerClient() {
         return cxService;
