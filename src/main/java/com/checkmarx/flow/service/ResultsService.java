@@ -23,6 +23,7 @@ import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
 import com.checkmarx.sdk.service.CxOsaClient;
+import com.cx.restclient.ScannerClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -43,7 +44,7 @@ import static com.checkmarx.sdk.config.Constants.UNKNOWN_INT;
 @RequiredArgsConstructor
 public class ResultsService {
 
-    private final CxClient cxService;
+    private final ScannerClient cxService;
     private final CxOsaClient osaService;
     private final JiraService jiraService;
     private final IssueService issueService;

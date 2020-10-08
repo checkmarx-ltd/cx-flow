@@ -9,11 +9,11 @@ import com.checkmarx.sdk.ShardManager.ShardSession;
 import com.checkmarx.sdk.ShardManager.ShardSessionTracker;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
+import com.checkmarx.sdk.config.CxPropertiesBase;
 import com.checkmarx.sdk.dto.cx.CxScanParams;
 import com.checkmarx.sdk.dto.cx.CxScanSettings;
 import com.checkmarx.sdk.exception.CheckmarxException;
-import com.checkmarx.sdk.service.CxClient;
-import lombok.RequiredArgsConstructor;
+import com.cx.restclient.ScannerClient;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
@@ -26,12 +26,11 @@ import static com.checkmarx.sdk.config.Constants.UNKNOWN_INT;
 
 @Component
 @Slf4j
-@RequiredArgsConstructor
 public class ScanRequestConverter {
 
     private final HelperService helperService;
-    private final CxProperties cxProperties;
-    private final CxClient cxService;
+    private final CxPropertiesBase cxProperties;
+    private ScannerClient scannerClient;
     private final FlowProperties flowProperties;
     private final GitHubService gitService;
     private final GitLabService gitLabService;
@@ -39,6 +38,21 @@ public class ScanRequestConverter {
     private final ADOService adoService;
     private final ShardSessionTracker sessionTracker;
     private static final String EMPTY_STRING = "";
+
+    public ScanRequestConverter(HelperService helperService, CxPropertiesBase cxProperties, FlowProperties flowProperties, GitHubService gitService, GitLabService gitLabService, BitBucketService bitBucketService, ADOService adoService, ShardSessionTracker sessionTracker) {
+        this.helperService = helperService;
+        this.cxProperties = cxProperties;
+        this.flowProperties = flowProperties;
+        this.gitService = gitService;
+        this.gitLabService = gitLabService;
+        this.bitBucketService = bitBucketService;
+        this.adoService = adoService;
+        this.sessionTracker = sessionTracker;
+    }
+
+    public void setScannerClient(ScannerClient scannerClient) {
+        this.scannerClient = scannerClient;
+    }
 
     public CxScanParams toScanParams(ScanRequest scanRequest) throws CheckmarxException {
         String ownerId = determineTeamAndOwnerID(scanRequest);
@@ -50,10 +64,10 @@ public class ScanRequestConverter {
     private void setScanConfiguration(ScanRequest scanRequest, Integer projectId) {
         if (entityExists(projectId)) {
             log.debug("Scan request will contain scan configuration of the existing project.");
-            CxScanSettings scanSettings = cxService.getScanSettingsDto(projectId);
+            CxScanSettings scanSettings = scannerClient.getScanSettingsDto(projectId);
             if (scanSettings != null && scanSettings.getEngineConfigurationId() != null) {
                 Integer configId = scanSettings.getEngineConfigurationId();
-                String configName = cxService.getScanConfigurationName(configId);
+                String configName = scannerClient.getScanConfigurationName(configId);
                 log.debug("Using scan configuration ID: {}, name: '{}'.", configId, configName);
                 scanRequest.setScanConfiguration(configName);
             } else {
@@ -82,7 +96,7 @@ public class ScanRequestConverter {
                 shard.setTeam(team);
                 shard.setProject(request.getProject());
             }
-            ownerId = cxService.getTeamId(team);
+            ownerId = scannerClient.getTeamId(team);
         } else {
             team = cxProperties.getTeam();
             if (!team.startsWith(cxProperties.getTeamPathSeparator()))
@@ -94,13 +108,13 @@ public class ScanRequestConverter {
                 shard.setTeam(fullTeamName);
                 shard.setProject(request.getProject());
             }
-            ownerId = cxService.getTeamId(team);
+            ownerId = scannerClient.getTeamId(team);
             if (cxProperties.isMultiTenant() && !ScanUtils.empty(namespace)) {
                 log.info("Using multi tenant team name: {}", fullTeamName);
                 request.setTeam(fullTeamName);
-                String tmpId = cxService.getTeamId(fullTeamName);
+                String tmpId = scannerClient.getTeamId(fullTeamName);
                 if (tmpId.equals(UNKNOWN)) {
-                    ownerId = cxService.createTeam(ownerId, namespace);
+                    ownerId = scannerClient.createTeam(ownerId, namespace);
                 } else {
                     ownerId = tmpId;
                 }
@@ -117,7 +131,7 @@ public class ScanRequestConverter {
     }
 
     public Integer determinePresetAndProjectId(ScanRequest request, String ownerId) {
-        Integer projectId = cxService.getProjectId(ownerId, request.getProject());
+        Integer projectId = scannerClient.getProjectId(ownerId, request.getProject());
         boolean projectExists = entityExists(projectId);
 
         boolean needToProfile = flowProperties.isAlwaysProfile() ||
@@ -142,9 +156,9 @@ public class ScanRequestConverter {
 
     private void setPresetBasedOnExistingProject(ScanRequest request, Integer projectId) {
         log.debug("Setting scan preset based on an existing project (ID {})", projectId);
-        int presetId = cxService.getProjectPresetId(projectId);
+        int presetId = scannerClient.getProjectPresetId(projectId);
         if (entityExists(presetId)) {
-            String preset = cxService.getPresetName(presetId);
+            String preset = scannerClient.getPresetName(presetId);
             request.setScanPreset(preset);
         } else {
             log.warn("Unable to get preset for the existing project.");

@@ -8,12 +8,14 @@ import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.sastscanning.ScanRequestConverter;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
+import com.checkmarx.sdk.config.CxGoProperties;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxProject;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
 import com.checkmarx.sdk.service.CxOsaClient;
+import com.cx.restclient.CxGoClientImpl;
 import com.cx.restclient.ScannerClient;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -37,13 +39,23 @@ public class SastScanner extends AbstractVulnerabilityScanner {
     
     private final CxClient cxService;
     private final CxOsaClient osaService;
+
+    protected final ScanRequestConverter scanRequestConverter;
+    
     
     public SastScanner(ResultsService resultsService, HelperService helperService, CxProperties cxProperties, FlowProperties flowProperties, CxOsaClient osaService, EmailService emailService, ScanRequestConverter scanRequestConverter, BugTrackerEventTrigger bugTrackerEventTrigger, ProjectNameGenerator projectNameGenerator, CxClient cxService) {
-        super(resultsService, helperService, cxProperties, flowProperties, emailService, scanRequestConverter, bugTrackerEventTrigger, projectNameGenerator);
+        super(resultsService, helperService, cxProperties, flowProperties, emailService, bugTrackerEventTrigger, projectNameGenerator);
         this.osaService = osaService;
         this.cxService = cxService;
+        this.scanRequestConverter = scanRequestConverter;
+        this.scanRequestConverter.setScannerClient(cxService);
     }
 
+    @Override
+    protected ScanRequestConverter getScanRequestConverter() {
+        return scanRequestConverter;
+    }
+    
     @Override
     public boolean isEnabled() {
         boolean result = false;
