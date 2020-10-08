@@ -90,6 +90,7 @@ sca:
 
 ast:
   apiUrl: http://xxxxx
+  webAppUrl: ${ast.apiUrl}
   clientId: xxxxx
   clientSecret: xxxxx
   preset: Checkmarx Default

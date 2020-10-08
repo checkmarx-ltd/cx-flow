@@ -46,7 +46,7 @@ public class HTMLHelper {
     public static final String ISSUE_BODY_TEXT = "%s issue exists @ %s in branch %s";
 
     private static final String DIV_A_HREF = "<div><a href='";
-    private static final String NO_POLICY_VIOLATION_MESSAGE = "No policy violation found";
+    public static final String NO_POLICY_VIOLATION_MESSAGE = "No policy violation found";
     private static final String NO_PACKAGE_VIOLATION_MESSAGE = "No package violation found";
 
     private HTMLHelper() {
@@ -93,7 +93,7 @@ public class HTMLHelper {
     }
 
     private static void addFlowSummarySection(ScanResults results, RepoProperties properties, StringBuilder body, ScanRequest request) {
-        if (properties.isFlowSummary() && results.getAstResults() == null) {
+        if (properties.isFlowSummary() ) {
             if (!ScanUtils.empty(properties.getFlowSummaryHeader())) {
                 appendAll(body, MarkDownHelper.getMdHeaderType(3, properties.getFlowSummaryHeader()), CRLF);
             }
@@ -103,18 +103,17 @@ public class HTMLHelper {
                 appendAll(body, MarkDownHelper.getMdHeaderType(4, NO_POLICY_VIOLATION_MESSAGE), CRLF);
             } else {
                 flowSummaryToMap.forEach((severityKey, value) ->
-                    appendAll(body,
-                            MarkDownHelper.getSeverityIconFromLinkByText(severityKey, request),
-                            MarkDownHelper.getNonBreakingSpace(request), MarkDownHelper.getBoldText(value.toString()),
-                            " ",
-                            MarkDownHelper.getBoldText(severityKey), MarkDownHelper.getLineBreak(request))
+                        appendAll(body,
+                                MarkDownHelper.getSeverityIconFromLinkByText(severityKey, request),
+                                MarkDownHelper.getNonBreakingSpace(request), MarkDownHelper.getBoldText(value.toString()),
+                                " ",
+                                MarkDownHelper.getBoldText(severityKey), MarkDownHelper.getLineBreak(request))
                 );
                 body.append(CRLF);
                 appendAll(body, MarkDownHelper.getTextLink(MarkDownHelper.MORE_DETAILS_LINK_HEADER, results.getLink()), CRLF);
             }
         }
     }
-
     private static void addScaBody(ScanResults results, StringBuilder body, ScanRequest request) {
         Optional.ofNullable(results.getScaResults()).ifPresent(r -> {
             log.debug("Building merge comment MD for SCA scanner");

@@ -42,6 +42,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import com.cx.restclient.ast.dto.sast.report.Finding;
 
 
+import javax.validation.constraints.AssertTrue;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -49,6 +50,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 
+import static com.checkmarx.flow.utils.HTMLHelper.NO_POLICY_VIOLATION_MESSAGE;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doAnswer;
@@ -67,6 +69,7 @@ public class GitHubCommentsASTSteps {
     private static final String AST_SCA = "AST,SCA";
     private static final String GIT_URL =  "https://github.com/cxflowtestuser/testsAST.git";
     private static final String REGEX = "### Checkmarx";
+    private static final String AST_WEB_REPORT_LINK = "https://astWebReportUrl";
 
     private final CxClient cxClientMock;
     private final FlowProperties flowProperties;
@@ -170,6 +173,7 @@ public class GitHubCommentsASTSteps {
         summary.setMediumVulnerabilityCount(mediumCount);
         summary.setLowVulnerabilityCount(lowCount);
 
+        astSastResults.setWebReportLink(AST_WEB_REPORT_LINK);
         astSastResults.setSummary(summary);
         Map<String, Object> details = new HashMap<>();
         details.put(Constants.SUMMARY_KEY, new HashMap<>());
@@ -256,11 +260,11 @@ public class GitHubCommentsASTSteps {
 
     private void initGitHubProperties() {
         this.gitHubProperties.setCxSummary(false);
-        this.gitHubProperties.setFlowSummary(false);
         this.gitHubProperties.setUrl(GIT_URL);
         this.gitHubProperties.setWebhookToken("1234");
         this.gitHubProperties.setApiUrl("https://api.github.com/repos");
         this.gitHubProperties.setBlockMerge(false);
+        this.gitHubProperties.setFlowSummary(true);
     }
 
 
@@ -396,30 +400,47 @@ public class GitHubCommentsASTSteps {
     @Then("we should see the expected number of results in comments")
     public void verifyComments(){
 
-        int highCounter = StringUtils.countMatches(comment, "HIGH");
-        int mediumCounter = StringUtils.countMatches(comment, "MEDIUM");
-        int lowCounter = StringUtils.countMatches(comment, "LOW");
+        int actaulHighCounter = StringUtils.countMatches(comment, "HIGH");
+        int actualMediumCounter = StringUtils.countMatches(comment, "MEDIUM");
+        int actaulLowCounter = StringUtils.countMatches(comment, "LOW");
 
         
         if (scannerType.equalsIgnoreCase(AST_SCA)) {
             Assert.assertTrue(PullRequestCommentsHelper.isSastAndScaComment(comment) );
-            
+
             Assert.assertEquals(scanResultsToInject.getAstResults().getResults().getSummary().getHighVulnerabilityCount()+
-                    scanResultsToInject.getScaResults().getSummary().getFindingCounts().get(Filter.Severity.HIGH), highCounter);
+                    scanResultsToInject.getScaResults().getSummary().getFindingCounts().get(Filter.Severity.HIGH), actaulHighCounter);
             Assert.assertEquals(scanResultsToInject.getAstResults().getResults().getSummary().getMediumVulnerabilityCount() +
-                    scanResultsToInject.getScaResults().getSummary().getFindingCounts().get(Filter.Severity.MEDIUM), mediumCounter);
-            Assert.assertEquals(scanResultsToInject.getAstResults().getResults().getSummary().getLowVulnerabilityCount()+
-                    scanResultsToInject.getScaResults().getSummary().getFindingCounts().get(Filter.Severity.LOW), lowCounter);
+                    scanResultsToInject.getScaResults().getSummary().getFindingCounts().get(Filter.Severity.MEDIUM), actualMediumCounter);
+            
+            // add 1 to the results 
+            Assert.assertEquals(scanResultsToInject.getAstResults().getResults().getSummary().getLowVulnerabilityCount()+ 1 +
+                    scanResultsToInject.getScaResults().getSummary().getFindingCounts().get(Filter.Severity.LOW), actaulLowCounter);
 
         }
         else if (scannerType.equalsIgnoreCase(AST)) {
+            
             Assert.assertTrue(PullRequestCommentsHelper.isSastFindingsComment(comment));
 
-            Assert.assertEquals(scanResultsToInject.getAstResults().getResults().getSummary().getHighVulnerabilityCount(), highCounter);
-            Assert.assertEquals(scanResultsToInject.getAstResults().getResults().getSummary().getMediumVulnerabilityCount(), mediumCounter);
-            Assert.assertEquals(scanResultsToInject.getAstResults().getResults().getSummary().getLowVulnerabilityCount(), lowCounter);
-
+            int expectedHigh = getExpectedResults(scanResultsToInject.getAstResults().getResults().getSummary().getHighVulnerabilityCount());
+            int expectedMedium = getExpectedResults(scanResultsToInject.getAstResults().getResults().getSummary().getMediumVulnerabilityCount());
+            int expectedLow = getExpectedResults(scanResultsToInject.getAstResults().getResults().getSummary().getLowVulnerabilityCount());
+            
+            Assert.assertEquals(expectedHigh  , actaulHighCounter);
+            Assert.assertEquals(expectedMedium  , actualMediumCounter);
+            Assert.assertEquals(expectedLow , actaulLowCounter);
+    
+            if(!comment.contains(NO_POLICY_VIOLATION_MESSAGE)) {
+                Assert.assertTrue(comment.contains(AST_WEB_REPORT_LINK));
+            }
         }
+
         
+    }
+
+    private int getExpectedResults(int vulnerabilityCount) {
+        
+        //adding 1 to the expected count since the severity string appears not only in the Summary section but also in in the Flow Summary Section
+        return vulnerabilityCount==0 ? 0 :  vulnerabilityCount + 1;
     }
 }

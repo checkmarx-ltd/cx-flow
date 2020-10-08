@@ -4,6 +4,7 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitLabProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.config.ScmConfigOverrider;
+import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.EventResponse;
@@ -68,7 +69,7 @@ public class GitLabController extends WebhookController {
             ControllerRequest controllerRequest
     ){
         String uid = helperService.getShortUid();
-        MDC.put("cx", uid);
+        MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
         log.info("Processing GitLab MERGE request");
         controllerRequest = ensureNotNull(controllerRequest);
         validateGitLabRequest(token, controllerRequest);
@@ -187,7 +188,7 @@ public class GitLabController extends WebhookController {
             ControllerRequest controllerRequest
     ){
         String uid = helperService.getShortUid();
-        MDC.put("cx", uid);
+        MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
         controllerRequest = ensureNotNull(controllerRequest);
         validateGitLabRequest(token, controllerRequest);
 

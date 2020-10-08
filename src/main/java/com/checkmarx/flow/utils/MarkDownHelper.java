@@ -42,6 +42,11 @@ public class MarkDownHelper {
     public static final String SAST_HEADER = CHECKMARX_PREFIX + SAST_SCANNER + " - " + SCAN_SUMMARY_DETAILS;
     public static final String SCA_HEADER = CHECKMARX_PREFIX + SCA_SCANNER + " - " + SCAN_SUMMARY_DETAILS;
     private static final String AST_SAST_HEADER = CHECKMARX_PREFIX + AST_SAST_SCANNER + " - " + SCAN_SUMMARY_DETAILS;
+    private static final String HIGH = "HIGH";
+    private static final String MEDIUM = "MEDIUM";
+    private static final String LOW = "LOW";
+    private static final String INFORMATION = "INFORMATION";
+    private static final String INFO = "INFO";
 
 
     private MarkDownHelper() {
@@ -145,15 +150,18 @@ public class MarkDownHelper {
     }
 
     static String getSeverityIconFromLinkByText(String severity, ScanRequest request) {
-        switch (severity.toUpperCase()) {
-            case "HIGH":
+
+        severity = severity.toUpperCase();
+
+        switch (severity) {
+            case HIGH:
                 return getHighIconFromLink(request);
-            case "MEDIUM":
+            case MEDIUM:
                 return getMediumIconFromLink(request);
-            case "LOW":
+            case LOW:
                 return getLowIconFromLink(request);
-            case "INFORMATION":
-            case "INFO":
+            case INFORMATION:
+            case INFO:
                 return getInfoIconFromLink(request);
             default:
                 throw new MachinaRuntimeException(severity + " is not a valid severity");
