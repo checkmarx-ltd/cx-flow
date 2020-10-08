@@ -102,18 +102,12 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
 
     private boolean isAllowed(ScanResults scanResults, ScanRequest request) {
 
-        boolean isAllowed = true;
+        boolean isSastAllowed = !isSast() || isAllowedSast(scanResults, request);
+        boolean isScaAllowed = !scaScanner.isEnabled() || isAllowedSca(scanResults, request);
 
-        if (isSast()) {
-            isAllowed = isAllowedSast(scanResults, request);
-        }
-
-        if (isAllowed && scaScanner.isEnabled()) {
-            isAllowed = isAllowedSca(scanResults, request);
-        }
-
-        return isAllowed;
+        return isSastAllowed && isScaAllowed;
     }
+
 
     private boolean isSast() {
         return sastScanner.isEnabled();
