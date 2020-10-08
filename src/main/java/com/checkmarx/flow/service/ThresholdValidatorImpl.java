@@ -10,6 +10,7 @@ import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.ScaConfig;
 import com.checkmarx.sdk.config.ScaProperties;
+import com.checkmarx.sdk.dto.Sca;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.cx.restclient.dto.scansummary.Severity;
 import com.cx.restclient.ast.dto.sca.report.Finding;
@@ -53,10 +54,22 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
     @Override
     public boolean isMergeAllowed(ScanResults scanResults, RepoProperties repoProperties, PullRequestReport pullRequestReport) {
         OperationResult requestResult = new OperationResult(OperationStatus.SUCCESS, MERGE_SUCCESS_DESCRIPTION);
-        boolean isMergeAllowed = isAllowed(scanResults, repoProperties, pullRequestReport);
+        boolean isMergeAllowed = true;
 
-        if (!isMergeAllowed) {
-            requestResult = new OperationResult(OperationStatus.FAILURE, MERGE_FAILURE_DESCRIPTION);
+        if (!repoProperties.isErrorMerge()) {
+            log.info("Merge is allowed, because error-merge is set to false.");
+            pullRequestReport.setPullRequestResult(requestResult);
+        }
+        else{
+            isMergeAllowed = isAllowed(scanResults, pullRequestReport.getScanRequest());
+
+            if (!isMergeAllowed) {
+                log.info("Merge is not allowed, because some thresholds were exceeded.");
+                requestResult = new OperationResult(OperationStatus.FAILURE, MERGE_FAILURE_DESCRIPTION);
+            }
+            else{
+                log.info("Merge is allowed, because no thresholds were exceeded.");
+            }
         }
 
         pullRequestReport.setPullRequestResult(requestResult);
@@ -64,59 +77,70 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
         return isMergeAllowed;
     }
 
-    private boolean isAllowed(ScanResults scanResults, RepoProperties repoProperties, PullRequestReport pullRequestReport) {
-        if (!repoProperties.isErrorMerge()) {
-            log.info("Merge is allowed, because error-merge is set to false.");
-            return true;
-        }
-
-        boolean isAllowed = true;
-        if (isSast()) {
-            isAllowed = isAllowedSast(scanResults, pullRequestReport);
-        }
-
-        if (isAllowed && scaScanner.isEnabled()) {
-            isAllowed = isAllowedSca(scanResults, pullRequestReport);
-        }
-
-        return isAllowed;
+    @Override
+    public boolean thresholdsExceeded(ScanRequest request, ScanResults results){
+        return !isAllowed(results, request);
     }
+
+    @Override
+    public boolean isThresholdsConfigurationExist(ScanRequest scanRequest){
+        boolean sastThresholds;
+        boolean scaThresholds = false;
+
+        sastThresholds = scanRequest.getThresholds() != null || flowProperties.getThresholds() != null;
+        if(scaProperties != null){
+            scaThresholds = scaProperties.getThresholdsSeverity() != null || scaProperties.getThresholdsScore() != null;
+        }
+
+        if (!scaThresholds && scanRequest.getScaConfig() != null) {
+            scaThresholds = scanRequest.getScaConfig().getThresholdsSeverity() != null || scanRequest.getScaConfig().getThresholdsScore() != null;
+        }
+
+        log.info("Checking Thresholds exists. sast thresholds: {}. sca thresholds: {}", sastThresholds, scaThresholds);
+        return  sastThresholds || scaThresholds;
+    }
+
+    private boolean isAllowed(ScanResults scanResults, ScanRequest request) {
+
+        boolean isSastAllowed = !isSast() || isAllowedSast(scanResults, request);
+        boolean isScaAllowed = !scaScanner.isEnabled() || isAllowedSca(scanResults, request);
+
+        return isSastAllowed && isScaAllowed;
+    }
+
 
     private boolean isSast() {
         return sastScanner.isEnabled();
     }
 
-    private boolean isAllowedSca(ScanResults scanResults, PullRequestReport pullRequestReport) {
+    private boolean isAllowedSca(ScanResults scanResults, ScanRequest request) {
         log.debug("Checking if CxSCA pull request merge is allowed.");
-        Map<Severity, Integer> scaThresholdsSeverity = getScaEffectiveThresholdsSeverity(pullRequestReport.getScanRequest());
-        Double scaThresholdsScore = getScaEffectiveThresholdsScore(pullRequestReport.getScanRequest());
+        Map<Severity, Integer> scaThresholdsSeverity = getScaEffectiveThresholdsSeverity(request);
+        Double scaThresholdsScore = getScaEffectiveThresholdsScore(request);
 
         writeMapToLog(scaThresholdsSeverity, "Using CxSCA thresholds severity");
         writeMapToLog(scaThresholdsScore, "Using CxSCA thresholds score");
-        pullRequestReport.setScaThresholdsSeverity(scaThresholdsSeverity);
-        pullRequestReport.setScaThresholdsScore(scaThresholdsScore);
 
-        boolean isAllowedSca = !isAnyScaThresholdsExceeded(scanResults, scaThresholdsSeverity, scaThresholdsScore, pullRequestReport);
+        boolean isAllowedSca = !isAnyScaThresholdsExceeded(scanResults, scaThresholdsSeverity, scaThresholdsScore);
         isAllowedScannerToLog(isAllowedSca);
 
         return isAllowedSca;
     }
 
-    private boolean isAllowedSast(ScanResults scanResults, PullRequestReport pullRequestReport) {
+    private boolean isAllowedSast(ScanResults scanResults, ScanRequest request) {
         log.debug("Checking if CxSAST pull request merge is allowed.");
-        Map<FindingSeverity, Integer> thresholds = getSastEffectiveThresholds(pullRequestReport.getScanRequest());
+        Map<FindingSeverity, Integer> thresholds = getSastEffectiveThresholds(request);
         writeMapToLog(thresholds, "Using CxSAST thresholds");
-        pullRequestReport.setThresholds(thresholds);
 
-        boolean isAllowed = !isAnySastThresholdExceeded(scanResults, thresholds, pullRequestReport);
+        boolean isAllowed = !isAnySastThresholdExceeded(scanResults, thresholds);
         isAllowedScannerToLog(isAllowed);
 
         return isAllowed;
     }
 
     private void isAllowedScannerToLog(boolean isAllowedScanner) {
-        log.info(isAllowedScanner ? "Merge is allowed, because no thresholds were exceeded." :
-                "Merge is not allowed, because some of the thresholds were exceeded.");
+        log.info(isAllowedScanner ? "No thresholds were exceeded." :
+                "Thresholds were exceeded.");
     }
 
     private Map<FindingSeverity, Integer> getSastEffectiveThresholds(ScanRequest scanRequest) {
@@ -216,11 +240,10 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
     }
 
     private static boolean isAnyScaThresholdsExceeded(ScanResults scanResults,  Map<Severity, Integer> scaThresholds,
-                                                      Double scaThresholdsScore, PullRequestReport pullRequestReport) {
+                                                      Double scaThresholdsScore) {
         boolean isExceeded = isExceedsScaThresholdsScore(scanResults, scaThresholdsScore);
 
         Map<Severity, Integer> scaFindingsCountsPerSeverity = getScaFindingsCountsPerSeverity(scanResults);
-        pullRequestReport.setScaFindingsSeverityCount(scaFindingsCountsPerSeverity);
 
         for (Map.Entry<Severity, Integer> entry : scaFindingsCountsPerSeverity.entrySet()) {
             Severity severity = entry.getKey();
@@ -250,10 +273,10 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
         return isExceeded;
     }
 
-    private static boolean isAnySastThresholdExceeded(ScanResults scanResults, Map<FindingSeverity, Integer> sastThresholds, PullRequestReport pullRequestReport) {
+    private static boolean isAnySastThresholdExceeded(ScanResults scanResults, Map<FindingSeverity, Integer> sastThresholds) {
         boolean result = false;
         Map<FindingSeverity, Integer> findingsPerSeverity = getSastFindingCountPerSeverity(scanResults);
-        pullRequestReport.setFindingsPerSeverity(findingsPerSeverity);
+
         for (Map.Entry<FindingSeverity, Integer> entry : findingsPerSeverity.entrySet()) {
             if (isExceedsSastThreshold(entry, sastThresholds)) {
                 result = true;

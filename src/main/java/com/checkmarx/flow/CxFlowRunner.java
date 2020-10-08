@@ -57,6 +57,7 @@ public class CxFlowRunner implements ApplicationRunner {
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
     private final List<VulnerabilityScanner> scanners;
+    private final ThresholdValidator thresholdValidator;
     private static final String ERROR_BREAK_MSG = "Exiting with Error code 10 due to issues present";
 
     @Override
@@ -498,7 +499,7 @@ public class CxFlowRunner implements ApplicationRunner {
     private void processResults(ScanRequest request, ScanResults results) throws ExitThrowable {
         try {
             resultsService.processResults(request, results, null);
-            if (flowProperties.isBreakBuild() && resultsService.filteredIssuesPresent(results)) {
+            if (checkIfBreakBuild(request, results)) {
                 log.error(ERROR_BREAK_MSG);
                 exit(ExitCode.BUILD_INTERRUPTED);
             }
@@ -506,6 +507,25 @@ public class CxFlowRunner implements ApplicationRunner {
         } catch (MachinaException e) {
             log.error("An error has occurred.", ExceptionUtils.getRootCause(e));
         }
+    }
+
+    private boolean checkIfBreakBuild(ScanRequest request, ScanResults results){
+        boolean breakBuildResult = false;
+
+        if(thresholdValidator.isThresholdsConfigurationExist(request)){
+            if(thresholdValidator.thresholdsExceeded(request, results)){
+                log.info("Fail build on Thresholds exceeded.");
+                breakBuildResult = true;
+            }
+        } else if(flowProperties.isBreakBuild() && resultsService.filteredSastIssuesPresent(results)){
+            log.info("Build failed because some issues were found");
+            breakBuildResult = true;
+        }
+        else {
+            log.info("Build succeeded. all checks passed");
+        }
+
+        return breakBuildResult;
     }
 
     private ScanResults runOnActiveScanners(Function<? super VulnerabilityScanner, ScanResults> action) throws ExitThrowable {

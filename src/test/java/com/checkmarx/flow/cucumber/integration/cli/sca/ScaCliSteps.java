@@ -75,6 +75,7 @@ public class ScaCliSteps {
         initJiraBugTracker();
         log.info("reset sca filters");
         scaProperties.setFilterSeverity(Collections.emptyList());
+        resetThresholds();
     }
 
     @After
@@ -94,7 +95,7 @@ public class ScaCliSteps {
         copyTestProjectTo(directoryToScan);
     }
 
-    @Given("code has 6 High, 9 Medium and 0 low issues")
+    @Given("code has 6 High, 11 Medium and 1 low issues")
     public void setProject() {
         customScaProjectName = "test";
     }
@@ -279,5 +280,11 @@ public class ScaCliSteps {
         log.info("Copying test project files from resources ({}) into a temp directory: {}", DIRECTORY_TO_SCAN, targetDir);
         File directory = TestUtils.getFileFromResource(DIRECTORY_TO_SCAN);
         FileUtils.copyDirectory(directory, targetDir.toFile());
+    }
+
+    private void resetThresholds() {
+        flowProperties.setThresholds(null);
+        scaProperties.setThresholdsSeverity(null);
+        scaProperties.setThresholdsScore(null);
     }
 }

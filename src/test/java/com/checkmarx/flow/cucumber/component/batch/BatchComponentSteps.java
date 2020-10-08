@@ -43,6 +43,7 @@ public class BatchComponentSteps {
     private final OsaScannerService osaScannerService;
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
+    private final ThresholdValidator thresholdValidator;
 
     private CxFlowRunner cxFlowRunner;
     private String projectName;
@@ -69,7 +70,8 @@ public class BatchComponentSteps {
                 osaScannerService,
                 filterFactory,
                 configOverrider,
-                scanners);
+                scanners,
+                thresholdValidator);
     }
 
     @Given("project is provided: {string} and team: {string}")
