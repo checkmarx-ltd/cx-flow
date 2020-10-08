@@ -16,9 +16,14 @@ import com.checkmarx.flow.service.*;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.ScanResults;
+import com.checkmarx.sdk.dto.ast.ASTResults;
+import com.cx.restclient.ast.dto.sast.report.AstSastSummaryResults;
+import com.cx.restclient.ast.dto.sast.report.Finding;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
+import com.cx.restclient.ast.dto.sast.AstSastResults;
+import com.cx.restclient.ast.dto.sast.report.FindingNode;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cucumber.java.Before;
@@ -50,6 +55,11 @@ import static org.mockito.Mockito.*;
 public class Github2AdoSteps {
     public static final String GITHUB_USER = "cxflowtestuser";
     public static final String AZURE = "Azure";
+    private static final String AST = "AST";
+    private static final String WEB_REPORT_LINK = "http://fake.co.il";
+    private static final String SAST = "SAST";
+    private static final String TO_VERIFY = "TO_VERIFY";
+    private static final String DESCRIPTION_AST = "Description AST";
 
     private final CxClient cxClientMock;
     private final GitHubService gitHubService;
@@ -81,6 +91,8 @@ public class Github2AdoSteps {
     @Autowired
     private ApplicationContext applicationContext;
     
+    private String scannerType;
+
     public Github2AdoSteps(FlowProperties flowProperties, GitHubService gitHubService,
                            CxProperties cxProperties, GitHubProperties gitHubProperties,
                            ConfigurationOverrider configOverrider, FlowService flowService,
@@ -124,7 +136,7 @@ public class Github2AdoSteps {
         
         issueService = new IssueService(flowProperties);
         issueService.setApplicationContext(applicationContext);
-        scanResultsToInject = createFakeResults();
+       
         initCxClientMock();
         initServices();
         initHelperServiceMock();
@@ -177,6 +189,7 @@ public class Github2AdoSteps {
         Pusher pusher = new Pusher();
         pusher.setEmail("some@email");
         pushEvent.setPusher(pusher);
+        pushEvent.setRef("refs/heads/master");
 
 
         try {
@@ -204,18 +217,18 @@ public class Github2AdoSteps {
             assertTrue(azureDevopsClient.projectExists());
             assertEquals(2, azureDevopsClient.getIssues().size());
             
-            azureDevopsClient.deleteProjectIssues();
-            
         } catch (IOException e) {
             fail(e.getMessage());
         }
     }
 
-    @And("description field is populated")
-    public void validateDescription() throws IOException {
+    @And("Additional fields are populated")
+    public void validateAdditionalFields() throws IOException {
         azureDevopsClient.getIssues().forEach(issue -> {
-            Assert.assertTrue(issue.getBody().toLowerCase().contains("description"));
+            Assert.assertTrue(issue.getBody().contains(DESCRIPTION_AST));
         });
+
+        azureDevopsClient.deleteProjectIssues();
     }
 
     @And("project {string} exists in Azure under namespace {string}")
@@ -318,6 +331,21 @@ public class Github2AdoSteps {
                 cxProperties));
     }
 
+    @And("Scanner is AST")
+    public void setScannerAST(){
+        this.scannerType = AST;
+        flowProperties.setEnabledVulnerabilityScanners(Arrays.asList(AST));
+        scanResultsToInject = createFakeResults();
+    }
+
+    @And("Scanner is SAST")
+    public void setScannerSAST(){
+        this.scannerType = SAST;
+        flowProperties.setEnabledVulnerabilityScanners(Arrays.asList(SAST));
+        scanResultsToInject = createFakeResults();
+
+    }
+    
     private ScanResults createFakeResults() {
         ScanResults result = new ScanResults();
         
@@ -326,6 +354,9 @@ public class Github2AdoSteps {
         Map<String, Object> details = new HashMap<>();
         details.put(Constants.SUMMARY_KEY, new HashMap<>());
 
+        if(scannerType.equals(AST)){
+            createAstFindings(result);
+        }
         result.setAdditionalDetails(details);
         
         result.setXIssues(ScanResultsBuilder.get2XIssues());
@@ -333,7 +364,40 @@ public class Github2AdoSteps {
         return result;
     }
 
+    private void createAstFindings(ScanResults result) {
+        result.setAstResults(new ASTResults());
+        result.getAstResults().setResults(new AstSastResults());
+        result.getAstResults().getResults().setScanId("111");
+        result.getAstResults().getResults().setWebReportLink(WEB_REPORT_LINK);
+        LinkedList<Finding> findings = new LinkedList();
+        
+        findings.add(createAstFinding(1));
+        findings.add(createAstFinding(2));
+        
+        result.getAstResults().getResults().setFindings(findings);
+
+        result.setScanSummary(new CxScanSummary());
+
+        result.getAstResults().getResults().setSummary(new AstSastSummaryResults());
     
+ 
+    }
+
+    private Finding createAstFinding(int index) {
+        Finding f1 = new Finding();
+        f1.setDescription(DESCRIPTION_AST + index);
+        f1.setState(TO_VERIFY);
+        f1.setQueryName("Query Name " + index);
+        f1.setSeverity("HIGH");
+        f1.setCweID(index);
+        f1.setSimilarityID(index);
+        f1.setUniqueID(index);
+        f1.setNodes(Arrays.asList(new FindingNode()));
+        f1.getNodes().get(0).setFileName(index + "file.java");
+        return f1;
+    }
+
+
     /**
      * Returns scan results as if they were produced by SAST.
      */

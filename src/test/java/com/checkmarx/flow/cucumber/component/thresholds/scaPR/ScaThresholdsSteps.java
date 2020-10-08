@@ -1,17 +1,11 @@
 package com.checkmarx.flow.cucumber.component.thresholds.scaPR;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -19,18 +13,26 @@ import java.util.stream.Stream;
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.RepoProperties;
+import com.checkmarx.flow.cucumber.common.utils.TestUtils;
+import com.checkmarx.flow.cucumber.integration.cli.IntegrationTestContext;
+import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.report.PullRequestReport;
+import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.flow.service.ThresholdValidator;
 import com.checkmarx.flow.service.ThresholdValidatorImpl;
 import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
+import com.checkmarx.sdk.dto.ast.ASTResultsWrapper;
 import com.checkmarx.sdk.dto.ast.SCAResults;
 import com.checkmarx.sdk.dto.ast.Summary;
 import com.checkmarx.test.flow.config.CxFlowMocksConfig;
+import com.cx.restclient.ScaClientImpl;
 import com.cx.restclient.dto.scansummary.Severity;
 import com.cx.restclient.ast.dto.sca.report.Finding;
 
+import io.cucumber.java.en.And;
+import org.junit.Assert;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import io.cucumber.java.Before;
@@ -59,32 +61,41 @@ public class ScaThresholdsSteps {
         }
     }
 
+    private static final String CLI_COMMAND = "--project  --cx-project=test --app=MyApp --branch=master --repo-name=CLI-Tests --namespace=CxFlow --blocksysexit";
+    private final String DEFAULT_THRESHOLDS_LIMIT = "10";
+    private final String DEFAULT_FINDINGS_CONFIG = "default";
     private final FlowProperties flowProperties;
+    private final IntegrationTestContext testContext;
     private List<Map<String, String>> thresholdDefs;
     private List<Map<String, String>> findingsDefs;
     private SCAResults scaResults;
     private ScaProperties scaProperties;
     private ThresholdValidatorImpl thresholdValidatorImpl;
+    private ScaClientImpl scaClientMock;
+    private boolean thresholdsSectionExist;
 
     public ScaThresholdsSteps(ThresholdValidatorImpl thresholdValidatorImpl,
                               FlowProperties flowProperties, ThresholdValidator thresholdValidator,
-                              ScaProperties scaProperties) {
-        flowProperties.setThresholds(new HashMap<>());
+                              ScaProperties scaProperties, IntegrationTestContext testContext, ScaClientImpl scaClient) {
+                flowProperties.setThresholds(new HashMap<>());
         this.flowProperties = flowProperties;
         this.scaProperties = scaProperties;
         this.thresholdValidatorImpl = thresholdValidatorImpl;
-
+        this.scaClientMock = scaClient;
+        this.testContext = testContext;
+        initMock();
     }
 
     @Before("@ThresholdsFeature")
     public void prepareServices() {
         log.info("setting scan engine to CxSCA");
         flowProperties.setEnabledVulnerabilityScanners(Collections.singletonList(ScaProperties.CONFIG_PREFIX));
+        resetThresholds();
     }
 
-    @Given("the following thresholds-severitys:")
-    public void the_following_thresholds_severitys(List<Map<String, String>> thresholds) {
-        log.info("found {} threshold-severitys definitions", thresholds.size());
+    @Given("the following thresholds-severities:")
+    public void the_following_thresholds_severities(List<Map<String, String>> thresholds) {
+        log.info("found {} threshold-severities definitions", thresholds.size());
         if (log.isDebugEnabled()) {
             thresholds.forEach(threshold ->
                     log.debug("{} --> high: {}, medium: {}, low: {}",
@@ -106,9 +117,74 @@ public class ScaThresholdsSteps {
         findingsDefs = findings;
     }
 
-    @When("threshold-severity is cofigured to {word}")
-    public void threshold_severity_is_cofigured_to_normal(String selectedConfig) {
+    @Given("SCA thresholds section {} in cxflow configuration")
+    public void setThresholdsSectionExist(boolean thresholdsExist) {
+        thresholdsSectionExist = thresholdsExist;
+    }
+
+    @And("SCA thresholds {} by scan findings")
+    public void setScaThresholds(boolean exceeded) {
+        if (thresholdsSectionExist){
+            int thresholdLimit;
+            if (exceeded){thresholdLimit = Integer.parseInt(DEFAULT_THRESHOLDS_LIMIT) - 1;}
+            else{thresholdLimit = Integer.parseInt(DEFAULT_THRESHOLDS_LIMIT) + 1;}
+
+            Map<Severity, Integer> map = new HashMap<>();
+            map.put(Severity.HIGH, thresholdLimit);
+            scaProperties.setThresholdsSeverity(map);
+        }
+    }
+
+    @And("cx-flow.break-build property is set to {}")
+    public void setBreakBuildProperty(boolean breakBuild){
+        flowProperties.setBreakBuild(breakBuild);
+    }
+
+    @When("cxflow called with get-latest-sca-project-results cli command")
+    public void runCxFlowFromCommandLine() {
+
+        flowProperties.setBugTracker(BugTracker.Type.NONE.toString());
+
+        Throwable exception = null;
+        try {
+            TestUtils.runCxFlow(testContext.getCxFlowRunner(), CLI_COMMAND);
+        } catch (Throwable e) {
+            exception = e;
+        }
+        testContext.setCxFlowExecutionException(exception);
+    }
+
+    private void setDefaultFindings(){
+        List<Map<String, String>> findings= new ArrayList<>();
+        Map<String, String> map = new HashMap<>();
+        map.put("name", DEFAULT_FINDINGS_CONFIG);
+        map.put("high", DEFAULT_THRESHOLDS_LIMIT);
+        map.put("medium", DEFAULT_THRESHOLDS_LIMIT);
+        map.put("low", DEFAULT_THRESHOLDS_LIMIT);
+
+        findings.add(map);
+        findingsDefs = findings;
+    }
+
+    @When("threshold-severity is configured to {word}")
+    public void threshold_severity_is_configured_to_normal(String selectedConfig) {
         configureThreshold(selectedConfig);
+    }
+
+    @Then("cxflow SCA should exit with the correct {}")
+    public void validateExitCode(int expectedExitCode) {
+        Throwable exception = testContext.getCxFlowExecutionException();
+
+        Assert.assertNotNull("Expected an exception to be thrown.", exception);
+        Assert.assertEquals(InvocationTargetException.class, exception.getClass());
+
+        Throwable targetException = ((InvocationTargetException) exception).getTargetException();
+        Assert.assertTrue(targetException instanceof ExitThrowable);
+
+        int actualExitCode = ((ExitThrowable) targetException).getExitCode();
+
+        Assert.assertEquals("The expected exist code did not match",
+                expectedExitCode, actualExitCode);
     }
 
     private void configureThreshold(String selectedConfig) {
@@ -171,8 +247,8 @@ public class ScaThresholdsSteps {
         return findingsScore;
     }
 
-    @When("the folowing threshold\\/s fails on {word}")
-    public void the_folowing_threshold_fails(String failType) {
+    @When("the following thresholds fails on {word}")
+    public void the_following_threshold_fails(String failType) {
         boolean isPassSeverity = Arrays.asList("score", "none").contains(failType);
         boolean isPassScore = Arrays.asList("count", "none").contains(failType);
 
@@ -230,5 +306,21 @@ public class ScaThresholdsSteps {
             fnd.setPackageId("");
             findings.add(fnd);
         }
+    }
+
+    private void initMock()
+    {
+        setDefaultFindings();
+        SCAResults scaResults = getFakeSCAResults(DEFAULT_FINDINGS_CONFIG);
+
+        ASTResultsWrapper wrapper = new ASTResultsWrapper();
+        wrapper.setScaResults(scaResults);
+        when(scaClientMock.getLatestScanResults(any())).thenReturn(wrapper);
+    }
+
+    private void resetThresholds() {
+        flowProperties.setThresholds(null);
+        scaProperties.setThresholdsSeverity(null);
+        scaProperties.setThresholdsScore(null);
     }
 }

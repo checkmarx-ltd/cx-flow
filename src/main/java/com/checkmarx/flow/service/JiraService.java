@@ -46,6 +46,7 @@ import com.atlassian.jira.rest.client.api.domain.input.TransitionInput;
 import com.atlassian.jira.rest.client.internal.async.CustomAsynchronousJiraRestClientFactory;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.constants.JiraConstants;
 import com.checkmarx.flow.constants.SCATicketingConstants;
 import com.checkmarx.flow.dto.BugTracker;
@@ -448,7 +449,7 @@ public class JiraService {
                 }
 
                 switch (fieldType) {
-                    case "cx":
+                    case FlowConstants.MAIN_MDC_ENTRY:
                         log.debug("Checkmarx custom field {}", f.getName());
                         if (request.getCxFields() != null) {
                             log.debug("Checkmarx custom field");
@@ -502,7 +503,7 @@ public class JiraService {
                                 break;
                             case "severity":
                                 log.debug("severity: {}", issue.getSeverity());
-                                value = issue.getSeverity();
+                                value = ScanUtils.toProperCase(issue.getSeverity());
                                 break;
                             case "category":
                                 log.debug("category: {}", issue.getVulnerability());

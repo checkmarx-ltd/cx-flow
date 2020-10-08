@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        CxSBSDK = "0.1.38"
+        CxSBSDK = "0.1.40"
         //cxVersion = "8.90.5"
         springBootVersion = '2.2.6.RELEASE'
         sonarqubeVersion = '2.8'
@@ -45,7 +45,7 @@ apply plugin: 'io.spring.dependency-management'
 apply plugin: 'com.gorylenko.gradle-git-properties'
 
 group = 'com.checkmarx'
-version = 'cxgo-1.6.9'
+version = 'cxgo-1.6.10'
 sourceCompatibility = 1.8
 def cucumberVersion = '5.7.0'
 def junitVersion = '5.5.0'
@@ -116,6 +116,7 @@ dependencies {
     compile("ch.qos.logback.contrib:logback-json-classic:0.1.5")
     compile("ch.qos.logback.contrib:logback-jackson:0.1.5")
     compile("net.logstash.logback:logstash-logback-encoder:5.2")
+    compile("com.checkmarx:cx-config-provider:1.0.8")
 }
 
 springBoot {

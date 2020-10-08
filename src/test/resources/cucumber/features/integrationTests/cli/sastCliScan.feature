@@ -18,10 +18,11 @@ Feature: Cx-Flow CLI SAST Integration tests
     Given code has x High, y Medium and z low issues
     When running sast scan <filter>
     Then bugTracker contains <number of issue> issues
+    And cxflow should exit with <return code>
 
     Examples:
-      | filter                 | number of issue |
-      | no-filter              | x+y+z           |
-      | filter-High-and-Medium | x+y             |
-      | filter-only-Medium     | y               |
-      | filter-invalid-cwe     | 0               |
+      | filter                 | number of issue | return code |
+      | no-filter              | x+y+z           | 10          |
+      | filter-High-and-Medium | x+y             | 10          |
+      | filter-only-Medium     | y               | 10          |
+      | filter-invalid-cwe     | 0               | 0           |

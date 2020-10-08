@@ -4,11 +4,13 @@ import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.constants.SCATicketingConstants;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
+import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.ast.SCAResults;
 import com.cx.restclient.ast.dto.sast.report.FindingNode;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
+import com.cx.restclient.ast.dto.sast.report.StatusCounter;
 import com.cx.restclient.ast.dto.sca.report.Finding;
 import com.cx.restclient.ast.dto.sca.report.Package;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -90,6 +92,8 @@ public class ScanUtils {
         
         setAstScanSummary(results);
 
+        Map<String, Integer> severityCount = new HashMap<>();
+
         List<com.cx.restclient.ast.dto.sast.report.Finding> findings = results.getAstResults().getResults().getFindings();
         findings.forEach(finding -> {
             
@@ -115,19 +119,25 @@ public class ScanUtils {
             xIssueBuilder.additionalDetails(additionalDetails);
             
             ScanResults.XIssue issue = xIssueBuilder.build();
-            removeDuplicateIssues(issueList, issue, issue.getDetails());
+
+            removeDuplicateIssues(issueList, issue, issue.getDetails(), severityCount);
+            
         });
 
+        results.getAdditionalDetails().put(Constants.SUMMARY_KEY, severityCount);
         results.setXIssues(issueList);
-
+        
         return issueList;
     }
 
-    private static void removeDuplicateIssues(List<ScanResults.XIssue> issueList, ScanResults.XIssue issue, Map<Integer, ScanResults.IssueDetails> details) {
+    private static void removeDuplicateIssues(List<ScanResults.XIssue> issueList, ScanResults.XIssue issue, Map<Integer, ScanResults.IssueDetails> details, Map<String, Integer> severityMap) {
+        
         if (issueList.contains(issue)) {
             ScanResults.XIssue existingIssue = issueList.get(issueList.indexOf(issue));
             existingIssue.getDetails().putAll(details);
         } else {
+            Integer severityCount = Optional.ofNullable(severityMap.get(issue.getSeverity())).orElse(0) ;
+            severityMap.put(issue.getSeverity(), ++severityCount);
             issueList.add(issue);
         }
     }
@@ -140,6 +150,7 @@ public class ScanUtils {
         scanSummary.setInfoSeverity(0);
         results.setLink(results.getAstResults().getResults().getWebReportLink());
         results.setScanSummary( scanSummary);
+        
     }
 
 
@@ -571,5 +582,15 @@ public class ScanUtils {
                 .append(urlColonEncode).append(urlCompatiblePackageId).append("/vulnerabilityDetails");
 
         return vulnerabilityUrl.toString();
+    }
+
+    /**
+     * Returns the string with first letter in uppercase and the remainder in lowercase
+     * @param s
+     * @return
+     */
+    public static String toProperCase(String s) {
+        return s.substring(0, 1).toUpperCase() +
+                s.substring(1).toLowerCase();
     }
 }

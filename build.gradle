@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        CxSBSDK = "0.4.45"
+        CxSBSDK = "0.4.47"
         //cxVersion = "8.90.5"
         springBootVersion = '2.2.6.RELEASE'
         sonarqubeVersion = '2.8'
@@ -46,7 +46,7 @@ apply plugin: 'io.spring.dependency-management'
 apply plugin: 'com.gorylenko.gradle-git-properties'
 
 group = 'com.checkmarx'
-version = '1.6.9'
+version = '1.6.10'
 sourceCompatibility = 1.8
 def cucumberVersion = '5.7.0'
 def junitVersion = '5.5.0'
@@ -73,7 +73,7 @@ dependencies {
     compile('org.springframework.boot:spring-boot-starter-actuator')
     compile('org.springframework.boot:spring-boot-starter-web')
     compile('org.springframework.boot:spring-boot-starter-aop')
-    compile("com.github.checkmarx-ts:cx-spring-boot-sdk:${CxSBSDK}")
+    compile("com.github.checkmarx-ltd:cx-spring-boot-sdk:${CxSBSDK}")
     compile("org.apache.commons:commons-text:1.8")
     compile('commons-codec:commons-codec:1.13')
     compile('commons-io:commons-io:2.7')
@@ -117,6 +117,7 @@ dependencies {
     compile("ch.qos.logback.contrib:logback-json-classic:0.1.5")
     compile("ch.qos.logback.contrib:logback-jackson:0.1.5")
     compile("net.logstash.logback:logstash-logback-encoder:5.2")
+    compile("com.checkmarx:cx-config-provider:1.0.8")
 }
 
 springBoot {
@@ -196,6 +197,7 @@ task integrationTest(type: Test) {
         include 'com/checkmarx/flow/cucumber/integration/azure/publishing/**'
         include 'com/checkmarx/flow/cucumber/integration/azure/publishing/github2ado/*'
         include 'com/checkmarx/flow/cucumber/integration/cxconfig/*'
+        include 'com/checkmarx/flow/cucumber/integration/config_provider/**'
         include 'com/checkmarx/flow/cucumber/integration/cxconfigbugtracker/**'
         include 'com/checkmarx/flow/cucumber/integration/multiScmInstances/**'
 

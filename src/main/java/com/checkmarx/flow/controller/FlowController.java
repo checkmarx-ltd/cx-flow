@@ -2,6 +2,7 @@ package com.checkmarx.flow.controller;
 
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.service.*;
@@ -72,7 +73,7 @@ public class FlowController {
             @RequestParam(value = "bug", required = false) String bug) {
 
         String uid = helperService.getShortUid();
-        MDC.put("cx", uid);
+        MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
         // Validate shared API token from header
         validateToken(token);
 
@@ -116,7 +117,7 @@ public class FlowController {
     ){
         String uid = helperService.getShortUid();
         String errorMessage = "Error submitting Scan Request.";
-        MDC.put("cx", uid);
+        MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
         log.info("Processing Scan initiation request");
 
         validateToken(token);
