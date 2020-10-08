@@ -8,14 +8,13 @@ import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.sastscanning.ScanRequestConverter;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
-import com.checkmarx.sdk.config.CxGoProperties;
 import com.checkmarx.sdk.config.CxProperties;
+import com.checkmarx.sdk.config.CxPropertiesBase;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxProject;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
 import com.checkmarx.sdk.service.CxOsaClient;
-import com.cx.restclient.CxGoClientImpl;
 import com.cx.restclient.ScannerClient;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -39,16 +38,17 @@ public class SastScanner extends AbstractVulnerabilityScanner {
     
     private final CxClient cxService;
     private final CxOsaClient osaService;
-
+    protected final CxProperties cxProperties;
     protected final ScanRequestConverter scanRequestConverter;
     
     
     public SastScanner(ResultsService resultsService, HelperService helperService, CxProperties cxProperties, FlowProperties flowProperties, CxOsaClient osaService, EmailService emailService, ScanRequestConverter scanRequestConverter, BugTrackerEventTrigger bugTrackerEventTrigger, ProjectNameGenerator projectNameGenerator, CxClient cxService) {
-        super(resultsService, helperService, cxProperties, flowProperties, emailService, bugTrackerEventTrigger, projectNameGenerator);
+        super(resultsService, helperService, flowProperties, emailService, bugTrackerEventTrigger, projectNameGenerator);
         this.osaService = osaService;
         this.cxService = cxService;
         this.scanRequestConverter = scanRequestConverter;
-        this.scanRequestConverter.setScannerClient(cxService);
+        this.cxProperties = cxProperties;
+        this.scanRequestConverter.setScannerClient(cxService, cxProperties);
     }
 
     @Override
@@ -139,7 +139,12 @@ public class SastScanner extends AbstractVulnerabilityScanner {
         }
         return osaScanId;
     }
-    
+
+    @Override
+    protected CxPropertiesBase getCxPropertiesBase() {
+        return cxProperties;
+    }
+
     public void deleteProject(ScanRequest request) {
         try {
             String ownerId = scanRequestConverter.determineTeamAndOwnerID(request);

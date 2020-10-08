@@ -29,7 +29,7 @@ import static com.checkmarx.sdk.config.Constants.UNKNOWN_INT;
 public class ScanRequestConverter {
 
     private final HelperService helperService;
-    private final CxPropertiesBase cxProperties;
+    private CxPropertiesBase cxProperties;
     private ScannerClient scannerClient;
     private final FlowProperties flowProperties;
     private final GitHubService gitService;
@@ -39,9 +39,8 @@ public class ScanRequestConverter {
     private final ShardSessionTracker sessionTracker;
     private static final String EMPTY_STRING = "";
 
-    public ScanRequestConverter(HelperService helperService, CxPropertiesBase cxProperties, FlowProperties flowProperties, GitHubService gitService, GitLabService gitLabService, BitBucketService bitBucketService, ADOService adoService, ShardSessionTracker sessionTracker) {
+    public ScanRequestConverter(HelperService helperService, FlowProperties flowProperties, GitHubService gitService, GitLabService gitLabService, BitBucketService bitBucketService, ADOService adoService, ShardSessionTracker sessionTracker) {
         this.helperService = helperService;
-        this.cxProperties = cxProperties;
         this.flowProperties = flowProperties;
         this.gitService = gitService;
         this.gitLabService = gitLabService;
@@ -50,8 +49,9 @@ public class ScanRequestConverter {
         this.sessionTracker = sessionTracker;
     }
 
-    public void setScannerClient(ScannerClient scannerClient) {
+    public void setScannerClient(ScannerClient scannerClient, CxPropertiesBase cxProperties) {
         this.scannerClient = scannerClient;
+        this.cxProperties = cxProperties;
     }
 
     public CxScanParams toScanParams(ScanRequest scanRequest) throws CheckmarxException {
