@@ -87,7 +87,9 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
                             .url(String.format(flowProperties.getMitreUrl(), issue.getCwe()))
                             .build()
             );
-        }else {log.info("mitre-url property is empty");}
+        }else {
+            log.info("mitre-url property is empty");
+        }
 
         return identifiers;
     }

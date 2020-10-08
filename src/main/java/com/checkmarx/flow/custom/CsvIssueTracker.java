@@ -143,6 +143,7 @@ public class CsvIssueTracker extends ImmutableIssueTracker {
                     break;
                 case "recommendation":
                     if (!ScanUtils.anyEmpty(flowProperties.getMitreUrl(), issue.getCwe())) {
+                        log.debug("recommendation: {}", flowProperties.getMitreUrl());
                         value = String.format(flowProperties.getMitreUrl(), issue.getCwe());
                     }
                     break;
