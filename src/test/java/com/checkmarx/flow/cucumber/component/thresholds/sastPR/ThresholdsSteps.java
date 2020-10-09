@@ -74,6 +74,7 @@ public class ThresholdsSteps {
     private final GitHubProperties gitHubProperties;
     private final ADOProperties adoProperties;
     private final EmailService emailService;
+    private final GitHubAppAuthService gitHubAppAuthService;
     private final ScmConfigOverrider scmConfigOverrider;
     private final ScaProperties scaProperties;
 
@@ -85,7 +86,7 @@ public class ThresholdsSteps {
 
     public ThresholdsSteps(IntegrationTestContext testContext, CxClient cxClientMock, RestTemplate restTemplateMock, FlowProperties flowProperties, ADOProperties adoProperties,
                            CxProperties cxProperties, GitHubProperties gitHubProperties, ThresholdValidator thresholdValidator,
-                           EmailService emailService, ScmConfigOverrider scmConfigOverrider, ScaProperties scaProperties) {
+                           EmailService emailService, GitHubAppAuthService gitHubAppAuthService, ScmConfigOverrider scmConfigOverrider, ScaProperties scaProperties) {
 
         this.cxClientMock = cxClientMock;
         this.restTemplateMock = restTemplateMock;
@@ -93,6 +94,7 @@ public class ThresholdsSteps {
 
         this.flowProperties = flowProperties;
         this.cxProperties = cxProperties;
+        this.gitHubAppAuthService = gitHubAppAuthService;
         this.scaProperties = scaProperties;
         flowProperties.setThresholds(new HashMap<>());
         gitHubProperties.setCxSummary(false);
@@ -334,7 +336,8 @@ public class ThresholdsSteps {
                 gitHubProperties,
                 flowProperties,
                 thresholdValidator,
-                scmConfigOverrider);
+                scmConfigOverrider,
+                gitHubAppAuthService);
 
         ADOService adoService = new ADOService(restTemplateMock,
                 adoProperties,
