@@ -4,7 +4,7 @@ on:
   push:
     # branches to consider in the event; optional, defaults to all
     branches:
-      - pr-natalie-prerelease
+      - develop
 
 jobs:
   update_release_draft:
@@ -15,7 +15,7 @@ jobs:
         with:
           # (Optional) specify config name to use, relative to .github/. Default: release-drafter.yml
           config-name: release-drafter.yml
-          prerelease: true
-          publish: true
+          prerelease: false
+          publish: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
