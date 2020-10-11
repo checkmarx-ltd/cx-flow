@@ -528,8 +528,7 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - create-github-release:
-
+      - create-github-release
 
   publish-github-pre-release:
     docker:
