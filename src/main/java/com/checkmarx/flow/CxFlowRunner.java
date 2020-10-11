@@ -58,7 +58,7 @@ public class CxFlowRunner implements ApplicationRunner {
     private final ConfigurationOverrider configOverrider;
     private final List<VulnerabilityScanner> scanners;
     private final ThresholdValidator thresholdValidator;
-    private static final String ERROR_BREAK_MSG = "Exiting with Error code 10 due to issues present";
+    private static final String ERROR_BREAK_MSG = "Exiting with Error code 10 due to checkmarx findings";
 
     @Override
     public void run(ApplicationArguments args) throws InvocationTargetException {
