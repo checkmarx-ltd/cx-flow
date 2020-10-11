@@ -7,6 +7,7 @@ import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.sastscanning.ScanRequestConverter;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.ShardManager.ShardSessionTracker;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.CxPropertiesBase;
@@ -38,17 +39,30 @@ public class SastScanner extends AbstractVulnerabilityScanner {
     
     private final CxClient cxService;
     private final CxOsaClient osaService;
-    protected final CxProperties cxProperties;
-    protected final ScanRequestConverter scanRequestConverter;
+    private final CxProperties cxProperties;
+    private final ScanRequestConverter scanRequestConverter;
     
     
-    public SastScanner(ResultsService resultsService, HelperService helperService, CxProperties cxProperties, FlowProperties flowProperties, CxOsaClient osaService, EmailService emailService, ScanRequestConverter scanRequestConverter, BugTrackerEventTrigger bugTrackerEventTrigger, ProjectNameGenerator projectNameGenerator, CxClient cxService) {
-        super(resultsService, helperService, flowProperties, emailService, bugTrackerEventTrigger, projectNameGenerator);
+    public SastScanner(ResultsService resultsService, 
+                       HelperService helperService, 
+                       CxProperties cxProperties, 
+                       FlowProperties flowProperties, 
+                       CxOsaClient osaService, 
+                       EmailService emailService, 
+                       BugTrackerEventTrigger bugTrackerEventTrigger, 
+                       ProjectNameGenerator projectNameGenerator, 
+                       CxClient cxService, 
+                       GitHubService gitService, 
+                       GitLabService gitLabService, 
+                       BitBucketService bitBucketService, 
+                       ADOService adoService, 
+                       ShardSessionTracker tracker) {
+        
+        super(resultsService, helperService, flowProperties, emailService, bugTrackerEventTrigger, projectNameGenerator, gitService,  gitLabService,  bitBucketService, adoService,tracker);
         this.osaService = osaService;
         this.cxService = cxService;
-        this.scanRequestConverter = scanRequestConverter;
+        this.scanRequestConverter = new ScanRequestConverter(helperService,flowProperties,gitService,gitLabService,bitBucketService,adoService,tracker,cxService,cxProperties);
         this.cxProperties = cxProperties;
-        this.scanRequestConverter.setScannerClient(cxService, cxProperties);
     }
 
     @Override
@@ -69,7 +83,7 @@ public class SastScanner extends AbstractVulnerabilityScanner {
         return result;
     }
 
-    public ScannerClient getScannerClient() {
+    public ScannerClient getCxGoClient() {
         return cxService;
     }
 

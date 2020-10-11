@@ -8,11 +8,13 @@ import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.ShardManager.ShardSession;
 import com.checkmarx.sdk.ShardManager.ShardSessionTracker;
 import com.checkmarx.sdk.config.Constants;
+import com.checkmarx.sdk.config.CxGoProperties;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.CxPropertiesBase;
 import com.checkmarx.sdk.dto.cx.CxScanParams;
 import com.checkmarx.sdk.dto.cx.CxScanSettings;
 import com.checkmarx.sdk.exception.CheckmarxException;
+import com.checkmarx.sdk.service.CxService;
 import com.cx.restclient.ScannerClient;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -24,7 +26,6 @@ import java.util.Optional;
 import static com.checkmarx.sdk.config.Constants.UNKNOWN;
 import static com.checkmarx.sdk.config.Constants.UNKNOWN_INT;
 
-@Component
 @Slf4j
 public class ScanRequestConverter {
 
@@ -39,7 +40,7 @@ public class ScanRequestConverter {
     private final ShardSessionTracker sessionTracker;
     private static final String EMPTY_STRING = "";
 
-    public ScanRequestConverter(HelperService helperService, FlowProperties flowProperties, GitHubService gitService, GitLabService gitLabService, BitBucketService bitBucketService, ADOService adoService, ShardSessionTracker sessionTracker) {
+    public ScanRequestConverter(HelperService helperService, FlowProperties flowProperties, GitHubService gitService, GitLabService gitLabService, BitBucketService bitBucketService, ADOService adoService, ShardSessionTracker sessionTracker, ScannerClient scannerClient, CxPropertiesBase cxProperties) {
         this.helperService = helperService;
         this.flowProperties = flowProperties;
         this.gitService = gitService;
@@ -47,13 +48,12 @@ public class ScanRequestConverter {
         this.bitBucketService = bitBucketService;
         this.adoService = adoService;
         this.sessionTracker = sessionTracker;
-    }
-
-    public void setScannerClient(ScannerClient scannerClient, CxPropertiesBase cxProperties) {
-        this.scannerClient = scannerClient;
         this.cxProperties = cxProperties;
+        this.scannerClient = scannerClient;
     }
 
+    
+    
     public CxScanParams toScanParams(ScanRequest scanRequest) throws CheckmarxException {
         String ownerId = determineTeamAndOwnerID(scanRequest);
         Integer projectId = determinePresetAndProjectId(scanRequest, ownerId);
