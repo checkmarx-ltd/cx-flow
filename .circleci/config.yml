@@ -5,11 +5,10 @@ executors:
     docker:
       - image: circleci/golang:1.9
 
-
 commands: # a reusable command with parameters
-  createGithubRelease:
+  create-github-release:
     parameters:
-      ghrOption:
+      ghr-option:
         default: ""
         type: string
     steps:
@@ -20,7 +19,7 @@ commands: # a reusable command with parameters
           VERSION_OD=$(cat ./build/libs/cxgo/version.txt)
           mv build/libs/java11/repo-${VERSION}.jar build/libs/cx-flow-${VERSION}-java11.jar
           mv build/libs/cxgo/repo-${VERSION_OD}.jar build/libs/${VERSION_OD}.jar
-          ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -n ${VERSION} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} << parameters.ghrOption >> -delete ${VERSION} ./build/libs/
+          ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -n ${VERSION} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} << parameters.ghr-option >> -replace ${VERSION} ./build/libs/
 
 
 jobs:
@@ -528,8 +527,7 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - createGithubRelease:
-
+      - create-github-release
 
   publish-github-pre-release:
     docker:
@@ -537,8 +535,8 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - createGithubRelease:
-          ghrOption: "-prerelease "
+      - create-github-release:
+          ghr-option: "-prerelease "
 
   clean-eks:
     executor: aws-eks/python3
