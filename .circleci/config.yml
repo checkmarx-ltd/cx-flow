@@ -5,6 +5,24 @@ executors:
     docker:
       - image: circleci/golang:1.9
 
+
+commands: # a reusable command with parameters
+  create-github-release:
+    parameters:
+      ghr-option:
+        default: ""
+        type: string
+    steps:
+      - run: |
+          go get github.com/tcnksm/ghr
+          VERSION=$(cat ./build/libs/version.txt)
+          rm ./build/libs/version.txt
+          VERSION_OD=$(cat ./build/libs/cxgo/version.txt)
+          mv build/libs/java11/repo-${VERSION}.jar build/libs/cx-flow-${VERSION}-java11.jar
+          mv build/libs/cxgo/repo-${VERSION_OD}.jar build/libs/${VERSION_OD}.jar
+          ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -n ${VERSION} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} << parameters.ghr-option >> -delete ${VERSION} ./build/libs/
+
+
 jobs:
   build:
     docker:
@@ -510,16 +528,16 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run:
-          name: "Publish Release on GitHub"
-          command: |
-            go get github.com/tcnksm/ghr
-            VERSION=$(cat ./build/libs/version.txt)
-            rm ./build/libs/version.txt
-            VERSION_OD=$(cat ./build/libs/cxgo/version.txt)
-            mv build/libs/java11/repo-${VERSION}.jar build/libs/cx-flow-${VERSION}-java11.jar
-            mv build/libs/cxgo/repo-${VERSION_OD}.jar build/libs/${VERSION_OD}.jar
-            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -n ${VERSION} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./build/libs/
+      - create-github-release
+
+  publish-github-pre-release:
+    docker:
+      - image: circleci/golang:1.9
+    steps:
+      - attach_workspace:
+          at: .
+      - create-github-release:
+          ghr-option: "-prerelease "
 
   clean-eks:
     executor: aws-eks/python3
@@ -635,7 +653,21 @@ workflows:
             - deploy-cxflow
       - AST-CLI-integration-tests:
           requires:
-            - deploy-cxflow      
+            - deploy-cxflow
+      - publish-github-pre-release:
+          filters:
+            branches:
+              only: develop
+          requires:
+            - e2e-tests
+            - integration-tests
+            - sca-integration-tests
+            - ast-integration-tests
+            - jira-integration-tests
+            - pullRequestComments-integration-tests
+            - SAST-CLI-integration-tests
+            - SCA-CLI-integration-tests
+            - AST-CLI-integration-tests
       - docker-push-stable:
           filters:
             branches:
