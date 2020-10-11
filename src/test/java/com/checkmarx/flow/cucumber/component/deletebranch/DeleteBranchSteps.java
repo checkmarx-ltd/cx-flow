@@ -329,8 +329,8 @@ public class DeleteBranchSteps {
         ProjectNameGenerator projectNameGeneratorSpy = spy(new ProjectNameGenerator(helperService, cxProperties, null));
             initProjectNameGeneratorSpy(projectNameGeneratorSpy);
  
-        ScanRequestConverter scanRequestConverter = new ScanRequestConverter(helperService, flowProperties, gitHubService, null, null, null, null);
-        SastScanner sastScanner = new SastScanner(null, helperService, cxProperties, flowProperties, null, emailService, scanRequestConverter, bugTrackerEventTrigger, projectNameGeneratorSpy, cxClientMock);
+        ScanRequestConverter scanRequestConverter = new ScanRequestConverter(helperService, flowProperties, gitHubService, null, null, null, null,cxClientMock,cxProperties);
+        SastScanner sastScanner = new SastScanner(null, helperService, cxProperties, flowProperties, null, emailService, bugTrackerEventTrigger, projectNameGeneratorSpy, cxClientMock,gitHubService, null, null, null, null);
         List<VulnerabilityScanner> scanners= new LinkedList<>();
         scanners.add(sastScanner);
         
