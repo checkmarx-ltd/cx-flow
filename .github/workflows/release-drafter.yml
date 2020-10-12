@@ -10,6 +10,9 @@ jobs:
   update_release_draft:
     runs-on: ubuntu-latest
     steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+      #read version file
       - name: Read version.txt file
         id: getversion
         run: echo "::set-output name=version::$(cat version.txt)"
@@ -20,6 +23,6 @@ jobs:
           config-name: release-drafter.yml
           name: ${{ steps.getversion.outputs.version }}
           tag: ${{ steps.getversion.outputs.version }}
-          version: ${{ steps.getversion.outputs.version }}
+          version: 1.6.11
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
