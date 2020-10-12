@@ -656,7 +656,7 @@ workflows:
       - publish-github-pre-release:
           filters:
             branches:
-              only: pr-natalie-prerelease2
+              only: develop
           requires:
             - e2e-tests
             - integration-tests
