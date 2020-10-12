@@ -5,10 +5,12 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 import com.checkmarx.flow.cucumber.integration.cli.IntegrationTestContext;
+import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.jira.IJiraTestUtils;
 import com.checkmarx.jira.JiraTestUtils;
 import com.checkmarx.sdk.config.ScaProperties;
+import com.checkmarx.sdk.service.CxClient;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.PendingException;
@@ -24,13 +26,16 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Optional;
 
 @SpringBootTest(classes = {CxFlowApplication.class, JiraTestUtils.class})
 @Slf4j
 @RequiredArgsConstructor
 public class SastCliSteps {
 
-    private static final String GITHUB_REPO_ARGS = " --repo-url=https://github.com/cxflowtestuser/CLI-Integration-Tests --repo-name=CLI-Integration-Tests --github --branch=master --blocksysexit";
+    private static final String GITHUB_REPO_ARGS = " --repo-url=https://github.com/cxflowtestuser/CLI-Integration-Tests --repo-name=CLI-Integration-Tests --github --branch=master --blocksysexit ";
+    private static final String STANDARD_CLI_SCAN = " --scan  --scanner=sast  --app=MyApp";
+    private static final String TEST_NONE_BT_PROJECT_NAME =  "--cx-project=Test-bugTracker-None";
     private static final String JIRA_PROJECT = "CIT";
 
     private final FlowProperties flowProperties;
@@ -39,10 +44,10 @@ public class SastCliSteps {
     private final ScaProperties scaProperties;
 
     private String commandlineConstantArgs;
-    private Throwable cxFlowExecutionException;
     private int expectedHigh;
     private int expectedMedium;
     private int expectedLow;
+    private final CxClient cxService;
 
     @Autowired
     private IJiraTestUtils jiraUtils;
@@ -100,6 +105,37 @@ public class SastCliSteps {
         testContext.setCxFlowExecutionException(exception);
     }
 
+    @When("bug tracker is set to 'None'")
+    public void setNoneBugTracker() {
+        flowProperties.setBugTracker(BugTracker.Type.NONE.toString());
+    }
+
+    @Then("running cxflow to execute SAST scan")
+    public void runCxFlowScan() {
+        Throwable exception = null;
+        try {
+            TestUtils.runCxFlow(testContext.getCxFlowRunner(), STANDARD_CLI_SCAN + GITHUB_REPO_ARGS + TEST_NONE_BT_PROJECT_NAME);
+        } catch (Throwable e) {
+            exception = e;
+        }
+        testContext.setCxFlowExecutionException(exception);
+    }
+
+    @Then("cxflow should not wait for scan results")
+    public void validateScanNotFinished() {
+        Integer projectId = cxService.getProjectId("CxServer/SP/Checkmarx", TEST_NONE_BT_PROJECT_NAME);
+
+        log.info("Checking if there is any existing scan for Project:");
+        Integer existingScanId = cxService.getScanIdOfExistingScanIfExists(projectId);
+
+        Assert.assertNotEquals(-1, Optional.ofNullable(existingScanId));
+    }
+
+    @And("cxflow exit with success return code")
+    public void checkSuccessReturnCode() {
+        validateExitCode(0);
+    }
+
     @Then("run should exit with exit code {int}")
     public void validateExitCode(int expectedExitCode) {
         Throwable exception = testContext.getCxFlowExecutionException();
@@ -115,6 +151,7 @@ public class SastCliSteps {
         Assert.assertEquals("The expected exist code did not match",
                 expectedExitCode, actualExitCode);
     }
+
 
     @Given("code has x High, y Medium and z low issues")
     public void setIssues() {
@@ -157,7 +194,6 @@ public class SastCliSteps {
     public void checkReturnCode(int returnCode) {
         validateExitCode(returnCode);
     }
-
 
     @Then("bugTracker contains {} issues")
     public void validateBugTrackerIssues(String numberOfIssues) {
