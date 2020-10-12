@@ -341,7 +341,6 @@ public class DeleteBranchSteps {
         //And thus it will work with real gitHubService
         this.gitHubControllerSpy = spy(new GitHubController(gitHubProperties,
                 flowProperties,
-                cxProperties,
                 null,
                 flowServiceSpy,
                 helperService,
@@ -353,7 +352,6 @@ public class DeleteBranchSteps {
 
         this.adoControllerSpy = spy(new ADOController(adoProperties,
                 flowProperties,
-                cxProperties,
                 null,
                 flowServiceSpy,
                 helperService,

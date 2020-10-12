@@ -44,7 +44,6 @@ public class ADOController extends AdoControllerBase {
     private static final String EMPTY_STRING = "";
     private final ADOProperties properties;
     private final FlowProperties flowProperties;
-    private final CxProperties cxProperties;
     private final JiraProperties jiraProperties;
     private final FlowService flowService;
     private final HelperService helperService;
@@ -124,19 +123,13 @@ public class ADOController extends AdoControllerBase {
 
             FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
 
-            setExclusionProperties(cxProperties, controllerRequest);
-
             //build request object
             String gitUrl = repository.getWebUrl();
             String token = scmConfigOverrider.determineConfigToken(properties, controllerRequest.getScmInstance());
             log.info("Using url: {}", gitUrl);
             String gitAuthUrl = gitUrl.replace(HTTPS, HTTPS.concat(token).concat("@"));
             gitAuthUrl = gitAuthUrl.replace(HTTP, HTTP.concat(token).concat("@"));
-
-            String scanPreset = cxProperties.getScanPreset();
-            if (StringUtils.isNotEmpty(controllerRequest.getPreset())) {
-                scanPreset = controllerRequest.getPreset();
-            }
+            
 
             ScanRequest request = ScanRequest.builder()
                     .application(app)
@@ -153,8 +146,8 @@ public class ADOController extends AdoControllerBase {
                     .mergeNoteUri(pullUrl.concat("/threads"))
                     .mergeTargetBranch(targetBranch)
                     .email(null)
-                    .incremental(isScanIncremental(controllerRequest, cxProperties))
-                    .scanPreset(scanPreset)
+                    .scanPreset(controllerRequest.getPreset())
+                    .incremental(controllerRequest.getIncremental())
                     .excludeFolders(controllerRequest.getExcludeFolders())
                     .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)
@@ -241,8 +234,6 @@ public class ADOController extends AdoControllerBase {
 
             FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
 
-            setExclusionProperties(cxProperties, controllerRequest);
-
             List<String> emails = determineEmails(resource);
 
             //build request object
@@ -250,11 +241,7 @@ public class ADOController extends AdoControllerBase {
             log.debug("Using url: {}", gitUrl);
             String configToken = scmConfigOverrider.determineConfigToken(properties, controllerRequest.getScmInstance());
             String gitAuthUrl = gitUrl.replace(HTTPS, HTTPS.concat(configToken).concat("@")).replace(HTTP, HTTP.concat(configToken).concat("@"));
-
-            String scanPreset = cxProperties.getScanPreset();
-            if (StringUtils.isNotEmpty(controllerRequest.getPreset())) {
-                scanPreset = controllerRequest.getPreset();
-            }
+            
 
             String defaultBranch = ScanUtils.getBranchFromRef(Optional.ofNullable(repository.getDefaultBranch()).orElse(ref));
 
@@ -273,8 +260,8 @@ public class ADOController extends AdoControllerBase {
                     .defaultBranch(defaultBranch)
                     .refs(ref)
                     .email(emails)
-                    .incremental(isScanIncremental(controllerRequest, cxProperties))
-                    .scanPreset(scanPreset)
+                    .scanPreset(controllerRequest.getPreset())
+                    .incremental(controllerRequest.getIncremental())
                     .excludeFolders(controllerRequest.getExcludeFolders())
                     .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)

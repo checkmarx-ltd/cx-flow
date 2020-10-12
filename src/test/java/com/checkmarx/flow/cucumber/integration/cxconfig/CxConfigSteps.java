@@ -527,7 +527,6 @@ public class CxConfigSteps {
         // And thus it will work with real gitHubService
         this.gitHubControllerSpy = spy(new GitHubController(gitHubProperties,
                 flowProperties,
-                cxProperties,
                 jiraProperties,
                 flowService,
                 helperService,

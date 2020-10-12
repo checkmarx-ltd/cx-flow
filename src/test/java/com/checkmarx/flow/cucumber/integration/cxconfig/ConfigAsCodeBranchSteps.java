@@ -71,7 +71,6 @@ public class ConfigAsCodeBranchSteps {
 
         GitHubController gitHubControllerSpy = Mockito.spy(new GitHubController(gitHubProperties,
                 flowProperties,
-                cxProperties,
                 null,
                 flowServiceMock,
                 helperService,

@@ -96,8 +96,6 @@ public class TfsController extends AdoControllerBase {
 
         FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
 
-        setExclusionProperties(cxProperties, controllerRequest);
-
         ScanRequestBuilder requestBuilder = ScanRequest.builder()
                 .application(Optional.ofNullable(controllerRequest.getApplication()).orElse(app))
                 .product(getProductForName(product))
@@ -106,8 +104,8 @@ public class TfsController extends AdoControllerBase {
                 .namespace(repository.getProject().getName().replace(" ", "_"))
                 .repoName(repository.getName())
                 .repoType(ScanRequest.Repository.ADO)
-                .incremental(isScanIncremental(controllerRequest, cxProperties))
-                .scanPreset(Optional.ofNullable(controllerRequest.getPreset()).orElse(cxProperties.getScanPreset()))
+                .scanPreset(controllerRequest.getPreset())
+                .incremental(controllerRequest.getIncremental())
                 .excludeFolders(controllerRequest.getExcludeFolders())
                 .excludeFiles(controllerRequest.getExcludeFiles())
                 .filter(filter);

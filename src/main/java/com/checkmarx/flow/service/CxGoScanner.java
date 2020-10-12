@@ -6,6 +6,7 @@ import com.checkmarx.flow.sastscanning.ScanRequestConverter;
 import com.checkmarx.sdk.ShardManager.ShardSessionTracker;
 import com.checkmarx.sdk.config.CxGoProperties;
 import com.checkmarx.sdk.config.CxPropertiesBase;
+import com.checkmarx.sdk.dto.ScanResults;
 import com.cx.restclient.CxGoClientImpl;
 import com.cx.restclient.ScannerClient;
 import lombok.extern.slf4j.Slf4j;
@@ -31,8 +32,7 @@ public class CxGoScanner extends AbstractVulnerabilityScanner {
         
     }
 
-
-    @Override
+        @Override
     protected void cxBatch(ScanRequest request) {
         throw new UnsupportedOperationException();
     }

@@ -93,15 +93,9 @@ public class BitbucketCloudController extends WebhookController {
 
             FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
 
-            setExclusionProperties(cxProperties, controllerRequest);
-
             String gitUrl = repository.getLinks().getHtml().getHref().concat(".git");
             String mergeEndpoint = pullRequest.getLinks().getComments().getHref();
 
-            String scanPreset = cxProperties.getScanPreset();
-            if (!ScanUtils.empty(controllerRequest.getPreset())) {
-                scanPreset = controllerRequest.getPreset();
-            }
 
             ScanRequest request = ScanRequest.builder()
                     .application(app)
@@ -118,8 +112,8 @@ public class BitbucketCloudController extends WebhookController {
                     .mergeNoteUri(mergeEndpoint)
                     .refs(Constants.CX_BRANCH_PREFIX.concat(currentBranch))
                     .email(null)
-                    .incremental(isScanIncremental(controllerRequest, cxProperties))
-                    .scanPreset(scanPreset)
+                    .scanPreset(controllerRequest.getPreset())
+                    .incremental(controllerRequest.getIncremental())
                     .excludeFolders(controllerRequest.getExcludeFolders())
                     .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)
@@ -186,8 +180,6 @@ public class BitbucketCloudController extends WebhookController {
 
             FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
 
-            setExclusionProperties(cxProperties, controllerRequest);
-
             /*Determine emails*/
             List<String> emails = new ArrayList<>();
 
@@ -201,12 +193,7 @@ public class BitbucketCloudController extends WebhookController {
             }
 
             String gitUrl = repository.getLinks().getHtml().getHref().concat(".git");
-
-            String scanPreset = cxProperties.getScanPreset();
-            if (!ScanUtils.empty(controllerRequest.getPreset())) {
-                scanPreset = controllerRequest.getPreset();
-            }
-
+            
             ScanRequest request = ScanRequest.builder()
                     .application(app)
                     .product(p)
@@ -220,8 +207,8 @@ public class BitbucketCloudController extends WebhookController {
                     .branch(currentBranch)
                     .refs(Constants.CX_BRANCH_PREFIX.concat(currentBranch))
                     .email(emails)
-                    .incremental(isScanIncremental(controllerRequest, cxProperties))
-                    .scanPreset(scanPreset)
+                    .scanPreset(controllerRequest.getPreset())
+                    .incremental(controllerRequest.getIncremental())
                     .excludeFolders(controllerRequest.getExcludeFolders())
                     .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)

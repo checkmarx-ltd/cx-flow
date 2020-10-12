@@ -143,8 +143,8 @@ public class PublishingSteps extends PublishingStepsBase {
         List<VulnerabilityScanner> vulnerabilityScannerList = Collections.singletonList(sastScanner);
         FlowService flowService = new FlowService(vulnerabilityScannerList, projectNameGenerator, resultsService);
 
-        return new GitHubController(gitHubProperties, flowProperties, cxProperties,
-                null, flowService, helperService, gitHubAppAuthService, filterFactory, configOverrider,
+        return new GitHubController(gitHubProperties, flowProperties,
+                null, flowService, helperService, gitHubService, gitHubAppAuthService, filterFactory, configOverrider,
                 scmConfigOverrider);
     }
 
