@@ -156,6 +156,10 @@ public class GitLabController extends WebhookController {
             overrideScanPreset(controllerRequest, request);
             setScmInstance(controllerRequest, request);
 
+            if(proj.getId() != null) {
+                request.setRepoProjectId(proj.getId());
+            }
+
             /*Check for Config as code (cx.config) and override*/
             CxConfig cxConfig =  gitLabService.getCxConfigOverride(request);
             request = configOverrider.overrideScanRequestProperties(cxConfig, request);
@@ -163,9 +167,7 @@ public class GitLabController extends WebhookController {
             request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, body.toString());
             request.putAdditionalMetadata("merge_id",objectAttributes.getIid().toString());
             request.putAdditionalMetadata("merge_title", objectAttributes.getTitle());
-            if(proj.getId() != null) {
-                request.setRepoProjectId(proj.getId());
-            }
+
             request.setId(uid);
             if(helperService.isBranch2Scan(request, branches)){
                 flowService.initiateAutomation(request);
@@ -274,15 +276,17 @@ public class GitLabController extends WebhookController {
                 request.setScanPresetOverride(true);
             }
 
+            if(proj.getId() != null) {
+                request.setRepoProjectId(proj.getId());
+            }
+
             /*Check for Config as code (cx.config) and override*/
             CxConfig cxConfig =  gitLabService.getCxConfigOverride(request);
             request = configOverrider.overrideScanRequestProperties(cxConfig, request);
 
             request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, body.toString());
             request.setId(uid);
-            if(proj.getId() != null) {
-                request.setRepoProjectId(proj.getId());
-            }
+
             if(helperService.isBranch2Scan(request, branches)){
                 flowService.initiateAutomation(request);
             }
