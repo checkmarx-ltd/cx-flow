@@ -3,6 +3,7 @@ import org.gradle.api.tasks.testing.Test
 buildscript {
 	ext {
         CxSBSDK = "0.4.47"
+        ConfigProviderVersion = "1.0.9"
         //cxVersion = "8.90.5"
         springBootVersion = '2.2.6.RELEASE'
         sonarqubeVersion = '2.8'
@@ -37,7 +38,7 @@ apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
 
 group = 'com.checkmarx'
-version = '1.6.10'
+version = file('version.txt').text.trim()
 sourceCompatibility = 1.8
 def cucumberVersion = '5.7.0'
 def junitVersion = '5.5.0'
@@ -101,7 +102,7 @@ dependencies {
     compile("ch.qos.logback.contrib:logback-json-classic:0.1.5")
     compile("ch.qos.logback.contrib:logback-jackson:0.1.5")
     compile("net.logstash.logback:logstash-logback-encoder:5.2")
-    compile("com.checkmarx:cx-config-provider:1.0.8")
+    compile("com.checkmarx:cx-config-provider:${ConfigProviderVersion}")
     compile("org.jasypt:jasypt:1.9.3")
     compileJava.dependsOn(processResources)
 }
