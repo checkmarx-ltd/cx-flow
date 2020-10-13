@@ -22,7 +22,8 @@ import java.util.Map;
     "repository",
     "pusher",
     "organization",
-    "sender"
+    "sender",
+    "installation"
 })
 public class PushEvent {
 
@@ -54,6 +55,8 @@ public class PushEvent {
     private Organization organization;
     @JsonProperty("sender")
     private Sender sender;
+    @JsonProperty("installation")
+    private Installation installation;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<>();
 
@@ -195,6 +198,16 @@ public class PushEvent {
     @JsonProperty("sender")
     public void setSender(Sender sender) {
         this.sender = sender;
+    }
+
+    @JsonProperty("installation")
+    public Installation getInstallation() {
+        return installation;
+    }
+
+    @JsonProperty("installation")
+    public void setInstallation(Installation installation) {
+        this.installation = installation;
     }
 
     @JsonAnyGetter
