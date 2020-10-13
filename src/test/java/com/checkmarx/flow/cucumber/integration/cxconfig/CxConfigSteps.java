@@ -57,6 +57,7 @@ public class CxConfigSteps {
 
     private final CxClient cxClientMock;
     private final GitHubService gitHubService;
+    private final GitHubAppAuthService gitHubAppAuthService;
     private GitHubController gitHubControllerSpy;
     private final ThresholdValidator thresholdValidator;
     private final FlowProperties flowProperties;
@@ -78,7 +79,6 @@ public class CxConfigSteps {
 
     private ScanRequest request;
     private final JiraProperties jiraProperties;
-    private GitHubAppAuthService gitHubAppAuthService;
 
     public CxConfigSteps(FlowProperties flowProperties, GitHubService gitHubService,
                          CxProperties cxProperties, GitHubProperties gitHubProperties, ConfigurationOverrider configOverrider, JiraProperties jiraProperties,
@@ -532,6 +532,7 @@ public class CxConfigSteps {
                 flowService,
                 helperService,
                 gitHubService,
+                gitHubAppAuthService,
                 null,
                 filterFactory,
                 configOverrider,
