@@ -59,6 +59,7 @@ public class OverwritingProjectConfigSteps {
     private final GitHubTestUtils gitHubTestUtils;
     private final HelperService helperService;
     private final GitHubService gitHubService;
+    private final GitHubAppAuthService gitHubAppAuthService;
     private final FlowService flowService;
     private final SastScanner sastScanner;
     private final FilterFactory filterFactory;
@@ -126,8 +127,8 @@ public class OverwritingProjectConfigSteps {
     public void githubNotifiesCxFlowAboutAPullRequest(String projectName) {
 
         GitHubController gitHubController = new GitHubController(gitHubProperties, flowProperties, cxProperties,
-                null, flowService, helperService, gitHubService, sastScanner, filterFactory, configOverrider,
-                scmConfigOverrider);
+                null, flowService, helperService, gitHubService, gitHubAppAuthService,
+                sastScanner, filterFactory, configOverrider, scmConfigOverrider);
 
         gitHubTestUtils.callController(gitHubController, GitHubTestUtils.EventType.PULL_REQUEST, projectName);
     }
