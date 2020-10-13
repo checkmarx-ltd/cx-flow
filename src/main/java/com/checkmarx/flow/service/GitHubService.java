@@ -4,6 +4,7 @@ import com.checkmarx.configprovider.ConfigProvider;
 import com.checkmarx.configprovider.dto.SourceProviderType;
 import com.checkmarx.configprovider.readers.RepoReader;
 import com.checkmarx.flow.config.*;
+import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.github.Content;
 import com.checkmarx.flow.dto.github.PullEvent;
@@ -86,9 +87,18 @@ public class GitHubService extends RepoService {
 
     private HttpHeaders createAuthHeaders(ScanRequest scanRequest){
         HttpHeaders httpHeaders;;
-        if(!StringUtils.isEmpty(properties.getAppId()) && !StringUtils.isEmpty(properties.getAppKeyFile())){
+        if(!StringUtils.isEmpty(properties.getAppId()) &&
+                !StringUtils.isEmpty(properties.getAppKeyFile()) &&
+                scanRequest.getAdditionalMetadata(FlowConstants.GITHUB_APP_INSTALLATION_ID) != null
+        ){
             log.debug("Using GitHub AppId: {}", properties.getAppId());
-            httpHeaders = gitHubAppAuthService.createAuthHeaders();
+            String token = gitHubAppAuthService.getInstallationToken(
+                    Integer.parseInt(scanRequest.getAdditionalMetadata(FlowConstants.GITHUB_APP_INSTALLATION_ID))
+            );
+            httpHeaders = new HttpHeaders();
+            httpHeaders.set(HttpHeaders.AUTHORIZATION, "token ".concat(token));
+
+
         }
         else{
             httpHeaders = new HttpHeaders();
