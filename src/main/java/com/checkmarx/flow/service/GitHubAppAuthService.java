@@ -1,13 +1,12 @@
 package com.checkmarx.flow.service;
 
 import com.auth0.jwt.JWT;
-import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.auth0.jwt.exceptions.TokenExpiredException;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.exception.GitHubClientRunTimeException;
 import com.fasterxml.jackson.databind.JsonNode;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -27,31 +26,27 @@ import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAccessor;
-import java.util.Base64;
-import java.util.Date;
-import java.util.Objects;
+import java.util.*;
 
 import javax.annotation.PostConstruct;
 
 @Service
 @Slf4j
 public class GitHubAppAuthService {
-    private static final String INSTALLATION = "/app/installations";
-    private static final String BEARER = "Bearer ";
+    private static final String INSTALLATION_TOKEN_PATH = "/installations/{installation_id}/access_tokens";
+    private static final String BEARER_HEADER = "Bearer ";
     private final RestTemplate restTemplate;
     private final GitHubProperties properties;
-    private String appInstallationUrl;
-    private JWTVerifier jwtVerifier;
     private String jwt;
     private RSAPrivateKey privateKey;
-    private String appToken;
-    private Instant appTokenExp;
+    private Map<Integer, AppToken> appTokens = new HashMap<>();
 
     public GitHubAppAuthService(@Qualifier("flowRestTemplate") RestTemplate restTemplate,
                                 GitHubProperties properties) {
@@ -71,10 +66,6 @@ public class GitHubAppAuthService {
             }
              try {
                  this.privateKey = getPrivateKey(new File(properties.getAppKeyFile()));
-                 Algorithm algorithm = Algorithm.RSA256(null, this.privateKey);
-                 this.jwtVerifier = JWT.require(algorithm)
-                         .withIssuer(properties.getAppId())
-                         .build();
                  //set the initial Jwt to confirm signing is correct before proceeding
                  getJwt(properties.getAppId());
              }catch (IOException e){
@@ -89,69 +80,45 @@ public class GitHubAppAuthService {
      *
      * @return headers with authentication.
      */
-    public HttpHeaders createAuthHeaders() {
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.set(HttpHeaders.AUTHORIZATION, BEARER.concat(createAppToken()));
-        return httpHeaders;
+    public String getInstallationToken(Integer installationId) {
+        return createAppToken(installationId);
     }
 
-    private String createAppToken() {
-        //Check if the token exists, and if it is not expired yet
-        if(!StringUtils.isEmpty(this.appToken) &&
-                this.appTokenExp != null &&
-                this.appTokenExp.isAfter(Instant.now())){
-            return this.appToken;
-        }
-        log.info("GitHub token expired, generating a new one.");
-        String installationUrl = getInstallationUrl();
+    private String createAppToken(Integer installationId) {
+        //Check if the token exists for the installation, and if it is not expired yet
 
-        String token = getJwt(properties.getAppId());
+        if(this.appTokens.containsKey(installationId) &&
+                !this.appTokens.get(installationId).isExpired()){
+            return this.appTokens.get(installationId).getToken();
+        }
+        log.info("GitHub token expired for installation {}, generating a new.", installationId);
+        String jwtToken = getJwt(properties.getAppId());
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.set(HttpHeaders.AUTHORIZATION, BEARER.concat(token));
+        httpHeaders.set(HttpHeaders.AUTHORIZATION, BEARER_HEADER.concat(jwtToken));
         httpHeaders.set(HttpHeaders.ACCEPT, "application/vnd.github.v3+json");
 
         ResponseEntity<JsonNode> response = restTemplate.exchange(
-                installationUrl,
-                HttpMethod.POST, new HttpEntity<>(httpHeaders),
-                JsonNode.class);
+                properties.getAppUrl().concat(INSTALLATION_TOKEN_PATH),
+                HttpMethod.POST,
+                new HttpEntity<>(httpHeaders),
+                JsonNode.class,
+                installationId);
 
         if (response.hasBody()) {
+            AppToken appToken = new AppToken();
             JsonNode it = response.getBody();
             assert it != null;
             String expireAt = it.get("expires_at").asText();
             TemporalAccessor expires = DateTimeFormatter.ISO_DATE_TIME.parse(it.get("expires_at").asText());
-            log.info("Generated a GitHub token which expires at {}", expireAt);
-            this.appTokenExp = Instant.from(expires).minus(3, ChronoUnit.MINUTES);
-            this.appToken = it.get("token").textValue();
-            return this.appToken;
+            log.info("Generated a GitHub token for installation id {}, which expires at {}", installationId, expireAt);
+            appToken.setTokenExp(Instant.from(expires).minus(3, ChronoUnit.MINUTES));
+            appToken.setToken(it.get("token").textValue());
+            //Store the token for future Installation use until expired
+            this.appTokens.put(installationId, appToken);
+            return appToken.getToken();
         } else {
             throw new GitHubClientRunTimeException("Cannot access GitHub app access token endpoint");
-        }
-    }
-
-    String getInstallationUrl() {
-        if (!StringUtils.isEmpty(this.appInstallationUrl)) {
-            return this.appInstallationUrl;
-        }
-        String token = getJwt(properties.getAppId());
-
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.set(HttpHeaders.AUTHORIZATION, BEARER.concat(token));
-        httpHeaders.set(HttpHeaders.ACCEPT, "application/vnd.github.v3+json");
-
-        String url = properties.getApiUrl().concat(INSTALLATION);
-        ResponseEntity<JsonNode[]> response = restTemplate.exchange(
-                url,
-                HttpMethod.GET,
-                new HttpEntity<>(httpHeaders),
-                JsonNode[].class);
-        if (response.hasBody()) {
-            JsonNode installationRef = Objects.requireNonNull(response.getBody())[0];
-            this.appInstallationUrl = installationRef.get("access_tokens_url").textValue();
-            return this.appInstallationUrl;
-        } else {
-            throw new GitHubClientRunTimeException("GitHub apps is not installed on the given org");
         }
     }
 
@@ -187,28 +154,35 @@ public class GitHubAppAuthService {
 
     private String getJwt(String appId) {
         //Check if current token is set and if it is verified
-        if(this.jwt != null){
-            try{
-                jwtVerifier.verify(jwt);
+        LocalDateTime currentDateTime = LocalDateTime.now(ZoneOffset.UTC);
+        if(this.jwt != null) {
+            DecodedJWT decodedJwt = JWT.decode(this.jwt);
+
+            Instant currentTime = currentDateTime.plusMinutes(1).toInstant(ZoneOffset.UTC);
+            if (currentTime.isBefore(decodedJwt.getExpiresAt().toInstant())) {
                 return this.jwt;
-            }catch (TokenExpiredException e){
-                log.debug("JWT has expired, generating a new one.");
-            }catch (JWTVerificationException e){
-                log.error("Error occurred verifying JWT", e);
-                throw new GitHubClientRunTimeException("Error occurred verifying JWT");
             }
         }
         //If the jwt was null or expired, we hit this block to create new
-        LocalDateTime issued = LocalDateTime.now();
-        LocalDateTime exp = issued.plusMinutes(10); // 10 minutes in future
+        LocalDateTime exp = currentDateTime.plusMinutes(10); // 10 minutes in future
         assert this.privateKey != null;
         Algorithm algorithm = Algorithm.RSA256(null, this.privateKey);
         //set the current token and return it
         this.jwt = JWT.create()
                 .withIssuer(appId)
-                .withIssuedAt(Date.from(issued.toInstant(ZoneOffset.UTC)))
+                .withIssuedAt(Date.from(currentDateTime.toInstant(ZoneOffset.UTC)))
                 .withExpiresAt(Date.from(exp.toInstant(ZoneOffset.UTC)))
                 .sign(algorithm);
         return this.jwt;
+    }
+
+    @Data
+    public static class AppToken{
+         private String token;
+         private Instant tokenExp;
+
+         public boolean isExpired(){
+             return this.tokenExp.isBefore(Instant.now(Clock.systemUTC()));
+         }
     }
 }
