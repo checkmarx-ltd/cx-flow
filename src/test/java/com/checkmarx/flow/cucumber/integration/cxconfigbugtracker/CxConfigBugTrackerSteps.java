@@ -34,7 +34,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import javax.annotation.Resource;
 import java.util.*;
 
 import static org.junit.Assert.fail;
@@ -53,6 +52,7 @@ public class CxConfigBugTrackerSteps {
     @Qualifier("cxConfigurationTestBean")
     private CxClient cxClientMock;
     private final GitHubService gitHubService;
+    private final GitHubAppAuthService gitHubAppAuthService;
     private GitHubController gitHubControllerSpy;
     private final ObjectMapper mapper = new ObjectMapper();
     private final FlowProperties flowProperties;
@@ -71,13 +71,14 @@ public class CxConfigBugTrackerSteps {
 
 
     public CxConfigBugTrackerSteps(FlowProperties flowProperties, GitHubService gitHubService,
-                                   CxProperties cxProperties, GitHubProperties gitHubProperties,
+                                   GitHubAppAuthService gitHubAppAuthService, CxProperties cxProperties, GitHubProperties gitHubProperties,
                                    JiraProperties jiraProperties, GitHubController gitHubController,
                                    FilterFactory filterFactory, ConfigurationOverrider configOverrider,
                                    ScmConfigOverrider scmConfigOverrider) {
 
 
         this.flowProperties = flowProperties;
+        this.gitHubAppAuthService = gitHubAppAuthService;
 
         this.cxProperties = cxProperties;
         this.jiraProperties = jiraProperties;
@@ -161,7 +162,7 @@ public class CxConfigBugTrackerSteps {
         assertFlowPropertiesBugTracker("Json");
         ArgumentCaptor<ScanRequest> ac = ArgumentCaptor.forClass(ScanRequest.class);
         FlowService flowServiceMock = Mockito.mock(FlowService.class);
-        gitHubControllerSpy = new GitHubController(gitHubProperties,flowProperties, cxProperties, jiraProperties, flowServiceMock,helperService, gitHubService, null, filterFactory, configOverrider, scmConfigOverrider);
+        gitHubControllerSpy = new GitHubController(gitHubProperties,flowProperties, cxProperties, jiraProperties, flowServiceMock,helperService, gitHubService, gitHubAppAuthService,null, filterFactory, configOverrider, scmConfigOverrider);
         gitHubControllerSpy = spy(gitHubControllerSpy);
         initGitHubControllerSpy();
         buildPullRequest();
@@ -174,7 +175,7 @@ public class CxConfigBugTrackerSteps {
         assertFlowPropertiesBugTracker("Json");
         ArgumentCaptor<ScanRequest> ac = ArgumentCaptor.forClass(ScanRequest.class);
         FlowService flowServiceMock = Mockito.mock(FlowService.class);
-        gitHubControllerSpy = new GitHubController(gitHubProperties,flowProperties, cxProperties, jiraProperties, flowServiceMock,helperService, gitHubService, null, filterFactory, configOverrider, scmConfigOverrider);
+        gitHubControllerSpy = new GitHubController(gitHubProperties,flowProperties, cxProperties, jiraProperties, flowServiceMock,helperService, gitHubService, gitHubAppAuthService,null, filterFactory, configOverrider, scmConfigOverrider);
         gitHubControllerSpy = spy(gitHubControllerSpy);
         initGitHubControllerSpy();
         buildPushRequest();
