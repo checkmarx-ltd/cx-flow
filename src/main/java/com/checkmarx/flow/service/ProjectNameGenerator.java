@@ -2,22 +2,23 @@ package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
-import com.checkmarx.sdk.config.CxProperties;
-import lombok.RequiredArgsConstructor;
+import com.checkmarx.sdk.config.CxPropertiesBase;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.util.HashMap;
-
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class ProjectNameGenerator {
     private final HelperService helperService;
-    private final CxProperties cxProperties;
+    private final CxPropertiesBase cxPropertiesBase;
     private final ExternalScriptService scriptService;
+
+    public ProjectNameGenerator(HelperService helperService, ExternalScriptService scriptService) {
+        this.helperService = helperService;
+        this.cxPropertiesBase = helperService.getCxPropertiesBase();
+        this.scriptService = scriptService;
+    }
 
     /**
      * Determines effective project name that can be used by vulnerability scanners.
@@ -34,7 +35,7 @@ public class ProjectNameGenerator {
         if (StringUtils.isNotEmpty(nameOverride)) {
             log.debug("Project name override is present. Using the override: {}.", nameOverride);
             projectName = nameOverride;
-        } else if (cxProperties.isMultiTenant() && StringUtils.isNotEmpty(repoName)) {
+        } else if (cxPropertiesBase.isMultiTenant() && StringUtils.isNotEmpty(repoName)) {
             projectName = repoName;
             if (StringUtils.isNotEmpty(branch)) {
                 log.debug("Multi-tenant mode is enabled. Branch is specified. Using repo name and branch.");

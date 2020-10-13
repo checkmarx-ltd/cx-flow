@@ -12,7 +12,6 @@ import com.checkmarx.flow.service.EmailService;
 import com.checkmarx.flow.service.ResultsService;
 import com.checkmarx.jira.PublishUtils;
 import com.checkmarx.sdk.config.Constants;
-import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
@@ -20,6 +19,7 @@ import com.checkmarx.sdk.dto.ast.SCAResults;
 import com.checkmarx.sdk.dto.ast.Summary;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
+import com.checkmarx.sdk.service.CxService;
 import com.checkmarx.test.flow.config.CxFlowMocksConfig;
 import com.cx.restclient.dto.scansummary.Severity;
 import com.cx.restclient.ast.dto.sca.report.Finding;
@@ -50,18 +50,15 @@ public class GetResultsAnalyticsTestSteps {
     private final static int SCAN_ID = 100001;
     private static final String PULL_REQUEST_STATUSES_URL = "statuses url stub";
     private static final String MERGE_NOTE_URL = "merge note url stub";
-    private final CxClient cxClientMock;
+    private final CxService cxClientMock;
     private final EmailService emailService;
-    private final CxProperties cxProperties;
     private ScanResults scanResultsToInject;
     private ResultsService resultsService;
 
 
-    public GetResultsAnalyticsTestSteps(CxClient cxClientMock, FlowProperties flowProperties,
-                                        CxProperties cxProperties, EmailService emailService) {
+    public GetResultsAnalyticsTestSteps(CxService cxClientMock, FlowProperties flowProperties, EmailService emailService) {
         this.cxClientMock = cxClientMock;
         flowProperties.setThresholds(new HashMap<>());
-        this.cxProperties = cxProperties;
         this.emailService = emailService;
     }
 
@@ -82,8 +79,11 @@ public class GetResultsAnalyticsTestSteps {
                 null,
                 null,
                 null,
+                null,
+                null,
+                null,
                 emailService,
-                cxProperties);
+                null);
     }
 
 

@@ -30,7 +30,7 @@ public class HelperServiceTest {
         CxProperties cxProperties = new CxProperties();
         cxProperties.setScanPreset(Constants.CX_DEFAULT_PRESET);
 
-        HelperService helperService = new HelperService(properties, cxProperties, null);
+        HelperService helperService = new HelperService(properties, cxProperties, null, null);
         Sources sources = new Sources();
         Sources.Source src1 = new Sources.Source();
         src1.setFile("abc.java");

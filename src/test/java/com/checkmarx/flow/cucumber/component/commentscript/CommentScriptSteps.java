@@ -73,7 +73,7 @@ public class CommentScriptSteps {
         this.cxProperties = cxProperties;
         FlowService flowService = new FlowService(Collections.singletonList(sastScanner), projectNameGenerator, resultService);
 
-        this.flowController = new FlowController(flowProperties, cxProperties, flowService, helperService, jiraProperties, filterFactory, configOverrider, sastScanner, cxgoScanner);
+        this.flowController = new FlowController(flowProperties, cxProperties, null, flowService, helperService, jiraProperties, filterFactory, configOverrider, sastScanner, cxgoScanner);
     }
 
 

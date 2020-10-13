@@ -83,7 +83,7 @@ public class SastScanner extends AbstractVulnerabilityScanner {
         return result;
     }
 
-    public ScannerClient getCxGoClient() {
+    public ScannerClient getScannerClient() {
         return cxService;
     }
 

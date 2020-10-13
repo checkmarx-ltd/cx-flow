@@ -6,7 +6,9 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.Sources;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
+import com.checkmarx.sdk.config.CxGoProperties;
 import com.checkmarx.sdk.config.CxProperties;
+import com.checkmarx.sdk.config.CxPropertiesBase;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -17,8 +19,6 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,13 +28,13 @@ public class HelperService {
 
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(HelperService.class);
     private final FlowProperties properties;
-    private final CxProperties cxProperties;
+    private final CxPropertiesBase cxPropertiesBase;
     private final ExternalScriptService scriptService;
     private List<CxProfile> profiles;
 
-    public HelperService(FlowProperties properties, CxProperties cxProperties, ExternalScriptService scriptService) {
+    public HelperService(FlowProperties properties, CxProperties cxProperties, CxGoProperties cxgoProperties, ExternalScriptService scriptService) {
         this.properties = properties;
-        this.cxProperties = cxProperties;
+        this.cxPropertiesBase = ScanUtils.getBaseProperties(properties,cxgoProperties,cxProperties);
         this.scriptService = scriptService;
     }
 
@@ -101,13 +101,13 @@ public class HelperService {
     }
 
     public String getCxTeam(ScanRequest request) {
-        String scriptFile = cxProperties.getTeamScript();
+        String scriptFile = cxPropertiesBase.getTeamScript();
         String team = request.getTeam();
         return getEffectiveEntityName(request, scriptFile, team, "team");
     }
 
     public String getCxProject(ScanRequest request) {
-        String scriptFile = cxProperties.getProjectScript();
+        String scriptFile = cxPropertiesBase.getProjectScript();
         String project = request.getProject();
         return getEffectiveEntityName(request, scriptFile, project, "project");
     }
@@ -143,7 +143,7 @@ public class HelperService {
      */
     public String getPresetFromSources(Sources sources){
         if(sources == null || profiles == null || sources.getSources() == null){
-            return cxProperties.getScanPreset();
+            return cxPropertiesBase.getScanPreset();
         }
 
         for(CxProfile p: profiles){
@@ -248,5 +248,10 @@ public class HelperService {
     public void setProfiles(List<CxProfile> profiles) {
         this.profiles = profiles;
     }
+
+    public CxPropertiesBase getCxPropertiesBase() {
+        return cxPropertiesBase;
+    }
+
 }
 

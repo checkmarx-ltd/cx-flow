@@ -6,6 +6,7 @@ import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.sastscanning.ScanRequestConverter;
 import com.checkmarx.flow.service.*;
+import com.checkmarx.sdk.config.CxGoProperties;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.service.*;
 //import com.cx.restclient.CxOsaService;
@@ -33,10 +34,11 @@ public class GitHubControllerTest {
     private static final FlowProperties flowProperties = new FlowProperties();
     private static final GitHubProperties properties = new GitHubProperties();
     private static final CxProperties cxProperties = new CxProperties();
+    private static final CxGoProperties cxgoProperties = new CxGoProperties();
     private static final ExternalScriptService scriptService = new ExternalScriptService();
-    private static final HelperService helperService = new HelperService(flowProperties, cxProperties, scriptService);
+    private static final HelperService helperService = new HelperService(flowProperties, cxProperties,cxgoProperties, scriptService);
     private static final List<VulnerabilityScanner> scanners = new ArrayList<>();
-    private static final ProjectNameGenerator projectNameGenerator = new ProjectNameGenerator(helperService, cxProperties, scriptService);
+    private static final ProjectNameGenerator projectNameGenerator = new ProjectNameGenerator(helperService, scriptService);
     private static final FlowService flowService = new FlowService(scanners, projectNameGenerator, resultsService);
     private static final FilterFactory filterFactory = new FilterFactory();
 

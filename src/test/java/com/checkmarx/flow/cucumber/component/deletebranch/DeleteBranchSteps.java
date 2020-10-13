@@ -326,7 +326,7 @@ public class DeleteBranchSteps {
     }
 
     private void initServices() {
-        ProjectNameGenerator projectNameGeneratorSpy = spy(new ProjectNameGenerator(helperService, cxProperties, null));
+        ProjectNameGenerator projectNameGeneratorSpy = spy(new ProjectNameGenerator(helperService, null));
             initProjectNameGeneratorSpy(projectNameGeneratorSpy);
  
         ScanRequestConverter scanRequestConverter = new ScanRequestConverter(helperService, flowProperties, gitHubService, null, null, null, null,cxClientMock,cxProperties);

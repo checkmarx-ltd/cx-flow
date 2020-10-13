@@ -15,7 +15,7 @@ import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
-import com.checkmarx.sdk.config.CxProperties;
+
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import lombok.RequiredArgsConstructor;

@@ -14,7 +14,6 @@ import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
-import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import lombok.RequiredArgsConstructor;
@@ -38,7 +37,6 @@ public class BitbucketCloudController extends WebhookController {
 
     private final FlowProperties flowProperties;
     private final BitBucketProperties properties;
-    private final CxProperties cxProperties;
     private final JiraProperties jiraProperties;
     private final FlowService flowService;
     private final HelperService helperService;

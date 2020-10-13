@@ -17,6 +17,7 @@ import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.ast.ASTResults;
+import com.checkmarx.sdk.service.CxService;
 import com.cx.restclient.ast.dto.sast.report.AstSastSummaryResults;
 import com.cx.restclient.ast.dto.sast.report.Finding;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
@@ -61,7 +62,7 @@ public class Github2AdoSteps {
     private static final String TO_VERIFY = "TO_VERIFY";
     private static final String DESCRIPTION_AST = "Description AST";
 
-    private final CxClient cxClientMock;
+    private final CxService cxClientMock;
     private final GitHubService gitHubService;
     private final GitHubAppAuthService gitHubAppAuthService;
     private final ADOProperties adoProperties;
@@ -102,7 +103,7 @@ public class Github2AdoSteps {
                            EmailService emailService, ScmConfigOverrider scmConfigOverrider) {
         this.filterFactory = filterFactory;
 
-        this.cxClientMock = mock(CxClient.class);
+        this.cxClientMock = mock(CxService.class);
 
         this.flowProperties = flowProperties;
 
@@ -322,6 +323,9 @@ public class Github2AdoSteps {
         this.resultsService = spy(new ResultsService(
                 cxClientMock,
                 null,
+                cxProperties,
+                null,
+                null,
                 null,
                 issueService,
                 gitHubService,
@@ -329,7 +333,8 @@ public class Github2AdoSteps {
                 null,
                 null,
                 emailService,
-                cxProperties));
+                flowProperties
+                ));
     }
 
     @And("Scanner is AST")

@@ -284,9 +284,9 @@ public class AstRemoteRepoScanSteps {
     public void startScan(List<VulnerabilityScanner> scanners, String branch, String repo) {
         CxProperties cxProperties = new CxProperties();
         ExternalScriptService scriptService = new ExternalScriptService();
-        HelperService helperService = new HelperService(flowProperties, cxProperties, scriptService);
+        HelperService helperService = new HelperService(flowProperties, cxProperties, null, scriptService);
      
-        ProjectNameGenerator projectNameGenerator = new ProjectNameGenerator(helperService, cxProperties, scriptService);
+        ProjectNameGenerator projectNameGenerator = new ProjectNameGenerator(helperService, scriptService);
         FlowService flowService = new FlowService(new ArrayList<>(), projectNameGenerator, resultsServiceMock);
 
         ScanRequest scanRequest = getBasicScanRequest(branch, repo);

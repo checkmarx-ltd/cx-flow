@@ -16,6 +16,7 @@ import com.checkmarx.flow.exception.ADOClientException;
 import com.checkmarx.flow.utils.ADOUtils;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.config.CxGoProperties;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
@@ -66,17 +67,19 @@ public class ADOService {
     private final ADOProperties properties;
     private final FlowProperties flowProperties;
     private final CxProperties cxProperties;
+    private final CxGoProperties cxgoProperties;
     private final ScmConfigOverrider scmConfigOverrider;
     private final ThresholdValidator thresholdValidator;
     private String browseRepoEndpoint = "";
 
     public ADOService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, ADOProperties properties,
-                      FlowProperties flowProperties, CxProperties cxProperties,
+                      FlowProperties flowProperties, CxProperties cxProperties,CxGoProperties cxgoProperties,
                       ScmConfigOverrider scmConfigOverrider, ThresholdValidator thresholdValidator) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.flowProperties = flowProperties;
         this.cxProperties = cxProperties;
+        this.cxgoProperties =cxgoProperties;
         this.scmConfigOverrider = scmConfigOverrider;
         this.thresholdValidator = thresholdValidator;
     }
@@ -150,10 +153,18 @@ public class ADOService {
                 return;
             }
             int statusId = createStatus("pending","Checkmarx Scan Initiated", url,
-                    cxProperties.getBaseUrl().concat("/CxWebClient/UserQueue.aspx"), request);
+                    getBaseUrl().concat("/CxWebClient/UserQueue.aspx"), request);
             if(statusId != -1) {
                 request.getAdditionalMetadata().put("status_id", Integer.toString(statusId));
             }
+        }
+    }
+
+    private String getBaseUrl() {
+        if(flowProperties.isCxGoEnabled()){
+            return cxgoProperties.getBaseUrl();
+        }else {
+            return cxProperties.getBaseUrl();
         }
     }
 

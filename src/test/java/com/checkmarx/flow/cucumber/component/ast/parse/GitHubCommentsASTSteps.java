@@ -21,6 +21,7 @@ import com.checkmarx.sdk.dto.ast.SCAResults;
 import com.checkmarx.sdk.dto.ast.Summary;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
+import com.checkmarx.sdk.service.CxService;
 import com.checkmarx.test.flow.config.CxFlowMocksConfig;
 import com.cx.restclient.ast.dto.sast.AstSastResults;
 
@@ -42,7 +43,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import com.cx.restclient.ast.dto.sast.report.Finding;
 
 
-import javax.validation.constraints.AssertTrue;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -71,31 +71,32 @@ public class GitHubCommentsASTSteps {
     private static final String REGEX = "### Checkmarx";
     private static final String AST_WEB_REPORT_LINK = "https://astWebReportUrl";
 
-    private final CxClient cxClientMock;
-    private final FlowProperties flowProperties;
-    private final EmailService emailService;
+    private final CxService cxClientMock;
     private final CxProperties cxProperties;
+    private final EmailService emailService;
     private final IssueService issueService;
     private final GitHubService gitHubService;
     private final GitHubProperties gitHubProperties;
+    private final FlowProperties flowProperties;
     private ScanResults scanResultsToInject;
     private ResultsService resultsService;
     private String scannerType;
     private ScanRequest.Repository repo;
     private String comment;
 
-    public GitHubCommentsASTSteps(CxClient cxClientMock, FlowProperties flowProperties,
-                                  CxProperties cxProperties, EmailService emailService,
+    public GitHubCommentsASTSteps(CxService cxClientMock, FlowProperties flowProperties,
+                                  EmailService emailService,
                                   GitHubService gitHubService, IssueService issueService,
-                                  GitHubProperties gitHubProperties) {
+                                  GitHubProperties gitHubProperties,
+                                  CxProperties cxProperties) {
         this.cxClientMock = cxClientMock;
         flowProperties.setThresholds(new HashMap<>());
-        this.flowProperties = flowProperties;
-        this.cxProperties = cxProperties;
         this.emailService = emailService;
         this.gitHubService = Mockito.spy(gitHubService);
         this.issueService = issueService;
         this.gitHubProperties = gitHubProperties;
+        this.cxProperties = cxProperties;
+        this.flowProperties = flowProperties;
     }
 
     @Before()
@@ -132,13 +133,18 @@ public class GitHubCommentsASTSteps {
             return new ResultsService(
                     cxClientMock,
                     null,
+                    cxProperties,
+                    null,
+                    null,
                     null,
                     issueService,
                     gitHubService,
+                    null, 
                     null,
                     null,
-                    null, emailService,
-                    cxProperties);
+                    emailService,
+                    flowProperties
+                    );
         }
         
         throw new UnsupportedOperationException();
@@ -320,17 +326,6 @@ public class GitHubCommentsASTSteps {
         flowSummary.put("Info", info);
         scanResultsToInject.getAdditionalDetails().put("flow-summary", flowSummary);
     }
-//
-//    private void addAdditionalInfoToResults() {
-//        scanResultsToInject.getAdditionalDetails().put("numFailedLoc", 0);
-//        scanResultsToInject.getAdditionalDetails().put("scanRiskSeverity", 0);
-//        scanResultsToInject.getAdditionalDetails().put("scanId", 100001);
-//        scanResultsToInject.getAdditionalDetails().put("scanStartDate", new Date());
-//        scanResultsToInject.getAdditionalDetails().put("customFields", new HashMap<>());
-//        scanResultsToInject.getAdditionalDetails().put("scanRisk", 0);
-//
-//
-//    }
 
     private ScanRequest createScanRequest() {
         ScanRequest scanRequest = new ScanRequest();

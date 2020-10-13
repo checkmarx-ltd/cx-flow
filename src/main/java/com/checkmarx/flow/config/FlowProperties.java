@@ -1,5 +1,6 @@
 package com.checkmarx.flow.config;
 
+import com.checkmarx.sdk.config.CxGoProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
@@ -382,4 +383,7 @@ public class FlowProperties {
         public void setTemplate(String template) { this.template = template; }
     }
 
+    public boolean isCxGoEnabled() {
+        return getEnabledVulnerabilityScanners().toString().toLowerCase().contains(CxGoProperties.CONFIG_PREFIX);
+    }
 }

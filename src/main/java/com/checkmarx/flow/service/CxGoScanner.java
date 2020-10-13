@@ -32,7 +32,7 @@ public class CxGoScanner extends AbstractVulnerabilityScanner {
         
     }
 
-        @Override
+    @Override
     protected void cxBatch(ScanRequest request) {
         throw new UnsupportedOperationException();
     }
@@ -57,7 +57,7 @@ public class CxGoScanner extends AbstractVulnerabilityScanner {
         throw new UnsupportedOperationException();
     }
     
-    public ScannerClient getCxGoClient() {
+    public ScannerClient getScannerClient() {
         return cxGoClient;
     }
 

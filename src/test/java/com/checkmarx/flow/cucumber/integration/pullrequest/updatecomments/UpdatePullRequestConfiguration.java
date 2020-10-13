@@ -15,7 +15,7 @@ public class UpdatePullRequestConfiguration {
 
     @Bean
     @Primary
-    public CxService getCxService(CxAuthClient authClient,
+    public CxService getCxService(CxAuthService authClient,
                                   CxProperties cxProperties,
                                   CxLegacyService cxLegacyService,
                                   @Qualifier("cxRestTemplate") RestTemplate restTemplate,
