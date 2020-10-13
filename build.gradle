@@ -227,6 +227,7 @@ task ASTIntegrationTest(type: Test) {
 
         include 'com/checkmarx/flow/cucumber/integration/ast/bugtrackers/jira/**'
         include  'com/checkmarx/flow/cucumber/integration/ast/scans/**'
+        include  'com/checkmarx/flow/cucumber/integration/cli/ast/**'
 
         testLogging {
             events "passed", "skipped", "failed"

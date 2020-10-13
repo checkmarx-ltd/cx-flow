@@ -1,7 +1,6 @@
 @AST_CLI_SCAN  @IntegrationTest
 Feature: AST support in CxFlow command-line
 
-    @Skip
     Scenario Outline: AST CLI scan of a local directory
         Given scanner is <scanner>
         And source directory contains vulnerable files
@@ -24,7 +23,6 @@ Feature: AST support in CxFlow command-line
             | missing-project             | 2                |
 
 
-    @Skip
     Scenario Outline: AST CLI scan of github repo
         Given scanner is <scanner>
         And  repository is github

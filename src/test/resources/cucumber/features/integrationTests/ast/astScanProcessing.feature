@@ -19,14 +19,14 @@ Feature: Cx-Flow AST Integration permutation tests
   Scenario Outline: validate AST additional fields
     Given enabled vulnerability scanners are "<scanners>"
     Then scan results contain populated results for all scanners
-    And each finding will contain AST populated description field 
-    And finding with the same queryId will have the same description and there will be a unique finding description for each queryId  
+    And each finding will contain AST populated description field
+    And finding with the same queryId will have the same description and there will be a unique finding description for each queryId
 
     Examples:
-      | scanners | 
+      | scanners |
       | AST      |
-      
-    
+
+
   @ASTRemoteRepoScan @InvalidCredentials
   Scenario Outline: Trying to scan with invalid credentials
     When CxFlow tries to start AST scan with the "<client id>" and "<client secret>" credentials
