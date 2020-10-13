@@ -4,7 +4,6 @@ package com.checkmarx.flow.dto.github;
 import com.fasterxml.jackson.annotation.*;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @JsonIgnoreProperties
@@ -13,7 +12,8 @@ import java.util.Map;
     "ref",
     "ref_type",
     "repository",
-    "sender"
+    "sender",
+    "installation"
 })
 public class DeleteEvent {
 
@@ -25,6 +25,8 @@ public class DeleteEvent {
     private Repository repository;
     @JsonProperty("sender")
     private Sender sender;
+    @JsonProperty("installation")
+    private Installation installation;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<>();
 
@@ -66,6 +68,16 @@ public class DeleteEvent {
     @JsonProperty("sender")
     public void setSender(Sender sender) {
         this.sender = sender;
+    }
+
+    @JsonProperty("installation")
+    public Installation getInstallation() {
+        return installation;
+    }
+
+    @JsonProperty("installation")
+    public void setInstallation(Installation installation) {
+        this.installation = installation;
     }
 
     @JsonAnyGetter
