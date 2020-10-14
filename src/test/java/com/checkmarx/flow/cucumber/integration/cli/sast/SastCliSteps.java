@@ -9,12 +9,13 @@ import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.jira.IJiraTestUtils;
 import com.checkmarx.jira.JiraTestUtils;
+import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.ScaProperties;
+import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.PendingException;
-import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -26,7 +27,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Optional;
 
 @SpringBootTest(classes = {CxFlowApplication.class, JiraTestUtils.class})
 @Slf4j
@@ -35,14 +35,15 @@ public class SastCliSteps {
 
     private static final String GITHUB_REPO_ARGS = " --repo-url=https://github.com/cxflowtestuser/CLI-Integration-Tests --repo-name=CLI-Integration-Tests --github --branch=master --blocksysexit ";
     private static final String STANDARD_CLI_SCAN = " --scan  --scanner=sast  --app=MyApp";
-    private static final String TEST_NONE_BT_PROJECT_NAME =  "--cx-project=Test-bugTracker-None";
+    private static final String NONE__BUG_TRACKER_TEST_PROJECT_NAME =  "Test-bugTracker-None";
+    private static final String PROJECT_NAME_ARG =  "--cx-project=" + NONE__BUG_TRACKER_TEST_PROJECT_NAME;
     private static final String JIRA_PROJECT = "CIT";
 
     private final FlowProperties flowProperties;
     private final JiraProperties jiraProperties;
     private final IntegrationTestContext testContext;
     private final ScaProperties scaProperties;
-
+    private final CxProperties cxProperties;
     private String commandlineConstantArgs;
     private int expectedHigh;
     private int expectedMedium;
@@ -114,7 +115,7 @@ public class SastCliSteps {
     public void runCxFlowScan() {
         Throwable exception = null;
         try {
-            TestUtils.runCxFlow(testContext.getCxFlowRunner(), STANDARD_CLI_SCAN + GITHUB_REPO_ARGS + TEST_NONE_BT_PROJECT_NAME);
+            TestUtils.runCxFlow(testContext.getCxFlowRunner(), STANDARD_CLI_SCAN + GITHUB_REPO_ARGS + PROJECT_NAME_ARG);
         } catch (Throwable e) {
             exception = e;
         }
@@ -122,22 +123,21 @@ public class SastCliSteps {
     }
 
     @Then("cxflow should not wait for scan results")
-    public void validateScanNotFinished() {
-        Integer projectId = cxService.getProjectId("CxServer/SP/Checkmarx", TEST_NONE_BT_PROJECT_NAME);
+    public void validateScanNotFinished() throws CheckmarxException {
+
+        String teamId = cxProperties.getTeam();
+        String ownerId = cxService.getTeamId(teamId);
+        Integer projectId = cxService.getProjectId(ownerId, NONE__BUG_TRACKER_TEST_PROJECT_NAME);
 
         log.info("Checking if there is any existing scan for Project:");
         Integer existingScanId = cxService.getScanIdOfExistingScanIfExists(projectId);
 
-        Assert.assertNotEquals(-1, Optional.ofNullable(existingScanId));
+        log.info("found scanId {}", existingScanId);
+        Assert.assertNotEquals(-1, (long)existingScanId);
     }
 
-    @And("cxflow exit with success return code")
-    public void checkSuccessReturnCode() {
-        validateExitCode(0);
-    }
-
-    @Then("run should exit with exit code {int}")
-    public void validateExitCode(int expectedExitCode) {
+    @Then("cxflow should exit with exit code: {}")
+    public void checkReturnCode(int expectedExitCode) {
         Throwable exception = testContext.getCxFlowExecutionException();
 
         Assert.assertNotNull("Expected an exception to be thrown.", exception);
@@ -188,11 +188,6 @@ public class SastCliSteps {
             exception = e;
         }
         testContext.setCxFlowExecutionException(exception);
-    }
-
-    @And("cxflow should exit with {}")
-    public void checkReturnCode(int returnCode) {
-        validateExitCode(returnCode);
     }
 
     @Then("bugTracker contains {} issues")

@@ -7,7 +7,7 @@ Feature: Cx-Flow CLI SAST Integration tests
 
   Scenario Outline: Testing break-build functionality
     When running with break-build on <issue-type>
-    Then run should exit with exit code <exit-code-number>
+    Then cxflow should exit with exit code: <exit-code-number>
 
     Examples:
       | issue-type                  | exit-code-number |
@@ -19,7 +19,7 @@ Feature: Cx-Flow CLI SAST Integration tests
     Given code has x High, y Medium and z low issues
     When running sast scan <filter>
     Then bugTracker contains <number of issue> issues
-    And cxflow should exit with <return code>
+    And cxflow should exit with exit code: <return code>
 
     Examples:
       | filter                 | number of issue | return code |
@@ -33,4 +33,4 @@ Feature: Cx-Flow CLI SAST Integration tests
     Given bug tracker is set to 'None'
     When running cxflow to execute SAST scan
     Then cxflow should not wait for scan results
-    And cxflow exit with success return code
+    And cxflow should exit with exit code: 0
