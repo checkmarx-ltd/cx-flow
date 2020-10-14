@@ -15,8 +15,6 @@ import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
-import com.checkmarx.sdk.config.CxGoProperties;
-import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -63,8 +61,7 @@ public class BitbucketServerController extends WebhookController {
 
     private final FlowProperties flowProperties;
     private final BitBucketProperties properties;
-    private final CxProperties cxProperties;
-    private final CxGoProperties cxgoProperties;
+    private final CxScannerService cxScannerService;
     private final JiraProperties jiraProperties;
     private final FlowService flowService;
     private final HelperService helperService;
@@ -223,7 +220,7 @@ public class BitbucketServerController extends WebhookController {
             fillRequestWithCommonAdditionalData(request, toRefRepository, body);
             checkForConfigAsCode(request);
             request.putAdditionalMetadata("buildStatusUrl", buildStatusEndpoint);
-            request.putAdditionalMetadata("cxBaseUrl", getBaseUrl());
+            request.putAdditionalMetadata("cxBaseUrl", cxScannerService.getProperties().getBaseUrl());
             request.putAdditionalMetadata("blocker-comment-url", blockerCommentUrl);
             request.setId(uid);
 
@@ -237,13 +234,7 @@ public class BitbucketServerController extends WebhookController {
         return getSuccessMessage();
     }
 
-    private String getBaseUrl() {
-        if(flowProperties.getEnabledVulnerabilityScanners().toString().toLowerCase().contains("cxgo")){
-            return cxgoProperties.getBaseUrl();
-        }else{
-            return cxProperties.getBaseUrl();
-        }
-    }
+
 
     private void setBrowseUrl(Repository repo, ScanRequest targetRequest) {
         try {
