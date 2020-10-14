@@ -57,7 +57,7 @@ public class SastScanner implements VulnerabilityScanner {
 
     @Override
     public ScanResults scan(ScanRequest scanRequest) {
-        ScanResults scanResults;
+
         log.info("--------------------- Initiating new {} scan ---------------------", SCAN_TYPE);
         checkScanSubmitEmailDelivery(scanRequest);
 
@@ -85,19 +85,7 @@ public class SastScanner implements VulnerabilityScanner {
                 scanId = cxService.createScan(cxScanParams, getComment(scanRequest));
             }
 
-            BugTracker.Type bugTrackerType = bugTrackerEventTrigger.triggerBugTrackerEvent(scanRequest);
-            if (bugTrackerType.equals(BugTracker.Type.NONE)) {
-                scanDetails = handleNoneBugTrackerCase(scanRequest, null, scanId, projectId);
-            } else {
-                cxService.waitForScanCompletion(scanId);
-                projectId = handleUnKnownProjectId(cxScanParams.getProjectId(), cxScanParams.getTeamId(), cxScanParams.getProjectName());
-                scanDetails = new ScanDetails(projectId, scanId, null);
-            }
-            logRequest(scanRequest, scanId, null, OperationResult.successful());
-
-            scanResults = cxService.getReportContentByScanId(scanId, scanRequest.getFilter());
-            scanResults.setSastScanId(scanId);
-            return scanResults;
+            return getScanResults(scanRequest, projectId, scanId);
 
         } catch (GitHubRepoUnavailableException e) {
             //the repository is unavailable - can happen for a push event of a deleted branch - nothing to do
@@ -115,6 +103,22 @@ public class SastScanner implements VulnerabilityScanner {
             report.log();
             return getEmptyScanResults();
         }
+    }
+
+    private ScanResults getScanResults(ScanRequest scanRequest, Integer projectId, Integer scanId) throws CheckmarxException {
+        ScanResults scanResults = null;
+        BugTracker.Type bugTrackerType = bugTrackerEventTrigger.triggerBugTrackerEvent(scanRequest);
+        if (bugTrackerType.equals(BugTracker.Type.NONE)) {
+            scanDetails = handleNoneBugTrackerCase(scanRequest, null, scanId, projectId);
+        } else {
+            cxService.waitForScanCompletion(scanId);
+            logRequest(scanRequest, scanId, null, OperationResult.successful());
+
+            scanResults = cxService.getReportContentByScanId(scanId, scanRequest.getFilter());
+            scanResults.setSastScanId(scanId);
+        }
+
+        return scanResults;
     }
 
     @Override
@@ -188,17 +192,10 @@ public class SastScanner implements VulnerabilityScanner {
 
             scanId = cxService.createScan(params, getComment(request));
 
-            BugTracker.Type bugTrackerType = bugTrackerEventTrigger.triggerBugTrackerEvent(request);
-            if (bugTrackerType.equals(BugTracker.Type.NONE)) {
-                return handleNoneBugTrackerCase(request, cxFile, scanId, projectId);
-            } else {
-                cxService.waitForScanCompletion(scanId);
-                projectId = handleUnKnownProjectId(projectId, ownerId, request.getProject());
-                osaScanId = createOsaScan(request, projectId);
+            osaScanId = createOsaScan(request, projectId);
 
-                if (osaScanId != null) {
-                    logRequest(request, osaScanId, cxFile, OperationResult.successful());
-                }
+            if (osaScanId != null) {
+                logRequest(request, osaScanId, cxFile, OperationResult.successful());
             }
         } catch (GitHubRepoUnavailableException e) {
             // The error message is printed when the exception is thrown.
@@ -212,7 +209,7 @@ public class SastScanner implements VulnerabilityScanner {
         }
 
         logRequest(request, scanId, cxFile, OperationResult.successful());
-        
+
         this.scanDetails = new ScanDetails(projectId, scanId, osaScanId);
         return scanDetails;
     }
@@ -229,8 +226,7 @@ public class SastScanner implements VulnerabilityScanner {
 
             File zipFile = ZipUtils.zipToTempFile(path, flowProperties.getZipExclude());
             ScanDetails details = executeCxScan(request, zipFile);
-            results = cxService.getReportContentByScanId(details.getScanId(), request.getFilter());
-
+            results = getScanResults(request, details.getProjectId(), details.getScanId());
             log.debug("Deleting temp file {}", zipFile.getPath());
             Files.deleteIfExists(zipFile.toPath());
         } catch (IOException e) {
@@ -249,7 +245,7 @@ public class SastScanner implements VulnerabilityScanner {
             String effectiveProjectName = projectNameGenerator.determineProjectName(request);
             request.setProject(effectiveProjectName);
             ScanDetails details = executeCxScan(request, null);
-            results = cxService.getReportContentByScanId(details.getScanId(), request.getFilter());
+            results = getScanResults(request, details.getProjectId(), details.getScanId());
         } catch (MachinaException | CheckmarxException e) {
             log.error("Error occurred", e);
             exit(3);
@@ -384,13 +380,6 @@ public class SastScanner implements VulnerabilityScanner {
         CompletableFuture<ScanResults> results = CompletableFuture.completedFuture(null);
         logRequest(request, scanId, cxFile, OperationResult.successful());
         return new ScanDetails(projectId, scanId, results, false);
-    }
-
-    private Integer handleUnKnownProjectId(Integer projectId, String ownerId, String projectName) {
-        if (projectId == UNKNOWN_INT) {
-            projectId = cxService.getProjectId(ownerId, projectName); //get the project id of the updated or created project
-        }
-        return projectId;
     }
 
     private void checkScanSubmitEmailDelivery(ScanRequest scanRequest) {
