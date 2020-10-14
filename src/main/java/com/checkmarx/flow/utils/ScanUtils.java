@@ -587,14 +587,6 @@ public class ScanUtils {
         return vulnerabilityUrl.toString();
     }
 
-    public static ScannerClient getBaseScanner(FlowProperties flowProperties, CxGoClientImpl cxGoClient, CxClient cxService) {
-        return flowProperties.isCxGoEnabled() && cxGoClient!=null ? cxGoClient : cxService;
-    }
-    
-    public static CxPropertiesBase getBaseProperties(FlowProperties flowProperties, CxGoProperties cxgoProperties, CxProperties cxProperties){
-        return flowProperties.isCxGoEnabled() && cxgoProperties != null ? cxgoProperties : cxProperties;
-    }
-
     /**
      * Returns the string with first letter in uppercase and the remainder in lowercase
      */

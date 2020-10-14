@@ -8,10 +8,12 @@ import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.report.ScanResultsReport;
 import com.checkmarx.flow.exception.MachinaException;
+import com.checkmarx.flow.service.CxScannerService;
 import com.checkmarx.flow.service.EmailService;
 import com.checkmarx.flow.service.ResultsService;
 import com.checkmarx.jira.PublishUtils;
 import com.checkmarx.sdk.config.Constants;
+import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
@@ -70,8 +72,11 @@ public class GetResultsAnalyticsTestSteps {
     }
 
     private ResultsService createResultsService() {
+        
+        CxScannerService cxScannerService = new CxScannerService((CxProperties) cxClientMock.getCxPropertiesBase(),null, null, cxClientMock, null );
+        
         return new ResultsService(
-                cxClientMock,
+                cxScannerService,
                 null,
                 null,
                 null,
@@ -79,11 +84,7 @@ public class GetResultsAnalyticsTestSteps {
                 null,
                 null,
                 null,
-                null,
-                null,
-                null,
-                emailService,
-                null);
+                emailService);
     }
 
 

@@ -8,6 +8,7 @@ import com.checkmarx.flow.sastscanning.ScanRequestConverter;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.sdk.config.CxGoProperties;
 import com.checkmarx.sdk.config.CxProperties;
+import com.checkmarx.sdk.config.CxPropertiesBase;
 import com.checkmarx.sdk.service.*;
 //import com.cx.restclient.CxOsaService;
 //import com.cx.restclient.httpClient.CxHttpClient;
@@ -33,12 +34,11 @@ public class GitHubControllerTest {
 
     private static final FlowProperties flowProperties = new FlowProperties();
     private static final GitHubProperties properties = new GitHubProperties();
-    private static final CxProperties cxProperties = new CxProperties();
-    private static final CxGoProperties cxgoProperties = new CxGoProperties();
+    private static CxScannerService cxScannerService;
     private static final ExternalScriptService scriptService = new ExternalScriptService();
-    private static final HelperService helperService = new HelperService(flowProperties, cxProperties,cxgoProperties, scriptService);
+    private static final HelperService helperService = new HelperService(flowProperties, cxScannerService, scriptService);
     private static final List<VulnerabilityScanner> scanners = new ArrayList<>();
-    private static final ProjectNameGenerator projectNameGenerator = new ProjectNameGenerator(helperService, scriptService);
+    private static final ProjectNameGenerator projectNameGenerator = new ProjectNameGenerator(helperService, scriptService, cxScannerService);
     private static final FlowService flowService = new FlowService(scanners, projectNameGenerator, resultsService);
     private static final FilterFactory filterFactory = new FilterFactory();
 

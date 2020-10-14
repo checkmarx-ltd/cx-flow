@@ -318,13 +318,11 @@ public class Github2AdoSteps {
     }
 
     private void initResultsServiceMock() {
-        
+
+        CxScannerService cxScannerService = new CxScannerService(cxProperties,null, null, cxClientMock, null );
 
         this.resultsService = spy(new ResultsService(
-                cxClientMock,
-                null,
-                cxProperties,
-                null,
+                cxScannerService,
                 null,
                 null,
                 issueService,
@@ -332,9 +330,7 @@ public class Github2AdoSteps {
                 null,
                 null,
                 null,
-                emailService,
-                flowProperties
-                ));
+                emailService));
     }
 
     @And("Scanner is AST")

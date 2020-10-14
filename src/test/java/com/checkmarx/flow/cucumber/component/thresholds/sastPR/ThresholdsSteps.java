@@ -339,21 +339,18 @@ public class ThresholdsSteps {
                 scmConfigOverrider,
                 gitHubAppAuthService);
 
+        CxScannerService cxScannerService = new CxScannerService(cxProperties,null, null, cxClientMock, null );
+
         ADOService adoService = new ADOService(restTemplateMock,
                 adoProperties,
                 flowProperties,
-                cxProperties,
-                null,
+                cxScannerService,
                 scmConfigOverrider,
                 thresholdValidator
                 );
-
         
         return new ResultsService(
-                cxClientMock,
-                null,
-                cxProperties,
-                null,
+                cxScannerService,
                 null,
                 null,
                 null,
@@ -361,8 +358,7 @@ public class ThresholdsSteps {
                 null,
                 null,
                 adoService,
-                emailService,
-                flowProperties);
+                emailService);
     }
 
     private static ScanResults createFakeScanResults() {

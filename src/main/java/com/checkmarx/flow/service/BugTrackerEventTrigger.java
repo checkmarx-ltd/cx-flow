@@ -1,12 +1,8 @@
 package com.checkmarx.flow.service;
 
-import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanDetails;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.utils.ScanUtils;
-import com.checkmarx.sdk.config.CxGoProperties;
-import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.CxPropertiesBase;
 import com.checkmarx.sdk.dto.ScanResults;
 import lombok.extern.slf4j.Slf4j;
@@ -23,15 +19,14 @@ public class BugTrackerEventTrigger {
     private final GitHubService gitService;
     private final BitBucketService bbService;
     private final ADOService adoService;
-    private final CxPropertiesBase cxPropertiesBase;
+    private final CxPropertiesBase cxProperties;
 
-    public BugTrackerEventTrigger(GitLabService gitLabService, GitHubService gitService, BitBucketService bbService, ADOService adoService, FlowProperties flowProperties, CxProperties cxProperties, CxGoProperties cxgoProperties) {
+    public BugTrackerEventTrigger(GitLabService gitLabService, GitHubService gitService, BitBucketService bbService, ADOService adoService, CxScannerService cxScannerService) {
         this.gitLabService = gitLabService;
         this.gitService = gitService;
         this.bbService = bbService;
         this.adoService = adoService;
-
-        this.cxPropertiesBase = ScanUtils.getBaseProperties(flowProperties, cxgoProperties, cxProperties);
+        this.cxProperties = cxScannerService.getProperties();
     }
 
     public BugTracker.Type triggerBugTrackerEvent(ScanRequest request) {
@@ -50,7 +45,7 @@ public class BugTrackerEventTrigger {
 
             case GITHUBPULL:
                 gitService.sendMergeComment(request, SCAN_MESSAGE);
-                gitService.startBlockMerge(request, cxPropertiesBase.getUrl());
+                gitService.startBlockMerge(request, cxProperties.getUrl());
                 break;
 
             case BITBUCKETPULL:
@@ -107,7 +102,7 @@ public class BugTrackerEventTrigger {
 
             case GITHUBPULL:
                 gitService.sendMergeComment(scanRequest, SCAN_NOT_SUBMITTED_MESSAGE);
-                String targetURL = cxPropertiesBase.getBaseUrl().concat(GitHubService.CX_USER_SCAN_QUEUE);
+                String targetURL = cxProperties.getBaseUrl().concat(GitHubService.CX_USER_SCAN_QUEUE);
                 gitService.errorBlockMerge(scanRequest, targetURL, description);
                 break;
 
@@ -118,7 +113,7 @@ public class BugTrackerEventTrigger {
             case BITBUCKETSERVERPULL:
                 bbService.sendServerMergeComment(scanRequest, SCAN_NOT_SUBMITTED_MESSAGE);
                 String buildName = "Existing Checkmarx Scan in progress.";
-                String buildUrl = cxPropertiesBase.getBaseUrl().concat(BitBucketService.CX_USER_SCAN_QUEUE);
+                String buildUrl = cxProperties.getBaseUrl().concat(BitBucketService.CX_USER_SCAN_QUEUE);
                 bbService.setBuildFailedStatus(scanRequest, buildName, buildUrl, description);
                 break;
 

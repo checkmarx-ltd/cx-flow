@@ -554,11 +554,10 @@ public class CxConfigSteps {
                 scmConfigOverrider,
                 gitHubAppAuthService);
 
+        CxScannerService cxScannerService = new CxScannerService(cxProperties,null, null, cxClientMock, null );
+
         this.resultsService = new ResultsService(
-                cxClientMock,
-                null,
-                cxProperties,
-                null,
+                cxScannerService,
                 null,
                 null,
                 null,
@@ -566,9 +565,7 @@ public class CxConfigSteps {
                 null,
                 null,
                 null,
-                emailService,
-                flowProperties
-                );
+                emailService);
     }
 
     private static ScanResults createFakeScanResults() {

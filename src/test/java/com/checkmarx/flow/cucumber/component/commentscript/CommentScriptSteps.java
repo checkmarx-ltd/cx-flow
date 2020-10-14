@@ -44,7 +44,7 @@ public class CommentScriptSteps {
     private final static  String EMPTY_SCRIPT = "empty";
     private final static  String INVALID_SCRIPT = "invalid-syntax-script-comment";
     private final static  String EMPTY_STRING = "";
-    final private CxClient cxClientMock;
+    final private CxService cxClientMock;
     private final ScanRequestConverter scanRequestConverterMock;
     private final SastScanner sastScanner;
     private final CxGoScanner cxgoScanner;
@@ -59,7 +59,7 @@ public class CommentScriptSteps {
                               ResultsService resultService, ProjectNameGenerator projectNameGenerator, BugTrackerEventTrigger btet){
 
 
-        cxClientMock = mock(CxClient.class);
+        cxClientMock = mock(CxService.class);
         scanRequestConverterMock = mock(ScanRequestConverter.class);
 
         this.flowProperties = flowProperties;
@@ -73,7 +73,8 @@ public class CommentScriptSteps {
         this.cxProperties = cxProperties;
         FlowService flowService = new FlowService(Collections.singletonList(sastScanner), projectNameGenerator, resultService);
 
-        this.flowController = new FlowController(flowProperties, cxProperties, null, flowService, helperService, jiraProperties, filterFactory, configOverrider, sastScanner, cxgoScanner);
+        CxScannerService scannerService = new CxScannerService(cxProperties, null, flowProperties, cxClientMock, null);
+        this.flowController = new FlowController(flowProperties, scannerService, flowService, helperService, jiraProperties, filterFactory, configOverrider, sastScanner, cxgoScanner);
     }
 
 

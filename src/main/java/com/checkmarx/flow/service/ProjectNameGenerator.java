@@ -11,12 +11,12 @@ import org.springframework.stereotype.Service;
 @Service
 public class ProjectNameGenerator {
     private final HelperService helperService;
-    private final CxPropertiesBase cxPropertiesBase;
     private final ExternalScriptService scriptService;
+    private final CxPropertiesBase cxProperties;
 
-    public ProjectNameGenerator(HelperService helperService, ExternalScriptService scriptService) {
+    public ProjectNameGenerator(HelperService helperService, ExternalScriptService scriptService, CxScannerService cxScannerService) {
         this.helperService = helperService;
-        this.cxPropertiesBase = helperService.getCxPropertiesBase();
+        this.cxProperties = cxScannerService.getProperties();
         this.scriptService = scriptService;
     }
 
@@ -35,7 +35,7 @@ public class ProjectNameGenerator {
         if (StringUtils.isNotEmpty(nameOverride)) {
             log.debug("Project name override is present. Using the override: {}.", nameOverride);
             projectName = nameOverride;
-        } else if (cxPropertiesBase.isMultiTenant() && StringUtils.isNotEmpty(repoName)) {
+        } else if (cxProperties.isMultiTenant() && StringUtils.isNotEmpty(repoName)) {
             projectName = repoName;
             if (StringUtils.isNotEmpty(branch)) {
                 log.debug("Multi-tenant mode is enabled. Branch is specified. Using repo name and branch.");

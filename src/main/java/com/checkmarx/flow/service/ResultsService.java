@@ -1,7 +1,6 @@
 package com.checkmarx.flow.service;
 
 import com.atlassian.jira.rest.client.api.RestClientException;
-import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.dto.Field;
 import com.checkmarx.flow.dto.ScanDetails;
@@ -15,8 +14,6 @@ import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
-import com.checkmarx.sdk.config.CxGoProperties;
-import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.CxPropertiesBase;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
@@ -24,10 +21,7 @@ import com.checkmarx.sdk.dto.cx.CxProject;
 import com.checkmarx.sdk.dto.filtering.EngineFilterConfiguration;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.checkmarx.sdk.exception.CheckmarxException;
-import com.checkmarx.sdk.service.CxClient;
 import com.checkmarx.sdk.service.CxOsaClient;
-import com.checkmarx.sdk.service.CxService;
-import com.cx.restclient.CxGoClientImpl;
 import com.cx.restclient.ScannerClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -47,10 +41,7 @@ import static com.checkmarx.sdk.config.Constants.UNKNOWN_INT;
 @Slf4j
 public class ResultsService {
 
-    private final CxService cxService;
-    private final CxGoClientImpl cxGoClient;
-    private final CxProperties cxProperties;
-    private final CxGoProperties cxgoProperties;
+
     private final CxOsaClient osaService;
     private final JiraService jiraService;
     private final IssueService issueService;
@@ -59,15 +50,11 @@ public class ResultsService {
     private final BitBucketService bbService;
     private final ADOService adoService;
     private final EmailService emailService;
-    private final FlowProperties flowProperties;
-    private CxPropertiesBase cxPropertiesBase;
-    private ScannerClient scannerClient;
+    private CxPropertiesBase cxProperties;
+    private ScannerClient cxScanner;
 
-    public ResultsService(CxService cxService, CxGoClientImpl cxGoClient, CxProperties cxProperties, CxGoProperties cxgoProperties, CxOsaClient osaService, JiraService jiraService, IssueService issueService, GitHubService gitService, GitLabService gitLabService, BitBucketService bbService, ADOService adoService, EmailService emailService, FlowProperties flowProperties) {
-        this.cxService = cxService;
-        this.cxGoClient = cxGoClient;
-        this.cxProperties = cxProperties;
-        this.cxgoProperties = cxgoProperties;
+    public ResultsService(CxScannerService cxScannerService,  CxOsaClient osaService, JiraService jiraService, IssueService issueService, GitHubService gitService, GitLabService gitLabService, BitBucketService bbService, ADOService adoService, EmailService emailService) {
+
         this.osaService = osaService;
         this.jiraService = jiraService;
         this.issueService = issueService;
@@ -76,9 +63,8 @@ public class ResultsService {
         this.bbService = bbService;
         this.adoService = adoService;
         this.emailService = emailService;
-        this.flowProperties = flowProperties;
-        this.cxPropertiesBase = ScanUtils.getBaseProperties(flowProperties, cxgoProperties,cxProperties);
-        this.scannerClient = ScanUtils.getBaseScanner(flowProperties, cxGoClient,cxService);;
+        this.cxProperties = cxScannerService.getProperties();
+        this.cxScanner = cxScannerService.getScannerClient();
     }
 
 
@@ -90,7 +76,7 @@ public class ResultsService {
                     
             CompletableFuture<ScanResults> future = new CompletableFuture<>();
             //TODO async these, and join and merge after
-            ScanResults results = scannerClient.getReportContentByScanId(scanId, filterConfiguration);
+            ScanResults results = cxScanner.getReportContentByScanId(scanId, filterConfiguration);
             logGetResultsJsonLogger(request, scanId, results);
             results = getOSAScan(request, projectId, osaScanId, filterConfiguration, results);
 
@@ -156,7 +142,7 @@ public class ResultsService {
     public void processResults(ScanRequest request, ScanResults results, ScanDetails scanDetails) throws MachinaException {
         
         scanDetails = Optional.ofNullable(scanDetails).orElseGet(ScanDetails::new);
-        if (Boolean.FALSE.equals(cxPropertiesBase.getOffline())) {
+        if (Boolean.FALSE.equals(cxProperties.getOffline())) {
             getCxFields(request, results);
         }
         switch (request.getBugTracker().getType()) {
@@ -226,7 +212,7 @@ public class ResultsService {
     }
 
     ScanResults getOSAScan(ScanRequest request, Integer projectId, String osaScanId, FilterConfiguration filter, ScanResults results) throws CheckmarxException {
-        if (Boolean.TRUE.equals(cxPropertiesBase.getEnableOsa()) && !ScanUtils.empty(osaScanId)) {
+        if (Boolean.TRUE.equals(cxProperties.getEnableOsa()) && !ScanUtils.empty(osaScanId)) {
             log.info("Waiting for OSA Scan results for scan id {}", osaScanId);
 
             List<Filter> filters = Optional.ofNullable(filter.getScaFilters())
@@ -329,7 +315,7 @@ public class ResultsService {
             }
             /*if so, then get them and add them to the request object*/
             if (!ScanUtils.empty(results.getProjectId()) && !results.getProjectId().equals(Constants.UNKNOWN)) {
-                CxProject project = scannerClient.getProject(Integer.parseInt(results.getProjectId()));
+                CxProject project = cxScanner.getProject(Integer.parseInt(results.getProjectId()));
                 Map<String, String> fields = new HashMap<>();
                 for (CxProject.CustomField field : project.getCustomFields()) {
                     if (!ScanUtils.empty(field.getName()) && !ScanUtils.empty(field.getValue())) {
@@ -338,14 +324,14 @@ public class ResultsService {
                 }
                 if (!fields.isEmpty()) {
                     request.setCxFields(fields);
-                    if (!ScanUtils.empty(cxPropertiesBase.getJiraProjectField())) {
-                        String jiraProject = fields.get(cxPropertiesBase.getJiraProjectField());
+                    if (!ScanUtils.empty(cxProperties.getJiraProjectField())) {
+                        String jiraProject = fields.get(cxProperties.getJiraProjectField());
                         if (!ScanUtils.empty(jiraProject)) {
                             request.getBugTracker().setProjectKey(jiraProject);
                         }
                     }
-                    if (!ScanUtils.empty(cxPropertiesBase.getJiraIssuetypeField())) {
-                        String jiraIssuetype = fields.get(cxPropertiesBase.getJiraIssuetypeField());
+                    if (!ScanUtils.empty(cxProperties.getJiraIssuetypeField())) {
+                        String jiraIssuetype = fields.get(cxProperties.getJiraIssuetypeField());
                         if (!ScanUtils.empty(jiraIssuetype)) {
                             request.getBugTracker().setIssueType(jiraIssuetype);
                         }

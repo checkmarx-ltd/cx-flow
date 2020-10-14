@@ -47,8 +47,7 @@ public class CxFlowRunner implements ApplicationRunner {
     public static final String BATCH_OPTION = "batch";
 
     private final FlowProperties flowProperties;
-    private final CxProperties cxProperties;
-    private final CxGoProperties cxgoProperties;
+    private final CxScannerService cxScannerService;
     private final JiraProperties jiraProperties;
     private final GitHubProperties gitHubProperties;
     private final GitLabProperties gitLabProperties;
@@ -173,7 +172,7 @@ public class CxFlowRunner implements ApplicationRunner {
         excludeFolders = args.getOptionValues("exclude-folders");
         boolean usingBitBucketCloud = args.containsOption("bb");
         boolean usingBitBucketServer = args.containsOption("bbs");
-        CxPropertiesBase cxPropertiesBase = ScanUtils.getBaseProperties(flowProperties,cxgoProperties,cxProperties);
+        CxPropertiesBase cxProperties = cxScannerService.getProperties();
         
         if (((ScanUtils.empty(namespace) && ScanUtils.empty(repoName) && ScanUtils.empty(branch)) &&
                 ScanUtils.empty(application)) && !args.containsOption(BATCH_OPTION)) {
@@ -185,11 +184,11 @@ public class CxFlowRunner implements ApplicationRunner {
         FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
 
         //Adding default file/folder exclusions from properties if they are not provided as an override
-        if (excludeFiles == null && !ScanUtils.empty(cxPropertiesBase.getExcludeFiles())) {
-            excludeFiles = Arrays.asList(cxPropertiesBase.getExcludeFiles().split(","));
+        if (excludeFiles == null && !ScanUtils.empty(cxProperties.getExcludeFiles())) {
+            excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
         }
-        if (excludeFolders == null && !ScanUtils.empty(cxPropertiesBase.getExcludeFolders())) {
-            excludeFolders = Arrays.asList(cxPropertiesBase.getExcludeFolders().split(","));
+        if (excludeFolders == null && !ScanUtils.empty(cxProperties.getExcludeFolders())) {
+            excludeFolders = Arrays.asList(cxProperties.getExcludeFolders().split(","));
         }
         if (ScanUtils.empty(bugTracker)) {
             bugTracker = flowProperties.getBugTracker();
@@ -207,7 +206,7 @@ public class CxFlowRunner implements ApplicationRunner {
         }
 
         if (ScanUtils.empty(preset)) {
-            preset = cxPropertiesBase.getScanPreset();
+            preset = cxProperties.getScanPreset();
         }
 
         BugTracker bt = null;
@@ -308,7 +307,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 .branch(branch)
                 .refs(null)
                 .email(emails)
-                .incremental(cxPropertiesBase.getIncremental())
+                .incremental(cxProperties.getIncremental())
                 .scanPreset(preset)
                 .excludeFolders(excludeFolders)
                 .excludeFiles(excludeFiles)
@@ -347,7 +346,7 @@ public class CxFlowRunner implements ApplicationRunner {
                     cxOsaParse(request, f, libs);
                 } else { //SAST
                     if (args.containsOption("offline")) {
-                        cxPropertiesBase.setOffline(true);
+                        cxProperties.setOffline(true);
                     }
                     log.info("Processing Checkmarx result file {}", file);
 

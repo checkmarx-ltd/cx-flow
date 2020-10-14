@@ -129,22 +129,19 @@ public class GitHubCommentsASTSteps {
             this.repo = ScanRequest.Repository.GITHUB;
             
             initGitHubProperties();
-            
+
+            CxScannerService cxScannerService = new CxScannerService(cxProperties,null, null, cxClientMock, null );
+
             return new ResultsService(
-                    cxClientMock,
-                    null,
-                    cxProperties,
-                    null,
+                    cxScannerService,
                     null,
                     null,
                     issueService,
                     gitHubService,
-                    null, 
                     null,
                     null,
-                    emailService,
-                    flowProperties
-                    );
+                    null,
+                    emailService);
         }
         
         throw new UnsupportedOperationException();

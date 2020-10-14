@@ -11,6 +11,7 @@ import com.checkmarx.flow.dto.OperationResult;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.exception.MachinaException;
+import com.checkmarx.flow.service.CxScannerService;
 import com.checkmarx.flow.service.GitHubAppAuthService;
 import com.checkmarx.flow.service.GitHubService;
 import com.checkmarx.flow.service.ThresholdValidator;
@@ -238,17 +239,16 @@ public class AnalyticsSteps {
                 thresholdValidator,
                 scmConfigOverrider,
                 gitHubAppAuthService);
+                scmConfigOverrider);
+        
+        CxScannerService cxScannerService = new CxScannerService(cxProperties,null, null, cxClientMock, null );
 
         return new ResultsService(
-                cxClientMock,
-                null,
-                cxProperties,
-                null,
+                cxScannerService,
                 null,
                 null,
                 null,
                 gitService,
-                null,
                 null,
                 null,
                 null,

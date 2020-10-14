@@ -60,9 +60,11 @@ public class BatchComponentSteps {
         FilterConfiguration filter = FilterConfiguration.fromSimpleFilters(ScanFixture.getScanFilters());
         when(cxClient.getReportContentByScanId(ScanFixture.SCAN_ID, filter))
                 .thenReturn(ScanFixture.getScanResults());
+
+        CxScannerService cxScannerService = new CxScannerService(cxProperties,null, null, null, null );
+        
         cxFlowRunner = new CxFlowRunner(flowProperties,
-                cxProperties,
-                cxgoProperties,
+                cxScannerService,
                 jiraProperties,
                 gitHubProperties,
                 gitLabProperties,

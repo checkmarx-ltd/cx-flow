@@ -20,6 +20,7 @@ import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
+import com.checkmarx.sdk.service.CxService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cucumber.java.Before;
@@ -52,7 +53,7 @@ public class DeleteBranchSteps {
     private static final String AZURE_DELETED_BRANCH_OBJ_ID = "0000000000000000000000000000000000000000";
     private static final String GIT_DEFAULT_BRANCH = "refs/heads/master";
     private static final int SCAN_ID_EXISTING_SCAN_NOT_EXIST = -1;
-    private final CxClient cxClientMock;
+    private final CxService cxClientMock;
     private final GitHubService gitHubService;
     private final GitHubAppAuthService gitHubAppAuthService;
     private GitHubController gitHubControllerSpy;
@@ -101,7 +102,7 @@ public class DeleteBranchSteps {
 
         this.adoServiceMock = mock(ADOService.class);
         this.resultsServiceMock = mock(ResultsService.class);
-        this.cxClientMock = mock(CxClient.class);
+        this.cxClientMock = mock(CxService.class);
         this.helperService = mock(HelperService.class, Mockito.withSettings().useConstructor(flowProperties, cxProperties, null));
         this.scmConfigOverrider = scmConfigOverrider;
     }
@@ -326,7 +327,9 @@ public class DeleteBranchSteps {
     }
 
     private void initServices() {
-        ProjectNameGenerator projectNameGeneratorSpy = spy(new ProjectNameGenerator(helperService, null));
+        CxScannerService cxScannerService = new CxScannerService(cxProperties,null, flowProperties, cxClientMock, null );
+
+        ProjectNameGenerator projectNameGeneratorSpy = spy(new ProjectNameGenerator(helperService, null, cxScannerService));
             initProjectNameGeneratorSpy(projectNameGeneratorSpy);
  
         ScanRequestConverter scanRequestConverter = new ScanRequestConverter(helperService, flowProperties, gitHubService, null, null, null, null,cxClientMock,cxProperties);

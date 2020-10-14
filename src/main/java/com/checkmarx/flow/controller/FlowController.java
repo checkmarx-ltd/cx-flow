@@ -17,9 +17,6 @@ import com.checkmarx.flow.service.SastScanner;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
-import com.checkmarx.sdk.config.CxGoProperties;
-import com.checkmarx.sdk.config.CxProperties;
-import com.checkmarx.sdk.config.CxPropertiesBase;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
@@ -55,8 +52,7 @@ public class FlowController {
     private static final String TOKEN_HEADER = "x-cx-token";
 
     private final FlowProperties properties;
-    private final CxProperties cxProperties;
-    private final CxGoProperties cxgoProperties;
+    private final CxScannerService cxScannerService;
     private final FlowService scanService;
     private final HelperService helperService;
     private final JiraProperties jiraProperties;
@@ -114,13 +110,8 @@ public class FlowController {
         // The cxProject parameter is null because the required project metadata
         // is already contained in the scanRequest parameter.
 
-        ScanResults scanResults;
+        ScanResults scanResults = CxScannerService.getScanner(cxgoScanner, sastScanner).getLatestScanResults(scanRequest);
         
-        if(cxgoScanner.isEnabled()){
-            scanResults = cxgoScanner.getLatestScanResults(scanRequest);
-        }else {
-            scanResults = sastScanner.getLatestScanResults(scanRequest);
-        }
         log.debug("ScanResults {}", scanResults);
 
         return scanResults;
@@ -150,7 +141,7 @@ public class FlowController {
                 application = project;
             }
             if(ScanUtils.empty(team)){
-                team = getCxProperties().getTeam();
+                team = cxScannerService.getProperties().getTeam();
             }
             properties.setTrackApplicationOnly(scanRequest.isApplicationOnly());
 
@@ -162,11 +153,11 @@ public class FlowController {
                         .success(false)
                         .build());
             }
-            String scanPreset = getCxProperties().getScanPreset();
+            String scanPreset = cxScannerService.getProperties().getScanPreset();
             if(!ScanUtils.empty(scanRequest.getPreset())){
                 scanPreset = scanRequest.getPreset();
             }
-            boolean inc = getCxProperties().getIncremental();
+            boolean inc = cxScannerService.getProperties().getIncremental();
             if(scanRequest.isIncremental()){
                 inc = true;
             }
@@ -194,11 +185,11 @@ public class FlowController {
 
             List<String> excludeFiles = scanRequest.getExcludeFiles();
             List<String> excludeFolders = scanRequest.getExcludeFolders();
-            if((excludeFiles == null) && !ScanUtils.empty(getCxProperties().getExcludeFiles())){
-                excludeFiles = Arrays.asList(getCxProperties().getExcludeFiles().split(","));
+            if((excludeFiles == null) && !ScanUtils.empty(cxScannerService.getProperties().getExcludeFiles())){
+                excludeFiles = Arrays.asList(cxScannerService.getProperties().getExcludeFiles().split(","));
             }
-            if(excludeFolders == null && !ScanUtils.empty(getCxProperties().getExcludeFolders())){
-                excludeFolders = Arrays.asList(getCxProperties().getExcludeFolders().split(","));
+            if(excludeFolders == null && !ScanUtils.empty(cxScannerService.getProperties().getExcludeFolders())){
+                excludeFolders = Arrays.asList(cxScannerService.getProperties().getExcludeFolders().split(","));
             }
 
             ScanRequest request = ScanRequest.builder()
@@ -245,9 +236,7 @@ public class FlowController {
                 .build());
     }
 
-    private CxPropertiesBase getCxProperties() {
-        return ScanUtils.getBaseProperties(properties,cxgoProperties,cxProperties);
-    }
+
 
     private FilterConfiguration determineFilter(CxScanRequest scanRequest) {
         FilterConfiguration filter;
