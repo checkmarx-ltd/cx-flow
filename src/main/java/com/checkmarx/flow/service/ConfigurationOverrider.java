@@ -15,7 +15,9 @@ import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.ScaConfig;
 import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.CxConfig;
+import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.Sca;
+import com.checkmarx.sdk.dto.filtering.EngineFilterConfiguration;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -145,13 +147,17 @@ public class ConfigurationOverrider {
                     override.getCwe(),
                     override.getCategory(),
                     override.getStatus());
-            FilterConfiguration filter = filterFactory.getFilter(controllerRequest, null);
-            request.setFilter(filter);
+            FilterConfiguration filterConfig = filterFactory.getFilter(controllerRequest, null);
+            request.setFilter(filterConfig);
 
             String filterDescr;
-            if (CollectionUtils.isNotEmpty(filter.getSimpleFilters())) {
-                filterDescr = filter.getSimpleFilters()
-                        .stream()
+            List<Filter> simpleFilters = Optional.ofNullable(filterConfig)
+                    .map(FilterConfiguration::getSastFilters)
+                    .map(EngineFilterConfiguration::getSimpleFilters)
+                    .orElse(null);
+
+            if (CollectionUtils.isNotEmpty(simpleFilters)) {
+                filterDescr = simpleFilters.stream()
                         .map(Object::toString)
                         .collect(Collectors.joining(","));
             } else {

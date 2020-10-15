@@ -3,6 +3,7 @@ package com.checkmarx.flow.service;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.sdk.dto.Filter;
+import com.checkmarx.sdk.dto.filtering.EngineFilterConfiguration;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.checkmarx.sdk.dto.filtering.ScriptedFilter;
 import com.checkmarx.sdk.exception.CheckmarxRuntimeException;
@@ -28,25 +29,40 @@ public class FilterFactory {
                 .orElse(ControllerRequest.builder().build());
 
         if (hasRequiredProperties(request)) {
-            result = getFilter(request.getSeverity(),
+            result = getFilterFromLists(request.getSeverity(),
                     request.getCwe(),
                     request.getCategory(),
                     request.getStatus(),
                     null,
                     null);
         } else if (flowProperties != null) {
-            result = getFilter(flowProperties);
+            result = getFilterFromProperties(flowProperties);
         } else {
             result = FilterConfiguration.builder().build();
         }
         return result;
     }
 
+    public FilterConfiguration getFilterFromComponents(String filterScript, List<Filter> simpleFilters) {
+        Script parsedScript = parseScriptText(filterScript);
+
+        EngineFilterConfiguration sastFilterConfig = EngineFilterConfiguration.builder()
+                .simpleFilters(simpleFilters)
+                .scriptedFilter(ScriptedFilter.builder()
+                        .script(parsedScript)
+                        .build())
+                .build();
+
+        return FilterConfiguration.builder()
+                .sastFilters(sastFilterConfig)
+                .build();
+    }
+
     /**
      * Create filter configuration based on CxFlow properties.
      */
-    private static FilterConfiguration getFilter(FlowProperties flowProperties) {
-        return getFilter(flowProperties.getFilterSeverity(),
+    private FilterConfiguration getFilterFromProperties(FlowProperties flowProperties) {
+        return getFilterFromLists(flowProperties.getFilterSeverity(),
                 flowProperties.getFilterCwe(),
                 flowProperties.getFilterCategory(),
                 flowProperties.getFilterStatus(),
@@ -64,7 +80,7 @@ public class FilterFactory {
     /**
      * Create filter configuration based on lists of severity, cwe, category and on the text of a filter script
      */
-    private static FilterConfiguration getFilter(List<String> severity,
+    private FilterConfiguration getFilterFromLists(List<String> severity,
                                                  List<String> cwe,
                                                  List<String> category,
                                                  List<String> status,
@@ -77,14 +93,7 @@ public class FilterFactory {
         simpleFilters.addAll(getListByFilterType(status, Filter.Type.STATUS));
         simpleFilters.addAll(getListByFilterType(state, Filter.Type.STATE));
 
-        Script parsedScript = parseScriptText(filterScript);
-
-        return FilterConfiguration.builder()
-                .simpleFilters(simpleFilters)
-                .scriptedFilter(ScriptedFilter.builder()
-                        .script(parsedScript)
-                        .build())
-                .build();
+        return getFilterFromComponents(filterScript, simpleFilters);
     }
 
     private static Script parseScriptText(String filterScript) {

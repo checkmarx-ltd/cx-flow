@@ -3,9 +3,17 @@ package com.checkmarx.flow.controller;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.constants.FlowConstants;
-import com.checkmarx.flow.dto.*;
+import com.checkmarx.flow.dto.BugTracker;
+import com.checkmarx.flow.dto.ControllerRequest;
+import com.checkmarx.flow.dto.EventResponse;
+import com.checkmarx.flow.dto.FlowOverride;
+import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.InvalidTokenException;
-import com.checkmarx.flow.service.*;
+import com.checkmarx.flow.service.ConfigurationOverrider;
+import com.checkmarx.flow.service.FilterFactory;
+import com.checkmarx.flow.service.FlowService;
+import com.checkmarx.flow.service.HelperService;
+import com.checkmarx.flow.service.SastScanner;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
@@ -13,11 +21,8 @@ import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
-import com.checkmarx.sdk.dto.filtering.ScriptedFilter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import groovy.lang.GroovyShell;
-import groovy.lang.Script;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -230,22 +235,14 @@ public class FlowController {
     }
 
     private FilterConfiguration determineFilter(CxScanRequest scanRequest) {
-        FilterConfiguration filter = filterFactory.getFilter(null, properties);
+        FilterConfiguration filter;
 
         boolean hasSimpleFilters = CollectionUtils.isNotEmpty(scanRequest.getFilters());
         boolean hasFilterScript = StringUtils.isNotEmpty(scanRequest.getFilterScript());
         if (hasSimpleFilters || hasFilterScript) {
-            Script parsedScript = null;
-            if (hasFilterScript) {
-                GroovyShell groovyShell = new GroovyShell();
-                parsedScript = groovyShell.parse(scanRequest.getFilterScript());
-            }
-            filter = FilterConfiguration.builder()
-                    .simpleFilters(scanRequest.getFilters())
-                    .scriptedFilter(ScriptedFilter.builder()
-                            .script(parsedScript)
-                            .build())
-                    .build();
+            filter = filterFactory.getFilterFromComponents(scanRequest.getFilterScript(), scanRequest.getFilters());
+        } else {
+            filter = filterFactory.getFilter(null, properties);
         }
         return filter;
     }
