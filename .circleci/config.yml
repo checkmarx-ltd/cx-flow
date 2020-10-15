@@ -537,7 +537,6 @@ jobs:
       - attach_workspace:
           at: .
       - create-github-release:
-          name: Create github pre-release
           ghr-option: "-prerelease "
 
   clean-eks:
