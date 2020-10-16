@@ -77,6 +77,7 @@ public class AstCliSteps  {
         log.info("reset sca filters");
         scaProperties.setFilterSeverity(Collections.emptyList());
 
+        astProperties.setApiUrl("http://ec2-3-249-195-18.eu-west-1.compute.amazonaws.com");
         astProperties.setPreset("Checkmarx Default");
         astProperties.setIncremental("false");
     }
@@ -184,7 +185,7 @@ public class AstCliSteps  {
                     Assert.assertTrue(issue.getDescription().contains("Method @SourceMethod at line @SourceLine of @SourceFile may leak server-side conditional values, enabling user tracking from another website. This may constitute a Privacy Violation."));
                 }
                 if (issue.getDescription().contains("Hardcoded_password_in_Connection_String")) {
-                    Assert.assertTrue(issue.getDescription().contains("The application contains hardcoded connection details, @SourceElement, at lineÂ @SourceLine ofÂ @SourceFile. This connection string contains a hardcoded password,Â which is used in @DestinationMethod at line @DestinationLine of @DestinationFile to connect to a database server with @DestinationElement. This can expose the database password, and impede proper password management."));
+                    Assert.assertTrue(issue.getDescription().contains("The application contains hardcoded connection details, @SourceElement, at line @SourceLine of @SourceFile. This connection string contains a hardcoded password, which is used in @DestinationMethod at line @DestinationLine of @DestinationFile to connect to a database server with @DestinationElement. This can expose the database password, and impede proper password management."));
                 }
             }
         });

@@ -58,6 +58,7 @@ public class BugTrackerEventTrigger {
 
             case JIRA:
             case CUSTOM:
+            case NONE:
                 eventsWereTriggered = false;
                 break; // No action is needed
 

@@ -336,8 +336,8 @@ public class ResultsService {
     }
 
     public boolean filteredSastIssuesPresent(ScanResults results) {
-        if(results.getAdditionalDetails()==null) {
-            // assuming SCA results only
+        if(results == null || results.getAdditionalDetails()==null) {
+            // assuming no bugTracker or SCA results only
             return false;
         }
 

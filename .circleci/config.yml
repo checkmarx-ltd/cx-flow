@@ -7,6 +7,7 @@ executors:
 
 commands: # a reusable command with parameters
   create-github-release:
+    description: Create Github Release or Pre-Release
     parameters:
       ghr-option:
         default: ""
@@ -19,7 +20,7 @@ commands: # a reusable command with parameters
           VERSION_OD=$(cat ./build/libs/cxgo/version.txt)
           mv build/libs/java11/repo-${VERSION}.jar build/libs/cx-flow-${VERSION}-java11.jar
           mv build/libs/cxgo/repo-${VERSION_OD}.jar build/libs/${VERSION_OD}.jar
-          ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -n ${VERSION} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} << parameters.ghr-option >> -replace ${VERSION} ./build/libs/
+          ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -n ${VERSION} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} << parameters.ghr-option >> -delete ${VERSION} ./build/libs/
 
 
 jobs:
@@ -467,7 +468,7 @@ jobs:
           path: ~/test-results
       - store_artifacts:
           path: ~/test-results/junit
-          
+
   cleanup:
     executor: aws-eks/python3
     parameters:

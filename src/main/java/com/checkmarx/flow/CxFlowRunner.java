@@ -58,10 +58,11 @@ public class CxFlowRunner implements ApplicationRunner {
     private final ConfigurationOverrider configOverrider;
     private final List<VulnerabilityScanner> scanners;
     private final ThresholdValidator thresholdValidator;
-    private static final String ERROR_BREAK_MSG = "Exiting with Error code 10 due to issues present";
+    private static final String ERROR_BREAK_MSG = String.format("Exiting with Error code %d due to Checkmarx findings", ExitCode.BUILD_INTERRUPTED.getValue());
 
     @Override
     public void run(ApplicationArguments args) throws InvocationTargetException {
+
         if (!args.getOptionNames().isEmpty()) {
             try {
                 if (args.containsOption("web")) {
