@@ -3,29 +3,10 @@ package com.checkmarx.flow.dto.github;
 
 import com.fasterxml.jackson.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 @JsonIgnoreProperties
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "ref",
-    "before",
-    "after",
-    "created",
-    "deleted",
-    "forced",
-    "base_ref",
-    "compare",
-    "commits",
-    "head_commit",
-    "repository",
-    "pusher",
-    "organization",
-    "sender",
-    "installation"
-})
-public class PushEvent {
+public class PushEvent extends EventCommon{
 
     @JsonProperty("ref")
     private String ref;
@@ -47,18 +28,10 @@ public class PushEvent {
     private List<Commit> commits = null;
     @JsonProperty("head_commit")
     private HeadCommit headCommit;
-    @JsonProperty("repository")
-    private Repository repository;
     @JsonProperty("pusher")
     private Pusher pusher;
     @JsonProperty("organization")
     private Organization organization;
-    @JsonProperty("sender")
-    private Sender sender;
-    @JsonProperty("installation")
-    private Installation installation;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<>();
 
     @JsonProperty("ref")
     public String getRef() {
@@ -160,16 +133,6 @@ public class PushEvent {
         this.headCommit = headCommit;
     }
 
-    @JsonProperty("repository")
-    public Repository getRepository() {
-        return repository;
-    }
-
-    @JsonProperty("repository")
-    public void setRepository(Repository repository) {
-        this.repository = repository;
-    }
-
     @JsonProperty("pusher")
     public Pusher getPusher() {
         return pusher;
@@ -188,36 +151,6 @@ public class PushEvent {
     @JsonProperty("organization")
     public void setOrganization(Organization organization) {
         this.organization = organization;
-    }
-
-    @JsonProperty("sender")
-    public Sender getSender() {
-        return sender;
-    }
-
-    @JsonProperty("sender")
-    public void setSender(Sender sender) {
-        this.sender = sender;
-    }
-
-    @JsonProperty("installation")
-    public Installation getInstallation() {
-        return installation;
-    }
-
-    @JsonProperty("installation")
-    public void setInstallation(Installation installation) {
-        this.installation = installation;
-    }
-
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
     }
 
 }
