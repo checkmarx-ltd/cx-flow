@@ -63,6 +63,7 @@ public class Github2AdoSteps {
 
     private final CxClient cxClientMock;
     private final GitHubService gitHubService;
+    private final GitHubAppAuthService gitHubAppAuthService;
     private final ADOProperties adoProperties;
     private IssueService issueService;
     private GitHubController gitHubControllerSpy;
@@ -94,11 +95,11 @@ public class Github2AdoSteps {
     private String scannerType;
 
     public Github2AdoSteps(FlowProperties flowProperties, GitHubService gitHubService,
-                           CxProperties cxProperties, GitHubProperties gitHubProperties,
-                           ConfigurationOverrider configOverrider, FlowService flowService,
-                           ADOProperties adoProperties, FilterFactory filterFactory,
-                           AzureDevopsClient azureDevopsClient, EmailService emailService,
-                           ScmConfigOverrider scmConfigOverrider) {
+                           GitHubAppAuthService gitHubAppAuthService, CxProperties cxProperties,
+                           GitHubProperties gitHubProperties, ConfigurationOverrider configOverrider,
+                           FlowService flowService, ADOProperties adoProperties,
+                           FilterFactory filterFactory, AzureDevopsClient azureDevopsClient,
+                           EmailService emailService, ScmConfigOverrider scmConfigOverrider) {
         this.filterFactory = filterFactory;
 
         this.cxClientMock = mock(CxClient.class);
@@ -110,6 +111,7 @@ public class Github2AdoSteps {
         this.helperService = mock(HelperService.class);
         this.flowService = flowService;
         this.gitHubService = gitHubService;
+        this.gitHubAppAuthService = gitHubAppAuthService;
         this.azureDevopsClient = azureDevopsClient;
         this.gitHubProperties = gitHubProperties;
         this.adoProperties = adoProperties;
@@ -305,6 +307,7 @@ public class Github2AdoSteps {
                 flowService,
                 helperService,
                 gitHubService,
+                gitHubAppAuthService,
                 null,
                 filterFactory,
                 configOverrider,

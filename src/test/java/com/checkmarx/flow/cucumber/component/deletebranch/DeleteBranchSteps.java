@@ -54,6 +54,7 @@ public class DeleteBranchSteps {
     private static final int SCAN_ID_EXISTING_SCAN_NOT_EXIST = -1;
     private final CxClient cxClientMock;
     private final GitHubService gitHubService;
+    private final GitHubAppAuthService gitHubAppAuthService;
     private GitHubController gitHubControllerSpy;
     private ADOController adoControllerSpy;
 
@@ -82,9 +83,10 @@ public class DeleteBranchSteps {
     private String calculatedProjectName;
 
     public DeleteBranchSteps(FlowProperties flowProperties, GitHubService gitHubService,
-                             CxProperties cxProperties, GitHubProperties gitHubProperties, FilterFactory filterFactory,
+                             GitHubAppAuthService gitHubAppAuthService, CxProperties cxProperties, GitHubProperties gitHubProperties, FilterFactory filterFactory,
                              ConfigurationOverrider configOverrider, ADOProperties adoProperties, EmailService emailService,
                              BugTrackerEventTrigger bugTrackerEventTrigger, ScmConfigOverrider scmConfigOverrider) {
+        this.gitHubAppAuthService = gitHubAppAuthService;
 
         this.filterFactory = filterFactory;
         this.configOverrider = configOverrider;
@@ -344,6 +346,7 @@ public class DeleteBranchSteps {
                 flowServiceSpy,
                 helperService,
                 gitHubService,
+                gitHubAppAuthService,
                 sastScanner,
                 filterFactory,
                 configOverrider,

@@ -95,6 +95,7 @@ dependencies {
     compile("org.apache.ivy:ivy:2.5.0")
     compile("org.jasypt:jasypt:1.9.3")
     compile("org.eclipse.jgit:org.eclipse.jgit:5.5.1.201910021850-r")
+    compile("com.auth0:java-jwt:3.10.3")
     compileOnly('org.springframework.boot:spring-boot-configuration-processor')
     runtime('org.springframework.boot:spring-boot-devtools')
     testImplementation('org.springframework.boot:spring-boot-starter-test')
