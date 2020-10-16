@@ -16,12 +16,6 @@ public class PingEvent extends EventCommon {
     private Integer hookId;
     @JsonProperty("hook")
     private Hook hook;
-    @JsonProperty("repository")
-    private Repository repository;
-    @JsonProperty("sender")
-    private Sender sender;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<>();
 
     @JsonProperty("zen")
     public String getZen() {
@@ -51,36 +45,6 @@ public class PingEvent extends EventCommon {
     @JsonProperty("hook")
     public void setHook(Hook hook) {
         this.hook = hook;
-    }
-
-    @JsonProperty("repository")
-    public Repository getRepository() {
-        return repository;
-    }
-
-    @JsonProperty("repository")
-    public void setRepository(Repository repository) {
-        this.repository = repository;
-    }
-
-    @JsonProperty("sender")
-    public Sender getSender() {
-        return sender;
-    }
-
-    @JsonProperty("sender")
-    public void setSender(Sender sender) {
-        this.sender = sender;
-    }
-
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
     }
 
 }
