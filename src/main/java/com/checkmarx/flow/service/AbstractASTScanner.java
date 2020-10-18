@@ -1,6 +1,7 @@
 package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.OperationResult;
 import com.checkmarx.flow.dto.OperationStatus;
 import com.checkmarx.flow.dto.ScanRequest;
@@ -20,6 +21,7 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -27,6 +29,7 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
     private final com.checkmarx.sdk.service.AstClient client;
     private final FlowProperties flowProperties;
     private final String scanType;
+    private final BugTrackerEventTrigger bugTrackerEventTrigger;
 
     @Override
     public ScanResults scan(ScanRequest scanRequest) {
@@ -41,6 +44,7 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
         } catch (Exception e) {
             treatError(scanRequest, internalResults, e);
         }
+        
         return result;
     }
 
@@ -89,17 +93,28 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
     }
 
     public ScanResults scan(ScanRequest scanRequest, String path) throws ExitThrowable {
+        CompletableFuture<ScanResults> futureScan = CompletableFuture.supplyAsync(() -> {
+            ScanResults result = null;
+            log.info("--------------------- Initiating new {} scan ---------------------", scanType);
+            ASTResultsWrapper internalResults = new ASTResultsWrapper(new SCAResults(), new ASTResults());            
+            try {
+                ScanParams internalScanParams = toSdkScanParams(scanRequest, path);
+                internalResults = client.scan(internalScanParams);
+                logRequest(scanRequest, internalResults, OperationResult.successful());
+                result = toScanResults(internalResults);
+            } catch (Exception e) {
+                treatError(scanRequest, internalResults, e);
+            }
+            return result;
+        });
+        BugTracker.Type bugTrackerType = bugTrackerEventTrigger.triggerBugTrackerEvent(scanRequest);
         ScanResults result = null;
-        log.info("--------------------- Initiating new {} scan ---------------------", scanType);
-        ASTResultsWrapper internalResults = new ASTResultsWrapper(new SCAResults(), new ASTResults());
-
-        try {
-            ScanParams internalScanParams = toSdkScanParams(scanRequest, path);
-            internalResults = client.scan(internalScanParams);
-            logRequest(scanRequest, internalResults, OperationResult.successful());
-            result = toScanResults(internalResults);
-        } catch (Exception e) {
-            treatError(scanRequest, internalResults, e);
+        if (!bugTrackerType.equals(BugTracker.Type.NONE)) {
+            try {
+                result = futureScan.get();
+            } catch (Exception e) {
+                result = null;
+            }
         }
         return result;
     }
