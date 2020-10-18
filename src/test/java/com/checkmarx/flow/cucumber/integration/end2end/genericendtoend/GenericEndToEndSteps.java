@@ -1,10 +1,7 @@
 package com.checkmarx.flow.cucumber.integration.end2end.genericendtoend;
 
 import com.checkmarx.flow.CxFlowApplication;
-import com.checkmarx.flow.config.ADOProperties;
-import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.config.GitHubProperties;
-import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.config.*;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 
 import io.cucumber.java.After;
@@ -19,11 +16,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ConfigurableApplicationContext;
 
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.Charset;
 import java.util.Base64;
 import java.util.Optional;
@@ -46,6 +39,7 @@ public class GenericEndToEndSteps {
      */
     @Autowired GitHubProperties gitHubProperties;
     @Autowired ADOProperties adoProperties;
+    @Autowired GitLabProperties gitLabProperties;
 
     /*
      * bug-trackers
@@ -99,13 +93,15 @@ public class GenericEndToEndSteps {
 
     @When("pushing a change")
     public void pushChange() {
-        String content = null;
+        String base64content = null;
+        String fileTextContent = null;
         try {
-            content = getFileInBase64();
+            base64content = readFileInBase64();
+            fileTextContent = readFile();
         } catch (IOException e) {
             fail("can not read source file");
         }
-        repository.pushFile(content);
+        repository.pushFile(base64content, fileTextContent);
     }
 
     @When("creating pull-request")
@@ -136,14 +132,24 @@ public class GenericEndToEndSteps {
         return engine;
     }
 
-    private String getFileInBase64() throws IOException {
+    private String readFileInBase64() throws IOException {
         String path = new StringJoiner(File.separator)
                 .add("cucumber")
                 .add("data")
                 .add("input-files-toscan")
                 .add("e2e.src")
                 .toString();
-        return readAsBase64(path);
+        return getFileContentAsBase64(path);
+    }
+
+    private String readFile() throws IOException {
+        String path = new StringJoiner(File.separator)
+                .add("cucumber")
+                .add("data")
+                .add("input-files-toscan")
+                .add("e2e.src")
+                .toString();
+        return getFileContent(path);
     }
 
     String getConfigAsCodeInBase64() throws IOException {
@@ -153,18 +159,30 @@ public class GenericEndToEndSteps {
                 .add("input-files-toscan")
                 .add(E2E_CONFIG + ".src")
                 .toString();
-        return readAsBase64(path);
+        return getFileContentAsBase64(path);
     }
 
-    private String readAsBase64(String path) throws IOException {
+    String getConfigAsCodeTextContent() throws IOException {
+        String path = new StringJoiner(File.separator)
+                .add("cucumber")
+                .add("data")
+                .add("input-files-toscan")
+                .add(E2E_CONFIG + ".src")
+                .toString();
+        return getFileContent(path);
+    }
+
+    private String getFileContentAsBase64(String path) throws IOException {
+        return Base64.getEncoder().encodeToString(getFileContent(path).getBytes());
+    }
+
+    private String getFileContent(String path)  throws IOException {
         try (InputStream is = getClass().getClassLoader().getResourceAsStream(path)) {
             try (
                     InputStreamReader isr = new InputStreamReader(is, Charset.forName("UTF-8"));
                     BufferedReader reader = new BufferedReader(isr)
             ) {
-                String content = reader.lines().collect(Collectors.joining(System.lineSeparator()));
-                String encodedString = Base64.getEncoder().encodeToString(content.getBytes());
-                return encodedString;
+                return reader.lines().collect(Collectors.joining(System.lineSeparator()));
             }
         }
     }

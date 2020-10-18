@@ -51,6 +51,10 @@ spec:
               value: {{ .Values.cxflow.jiraProject | quote }}
             - name: AZURE_TOKEN
               value: {{ .Values.cxflow.azureToken | quote }}
+            - name: GITLAB_TOKEN
+              value: {{ .Values.cxflow.gitlabToken | quote }}
+            - name: GITLAB_CONFIG_AS_CODE
+              value: {{ .Values.cxflow.gitlabConfigAsCode | quote }}
             - name: CHECKMARX_TEAM
               value: {{ .Values.cxflow.checkmarxTeam }}
           envFrom:

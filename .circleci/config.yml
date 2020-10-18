@@ -220,6 +220,8 @@ jobs:
               --set cxflow.jiraToken=${JIRA_TOKEN} \
               --set cxflow.jiraProject=${JIRA_PROJECT} \
               --set cxflow.azureToken=${AZURE_TOKEN} \
+              --set cxflow.gitlabToken=${GITLAB_TOKEN} \
+              --set cxflow.gitlabConfigAsCode={GITLAB_CONFIG_AS_CODE} \
               --set ingress.hosts[0].host=<< parameters.release-name >>.${EXTERNAL_DNS_DOMAIN} \
               --set ingress.hosts[0].paths[0]="/*" \
               << parameters.chart >>

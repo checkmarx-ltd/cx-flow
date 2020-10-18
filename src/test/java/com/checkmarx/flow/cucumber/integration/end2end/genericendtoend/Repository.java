@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.checkmarx.flow.config.ADOProperties;
 import com.checkmarx.flow.config.GitHubProperties;
+import com.checkmarx.flow.config.GitLabProperties;
 import com.checkmarx.flow.dto.azure.ConsumerInputs;
 import com.checkmarx.flow.dto.azure.PublisherInputs;
 import com.checkmarx.flow.dto.azure.Subscription;
@@ -32,7 +33,6 @@ import com.checkmarx.sdk.config.ScaProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.platform.commons.PreconditionViolationException;
@@ -109,7 +109,7 @@ enum Repository {
                 String confFile;
                 try {
                     confFile = genericEndToEndSteps.getConfigAsCodeInBase64();
-                    pushFile(confFile , CONFIG_FILE_PATH);
+                    pushFileToBranch(confFile , CONFIG_FILE_PATH);
                 } catch (IOException e) {
                     fail("failed to read config file in base 64 needed by github for sca");
                 }
@@ -141,11 +141,11 @@ enum Repository {
         }
 
         @Override
-        void pushFile(String content) {
-            pushFile(content , filePath);
+        void pushFile(String base64content, String textContent) {
+            pushFileToBranch(base64content , filePath);
         }
 
-        private void pushFile(String content, String theFilePath) {
+        private void pushFileToBranch(String content, String theFilePath) {
             Committer committer = new Committer();
             committer.setName("CxFlowTestUser");
             committer.setEmail("CxFlowTestUser@checkmarx.com");
@@ -446,8 +446,8 @@ enum Repository {
         }
 
         @Override
-        void pushFile(String content) {
-            String data = null;
+        void pushFile(String base64content, String textContent) {
+            String data;
             String commitFilePath = getPushesFormat();
             String Path = "/encode.frm";
             final RestTemplate restTemplate = new RestTemplate();
@@ -455,7 +455,7 @@ enum Repository {
             ObjectMapper mapper = new ObjectMapper();
             String oldObject = getLastOldObject();
 
-            ObjectNode commit = createCommit(Path, content, oldObject);
+            ObjectNode commit = createCommit(Path, base64content, oldObject);
 
             try {
 
@@ -669,8 +669,158 @@ enum Repository {
             throw new PendingException();
         }
 
+    },
+    GITLAB {
+
+        private static final String GET_PROJECT_URL = "/projects?search=";
+        private static final String GET_HOOKS_URL = "/projects/{id}/hooks";
+        private static final String CREATE_WEBHOOK_URL = "/projects/{id}/hooks?url={webhook}&token={token}";
+        private static final String DELETE_WEBHOOK_URL = "/projects/{id}/hooks/{webhookId}";
+        private static final String COMMIT_URL = "/projects/{id}/repository/commits";
+        private static final String FILE_PATH = "/encode.frm";
+
+        GitLabProperties gitLabProperties;
+        private  Integer projectId = null;
+        private Integer webhookId = null;
+        private String projectName = "CxFlow-Gitlab-E2E-Test";
+
+
+
+        @Override
+        protected void init(GenericEndToEndSteps genericEndToEndSteps) {
+            gitLabProperties = genericEndToEndSteps.gitLabProperties;
+            super.init(genericEndToEndSteps);
+            projectId = getProjectId();
+        }
+
+        @Override
+        Boolean hasWebHook() {
+            log.info("checking if webhook exist in project {}", projectId);
+            HttpEntity<String> httpEntity = new HttpEntity<>(getHeaders());
+            String hooksUrl = String.format("%s%s", gitLabProperties.getApiUrl(), GET_HOOKS_URL);
+            ResponseEntity<String> response = restTemplate.exchange(hooksUrl, HttpMethod.GET, httpEntity, String.class, projectId);
+            JSONArray jsonArray = new JSONArray(response.getBody());
+
+            return !jsonArray.isEmpty();
+        }
+
+        private int getProjectId()
+        {
+            String getProjectsUrl = String.format("%s%s%s", gitLabProperties.getApiUrl(), GET_PROJECT_URL, projectName);
+            HttpEntity<String> httpEntity = new HttpEntity<>(getHeaders());
+            ResponseEntity<String> response = restTemplate.exchange(getProjectsUrl, HttpMethod.GET, httpEntity, String.class);
+
+            JSONArray jsonArray = new JSONArray(response.getBody());
+            JSONObject obj = jsonArray.getJSONObject(0);
+
+            int responseProjectId = obj.getInt("id");
+            log.info("found project Id: '{}' for project '{}'", responseProjectId, projectName);
+            return  obj.getInt("id");
+        }
+
+        @Override
+        void generateHook(HookType hookType) {
+
+            log.info("creating new webhook to project '{}'", projectId);
+            String hooksUrl = String.format("%s%s", gitLabProperties.getApiUrl(), CREATE_WEBHOOK_URL);
+            HttpEntity<String> httpEntity = new HttpEntity<>(getHeaders());
+            ResponseEntity<String> response = restTemplate.exchange(hooksUrl, HttpMethod.POST, httpEntity, String.class, projectId, hookTargetURL, gitLabProperties.getWebhookToken());
+            JSONObject obj = new JSONObject(response.getBody());
+            webhookId = obj.getInt("id");
+            log.info("webhook created with Id: '{}'", webhookId);
+        }
+
+        @Override
+        void pushFile(String base64content, String textContent) {
+            log.info("pushing file '{}' tp project", FILE_PATH);
+
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("branch", "master");
+            jsonObject.put("commit_message", "pushing file");
+            JSONArray jsonArray = new JSONArray();
+            JSONObject actionObject = new JSONObject();
+            actionObject.put("action", "create");
+            actionObject.put("file_path", FILE_PATH);
+            actionObject.put("content", textContent);
+            jsonArray.put(actionObject);
+            jsonObject.put("actions", jsonArray);
+
+
+            String commitUrl = String.format("%s%s", gitLabProperties.getApiUrl(), COMMIT_URL);
+            HttpEntity<String> httpEntity = new HttpEntity<>(jsonObject.toString(), getHeaders());
+
+            ResponseEntity<String> response = restTemplate.exchange(commitUrl, HttpMethod.POST, httpEntity, String.class, projectId);
+            JSONObject obj = new JSONObject(response.getBody());
+        }
+
+        @Override
+        void generateConfigAsCode(GenericEndToEndSteps genericEndToEndSteps) {
+
+        }
+
+        @Override
+        void deleteHook() {
+            String hooksUrl = String.format("%s%s", gitLabProperties.getApiUrl(), DELETE_WEBHOOK_URL);
+            HttpEntity<String> httpEntity = new HttpEntity<>(getHeaders());
+            ResponseEntity<String> response = restTemplate.exchange(hooksUrl, HttpMethod.DELETE, httpEntity, String.class, projectId, webhookId);
+            if(response.getStatusCode().equals(HttpStatus.NO_CONTENT))
+            {
+                log.info("webhook Id: '{}' deleted successfully", webhookId);
+            }
+            else
+            {
+                log.info("failed to delete webhook '{}'. status code '{}", webhookId, response.getStatusCode());
+            }
+        }
+
+        @Override
+        HttpHeaders getHeaders() {
+            HttpHeaders httpHeaders = new HttpHeaders();
+            httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+            httpHeaders.set("PRIVATE-TOKEN", gitLabProperties.getToken());
+            httpHeaders.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+            return httpHeaders;
+        }
+
+        @Override
+        void deleteFile() {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("branch", "master");
+            jsonObject.put("commit_message", "deleting file from branch");
+            JSONArray jsonArray = new JSONArray();
+            JSONObject actionObject = new JSONObject();
+            actionObject.put("action", "delete");
+            actionObject.put("file_path", FILE_PATH);
+            jsonArray.put(actionObject);
+            jsonObject.put("actions", jsonArray);
+
+
+            String commitUrl = String.format("%s%s", gitLabProperties.getApiUrl(), COMMIT_URL);
+            HttpEntity<String> httpEntity = new HttpEntity<>(jsonObject.toString(), getHeaders());
+
+            log.info("deleting file: {}", jsonObject.toString());
+            ResponseEntity<String> response = restTemplate.exchange(commitUrl, HttpMethod.POST, httpEntity, String.class, projectId);
+            JSONObject obj = new JSONObject(response.getBody());
+        }
+
+        @Override
+        void createPR() {
+
+        }
+
+        @Override
+        void deletePR() {
+
+
+        }
+
+        @Override
+        void verifyPRUpdated(String engine) {
+
+        }
     };
 
+    protected final RestTemplate restTemplate = new RestTemplate();
     private HookType hookType;
     /* where to push the file */
     static final String filePath = "src/main/java/sample/encode.frm";
@@ -703,14 +853,6 @@ enum Repository {
         }
     }
 
-    protected void generateWebHook(HookType hookType) {
-        log.info("testing if repository already has hooks configured");
-        assertTrue(!hasWebHook(), "repository already has hooks configured");
-        this.hookType = hookType;
-        log.info("creating the webhook ({})", hookType);
-        generateHook(hookType);
-    }
-
     protected Properties getProperties(String propertiesName) {
         Properties prop = new Properties();
         String path = new StringJoiner(File.separator, File.separator, "")
@@ -733,6 +875,14 @@ enum Repository {
         return prop;
     }
 
+    protected void generateWebHook(HookType hookType) {
+        log.info("testing if repository already has hooks configured");
+        assertTrue(!hasWebHook(), "repository already has hooks configured");
+        this.hookType = hookType;
+        log.info("creating the webhook ({})", hookType);
+        generateHook(hookType);
+    }
+
     abstract Boolean hasWebHook();
 
     abstract void generateHook(HookType hookType);
@@ -741,7 +891,7 @@ enum Repository {
 
     abstract HttpHeaders getHeaders();
 
-    abstract void pushFile(String content);
+    abstract void pushFile(String base64content, String textContent);
 
     protected ResponseEntity<String> getResponseEntity(String requestUrl) {
         RestTemplate restTemplate = new RestTemplate();
