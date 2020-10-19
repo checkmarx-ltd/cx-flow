@@ -682,7 +682,7 @@ enum Repository {
         GitLabProperties gitLabProperties;
         private  Integer projectId = null;
         private Integer webhookId = null;
-        private String projectName = "CxFlow-Gitlab-E2E-Test";
+        //private String projectName = "CxFlow-Gitlab-E2E-Test";
 
 
 
@@ -691,8 +691,6 @@ enum Repository {
             gitLabProperties = genericEndToEndSteps.gitLabProperties;
             super.init(genericEndToEndSteps);
             projectId = getProjectId();
-            log.info("using gitlab project name: '{}'", repo);
-            log.info("using webhook: {}", gitLabProperties.getWebhookToken());
         }
 
         @Override
@@ -708,6 +706,7 @@ enum Repository {
 
         private int getProjectId()
         {
+            String projectName = repo;
             String getProjectsUrl = String.format("%s%s%s", gitLabProperties.getApiUrl(), GET_PROJECT_URL, projectName);
             HttpEntity<String> httpEntity = new HttpEntity<>(getHeaders());
             ResponseEntity<String> response = restTemplate.exchange(getProjectsUrl, HttpMethod.GET, httpEntity, String.class);
