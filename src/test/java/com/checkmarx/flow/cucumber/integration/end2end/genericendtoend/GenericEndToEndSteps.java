@@ -31,6 +31,7 @@ public class GenericEndToEndSteps {
     static final String E2E_CONFIG = "cx.config";
     static final String BRANCH_MASTER = "master";
     static final String BRANCH_DEVELOP = "develop";
+    static final String FILE_WITH_VULNERABILITIES = "e2e.src";
 
     @Autowired
     private FlowProperties flowProperties;
@@ -137,7 +138,7 @@ public class GenericEndToEndSteps {
                 .add("cucumber")
                 .add("data")
                 .add("input-files-toscan")
-                .add("e2e.src")
+                .add(FILE_WITH_VULNERABILITIES)
                 .toString();
         return getFileContentAsBase64(path);
     }
@@ -147,7 +148,7 @@ public class GenericEndToEndSteps {
                 .add("cucumber")
                 .add("data")
                 .add("input-files-toscan")
-                .add("e2e.src")
+                .add(FILE_WITH_VULNERABILITIES)
                 .toString();
         return getFileContent(path);
     }
@@ -162,12 +163,12 @@ public class GenericEndToEndSteps {
         return getFileContentAsBase64(path);
     }
 
-    String getConfigAsCodeTextContent() throws IOException {
+    String getConfigAsCodeTextContent(String fileName) throws IOException {
         String path = new StringJoiner(File.separator)
                 .add("cucumber")
                 .add("data")
                 .add("input-files-toscan")
-                .add(E2E_CONFIG + ".src")
+                .add(fileName)
                 .toString();
         return getFileContent(path);
     }

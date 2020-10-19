@@ -51,9 +51,7 @@ enum BugTracker {
 
         @Override
         void verifyIssueCreated(String severities, String engine) {
-            jqlQuery =  (CxProperties.CONFIG_PREFIX.equalsIgnoreCase(engine))
-                    ? String.format("project = %s and priority  in %s", jiraProperties.getProject(), severities)
-                    : String.format("project = %s and summary ~\"CVE-?\"", jiraProperties.getProject());
+            jqlQuery =  String.format("project = %s", jiraProperties.getProject());
             log.info("filtering issue with jql: {}", jqlQuery);
             Set<String> fields = new HashSet<>();
             fields.addAll(

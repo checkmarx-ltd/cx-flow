@@ -677,12 +677,13 @@ enum Repository {
         private static final String CREATE_WEBHOOK_URL = "/projects/{id}/hooks?url={webhook}&token={token}";
         private static final String DELETE_WEBHOOK_URL = "/projects/{id}/hooks/{webhookId}";
         private static final String COMMIT_URL = "/projects/{id}/repository/commits";
-        private static final String FILE_PATH = "/encode.frm";
+        private static final String CODE_FILE_PATH = "/encode.frm";
+        private static final String GITLAB_CONFIG_AS_CODE_FILE = "cx.gitlab.configuration";
+        private static final String GITLAB_CONFIG_AS_CODE_PATH = "/cx.gitlab.configuration";
 
         GitLabProperties gitLabProperties;
         private  Integer projectId = null;
         private Integer webhookId = null;
-        //private String projectName = "CxFlow-Gitlab-E2E-Test";
 
 
 
@@ -731,9 +732,8 @@ enum Repository {
             log.info("webhook created with Id: '{}'", webhookId);
         }
 
-        @Override
-        void pushFile(String base64content, String textContent) {
-            log.info("pushing file '{}' tp project", FILE_PATH);
+        private void pushFileToBranch(String textContent, String path){
+            log.info("pushing file '{}' tp project '{}' ", path, projectId);
 
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("branch", "master");
@@ -741,7 +741,7 @@ enum Repository {
             JSONArray jsonArray = new JSONArray();
             JSONObject actionObject = new JSONObject();
             actionObject.put("action", "create");
-            actionObject.put("file_path", FILE_PATH);
+            actionObject.put("file_path", path);
             actionObject.put("content", textContent);
             jsonArray.put(actionObject);
             jsonObject.put("actions", jsonArray);
@@ -755,8 +755,19 @@ enum Repository {
         }
 
         @Override
-        void generateConfigAsCode(GenericEndToEndSteps genericEndToEndSteps) {
+        void pushFile(String base64content, String textContent) {
+            pushFileToBranch(textContent, CODE_FILE_PATH);
+        }
 
+        @Override
+        void generateConfigAsCode(GenericEndToEndSteps genericEndToEndSteps) {
+            try{
+                String content = genericEndToEndSteps.getConfigAsCodeTextContent(GITLAB_CONFIG_AS_CODE_FILE);
+                pushFileToBranch(content, GITLAB_CONFIG_AS_CODE_PATH);
+            }catch (IOException ex)
+            {
+                log.info("failed to read config as code file: {}", GITLAB_CONFIG_AS_CODE_FILE);
+            }
         }
 
         @Override
@@ -785,13 +796,19 @@ enum Repository {
 
         @Override
         void deleteFile() {
+            deleteFileFromBranch(CODE_FILE_PATH);
+            deleteFileFromBranch(GITLAB_CONFIG_AS_CODE_PATH);
+        }
+
+        private void deleteFileFromBranch(String path)
+        {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("branch", "master");
             jsonObject.put("commit_message", "deleting file from branch");
             JSONArray jsonArray = new JSONArray();
             JSONObject actionObject = new JSONObject();
             actionObject.put("action", "delete");
-            actionObject.put("file_path", FILE_PATH);
+            actionObject.put("file_path", path);
             jsonArray.put(actionObject);
             jsonObject.put("actions", jsonArray);
 
