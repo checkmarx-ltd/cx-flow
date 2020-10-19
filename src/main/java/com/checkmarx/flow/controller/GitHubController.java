@@ -261,7 +261,12 @@ public class GitHubController extends WebhookController {
         } catch (NullPointerException | IOException | IllegalArgumentException e) {
             throw new MachinaRuntimeException(e);
         }
-
+        // Delete event is triggering a push event that needs to be ignored
+        if(event.getDeleted() != null && event.getDeleted()){
+            log.info("Push event is associated with a Delete branch event...ignoring request");
+            return getSuccessMessage();
+        }
+        
         gitHubService.initConfigProviderOnPushEvent(uid, event);
 
         if (flowProperties == null || cxProperties == null) {
