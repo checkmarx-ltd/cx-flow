@@ -93,28 +93,28 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
     }
 
     public ScanResults scan(ScanRequest scanRequest, String path) throws ExitThrowable {
-        CompletableFuture<ScanResults> futureScan = CompletableFuture.supplyAsync(() -> {
-            ScanResults result = null;
-            log.info("--------------------- Initiating new {} scan ---------------------", scanType);
-            ASTResultsWrapper internalResults = new ASTResultsWrapper(new SCAResults(), new ASTResults());            
-            try {
-                ScanParams internalScanParams = toSdkScanParams(scanRequest, path);
-                internalResults = client.scan(internalScanParams);
-                logRequest(scanRequest, internalResults, OperationResult.successful());
-                result = toScanResults(internalResults);
-            } catch (Exception e) {
-                treatError(scanRequest, internalResults, e);
-            }
-            return result;
-        });
         BugTracker.Type bugTrackerType = bugTrackerEventTrigger.triggerBugTrackerEvent(scanRequest);
         ScanResults result = null;
-        if (!bugTrackerType.equals(BugTracker.Type.NONE)) {
-            try {
-                result = futureScan.get();
-            } catch (Exception e) {
-                result = null;
-            }
+        if (bugTrackerType.equals(BugTracker.Type.NONE)) {
+            log.info("Not waiting for scan completion as Bug Tracker type is NONE");
+            CompletableFuture.supplyAsync(() -> actualScan(scanRequest, path));
+        } else {
+            result = actualScan(scanRequest, path);
+        }
+        return result;
+    }
+
+    private ScanResults actualScan(ScanRequest scanRequest, String path) {
+        ScanResults result = null;
+        log.info("--------------------- Initiating new {} scan ---------------------", scanType);
+        ASTResultsWrapper internalResults = new ASTResultsWrapper(new SCAResults(), new ASTResults());            
+        try {
+            ScanParams internalScanParams = toSdkScanParams(scanRequest, path);
+            internalResults = client.scan(internalScanParams);
+            logRequest(scanRequest, internalResults, OperationResult.successful());
+            result = toScanResults(internalResults);
+        } catch (Exception e) {
+            treatError(scanRequest, internalResults, e);
         }
         return result;
     }
