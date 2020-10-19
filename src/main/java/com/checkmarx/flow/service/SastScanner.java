@@ -7,6 +7,8 @@ import com.checkmarx.flow.exception.*;
 import com.checkmarx.flow.sastscanning.ScanRequestConverter;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.flow.utils.ZipUtils;
+import com.checkmarx.sdk.ShardManager.ShardConfig;
+import com.checkmarx.sdk.ShardManager.ShardSession;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.ScanResults;
@@ -15,6 +17,13 @@ import com.checkmarx.sdk.dto.cx.CxScanParams;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
 import com.checkmarx.sdk.service.CxOsaClient;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import groovy.lang.Binding;
+import groovy.lang.GroovyRuntimeException;
+import groovy.util.GroovyScriptEngine;
+import groovy.util.ResourceException;
+import groovy.util.ScriptException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -67,7 +76,23 @@ public class SastScanner implements VulnerabilityScanner {
             Integer projectId = cxScanParams.getProjectId();
 
             log.info("Checking if there is any existing scan for Project: {}", projectId);
-            Integer existingScanId = cxService.getScanIdOfExistingScanIfExists(projectId);
+                Integer existingScanId = cxService.getScanIdOfExistingScanIfExists(projectId);
+
+            String scanComment = getComment(scanRequest);
+            if(cxProperties.getEnablePostActionMonitor()) {
+                //scanComment += (";" + scanRequest.getTeam() + ";");
+                scanComment += (";" + scanRequest.getNamespace() + ";");
+                scanComment += (scanRequest.getApplication() + ";");
+                scanComment += (scanRequest.getBranch() + ";");
+                scanComment += (scanRequest.getMergeNoteUri() + ";");
+                scanComment += (scanRequest.getAdditionalMetadata("statuses_url") + ";");
+                BugTracker bt = scanRequest.getBugTracker();
+                if(bt.getType().getType().equals("GITHUBPULL")) {
+                    scanComment += "PULL";
+                } else {
+                    scanComment += "PUSH";
+                }
+            }
 
             if (existingScanId != UNKNOWN_INT) {
                 if (flowProperties.getScanResubmit()) {
@@ -75,30 +100,34 @@ public class SastScanner implements VulnerabilityScanner {
                     log.info("Aborting the ongoing scan with id {} for Project: {}", existingScanId, projectId);
                     cxService.cancelScan(existingScanId);
                     log.info("Resubmitting the scan for Project: {}", projectId);
-                    scanId = cxService.createScan(cxScanParams, getComment(scanRequest));
+                    scanId = cxService.createScan(cxScanParams, scanComment);
                 } else {
                     log.warn("Property scan-resubmit set to {} : New scan not submitted, due to existing ongoing scan for the same Project id {}", flowProperties.getScanResubmit(), projectId);
                     bugTrackerEventTrigger.triggerScanNotSubmittedBugTrackerEvent(scanRequest, getEmptyScanResults());
                     throw new CheckmarxException(String.format("Active Scan with Id %d already exists for Project: %d", existingScanId, projectId));
                 }
             } else {
-                scanId = cxService.createScan(cxScanParams, getComment(scanRequest));
+                scanId = cxService.createScan(cxScanParams, scanComment);
             }
 
-            BugTracker.Type bugTrackerType = bugTrackerEventTrigger.triggerBugTrackerEvent(scanRequest);
-            if (bugTrackerType.equals(BugTracker.Type.NONE)) {
-                scanDetails = handleNoneBugTrackerCase(scanRequest, null, scanId, projectId);
+            if(!cxProperties.getEnablePostActionMonitor()) {
+                BugTracker.Type bugTrackerType = bugTrackerEventTrigger.triggerBugTrackerEvent(scanRequest);
+                if (bugTrackerType.equals(BugTracker.Type.NONE)) {
+                    scanDetails = handleNoneBugTrackerCase(scanRequest, null, scanId, projectId);
+                } else {
+                    cxService.waitForScanCompletion(scanId);
+                    projectId = handleUnKnownProjectId(cxScanParams.getProjectId(), cxScanParams.getTeamId(), cxScanParams.getProjectName());
+                    scanDetails = new ScanDetails(projectId, scanId, null);
+                }
+                logRequest(scanRequest, scanId, null, OperationResult.successful());
+
+                scanResults = cxService.getReportContentByScanId(scanId, scanRequest.getFilter());
+                scanResults.setSastScanId(scanId);
+                return scanResults;
             } else {
-                cxService.waitForScanCompletion(scanId);
-                projectId = handleUnKnownProjectId(cxScanParams.getProjectId(), cxScanParams.getTeamId(), cxScanParams.getProjectName());
-                scanDetails = new ScanDetails(projectId, scanId, null);
+                bugTrackerEventTrigger.triggerBugTrackerEvent(scanRequest);
+                return getEmptyScanResults();
             }
-            logRequest(scanRequest, scanId, null, OperationResult.successful());
-
-            scanResults = cxService.getReportContentByScanId(scanId, scanRequest.getFilter());
-            scanResults.setSastScanId(scanId);
-            return scanResults;
-
         } catch (GitHubRepoUnavailableException e) {
             //the repository is unavailable - can happen for a push event of a deleted branch - nothing to do
 
