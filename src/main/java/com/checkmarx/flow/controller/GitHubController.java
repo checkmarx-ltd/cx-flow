@@ -1,8 +1,5 @@
 package com.checkmarx.flow.controller;
 
-import com.checkmarx.configprovider.ConfigProvider;
-import com.checkmarx.configprovider.dto.SourceProviderType;
-import com.checkmarx.configprovider.readers.RepoReader;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.config.JiraProperties;
@@ -34,7 +31,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.PostConstruct;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import javax.naming.ConfigurationException;
 import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.nio.charset.Charset;

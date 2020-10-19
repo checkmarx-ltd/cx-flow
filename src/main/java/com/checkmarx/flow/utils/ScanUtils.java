@@ -10,7 +10,6 @@ import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.ast.SCAResults;
 import com.cx.restclient.ast.dto.sast.report.FindingNode;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
-import com.cx.restclient.ast.dto.sast.report.StatusCounter;
 import com.cx.restclient.ast.dto.sca.report.Finding;
 import com.cx.restclient.ast.dto.sca.report.Package;
 import com.fasterxml.jackson.databind.ObjectMapper;
