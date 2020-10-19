@@ -55,6 +55,8 @@ spec:
               value: {{ .Values.cxflow.gitlabToken | quote }}
             - name: GITLAB_CONFIG_AS_CODE
               value: {{ .Values.cxflow.gitlabConfigAsCode | quote }}
+            - name: GITLAB_WEBHOOK_TOKEN
+              value: {{ .Values.cxflow.gitlabWebhookToken | quote }}
             - name: CHECKMARX_TEAM
               value: {{ .Values.cxflow.checkmarxTeam }}
           envFrom:

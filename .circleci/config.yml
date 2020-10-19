@@ -222,6 +222,7 @@ jobs:
               --set cxflow.azureToken=${AZURE_TOKEN} \
               --set cxflow.gitlabToken=${GITLAB_TOKEN} \
               --set cxflow.gitlabConfigAsCode={GITLAB_CONFIG_AS_CODE} \
+              --set cxflow.gitlabWebhookToken=${GITLAB_WEBHOOK_TOKEN} \
               --set ingress.hosts[0].host=<< parameters.release-name >>.${EXTERNAL_DNS_DOMAIN} \
               --set ingress.hosts[0].paths[0]="/*" \
               << parameters.chart >>
@@ -282,7 +283,8 @@ jobs:
           command: |
             export GITHUB_HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
             export ADO_HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
-            ./gradlew clean e2eTests --info -DGITHUB_target=${GITHUB_HOOK_TARGET} -DGITHUB_repo=${GITHUB_HOOK_REPO} -DGITHUB_repo_SCA=${GITHUB_HOOK_REPO_SCA} -DGITHUB_namespace=${GITHUB_HOOK_NAMESPACE} -DADO_target=${ADO_HOOK_TARGET} -DADO_repo=${ADO_HOOK_REPO} -DADO_namespace=${ADO_HOOK_NAMESPACE} -DGITLAB_target=${GITHUB_HOOK_TARGET} -DGITLAB_repo=${GITLAB_HOOK_REPO} -DGITLAB_namespace=${GITLAB_HOOK_NAMESPACE}
+            export GITLAB_HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
+            ./gradlew clean e2eTests --info -DGITHUB_target=${GITHUB_HOOK_TARGET} -DGITHUB_repo=${GITHUB_HOOK_REPO} -DGITHUB_repo_SCA=${GITHUB_HOOK_REPO_SCA} -DGITHUB_namespace=${GITHUB_HOOK_NAMESPACE} -DADO_target=${ADO_HOOK_TARGET} -DADO_repo=${ADO_HOOK_REPO} -DADO_namespace=${ADO_HOOK_NAMESPACE} -DGITLAB_target=${GITLAB_HOOK_TARGET} -DGITLAB_repo=${GITLAB_HOOK_REPO} -DGITLAB_namespace=${GITLAB_HOOK_NAMESPACE}
       - run:
           name: Save test results
           command: |
