@@ -86,7 +86,7 @@ public class GitHubService extends RepoService {
     }
 
     private HttpHeaders createAuthHeaders(ScanRequest scanRequest){
-        HttpHeaders httpHeaders;;
+        HttpHeaders httpHeaders;
         if(!StringUtils.isEmpty(properties.getAppId()) &&
                 !StringUtils.isEmpty(properties.getAppKeyFile()) &&
                 scanRequest.getAdditionalMetadata(FlowConstants.GITHUB_APP_INSTALLATION_ID) != null

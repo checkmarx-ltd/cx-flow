@@ -40,7 +40,7 @@ import javax.annotation.PostConstruct;
 @Service
 @Slf4j
 public class GitHubAppAuthService {
-    private static final String INSTALLATION_TOKEN_PATH = "/installations/{installation_id}/access_tokens";
+    private static final String INSTALLATION_TOKEN_PATH = "/installations/{installation_id}/access_tokens"; // NOSONAR
     private static final String BEARER_HEADER = "Bearer ";
     private final RestTemplate restTemplate;
     private final GitHubProperties properties;
