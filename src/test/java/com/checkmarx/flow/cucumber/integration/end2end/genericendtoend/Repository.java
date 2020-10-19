@@ -5,18 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
-
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
+
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Properties;
-import java.util.StringJoiner;
 import java.util.concurrent.TimeUnit;
 
 import com.checkmarx.flow.config.ADOProperties;
@@ -29,7 +24,6 @@ import com.checkmarx.flow.dto.github.Committer;
 import com.checkmarx.flow.dto.github.Hook;
 import com.checkmarx.flow.dto.rally.Object;
 import com.checkmarx.flow.utils.MarkDownHelper;
-import com.checkmarx.sdk.config.ScaProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -221,7 +215,6 @@ enum Repository {
         protected void init(GenericEndToEndSteps genericEndToEndSteps) {
             gitHubProperties = genericEndToEndSteps.gitHubProperties;
             api = new GitHubApiHandler();
-            super.init(genericEndToEndSteps);
         }
 
         @Override
@@ -633,7 +626,6 @@ enum Repository {
         @Override
         protected void init(GenericEndToEndSteps genericEndToEndSteps) {
             adoProperties = genericEndToEndSteps.adoProperties;
-            super.init(genericEndToEndSteps);
         }
 
         @Override
@@ -690,7 +682,6 @@ enum Repository {
         @Override
         protected void init(GenericEndToEndSteps genericEndToEndSteps) {
             gitLabProperties = genericEndToEndSteps.gitLabProperties;
-            super.init(genericEndToEndSteps);
             projectId = getProjectId();
         }
 
@@ -850,48 +841,7 @@ enum Repository {
         return repo;
     }
 
-    protected void init(GenericEndToEndSteps genericEndToEndSteps) {
-        String upperCaseName = name().toUpperCase();
-        boolean isSca = ScaProperties.CONFIG_PREFIX.equalsIgnoreCase(genericEndToEndSteps.getEngine());
-        if (
-                System.getenv(upperCaseName + "_HOOK_NAMESPACE") == null ||
-                System.getenv(upperCaseName + "_HOOK_REPO") == null ||
-                System.getenv(upperCaseName + "_HOOK_TARGET") == null
-        ) {
-            log.info("running with property file");
-            Properties properties = getProperties("HookProperties");
-            namespace = properties.getProperty(upperCaseName + "_namespace");
-            repo = properties.getProperty(upperCaseName + "_repo" + (isSca ? "_SCA" : "" ) );
-            hookTargetURL = properties.getProperty(upperCaseName + "_target");
-        } else {
-            log.info("running with system variables");
-            namespace = System.getenv(upperCaseName + "_HOOK_NAMESPACE");
-            repo = System.getenv(upperCaseName + "_HOOK_REPO" + (isSca ? "_SCA" : "" ));
-            hookTargetURL = System.getenv(upperCaseName + "_HOOK_TARGET");
-        }
-    }
-
-    protected Properties getProperties(String propertiesName) {
-        Properties prop = new Properties();
-        String path = new StringJoiner(File.separator, File.separator, "")
-                .add("cucumber")
-                .add("features")
-                .add("e2eTests")
-                .add(String.format("%s_%s.properties", propertiesName, name().toUpperCase()))
-                .toString();
-        try (InputStream is = getClass().getClassLoader().getResourceAsStream(path)) {
-            prop.load(is);
-        } catch (NullPointerException | FileNotFoundException e) {
-            log.info("to run this test you need a file called {}", path);
-            log.info("the file should have the following properties: \nnamespace\nrepo\ntarget");
-            log.info("class loader used {}", getClass().getClassLoader());
-            fail("property file not found (" + path + ") " + e.getMessage());
-        } catch (IOException e) {
-            log.error("please verify that the file {} is ok", path);
-            fail("could not read properties file (" + path + ") " + e.getMessage());
-        }
-        return prop;
-    }
+    abstract void init(GenericEndToEndSteps genericEndToEndSteps);
 
     protected void generateWebHook(HookType hookType) {
         log.info("testing if repository already has hooks configured");
@@ -924,11 +874,15 @@ enum Repository {
     abstract void deletePR();
     abstract void verifyPRUpdated(String engine);
 
+
     protected String namespace = null;
     protected String repo = null;
     protected String hookTargetURL = null;
     protected String activeBranch;
 
+    public void setNamespace(String namespace){ this.namespace = namespace;}
+    public void setRepoName(String repoName){ this.repo = repoName;}
+    public void setHookUrl(String hookTargetURL){ this.hookTargetURL = hookTargetURL;}
     public void setActiveBranch(String branch){
         log.info("setting active branch to: {}", branch);
         activeBranch = branch;

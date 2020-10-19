@@ -4,6 +4,7 @@ import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.*;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 
+import com.checkmarx.sdk.config.ScaProperties;
 import io.cucumber.java.After;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
@@ -20,6 +21,7 @@ import java.io.*;
 import java.nio.charset.Charset;
 import java.util.Base64;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
@@ -61,6 +63,50 @@ public class GenericEndToEndSteps {
     @And("repository is {word}")
     public void setRepository(String repository) {
         this.repository = Repository.setTo(repository, this);
+        readEnvironmentProperties();
+    }
+
+    private void readEnvironmentProperties(){
+        String upperCaseName = repository.name().toUpperCase();
+        boolean isSca = ScaProperties.CONFIG_PREFIX.equalsIgnoreCase(getEngine());
+        if (
+                System.getenv(upperCaseName + "_HOOK_NAMESPACE") == null ||
+                        System.getenv(upperCaseName + "_HOOK_REPO") == null ||
+                        System.getenv(upperCaseName + "_HOOK_TARGET") == null
+        ) {
+            log.info("running with property file");
+            Properties properties = getProperties("HookProperties");
+            repository.setNamespace(properties.getProperty(upperCaseName + "_namespace"));
+            repository.setRepoName(properties.getProperty(upperCaseName + "_repo" + (isSca ? "_SCA" : "" )) );
+            repository.setHookUrl(properties.getProperty(upperCaseName + "_target"));
+        } else {
+            log.info("running with system variables");
+            repository.setNamespace(System.getenv(upperCaseName + "_HOOK_NAMESPACE"));
+            repository.setRepoName(System.getenv(upperCaseName + "_HOOK_REPO" + (isSca ? "_SCA" : "" )));
+            repository.setHookUrl(System.getenv(upperCaseName + "_HOOK_TARGET"));
+        }
+    }
+
+    private Properties getProperties(String propertiesName) {
+        Properties prop = new Properties();
+        String path = new StringJoiner(File.separator, File.separator, "")
+                .add("cucumber")
+                .add("features")
+                .add("e2eTests")
+                .add(String.format("%s_%s.properties", propertiesName, repository.name().toUpperCase()))
+                .toString();
+        try (InputStream is = getClass().getClassLoader().getResourceAsStream(path)) {
+            prop.load(is);
+        } catch (NullPointerException | FileNotFoundException e) {
+            log.info("to run this test you need a file called {}", path);
+            log.info("the file should have the following properties: \nnamespace\nrepo\ntarget");
+            log.info("class loader used {}", getClass().getClassLoader());
+            fail("property file not found (" + path + ") " + e.getMessage());
+        } catch (IOException e) {
+            log.error("please verify that the file {} is ok", path);
+            fail("could not read properties file (" + path + ") " + e.getMessage());
+        }
+        return prop;
     }
 
     @And("bug-tracker is {word}")
