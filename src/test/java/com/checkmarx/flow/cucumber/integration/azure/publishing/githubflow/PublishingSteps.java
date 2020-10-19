@@ -54,6 +54,7 @@ public class PublishingSteps extends PublishingStepsBase {
     private final CxProperties cxProperties;
     private final HelperService helperService;
     private final GitHubService gitHubService;
+    private final GitHubAppAuthService gitHubAppAuthService;
     private final ResultsService resultsService;
     private final VulnerabilityScanner sastScanner;
     private final FilterFactory filterFactory;
@@ -143,7 +144,7 @@ public class PublishingSteps extends PublishingStepsBase {
         FlowService flowService = new FlowService(vulnerabilityScannerList, projectNameGenerator, resultsService);
 
         return new GitHubController(gitHubProperties, flowProperties, cxProperties,
-                null, flowService, helperService, gitHubService, null, filterFactory, configOverrider,
+                null, flowService, helperService, gitHubService, gitHubAppAuthService,null, filterFactory, configOverrider,
                 scmConfigOverrider);
     }
 

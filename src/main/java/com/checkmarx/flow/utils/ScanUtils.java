@@ -10,7 +10,6 @@ import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.ast.SCAResults;
 import com.cx.restclient.ast.dto.sast.report.FindingNode;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
-import com.cx.restclient.ast.dto.sast.report.StatusCounter;
 import com.cx.restclient.ast.dto.sca.report.Finding;
 import com.cx.restclient.ast.dto.sca.report.Package;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -582,5 +581,15 @@ public class ScanUtils {
                 .append(urlColonEncode).append(urlCompatiblePackageId).append("/vulnerabilityDetails");
 
         return vulnerabilityUrl.toString();
+    }
+
+    /**
+     * Returns the string with first letter in uppercase and the remainder in lowercase
+     * @param s
+     * @return
+     */
+    public static String toProperCase(String s) {
+        return s.substring(0, 1).toUpperCase() +
+                s.substring(1).toLowerCase();
     }
 }

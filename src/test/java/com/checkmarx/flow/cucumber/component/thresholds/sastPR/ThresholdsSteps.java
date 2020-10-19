@@ -2,8 +2,11 @@ package com.checkmarx.flow.cucumber.component.thresholds.sastPR;
 
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.*;
+import com.checkmarx.flow.cucumber.common.utils.TestUtils;
+import com.checkmarx.flow.cucumber.integration.cli.IntegrationTestContext;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.sdk.config.Constants;
@@ -11,6 +14,7 @@ import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
+import com.checkmarx.sdk.dto.cx.CxProject;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
@@ -22,6 +26,7 @@ import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.mockito.ArgumentMatchers;
@@ -34,6 +39,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -52,10 +58,13 @@ import static org.mockito.Mockito.*;
 public class ThresholdsSteps {
     
     private static final String PULL_REQUEST_STATUSES_URL = "statuses url stub";
+    private static final String CLI_COMMAND = "--project  --cx-project=test --app=MyApp --branch=master --repo-name=CLI-Tests --namespace=CxFlow --blocksysexit";
     private static final String MERGE_NOTE_URL = "merge note url stub";
-    
+    private static  final String DEFAULT_SEVERITY_HIGH = "HIGH";
+    private static final int DEFAULT_FINDINGS_COUNT = 10;
     private static final ObjectMapper mapper = new ObjectMapper();
     private static final String STATUSES_URL_KEY = "statuses_url";
+    private final IntegrationTestContext testContext;
 
     private final CxClient cxClientMock;
     private final RestTemplate restTemplateMock;
@@ -65,32 +74,34 @@ public class ThresholdsSteps {
     private final GitHubProperties gitHubProperties;
     private final ADOProperties adoProperties;
     private final EmailService emailService;
+    private final GitHubAppAuthService gitHubAppAuthService;
     private final ScmConfigOverrider scmConfigOverrider;
+    private final ScaProperties scaProperties;
 
     private ScanResults scanResultsToInject;
     private ResultsService resultsService;
     private Boolean pullRequestWasApproved;
     private Filter filter;
+    private boolean thresholdsSectionExist;
 
-    public ThresholdsSteps(CxClient cxClientMock, RestTemplate restTemplateMock, FlowProperties flowProperties, ADOProperties adoProperties,
+    public ThresholdsSteps(IntegrationTestContext testContext, CxClient cxClientMock, RestTemplate restTemplateMock, FlowProperties flowProperties, ADOProperties adoProperties,
                            CxProperties cxProperties, GitHubProperties gitHubProperties, ThresholdValidator thresholdValidator,
-                           EmailService emailService, ScmConfigOverrider scmConfigOverrider) {
+                           EmailService emailService, GitHubAppAuthService gitHubAppAuthService, ScmConfigOverrider scmConfigOverrider, ScaProperties scaProperties) {
 
         this.cxClientMock = cxClientMock;
         this.restTemplateMock = restTemplateMock;
+        this.testContext = testContext;
 
-        flowProperties.setThresholds(new HashMap<>());
         this.flowProperties = flowProperties;
-
         this.cxProperties = cxProperties;
-
+        this.gitHubAppAuthService = gitHubAppAuthService;
+        this.scaProperties = scaProperties;
+        flowProperties.setThresholds(new HashMap<>());
         gitHubProperties.setCxSummary(false);
         this.gitHubProperties = gitHubProperties;
-
         this.adoProperties = adoProperties;
 
         this.thresholdValidator = thresholdValidator;
-
         this.emailService = emailService;
         this.scmConfigOverrider = scmConfigOverrider;
     }
@@ -111,6 +122,23 @@ public class ThresholdsSteps {
         pullRequestWasApproved = null;
     }
 
+    @Given("thresholds section {} in cxflow configuration")
+    public void setThresholdsSectionExist(boolean thresholdsExist) {
+        thresholdsSectionExist = thresholdsExist;
+    }
+
+    @And("thresholds {} by scan findings")
+    public void setThresholds(boolean thresholdsExceeded) {
+        if (thresholdsSectionExist){
+            if (thresholdsExceeded) {
+                thresholdForFindingsOfSeverityIs(DEFAULT_SEVERITY_HIGH, String.valueOf(DEFAULT_FINDINGS_COUNT - 1));
+            } else {
+                thresholdForFindingsOfSeverityIs(DEFAULT_SEVERITY_HIGH, String.valueOf(DEFAULT_FINDINGS_COUNT + 1));
+            }
+        }
+        else{ resetThresholds(); }
+    }
+
     @Given("threshold for findings of {string} severity is {string}")
     public void thresholdForFindingsOfSeverityIs(String severityName, String threshold) {
         if (!threshold.equals("<omitted>")) {
@@ -121,13 +149,59 @@ public class ThresholdsSteps {
     }
 
     @Given("the whole 'thresholds' section is omitted from config")
-    public void theWholeThresholdsSectionIsOmittedFromConfig() {
+    public void resetThresholds() {
         flowProperties.setThresholds(null);
+        scaProperties.setThresholdsSeverity(null);
+        scaProperties.setThresholdsScore(null);
+    }
+
+    @When("cxflow called with scan cli command")
+    public void runCxFlowFromCommandLine() {
+
+        flowProperties.setBugTracker(BugTracker.Type.NONE.toString());
+
+        Throwable exception = null;
+        try {
+            TestUtils.runCxFlow(testContext.getCxFlowRunner(), CLI_COMMAND);
+        } catch (Throwable e) {
+            exception = e;
+        }
+        testContext.setCxFlowExecutionException(exception);
+    }
+
+    @Then("cxflow should exit with the correct {}")
+    public void validateExitCode(int expectedExitCode) {
+        Throwable exception = testContext.getCxFlowExecutionException();
+
+        Assert.assertNotNull("Expected an exception to be thrown.", exception);
+        Assert.assertEquals(InvocationTargetException.class, exception.getClass());
+
+        Throwable targetException = ((InvocationTargetException) exception).getTargetException();
+        Assert.assertTrue(targetException instanceof ExitThrowable);
+
+        int actualExitCode = ((ExitThrowable) targetException).getExitCode();
+
+        Assert.assertEquals("The expected exist code did not match",
+                expectedExitCode, actualExitCode);
     }
 
     @And("severity filter is set to {string}")
     public void severityFilterIsSetTo(String severity) {
         filter = new Filter(Filter.Type.SEVERITY, severity);
+    }
+
+    @And("scan findings are {} after filter")
+    public void severityFilterIsSetTo(boolean findingsPresentedAfterFilter) {
+        if (findingsPresentedAfterFilter){
+            addFindingsTo(scanResultsToInject, DEFAULT_FINDINGS_COUNT, DEFAULT_SEVERITY_HIGH);
+        }else{
+            scanResultsToInject = createFakeScanResults();
+        }
+    }
+
+    @And("break-build property is set to {}")
+    public void setBreakBuildProperty(boolean breakBuild){
+        flowProperties.setBreakBuild(breakBuild);
     }
 
     @And("no severity filter is specified")
@@ -244,8 +318,14 @@ public class ThresholdsSteps {
 
     private void initMock(CxClient cxClientMock) {
         try {
+            CxProject cxProject = CxProject.builder().id(1).name("testproject").isPublic(false).customFields(Collections.EMPTY_LIST).build();
+
             ScanResultsAnswerer answerer = new ScanResultsAnswerer();
             when(cxClientMock.getReportContentByScanId(anyInt(), any())).thenAnswer(answerer);
+
+            when(cxClientMock.getProject(anyInt())).thenReturn(cxProject);
+
+            when(cxClientMock.getTeamId(anyString())).thenReturn("1");
         } catch (CheckmarxException e) {
             Assert.fail("Error initializing mock." + e);
         }
@@ -256,7 +336,8 @@ public class ThresholdsSteps {
                 gitHubProperties,
                 flowProperties,
                 thresholdValidator,
-                scmConfigOverrider);
+                scmConfigOverrider,
+                gitHubAppAuthService);
 
         ADOService adoService = new ADOService(restTemplateMock,
                 adoProperties,

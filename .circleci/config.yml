@@ -5,6 +5,24 @@ executors:
     docker:
       - image: circleci/golang:1.9
 
+commands: # a reusable command with parameters
+  create-github-release:
+    description: Create Github Release or Pre-Release
+    parameters:
+      ghr-option:
+        default: ""
+        type: string
+    steps:
+      - run: |
+          go get github.com/tcnksm/ghr
+          VERSION=$(cat ./build/libs/version.txt)
+          rm ./build/libs/version.txt
+          VERSION_OD=$(cat ./build/libs/cxgo/version.txt)
+          mv build/libs/java11/repo-${VERSION}.jar build/libs/cx-flow-${VERSION}-java11.jar
+          mv build/libs/cxgo/repo-${VERSION_OD}.jar build/libs/${VERSION_OD}.jar
+          ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -n ${VERSION} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} << parameters.ghr-option >> -delete ${VERSION} ./build/libs/
+
+
 jobs:
   build:
     docker:
@@ -179,6 +197,7 @@ jobs:
       - aws-eks/update-kubeconfig-with-authenticator:
           cluster-name: << parameters.cluster-name >>
           install-kubectl: true
+          authenticator-release-tag: v0.5.1
       - run:
           name: Change appVersion
           command: |
@@ -255,6 +274,7 @@ jobs:
       - aws-eks/update-kubeconfig-with-authenticator:
           cluster-name: << parameters.cluster-name >>
           install-kubectl: true
+          authenticator-release-tag: v0.5.1
       - run:
           name: Run E2E Tests
           command: |
@@ -448,7 +468,7 @@ jobs:
           path: ~/test-results
       - store_artifacts:
           path: ~/test-results/junit
-          
+
   cleanup:
     executor: aws-eks/python3
     parameters:
@@ -464,6 +484,7 @@ jobs:
       - aws-eks/update-kubeconfig-with-authenticator:
           cluster-name: << parameters.cluster-name >>
           install-kubectl: true
+          authenticator-release-tag: v0.5.1
       - helm/install-helm-client:
           version: << parameters.version >>
       - run:
@@ -507,16 +528,16 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run:
-          name: "Publish Release on GitHub"
-          command: |
-            go get github.com/tcnksm/ghr
-            VERSION=$(cat ./build/libs/version.txt)
-            rm ./build/libs/version.txt
-            VERSION_OD=$(cat ./build/libs/cxgo/version.txt)
-            mv build/libs/java11/repo-${VERSION}.jar build/libs/cx-flow-${VERSION}-java11.jar
-            mv build/libs/cxgo/repo-${VERSION_OD}.jar build/libs/${VERSION_OD}.jar
-            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -n ${VERSION} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./build/libs/
+      - create-github-release
+
+  publish-github-pre-release:
+    docker:
+      - image: circleci/golang:1.9
+    steps:
+      - attach_workspace:
+          at: .
+      - create-github-release:
+          ghr-option: "-prerelease "
 
   clean-eks:
     executor: aws-eks/python3
@@ -524,6 +545,7 @@ jobs:
       - aws-eks/update-kubeconfig-with-authenticator:
           cluster-name: eks-cxflow-ci
           install-kubectl: true
+          authenticator-release-tag: v0.5.1
       - run:
           name: Delete namespace
           command: |
@@ -538,7 +560,7 @@ jobs:
             fi
 
 orbs:
-  aws-eks: circleci/aws-eks@0.2.6
+  aws-eks: circleci/aws-eks@1.0.0
   kubernetes: circleci/kubernetes@0.4.0
   helm: circleci/helm@0.2.3
   checkmarx: checkmarx/circleci-kpi-shipper@0.10.0
@@ -583,7 +605,7 @@ workflows:
           chart: ./helm/cxflow
           namespace: cxflow-${CIRCLE_SHA1::7}
           release-name: cxflow-${CIRCLE_SHA1::7}
-          version: v3.2.1
+          version: v3.3.4
           filters:
             branches:
               only:
@@ -631,7 +653,21 @@ workflows:
             - deploy-cxflow
       - AST-CLI-integration-tests:
           requires:
-            - deploy-cxflow      
+            - deploy-cxflow
+      - publish-github-pre-release:
+          filters:
+            branches:
+              only: develop
+          requires:
+            - e2e-tests
+            - integration-tests
+            - sca-integration-tests
+            - ast-integration-tests
+            - jira-integration-tests
+            - pullRequestComments-integration-tests
+            - SAST-CLI-integration-tests
+            - SCA-CLI-integration-tests
+            - AST-CLI-integration-tests
       - docker-push-stable:
           filters:
             branches:
@@ -663,7 +699,7 @@ workflows:
           cluster-name: eks-cxflow-ci
           namespace: cxflow-${CIRCLE_SHA1::7}
           release-name: cxflow-${CIRCLE_SHA1::7}
-          version: v3.2.1
+          version: v3.3.4
           filters:
             branches:
               only:

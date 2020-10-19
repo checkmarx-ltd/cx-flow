@@ -11,6 +11,7 @@ import com.checkmarx.flow.dto.OperationResult;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.exception.MachinaException;
+import com.checkmarx.flow.service.GitHubAppAuthService;
 import com.checkmarx.flow.service.GitHubService;
 import com.checkmarx.flow.service.ThresholdValidator;
 import com.checkmarx.flow.service.ResultsService;
@@ -69,6 +70,7 @@ public class AnalyticsSteps {
     private final CxClient cxClientMock;
     private final CxProperties cxProperties;
     private final RestTemplate restTemplateMock;
+    private final GitHubAppAuthService gitHubAppAuthService;
 
     private static class State {
         ScanResults scanResultsToInject;
@@ -233,7 +235,8 @@ public class AnalyticsSteps {
                 gitHubProperties,
                 flowProperties,
                 thresholdValidator,
-                scmConfigOverrider);
+                scmConfigOverrider,
+                gitHubAppAuthService);
 
         return new ResultsService(
                 cxClientMock,

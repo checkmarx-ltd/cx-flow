@@ -503,7 +503,7 @@ public class JiraService {
                                 break;
                             case "severity":
                                 log.debug("severity: {}", issue.getSeverity());
-                                value = issue.getSeverity();
+                                value = ScanUtils.toProperCase(issue.getSeverity());
                                 break;
                             case "category":
                                 log.debug("category: {}", issue.getVulnerability());
@@ -528,7 +528,7 @@ public class JiraService {
                                 if (issue.getLink() != null && !issue.getLink().isEmpty()) {
                                     recommendation.append("Checkmarx Link: ").append(issue.getLink()).append(HTMLHelper.CRLF);
                                 }
-                                if (!ScanUtils.empty(issue.getCwe())) {
+                                if (!ScanUtils.anyEmpty(flowProperties.getMitreUrl(), issue.getCwe())) {
                                     recommendation.append("Mitre Details: ").append(String.format(flowProperties.getMitreUrl(), issue.getCwe())).append(HTMLHelper.CRLF);
                                 }
                                 if (!ScanUtils.empty(flowProperties.getCodebashUrl())) {

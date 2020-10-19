@@ -152,13 +152,13 @@ public class MarkDownHelper {
     static String getSeverityIconFromLinkByText(String severity, ScanRequest request) {
 
         severity = severity.toUpperCase();
-        
+
         switch (severity) {
             case HIGH:
                 return getHighIconFromLink(request);
             case MEDIUM:
                 return getMediumIconFromLink(request);
-            case LOW:    
+            case LOW:
                 return getLowIconFromLink(request);
             case INFORMATION:
             case INFO:
