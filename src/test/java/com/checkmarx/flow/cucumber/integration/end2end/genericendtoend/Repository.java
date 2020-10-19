@@ -837,7 +837,6 @@ enum Repository {
     static Repository setTo(String toRepository, GenericEndToEndSteps genericEndToEndSteps) {
         log.info("setting repository to {}", toRepository);
         Repository repo = valueOf(toRepository.toUpperCase());
-        repo.init(genericEndToEndSteps);
         return repo;
     }
 

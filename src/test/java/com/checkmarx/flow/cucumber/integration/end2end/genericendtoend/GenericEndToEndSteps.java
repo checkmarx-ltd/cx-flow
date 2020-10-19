@@ -61,9 +61,10 @@ public class GenericEndToEndSteps {
     }
 
     @And("repository is {word}")
-    public void setRepository(String repository) {
-        this.repository = Repository.setTo(repository, this);
+    public void setRepository(String repositoryName) {
+        this.repository = Repository.setTo(repositoryName, this);
         readEnvironmentProperties();
+        repository.init(this);
     }
 
     private void readEnvironmentProperties(){
