@@ -1,6 +1,7 @@
 buildscript {
     ext {
-        CxSBSDK = "0.4.47"
+        CxSBSDK = "0.4.48"
+        ConfigProviderVersion = "1.0.9"
         //cxVersion = "8.90.5"
         springBootVersion = '2.2.6.RELEASE'
         sonarqubeVersion = '2.8'
@@ -214,7 +215,7 @@ task ScaIntegrationTest(type: Test) {
         systemProperty "testprofile", "scaIntegration"
 
         include 'com/checkmarx/flow/cucumber/integration/sca_scanner/**'
-        
+
         testLogging {
             events "passed", "skipped", "failed"
         }
@@ -227,7 +228,7 @@ task ASTIntegrationTest(type: Test) {
 
         include 'com/checkmarx/flow/cucumber/integration/ast/bugtrackers/jira/**'
         include  'com/checkmarx/flow/cucumber/integration/ast/scans/**'
-        
+
         testLogging {
             events "passed", "skipped", "failed"
         }
@@ -303,4 +304,3 @@ task getVersion {
         println "${version}"
     }
 }
-

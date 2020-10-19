@@ -131,19 +131,22 @@ public class SastScanner implements VulnerabilityScanner {
     }
 
     private ScanResults getScanResults(ScanRequest scanRequest, Integer projectId, Integer scanId) throws CheckmarxException {
-        ScanResults scanResults = null;
-        BugTracker.Type bugTrackerType = bugTrackerEventTrigger.triggerBugTrackerEvent(scanRequest);
-        if (bugTrackerType.equals(BugTracker.Type.NONE)) {
-            scanDetails = handleNoneBugTrackerCase(scanRequest, null, scanId, projectId);
+        if(!cxProperties.getEnablePostActionMonitor()) {
+            ScanResults scanResults = null;
+            BugTracker.Type bugTrackerType = bugTrackerEventTrigger.triggerBugTrackerEvent(scanRequest);
+            if (bugTrackerType.equals(BugTracker.Type.NONE)) {
+                scanDetails = handleNoneBugTrackerCase(scanRequest, null, scanId, projectId);
+            } else {
+                cxService.waitForScanCompletion(scanId);
+                logRequest(scanRequest, scanId, null, OperationResult.successful());
+                scanResults = cxService.getReportContentByScanId(scanId, scanRequest.getFilter());
+                scanResults.setSastScanId(scanId);
+            }
+            return scanResults;
         } else {
-            cxService.waitForScanCompletion(scanId);
-            logRequest(scanRequest, scanId, null, OperationResult.successful());
-
-            scanResults = cxService.getReportContentByScanId(scanId, scanRequest.getFilter());
-            scanResults.setSastScanId(scanId);
+            bugTrackerEventTrigger.triggerBugTrackerEvent(scanRequest);
+            return getEmptyScanResults();
         }
-
-        return scanResults;
     }
 
     @Override
