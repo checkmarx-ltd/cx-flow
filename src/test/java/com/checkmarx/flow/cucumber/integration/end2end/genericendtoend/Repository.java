@@ -691,6 +691,8 @@ enum Repository {
             gitLabProperties = genericEndToEndSteps.gitLabProperties;
             super.init(genericEndToEndSteps);
             projectId = getProjectId();
+            log.info("using gitlab project name: '{}'", repo);
+            log.info("using webhook: {}", gitLabProperties.getWebhookToken());
         }
 
         @Override
