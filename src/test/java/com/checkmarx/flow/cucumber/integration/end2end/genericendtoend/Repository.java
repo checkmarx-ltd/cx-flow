@@ -887,6 +887,7 @@ enum Repository {
         activeBranch = branch;
     }
 
+    public String getRepoName(){return repo;}
     public void cleanup() {
         Optional.ofNullable(hookType).ifPresent(h -> {
             switch (h) {

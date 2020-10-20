@@ -180,6 +180,8 @@ public class GenericEndToEndSteps {
         return engine;
     }
 
+    Repository getRepository() {return this.repository;}
+
     private String readFileInBase64() throws IOException {
         String path = new StringJoiner(File.separator)
                 .add("cucumber")

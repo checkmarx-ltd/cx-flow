@@ -125,7 +125,7 @@ enum BugTracker {
         @Override
         void init(GenericEndToEndSteps genericEndToEndSteps) {
             gitLabProperties = genericEndToEndSteps.gitLabProperties;
-            projectName = "CxFlow-Gitlab-E2E-Test";
+            projectName = genericEndToEndSteps.getRepository().getRepoName();
             projectId = getProjectId();
         }
 
