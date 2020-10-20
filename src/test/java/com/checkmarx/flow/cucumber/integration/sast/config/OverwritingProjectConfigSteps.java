@@ -4,7 +4,7 @@ import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.config.ScmConfigOverrider;
-import com.checkmarx.flow.controller.GitHubController;
+import com.checkmarx.flow.controller.*;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.github.GitHubTestUtils;
@@ -12,6 +12,7 @@ import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.cx.CxScanParams;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
+import com.checkmarx.sdk.service.CxService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -48,7 +49,7 @@ public class OverwritingProjectConfigSteps {
     private static final ObjectMapper jsonMapper = new ObjectMapper();
 
     @SpyBean
-    private final CxClient cxClientSpy;
+    private final CxService cxClientSpy;
 
     @MockBean
     private final ResultsService resultsServiceMock;
@@ -109,7 +110,7 @@ public class OverwritingProjectConfigSteps {
 
     @And("project has the {string} preset and the {string} scan configuration")
     public void projectPresetIs(String preset, String config) {
-        cxClientSpy.createScanSetting(projectId, presetMapping.get(preset), configMapping.get(config), 0);
+        cxClientSpy.createScanSetting(projectId, presetMapping.get(preset), configMapping.get(config), 0, null);
     }
 
     @And("CxFlow config has the {string} preset and the {string} scan configuration")

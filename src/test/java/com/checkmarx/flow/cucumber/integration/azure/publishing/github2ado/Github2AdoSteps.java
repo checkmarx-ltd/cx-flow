@@ -5,7 +5,7 @@ import com.checkmarx.flow.config.ADOProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.config.ScmConfigOverrider;
-import com.checkmarx.flow.controller.GitHubController;
+import com.checkmarx.flow.controller.*;
 import com.checkmarx.flow.cucumber.integration.azure.publishing.AzureDevopsClient;
 import com.checkmarx.flow.cucumber.integration.azure.publishing.githubflow.ScanResultsBuilder;
 import com.checkmarx.flow.dto.ControllerRequest;
@@ -17,13 +17,12 @@ import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.ast.ASTResults;
-import com.checkmarx.sdk.service.CxService;
-import com.cx.restclient.ast.dto.sast.report.AstSastSummaryResults;
-import com.cx.restclient.ast.dto.sast.report.Finding;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
 import com.checkmarx.sdk.exception.CheckmarxException;
-import com.checkmarx.sdk.service.CxClient;
+import com.checkmarx.sdk.service.CxService;
 import com.cx.restclient.ast.dto.sast.AstSastResults;
+import com.cx.restclient.ast.dto.sast.report.AstSastSummaryResults;
+import com.cx.restclient.ast.dto.sast.report.Finding;
 import com.cx.restclient.ast.dto.sast.report.FindingNode;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -73,7 +72,7 @@ public class Github2AdoSteps {
     private FlowProperties flowProperties;
     private final CxProperties cxProperties;
     private final GitHubProperties gitHubProperties;
-    private final HelperService helperService;
+    private HelperService helperService = mock(HelperService.class);
     private final EmailService emailService;
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
@@ -109,7 +108,6 @@ public class Github2AdoSteps {
 
         this.cxProperties = cxProperties;
 
-        this.helperService = mock(HelperService.class);
         this.flowService = flowService;
         this.gitHubService = gitHubService;
         this.gitHubAppAuthService = gitHubAppAuthService;

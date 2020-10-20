@@ -4,20 +4,13 @@ import com.checkmarx.flow.config.*;
 import com.checkmarx.flow.exception.InvalidCredentialsException;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
-import com.checkmarx.flow.sastscanning.ScanRequestConverter;
+
 import com.checkmarx.flow.service.*;
-import com.checkmarx.sdk.config.CxGoProperties;
-import com.checkmarx.sdk.config.CxProperties;
-import com.checkmarx.sdk.config.CxPropertiesBase;
 import com.checkmarx.sdk.service.*;
-//import com.cx.restclient.CxOsaService;
-//import com.cx.restclient.httpClient.CxHttpClient;
+import com.checkmarx.flow.service.HelperService;
+
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.javamail.JavaMailSenderImpl;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.ws.client.core.WebServiceTemplate;
-import org.thymeleaf.TemplateEngine;
 
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -49,7 +42,7 @@ public class GitHubControllerTest {
     private static final String validWebhookToken = "adsfdsfddsfsadaf";
     @Test
     public void initNullController() throws InvalidKeyException, NoSuchAlgorithmException {
-        GitHubController gitHubControllerNull = new GitHubController(null, null, null, null,  helperService, null, null, null, null);
+        GitHubController gitHubControllerNull = new GitHubController(null, null, null, null,  helperService, null, null, null, null, null);
         gitHubControllerNull.init();
     }
 
@@ -62,7 +55,7 @@ public class GitHubControllerTest {
 
     @Test
     public void pingRequestNullController() {
-        GitHubController gitHubControllerNull = new GitHubController(null, null, null, null,  helperService, null, null, null, null);
+        GitHubController gitHubControllerNull = new GitHubController(null, null, null, null,  helperService, null, null, null, null, null);
         try {
             gitHubControllerNull.pingRequest("body", "product", "signature");
             assert false;
@@ -73,7 +66,7 @@ public class GitHubControllerTest {
 
     @Test
     public void pingRequestNullControllerWithNullParameters() {
-        GitHubController gitHubControllerNull = new GitHubController(null, null, null, null,  helperService, null, null, null, null);
+        GitHubController gitHubControllerNull = new GitHubController(null, null, null, null,  helperService, null, null, null, null, null);
         try {
             gitHubControllerNull.pingRequest(null, null, null);
             assert false;
@@ -84,7 +77,7 @@ public class GitHubControllerTest {
 
     @Test
     public void pingRequestWithNullParametersNullWebHookToken() {
-        GitHubController gitHubController = new GitHubController(properties, null, null, null,  helperService, null, null, null, null);
+        GitHubController gitHubController = new GitHubController(properties, null, null, null,  helperService, null, null, null, null, null);
         try {
             gitHubController.pingRequest(null, null, null);
             assert false;
@@ -96,7 +89,7 @@ public class GitHubControllerTest {
     @Test
     public void pingRequestWithNullParametersWithWebHookTokenNullMessage() {
         properties.setWebhookToken("token");
-        GitHubController gitHubController = new GitHubController(properties, null, null, null,  helperService, null, null, null, null);
+        GitHubController gitHubController = new GitHubController(properties, null, null, null,  helperService, null, null, null, null, null);
         try {
             gitHubController.pingRequest(null, null, null);
             assert false;
@@ -108,7 +101,7 @@ public class GitHubControllerTest {
     @Test
     public void pingRequestWithWebHookTokenInvalidSignature() {
         properties.setWebhookToken(invalidWebhookToken);
-        GitHubController gitHubController = new GitHubController(properties, null, null, null,  helperService, null, null, null, null);
+        GitHubController gitHubController = new GitHubController(properties, null, null, null,  helperService, null, null, null, null, null);
         try {
             gitHubController.pingRequest("test", null, null);
             assert false;
@@ -120,7 +113,7 @@ public class GitHubControllerTest {
     @Test
     public void pingRequestWithWebHookTokenInvalidMessage() {
         properties.setWebhookToken(invalidWebhookToken);
-        GitHubController gitHubController = new GitHubController(properties, null, null, null,  helperService, null, null, null, null);
+        GitHubController gitHubController = new GitHubController(properties, null, null, null,  helperService, null, null, null, null, null);
         try {
             gitHubController.pingRequest(null, null, validSignature);
             assert true;
@@ -143,7 +136,7 @@ public class GitHubControllerTest {
 
     @Test
     public void pushRequestNullControllerNullParameters() {
-        GitHubController gitHubController = new GitHubController(null, null, null, null,  helperService, null, null, null, null);
+        GitHubController gitHubController = new GitHubController(null, null, null, null,  helperService, null, null, null, null, null);
         try {
             gitHubController.pushRequest(null, null, null, null);
             assert false;
@@ -154,7 +147,7 @@ public class GitHubControllerTest {
 
     @Test
     public void pushRequestNullControllerNullParametersWithBody() {
-        GitHubController gitHubController = new GitHubController(null, null, null, null,  helperService, null, null, null, null);
+        GitHubController gitHubController = new GitHubController(null, null, null, null,  helperService, null, null, null, null, null);
         try {
             gitHubController.pushRequest(validBody, null, null, null);
             assert false;
@@ -166,7 +159,7 @@ public class GitHubControllerTest {
     @Test
     public void pushRequestNullParametersWithBodyInvalidWebHook() {
         properties.setWebhookToken(invalidWebhookToken);
-        GitHubController gitHubController = new GitHubController(properties, null, null, null,  helperService, null, null, null, null);
+        GitHubController gitHubController = new GitHubController(properties, null, null, null,  helperService, null, null, null, null, null);
         try {
             gitHubController.pushRequest(validBody, null, null, null);
             assert false;
@@ -189,7 +182,7 @@ public class GitHubControllerTest {
     }
 
     private GitHubController allocateGitHubController() {
-        return new GitHubController(properties, null, null, null,  helperService,null, null, null, null);
+        return new GitHubController(properties, null, null, null,  helperService,null, null, null, null, null);
     }
 
     @Test
@@ -207,7 +200,7 @@ public class GitHubControllerTest {
     @Test
     public void pushRequestValidFlowPropertiesWithBodyValidWebHookValidSignature() {
         properties.setWebhookToken(validWebhookToken);
-        GitHubController gitHubController = new GitHubController(properties, flowProperties, null, null,  helperService, null, null, null, null);
+        GitHubController gitHubController = new GitHubController(properties, flowProperties, null, null,  helperService, null, null, null, null, null);
         try {
             gitHubController.pushRequest(validBody, validSignature2, null, null);
             assert false;
@@ -221,7 +214,7 @@ public class GitHubControllerTest {
     public void pushRequestValidFlowPropertiesWithBodyValidWebHookValidSignatureWithValidToken() {
         properties.setWebhookToken(validWebhookToken);
         properties.setToken(invalidWebhookToken);
-        GitHubController gitHubController = new GitHubController(properties, flowProperties, null, null,  helperService, null, filterFactory, null, null);
+        GitHubController gitHubController = new GitHubController(properties, flowProperties, null, null,  helperService, null, null,  filterFactory, null, null);
         try {
             gitHubController.pushRequest(validBody, validSignature2, null, null);
             assert false;
@@ -250,7 +243,7 @@ public class GitHubControllerTest {
     public void pushRequestValidCxPropertiesWithBodyValidWebHookValidSignatureWithValidTokenFlowService() {
         properties.setWebhookToken(validWebhookToken);
         properties.setToken(invalidWebhookToken);
-        GitHubController gitHubController = new GitHubController(properties, flowProperties,  null, flowService, helperService, null, filterFactory, null, null);
+        GitHubController gitHubController = new GitHubController(properties, flowProperties,  null, flowService, helperService, null, null,  filterFactory, null, null);
         try {
             gitHubController.pushRequest(validBody, validSignature2, null, null);
             assert false;

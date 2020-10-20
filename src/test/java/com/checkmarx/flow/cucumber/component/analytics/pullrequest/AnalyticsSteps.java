@@ -239,7 +239,7 @@ public class AnalyticsSteps {
                 thresholdValidator,
                 scmConfigOverrider,
                 gitHubAppAuthService);
-                scmConfigOverrider);
+                
         
         CxScannerService cxScannerService = new CxScannerService(cxProperties,null, null, cxClientMock, null );
 

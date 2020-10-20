@@ -65,7 +65,6 @@ public class GitHubController extends WebhookController {
     private final HelperService helperService;
     private final GitHubService gitHubService;
     private final GitHubAppAuthService gitHubAppAuthService;
-    private final SastScanner sastScanner;
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
     private final ScmConfigOverrider scmConfigOverrider;

@@ -6,7 +6,7 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.controller.ADOController;
 import com.checkmarx.flow.config.ScmConfigOverrider;
-import com.checkmarx.flow.controller.GitHubController;
+import com.checkmarx.flow.controller.*;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.azure.*;
@@ -63,7 +63,7 @@ public class DeleteBranchSteps {
     private final FlowProperties flowProperties;
     private final CxProperties cxProperties;
     private final GitHubProperties gitHubProperties;
-    private final HelperService helperService;
+    private HelperService helperService;
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
     private final ADOProperties adoProperties;
@@ -103,7 +103,8 @@ public class DeleteBranchSteps {
         this.adoServiceMock = mock(ADOService.class);
         this.resultsServiceMock = mock(ResultsService.class);
         this.cxClientMock = mock(CxService.class);
-        this.helperService = mock(HelperService.class, Mockito.withSettings().useConstructor(flowProperties, cxProperties, null));
+        CxScannerService  cxScannerService = new CxScannerService(cxProperties, null, flowProperties,cxClientMock, null);
+        this.helperService = mock(HelperService.class, Mockito.withSettings().useConstructor(flowProperties, cxScannerService, null));
         this.scmConfigOverrider = scmConfigOverrider;
     }
 
