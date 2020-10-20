@@ -109,7 +109,7 @@ public class OverwritingProjectConfigSteps {
 
     @And("project has the {string} preset and the {string} scan configuration")
     public void projectPresetIs(String preset, String config) {
-        cxClientSpy.createScanSetting(projectId, presetMapping.get(preset), configMapping.get(config));
+        cxClientSpy.createScanSetting(projectId, presetMapping.get(preset), configMapping.get(config), 0);
     }
 
     @And("CxFlow config has the {string} preset and the {string} scan configuration")
