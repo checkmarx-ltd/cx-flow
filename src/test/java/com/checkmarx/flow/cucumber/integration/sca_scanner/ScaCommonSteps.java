@@ -6,8 +6,9 @@ import com.checkmarx.flow.service.SCAScanner;
 import com.checkmarx.sdk.config.ScaProperties;
 import lombok.RequiredArgsConstructor;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 public class ScaCommonSteps {
@@ -30,7 +31,9 @@ public class ScaCommonSteps {
                 .build();
     }
 
-    protected ArrayList<String> createFiltersListFromString(String filters) {
-        return new ArrayList<>(Arrays.asList(filters.split(",")));
+    protected List<String> createFiltersListFromString(String filters) {
+        return Arrays.stream(filters.split(","))
+                .map(String::trim)
+                .collect(Collectors.toList());
     }
 }

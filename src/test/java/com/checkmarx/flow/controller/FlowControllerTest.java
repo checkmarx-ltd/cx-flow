@@ -151,7 +151,7 @@ public class FlowControllerTest {
         ArgumentCaptor<ScanRequest> captor = ArgumentCaptor.forClass(ScanRequest.class);
         verify(flowService).initiateAutomation(captor.capture());
         ScanRequest actual = captor.getValue();
-        assertScanApiFilters(actual.getFilter().getSimpleFilters(), filters);
+        assertScanApiFilters(actual.getFilter().getSastFilters().getSimpleFilters(), filters);
         assertOKResponse(response);
     }
 
@@ -218,13 +218,14 @@ public class FlowControllerTest {
 
     private void assertScanResultsFilters(List<String> wanted, ScanRequest scanRequest, Filter.Type filterType) {
         List<Filter> filtersForType = scanRequest.getFilter()
+                .getSastFilters()
                 .getSimpleFilters()
                 .stream()
                 .filter(f -> f.getType().equals(filterType))
                 .collect(Collectors.toList());
 
         for (String wantedStr : wanted) {
-            boolean found = !(filtersForType.stream().noneMatch(f -> f.getValue().equals(wantedStr)));
+            boolean found = filtersForType.stream().anyMatch(f -> f.getValue().equals(wantedStr));
             Assert.assertTrue(String.format("Filter from type: %s and value %s was not found in call to FlowService", filterType, wanted), found);
         }
     }

@@ -311,10 +311,10 @@ public class CxConfigSteps {
     }
 
     private void validateRequestFilter() {
-        List<Filter> filters = request.getFilter().getSimpleFilters();
+        List<Filter> filters = request.getFilter().getSastFilters().getSimpleFilters();
         List<String> filterSeverity = getFilter(filters, Filter.Type.SEVERITY);
         List<String> filterCwe = getFilter(filters, Filter.Type.CWE);
-        List<String> filterCatergory = getFilter(filters, Filter.Type.TYPE);
+        List<String> filterCategory = getFilter(filters, Filter.Type.TYPE);
 
         boolean asExpected = false;
         switch (branch) {
@@ -323,20 +323,20 @@ public class CxConfigSteps {
                 asExpected = filterSeverity.size() == 2 &&
                         filterSeverity.contains(FindingSeverity.HIGH.toString()) &&
                         filterSeverity.contains(FindingSeverity.MEDIUM.toString()) &&
-                        filterCwe.isEmpty() && filterCatergory.isEmpty();
+                        filterCwe.isEmpty() && filterCategory.isEmpty();
                 break;
             case "test8":
                 //Filter cwe: "79", "89"
                 asExpected = filterCwe.size() == 2 &&
                         filterCwe.contains(CWE_79) &&
                         filterCwe.contains(CWE_89) &&
-                        filterCatergory.isEmpty() && filterSeverity.isEmpty();
+                        filterCategory.isEmpty() && filterSeverity.isEmpty();
                 break;
             case "test9":
                 // filter category: "XSS_Reflected", "SQL_Injection"
-                asExpected = filterCatergory.size() == 2 &&
-                        filterCatergory.contains(XSS_REFLECTED) &&
-                        filterCatergory.contains(SQL_INJECTION) &&
+                asExpected = filterCategory.size() == 2 &&
+                        filterCategory.contains(XSS_REFLECTED) &&
+                        filterCategory.contains(SQL_INJECTION) &&
                         filterCwe.isEmpty() && filterSeverity.isEmpty();
                 break;
             case "test10":
@@ -346,9 +346,9 @@ public class CxConfigSteps {
                 asExpected = filterCwe.size() == 2 &&
                         filterCwe.contains(CWE_79) &&
                         filterCwe.contains(CWE_89) &&
-                        filterCatergory.size() == 2 &&
-                        filterCatergory.contains(XSS_REFLECTED) &&
-                        filterCatergory.contains(SQL_INJECTION) &&
+                        filterCategory.size() == 2 &&
+                        filterCategory.contains(XSS_REFLECTED) &&
+                        filterCategory.contains(SQL_INJECTION) &&
                         filterSeverity.isEmpty();
                 break;
             case "test11":
@@ -358,9 +358,9 @@ public class CxConfigSteps {
                         filterSeverity.size() == 2 &&
                                 filterSeverity.contains(FindingSeverity.HIGH.toString()) &&
                                 filterSeverity.contains(FindingSeverity.MEDIUM.toString()) &&
-                                filterCatergory.size() == 2 &&
-                                filterCatergory.contains(XSS_REFLECTED) &&
-                                filterCatergory.contains(SQL_INJECTION) &&
+                                filterCategory.size() == 2 &&
+                                filterCategory.contains(XSS_REFLECTED) &&
+                                filterCategory.contains(SQL_INJECTION) &&
                                 filterCwe.isEmpty();
                 break;
             case "test12":
@@ -368,7 +368,7 @@ public class CxConfigSteps {
                 asExpected = filterSeverity.size() == 2 &&
                         filterSeverity.contains(FindingSeverity.HIGH.toString()) &&
                         filterSeverity.contains(FindingSeverity.LOW.toString()) &&
-                        filterCwe.isEmpty() && filterCatergory.isEmpty();
+                        filterCwe.isEmpty() && filterCategory.isEmpty();
                 break;
             default:
                 fail("Invalid Branch");

@@ -15,7 +15,9 @@ import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.ScaConfig;
 import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.CxConfig;
+import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.Sca;
+import com.checkmarx.sdk.dto.filtering.EngineFilterConfiguration;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -40,13 +42,12 @@ public class ConfigurationOverrider {
             BugTracker.Type.GITLABMERGE));
 
     private final FlowProperties flowProperties;
-    private final ScaProperties scaProperties;
     private final SCAScanner scaScanner;
     private final SastScanner sastScanner;
 
     public ScanRequest overrideScanRequestProperties(CxConfig override, ScanRequest request) {
         ConfigProvider configProvider = ConfigProvider.getInstance();
-        if (request == null || (!isConfigAsCodeAvailable(configProvider) && !isLegacyConfigAsCodeAvailable(override))) {
+        if (request == null || (!configProviderResultsAreAvailable(configProvider) && !configAsCodeIsAvailable(override))) {
             return request;
         }
 
@@ -73,12 +74,14 @@ public class ConfigurationOverrider {
         return request;
     }
 
-    private boolean isConfigAsCodeAvailable(ConfigProvider configProvider) {
+    private boolean configProviderResultsAreAvailable(ConfigProvider configProvider) {
         return configProvider.hasAnyConfiguration(MDC.get(FlowConstants.MAIN_MDC_ENTRY));
     }
 
-    private boolean isLegacyConfigAsCodeAvailable(CxConfig override) {
-        return override != null && !(Boolean.FALSE.equals(override.getActive()));
+    private boolean configAsCodeIsAvailable(CxConfig override) {
+        // Config-as-code should be enabled if the 'active' property is either
+        // true or null => checking against Boolean.FALSE.
+        return override != null && !Boolean.FALSE.equals(override.getActive());
     }
 
     private void applyFlowOverride(FlowOverride fo, ScanRequest request, Map<String, String> overrideReport) {
@@ -145,13 +148,17 @@ public class ConfigurationOverrider {
                     override.getCwe(),
                     override.getCategory(),
                     override.getStatus());
-            FilterConfiguration filter = filterFactory.getFilter(controllerRequest, null);
-            request.setFilter(filter);
+            FilterConfiguration filterConfig = filterFactory.getFilter(controllerRequest, null);
+            request.setFilter(filterConfig);
 
             String filterDescr;
-            if (CollectionUtils.isNotEmpty(filter.getSimpleFilters())) {
-                filterDescr = filter.getSimpleFilters()
-                        .stream()
+            List<Filter> simpleFilters = Optional.ofNullable(filterConfig)
+                    .map(FilterConfiguration::getSastFilters)
+                    .map(EngineFilterConfiguration::getSimpleFilters)
+                    .orElse(null);
+
+            if (CollectionUtils.isNotEmpty(simpleFilters)) {
+                filterDescr = simpleFilters.stream()
                         .map(Object::toString)
                         .collect(Collectors.joining(","));
             } else {
