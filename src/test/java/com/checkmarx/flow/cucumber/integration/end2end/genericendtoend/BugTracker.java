@@ -16,7 +16,6 @@ import com.atlassian.jira.rest.client.internal.async.CustomAsynchronousJiraRestC
 import com.checkmarx.flow.config.GitLabProperties;
 import com.checkmarx.flow.config.JiraProperties;
 
-import com.checkmarx.sdk.config.CxProperties;
 import io.atlassian.util.concurrent.Promise;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
@@ -119,8 +118,8 @@ enum BugTracker {
         private static final String DELETE_ISSUE_URL = "/projects/{id}/issues/{issueId}";
 
         private final RestTemplate restTemplate = new RestTemplate();
-        private String projectName = null;
-        private  Integer projectId = null;
+        private String projectName;
+        private  Integer projectId;
         private  GitLabProperties gitLabProperties;
         @Override
         void init(GenericEndToEndSteps genericEndToEndSteps) {
@@ -131,6 +130,7 @@ enum BugTracker {
 
         @Override
         void verifyIssueCreated(String severities, String engine) {
+            boolean foundIssueInBugTracker = false;
             for (int retries = 0; retries < NUMBER_OF_RETRIES; retries++) {
                 try {
                     TimeUnit.SECONDS.sleep(RETRY_TIMEOUT_IN_SECONDS);
@@ -138,25 +138,23 @@ enum BugTracker {
                 } catch (Exception e) {
                     log.error("error in timeout while verifying created issues: {}", e.getMessage());
                 }
-                JSONArray issuesList = getAllGitlabIssues();
+                JSONArray issuesList = getAllProjectIssues();
                 if (issuesList.length() > 0){
                     log.info("successfully verified created issues!");
-                    return;
+                    foundIssueInBugTracker = true;
                 }
             }
-            String msg = String.format("didn't find any security issues in gitlab project %d after %d retries", projectId, NUMBER_OF_RETRIES);
-            log.error(msg);
-            fail(msg);
+            assertTrue(foundIssueInBugTracker, "didn't find any security issues in gitlab project %d after %d retries");
         }
 
         @Override
         void deleteIssues() {
-            JSONArray issuesArray = getAllGitlabIssues();
+            JSONArray issuesArray = getAllProjectIssues();
             log.info("going to delete {} issues from gitlab project", issuesArray.length());
 
             for (int i=0; i < issuesArray.length(); i++){
-                JSONObject issueObj = issuesArray.getJSONObject(i);
-                int issueIid = issueObj.getInt("iid");
+                JSONObject issue = issuesArray.getJSONObject(i);
+                int issueIid = issue.getInt("iid");
                 String getProjectsUrl = String.format("%s%s", gitLabProperties.getApiUrl(), DELETE_ISSUE_URL);
                 HttpEntity<String> httpEntity = new HttpEntity<>(getHeaders());
                 ResponseEntity<String> response = restTemplate.exchange(getProjectsUrl, HttpMethod.DELETE, httpEntity, String.class, projectId, issueIid);
@@ -176,34 +174,34 @@ enum BugTracker {
             HttpEntity<String> httpEntity = new HttpEntity<>(getHeaders());
             ResponseEntity<String> response = restTemplate.exchange(getProjectsUrl, HttpMethod.GET, httpEntity, String.class, projectName);
 
-            JSONArray jsonArray = new JSONArray(response.getBody());
-            JSONObject obj = jsonArray.getJSONObject(0);
+            JSONArray projects = new JSONArray(response.getBody());
+            JSONObject gitlabProject = projects.getJSONObject(0);
 
-            return  obj.getInt("id");
+            return  gitlabProject.getInt("id");
         }
 
         HttpHeaders getHeaders() {
             HttpHeaders httpHeaders = new HttpHeaders();
             httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-            httpHeaders.set("PRIVATE-TOKEN", gitLabProperties.getToken());
+            httpHeaders.set(PRIVATE_TOKEN_HEADER, gitLabProperties.getToken());
             httpHeaders.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
             return httpHeaders;
         }
 
-        private JSONArray getAllGitlabIssues(){
+        private JSONArray getAllProjectIssues(){
             String getProjectsUrl = String.format("%s%s", gitLabProperties.getApiUrl(), GET_ISSUES_URL);
             HttpEntity<String> httpEntity = new HttpEntity<>(getHeaders());
 
             ResponseEntity<String> response = restTemplate.exchange(getProjectsUrl, HttpMethod.GET, httpEntity, String.class, projectId);
-            JSONArray issuesArray = new JSONArray(response.getBody());
-            log.info("Found {} issues in project" , issuesArray.length());
-            return issuesArray;
+            JSONArray issues = new JSONArray(response.getBody());
+            log.info("Found {} issues in project" , issues.length());
+            return issues;
         }
     };
 
     protected static Integer NUMBER_OF_RETRIES = 24;
     protected static Integer RETRY_TIMEOUT_IN_SECONDS = 5;
-
+    protected final String PRIVATE_TOKEN_HEADER = "PRIVATE-TOKEN";
     static BugTracker setTo(String bugTracker, GenericEndToEndSteps genericEndToEndSteps) {
         log.info("setting bug-tracker to {}", bugTracker);
         BugTracker bt = valueOf(bugTracker);

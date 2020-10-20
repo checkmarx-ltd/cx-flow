@@ -103,7 +103,7 @@ enum Repository {
                 String confFile;
                 try {
                     confFile = genericEndToEndSteps.getConfigAsCodeInBase64();
-                    pushFileToBranch(confFile , CONFIG_FILE_PATH);
+                    pushFileToActiveBranch(confFile , CONFIG_FILE_PATH);
                 } catch (IOException e) {
                     fail("failed to read config file in base 64 needed by github for sca");
                 }
@@ -136,10 +136,10 @@ enum Repository {
 
         @Override
         void pushFile(String base64content, String textContent) {
-            pushFileToBranch(base64content , filePath);
+            pushFileToActiveBranch(base64content , filePath);
         }
 
-        private void pushFileToBranch(String content, String theFilePath) {
+        private void pushFileToActiveBranch(String content, String theFilePath) {
             Committer committer = new Committer();
             committer.setName("CxFlowTestUser");
             committer.setEmail("CxFlowTestUser@checkmarx.com");
@@ -691,9 +691,9 @@ enum Repository {
             HttpEntity<String> httpEntity = new HttpEntity<>(getHeaders());
             String hooksUrl = String.format("%s%s", gitLabProperties.getApiUrl(), GET_HOOKS_URL);
             ResponseEntity<String> response = restTemplate.exchange(hooksUrl, HttpMethod.GET, httpEntity, String.class, projectId);
-            JSONArray jsonArray = new JSONArray(response.getBody());
+            JSONArray projectWebhooks = new JSONArray(response.getBody());
 
-            return !jsonArray.isEmpty();
+            return !projectWebhooks.isEmpty();
         }
 
         private int getProjectId()
@@ -703,12 +703,12 @@ enum Repository {
             HttpEntity<String> httpEntity = new HttpEntity<>(getHeaders());
             ResponseEntity<String> response = restTemplate.exchange(getProjectsUrl, HttpMethod.GET, httpEntity, String.class);
 
-            JSONArray jsonArray = new JSONArray(response.getBody());
-            JSONObject obj = jsonArray.getJSONObject(0);
+            JSONArray projects = new JSONArray(response.getBody());
+            JSONObject gitlabProject = projects.getJSONObject(0);
 
-            int responseProjectId = obj.getInt("id");
+            int responseProjectId = gitlabProject.getInt("id");
             log.info("found project Id: '{}' for project '{}'", responseProjectId, projectName);
-            return  obj.getInt("id");
+            return  responseProjectId;
         }
 
         @Override
@@ -718,28 +718,28 @@ enum Repository {
             String hooksUrl = String.format("%s%s", gitLabProperties.getApiUrl(), CREATE_WEBHOOK_URL);
             HttpEntity<String> httpEntity = new HttpEntity<>(getHeaders());
             ResponseEntity<String> response = restTemplate.exchange(hooksUrl, HttpMethod.POST, httpEntity, String.class, projectId, hookTargetURL, gitLabProperties.getWebhookToken());
-            JSONObject obj = new JSONObject(response.getBody());
-            webhookId = obj.getInt("id");
+            JSONObject webhook = new JSONObject(response.getBody());
+            webhookId = webhook.getInt("id");
             log.info("webhook created with Id: '{}'", webhookId);
         }
 
         private void pushFileToBranch(String textContent, String path){
             log.info("pushing file '{}' tp project '{}' ", path, projectId);
 
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("branch", "master");
-            jsonObject.put("commit_message", "pushing file");
-            JSONArray jsonArray = new JSONArray();
+            JSONObject requestBody = new JSONObject();
+            requestBody.put("branch", "master");
+            requestBody.put("commit_message", "pushing file");
+            JSONArray actions = new JSONArray();
             JSONObject actionObject = new JSONObject();
             actionObject.put("action", "create");
             actionObject.put("file_path", path);
             actionObject.put("content", textContent);
-            jsonArray.put(actionObject);
-            jsonObject.put("actions", jsonArray);
+            actions.put(actionObject);
+            requestBody.put("actions", actions);
 
 
             String commitUrl = String.format("%s%s", gitLabProperties.getApiUrl(), COMMIT_URL);
-            HttpEntity<String> httpEntity = new HttpEntity<>(jsonObject.toString(), getHeaders());
+            HttpEntity<String> httpEntity = new HttpEntity<>(requestBody.toString(), getHeaders());
 
             ResponseEntity<String> response = restTemplate.exchange(commitUrl, HttpMethod.POST, httpEntity, String.class, projectId);
             JSONObject obj = new JSONObject(response.getBody());
@@ -780,7 +780,7 @@ enum Repository {
         HttpHeaders getHeaders() {
             HttpHeaders httpHeaders = new HttpHeaders();
             httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-            httpHeaders.set("PRIVATE-TOKEN", gitLabProperties.getToken());
+            httpHeaders.set(PRIVATE_TOKEN_HEADER, gitLabProperties.getToken());
             httpHeaders.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
             return httpHeaders;
         }
@@ -833,6 +833,7 @@ enum Repository {
     private HookType hookType;
     /* where to push the file */
     static final String filePath = "src/main/java/sample/encode.frm";
+    protected final String PRIVATE_TOKEN_HEADER = "PRIVATE-TOKEN";
 
     static Repository setTo(String toRepository, GenericEndToEndSteps genericEndToEndSteps) {
         log.info("setting repository to {}", toRepository);
