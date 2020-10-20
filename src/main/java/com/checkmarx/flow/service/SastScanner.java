@@ -137,7 +137,7 @@ public class SastScanner extends AbstractVulnerabilityScanner {
         }
     }
 
-    private String createOsaScan(ScanRequest request, Integer projectId) throws GitAPIException, CheckmarxException {
+    public String createOsaScan(ScanRequest request, Integer projectId) throws GitAPIException, CheckmarxException {
         String osaScanId = null;
         if (Boolean.TRUE.equals(cxProperties.getEnableOsa())) {
             String path = cxProperties.getGitClonePath().concat("/").concat(UUID.randomUUID().toString());

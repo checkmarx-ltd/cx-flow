@@ -47,7 +47,8 @@ public class ScanRequest {
     private String refs;
     private List<String> email;
     private boolean forceScan;
-    private Boolean incremental;
+    @Builder.Default
+    private Boolean incremental = Boolean.FALSE;
     private String scanPreset;
 
     /**
