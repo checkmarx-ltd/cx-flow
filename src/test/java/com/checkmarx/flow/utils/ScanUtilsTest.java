@@ -41,7 +41,7 @@ public class ScanUtilsTest {
         scaProperties = new ScaProperties();
 
         jiraProperties = new JiraProperties();
-        configOverrider = new ConfigurationOverrider(flowProperties, scaProperties, scaScanner, sastScanner);
+        configOverrider = new ConfigurationOverrider(flowProperties, scaScanner, sastScanner);
     }
     @Test
     public void testCxConfigOverride(){
@@ -104,8 +104,8 @@ public class ScanUtilsTest {
         assertEquals("test app", request.getApplication());
         assertEquals(2, request.getActiveBranches().size());
         assertNotNull(request.getFilter());
-        assertNotNull(request.getFilter().getSimpleFilters());
-        assertFalse(request.getFilter().getSimpleFilters().isEmpty());
+        assertNotNull(request.getFilter().getSastFilters().getSimpleFilters());
+        assertFalse(request.getFilter().getSastFilters().getSimpleFilters().isEmpty());
     }
 
     @Test

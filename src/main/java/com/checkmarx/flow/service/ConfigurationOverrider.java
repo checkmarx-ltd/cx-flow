@@ -42,13 +42,12 @@ public class ConfigurationOverrider {
             BugTracker.Type.GITLABMERGE));
 
     private final FlowProperties flowProperties;
-    private final ScaProperties scaProperties;
     private final SCAScanner scaScanner;
     private final SastScanner sastScanner;
 
     public ScanRequest overrideScanRequestProperties(CxConfig override, ScanRequest request) {
         ConfigProvider configProvider = ConfigProvider.getInstance();
-        if (request == null || (!isConfigAsCodeAvailable(configProvider) && !isLegacyConfigAsCodeAvailable(override))) {
+        if (request == null || (!configProviderResultsAreAvailable(configProvider) && !configAsCodeIsAvailable(override))) {
             return request;
         }
 
@@ -75,12 +74,14 @@ public class ConfigurationOverrider {
         return request;
     }
 
-    private boolean isConfigAsCodeAvailable(ConfigProvider configProvider) {
+    private boolean configProviderResultsAreAvailable(ConfigProvider configProvider) {
         return configProvider.hasAnyConfiguration(MDC.get(FlowConstants.MAIN_MDC_ENTRY));
     }
 
-    private boolean isLegacyConfigAsCodeAvailable(CxConfig override) {
-        return override != null && !(Boolean.FALSE.equals(override.getActive()));
+    private boolean configAsCodeIsAvailable(CxConfig override) {
+        // Config-as-code should be enabled if the 'active' property is either
+        // true or null => checking against Boolean.FALSE.
+        return override != null && !Boolean.FALSE.equals(override.getActive());
     }
 
     private void applyFlowOverride(FlowOverride fo, ScanRequest request, Map<String, String> overrideReport) {
