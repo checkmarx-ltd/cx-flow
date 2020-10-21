@@ -6,11 +6,9 @@ import com.checkmarx.flow.service.VulnerabilityScanner;
 import com.checkmarx.sdk.config.ScaConfig;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import lombok.*;
+import org.checkerframework.checker.nullness.Opt;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Object containing all applicable information about the scan request details
@@ -161,9 +159,12 @@ public class ScanRequest {
     }
 
     public Boolean isIncremental() {
+        return Optional.ofNullable(incremental).orElse(Boolean.FALSE);
+    }
+    public Boolean getIncrementalField() {
         return incremental;
     }
-
+    
     public enum Product {
         CX("CX"),
         CXOSA("CXOSA"),
