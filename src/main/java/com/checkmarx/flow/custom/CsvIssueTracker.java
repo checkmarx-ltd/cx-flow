@@ -35,10 +35,10 @@ public class CsvIssueTracker extends ImmutableIssueTracker {
     public void init(ScanRequest request, ScanResults results) throws MachinaException {
         String filename = filenameFormatter.formatPath(request, properties.getFileNameFormat(), properties.getDataFolder());
         request.setFilename(filename);
-        log.info("Creating file {}", filename);
-        log.info("Deleting if already exists");
+        log.info("Creating file {}, Deleting if already exists", filename);
         try {
             Files.deleteIfExists(Paths.get(filename));
+            Files.createDirectories(Paths.get(properties.getDataFolder()));
             Files.createFile(Paths.get(filename));
             if (properties.isIncludeHeader()) {
                 log.debug("Writing headers for CSV");
