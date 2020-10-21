@@ -11,7 +11,6 @@ import com.checkmarx.flow.utils.github.GitHubTestUtils;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.cx.CxScanParams;
 import com.checkmarx.sdk.exception.CheckmarxException;
-import com.checkmarx.sdk.service.CxClient;
 import com.checkmarx.sdk.service.CxService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -110,7 +109,7 @@ public class OverwritingProjectConfigSteps {
 
     @And("project has the {string} preset and the {string} scan configuration")
     public void projectPresetIs(String preset, String config) {
-        cxClientSpy.createScanSetting(projectId, presetMapping.get(preset), configMapping.get(config), 0, null);
+        cxClientSpy.createScanSetting(projectId, presetMapping.get(preset), configMapping.get(config), 0);
     }
 
     @And("CxFlow config has the {string} preset and the {string} scan configuration")
