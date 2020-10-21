@@ -1,12 +1,10 @@
 package com.checkmarx.flow.cucumber.integration.end2end.genericendtoend;
 
 import com.checkmarx.flow.CxFlowApplication;
-import com.checkmarx.flow.config.ADOProperties;
-import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.config.GitHubProperties;
-import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.config.*;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 
+import com.checkmarx.sdk.config.ScaProperties;
 import io.cucumber.java.After;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
@@ -19,14 +17,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ConfigurableApplicationContext;
 
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.Charset;
 import java.util.Base64;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
@@ -38,6 +33,7 @@ public class GenericEndToEndSteps {
     static final String E2E_CONFIG = "cx.config";
     static final String BRANCH_MASTER = "master";
     static final String BRANCH_DEVELOP = "develop";
+    static final String FILE_WITH_VULNERABILITIES = "e2e.src";
 
     @Autowired
     private FlowProperties flowProperties;
@@ -46,6 +42,7 @@ public class GenericEndToEndSteps {
      */
     @Autowired GitHubProperties gitHubProperties;
     @Autowired ADOProperties adoProperties;
+    @Autowired GitLabProperties gitLabProperties;
 
     /*
      * bug-trackers
@@ -64,8 +61,53 @@ public class GenericEndToEndSteps {
     }
 
     @And("repository is {word}")
-    public void setRepository(String repository) {
-        this.repository = Repository.setTo(repository, this);
+    public void setRepository(String repositoryName) {
+        this.repository = Repository.setTo(repositoryName, this);
+        readEnvironmentProperties();
+        repository.init(this);
+    }
+
+    private void readEnvironmentProperties(){
+        String upperCaseName = repository.name().toUpperCase();
+        boolean isSca = ScaProperties.CONFIG_PREFIX.equalsIgnoreCase(getEngine());
+        if (
+                System.getenv(upperCaseName + "_HOOK_NAMESPACE") == null ||
+                        System.getenv(upperCaseName + "_HOOK_REPO") == null ||
+                        System.getenv(upperCaseName + "_HOOK_TARGET") == null
+        ) {
+            log.info("running with property file");
+            Properties properties = getProperties("HookProperties");
+            repository.setNamespace(properties.getProperty(upperCaseName + "_namespace"));
+            repository.setRepoName(properties.getProperty(upperCaseName + "_repo" + (isSca ? "_SCA" : "" )) );
+            repository.setHookUrl(properties.getProperty(upperCaseName + "_target"));
+        } else {
+            log.info("running with system variables");
+            repository.setNamespace(System.getenv(upperCaseName + "_HOOK_NAMESPACE"));
+            repository.setRepoName(System.getenv(upperCaseName + "_HOOK_REPO" + (isSca ? "_SCA" : "" )));
+            repository.setHookUrl(System.getenv(upperCaseName + "_HOOK_TARGET"));
+        }
+    }
+
+    private Properties getProperties(String propertiesName) {
+        Properties prop = new Properties();
+        String path = new StringJoiner(File.separator, File.separator, "")
+                .add("cucumber")
+                .add("features")
+                .add("e2eTests")
+                .add(String.format("%s_%s.properties", propertiesName, repository.name().toUpperCase()))
+                .toString();
+        try (InputStream is = getClass().getClassLoader().getResourceAsStream(path)) {
+            prop.load(is);
+        } catch (NullPointerException | FileNotFoundException e) {
+            log.info("to run this test you need a file called {}", path);
+            log.info("the file should have the following properties: \nnamespace\nrepo\ntarget");
+            log.info("class loader used {}", getClass().getClassLoader());
+            fail("property file not found (" + path + ") " + e.getMessage());
+        } catch (IOException e) {
+            log.error("please verify that the file {} is ok", path);
+            fail("could not read properties file (" + path + ") " + e.getMessage());
+        }
+        return prop;
     }
 
     @And("bug-tracker is {word}")
@@ -99,13 +141,15 @@ public class GenericEndToEndSteps {
 
     @When("pushing a change")
     public void pushChange() {
-        String content = null;
+        String base64content = null;
+        String fileTextContent = null;
         try {
-            content = getFileInBase64();
+            base64content = readFileInBase64();
+            fileTextContent = readFile();
         } catch (IOException e) {
             fail("can not read source file");
         }
-        repository.pushFile(content);
+        repository.pushFile(base64content, fileTextContent);
     }
 
     @When("creating pull-request")
@@ -136,14 +180,26 @@ public class GenericEndToEndSteps {
         return engine;
     }
 
-    private String getFileInBase64() throws IOException {
+    Repository getRepository() {return this.repository;}
+
+    private String readFileInBase64() throws IOException {
         String path = new StringJoiner(File.separator)
                 .add("cucumber")
                 .add("data")
                 .add("input-files-toscan")
-                .add("e2e.src")
+                .add(FILE_WITH_VULNERABILITIES)
                 .toString();
-        return readAsBase64(path);
+        return getFileContentAsBase64(path);
+    }
+
+    private String readFile() throws IOException {
+        String path = new StringJoiner(File.separator)
+                .add("cucumber")
+                .add("data")
+                .add("input-files-toscan")
+                .add(FILE_WITH_VULNERABILITIES)
+                .toString();
+        return getFileContent(path);
     }
 
     String getConfigAsCodeInBase64() throws IOException {
@@ -153,18 +209,30 @@ public class GenericEndToEndSteps {
                 .add("input-files-toscan")
                 .add(E2E_CONFIG + ".src")
                 .toString();
-        return readAsBase64(path);
+        return getFileContentAsBase64(path);
     }
 
-    private String readAsBase64(String path) throws IOException {
+    String getConfigAsCodeTextContent(String fileName) throws IOException {
+        String path = new StringJoiner(File.separator)
+                .add("cucumber")
+                .add("data")
+                .add("input-files-toscan")
+                .add(fileName)
+                .toString();
+        return getFileContent(path);
+    }
+
+    private String getFileContentAsBase64(String path) throws IOException {
+        return Base64.getEncoder().encodeToString(getFileContent(path).getBytes());
+    }
+
+    private String getFileContent(String path)  throws IOException {
         try (InputStream is = getClass().getClassLoader().getResourceAsStream(path)) {
             try (
                     InputStreamReader isr = new InputStreamReader(is, Charset.forName("UTF-8"));
                     BufferedReader reader = new BufferedReader(isr)
             ) {
-                String content = reader.lines().collect(Collectors.joining(System.lineSeparator()));
-                String encodedString = Base64.getEncoder().encodeToString(content.getBytes());
-                return encodedString;
+                return reader.lines().collect(Collectors.joining(System.lineSeparator()));
             }
         }
     }

@@ -5,22 +5,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
-
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
+
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Properties;
-import java.util.StringJoiner;
 import java.util.concurrent.TimeUnit;
 
 import com.checkmarx.flow.config.ADOProperties;
 import com.checkmarx.flow.config.GitHubProperties;
+import com.checkmarx.flow.config.GitLabProperties;
 import com.checkmarx.flow.dto.azure.ConsumerInputs;
 import com.checkmarx.flow.dto.azure.PublisherInputs;
 import com.checkmarx.flow.dto.azure.Subscription;
@@ -28,11 +24,9 @@ import com.checkmarx.flow.dto.github.Committer;
 import com.checkmarx.flow.dto.github.Hook;
 import com.checkmarx.flow.dto.rally.Object;
 import com.checkmarx.flow.utils.MarkDownHelper;
-import com.checkmarx.sdk.config.ScaProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.platform.commons.PreconditionViolationException;
@@ -109,7 +103,7 @@ enum Repository {
                 String confFile;
                 try {
                     confFile = genericEndToEndSteps.getConfigAsCodeInBase64();
-                    pushFile(confFile , CONFIG_FILE_PATH);
+                    pushFileToActiveBranch(confFile , CONFIG_FILE_PATH);
                 } catch (IOException e) {
                     fail("failed to read config file in base 64 needed by github for sca");
                 }
@@ -141,11 +135,11 @@ enum Repository {
         }
 
         @Override
-        void pushFile(String content) {
-            pushFile(content , filePath);
+        void pushFile(String base64content, String textContent) {
+            pushFileToActiveBranch(base64content , filePath);
         }
 
-        private void pushFile(String content, String theFilePath) {
+        private void pushFileToActiveBranch(String content, String theFilePath) {
             Committer committer = new Committer();
             committer.setName("CxFlowTestUser");
             committer.setEmail("CxFlowTestUser@checkmarx.com");
@@ -221,7 +215,6 @@ enum Repository {
         protected void init(GenericEndToEndSteps genericEndToEndSteps) {
             gitHubProperties = genericEndToEndSteps.gitHubProperties;
             api = new GitHubApiHandler();
-            super.init(genericEndToEndSteps);
         }
 
         @Override
@@ -446,8 +439,8 @@ enum Repository {
         }
 
         @Override
-        void pushFile(String content) {
-            String data = null;
+        void pushFile(String base64content, String textContent) {
+            String data;
             String commitFilePath = getPushesFormat();
             String Path = "/encode.frm";
             final RestTemplate restTemplate = new RestTemplate();
@@ -455,7 +448,7 @@ enum Repository {
             ObjectMapper mapper = new ObjectMapper();
             String oldObject = getLastOldObject();
 
-            ObjectNode commit = createCommit(Path, content, oldObject);
+            ObjectNode commit = createCommit(Path, base64content, oldObject);
 
             try {
 
@@ -633,7 +626,6 @@ enum Repository {
         @Override
         protected void init(GenericEndToEndSteps genericEndToEndSteps) {
             adoProperties = genericEndToEndSteps.adoProperties;
-            super.init(genericEndToEndSteps);
         }
 
         @Override
@@ -669,39 +661,187 @@ enum Repository {
             throw new PendingException();
         }
 
+    },
+    GITLAB {
+
+        private static final String GET_PROJECT_URL = "/projects?search=";
+        private static final String GET_HOOKS_URL = "/projects/{id}/hooks";
+        private static final String CREATE_WEBHOOK_URL = "/projects/{id}/hooks?url={webhook}&token={token}";
+        private static final String DELETE_WEBHOOK_URL = "/projects/{id}/hooks/{webhookId}";
+        private static final String COMMIT_URL = "/projects/{id}/repository/commits";
+        private static final String CODE_FILE_PATH = "/encode.frm";
+        private static final String GITLAB_CONFIG_AS_CODE_FILE = "cx.gitlab.configuration";
+        private static final String GITLAB_CONFIG_AS_CODE_PATH = "/cx.gitlab.configuration";
+
+        GitLabProperties gitLabProperties;
+        private  Integer projectId = null;
+        private Integer webhookId = null;
+
+
+
+        @Override
+        protected void init(GenericEndToEndSteps genericEndToEndSteps) {
+            gitLabProperties = genericEndToEndSteps.gitLabProperties;
+            projectId = getProjectId();
+        }
+
+        @Override
+        Boolean hasWebHook() {
+            log.info("checking if webhook exist in project {}", projectId);
+            HttpEntity<String> httpEntity = new HttpEntity<>(getHeaders());
+            String hooksUrl = String.format("%s%s", gitLabProperties.getApiUrl(), GET_HOOKS_URL);
+            ResponseEntity<String> response = restTemplate.exchange(hooksUrl, HttpMethod.GET, httpEntity, String.class, projectId);
+            JSONArray projectWebhooks = new JSONArray(response.getBody());
+
+            return !projectWebhooks.isEmpty();
+        }
+
+        private int getProjectId()
+        {
+            String projectName = repo;
+            String getProjectsUrl = String.format("%s%s%s", gitLabProperties.getApiUrl(), GET_PROJECT_URL, projectName);
+            HttpEntity<String> httpEntity = new HttpEntity<>(getHeaders());
+            ResponseEntity<String> response = restTemplate.exchange(getProjectsUrl, HttpMethod.GET, httpEntity, String.class);
+
+            JSONArray projects = new JSONArray(response.getBody());
+            JSONObject gitlabProject = projects.getJSONObject(0);
+
+            int responseProjectId = gitlabProject.getInt("id");
+            log.info("found project Id: '{}' for project '{}'", responseProjectId, projectName);
+            return  responseProjectId;
+        }
+
+        @Override
+        void generateHook(HookType hookType) {
+
+            log.info("creating new webhook to project '{}'", projectId);
+            String hooksUrl = String.format("%s%s", gitLabProperties.getApiUrl(), CREATE_WEBHOOK_URL);
+            HttpEntity<String> httpEntity = new HttpEntity<>(getHeaders());
+            ResponseEntity<String> response = restTemplate.exchange(hooksUrl, HttpMethod.POST, httpEntity, String.class, projectId, hookTargetURL, gitLabProperties.getWebhookToken());
+            JSONObject webhook = new JSONObject(response.getBody());
+            webhookId = webhook.getInt("id");
+            log.info("webhook created with Id: '{}'", webhookId);
+        }
+
+        private void pushFileToBranch(String textContent, String path){
+            log.info("pushing file '{}' tp project '{}' ", path, projectId);
+
+            JSONObject requestBody = new JSONObject();
+            requestBody.put("branch", "master");
+            requestBody.put("commit_message", "pushing file");
+            JSONArray actions = new JSONArray();
+            JSONObject actionObject = new JSONObject();
+            actionObject.put("action", "create");
+            actionObject.put("file_path", path);
+            actionObject.put("content", textContent);
+            actions.put(actionObject);
+            requestBody.put("actions", actions);
+
+
+            String commitUrl = String.format("%s%s", gitLabProperties.getApiUrl(), COMMIT_URL);
+            HttpEntity<String> httpEntity = new HttpEntity<>(requestBody.toString(), getHeaders());
+
+            ResponseEntity<String> response = restTemplate.exchange(commitUrl, HttpMethod.POST, httpEntity, String.class, projectId);
+            JSONObject obj = new JSONObject(response.getBody());
+        }
+
+        @Override
+        void pushFile(String base64content, String textContent) {
+            pushFileToBranch(textContent, CODE_FILE_PATH);
+        }
+
+        @Override
+        void generateConfigAsCode(GenericEndToEndSteps genericEndToEndSteps) {
+            try{
+                String content = genericEndToEndSteps.getConfigAsCodeTextContent(GITLAB_CONFIG_AS_CODE_FILE);
+                pushFileToBranch(content, GITLAB_CONFIG_AS_CODE_PATH);
+            }catch (IOException ex)
+            {
+                log.info("failed to read config as code file: {}", GITLAB_CONFIG_AS_CODE_FILE);
+            }
+        }
+
+        @Override
+        void deleteHook() {
+            String hooksUrl = String.format("%s%s", gitLabProperties.getApiUrl(), DELETE_WEBHOOK_URL);
+            HttpEntity<String> httpEntity = new HttpEntity<>(getHeaders());
+            ResponseEntity<String> response = restTemplate.exchange(hooksUrl, HttpMethod.DELETE, httpEntity, String.class, projectId, webhookId);
+            if(response.getStatusCode().equals(HttpStatus.NO_CONTENT))
+            {
+                log.info("webhook Id: '{}' deleted successfully", webhookId);
+            }
+            else
+            {
+                log.info("failed to delete webhook '{}'. status code '{}", webhookId, response.getStatusCode());
+            }
+        }
+
+        @Override
+        HttpHeaders getHeaders() {
+            HttpHeaders httpHeaders = new HttpHeaders();
+            httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+            httpHeaders.set(PRIVATE_TOKEN_HEADER, gitLabProperties.getToken());
+            httpHeaders.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+            return httpHeaders;
+        }
+
+        @Override
+        void deleteFile() {
+            deleteFileFromBranch(CODE_FILE_PATH);
+            deleteFileFromBranch(GITLAB_CONFIG_AS_CODE_PATH);
+        }
+
+        private void deleteFileFromBranch(String path)
+        {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("branch", "master");
+            jsonObject.put("commit_message", "deleting file from branch");
+            JSONArray jsonArray = new JSONArray();
+            JSONObject actionObject = new JSONObject();
+            actionObject.put("action", "delete");
+            actionObject.put("file_path", path);
+            jsonArray.put(actionObject);
+            jsonObject.put("actions", jsonArray);
+
+
+            String commitUrl = String.format("%s%s", gitLabProperties.getApiUrl(), COMMIT_URL);
+            HttpEntity<String> httpEntity = new HttpEntity<>(jsonObject.toString(), getHeaders());
+
+            log.info("deleting file: {}", jsonObject.toString());
+            ResponseEntity<String> response = restTemplate.exchange(commitUrl, HttpMethod.POST, httpEntity, String.class, projectId);
+            JSONObject obj = new JSONObject(response.getBody());
+        }
+
+        @Override
+        void createPR() {
+
+        }
+
+        @Override
+        void deletePR() {
+
+
+        }
+
+        @Override
+        void verifyPRUpdated(String engine) {
+
+        }
     };
 
+    protected final RestTemplate restTemplate = new RestTemplate();
     private HookType hookType;
     /* where to push the file */
     static final String filePath = "src/main/java/sample/encode.frm";
+    protected final String PRIVATE_TOKEN_HEADER = "PRIVATE-TOKEN";
 
     static Repository setTo(String toRepository, GenericEndToEndSteps genericEndToEndSteps) {
         log.info("setting repository to {}", toRepository);
         Repository repo = valueOf(toRepository.toUpperCase());
-        repo.init(genericEndToEndSteps);
         return repo;
     }
 
-    protected void init(GenericEndToEndSteps genericEndToEndSteps) {
-        String upperCaseName = name().toUpperCase();
-        boolean isSca = ScaProperties.CONFIG_PREFIX.equalsIgnoreCase(genericEndToEndSteps.getEngine());
-        if (
-                System.getenv(upperCaseName + "_HOOK_NAMESPACE") == null ||
-                System.getenv(upperCaseName + "_HOOK_REPO") == null ||
-                System.getenv(upperCaseName + "_HOOK_TARGET") == null
-        ) {
-            log.info("running with property file");
-            Properties properties = getProperties("HookProperties");
-            namespace = properties.getProperty(upperCaseName + "_namespace");
-            repo = properties.getProperty(upperCaseName + "_repo" + (isSca ? "_SCA" : "" ) );
-            hookTargetURL = properties.getProperty(upperCaseName + "_target");
-        } else {
-            log.info("running with system variables");
-            namespace = System.getenv(upperCaseName + "_HOOK_NAMESPACE");
-            repo = System.getenv(upperCaseName + "_HOOK_REPO" + (isSca ? "_SCA" : "" ));
-            hookTargetURL = System.getenv(upperCaseName + "_HOOK_TARGET");
-        }
-    }
+    abstract void init(GenericEndToEndSteps genericEndToEndSteps);
 
     protected void generateWebHook(HookType hookType) {
         log.info("testing if repository already has hooks configured");
@@ -709,28 +849,6 @@ enum Repository {
         this.hookType = hookType;
         log.info("creating the webhook ({})", hookType);
         generateHook(hookType);
-    }
-
-    protected Properties getProperties(String propertiesName) {
-        Properties prop = new Properties();
-        String path = new StringJoiner(File.separator, File.separator, "")
-                .add("cucumber")
-                .add("features")
-                .add("e2eTests")
-                .add(String.format("%s_%s.properties", propertiesName, name().toUpperCase()))
-                .toString();
-        try (InputStream is = getClass().getClassLoader().getResourceAsStream(path)) {
-            prop.load(is);
-        } catch (NullPointerException | FileNotFoundException e) {
-            log.info("to run this test you need a file called {}", path);
-            log.info("the file should have the following properties: \nnamespace\nrepo\ntarget");
-            log.info("class loader used {}", getClass().getClassLoader());
-            fail("property file not found (" + path + ") " + e.getMessage());
-        } catch (IOException e) {
-            log.error("please verify that the file {} is ok", path);
-            fail("could not read properties file (" + path + ") " + e.getMessage());
-        }
-        return prop;
     }
 
     abstract Boolean hasWebHook();
@@ -741,7 +859,7 @@ enum Repository {
 
     abstract HttpHeaders getHeaders();
 
-    abstract void pushFile(String content);
+    abstract void pushFile(String base64content, String textContent);
 
     protected ResponseEntity<String> getResponseEntity(String requestUrl) {
         RestTemplate restTemplate = new RestTemplate();
@@ -756,16 +874,21 @@ enum Repository {
     abstract void deletePR();
     abstract void verifyPRUpdated(String engine);
 
+
     protected String namespace = null;
     protected String repo = null;
     protected String hookTargetURL = null;
     protected String activeBranch;
 
+    public void setNamespace(String namespace){ this.namespace = namespace;}
+    public void setRepoName(String repoName){ this.repo = repoName;}
+    public void setHookUrl(String hookTargetURL){ this.hookTargetURL = hookTargetURL;}
     public void setActiveBranch(String branch){
         log.info("setting active branch to: {}", branch);
         activeBranch = branch;
     }
 
+    public String getRepoName(){return repo;}
     public void cleanup() {
         Optional.ofNullable(hookType).ifPresent(h -> {
             switch (h) {
