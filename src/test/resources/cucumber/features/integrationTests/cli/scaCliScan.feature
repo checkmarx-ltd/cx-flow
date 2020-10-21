@@ -71,4 +71,4 @@ Feature: SCA support in CxFlow command-line
             | filters         | expected issue count |
             | Medium          | 3                    |
             | Medium,Low      | 4                    |
-            | none            | 54                   |
+            | none            | 55                   |
