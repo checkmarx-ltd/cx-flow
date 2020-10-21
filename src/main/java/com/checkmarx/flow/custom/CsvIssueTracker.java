@@ -46,7 +46,7 @@ public class CsvIssueTracker extends ImmutableIssueTracker {
                 Files.write(Paths.get(request.getFilename()), headers.getBytes());
             }
         } catch (IOException e) {
-            log.error("Issue deleting existing file or writing initial {}", filename, e);
+            log.error("Issue deleting or creating file {}", filename,e);
         }
     }
 
