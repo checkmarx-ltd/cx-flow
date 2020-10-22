@@ -13,8 +13,11 @@ import java.util.Map;
 @Validated
 public class SarifProperties {
     private String filePath = "./cx.sarif";
-    private String scannerName = "Checkmarx";
-    private String organization = "Checkmarx";
+    private String scaScannerName = "Checkmarx - SCA";
+    private String sastScannerName = "Checkmarx - SAST";
+    private String scaOrganization = "Checkmarx - SCA";
+    private String sastOrganization = "Checkmarx - SAST";
+
     private String sarifSchema="https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json";
     private String sarifVersion = "2.1.0";
     private String semanticVersion = "1.0.0";
@@ -36,24 +39,41 @@ public class SarifProperties {
         this.filePath = filePath;
     }
 
-    public String getScannerName() {
-        return scannerName;
+
+    public String getScaScannerName() {
+        return scaScannerName;
     }
 
-    public void setScannerName(String scannerName) {
-        this.scannerName = scannerName;
+    public void setScaScannerName(String scaScannerName) {
+        this.scaScannerName = scaScannerName;
     }
 
-    public String getOrganization() {
-        return organization;
+    public String getSastScannerName() {
+        return sastScannerName;
     }
 
-    public void setOrganization(String organization) {
-        this.organization = organization;
+    public void setSastScannerName(String sastScannerName) {
+        this.sastScannerName = sastScannerName;
     }
 
     public String getSarifSchema() {
         return sarifSchema;
+    }
+
+    public String getScaOrganization() {
+        return scaOrganization;
+    }
+
+    public void setScaOrganization(String scaOrganization) {
+        this.scaOrganization = scaOrganization;
+    }
+
+    public String getSastOrganization() {
+        return sastOrganization;
+    }
+
+    public void setSastOrganization(String sastOrganization) {
+        this.sastOrganization = sastOrganization;
     }
 
     public void setSarifSchema(String sarifSchema) {
