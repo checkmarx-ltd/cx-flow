@@ -2,33 +2,38 @@ package com.checkmarx.flow.utils;
 
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.constants.SCATicketingConstants;
-import com.checkmarx.flow.dto.*;
+import com.checkmarx.flow.dto.BugTracker;
+import com.checkmarx.flow.dto.Field;
+import com.checkmarx.flow.dto.FlowOverride;
+import com.checkmarx.flow.dto.RepoIssue;
+import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.ast.SCAResults;
-import com.cx.restclient.ast.dto.sast.report.FindingNode;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
+import com.cx.restclient.ast.dto.sast.report.FindingNode;
 import com.cx.restclient.ast.dto.sca.report.Finding;
 import com.cx.restclient.ast.dto.sca.report.Package;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
-
 import org.slf4j.Logger;
-
 import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.validation.constraints.NotNull;
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-
 import java.util.stream.Collectors;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -59,14 +64,12 @@ public class ScanUtils {
 
 
     private ScanUtils() {
-        // this is to hide the public constractor
+        // this is to hide the public constructor
     }
     /**
      * Function used to determine if file extension of full filename is preset in list
      *
-     * @param list
      * @param value - extension of file, or full filename
-     * @return
      */
     public static boolean fileListContains(List<String> list, String value){
         for(String s: list){
@@ -99,7 +102,7 @@ public class ScanUtils {
             xIssueBuilder.cwe("" + finding.getCweID());
             xIssueBuilder.severity(finding.getSeverity());
             xIssueBuilder.vulnerability(finding.getQueryName());
-            if(finding.getNodes().size() >0) {
+            if(!finding.getNodes().isEmpty()) {
                 xIssueBuilder.file(finding.getNodes().get(0).getFileName());
             }
             xIssueBuilder.vulnerabilityStatus(finding.getState());
@@ -174,8 +177,6 @@ public class ScanUtils {
 
     /**
      * Check if string is empty or null
-     * @param str
-     * @return
      */
     public static boolean empty(String str) {
         return str == null || str.trim().isEmpty();
@@ -190,8 +191,6 @@ public class ScanUtils {
     }
     /**
      * Check if list is empty or null
-     * @param list
-     * @return
      */
     public static boolean empty(List<?> list) {
         return (list == null) || list.isEmpty();
@@ -421,9 +420,6 @@ public class ScanUtils {
 
     /**
      * Creates a map of GitLab Issues
-     *
-     * @param issues
-     * @return
      */
     public static Map<String, ? extends RepoIssue> getRepoIssueMap(List<? extends RepoIssue> issues, String prefix) {
         Map<String, RepoIssue> map = new HashMap<>();
@@ -438,7 +434,6 @@ public class ScanUtils {
     /**
      *  Parse cx custom field which is csv for custom field mapping in jira:
      *  type, name, jira-field-name, jira-field-value, jira-field-type (separated by ; for multiple)
-     * @param cxFields
      * @return List of Fields
      */
     public static List<Field> getCustomFieldsFromCx(@NotNull String cxFields){
@@ -510,7 +505,7 @@ public class ScanUtils {
             int port = uri.getPort();
             hostWithProtocol = uri.getScheme() + "//"  + uri.getHost() + (port > 0 ? ":" + port : "");
         } catch (URISyntaxException e) {
-            log.debug("Could not parse given URL" + url, e);
+            log.debug(String.format("Could not parse given URL: %s", url), e);
         }
         return hostWithProtocol;
     }
@@ -585,8 +580,6 @@ public class ScanUtils {
 
     /**
      * Returns the string with first letter in uppercase and the remainder in lowercase
-     * @param s
-     * @return
      */
     public static String toProperCase(String s) {
         return s.substring(0, 1).toUpperCase() +

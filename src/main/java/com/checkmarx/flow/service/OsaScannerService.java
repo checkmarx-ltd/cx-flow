@@ -6,7 +6,10 @@ import com.checkmarx.flow.dto.ScanDetails;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.flow.exception.MachinaException;
+import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
+import com.checkmarx.sdk.dto.filtering.EngineFilterConfiguration;
+import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.util.List;
+import java.util.Optional;
 
 import static com.checkmarx.flow.exception.ExitThrowable.exit;
 
@@ -32,7 +37,13 @@ public class OsaScannerService {
 
     public void cxOsaParseResults(ScanRequest request, File file, File libs) throws ExitThrowable {
         try {
-            ScanResults results = cxService.getOsaReportContent(file, libs, request.getFilter().getSimpleFilters());
+            List<Filter> simpleFilters = Optional.ofNullable(request)
+                    .map(ScanRequest::getFilter)
+                    .map(FilterConfiguration::getSastFilters)
+                    .map(EngineFilterConfiguration::getSimpleFilters)
+                    .orElse(null);
+
+            ScanResults results = cxService.getOsaReportContent(file, libs, simpleFilters);
             resultsService.processResults(request, results, scanDetails);
             if(flowProperties.isBreakBuild() && results !=null && results.getXIssues()!=null && !results.getXIssues().isEmpty()){
                 log.error(ERROR_BREAK_MSG);

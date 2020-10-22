@@ -15,6 +15,7 @@ Feature: Cxflow generic end-2-end tests
       | sast        | GitHub     | JIRA        |
       | sast        | ADO        | JIRA        |
       | sca         | GitHub     | JIRA        |
+      | sast        | GitLab     | GitLab      |
 
 
   Scenario Outline: Check cxflow pull-request end-2-end <scan-engine> of <repository>

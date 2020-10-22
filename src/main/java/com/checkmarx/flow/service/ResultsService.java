@@ -15,8 +15,10 @@ import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
+import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxProject;
+import com.checkmarx.sdk.dto.filtering.EngineFilterConfiguration;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
@@ -123,7 +125,7 @@ public class ResultsService {
 
     public void processResults(ScanRequest request, ScanResults results, ScanDetails scanDetails) throws MachinaException {
         scanDetails = Optional.ofNullable(scanDetails).orElseGet(ScanDetails::new);
-        if (!cxProperties.getOffline()) {
+        if (Boolean.FALSE.equals(cxProperties.getOffline())) {
             getCxFields(request, results);
         }
         switch (request.getBugTracker().getType()) {
@@ -193,9 +195,14 @@ public class ResultsService {
     }
 
     ScanResults getOSAScan(ScanRequest request, Integer projectId, String osaScanId, FilterConfiguration filter, ScanResults results) throws CheckmarxException {
-        if (cxProperties.getEnableOsa() && !ScanUtils.empty(osaScanId)) {
+        if (Boolean.TRUE.equals(cxProperties.getEnableOsa()) && !ScanUtils.empty(osaScanId)) {
             log.info("Waiting for OSA Scan results for scan id {}", osaScanId);
-            results = osaService.waitForOsaScan(osaScanId, projectId, results, filter.getSimpleFilters());
+
+            List<Filter> filters = Optional.ofNullable(filter.getScaFilters())
+                    .map(EngineFilterConfiguration::getSimpleFilters)
+                    .orElse(null);
+
+            results = osaService.waitForOsaScan(osaScanId, projectId, results, filters);
 
             new ScanResultsReport(osaScanId, request, results).log();
         }

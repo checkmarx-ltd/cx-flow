@@ -1,0 +1,14 @@
+{
+    "additionalProperties": {
+        "cxFlow": {
+            "bugTracker": "GitLab",
+            "filters": {
+                "severity": ["High", "Medium"]
+            },
+            "thresholds": {
+                "MEDIUM": 1,
+                "LOW": 15
+            }
+        }
+    }
+}
