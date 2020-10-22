@@ -79,12 +79,12 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
         for (Map.Entry<String, List<Finding>> entry : findingsMap.entrySet()) {
             String key = entry.getKey();
             StringBuilder markDownValue = new StringBuilder();
-            markDownValue.append(String.format(MARKDOWN_TABLE_FORMAT, "Reference", "Description", "CVE Name", "Score")).append("\r");
+            markDownValue.append(String.format(MARKDOWN_TABLE_FORMAT, "CVE Name", "Description", "Score", "References")).append("\r");
             markDownValue.append(String.format(MARKDOWN_TABLE_FORMAT, "---", "---", "---", "---")).append("\r");
             List<Finding> val = entry.getValue();
             List<String> tags = new ArrayList<>();
             val.forEach(v -> {
-                markDownValue.append(String.format(MARKDOWN_TABLE_FORMAT, v.getReferences(), v.getDescription(), v.getCveName(), v.getScore())).append("\r");
+                markDownValue.append(String.format(MARKDOWN_TABLE_FORMAT, v.getCveName(), v.getDescription(), v.getScore(), v.getReferences())).append("\r");
                 if (!tags.contains(String.valueOf(v.getScore())))
                     tags.add(String.valueOf(v.getScore()));
             });
