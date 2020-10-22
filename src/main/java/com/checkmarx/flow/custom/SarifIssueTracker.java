@@ -5,14 +5,19 @@ import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.service.FilenameFormatter;
+import com.cx.restclient.ast.dto.sca.report.Finding;
+import com.cx.restclient.ast.dto.sca.report.Package;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import com.google.common.collect.Lists;
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
 import java.util.*;
+
 import java.util.stream.Collectors;
 
 /**
@@ -26,6 +31,7 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
     private final SarifProperties properties;
     private final FilenameFormatter filenameFormatter;
     private static final String DEFAULT_LEVEL = "error";
+    private static final String MARKDOWN_TABLE_FORMAT = "| %s | %s | %s | %s |";
 
     @Override
     public void init(ScanRequest request, ScanResults results) throws MachinaException {
@@ -35,8 +41,111 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
     @Override
     public void complete(ScanRequest request, ScanResults results) throws MachinaException {
         log.info("Finalizing SARIF output");
+        List<SarifVulnerability> run=Lists.newArrayList();
+        if(results.getXIssues() != null) {
+            log.info("Generating SAST Sarif Report");
+            generateSastResults(results,run);
+            // Filter issues without false-positives
+            // Build the run object
+        }
+        if(results.getScaResults() != null ){
+            log.info("Generating SCA Sarif Report");
+            generateScaResults(results,run);
+        }
 
-        // Filter issues without false-positives
+        // Build the report
+        SarifReport report = SarifReport.builder()
+                .schema(properties.getSarifSchema())
+                .version(properties.getSarifVersion())
+                .runs(run)
+                .build();
+
+        writeJsonOutput(request, report, log);
+    }
+
+    private void generateScaResults(ScanResults results, List<SarifVulnerability> run) {
+        List<Rule> scaScanrules = Lists.newArrayList();
+        List<Result> scaScanresultList = Lists.newArrayList();
+        Map<String, List<Finding>> findingsMap = results.getScaResults()
+                .getFindings().stream().collect(Collectors.groupingBy(Finding::getPackageId));
+
+        List<Package> packages = new ArrayList<>(results.getScaResults()
+                .getPackages());
+
+        Map<String, Package> map = new HashMap<>();
+        for (Package p : packages) map.put(p.getId(), p);
+
+
+        for (Map.Entry<String, List<Finding>> entry : findingsMap.entrySet()) {
+            String key = entry.getKey();
+            StringBuilder markDownValue = new StringBuilder();
+            markDownValue.append(String.format(MARKDOWN_TABLE_FORMAT, "CVE Name", "Description", "Score", "References")).append("\r");
+            markDownValue.append(String.format(MARKDOWN_TABLE_FORMAT, "---", "---", "---", "---")).append("\r");
+            List<Finding> val = entry.getValue();
+            List<String> tags = new ArrayList<>();
+            val.forEach(v -> {
+                markDownValue.append(String.format(MARKDOWN_TABLE_FORMAT, v.getCveName(), v.getDescription(), v.getScore(), v.getReferences())).append("\r");
+                if (!tags.contains(String.valueOf(v.getScore())))
+                    tags.add(String.valueOf(v.getScore()));
+            });
+            tags.replaceAll(s -> "CVSS-" + s);
+            tags.add("security");
+            Rule rule = Rule.builder().id(key)
+                    .shortDescription(ShortDescription.builder().text(key).build())
+                    .fullDescription(FullDescription.builder().text(key).build())
+                    .help(Help.builder().markdown(String.valueOf(markDownValue).replace("\n", " ").replace("[", "").replace("]", "")).text(String.valueOf(markDownValue).replace("\n", " ")).build())
+                    .properties(Properties.builder().tags(tags).build())
+                    .build();
+
+            List<Location> locations = Lists.newArrayList();
+            List<String> locationString = Lists.newArrayList();
+            map.get(key).getLocations().forEach(k -> {
+                if (!locationString.contains(k)) {
+                    locationString.add(k);
+                }
+            });
+
+
+            locations.add(Location.builder()
+                    .physicalLocation(PhysicalLocation.builder()
+                            .artifactLocation(ArtifactLocation.builder()
+                                    .uri(locationString.stream().map(String::valueOf).collect(Collectors.joining(",")))
+                                    .build())
+                            .build())
+                    .build());
+
+            // Build collection of the results -> locations
+            scaScanresultList.add(
+                    Result.builder()
+                            .level(properties.getSeverityMap().get(map.get(key).getSeverity().toString()) != null ? properties.getSeverityMap().get(map.get(key).getSeverity().toString()) : DEFAULT_LEVEL)
+                            .locations(locations)
+                            .message(Message.builder()
+                                    .text(key)
+                                    .build())
+                            .ruleId(key)
+                            .build()
+            );
+
+            scaScanrules.add(rule);
+
+        }
+        run.add(SarifVulnerability
+                .builder()
+                .tool(Tool.builder()
+                        .driver(Driver.builder()
+                                .name(properties.getScaScannerName())
+                                .organization(properties.getScaOrganization())
+                                .semanticVersion(properties.getSemanticVersion())
+                                .rules(scaScanrules)
+                                .build())
+                        .build())
+                .results(scaScanresultList)
+                .build());
+    }
+
+    private void generateSastResults(ScanResults results, List<SarifVulnerability> run) {
+        List<Rule> sastScanrules;
+        List<Result> sastScanresultList = Lists.newArrayList();
         List<ScanResults.XIssue> filteredXIssues =
                 results.getXIssues()
                         .stream()
@@ -52,7 +161,7 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                         .filter(x -> !x.isAllFalsePositive())
                         .collect(Collectors.toList());
         // Build the collection of the rules objects (Vulnerabilities)
-        List<Rule> rules = filteredByVulns.stream().map(i -> Rule.builder()
+        sastScanrules = filteredByVulns.stream().map(i -> Rule.builder()
                 .id(i.getVulnerability())
                 .name(i.getVulnerability())
                 .shortDescription(ShortDescription.builder().text(i.getVulnerability()).build())
@@ -68,12 +177,12 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                         .build())
                 .build()).collect(Collectors.toList());
         //All issues to create the results/locations that are not all false positive
-        List<Result> resultList = Lists.newArrayList();
+
         filteredXIssues.forEach(
                 issue -> {
                     List<Location> locations = Lists.newArrayList();
                     issue.getDetails().forEach((k, v) -> {
-                        if(!v.isFalsePositive()) {
+                        if (!v.isFalsePositive()) {
                             locations.add(Location.builder()
                                     .physicalLocation(PhysicalLocation.builder()
                                             .artifactLocation(ArtifactLocation.builder()
@@ -89,44 +198,33 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                         }
                     });
                     // Build collection of the results -> locations
-                    resultList.add(
+                    sastScanresultList.add(
                             Result.builder()
-                            .level(properties.getSeverityMap().get(issue.getSeverity()) != null ? properties.getSeverityMap().get(issue.getSeverity()) : DEFAULT_LEVEL)
-                            .locations(locations)
-                            .message(Message.builder()
-                                    .text(issue.getDescription())
-                                    .build())
-                            .ruleId(issue.getVulnerability())
-                            .build()
+                                    .level(properties.getSeverityMap().get(issue.getSeverity()) != null ? properties.getSeverityMap().get(issue.getSeverity()) : DEFAULT_LEVEL)
+                                    .locations(locations)
+                                    .message(Message.builder()
+                                            .text(issue.getDescription())
+                                            .build())
+                                    .ruleId(issue.getVulnerability())
+                                    .build()
                     );
 
                 }
         );
-
-        // Build the run object
-        SarifVulnerability run =
-                SarifVulnerability
-                        .builder()
-                        .tool(Tool.builder()
-                                .driver(Driver.builder()
-                                    .name(properties.getScannerName())
-                                    .organization(properties.getOrganization())
-                                    .semanticVersion(properties.getSemanticVersion())
-                                    .rules(rules)
-                                    .build())
+        run.add(SarifVulnerability
+                .builder()
+                .tool(Tool.builder()
+                        .driver(Driver.builder()
+                                .name(properties.getSastScannerName())
+                                .organization(properties.getSastOrganization())
+                                .semanticVersion(properties.getSemanticVersion())
+                                .rules(sastScanrules)
                                 .build())
-                        .results(resultList)
-                        .build();
-
-        // Build the report
-        SarifReport report = SarifReport.builder()
-                .schema(properties.getSarifSchema())
-                .version(properties.getSarifVersion())
-                .runs(Collections.singletonList(run))
-                .build();
-
-        writeJsonOutput(request, report, log);
+                        .build())
+                .results(sastScanresultList)
+                .build());
     }
+
 
     @Data
     @Builder
