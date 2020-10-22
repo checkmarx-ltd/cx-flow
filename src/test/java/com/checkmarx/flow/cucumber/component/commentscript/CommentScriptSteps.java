@@ -10,11 +10,15 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.sastscanning.ScanRequestConverter;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.ShardManager.ShardSessionTracker;
+import com.checkmarx.sdk.config.CxGoProperties;
 import com.checkmarx.sdk.config.CxProperties;
+import com.checkmarx.sdk.config.CxPropertiesBase;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxScanParams;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.*;
+import com.cx.restclient.CxGoClientImpl;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
@@ -23,8 +27,6 @@ import io.cucumber.java.en.When;
 import io.cucumber.spring.CucumberContextConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.File;
@@ -45,10 +47,12 @@ public class CommentScriptSteps {
     private final static  String INVALID_SCRIPT = "invalid-syntax-script-comment";
     private final static  String EMPTY_STRING = "";
     final private CxService cxClientMock;
+    final private CxGoClientImpl cxgoClientMock;
     private final ScanRequestConverter scanRequestConverterMock;
     private final SastScanner sastScanner;
-    private final CxGoScanner cxgoScanner;
+    //private final CxGoScanner cxgoScanner;
     private final CxProperties cxProperties;
+    private final CxGoProperties cxgoProperties;
     private final FlowController flowController;
     private final FlowProperties flowProperties;
     private String branchName;
@@ -56,25 +60,43 @@ public class CommentScriptSteps {
 
     public CommentScriptSteps(FlowProperties flowProperties, CxProperties cxProperties, HelperService helperService,
                               JiraProperties jiraProperties, FilterFactory filterFactory, ConfigurationOverrider configOverrider,
-                              ResultsService resultService, ProjectNameGenerator projectNameGenerator, BugTrackerEventTrigger btet){
+                              ResultsService resultService, ProjectNameGenerator projectNameGenerator, BugTrackerEventTrigger btet, CxGoProperties cxgoProperties){
+        this.cxgoProperties = cxgoProperties;
 
-
+        this.cxgoClientMock = mock(CxGoClientImpl.class);;
         cxClientMock = mock(CxService.class);
-        scanRequestConverterMock = mock(ScanRequestConverter.class);
-
+        
+        scanRequestConverterMock = mock(ScanRequestConverter.class, Mockito.withSettings().useConstructor(
+                helperService,  flowProperties,  null,   null,   null,   null,  null, cxClientMock, cxProperties ));
+        
         this.flowProperties = flowProperties;
+        
+        sastScanner = mock(SastScanner.class, Mockito.withSettings().useConstructor(
+                resultService,
+                helperService,
+                cxProperties,
+                flowProperties,
+                null,
+                null,
+                btet,
+                projectNameGenerator,
+                cxClientMock, null,null, null, null, null));
+        
+                
+//        cxgoScanner = mock(CxGoScanner.class, Mockito.withSettings().useConstructor(
+//                resultService,
+//                helperService,
+//                flowProperties,
+//                null,btet, projectNameGenerator,null, null,null, null,null, cxgoClientMock, cxgoProperties));
 
-        sastScanner = mock(SastScanner.class, Mockito.withSettings().useConstructor(resultService, cxClientMock,
-                helperService, cxProperties, flowProperties, null, null, scanRequestConverterMock, btet, null));
 
-        cxgoScanner = mock(CxGoScanner.class, Mockito.withSettings().useConstructor(resultService, cxClientMock,
-                helperService, cxProperties, flowProperties, null, null, scanRequestConverterMock, btet, null));
+        //cxgoScanner = mock(CxGoScanner.class, Mockito.withSettings().useConstructor(resultService,helperService,flowProperties,null,btet,projectNameGenerator,null,null,null,null,null,cxgoClientMock, cxgoProperties));
 
         this.cxProperties = cxProperties;
         FlowService flowService = new FlowService(Collections.singletonList(sastScanner), projectNameGenerator, resultService);
 
         CxScannerService scannerService = new CxScannerService(cxProperties, null, flowProperties, cxClientMock, null);
-        this.flowController = new FlowController(flowProperties, scannerService, flowService, helperService, jiraProperties, filterFactory, configOverrider, sastScanner, cxgoScanner);
+        this.flowController = new FlowController(flowProperties, scannerService, flowService, helperService, jiraProperties, filterFactory, configOverrider, sastScanner, null);
     }
 
 
@@ -86,6 +108,9 @@ public class CommentScriptSteps {
             return null;});
         when(cxClientMock.getReportContentByScanId(nullable(Integer.class), any())).thenReturn(new ScanResults());
 
+        when(sastScanner.getScannerClient()).thenReturn(cxClientMock);
+        when(sastScanner.getScanRequestConverter()).thenReturn(scanRequestConverterMock);
+        
         when(sastScanner.isEnabled()).thenReturn(true);
         when(sastScanner.scan(any())).thenCallRealMethod();
 

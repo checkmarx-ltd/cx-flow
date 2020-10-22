@@ -48,7 +48,7 @@ public class CxGoScanner extends AbstractVulnerabilityScanner {
     }
 
     @Override
-    protected ScanRequestConverter getScanRequestConverter() {
+    public ScanRequestConverter getScanRequestConverter() {
         return scanRequestConverter;
     }
 

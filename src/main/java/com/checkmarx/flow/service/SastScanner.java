@@ -66,7 +66,7 @@ public class SastScanner extends AbstractVulnerabilityScanner {
     }
 
     @Override
-    protected ScanRequestConverter getScanRequestConverter() {
+    public ScanRequestConverter getScanRequestConverter() {
         return scanRequestConverter;
     }
     
