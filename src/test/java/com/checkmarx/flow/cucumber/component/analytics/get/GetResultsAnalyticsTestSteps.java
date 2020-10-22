@@ -54,14 +54,16 @@ public class GetResultsAnalyticsTestSteps {
     private static final String MERGE_NOTE_URL = "merge note url stub";
     private final CxService cxClientMock;
     private final EmailService emailService;
+    private final CxProperties cxProperties;
     private ScanResults scanResultsToInject;
     private ResultsService resultsService;
 
 
-    public GetResultsAnalyticsTestSteps(CxService cxClientMock, FlowProperties flowProperties, EmailService emailService) {
+    public GetResultsAnalyticsTestSteps(CxService cxClientMock, FlowProperties flowProperties, EmailService emailService, CxProperties cxProperties) {
         this.cxClientMock = cxClientMock;
         flowProperties.setThresholds(new HashMap<>());
         this.emailService = emailService;
+        this.cxProperties = cxProperties;
     }
 
     @Before()
@@ -73,7 +75,7 @@ public class GetResultsAnalyticsTestSteps {
 
     private ResultsService createResultsService() {
         
-        CxScannerService cxScannerService = new CxScannerService((CxProperties) cxClientMock.getCxPropertiesBase(),null, null, cxClientMock, null );
+        CxScannerService cxScannerService = new CxScannerService(cxProperties,null, null, cxClientMock, null );
         
         return new ResultsService(
                 cxScannerService,
