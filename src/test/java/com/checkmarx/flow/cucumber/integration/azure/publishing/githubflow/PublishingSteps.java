@@ -7,6 +7,7 @@ import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.controller.*;
 import com.checkmarx.flow.cucumber.integration.azure.publishing.AzureDevopsClient;
 import com.checkmarx.flow.cucumber.integration.azure.publishing.PublishingStepsBase;
+import com.checkmarx.flow.sastscanning.ScanRequestConverter;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.github.GitHubTestUtils;
 import com.checkmarx.sdk.config.Constants;
@@ -14,6 +15,7 @@ import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
+import com.checkmarx.sdk.service.CxService;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
@@ -24,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionTimeoutException;
 import org.junit.Assert;
+import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
@@ -34,6 +37,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
@@ -56,13 +60,13 @@ public class PublishingSteps extends PublishingStepsBase {
     private final GitHubService gitHubService;
     private final GitHubAppAuthService gitHubAppAuthService;
     private final ResultsService resultsService;
-    private final VulnerabilityScanner sastScanner;
+    private SastScanner sastScanner;
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
     private final ScmConfigOverrider scmConfigOverrider;
 
     @MockBean
-    private final CxClient cxClientMock;
+    private final CxService cxClientMock;
 
     @MockBean
     private final ProjectNameGenerator projectNameGenerator;
@@ -113,7 +117,7 @@ public class PublishingSteps extends PublishingStepsBase {
 
     @Then("ADO contains {int} issues")
     public void adoContainsIssueCount(int expectedIssueCount) {
-        Duration timeout = Duration.ofSeconds(30);
+        Duration timeout = Duration.ofSeconds(1000);
         Duration pollInterval = Duration.ofSeconds(5);
         try {
             Awaitility.await().atMost(timeout)
@@ -128,6 +132,24 @@ public class PublishingSteps extends PublishingStepsBase {
     }
 
     private void initCxClientMock() throws CheckmarxException {
+
+        sastScanner = mock(SastScanner.class, Mockito.withSettings().useConstructor(
+                resultsService,
+                helperService,
+                cxProperties,
+                flowProperties,
+                null,
+                null,
+                null,
+                projectNameGenerator,
+                cxClientMock, null,null, null, null, null));
+
+        ScanRequestConverter scanRequestConverterMock = mock(ScanRequestConverter.class, Mockito.withSettings().useConstructor(
+                helperService, flowProperties, null, null, null, null, null, cxClientMock, cxProperties));
+
+        when(sastScanner.getScannerClient()).thenReturn(cxClientMock);
+        when(sastScanner.getScanRequestConverter()).thenReturn(scanRequestConverterMock);
+        
         when(cxClientMock.getReportContentByScanId(anyInt(), any()))
                 .thenAnswer(invocation -> scanResultsToInject);
 
