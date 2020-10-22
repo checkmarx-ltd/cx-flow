@@ -117,7 +117,7 @@ public class PublishingSteps extends PublishingStepsBase {
 
     @Then("ADO contains {int} issues")
     public void adoContainsIssueCount(int expectedIssueCount) {
-        Duration timeout = Duration.ofSeconds(1000);
+        Duration timeout = Duration.ofSeconds(30);
         Duration pollInterval = Duration.ofSeconds(5);
         try {
             Awaitility.await().atMost(timeout)
