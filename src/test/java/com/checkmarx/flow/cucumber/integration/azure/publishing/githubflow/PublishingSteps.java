@@ -106,7 +106,6 @@ public class PublishingSteps extends PublishingStepsBase {
 
     @And("SAST scan returns a report with 1 finding")
     public void sastScanReturnsAReportWithFinding() {
-        scanResultsToInject = new ScanResultsBuilder().getScanResultsWithSingleFinding(getProjectName());
     }
 
     @And("CxFlow publishes the report")
@@ -144,17 +143,12 @@ public class PublishingSteps extends PublishingStepsBase {
                 projectNameGenerator,
                 cxClientMock, null,null, null, null, null));
 
-        ScanRequestConverter scanRequestConverterMock = mock(ScanRequestConverter.class, Mockito.withSettings().useConstructor(
-                helperService, flowProperties, null, null, null, null, null, cxClientMock, cxProperties));
+        scanResultsToInject = new ScanResultsBuilder().getScanResultsWithSingleFinding(getProjectName());
 
-        when(sastScanner.getScannerClient()).thenReturn(cxClientMock);
-        when(sastScanner.getScanRequestConverter()).thenReturn(scanRequestConverterMock);
+        when(sastScanner.isEnabled()).thenReturn(true);
+
+        when(sastScanner.scan(any())).thenReturn(scanResultsToInject);
         
-        when(cxClientMock.getReportContentByScanId(anyInt(), any()))
-                .thenAnswer(invocation -> scanResultsToInject);
-
-        when(cxClientMock.getTeamId(anyString()))
-                .thenReturn("dummyTeamId");
 
         // Prevent an error related to scan resubmission.
         when(cxClientMock.getScanIdOfExistingScanIfExists(any()))
