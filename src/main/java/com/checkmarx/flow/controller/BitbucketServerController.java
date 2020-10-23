@@ -128,8 +128,10 @@ public class BitbucketServerController extends WebhookController {
         return doMergeEvent(body, product, signature, controllerRequest);
     }
 
-    private ResponseEntity<EventResponse> doMergeEvent(String body, String product, String signature,
-            ControllerRequest controllerRequest) {
+    private ResponseEntity<EventResponse> doMergeEvent(String body, 
+                                                       String product, 
+                                                       String signature,
+                                                       ControllerRequest controllerRequest) {
         String uid = helperService.getShortUid();
         MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
         verifyHmacSignature(body, signature);
@@ -251,10 +253,12 @@ public class BitbucketServerController extends WebhookController {
     /**
      * Receive Push event submitted from Bitbucket
      */
-    @PostMapping(value = { "/{product}", "/" }, headers = PUSH)
-    public ResponseEntity<EventResponse> pushRequest(@RequestBody String body,
+    @PostMapping(value = {"/{product}", "/"}, headers = PUSH)
+    public ResponseEntity<EventResponse> pushRequest(
+            @RequestBody String body,
             @PathVariable(value = "product", required = false) String product,
-            @RequestHeader(value = SIGNATURE) String signature, ControllerRequest controllerRequest
+            @RequestHeader(value = SIGNATURE) String signature,
+            ControllerRequest controllerRequest
 
     ) {
         String uid = helperService.getShortUid();
