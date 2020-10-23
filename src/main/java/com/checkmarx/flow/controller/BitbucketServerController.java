@@ -128,8 +128,8 @@ public class BitbucketServerController extends WebhookController {
         return doMergeEvent(body, product, signature, controllerRequest);
     }
 
-    private ResponseEntity<EventResponse> doMergeEvent(String body, 
-                                                       String product, 
+    private ResponseEntity<EventResponse> doMergeEvent(String body,
+                                                       String product,
                                                        String signature,
                                                        ControllerRequest controllerRequest) {
         String uid = helperService.getShortUid();
@@ -383,7 +383,8 @@ public class BitbucketServerController extends WebhookController {
     }
 
     private String getGitUrl(Repository repository) {
-        return properties.getUrl().concat("/scm/").concat(repository.getProject().getKey().concat("/"))
+        return properties.getUrl().concat("/scm/")
+                .concat(repository.getProject().getKey().concat("/"))
                 .concat(repository.getSlug()).concat(".git");
     }
 
