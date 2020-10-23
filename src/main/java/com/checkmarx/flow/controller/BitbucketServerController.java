@@ -105,10 +105,13 @@ public class BitbucketServerController extends WebhookController {
     /**
      * Push Request event webhook submitted.
      */
-    @PostMapping(value = { "/{product}", "/" }, headers = MERGED)
-    public ResponseEntity<EventResponse> mergedRequest(@RequestBody String body,
+    @PostMapping(value = {"/{product}", "/"}, headers = MERGED)
+    public ResponseEntity<EventResponse> mergedRequest(\
+            @RequestBody String body,
             @PathVariable(value = "product", required = false) String product,
-            @RequestHeader(value = SIGNATURE) String signature, ControllerRequest controllerRequest) {
+            @RequestHeader(value = SIGNATURE) String signature,
+            ControllerRequest controllerRequest
+    ) {
         return doMergeEvent(body, product, signature, controllerRequest);
     }
 
