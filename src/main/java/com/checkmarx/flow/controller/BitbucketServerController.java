@@ -188,15 +188,29 @@ public class BitbucketServerController extends WebhookController {
                 scanPreset = controllerRequest.getPreset();
             }
 
-            ScanRequest request = ScanRequest.builder().application(app).product(p)
-                    .project(controllerRequest.getProject()).team(controllerRequest.getTeam())
-                    .namespace(getNamespace(fromRefRepository)).repoName(fromRefRepository.getName()).repoUrl(gitUrl)
-                    .repoUrlWithAuth(gitAuthUrl).repoType(ScanRequest.Repository.BITBUCKETSERVER).branch(currentBranch)
-                    .mergeTargetBranch(targetBranch).mergeNoteUri(mergeEndpoint).refs(fromRef.getId()).email(null)
-                    .incremental(isScanIncremental(controllerRequest, cxProperties)).scanPreset(scanPreset)
-                    .excludeFolders(controllerRequest.getExcludeFolders())
-                    .excludeFiles(controllerRequest.getExcludeFiles()).bugTracker(bt).filter(filter)
-                    .hash(fromRefLatestCommit).build();
+            ScanRequest request = ScanRequest.builder()
+                .application(app)
+                .product(p)
+                .project(controllerRequest.getProject())
+                .team(controllerRequest.getTeam())
+                .namespace(getNamespace(fromRefRepository))
+                .repoName(fromRefRepository.getName())
+                .repoUrl(gitUrl)
+                .repoUrlWithAuth(gitAuthUrl)
+                .repoType(ScanRequest.Repository.BITBUCKETSERVER)
+                .branch(currentBranch)
+                .mergeTargetBranch(targetBranch)
+                .mergeNoteUri(mergeEndpoint)
+                .refs(fromRef.getId())
+                .email(null)
+                .incremental(isScanIncremental(controllerRequest, cxProperties))
+                .scanPreset(scanPreset)
+                .excludeFolders(controllerRequest.getExcludeFolders())
+                .excludeFiles(controllerRequest.getExcludeFiles())
+                .bugTracker(bt)
+                .filter(filter)
+                .hash(fromRefLatestCommit)
+                .build();
 
             setBrowseUrl(fromRefRepository, request);
             fillRequestWithCommonAdditionalData(request, toRefRepository, body);
@@ -286,15 +300,27 @@ public class BitbucketServerController extends WebhookController {
                 scanPreset = controllerRequest.getPreset();
             }
 
-            ScanRequest request = ScanRequest.builder().application(app).product(p)
-                    .project(controllerRequest.getProject()).team(controllerRequest.getTeam())
-                    .namespace(getNamespace(repository)).repoName(repository.getName()).repoUrl(gitUrl)
-                    .repoUrlWithAuth(gitAuthUrl).repoType(ScanRequest.Repository.BITBUCKETSERVER).branch(currentBranch)
-                    .refs(event.getChanges().get(0).getRefId()).email(emails)
-                    .incremental(isScanIncremental(controllerRequest, cxProperties)).scanPreset(scanPreset)
-                    .excludeFolders(controllerRequest.getExcludeFolders())
-                    .excludeFiles(controllerRequest.getExcludeFiles()).bugTracker(bt).filter(filter).hash(latestCommit)
-                    .build();
+            ScanRequest request = ScanRequest.builder()
+                .application(app)
+                .product(p)
+                .project(controllerRequest.getProject())
+                .team(controllerRequest.getTeam())
+                .namespace(getNamespace(repository))
+                .repoName(repository.getName())
+                .repoUrl(gitUrl)
+                .repoUrlWithAuth(gitAuthUrl)
+                .repoType(ScanRequest.Repository.BITBUCKETSERVER)
+                .branch(currentBranch)
+                .refs(event.getChanges().get(0).getRefId())
+                .email(emails)
+                .incremental(isScanIncremental(controllerRequest, cxProperties))
+                .scanPreset(scanPreset)
+                .excludeFolders(controllerRequest.getExcludeFolders())
+                .excludeFiles(controllerRequest.getExcludeFiles())
+                .bugTracker(bt)
+                .filter(filter)
+                .hash(latestCommit)
+                .build();
 
             setBrowseUrl(repository, request);
             fillRequestWithCommonAdditionalData(request, repository, body);
