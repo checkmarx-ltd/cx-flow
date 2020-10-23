@@ -39,7 +39,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
-
 @RestController
 @RequestMapping(value = "/")
 @RequiredArgsConstructor
@@ -175,7 +174,8 @@ public class BitbucketServerController extends WebhookController {
             List<String> branches = getBranches(controllerRequest, flowProperties);
             String fromRefLatestCommit = fromRef.getLatestCommit();
 
-            BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
+            BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties,
+                    controllerRequest.getBug());
 
             FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
 
@@ -224,16 +224,15 @@ public class BitbucketServerController extends WebhookController {
                     .hash(fromRefLatestCommit)
                     .build();
 
-            request.putAdditionalMetadata(BitBucketService.REPO_SELF_URL, repoSelfUrl);
             setBrowseUrl(fromRefRepository, request);
+            fillRequestWithCommonAdditionalData(request, toRefRepository, body);
             checkForConfigAsCode(request);
-            request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, body);
             request.putAdditionalMetadata("buildStatusUrl", buildStatusEndpoint);
             request.putAdditionalMetadata("cxBaseUrl", cxProperties.getBaseUrl());
             request.putAdditionalMetadata("blocker-comment-url", blockerCommentUrl);
             request.setId(uid);
 
-            //only initiate scan/automation if target branch is applicable
+            // only initiate scan/automation if target branch is applicable
             if (helperService.isBranch2Scan(request, branches)) {
                 flowService.initiateAutomation(request);
             }
@@ -297,7 +296,8 @@ public class BitbucketServerController extends WebhookController {
             List<String> branches = getBranches(controllerRequest, flowProperties);
             String latestCommit = event.getChanges().get(INDEX_FROM_CHANGES).getToHash();
 
-            BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
+            BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties,
+                    controllerRequest.getBug());
             FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
 
             setExclusionProperties(cxProperties, controllerRequest);
@@ -335,10 +335,9 @@ public class BitbucketServerController extends WebhookController {
                     .hash(latestCommit)
                     .build();
 
-
             setBrowseUrl(repository, request);
+            fillRequestWithCommonAdditionalData(request, repository, body);
             checkForConfigAsCode(request);
-            fillRequestWithAdditionalData(request, repository, body);
             request.setId(uid);
             //only initiate scan/automation if target branch is applicable
             if (helperService.isBranch2Scan(request, branches)) {
@@ -392,18 +391,25 @@ public class BitbucketServerController extends WebhookController {
         configOverrider.overrideScanRequestProperties(cxConfig, request);
     }
 
-    private void fillRequestWithAdditionalData(ScanRequest request, Repository repository, String hookPayload) {
-        String repoSelfUrl = getRepoSelfUrl(repository.getProject().getKey(), repository.getSlug());
+    private void fillRequestWithCommonAdditionalData(ScanRequest request, Repository_ repository, String hookPayload) {
+        fillRequestWithCommonAdditionalData (request, repository.getProject().getKey(), repository.getSlug(), hookPayload);
+    }
+
+    private void fillRequestWithCommonAdditionalData(ScanRequest request, Repository repository, String hookPayload) {
+        fillRequestWithCommonAdditionalData (request, repository.getProject().getKey(), repository.getSlug(), hookPayload);
+    }
+
+    private void fillRequestWithCommonAdditionalData(ScanRequest request, String projectKey, String slug, String hookPayload) {
+        String repoSelfUrl = getRepoSelfUrl(projectKey, slug);
         request.putAdditionalMetadata(BitBucketService.REPO_SELF_URL, repoSelfUrl);
         request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, hookPayload);
     }
 
-    String getRepoSelfUrl(String projectKey, String repoSlug){
+
+    String getRepoSelfUrl(String projectKey, String repoSlug) {
         String repoSelfUrl = properties.getUrl().concat(properties.getApiPath()).concat(PROJECT_REPO_PATH);
         repoSelfUrl = repoSelfUrl.replace("{project}", projectKey);
         repoSelfUrl = repoSelfUrl.replace("{repo}", repoSlug);
         return repoSelfUrl;
     }
 }
-
-
