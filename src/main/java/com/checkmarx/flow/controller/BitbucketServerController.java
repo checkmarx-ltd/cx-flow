@@ -376,8 +376,7 @@ public class BitbucketServerController extends WebhookController {
     }
 
     private String getGitAuthUrl(String gitUrl) {
-        String gitAuthUrl = gitUrl.replace(Constants.HTTPS,
-                Constants.HTTPS.concat(getEncodedAccessToken()).concat("@"));
+        String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(getEncodedAccessToken()).concat("@"));
         return gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(getEncodedAccessToken()).concat("@"));
     }
 
