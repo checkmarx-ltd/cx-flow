@@ -83,7 +83,8 @@ public class BitbucketServerController extends WebhookController {
     }
 
     @PostMapping(value = { "/{product}", "/" }, headers = PING)
-    public String pingEvent(@PathVariable(value = "product", required = false) String product) {
+    public String pingEvent(
+            @PathVariable(value = "product", required = false) String product) {
         log.info("Processing Bitbucket Server PING request");
         return "ok";
     }
@@ -92,9 +93,12 @@ public class BitbucketServerController extends WebhookController {
      * Push Request event webhook submitted.
      */
     @PostMapping(value = { "/{product}", "/" }, headers = MERGE)
-    public ResponseEntity<EventResponse> mergeRequest(@RequestBody String body,
+    public ResponseEntity<EventResponse> mergeRequest(
+            @RequestBody String body,
             @PathVariable(value = "product", required = false) String product,
-            @RequestHeader(value = SIGNATURE) String signature, ControllerRequest controllerRequest) {
+            @RequestHeader(value = SIGNATURE) String signature, 
+            ControllerRequest controllerRequest
+    ) {
         return doMergeEvent(body, product, signature, controllerRequest);
     }
 
