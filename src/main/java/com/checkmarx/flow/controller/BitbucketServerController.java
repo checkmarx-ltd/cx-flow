@@ -39,7 +39,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
-
 @RestController
 @RequestMapping(value = "/")
 @RequiredArgsConstructor
@@ -83,9 +82,8 @@ public class BitbucketServerController extends WebhookController {
         }
     }
 
-    @PostMapping(value = {"/{product}", "/"}, headers = PING)
-    public String pingEvent(
-            @PathVariable(value = "product", required = false) String product) {
+    @PostMapping(value = { "/{product}", "/" }, headers = PING)
+    public String pingEvent(@PathVariable(value = "product", required = false) String product) {
         log.info("Processing Bitbucket Server PING request");
         return "ok";
     }
@@ -93,46 +91,35 @@ public class BitbucketServerController extends WebhookController {
     /**
      * Push Request event webhook submitted.
      */
-    @PostMapping(value = {"/{product}", "/"}, headers = MERGE)
-    public ResponseEntity<EventResponse> mergeRequest(
-            @RequestBody String body,
+    @PostMapping(value = { "/{product}", "/" }, headers = MERGE)
+    public ResponseEntity<EventResponse> mergeRequest(@RequestBody String body,
             @PathVariable(value = "product", required = false) String product,
-            @RequestHeader(value = SIGNATURE) String signature,
-            ControllerRequest controllerRequest
-    ) {
+            @RequestHeader(value = SIGNATURE) String signature, ControllerRequest controllerRequest) {
         return doMergeEvent(body, product, signature, controllerRequest);
     }
 
     /**
      * Push Request event webhook submitted.
      */
-    @PostMapping(value = {"/{product}", "/"}, headers = MERGED)
-    public ResponseEntity<EventResponse> mergedRequest(
-            @RequestBody String body,
+    @PostMapping(value = { "/{product}", "/" }, headers = MERGED)
+    public ResponseEntity<EventResponse> mergedRequest(@RequestBody String body,
             @PathVariable(value = "product", required = false) String product,
-            @RequestHeader(value = SIGNATURE) String signature,
-            ControllerRequest controllerRequest
-    ) {
+            @RequestHeader(value = SIGNATURE) String signature, ControllerRequest controllerRequest) {
         return doMergeEvent(body, product, signature, controllerRequest);
     }
 
     /**
      * PR Source Branch Updated Request event webhook submitted.
      */
-    @PostMapping(value = {"/{product}", "/"}, headers = PR_SOURCE_BRANCH_UPDATED)
-    public ResponseEntity<EventResponse> prSourceBranchUpdateRequest(
-            @RequestBody String body,
+    @PostMapping(value = { "/{product}", "/" }, headers = PR_SOURCE_BRANCH_UPDATED)
+    public ResponseEntity<EventResponse> prSourceBranchUpdateRequest(@RequestBody String body,
             @PathVariable(value = "product", required = false) String product,
-            @RequestHeader(value = SIGNATURE) String signature,
-            ControllerRequest controllerRequest
-    ) {
+            @RequestHeader(value = SIGNATURE) String signature, ControllerRequest controllerRequest) {
         return doMergeEvent(body, product, signature, controllerRequest);
     }
 
-    private ResponseEntity<EventResponse> doMergeEvent(String body,
-                                                       String product,
-                                                       String signature,
-                                                       ControllerRequest controllerRequest) {
+    private ResponseEntity<EventResponse> doMergeEvent(String body, String product, String signature,
+            ControllerRequest controllerRequest) {
         String uid = helperService.getShortUid();
         MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
         verifyHmacSignature(body, signature);
@@ -175,7 +162,8 @@ public class BitbucketServerController extends WebhookController {
             List<String> branches = getBranches(controllerRequest, flowProperties);
             String fromRefLatestCommit = fromRef.getLatestCommit();
 
-            BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
+            BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties,
+                    controllerRequest.getBug());
 
             FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
 
@@ -200,40 +188,25 @@ public class BitbucketServerController extends WebhookController {
                 scanPreset = controllerRequest.getPreset();
             }
 
-            ScanRequest request = ScanRequest.builder()
-                    .application(app)
-                    .product(p)
-                    .project(controllerRequest.getProject())
-                    .team(controllerRequest.getTeam())
-                    .namespace(getNamespace(fromRefRepository))
-                    .repoName(fromRefRepository.getName())
-                    .repoUrl(gitUrl)
-                    .repoUrlWithAuth(gitAuthUrl)
-                    .repoType(ScanRequest.Repository.BITBUCKETSERVER)
-                    .branch(currentBranch)
-                    .mergeTargetBranch(targetBranch)
-                    .mergeNoteUri(mergeEndpoint)
-                    .refs(fromRef.getId())
-                    .email(null)
-                    .incremental(isScanIncremental(controllerRequest, cxProperties))
-                    .scanPreset(scanPreset)
+            ScanRequest request = ScanRequest.builder().application(app).product(p)
+                    .project(controllerRequest.getProject()).team(controllerRequest.getTeam())
+                    .namespace(getNamespace(fromRefRepository)).repoName(fromRefRepository.getName()).repoUrl(gitUrl)
+                    .repoUrlWithAuth(gitAuthUrl).repoType(ScanRequest.Repository.BITBUCKETSERVER).branch(currentBranch)
+                    .mergeTargetBranch(targetBranch).mergeNoteUri(mergeEndpoint).refs(fromRef.getId()).email(null)
+                    .incremental(isScanIncremental(controllerRequest, cxProperties)).scanPreset(scanPreset)
                     .excludeFolders(controllerRequest.getExcludeFolders())
-                    .excludeFiles(controllerRequest.getExcludeFiles())
-                    .bugTracker(bt)
-                    .filter(filter)
-                    .hash(fromRefLatestCommit)
-                    .build();
+                    .excludeFiles(controllerRequest.getExcludeFiles()).bugTracker(bt).filter(filter)
+                    .hash(fromRefLatestCommit).build();
 
-            request.putAdditionalMetadata(BitBucketService.REPO_SELF_URL, repoSelfUrl);
             setBrowseUrl(fromRefRepository, request);
+            fillRequestWithCommonAdditionalData(request, toRefRepository, body);
             checkForConfigAsCode(request);
-            request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, body);
             request.putAdditionalMetadata("buildStatusUrl", buildStatusEndpoint);
             request.putAdditionalMetadata("cxBaseUrl", cxProperties.getBaseUrl());
             request.putAdditionalMetadata("blocker-comment-url", blockerCommentUrl);
             request.setId(uid);
 
-            //only initiate scan/automation if target branch is applicable
+            // only initiate scan/automation if target branch is applicable
             if (helperService.isBranch2Scan(request, branches)) {
                 flowService.initiateAutomation(request);
             }
@@ -254,12 +227,10 @@ public class BitbucketServerController extends WebhookController {
     /**
      * Receive Push event submitted from Bitbucket
      */
-    @PostMapping(value = {"/{product}", "/"}, headers = PUSH)
-    public ResponseEntity<EventResponse> pushRequest(
-            @RequestBody String body,
+    @PostMapping(value = { "/{product}", "/" }, headers = PUSH)
+    public ResponseEntity<EventResponse> pushRequest(@RequestBody String body,
             @PathVariable(value = "product", required = false) String product,
-            @RequestHeader(value = SIGNATURE) String signature,
-            ControllerRequest controllerRequest
+            @RequestHeader(value = SIGNATURE) String signature, ControllerRequest controllerRequest
 
     ) {
         String uid = helperService.getShortUid();
@@ -283,9 +254,10 @@ public class BitbucketServerController extends WebhookController {
                 app = controllerRequest.getApplication();
             }
 
-            //set the default bug tracker as per yml
+            // set the default bug tracker as per yml
             setBugTracker(flowProperties, controllerRequest);
-            BugTracker.Type bugType = ScanUtils.getBugTypeEnum(controllerRequest.getBug(), flowProperties.getBugTrackerImpl());
+            BugTracker.Type bugType = ScanUtils.getBugTypeEnum(controllerRequest.getBug(),
+                    flowProperties.getBugTrackerImpl());
 
             Optional.ofNullable(controllerRequest.getAppOnly()).ifPresent(flowProperties::setTrackApplicationOnly);
 
@@ -297,7 +269,8 @@ public class BitbucketServerController extends WebhookController {
             List<String> branches = getBranches(controllerRequest, flowProperties);
             String latestCommit = event.getChanges().get(INDEX_FROM_CHANGES).getToHash();
 
-            BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
+            BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties,
+                    controllerRequest.getBug());
             FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
 
             setExclusionProperties(cxProperties, controllerRequest);
@@ -313,34 +286,21 @@ public class BitbucketServerController extends WebhookController {
                 scanPreset = controllerRequest.getPreset();
             }
 
-            ScanRequest request = ScanRequest.builder()
-                    .application(app)
-                    .product(p)
-                    .project(controllerRequest.getProject())
-                    .team(controllerRequest.getTeam())
-                    .namespace(getNamespace(repository))
-                    .repoName(repository.getName())
-                    .repoUrl(gitUrl)
-                    .repoUrlWithAuth(gitAuthUrl)
-                    .repoType(ScanRequest.Repository.BITBUCKETSERVER)
-                    .branch(currentBranch)
-                    .refs(event.getChanges().get(0).getRefId())
-                    .email(emails)
-                    .incremental(isScanIncremental(controllerRequest, cxProperties))
-                    .scanPreset(scanPreset)
+            ScanRequest request = ScanRequest.builder().application(app).product(p)
+                    .project(controllerRequest.getProject()).team(controllerRequest.getTeam())
+                    .namespace(getNamespace(repository)).repoName(repository.getName()).repoUrl(gitUrl)
+                    .repoUrlWithAuth(gitAuthUrl).repoType(ScanRequest.Repository.BITBUCKETSERVER).branch(currentBranch)
+                    .refs(event.getChanges().get(0).getRefId()).email(emails)
+                    .incremental(isScanIncremental(controllerRequest, cxProperties)).scanPreset(scanPreset)
                     .excludeFolders(controllerRequest.getExcludeFolders())
-                    .excludeFiles(controllerRequest.getExcludeFiles())
-                    .bugTracker(bt)
-                    .filter(filter)
-                    .hash(latestCommit)
+                    .excludeFiles(controllerRequest.getExcludeFiles()).bugTracker(bt).filter(filter).hash(latestCommit)
                     .build();
 
-
             setBrowseUrl(repository, request);
+            fillRequestWithCommonAdditionalData(request, repository, body);
             checkForConfigAsCode(request);
-            fillRequestWithAdditionalData(request, repository, body);
             request.setId(uid);
-            //only initiate scan/automation if target branch is applicable
+            // only initiate scan/automation if target branch is applicable
             if (helperService.isBranch2Scan(request, branches)) {
                 flowService.initiateAutomation(request);
             }
@@ -377,13 +337,13 @@ public class BitbucketServerController extends WebhookController {
     }
 
     private String getGitAuthUrl(String gitUrl) {
-        String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(getEncodedAccessToken()).concat("@"));
+        String gitAuthUrl = gitUrl.replace(Constants.HTTPS,
+                Constants.HTTPS.concat(getEncodedAccessToken()).concat("@"));
         return gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(getEncodedAccessToken()).concat("@"));
     }
 
     private String getGitUrl(Repository repository) {
-        return properties.getUrl().concat("/scm/")
-                .concat(repository.getProject().getKey().concat("/"))
+        return properties.getUrl().concat("/scm/").concat(repository.getProject().getKey().concat("/"))
                 .concat(repository.getSlug()).concat(".git");
     }
 
@@ -392,18 +352,25 @@ public class BitbucketServerController extends WebhookController {
         configOverrider.overrideScanRequestProperties(cxConfig, request);
     }
 
-    private void fillRequestWithAdditionalData(ScanRequest request, Repository repository, String hookPayload) {
-        String repoSelfUrl = getRepoSelfUrl(repository.getProject().getKey(), repository.getSlug());
+    private void fillRequestWithCommonAdditionalData(ScanRequest request, Repository_ repository, String hookPayload) {
+        fillRequestWithCommonAdditionalData (request, repository.getProject().getKey(), repository.getSlug(), hookPayload);
+    }
+
+    private void fillRequestWithCommonAdditionalData(ScanRequest request, Repository repository, String hookPayload) {
+        fillRequestWithCommonAdditionalData (request, repository.getProject().getKey(), repository.getSlug(), hookPayload);
+    }
+
+    private void fillRequestWithCommonAdditionalData(ScanRequest request, String projectKey, String slug, String hookPayload) {
+        String repoSelfUrl = getRepoSelfUrl(projectKey, slug);
         request.putAdditionalMetadata(BitBucketService.REPO_SELF_URL, repoSelfUrl);
         request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, hookPayload);
     }
 
-    String getRepoSelfUrl(String projectKey, String repoSlug){
+
+    String getRepoSelfUrl(String projectKey, String repoSlug) {
         String repoSelfUrl = properties.getUrl().concat(properties.getApiPath()).concat(PROJECT_REPO_PATH);
         repoSelfUrl = repoSelfUrl.replace("{project}", projectKey);
         repoSelfUrl = repoSelfUrl.replace("{repo}", repoSlug);
         return repoSelfUrl;
     }
 }
-
-
