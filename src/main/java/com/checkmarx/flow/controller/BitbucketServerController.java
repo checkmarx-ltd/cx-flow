@@ -282,10 +282,9 @@ public class BitbucketServerController extends WebhookController {
                 app = controllerRequest.getApplication();
             }
 
-            // set the default bug tracker as per yml
+            //set the default bug tracker as per yml
             setBugTracker(flowProperties, controllerRequest);
-            BugTracker.Type bugType = ScanUtils.getBugTypeEnum(controllerRequest.getBug(),
-                    flowProperties.getBugTrackerImpl());
+            BugTracker.Type bugType = ScanUtils.getBugTypeEnum(controllerRequest.getBug(), flowProperties.getBugTrackerImpl());
 
             Optional.ofNullable(controllerRequest.getAppOnly()).ifPresent(flowProperties::setTrackApplicationOnly);
 
@@ -340,7 +339,7 @@ public class BitbucketServerController extends WebhookController {
             fillRequestWithCommonAdditionalData(request, repository, body);
             checkForConfigAsCode(request);
             request.setId(uid);
-            // only initiate scan/automation if target branch is applicable
+            //only initiate scan/automation if target branch is applicable
             if (helperService.isBranch2Scan(request, branches)) {
                 flowService.initiateAutomation(request);
             }
