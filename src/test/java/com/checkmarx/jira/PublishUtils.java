@@ -23,8 +23,7 @@ public class PublishUtils implements IPublishUtils {
     @Autowired
     private FlowProperties flowProperties;
 
-    @Autowired
-    private SastScanner sastScanner;
+   
 
     @Override
     public File getFileFromResourcePath(String path) throws IOException {
@@ -46,10 +45,10 @@ public class PublishUtils implements IPublishUtils {
     }
 
     @Override
-    public void publishRequest(ScanRequest request, File file, BugTracker.Type bugTrackerType) throws ExitThrowable {
+    public void publishRequest(ScanRequest request, File file, BugTracker.Type bugTrackerType, SastScanner scanner) throws ExitThrowable {
         request.setBugTracker(createJiraBugTracker());
         flowProperties.setBugTracker(bugTrackerType.name());
-        sastScanner.cxParseResults(request, file);
+        scanner.cxParseResults(request, file);
     }
 
     @Override
