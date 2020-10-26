@@ -6,6 +6,7 @@ import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.controller.FlowController;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 import com.checkmarx.flow.dto.BugTracker;
+import com.checkmarx.flow.dto.BugTrackersDto;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.sastscanning.ScanRequestConverter;
 import com.checkmarx.flow.service.*;
@@ -47,12 +48,9 @@ public class CommentScriptSteps {
     private final static  String INVALID_SCRIPT = "invalid-syntax-script-comment";
     private final static  String EMPTY_STRING = "";
     final private CxService cxClientMock;
-    final private CxGoClientImpl cxgoClientMock;
     private final ScanRequestConverter scanRequestConverterMock;
     private final SastScanner sastScanner;
-    //private final CxGoScanner cxgoScanner;
     private final CxProperties cxProperties;
-    private final CxGoProperties cxgoProperties;
     private final FlowController flowController;
     private final FlowProperties flowProperties;
     private String branchName;
@@ -60,10 +58,9 @@ public class CommentScriptSteps {
 
     public CommentScriptSteps(FlowProperties flowProperties, CxProperties cxProperties, HelperService helperService,
                               JiraProperties jiraProperties, FilterFactory filterFactory, ConfigurationOverrider configOverrider,
-                              ResultsService resultService, ProjectNameGenerator projectNameGenerator, BugTrackerEventTrigger btet, CxGoProperties cxgoProperties){
-        this.cxgoProperties = cxgoProperties;
+                              ResultsService resultService, ProjectNameGenerator projectNameGenerator, BugTrackerEventTrigger btet){
 
-        this.cxgoClientMock = mock(CxGoClientImpl.class);;
+        
         cxClientMock = mock(CxService.class);
         
         scanRequestConverterMock = mock(ScanRequestConverter.class, Mockito.withSettings().useConstructor(
@@ -73,25 +70,12 @@ public class CommentScriptSteps {
         
         sastScanner = mock(SastScanner.class, Mockito.withSettings().useConstructor(
                 resultService,
-                helperService,
                 cxProperties,
                 flowProperties,
                 null,
-                null,
-                btet,
                 projectNameGenerator,
-                cxClientMock, null,null, null, null, null));
+                cxClientMock, new BugTrackersDto(null,btet,null, null, null, null, null)));
         
-                
-//        cxgoScanner = mock(CxGoScanner.class, Mockito.withSettings().useConstructor(
-//                resultService,
-//                helperService,
-//                flowProperties,
-//                null,btet, projectNameGenerator,null, null,null, null,null, cxgoClientMock, cxgoProperties));
-
-
-        //cxgoScanner = mock(CxGoScanner.class, Mockito.withSettings().useConstructor(resultService,helperService,flowProperties,null,btet,projectNameGenerator,null,null,null,null,null,cxgoClientMock, cxgoProperties));
-
         this.cxProperties = cxProperties;
         FlowService flowService = new FlowService(Collections.singletonList(sastScanner), projectNameGenerator, resultService);
 

@@ -6,7 +6,6 @@ import com.checkmarx.flow.service.VulnerabilityScanner;
 import com.checkmarx.sdk.config.ScaConfig;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import lombok.*;
-import org.checkerframework.checker.nullness.Opt;
 
 import java.util.*;
 
