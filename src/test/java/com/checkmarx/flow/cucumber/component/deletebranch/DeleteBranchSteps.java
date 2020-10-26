@@ -8,6 +8,7 @@ import com.checkmarx.flow.controller.ADOController;
 import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.controller.*;
 import com.checkmarx.flow.dto.BugTracker;
+import com.checkmarx.flow.dto.BugTrackersDto;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.azure.*;
 import com.checkmarx.flow.dto.github.*;
@@ -334,7 +335,7 @@ public class DeleteBranchSteps {
             initProjectNameGeneratorSpy(projectNameGeneratorSpy);
  
         ScanRequestConverter scanRequestConverter = new ScanRequestConverter(helperService, flowProperties, gitHubService, null, null, null, null,cxClientMock,cxProperties);
-        SastScanner sastScanner = new SastScanner(null, helperService, cxProperties, flowProperties, null, emailService, bugTrackerEventTrigger, projectNameGeneratorSpy, cxClientMock,gitHubService, null, null, null, null);
+        SastScanner sastScanner = new SastScanner(null,  cxProperties, flowProperties, null,  projectNameGeneratorSpy, cxClientMock, new BugTrackersDto(emailService, bugTrackerEventTrigger,gitHubService, null, null, null, null));
         List<VulnerabilityScanner> scanners= new LinkedList<>();
         scanners.add(sastScanner);
         

@@ -3,10 +3,13 @@ package com.checkmarx.flow.service;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.sdk.config.CxPropertiesBase;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
+
+@Getter
 @Slf4j
 @Service
 public class ProjectNameGenerator {
@@ -76,5 +79,9 @@ public class ProjectNameGenerator {
 
     private String tryGetProjectNameFromScript(ScanRequest request) {
         return helperService.getCxProject(request);
+    }
+
+    public String getCxComment(ScanRequest request, String cxflowScanMsg) {
+        return helperService.getCxComment(request, cxflowScanMsg);
     }
 }

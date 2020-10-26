@@ -1,6 +1,7 @@
 package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.dto.BugTrackersDto;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.sastscanning.ScanRequestConverter;
 import com.checkmarx.sdk.ShardManager.ShardSessionTracker;
@@ -24,10 +25,10 @@ public class CxGoScanner extends AbstractVulnerabilityScanner {
     protected final ScanRequestConverter scanRequestConverter;
     protected final CxGoProperties cxGoProperties;
 
-    public CxGoScanner(ResultsService resultsService, HelperService helperService, FlowProperties flowProperties, EmailService emailService, BugTrackerEventTrigger bugTrackerEventTrigger, ProjectNameGenerator projectNameGenerator, GitHubService gitService, GitLabService gitLabService, BitBucketService bitBucketService, ADOService adoService, ShardSessionTracker sessionTracker, CxGoClientImpl cxGoClient,  CxGoProperties cxGoProperties) {
-        super(resultsService, helperService, flowProperties, emailService, bugTrackerEventTrigger, projectNameGenerator, gitService, gitLabService, bitBucketService, adoService, sessionTracker);
+    public CxGoScanner(ResultsService resultsService, HelperService helperService, FlowProperties flowProperties, ProjectNameGenerator projectNameGenerator, BugTrackersDto bugTrackersDto, CxGoClientImpl cxGoClient, CxGoProperties cxGoProperties) {
+        super(resultsService, flowProperties,  projectNameGenerator, bugTrackersDto);
         this.cxGoClient = cxGoClient;
-        this.scanRequestConverter = new ScanRequestConverter(helperService,flowProperties,gitService,gitLabService,bitBucketService,adoService,sessionTracker,cxGoClient,cxGoProperties);
+        this.scanRequestConverter = new ScanRequestConverter(helperService,flowProperties,bugTrackersDto.getGitService(),bugTrackersDto.getGitLabService(),bugTrackersDto.getBitBucketService(),bugTrackersDto.getAdoService(),bugTrackersDto.getSessionTracker(),cxGoClient,cxGoProperties);
         this.cxGoProperties = cxGoProperties;
         
     }

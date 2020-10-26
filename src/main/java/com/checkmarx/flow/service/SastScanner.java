@@ -1,6 +1,7 @@
 package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.dto.BugTrackersDto;
 import com.checkmarx.flow.dto.ExitCode;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.ExitThrowable;
@@ -42,26 +43,18 @@ public class SastScanner extends AbstractVulnerabilityScanner {
     private final CxProperties cxProperties;
     private final ScanRequestConverter scanRequestConverter;
     
-    
-    public SastScanner(ResultsService resultsService, 
-                       HelperService helperService, 
-                       CxProperties cxProperties, 
-                       FlowProperties flowProperties, 
-                       CxOsaClient osaService, 
-                       EmailService emailService, 
-                       BugTrackerEventTrigger bugTrackerEventTrigger, 
-                       ProjectNameGenerator projectNameGenerator, 
-                       CxClient cxService, 
-                       GitHubService gitService, 
-                       GitLabService gitLabService, 
-                       BitBucketService bitBucketService, 
-                       ADOService adoService, 
-                       ShardSessionTracker tracker) {
+    public SastScanner(ResultsService resultsService,
+                       CxProperties cxProperties,
+                       FlowProperties flowProperties,
+                       CxOsaClient osaService,
+                       ProjectNameGenerator projectNameGenerator,
+                       CxClient cxService,
+                       BugTrackersDto bugTrackersDto) {
         
-        super(resultsService, helperService, flowProperties, emailService, bugTrackerEventTrigger, projectNameGenerator, gitService,  gitLabService,  bitBucketService, adoService,tracker);
+        super(resultsService, flowProperties, projectNameGenerator, bugTrackersDto);
         this.osaService = osaService;
         this.cxService = cxService;
-        this.scanRequestConverter = new ScanRequestConverter(helperService,flowProperties,gitService,gitLabService,bitBucketService,adoService,tracker,cxService,cxProperties);
+        this.scanRequestConverter = new ScanRequestConverter(projectNameGenerator.getHelperService(),flowProperties,bugTrackersDto.getGitService(),bugTrackersDto.getGitLabService(),bugTrackersDto.getBitBucketService(),bugTrackersDto.getAdoService(),bugTrackersDto.getSessionTracker(),cxService,cxProperties);
         this.cxProperties = cxProperties;
     }
 
@@ -123,7 +116,7 @@ public class SastScanner extends AbstractVulnerabilityScanner {
                 ScanRequest request = new ScanRequest(originalRequest);
                 String name = project.getName().replaceAll("[^a-zA-Z0-9-_]+", "_");
                 //TODO set team when entire instance batch mode
-                helperService.getShortUid(request); //update new request object with a unique id for thread log monitoring
+                projectNameGenerator.getHelperService().getShortUid(request); //update new request object with a unique id for thread log monitoring
                 request.setProject(name);
                 request.setApplication(name);
                 processes.add(getLatestScanResultsAsync(request, project));
@@ -182,7 +175,7 @@ public class SastScanner extends AbstractVulnerabilityScanner {
         if (projectId == null || projectId == UNKNOWN_INT) {
             log.warn("{} project with the provided name is not found, nothing to delete.", SCAN_TYPE);
         } else {
-            boolean branchIsProtected = helperService.isBranchProtected(request.getBranch(),
+            boolean branchIsProtected = projectNameGenerator.getHelperService().isBranchProtected(request.getBranch(),
                     flowProperties.getBranches(),
                     request);
 
