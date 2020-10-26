@@ -384,6 +384,10 @@ public class FlowProperties {
     }
 
     public boolean isCxGoEnabled() {
-        return enabledVulnerabilityScanners!= null && enabledVulnerabilityScanners.size()>0 && enabledVulnerabilityScanners.toString().toLowerCase().contains(CxGoProperties.CONFIG_PREFIX);
+        return anyScannerEnabled() && enabledVulnerabilityScanners.toString().toLowerCase().contains(CxGoProperties.CONFIG_PREFIX);
+    }
+
+    private boolean anyScannerEnabled() {
+        return enabledVulnerabilityScanners != null && !enabledVulnerabilityScanners.isEmpty();
     }
 }
