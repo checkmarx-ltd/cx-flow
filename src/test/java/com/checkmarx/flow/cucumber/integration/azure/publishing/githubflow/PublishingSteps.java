@@ -7,6 +7,7 @@ import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.controller.*;
 import com.checkmarx.flow.cucumber.integration.azure.publishing.AzureDevopsClient;
 import com.checkmarx.flow.cucumber.integration.azure.publishing.PublishingStepsBase;
+import com.checkmarx.flow.dto.BugTrackersDto;
 import com.checkmarx.flow.sastscanning.ScanRequestConverter;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.github.GitHubTestUtils;
@@ -134,15 +135,13 @@ public class PublishingSteps extends PublishingStepsBase {
 
         sastScanner = mock(SastScanner.class, Mockito.withSettings().useConstructor(
                 resultsService,
-                helperService,
                 cxProperties,
                 flowProperties,
                 null,
-                null,
-                null,
                 projectNameGenerator,
-                cxClientMock, null,null, null, null, null));
+                cxClientMock, new BugTrackersDto(null,null,null, null, null, null, null)));
 
+        
         scanResultsToInject = new ScanResultsBuilder().getScanResultsWithSingleFinding(getProjectName());
 
         when(sastScanner.isEnabled()).thenReturn(true);

@@ -19,7 +19,7 @@ import java.util.List;
 public class CxGoScanner extends AbstractVulnerabilityScanner {
     
     private final CxGoClientImpl cxGoClient;
-    private final String scanType = CxGoProperties.CONFIG_PREFIX;
+    private static final String scanType = CxGoProperties.CONFIG_PREFIX;
     protected final ScanRequestConverter scanRequestConverter;
     protected final CxGoProperties cxGoProperties;
 
