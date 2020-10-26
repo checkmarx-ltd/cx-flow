@@ -13,20 +13,10 @@ import org.springframework.stereotype.Service;
 @Service
 public class CxScannerService {
     
-    private final CxProperties cxProperties;
-    private final CxGoProperties cxgoProperties;
-    private final FlowProperties flowProperties;
-    private final CxService cxService;
-    private  final CxGoClientImpl cxGoClient;
     private final ScannerClient scannerClient;
     private final CxPropertiesBase cxPropertiesBase;
 
     public CxScannerService(CxProperties cxProperties, CxGoProperties cxgoProperties, FlowProperties flowProperties, CxService cxService, CxGoClientImpl cxGoClient) {
-        this.cxProperties = cxProperties;
-        this.cxgoProperties = cxgoProperties;
-        this.flowProperties = flowProperties;
-        this.cxService = cxService;
-        this.cxGoClient = cxGoClient;
         
         this.scannerClient = getScannerClient(flowProperties, cxGoClient, cxService);
         this.cxPropertiesBase = getProperties(flowProperties, cxgoProperties, cxProperties);

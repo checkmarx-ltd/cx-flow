@@ -31,7 +31,7 @@ public class GitHubControllerTest {
     private static final ExternalScriptService scriptService = new ExternalScriptService();
     private static final HelperService helperService = new HelperService(flowProperties, cxScannerService, scriptService);
     private static final List<VulnerabilityScanner> scanners = new ArrayList<>();
-    private static final ProjectNameGenerator projectNameGenerator = new ProjectNameGenerator(helperService, scriptService, cxScannerService);
+    private static final ProjectNameGenerator projectNameGenerator = new ProjectNameGenerator(helperService, cxScannerService);
     private static final FlowService flowService = new FlowService(scanners, projectNameGenerator, resultsService);
     private static final FilterFactory filterFactory = new FilterFactory();
 

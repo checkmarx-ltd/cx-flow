@@ -287,7 +287,7 @@ public class AstRemoteRepoScanSteps {
         CxScannerService cxScannerService = new CxScannerService(cxProperties,null, null, null, null );
         HelperService helperService = new HelperService(flowProperties, cxScannerService, scriptService);
      
-        ProjectNameGenerator projectNameGenerator = new ProjectNameGenerator(helperService, scriptService, cxScannerService);
+        ProjectNameGenerator projectNameGenerator = new ProjectNameGenerator(helperService, cxScannerService);
         FlowService flowService = new FlowService(new ArrayList<>(), projectNameGenerator, resultsServiceMock);
 
         ScanRequest scanRequest = getBasicScanRequest(branch, repo);

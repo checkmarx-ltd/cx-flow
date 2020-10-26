@@ -11,13 +11,11 @@ import org.springframework.stereotype.Service;
 @Service
 public class ProjectNameGenerator {
     private final HelperService helperService;
-    private final ExternalScriptService scriptService;
     private final CxPropertiesBase cxProperties;
 
-    public ProjectNameGenerator(HelperService helperService, ExternalScriptService scriptService, CxScannerService cxScannerService) {
+    public ProjectNameGenerator(HelperService helperService, CxScannerService cxScannerService) {
         this.helperService = helperService;
         this.cxProperties = cxScannerService.getProperties();
-        this.scriptService = scriptService;
     }
 
     /**

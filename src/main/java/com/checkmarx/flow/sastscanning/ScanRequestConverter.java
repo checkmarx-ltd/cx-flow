@@ -13,6 +13,7 @@ import com.checkmarx.sdk.dto.cx.CxScanParams;
 import com.checkmarx.sdk.dto.cx.CxScanSettings;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.cx.restclient.ScannerClient;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
@@ -24,32 +25,20 @@ import static com.checkmarx.sdk.config.Constants.UNKNOWN;
 import static com.checkmarx.sdk.config.Constants.UNKNOWN_INT;
 
 @Slf4j
+@RequiredArgsConstructor
 public class ScanRequestConverter {
 
     private final HelperService helperService;
-    private CxPropertiesBase cxProperties;
-    private ScannerClient scannerClient;
     private final FlowProperties flowProperties;
     private final GitHubService gitService;
     private final GitLabService gitLabService;
     private final BitBucketService bitBucketService;
     private final ADOService adoService;
     private final ShardSessionTracker sessionTracker;
-    private static final String EMPTY_STRING = "";
-
-    public ScanRequestConverter(HelperService helperService, FlowProperties flowProperties, GitHubService gitService, GitLabService gitLabService, BitBucketService bitBucketService, ADOService adoService, ShardSessionTracker sessionTracker, ScannerClient scannerClient, CxPropertiesBase cxProperties) {
-        this.helperService = helperService;
-        this.flowProperties = flowProperties;
-        this.gitService = gitService;
-        this.gitLabService = gitLabService;
-        this.bitBucketService = bitBucketService;
-        this.adoService = adoService;
-        this.sessionTracker = sessionTracker;
-        this.cxProperties = cxProperties;
-        this.scannerClient = scannerClient;
-    }
-
+    private final ScannerClient scannerClient;
+    private final CxPropertiesBase cxProperties;
     
+    private static final String EMPTY_STRING = "";
     
     public CxScanParams toScanParams(ScanRequest scanRequest) throws CheckmarxException {
         String ownerId = determineTeamAndOwnerID(scanRequest);
