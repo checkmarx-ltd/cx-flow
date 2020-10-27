@@ -15,7 +15,6 @@ import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
-import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -62,7 +61,7 @@ public class BitbucketServerController extends WebhookController {
 
     private final FlowProperties flowProperties;
     private final BitBucketProperties properties;
-    private final CxProperties cxProperties;
+    private final CxScannerService cxScannerService;
     private final JiraProperties jiraProperties;
     private final FlowService flowService;
     private final HelperService helperService;
@@ -179,8 +178,6 @@ public class BitbucketServerController extends WebhookController {
 
             FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
 
-            setExclusionProperties(cxProperties, controllerRequest);
-
             String gitUrl = getGitUrl(fromRefRepository);
             String gitAuthUrl = getGitAuthUrl(gitUrl);
 
@@ -194,11 +191,6 @@ public class BitbucketServerController extends WebhookController {
 
             String blockerCommentUrl = repoSelfUrl.concat(BLOCKER_COMMENT);
             blockerCommentUrl = blockerCommentUrl.replace("{id}", pullRequest.getId().toString());
-
-            String scanPreset = cxProperties.getScanPreset();
-            if (!ScanUtils.empty(controllerRequest.getPreset())) {
-                scanPreset = controllerRequest.getPreset();
-            }
 
             ScanRequest request = ScanRequest.builder()
                     .application(app)
@@ -215,8 +207,8 @@ public class BitbucketServerController extends WebhookController {
                     .mergeNoteUri(mergeEndpoint)
                     .refs(fromRef.getId())
                     .email(null)
-                    .incremental(isScanIncremental(controllerRequest, cxProperties))
-                    .scanPreset(scanPreset)
+                    .incremental(controllerRequest.getIncremental())
+                    .scanPreset(controllerRequest.getPreset())
                     .excludeFolders(controllerRequest.getExcludeFolders())
                     .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)
@@ -228,7 +220,7 @@ public class BitbucketServerController extends WebhookController {
             fillRequestWithCommonAdditionalData(request, toRefRepository, body);
             checkForConfigAsCode(request);
             request.putAdditionalMetadata("buildStatusUrl", buildStatusEndpoint);
-            request.putAdditionalMetadata("cxBaseUrl", cxProperties.getBaseUrl());
+            request.putAdditionalMetadata("cxBaseUrl", cxScannerService.getProperties().getBaseUrl());
             request.putAdditionalMetadata("blocker-comment-url", blockerCommentUrl);
             request.setId(uid);
 
@@ -241,6 +233,8 @@ public class BitbucketServerController extends WebhookController {
         }
         return getSuccessMessage();
     }
+
+
 
     private void setBrowseUrl(Repository repo, ScanRequest targetRequest) {
         try {
@@ -299,19 +293,13 @@ public class BitbucketServerController extends WebhookController {
             BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties,
                     controllerRequest.getBug());
             FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
-
-            setExclusionProperties(cxProperties, controllerRequest);
+            
 
             List<String> emails = new ArrayList<>();
             emails.add(event.getActor().getEmailAddress());
 
             String gitUrl = getGitUrl(repository);
             String gitAuthUrl = getGitAuthUrl(gitUrl);
-
-            String scanPreset = cxProperties.getScanPreset();
-            if (!ScanUtils.empty(controllerRequest.getPreset())) {
-                scanPreset = controllerRequest.getPreset();
-            }
 
             ScanRequest request = ScanRequest.builder()
                     .application(app)
@@ -326,8 +314,8 @@ public class BitbucketServerController extends WebhookController {
                     .branch(currentBranch)
                     .refs(event.getChanges().get(0).getRefId())
                     .email(emails)
-                    .incremental(isScanIncremental(controllerRequest, cxProperties))
-                    .scanPreset(scanPreset)
+                    .scanPreset(controllerRequest.getPreset())
+                    .incremental(controllerRequest.getIncremental())
                     .excludeFolders(controllerRequest.getExcludeFolders())
                     .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)

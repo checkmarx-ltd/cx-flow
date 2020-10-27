@@ -11,6 +11,7 @@ import com.checkmarx.flow.dto.OperationResult;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.exception.MachinaException;
+import com.checkmarx.flow.service.CxScannerService;
 import com.checkmarx.flow.service.GitHubAppAuthService;
 import com.checkmarx.flow.service.GitHubService;
 import com.checkmarx.flow.service.ThresholdValidator;
@@ -26,6 +27,7 @@ import com.checkmarx.sdk.dto.ast.Summary;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
+import com.checkmarx.sdk.service.CxService;
 import com.checkmarx.test.flow.config.CxFlowMocksConfig;
 import com.cx.restclient.dto.scansummary.Severity;
 import com.cx.restclient.ast.dto.sca.report.Finding;
@@ -67,7 +69,7 @@ public class AnalyticsSteps {
     private final ThresholdValidator thresholdValidator;
     private final ScmConfigOverrider scmConfigOverrider;
 
-    private final CxClient cxClientMock;
+    private final CxService cxClientMock;
     private final CxProperties cxProperties;
     private final RestTemplate restTemplateMock;
     private final GitHubAppAuthService gitHubAppAuthService;
@@ -237,9 +239,12 @@ public class AnalyticsSteps {
                 thresholdValidator,
                 scmConfigOverrider,
                 gitHubAppAuthService);
+                
+        
+        CxScannerService cxScannerService = new CxScannerService(cxProperties,null, null, cxClientMock, null );
 
         return new ResultsService(
-                cxClientMock,
+                cxScannerService,
                 null,
                 null,
                 null,
@@ -247,8 +252,7 @@ public class AnalyticsSteps {
                 null,
                 null,
                 null,
-                null,
-                cxProperties);
+                null);
     }
 
     private static ScanResults createFakeSASTScanResults(Map<FindingSeverity, Integer> findingsPerSeverity) {

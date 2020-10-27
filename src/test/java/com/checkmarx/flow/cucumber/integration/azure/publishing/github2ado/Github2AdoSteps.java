@@ -5,7 +5,7 @@ import com.checkmarx.flow.config.ADOProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.config.ScmConfigOverrider;
-import com.checkmarx.flow.controller.GitHubController;
+import com.checkmarx.flow.controller.*;
 import com.checkmarx.flow.cucumber.integration.azure.publishing.AzureDevopsClient;
 import com.checkmarx.flow.cucumber.integration.azure.publishing.githubflow.ScanResultsBuilder;
 import com.checkmarx.flow.dto.ControllerRequest;
@@ -17,12 +17,12 @@ import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.ast.ASTResults;
-import com.cx.restclient.ast.dto.sast.report.AstSastSummaryResults;
-import com.cx.restclient.ast.dto.sast.report.Finding;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
 import com.checkmarx.sdk.exception.CheckmarxException;
-import com.checkmarx.sdk.service.CxClient;
+import com.checkmarx.sdk.service.CxService;
 import com.cx.restclient.ast.dto.sast.AstSastResults;
+import com.cx.restclient.ast.dto.sast.report.AstSastSummaryResults;
+import com.cx.restclient.ast.dto.sast.report.Finding;
 import com.cx.restclient.ast.dto.sast.report.FindingNode;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -61,7 +61,7 @@ public class Github2AdoSteps {
     private static final String TO_VERIFY = "TO_VERIFY";
     private static final String DESCRIPTION_AST = "Description AST";
 
-    private final CxClient cxClientMock;
+    private final CxService cxClientMock;
     private final GitHubService gitHubService;
     private final GitHubAppAuthService gitHubAppAuthService;
     private final ADOProperties adoProperties;
@@ -72,7 +72,7 @@ public class Github2AdoSteps {
     private FlowProperties flowProperties;
     private final CxProperties cxProperties;
     private final GitHubProperties gitHubProperties;
-    private final HelperService helperService;
+    private HelperService helperService = mock(HelperService.class);
     private final EmailService emailService;
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
@@ -102,13 +102,12 @@ public class Github2AdoSteps {
                            EmailService emailService, ScmConfigOverrider scmConfigOverrider) {
         this.filterFactory = filterFactory;
 
-        this.cxClientMock = mock(CxClient.class);
+        this.cxClientMock = mock(CxService.class);
 
         this.flowProperties = flowProperties;
 
         this.cxProperties = cxProperties;
 
-        this.helperService = mock(HelperService.class);
         this.flowService = flowService;
         this.gitHubService = gitHubService;
         this.gitHubAppAuthService = gitHubAppAuthService;
@@ -302,13 +301,11 @@ public class Github2AdoSteps {
         //And thus it will work with real gitHubService
         this.gitHubControllerSpy = spy(new GitHubController(gitHubProperties,
                 flowProperties,
-                cxProperties,
                 null,
                 flowService,
                 helperService,
                 gitHubService,
                 gitHubAppAuthService,
-                null,
                 filterFactory,
                 configOverrider,
                 scmConfigOverrider));
@@ -319,10 +316,11 @@ public class Github2AdoSteps {
     }
 
     private void initResultsServiceMock() {
-        
+
+        CxScannerService cxScannerService = new CxScannerService(cxProperties,null, null, cxClientMock, null );
 
         this.resultsService = spy(new ResultsService(
-                cxClientMock,
+                cxScannerService,
                 null,
                 null,
                 issueService,
@@ -330,8 +328,7 @@ public class Github2AdoSteps {
                 null,
                 null,
                 null,
-                emailService,
-                cxProperties));
+                emailService));
     }
 
     @And("Scanner is AST")

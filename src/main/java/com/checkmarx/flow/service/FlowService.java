@@ -40,6 +40,13 @@ public class FlowService {
     }
 
     private void validateEnabledScanners(List<VulnerabilityScanner> enabledScanners) {
+
+        boolean isCxGoEnabled = enabledScanners.stream().anyMatch(scanner -> scanner instanceof CxGoScanner);
+                
+        if(isCxGoEnabled && enabledScanners.size()>1){
+            throw new MachinaRuntimeException("CxGo scanner cannot be set with any other scanner");
+        }
+        
         boolean isSastAndASTScannersFound = enabledScanners.stream().anyMatch(scanner -> scanner instanceof ASTScanner)
                 && enabledScanners.stream().anyMatch(scanner -> scanner instanceof SastScanner);
         if (isSastAndASTScannersFound) {

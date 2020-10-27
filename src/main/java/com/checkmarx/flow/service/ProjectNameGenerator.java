@@ -2,22 +2,24 @@ package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
-import com.checkmarx.sdk.config.CxProperties;
-import lombok.RequiredArgsConstructor;
+import com.checkmarx.sdk.config.CxPropertiesBase;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.util.HashMap;
 
+@Getter
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class ProjectNameGenerator {
     private final HelperService helperService;
-    private final CxProperties cxProperties;
-    private final ExternalScriptService scriptService;
+    private final CxPropertiesBase cxProperties;
+
+    public ProjectNameGenerator(HelperService helperService, CxScannerService cxScannerService) {
+        this.helperService = helperService;
+        this.cxProperties = cxScannerService.getProperties();
+    }
 
     /**
      * Determines effective project name that can be used by vulnerability scanners.
@@ -77,5 +79,9 @@ public class ProjectNameGenerator {
 
     private String tryGetProjectNameFromScript(ScanRequest request) {
         return helperService.getCxProject(request);
+    }
+
+    public String getCxComment(ScanRequest request, String cxflowScanMsg) {
+        return helperService.getCxComment(request, cxflowScanMsg);
     }
 }

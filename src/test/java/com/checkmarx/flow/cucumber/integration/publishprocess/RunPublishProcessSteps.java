@@ -2,6 +2,7 @@ package com.checkmarx.flow.cucumber.integration.publishprocess;
 
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.service.SastScanner;
 import com.checkmarx.jira.IPublishUtils;
 import com.checkmarx.jira.PublishUtils;
 import com.checkmarx.flow.dto.BugTracker;
@@ -40,6 +41,8 @@ public class RunPublishProcessSteps {
     private static final String ISSUE_PRIORITY_BEFORE_UPDATE = "High";
     private static final String ISSUE_PRIORITY_AFTER_UPDATE = "Medium";
 
+    @Autowired
+    SastScanner sastScanner;
 
     @Autowired
     private IJiraTestUtils jiraUtils;
@@ -171,7 +174,7 @@ public class RunPublishProcessSteps {
     }
 
     private void innerPublishRequest(ScanRequest request, File file) throws ExitThrowable {
-    publishUtils.publishRequest(request, file, bugTracker);
+    publishUtils.publishRequest(request, file, bugTracker, sastScanner);
     }
 
     @When("results contain {} findings each having a different vulnerability type in one source file")

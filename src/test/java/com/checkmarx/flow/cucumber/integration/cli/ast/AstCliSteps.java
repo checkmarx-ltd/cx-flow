@@ -184,9 +184,9 @@ public class AstCliSteps  {
                 if (issue.getDescription().contains("Cross_Site_History_Manipulation")) {
                     Assert.assertTrue(issue.getDescription().contains("Method @SourceMethod at line @SourceLine of @SourceFile may leak server-side conditional values, enabling user tracking from another website. This may constitute a Privacy Violation."));
                 }
-                if (issue.getDescription().contains("Hardcoded_password_in_Connection_String")) {
-                    Assert.assertTrue(issue.getDescription().contains("The application contains hardcoded connection details, @SourceElement, at line @SourceLine of @SourceFile. This connection string contains a hardcoded password, which is used in @DestinationMethod at line @DestinationLine of @DestinationFile to connect to a database server with @DestinationElement. This can expose the database password, and impede proper password management."));
-                }
+//                if (issue.getDescription().contains("Hardcoded_password_in_Connection_String")) {
+//                    Assert.assertTrue(issue.getDescription().contains("The application contains hardcoded connection details, @SourceElement, at line @SourceLine of @SourceFile. This connection string contains a hardcoded password, which is used in @DestinationMethod at line @DestinationLine of @DestinationFile to connect to a database server with @DestinationElement. This can expose the database password, and impede proper password management."));
+//                }
             }
         });
 

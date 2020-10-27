@@ -4,7 +4,6 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.EventResponse;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.sdk.config.CxProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -12,7 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -42,14 +40,7 @@ public abstract class WebhookController {
                 .build());
     }
 
-    protected void setExclusionProperties(CxProperties cxProperties, ControllerRequest target) {
-        if (target.getExcludeFiles() == null && StringUtils.isNotEmpty(cxProperties.getExcludeFiles())) {
-            target.setExcludeFiles(Arrays.asList(cxProperties.getExcludeFiles().split(",")));
-        }
-        if (target.getExcludeFolders() == null && StringUtils.isNotEmpty(cxProperties.getExcludeFolders())) {
-            target.setExcludeFolders(Arrays.asList(cxProperties.getExcludeFolders().split(",")));
-        }
-    }
+
 
     protected void setBugTracker(FlowProperties flowProperties, ControllerRequest target) {
         if (StringUtils.isEmpty(target.getBug())) {
@@ -66,18 +57,7 @@ public abstract class WebhookController {
         }
         return result;
     }
-
-    protected void overrideScanPreset(ControllerRequest controllerRequest, ScanRequest scanRequest) {
-        if (StringUtils.isNotEmpty(controllerRequest.getPreset())) {
-            scanRequest.setScanPreset(controllerRequest.getPreset());
-            scanRequest.setScanPresetOverride(true);
-        }
-    }
-
-    protected boolean isScanIncremental(ControllerRequest request, CxProperties cxProperties) {
-        return Optional.ofNullable(request.getIncremental())
-                .orElse(cxProperties.getIncremental());
-    }
+    
 
     protected ControllerRequest ensureNotNull(ControllerRequest requestToCheck) {
         return Optional.ofNullable(requestToCheck)

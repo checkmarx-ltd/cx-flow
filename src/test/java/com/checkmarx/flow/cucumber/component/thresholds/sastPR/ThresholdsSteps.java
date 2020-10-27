@@ -18,6 +18,7 @@ import com.checkmarx.sdk.dto.cx.CxProject;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
+import com.checkmarx.sdk.service.CxService;
 import com.checkmarx.test.flow.config.CxFlowMocksConfig;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -66,7 +67,7 @@ public class ThresholdsSteps {
     private static final String STATUSES_URL_KEY = "statuses_url";
     private final IntegrationTestContext testContext;
 
-    private final CxClient cxClientMock;
+    private final CxService cxClientMock;
     private final RestTemplate restTemplateMock;
     private final ThresholdValidator thresholdValidator;
     private final FlowProperties flowProperties;
@@ -84,7 +85,7 @@ public class ThresholdsSteps {
     private Filter filter;
     private boolean thresholdsSectionExist;
 
-    public ThresholdsSteps(IntegrationTestContext testContext, CxClient cxClientMock, RestTemplate restTemplateMock, FlowProperties flowProperties, ADOProperties adoProperties,
+    public ThresholdsSteps(IntegrationTestContext testContext, CxService cxClientMock, RestTemplate restTemplateMock, FlowProperties flowProperties, ADOProperties adoProperties,
                            CxProperties cxProperties, GitHubProperties gitHubProperties, ThresholdValidator thresholdValidator,
                            EmailService emailService, GitHubAppAuthService gitHubAppAuthService, ScmConfigOverrider scmConfigOverrider, ScaProperties scaProperties) {
 
@@ -339,16 +340,18 @@ public class ThresholdsSteps {
                 scmConfigOverrider,
                 gitHubAppAuthService);
 
+        CxScannerService cxScannerService = new CxScannerService(cxProperties,null, null, cxClientMock, null );
+
         ADOService adoService = new ADOService(restTemplateMock,
                 adoProperties,
                 flowProperties,
-                cxProperties,
+                cxScannerService,
                 scmConfigOverrider,
-                thresholdValidator);
-
+                thresholdValidator
+                );
         
         return new ResultsService(
-                cxClientMock,
+                cxScannerService,
                 null,
                 null,
                 null,
@@ -356,8 +359,7 @@ public class ThresholdsSteps {
                 null,
                 null,
                 adoService,
-                emailService,
-                cxProperties);
+                emailService);
     }
 
     private static ScanResults createFakeScanResults() {

@@ -1,167 +1,67 @@
 package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.dto.*;
-import com.checkmarx.flow.dto.report.ScanReport;
-import com.checkmarx.flow.exception.*;
+import com.checkmarx.flow.dto.BugTrackersDto;
+import com.checkmarx.flow.dto.ExitCode;
+import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.exception.ExitThrowable;
+import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.sastscanning.ScanRequestConverter;
 import com.checkmarx.flow.utils.ScanUtils;
-import com.checkmarx.flow.utils.ZipUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
+import com.checkmarx.sdk.config.CxPropertiesBase;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxProject;
-import com.checkmarx.sdk.dto.cx.CxScanParams;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
 import com.checkmarx.sdk.service.CxOsaClient;
-import lombok.RequiredArgsConstructor;
+import com.cx.restclient.ScannerClient;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 import static com.checkmarx.flow.exception.ExitThrowable.exit;
-import static com.checkmarx.sdk.config.Constants.UNKNOWN;
 import static com.checkmarx.sdk.config.Constants.UNKNOWN_INT;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
-public class SastScanner implements VulnerabilityScanner {
-    private static final String SCAN_TYPE = CxProperties.CONFIG_PREFIX;
-    private static final String ERROR_BREAK_MSG = "Exiting with Error code 10 due to issues present";
-    private static final String CXFLOW_SCAN_MSG = "CxFlow Automated Scan";
-
-    private final ResultsService resultsService;
+public class SastScanner extends AbstractVulnerabilityScanner {
+    
     private final CxClient cxService;
-    private final HelperService helperService;
-    private final CxProperties cxProperties;
-    private final FlowProperties flowProperties;
     private final CxOsaClient osaService;
-    private final EmailService emailService;
+    private final CxProperties cxProperties;
     private final ScanRequestConverter scanRequestConverter;
-    private final BugTrackerEventTrigger bugTrackerEventTrigger;
-    private final ProjectNameGenerator projectNameGenerator;
-
-    private ScanDetails scanDetails = null;
-    private String sourcesPath = null;
-
-    @Override
-    public ScanResults scan(ScanRequest scanRequest) {
-
-        log.info("--------------------- Initiating new {} scan ---------------------", SCAN_TYPE);
-        checkScanSubmitEmailDelivery(scanRequest);
-
-        try {
-            Integer scanId;
-            CxScanParams cxScanParams = scanRequestConverter.toScanParams(scanRequest);
-            Integer projectId = cxScanParams.getProjectId();
-
-            log.info("Checking if there is any existing scan for Project: {}", projectId);
-            Integer existingScanId = cxService.getScanIdOfExistingScanIfExists(projectId);
-
-            if (existingScanId != UNKNOWN_INT) {
-                if (flowProperties.getScanResubmit()) {
-                    log.info("Existing ongoing scan with id {} found for Project : {}", existingScanId, projectId);
-                    log.info("Aborting the ongoing scan with id {} for Project: {}", existingScanId, projectId);
-                    cxService.cancelScan(existingScanId);
-                    log.info("Resubmitting the scan for Project: {}", projectId);
-                    scanId = cxService.createScan(cxScanParams, getComment(scanRequest));
-                } else {
-                    log.warn("Property scan-resubmit set to {} : New scan not submitted, due to existing ongoing scan for the same Project id {}", flowProperties.getScanResubmit(), projectId);
-                    bugTrackerEventTrigger.triggerScanNotSubmittedBugTrackerEvent(scanRequest, getEmptyScanResults());
-                    throw new CheckmarxException(String.format("Active Scan with Id %d already exists for Project: %d", existingScanId, projectId));
-                }
-            } else {
-                scanId = cxService.createScan(cxScanParams, getComment(scanRequest));
-            }
-
-            return getScanResults(scanRequest, projectId, scanId);
-
-        } catch (GitHubRepoUnavailableException e) {
-            //the repository is unavailable - can happen for a push event of a deleted branch - nothing to do
-
-            //the error message is printed when the exception is thrown
-            //usually should occur during push event occurring on delete branch
-            //therefore need to eliminate the scan process but do not want to create
-            //an error stack trace in the log
-            return getEmptyScanResults();
-
-        } catch (Exception e) {
-            log.error("SAST scan failed", e);
-            OperationResult scanCreationFailure = new OperationResult(OperationStatus.FAILURE, e.getMessage());
-            ScanReport report = new ScanReport(-1, scanRequest, scanRequest.getRepoUrl(), scanCreationFailure);
-            report.log();
-            return getEmptyScanResults();
-        }
-    }
-
-    private ScanResults getScanResults(ScanRequest scanRequest, Integer projectId, Integer scanId) throws CheckmarxException {
-        ScanResults scanResults = null;
-        BugTracker.Type bugTrackerType = bugTrackerEventTrigger.triggerBugTrackerEvent(scanRequest);
-        if (bugTrackerType.equals(BugTracker.Type.NONE)) {
-            scanDetails = handleNoneBugTrackerCase(scanRequest, null, scanId, projectId);
-        } else {
-            cxService.waitForScanCompletion(scanId);
-            logRequest(scanRequest, scanId, null, OperationResult.successful());
-
-            scanResults = cxService.getReportContentByScanId(scanId, scanRequest.getFilter());
-            scanResults.setSastScanId(scanId);
-        }
-
-        return scanResults;
+    
+    public SastScanner(ResultsService resultsService,
+                       CxProperties cxProperties,
+                       FlowProperties flowProperties,
+                       CxOsaClient osaService,
+                       ProjectNameGenerator projectNameGenerator,
+                       CxClient cxService,
+                       BugTrackersDto bugTrackersDto) {
+        
+        super(resultsService, flowProperties, projectNameGenerator, bugTrackersDto);
+        this.osaService = osaService;
+        this.cxService = cxService;
+        this.scanRequestConverter = new ScanRequestConverter(projectNameGenerator.getHelperService(),flowProperties,bugTrackersDto.getGitService(),bugTrackersDto.getGitLabService(),bugTrackersDto.getBitBucketService(),bugTrackersDto.getAdoService(),bugTrackersDto.getSessionTracker(),cxService,cxProperties);
+        this.cxProperties = cxProperties;
     }
 
     @Override
-    public ScanResults scanCli(ScanRequest request, String scanType, File... files) {
-        ScanResults scanResults = null;
-        try {
-            switch (scanType) {
-                case "Scan-git-clone":
-                    scanResults = scanRemoteRepo(request);
-                    break;
-                case "cxFullScan":
-                    scanResults = scanLocalPath(request, files[0].getPath());
-                    break;
-                case "cxParse":
-                    cxParseResults(request, files[0]);
-                    break;
-                case "cxBatch":
-                    cxBatch(request);
-                    break;
-                default:
-                    log.warn("SastScanner does not support scanType of {}, ignoring.", scanType);
-                    break;
-            }
-        } catch (ExitThrowable e) {
-            throw new MachinaRuntimeException(e);
-        }
-        return scanResults;
+    public ScanRequestConverter getScanRequestConverter() {
+        return scanRequestConverter;
     }
-
-    @Override
-    public ScanResults getLatestScanResults(ScanRequest request) {
-        return getLatestScanResultsAsync(request, null).join();
-    }
-
-    private ScanResults getEmptyScanResults() {
-        ScanResults scanResults;
-        scanResults = new ScanResults();
-        scanResults.setProjectId(UNKNOWN);
-        scanResults.setProject(UNKNOWN);
-        scanResults.setScanType(SCAN_TYPE);
-        return scanResults;
-    }
-
+    
     @Override
     public boolean isEnabled() {
         boolean result = false;
@@ -175,82 +75,8 @@ public class SastScanner implements VulnerabilityScanner {
         return result;
     }
 
-    public ScanDetails executeCxScan(ScanRequest request, File cxFile) throws MachinaException {
-
-        String osaScanId;
-        Integer scanId = null;
-        Integer projectId;
-
-        try {
-            /*Check if team is provided*/
-            String ownerId = scanRequestConverter.determineTeamAndOwnerID(request);
-
-            log.debug("Auto profiling is enabled");
-            projectId = scanRequestConverter.determinePresetAndProjectId(request, ownerId);
-
-            CxScanParams params = scanRequestConverter.prepareScanParamsObject(request, cxFile, ownerId, projectId);
-
-            scanId = cxService.createScan(params, getComment(request));
-
-            osaScanId = createOsaScan(request, projectId);
-
-            if (osaScanId != null) {
-                logRequest(request, osaScanId, cxFile, OperationResult.successful());
-            }
-        } catch (GitHubRepoUnavailableException e) {
-            // The error message is printed when the exception is thrown.
-            // Usually should occur during push event occurring on delete branch.
-            // Therefore need to eliminate the scan process but do not want to create
-            // an error stack trace in the log.
-            return new ScanDetails(UNKNOWN_INT, UNKNOWN_INT, new CompletableFuture<>(), false);
-        } catch (CheckmarxException | GitAPIException e) {
-            String extendedMessage = treatFailure(request, cxFile, scanId, e);
-            throw new MachinaException("Checkmarx Error Occurred: " + extendedMessage);
-        }
-
-        logRequest(request, scanId, cxFile, OperationResult.successful());
-
-        this.scanDetails = new ScanDetails(projectId, scanId, osaScanId);
-        return scanDetails;
-    }
-
-    private String getComment(ScanRequest request){
-        return  helperService.getCxComment(request, CXFLOW_SCAN_MSG);
-    }
-
-    private ScanResults scanLocalPath(ScanRequest request, String path) throws ExitThrowable {
-        ScanResults results = null;
-        try {
-            String effectiveProjectName = projectNameGenerator.determineProjectName(request);
-            request.setProject(effectiveProjectName);
-
-            File zipFile = ZipUtils.zipToTempFile(path, flowProperties.getZipExclude());
-            ScanDetails details = executeCxScan(request, zipFile);
-            results = getScanResults(request, details.getProjectId(), details.getScanId());
-            log.debug("Deleting temp file {}", zipFile.getPath());
-            Files.deleteIfExists(zipFile.toPath());
-        } catch (IOException e) {
-            log.error("Error occurred while attempting to zip path {}", path, e);
-            exit(3);
-        } catch (MachinaException | CheckmarxException e) {
-            log.error("Error occurred", e);
-            exit(3);
-        }
-        return results;
-    }
-
-    private ScanResults scanRemoteRepo(ScanRequest request) throws ExitThrowable {
-        ScanResults results = null;
-        try {
-            String effectiveProjectName = projectNameGenerator.determineProjectName(request);
-            request.setProject(effectiveProjectName);
-            ScanDetails details = executeCxScan(request, null);
-            results = getScanResults(request, details.getProjectId(), details.getScanId());
-        } catch (MachinaException | CheckmarxException e) {
-            log.error("Error occurred", e);
-            exit(3);
-        }
-        return results;
+    public ScannerClient getScannerClient() {
+        return cxService;
     }
 
     public void cxParseResults(ScanRequest request, File file) throws ExitThrowable {
@@ -266,12 +92,12 @@ public class SastScanner implements VulnerabilityScanner {
             exit(3);
         }
     }
-
     /**
      * Process Projects in batch mode - JIRA ONLY
      */
     public void cxBatch(ScanRequest originalRequest) throws ExitThrowable {
         try {
+            
             List<CxProject> projects;
             List<CompletableFuture<ScanResults>> processes = new ArrayList<>();
             //Get all projects
@@ -289,7 +115,7 @@ public class SastScanner implements VulnerabilityScanner {
                 ScanRequest request = new ScanRequest(originalRequest);
                 String name = project.getName().replaceAll("[^a-zA-Z0-9-_]+", "_");
                 //TODO set team when entire instance batch mode
-                helperService.getShortUid(request); //update new request object with a unique id for thread log monitoring
+                projectNameGenerator.getHelperService().getShortUid(request); //update new request object with a unique id for thread log monitoring
                 request.setProject(name);
                 request.setApplication(name);
                 processes.add(getLatestScanResultsAsync(request, project));
@@ -301,6 +127,28 @@ public class SastScanner implements VulnerabilityScanner {
             log.error("Error occurred while processing projects in batch mode", e);
             exit(3);
         }
+    }
+
+    public String createOsaScan(ScanRequest request, Integer projectId) throws GitAPIException, CheckmarxException {
+        String osaScanId = null;
+        if (Boolean.TRUE.equals(cxProperties.getEnableOsa())) {
+            String path = cxProperties.getGitClonePath().concat("/").concat(UUID.randomUUID().toString());
+            File pathFile = new File(path);
+
+            Git.cloneRepository()
+                    .setURI(request.getRepoUrlWithAuth())
+                    .setBranch(request.getBranch())
+                    .setBranchesToClone(Collections.singleton(Constants.CX_BRANCH_PREFIX.concat(request.getBranch())))
+                    .setDirectory(pathFile)
+                    .call();
+            osaScanId = osaService.createScan(projectId, path);
+        }
+        return osaScanId;
+    }
+
+    @Override
+    protected CxPropertiesBase getCxPropertiesBase() {
+        return cxProperties;
     }
 
     public void deleteProject(ScanRequest request) {
@@ -326,7 +174,7 @@ public class SastScanner implements VulnerabilityScanner {
         if (projectId == null || projectId == UNKNOWN_INT) {
             log.warn("{} project with the provided name is not found, nothing to delete.", SCAN_TYPE);
         } else {
-            boolean branchIsProtected = helperService.isBranchProtected(request.getBranch(),
+            boolean branchIsProtected = projectNameGenerator.getHelperService().isBranchProtected(request.getBranch(),
                     flowProperties.getBranches(),
                     request);
 
@@ -337,158 +185,5 @@ public class SastScanner implements VulnerabilityScanner {
             }
         }
         return result;
-    }
-
-    private String treatFailure(ScanRequest request, File cxFile, Integer scanId, Exception e) {
-        String extendedMessage = ExceptionUtils.getMessage(e);
-        log.error(extendedMessage, e);
-        Thread.currentThread().interrupt();
-        OperationResult scanCreationFailure = new OperationResult(OperationStatus.FAILURE, e.getMessage());
-        logRequest(request, scanId, cxFile, scanCreationFailure);
-        return extendedMessage;
-    }
-
-    private void logRequest(ScanRequest request, Integer scanId, File cxFile, OperationResult scanCreationResult) {
-        ScanReport report = new ScanReport(scanId, request, getRepoUrl(request, cxFile), scanCreationResult);
-        report.log();
-    }
-
-    private void logRequest(ScanRequest request, String scanId, File cxFile, OperationResult scanCreationResult) {
-        ScanReport report = new ScanReport(scanId, request, getRepoUrl(request, cxFile), scanCreationResult);
-        report.log();
-    }
-
-    private String getRepoUrl(ScanRequest request, File cxFile) {
-        String repoUrl;
-
-        if (sourcesPath != null) {
-            //the folder to scan is supplied via -f flag in command line and it is located in the filesystem
-            repoUrl = sourcesPath;
-        } else if (cxFile != null) {
-            //in general cxFile is a zip created by cxFlow using the folder supplied y -f
-            //the use case when sourcePath is empty but cxFile is set is only for the test flow
-            repoUrl = cxFile.getAbsolutePath();
-        } else {
-            //sources to scan are in the remote repository (GitHib, TFS ... etc)
-            repoUrl = request.getRepoUrl();
-        }
-        return repoUrl;
-    }
-
-    private ScanDetails handleNoneBugTrackerCase(ScanRequest request, File cxFile, Integer scanId, Integer projectId) {
-        log.info("Not waiting for scan completion as Bug Tracker type is NONE");
-        CompletableFuture<ScanResults> results = CompletableFuture.completedFuture(null);
-        logRequest(request, scanId, cxFile, OperationResult.successful());
-        return new ScanDetails(projectId, scanId, results, false);
-    }
-
-    private void checkScanSubmitEmailDelivery(ScanRequest scanRequest) {
-        if (StringUtils.isNoneEmpty(scanRequest.getNamespace(), scanRequest.getRepoName(), scanRequest.getRepoUrl())) {
-            emailService.sendScanSubmittedEmail(scanRequest);
-        }
-    }
-
-    private String createOsaScan(ScanRequest request, Integer projectId) throws GitAPIException, CheckmarxException {
-        String osaScanId = null;
-        if (Boolean.TRUE.equals(cxProperties.getEnableOsa())) {
-            String path = cxProperties.getGitClonePath().concat("/").concat(UUID.randomUUID().toString());
-            File pathFile = new File(path);
-
-            Git.cloneRepository()
-                    .setURI(request.getRepoUrlWithAuth())
-                    .setBranch(request.getBranch())
-                    .setBranchesToClone(Collections.singleton(Constants.CX_BRANCH_PREFIX.concat(request.getBranch())))
-                    .setDirectory(pathFile)
-                    .call();
-            osaScanId = osaService.createScan(projectId, path);
-        }
-        return osaScanId;
-    }
-
-    public CompletableFuture<ScanResults> getLatestScanResultsAsync(ScanRequest request, CxProject cxProject) {
-        try {
-            CxProject project;
-            if (cxProject == null) {
-                Integer projectId = getProjectId(request);
-                if (projectId.equals(UNKNOWN_INT)) {
-                    log.warn("No project found for {}", request.getProject());
-                    return CompletableFuture.completedFuture(null);
-                }
-                project = cxService.getProject(projectId);
-
-            } else {
-                project = cxProject;
-            }
-            Integer scanId = cxService.getLastScanId(project.getId());
-            if (scanId.equals(UNKNOWN_INT)) {
-                log.warn("No Scan Results to process for project {}", project.getName());
-                CompletableFuture<ScanResults> x = new CompletableFuture<>();
-                x.complete(null);
-                return x;
-            }
-            setCxFields(project, request);
-            //null is passed for osaScanId as it is not applicable here and will be ignored
-            return resultsService.processScanResultsAsync(request, project.getId(), scanId, null, request.getFilter());
-
-        } catch (MachinaException | CheckmarxException e) {
-            log.error("Error occurred while processing results for {}{}", request.getTeam(), request.getProject(), e);
-            CompletableFuture<ScanResults> x = new CompletableFuture<>();
-            x.completeExceptionally(e);
-            return x;
-        }
-    }
-
-    private Integer getProjectId(ScanRequest request) throws CheckmarxException {
-        String team = request.getTeam();
-        if (ScanUtils.empty(team)) {
-            //if the team is not provided, use the default
-            team = cxProperties.getTeam();
-            request.setTeam(team);
-        }
-        if (!team.startsWith(cxProperties.getTeamPathSeparator())) {
-            team = cxProperties.getTeamPathSeparator().concat(team);
-        }
-        String teamId = cxService.getTeamId(team);
-        return cxService.getProjectId(teamId, request.getProject());
-    }
-
-    private void setCxFields(CxProject project, ScanRequest request) {
-        if (project == null) {
-            return;
-        }
-
-        Map<String, String> fields = new HashMap<>();
-        for (CxProject.CustomField field : project.getCustomFields()) {
-            String name = field.getName();
-            String value = field.getValue();
-            if (StringUtils.isNoneEmpty(name, value)) {
-                fields.put(name, value);
-            }
-        }
-        if (!ScanUtils.empty(cxProperties.getJiraProjectField())) {
-            String jiraProject = fields.get(cxProperties.getJiraProjectField());
-            if (!ScanUtils.empty(jiraProject)) {
-                request.getBugTracker().setProjectKey(jiraProject);
-            }
-        }
-        if (!ScanUtils.empty(cxProperties.getJiraIssuetypeField())) {
-            String jiraIssuetype = fields.get(cxProperties.getJiraIssuetypeField());
-            if (!ScanUtils.empty(jiraIssuetype)) {
-                request.getBugTracker().setIssueType(jiraIssuetype);
-            }
-        }
-        if (!ScanUtils.empty(cxProperties.getJiraCustomField()) &&
-                (fields.get(cxProperties.getJiraCustomField()) != null) && !fields.get(cxProperties.getJiraCustomField()).isEmpty()) {
-            request.getBugTracker().setFields(ScanUtils.getCustomFieldsFromCx(fields.get(cxProperties.getJiraCustomField())));
-        }
-
-        if (!ScanUtils.empty(cxProperties.getJiraAssigneeField())) {
-            String assignee = fields.get(cxProperties.getJiraAssigneeField());
-            if (!ScanUtils.empty(assignee)) {
-                request.getBugTracker().setAssignee(assignee);
-            }
-        }
-
-        request.setCxFields(fields);
     }
 }

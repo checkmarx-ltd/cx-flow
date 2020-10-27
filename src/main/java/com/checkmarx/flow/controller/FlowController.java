@@ -9,15 +9,10 @@ import com.checkmarx.flow.dto.EventResponse;
 import com.checkmarx.flow.dto.FlowOverride;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.InvalidTokenException;
-import com.checkmarx.flow.service.ConfigurationOverrider;
-import com.checkmarx.flow.service.FilterFactory;
-import com.checkmarx.flow.service.FlowService;
-import com.checkmarx.flow.service.HelperService;
-import com.checkmarx.flow.service.SastScanner;
+import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
-import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
@@ -53,14 +48,15 @@ public class FlowController {
     private static final String TOKEN_HEADER = "x-cx-token";
 
     private final FlowProperties properties;
-    private final CxProperties cxProperties;
+    private final CxScannerService cxScannerService;
     private final FlowService scanService;
     private final HelperService helperService;
     private final JiraProperties jiraProperties;
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
     private final SastScanner sastScanner;
-
+    private final CxGoScanner cxgoScanner;
+    
     @GetMapping(value = "/scanresults", produces = "application/json")
     public ScanResults latestScanResults(
             // Mandatory parameters
@@ -109,7 +105,9 @@ public class FlowController {
         // Fetch the Checkmarx Scan Results based on given ScanRequest.
         // The cxProject parameter is null because the required project metadata
         // is already contained in the scanRequest parameter.
-        ScanResults scanResults = sastScanner.getLatestScanResults(scanRequest);
+
+        ScanResults scanResults = CxScannerService.getScanner(cxgoScanner, sastScanner).getLatestScanResults(scanRequest);
+        
         log.debug("ScanResults {}", scanResults);
 
         return scanResults;
@@ -139,7 +137,7 @@ public class FlowController {
                 application = project;
             }
             if(ScanUtils.empty(team)){
-                team = cxProperties.getTeam();
+                team = cxScannerService.getProperties().getTeam();
             }
             properties.setTrackApplicationOnly(scanRequest.isApplicationOnly());
 
@@ -151,11 +149,11 @@ public class FlowController {
                         .success(false)
                         .build());
             }
-            String scanPreset = cxProperties.getScanPreset();
+            String scanPreset = cxScannerService.getProperties().getScanPreset();
             if(!ScanUtils.empty(scanRequest.getPreset())){
                 scanPreset = scanRequest.getPreset();
             }
-            boolean inc = cxProperties.getIncremental();
+            boolean inc = cxScannerService.getProperties().getIncremental();
             if(scanRequest.isIncremental()){
                 inc = true;
             }
@@ -183,11 +181,11 @@ public class FlowController {
 
             List<String> excludeFiles = scanRequest.getExcludeFiles();
             List<String> excludeFolders = scanRequest.getExcludeFolders();
-            if((excludeFiles == null) && !ScanUtils.empty(cxProperties.getExcludeFiles())){
-                excludeFiles = Arrays.asList(cxProperties.getExcludeFiles().split(","));
+            if((excludeFiles == null) && !ScanUtils.empty(cxScannerService.getProperties().getExcludeFiles())){
+                excludeFiles = Arrays.asList(cxScannerService.getProperties().getExcludeFiles().split(","));
             }
-            if(excludeFolders == null && !ScanUtils.empty(cxProperties.getExcludeFolders())){
-                excludeFolders = Arrays.asList(cxProperties.getExcludeFolders().split(","));
+            if(excludeFolders == null && !ScanUtils.empty(cxScannerService.getProperties().getExcludeFolders())){
+                excludeFolders = Arrays.asList(cxScannerService.getProperties().getExcludeFolders().split(","));
             }
 
             ScanRequest request = ScanRequest.builder()
@@ -233,6 +231,8 @@ public class FlowController {
                 .success(true)
                 .build());
     }
+
+
 
     private FilterConfiguration determineFilter(CxScanRequest scanRequest) {
         FilterConfiguration filter;
