@@ -11,7 +11,7 @@ jobs:
   update_release_draft:
     runs-on: ubuntu-latest
     steps:
-      - uses: natalieb07/release-drafter@v5
+      - uses: natalieb07/release-drafter@v5.12.1.3
         with:
           # (Optional) specify config name to use, relative to .github/. Default: release-drafter.yml
           config-name: release-drafter.yml
