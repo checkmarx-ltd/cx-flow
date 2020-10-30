@@ -34,12 +34,12 @@ import static com.checkmarx.sdk.config.Constants.UNKNOWN_INT;
 @Service
 @Slf4j
 public class SastScanner extends AbstractVulnerabilityScanner {
-    
+
     private final CxClient cxService;
     private final CxOsaClient osaService;
     private final CxProperties cxProperties;
     private final ScanRequestConverter scanRequestConverter;
-    
+
     public SastScanner(ResultsService resultsService,
                        CxProperties cxProperties,
                        FlowProperties flowProperties,
@@ -47,8 +47,8 @@ public class SastScanner extends AbstractVulnerabilityScanner {
                        ProjectNameGenerator projectNameGenerator,
                        CxClient cxService,
                        BugTrackersDto bugTrackersDto) {
-        
-        super(resultsService, flowProperties, projectNameGenerator, bugTrackersDto);
+
+        super(resultsService, flowProperties, projectNameGenerator, bugTrackersDto, cxProperties);
         this.osaService = osaService;
         this.cxService = cxService;
         this.scanRequestConverter = new ScanRequestConverter(projectNameGenerator.getHelperService(),flowProperties,bugTrackersDto.getGitService(),bugTrackersDto.getGitLabService(),bugTrackersDto.getBitBucketService(),bugTrackersDto.getAdoService(),bugTrackersDto.getSessionTracker(),cxService,cxProperties);
@@ -59,7 +59,7 @@ public class SastScanner extends AbstractVulnerabilityScanner {
     public ScanRequestConverter getScanRequestConverter() {
         return scanRequestConverter;
     }
-    
+
     @Override
     public boolean isEnabled() {
         boolean result = false;
@@ -95,7 +95,7 @@ public class SastScanner extends AbstractVulnerabilityScanner {
      */
     public void cxBatch(ScanRequest originalRequest) throws ExitThrowable {
         try {
-            
+
             List<CxProject> projects;
             List<CompletableFuture<ScanResults>> processes = new ArrayList<>();
             //Get all projects
