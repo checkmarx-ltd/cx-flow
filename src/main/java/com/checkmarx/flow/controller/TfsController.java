@@ -18,7 +18,6 @@ import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.HelperService;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
-import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,7 +43,6 @@ public class TfsController extends AdoControllerBase {
 
     private final ADOProperties properties;
     private final FlowProperties flowProperties;
-    private final CxProperties cxProperties;
     private final JiraProperties jiraProperties;
     private final FlowService flowService;
     private final HelperService helperService;
@@ -96,8 +94,6 @@ public class TfsController extends AdoControllerBase {
 
         FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
 
-        setExclusionProperties(cxProperties, controllerRequest);
-
         ScanRequestBuilder requestBuilder = ScanRequest.builder()
                 .application(Optional.ofNullable(controllerRequest.getApplication()).orElse(app))
                 .product(getProductForName(product))
@@ -106,8 +102,8 @@ public class TfsController extends AdoControllerBase {
                 .namespace(repository.getProject().getName().replace(" ", "_"))
                 .repoName(repository.getName())
                 .repoType(ScanRequest.Repository.ADO)
-                .incremental(isScanIncremental(controllerRequest, cxProperties))
-                .scanPreset(Optional.ofNullable(controllerRequest.getPreset()).orElse(cxProperties.getScanPreset()))
+                .scanPreset(controllerRequest.getPreset())
+                .incremental(controllerRequest.getIncremental())
                 .excludeFolders(controllerRequest.getExcludeFolders())
                 .excludeFiles(controllerRequest.getExcludeFiles())
                 .filter(filter);

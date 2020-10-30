@@ -3,15 +3,13 @@ package com.checkmarx.flow.service;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanDetails;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.sdk.config.CxProperties;
+import com.checkmarx.sdk.config.CxPropertiesBase;
 import com.checkmarx.sdk.dto.ScanResults;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
-@RequiredArgsConstructor
 public class BugTrackerEventTrigger {
 
     private static final String SCAN_MESSAGE = "Scan submitted to Checkmarx";
@@ -21,7 +19,15 @@ public class BugTrackerEventTrigger {
     private final GitHubService gitService;
     private final BitBucketService bbService;
     private final ADOService adoService;
-    private final CxProperties cxProperties;
+    private final CxPropertiesBase cxProperties;
+
+    public BugTrackerEventTrigger(GitLabService gitLabService, GitHubService gitService, BitBucketService bbService, ADOService adoService, CxScannerService cxScannerService) {
+        this.gitLabService = gitLabService;
+        this.gitService = gitService;
+        this.bbService = bbService;
+        this.adoService = adoService;
+        this.cxProperties = cxScannerService.getProperties();
+    }
 
     public BugTracker.Type triggerBugTrackerEvent(ScanRequest request) {
         boolean eventsWereTriggered = true;

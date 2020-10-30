@@ -113,6 +113,32 @@ jira:
 #    - Done
 #  fields:
 
+cxgo:
+  client-secret: xxx
+  base-url: https://url
+  portal-url: https://url
+  # CxOD Business unit that will contain the project/application/scan
+  team: \Demo\CxFlow
+  url: ${cxgo.base-url}
+  multi-tenant: true
+  configuration: Default Configuration
+  #
+  ## Available Scan defaults
+  #
+  #   - CXOD_MOBILE_NATIVE = 1;
+  #   - CXOD_MOBILE_WEB_BASED = 2;
+  #   - CXOD_DESKTOP_NATIVE = 3;
+  #   - CXOD_DESKTOP_WEB = 4;
+  #   - CXOD_API = 5;
+  #   - CXOD_FRONTEND = 6;
+  #   - CXOD_BACKEND = 7;
+  #   - CXOD_LAMBDA = 8;
+  #   - CXOD_CLI = 9;
+  #   - CXOD_SERVICE = 10;
+  #   - CXOD_SMART_DEVICE = 11;
+  #   - CXOD_OTHER = 12;
+  scan-preset: 1,2,3,4,5,9
+  
 rally:
   token: xxxx
   rally-project-id: xxxx

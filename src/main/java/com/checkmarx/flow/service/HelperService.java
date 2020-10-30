@@ -6,7 +6,7 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.Sources;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
-import com.checkmarx.sdk.config.CxProperties;
+import com.checkmarx.sdk.config.CxPropertiesBase;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -17,8 +17,6 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,13 +26,13 @@ public class HelperService {
 
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(HelperService.class);
     private final FlowProperties properties;
-    private final CxProperties cxProperties;
+    private final CxPropertiesBase cxProperties;
     private final ExternalScriptService scriptService;
     private List<CxProfile> profiles;
 
-    public HelperService(FlowProperties properties, CxProperties cxProperties, ExternalScriptService scriptService) {
+    public HelperService(FlowProperties properties, CxScannerService cxScannerService,  ExternalScriptService scriptService) {
         this.properties = properties;
-        this.cxProperties = cxProperties;
+        this.cxProperties = cxScannerService.getProperties();
         this.scriptService = scriptService;
     }
 
@@ -248,5 +246,6 @@ public class HelperService {
     public void setProfiles(List<CxProfile> profiles) {
         this.profiles = profiles;
     }
+
 }
 

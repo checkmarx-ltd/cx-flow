@@ -6,8 +6,9 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.controller.ADOController;
 import com.checkmarx.flow.config.ScmConfigOverrider;
-import com.checkmarx.flow.controller.GitHubController;
+import com.checkmarx.flow.controller.*;
 import com.checkmarx.flow.dto.BugTracker;
+import com.checkmarx.flow.dto.BugTrackersDto;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.azure.*;
 import com.checkmarx.flow.dto.github.*;
@@ -20,6 +21,7 @@ import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
+import com.checkmarx.sdk.service.CxService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cucumber.java.Before;
@@ -52,7 +54,7 @@ public class DeleteBranchSteps {
     private static final String AZURE_DELETED_BRANCH_OBJ_ID = "0000000000000000000000000000000000000000";
     private static final String GIT_DEFAULT_BRANCH = "refs/heads/master";
     private static final int SCAN_ID_EXISTING_SCAN_NOT_EXIST = -1;
-    private final CxClient cxClientMock;
+    private final CxService cxClientMock;
     private final GitHubService gitHubService;
     private final GitHubAppAuthService gitHubAppAuthService;
     private GitHubController gitHubControllerSpy;
@@ -62,7 +64,7 @@ public class DeleteBranchSteps {
     private final FlowProperties flowProperties;
     private final CxProperties cxProperties;
     private final GitHubProperties gitHubProperties;
-    private final HelperService helperService;
+    private HelperService helperService;
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
     private final ADOProperties adoProperties;
@@ -101,8 +103,9 @@ public class DeleteBranchSteps {
 
         this.adoServiceMock = mock(ADOService.class);
         this.resultsServiceMock = mock(ResultsService.class);
-        this.cxClientMock = mock(CxClient.class);
-        this.helperService = mock(HelperService.class, Mockito.withSettings().useConstructor(flowProperties, cxProperties, null));
+        this.cxClientMock = mock(CxService.class);
+        CxScannerService  cxScannerService = new CxScannerService(cxProperties, null, flowProperties,cxClientMock, null);
+        this.helperService = mock(HelperService.class, Mockito.withSettings().useConstructor(flowProperties, cxScannerService, null));
         this.scmConfigOverrider = scmConfigOverrider;
     }
 
@@ -326,11 +329,13 @@ public class DeleteBranchSteps {
     }
 
     private void initServices() {
-        ProjectNameGenerator projectNameGeneratorSpy = spy(new ProjectNameGenerator(helperService, cxProperties, null));
+        CxScannerService cxScannerService = new CxScannerService(cxProperties,null, flowProperties, cxClientMock, null );
+
+        ProjectNameGenerator projectNameGeneratorSpy = spy(new ProjectNameGenerator(helperService, cxScannerService));
             initProjectNameGeneratorSpy(projectNameGeneratorSpy);
  
-        ScanRequestConverter scanRequestConverter = new ScanRequestConverter(helperService, cxProperties, cxClientMock, flowProperties, gitHubService, null, null, null, null);
-        SastScanner sastScanner = new SastScanner(null, cxClientMock, helperService, cxProperties, flowProperties, null, emailService, scanRequestConverter, bugTrackerEventTrigger, projectNameGeneratorSpy);
+        ScanRequestConverter scanRequestConverter = new ScanRequestConverter(helperService, flowProperties, gitHubService, null, null, null, null,cxClientMock,cxProperties);
+        SastScanner sastScanner = new SastScanner(null,  cxProperties, flowProperties, null,  projectNameGeneratorSpy, cxClientMock, new BugTrackersDto(emailService, bugTrackerEventTrigger,gitHubService, null, null, null, null));
         List<VulnerabilityScanner> scanners= new LinkedList<>();
         scanners.add(sastScanner);
         
@@ -341,20 +346,17 @@ public class DeleteBranchSteps {
         //And thus it will work with real gitHubService
         this.gitHubControllerSpy = spy(new GitHubController(gitHubProperties,
                 flowProperties,
-                cxProperties,
                 null,
                 flowServiceSpy,
                 helperService,
                 gitHubService,
                 gitHubAppAuthService,
-                sastScanner,
                 filterFactory,
                 configOverrider,
                 null));
 
         this.adoControllerSpy = spy(new ADOController(adoProperties,
                 flowProperties,
-                cxProperties,
                 null,
                 flowServiceSpy,
                 helperService,

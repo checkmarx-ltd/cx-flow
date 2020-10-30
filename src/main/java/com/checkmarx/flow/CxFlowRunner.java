@@ -7,7 +7,7 @@ import com.checkmarx.flow.exception.*;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
-import com.checkmarx.sdk.config.CxProperties;
+import com.checkmarx.sdk.config.CxPropertiesBase;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -45,7 +45,7 @@ public class CxFlowRunner implements ApplicationRunner {
     public static final String BATCH_OPTION = "batch";
 
     private final FlowProperties flowProperties;
-    private final CxProperties cxProperties;
+    private final CxScannerService cxScannerService;
     private final JiraProperties jiraProperties;
     private final GitHubProperties gitHubProperties;
     private final GitLabProperties gitLabProperties;
@@ -170,7 +170,8 @@ public class CxFlowRunner implements ApplicationRunner {
         excludeFolders = args.getOptionValues("exclude-folders");
         boolean usingBitBucketCloud = args.containsOption("bb");
         boolean usingBitBucketServer = args.containsOption("bbs");
-
+        CxPropertiesBase cxProperties = cxScannerService.getProperties();
+        
         if (((ScanUtils.empty(namespace) && ScanUtils.empty(repoName) && ScanUtils.empty(branch)) &&
                 ScanUtils.empty(application)) && !args.containsOption(BATCH_OPTION)) {
             log.error("Namespace/Repo/Branch or Application (app) must be provided");

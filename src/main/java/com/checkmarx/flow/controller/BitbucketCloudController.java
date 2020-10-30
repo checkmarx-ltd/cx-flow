@@ -14,7 +14,6 @@ import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
-import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import lombok.RequiredArgsConstructor;
@@ -38,7 +37,6 @@ public class BitbucketCloudController extends WebhookController {
 
     private final FlowProperties flowProperties;
     private final BitBucketProperties properties;
-    private final CxProperties cxProperties;
     private final JiraProperties jiraProperties;
     private final FlowService flowService;
     private final HelperService helperService;
@@ -93,15 +91,9 @@ public class BitbucketCloudController extends WebhookController {
 
             FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
 
-            setExclusionProperties(cxProperties, controllerRequest);
-
             String gitUrl = repository.getLinks().getHtml().getHref().concat(".git");
             String mergeEndpoint = pullRequest.getLinks().getComments().getHref();
 
-            String scanPreset = cxProperties.getScanPreset();
-            if (!ScanUtils.empty(controllerRequest.getPreset())) {
-                scanPreset = controllerRequest.getPreset();
-            }
 
             ScanRequest request = ScanRequest.builder()
                     .application(app)
@@ -118,8 +110,8 @@ public class BitbucketCloudController extends WebhookController {
                     .mergeNoteUri(mergeEndpoint)
                     .refs(Constants.CX_BRANCH_PREFIX.concat(currentBranch))
                     .email(null)
-                    .incremental(isScanIncremental(controllerRequest, cxProperties))
-                    .scanPreset(scanPreset)
+                    .scanPreset(controllerRequest.getPreset())
+                    .incremental(controllerRequest.getIncremental())
                     .excludeFolders(controllerRequest.getExcludeFolders())
                     .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)
@@ -186,8 +178,6 @@ public class BitbucketCloudController extends WebhookController {
 
             FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
 
-            setExclusionProperties(cxProperties, controllerRequest);
-
             /*Determine emails*/
             List<String> emails = new ArrayList<>();
 
@@ -201,12 +191,7 @@ public class BitbucketCloudController extends WebhookController {
             }
 
             String gitUrl = repository.getLinks().getHtml().getHref().concat(".git");
-
-            String scanPreset = cxProperties.getScanPreset();
-            if (!ScanUtils.empty(controllerRequest.getPreset())) {
-                scanPreset = controllerRequest.getPreset();
-            }
-
+            
             ScanRequest request = ScanRequest.builder()
                     .application(app)
                     .product(p)
@@ -220,8 +205,8 @@ public class BitbucketCloudController extends WebhookController {
                     .branch(currentBranch)
                     .refs(Constants.CX_BRANCH_PREFIX.concat(currentBranch))
                     .email(emails)
-                    .incremental(isScanIncremental(controllerRequest, cxProperties))
-                    .scanPreset(scanPreset)
+                    .scanPreset(controllerRequest.getPreset())
+                    .incremental(controllerRequest.getIncremental())
                     .excludeFolders(controllerRequest.getExcludeFolders())
                     .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)

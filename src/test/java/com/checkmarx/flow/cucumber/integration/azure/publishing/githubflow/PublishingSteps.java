@@ -4,9 +4,11 @@ import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.config.ScmConfigOverrider;
-import com.checkmarx.flow.controller.GitHubController;
+import com.checkmarx.flow.controller.*;
 import com.checkmarx.flow.cucumber.integration.azure.publishing.AzureDevopsClient;
 import com.checkmarx.flow.cucumber.integration.azure.publishing.PublishingStepsBase;
+import com.checkmarx.flow.dto.BugTrackersDto;
+import com.checkmarx.flow.sastscanning.ScanRequestConverter;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.github.GitHubTestUtils;
 import com.checkmarx.sdk.config.Constants;
@@ -14,6 +16,7 @@ import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
+import com.checkmarx.sdk.service.CxService;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
@@ -24,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionTimeoutException;
 import org.junit.Assert;
+import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
@@ -34,6 +38,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
@@ -56,13 +61,13 @@ public class PublishingSteps extends PublishingStepsBase {
     private final GitHubService gitHubService;
     private final GitHubAppAuthService gitHubAppAuthService;
     private final ResultsService resultsService;
-    private final VulnerabilityScanner sastScanner;
+    private SastScanner sastScanner;
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
     private final ScmConfigOverrider scmConfigOverrider;
 
     @MockBean
-    private final CxClient cxClientMock;
+    private final CxService cxClientMock;
 
     @MockBean
     private final ProjectNameGenerator projectNameGenerator;
@@ -102,7 +107,6 @@ public class PublishingSteps extends PublishingStepsBase {
 
     @And("SAST scan returns a report with 1 finding")
     public void sastScanReturnsAReportWithFinding() {
-        scanResultsToInject = new ScanResultsBuilder().getScanResultsWithSingleFinding(getProjectName());
     }
 
     @And("CxFlow publishes the report")
@@ -128,11 +132,22 @@ public class PublishingSteps extends PublishingStepsBase {
     }
 
     private void initCxClientMock() throws CheckmarxException {
-        when(cxClientMock.getReportContentByScanId(anyInt(), any()))
-                .thenAnswer(invocation -> scanResultsToInject);
 
-        when(cxClientMock.getTeamId(anyString()))
-                .thenReturn("dummyTeamId");
+        sastScanner = mock(SastScanner.class, Mockito.withSettings().useConstructor(
+                resultsService,
+                cxProperties,
+                flowProperties,
+                null,
+                projectNameGenerator,
+                cxClientMock, new BugTrackersDto(null,null,null, null, null, null, null)));
+
+        
+        scanResultsToInject = new ScanResultsBuilder().getScanResultsWithSingleFinding(getProjectName());
+
+        when(sastScanner.isEnabled()).thenReturn(true);
+
+        when(sastScanner.scan(any())).thenReturn(scanResultsToInject);
+        
 
         // Prevent an error related to scan resubmission.
         when(cxClientMock.getScanIdOfExistingScanIfExists(any()))
@@ -143,8 +158,8 @@ public class PublishingSteps extends PublishingStepsBase {
         List<VulnerabilityScanner> vulnerabilityScannerList = Collections.singletonList(sastScanner);
         FlowService flowService = new FlowService(vulnerabilityScannerList, projectNameGenerator, resultsService);
 
-        return new GitHubController(gitHubProperties, flowProperties, cxProperties,
-                null, flowService, helperService, gitHubService, gitHubAppAuthService,null, filterFactory, configOverrider,
+        return new GitHubController(gitHubProperties, flowProperties,
+                null, flowService, helperService, gitHubService, gitHubAppAuthService, filterFactory, configOverrider,
                 scmConfigOverrider);
     }
 

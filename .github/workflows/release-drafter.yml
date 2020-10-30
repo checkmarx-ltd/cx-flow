@@ -1,4 +1,4 @@
-name: Release Drafter
+name: Natalies Release Drafter
 
 on:
   push:
@@ -10,7 +10,7 @@ jobs:
   update_release_draft:
     runs-on: ubuntu-latest
     steps:
-      - uses: release-drafter/release-drafter@v5
+      - uses: natalieb07/release-drafter@v5.12.1.6
         with:
           # (Optional) specify config name to use, relative to .github/. Default: release-drafter.yml
           config-name: release-drafter.yml

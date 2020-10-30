@@ -7,10 +7,7 @@ import com.checkmarx.sdk.config.ScaConfig;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import lombok.*;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Object containing all applicable information about the scan request details
@@ -47,7 +44,7 @@ public class ScanRequest {
     private String refs;
     private List<String> email;
     private boolean forceScan;
-    private boolean incremental;
+    private Boolean incremental;
     private String scanPreset;
 
     /**
@@ -159,6 +156,13 @@ public class ScanRequest {
         return "ScanRequest(namespace=" + this.getNamespace() + ", application=" + this.getApplication() + ", org=" + this.getOrg() + ", team=" + this.getTeam() + ", project=" + this.getProject() + ", cxFields=" + this.getCxFields() + ", site=" + this.getSite() + ", repoUrl=" + this.getRepoUrl() + ", repoName=" + this.getRepoName() + ", branch=" + this.getBranch() + ", mergeTargetBranch=" + this.getMergeTargetBranch() + ", mergeNoteUri=" + this.getMergeNoteUri() + ", repoProjectId=" + this.getRepoProjectId() + ", refs=" + this.getRefs() + ", email=" + this.getEmail() + ", incremental=" + this.isIncremental() + ", scanPreset=" + this.getScanPreset() + ", excludeFiles=" + this.getExcludeFiles() + ", excludeFolders=" + this.getExcludeFolders() + ", repoType=" + this.getRepoType() + ", product=" + this.getProduct() + ", bugTracker=" + this.getBugTracker() + ", type=" + this.getType() + ", activeBranches=" + this.getActiveBranches() + ", filter=" + this.getFilter() + ")";
     }
 
+    public Boolean isIncremental() {
+        return Optional.ofNullable(incremental).orElse(Boolean.FALSE);
+    }
+    public Boolean getIncrementalField() {
+        return incremental;
+    }
+    
     public enum Product {
         CX("CX"),
         CXOSA("CXOSA"),

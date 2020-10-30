@@ -16,6 +16,7 @@ import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxClient;
+import com.checkmarx.sdk.service.CxService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -55,7 +56,7 @@ public class CxConfigSteps {
     public static final String CWE_89 = "89";
     private static final ObjectMapper mapper = new ObjectMapper();
 
-    private final CxClient cxClientMock;
+    private final CxService cxClientMock;
     private final GitHubService gitHubService;
     private final GitHubAppAuthService gitHubAppAuthService;
     private GitHubController gitHubControllerSpy;
@@ -85,7 +86,7 @@ public class CxConfigSteps {
                          ThresholdValidator thresholdValidator, FilterFactory filterFactory, FlowService flowService, EmailService emailService,
                          ScmConfigOverrider scmConfigOverrider, GitHubAppAuthService gitHubAppAuthService) {
 
-        this.cxClientMock = mock(CxClient.class);
+        this.cxClientMock = mock(CxService.class);
 
         this.flowProperties = flowProperties;
 
@@ -527,13 +528,11 @@ public class CxConfigSteps {
         // And thus it will work with real gitHubService
         this.gitHubControllerSpy = spy(new GitHubController(gitHubProperties,
                 flowProperties,
-                cxProperties,
                 jiraProperties,
                 flowService,
                 helperService,
                 gitHubService,
                 gitHubAppAuthService,
-                null,
                 filterFactory,
                 configOverrider,
                 scmConfigOverrider));
@@ -555,8 +554,10 @@ public class CxConfigSteps {
                 scmConfigOverrider,
                 gitHubAppAuthService);
 
+        CxScannerService cxScannerService = new CxScannerService(cxProperties,null, null, cxClientMock, null );
+
         this.resultsService = new ResultsService(
-                cxClientMock,
+                cxScannerService,
                 null,
                 null,
                 null,
@@ -564,8 +565,7 @@ public class CxConfigSteps {
                 null,
                 null,
                 null,
-                emailService,
-                cxProperties);
+                emailService);
     }
 
     private static ScanResults createFakeScanResults() {

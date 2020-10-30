@@ -15,7 +15,7 @@ import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
-import com.checkmarx.sdk.config.CxProperties;
+
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import lombok.RequiredArgsConstructor;
@@ -44,7 +44,6 @@ public class GitLabController extends WebhookController {
     private final FlowService flowService;
     private final HelperService helperService;
     private final GitLabProperties properties;
-    private final CxProperties cxProperties;
     private final JiraProperties jiraProperties;
     private final FlowProperties flowProperties;
     private final GitLabService gitLabService;
@@ -113,8 +112,6 @@ public class GitLabController extends WebhookController {
 
             FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
 
-            setExclusionProperties(cxProperties, controllerRequest);
-
             Project proj = body.getProject();
             String gitUrl = proj.getGitHttpUrl();
 
@@ -122,10 +119,6 @@ public class GitLabController extends WebhookController {
             String configToken = scmConfigOverrider.determineConfigToken(properties, controllerRequest.getScmInstance());
             String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS_OAUTH2.concat(configToken).concat("@"));
             gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP_OAUTH2.concat(configToken).concat("@"));
-            String scanPreset = cxProperties.getScanPreset();
-            if (StringUtils.isNotEmpty(controllerRequest.getPreset())) {
-                scanPreset = controllerRequest.getPreset();
-            }
 
             ScanRequest request = ScanRequest.builder()
                     .id(String.valueOf(proj.getId()))
@@ -143,8 +136,8 @@ public class GitLabController extends WebhookController {
                     .mergeTargetBranch(targetBranch)
                     .refs(Constants.CX_BRANCH_PREFIX.concat(currentBranch))
                     .email(null)
-                    .incremental(isScanIncremental(controllerRequest, cxProperties))
-                    .scanPreset(scanPreset)
+                    .incremental(controllerRequest.getIncremental())
+                    .scanPreset(controllerRequest.getPreset())
                     .excludeFolders(controllerRequest.getExcludeFolders())
                     .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)
@@ -153,7 +146,6 @@ public class GitLabController extends WebhookController {
 
             setMergeEndPointUri(objectAttributes, proj, request);
 
-            overrideScanPreset(controllerRequest, request);
             setScmInstance(controllerRequest, request);
 
             if(proj.getId() != null) {
@@ -225,8 +217,6 @@ public class GitLabController extends WebhookController {
             BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
             FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
 
-            setExclusionProperties(cxProperties, controllerRequest);
-
             Project proj = body.getProject();
 
             String gitUrl = proj.getGitHttpUrl();
@@ -235,10 +225,6 @@ public class GitLabController extends WebhookController {
             String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS_OAUTH2.concat(configToken).concat("@"));
             gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP_OAUTH2.concat(configToken).concat("@"));
 
-            String scanPreset = cxProperties.getScanPreset();
-            if (StringUtils.isNotEmpty(controllerRequest.getPreset())) {
-                scanPreset = controllerRequest.getPreset();
-            }
 
             ScanRequest request = ScanRequest.builder()
                     .id(String.valueOf(body.getProjectId()))
@@ -253,8 +239,8 @@ public class GitLabController extends WebhookController {
                     .repoType(ScanRequest.Repository.GITLAB)
                     .branch(currentBranch)
                     .refs(body.getRef())
-                    .incremental(isScanIncremental(controllerRequest, cxProperties))
-                    .scanPreset(scanPreset)
+                    .incremental(controllerRequest.getIncremental())
+                    .scanPreset(controllerRequest.getPreset())
                     .excludeFolders(controllerRequest.getExcludeFolders())
                     .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)

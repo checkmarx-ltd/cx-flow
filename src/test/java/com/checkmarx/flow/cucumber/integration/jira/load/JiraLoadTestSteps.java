@@ -5,6 +5,7 @@ import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.ExitThrowable;
+import com.checkmarx.flow.service.SastScanner;
 import com.checkmarx.jira.IJiraTestUtils;
 import com.checkmarx.jira.JiraTestUtils;
 import com.checkmarx.jira.PublishUtils;
@@ -40,6 +41,9 @@ public class JiraLoadTestSteps {
     @Autowired
     private CxProperties cxProperties;
 
+    @Autowired
+    SastScanner sastScanner;
+    
     @Autowired
     private PublishUtils publishUtils;
 
@@ -111,7 +115,7 @@ public class JiraLoadTestSteps {
         File file = publishUtils.getFileFromResourcePath(filename);
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
-        publishUtils.publishRequest(request, file, BugTracker.Type.JIRA);
+        publishUtils.publishRequest(request, file, BugTracker.Type.JIRA, sastScanner);
         stopWatch.stop();
         durations.add(stopWatch.getTime());
     }

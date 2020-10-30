@@ -16,7 +16,7 @@ import com.checkmarx.flow.exception.ADOClientException;
 import com.checkmarx.flow.utils.ADOUtils;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
-import com.checkmarx.sdk.config.CxProperties;
+import com.checkmarx.sdk.config.CxPropertiesBase;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -65,18 +65,18 @@ public class ADOService {
     private final RestTemplate restTemplate;
     private final ADOProperties properties;
     private final FlowProperties flowProperties;
-    private final CxProperties cxProperties;
+    private final CxPropertiesBase cxProperties;
     private final ScmConfigOverrider scmConfigOverrider;
     private final ThresholdValidator thresholdValidator;
     private String browseRepoEndpoint = "";
 
     public ADOService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, ADOProperties properties,
-                      FlowProperties flowProperties, CxProperties cxProperties,
+                      FlowProperties flowProperties, CxScannerService cxScannerService,
                       ScmConfigOverrider scmConfigOverrider, ThresholdValidator thresholdValidator) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.flowProperties = flowProperties;
-        this.cxProperties = cxProperties;
+        this.cxProperties = cxScannerService.getProperties();
         this.scmConfigOverrider = scmConfigOverrider;
         this.thresholdValidator = thresholdValidator;
     }
@@ -156,6 +156,7 @@ public class ADOService {
             }
         }
     }
+    
 
     void endBlockMerge(ScanRequest request, ScanResults results, ScanDetails scanDetails){
         if(properties.isBlockMerge()) {

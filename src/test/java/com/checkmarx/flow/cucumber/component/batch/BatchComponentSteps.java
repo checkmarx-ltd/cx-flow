@@ -6,6 +6,7 @@ import com.checkmarx.flow.config.*;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 import com.checkmarx.flow.cucumber.component.scan.ScanFixture;
 import com.checkmarx.flow.service.*;
+import com.checkmarx.sdk.config.CxGoProperties;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.checkmarx.sdk.exception.CheckmarxException;
@@ -31,6 +32,7 @@ import static org.mockito.Mockito.when;
 public class BatchComponentSteps {
     private final FlowProperties flowProperties;
     private final CxProperties cxProperties;
+    private final CxGoProperties cxgoProperties;
     private final JiraProperties jiraProperties;
     private final GitHubProperties gitHubProperties;
     private final GitLabProperties gitLabProperties;
@@ -58,8 +60,11 @@ public class BatchComponentSteps {
         FilterConfiguration filter = FilterConfiguration.fromSimpleFilters(ScanFixture.getScanFilters());
         when(cxClient.getReportContentByScanId(ScanFixture.SCAN_ID, filter))
                 .thenReturn(ScanFixture.getScanResults());
+
+        CxScannerService cxScannerService = new CxScannerService(cxProperties,null, null, null, null );
+        
         cxFlowRunner = new CxFlowRunner(flowProperties,
-                cxProperties,
+                cxScannerService,
                 jiraProperties,
                 gitHubProperties,
                 gitLabProperties,

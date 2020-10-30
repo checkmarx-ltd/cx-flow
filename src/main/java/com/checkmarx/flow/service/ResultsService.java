@@ -14,14 +14,12 @@ import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
-import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxProject;
 import com.checkmarx.sdk.dto.filtering.EngineFilterConfiguration;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.checkmarx.sdk.exception.CheckmarxException;
-import com.checkmarx.sdk.service.CxClient;
 import com.checkmarx.sdk.service.CxOsaClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,7 +41,7 @@ import static com.checkmarx.sdk.config.Constants.UNKNOWN_INT;
 @RequiredArgsConstructor
 public class ResultsService {
 
-    private final CxClient cxService;
+    private final CxScannerService cxScannerService;
     private final CxOsaClient osaService;
     private final JiraService jiraService;
     private final IssueService issueService;
@@ -52,15 +50,15 @@ public class ResultsService {
     private final BitBucketService bbService;
     private final ADOService adoService;
     private final EmailService emailService;
-    private final CxProperties cxProperties;
 
     @Async("scanRequest")
     public CompletableFuture<ScanResults> processScanResultsAsync(ScanRequest request, Integer projectId,
                                                                   Integer scanId, String osaScanId, FilterConfiguration filterConfiguration) throws MachinaException {
         try {
+                    
             CompletableFuture<ScanResults> future = new CompletableFuture<>();
             //TODO async these, and join and merge after
-            ScanResults results = cxService.getReportContentByScanId(scanId, filterConfiguration);
+            ScanResults results = cxScannerService.getScannerClient().getReportContentByScanId(scanId, filterConfiguration);
             logGetResultsJsonLogger(request, scanId, results);
             results = getOSAScan(request, projectId, osaScanId, filterConfiguration, results);
 
@@ -124,8 +122,9 @@ public class ResultsService {
 
 
     public void processResults(ScanRequest request, ScanResults results, ScanDetails scanDetails) throws MachinaException {
+        
         scanDetails = Optional.ofNullable(scanDetails).orElseGet(ScanDetails::new);
-        if (Boolean.FALSE.equals(cxProperties.getOffline())) {
+        if (Boolean.FALSE.equals(cxScannerService.getProperties().getOffline())) {
             getCxFields(request, results);
         }
         switch (request.getBugTracker().getType()) {
@@ -195,7 +194,7 @@ public class ResultsService {
     }
 
     ScanResults getOSAScan(ScanRequest request, Integer projectId, String osaScanId, FilterConfiguration filter, ScanResults results) throws CheckmarxException {
-        if (Boolean.TRUE.equals(cxProperties.getEnableOsa()) && !ScanUtils.empty(osaScanId)) {
+        if (Boolean.TRUE.equals(cxScannerService.getProperties().getEnableOsa()) && !ScanUtils.empty(osaScanId)) {
             log.info("Waiting for OSA Scan results for scan id {}", osaScanId);
 
             List<Filter> filters = Optional.ofNullable(filter.getScaFilters())
@@ -298,7 +297,7 @@ public class ResultsService {
             }
             /*if so, then get them and add them to the request object*/
             if (!ScanUtils.empty(results.getProjectId()) && !results.getProjectId().equals(Constants.UNKNOWN)) {
-                CxProject project = cxService.getProject(Integer.parseInt(results.getProjectId()));
+                CxProject project = cxScannerService.getScannerClient().getProject(Integer.parseInt(results.getProjectId()));
                 Map<String, String> fields = new HashMap<>();
                 for (CxProject.CustomField field : project.getCustomFields()) {
                     if (!ScanUtils.empty(field.getName()) && !ScanUtils.empty(field.getValue())) {
@@ -307,14 +306,14 @@ public class ResultsService {
                 }
                 if (!fields.isEmpty()) {
                     request.setCxFields(fields);
-                    if (!ScanUtils.empty(cxProperties.getJiraProjectField())) {
-                        String jiraProject = fields.get(cxProperties.getJiraProjectField());
+                    if (!ScanUtils.empty(cxScannerService.getProperties().getJiraProjectField())) {
+                        String jiraProject = fields.get(cxScannerService.getProperties().getJiraProjectField());
                         if (!ScanUtils.empty(jiraProject)) {
                             request.getBugTracker().setProjectKey(jiraProject);
                         }
                     }
-                    if (!ScanUtils.empty(cxProperties.getJiraIssuetypeField())) {
-                        String jiraIssuetype = fields.get(cxProperties.getJiraIssuetypeField());
+                    if (!ScanUtils.empty(cxScannerService.getProperties().getJiraIssuetypeField())) {
+                        String jiraIssuetype = fields.get(cxScannerService.getProperties().getJiraIssuetypeField());
                         if (!ScanUtils.empty(jiraIssuetype)) {
                             request.getBugTracker().setIssueType(jiraIssuetype);
                         }

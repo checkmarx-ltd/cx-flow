@@ -99,7 +99,7 @@ public class FilterScriptSteps {
     @When("CxFlow generates issues from findings")
     public void cxFlowGeneratesIssues() throws CheckmarxException, IOException {
         RestTemplate restTemplateMock = getRestTemplateMock();
-        CxAuthClient authClientMock = getAuthClientMock();
+        CxAuthService authClientMock = getAuthClientMock();
         CxClient cxClientSpy = getCxClientSpy(restTemplateMock, authClientMock);
         generateIssues(cxClientSpy);
     }
@@ -185,7 +185,7 @@ public class FilterScriptSteps {
         return result;
     }
 
-    private CxClient getCxClientSpy(RestTemplate restTemplateMock, CxAuthClient authClientMock) throws CheckmarxException {
+    private CxClient getCxClientSpy(RestTemplate restTemplateMock, CxAuthService authClientMock) throws CheckmarxException {
         CxClient cxClient = new CxService(authClientMock,
                 cxProperties,
                 cxLegacyService,
@@ -198,8 +198,8 @@ public class FilterScriptSteps {
         return cxClientSpy;
     }
 
-    private CxAuthClient getAuthClientMock() {
-        CxAuthClient authClientMock = mock(CxAuthClient.class);
+    private CxAuthService getAuthClientMock() {
+        CxAuthService authClientMock = mock(CxAuthService.class);
         doReturn(new HttpHeaders()).when(authClientMock).createAuthHeaders();
         doReturn(null).when(authClientMock).getLegacySession();
         return authClientMock;
