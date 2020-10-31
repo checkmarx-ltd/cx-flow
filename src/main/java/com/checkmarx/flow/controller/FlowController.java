@@ -201,6 +201,9 @@ public class FlowController {
                         prd.bugType = BugTracker.Type.CUSTOM;
                     }
                     break;
+                default:
+                    // Nothing to do.
+                    break;
             }
             detailCnt++;
         }
