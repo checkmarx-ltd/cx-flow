@@ -122,7 +122,7 @@ public class FlowController {
             @PathVariable(value = "scanID") String scanID
     ) {
         log.debug("Handling post-back from SAST");
-        PostRequestData prd = null;
+        PostRequestData prd = new PostRequestData();
         String token = "";
         String bugTracker = properties.getBugTracker();
         //
@@ -138,7 +138,7 @@ public class FlowController {
                 String scanDetails = strToken.substring(13);
                 try {
                     String postRequest = URLDecoder.decode(scanDetails,"UTF-8");
-                    prd = decodePostBackReq(postRequest);
+                    decodePostBackReq(postRequest, prd);
                 } catch(Exception e) {
                     log.error("Error decoding scan details");
                 }
@@ -172,9 +172,8 @@ public class FlowController {
                 .build());
     }
 
-    private PostRequestData decodePostBackReq(String postRequest) {
+    private void decodePostBackReq(String postRequest, PostRequestData prd) {
         StringTokenizer scanDetailData = new StringTokenizer(postRequest, ";");
-        PostRequestData prd = new PostRequestData();
         int detailCnt = 0;
         while(scanDetailData.hasMoreTokens()) {
             String scanDetailToken = scanDetailData.nextToken();
@@ -205,7 +204,6 @@ public class FlowController {
             }
             detailCnt++;
         }
-        return prd;
     }
 
     @PostMapping("/scan")
