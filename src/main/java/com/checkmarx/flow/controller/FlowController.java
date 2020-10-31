@@ -136,10 +136,10 @@ public class FlowController {
         StringTokenizer postData = new StringTokenizer(postBackData, "&");
         while(postData.hasMoreTokens()) {
             String strToken = postData.nextToken();
-            if(strToken.length() > 6 && strToken.substring(0,6).equals("token=")) {
+            if(strToken.length() > 6 && strToken.startsWith("token=")) {
                 token = strToken.substring(6);
             }
-            if(strToken.length() > 13 && strToken.substring(0,13).equals("scancomments=")) {
+            if(strToken.length() > 13 && strToken.startsWith("scancomments=")) {
                 String scanDetails = strToken.substring(13);
                 try {
                     String decoded = URLDecoder.decode(scanDetails,"UTF-8");
