@@ -122,14 +122,9 @@ public class FlowController {
             @PathVariable(value = "scanID") String scanID
     ) {
         log.debug("Handling post-back from SAST");
+        PostRequestData prd = null;
         String token = "";
-        String mergeNoteUri = "";
-        String pullRequestURL = "";
-        String branch = "";
-        String repoName = "";
-        String namespace = "";
         String bugTracker = properties.getBugTracker();
-        BugTracker.Type bugType = ScanUtils.getBugTypeEnum(properties.getBugTracker(), properties.getBugTrackerImpl());
         //
         /// Decode the scan details.
         //
@@ -142,26 +137,8 @@ public class FlowController {
             if(strToken.length() > 13 && strToken.startsWith("scancomments=")) {
                 String scanDetails = strToken.substring(13);
                 try {
-                    String decoded = URLDecoder.decode(scanDetails,"UTF-8");
-                    StringTokenizer scanDetailData = new StringTokenizer(decoded, ";");
-                    int detailCnt = 0;
-                    while(scanDetailData.hasMoreTokens()) {
-                        String scanDetailToken = scanDetailData.nextToken();
-                        if(scanDetailToken == null) scanDetailToken = "";
-                        if(detailCnt == 1)
-                            namespace = scanDetailToken;
-                        if(detailCnt == 2)
-                            repoName = scanDetailToken;
-                        if(detailCnt == 3)
-                            branch = scanDetailToken;
-                        if(detailCnt == 4)
-                            mergeNoteUri = scanDetailToken;
-                        if(detailCnt == 5)
-                            pullRequestURL = scanDetailToken;
-                        if(detailCnt == 6 && scanDetailToken.equals("PULL"))
-                            bugType = BugTracker.Type.GITHUBPULL;
-                        detailCnt++;
-                    }
+                    String postRequest = URLDecoder.decode(scanDetails,"UTF-8");
+                    prd = decodePostBackReq(postRequest);
                 } catch(Exception e) {
                     log.error("Error decoding scan details");
                 }
@@ -172,17 +149,17 @@ public class FlowController {
             String product = "CX";
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
             ScanRequest scanRequest = ScanRequest.builder()
-                                            .namespace(namespace)
-                                            .repoName(repoName)
+                                            .namespace(prd.namespace)
+                                            .repoName(prd.repoName)
                                             .repoType(ScanRequest.Repository.GITHUB)
                                             .product(p)
-                                            .branch(branch)
+                                            .branch(prd.branch)
                                             .build();
 
             ScanResults scanResults = cxService.getReportContentByScanId(Integer.parseInt(scanID), scanRequest.getFilter());
-            scanRequest.putAdditionalMetadata("statuses_url", pullRequestURL);
-            scanRequest.setMergeNoteUri(mergeNoteUri);
-            BugTracker bt = ScanUtils.getBugTracker(null, bugType, jiraProperties, bugTracker);
+            scanRequest.putAdditionalMetadata("statuses_url", prd.pullRequestURL);
+            scanRequest.setMergeNoteUri(prd.mergeNoteUri);
+            BugTracker bt = ScanUtils.getBugTracker(null, prd.bugType, jiraProperties, bugTracker);
             scanRequest.setBugTracker(bt);
             scanResults.setSastScanId(Integer.parseInt(scanID));
             resultsService.publishCombinedResults(scanRequest, scanResults);
@@ -193,6 +170,42 @@ public class FlowController {
                 .message("Scan Results Successfully Processed")
                 .success(true)
                 .build());
+    }
+
+    private PostRequestData decodePostBackReq(String postRequest) {
+        StringTokenizer scanDetailData = new StringTokenizer(postRequest, ";");
+        PostRequestData prd = new PostRequestData();
+        int detailCnt = 0;
+        while(scanDetailData.hasMoreTokens()) {
+            String scanDetailToken = scanDetailData.nextToken();
+            if(scanDetailToken == null) scanDetailToken = "";
+            switch(detailCnt) {
+                case 1:
+                    prd.namespace = scanDetailToken;
+                    break;
+                case 2:
+                    prd.repoName = scanDetailToken;
+                    break;
+                case 3:
+                    prd.branch = scanDetailToken;
+                    break;
+                case 4:
+                    prd.mergeNoteUri = scanDetailToken;
+                    break;
+                case 5:
+                    prd.pullRequestURL = scanDetailToken;
+                    break;
+                case 6:
+                    if(scanDetailToken.equals("PULL")) {
+                        prd.bugType = BugTracker.Type.GITHUBPULL;
+                    } else {
+                        prd.bugType = BugTracker.Type.CUSTOM;
+                    }
+                    break;
+            }
+            detailCnt++;
+        }
+        return prd;
     }
 
     @PostMapping("/scan")
@@ -581,6 +594,14 @@ public class FlowController {
                     '}';
         }
     }
+}
 
-
+class PostRequestData {
+    String token = "";
+    String mergeNoteUri = "";
+    String pullRequestURL = "";
+    String branch = "";
+    String repoName = "";
+    String namespace = "";
+    BugTracker.Type bugType;
 }
