@@ -214,8 +214,6 @@ public class ScanRequestConverter {
                 "Some hints:\n" +
                 "\t- team name is case-sensitive\n" +
                 "\t- trailing slash is not allowed\n" +
-                "\t- team name separator depends on Checkmarx product version specified in CxFlow configuration:\n" +
-                String.format("\t\tCheckmarx version: %s%n", cxProperties.getVersion()) +
-                String.format("\t\tSeparator that should be used: %s%n", cxProperties.getTeamPathSeparator());
+                "\t- team name separator depends on Checkmarx product version specified in CxFlow configuration: (github.com/checkmarx-ltd/cx-flow/wiki/Configuration)";
     }
 }
