@@ -5,6 +5,7 @@ import com.checkmarx.flow.dto.BugTrackersDto;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.sastscanning.ScanRequestConverter;
 import com.checkmarx.sdk.config.CxGoProperties;
+import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.CxPropertiesBase;
 import com.cx.restclient.CxGoClientImpl;
 import com.cx.restclient.ScannerClient;
@@ -17,18 +18,26 @@ import java.util.List;
 @Service
 @Slf4j
 public class CxGoScanner extends AbstractVulnerabilityScanner {
-    
+
     private final CxGoClientImpl cxGoClient;
     private static final String SCAN_TYPE = CxGoProperties.CONFIG_PREFIX;
     protected final ScanRequestConverter scanRequestConverter;
     protected final CxGoProperties cxGoProperties;
+    private final CxProperties cxProperties;
 
-    public CxGoScanner(ResultsService resultsService, HelperService helperService, FlowProperties flowProperties, ProjectNameGenerator projectNameGenerator, BugTrackersDto bugTrackersDto, CxGoClientImpl cxGoClient, CxGoProperties cxGoProperties) {
-        super(resultsService, flowProperties,  projectNameGenerator, bugTrackersDto);
+    public CxGoScanner(ResultsService resultsService,
+                       HelperService helperService,
+                       FlowProperties flowProperties,
+                       ProjectNameGenerator projectNameGenerator,
+                       BugTrackersDto bugTrackersDto,
+                       CxGoClientImpl cxGoClient,
+                       CxGoProperties cxGoProperties,
+                       CxProperties cxProperties) {
+        super(resultsService, flowProperties,  projectNameGenerator, bugTrackersDto, cxProperties);
         this.cxGoClient = cxGoClient;
         this.scanRequestConverter = new ScanRequestConverter(helperService,flowProperties,bugTrackersDto.getGitService(),bugTrackersDto.getGitLabService(),bugTrackersDto.getBitBucketService(),bugTrackersDto.getAdoService(),bugTrackersDto.getSessionTracker(),cxGoClient,cxGoProperties);
         this.cxGoProperties = cxGoProperties;
-        
+        this.cxProperties = cxProperties;
     }
 
     @Override
@@ -55,7 +64,7 @@ public class CxGoScanner extends AbstractVulnerabilityScanner {
     protected void cxParseResults(ScanRequest request, File file){
         throw new UnsupportedOperationException();
     }
-    
+
     public ScannerClient getScannerClient() {
         return cxGoClient;
     }

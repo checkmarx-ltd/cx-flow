@@ -16,6 +16,7 @@ import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
+import com.checkmarx.sdk.service.CxClient;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.RequiredArgsConstructor;
@@ -28,9 +29,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
+import java.net.URLDecoder;
+import java.util.*;
 
 
 /**
@@ -55,6 +55,9 @@ public class FlowController {
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
     private final SastScanner sastScanner;
+    private final ResultsService resultsService;
+    private final CxClient cxService;
+
     private final CxGoScanner cxgoScanner;
     
     @GetMapping(value = "/scanresults", produces = "application/json")
@@ -111,6 +114,99 @@ public class FlowController {
         log.debug("ScanResults {}", scanResults);
 
         return scanResults;
+    }
+
+    @PostMapping(value = "/postbackAction/{scanID}")
+    public ResponseEntity<EventResponse> scanPostback(
+            @RequestBody String postBackData,
+            @PathVariable(value = "scanID") String scanID
+    ) {
+        log.debug("Handling post-back from SAST");
+        PostRequestData prd = new PostRequestData();
+        String token = "";
+        String bugTracker = properties.getBugTracker();
+        //
+        /// Decode the scan details.
+        //
+        StringTokenizer postData = new StringTokenizer(postBackData, "&");
+        while(postData.hasMoreTokens()) {
+            String strToken = postData.nextToken();
+            if(strToken.length() > 6 && strToken.startsWith("token=")) {
+                token = strToken.substring(6);
+            }
+            if(strToken.length() > 13 && strToken.startsWith("scancomments=")) {
+                String scanDetails = strToken.substring(13);
+                try {
+                    String postRequest = URLDecoder.decode(scanDetails,"UTF-8");
+                    decodePostBackReq(postRequest, prd);
+                } catch(Exception e) {
+                    log.error("Error decoding scan details");
+                }
+            }
+        }
+        validateToken(token);
+        try {
+            String product = "CX";
+            ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
+            ScanRequest scanRequest = ScanRequest.builder()
+                                            .namespace(prd.namespace)
+                                            .repoName(prd.repoName)
+                                            .repoType(ScanRequest.Repository.GITHUB)
+                                            .product(p)
+                                            .branch(prd.branch)
+                                            .build();
+
+            ScanResults scanResults = cxService.getReportContentByScanId(Integer.parseInt(scanID), scanRequest.getFilter());
+            scanRequest.putAdditionalMetadata("statuses_url", prd.pullRequestURL);
+            scanRequest.setMergeNoteUri(prd.mergeNoteUri);
+            BugTracker bt = ScanUtils.getBugTracker(null, prd.bugType, jiraProperties, bugTracker);
+            scanRequest.setBugTracker(bt);
+            scanResults.setSastScanId(Integer.parseInt(scanID));
+            resultsService.publishCombinedResults(scanRequest, scanResults);
+        } catch (Exception e) {
+            log.error("Error posting SAST scan results", e);
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
+                .message("Scan Results Successfully Processed")
+                .success(true)
+                .build());
+    }
+
+    private void decodePostBackReq(String postRequest, PostRequestData prd) {
+        StringTokenizer scanDetailData = new StringTokenizer(postRequest, ";");
+        int detailCnt = 0;
+        while(scanDetailData.hasMoreTokens()) {
+            String scanDetailToken = scanDetailData.nextToken();
+            if(scanDetailToken == null) scanDetailToken = "";
+            switch(detailCnt) {
+                case 1:
+                    prd.namespace = scanDetailToken;
+                    break;
+                case 2:
+                    prd.repoName = scanDetailToken;
+                    break;
+                case 3:
+                    prd.branch = scanDetailToken;
+                    break;
+                case 4:
+                    prd.mergeNoteUri = scanDetailToken;
+                    break;
+                case 5:
+                    prd.pullRequestURL = scanDetailToken;
+                    break;
+                case 6:
+                    if(scanDetailToken.equals("PULL")) {
+                        prd.bugType = BugTracker.Type.GITHUBPULL;
+                    } else {
+                        prd.bugType = BugTracker.Type.CUSTOM;
+                    }
+                    break;
+                default:
+                    // Nothing to do.
+                    break;
+            }
+            detailCnt++;
+        }
     }
 
     @PostMapping("/scan")
@@ -499,6 +595,14 @@ public class FlowController {
                     '}';
         }
     }
+}
 
-
+class PostRequestData {
+    String token = "";
+    String mergeNoteUri = "";
+    String pullRequestURL = "";
+    String branch = "";
+    String repoName = "";
+    String namespace = "";
+    BugTracker.Type bugType;
 }
