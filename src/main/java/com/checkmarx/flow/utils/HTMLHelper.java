@@ -386,6 +386,11 @@ public class HTMLHelper {
         if (!ScanUtils.empty(issue.getLink())) {
             body.append("[Checkmarx](").append(issue.getLink()).append(")").append(CRLF).append(CRLF);
         }
+
+        if (!ScanUtils.empty(flowProperties.getCodebashUrl())) {
+            appendAll(body, "[Training](", flowProperties.getCodebashUrl(), ")", HTMLHelper.CRLF);
+        }
+
         Map<String, Object> additionalDetails = issue.getAdditionalDetails();
         if (MapUtils.isNotEmpty(additionalDetails) && additionalDetails.containsKey(RECOMMENDED_FIX)) {
             body.append("[Recommended Fix](").append(additionalDetails.get(ScanUtils.RECOMMENDED_FIX)).append(")")
