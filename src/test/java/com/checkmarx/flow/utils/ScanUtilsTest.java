@@ -8,6 +8,7 @@ import com.checkmarx.flow.service.ConfigurationOverrider;
 import com.checkmarx.flow.service.CxGoScanner;
 import com.checkmarx.flow.service.SCAScanner;
 import com.checkmarx.flow.service.SastScanner;
+import com.checkmarx.flow.service.ScaConfigurationOverrider;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.CxConfig;
@@ -32,7 +33,10 @@ public class ScanUtilsTest {
 
     @Autowired
     private CxGoScanner cxgoScanner;
-    
+
+@   Autowired
+    private ScaConfigurationOverrider scaConfigOverrider;
+
     private FlowProperties flowProperties;
     private JiraProperties jiraProperties;
     private ScaProperties scaProperties;
@@ -45,7 +49,7 @@ public class ScanUtilsTest {
         scaProperties = new ScaProperties();
 
         jiraProperties = new JiraProperties();
-        configOverrider = new ConfigurationOverrider(flowProperties, scaScanner, sastScanner, cxgoScanner);
+        configOverrider = new ConfigurationOverrider(flowProperties, scaScanner, sastScanner, cxgoScanner, scaConfigOverrider);
     }
     @Test
     public void testCxConfigOverride(){
