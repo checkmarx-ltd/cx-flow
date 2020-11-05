@@ -120,7 +120,8 @@ public class GitHubService extends RepoService {
         restTemplate.exchange(baseUrl, HttpMethod.PATCH, httpEntity, String.class);
     }
 
-    public List<RepoComment> getComments(ScanRequest scanRequest) throws IOException  {
+    @Override
+    public List<RepoComment> getComments(ScanRequest scanRequest) throws IOException {
         HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders(scanRequest));
         ResponseEntity<String> response = restTemplate.exchange(scanRequest.getMergeNoteUri(), HttpMethod.GET, httpEntity , String.class);
         List<RepoComment> result = new ArrayList<>();
@@ -171,6 +172,7 @@ public class GitHubService extends RepoService {
         }
     }
 
+    @Override
     public void deleteComment(String url, ScanRequest scanRequest) {
         HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders(scanRequest));
         restTemplate.exchange(url, HttpMethod.DELETE, httpEntity, String.class);

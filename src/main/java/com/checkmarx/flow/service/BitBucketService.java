@@ -2,6 +2,7 @@ package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.config.BitBucketProperties;
 import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.dto.RepoComment;
 import com.checkmarx.flow.dto.ScanDetails;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.Sources;
@@ -28,6 +29,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.beans.ConstructorProperties;
+import java.io.IOException;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
@@ -423,6 +425,16 @@ public class BitBucketService extends RepoService {
             }
         }
         return result;
+    }
+
+    @Override
+    public void deleteComment(String url, ScanRequest scanRequest) {
+        return;
+    }
+
+    @Override
+    public List<RepoComment> getComments(ScanRequest scanRequest) throws IOException {
+        return null;
     }
 
     private CxConfig loadCxConfigFromBitbucket(ScanRequest request) {
