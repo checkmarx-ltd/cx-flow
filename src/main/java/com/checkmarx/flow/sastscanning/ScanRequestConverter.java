@@ -95,11 +95,17 @@ public class ScanRequestConverter {
             }
             ownerId = scannerClient.getTeamId(team);
             if (cxProperties.isMultiTenant() && !ScanUtils.empty(namespace)) {
-                log.info("Using multi tenant team name: {}", fullTeamName);
+                
                 request.setTeam(fullTeamName);
                 String tmpId = scannerClient.getTeamId(fullTeamName);
+                log.info("Existing team with " + fullTeamName + " was not found. Creating one ...");
                 if (tmpId.equals(UNKNOWN)) {
-                    ownerId = scannerClient.createTeam(ownerId, namespace);
+                    try {
+                        ownerId = scannerClient.createTeam(ownerId, namespace);
+                    }catch(Exception e){
+                        log.error("Existing team with " + fullTeamName + " was not found.");
+                        ownerId = UNKNOWN;
+                    }
                 } else {
                     ownerId = tmpId;
                 }
