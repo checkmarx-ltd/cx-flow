@@ -125,7 +125,7 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
     }
 
     private Map<Severity, Integer> convertSeverityMap(Map<FindingSeverity, Integer> thresholds) {
-        Map<Severity, Integer> thresholdsSca = new HashMap<>();
+        Map<Severity, Integer> thresholdsSca = new EnumMap<>(Severity.class);
 
         thresholds.entrySet().forEach(entry -> {
             switch(entry.getKey()) {
