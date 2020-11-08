@@ -45,9 +45,17 @@ public class ConfigurationOverrider {
     private final ScaConfigurationOverrider scaConfigOverrider;
     
     public ScanRequest overrideScanRequestProperties(CxConfig override, ScanRequest request) {
+        if (request == null) {
+            log.warn("Unable to override scan request properties. Scan request is null.");
+            return null;
+        }
+
+        scaConfigOverrider.initScaConfig(request);
+
         ConfigProvider configProvider = ConfigProvider.getInstance();
         boolean noOverridesArePresent = !configProviderResultsAreAvailable(configProvider) && !configAsCodeIsAvailable(override);
-        if (request == null || noOverridesArePresent) {
+        if (noOverridesArePresent) {
+            log.debug("No scan request property overrides were detected.");
             return request;
         }
 
@@ -87,54 +95,59 @@ public class ConfigurationOverrider {
         return override != null && !Boolean.FALSE.equals(override.getActive());
     }
 
-    private void applyFlowOverride(FlowOverride fo, ScanRequest request, Map<String, String> overrideReport) {
-        BugTracker bt = getBugTracker(fo, request, overrideReport);
+    private void applyFlowOverride(FlowOverride override, ScanRequest request, Map<String, String> overrideReport) {
+        BugTracker bt = getBugTracker(override, request, overrideReport);
         /*Override only applicable to Simple JIRA bug*/
-        if (BugTracker.Type.JIRA.equals(bt.getType()) && fo.getJira() != null) {
-            overrideJiraBugProperties(fo, bt);
+        if (BugTracker.Type.JIRA.equals(bt.getType()) && override.getJira() != null) {
+            overrideJiraBugProperties(override, bt);
         }
 
         request.setBugTracker(bt);
 
-        Optional.ofNullable(fo.getApplication())
+        Optional.ofNullable(override.getApplication())
                 .filter(StringUtils::isNotBlank)
                 .ifPresent(a -> {
                     request.setApplication(a);
                     overrideReport.put("application", a);
                 });
 
-        Optional.ofNullable(fo.getBranches())
+        Optional.ofNullable(override.getBranches())
                 .filter(CollectionUtils::isNotEmpty)
                 .ifPresent(br -> {
                     request.setActiveBranches(br);
                     overrideReport.put("active branches", Arrays.toString(br.toArray()));
                 });
 
-        Optional.ofNullable(fo.getEmails())
+        Optional.ofNullable(override.getEmails())
                 .ifPresent(e -> request.setEmail(e.isEmpty() ? null : e));
 
-        overrideFilters(fo, request, overrideReport);
+        overrideFilters(override, request, overrideReport);
 
-        overrideThresholds(fo, overrideReport, request);
+        overrideThresholds(override, overrideReport, request);
 
-        Optional.ofNullable(fo.getVulnerabilityScanners()).ifPresent(vulnerabilityScanners -> {
+        overrideEnabledVulnerabilityScanners(override, request, overrideReport);
+    }
+
+    private void overrideEnabledVulnerabilityScanners(FlowOverride override,
+                                                      ScanRequest request,
+                                                      Map<String, String> overrideReport) {
+        Optional.ofNullable(override.getVulnerabilityScanners()).ifPresent(vulnerabilityScanners -> {
             List<VulnerabilityScanner> scannersForRequest = new ArrayList<>();
 
-            vulnerabilityScanners.forEach(vs -> {
-                if (vs.equalsIgnoreCase(ScaProperties.CONFIG_PREFIX)) {
+            vulnerabilityScanners.forEach(scannerName -> {
+                if (scannerName.equalsIgnoreCase(ScaProperties.CONFIG_PREFIX)) {
                     scannersForRequest.add(scaScanner);
                 }
-                if (vs.equalsIgnoreCase(CxProperties.CONFIG_PREFIX)) {
+                if (scannerName.equalsIgnoreCase(CxProperties.CONFIG_PREFIX)) {
                     scannersForRequest.add(sastScanner);
                 }
-                if (vs.equalsIgnoreCase(CxGoProperties.CONFIG_PREFIX)) {
+                if (scannerName.equalsIgnoreCase(CxGoProperties.CONFIG_PREFIX)) {
                     scannersForRequest.add(cxgoScanner);
                 }
             });
             request.setVulnerabilityScanners(scannersForRequest);
             overrideReport.put("vulnerabilityScanners", vulnerabilityScanners.toString());
         });
-
     }
 
     private void overrideThresholds(FlowOverride flowOverride, Map<String, String> overrideReport, ScanRequest request) {

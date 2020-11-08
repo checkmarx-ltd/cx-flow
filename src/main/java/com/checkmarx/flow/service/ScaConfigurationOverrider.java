@@ -3,17 +3,41 @@ package com.checkmarx.flow.service;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.ScaConfig;
+import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.Sca;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class ScaConfigurationOverrider {
-    public void overrideScanRequestProperties(ScaConfig scaConfig, ScanRequest request, Map<String, String> overrideReport) {
-        addToReport(scaConfig, overrideReport);
+    private static final ModelMapper modelMapper = new ModelMapper();
+
+    private final ScaProperties scaProperties;
+
+    public void initScaConfig(ScanRequest request) {
+        log.debug("Initializing SCA configuration in scan request using default configuration properties.");
+        ScaConfig scaConfig = modelMapper.map(scaProperties, ScaConfig.class);
         request.setScaConfig(scaConfig);
+    }
+
+    public void overrideScanRequestProperties(ScaConfig scaConfig, ScanRequest request, Map<String, String> overrideReport) {
+        log.debug("Overriding SCA config in scan request.");
+        ScaConfig existingScaConfig = request.getScaConfig();
+        if (existingScaConfig == null) {
+            log.debug("SCA config doesn't exist yet. Using the override as is.");
+            request.setScaConfig(scaConfig);
+        } else {
+            log.debug("SCA config exists, merging.");
+            modelMapper.map(scaConfig, existingScaConfig);
+        }
+        addToReport(scaConfig, overrideReport);
     }
 
     public void overrideScanRequestProperties(Sca override, ScanRequest request, Map<String, String> overrideReport) {
@@ -46,7 +70,7 @@ public class ScaConfigurationOverrider {
         });
 
         sca.map(Sca::getThresholdsSeverity).ifPresent(thresholdsSeverity -> {
-            scaConfig.initThresholdsSeverity(thresholdsSeverity);
+            scaConfig.setThresholdsSeverity(thresholdsSeverity);
             overrideReport.put("thresholdsSeverity", ScanUtils.convertMapToString(thresholdsSeverity));
         });
 

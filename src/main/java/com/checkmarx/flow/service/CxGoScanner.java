@@ -31,7 +31,15 @@ public class CxGoScanner extends AbstractVulnerabilityScanner {
                        CxGoProperties cxGoProperties) {
         super(resultsService, flowProperties,  projectNameGenerator, bugTrackersDto);
         this.cxGoClient = cxGoClient;
-        this.scanRequestConverter = new ScanRequestConverter(helperService,flowProperties,bugTrackersDto.getGitService(),bugTrackersDto.getGitLabService(),bugTrackersDto.getBitBucketService(),bugTrackersDto.getAdoService(),bugTrackersDto.getSessionTracker(),cxGoClient,cxGoProperties);
+        this.scanRequestConverter = new ScanRequestConverter(helperService,
+                flowProperties,
+                bugTrackersDto.getGitService(),
+                bugTrackersDto.getGitLabService(),
+                bugTrackersDto.getBitBucketService(),
+                bugTrackersDto.getAdoService(),
+                bugTrackersDto.getSessionTracker(),
+                cxGoClient,
+                cxGoProperties);
         this.cxGoProperties = cxGoProperties;
     }
 

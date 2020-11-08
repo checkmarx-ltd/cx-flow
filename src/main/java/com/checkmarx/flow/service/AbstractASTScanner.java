@@ -35,10 +35,10 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
     public ScanResults scan(ScanRequest scanRequest) {
         ScanResults result = null;
         log.info("--------------------- Initiating new {} scan ---------------------", scanType);
-        ScanParams internalScaParams = toSdkScanParams(scanRequest);
+        ScanParams sdkScanParams = toSdkScanParams(scanRequest);
         ASTResultsWrapper internalResults = new ASTResultsWrapper(new SCAResults(), new ASTResults());
         try {
-            internalResults = client.scan(internalScaParams);
+            internalResults = client.scan(sdkScanParams);
             logRequest(scanRequest, internalResults, OperationResult.successful());
             result = toScanResults(internalResults);
         } catch (Exception e) {
