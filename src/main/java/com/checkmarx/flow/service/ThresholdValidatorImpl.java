@@ -131,10 +131,13 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
             switch(entry.getKey()) {
                 case HIGH:
                     thresholdsSca.put(Severity.HIGH, entry.getValue());
+                    break;
                 case MEDIUM:
                     thresholdsSca.put(Severity.MEDIUM, entry.getValue());
+                    break;
                 case LOW:
                     thresholdsSca.put(Severity.LOW, entry.getValue());   
+                    break;
                 default:
                     break;    
             }
