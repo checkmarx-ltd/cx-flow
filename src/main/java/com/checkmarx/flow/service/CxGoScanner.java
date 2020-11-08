@@ -47,7 +47,7 @@ public class CxGoScanner extends AbstractVulnerabilityScanner {
     }
 
     @Override
-    protected CxPropertiesBase getCxPropertiesBase() {
+    public CxPropertiesBase getCxPropertiesBase() {
         return cxGoProperties;
     }
 

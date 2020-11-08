@@ -145,7 +145,7 @@ public class SastScanner extends AbstractVulnerabilityScanner {
     }
 
     @Override
-    protected CxPropertiesBase getCxPropertiesBase() {
+    public CxPropertiesBase getCxPropertiesBase() {
         return cxProperties;
     }
 
