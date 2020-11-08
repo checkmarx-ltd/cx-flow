@@ -5,7 +5,6 @@ import com.checkmarx.flow.dto.BugTrackersDto;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.sastscanning.ScanRequestConverter;
 import com.checkmarx.sdk.config.CxGoProperties;
-import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.CxPropertiesBase;
 import com.cx.restclient.CxGoClientImpl;
 import com.cx.restclient.ScannerClient;
