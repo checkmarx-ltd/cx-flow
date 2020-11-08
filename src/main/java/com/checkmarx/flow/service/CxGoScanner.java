@@ -23,7 +23,6 @@ public class CxGoScanner extends AbstractVulnerabilityScanner {
     private static final String SCAN_TYPE = CxGoProperties.CONFIG_PREFIX;
     protected final ScanRequestConverter scanRequestConverter;
     protected final CxGoProperties cxGoProperties;
-    private final CxProperties cxProperties;
 
     public CxGoScanner(ResultsService resultsService,
                        HelperService helperService,
@@ -31,13 +30,11 @@ public class CxGoScanner extends AbstractVulnerabilityScanner {
                        ProjectNameGenerator projectNameGenerator,
                        BugTrackersDto bugTrackersDto,
                        CxGoClientImpl cxGoClient,
-                       CxGoProperties cxGoProperties,
-                       CxProperties cxProperties) {
-        super(resultsService, flowProperties,  projectNameGenerator, bugTrackersDto, cxProperties);
+                       CxGoProperties cxGoProperties) {
+        super(resultsService, flowProperties,  projectNameGenerator, bugTrackersDto);
         this.cxGoClient = cxGoClient;
         this.scanRequestConverter = new ScanRequestConverter(helperService,flowProperties,bugTrackersDto.getGitService(),bugTrackersDto.getGitLabService(),bugTrackersDto.getBitBucketService(),bugTrackersDto.getAdoService(),bugTrackersDto.getSessionTracker(),cxGoClient,cxGoProperties);
         this.cxGoProperties = cxGoProperties;
-        this.cxProperties = cxProperties;
     }
 
     @Override
