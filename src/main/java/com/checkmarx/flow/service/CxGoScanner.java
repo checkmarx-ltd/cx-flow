@@ -5,7 +5,6 @@ import com.checkmarx.flow.dto.BugTrackersDto;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.sastscanning.ScanRequestConverter;
 import com.checkmarx.sdk.config.CxGoProperties;
-import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.CxPropertiesBase;
 import com.cx.restclient.CxGoClientImpl;
 import com.cx.restclient.ScannerClient;
@@ -23,7 +22,6 @@ public class CxGoScanner extends AbstractVulnerabilityScanner {
     private static final String SCAN_TYPE = CxGoProperties.CONFIG_PREFIX;
     protected final ScanRequestConverter scanRequestConverter;
     protected final CxGoProperties cxGoProperties;
-    private final CxProperties cxProperties;
 
     public CxGoScanner(ResultsService resultsService,
                        HelperService helperService,
@@ -31,13 +29,11 @@ public class CxGoScanner extends AbstractVulnerabilityScanner {
                        ProjectNameGenerator projectNameGenerator,
                        BugTrackersDto bugTrackersDto,
                        CxGoClientImpl cxGoClient,
-                       CxGoProperties cxGoProperties,
-                       CxProperties cxProperties) {
-        super(resultsService, flowProperties,  projectNameGenerator, bugTrackersDto, cxProperties);
+                       CxGoProperties cxGoProperties) {
+        super(resultsService, flowProperties,  projectNameGenerator, bugTrackersDto);
         this.cxGoClient = cxGoClient;
         this.scanRequestConverter = new ScanRequestConverter(helperService,flowProperties,bugTrackersDto.getGitService(),bugTrackersDto.getGitLabService(),bugTrackersDto.getBitBucketService(),bugTrackersDto.getAdoService(),bugTrackersDto.getSessionTracker(),cxGoClient,cxGoProperties);
         this.cxGoProperties = cxGoProperties;
-        this.cxProperties = cxProperties;
     }
 
     @Override
@@ -51,7 +47,7 @@ public class CxGoScanner extends AbstractVulnerabilityScanner {
     }
 
     @Override
-    protected CxPropertiesBase getCxPropertiesBase() {
+    public CxPropertiesBase getCxPropertiesBase() {
         return cxGoProperties;
     }
 

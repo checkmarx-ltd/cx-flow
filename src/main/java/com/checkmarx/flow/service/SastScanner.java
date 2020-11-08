@@ -48,7 +48,7 @@ public class SastScanner extends AbstractVulnerabilityScanner {
                        CxClient cxService,
                        BugTrackersDto bugTrackersDto) {
 
-        super(resultsService, flowProperties, projectNameGenerator, bugTrackersDto, cxProperties);
+        super(resultsService, flowProperties, projectNameGenerator, bugTrackersDto);
         this.osaService = osaService;
         this.cxService = cxService;
         this.scanRequestConverter = new ScanRequestConverter(projectNameGenerator.getHelperService(),flowProperties,bugTrackersDto.getGitService(),bugTrackersDto.getGitLabService(),bugTrackersDto.getBitBucketService(),bugTrackersDto.getAdoService(),bugTrackersDto.getSessionTracker(),cxService,cxProperties);
@@ -145,7 +145,7 @@ public class SastScanner extends AbstractVulnerabilityScanner {
     }
 
     @Override
-    protected CxPropertiesBase getCxPropertiesBase() {
+    public CxPropertiesBase getCxPropertiesBase() {
         return cxProperties;
     }
 
