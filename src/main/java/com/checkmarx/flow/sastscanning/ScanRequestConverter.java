@@ -95,20 +95,7 @@ public class ScanRequestConverter {
             }
             ownerId = scannerClient.getTeamId(team);
             if (cxProperties.isMultiTenant() && !ScanUtils.empty(namespace)) {
-                
-                request.setTeam(fullTeamName);
-                String tmpId = scannerClient.getTeamId(fullTeamName);
-                log.info("Existing team with " + fullTeamName + " was not found. Creating one ...");
-                if (tmpId.equals(UNKNOWN)) {
-                    try {
-                        ownerId = scannerClient.createTeam(ownerId, namespace);
-                    }catch(Exception e){
-                        log.error("Existing team with " + fullTeamName + " was not found.");
-                        ownerId = UNKNOWN;
-                    }
-                } else {
-                    ownerId = tmpId;
-                }
+                ownerId = aquireTeamMultiTenant(request, ownerId, namespace, fullTeamName);
             } else {
                 request.setTeam(team);
             }
@@ -117,6 +104,23 @@ public class ScanRequestConverter {
         //Kick out if the team is unknown
         if (ownerId.equals(UNKNOWN)) {
             throw new CheckmarxException(getTeamErrorMessage());
+        }
+        return ownerId;
+    }
+
+    private String aquireTeamMultiTenant(ScanRequest request, String ownerId, String namespace, String fullTeamName) throws CheckmarxException {
+        request.setTeam(fullTeamName);
+        String tmpId = scannerClient.getTeamId(fullTeamName);
+        log.info("Existing team with " + fullTeamName + " was not found. Creating one ...");
+        if (tmpId.equals(UNKNOWN)) {
+            try {
+                ownerId = scannerClient.createTeam(ownerId, namespace);
+            }catch(Exception e){
+                log.error("Existing team with " + fullTeamName + " was not found.");
+                ownerId = UNKNOWN;
+            }
+        } else {
+            ownerId = tmpId;
         }
         return ownerId;
     }
