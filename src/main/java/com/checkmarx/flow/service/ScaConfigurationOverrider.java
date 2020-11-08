@@ -20,11 +20,13 @@ public class ScaConfigurationOverrider {
     private static final ModelMapper modelMapper = new ModelMapper();
 
     private final ScaProperties scaProperties;
+    private final ScaFilterFactory scaFilterFactory;
 
     public void initScaConfig(ScanRequest request) {
         log.debug("Initializing SCA configuration in scan request using default configuration properties.");
         ScaConfig scaConfig = modelMapper.map(scaProperties, ScaConfig.class);
         request.setScaConfig(scaConfig);
+        scaFilterFactory.initScaFilter(request);
     }
 
     public void overrideScanRequestProperties(ScaConfig scaConfig, ScanRequest request, Map<String, String> overrideReport) {
@@ -79,16 +81,6 @@ public class ScaConfigurationOverrider {
             overrideReport.put("thresholdsScore", String.valueOf(thresholdsScore));
         });
 
-        sca.map(Sca::getFilterSeverity).ifPresent(filterSeverity -> {
-            scaConfig.setFilterSeverity(filterSeverity);
-            overrideReport.put("filterSeverity", filterSeverity.toString());
-        });
-
-        sca.map(Sca::getFilterScore).ifPresent(filterScore -> {
-            scaConfig.setFilterScore(filterScore);
-            overrideReport.put("filterScore", String.valueOf(filterScore));
-        });
-
         request.setScaConfig(scaConfig);
     }
 
@@ -99,7 +91,5 @@ public class ScaConfigurationOverrider {
         report.put("tenant", config.getTenant());
         report.put("thresholdsSeverity", ScanUtils.convertMapToString(config.getThresholdsSeverity()));
         report.put("thresholdsScore", String.valueOf(config.getThresholdsScore()));
-        report.put("filterSeverity", config.getFilterSeverity().toString());
-        report.put("filterScore", String.valueOf(config.getFilterScore()));
     }
 }
