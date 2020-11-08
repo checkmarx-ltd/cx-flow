@@ -21,11 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
-import java.util.EnumMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,12 +36,15 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
     private final ScaProperties scaProperties;
     private final SastScanner sastScanner;
     private final SCAScanner scaScanner;
+    private final CxGoScanner cxgoScanner;
 
     @Autowired
     public ThresholdValidatorImpl(@Lazy SastScanner sastScanner, @Lazy SCAScanner scaScanner,
+                                  @Lazy CxGoScanner cxgoScanner, 
                                   FlowProperties flowProperties, ScaProperties scaProperties) {
         this.sastScanner = sastScanner;
         this.scaScanner = scaScanner;
+        this.cxgoScanner = cxgoScanner;
         this.flowProperties = flowProperties;
         this.scaProperties = scaProperties;
     }
@@ -101,14 +100,61 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
 
     private boolean isAllowed(ScanResults scanResults, ScanRequest request) {
 
-        boolean isSastAllowed = !isSast() || isAllowedSast(scanResults, request);
-        boolean isScaAllowed = !scaScanner.isEnabled() || isAllowedSca(scanResults, request);
+        boolean isSastAllowed = !isSastScan() || isAllowedSast(scanResults, request);
+        boolean isScaAllowed = !isScaScan() || isAllowedSca(scanResults, request);
+        boolean isGoAllowed = !isGoScan() || isAllowedGo(scanResults, request);
+        
+        return isSastAllowed && isScaAllowed && isGoAllowed;
+    }
 
-        return isSastAllowed && isScaAllowed;
+    private boolean isAllowedGo(ScanResults scanResults, ScanRequest request) {
+        
+        Map<FindingSeverity, Integer> thresholds = getCxFlowLevelEffectiveThresholds(request);
+        writeMapToLog(thresholds, "Using CxSAST thresholds");
+
+        boolean isAllowedSast = !isAnySastThresholdExceeded(scanResults, thresholds);
+        logIsAllowed(isAllowedSast);
+        
+        writeMapToLog(thresholds, "Using CxSCA thresholds severity");
+        Map<Severity, Integer> thresholdsSca = convertSeverityMap(thresholds);
+
+        boolean isAllowedSca = !isAnyScaThresholdsExceeded(scanResults, thresholdsSca, 0.0);
+        logIsAllowed(isAllowedSca);
+        
+        return isAllowedSast && isAllowedSca;
+    }
+
+    private Map<Severity, Integer> convertSeverityMap(Map<FindingSeverity, Integer> thresholds) {
+        Map<Severity, Integer> thresholdsSca = new EnumMap<>(Severity.class);
+
+        thresholds.entrySet().forEach(entry -> {
+            switch(entry.getKey()) {
+                case HIGH:
+                    thresholdsSca.put(Severity.HIGH, entry.getValue());
+                    break;
+                case MEDIUM:
+                    thresholdsSca.put(Severity.MEDIUM, entry.getValue());
+                    break;
+                case LOW:
+                    thresholdsSca.put(Severity.LOW, entry.getValue());   
+                    break;
+                default:
+                    break;    
+            }
+        });
+        return thresholdsSca;
+    }
+
+    private boolean isGoScan() {
+        return cxgoScanner.isEnabled();
+    }
+
+    private boolean isScaScan() {
+        return scaScanner.isEnabled();
     }
 
 
-    private boolean isSast() {
+    private boolean isSastScan() {
         return sastScanner.isEnabled();
     }
 
@@ -121,28 +167,28 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
         writeMapToLog(scaThresholdsScore, "Using CxSCA thresholds score");
 
         boolean isAllowedSca = !isAnyScaThresholdsExceeded(scanResults, scaThresholdsSeverity, scaThresholdsScore);
-        isAllowedScannerToLog(isAllowedSca);
+        logIsAllowed(isAllowedSca);
 
         return isAllowedSca;
     }
 
     private boolean isAllowedSast(ScanResults scanResults, ScanRequest request) {
         log.debug("Checking if CxSAST pull request merge is allowed.");
-        Map<FindingSeverity, Integer> thresholds = getSastEffectiveThresholds(request);
+        Map<FindingSeverity, Integer> thresholds = getCxFlowLevelEffectiveThresholds(request);
         writeMapToLog(thresholds, "Using CxSAST thresholds");
 
         boolean isAllowed = !isAnySastThresholdExceeded(scanResults, thresholds);
-        isAllowedScannerToLog(isAllowed);
+        logIsAllowed(isAllowed);
 
         return isAllowed;
     }
 
-    private void isAllowedScannerToLog(boolean isAllowedScanner) {
+    private void logIsAllowed(boolean isAllowedScanner) {
         log.info(isAllowedScanner ? "No thresholds were exceeded." :
                 "Thresholds were exceeded.");
     }
 
-    private Map<FindingSeverity, Integer> getSastEffectiveThresholds(ScanRequest scanRequest) {
+    private Map<FindingSeverity, Integer> getCxFlowLevelEffectiveThresholds(ScanRequest scanRequest) {
         Map<FindingSeverity, Integer> res;
 
         if (areSastThresholdsFromRequestDefined(scanRequest)) {
