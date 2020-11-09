@@ -4,12 +4,17 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.ScaConfig;
 import com.checkmarx.sdk.config.ScaProperties;
+import com.checkmarx.sdk.dto.Filter;
 import com.checkmarx.sdk.dto.Sca;
+import com.checkmarx.sdk.dto.filtering.EngineFilterConfiguration;
+import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -23,6 +28,9 @@ public class ScaConfigurationOverrider {
     private final ScaFilterFactory scaFilterFactory;
 
     public void initScaConfig(ScanRequest request) {
+        // Initializing something in 'overrider' is not very consistent. However, this is the only point
+        // where we can initialize SCA config without having to change each controller.
+
         log.debug("Initializing SCA configuration in scan request using default configuration properties.");
         ScaConfig scaConfig = modelMapper.map(scaProperties, ScaConfig.class);
         request.setScaConfig(scaConfig);
@@ -81,7 +89,48 @@ public class ScaConfigurationOverrider {
             overrideReport.put("thresholdsScore", String.valueOf(thresholdsScore));
         });
 
+        overrideSeverityFilters(request, sca, overrideReport);
+
+        overrideScoreFilter(request, sca, overrideReport);
+
         request.setScaConfig(scaConfig);
+    }
+
+    private void overrideScoreFilter(ScanRequest request, Optional<Sca> override, Map<String, String> overrideReport) {
+        override.map(Sca::getFilterScore).ifPresent(score -> {
+            Filter filterFromOverride = scaFilterFactory.getScoreFilter(score);
+            if (replaceFiltersOfType(request, Collections.singletonList(filterFromOverride), Filter.Type.SCORE)) {
+                overrideReport.put("filterScore", String.valueOf(filterFromOverride));
+            }
+        });
+    }
+
+    private void overrideSeverityFilters(ScanRequest request, Optional<Sca> override, Map<String, String> overrideReport) {
+        override.map(Sca::getFilterSeverity).ifPresent(severities -> {
+            List<Filter> filtersFromOverride = scaFilterFactory.getSeverityFilters(severities);
+            if (replaceFiltersOfType(request, filtersFromOverride, Filter.Type.SEVERITY)) {
+                overrideReport.put("filterSeverity", severities.toString());
+            }
+        });
+    }
+
+    private boolean replaceFiltersOfType(ScanRequest request, List<Filter> override, Filter.Type type) {
+        boolean canOverride = true;
+        List<Filter> existingFilters = Optional.ofNullable(request.getFilter())
+                .map(FilterConfiguration::getScaFilters)
+                .map(EngineFilterConfiguration::getSimpleFilters)
+                .orElse(null);
+
+        if (existingFilters == null) {
+            log.warn("Unable to apply {} filter override. " +
+                    "Unexpected state: simple filter list in SCA filters is not initialized.",
+                    type);
+            canOverride = false;
+        } else {
+            existingFilters.removeIf(filter -> filter.getType() == type);
+            existingFilters.addAll(override);
+        }
+        return canOverride;
     }
 
     private static void addToReport(ScaConfig config, Map<String, String> report) {

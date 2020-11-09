@@ -31,8 +31,8 @@ public class ScaFilterFactory {
     public void initScaFilter(ScanRequest request) {
         log.info("Initializing SCA filters.");
 
-        List<Filter> severityFilters = getSeverityFilters();
-        Filter scoreFilter = getScoreFilter();
+        List<Filter> severityFilters = getSeverityFilters(scaProperties.getFilterSeverity());
+        Filter scoreFilter = getScoreFilter(scaProperties.getFilterScore());
 
         List<Filter> allFilters = combine(severityFilters, scoreFilter);
         writeToLog(allFilters);
@@ -40,8 +40,8 @@ public class ScaFilterFactory {
         setScaFilters(allFilters, request);
     }
 
-    private Filter getScoreFilter() {
-        return Optional.ofNullable(scaProperties.getFilterScore())
+    public Filter getScoreFilter(Double value) {
+        return Optional.ofNullable(value)
                 .map(numericScore -> Filter.builder()
                         .type(Filter.Type.SCORE)
                         .value(neutralFormat.format(numericScore))
@@ -49,8 +49,8 @@ public class ScaFilterFactory {
                 .orElse(null);
     }
 
-    private List<Filter> getSeverityFilters() {
-        return Optional.ofNullable(scaProperties.getFilterSeverity())
+    public List<Filter> getSeverityFilters(List<String> severities) {
+        return Optional.ofNullable(severities)
                 .orElse(Collections.emptyList())
                 .stream()
                 .filter(StringUtils::isNotEmpty)
