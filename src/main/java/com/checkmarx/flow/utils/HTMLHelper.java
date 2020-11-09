@@ -55,7 +55,7 @@ public class HTMLHelper {
     public static String getMergeCommentMD(ScanRequest request, ScanResults results, RepoProperties properties) {
         StringBuilder body = new StringBuilder();
 
-        if (results.isSastRestuls() || results.isAstResults()) {
+        if (results.isSastResults() || results.isAstResults()) {
             log.debug("Building merge comment MD for SAST scanner");
 
             if (results.isAstResults()) {

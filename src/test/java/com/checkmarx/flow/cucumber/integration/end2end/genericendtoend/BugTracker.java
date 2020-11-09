@@ -147,6 +147,7 @@ enum BugTracker {
                 if (issuesList.length() > 0){
                     log.info("successfully verified created issues!");
                     foundIssueInBugTracker = true;
+                    break;
                 }
             }
             assertTrue(foundIssueInBugTracker, "didn't find any security issues in gitlab project %d after %d retries");
