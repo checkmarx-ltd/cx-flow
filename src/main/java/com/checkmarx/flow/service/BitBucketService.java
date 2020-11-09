@@ -30,10 +30,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.beans.ConstructorProperties;
 import java.io.IOException;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -433,8 +430,8 @@ public class BitBucketService extends RepoService {
     }
 
     @Override
-    public List<RepoComment> getComments(ScanRequest scanRequest) throws IOException {
-        return null;
+    public List<RepoComment> getComments(ScanRequest scanRequest) {
+        return Collections.emptyList();
     }
 
     private CxConfig loadCxConfigFromBitbucket(ScanRequest request) {

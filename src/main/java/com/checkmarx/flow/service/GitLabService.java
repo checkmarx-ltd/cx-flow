@@ -28,10 +28,7 @@ import java.beans.ConstructorProperties;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 @Service
@@ -304,8 +301,8 @@ public class GitLabService extends RepoService {
     }
 
     @Override
-    public List<RepoComment> getComments(ScanRequest scanRequest) throws IOException {
-        return null;
+    public List<RepoComment> getComments(ScanRequest scanRequest) {
+        return Collections.emptyList();
     }
 
 }
