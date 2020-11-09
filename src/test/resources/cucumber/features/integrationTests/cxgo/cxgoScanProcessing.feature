@@ -13,6 +13,7 @@ Feature: Cx-Flow CxGo Integration tests
     Examples:
       | scm      | exceeded       | pull request status  |
       | Github   | false          | success              |
+      | Github   | true           | failure              |
 
 
   @CxGoPushIntegrationTests

@@ -1,10 +1,7 @@
 package com.checkmarx.flow.cucumber.integration.cxgo;
 
 import com.checkmarx.flow.CxFlowApplication;
-import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.config.GitHubProperties;
-import com.checkmarx.flow.config.GitLabProperties;
-import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.config.*;
 import com.checkmarx.flow.controller.GitHubController;
 import com.checkmarx.flow.controller.GitLabController;
 import com.checkmarx.flow.cucumber.common.repoServiceMockers.GithubServiceMocker;
@@ -37,6 +34,7 @@ import org.springframework.web.client.RestTemplate;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -62,6 +60,7 @@ public class CxGoRemoteRepoScanSteps {
     private static final int MAX_TIME_FOR_BUG_TRACKER_UPDATE_IN_SEC = 150;
     private final GitHubProperties gitHubProperties;
     private final GitLabProperties gitLabProperties;
+    private final FlowProperties flowProperties;
     private Integer oldScanId;
     private Integer cxgoProjectId;
     private CxGoClientImpl cxGoClient;
@@ -83,7 +82,7 @@ public class CxGoRemoteRepoScanSteps {
 
 
     public CxGoRemoteRepoScanSteps(CxGoProperties goProperties, GitHubController gitHubController, GitHubProperties gitHubProperties, GitHubService gitHubService, CxGoClientImpl client,
-                                    JiraProperties jiraProperties, GitLabController gitLabController, GitLabProperties gitLabProperties){
+                                   JiraProperties jiraProperties, GitLabController gitLabController, GitLabProperties gitLabProperties, FlowProperties flowProperties){
         this.gitHubProperties = gitHubProperties;
         this.gitHubController = gitHubController;
         this.cxGoProperties = goProperties;
@@ -92,6 +91,7 @@ public class CxGoRemoteRepoScanSteps {
         this.jiraProperties = jiraProperties;
         this.gitLabController = gitLabController;
         this.gitLabProperties = gitLabProperties;
+        this.flowProperties = flowProperties;
     }
 
     @Before("@CxGoIntegrationTests")
@@ -140,12 +140,20 @@ public class CxGoRemoteRepoScanSteps {
     }
 
     @And("Thresholds set to {}")
-    public void setThresholds(String scanners) {
-        // currently do nothing. Todo: add thresholds validation
+    public void setThresholds(boolean thresholdsExceeded) {
+        flowProperties.setThresholds(new HashMap<>());
+        if(!thresholdsExceeded){
+            log.info("resetting thresholds to approve pull request");
+            flowProperties.getThresholds().put(FindingSeverity.MEDIUM, 100);
+        }
+        else {
+            log.info("setting thresholds to reject pull request");
+            flowProperties.getThresholds().put(FindingSeverity.MEDIUM, 1);
+        }
     }
 
     @And("Filters set to {}")
-    public void setFilters(String scanners) {
+    public void setFilters(String filters) {
         // currently do nothing. Todo: add filters validation
     }
 
