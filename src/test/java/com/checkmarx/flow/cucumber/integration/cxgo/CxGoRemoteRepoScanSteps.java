@@ -7,6 +7,9 @@ import com.checkmarx.flow.config.GitLabProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.controller.GitHubController;
 import com.checkmarx.flow.controller.GitLabController;
+import com.checkmarx.flow.cucumber.common.repoServiceMockers.GithubServiceMocker;
+import com.checkmarx.flow.cucumber.common.repoServiceMockers.GitlabServiceMocker;
+import com.checkmarx.flow.cucumber.common.repoServiceMockers.RepoServiceMocker;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.RepoComment;
 import com.checkmarx.flow.dto.ScanRequest;
@@ -92,28 +95,31 @@ public class CxGoRemoteRepoScanSteps {
     }
 
     @Before("@CxGoIntegrationTests")
-    public void initCxFlow() throws IOException {
-        properties.setEnabledVulnerabilityScanners(Collections.singletonList("cxgo"));
-        properties.setBugTracker(BugTracker.Type.JIRA.toString());
-
-        log.info("Jira project key: {}", JIRA_PROJECT);
-        jiraProperties.setProject(JIRA_PROJECT);
+    public void init() throws IOException {
+        initCxFlowConfiguration();
         initJiraBugTracker();
     }
 
     private void initJiraBugTracker() throws IOException {
+        log.info("Jira project key: {}", JIRA_PROJECT);
+        jiraProperties.setProject(JIRA_PROJECT);
         log.info("Cleaning jira project before test: {}", jiraProperties.getProject());
         jiraUtils.ensureProjectExists(jiraProperties.getProject());
         jiraUtils.cleanProject(jiraProperties.getProject());
     }
 
+    private void initCxFlowConfiguration(){
+        properties.setEnabledVulnerabilityScanners(Collections.singletonList("cxgo"));
+        properties.setBugTracker(BugTracker.Type.JIRA.toString());
+
+    }
+
     @After("@CxGoIntegrationTests")
-    public void cleanRepo() {
+    public void cleanTestOutputs() {
         deleteRepoPullRequestComments();
         log.info("Cleaning jira project after test: {}", jiraProperties.getProject());
         jiraUtils.cleanProject(jiraProperties.getProject());
     }
-
 
     @Given("SCM type is {}")
     public void setScmType(String scmType){

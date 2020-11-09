@@ -1,4 +1,4 @@
-package com.checkmarx.flow.cucumber.integration.cxgo;
+package com.checkmarx.flow.cucumber.common.repoServiceMockers;
 import com.checkmarx.flow.config.GitLabProperties;
 import com.checkmarx.flow.config.RepoProperties;
 import com.checkmarx.flow.controller.GitLabController;
