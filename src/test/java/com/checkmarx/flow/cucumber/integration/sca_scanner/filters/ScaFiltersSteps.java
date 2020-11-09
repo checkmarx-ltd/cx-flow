@@ -5,6 +5,7 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.cucumber.integration.sca_scanner.ScaCommonSteps;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.service.SCAScanner;
+import com.checkmarx.flow.service.ScaConfigurationOverrider;
 import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.ast.SCAResults;
 import io.cucumber.java.Before;
@@ -31,8 +32,11 @@ public class ScaFiltersSteps extends ScaCommonSteps {
     private SCAResults scaResults;
     private ScaProperties scaProperties;
 
-    public ScaFiltersSteps(FlowProperties flowProperties, ScaProperties scaProperties, SCAScanner scaScanner) {
-        super(flowProperties, scaScanner);
+    public ScaFiltersSteps(FlowProperties flowProperties,
+                           ScaProperties scaProperties,
+                           SCAScanner scaScanner,
+                           ScaConfigurationOverrider scaConfigOverrider) {
+        super(flowProperties, scaScanner, scaConfigOverrider);
         this.scaProperties = scaProperties;
     }
 

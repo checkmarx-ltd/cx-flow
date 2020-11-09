@@ -80,7 +80,7 @@ public class ScaConfigurationOverrider {
         });
 
         sca.map(Sca::getThresholdsSeverity).ifPresent(thresholdsSeverity -> {
-            scaConfig.setThresholdsSeverity(thresholdsSeverity);
+            scaConfig.setThresholdsSeverityDirectly(thresholdsSeverity);
             overrideReport.put("thresholdsSeverity", ScanUtils.convertMapToString(thresholdsSeverity));
         });
 
