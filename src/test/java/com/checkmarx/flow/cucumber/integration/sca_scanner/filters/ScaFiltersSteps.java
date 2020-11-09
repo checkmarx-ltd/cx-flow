@@ -7,6 +7,7 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.service.SCAScanner;
 import com.checkmarx.flow.service.ScaConfigurationOverrider;
 import com.checkmarx.sdk.config.ScaProperties;
+import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.ast.SCAResults;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
@@ -28,9 +29,8 @@ public class ScaFiltersSteps extends ScaCommonSteps {
     private static final String PROJECT_NAME = "Filters-Tests-Repo";
     private static final String GIT_REPO_URL = "https://github.com/cxflowtestuser/public-rest-repo.git";
 
-    private ScanRequest scanRequest;
     private SCAResults scaResults;
-    private ScaProperties scaProperties;
+    private final ScaProperties scaProperties;
 
     public ScaFiltersSteps(FlowProperties flowProperties,
                            ScaProperties scaProperties,
@@ -43,7 +43,6 @@ public class ScaFiltersSteps extends ScaCommonSteps {
     @Before("@SCA_Filtering")
     public void init() {
         initSCAConfig(scaProperties);
-        scanRequest = getBasicScanRequest(PROJECT_NAME, GIT_REPO_URL);
     }
 
     @Given("scan initiator is SCA")
@@ -68,7 +67,11 @@ public class ScaFiltersSteps extends ScaCommonSteps {
 
     @When("SCA runs a new scan on Filters-Tests-Repo which contains 8 vulnerabilities results")
     public void scanResults() {
-        scaResults = Objects.requireNonNull(scaScanner.scan(scanRequest)).getScaResults();
+        // scanRequest must be created after all the changes in scaProperties are done.
+        ScanRequest scanRequest = getBasicScanRequest(PROJECT_NAME, GIT_REPO_URL);
+
+        ScanResults scanResults = scaScanner.scan(scanRequest);
+        scaResults = Objects.requireNonNull(scanResults).getScaResults();
     }
 
     @Then("the expected number of sanitized vulnerabilities are {int}")
