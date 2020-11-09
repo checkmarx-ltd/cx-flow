@@ -5,7 +5,6 @@ import com.checkmarx.flow.config.RepoProperties;
 import com.checkmarx.flow.controller.GitHubController;
 import com.checkmarx.flow.controller.WebhookController;
 import com.checkmarx.flow.dto.ControllerRequest;
-import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.github.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,7 +23,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 
 @Slf4j
-public class GithubTestService implements RepoTestService{
+public class GithubServiceMocker implements RepoServiceMocker {
 
     private static final String GITHUB_USER = "cxflowtestuser";
     private final ObjectMapper mapper = new ObjectMapper();
@@ -42,8 +41,8 @@ public class GithubTestService implements RepoTestService{
 
 
     @Override
-    public void init(ScanRequest scanRequest, RepoProperties properties, String branch, String projectName, String teamName, RestTemplate rest){
-        githubProjectName = scanRequest.getProject();
+    public void init(String gitProjectName, RepoProperties properties, String branch, String projectName, String teamName, RestTemplate rest){
+        githubProjectName = gitProjectName;
         gitHubProperties = (GitHubProperties) properties;
 
         gitUrl = String.format("%s/%s/%s.git", gitHubProperties.getUrl(), GITHUB_USER, githubProjectName);

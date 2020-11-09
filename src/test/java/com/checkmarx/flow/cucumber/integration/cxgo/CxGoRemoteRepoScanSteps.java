@@ -3,8 +3,10 @@ package com.checkmarx.flow.cucumber.integration.cxgo;
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
+import com.checkmarx.flow.config.GitLabProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.controller.GitHubController;
+import com.checkmarx.flow.controller.GitLabController;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.RepoComment;
 import com.checkmarx.flow.dto.ScanRequest;
@@ -42,27 +44,31 @@ import java.util.concurrent.Callable;
 @Slf4j
 public class CxGoRemoteRepoScanSteps {
 
-    private final GitHubProperties gitHubProperties;
     private static final String JIRA_PROJECT = "CT";
     private static final String PR_COMMIT_HASH = "75380372c24c0caeeb97c104214dd448ac9e066d";
     private static final int PULL_REQUEST_ID = 1;
-    private static final String GIT_PROJECT_NAME = "CxGo-Integration-Tests";
-    private static final String GIT_BRANCH = "develop";
+    private static final String GITHUB_PROJECT_NAME = "CxGo-Integration-Tests";
+    private static final String GITHUB_BRANCH = "develop";
+    private static final String GITLAB_PROJECT_NAME = "cxflow-cxgo-integration-tests";
+    private static final String GITLAB_BRANCH = "feature-branch";
     private static final String CXGO_PROJECT_NAME = "CxGo-Integration-Tests-develop";
-
     private static final String CXGO_TEAM_NAME = "\\Demo\\CxFlow";
 
     private static final int MAX_TIME_FOR_SCAN_COMPLETED_IN_SEC = 600;
     private static final int MAX_TIME_FOR_PULL_REQUEST_UPDATE_IN_SEC = 60;
     private static final int MAX_TIME_FOR_BUG_TRACKER_UPDATE_IN_SEC = 150;
+    private final GitHubProperties gitHubProperties;
+    private final GitLabProperties gitLabProperties;
     private Integer oldScanId;
     private Integer cxgoProjectId;
     private CxGoClientImpl cxGoClient;
     private CxGoProperties cxGoProperties;
-    private RepoTestService repoTestService;
+    private RepoServiceMocker repoServiceMocker;
     private RepoService repoService;
     private GitHubController gitHubController;
     private GitHubService gitHubService;
+
+    private GitLabController gitLabController;
     private JiraProperties jiraProperties;
 
     @Autowired
@@ -74,13 +80,15 @@ public class CxGoRemoteRepoScanSteps {
 
 
     public CxGoRemoteRepoScanSteps(CxGoProperties goProperties, GitHubController gitHubController, GitHubProperties gitHubProperties, GitHubService gitHubService, CxGoClientImpl client,
-                                    JiraProperties jiraProperties){
+                                    JiraProperties jiraProperties, GitLabController gitLabController, GitLabProperties gitLabProperties){
         this.gitHubProperties = gitHubProperties;
         this.gitHubController = gitHubController;
         this.cxGoProperties = goProperties;
         this.cxGoClient = client;
         this.gitHubService = gitHubService;
         this.jiraProperties = jiraProperties;
+        this.gitLabController = gitLabController;
+        this.gitLabProperties = gitLabProperties;
     }
 
     @Before("@CxGoIntegrationTests")
@@ -110,13 +118,18 @@ public class CxGoRemoteRepoScanSteps {
     @Given("SCM type is {}")
     public void setScmType(String scmType){
         if(scmType.equals("Github")) {
-            repoTestService = new GithubTestService();
-            ScanRequest request = ScanRequest.builder().project(GIT_PROJECT_NAME).build();
-            repoTestService.init(request, gitHubProperties, GIT_BRANCH, CXGO_PROJECT_NAME, CXGO_TEAM_NAME, restTemplate);
-            repoTestService.initPullRequestDetails(PULL_REQUEST_ID, PR_COMMIT_HASH);
-            repoTestService.setController(gitHubController);
+            repoServiceMocker = new GithubServiceMocker();
+            repoServiceMocker.init(GITHUB_PROJECT_NAME, gitHubProperties, GITHUB_BRANCH, CXGO_PROJECT_NAME, CXGO_TEAM_NAME, restTemplate);
+            repoServiceMocker.initPullRequestDetails(PULL_REQUEST_ID, PR_COMMIT_HASH);
+            repoServiceMocker.setController(gitHubController);
             repoService = gitHubService;
         }
+        if(scmType.equals("Gitlab")) {
+            repoServiceMocker = new GitlabServiceMocker();
+            repoServiceMocker.init(GITLAB_PROJECT_NAME, gitLabProperties, GITLAB_BRANCH, CXGO_PROJECT_NAME, CXGO_TEAM_NAME, restTemplate);
+            repoServiceMocker.setController(gitLabController);
+        }
+
         deleteRepoPullRequestComments();
     }
 
@@ -132,12 +145,12 @@ public class CxGoRemoteRepoScanSteps {
 
     @And("Pull Request is opened in repo")
     public void openPullRequest() {
-        repoTestService.openPullRequest();
+        repoServiceMocker.openPullRequest();
     }
 
     @And("Push event is sent to cxflow")
     public void sendPushEvent() {
-        repoTestService.sendPushEvent();
+        repoServiceMocker.sendPushEvent();
     }
 
     @Then("CxFlow initiate scan in CxGo")
@@ -167,7 +180,7 @@ public class CxGoRemoteRepoScanSteps {
         waitForOperationToComplete(this::scanFinished, MAX_TIME_FOR_SCAN_COMPLETED_IN_SEC);
         waitForOperationToComplete(this::pullRequestHas2CxFlowComments, MAX_TIME_FOR_PULL_REQUEST_UPDATE_IN_SEC);
 
-        String status = repoTestService.getPullRequestStatus();
+        String status = repoServiceMocker.getPullRequestStatus();
 
         Assert.assertEquals(pullRequestStatus, status);
     }
@@ -207,17 +220,19 @@ public class CxGoRemoteRepoScanSteps {
 
     private ScanRequest getBasicRequest() {
         return ScanRequest.builder()
-                .mergeNoteUri(repoTestService.getPullRequestCommentsUrl())
+                .mergeNoteUri(repoServiceMocker.getPullRequestCommentsUrl())
                 .build();
     }
 
     private void deleteRepoPullRequestComments() {
         try {
-            List<RepoComment> comments = repoService.getComments(getBasicRequest());
-            log.info("deleting {} comments from pull request", comments.size());
-            for (RepoComment comment : comments) {
-                log.info("deleting comment: '{}'", comment.getComment());
-                repoService.deleteComment(comment.getCommentUrl(), getBasicRequest());
+            if(repoService != null) {
+                List<RepoComment> comments = repoService.getComments(getBasicRequest());
+                log.info("deleting {} comments from pull request", comments.size());
+                for (RepoComment comment : comments) {
+                    log.info("deleting comment: '{}'", comment.getComment());
+                    repoService.deleteComment(comment.getCommentUrl(), getBasicRequest());
+                }
             }
         }
         catch (IOException ex){

@@ -5,9 +5,9 @@ import com.checkmarx.flow.controller.WebhookController;
 import com.checkmarx.flow.dto.ScanRequest;
 import org.springframework.web.client.RestTemplate;
 
-public interface RepoTestService {
-    void init(ScanRequest scanRequest, RepoProperties properties, String branch, String projectName, String teamName, RestTemplate restTemplate);
-    void initPullRequestDetails(int pullRequestId, String lastCommiyHash);
+public interface RepoServiceMocker {
+    void init(String gitProjectName, RepoProperties properties, String branch, String projectName, String teamName, RestTemplate restTemplate);
+    void initPullRequestDetails(int pullRequestId, String lastCommitHash);
     void setController(WebhookController controller);
     void openPullRequest();
     void sendPushEvent();

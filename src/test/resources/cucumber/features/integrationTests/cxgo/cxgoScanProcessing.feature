@@ -2,7 +2,7 @@
 Feature: Cx-Flow CxGo Integration tests
 
 
-  @CxGoIntegrationTests
+  @CxGoPullIntegrationTests
   Scenario Outline: Test CxFlow pull request scan flow with CxGo
     Given SCM type is <scm>
     And Pull Request is opened in repo
@@ -15,7 +15,7 @@ Feature: Cx-Flow CxGo Integration tests
       | Github   | false          | success              |
 
 
-  @CxGoIntegrationTests
+  @CxGoPushIntegrationTests
   Scenario Outline: Test CxFlow push event scan flow with CxGo
     Given SCM type is <scm>
     And Push event is sent to cxflow
@@ -26,4 +26,5 @@ Feature: Cx-Flow CxGo Integration tests
     Examples:
       | scm      | filters |
       | Github   | filters |
+      | Gitlab   | filters |
 
