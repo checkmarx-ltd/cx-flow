@@ -11,15 +11,13 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.sastscanning.ScanRequestConverter;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.ScanUtils;
-import com.checkmarx.sdk.ShardManager.ShardSessionTracker;
-import com.checkmarx.sdk.config.CxGoProperties;
 import com.checkmarx.sdk.config.CxProperties;
-import com.checkmarx.sdk.config.CxPropertiesBase;
+
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxScanParams;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.*;
-import com.cx.restclient.CxGoClientImpl;
+
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
@@ -94,7 +92,10 @@ public class CommentScriptSteps {
 
         when(sastScanner.getScannerClient()).thenReturn(cxClientMock);
         when(sastScanner.getScanRequestConverter()).thenReturn(scanRequestConverterMock);
-        
+        when(sastScanner.getScanComment(any())).thenCallRealMethod();
+        when(sastScanner.getCxPropertiesBase()).thenReturn(cxProperties);
+       
+                
         when(sastScanner.isEnabled()).thenReturn(true);
         when(sastScanner.scan(any())).thenCallRealMethod();
 
@@ -162,7 +163,7 @@ public class CommentScriptSteps {
 
     @Then("CxFlow scan comment is equal to {string}")
     public void compareComments(String expectedComment){
-        log.info("Comparing expected comment '{} to actual comment '{}'", expectedComment, commentMessageFromRequest);
+        log.info("Comparing expected comment '{}' to actual comment '{}'", expectedComment, commentMessageFromRequest);
 
         assertEquals(expectedComment, commentMessageFromRequest, "fail comparing expected comment to actual comment in scan request");
     }
