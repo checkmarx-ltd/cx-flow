@@ -1,6 +1,6 @@
 # Config as Code
 The presence of a cx.config file in the root of the source repository is used to drive/override project/scanning configuration within CxFlow
-### **Note: Currently only implemented for GitHub and GitLab WebHook execution.**
+### **Note: Currently only implemented for GitHub, GitLab, Bitbucket Server, Bitbucket Cloud and Azure DevOps, for WebHook execution.**
 
 * [Current Overrides](#current)
 * [Future Overrides](#future)
