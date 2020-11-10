@@ -8,6 +8,7 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.github.LabelsItem;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
+import com.checkmarx.flow.service.GitHubService;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
@@ -37,13 +38,15 @@ public class GitHubIssueTracker implements IssueTracker {
     private final GitHubProperties properties;
     private final FlowProperties flowProperties;
     private final ScmConfigOverrider scmConfigOverrider;
+    private final GitHubService gitHubService;
 
     public GitHubIssueTracker(@Qualifier("flowRestTemplate") RestTemplate restTemplate, GitHubProperties properties, FlowProperties flowProperties,
-                              ScmConfigOverrider scmConfigOverrider) {
+                              ScmConfigOverrider scmConfigOverrider, GitHubService gitHubService) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.flowProperties = flowProperties;
         this.scmConfigOverrider = scmConfigOverrider;
+        this.gitHubService = gitHubService;
     }
 
     @Override
@@ -76,7 +79,7 @@ public class GitHubIssueTracker implements IssueTracker {
 
         log.info("Executing getIssues GitHub API call: {}", apiUrl);
         List<Issue> issues = new ArrayList<>();
-        HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders(request));
+        HttpEntity<?> httpEntity = new HttpEntity<>(gitHubService.createAuthHeaders(request));
 
         ResponseEntity<com.checkmarx.flow.dto.github.Issue[]> response = restTemplate.exchange(apiUrl,
                 HttpMethod.GET, httpEntity, com.checkmarx.flow.dto.github.Issue[].class);
@@ -99,17 +102,21 @@ public class GitHubIssueTracker implements IssueTracker {
             ResponseEntity<com.checkmarx.flow.dto.github.Issue[]> responsePage = restTemplate.exchange(next, HttpMethod.GET,
                     httpEntity, com.checkmarx.flow.dto.github.Issue[].class);
 
-            if (responsePage.getBody() != null) {
-                for (com.checkmarx.flow.dto.github.Issue issue : responsePage.getBody()) {
-                    Issue i = mapToIssue(issue);
-                    if (i != null && i.getTitle().startsWith(request.getProduct().getProduct())) {
-                        issues.add(i);
-                    }
-                }
-            }
+            mapIssues(request, issues, responsePage);
             next = getNextURIFromHeaders(responsePage.getHeaders(), "link", "next");
         }
         return issues;
+    }
+
+    private void mapIssues(ScanRequest request, List<Issue> issues, ResponseEntity<com.checkmarx.flow.dto.github.Issue[]> responsePage) {
+        if (responsePage.getBody() != null) {
+            for (com.checkmarx.flow.dto.github.Issue issue : responsePage.getBody()) {
+                Issue i = mapToIssue(issue);
+                if (i != null && i.getTitle().startsWith(request.getProduct().getProduct())) {
+                    issues.add(i);
+                }
+            }
+        }
     }
 
 
@@ -139,7 +146,7 @@ public class GitHubIssueTracker implements IssueTracker {
      */
     private Issue getIssue(String issueUrl, ScanRequest scanRequest) {
         log.info("Executing getIssue GitHub API call");
-        HttpEntity<Object> httpEntity = new HttpEntity<>(createAuthHeaders(scanRequest));
+        HttpEntity<Object> httpEntity = new HttpEntity<>(gitHubService.createAuthHeaders(scanRequest));
         ResponseEntity<com.checkmarx.flow.dto.github.Issue> response =
                 restTemplate.exchange(issueUrl, HttpMethod.GET, httpEntity, com.checkmarx.flow.dto.github.Issue.class);
 
@@ -154,7 +161,7 @@ public class GitHubIssueTracker implements IssueTracker {
      */
     private void addComment(String issueUrl, String comment, ScanRequest scanRequest) {
         log.debug("Executing add comment GitHub API call with following comment {}", comment);
-        HttpEntity<String> httpEntity = new HttpEntity<>(getJSONComment(comment).toString(), createAuthHeaders(scanRequest));
+        HttpEntity<String> httpEntity = new HttpEntity<>(getJSONComment(comment).toString(), gitHubService.createAuthHeaders(scanRequest));
         restTemplate.exchange(issueUrl.concat("/comments"), HttpMethod.POST, httpEntity, String.class);
     }
 
@@ -167,7 +174,8 @@ public class GitHubIssueTracker implements IssueTracker {
                 .concat("/issues");
         ResponseEntity<com.checkmarx.flow.dto.github.Issue> response;
         try {
-            HttpEntity<String> httpEntity = new HttpEntity<>(getJSONCreateIssue(resultIssue, request).toString(), createAuthHeaders(request));
+            HttpEntity<String> httpEntity = new HttpEntity<>(getJSONCreateIssue(resultIssue, request).toString(),
+                    gitHubService.createAuthHeaders(request));
             response = restTemplate.exchange(apiUrl, HttpMethod.POST, httpEntity, com.checkmarx.flow.dto.github.Issue.class);
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while creating GitHub Issue", e);
@@ -182,14 +190,15 @@ public class GitHubIssueTracker implements IssueTracker {
     @Override
     public void closeIssue(Issue issue, ScanRequest request) throws MachinaException {
         log.info("Executing closeIssue GitHub API call");
-        HttpEntity httpEntity = new HttpEntity<>(getJSONCloseIssue().toString(), createAuthHeaders(request));
+        HttpEntity<String> httpEntity = new HttpEntity<>(getJSONCloseIssue().toString(), gitHubService.createAuthHeaders(request));
         restTemplate.exchange(issue.getUrl(), HttpMethod.POST, httpEntity, Issue.class);
     }
 
     @Override
     public Issue updateIssue(Issue issue, ScanResults.XIssue resultIssue, ScanRequest request) throws MachinaException {
         log.info("Executing updateIssue GitHub API call");
-        HttpEntity<String> httpEntity = new HttpEntity<>(getJSONUpdateIssue(resultIssue, request).toString(), createAuthHeaders(request));
+        HttpEntity<String> httpEntity = new HttpEntity<>(getJSONUpdateIssue(resultIssue, request).toString(),
+                gitHubService.createAuthHeaders(request));
         ResponseEntity<com.checkmarx.flow.dto.github.Issue> response;
         try {
             response = restTemplate.exchange(issue.getUrl(), HttpMethod.POST, httpEntity, com.checkmarx.flow.dto.github.Issue.class);
@@ -324,15 +333,6 @@ public class GitHubIssueTracker implements IssueTracker {
             log.error("Error creating JSON Close Issue Object - JSON object will be empty", e);
         }
         return requestBody;
-    }
-
-    /**
-     * @return Header consisting of API token used for authentication
-     */
-    private HttpHeaders createAuthHeaders(ScanRequest scanRequest) {
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.set(HttpHeaders.AUTHORIZATION, "token ".concat(scmConfigOverrider.determineConfigToken(properties, scanRequest.getScmInstance())));
-        return httpHeaders;
     }
 
     private static String getNextURIFromHeaders(HttpHeaders headers, final String headerName, final String rel) {
