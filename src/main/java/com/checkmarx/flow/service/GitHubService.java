@@ -85,7 +85,7 @@ public class GitHubService extends RepoService {
         this.gitHubAppAuthService = gitHubAppAuthService;
     }
 
-    private HttpHeaders createAuthHeaders(ScanRequest scanRequest){
+    public HttpHeaders createAuthHeaders(ScanRequest scanRequest){
         HttpHeaders httpHeaders;
         if(!StringUtils.isEmpty(properties.getAppId()) &&
                 !StringUtils.isEmpty(properties.getAppKeyFile()) &&
@@ -97,8 +97,6 @@ public class GitHubService extends RepoService {
             );
             httpHeaders = new HttpHeaders();
             httpHeaders.set(HttpHeaders.AUTHORIZATION, "token ".concat(token));
-
-
         }
         else{
             httpHeaders = new HttpHeaders();

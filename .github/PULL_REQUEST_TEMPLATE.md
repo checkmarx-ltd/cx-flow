@@ -16,6 +16,6 @@ By submitting a PR to this repository, you agree to the terms within the [Checkm
 
 ### Checklist
 
-- [ ] I have added documentation for new/changed functionality in this PR (if applicable).  *If documentaiton is a Wiki Update, please indicate desired changes within PR MD Comment*
+- [ ] I have added documentation for new/changed functionality in this PR (if applicable).  *If documentation is a Wiki Update, please indicate desired changes within PR MD Comment*
 - [ ] All active GitHub checks for tests, formatting, and security are passing
 - [ ] The correct base branch is being used
