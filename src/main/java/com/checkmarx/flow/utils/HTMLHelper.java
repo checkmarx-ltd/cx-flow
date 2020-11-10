@@ -188,8 +188,14 @@ public class HTMLHelper {
     }
 
     private static String extractPackageVersionFromFindings(SCAResults r, Finding f) {
-        return r.getPackages().stream().filter(p -> p.getId().equals(f.getPackageId())).map(Package::getVersion)
-                .findFirst().orElse("");
+        try {
+            return r.getPackages().stream().filter(p -> p.getId().equals(f.getPackageId())).map(Package::getVersion)
+                    .findFirst().orElse("");
+        }
+        catch (Exception e) {
+            log.warn("failed to extract package version from SCA finding - {}", f.toString());
+            return "EMPTY";
+        }
     }
 
     private static void setSCAMDBody(String branch, StringBuilder body, List<ScanResults.ScaDetails> scaDetails) {
