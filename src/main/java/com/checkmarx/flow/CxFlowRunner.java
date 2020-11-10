@@ -18,9 +18,11 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.MDC;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.boot.info.BuildProperties;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -56,9 +58,18 @@ public class CxFlowRunner implements ApplicationRunner {
     private final OsaScannerService osaScannerService;
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
+    private final BuildProperties buildProperties;
     private final List<VulnerabilityScanner> scanners;
     private final ThresholdValidator thresholdValidator;
     private static final String ERROR_BREAK_MSG = String.format("Exiting with Error code %d due to Checkmarx findings", ExitCode.BUILD_INTERRUPTED.getValue());
+
+    @PostConstruct
+    private void logVersion() {
+        log.info("=======BUID INFO=======");
+        log.info("Version: {}-{}", buildProperties.getName(), buildProperties.getVersion());
+        log.info("Time: {}", buildProperties.getTime().toString());
+        log.info("=======================");
+    }
 
     @Override
     public void run(ApplicationArguments args) throws InvocationTargetException {
