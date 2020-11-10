@@ -4,8 +4,6 @@ import com.checkmarx.flow.dto.RepoComment;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.Sources;
 import com.checkmarx.sdk.dto.CxConfig;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
 
 import java.io.IOException;
 import java.util.List;

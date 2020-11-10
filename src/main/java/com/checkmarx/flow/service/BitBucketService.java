@@ -29,7 +29,6 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.beans.ConstructorProperties;
-import java.io.IOException;
 import java.util.*;
 
 @Slf4j
@@ -426,7 +425,7 @@ public class BitBucketService extends RepoService {
 
     @Override
     public void deleteComment(String url, ScanRequest scanRequest) {
-        return;
+        // not implemented
     }
 
     @Override
