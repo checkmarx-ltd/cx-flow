@@ -16,6 +16,7 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.info.BuildProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
@@ -46,6 +47,7 @@ public class BatchComponentSteps {
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
     private final ThresholdValidator thresholdValidator;
+    private final BuildProperties buildProperties;
 
     private CxFlowRunner cxFlowRunner;
     private String projectName;
@@ -75,6 +77,7 @@ public class BatchComponentSteps {
                 osaScannerService,
                 filterFactory,
                 configOverrider,
+                buildProperties,
                 scanners,
                 thresholdValidator);
     }
