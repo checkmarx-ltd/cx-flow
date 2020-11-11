@@ -65,7 +65,7 @@ public class CxFlowRunner implements ApplicationRunner {
 
     @PostConstruct
     private void logVersion() {
-        log.info("=======BUID INFO=======");
+        log.info("=======BUILD INFO=======");
         log.info("Version: {}-{}", buildProperties.getName(), buildProperties.getVersion());
         log.info("Time: {}", buildProperties.getTime().toString());
         log.info("=======================");
