@@ -146,7 +146,7 @@ public class GitLabIssueTracker implements IssueTracker {
         }
         for(com.checkmarx.flow.dto.gitlab.Issue issue: response.getBody()){
             Issue i = mapToIssue(issue);
-            if (i != null) {
+            if (i != null && i.getTitle().startsWith(request.getProduct().getProduct())) {
                 issues.add(i);
             }
         }
