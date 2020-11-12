@@ -79,6 +79,8 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
     public ScanResults getLatestScanResults(ScanRequest request) {
         ScanParams sdkScanParams = ScanParams.builder()
                 .projectName(request.getProject())
+                .scaConfig(request.getScaConfig())
+                .filterConfiguration(request.getFilter())
                 .build();
         ASTResultsWrapper internalResults = client.getLatestScanResults(sdkScanParams);
         return toScanResults(internalResults);
@@ -125,6 +127,8 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
         return ScanParams.builder()
                 .projectName(scanRequest.getProject())
                 .sourceDir(pathToScan)
+                .scaConfig(scanRequest.getScaConfig())
+                .filterConfiguration(scanRequest.getFilter())
                 .build();
     }
 
