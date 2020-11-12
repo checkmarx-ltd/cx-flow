@@ -262,6 +262,8 @@ public class ConfigurationOverrider {
      * Override scan request details as per file/blob (MachinaOverride)
      */
     public ScanRequest overrideScanRequestProperties(FlowOverride override, ScanRequest request) {
+        scaConfigOverrider.initScaConfig(request);
+
         if (override == null) {
             return request;
         }
