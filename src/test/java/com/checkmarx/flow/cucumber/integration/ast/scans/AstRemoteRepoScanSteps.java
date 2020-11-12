@@ -56,6 +56,7 @@ public class AstRemoteRepoScanSteps {
     private final FlowProperties flowProperties;
     private final AstProperties astProperties;
     private final ScaProperties scaProperties;
+    private final ScaConfigurationOverrider scaConfigOverrider;
 
     private ScanResults scanResults;
     private boolean isScaEnabled;
@@ -296,12 +297,14 @@ public class AstRemoteRepoScanSteps {
         flowService.initiateAutomation(scanRequest);
     }
 
-    private static ScanRequest getBasicScanRequest(String branch, String repo) {
-        return ScanRequest.builder()
+    private ScanRequest getBasicScanRequest(String branch, String repo) {
+        ScanRequest result = ScanRequest.builder()
                 .project(PUBLIC_PROJECT_NAME)
                 .repoUrlWithAuth(repo)
                 .branch(branch)
                 .repoType(ScanRequest.Repository.GITHUB)
                 .build();
+        scaConfigOverrider.initScaConfig(result);
+        return result;
     }
 }
