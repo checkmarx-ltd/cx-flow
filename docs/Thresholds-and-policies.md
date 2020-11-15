@@ -54,7 +54,7 @@ Under Branch policies configuration, enable checkmarx scan as ‘required’ (ht
 
 By default, CxFlow use the basic filter configuration to make a ‘break decision’. 
 
-For example, if you configure filter:  ```Filter-severity: HIGH``` - cxflow results contain only High severity findings. if ```number-of-results > 0```  CxFlow will fail the build\PR, if  ```number-of-results < 0``` build\PR is approved
+For example, if you configure filter:  ```Filter-severity: HIGH``` - cxflow results contain only High severity findings. if ```number-of-results > 0```  CxFlow will fail the build\PR, if  ```number-of-results = 0``` build\PR is approved
 
 now you can add more concrete thresholds to control the the validation logic
 ```yaml

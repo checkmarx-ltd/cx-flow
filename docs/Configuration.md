@@ -108,7 +108,7 @@ cx-flow:
   filter-cwe:
     - 89
     - 79
-  filter-status:
+  filter-state:
     - New
     - Confirmed
   mitre-url: https://cwe.mitre.org/data/definitions/%s.html
