@@ -18,9 +18,11 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.MDC;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.boot.info.BuildProperties;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -56,9 +58,18 @@ public class CxFlowRunner implements ApplicationRunner {
     private final OsaScannerService osaScannerService;
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
+    private final BuildProperties buildProperties;
     private final List<VulnerabilityScanner> scanners;
     private final ThresholdValidator thresholdValidator;
     private static final String ERROR_BREAK_MSG = String.format("Exiting with Error code %d due to Checkmarx findings", ExitCode.BUILD_INTERRUPTED.getValue());
+
+    @PostConstruct
+    private void logVersion() {
+        log.info("=======BUILD INFO=======");
+        log.info("Version: {}-{}", buildProperties.getName(), buildProperties.getVersion());
+        log.info("Time: {}", buildProperties.getTime().toString());
+        log.info("=======================");
+    }
 
     @Override
     public void run(ApplicationArguments args) throws InvocationTargetException {
@@ -114,7 +125,7 @@ public class CxFlowRunner implements ApplicationRunner {
         ScanRequest.Repository repoType = ScanRequest.Repository.NA;
         boolean osa;
         boolean force;
-        FlowOverride o = null;
+        FlowOverride flowOverride = null;
         ObjectMapper mapper = new ObjectMapper();
         String uid = helperService.getShortUid();
         MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
@@ -135,7 +146,7 @@ public class CxFlowRunner implements ApplicationRunner {
         if (args.containsOption("config")) {
             config = args.getOptionValues("config").get(0);
             try {
-                o = mapper.readValue(new File(config), FlowOverride.class);
+                flowOverride = mapper.readValue(new File(config), FlowOverride.class);
             } catch (IOException e) {
                 log.error("Error reading config file, ignoring...", e);
             }
@@ -316,7 +327,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 .forceScan(force)
                 .build();
 
-        request = configOverrider.overrideScanRequestProperties(o, request);
+        request = configOverrider.overrideScanRequestProperties(flowOverride, request);
         /*Determine if BitBucket Cloud/Server is being used - this will determine formatting of URL that links to file/line in repository */
         request.setId(uid);
         if (usingBitBucketCloud) {

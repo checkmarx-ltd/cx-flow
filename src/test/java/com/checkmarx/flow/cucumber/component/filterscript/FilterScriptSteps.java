@@ -52,6 +52,7 @@ public class FilterScriptSteps {
     private Map<String, Integer> findingFilenameToNumber;
     private final CxProperties cxProperties;
     private final CxLegacyService cxLegacyService;
+    private final FilterInputFactory filterInputFactory;
     private final FilterValidator filterValidator;
 
     private Set<Integer> findingNumbersAfterFiltering;
@@ -191,6 +192,7 @@ public class FilterScriptSteps {
                 cxLegacyService,
                 restTemplateMock,
                 null,
+                filterInputFactory,
                 filterValidator);
 
         CxClient cxClientSpy = spy(cxClient);

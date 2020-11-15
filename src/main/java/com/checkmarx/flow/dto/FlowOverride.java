@@ -9,7 +9,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * DTO representing the Override/Property file from within repository or provided as base64 encoded JSON blob query param
+ * Represents config override that may come from the following sources:<br>
+ *  1) Local file whose path is specified in a command line argument<br>
+ *  2) Base64-encoded JSON string. Such string may be specified in a query string in a controller request<br>
+ *  3) 'additionalProperties' section in a config-as-code file
  */
 public class FlowOverride {
 

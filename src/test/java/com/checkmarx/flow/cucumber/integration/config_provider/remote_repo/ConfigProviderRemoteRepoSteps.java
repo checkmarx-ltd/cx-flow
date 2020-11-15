@@ -94,7 +94,5 @@ public class ConfigProviderRemoteRepoSteps {
         Assert.assertEquals("cxflow", scaConfiguration.getTenant());
         Assert.assertEquals("{LOW=25, MEDIUM=18, HIGH=15}", StringUtils.join(scaConfiguration.getThresholdsSeverity()));
         Assert.assertEquals((Double)8.5, scaConfiguration.getThresholdsScore());
-        Assert.assertEquals("[high, medium, low]", scaConfiguration.getFilterSeverity().toString());
-        Assert.assertEquals((Double)7.5, scaConfiguration.getFilterScore());
     }
 }

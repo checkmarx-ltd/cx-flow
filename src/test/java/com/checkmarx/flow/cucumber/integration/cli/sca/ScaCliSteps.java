@@ -100,13 +100,18 @@ public class ScaCliSteps {
         customScaProjectName = "test";
     }
 
-    @When("running a SCA scan with break-build on {}")
-    public void runningWithBreakBuild(String issueType) {
+    @When("running a SCA scan with {} input")
+    public void runningWithBreakBuild(String input) {
         StringBuilder commandBuilder = new StringBuilder();
         setFilters("High");
-        switch (issueType) {
+        switch (input) {
             case "success":
                 commandBuilder.append("--scan  --severity=High --app=MyApp --cx-project=test").append(GITHUB_REPO_ARGS);
+                scaProperties.setThresholdsScore(10.0);
+                break;
+            case "break-build":
+                commandBuilder.append("--scan  --severity=High --app=MyApp --cx-project=test").append(GITHUB_REPO_ARGS);
+                scaProperties.setThresholdsScore(1.0);
                 break;
             case "missing-mandatory-parameter":
                 commandBuilder.append(GITHUB_REPO_ARGS);
@@ -118,7 +123,7 @@ public class ScaCliSteps {
                 commandBuilder.append("--scan --app=MyApp --f=nofile").append(REPO_ARGS);
                 break;
             default:
-                throw new PendingException("Issues type " + issueType + " isn't supported");
+                throw new PendingException("Issues type " + input + " isn't supported");
         }
 
         log.info("Running CxFlow scan with command line: {}", commandBuilder.toString());

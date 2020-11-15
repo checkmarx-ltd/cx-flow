@@ -587,4 +587,10 @@ public class ScanUtils {
         return s.substring(0, 1).toUpperCase() +
                 s.substring(1).toLowerCase();
     }
+
+    public static String convertMapToString(Map<?, ?> map) {
+        return map.keySet().stream()
+                .map(key -> key + "=" + map.get(key))
+                .collect(Collectors.joining(", ", "{", "}"));
+    }
 }
