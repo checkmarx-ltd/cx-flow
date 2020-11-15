@@ -108,9 +108,12 @@ cx-flow:
   filter-cwe:
     - 89
     - 79
+  filter-status:
+     - New
+     - Reoccured
   filter-state:
-    - New
-    - Confirmed
+     - Confirmed
+     - Urgent
   mitre-url: https://cwe.mitre.org/data/definitions/%s.html
   wiki-url: https://checkmarx.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
   codebash-url: https://cxa.codebashing.com/courses/

@@ -52,9 +52,9 @@ scan-preset | CSV of scanning rules
 java -jar <cx-flow-x.x.x.jar> --spring.config.location=application.yml --scan --cx-team="\my\bu\ba" --cx-project="Myprj" --app=AppID
 ```
 CLI execution mode is supported
-  * --scan indicates that the source will be zipped/scanned.  
-  * --cx-team value must be the path where the project will be created - inclusive of the business application.  
-  * --cx-project will be the project name created under the team path.
+  * --scan indicates that the source will be zipped/scanned  
+  * --cx-team value must be the path where the project will be created. The path includes business unit and application 
+  * --cx-project will be the project name created under the team path
   * --app is required, but is only downstream when bug trackers are configured for CxFlow
   
   
