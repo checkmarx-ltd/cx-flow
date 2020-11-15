@@ -81,7 +81,7 @@ public class AstRemoteRepoScanSteps {
  
     @Before("@ASTRemoteRepoScan")
     public void init() {
-        astProperties.setApiUrl("http://ec2-3-249-195-18.eu-west-1.compute.amazonaws.com");
+        astProperties.setApiUrl("http://ec2-63-35-211-169.eu-west-1.compute.amazonaws.com");
 
         ScaCommonSteps.initSCAConfig(scaProperties);
         resultsServiceMock = mock(ResultsService.class);
