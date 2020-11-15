@@ -10,6 +10,7 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.report.AnalyticsReport;
 import com.checkmarx.flow.dto.report.ScanReport;
 import com.checkmarx.flow.service.SCAScanner;
+import com.checkmarx.flow.service.ScaConfigurationOverrider;
 import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.ast.SCAResults;
 import com.checkmarx.sdk.exception.CheckmarxException;
@@ -48,8 +49,9 @@ public class SCARemoteRepoScanSteps extends ScaCommonSteps {
     private ScaProperties scaProperties;
 
     public SCARemoteRepoScanSteps(FlowProperties flowProperties, ScaProperties scaProperties,
-                                  SCAScanner scaScanner, GitHubProperties gitHubProperties) {
-        super(flowProperties, scaScanner);
+                                  SCAScanner scaScanner, GitHubProperties gitHubProperties,
+                                  ScaConfigurationOverrider scaConfigOverrider) {
+        super(flowProperties, scaScanner, scaConfigOverrider);
         this.gitHubProperties = gitHubProperties;
         this.scaProperties = scaProperties;
     }
@@ -145,8 +147,7 @@ public class SCARemoteRepoScanSteps extends ScaCommonSteps {
 
         JsonNode jsonNode = objectMapper.readTree(lastLine).get(ScanReport.OPERATION);
         if (jsonNode != null) {
-            ScanReport reportObject = (ScanReport)utils.getAnalyticsReport(ScanReport.class, objectMapper, jsonNode);
-            return reportObject;
+            return (ScanReport)utils.getAnalyticsReport(ScanReport.class, objectMapper, jsonNode);
         }else{
             return null;
         }

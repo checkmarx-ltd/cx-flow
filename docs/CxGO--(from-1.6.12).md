@@ -1,3 +1,5 @@
+
+
 ## CxGO
 CxGo is a AWS multi tenant Checkmarx application which can scan both CxSAST and CxSCA
 
@@ -7,8 +9,8 @@ The application should be started by running cx-flow-x.x.x.jar while supplying t
 java -jar cx-flow-x.x.x.jar [params]
 
 CxGO should look like the following:
-```
 
+```
 cx-flow:
    enabled-vulnerability-scanners:
      - cxgo
@@ -49,8 +51,46 @@ scan-preset | CSV of scanning rules
 ```
 java -jar <cx-flow-x.x.x.jar> --spring.config.location=application.yml --scan --cx-team="\my\bu\ba" --cx-project="Myprj" --app=AppID
 ```
-CLI execution mode is supported, and 
-  * --scan indicates that the source will be zipped/scanned.  
-  * --cx-team value must be the path where the project will be created - inclusive of the business application.  
-  * --cx-project will be the project name created under the team path.
+CLI execution mode is supported
+  * --scan indicates that the source will be zipped/scanned  
+  * --cx-team value must be the path where the project will be created. The path includes business unit and application 
+  * --cx-project will be the project name created under the team path
   * --app is required, but is only downstream when bug trackers are configured for CxFlow
+  
+  
+
+### Filters
+you can use filter configuration to filter SAST\SCA results. the configuration format is backward compatible with original SAST & SCA configurations:
+to add SAST filters use 
+
+#### SAST filters
+```
+cx-flow:
+  filter-severity:
+  filter-category:
+  filter-cwe:
+  filter-state:
+```
+for more details refer to [configuration page](https://github.com/checkmarx-ltd/cx-flow/wiki/Configuration#main-global-properties)
+
+#### SCA filters
+```
+sca:
+  filter-severity:
+  filter-score:
+```
+for more details refer to [SCA filters](https://github.com/checkmarx-ltd/cx-flow/wiki/Integration-with-CxSCA#filterss)
+
+
+### Thresholds
+you can use thresholds to set the count of vulnerabilities which approve or fail a pull request 
+
+```
+cx-flow:
+  thresholds:
+    high: 10
+    medium: 10
+    low: 10
+```
+
+[CxFlow Thresholds](https://github.com/checkmarx-ltd/cx-flow/wiki/Thresholds-and-policies#thresholds-vs-basic-filters)

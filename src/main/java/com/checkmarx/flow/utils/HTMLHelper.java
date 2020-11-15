@@ -245,19 +245,19 @@ public class HTMLHelper {
             appendAll(body, "<div><b>CWE:</b>", issue.getCwe(), DIV_CLOSING_TAG);
             if (!ScanUtils.empty(flowProperties.getMitreUrl())) {
                 appendAll(body, DIV_A_HREF, String.format(flowProperties.getMitreUrl(), issue.getCwe()),
-                        "\'>Vulnerability details and guidance</a></div>");
+                        "'>Vulnerability details and guidance</a></div>");
             }
         }
         if (!ScanUtils.empty(flowProperties.getWikiUrl())) {
-            appendAll(body, DIV_A_HREF, flowProperties.getWikiUrl(), "\'>Internal Guidance</a></div>");
+            appendAll(body, DIV_A_HREF, flowProperties.getWikiUrl(), "'>Internal Guidance</a></div>");
         }
         if (!ScanUtils.empty(issue.getLink())) {
-            appendAll(body, DIV_A_HREF, issue.getLink(), "\'>Checkmarx</a></div>");
+            appendAll(body, DIV_A_HREF, issue.getLink(), "'>Checkmarx</a></div>");
         }
         Map<String, Object> additionalDetails = issue.getAdditionalDetails();
         if (MapUtils.isNotEmpty(additionalDetails) && additionalDetails.containsKey(ScanUtils.RECOMMENDED_FIX)) {
             appendAll(body, DIV_A_HREF, additionalDetails.get(ScanUtils.RECOMMENDED_FIX),
-                    "\'>Recommended Fix</a></div>");
+                    "'>Recommended Fix</a></div>");
         }
 
         appendsSastAstDetails(issue, flowProperties, body);
@@ -356,12 +356,12 @@ public class HTMLHelper {
             scaDetailsMap.forEach((key, value) -> body.append(key).append(":</b> ").append(value).append(MarkDownHelper.getLineBreak(request)));
 
             String findingLink = ScanUtils.constructVulnerabilityUrl(any.getVulnerabilityLink(), any.getFinding());
-            body.append(DIV_A_HREF).append(findingLink).append("\'>Link To SCA</a></div>");
+            body.append(DIV_A_HREF).append(findingLink).append("'>Link To SCA</a></div>");
 
             String cveName = any.getFinding().getCveName();
             if (!ScanUtils.empty(cveName)) {
                 body.append(DIV_A_HREF).append(NVD_URL_PREFIX).append(cveName)
-                        .append("\'>Reference – NVD link</a></div>");
+                        .append("'>Reference – NVD link</a></div>");
             }
         });
     }
@@ -682,7 +682,7 @@ public class HTMLHelper {
     }
 
     private static String countSastTotalVulnerabilities(CxScanSummary summary) {
-        Integer totalVulnerabilities = 0;
+        int totalVulnerabilities = 0;
 
         totalVulnerabilities += Optional.ofNullable(summary.getHighSeverity()).orElse(0);
         totalVulnerabilities += Optional.ofNullable(summary.getMediumSeverity()).orElse(0);

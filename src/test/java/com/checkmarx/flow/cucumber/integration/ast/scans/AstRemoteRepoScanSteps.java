@@ -8,6 +8,7 @@ import com.checkmarx.flow.service.*;
 import com.checkmarx.sdk.config.AstProperties;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.ScaProperties;
+import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.cx.restclient.ast.dto.sast.report.Finding;
 import io.cucumber.java.After;
@@ -56,6 +57,8 @@ public class AstRemoteRepoScanSteps {
     private final FlowProperties flowProperties;
     private final AstProperties astProperties;
     private final ScaProperties scaProperties;
+    private final ConfigurationOverrider configOverrider;
+    private final ScaConfigurationOverrider scaConfigOverrider;
 
     private ScanResults scanResults;
     private boolean isScaEnabled;
@@ -292,16 +295,19 @@ public class AstRemoteRepoScanSteps {
 
         ScanRequest scanRequest = getBasicScanRequest(branch, repo);
 
+        scanRequest = configOverrider.overrideScanRequestProperties(new CxConfig(), scanRequest);
         scanRequest.setVulnerabilityScanners(scanners);
         flowService.initiateAutomation(scanRequest);
     }
 
-    private static ScanRequest getBasicScanRequest(String branch, String repo) {
-        return ScanRequest.builder()
+    private ScanRequest getBasicScanRequest(String branch, String repo) {
+        ScanRequest result = ScanRequest.builder()
                 .project(PUBLIC_PROJECT_NAME)
                 .repoUrlWithAuth(repo)
                 .branch(branch)
                 .repoType(ScanRequest.Repository.GITHUB)
                 .build();
+        scaConfigOverrider.initScaConfig(result);
+        return result;
     }
 }

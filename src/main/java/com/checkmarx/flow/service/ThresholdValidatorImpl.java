@@ -91,7 +91,8 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
         }
 
         if (!scaThresholds && scanRequest.getScaConfig() != null) {
-            scaThresholds = scanRequest.getScaConfig().getThresholdsSeverity() != null || scanRequest.getScaConfig().getThresholdsScore() != null;
+            Map<Severity, Integer> scaThresholdsSeverity = scanRequest.getScaConfig().getThresholdsSeverity();
+            scaThresholds = (scaThresholdsSeverity != null && scaThresholdsSeverity.size() > 0) || scanRequest.getScaConfig().getThresholdsScore() != null;
         }
 
         log.info("Checking Thresholds exists. sast thresholds: {}. sca thresholds: {}", sastThresholds, scaThresholds);

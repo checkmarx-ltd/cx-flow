@@ -35,10 +35,10 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
     public ScanResults scan(ScanRequest scanRequest) {
         ScanResults result = null;
         log.info("--------------------- Initiating new {} scan ---------------------", scanType);
-        ScanParams internalScaParams = toSdkScanParams(scanRequest);
+        ScanParams sdkScanParams = toSdkScanParams(scanRequest);
         ASTResultsWrapper internalResults = new ASTResultsWrapper(new SCAResults(), new ASTResults());
         try {
-            internalResults = client.scan(internalScaParams);
+            internalResults = client.scan(sdkScanParams);
             logRequest(scanRequest, internalResults, OperationResult.successful());
             result = toScanResults(internalResults);
         } catch (Exception e) {
@@ -77,10 +77,12 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
 
     @Override
     public ScanResults getLatestScanResults(ScanRequest request) {
-        ScanParams internalScanParams = ScanParams.builder()
+        ScanParams sdkScanParams = ScanParams.builder()
                 .projectName(request.getProject())
+                .scaConfig(request.getScaConfig())
+                .filterConfiguration(request.getFilter())
                 .build();
-        ASTResultsWrapper internalResults = client.getLatestScanResults(internalScanParams);
+        ASTResultsWrapper internalResults = client.getLatestScanResults(sdkScanParams);
         return toScanResults(internalResults);
     }
 
@@ -109,8 +111,8 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
         log.info("--------------------- Initiating new {} scan ---------------------", scanType);
         ASTResultsWrapper internalResults = new ASTResultsWrapper(new SCAResults(), new ASTResults());            
         try {
-            ScanParams internalScanParams = toSdkScanParams(scanRequest, path);
-            internalResults = client.scan(internalScanParams);
+            ScanParams sdkScanParams = toSdkScanParams(scanRequest, path);
+            internalResults = client.scan(sdkScanParams);
             logRequest(scanRequest, internalResults, OperationResult.successful());
             result = toScanResults(internalResults);
         } catch (Exception e) {
@@ -125,19 +127,22 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
         return ScanParams.builder()
                 .projectName(scanRequest.getProject())
                 .sourceDir(pathToScan)
+                .scaConfig(scanRequest.getScaConfig())
+                .filterConfiguration(scanRequest.getFilter())
                 .build();
     }
 
     protected abstract ScanResults toScanResults(ASTResultsWrapper internalResults);
 
 
-    protected ScanParams toSdkScanParams(ScanRequest scanRequest) {
+    private ScanParams toSdkScanParams(ScanRequest scanRequest) {
         URL parsedUrl = getRepoUrl(scanRequest);
 
         return ScanParams.builder()
                 .projectName(scanRequest.getProject())
                 .remoteRepoUrl(parsedUrl)
                 .scaConfig(scanRequest.getScaConfig())
+                .filterConfiguration(scanRequest.getFilter())
                 .build();
     }
 

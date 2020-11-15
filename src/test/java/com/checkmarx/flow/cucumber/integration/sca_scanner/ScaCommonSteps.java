@@ -3,6 +3,7 @@ package com.checkmarx.flow.cucumber.integration.sca_scanner;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.service.SCAScanner;
+import com.checkmarx.flow.service.ScaConfigurationOverrider;
 import com.checkmarx.sdk.config.ScaProperties;
 import lombok.RequiredArgsConstructor;
 
@@ -15,6 +16,7 @@ public class ScaCommonSteps {
 
     protected final FlowProperties flowProperties;
     protected final SCAScanner scaScanner;
+    private final ScaConfigurationOverrider scaConfigOverrider;
 
     public static void initSCAConfig(ScaProperties scaProperties) {
         scaProperties.setAppUrl("https://sca.scacheckmarx.com");
@@ -23,12 +25,14 @@ public class ScaCommonSteps {
     }
 
     protected ScanRequest getBasicScanRequest(String projectName, String repoWithAuth) {
-        return ScanRequest.builder()
+        ScanRequest request = ScanRequest.builder()
                 .project(projectName)
                 .repoUrlWithAuth(repoWithAuth)
                 .branch("master")
                 .repoType(ScanRequest.Repository.GITHUB)
                 .build();
+        scaConfigOverrider.initScaConfig(request);
+        return request;
     }
 
     protected List<String> createFiltersListFromString(String filters) {
