@@ -10,18 +10,19 @@ Feature: SCA support in CxFlow command-line
         And no exception is thrown
 
     Scenario Outline: Testing break-build functionality
-        When running a SCA scan with break-build on <issue-type>
+        When running a SCA scan with <expected-scenario> input
         Then run should exit with exit code <exit-code-number>
 
         Examples:
-            | issue-type                  | exit-code-number |
+            | expected-scenario           | exit-code-number |
             | success                     | 0                |
+            | break-build                 | 10               |
             | missing-mandatory-parameter | 1                |
             | missing-project             | 2                |
             | error-processing-request    | 10               |
 
 
-    @Skip
+
     Scenario Outline: Testing cli filter functionality
         Given code has 6 High, 11 Medium and 1 low issues
         When running sca scan <filter>
