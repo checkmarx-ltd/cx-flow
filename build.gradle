@@ -299,6 +299,18 @@ task ScaCliIntegrationTest(type: Test) {
     }
 }
 
+task CxGoIntegrationTest(type: Test) {
+    useJUnitPlatform() {
+        systemProperty "testprofile", "cxgoIntegration"
+
+        include 'com/checkmarx/flow/cucumber/integration/cxgo/**'
+
+        testLogging {
+            events "passed", "skipped", "failed"
+        }
+    }
+}
+
 
 task getVersion {
     doLast {

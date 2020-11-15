@@ -1,8 +1,8 @@
 package com.checkmarx.flow.service;
 
-import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitLabProperties;
 import com.checkmarx.flow.config.ScmConfigOverrider;
+import com.checkmarx.flow.dto.RepoComment;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.Sources;
 import com.checkmarx.flow.dto.gitlab.Note;
@@ -22,12 +22,11 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+
 import java.beans.ConstructorProperties;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 
 @Service
@@ -292,6 +291,16 @@ public class GitLabService extends RepoService {
             log.error(ERROR_OCCURRED, e);
         }
         return null;
+    }
+
+    @Override
+    public void deleteComment(String url, ScanRequest scanRequest) {
+        // not implemented
+    }
+
+    @Override
+    public List<RepoComment> getComments(ScanRequest scanRequest) {
+        return Collections.emptyList();
     }
 
 }
