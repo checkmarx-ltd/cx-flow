@@ -6,6 +6,7 @@
   * [9.0 Configuration Changes](#nine)
   * [Filtering](#filtering)
   * [Break build](#break)
+  * [Override SAST project setting](#override)
 * [WebHook Configuration](#webhook)
   * [WebHook URL Parameters - Code](#code)
   * [WebHook URL Override Parameters - Details](#details)
@@ -319,7 +320,7 @@ Refer to the sample configuration above for the entire yaml structure.
 | filter-severity |     | No       | Yes    | Yes           | The severity can be filtered during feedback (**High**, **Medium**, **Low**, **Informational**).  If no value is provided, all severity levels are applicable. |
 | filter-category |     | No       | Yes    | Yes           | The list of vulnerability types to be included with the results (**Stored_XSS**, **SQL_Injection**) as defined within Checkmarx.  If no value is provided, all categories are applicable. |
 | filter-cwe      |     | No       | Yes    | Yes           | The list of CWEs to be included with the results (**79**, **89**).  If no value is provided, all categories are applicable. |
-| filter-status   |     | No       | Yes    | Yes           | The available options are **Urgent** and **Confirmed**.  This only allows for filtering the results that have been confirmed/validated within Checkmarx. |
+| filter-state    |     | No       | Yes    | Yes           | The available options are **Urgent** and **Confirmed**.  This only allows for filtering the results that have been confirmed/validated within Checkmarx. |
 | mitre-url       |     | No       | Yes    | Yes           | Provides a link in the issue body for **Jira**, **GitLab Issues** and **GitHub Issues** to help guide developers.  The link is not provided, if left empty or omitted. |
 | wiki-url        |     | No       | Yes    | Yes           | Provides a link in the issue body for **Jira**, **GitLab Issues** and **GitHub Issues** associated with internal program references (program/assessment methodology, remediation guidance, etc).  The link is not provided, if left empty or omitted. |
 | codebash-url    |     | No       | Yes    | Yes           | Provides a link in the issue body for **Jira**, **GitLab Issues** and **GitHub Issues**  associated with training. The link is titled **'Training'** and is not provided, if left empty or omitted. |
@@ -392,13 +393,22 @@ Filtering, as specified above, is available on the following criteria:
 * **Severity** → Severity from Checkmarx
 * **Category** → Vulnerability name within Checkmarx
 * **CWE** → CWE value from Checkmarx
-* **Status** → Urgent | Confirmed
+* **State** → Urgent | Confirmed
 All values are case sensitive as per the output from Checkmarx (i.e. High severity, Stored_XSS, Confirmed)
 
 ### <a name="break">Break Build</a>
 The configuration can be set or overridden at execution time using the command line (`--cx-flow.break-build=true`) to exit the command line execution flow for a single project result or scan for results that meet the filter criteria.
 
 **Note**:  This does not apply to WebHooks or for batch cli execution (instance and team).  It only works, if one project result is processed.
+
+### <a name="override">Override project settings</a>
+The configuration can be set to override project settings with cxflow configuration when triggering new scan for SAST project, or to avoid project setting update if property set to 'false'
+```
+checkmarx
+  ...
+  settings-override: true #default false if not provide
+```
+
 
 ## <a name="webhook">WebHook Configuration</a>
 Each repository type requires its own specific configuration block as defined below.  Each of these have available overrides that can be provided in the form of URL parameters or as a JSON configuration blob that is base64 encoded and provided as a url parameter (override=<XXXXXX>).
@@ -443,7 +453,7 @@ These parameters are related to the WebHook URL parameters above.
 | category      | Override the category filters.  For multiple category, simply list category multiple times,  i.e. `category=Stored_XSS&category=SQL_Injection` |
 | project       | Override the project name that will be created/used in Checkmarx.  This allows for greater flexibility for incremental scan relating to pull requests,  i.e. use a standardized pull project name that is always used regardless of the branch - `?project=repo-pull` |
 | team          | Override the team within Checkmarx to use/create project under. |
-| status        | Override the status filters (Confirmed/Urgent)
+| state         | Override the state filters (Confirmed/Urgent)
 | assignee      | Override the assignee  |
 | preset        | Override the Checkmarx preset rules for scanning |
 | incremental   | Override incremental property to enable/disable incremental scan support |
@@ -584,7 +594,7 @@ The sample below illustrates an override configuration in JSON format.  It has s
      "severity": ["High", "Medium"],
      "cwe": ["79", "89"],
      "category": ["XSS_Reflected", "SQL_Injection"],
-     "status": ["Confirmed", "New"]
+     "state": ["Confirmed", "New"]
    },
    "jira": {
      "project": "APPSEC",
