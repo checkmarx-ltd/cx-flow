@@ -15,7 +15,7 @@ The relevant configuration is determined by the **application.yml** file that re
 `java -jar cx-flow-<ver>.jar --spring.config.location=/path/to/application.yml --web`
 
 ## <a name="docker">Docker</a>
-The CxFlow docker images on Docker Hub [checkmarxts/cxflow](https://hub.docker.com/r/checkmarxts/cxflow) contain the latest and previous versions of CxFlow.
+The CxFlow docker images on Docker Hub [checkmarx/cx-flow](https://hub.docker.com/r/checkmarx/cx-flow) contain the latest and previous versions of CxFlow.
 
 ```
 docker pull checkmarxts/cxflow
