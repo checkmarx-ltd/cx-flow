@@ -3,6 +3,7 @@
   * [Priorities](#priorities)
   * [Transitions](#transitions)
   * [Fields](#fields)
+  * [Assigning tickets to a user](#assigningTickets)
 * [Custom Bug trackers](#custom)
 * [Azure DevOps Work Items](#azure)
 * [GitLab Issues](#gitlab)
@@ -139,6 +140,13 @@ similarity-id - Cx Similarity ID
   * _single-select_
   * _security_ (used for issue security levels)
 * **jira-default-value** - Static value if no value can be determined for the respective field (Optional)
+
+### <a name="assigningTickets">Assigning tickets to a user</a>
+Jira tickets can be assigned to a user when they are created. This can be achieved in the following way.
+
+* As a webhook url parameter - The url parameter 'assignee' can be appended to the url in the webhook configuration and a user's email address to whom the tickets should be assigned, is provided as the value of the parameter.
+
+  E.g - http​&#65279;://a7674e6a169f.ngrok.io?assignee=someUsersEmail@&#65279;xyz.com
 
 ## <a name="custom">Custom Bug Trackers</a>
 Refer to the [development section](https://github.com/checkmarx-ltd/cx-flow/wiki/Development) for the implementation approach.

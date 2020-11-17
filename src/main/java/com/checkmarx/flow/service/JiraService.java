@@ -1,44 +1,7 @@
 package com.checkmarx.flow.service;
 
-import java.beans.ConstructorProperties;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import javax.annotation.PostConstruct;
-
-import com.atlassian.jira.rest.client.api.GetCreateIssueMetadataOptions;
-import com.atlassian.jira.rest.client.api.GetCreateIssueMetadataOptionsBuilder;
-import com.atlassian.jira.rest.client.api.IssueRestClient;
-import com.atlassian.jira.rest.client.api.JiraRestClient;
-import com.atlassian.jira.rest.client.api.MetadataRestClient;
-import com.atlassian.jira.rest.client.api.ProjectRestClient;
-import com.atlassian.jira.rest.client.api.RestClientException;
-import com.atlassian.jira.rest.client.api.SearchRestClient;
-import com.atlassian.jira.rest.client.api.domain.BasicIssue;
-import com.atlassian.jira.rest.client.api.domain.CimFieldInfo;
-import com.atlassian.jira.rest.client.api.domain.CimProject;
-import com.atlassian.jira.rest.client.api.domain.Comment;
-import com.atlassian.jira.rest.client.api.domain.Field;
-import com.atlassian.jira.rest.client.api.domain.Issue;
-import com.atlassian.jira.rest.client.api.domain.IssueType;
-import com.atlassian.jira.rest.client.api.domain.Project;
-import com.atlassian.jira.rest.client.api.domain.SearchResult;
-import com.atlassian.jira.rest.client.api.domain.SecurityLevel;
-import com.atlassian.jira.rest.client.api.domain.Status;
-import com.atlassian.jira.rest.client.api.domain.Transition;
-import com.atlassian.jira.rest.client.api.domain.User;
+import com.atlassian.jira.rest.client.api.*;
+import com.atlassian.jira.rest.client.api.domain.*;
 import com.atlassian.jira.rest.client.api.domain.input.ComplexIssueInputFieldValue;
 import com.atlassian.jira.rest.client.api.domain.input.FieldInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
@@ -60,12 +23,25 @@ import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.google.common.collect.ImmutableMap;
-
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.slf4j.Logger;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.DefaultUriBuilderFactory;
+
+import javax.annotation.PostConstruct;
+import java.beans.ConstructorProperties;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class JiraService {
@@ -96,6 +72,7 @@ public class JiraService {
     private static final String CHILD_FIELD_TYPE = "child";
     private static final String CASCADE_PARENT_CHILD_DELIMITER  = ";";
     private static final int MAX_RESULTS_ALLOWED = 1000000;
+    private static final String SEARCH_ASSIGNABLE_USER = "%s/rest/api/latest/user/assignable/search?project={projectKey}&query={assignee}";
 
     @ConstructorProperties({"jiraProperties", "flowProperties"})
     public JiraService(JiraProperties jiraProperties, FlowProperties flowProperties) {
@@ -248,7 +225,7 @@ public class JiraService {
         return this.issueClient.getIssue(bugId).claim();
     }
 
-    private IssueType getIssueType(String projectKey, String type) throws RestClientException, JiraClientException {
+    private IssueType getIssueType(String projectKey, String type) throws JiraClientException {
         List<String> issueTypesList = new ArrayList<>();
 
         Project project = this.projectClient.getProject(projectKey).claim();
@@ -317,11 +294,9 @@ public class JiraService {
             issueBuilder.setSummary(summary);
             issueBuilder.setDescription(this.getBody(issue, request, fileUrl));
             if (assignee != null && !assignee.isEmpty()) {
-                try {
-                    User userAssignee = getAssignee(assignee);
-                    issueBuilder.setAssignee(userAssignee);
-                } catch (RestClientException e) {
-                    log.error("Error occurred while assigning to user {}", assignee, e);
+                    String accountId = getAssignee(assignee, projectKey);
+                    if(!accountId.isEmpty()) {
+                        issueBuilder.setFieldInput(new FieldInput(IssueFieldId.ASSIGNEE_FIELD, ComplexIssueInputFieldValue.with("accountId", accountId)));
                 }
             }
 
@@ -358,7 +333,6 @@ public class JiraService {
             mapCustomFields(request, issue, issueBuilder, false);
 
             log.debug("Creating JIRA issue");
-            log.debug(issueBuilder.toString());
             BasicIssue basicIssue = this.issueClient.createIssue(issueBuilder.build()).claim();
             log.debug("JIRA issue {} created", basicIssue.getKey());
             return basicIssue.getKey();
@@ -405,7 +379,6 @@ public class JiraService {
         mapCustomFields(request, issue, issueBuilder, true);
 
         log.debug("Updating JIRA issue");
-        log.debug(issueBuilder.toString());
         try {
             this.issueClient.updateIssue(bugId, issueBuilder.build()).claim();
         } catch (RestClientException e) {
@@ -703,7 +676,7 @@ public class JiraService {
         // must match case
         String[] selectedValues = StringUtils.split(value, CASCADE_PARENT_CHILD_DELIMITER);
         if(selectedValues.length == 2) {
-            Map<String, Object> cascadingValues = new HashMap<String, Object>();
+            Map<String, Object> cascadingValues = new HashMap<>();
             cascadingValues.put(VALUE_FIELD_TYPE, selectedValues[0].trim());
             cascadingValues.put(CHILD_FIELD_TYPE, ComplexIssueInputFieldValue.with(VALUE_FIELD_TYPE, selectedValues[1].trim()));
             issueBuilder.setFieldValue(customField, new ComplexIssueInputFieldValue(cascadingValues));
@@ -754,7 +727,7 @@ public class JiraService {
                 this.issueClient.transition(issue.getTransitionsUri(), new TransitionInput(transition.getId())).claim();
             } else {
                 log.warn("Issue cannot be transitioned to {}.  Transition is not applicable to issue {}.  Available transitions: {}",
-                        transitionName, bugId, transitions.toString());
+                        transitionName, bugId, transitions);
             }
         } catch (RestClientException e) {
             log.error("There was a problem transitioning issue {}. ", bugId, e);
@@ -787,7 +760,7 @@ public class JiraService {
                 }
             } else {
                 log.warn("Issue cannot't be transitioned to {}.  Transition is not applicable to issue {}.  Available transitions: {}",
-                        transitionName, bugId, transitions.toString());
+                        transitionName, bugId, transitions);
             }
         } catch (RestClientException e) {
             log.error("There was a problem transitioning issue {}. ", bugId, e);
@@ -796,8 +769,39 @@ public class JiraService {
         return issue;
     }
 
-    private User getAssignee(String assignee) {
-        return client.getUserClient().getUser(assignee).claim();
+    private String getAssignee(String assignee, String projectKey) {
+
+        String urlTemplate = String.format(SEARCH_ASSIGNABLE_USER, jiraProperties.getUrl());
+        URI endpoint = new DefaultUriBuilderFactory().expand(urlTemplate, projectKey, assignee);
+
+        HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders());
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<String> response = restTemplate.exchange(endpoint, HttpMethod.GET, httpEntity, String.class);
+        String accountId = "";
+
+        try{
+            if(response.getBody() != null) {
+                JSONArray usersArray = new JSONArray(response.getBody());
+                if(!usersArray.isEmpty()) {
+                    JSONObject userDetails = usersArray.getJSONObject(0);
+                    accountId = (String) userDetails.get("accountId");
+                }
+            }
+        }catch (NullPointerException e){
+            log.error("Error retrieving assignee");
+        }
+        return accountId;
+    }
+
+    private HttpHeaders createAuthHeaders(){
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+        httpHeaders.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+
+        String credentials = String.format("%s:%s", jiraProperties.getUsername(), jiraProperties.getToken());
+        String encodedCredentials = Base64.getEncoder().encodeToString(credentials.getBytes());
+        httpHeaders.set(HttpHeaders.AUTHORIZATION, "Basic " + encodedCredentials);
+        return httpHeaders;
     }
 
     private void addCommentToBug(String bugId, String comment) {
