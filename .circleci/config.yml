@@ -197,7 +197,8 @@ jobs:
       #- run:
       #    name: Install k8s-external-secret service on cluster
       #    command: |
-      #       helm repo add external-secrets https://godaddy.github.io/kubernetes-external-secrets/
+      #       godaddy repo is depracated - helm repo add external-secrets https://godaddy.github.io/kubernetes-external-secrets/
+      #       helm repo add external-secrets https://external-secrets.github.io/kubernetes-external-secrets/
       #       helm upgrade --install --create-namespace external-secret-${CIRCLE_SHA1::7} --namespace << parameters.namespace >> --set env.AWS_REGION=eu-west-1 external-secrets/kubernetes-external-secrets
       - run:
           name: Install cxflow service on cluster
