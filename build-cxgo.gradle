@@ -3,7 +3,7 @@ buildscript {
         CxSBSDK = "0.1.41"
         ConfigProviderVersion = "1.0.9"
         //cxVersion = "8.90.5"
-        springBootVersion = '2.2.6.RELEASE'
+        springBootVersion = '2.3.5.RELEASE'
         sonarqubeVersion = '2.8'
         atlassianVersion = "5.2.0"
         atlassianFugueVersion = "4.7.2"
@@ -73,6 +73,7 @@ dependencies {
     compile('org.springframework.boot:spring-boot-starter-actuator')
     compile('org.springframework.boot:spring-boot-starter-web')
     compile('org.springframework.boot:spring-boot-starter-aop')
+    compile('org.springframework.boot:spring-boot-starter-validation')
     compile("com.github.checkmarx-ltd:cxgo-spring-boot-sdk:${CxSBSDK}")
     compile("org.apache.commons:commons-text:1.8")
     compile('commons-codec:commons-codec:1.13')
