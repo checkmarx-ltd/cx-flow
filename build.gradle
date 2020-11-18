@@ -51,7 +51,7 @@ version = file('version.txt').text.trim()
 
 sourceCompatibility = 1.8
 def cucumberVersion = '5.7.0'
-def junitVersion = '5.5.0'
+def junitVersion = '5.7.0'
 
 repositories {
     mavenLocal()
