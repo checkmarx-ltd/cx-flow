@@ -80,6 +80,9 @@ public class ScanRequest {
     private ScaConfig scaConfig;
     private ASTConfig astConfig;
 
+    @Getter @Setter
+    private String clientSecret;
+
     public ScanRequest(ScanRequest other) {
         this.namespace = other.namespace;
         this.application = other.application;
@@ -116,6 +119,7 @@ public class ScanRequest {
         this.scaConfig = other.scaConfig;
         this.astConfig = other.astConfig;
         this.thresholds = other.thresholds;
+        this.clientSecret = other.clientSecret;
     }
 
     public Map<String,String> getAltFields() {
@@ -168,14 +172,14 @@ public class ScanRequest {
         CXOSA("CXOSA"),
         FORTIFY("FORTIFY");
 
-        private String product;
+        private final String value;
 
-        Product(String product) {
-            this.product = product;
+        Product(String value) {
+            this.value = value;
         }
 
         public String getProduct() {
-            return product;
+            return value;
         }
     }
 
@@ -184,14 +188,14 @@ public class ScanRequest {
         DAST("DAST"),
         IAST("IAST");
 
-        private String type;
+        private final String value;
 
-        Type(String type) {
-            this.type = type;
+        Type(String value) {
+            this.value = value;
         }
 
         public String getType() {
-            return type;
+            return value;
         }
     }
 
@@ -203,14 +207,14 @@ public class ScanRequest {
         ADO("ADO"),
         NA("NA");
 
-        private String repository;
+        private final String value;
 
-        Repository(String repository) {
-            this.repository = repository;
+        Repository(String value) {
+            this.value = value;
         }
 
         public String getRepository() {
-            return repository;
+            return value;
         }
     }
 }

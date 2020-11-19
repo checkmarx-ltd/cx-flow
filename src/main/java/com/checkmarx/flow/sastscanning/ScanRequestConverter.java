@@ -206,7 +206,8 @@ public class ScanRequestConverter {
                 .withForceScan(request.isForceScan())
                 .withFileExclude(request.getExcludeFiles())
                 .withFolderExclude(request.getExcludeFolders())
-                .withScanConfiguration(request.getScanConfiguration());
+                .withScanConfiguration(request.getScanConfiguration())
+                .withClientSecret(request.getClientSecret());
 
         if (StringUtils.isNotEmpty(request.getBranch())) {
             params.withBranch(Constants.CX_BRANCH_PREFIX.concat(request.getBranch()));
