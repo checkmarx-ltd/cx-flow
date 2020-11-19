@@ -90,7 +90,7 @@ dependencies {
     compile("com.atlassian.jira:jira-rest-java-client-api:${atlassianVersion}")
     compile("org.apache.httpcomponents:httpclient:4.5.10")
     compile("org.thymeleaf:thymeleaf:3.0.11.RELEASE")
-    compile("org.codehaus.groovy:groovy-all:2.5.8")
+    compile("org.codehaus.groovy:groovy-all:3.0.6")
     compile("org.apache.ivy:ivy:2.5.0")
     compile("org.jasypt:jasypt:1.9.3")
     compile("org.eclipse.jgit:org.eclipse.jgit:5.5.1.201910021850-r")
