@@ -5,7 +5,7 @@ buildscript {
         CxSBSDK = "0.4.60"
         ConfigProviderVersion = "1.0.9"
         //cxVersion = "8.90.5"
-        springBootVersion = '2.2.6.RELEASE'
+        springBootVersion = '2.3.5.RELEASE'
         sonarqubeVersion = '2.8'
         atlassianVersion = "5.2.0"
         atlassianFugueVersion = "4.7.2"
@@ -41,7 +41,7 @@ group = 'com.checkmarx'
 version = file('version.txt').text.trim()
 sourceCompatibility = 1.8
 def cucumberVersion = '5.7.0'
-def junitVersion = '5.5.0'
+def junitVersion = '5.7.0'
 
 repositories {
     mavenLocal()
@@ -62,11 +62,12 @@ dependencies {
 	compile('org.springframework.boot:spring-boot-starter-actuator')
 	compile('org.springframework.boot:spring-boot-starter-web')
     compile('org.springframework.boot:spring-boot-starter-aop')
+    compile('org.springframework.boot:spring-boot-starter-validation')
     compile("com.github.checkmarx-ltd:cx-spring-boot-sdk:${CxSBSDK}")
     compile ("org.apache.commons:commons-text:1.8")
     compile ('commons-codec:commons-codec:1.13')
     compile ('commons-io:commons-io:2.7')
-    compile ('org.json:json:20190722')
+    compile ('org.json:json:20201115')
     compile ('com.fasterxml.jackson.core:jackson-databind:2.10.3')
     compile ('org.springframework.boot:spring-boot-starter-web-services')
     compile ('org.springframework.boot:spring-boot-starter-mail')
@@ -77,7 +78,7 @@ dependencies {
     compile ("com.atlassian.jira:jira-rest-java-client-api:${atlassianVersion}")
     compile ("org.thymeleaf:thymeleaf:3.0.11.RELEASE")
     compile ("org.apache.httpcomponents:httpclient:4.5.10")
-    compile ("org.codehaus.groovy:groovy-all:2.5.8")
+    compile ("org.codehaus.groovy:groovy-all:3.0.6")
     compile ("org.apache.ivy:ivy:2.5.0")
     compile ("org.apache.commons:commons-lang3:3.11")
     compile ("org.eclipse.jgit:org.eclipse.jgit:5.5.1.201910021850-r")
