@@ -56,6 +56,7 @@ public class JiraService {
     private final FlowProperties flowProperties;
     private final String parentUrl;
     private final String grandParentUrl;
+    private final CodeBashingService codeBashingService;
     private Map<String, ScanResults.XIssue> nonPublishedScanResultsMap = new HashMap<>();
 
     private List<String> currentNewIssuesList = new ArrayList<>();
@@ -74,12 +75,13 @@ public class JiraService {
     private static final int MAX_RESULTS_ALLOWED = 1000000;
     private static final String SEARCH_ASSIGNABLE_USER = "%s/rest/api/latest/user/assignable/search?project={projectKey}&query={assignee}";
 
-    @ConstructorProperties({"jiraProperties", "flowProperties"})
-    public JiraService(JiraProperties jiraProperties, FlowProperties flowProperties) {
+    @ConstructorProperties({"jiraProperties", "flowProperties", "codeBashingService"})
+    public JiraService(JiraProperties jiraProperties, FlowProperties flowProperties, CodeBashingService codeBashingService) {
         this.jiraProperties = jiraProperties;
         this.flowProperties = flowProperties;
         parentUrl = jiraProperties.getParentUrl();
         grandParentUrl = jiraProperties.getGrandParentUrl();
+        this.codeBashingService = codeBashingService;
     }
 
     @PostConstruct
@@ -1147,9 +1149,8 @@ public class JiraService {
         List<String> newIssues = new ArrayList<>();
         List<String> updatedIssues = new ArrayList<>();
         List<String> closedIssues = new ArrayList<>();
-        CodeBashingService codeBashingService = new CodeBashingService(flowProperties);
 
-        codeBashingService.createLessonsMap(results);
+        codeBashingService.createLessonsMap();
         getAndModifyRequestApplication(request);
         loadCustomFields(request.getBugTracker().getProjectKey(), request.getBugTracker().getIssueType());
         if (this.jiraProperties.isChild()) {

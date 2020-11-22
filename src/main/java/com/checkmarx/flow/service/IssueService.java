@@ -1,7 +1,7 @@
 package com.checkmarx.flow.service;
 
+import com.checkmarx.flow.config.CodebashingProperties;
 import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.custom.IssueTracker;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.Issue;
@@ -28,6 +28,7 @@ public class IssueService implements ApplicationContextAware {
     private ApplicationContext context;
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(IssueService.class);
     private final FlowProperties properties;
+    private final CodeBashingService codeBashingService;
 
     public ApplicationContext getContext() {
         return context;
@@ -38,8 +39,9 @@ public class IssueService implements ApplicationContextAware {
         this.context = context;
     }
 
-    public IssueService(FlowProperties properties) {
+    public IssueService(FlowProperties properties, CodeBashingService codeBashingService) {
         this.properties = properties;
+        this.codeBashingService = codeBashingService;
     }
 
     /**
@@ -85,7 +87,6 @@ public class IssueService implements ApplicationContextAware {
     Map<String, List<String>> process(ScanResults results, ScanRequest request) throws MachinaException {
         Map<String, ScanResults.XIssue> xMap;
         Map<String, Issue> iMap;
-        CodeBashingService codeBashingService = new CodeBashingService(properties);
         List<String> newIssues = new ArrayList<>();
         List<String> updatedIssues = new ArrayList<>();
         List<String> closedIssues = new ArrayList<>();
@@ -100,8 +101,7 @@ public class IssueService implements ApplicationContextAware {
             tracker.init(request, results);
             String fpLabel = tracker.getFalsePositiveLabel();
 
-
-            codeBashingService.createLessonsMap(results);
+            codeBashingService.createLessonsMap();
 
             log.info("Processing Issues with custom bean {}", customBean);
 
