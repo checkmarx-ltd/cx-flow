@@ -77,7 +77,6 @@ public class AstCliSteps  {
         log.info("reset sca filters");
         scaProperties.setFilterSeverity(Collections.emptyList());
 
-        astProperties.setApiUrl("http://ec2-3-249-214-110.eu-west-1.compute.amazonaws.com");
         astProperties.setPreset("Checkmarx Default");
         astProperties.setIncremental("false");
     }
