@@ -52,7 +52,7 @@ public class CodeBashingService {
                 //listdata.add(jArray.getJSONObject(i));
 
                 JSONObject lessonObject = jArray.getJSONObject(i);
-                String CWE = lessonObject.getString("cwe_id");
+                String CWE = lessonObject.getString("cwe_id").split("-")[1];
                 String lessonPath = lessonObject.getString("path");
 
                 if(StringUtils.isEmpty(CWE) || StringUtils.isEmpty(lessonPath)){
