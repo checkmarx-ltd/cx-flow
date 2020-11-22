@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import javax.validation.ValidationException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,14 +21,16 @@ import java.util.Map;
 public class CodeBashingService {
 
     private static Logger log = org.slf4j.LoggerFactory.getLogger(JiraService.class);
-    Map<String,String> lessonsMap = null;
-    RestTemplate restTemplate = new RestTemplate();
+    private Map<String,String> lessonsMap = null;
+    private RestTemplate restTemplate = new RestTemplate();
     private final FlowProperties flowProperties;
     private final CodebashingProperties codebashingProperties;
 
     public void createLessonsMap() {
 
         try{
+            validateCodeBashingLessonsIntegration();
+            log.info("sending codebashing API [{}] request to get lessons map", codebashingProperties.getCodebashingApiUrl());
             HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders());
             ResponseEntity<String> response = restTemplate.exchange(codebashingProperties.getCodebashingApiUrl(), HttpMethod.GET, httpEntity, String.class);
 
@@ -39,6 +42,9 @@ public class CodeBashingService {
 
             JSONArray lessonsArray = new JSONArray(response.getBody());
             lessonsMap = createLessonMapByCwe(lessonsArray);
+        }
+        catch (ValidationException validationException){
+            log.info("not using CodeBashing lessons integration");
         }
         catch (Exception ex){
             log.error("can't get codbashing lessons map - {}", ex.getMessage());
@@ -77,15 +83,21 @@ public class CodeBashingService {
     }
 
     public void addCodebashingUrlToIssue(ScanResults.XIssue xIssue){
-        String mapKey = buildMapKey(xIssue.getCwe(), xIssue.getLanguage(), xIssue.gerQueryId());
-
-        if (lessonsMap.get(mapKey) != null) {
-            String lessonPath = String.format("%s%s", codebashingProperties.getTenantBaseUrl(), lessonsMap.get(mapKey));
-            xIssue.getAdditionalDetails().put(FlowConstants.CODE_BASHING_LESSON, lessonPath);
+        String mapKey = xIssue.getCwe();
+        if(validateXIssueFields(xIssue)) {
+            mapKey = buildMapKey(xIssue.getCwe(), xIssue.getLanguage(), xIssue.gerQueryId());
+            if (lessonsMap != null && lessonsMap.get(mapKey) != null) {
+                String lessonPath = String.format("%s%s", codebashingProperties.getTenantBaseUrl(), lessonsMap.get(mapKey));
+                xIssue.getAdditionalDetails().put(FlowConstants.CODE_BASHING_LESSON, lessonPath);
+            } else {
+                xIssue.getAdditionalDetails().put(FlowConstants.CODE_BASHING_LESSON, flowProperties.getCodebashUrl());
+            }
         }
-        else{
+        else {
             xIssue.getAdditionalDetails().put(FlowConstants.CODE_BASHING_LESSON, flowProperties.getCodebashUrl());
         }
+
+        log.debug("added codebashing lesson {} to xIssue: {}", xIssue.getAdditionalDetails().get(FlowConstants.CODE_BASHING_LESSON), mapKey);
     }
 
     private HttpHeaders createAuthHeaders(){
@@ -94,5 +106,18 @@ public class CodeBashingService {
         httpHeaders.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
         httpHeaders.set("x-api-key", codebashingProperties.getTenantSecret());
         return httpHeaders;
+    }
+
+    private void validateCodeBashingLessonsIntegration() {
+         if(codebashingProperties == null ||
+                 codebashingProperties.getCodebashingApiUrl() == null ||
+                 codebashingProperties.getTenantBaseUrl() == null ||
+                 codebashingProperties.getTenantSecret() == null) {
+             throw new ValidationException();
+        }
+    }
+
+    private boolean validateXIssueFields(ScanResults.XIssue xIssue) {
+        return xIssue.getCwe() != null && xIssue.getLanguage() != null && xIssue.gerQueryId() != null;
     }
 }
