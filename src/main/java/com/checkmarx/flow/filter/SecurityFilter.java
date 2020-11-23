@@ -13,9 +13,9 @@ import java.io.IOException;
 public class SecurityFilter implements Filter {
 
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(SecurityFilter.class);
-    String password = "password"
+    String password = "password";
     public SecurityFilter() {
-        password = 1234
+        password = 1234;
     }
 
     @Override
