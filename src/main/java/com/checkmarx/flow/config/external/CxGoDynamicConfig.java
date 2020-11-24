@@ -1,5 +1,6 @@
 package com.checkmarx.flow.config.external;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,6 +12,10 @@ import lombok.Setter;
 public class CxGoDynamicConfig {
     public static final String SECTION_NAME = "cxGoConfig";
 
+    @JsonProperty("team")
     private String team;
+    @JsonProperty("cxgoSecret")
     private String clientSecret;
+    @JsonProperty("token")
+    private String token;
 }

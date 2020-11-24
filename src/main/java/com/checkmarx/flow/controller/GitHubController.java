@@ -179,9 +179,7 @@ public class GitHubController extends WebhookController {
             else{
                 token = scmConfigOverrider.determineConfigToken(properties, controllerRequest.getScmInstance());
             }
-            gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(token).concat("@"));
-            gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(token).concat("@"));
-            
+            gitAuthUrl = gitHubService.getGitAuthUrlByToken(gitUrl, token);
 
             ScanRequest request = ScanRequest.builder()
                     .application(app)
@@ -205,6 +203,8 @@ public class GitHubController extends WebhookController {
                     .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)
                     .filter(filter)
+                    .organizationName(StringUtils.substringBefore(repository.getFullName(), "/"))
+                    .scmUrl(gitUrl)
                     .build();
 
             setScmInstance(controllerRequest, request);
@@ -318,9 +318,7 @@ public class GitHubController extends WebhookController {
                     throw new MachinaRuntimeException();
                 }
             }
-            gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(token).concat("@"));
-            gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(token).concat("@"));
-            
+            gitAuthUrl = gitHubService.getGitAuthUrlByToken(gitUrl, token);
 
             ScanRequest request = ScanRequest.builder()
                     .application(app)
@@ -342,8 +340,9 @@ public class GitHubController extends WebhookController {
                     .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)
                     .filter(filter)
+                    .organizationName(StringUtils.substringBefore(repository.getFullName(), "/"))
+                    .scmUrl(gitUrl)
                     .build();
-
 
             setScmInstance(controllerRequest, request);
 

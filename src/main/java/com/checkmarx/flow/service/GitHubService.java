@@ -15,6 +15,7 @@ import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.exception.GitHubClientRunTimeException;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
 import lombok.extern.slf4j.Slf4j;
@@ -134,6 +135,13 @@ public class GitHubService extends RepoService {
             }
         }
         return result;
+    }
+
+    public String getGitAuthUrlByToken(String gitUrl, String token) {
+        String gitAuthUrl;
+        gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(token).concat("@"));
+        gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(token).concat("@"));
+        return gitAuthUrl;
     }
 
     public void initConfigProviderOnPushEvent(String uid, PushEvent event) {

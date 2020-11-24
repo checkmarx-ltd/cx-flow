@@ -83,6 +83,12 @@ public class ScanRequest {
     @Getter @Setter
     private String clientSecret;
 
+    @Getter @Setter
+    private String organizationName;
+
+    @Getter @Setter
+    private String scmUrl;
+
     public ScanRequest(ScanRequest other) {
         this.namespace = other.namespace;
         this.application = other.application;
@@ -120,6 +126,8 @@ public class ScanRequest {
         this.astConfig = other.astConfig;
         this.thresholds = other.thresholds;
         this.clientSecret = other.clientSecret;
+        this.organizationName = other.organizationName;
+        this.scmUrl = other.scmUrl;
     }
 
     public Map<String,String> getAltFields() {

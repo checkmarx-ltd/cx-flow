@@ -81,7 +81,7 @@ public class ScanRequestConverter {
                 shard.setTeam(team);
                 shard.setProject(request.getProject());
             }
-            ownerId = scannerClient.getTeamId(team);
+            ownerId = scannerClient.getTeamId(team, request.getClientSecret());
         } else {
             team = cxProperties.getTeam();
             if (!team.startsWith(cxProperties.getTeamPathSeparator()))
@@ -93,7 +93,7 @@ public class ScanRequestConverter {
                 shard.setTeam(fullTeamName);
                 shard.setProject(request.getProject());
             }
-            ownerId = scannerClient.getTeamId(team);
+            ownerId = scannerClient.getTeamId(team, request.getClientSecret());
             if (cxProperties.isMultiTenant() && !ScanUtils.empty(namespace)) {
                 ownerId = aquireTeamMultiTenant(request, ownerId, namespace, fullTeamName);
             } else {
@@ -110,7 +110,7 @@ public class ScanRequestConverter {
 
     private String aquireTeamMultiTenant(ScanRequest request, String ownerId, String namespace, String fullTeamName) throws CheckmarxException {
         request.setTeam(fullTeamName);
-        String tmpId = scannerClient.getTeamId(fullTeamName);
+        String tmpId = scannerClient.getTeamId(fullTeamName, null);
         log.info("Existing team with " + fullTeamName + " was not found. Creating one ...");
         if (tmpId.equals(UNKNOWN)) {
             try {
