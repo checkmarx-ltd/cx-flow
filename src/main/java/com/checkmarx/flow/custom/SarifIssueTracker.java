@@ -1,14 +1,13 @@
 package com.checkmarx.flow.custom;
 
 import com.checkmarx.flow.config.SarifProperties;
-import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.service.FilenameFormatter;
+import com.checkmarx.sdk.dto.ScanResults;
 import com.cx.restclient.ast.dto.sca.report.Finding;
 import com.cx.restclient.ast.dto.sca.report.Package;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import com.google.common.collect.Lists;
 import lombok.Builder;
 import lombok.Data;
@@ -17,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-
 import java.util.stream.Collectors;
 
 /**
@@ -117,7 +115,7 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
             // Build collection of the results -> locations
             scaScanresultList.add(
                     Result.builder()
-                            .level(properties.getSeverityMap().get(map.get(key).getSeverity().toString()) != null ? properties.getSeverityMap().get(map.get(key).getSeverity().toString()) : DEFAULT_LEVEL)
+                            .level(properties.getSeverityMap().get(map.get(key).getSeverity()) != null ? properties.getSeverityMap().get(map.get(key).getSeverity().toString()) : DEFAULT_LEVEL)
                             .locations(locations)
                             .message(Message.builder()
                                     .text(key)
@@ -149,12 +147,14 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
         List<ScanResults.XIssue> filteredXIssues =
                 results.getXIssues()
                         .stream()
+                        .filter(x -> x.getVulnerability()!=null)
                         .filter(x -> !x.isAllFalsePositive())
                         .collect(Collectors.toList());
         //Distinct list of Vulns (Rules)
         List<ScanResults.XIssue> filteredByVulns =
                 results.getXIssues()
                         .stream()
+                        .filter(x -> x.getVulnerability()!=null)
                         .collect(Collectors.toCollection(() ->
                                 new TreeSet<>(Comparator.comparing(ScanResults.XIssue::getVulnerability))))
                         .stream()
