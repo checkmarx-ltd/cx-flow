@@ -138,7 +138,11 @@ cxgo:
   #   - CXOD_SMART_DEVICE = 11;
   #   - CXOD_OTHER = 12;
   scan-preset: 1,2,3,4,5,9
-  
+
+cx-integrations:
+  url: https://cx.local
+  read-multi-tenant-configuration: false
+
 rally:
   token: xxxx
   rally-project-id: xxxx
