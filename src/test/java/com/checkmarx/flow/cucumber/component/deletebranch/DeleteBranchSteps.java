@@ -144,7 +144,7 @@ public class DeleteBranchSteps {
         when(helperService.isBranchProtected(anyString(), anyList(), any())).thenCallRealMethod();
         when(helperService.isBranch2Scan(any(), anyList())).thenCallRealMethod();
 
-        when(cxClientMock.getTeamId(anyString(),anyString())).thenReturn(TEAM);
+        when(cxClientMock.getTeamId(anyString(),isNull())).thenReturn(TEAM);
         when(cxClientMock.getTeamId(anyString())).thenReturn(TEAM);
         when(cxClientMock.getScanIdOfExistingScanIfExists(anyInt())).thenReturn(SCAN_ID_EXISTING_SCAN_NOT_EXIST);
         when(cxClientMock.getReportContentByScanId(anyInt(), any())).thenReturn(new ScanResults());
