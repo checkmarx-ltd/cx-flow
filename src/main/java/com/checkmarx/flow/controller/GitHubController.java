@@ -68,6 +68,7 @@ public class GitHubController extends WebhookController {
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
     private final ScmConfigOverrider scmConfigOverrider;
+    private final GitAuthUrlGenerator gitAuthUrlGenerator;
 
     private Mac hmac;
 
@@ -179,7 +180,7 @@ public class GitHubController extends WebhookController {
             else{
                 token = scmConfigOverrider.determineConfigToken(properties, controllerRequest.getScmInstance());
             }
-            gitAuthUrl = gitHubService.getGitAuthUrlByToken(gitUrl, token);
+            gitAuthUrl = gitAuthUrlGenerator.overrideGitAuthUrlByScmAccessToken(ScanRequest.Repository.GITHUB, gitUrl, token);
 
             ScanRequest request = ScanRequest.builder()
                     .application(app)
@@ -204,7 +205,7 @@ public class GitHubController extends WebhookController {
                     .bugTracker(bt)
                     .filter(filter)
                     .organizationName(StringUtils.substringBefore(repository.getFullName(), "/"))
-                    .scmUrl(gitUrl)
+                    .gitUrl(gitUrl)
                     .build();
 
             setScmInstance(controllerRequest, request);
@@ -318,7 +319,7 @@ public class GitHubController extends WebhookController {
                     throw new MachinaRuntimeException();
                 }
             }
-            gitAuthUrl = gitHubService.getGitAuthUrlByToken(gitUrl, token);
+            gitAuthUrl = gitAuthUrlGenerator.overrideGitAuthUrlByScmAccessToken(ScanRequest.Repository.GITHUB, gitUrl, token);
 
             ScanRequest request = ScanRequest.builder()
                     .application(app)
@@ -341,7 +342,7 @@ public class GitHubController extends WebhookController {
                     .bugTracker(bt)
                     .filter(filter)
                     .organizationName(StringUtils.substringBefore(repository.getFullName(), "/"))
-                    .scmUrl(gitUrl)
+                    .gitUrl(gitUrl)
                     .build();
 
             setScmInstance(controllerRequest, request);

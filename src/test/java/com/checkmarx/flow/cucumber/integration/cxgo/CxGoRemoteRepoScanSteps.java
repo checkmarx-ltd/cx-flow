@@ -170,7 +170,7 @@ public class CxGoRemoteRepoScanSteps {
     @Then("CxFlow initiate scan in CxGo")
     public void initCxGoScan() throws CheckmarxException {
         String teamId = cxGoProperties.getTeam();
-        String ownerId = cxGoClient.getTeamId(teamId, null);
+        String ownerId = cxGoClient.getTeamId(teamId);
         cxgoProjectId = cxGoClient.getProjectId(ownerId, CXGO_PROJECT_NAME);
         oldScanId = cxGoClient.getLastScanId(cxgoProjectId);
         log.info("checking for active scans in projectId '{}'", cxgoProjectId);

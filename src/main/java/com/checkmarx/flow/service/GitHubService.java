@@ -137,13 +137,6 @@ public class GitHubService extends RepoService {
         return result;
     }
 
-    public String getGitAuthUrlByToken(String gitUrl, String token) {
-        String gitAuthUrl;
-        gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(token).concat("@"));
-        gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(token).concat("@"));
-        return gitAuthUrl;
-    }
-
     public void initConfigProviderOnPushEvent(String uid, PushEvent event) {
         if (properties != null) {
             try {

@@ -34,6 +34,7 @@ public class ConfigAsCodeBranchSteps {
     private final ConfigurationOverrider configOverrider;
     private final ScmConfigOverrider scmConfigOverrider;
     private final GitHubAppAuthService gitHubAppAuthService;
+    private final GitAuthUrlGenerator gitAuthUrlGenerator;
     private String defaultBranch;
     private String actualBranch;
 
@@ -79,7 +80,8 @@ public class ConfigAsCodeBranchSteps {
                 gitHubAppAuthService,
                 filterFactory,
                 configOverrider,
-                scmConfigOverrider));
+                scmConfigOverrider,
+                gitAuthUrlGenerator));
         
         
         doNothing().when(gitHubControllerSpy).verifyHmacSignature(any(), any(), any());

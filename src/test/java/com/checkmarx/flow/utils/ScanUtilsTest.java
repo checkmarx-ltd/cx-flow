@@ -1,12 +1,11 @@
 package com.checkmarx.flow.utils;
 
 import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.config.ReposManagerProperties;
+import com.checkmarx.flow.config.CxIntegrationsProperties;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.sdk.config.Constants;
-import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.utils.ScanUtils;
 import org.junit.Before;
@@ -34,10 +33,13 @@ public class ScanUtilsTest {
     private ScaConfigurationOverrider scaConfigOverrider;
 
     @Autowired
-    private ReposManagerProperties reposManagerProperties;
+    private CxIntegrationsProperties cxIntegrationsProperties;
 
     @Autowired
     private ReposManagerService reposManagerService;
+
+    @Autowired
+    private GitAuthUrlGenerator gitAuthUrlGenerator;
 
 
     private FlowProperties flowProperties;
@@ -49,9 +51,9 @@ public class ScanUtilsTest {
         flowProperties = new FlowProperties();
         flowProperties.setBugTrackerImpl(Arrays.asList("JIRA","GitHub","GitLab"));
 
-        configOverrider = new ConfigurationOverrider(flowProperties, reposManagerProperties,
+        configOverrider = new ConfigurationOverrider(flowProperties, cxIntegrationsProperties,
                 scaScanner, sastScanner, cxgoScanner,
-                scaConfigOverrider, reposManagerService, gitHubService);
+                scaConfigOverrider, reposManagerService, gitAuthUrlGenerator);
     }
     @Test
     public void testCxConfigOverride(){

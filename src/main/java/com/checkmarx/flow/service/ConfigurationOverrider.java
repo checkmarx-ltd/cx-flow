@@ -3,7 +3,7 @@ package com.checkmarx.flow.service;
 import com.checkmarx.configprovider.ConfigProvider;
 import com.checkmarx.flow.config.FindingSeverity;
 import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.config.ReposManagerProperties;
+import com.checkmarx.flow.config.CxIntegrationsProperties;
 import com.checkmarx.flow.config.external.ASTConfig;
 import com.checkmarx.flow.config.external.CxGoDynamicConfig;
 import com.checkmarx.flow.constants.FlowConstants;
@@ -43,13 +43,13 @@ public class ConfigurationOverrider {
     private static final String TEAM_REPORT_KEY = "team";
 
     private final FlowProperties flowProperties;
-    private final ReposManagerProperties reposManagerProperties;
+    private final CxIntegrationsProperties cxIntegrationsProperties;
     private final SCAScanner scaScanner;
     private final SastScanner sastScanner;
     private final CxGoScanner cxgoScanner;
     private final ScaConfigurationOverrider scaConfigOverrider;
     private final ReposManagerService reposManagerService;
-    private final GitHubService gitHubService;
+    private final GitAuthUrlGenerator gitAuthUrlGenerator;
     
     public ScanRequest overrideScanRequestProperties(CxConfig override, ScanRequest request) {
         if (request == null) {
@@ -261,7 +261,7 @@ public class ConfigurationOverrider {
     }
 
     private void applyCxGoDynamicConfig(Map<String, String> overrideReport, ScanRequest request) {
-        if (reposManagerProperties.isReadMultiTenantConfiguration()) {
+        if (cxIntegrationsProperties.isReadMultiTenantConfiguration()) {
             String scmType = request.getRepoType().getRepository().toLowerCase();
             String organizationName = request.getOrganizationName();
 
@@ -282,10 +282,12 @@ public class ConfigurationOverrider {
                         log.info("Using client secret from {}", className);
                         overrideReport.put("clientSecret", "<actually it's a secret>");
                     });
-            Optional.ofNullable(cxgoConfig.getToken())
+            Optional.ofNullable(cxgoConfig.getScmAccessToken())
                     .filter(StringUtils::isNotEmpty)
                     .ifPresent(token -> {
-                        request.setRepoUrlWithAuth(gitHubService.getGitAuthUrlByToken(request.getScmUrl(), cxgoConfig.getToken()));
+                        String authUrl = gitAuthUrlGenerator.overrideGitAuthUrlByScmAccessToken
+                                (request.getRepoType(), request.getGitUrl(), cxgoConfig.getScmAccessToken());
+                        request.setRepoUrlWithAuth(authUrl);
                         log.info("Using SCM token from {}", className);
                         overrideReport.put("SCM token", "********");
                     });

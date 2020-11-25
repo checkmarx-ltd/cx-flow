@@ -65,6 +65,7 @@ public class OverwritingProjectConfigSteps {
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
     private final ScmConfigOverrider scmConfigOverrider;
+    private final GitAuthUrlGenerator gitAuthUrlGenerator;
 
     private Integer projectId;
     private Integer interceptedScanId;
@@ -128,7 +129,7 @@ public class OverwritingProjectConfigSteps {
 
         GitHubController gitHubController = new GitHubController(gitHubProperties, flowProperties,
                 null, flowService, helperService, gitHubService,gitHubAppAuthService, filterFactory, configOverrider,
-                scmConfigOverrider);
+                scmConfigOverrider, gitAuthUrlGenerator);
 
         gitHubTestUtils.callController(gitHubController, GitHubTestUtils.EventType.PULL_REQUEST, projectName);
     }
