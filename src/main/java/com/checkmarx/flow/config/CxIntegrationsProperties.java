@@ -7,11 +7,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
 @Component
-@ConfigurationProperties(prefix = "repos-manager")
+@ConfigurationProperties(prefix = "cx-integrations")
 @Validated
 @Getter
 @Setter
-public class ReposManagerProperties {
+public class CxIntegrationsProperties {
 
     private String url;
     private boolean readMultiTenantConfiguration;

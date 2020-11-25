@@ -16,6 +16,6 @@ public class CxGoDynamicConfig {
     private String team;
     @JsonProperty("cxgoSecret")
     private String clientSecret;
-    @JsonProperty("token")
-    private String token;
+    @JsonProperty("scmAccessToken")
+    private String scmAccessToken;
 }

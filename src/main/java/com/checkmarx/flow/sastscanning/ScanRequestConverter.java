@@ -69,31 +69,34 @@ public class ScanRequestConverter {
 
     public String determineTeamAndOwnerID(ScanRequest request) throws CheckmarxException {
         String ownerId;
-        String namespace = Optional.ofNullable(request.getNamespace()).orElse(EMPTY_STRING) ;
+        String namespace = Optional.ofNullable(request.getNamespace()).orElse(EMPTY_STRING);
 
         String team = helperService.getCxTeam(request);
         if (!ScanUtils.empty(team)) {
             if (!team.startsWith(cxProperties.getTeamPathSeparator()))
                 team = cxProperties.getTeamPathSeparator().concat(team);
             log.info("Overriding team with {}", team);
-            if(cxProperties.getEnableShardManager()) {
+            if (cxProperties.getEnableShardManager()) {
                 ShardSession shard = sessionTracker.getShardSession();
                 shard.setTeam(team);
                 shard.setProject(request.getProject());
             }
-            ownerId = scannerClient.getTeamId(team, request.getClientSecret());
+
+            ownerId = determineOwnerId(request, team);
+
         } else {
             team = cxProperties.getTeam();
             if (!team.startsWith(cxProperties.getTeamPathSeparator()))
                 team = cxProperties.getTeamPathSeparator().concat(team);
             log.info("Using Checkmarx team: {}", team);
             String fullTeamName = cxProperties.getTeam().concat(cxProperties.getTeamPathSeparator()).concat(namespace);
-            if(cxProperties.getEnableShardManager()) {
+            if (cxProperties.getEnableShardManager()) {
                 ShardSession shard = sessionTracker.getShardSession();
                 shard.setTeam(fullTeamName);
                 shard.setProject(request.getProject());
             }
-            ownerId = scannerClient.getTeamId(team, request.getClientSecret());
+
+            ownerId = determineOwnerId(request, team);
             if (cxProperties.isMultiTenant() && !ScanUtils.empty(namespace)) {
                 ownerId = aquireTeamMultiTenant(request, ownerId, namespace, fullTeamName);
             } else {
@@ -108,9 +111,17 @@ public class ScanRequestConverter {
         return ownerId;
     }
 
+    private String determineOwnerId(ScanRequest request, String team) throws CheckmarxException {
+        String ownerId;
+        ownerId = (request.getClientSecret() != null)
+                ? scannerClient.getTeamIdByClientSecret(team, request.getClientSecret())
+                : scannerClient.getTeamId(team);
+        return ownerId;
+    }
+
     private String aquireTeamMultiTenant(ScanRequest request, String ownerId, String namespace, String fullTeamName) throws CheckmarxException {
         request.setTeam(fullTeamName);
-        String tmpId = scannerClient.getTeamId(fullTeamName, null);
+        String tmpId = scannerClient.getTeamId(fullTeamName);
         log.info("Existing team with " + fullTeamName + " was not found. Creating one ...");
         if (tmpId.equals(UNKNOWN)) {
             try {

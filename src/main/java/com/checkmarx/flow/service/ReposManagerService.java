@@ -1,6 +1,6 @@
 package com.checkmarx.flow.service;
 
-import com.checkmarx.flow.config.ReposManagerProperties;
+import com.checkmarx.flow.config.CxIntegrationsProperties;
 import com.checkmarx.flow.config.external.CxGoDynamicConfig;
 import com.checkmarx.flow.exception.ReposManagerException;
 import lombok.extern.slf4j.Slf4j;
@@ -20,23 +20,23 @@ import javax.annotation.PostConstruct;
 public class ReposManagerService {
 
     private final RestTemplate restTemplate;
-    private final ReposManagerProperties reposManagerProperties;
+    private final CxIntegrationsProperties cxIntegrationsProperties;
 
     private String cxGoConfigUrlPattern;
 
     public ReposManagerService(@Qualifier("flowRestTemplate") RestTemplate restTemplate,
-                               ReposManagerProperties reposManagerProperties) {
+                               CxIntegrationsProperties cxIntegrationsProperties) {
         this.restTemplate = restTemplate;
-        this.reposManagerProperties = reposManagerProperties;
+        this.cxIntegrationsProperties = cxIntegrationsProperties;
     }
 
     @PostConstruct
     private void compositeUrlPaths() {
-        cxGoConfigUrlPattern = reposManagerProperties.getUrl() + "/%s/orgs/%s/cxflow";
+        cxGoConfigUrlPattern = cxIntegrationsProperties.getUrl() + "/%s/orgs/%s/tenantConfig";
     }
 
     CxGoDynamicConfig getCxGoDynamicConfig(String scmType, String orgName) {
-        if (StringUtils.isNotEmpty(reposManagerProperties.getUrl())) {
+        if (StringUtils.isNotEmpty(cxIntegrationsProperties.getUrl())) {
             String urlPath = String.format(cxGoConfigUrlPattern, scmType, orgName);
             log.info("Overriding Cx-Go configuration for SCM type: {} and organization name: {}", scmType, orgName);
             ResponseEntity<CxGoDynamicConfig> responseEntity;

@@ -87,7 +87,7 @@ public class ScanRequest {
     private String organizationName;
 
     @Getter @Setter
-    private String scmUrl;
+    private String gitUrl;
 
     public ScanRequest(ScanRequest other) {
         this.namespace = other.namespace;
@@ -127,7 +127,7 @@ public class ScanRequest {
         this.thresholds = other.thresholds;
         this.clientSecret = other.clientSecret;
         this.organizationName = other.organizationName;
-        this.scmUrl = other.scmUrl;
+        this.gitUrl = other.gitUrl;
     }
 
     public Map<String,String> getAltFields() {
