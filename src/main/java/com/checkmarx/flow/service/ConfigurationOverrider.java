@@ -5,7 +5,7 @@ import com.checkmarx.flow.config.FindingSeverity;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.CxIntegrationsProperties;
 import com.checkmarx.flow.config.external.ASTConfig;
-import com.checkmarx.flow.config.external.CxGoDynamicConfig;
+import com.checkmarx.flow.config.external.CxGoConfigFromWebService;
 import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ControllerRequest;
@@ -265,8 +265,8 @@ public class ConfigurationOverrider {
             String scmType = request.getRepoType().getRepository().toLowerCase();
             String organizationName = request.getOrganizationName();
 
-            CxGoDynamicConfig cxgoConfig = reposManagerService.getCxGoDynamicConfig(scmType, organizationName);
-            String className = CxGoDynamicConfig.class.getSimpleName();
+            CxGoConfigFromWebService cxgoConfig = reposManagerService.getCxGoDynamicConfig(scmType, organizationName);
+            String className = CxGoConfigFromWebService.class.getSimpleName();
             log.info("Applying {} configuration.", className);
             Optional.ofNullable(cxgoConfig.getTeam())
                     .filter(StringUtils::isNotEmpty)
@@ -275,7 +275,7 @@ public class ConfigurationOverrider {
                         log.info("Using team from {}", className);
                         overrideReport.put(TEAM_REPORT_KEY, team);
                     });
-            Optional.ofNullable(cxgoConfig.getClientSecret())
+            Optional.ofNullable(cxgoConfig.getCxgoSecret())
                     .filter(StringUtils::isNotEmpty)
                     .ifPresent(secret -> {
                         request.setClientSecret(secret);
@@ -285,7 +285,7 @@ public class ConfigurationOverrider {
             Optional.ofNullable(cxgoConfig.getScmAccessToken())
                     .filter(StringUtils::isNotEmpty)
                     .ifPresent(token -> {
-                        String authUrl = gitAuthUrlGenerator.overrideGitAuthUrlByScmAccessToken
+                        String authUrl = gitAuthUrlGenerator.addCredentialsToUrl
                                 (request.getRepoType(), request.getGitUrl(), cxgoConfig.getScmAccessToken());
                         request.setRepoUrlWithAuth(authUrl);
                         log.info("Using SCM token from {}", className);

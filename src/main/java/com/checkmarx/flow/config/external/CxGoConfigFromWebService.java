@@ -12,10 +12,7 @@ import lombok.Setter;
 public class CxGoDynamicConfig {
     public static final String SECTION_NAME = "cxGoConfig";
 
-    @JsonProperty("team")
     private String team;
-    @JsonProperty("cxgoSecret")
-    private String clientSecret;
-    @JsonProperty("scmAccessToken")
+    private String cxgoSecret;
     private String scmAccessToken;
 }

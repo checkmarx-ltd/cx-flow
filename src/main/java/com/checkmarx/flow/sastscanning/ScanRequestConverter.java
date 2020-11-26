@@ -76,11 +76,7 @@ public class ScanRequestConverter {
             if (!team.startsWith(cxProperties.getTeamPathSeparator()))
                 team = cxProperties.getTeamPathSeparator().concat(team);
             log.info("Overriding team with {}", team);
-            if (cxProperties.getEnableShardManager()) {
-                ShardSession shard = sessionTracker.getShardSession();
-                shard.setTeam(team);
-                shard.setProject(request.getProject());
-            }
+            setShardPropertiesIfExists(request, team);
 
             ownerId = determineOwnerId(request, team);
 
@@ -90,11 +86,7 @@ public class ScanRequestConverter {
                 team = cxProperties.getTeamPathSeparator().concat(team);
             log.info("Using Checkmarx team: {}", team);
             String fullTeamName = cxProperties.getTeam().concat(cxProperties.getTeamPathSeparator()).concat(namespace);
-            if (cxProperties.getEnableShardManager()) {
-                ShardSession shard = sessionTracker.getShardSession();
-                shard.setTeam(fullTeamName);
-                shard.setProject(request.getProject());
-            }
+            setShardPropertiesIfExists(request, fullTeamName);
 
             ownerId = determineOwnerId(request, team);
             if (cxProperties.isMultiTenant() && !ScanUtils.empty(namespace)) {
@@ -111,12 +103,18 @@ public class ScanRequestConverter {
         return ownerId;
     }
 
+    private void setShardPropertiesIfExists(ScanRequest request, String fullTeamName) {
+        if (cxProperties.getEnableShardManager()) {
+            ShardSession shard = sessionTracker.getShardSession();
+            shard.setTeam(fullTeamName);
+            shard.setProject(request.getProject());
+        }
+    }
+
     private String determineOwnerId(ScanRequest request, String team) throws CheckmarxException {
-        String ownerId;
-        ownerId = (request.getClientSecret() != null)
+        return (request.getClientSecret() != null)
                 ? scannerClient.getTeamIdByClientSecret(team, request.getClientSecret())
                 : scannerClient.getTeamId(team);
-        return ownerId;
     }
 
     private String aquireTeamMultiTenant(ScanRequest request, String ownerId, String namespace, String fullTeamName) throws CheckmarxException {

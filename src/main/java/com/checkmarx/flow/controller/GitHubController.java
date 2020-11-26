@@ -180,7 +180,7 @@ public class GitHubController extends WebhookController {
             else{
                 token = scmConfigOverrider.determineConfigToken(properties, controllerRequest.getScmInstance());
             }
-            gitAuthUrl = gitAuthUrlGenerator.overrideGitAuthUrlByScmAccessToken(ScanRequest.Repository.GITHUB, gitUrl, token);
+            gitAuthUrl = gitAuthUrlGenerator.addCredentialsToUrl(ScanRequest.Repository.GITHUB, gitUrl, token);
 
             ScanRequest request = ScanRequest.builder()
                     .application(app)
@@ -204,7 +204,7 @@ public class GitHubController extends WebhookController {
                     .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)
                     .filter(filter)
-                    .organizationName(StringUtils.substringBefore(repository.getFullName(), "/"))
+                    .organizationName(getSubStringBefore(repository))
                     .gitUrl(gitUrl)
                     .build();
 
@@ -319,7 +319,7 @@ public class GitHubController extends WebhookController {
                     throw new MachinaRuntimeException();
                 }
             }
-            gitAuthUrl = gitAuthUrlGenerator.overrideGitAuthUrlByScmAccessToken(ScanRequest.Repository.GITHUB, gitUrl, token);
+            gitAuthUrl = gitAuthUrlGenerator.addCredentialsToUrl(ScanRequest.Repository.GITHUB, gitUrl, token);
 
             ScanRequest request = ScanRequest.builder()
                     .application(app)
@@ -341,7 +341,7 @@ public class GitHubController extends WebhookController {
                     .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)
                     .filter(filter)
-                    .organizationName(StringUtils.substringBefore(repository.getFullName(), "/"))
+                    .organizationName(getSubStringBefore(repository))
                     .gitUrl(gitUrl)
                     .build();
 
@@ -372,6 +372,16 @@ public class GitHubController extends WebhookController {
         }
 
         return getSuccessMessage();
+    }
+
+    /**
+     * Gets a substring before the first occurrence of the separator
+     * e.g. 'cxflowtestuser/VB_3845' will results with 'cxflowtestuser'
+     * @param repository
+     * @return
+     */
+    private String getSubStringBefore(Repository repository) {
+        return StringUtils.substringBefore(repository.getFullName(), "/");
     }
 
     private List<String> determineEmails(PushEvent event) {

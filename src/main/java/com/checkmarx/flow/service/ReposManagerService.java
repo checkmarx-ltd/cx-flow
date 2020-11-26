@@ -1,7 +1,7 @@
 package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.config.CxIntegrationsProperties;
-import com.checkmarx.flow.config.external.CxGoDynamicConfig;
+import com.checkmarx.flow.config.external.CxGoConfigFromWebService;
 import com.checkmarx.flow.exception.ReposManagerException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -39,11 +39,9 @@ public class ReposManagerService {
         if (StringUtils.isNotEmpty(cxIntegrationsProperties.getUrl())) {
             String urlPath = String.format(cxGoConfigUrlPattern, scmType, orgName);
             log.info("Overriding Cx-Go configuration for SCM type: {} and organization name: {}", scmType, orgName);
-            ResponseEntity<CxGoDynamicConfig> responseEntity;
+            ResponseEntity<CxGoConfigFromWebService> responseEntity;
             try {
-                responseEntity = restTemplate.exchange
-                        (urlPath, HttpMethod.GET, new HttpEntity<>(null, null), CxGoDynamicConfig.class);
-
+                responseEntity = restTemplate.getForEntity(urlPath, CxGoConfigFromWebService.class);
             } catch (HttpClientErrorException e) {
                 throw new ReposManagerException("HttpClientErrorException: " + e.getMessage());
             }

@@ -10,12 +10,13 @@ import org.springframework.stereotype.Service;
 @Service
 public class GitAuthUrlGenerator {
 
-    public String overrideGitAuthUrlByScmAccessToken(ScanRequest.Repository repoType, String gitUrl, String scmAccessToken) {
+    public String addCredentialsToUrl(ScanRequest.Repository repoType, String gitUrl, String scmAccessToken) {
         String gitAuthUrl;
 
         switch (repoType) {
             case GITHUB:
             case ADO:
+            case BITBUCKETSERVER:
                 gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(scmAccessToken).concat("@"));
                 return gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(scmAccessToken).concat("@"));
             case BITBUCKET:
