@@ -71,6 +71,7 @@ public class DeleteBranchSteps {
     private final EmailService emailService;
     private final ScmConfigOverrider scmConfigOverrider;
     private final BugTrackerEventTrigger bugTrackerEventTrigger;
+    private final GitAuthUrlGenerator gitAuthUrlGenerator;
 
     private final ADOService adoServiceMock;
     private final ResultsService resultsServiceMock;
@@ -87,7 +88,8 @@ public class DeleteBranchSteps {
     public DeleteBranchSteps(FlowProperties flowProperties, GitHubService gitHubService,
                              GitHubAppAuthService gitHubAppAuthService, CxProperties cxProperties, GitHubProperties gitHubProperties, FilterFactory filterFactory,
                              ConfigurationOverrider configOverrider, ADOProperties adoProperties, EmailService emailService,
-                             BugTrackerEventTrigger bugTrackerEventTrigger, ScmConfigOverrider scmConfigOverrider) {
+                             BugTrackerEventTrigger bugTrackerEventTrigger, ScmConfigOverrider scmConfigOverrider,
+                             GitAuthUrlGenerator gitAuthUrlGenerator) {
         this.gitHubAppAuthService = gitHubAppAuthService;
 
         this.filterFactory = filterFactory;
@@ -107,6 +109,7 @@ public class DeleteBranchSteps {
         CxScannerService  cxScannerService = new CxScannerService(cxProperties, null, flowProperties,cxClientMock, null);
         this.helperService = mock(HelperService.class, Mockito.withSettings().useConstructor(flowProperties, cxScannerService, null));
         this.scmConfigOverrider = scmConfigOverrider;
+        this.gitAuthUrlGenerator = gitAuthUrlGenerator;
     }
 
     private void initGitHubProperties() {
@@ -353,7 +356,8 @@ public class DeleteBranchSteps {
                 gitHubAppAuthService,
                 filterFactory,
                 configOverrider,
-                null));
+                null,
+                gitAuthUrlGenerator));
 
         this.adoControllerSpy = spy(new ADOController(adoProperties,
                 flowProperties,

@@ -3,7 +3,9 @@ package com.checkmarx.flow.service;
 import com.checkmarx.configprovider.ConfigProvider;
 import com.checkmarx.flow.config.FindingSeverity;
 import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.config.CxIntegrationsProperties;
 import com.checkmarx.flow.config.external.ASTConfig;
+import com.checkmarx.flow.config.external.CxGoConfigFromWebService;
 import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ControllerRequest;
@@ -38,11 +40,16 @@ public class ConfigurationOverrider {
             BugTracker.Type.GITHUBPULL,
             BugTracker.Type.GITLABMERGE));
 
+    private static final String TEAM_REPORT_KEY = "team";
+
     private final FlowProperties flowProperties;
+    private final CxIntegrationsProperties cxIntegrationsProperties;
     private final SCAScanner scaScanner;
     private final SastScanner sastScanner;
     private final CxGoScanner cxgoScanner;
     private final ScaConfigurationOverrider scaConfigOverrider;
+    private final ReposManagerService reposManagerService;
+    private final GitAuthUrlGenerator gitAuthUrlGenerator;
     
     public ScanRequest overrideScanRequestProperties(CxConfig override, ScanRequest request) {
         if (request == null) {
@@ -50,6 +57,8 @@ public class ConfigurationOverrider {
             return null;
         }
 
+        Map<String, String> overrideReport = new HashMap<>();
+        applyCxGoDynamicConfig(overrideReport, request);
         scaConfigOverrider.initScaConfig(request);
 
         ConfigProvider configProvider = ConfigProvider.getInstance();
@@ -59,7 +68,6 @@ public class ConfigurationOverrider {
             return request;
         }
 
-        Map<String, String> overrideReport = new HashMap<>();
         overrideMainProperties(Optional.ofNullable(override), request, overrideReport);
 
         try {
@@ -202,7 +210,7 @@ public class ConfigurationOverrider {
                 .filter(StringUtils::isNotBlank)
                 .ifPresent(t -> {
                     request.setTeam(t);
-                    overrideReport.put("team", t);
+                    overrideReport.put(TEAM_REPORT_KEY, t);
                 });
         override.map(CxConfig::getSast).ifPresent(s -> {
             Optional.ofNullable(s.getIncremental()).ifPresent(si -> {
@@ -229,14 +237,19 @@ public class ConfigurationOverrider {
                 overrideReport.put("exclude files", sf);
             });
         });
+        overrideUsingConfigProvider(override, overrideReport, request);
+    }
+
+    private void overrideUsingConfigProvider(Optional<CxConfig> fallback, Map<String, String> overrideReport, ScanRequest request) {
         ConfigProvider configProvider = ConfigProvider.getInstance();
         String uid = MDC.get(FlowConstants.MAIN_MDC_ENTRY);
+
         ScaConfig scaConfiguration = configProvider.getConfiguration(uid, ScaProperties.CONFIG_PREFIX, ScaConfig.class);
         if (scaConfiguration != null) {
             log.info("Overriding SCA properties from config provider configuration");
             scaConfigOverrider.overrideScanRequestProperties(scaConfiguration, request, overrideReport);
         } else {
-            Sca scaPropertiesFromConfigAsCode = override.map(CxConfig::getSca).orElse(null);
+            Sca scaPropertiesFromConfigAsCode = fallback.map(CxConfig::getSca).orElse(null);
             scaConfigOverrider.overrideScanRequestProperties(scaPropertiesFromConfigAsCode, request, overrideReport);
         }
 
@@ -244,6 +257,40 @@ public class ConfigurationOverrider {
         if (astConfiguration != null) {
             log.info("Overriding AST properties from config provider configuration");
             overridePropertiesAst(astConfiguration, overrideReport, request);
+        }
+    }
+
+    private void applyCxGoDynamicConfig(Map<String, String> overrideReport, ScanRequest request) {
+        if (cxIntegrationsProperties.isReadMultiTenantConfiguration()) {
+            String scmType = request.getRepoType().getRepository().toLowerCase();
+            String organizationName = request.getOrganizationName();
+
+            CxGoConfigFromWebService cxgoConfig = reposManagerService.getCxGoDynamicConfig(scmType, organizationName);
+            String className = CxGoConfigFromWebService.class.getSimpleName();
+            log.info("Applying {} configuration.", className);
+            Optional.ofNullable(cxgoConfig.getTeam())
+                    .filter(StringUtils::isNotEmpty)
+                    .ifPresent(team -> {
+                        request.setTeam(team);
+                        log.info("Using team from {}", className);
+                        overrideReport.put(TEAM_REPORT_KEY, team);
+                    });
+            Optional.ofNullable(cxgoConfig.getCxgoSecret())
+                    .filter(StringUtils::isNotEmpty)
+                    .ifPresent(secret -> {
+                        request.setClientSecret(secret);
+                        log.info("Using client secret from {}", className);
+                        overrideReport.put("clientSecret", "<actually it's a secret>");
+                    });
+            Optional.ofNullable(cxgoConfig.getScmAccessToken())
+                    .filter(StringUtils::isNotEmpty)
+                    .ifPresent(token -> {
+                        String authUrl = gitAuthUrlGenerator.addCredentialsToUrl
+                                (request.getRepoType(), request.getGitUrl(), cxgoConfig.getScmAccessToken());
+                        request.setRepoUrlWithAuth(authUrl);
+                        log.info("Using SCM token from {}", className);
+                        overrideReport.put("SCM token", "********");
+                    });
         }
     }
 

@@ -69,6 +69,7 @@ public class CxConfigSteps {
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
     private final ScmConfigOverrider scmConfigOverrider;
+    private final GitAuthUrlGenerator gitAuthUrlGenerator;
 
     private ScanResults scanResultsToInject;
 
@@ -84,7 +85,8 @@ public class CxConfigSteps {
     public CxConfigSteps(FlowProperties flowProperties, GitHubService gitHubService,
                          CxProperties cxProperties, GitHubProperties gitHubProperties, ConfigurationOverrider configOverrider, JiraProperties jiraProperties,
                          ThresholdValidator thresholdValidator, FilterFactory filterFactory, FlowService flowService, EmailService emailService,
-                         ScmConfigOverrider scmConfigOverrider, GitHubAppAuthService gitHubAppAuthService) {
+                         ScmConfigOverrider scmConfigOverrider, GitHubAppAuthService gitHubAppAuthService,
+                         GitAuthUrlGenerator gitAuthUrlGenerator) {
 
         this.cxClientMock = mock(CxService.class);
 
@@ -103,6 +105,7 @@ public class CxConfigSteps {
         this.configOverrider = configOverrider;
         this.scmConfigOverrider = scmConfigOverrider;
         this.gitHubAppAuthService = gitHubAppAuthService;
+        this.gitAuthUrlGenerator = gitAuthUrlGenerator;
         initGitHubProperties();
     }
 
@@ -535,7 +538,8 @@ public class CxConfigSteps {
                 gitHubAppAuthService,
                 filterFactory,
                 configOverrider,
-                scmConfigOverrider));
+                scmConfigOverrider,
+                gitAuthUrlGenerator));
 
         // results service will be a Mock and will work with gitHubService Mock
         // and will not connect to any external service.

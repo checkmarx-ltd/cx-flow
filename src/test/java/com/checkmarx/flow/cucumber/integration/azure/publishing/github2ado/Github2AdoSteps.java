@@ -77,6 +77,7 @@ public class Github2AdoSteps {
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
     private final ScmConfigOverrider scmConfigOverrider;
+    private final GitAuthUrlGenerator gitAuthUrlGenerator;
 
     private ScanResults scanResultsToInject;
     
@@ -99,7 +100,8 @@ public class Github2AdoSteps {
                            GitHubProperties gitHubProperties, ConfigurationOverrider configOverrider,
                            FlowService flowService, ADOProperties adoProperties,
                            FilterFactory filterFactory, AzureDevopsClient azureDevopsClient,
-                           EmailService emailService, ScmConfigOverrider scmConfigOverrider) {
+                           EmailService emailService, ScmConfigOverrider scmConfigOverrider,
+                           GitAuthUrlGenerator gitAuthUrlGenerator) {
         this.filterFactory = filterFactory;
 
         this.cxClientMock = mock(CxService.class);
@@ -117,6 +119,7 @@ public class Github2AdoSteps {
         this.configOverrider = configOverrider;
         this.emailService = emailService;
         this.scmConfigOverrider = scmConfigOverrider;
+        this.gitAuthUrlGenerator = gitAuthUrlGenerator;
         initGitHubProperties();
     }
 
@@ -308,7 +311,8 @@ public class Github2AdoSteps {
                 gitHubAppAuthService,
                 filterFactory,
                 configOverrider,
-                scmConfigOverrider));
+                scmConfigOverrider,
+                gitAuthUrlGenerator));
         
         //results service will be a Mock and will work with gitHubService Mock
         //and will not not connect to any external 
