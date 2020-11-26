@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import javax.annotation.PostConstruct;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -30,10 +29,7 @@ public class ReposManagerService {
                                CxIntegrationsProperties cxIntegrationsProperties) {
         this.restTemplate = restTemplate;
         this.cxIntegrationsProperties = cxIntegrationsProperties;
-    }
 
-    @PostConstruct
-    private void compositeUrlPaths() {
         cxGoConfigUrlPattern = cxIntegrationsProperties.getUrl() + "/%s/orgs/%s/tenantConfig";
     }
 
