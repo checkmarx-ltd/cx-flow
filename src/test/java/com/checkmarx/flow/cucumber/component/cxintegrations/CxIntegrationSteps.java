@@ -40,7 +40,7 @@ public class CxIntegrationSteps {
         scanRequest = initScanRequest();
     }
 
-    @Given("read-multi-tenant-configuration flag is on true status")
+    @Given("read-multi-tenant-configuration flag is set to true")
     public void setMultiTenantConf() {
         cxIntegrationsProperties.setReadMultiTenantConfiguration(true);
     }
