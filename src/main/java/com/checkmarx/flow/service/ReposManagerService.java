@@ -35,7 +35,7 @@ public class ReposManagerService {
         cxGoConfigUrlPattern = cxIntegrationsProperties.getUrl() + "/%s/orgs/%s/tenantConfig";
     }
 
-    CxGoDynamicConfig getCxGoDynamicConfig(String scmType, String orgName) {
+    public CxGoConfigFromWebService getCxGoDynamicConfig(String scmType, String orgName) {
         if (StringUtils.isNotEmpty(cxIntegrationsProperties.getUrl())) {
             String urlPath = String.format(cxGoConfigUrlPattern, scmType, orgName);
             log.info("Overriding Cx-Go configuration for SCM type: {} and organization name: {}", scmType, orgName);
