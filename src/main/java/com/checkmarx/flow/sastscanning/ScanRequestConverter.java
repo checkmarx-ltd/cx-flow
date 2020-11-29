@@ -48,15 +48,23 @@ public class ScanRequestConverter {
 
     private void setScanConfiguration(ScanRequest scanRequest, Integer projectId) {
         if (entityExists(projectId)) {
-            log.debug("Scan request will contain scan configuration of the existing project.");
-            CxScanSettings scanSettings = scannerClient.getScanSettingsDto(projectId);
-            if (scanSettings != null && scanSettings.getEngineConfigurationId() != null) {
-                Integer configId = scanSettings.getEngineConfigurationId();
-                String configName = scannerClient.getScanConfigurationName(configId);
-                log.debug("Using scan configuration ID: {}, name: '{}'.", configId, configName);
-                scanRequest.setScanConfiguration(configName);
-            } else {
-                log.warn("Unable to retrieve scan settings for the existing project (ID {}).", projectId);
+
+            if (!ScanUtils.empty(scanRequest.getScanConfiguration())){
+                String scanConfiguration = scanRequest.getScanConfiguration();
+                log.debug("overriding scan configuration with '{}'", scanConfiguration);
+                scanRequest.setScanConfiguration(scanConfiguration);
+            }
+            else{
+                log.debug("Scan request will contain scan configuration of the existing project.");
+                CxScanSettings scanSettings = scannerClient.getScanSettingsDto(projectId);
+                if (scanSettings != null && scanSettings.getEngineConfigurationId() != null) {
+                    Integer configId = scanSettings.getEngineConfigurationId();
+                    String configName = scannerClient.getScanConfigurationName(configId);
+                    log.debug("Using scan configuration ID: {}, name: '{}'.", configId, configName);
+                    scanRequest.setScanConfiguration(configName);
+                } else {
+                    log.warn("Unable to retrieve scan settings for the existing project (ID {}).", projectId);
+                }
             }
         } else {
             log.debug("Project doesn't exist. Scan configuration from the global config will be used.");
