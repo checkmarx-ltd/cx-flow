@@ -50,9 +50,7 @@ public class ScanRequestConverter {
         if (entityExists(projectId)) {
 
             if (!ScanUtils.empty(scanRequest.getScanConfiguration())){
-                String scanConfiguration = scanRequest.getScanConfiguration();
-                log.debug("overriding scan configuration with '{}'", scanConfiguration);
-                scanRequest.setScanConfiguration(scanConfiguration);
+                log.debug("overriding scan configuration with '{}'", scanRequest.getScanConfiguration());
             }
             else{
                 log.debug("Scan request will contain scan configuration of the existing project.");
