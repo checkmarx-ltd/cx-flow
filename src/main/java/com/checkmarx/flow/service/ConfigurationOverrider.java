@@ -236,6 +236,10 @@ public class ConfigurationOverrider {
                 request.setExcludeFiles(Arrays.asList(sf.split(",")));
                 overrideReport.put("exclude files", sf);
             });
+            Optional.ofNullable(s.getEngineConfiguration()).ifPresent(scanConfiguration -> {
+                request.setScanConfiguration(scanConfiguration);
+                overrideReport.put("scan configuration", scanConfiguration);
+            });
         });
         overrideUsingConfigProvider(override, overrideReport, request);
     }
