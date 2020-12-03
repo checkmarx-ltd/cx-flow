@@ -180,7 +180,7 @@ public class GitHubController extends WebhookController {
             else{
                 token = scmConfigOverrider.determineConfigToken(properties, controllerRequest.getScmInstance());
             }
-            gitAuthUrl = gitAuthUrlGenerator.addCredentialsToUrl(ScanRequest.Repository.GITHUB, gitUrl, token);
+            gitAuthUrl = gitAuthUrlGenerator.addCredToUrl(ScanRequest.Repository.GITHUB, gitUrl, token);
 
             ScanRequest request = ScanRequest.builder()
                     .application(app)
@@ -319,7 +319,7 @@ public class GitHubController extends WebhookController {
                     throw new MachinaRuntimeException();
                 }
             }
-            gitAuthUrl = gitAuthUrlGenerator.addCredentialsToUrl(ScanRequest.Repository.GITHUB, gitUrl, token);
+            gitAuthUrl = gitAuthUrlGenerator.addCredToUrl(ScanRequest.Repository.GITHUB, gitUrl, token);
 
             ScanRequest request = ScanRequest.builder()
                     .application(app)

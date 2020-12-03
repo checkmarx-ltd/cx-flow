@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class GitAuthUrlGenerator {
 
-    public String addCredentialsToUrl(ScanRequest.Repository repoType, String gitUrl, String scmAccessToken) {
+    public String addCredToUrl(ScanRequest.Repository repoType, String gitUrl, String scmAccessToken) {
         String gitAuthUrl;
 
         switch (repoType) {

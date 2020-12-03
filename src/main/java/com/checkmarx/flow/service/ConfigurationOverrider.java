@@ -282,14 +282,14 @@ public class ConfigurationOverrider {
             Optional.ofNullable(cxgoConfig.getCxgoSecret())
                     .filter(StringUtils::isNotEmpty)
                     .ifPresent(secret -> {
-                        request.setClientSecret(secret);
+                        request.setClientSec(secret);
                         log.info("Using client secret from {}", className);
                         overrideReport.put("clientSecret", "<actually it's a secret>");
                     });
             Optional.ofNullable(cxgoConfig.getScmAccessToken())
                     .filter(StringUtils::isNotEmpty)
                     .ifPresent(token -> {
-                        String authUrl = gitAuthUrlGenerator.addCredentialsToUrl
+                        String authUrl = gitAuthUrlGenerator.addCredToUrl
                                 (request.getRepoType(), request.getGitUrl(), cxgoConfig.getScmAccessToken());
                         request.setRepoUrlWithAuth(authUrl);
                         log.info("Using SCM token from {}", className);
