@@ -52,7 +52,7 @@ public class CxIntegrationSteps {
 
     @Then("scanRequest is getting populated with cx-go new configuration")
     public void validateCxGoConfigurationOverride() {
-        Assert.assertEquals(CLIENT_SECRET, scanRequest.getClientSecret());
+        Assert.assertEquals(CLIENT_SECRET, scanRequest.getClientSec());
         Assert.assertEquals(TEAM, scanRequest.getTeam());
         Assert.assertTrue(scanRequest.getRepoUrlWithAuth().contains(SCM_ACCESS_TOKEN));
     }

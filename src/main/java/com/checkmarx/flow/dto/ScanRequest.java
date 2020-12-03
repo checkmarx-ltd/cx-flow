@@ -81,7 +81,7 @@ public class ScanRequest {
     private ASTConfig astConfig;
 
     @Getter @Setter
-    private String clientSecret;
+    private String clientSec;
 
     @Getter @Setter
     private String organizationName;
@@ -125,7 +125,7 @@ public class ScanRequest {
         this.scaConfig = other.scaConfig;
         this.astConfig = other.astConfig;
         this.thresholds = other.thresholds;
-        this.clientSecret = other.clientSecret;
+        this.clientSec = other.clientSec;
         this.organizationName = other.organizationName;
         this.gitUrl = other.gitUrl;
     }

@@ -31,5 +31,5 @@ Feature: AST support in CxFlow command-line
         Examples:
             | scanner | number of issue |
             | AST     | 9               |
-            | AST,SCA | 22              |
+            | AST,SCA | 21              |
 
