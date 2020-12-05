@@ -30,6 +30,7 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
     private final FilenameFormatter filenameFormatter;
     private static final String DEFAULT_LEVEL = "error";
     private static final String MARKDOWN_TABLE_FORMAT = "| %s | %s | %s | %s |";
+    private static final String RECOMMENDED_FIX = "recommendedFix";
 
     @Override
     public void init(ScanRequest request, ScanResults results) throws MachinaException {
@@ -169,8 +170,8 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                 .help(Help.builder()
                         .markdown(String.format("[%s Details](%s)",
                                 i.getVulnerability(),
-                                (i.getAdditionalDetails().get("recommendedFix")==null) ? "":i.getAdditionalDetails().get("recommendedFix")))
-                        .text((String)((i.getAdditionalDetails().get("recommendedFix")==null) ? "Fix not available.":i.getAdditionalDetails().get("recommendedFix")))
+                                (i.getAdditionalDetails().get(RECOMMENDED_FIX)==null) ? "":i.getAdditionalDetails().get(RECOMMENDED_FIX)))
+                        .text((String)((i.getAdditionalDetails().get(RECOMMENDED_FIX)==null) ? "Fix not available.":i.getAdditionalDetails().get(RECOMMENDED_FIX)))
                         .build())
                 .properties(Properties.builder()
                         .tags(Arrays.asList("security", "external/cwe/cwe-".concat(i.getCwe())))
