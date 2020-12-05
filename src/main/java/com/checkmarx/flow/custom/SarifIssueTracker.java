@@ -169,8 +169,8 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                 .help(Help.builder()
                         .markdown(String.format("[%s Details](%s)",
                                 i.getVulnerability(),
-                                i.getAdditionalDetails().get("recommendedFix")))
-                        .text((String) i.getAdditionalDetails().get("recommendedFix"))
+                                (i.getAdditionalDetails().get("recommendedFix")==null) ? "":i.getAdditionalDetails().get("recommendedFix")))
+                        .text((String)((i.getAdditionalDetails().get("recommendedFix")==null) ? "Fix not available.":i.getAdditionalDetails().get("recommendedFix")))
                         .build())
                 .properties(Properties.builder()
                         .tags(Arrays.asList("security", "external/cwe/cwe-".concat(i.getCwe())))
