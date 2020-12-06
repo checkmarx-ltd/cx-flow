@@ -84,7 +84,7 @@ public class CodeBashingService {
 
     public void addCodebashingUrlToIssue(ScanResults.XIssue xIssue){
         String mapKey = xIssue.getCwe();
-        if(validateXIssueFields(xIssue)) {
+        if(validateXIssueFields(xIssue) && codebashingProperties.getTenantBaseUrl() != null) {
             mapKey = buildMapKey(xIssue.getCwe(), xIssue.getLanguage(), xIssue.gerQueryId());
             if (lessonsMap != null && lessonsMap.get(mapKey) != null) {
                 String lessonPath = String.format("%s%s", codebashingProperties.getTenantBaseUrl(), lessonsMap.get(mapKey));
@@ -94,6 +94,9 @@ public class CodeBashingService {
             }
         }
         else {
+            if (xIssue.getAdditionalDetails() == null){
+                xIssue.setAdditionalDetails(new HashMap<>());
+            }
             xIssue.getAdditionalDetails().put(FlowConstants.CODE_BASHING_LESSON, flowProperties.getCodebashUrl());
         }
 
@@ -104,7 +107,7 @@ public class CodeBashingService {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
         httpHeaders.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
-        httpHeaders.set("x-api-key", codebashingProperties.getTenantSecret());
+        httpHeaders.set("x-api-key", codebashingProperties.getApiSecret());
         return httpHeaders;
     }
 
@@ -112,12 +115,12 @@ public class CodeBashingService {
          if(codebashingProperties == null ||
                  codebashingProperties.getCodebashingApiUrl() == null ||
                  codebashingProperties.getTenantBaseUrl() == null ||
-                 codebashingProperties.getTenantSecret() == null) {
+                 codebashingProperties.getApiSecret() == null) {
              throw new ValidationException();
         }
     }
 
     private boolean validateXIssueFields(ScanResults.XIssue xIssue) {
-        return xIssue.getCwe() != null && xIssue.getLanguage() != null && xIssue.gerQueryId() != null;
+        return xIssue.getCwe() != null && xIssue.getLanguage() != null && xIssue.gerQueryId() != null && xIssue.getAdditionalDetails() != null;
     }
 }

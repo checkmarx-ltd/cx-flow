@@ -22,7 +22,7 @@ To get direct CodeBashing integration and connect ot to  your own tenant, add th
 codebashing:
   codebashingApiUrl: https://api.codebashing.com/lessons
   tenantBaseUrl: https://xxxxx.codebashing.com
-  tenantSecret: SECRET
+  apiSecret: SECRET
  ```
 
 

@@ -19,5 +19,5 @@ public class CodebashingProperties {
     private String tenantBaseUrl;
     @Getter
     @Setter
-    private String tenantSecret;
+    private String apiSecret;
 }
