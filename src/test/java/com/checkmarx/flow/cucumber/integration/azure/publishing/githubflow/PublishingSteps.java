@@ -65,6 +65,7 @@ public class PublishingSteps extends PublishingStepsBase {
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
     private final ScmConfigOverrider scmConfigOverrider;
+    private final GitAuthUrlGenerator gitAuthUrlGenerator;
 
     @MockBean
     private final CxService cxClientMock;
@@ -160,7 +161,7 @@ public class PublishingSteps extends PublishingStepsBase {
 
         return new GitHubController(gitHubProperties, flowProperties,
                 null, flowService, helperService, gitHubService, gitHubAppAuthService, filterFactory, configOverrider,
-                scmConfigOverrider);
+                scmConfigOverrider, gitAuthUrlGenerator);
     }
 
     private static GitHubTestUtils.EventType determineEventType(String eventName) {

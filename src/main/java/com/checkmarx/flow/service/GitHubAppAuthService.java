@@ -16,10 +16,12 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -130,17 +132,31 @@ public class GitHubAppAuthService {
      * @throws IOException
      */
      RSAPrivateKey getPrivateKey(File keyFile) throws IOException {
-        String key = new String(Files.readAllBytes(keyFile.toPath()), Charset.defaultCharset());
-
-        if (key.startsWith("-----BEGIN RSA PRIVATE KEY-----")) {
-            log.error("PKCS#1 key. Please convert to PKCS#8 with command line like: `openssl pkcs8 -topk8 -inform PEM -outform PEM -in private.pem -out private8.pem -nocrypt`");
-            throw new GitHubClientRunTimeException("Private key is in PKCS#1 format. Need PKCS#8.");
-        }
-        String noBoundary = key
-                .replace("-----BEGIN PRIVATE KEY-----", "")
-                .replace("-----END PRIVATE KEY-----", "")
-                .replace("\n", "");
-
+         Path keyFilePath = keyFile.toPath();
+         StringBuilder sb = new StringBuilder();
+         try(BufferedReader bufferedReader = Files.newBufferedReader(keyFilePath)) {
+             String line = bufferedReader.readLine();
+             while(line != null) {
+                 sb.append(line);
+                 line = bufferedReader.readLine();
+             }
+         }
+         String key = sb.toString();
+         if (key.startsWith("-----BEGIN RSA PRIVATE KEY-----")) {
+             log.error("PKCS#1 key. Please convert to PKCS#8 with command line like: `openssl pkcs8 -topk8 -inform PEM -outform PEM -in private.pem -out private8.pem -nocrypt`");
+             throw new GitHubClientRunTimeException("Private key is in PKCS#1 format. Need PKCS#8.");
+         }
+         final String startBoundary = "-----BEGIN PRIVATE KEY-----";
+         final String endBoundary = "-----END PRIVATE KEY-----";
+         int start = 0;
+         int end = key.length();
+         if (key.startsWith(startBoundary)) {
+             start = startBoundary.length();
+         }
+         if (key.endsWith(endBoundary)) {
+             end = end - endBoundary.length();
+         }
+         String noBoundary = key.substring(start, end);
         byte[] encoded = Base64.getDecoder().decode(noBoundary);
 
         try {

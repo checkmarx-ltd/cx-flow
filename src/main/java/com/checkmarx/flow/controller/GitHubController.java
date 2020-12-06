@@ -68,6 +68,7 @@ public class GitHubController extends WebhookController {
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
     private final ScmConfigOverrider scmConfigOverrider;
+    private final GitAuthUrlGenerator gitAuthUrlGenerator;
 
     private Mac hmac;
 
@@ -179,9 +180,7 @@ public class GitHubController extends WebhookController {
             else{
                 token = scmConfigOverrider.determineConfigToken(properties, controllerRequest.getScmInstance());
             }
-            gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(token).concat("@"));
-            gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(token).concat("@"));
-            
+            gitAuthUrl = gitAuthUrlGenerator.addCredentialsToUrl(ScanRequest.Repository.GITHUB, gitUrl, token);
 
             ScanRequest request = ScanRequest.builder()
                     .application(app)
@@ -205,6 +204,8 @@ public class GitHubController extends WebhookController {
                     .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)
                     .filter(filter)
+                    .organizationName(getSubStringBefore(repository))
+                    .gitUrl(gitUrl)
                     .build();
 
             setScmInstance(controllerRequest, request);
@@ -318,9 +319,7 @@ public class GitHubController extends WebhookController {
                     throw new MachinaRuntimeException();
                 }
             }
-            gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(token).concat("@"));
-            gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(token).concat("@"));
-            
+            gitAuthUrl = gitAuthUrlGenerator.addCredentialsToUrl(ScanRequest.Repository.GITHUB, gitUrl, token);
 
             ScanRequest request = ScanRequest.builder()
                     .application(app)
@@ -342,8 +341,9 @@ public class GitHubController extends WebhookController {
                     .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)
                     .filter(filter)
+                    .organizationName(getSubStringBefore(repository))
+                    .gitUrl(gitUrl)
                     .build();
-
 
             setScmInstance(controllerRequest, request);
 
@@ -372,6 +372,16 @@ public class GitHubController extends WebhookController {
         }
 
         return getSuccessMessage();
+    }
+
+    /**
+     * Gets a substring before the first occurrence of the separator
+     * e.g. 'cxflowtestuser/VB_3845' will results with 'cxflowtestuser'
+     * @param repository
+     * @return
+     */
+    private String getSubStringBefore(Repository repository) {
+        return StringUtils.substringBefore(repository.getFullName(), "/");
     }
 
     private List<String> determineEmails(PushEvent event) {
