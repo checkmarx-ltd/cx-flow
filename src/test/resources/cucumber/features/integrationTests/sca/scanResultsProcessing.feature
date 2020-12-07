@@ -49,10 +49,10 @@ Feature: Cx-Flow SCA Integration permutation tests
       | High, medium  | 6.3   | 8                        |
       | high, invalid | 8.7   | 2                        |
       |               | 6.4   | 7                        |
-      | medium        | 0.0   | 11                       |
-      |               | 0.0   | 18                       |
+      | medium        | 0.0   | 10                       |
+      |               | 0.0   | 17                       |
       | low           | 0.0   | 1                        |
-      |               | -0.3  | 18                       |
+      |               | -0.3  | 17                       |
 
 
   @SCA_Issues_Creation

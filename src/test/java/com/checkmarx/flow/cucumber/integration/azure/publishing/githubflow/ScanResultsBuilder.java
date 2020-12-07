@@ -38,7 +38,7 @@ public class ScanResultsBuilder {
     }
 
     public static List<ScanResults.XIssue> getXIssues() {
-
+        Map map = new HashMap<>();
         ScanResults.XIssue xIssue = ScanResults.XIssue.builder()
                 .vulnerability("Reflected_XSS_All_Clients")
                 .similarityId("1000026")
@@ -50,7 +50,7 @@ public class ScanResultsBuilder {
                 .file("DOS_Login.java")
                 .description("Description: Reflected_XSS_All_Clients")
                 .details(getIssueDetails())
-                .additionalDetails(Collections.emptyMap())
+                .additionalDetails(map)
                 .build();
         return Collections.singletonList(xIssue);
 
@@ -61,7 +61,7 @@ public class ScanResultsBuilder {
     public static List<ScanResults.XIssue> get2XIssues() {
 
         List<ScanResults.XIssue> collection = new ArrayList<>();
-
+        Map map = new HashMap<>();
         ScanResults.XIssue xIssue = ScanResults.XIssue.builder()
                 .vulnerability("SQL_Injection")
                 .similarityId("1000027")
@@ -73,7 +73,7 @@ public class ScanResultsBuilder {
                 .file("DOS_Login.java")
                 .description("Description: SQL_Injection")
                 .details(getIssueDetails())
-                .additionalDetails(Collections.emptyMap())
+                .additionalDetails(map)
                 .build();
         collection.add(xIssue);
         
