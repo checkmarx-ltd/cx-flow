@@ -61,6 +61,7 @@ public class CodeBashingLessonsSteps {
         codebashingApiUrl = codebashingProperties.getCodebashingApiUrl();
         apiSecret = codebashingProperties.getApiSecret();
         gitLabTestUtils = new GitLabTestUtils(gitLabProperties);
+        setFilters();
     }
 
     @When("CxFlow parsing SAST results")
@@ -217,5 +218,14 @@ public class CodeBashingLessonsSteps {
            result = getlessonPathFromCustomTicketDescription(issueDescription);
         }
         return result;
+    }
+
+    private void setFilters(){
+        String filterHigh = "High";
+        String filterMedium = "Medium";
+        List<String> filter = new ArrayList<>();
+        filter.add(filterHigh);
+        filter.add(filterMedium);
+        flowProperties.setFilterSeverity(filter);
     }
 }
