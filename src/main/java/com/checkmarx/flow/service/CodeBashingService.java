@@ -4,7 +4,6 @@ import com.checkmarx.flow.config.CodebashingProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.sdk.dto.ScanResults;
-import com.sun.xml.internal.ws.api.model.ExceptionType;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
