@@ -36,7 +36,7 @@ import java.util.*;
 public class CodeBashingLessonsSteps {
 
     private static final String TENANT_BASE_URL = "https://tenant.base.url.com";
-    private static final String CX_PROJECT_NAME = "CxFlow-Github-CLI";
+    private static final String CX_PROJECT_NAME = "CLI-INTEGRATION-TESTS-MASTER";
     private static final String JIRA_PROJECT = "COD";
     private static final String GITLAB_PROJECT = "CodeBashing-Integration-Tests ";
     private GitLabTestUtils gitLabTestUtils;

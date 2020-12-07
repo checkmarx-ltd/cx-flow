@@ -58,11 +58,12 @@ public class CodeBashingService {
     private HashMap<String, String> createLessonMapByCwe(JSONArray jArray) throws InvalidValue {
         HashMap<String, String> map = new HashMap<>();
         log.info("creating codebashing lessons map");
+        String cweSplitter = "-";
 
         if (jArray != null) {
             for (int i=0;i<jArray.length();i++){
                 JSONObject lessonObject = jArray.getJSONObject(i);
-                String CWE = lessonObject.getString("cwe_id").split("-")[1];
+                String CWE = lessonObject.getString("cwe_id").split(cweSplitter)[1];
                 String lessonPath = lessonObject.getString("path");
                 String language = lessonObject.getString("lang");
                 int queryId = lessonObject.getInt("cxQueryId");
