@@ -1,6 +1,5 @@
 package com.checkmarx.flow.service;
 
-import com.checkmarx.flow.config.CodebashingProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.custom.IssueTracker;
 import com.checkmarx.flow.dto.BugTracker;

@@ -312,6 +312,18 @@ task CxGoIntegrationTest(type: Test) {
     }
 }
 
+task CodeBashingIntegrationTest(type: Test) {
+    useJUnitPlatform() {
+        systemProperty "testprofile", "codebashingIntegration"
+
+        include 'com/checkmarx/flow/cucumber/integration/codebashing/**'
+
+        testLogging {
+            events "passed", "skipped", "failed"
+        }
+    }
+}
+
 
 task getVersion {
     doLast {

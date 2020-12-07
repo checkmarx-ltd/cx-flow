@@ -4,10 +4,12 @@ import com.checkmarx.flow.config.CodebashingProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.sdk.dto.ScanResults;
+import com.sun.xml.internal.ws.api.model.ExceptionType;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.omg.DynamicAny.DynAnyPackage.InvalidValue;
 import org.slf4j.Logger;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -20,7 +22,7 @@ import java.util.Map;
 @Service
 public class CodeBashingService {
 
-    private static Logger log = org.slf4j.LoggerFactory.getLogger(JiraService.class);
+    private static Logger log = org.slf4j.LoggerFactory.getLogger(CodeBashingService.class);
     private Map<String,String> lessonsMap = null;
     private RestTemplate restTemplate = new RestTemplate();
     private final FlowProperties flowProperties;
@@ -46,27 +48,29 @@ public class CodeBashingService {
         catch (ValidationException validationException){
             log.info("not using CodeBashing lessons integration");
         }
+        catch (InvalidValue invalidValueException){
+            log.warn("can't create codebashing lessons map - {}", invalidValueException.getMessage());
+        }
         catch (Exception ex){
             log.error("can't get codbashing lessons map - {}", ex.getMessage());
         }
     }
 
-    private HashMap<String, String> createLessonMapByCwe(JSONArray jArray) throws Exception {
+    private HashMap<String, String> createLessonMapByCwe(JSONArray jArray) throws InvalidValue {
         HashMap<String, String> map = new HashMap<>();
         log.info("creating codebashing lessons map");
 
         if (jArray != null) {
             for (int i=0;i<jArray.length();i++){
-                //listdata.add(jArray.getJSONObject(i));
-
                 JSONObject lessonObject = jArray.getJSONObject(i);
                 String CWE = lessonObject.getString("cwe_id").split("-")[1];
                 String lessonPath = lessonObject.getString("path");
                 String language = lessonObject.getString("lang");
                 int queryId = lessonObject.getInt("cxQueryId");
+
                 String mapKey = buildMapKey(CWE, language, String.valueOf(queryId));
                 if(StringUtils.isEmpty(CWE) || StringUtils.isEmpty(lessonPath)){
-                    throw new Exception("can't find CWE and lesson path in " + lessonObject.toMap().toString());
+                    throw new InvalidValue("can't find CWE and lesson path in " + lessonObject.toMap().toString());
                 }
 
                 if (!map.containsKey(mapKey)){
