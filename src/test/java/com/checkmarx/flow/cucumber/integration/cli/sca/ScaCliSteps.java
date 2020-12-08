@@ -179,8 +179,8 @@ public class ScaCliSteps {
             case 0:
                 customScaProjectName = "ci-2-to-0-findings-test";
                 break;
-            case 1:
-                customScaProjectName = "ci-2-to-1-finding-test";
+            case 13:
+                customScaProjectName = "cxflowtestuser-testsManual-master";
                 break;
             case 5:
                 customScaProjectName = "ci-2-to-5-findings-test";

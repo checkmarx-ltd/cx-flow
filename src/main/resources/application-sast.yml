@@ -1,0 +1,14 @@
+checkmarx:
+  version: 9.0
+  scope: access_control_api sast_rest_api
+  base-url: http://cx.local
+  url: ${checkmarx.base-url}/cxrestapi
+  scan-preset: Checkmarx Default
+  configuration: Default Configuration
+  team: /CxServer/SP/Company
+  scan-timeout: 120
+  portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
+  #project-script: ./CxProject.groovy
+  #team-script: ./CxTeam.groovy
+  #exclude-files:
+  #exclude-folders:
