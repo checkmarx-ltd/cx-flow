@@ -1,0 +1,7 @@
+ast:
+  apiUrl:
+  webAppUrl:
+  clientId:
+  clientSecret: xxxx
+  preset: Checkmarx Default
+  incremental: false
