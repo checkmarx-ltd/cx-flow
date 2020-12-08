@@ -947,7 +947,7 @@ public class JiraService {
         StringBuilder body = new StringBuilder();
         Optional.ofNullable(jiraProperties.getDescriptionPrefix())
                 .ifPresent(body::append);
-        Map<String, Object> additionalDetails = issue.getAdditionalDetails();
+
         boolean useBranch = isUseBranch(request);
 
         if (useBranch) {
@@ -1003,6 +1003,8 @@ public class JiraService {
         if (!ScanUtils.anyEmpty(issue.getCwe(), flowProperties.getMitreUrl())) {
             body.append("[Mitre Details|").append(String.format(flowProperties.getMitreUrl(), issue.getCwe())).append("]").append(HTMLHelper.CRLF);
         }
+
+        Map<String, Object> additionalDetails = issue.getAdditionalDetails();
 
         if (!MapUtils.isEmpty(additionalDetails) && additionalDetails.containsKey(FlowConstants.CODE_BASHING_LESSON))
         {

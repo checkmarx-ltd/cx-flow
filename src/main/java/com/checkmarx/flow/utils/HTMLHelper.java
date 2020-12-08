@@ -370,7 +370,7 @@ public class HTMLHelper {
     private static void setSASTMDBody(ScanResults.XIssue issue, String branch, String fileUrl,
             FlowProperties flowProperties, StringBuilder body) {
         log.debug("Building MD body for SAST scanner");
-        Map<String, Object> additionalDetails = issue.getAdditionalDetails();
+
 
         body.append(String.format(ISSUE_BODY, issue.getVulnerability(), issue.getFilename(), branch)).append(CRLF)
                 .append(CRLF);
@@ -396,6 +396,7 @@ public class HTMLHelper {
             body.append("[Checkmarx](").append(issue.getLink()).append(")").append(CRLF).append(CRLF);
         }
 
+        Map<String, Object> additionalDetails = issue.getAdditionalDetails();
         if (!MapUtils.isEmpty(additionalDetails) && additionalDetails.containsKey(FlowConstants.CODE_BASHING_LESSON))
         {
             appendAll(body, "[Training](", additionalDetails.get(FlowConstants.CODE_BASHING_LESSON), ")", HTMLHelper.CRLF);

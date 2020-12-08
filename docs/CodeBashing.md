@@ -1,7 +1,7 @@
 ## Integration with CodeBashing
 
 CxFlow adds CodeBashing link when creating a Bug-Tracker ticket.
-The link to CodeBasing is added under '**Training**' in the ticket recommendation:
+The link to CodeBashing is added under '**Training**' in the ticket recommendation:
 
 [[/Images/Training_link.png|Training_Link]]
 
@@ -16,7 +16,7 @@ The link will direct to the specific lesson under the customer CodeBashing accou
 for example:  (https://cxflow-account.codebashing.com/courses/backend_java/lessons/sql_injection)
 
 
-To get direct CodeBashing integration and connect ot to  your own tenant, add the following section to cxflow configuration:
+To get direct CodeBashing integration and connect it to your own tenant, add the following section to cxflow configuration:
 
  ```
 codebashing:

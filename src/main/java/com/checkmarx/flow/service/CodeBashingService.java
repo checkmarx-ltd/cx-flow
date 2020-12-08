@@ -22,7 +22,7 @@ import java.util.Map;
 public class CodeBashingService {
 
     private static Logger log = org.slf4j.LoggerFactory.getLogger(CodeBashingService.class);
-    private Map<String,String> lessonsMap = null;
+    private Map<String,String> lessonsMap;
     private RestTemplate restTemplate = new RestTemplate();
     private final FlowProperties flowProperties;
     private final CodebashingProperties codebashingProperties;

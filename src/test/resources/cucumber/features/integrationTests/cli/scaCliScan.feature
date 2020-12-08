@@ -45,8 +45,8 @@ Feature: SCA support in CxFlow command-line
         Examples:
             | latest count |
             | 0            |
-            | 1            |
             | 5            |
+            | 13           |
 
     Scenario: Trying to publish latest scan results for a non-existent project
         # Make sure CxFlow doesn't crash in this case.

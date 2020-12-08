@@ -39,6 +39,7 @@ public class CodeBashingLessonsSteps {
     private static final String CX_PROJECT_NAME = "CLI-INTEGRATION-TESTS-MASTER";
     private static final String JIRA_PROJECT = "COD";
     private static final String GITLAB_PROJECT = "CodeBashing-Integration-Tests ";
+    private static final String COMMAND_LINE = "--project --cx-project=%s --app=MyApp --namespace=cxflowtestuser --repo-name=codebashing-integration-tests --branch=master --blocksysexit";
     private GitLabTestUtils gitLabTestUtils;
     private String issueDescription = null;
     private String codebashingApiUrl;
@@ -66,8 +67,7 @@ public class CodeBashingLessonsSteps {
 
     @When("CxFlow parsing SAST results")
     public void getSastScanResults() {
-        String commandLine = String.format("--project --cx-project=%s --app=MyApp --blocksysexit", CX_PROJECT_NAME);
-        commandLine = String.format("--project --cx-project=%s --app=MyApp --namespace=cxflowtestuser --repo-name=codebashing-integration-tests --branch=master --blocksysexit", CX_PROJECT_NAME);
+        String commandLine = String.format(COMMAND_LINE, CX_PROJECT_NAME);
         tryRunCxFlow(commandLine);
     }
 
