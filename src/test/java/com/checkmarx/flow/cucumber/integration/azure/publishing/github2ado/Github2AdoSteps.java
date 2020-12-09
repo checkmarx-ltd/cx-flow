@@ -78,6 +78,7 @@ public class Github2AdoSteps {
     private final ConfigurationOverrider configOverrider;
     private final ScmConfigOverrider scmConfigOverrider;
     private final GitAuthUrlGenerator gitAuthUrlGenerator;
+    private final CodeBashingService codeBashingService;
 
     private ScanResults scanResultsToInject;
     
@@ -101,15 +102,13 @@ public class Github2AdoSteps {
                            FlowService flowService, ADOProperties adoProperties,
                            FilterFactory filterFactory, AzureDevopsClient azureDevopsClient,
                            EmailService emailService, ScmConfigOverrider scmConfigOverrider,
-                           GitAuthUrlGenerator gitAuthUrlGenerator) {
+                           GitAuthUrlGenerator gitAuthUrlGenerator,
+                           CodeBashingService codeBashingService) {
         this.filterFactory = filterFactory;
-
         this.cxClientMock = mock(CxService.class);
 
         this.flowProperties = flowProperties;
-
         this.cxProperties = cxProperties;
-
         this.flowService = flowService;
         this.gitHubService = gitHubService;
         this.gitHubAppAuthService = gitHubAppAuthService;
@@ -120,6 +119,7 @@ public class Github2AdoSteps {
         this.emailService = emailService;
         this.scmConfigOverrider = scmConfigOverrider;
         this.gitAuthUrlGenerator = gitAuthUrlGenerator;
+        this.codeBashingService = codeBashingService;
         initGitHubProperties();
     }
 
@@ -138,7 +138,7 @@ public class Github2AdoSteps {
         this.flowProperties.setBugTrackerImpl(Collections.singletonList(AZURE));
         this.adoProperties.setUrl("https://dev.azure.com/");
         
-        issueService = new IssueService(flowProperties);
+        issueService = new IssueService(flowProperties, codeBashingService);
         issueService.setApplicationContext(applicationContext);
        
         initCxClientMock();

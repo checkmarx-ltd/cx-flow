@@ -1,10 +1,12 @@
 package com.checkmarx.jira;
 
+import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.SearchResult;
 import com.checkmarx.sdk.dto.Filter;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Set;
 
 public interface IJiraTestUtils {
 
@@ -43,4 +45,6 @@ public interface IJiraTestUtils {
     Map<String, Integer> getIssuesByStatus(String projectKey);
 
     SearchResult searchForAllIssues(String projectKey) ;
+
+    Set<Issue> geAllIssuesInProject(String projectKey);
 }

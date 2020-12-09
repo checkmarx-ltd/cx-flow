@@ -82,7 +82,8 @@ public class JiraTestUtils implements IJiraTestUtils {
         return geAllIssuesInProject(projectKey).size();
     }
 
-    private Set<Issue> geAllIssuesInProject(String projectKey) {
+    @Override
+    public Set<Issue> geAllIssuesInProject(String projectKey) {
         List<Issue> issues = new ArrayList<>();
         SearchResult searchResult = search(getSearchAllProjectJql(projectKey), issues.size());
         searchResult.getIssues().forEach(issues::add);

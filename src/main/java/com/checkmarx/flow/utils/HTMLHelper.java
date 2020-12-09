@@ -2,6 +2,7 @@ package com.checkmarx.flow.utils;
 
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.RepoProperties;
+import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.constants.SCATicketingConstants;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.sdk.config.Constants;
@@ -369,6 +370,8 @@ public class HTMLHelper {
     private static void setSASTMDBody(ScanResults.XIssue issue, String branch, String fileUrl,
             FlowProperties flowProperties, StringBuilder body) {
         log.debug("Building MD body for SAST scanner");
+
+
         body.append(String.format(ISSUE_BODY, issue.getVulnerability(), issue.getFilename(), branch)).append(CRLF)
                 .append(CRLF);
         if (!ScanUtils.empty(issue.getDescription())) {
@@ -393,11 +396,12 @@ public class HTMLHelper {
             body.append("[Checkmarx](").append(issue.getLink()).append(")").append(CRLF).append(CRLF);
         }
 
-        if (!ScanUtils.empty(flowProperties.getCodebashUrl())) {
-            appendAll(body, "[Training](", flowProperties.getCodebashUrl(), ")", HTMLHelper.CRLF);
+        Map<String, Object> additionalDetails = issue.getAdditionalDetails();
+        if (!MapUtils.isEmpty(additionalDetails) && additionalDetails.containsKey(FlowConstants.CODE_BASHING_LESSON))
+        {
+            appendAll(body, "[Training](", additionalDetails.get(FlowConstants.CODE_BASHING_LESSON), ")", HTMLHelper.CRLF);
         }
 
-        Map<String, Object> additionalDetails = issue.getAdditionalDetails();
         if (MapUtils.isNotEmpty(additionalDetails) && additionalDetails.containsKey(RECOMMENDED_FIX)) {
             body.append("[Recommended Fix](").append(additionalDetails.get(ScanUtils.RECOMMENDED_FIX)).append(")")
                     .append(CRLF).append(CRLF);

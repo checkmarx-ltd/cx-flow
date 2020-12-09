@@ -23,11 +23,11 @@ import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.google.common.collect.ImmutableMap;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.slf4j.Logger;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -35,7 +35,6 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 
 import javax.annotation.PostConstruct;
-import java.beans.ConstructorProperties;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.LocalDateTime;
@@ -44,9 +43,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class JiraService {
 
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(JiraService.class);
     private JiraRestClient client;
     private IssueRestClient issueClient;
     private ProjectRestClient projectClient;
@@ -56,6 +55,7 @@ public class JiraService {
     private final FlowProperties flowProperties;
     private final String parentUrl;
     private final String grandParentUrl;
+    private final CodeBashingService codeBashingService;
     private Map<String, ScanResults.XIssue> nonPublishedScanResultsMap = new HashMap<>();
 
     private List<String> currentNewIssuesList = new ArrayList<>();
@@ -74,12 +74,12 @@ public class JiraService {
     private static final int MAX_RESULTS_ALLOWED = 1000000;
     private static final String SEARCH_ASSIGNABLE_USER = "%s/rest/api/latest/user/assignable/search?project={projectKey}&query={assignee}";
 
-    @ConstructorProperties({"jiraProperties", "flowProperties"})
-    public JiraService(JiraProperties jiraProperties, FlowProperties flowProperties) {
+    public JiraService(JiraProperties jiraProperties, FlowProperties flowProperties, CodeBashingService codeBashingService) {
         this.jiraProperties = jiraProperties;
         this.flowProperties = flowProperties;
         parentUrl = jiraProperties.getParentUrl();
         grandParentUrl = jiraProperties.getGrandParentUrl();
+        this.codeBashingService = codeBashingService;
     }
 
     @PostConstruct
@@ -1001,13 +1001,17 @@ public class JiraService {
         if (!ScanUtils.anyEmpty(issue.getCwe(), flowProperties.getMitreUrl())) {
             body.append("[Mitre Details|").append(String.format(flowProperties.getMitreUrl(), issue.getCwe())).append("]").append(HTMLHelper.CRLF);
         }
-        if (!ScanUtils.empty(flowProperties.getCodebashUrl())) {
-            body.append("[Training|").append(flowProperties.getCodebashUrl()).append("]").append(HTMLHelper.CRLF);
+
+        Map<String, Object> additionalDetails = issue.getAdditionalDetails();
+
+        if (!MapUtils.isEmpty(additionalDetails) && additionalDetails.containsKey(FlowConstants.CODE_BASHING_LESSON))
+        {
+            body.append("[Training|").append(additionalDetails.get(FlowConstants.CODE_BASHING_LESSON)).append("]").append(HTMLHelper.CRLF);
         }
         if (!ScanUtils.empty(flowProperties.getWikiUrl())) {
             body.append("[Guidance|").append(flowProperties.getWikiUrl()).append("]").append(HTMLHelper.CRLF);
         }
-        Map<String, Object> additionalDetails = issue.getAdditionalDetails();
+
         if (MapUtils.isNotEmpty(additionalDetails) && additionalDetails.containsKey(ScanUtils.RECOMMENDED_FIX)) {
            body.append("[Recommended Fix|").append(additionalDetails.get(ScanUtils.RECOMMENDED_FIX)).append("]").append(HTMLHelper.CRLF);
         }
@@ -1146,6 +1150,7 @@ public class JiraService {
         List<String> updatedIssues = new ArrayList<>();
         List<String> closedIssues = new ArrayList<>();
 
+        codeBashingService.createLessonsMap();
         getAndModifyRequestApplication(request);
         loadCustomFields(request.getBugTracker().getProjectKey(), request.getBugTracker().getIssueType());
         if (this.jiraProperties.isChild()) {
@@ -1177,10 +1182,12 @@ public class JiraService {
         setMapWithScanResults(map, nonPublishedScanResultsMap);
         jiraMap = this.getJiraIssueMap(this.getIssues(request));
 
+
         for (Map.Entry<String, ScanResults.XIssue> xIssue : map.entrySet()) {
             String issueCurrentKey = xIssue.getKey();
             try {
                 ScanResults.XIssue currentIssue = xIssue.getValue();
+                codeBashingService.addCodebashingUrlToIssue(currentIssue);
 
                 /*Issue already exists -> update and comment*/
                 if (jiraMap.containsKey(issueCurrentKey)) {
