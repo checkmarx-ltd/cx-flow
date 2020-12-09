@@ -23,6 +23,7 @@ import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.google.common.collect.ImmutableMap;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
@@ -44,9 +45,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class JiraService {
 
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(JiraService.class);
     private JiraRestClient client;
     private IssueRestClient issueClient;
     private ProjectRestClient projectClient;
@@ -75,7 +76,6 @@ public class JiraService {
     private static final int MAX_RESULTS_ALLOWED = 1000000;
     private static final String SEARCH_ASSIGNABLE_USER = "%s/rest/api/latest/user/assignable/search?project={projectKey}&query={assignee}";
 
-    @ConstructorProperties({"jiraProperties", "flowProperties", "codeBashingService"})
     public JiraService(JiraProperties jiraProperties, FlowProperties flowProperties, CodeBashingService codeBashingService) {
         this.jiraProperties = jiraProperties;
         this.flowProperties = flowProperties;

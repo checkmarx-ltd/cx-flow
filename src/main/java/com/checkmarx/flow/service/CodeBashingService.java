@@ -5,6 +5,7 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.sdk.dto.ScanResults;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -19,9 +20,9 @@ import java.util.Map;
 
 @RequiredArgsConstructor
 @Service
+@Slf4j
 public class CodeBashingService {
 
-    private static Logger log = org.slf4j.LoggerFactory.getLogger(CodeBashingService.class);
     private Map<String,String> lessonsMap;
     private RestTemplate restTemplate = new RestTemplate();
     private final FlowProperties flowProperties;
@@ -45,7 +46,7 @@ public class CodeBashingService {
             lessonsMap = createLessonMapByCwe(lessonsArray);
         }
         catch (ValidationException validationException){
-            log.info("not using CodeBashing lessons integration");
+            log.info("not using CodeBashing lessons integration - {}", validationException.getMessage());
         }
         catch (InvalidValue invalidValueException){
             log.warn("can't create codebashing lessons map - {}", invalidValueException.getMessage());
@@ -120,7 +121,7 @@ public class CodeBashingService {
                  codebashingProperties.getCodebashingApiUrl() == null ||
                  codebashingProperties.getTenantBaseUrl() == null ||
                  codebashingProperties.getApiSecret() == null) {
-             throw new ValidationException();
+             throw new ValidationException("one or more of the mandatory properties is missing");
         }
     }
 
