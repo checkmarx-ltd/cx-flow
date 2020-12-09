@@ -29,7 +29,7 @@ public class BugTrackerEventTrigger {
         this.cxProperties = cxScannerService.getProperties();
     }
 
-    public BugTracker.Type triggerBugTrackerEvent(ScanRequest request) {
+    public BugTracker.Type triggerScanStartedEvent(ScanRequest request) {
         boolean eventsWereTriggered = true;
         BugTracker.Type bugTrackerType = request.getBugTracker().getType();
 
