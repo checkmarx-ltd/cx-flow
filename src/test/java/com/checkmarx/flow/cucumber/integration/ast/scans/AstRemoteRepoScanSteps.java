@@ -3,6 +3,7 @@ package com.checkmarx.flow.cucumber.integration.ast.scans;
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.cucumber.integration.sca_scanner.ScaCommonSteps;
+import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.sdk.config.AstProperties;
@@ -295,6 +296,8 @@ public class AstRemoteRepoScanSteps {
 
         scanRequest = configOverrider.overrideScanRequestProperties(new CxConfig(), scanRequest);
         scanRequest.setVulnerabilityScanners(scanners);
+        BugTracker bt = BugTracker.builder().type(BugTracker.Type.JIRA).customBean("JIRA").build();
+        scanRequest.setBugTracker(bt);
         flowService.initiateAutomation(scanRequest);
     }
 

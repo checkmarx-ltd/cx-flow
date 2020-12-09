@@ -264,7 +264,6 @@ public class UpdatePullRequestCommentsSteps {
     private int getExpectedNumOfNewComments() {
         switch (scannerType) {
             case SCA:
-                return 1;
             case SAST:
             case BOTH:
                 return 2;

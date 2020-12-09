@@ -11,8 +11,8 @@
 
       Examples:
         | scanner |
-        | sca    |
-        | sast   |
+        | sca     |
+        | sast    |
         | both    |
 
 

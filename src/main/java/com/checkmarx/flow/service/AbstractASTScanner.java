@@ -38,8 +38,8 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
         ScanParams sdkScanParams = toSdkScanParams(scanRequest);
         ASTResultsWrapper internalResults = new ASTResultsWrapper(new SCAResults(), new ASTResults());
         try {
-            internalResults = client.scan(sdkScanParams);
             bugTrackerEventTrigger.triggerScanStartedEvent(scanRequest);
+            internalResults = client.scan(sdkScanParams);
             logRequest(scanRequest, internalResults, OperationResult.successful());
             result = toScanResults(internalResults);
         } catch (Exception e) {
