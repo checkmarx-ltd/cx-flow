@@ -367,7 +367,8 @@ public class DeleteBranchSteps {
                 filterFactory,
                 configOverrider,
                 adoServiceMock,
-                scmConfigOverrider));
+                scmConfigOverrider,
+                gitAuthUrlGenerator));
     }
 
     private void initProjectNameGeneratorSpy(ProjectNameGenerator projectNameGenerator) {

@@ -50,6 +50,7 @@ public class GitLabController extends WebhookController {
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
     private final ScmConfigOverrider scmConfigOverrider;
+    private final GitAuthUrlGenerator gitAuthUrlGenerator;
 
     @GetMapping(value = "/test")
     public String getTest() {
@@ -117,8 +118,7 @@ public class GitLabController extends WebhookController {
 
             log.info("Using url: {}", gitUrl);
             String configToken = scmConfigOverrider.determineConfigToken(properties, controllerRequest.getScmInstance());
-            String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS_OAUTH2.concat(configToken).concat("@"));
-            gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP_OAUTH2.concat(configToken).concat("@"));
+            String gitAuthUrl = gitAuthUrlGenerator.addCredToUrl(ScanRequest.Repository.GITLAB, gitUrl, configToken);
 
             ScanRequest request = ScanRequest.builder()
                     .id(String.valueOf(proj.getId()))
@@ -142,6 +142,8 @@ public class GitLabController extends WebhookController {
                     .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)
                     .filter(filter)
+                    .organizationName(getProjectNamespace(proj))
+                    .gitUrl(gitUrl)
                     .build();
 
             setMergeEndPointUri(objectAttributes, proj, request);
@@ -222,9 +224,7 @@ public class GitLabController extends WebhookController {
             String gitUrl = proj.getGitHttpUrl();
             log.debug("Using url: {}", gitUrl);
             String configToken = scmConfigOverrider.determineConfigToken(properties, controllerRequest.getScmInstance());
-            String gitAuthUrl = gitUrl.replace(Constants.HTTPS, Constants.HTTPS_OAUTH2.concat(configToken).concat("@"));
-            gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP_OAUTH2.concat(configToken).concat("@"));
-
+            String gitAuthUrl = gitAuthUrlGenerator.addCredToUrl(ScanRequest.Repository.GITLAB, gitUrl, configToken);
 
             ScanRequest request = ScanRequest.builder()
                     .id(String.valueOf(body.getProjectId()))
@@ -245,6 +245,8 @@ public class GitLabController extends WebhookController {
                     .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)
                     .filter(filter)
+                    .organizationName(getProjectNamespace(proj))
+                    .gitUrl(gitUrl)
                     .build();
 
             /*Determine emails*/
@@ -280,6 +282,10 @@ public class GitLabController extends WebhookController {
             return getBadRequestMessage(e, controllerRequest, product);
         }
         return getSuccessMessage();
+    }
+
+    private String getProjectNamespace(Project proj) {
+        return proj.getNamespace().replace(" ","_");
     }
 
     private String setUserEmail(@RequestBody PushEvent body, BugTracker.Type bugType, Project proj, ScanRequest request, List<String> emails, String commitEndpoint) {

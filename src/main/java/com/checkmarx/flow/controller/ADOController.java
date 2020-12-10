@@ -50,6 +50,7 @@ public class ADOController extends AdoControllerBase {
     private final ConfigurationOverrider configOverrider;
     private final ADOService adoService;
     private final ScmConfigOverrider scmConfigOverrider;
+    private final GitAuthUrlGenerator gitAuthUrlGenerator;
 
 
     /**
@@ -126,9 +127,7 @@ public class ADOController extends AdoControllerBase {
             String gitUrl = repository.getWebUrl();
             String token = scmConfigOverrider.determineConfigToken(properties, controllerRequest.getScmInstance());
             log.info("Using url: {}", gitUrl);
-            String gitAuthUrl = gitUrl.replace(HTTPS, HTTPS.concat(token).concat("@"));
-            gitAuthUrl = gitAuthUrl.replace(HTTP, HTTP.concat(token).concat("@"));
-            
+            String gitAuthUrl = gitAuthUrlGenerator.addCredToUrl(ScanRequest.Repository.ADO, gitUrl, token);
 
             ScanRequest request = ScanRequest.builder()
                     .application(app)
@@ -151,6 +150,8 @@ public class ADOController extends AdoControllerBase {
                     .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)
                     .filter(filter)
+                    .organizationName(determineNamespace(resourceContainers))
+                    .gitUrl(gitUrl)
                     .build();
 
             setScmInstance(controllerRequest, request);
@@ -239,9 +240,7 @@ public class ADOController extends AdoControllerBase {
             String gitUrl = repository.getRemoteUrl();
             log.debug("Using url: {}", gitUrl);
             String configToken = scmConfigOverrider.determineConfigToken(properties, controllerRequest.getScmInstance());
-            String gitAuthUrl = gitUrl.replace(HTTPS, HTTPS.concat(configToken).concat("@")).replace(HTTP, HTTP.concat(configToken).concat("@"));
-            
-
+            String gitAuthUrl = gitAuthUrlGenerator.addCredToUrl(ScanRequest.Repository.ADO, gitUrl, configToken);
             String defaultBranch = ScanUtils.getBranchFromRef(Optional.ofNullable(repository.getDefaultBranch()).orElse(ref));
 
             ScanRequest request = ScanRequest.builder()
@@ -265,6 +264,8 @@ public class ADOController extends AdoControllerBase {
                     .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)
                     .filter(filter)
+                    .organizationName(determineNamespace(resourceContainers))
+                    .gitUrl(gitUrl)
                     .build();
 
             setScmInstance(controllerRequest, request);
