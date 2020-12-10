@@ -1,6 +1,7 @@
 package com.checkmarx.flow.cucumber.integration.sca_scanner;
 
 import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.service.SCAScanner;
 import com.checkmarx.flow.service.ScaConfigurationOverrider;
@@ -25,11 +26,16 @@ public class ScaCommonSteps {
     }
 
     protected ScanRequest getBasicScanRequest(String projectName, String repoWithAuth) {
+        BugTracker bt = BugTracker.builder()
+                .type(BugTracker.Type.JIRA)
+                .customBean("JIRA")
+                .build();
         ScanRequest request = ScanRequest.builder()
                 .project(projectName)
                 .repoUrlWithAuth(repoWithAuth)
                 .branch("master")
                 .repoType(ScanRequest.Repository.GITHUB)
+                .bugTracker(bt)
                 .build();
         scaConfigOverrider.initScaConfig(request);
         return request;

@@ -264,7 +264,6 @@ public class UpdatePullRequestCommentsSteps {
     private int getExpectedNumOfNewComments() {
         switch (scannerType) {
             case SCA:
-                return 1;
             case SAST:
             case BOTH:
                 return 2;
@@ -333,12 +332,19 @@ public class UpdatePullRequestCommentsSteps {
             return foundSast && foundScanStarted;
         }
         else if (sct.equals(ScannerType.SCA)) {
+            boolean foundSCA = false;
+            boolean foundScanStarted = false;
             for (RepoComment comment : comments) {
                 if (PullRequestCommentsHelper.isScaComment(comment.getComment())) {
                     log.info("SCA: found pull request comment");
-                    return true;
+                    foundSCA = true;
+                }
+                else if (PullRequestCommentsHelper.isScanStartedComment(comment.getComment())) {
+                    log.info("SAST: found pull request 'scan started' comment");
+                    foundScanStarted = true;
                 }
             }
+            return foundSCA && foundScanStarted;
         }
         throw new IllegalArgumentException("Wrong scanner type: " + sct.name());
     }

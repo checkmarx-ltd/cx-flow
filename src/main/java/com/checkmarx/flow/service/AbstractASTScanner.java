@@ -38,6 +38,7 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
         ScanParams sdkScanParams = toSdkScanParams(scanRequest);
         ASTResultsWrapper internalResults = new ASTResultsWrapper(new SCAResults(), new ASTResults());
         try {
+            bugTrackerEventTrigger.triggerScanStartedEvent(scanRequest);
             internalResults = client.scan(sdkScanParams);
             logRequest(scanRequest, internalResults, OperationResult.successful());
             result = toScanResults(internalResults);
@@ -95,7 +96,7 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
     }
 
     public ScanResults scan(ScanRequest scanRequest, String path) throws ExitThrowable {
-        BugTracker.Type bugTrackerType = bugTrackerEventTrigger.triggerBugTrackerEvent(scanRequest);
+        BugTracker.Type bugTrackerType = bugTrackerEventTrigger.triggerScanStartedEvent(scanRequest);
         ScanResults result = null;
         if (bugTrackerType.equals(BugTracker.Type.NONE)) {
             log.info("Not waiting for scan completion as Bug Tracker type is NONE");
