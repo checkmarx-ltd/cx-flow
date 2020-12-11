@@ -403,6 +403,10 @@ public class UpdatePullRequestCommentsSteps {
         Owner owner = new Owner();
         owner.setName("");
         owner.setLogin("cxflowtestuser");
+
+        Repo r = new Repo();
+        r.setOwner(owner);
+
         repo.setOwner(owner);
         pullEvent.setRepository(repo);
         pullEvent.setAction("opened");
@@ -410,6 +414,7 @@ public class UpdatePullRequestCommentsSteps {
         pullRequest.setIssueUrl("");
         Head headBranch = new Head();
         headBranch.setRef(branchGitHub);
+        headBranch.setRepo(r);
 
         pullRequest.setHead(headBranch);
         pullRequest.setBase(new Base());

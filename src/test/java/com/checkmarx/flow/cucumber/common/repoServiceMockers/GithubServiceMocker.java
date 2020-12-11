@@ -104,12 +104,15 @@ public class GithubServiceMocker implements RepoServiceMocker {
         owner.setName("");
         owner.setLogin(GITHUB_USER);
         repo.setOwner(owner);
+        Repo r = new Repo();
+        r.setOwner(owner);
         pullEvent.setRepository(repo);
         pullEvent.setAction("opened");
         PullRequest pullRequest = new PullRequest();
         pullRequest.setIssueUrl("");
         Head headBranch = new Head();
         headBranch.setRef(branchName);
+        headBranch.setRepo(r);
 
         pullRequest.setHead(headBranch);
         pullRequest.setBase(new Base());
