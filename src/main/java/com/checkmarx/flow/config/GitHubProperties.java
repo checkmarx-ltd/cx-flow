@@ -21,6 +21,9 @@ public class GitHubProperties extends RepoProperties {
     private String appKeyFile;
     @Getter
     @Setter
+    private String appHeader = "application/vnd.github.machine-man-preview+json, application/vnd.github.v3+json";
+    @Getter
+    @Setter
     private String appUrl = "https://api.github.com/app/";
 
     public String getMergeNoteUri(String namespace, String repo, String mergeId){

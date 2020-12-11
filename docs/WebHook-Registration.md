@@ -30,10 +30,12 @@ WebHooks can be registered at the namespace level (Organization in GitHub, Group
 * Ensure to download/save the Private key generated for the App
 * You must convert the key to PKCS8 formatted PEM using: ```openssl pkcs8 -topk8 -inform PEM -outform PEM -in private.pem -out private8.pem```
 * To make use of the GitHub App, you must add app-id and app-key-file to your configuration
+* The base headers are ```application/vnd.github.machine-man-preview+json, application/vnd.github.v3+json``` to update them use the app-header conifg under the github block
 ```
 github:
   app-id: XXXXX #This ID will be found in your GitHub App configuration settings
   app-key-file: /path/to/keyfile.pem
+  app-headers: application/vnd.github.v3+json #Optional
   webhook-token: XXXX #Preconfigured WebHook Secret as defined in the GitHub App.
   url: https://github.com
   api-url: https://api.github.com/repos/
@@ -42,6 +44,18 @@ github:
   error-merge: true
   cx-summary: true
 ```
+
+### Permissions Required for GitHub App
+The following permissions are required
+  * Pull Request - Read/Write | For commenting on PR
+  * Commit statuses - Read/Write | For Block/Break Merge
+  * Webhooks - Read/Write | For ability to Register WebHook Events
+  * Issues - Read/Write | If using GitHub as bug-tracker
+
+WebHook Events
+  * Delete
+  * Push
+  * Pull Request
 
 ## <a name="gitlab">GitLab</a>
 [[/Images/webhookGitLab.png|Example of GitLab webhook registration]]
