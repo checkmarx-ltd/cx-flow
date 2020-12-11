@@ -188,6 +188,10 @@ public class CxConfigSteps {
         owner.setName("");
         owner.setLogin("cxflowtestuser");
         repo.setOwner(owner);
+
+        Repo r = new Repo();
+        r.setOwner(owner);
+
         pullEvent.setRepository(repo);
         pullEvent.setAction("opened");
         PullRequest pullRequest = new PullRequest();
@@ -195,6 +199,7 @@ public class CxConfigSteps {
         Head headBranch = new Head();
         headBranch.setRef(sourceBranch);
 
+        headBranch.setRepo(r);
         pullRequest.setHead(headBranch);
         pullRequest.setBase(new Base());
         pullRequest.setStatusesUrl("");
