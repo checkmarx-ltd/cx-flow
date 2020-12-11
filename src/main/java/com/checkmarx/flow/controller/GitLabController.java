@@ -54,7 +54,7 @@ public class GitLabController extends WebhookController {
 
     @GetMapping(value = "/test")
     public String getTest() {
-        log.info("Build Info");
+        log.debug("Build Info");
         return "IT WORKS";
     }
 
