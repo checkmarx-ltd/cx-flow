@@ -187,7 +187,7 @@ public class GitHubController extends WebhookController {
                     .product(p)
                     .project(controllerRequest.getProject())
                     .team(controllerRequest.getTeam())
-                    .namespace(repository.getOwner().getLogin().replace(" ","_"))
+                    .namespace(pullRequest.getHead().getRepo().getOwner().getLogin().replace(" ","_"))
                     .repoName(repository.getName())
                     .repoUrl(repository.getCloneUrl())
                     .repoUrlWithAuth(gitAuthUrl)
