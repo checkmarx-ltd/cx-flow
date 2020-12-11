@@ -98,7 +98,7 @@ public class GitHubAppAuthService {
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.set(HttpHeaders.AUTHORIZATION, BEARER_HEADER.concat(jwtToken));
-        httpHeaders.set(HttpHeaders.ACCEPT, "application/vnd.github.v3+json");
+        httpHeaders.set(HttpHeaders.ACCEPT, properties.getAppHeader());
 
         ResponseEntity<JsonNode> response = restTemplate.exchange(
                 properties.getAppUrl().concat(INSTALLATION_TOKEN_PATH),

@@ -105,6 +105,7 @@ public class GitHubService extends RepoService {
             );
             httpHeaders = new HttpHeaders();
             httpHeaders.set(HttpHeaders.AUTHORIZATION, "token ".concat(token));
+            httpHeaders.set(HttpHeaders.ACCEPT, properties.getAppHeader());
         }
         else{
             httpHeaders = new HttpHeaders();
