@@ -199,21 +199,25 @@ public class CxConfigBugTrackerSteps {
 
     public void buildPullRequest() {
         PullEvent pullEvent = new PullEvent();
-        Repository repo = new Repository();
-        repo.setName("CxConfigTests");
+        Repository repository = new Repository();
+        repository.setName("CxConfigTests");
 
-        repo.setCloneUrl(gitHubProperties.getUrl());
+        repository.setCloneUrl(gitHubProperties.getUrl());
         Owner owner = new Owner();
         owner.setName("");
         owner.setLogin(GITHUB_USER);
-        repo.setOwner(owner);
-        pullEvent.setRepository(repo);
+        repository.setOwner(owner);
+        pullEvent.setRepository(repository);
         pullEvent.setAction("opened");
         PullRequest pullRequest = new PullRequest();
         pullRequest.setIssueUrl("");
+
+        Repo repo = new Repo();
+        repo.setOwner(owner);
+
         Head headBranch = new Head();
         headBranch.setRef(branch);
-
+        headBranch.setRepo(repo);
         pullRequest.setHead(headBranch);
         pullRequest.setBase(new Base());
         pullRequest.setStatusesUrl("");
