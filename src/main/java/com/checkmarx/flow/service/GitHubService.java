@@ -129,18 +129,21 @@ public class GitHubService extends RepoService {
 
     @Override
     public List<RepoComment> getComments(ScanRequest scanRequest) throws IOException {
+        int maxNumberOfComments = 2000;
         HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders(scanRequest));
         ResponseEntity<String> response = restTemplate.exchange(scanRequest.getMergeNoteUri(), HttpMethod.GET, httpEntity , String.class);
         List<RepoComment> result = new ArrayList<>();
         ObjectMapper objMapper = new ObjectMapper();
         JsonNode root = objMapper.readTree(response.getBody());
         Iterator<JsonNode> it = root.getElements();
-        while (it.hasNext()) {
+        int iteration = 0;
+        while (it.hasNext() && iteration < maxNumberOfComments) {
             JsonNode commentNode = it.next();
             RepoComment comment = createRepoComment(commentNode);
             if (PullRequestCommentsHelper.isCheckMarxComment(comment)) {
                 result.add(comment);
             }
+            iteration++;
         }
         return result;
     }

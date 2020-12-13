@@ -226,17 +226,20 @@ public class JiraService {
     }
 
     private IssueType getIssueType(String projectKey, String type) throws JiraClientException {
+        int maxNumberOfIssues = 5000;
         List<String> issueTypesList = new ArrayList<>();
 
         Project project = this.projectClient.getProject(projectKey).claim();
         Iterator<IssueType> issueTypes = project.getIssueTypes().iterator();
-        while (issueTypes.hasNext()) {
+        int iteration = 0;
+        while (issueTypes.hasNext() && iteration < maxNumberOfIssues) {
             IssueType it = issueTypes.next();
             issueTypesList.add(it.getName());
             log.debug("getIssueType iterator: {}", it.getName());
             if (it.getName().equals(type)) {
                 return it;
             }
+            iteration++;
         }
 
         String error = String.format("The defined issue type '%s' was not found. Please make sure it's one of the following issues types: [%s]", type, getIssueTypesFromList(issueTypesList));

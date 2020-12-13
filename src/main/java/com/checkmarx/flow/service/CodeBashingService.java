@@ -9,11 +9,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.omg.DynamicAny.DynAnyPackage.InvalidValue;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import javax.validation.ValidationException;
+import java.io.InvalidObjectException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -47,7 +47,7 @@ public class CodeBashingService {
         catch (ValidationException validationException){
             log.info("not using CodeBashing lessons integration - {}", validationException.getMessage());
         }
-        catch (InvalidValue invalidValueException){
+        catch (InvalidObjectException invalidValueException){
             log.warn("can't create codebashing lessons map - {}", invalidValueException.getMessage());
         }
         catch (Exception ex){
@@ -55,7 +55,7 @@ public class CodeBashingService {
         }
     }
 
-    private HashMap<String, String> createLessonMapByCwe(JSONArray jArray) throws InvalidValue {
+    private HashMap<String, String> createLessonMapByCwe(JSONArray jArray) throws InvalidObjectException {
         HashMap<String, String> map = new HashMap<>();
         log.info("creating codebashing lessons map");
         String cweSplitter = "-";
@@ -70,7 +70,7 @@ public class CodeBashingService {
 
                 String mapKey = buildMapKey(CWE, language, String.valueOf(queryId));
                 if(StringUtils.isEmpty(CWE) || StringUtils.isEmpty(lessonPath)){
-                    throw new InvalidValue("can't find CWE and lesson path in " + lessonObject.toMap().toString());
+                    throw new InvalidObjectException("can't find CWE and lesson path in " + lessonObject.toMap().toString());
                 }
 
                 if (!map.containsKey(mapKey)){

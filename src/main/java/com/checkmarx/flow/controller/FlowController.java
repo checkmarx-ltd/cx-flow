@@ -122,6 +122,7 @@ public class FlowController {
             @PathVariable(value = "scanID") String scanID
     ) {
         log.debug("Handling post-back from SAST");
+        int maxNumberOfTokens = 100;
         PostRequestData prd = new PostRequestData();
         String token = "";
         String bugTracker = properties.getBugTracker();
@@ -129,7 +130,8 @@ public class FlowController {
         /// Decode the scan details.
         //
         StringTokenizer postData = new StringTokenizer(postBackData, "&");
-        while(postData.hasMoreTokens()) {
+        int iteration  = 0;
+        while(postData.hasMoreTokens() && iteration < maxNumberOfTokens) {
             String strToken = postData.nextToken();
             if(strToken.length() > 6 && strToken.startsWith("token=")) {
                 token = strToken.substring(6);
@@ -143,6 +145,7 @@ public class FlowController {
                     log.error("Error decoding scan details");
                 }
             }
+            iteration++;
         }
         validateToken(token);
         try {
