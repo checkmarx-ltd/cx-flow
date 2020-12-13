@@ -61,7 +61,7 @@ public class UpdatePullRequestCommentsSteps {
     private static final String GIT_PROJECT_NAME = "vb_test_pr_comments";
     private static final String GITHUB_PR_BASE_URL = "https://api.github.com/repos/cxflowtestuser/" + GIT_PROJECT_NAME;
     private static final String GITHUB_PR_ID = "6";
-    private static final String ADO_PR_ID = "69";
+    private static final String ADO_PR_ID = "90";
     public static final String PULL_REQUEST_COMMENTS_URL = GITHUB_PR_BASE_URL + "/issues/"+ GITHUB_PR_ID + "/comments";
     private static final String GIT_URL = "https://github.com/cxflowtestuser/" + GIT_PROJECT_NAME;
     private static final String ADO_PR_COMMENTS_URL = "https://dev.azure.com/CxNamespace/d50fc6e5-a5ab-4123-9bc9-ccb756c0bf16/_apis/git/repositories/a89a9d2f-ab67-4bda-9c56-a571224c2c66/pullRequests/" + ADO_PR_ID + "/threads";

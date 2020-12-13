@@ -255,7 +255,7 @@ public class ADOService {
     }
 
     public List<RepoComment> getComments(String url, ScanRequest scanRequest) throws IOException {
-        int maxNumberOfComments = 2000;
+        int maxNumberOfCommentThreads = 10000;
         HttpEntity<?> httpEntity = new HttpEntity<>(ADOUtils.createAuthHeaders(scmConfigOverrider.determineConfigToken(properties, scanRequest.getScmInstance())));
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, httpEntity , String.class);
         List<RepoComment> result = new ArrayList<>();
@@ -264,12 +264,12 @@ public class ADOService {
         JsonNode value = root.path("value");
         Iterator<JsonNode> threadsIter = value.getElements();
         int iteration = 0;
-        while (threadsIter.hasNext() && iteration < maxNumberOfComments) {
+        while (threadsIter.hasNext() && iteration < maxNumberOfCommentThreads) {
             JsonNode thread = threadsIter.next();
             JsonNode comments = thread.get("comments");
             Iterator<JsonNode> commentsIter = comments.getElements();
             int commentsCount = 0;
-            while (commentsIter.hasNext() && commentsCount < maxNumberOfComments) {
+            while (commentsIter.hasNext() && commentsCount < maxNumberOfCommentThreads) {
                 JsonNode commentNode = commentsIter.next();
                 // Remove empty or deleted comments
                 if (commentNode.has(ADO_COMMENT_CONTENT_FIELD_NAME) && !isCommentDeleted(commentNode)) {
