@@ -8,32 +8,29 @@ If any of the connecting components are using an internal CA or self-signed cert
 There have been cases when the Checkmarx REST API responds with XML that is not well encoded, and some defensive programming logic has been introduced to remove non-UTF-8 compatible characters.  This issue surfaces from time to time and detailed logging is required to find the exact problem - See below.
 
 ### Debugging
-Debug logs can be enabled by adding the following configuration to the yaml (_application.yml_, or _application-<profile>.yml_) properties or by adding additional command line arguments when launching.
+Debug logs can be enabled by adding the following configuration to the yaml (_application.yml_, or _application-\<profile\>.yml_) properties or by adding additional command line arguments when launching.
 
 #### YAML Configuration
 ```
 logging:
-  file:`
-    name: cx-flow.log`
+  file:
+    name: cx-flow.log
   level:
-    com:`
-       checkmarx:`
-          flow:`
-             cmd: TRACE`
-             service: TRACE`
-             controller: TRACE`
-    org:`
-       apache:`
-          http:`
-             wire: TRACE`
-       springframework:`
-          web:`
-             client:`
-                RestTemplate: TRACE`
+    com:
+       checkmarx: TRACE
+    org:
+       apache:
+          http:
+             wire: TRACE
+       springframework:
+          web:
+             client:
+                RestTemplate: TRACE
 ```
+**Note:** including the `wire` and `RestTemplate` sections (as in the example above) will produce lots of log output, including full contents of HTTP requests. Please be aware that such logs may expose sensitive data. If you don't want the log to be this detailed, just remove the whole `logging.level.org` section.   
 
 #### Log Grouping
-Events that drive scanning/results feedback are given a unique ID and that ID is passed through the various logs to ensure you can make an link between all of the events.
+Events that drive scanning/results feedback are given a unique ID and that ID is passed through the various logs to ensure you can make a link between all of the events.
 
 ```
 2019-06-23 20:06:53.606  INFO 19980 --- [  restartedMain] c.c.f.CxFlowRunner  [u9UzT5SU] : Executing scan process
