@@ -203,7 +203,7 @@ public class JiraService {
             log.error("Namespace/Repo/Branch or App must be provided in order to properly track ");
             throw new MachinaRuntimeException();
         }
-        log.debug("jql query : {}", jql);
+        log.debug("jql query: {}", jql);
         HashSet<String> fields = new HashSet<>();
         Collections.addAll(fields, "key","project","issuetype","summary",LABEL_FIELD_TYPE,"created","updated","status");
         
@@ -831,9 +831,10 @@ public class JiraService {
 
     private void loadCustomFields(String jiraProject, String issueType) {
         log.info("Preparing to loading custom fields");
-        
+        validateFieldRequestParams(jiraProject, issueType);
+
         this.customFields.computeIfAbsent(jiraProject.concat(issueType), customFieldKey -> {
-            log.info("Loading all custom fields for project: {} , with issueType: {}", jiraProject, issueType);
+            log.info("Loading all custom fields for project: {}, with issueType: {}", jiraProject, issueType);
             GetCreateIssueMetadataOptions options = new GetCreateIssueMetadataOptionsBuilder()
                     .withExpandedIssueTypesFields()
                     .withProjectKeys(jiraProject)
@@ -850,16 +851,30 @@ public class JiraService {
             Map<String, String> fields = new HashMap<>();
             CimProject cim = iterator.next();
             cim.getIssueTypes().forEach(issueTypes ->
-                issueTypes.getFields().forEach((id, value) -> 
+                issueTypes.getFields().forEach((id, value) ->
                     fields.put(value.getName(), id)
-                ) 
+                )
             );
-            
+
             log.info("finished Loading {} new custom fields", fields.size());
-            
+
             return fields;
         });
 
+    }
+
+    private static void validateFieldRequestParams(String jiraProject, String issueType) {
+        String missingField = null;
+        if (StringUtils.isEmpty(jiraProject)) {
+            missingField = "Jira project";
+        } else if (StringUtils.isEmpty(issueType)) {
+            missingField = "Issue type";
+        }
+        if (missingField != null) {
+            throw new IllegalArgumentException(String.format(
+                    "Unable to load custom fields. %s is not specified. Please make sure it is present in the configuration.",
+                    missingField));
+        }
     }
 
     private String getCustomFieldByName(String jiraProject, String issueType, String fieldName) {
