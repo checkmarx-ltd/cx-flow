@@ -476,6 +476,7 @@ public class CxFlowRunner implements ApplicationRunner {
         log.info("Initiating scan using Checkmarx git clone");
         request.setRepoType(repoType);
         log.info("Git url: {}", gitUrl);
+
         request.setBranch(branch);
         request.setRepoUrl(gitUrl);
         request.setRepoUrlWithAuth(gitAuthUrl);
