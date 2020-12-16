@@ -269,6 +269,7 @@ public class CxFlowRunner implements ApplicationRunner {
                     exit(1);
                 }
                 mergeNoteUri = gitHubProperties.getMergeNoteUri(namespace, repoName, mergeId);
+                repoUrl = getNonEmptyRepoUrl(namespace, repoName, repoUrl, gitHubProperties.getGitUri(namespace, repoName));
                 break;
             case GITLABMERGE:
             case gitlabmerge:
