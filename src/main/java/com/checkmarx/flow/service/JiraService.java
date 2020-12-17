@@ -294,7 +294,7 @@ public class JiraService {
             String fileUrl = ScanUtils.getFileUrl(request, issue.getFilename());
             summary = checkSummaryLength(summary);
 
-            issueBuilder.setSummary(summary);
+            issueBuilder.setSummary(request.getProduct().getProduct() + " " + summary);
             issueBuilder.setDescription(this.getBody(issue, request, fileUrl));
             if (assignee != null && !assignee.isEmpty()) {
                     String accountId = getAssignee(assignee, projectKey);

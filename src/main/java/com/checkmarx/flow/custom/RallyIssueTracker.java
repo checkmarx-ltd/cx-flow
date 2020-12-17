@@ -282,7 +282,7 @@ public class RallyIssueTracker implements IssueTracker {
         String fileUrl = ScanUtils.getFileUrl(request, resultIssue.getFilename());
         String body = HTMLHelper.getHTMLBody(resultIssue, request, flowProperties);
         //String body = ScanUtils.getHTMLBody(resultIssue, request.getBranch(), fileUrl, flowProperties);
-        String title = getXIssueKey(resultIssue, request);
+        String title = request.getProduct().getProduct() + " " + getXIssueKey(resultIssue, request);
         try {
             requestBody.put("Name", title);
             requestBody.put("Workspace", properties.getRallyWorkspaceId());
