@@ -205,7 +205,7 @@ jira:
   url: https://xxxx.atlassian.net
   username: XXXXX
   token: XXXXX
-  project: <JIRA PROJECT>
+  project: <JIRA PROJECT KEY>
   issue-type: <JIRA ISSUE TYPE>
   priorities:
      Critical: Highest
