@@ -936,7 +936,7 @@ public class JiraService {
                         ? String.format(JiraConstants.JIRA_ISSUE_TITLE_KEY, issuePrefix, issue.getVulnerability(), issue.getFilename(), issuePostfix)
                         : getScaDetailsIssueTitleWithoutBranchFormat(request, issuePrefix, issuePostfix, issue);
             }
-            map.put(key, issue);
+            map.put(request.getProduct().getProduct() + " " + key, issue);
         }
         return map;
     }
