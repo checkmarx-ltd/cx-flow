@@ -134,8 +134,9 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
     private void getSastResultsDashboard(ScanRequest request, ScanResults results) throws MachinaException {
         List<Vulnerability> vulns = new ArrayList<>();
         Scanner scanner = Scanner.builder().id("Checkmarx-SAST").name("Checkmarx-SAST").build();
-        results.getXIssues().forEach( issue ->
-                issue.getDetails().forEach( (k,v) -> {
+        for(ScanResults.XIssue issue : results.getXIssues()) {
+            if(issue.getDetails() != null) {
+                issue.getDetails().forEach((k, v) -> {
                     Vulnerability vuln = Vulnerability.builder()
                             .category("sast")
                             .id(issue.getVulnerability().concat(":").concat(issue.getFilename()).concat(":").concat(k.toString()))
@@ -157,8 +158,9 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
                             )
                             .build();
                     vulns.add(vuln);
-                })
-        );
+                });
+            }
+        }
         SecurityDashboard report  = SecurityDashboard.builder()
                 .vulnerabilities(vulns)
                 .build();
