@@ -322,7 +322,7 @@ public class GitLabIssueTracker implements IssueTracker {
         JSONObject requestBody = new JSONObject();
         String fileUrl = getFileUrl(request, resultIssue.getFilename());
         String body = HTMLHelper.getMDBody(resultIssue, request.getBranch(), fileUrl, flowProperties);
-        String title = request.getProduct().getProduct() + " " + getXIssueKey(resultIssue, request);
+        String title = HTMLHelper.getScanRequestDefaultProductValue(request) + getXIssueKey(resultIssue, request);
 
         try {
             requestBody.put("title", title);

@@ -366,7 +366,7 @@ public class ServiceNowTracker implements IssueTracker {
      */
     private Incident getCreateIncident(ScanResults.XIssue resultIssue, ScanRequest request) {
         String tag   = createServiceNowTag(request);
-        String title = request.getProduct().getProduct() + " " + getXIssueKey(resultIssue, request);
+        String title = HTMLHelper.getScanRequestDefaultProductValue(request) + getXIssueKey(resultIssue, request);
         String body  = HTMLHelper.getTextBody(resultIssue, request, flowProperties);
 
         Incident incident = new Incident();

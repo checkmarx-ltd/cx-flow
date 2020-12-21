@@ -93,6 +93,10 @@ public class HTMLHelper {
         return body.toString();
     }
 
+    public static String getScanRequestDefaultProductValue(ScanRequest scanRequest) {
+        return scanRequest.getProduct().getProduct() + " ";
+    }
+
     private static void addFlowSummarySection(ScanResults results, RepoProperties properties, StringBuilder body, ScanRequest request) {
         if (properties.isFlowSummary() ) {
             if (!ScanUtils.empty(properties.getFlowSummaryHeader())) {
