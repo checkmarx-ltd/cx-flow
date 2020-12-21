@@ -269,6 +269,7 @@ public class CxFlowRunner implements ApplicationRunner {
                     exit(1);
                 }
                 mergeNoteUri = gitHubProperties.getMergeNoteUri(namespace, repoName, mergeId);
+                repoUrl = getNonEmptyRepoUrl(namespace, repoName, repoUrl, gitHubProperties.getGitUri(namespace, repoName));
                 break;
             case GITLABMERGE:
             case gitlabmerge:
@@ -283,6 +284,7 @@ public class CxFlowRunner implements ApplicationRunner {
                     exit(1);
                 }
                 mergeNoteUri = gitLabProperties.getMergeNoteUri(projectId, mergeId);
+                repoUrl = getNonEmptyRepoUrl(namespace, repoName, repoUrl, gitLabProperties.getGitUri(namespace, repoName));
                 break;
             case BITBUCKETPULL:
             case bitbucketserverpull:
@@ -474,6 +476,7 @@ public class CxFlowRunner implements ApplicationRunner {
         log.info("Initiating scan using Checkmarx git clone");
         request.setRepoType(repoType);
         log.info("Git url: {}", gitUrl);
+
         request.setBranch(branch);
         request.setRepoUrl(gitUrl);
         request.setRepoUrlWithAuth(gitAuthUrl);
