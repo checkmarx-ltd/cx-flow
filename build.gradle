@@ -122,7 +122,9 @@ dependencies {
     compile("ch.qos.logback.contrib:logback-jackson:0.1.5")
     compile("net.logstash.logback:logstash-logback-encoder:5.2")
     compile 'org.modelmapper:modelmapper:2.3.8'
-    compile("com.checkmarx:cx-config-provider:${ConfigProviderVersion}")
+    compile("com.checkmarx:cx-config-provider:${ConfigProviderVersion}") {
+        exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j-impl'
+    }
 }
 
 springBoot {
