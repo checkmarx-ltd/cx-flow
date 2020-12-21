@@ -24,7 +24,6 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestOperations;
 
-import javax.annotation.PostConstruct;
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
@@ -366,7 +365,7 @@ public class ServiceNowTracker implements IssueTracker {
      */
     private Incident getCreateIncident(ScanResults.XIssue resultIssue, ScanRequest request) {
         String tag   = createServiceNowTag(request);
-        String title = getXIssueKey(resultIssue, request);
+        String title = HTMLHelper.getScanRequestIssueKeyWithDefaultProductValue(request, this, resultIssue);
         String body  = HTMLHelper.getTextBody(resultIssue, request, flowProperties);
 
         Incident incident = new Incident();
