@@ -235,7 +235,7 @@ public class ADOIssueTracker implements IssueTracker {
         CreateWorkItemAttr title = new CreateWorkItemAttr();
         title.setOp("add");
         title.setPath(Constants.ADO_FIELD.concat(TITLE_FIELD));
-        title.setValue(HTMLHelper.getScanRequestDefaultProductValue(request) + getXIssueKey(resultIssue, request));
+        title.setValue(HTMLHelper.getScanRequestIssueKeyWithDefaultProductValue(request, this, resultIssue));
         
         CreateWorkItemAttr description = new CreateWorkItemAttr();
         description.setOp("add");

@@ -4,6 +4,7 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.RepoProperties;
 import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.constants.SCATicketingConstants;
+import com.checkmarx.flow.custom.IssueTracker;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.dto.Filter.Severity;
@@ -93,8 +94,8 @@ public class HTMLHelper {
         return body.toString();
     }
 
-    public static String getScanRequestDefaultProductValue(ScanRequest scanRequest) {
-        return scanRequest.getProduct().getProduct() + " ";
+    public static String getScanRequestIssueKeyWithDefaultProductValue(ScanRequest scanRequest, IssueTracker issueTracker, ScanResults.XIssue resultIssue) {
+        return scanRequest.getProduct().getProduct() + " " + issueTracker.getXIssueKey(resultIssue, scanRequest);
     }
 
     private static void addFlowSummarySection(ScanResults results, RepoProperties properties, StringBuilder body, ScanRequest request) {
