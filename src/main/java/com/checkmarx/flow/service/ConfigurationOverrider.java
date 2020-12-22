@@ -393,17 +393,15 @@ public class ConfigurationOverrider {
 
         String cannotOverrideReason = null;
 
-        if (!ScanUtils.empty(bugTrackerNameOverride) && bugTrackerNameOverride.equalsIgnoreCase(BugTracker.Type.NONE.toString())) {
-            // if overriding bug-tracker to 'NONE', it should be override regardless the bug-tracker value in scan request
-            if (comingFromPullRequest) {
-                // Don't override bug tracker type if the scan is initiated by a pull request.
-                // Otherwise bug tracker events won't be triggered.
-                cannotOverrideReason = "scan was initiated by pull request";
-            } else if (StringUtils.isEmpty(bugTrackerNameOverride)) {
-                cannotOverrideReason = "no bug tracker override is defined";
-            } else if (bugTrackerNameOverride.equalsIgnoreCase(currentBugTrackerType.toString())) {
-                cannotOverrideReason = "bug tracker type in override is the same as in scan request";
-            }
+        if (StringUtils.isEmpty(bugTrackerNameOverride)) {
+            cannotOverrideReason = "no bug tracker override is defined";
+        } else if (comingFromPullRequest && !bugTrackerNameOverride.equalsIgnoreCase(BugTracker.Type.NONE.toString())) {
+            // if Bug-tracker override is 'NONE' - always override
+            // If not, don't override bug tracker type if the scan is initiated by a pull request.
+            // Otherwise bug tracker events won't be triggered.
+            cannotOverrideReason = "scan was initiated by pull request and the overriding value is not NONE";
+        } else if (bugTrackerNameOverride.equalsIgnoreCase(currentBugTrackerType.toString())) {
+            cannotOverrideReason = "bug tracker type in override is the same as in scan request";
         }
 
         if (cannotOverrideReason != null) {
