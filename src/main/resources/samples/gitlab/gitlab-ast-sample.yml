@@ -1,0 +1,13 @@
+include: 'https://raw.githubusercontent.com/checkmarx-ltd/cx-flow/master/src/main/resources/samples/gitlab-config.yml'
+
+variables:
+    CX_FLOW_ENABLED_VULNERABILITY_SCANNERS: ast
+    AST_API_URL: $AST_API_URL
+    AST_WEBAPPURL: $AST_WEBAPP_URL
+    AST_CLIENT_ID: <ast-client-id>
+    AST_CLIENT_SECRET: $AST_CLIENT_SECRET
+
+  
+stages:
+  - scan
+

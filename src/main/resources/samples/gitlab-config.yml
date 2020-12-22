@@ -1,0 +1,76 @@
+variables:
+    CX_FLOW_EXE: "java -jar /app/cx-flow.jar"
+    CHECKMARX_INCREMENTAL: "false"
+    CX_PROJECT: "$CI_PROJECT_NAME-$CI_COMMIT_REF_NAME"
+    APP: $CI_PROJECT_NAME
+    NAMESPACE: $CI_PROJECT_NAMESPACE
+    REPO_NAME: $CI_PROJECT_NAME
+    REPO_URL: $CI_REPOSITORY_URL
+    CX_FLOW_ENABLED_VULNERABILITY_SCANNERS: sast
+    CX_TEAM: "/CxServer/"
+    BRANCH: $CI_COMMIT_BRANCH
+    CX_FLOW_BREAK_BUILD: "false"
+    GITLAB_BLOCK_MERGE: "false"
+    GITLAB_ERROR_MERGE: "false"
+    PARAMS: ""
+
+stages:
+  - scan
+
+cx-scan:
+  stage: scan
+  only:
+    - master
+  variables:
+      CX_FLOW_BUG_TRACKER: GitLabDashboard
+      CX_FLOW_BUG_TRACKER_IMPL: GitLabDashboard
+  image:
+    name: checkmarx/cx-flow
+    entrypoint: ['']
+  script:
+    - ${CX_FLOW_EXE}
+          --scan 
+          --app="${APP}" 
+          --namespace="${NAMESPACE}" 
+          --repo-name="${REPO_NAME}" 
+          --repo-url="${REPO_URL}" 
+          --cx-team="${CX_TEAM}" 
+          --cx-project="${CX_PROJECT}" 
+          --branch="${BRANCH}"
+          --spring.profiles.active="${CX_FLOW_ENABLED_VULNERABILITY_SCANNERS}" 
+          --f=. 
+          ${PARAMS}
+
+  artifacts:
+     when: on_success
+     reports:
+       sast: gl-sast-report.json
+     paths:
+       - gl-sast-report.json
+
+
+cx-scan-mr:
+  stage: scan
+  only:
+    - merge_requests
+  variables:
+      CX_FLOW_BUG_TRACKER: GITLABMERGE
+      GITLAB_TOKEN: $GITLAB_TOKEN
+  image:   
+    name: checkmarx/cx-flow
+    entrypoint: ['']
+  script:
+    - ${CX_FLOW_EXE}
+          --scan 
+          --app="${APP}" 
+          --namespace="${NAMESPACE}" 
+          --repo-name="${REPO_NAME}" 
+          --repo-url="${REPO_URL}" 
+          --cx-team="${CX_TEAM}" 
+          --cx-project="${CX_PROJECT}" 
+          --branch="${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME}" 
+          --project-id="${CI_PROJECT_ID}" 
+          --merge-id="${CI_MERGE_REQUEST_IID}" 
+          --spring.profiles.active="${CX_FLOW_ENABLED_VULNERABILITY_SCANNERS}" 
+          --f=. 
+          ${PARAMS} 

@@ -1,0 +1,26 @@
+include: 'https://raw.githubusercontent.com/checkmarx-ltd/cx-flow/master/src/main/resources/samples/gitlab-config.yml'
+
+variables:
+    CX_FLOW_ENABLED_VULNERABILITY_SCANNERS: "sast,sca"
+    CX_TEAM: "/CxServer/SP"
+    CHECKMARX_USERNAME: $CHECKMARX_USERNAME
+    CHECKMARX_PASSWORD: $CHECKMARX_PASSWORD
+    CHECKMARX_BASE_URL: $CHECKMARX_SERVER
+    CHECKMARX_CLIENT_SECRET: $CHECKMARX_CLIENT_SECRET
+    
+    SCA_TENANT: $SCA_TENANT
+    SCA_USERNAME: $SCA_USERNAME
+    SCA_PASSWORD: $SCA_PASSWORD
+    
+  
+stages:
+  - scan
+
+ cx-scan:
+   artifacts:
+     reports:
+       sast: gl-sast-report.json
+       dependency_scanning: gl-dependency-scanning-report.json
+     paths:
+       - gl-sast-report.json
+       - gl-dependency-scanning-report.json
