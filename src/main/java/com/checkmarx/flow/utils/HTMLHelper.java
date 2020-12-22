@@ -95,7 +95,20 @@ public class HTMLHelper {
     }
 
     public static String getScanRequestIssueKeyWithDefaultProductValue(ScanRequest scanRequest, IssueTracker issueTracker, ScanResults.XIssue resultIssue) {
-        return scanRequest.getProduct().getProduct() + " " + issueTracker.getXIssueKey(resultIssue, scanRequest);
+        String xIssueKeyValue = issueTracker.getXIssueKey(resultIssue, scanRequest);
+        String productPrefix = scanRequest.getProduct().getProduct();
+        if (!xIssueKeyValue.startsWith(productPrefix)) {
+            xIssueKeyValue = productPrefix + " " + xIssueKeyValue;
+        }
+        return xIssueKeyValue;
+    }
+
+    public static String getScanRequestIssueKeyWithDefaultProductValue(ScanRequest scanRequest, String titleToConcat) {
+        String productPrefix = scanRequest.getProduct().getProduct();
+        if (!titleToConcat.startsWith(productPrefix)) {
+            titleToConcat = productPrefix + " " + titleToConcat;
+        }
+        return titleToConcat;
     }
 
     private static void addFlowSummarySection(ScanResults results, RepoProperties properties, StringBuilder body, ScanRequest request) {

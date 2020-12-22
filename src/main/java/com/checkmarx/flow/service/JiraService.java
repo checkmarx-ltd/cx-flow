@@ -294,7 +294,7 @@ public class JiraService {
             String fileUrl = ScanUtils.getFileUrl(request, issue.getFilename());
             summary = checkSummaryLength(summary);
 
-            issueBuilder.setSummary(request.getProduct().getProduct() + " " + summary);
+            issueBuilder.setSummary(HTMLHelper.getScanRequestIssueKeyWithDefaultProductValue(request, summary));
             issueBuilder.setDescription(this.getBody(issue, request, fileUrl));
             if (assignee != null && !assignee.isEmpty()) {
                     String accountId = getAssignee(assignee, projectKey);
@@ -936,7 +936,7 @@ public class JiraService {
                         ? String.format(JiraConstants.JIRA_ISSUE_TITLE_KEY, issuePrefix, issue.getVulnerability(), issue.getFilename(), issuePostfix)
                         : getScaDetailsIssueTitleWithoutBranchFormat(request, issuePrefix, issuePostfix, issue);
             }
-            map.put(request.getProduct().getProduct() + " " + key, issue);
+            map.put(HTMLHelper.getScanRequestIssueKeyWithDefaultProductValue(request, key), issue);
         }
         return map;
     }
