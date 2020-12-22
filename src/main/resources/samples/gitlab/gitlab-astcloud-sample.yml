@@ -1,0 +1,11 @@
+include: 'https://raw.githubusercontent.com/checkmarx-ltd/cx-flow/master/src/main/resources/samples/gitlab-config.yml'
+
+variables:
+    CX_FLOW_ENABLED_VULNERABILITY_SCANNERS: cxgo
+    CXGO_CLIENT_SECRET: $CXGO_CLIENT_SECRET
+    CX_TEAM: \Demo\CxFlow\
+    PARAMS: "" #Additional cxflow parameters if needed.
+  
+stages:
+  - scan
+

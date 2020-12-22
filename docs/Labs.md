@@ -232,65 +232,36 @@ To review scan results within GitLab’s Security Dashboard, you need the Gold/U
 To allow for easy configuration, it is necessary to create environment variables with GitLab to run the integration.  For more information on GitLab CI/CD variables, visit here: [GitLab: CI/CD - Environment Variables](https://gitlab.com/help/ci/variables/README#gitlab-cicd-environment-variables)
 Edit the CI/CD variables under Settings → CI / CD → Variables and add the following variables for a CxSAST and/or CxSCA scan :
 
-` ! The key CX_FLOW_CONFIG variable must be of type "File" `
 
 [[/Images/gitlab_settings.png]]
 
-Variable     | Value 
+Variable/ Inputs     | Value 
 --------------------|-------------------
 GITLAB_TOKEN | <p>API token to create Merge Request Overview entries, should have “api” privileges. <br>To create a personal token, click your Gitlab profile in the upper right corner >settings <br><br>- Click Access Tokens and add a personal access token.Click Access Tokens and add a personal access token. <br>- Give the token api, read_user, write_repository, read_registry scopes. <br><br> For additional information on creating a Personal Access Token, refer to [GitLab: Personal Access Tokens](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) </p> 
-BUG_TRACKER   (Type: Variable)| Type of bug tracking ('GitLabDashboard' or ‘GitLab’).  For vulnerabilities to be exported to GitLab’s Dashboard, use ‘GitLabDashboard’ and for vulnerabilities to be added to GitLab’s Issues, use ‘GitLab’  For more details on complete list of Bug Trackers, please refer to [CxFlow Configuration](https://github.com/checkmarx-ltd/cx-flow/wiki/Configuration) 
+CX_FLOW_BUG_TRACKER   (Type: Variable)| Type of bug tracking ('GitLabDashboard' or ‘GitLab’).  For vulnerabilities to be exported to GitLab’s Dashboard, use ‘GitLabDashboard’ and for vulnerabilities to be added to GitLab’s Issues, use ‘GitLab’  For more details on complete list of Bug Trackers, please refer to [CxFlow Configuration](https://github.com/checkmarx-ltd/cx-flow/wiki/Configuration) 
+CX_FLOW_ENABLED_VULNERABILITY_SCANNERS | Vulnerability Scanners (sast, sca, ast, cxgo). Multiple comma seperated values allowed.
 CHECKMARX_PASSWORD   (Type: Variable) | Password for CxSAST 
 CHECKMARX_SERVER   (Type: Variable) | The base URL of CxSAST Manager Server (i.e. https://checkmarx.company.com) 
 CHECKMARX_USERNAME   (Type: Variable) | User Name for the CxSAST Manager.  User must have ‘SAST Scanner’ privileges.  For more information on CxSAST roles, please refer to [CxSAST / CxOSA Roles and Permissions](https://checkmarx.atlassian.net/wiki/spaces/KC/pages/1178009601/CxSAST+CxOSA+Roles+and+Permissions+v9.0.0+and+up) 
-CX_FLOW_CONFIG   (Type: File)|  [See example below](#configfile)
-CHECKMARX_TEAM   (Type: Varia ble) | Checkmarx Team Name (i.e. /CxServer/teamname) 
+CHECKMARX_TEAM   (Type: Variable) | Checkmarx Team Name (i.e. /CxServer/teamname) 
+CHECKMARX_CLIENT_SECRET | Checkmarx OIDC Client Secret
 SCA_TENANT   (Type: Variable) | The name of the CxSCA Account (i.e. SCA-CompanyName).  **Only needed if you have a valid license for CxSCA** 
 SCA_USERNAME   (Type: Variable) | The username of the CxSCA Account.  **Only needed if you have a valid license for CxSCA**  
 SCA_PASSWORD   (Type: Variable) | The password of the CxSCA Account.  **Only needed if you have a valid license for CxSCA** 
+CXGO_CLIENT_SECRET | Client-Secret needed for AST Cloud (CxGo).
+AST_API_URL | API URL for AST scan
+AST_WEBAPPURL | WebApp URL for AST scan
+AST_CLIENT_ID | Client-ID configured within AST. 
+AST_CLIENT_SECRET | Client-Secret within AST.
+PARAMS | Any additional parameters for CxFlow. For a full list of all the parameters, check [here](https://github.com/checkmarx-ltd/cx-flow/wiki/Configuration)
 
-###### <a name="configfile">Configuration File example</a>
-`! enable-vulnerability-scanners: - sca and the sca block are only needed if you have a valid CxSCA license and tenant.`
+###### <a name="configfile">GitLab Configuration File example</a>
+
+The gitlab configuration file is stored at a remote location within the cxflow repo. It can be directly used as a template using the following syntax.
+
 ```yaml
-logging:
-  file:
-    name: cx-flow.log
+include: 'https://raw.githubusercontent.com/checkmarx-ltd/cx-flow/master/src/main/resources/samples/gitlab-config.yml'
 
-cx-flow:
-  bug-tracker:  ${BUG_TRACKER}
-  bug-tracker-impl:
-    - GitLab
-    - GitLabDashboard
-  filter-severity:
-    - High
-  mitre-url: https://cwe.mitre.org/data/definitions/%s.html
-  break-build: true
-  enabled-vulnerability-scanners:
-    - sast
-    - sca
-
-checkmarx:
-  version: 9.0
-  client-secret: 014DF517-39D1-4453-B7B3-9930C563627C
-  base-url: ${CHECKMARX_SERVER}
-  url: ${CHECKMARX_SERVER}/cxrestapi
-  portal-url: ${CHECKMARX_SERVER}/cxwebinterface/Portal/CxWebService.asmx
-  multi-tenant: true
-  incremental: true
-  scan-preset: Checkmarx Default
-  configuration: Default Configuration
-  scan-timeout: 120
-
-sca:
-  appUrl:  https://sca.scacheckmarx.com
-  apiUrl:  https://api.scacheckmarx.com
-  accessControlUrl:  https://platform.checkmarx.net
-
-gitlab:
-  api-url: https://gitlab.com/api/v4/
-  false-positive-label: false-positive
-  url: https://gitlab.com
-  file-path: ./gl-sast-report.json
 ```
 
 ##### [Top of Lab](#gitlabcicd)
@@ -300,49 +271,21 @@ The GitLab CI/CD pipeline is controlled by a file named ‘.gitlab-ci.yml’ loc
 `! It is suggested not to over-pollute your companies already existing '.gitlab-ci.yml' file.  Instead, create a new YAML file in the root directory named ‘.checkmarx.yml’ and include it in ‘.gitlab-ci.yml’`
 
 ` # Note that image is a docker container maintained by Checkmarx`
-#### .checkmarx.yml
+#### .checkmarx.yml (For SAST Scan)
 ```yaml
-image: docker:latest
-services:
-  - docker:dind
+include: 'https://raw.githubusercontent.com/checkmarx-ltd/cx-flow/master/src/main/resources/samples/gitlab-config.yml'
 
-.checkmarx_sast:
-  stage: test
-  image:
-    name: docker.io/checkmarx/cx-flow
-    entrypoint: ['']
-  script:
-    - cat ${CX_FLOW_CONFIG} > application.yml
-    - |
-      if [ "$CI_PIPELINE_SOURCE" == "merge_request_event" ]; then 
-        java -jar /app/cx-flow.jar --spring.config.location=./application.yml \
-          --scan \
-          --cx-team="${CHECKMARX_TEAM}" \
-          --cx-project="${CI_PROJECT_NAME}-${CI_COMMIT_REF_NAME}" \
-          --app="${CI_PROJECT_NAME}" \
-          --project-id=${CI_PROJECT_ID} \
-          --merge-id=${CI_MERGE_REQUEST_IID} \
-          --bug-tracker=GITLABMERGE \
-          --cx-flow.break-build=false \
-          --f=.
-      else
-        java -jar /app/cx-flow.jar --spring.config.location=./application.yml \
-          --scan \
-          --cx-team="${CHECKMARX_TEAM}" \
-          --cx-project="${CI_PROJECT_NAME}-${CI_COMMIT_REF_NAME}" \
-          --app="${CI_PROJECT_NAME}-${CI_COMMIT_REF_NAME}" \
-          --branch="${CI_COMMIT_REF_NAME}" \
-          --repo-name="${CI_PROJECT_NAME}" \
-          --namespace="${CI_PROJECT_NAMESPACE##*/}" \
-          --cx-flow.break-build=false \
-          --f=.
-      fi
-  artifacts:
-    when: on_success
-    reports:
-      sast: gl-sast-report.json
-    paths:
-      - gl-sast-report.json
+variables:
+    CX_FLOW_ENABLED_VULNERABILITY_SCANNERS: sast
+    CX_TEAM: "/CxServer/MP"
+    CHECKMARX_USERNAME: $CX_USERNAME
+    CHECKMARX_PASSWORD: $CX_PASSWORD
+    CHECKMARX_BASE_URL: $CHECKMARX_SERVER
+    CHECKMARX_CLIENT_SECRET: $CHECKMARX_CLIENT_SECRET
+  
+stages:
+  - scan
+
 ```
 
 #### .gitlab-ci.yml
@@ -350,14 +293,8 @@ services:
 include: '.checkmarx.yml'
 
 stages:
-  - test
+  - scan
 
-checkmarx_sast:
-  stage: test
-  only:
-    - master
-    - merge_requests
-  extends: .checkmarx_sast
 ```
 
 ##### [Top of Lab](#gitlabcicd)
@@ -392,6 +329,14 @@ With the Gold/Ultimate tier for GitLab, or if the project is public, you can rev
 
 An example of vulnerabilities displayed in the Security Dashboard can be found in the below image.
 ##### [Top of Lab](#gitlabcicd)
+
+## Sample Gitlab config files for different scanners
+
+ * [Gitlab config for AST](/src/main/resources/samples/gitlab/gitlab-ast-sample.yml)
+ * [Gitlab config for SAST and SCA combined](/src/main/resources/samples/gitlab/gitlab-sast-sca-sample.yml)
+ * [Gitlab config for AST Cloud](/src/main/resources/samples/gitlab/gitlab-astcloud-sample.yml)
+ * [Github config for SCA](/src/main/resources/samples/gitlab/gitlab-sca-sample.yml)
+
 
 ## <a name="azure">Azure DevOps Webhook Lab</a>
 * [Prep](#adoprep)

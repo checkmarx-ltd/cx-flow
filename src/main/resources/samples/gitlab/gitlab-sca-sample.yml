@@ -1,0 +1,18 @@
+include: 'https://raw.githubusercontent.com/checkmarx-ltd/cx-flow/master/src/main/resources/samples/gitlab-config.yml'
+
+variables:
+    CX_FLOW_ENABLED_VULNERABILITY_SCANNERS: sca
+    SCA_TENANT: $SCA_TENANT
+    SCA_USERNAME: $SCA_USERNAME
+    SCA_PASSWORD: $SCA_PASSWORD
+    
+  
+stages:
+  - scan
+
+ cx-scan:
+   artifacts:
+     reports:
+       dependency_scanning: gl-dependency-scanning-report.json
+     paths:
+       - gl-dependency-scanning-report.json
