@@ -362,14 +362,14 @@ public class ScanUtils {
   
 
     private static String getCustomScaSummaryIssueKey(ScanRequest request, ScanResults.ScaDetails scaDetails) {
-        return String.format(SCATicketingConstants.SCA_SUMMARY_CUSTOM_ISSUE_KEY, scaDetails.getFinding().getSeverity(),
+        return String.format(SCATicketingConstants.SCA_SUMMARY_CUSTOM_ISSUE_KEY, HTMLHelper.getScanRequestIssueKeyWithDefaultProductValue(request, String.valueOf(scaDetails.getFinding().getSeverity())),
                 scaDetails.getFinding().getScore(), scaDetails.getFinding().getId(),
                 scaDetails.getVulnerabilityPackage().getName(),
                 scaDetails.getVulnerabilityPackage().getVersion(), request.getRepoName(), request.getBranch());
     }
 
     private static String getCustomScaSummaryIssueKeyWithoutBranch(ScanRequest request, ScanResults.ScaDetails scaDetails) {
-        return String.format(SCATicketingConstants.SCA_SUMMARY_CUSTOM_ISSUE_KEY_WITHOUT_BRANCH, scaDetails.getFinding().getSeverity(),
+        return String.format(SCATicketingConstants.SCA_SUMMARY_CUSTOM_ISSUE_KEY_WITHOUT_BRANCH, HTMLHelper.getScanRequestIssueKeyWithDefaultProductValue(request, String.valueOf(scaDetails.getFinding().getSeverity())),
                 scaDetails.getFinding().getScore(), scaDetails.getFinding().getId(),
                 scaDetails.getVulnerabilityPackage().getName(),
                 scaDetails.getVulnerabilityPackage().getVersion(), request.getRepoName());
