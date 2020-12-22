@@ -444,5 +444,5 @@ The file system path and the file naming format are required.
 
 
 ## <a name="none">NONE | WAIT</a>
-If you want to trigger scans asynchronously, use **NONE**
-If you want to trigger scans, but wait for feedback | summary console output, use **WAIT | wait**
+If you want to trigger scans asynchronously, use **NONE**  
+If you want to trigger scans, but wait for feedback | summary console output, use **WAIT | wait**  
