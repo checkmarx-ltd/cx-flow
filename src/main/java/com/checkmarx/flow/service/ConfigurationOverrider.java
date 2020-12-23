@@ -269,6 +269,14 @@ public class ConfigurationOverrider {
             String scmType = request.getRepoType().getRepository().toLowerCase();
             String organizationName = request.getOrganizationName();
 
+            /*
+                When ADO is the SCM event trigger, the Repos-Manager expects to get 'azure' in the URL path
+                rather than 'ado'. Was decided to make the change here rather than the other services
+             */
+            if (scmType.equalsIgnoreCase(ScanRequest.Repository.ADO.getRepository())) {
+                scmType = "azure";
+            }
+
             CxGoConfigFromWebService cxgoConfig = reposManagerService.getCxGoDynamicConfig(scmType, organizationName);
             String className = CxGoConfigFromWebService.class.getSimpleName();
             log.info("Applying {} configuration.", className);
