@@ -52,7 +52,7 @@ public class CxIntegrationSteps {
 
     @Then("scanRequest is getting populated with cx-go new configuration")
     public void validateCxGoConfigurationOverride() {
-        Assert.assertEquals(CLIENT_SECRET, scanRequest.getClientSec());
+        Assert.assertEquals(CLIENT_SECRET, scanRequest.getScannerApiSecret());
         Assert.assertEquals(TEAM, scanRequest.getTeam());
         Assert.assertTrue(scanRequest.getRepoUrlWithAuth().contains(SCM_ACCESS_TOKEN));
     }
@@ -72,7 +72,7 @@ public class CxIntegrationSteps {
     private ScanRequest initScanRequest() {
         return ScanRequest.builder()
                 .repoType(ScanRequest.Repository.GITHUB)
-                .organizationName("organization-test")
+                .organizationId("organization-test")
                 .gitUrl("https://www.github.com")
                 .build();
     }

@@ -150,7 +150,7 @@ public class ADOController extends AdoControllerBase {
                     .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)
                     .filter(filter)
-                    .organizationName(determineNamespace(resourceContainers))
+                    .organizationId(determineNamespace(resourceContainers))
                     .gitUrl(gitUrl)
                     .build();
 
@@ -264,7 +264,7 @@ public class ADOController extends AdoControllerBase {
                     .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)
                     .filter(filter)
-                    .organizationName(determineNamespace(resourceContainers))
+                    .organizationId(determineNamespace(resourceContainers))
                     .gitUrl(gitUrl)
                     .build();
 
@@ -290,7 +290,7 @@ public class ADOController extends AdoControllerBase {
         return getSuccessMessage();
     }
 
-    private Boolean isDeleteBranchEvent(Resource resource){
+    private boolean isDeleteBranchEvent(Resource resource){
         if (resource.getRefUpdates().size() == 1){
             String newBranchRef = resource.getRefUpdates().get(0).getNewObjectId();
 
@@ -301,7 +301,7 @@ public class ADOController extends AdoControllerBase {
             return false;
         }
 
-        int refCount = Optional.ofNullable(resource.getRefUpdates().size()).orElse(0);
+        int refCount = resource.getRefUpdates().size();
         log.warn("unexpected number of refUpdates in push event: {}", refCount);
 
         return false;

@@ -267,7 +267,7 @@ public class ConfigurationOverrider {
     private void applyCxGoDynamicConfig(Map<String, String> overrideReport, ScanRequest request)  {
         if (cxIntegrationsProperties.isReadMultiTenantConfiguration()) {
             String scmType = request.getRepoType().getRepository().toLowerCase();
-            String organizationName = request.getOrganizationName();
+            String organizationName = request.getOrganizationId();
 
             /*
                 When ADO is the SCM event trigger, the Repos-Manager expects to get 'azure' in the URL path
@@ -296,9 +296,9 @@ public class ConfigurationOverrider {
             Optional.ofNullable(cxgoConfig.getCxgoSecret())
                     .filter(StringUtils::isNotEmpty)
                     .ifPresent(secret -> {
-                        request.setClientSec(secret);
-                        log.info("Using client secret from {}", className);
-                        overrideReport.put("clientSecret", "<actually it's a secret>");
+                        request.setScannerApiSecret(secret);
+                        log.info("Using scanner API secret from {}", className);
+                        overrideReport.put("scannerApiSecret", "<actually it's a secret>");
                     });
             Optional.ofNullable(cxgoConfig.getScmAccessToken())
                     .filter(StringUtils::isNotEmpty)
