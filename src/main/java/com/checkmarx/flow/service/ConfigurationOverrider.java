@@ -11,6 +11,7 @@ import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.FlowOverride;
 import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.*;
 import com.checkmarx.sdk.dto.CxConfig;
@@ -278,7 +279,8 @@ public class ConfigurationOverrider {
 
             CxGoConfigFromWebService cxgoConfig = reposManagerService.getCxGoDynamicConfig(
                     scmType,
-                    request.getOrganizationId());
+                    Optional.ofNullable(request.getOrganizationId())
+                            .orElseThrow(() -> new MachinaRuntimeException("Organization id is missing for SCM: " + request.getRepoType().getRepository())));
 
             if (cxgoConfig == null) {
                 log.error("Multi Tenant mode: missing CxGo configuration in Repos Manager Service. Working with Multi Tenant = false ");

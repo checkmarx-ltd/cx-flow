@@ -3,6 +3,7 @@ package com.checkmarx.flow.controller;
 import com.checkmarx.flow.config.BitBucketProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ControllerRequest;
@@ -43,6 +44,8 @@ public class BitbucketCloudController extends WebhookController {
     private final BitBucketService bitbucketService;
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
+    private final GitAuthUrlGenerator gitAuthUrlGenerator;
+    private final ScmConfigOverrider scmConfigOverrider;
 
     /**
      * Push Request event webhook submitted.
@@ -92,6 +95,8 @@ public class BitbucketCloudController extends WebhookController {
             FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
 
             String gitUrl = repository.getLinks().getHtml().getHref().concat(".git");
+            String configToken = scmConfigOverrider.determineConfigToken(properties, controllerRequest.getScmInstance());
+            String gitAuthUrl = gitAuthUrlGenerator.addCredToUrl(ScanRequest.Repository.BITBUCKET, gitUrl, configToken);
             String mergeEndpoint = pullRequest.getLinks().getComments().getHref();
 
 
@@ -100,10 +105,10 @@ public class BitbucketCloudController extends WebhookController {
                     .product(p)
                     .project(controllerRequest.getProject())
                     .team(controllerRequest.getTeam())
-                    .namespace(repository.getOwner().getDisplayName().replace(" ", "_"))
+                    .namespace(getProjectNamespace(repository))
                     .repoName(repository.getName())
                     .repoUrl(gitUrl)
-                    .repoUrlWithAuth(gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(properties.getToken()).concat("@")))
+                    .repoUrlWithAuth(gitAuthUrl)
                     .repoType(ScanRequest.Repository.BITBUCKET)
                     .branch(currentBranch)
                     .mergeTargetBranch(targetBranch)
@@ -117,6 +122,8 @@ public class BitbucketCloudController extends WebhookController {
                     .bugTracker(bt)
                     .filter(filter)
                     .hash(hash)
+                    .organizationId(getProjectNamespace(repository))
+                    .gitUrl(gitUrl)
                     .build();
 
             fillRequestWithAdditionalData(request, repository, body.toString());
@@ -191,16 +198,18 @@ public class BitbucketCloudController extends WebhookController {
             }
 
             String gitUrl = repository.getLinks().getHtml().getHref().concat(".git");
+            String configToken = scmConfigOverrider.determineConfigToken(properties, controllerRequest.getScmInstance());
+            String gitAuthUrl = gitAuthUrlGenerator.addCredToUrl(ScanRequest.Repository.BITBUCKET, gitUrl, configToken);
             
             ScanRequest request = ScanRequest.builder()
                     .application(app)
                     .product(p)
                     .project(controllerRequest.getProject())
                     .team(controllerRequest.getTeam())
-                    .namespace(repository.getOwner().getDisplayName().replace(" ", "_"))
+                    .namespace(getProjectNamespace(repository))
                     .repoName(repository.getName())
                     .repoUrl(gitUrl)
-                    .repoUrlWithAuth(gitUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(properties.getToken()).concat("@")))
+                    .repoUrlWithAuth(gitAuthUrl)
                     .repoType(ScanRequest.Repository.BITBUCKET)
                     .branch(currentBranch)
                     .refs(Constants.CX_BRANCH_PREFIX.concat(currentBranch))
@@ -212,6 +221,8 @@ public class BitbucketCloudController extends WebhookController {
                     .bugTracker(bt)
                     .filter(filter)
                     .hash(hash)
+                    .organizationId(getProjectNamespace(repository))
+                    .gitUrl(gitUrl)
                     .build();
 
             fillRequestWithAdditionalData(request, repository, body.toString());
@@ -225,6 +236,10 @@ public class BitbucketCloudController extends WebhookController {
             return getBadRequestMessage(e, controllerRequest, product);
         }
         return getSuccessMessage();
+    }
+
+    private String getProjectNamespace(Repository repository) {
+        return repository.getOwner().getDisplayName().replace(" ", "_");
     }
 
     /**
