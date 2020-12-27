@@ -33,10 +33,10 @@ public class ReposManagerService {
         cxGoConfigUrlPattern = cxIntegrationsProperties.getUrl() + "/%s/orgs/%s/tenantConfig";
     }
 
-    public CxGoConfigFromWebService getCxGoDynamicConfig(String scmType, String orgName) {
+    public CxGoConfigFromWebService getCxGoDynamicConfig(String scmType, String orgId) {
         if (StringUtils.isNotEmpty(cxIntegrationsProperties.getUrl())) {
-            String urlPath = String.format(cxGoConfigUrlPattern, scmType, encoder(orgName));
-            log.info("Overriding Cx-Go configuration for SCM type: {} and organization name: {}", scmType, orgName);
+            String urlPath = String.format(cxGoConfigUrlPattern, scmType, urlEncode(orgId));
+            log.info("Overriding Cx-Go configuration for SCM type: {} and organization ID: {}", scmType, orgId);
             ResponseEntity<CxGoConfigFromWebService> responseEntity;
             try {
                 responseEntity = restTemplate.getForEntity(urlPath, CxGoConfigFromWebService.class);
@@ -49,7 +49,7 @@ public class ReposManagerService {
         }
     }
 
-    private String encoder(String orgName) {
+    private static String urlEncode(String orgName) {
         try {
             return URLEncoder.encode(orgName, StandardCharsets.UTF_8.toString());
         } catch (UnsupportedEncodingException e) {

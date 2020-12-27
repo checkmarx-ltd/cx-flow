@@ -264,10 +264,9 @@ public class ConfigurationOverrider {
         }
     }
 
-    private void applyCxGoDynamicConfig(Map<String, String> overrideReport, ScanRequest request)  {
+    private void applyCxGoDynamicConfig(Map<String, String> overrideReport, ScanRequest request) {
         if (cxIntegrationsProperties.isReadMultiTenantConfiguration()) {
             String scmType = request.getRepoType().getRepository().toLowerCase();
-            String organizationName = request.getOrganizationId();
 
             /*
                 When ADO is the SCM event trigger, the Repos-Manager expects to get 'azure' in the URL path
@@ -277,13 +276,15 @@ public class ConfigurationOverrider {
                 scmType = "azure";
             }
 
-            CxGoConfigFromWebService cxgoConfig = reposManagerService.getCxGoDynamicConfig(scmType, organizationName);
-            
-            if(cxgoConfig == null){
-               log.error("Multi Tenant mode: missing CxGo configuration in Repos Manager Service. Working with Multi Tenant = false ");
-               return;
+            CxGoConfigFromWebService cxgoConfig = reposManagerService.getCxGoDynamicConfig(
+                    scmType,
+                    request.getOrganizationId());
+
+            if (cxgoConfig == null) {
+                log.error("Multi Tenant mode: missing CxGo configuration in Repos Manager Service. Working with Multi Tenant = false ");
+                return;
             }
-            
+
             String className = CxGoConfigFromWebService.class.getSimpleName();
             log.info("Applying {} configuration.", className);
             Optional.ofNullable(cxgoConfig.getTeam())
