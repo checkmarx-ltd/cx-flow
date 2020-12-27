@@ -81,10 +81,15 @@ public class ScanRequest {
     private ASTConfig astConfig;
 
     @Getter @Setter
-    private String clientSec;
+    private String scannerApiSecret;
 
+    /**
+     * 'Organization' here means the top-most level of project hierarchy.
+     * E.g. if SCM supports several levels of hierarchy, path to the project may look like org1/suborg/my-project.
+     * In such case the value of organizationId should be 'org1'.
+     */
     @Getter @Setter
-    private String organizationName;
+    private String organizationId;
 
     @Getter @Setter
     private String gitUrl;
@@ -125,8 +130,8 @@ public class ScanRequest {
         this.scaConfig = other.scaConfig;
         this.astConfig = other.astConfig;
         this.thresholds = other.thresholds;
-        this.clientSec = other.clientSec;
-        this.organizationName = other.organizationName;
+        this.scannerApiSecret = other.scannerApiSecret;
+        this.organizationId = other.organizationId;
         this.gitUrl = other.gitUrl;
     }
 

@@ -142,7 +142,7 @@ public class GitLabController extends WebhookController {
                     .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)
                     .filter(filter)
-                    .organizationName(getProjectNamespace(proj))
+                    .organizationId(getOrganizationId(proj))
                     .gitUrl(gitUrl)
                     .build();
 
@@ -245,7 +245,7 @@ public class GitLabController extends WebhookController {
                     .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)
                     .filter(filter)
-                    .organizationName(getProjectNamespace(proj))
+                    .organizationId(getOrganizationId(proj))
                     .gitUrl(gitUrl)
                     .build();
 
@@ -284,8 +284,13 @@ public class GitLabController extends WebhookController {
         return getSuccessMessage();
     }
 
-    private String getProjectNamespace(Project proj) {
-        return proj.getNamespace().replace(" ","_");
+    private String getOrganizationId(Project proj) {
+        // Cannot use the 'namespace' field here, because it's for display only and won't work in GitLab API calls.
+        // pathWithNamespace may look like the following, depending on project location:
+        //      my-username/personal-project
+        //      my-group/sample-project
+        //      my-group/my-subgroup/sample-project
+        return StringUtils.substringBefore(proj.getPathWithNamespace(), "/");
     }
 
     private String setUserEmail(@RequestBody PushEvent body, BugTracker.Type bugType, Project proj, ScanRequest request, List<String> emails, String commitEndpoint) {
