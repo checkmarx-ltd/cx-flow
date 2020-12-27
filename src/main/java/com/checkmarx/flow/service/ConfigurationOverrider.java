@@ -11,6 +11,7 @@ import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.FlowOverride;
 import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.*;
 import com.checkmarx.sdk.dto.CxConfig;
@@ -264,7 +265,7 @@ public class ConfigurationOverrider {
         }
     }
 
-    private void applyCxGoDynamicConfig(Map<String, String> overrideReport, ScanRequest request) {
+    private void applyCxGoDynamicConfig(Map<String, String> overrideReport, ScanRequest request)  {
         if (cxIntegrationsProperties.isReadMultiTenantConfiguration()) {
             String scmType = request.getRepoType().getRepository().toLowerCase();
             String organizationName = request.getOrganizationName();
@@ -278,6 +279,12 @@ public class ConfigurationOverrider {
             }
 
             CxGoConfigFromWebService cxgoConfig = reposManagerService.getCxGoDynamicConfig(scmType, organizationName);
+            
+            if(cxgoConfig == null){
+               log.error("Multi Tenant mode: missing CxGo configuration in Repos Manager Service. Working with Multi Tenant = false ");
+               return;
+            }
+            
             String className = CxGoConfigFromWebService.class.getSimpleName();
             log.info("Applying {} configuration.", className);
             Optional.ofNullable(cxgoConfig.getTeam())
