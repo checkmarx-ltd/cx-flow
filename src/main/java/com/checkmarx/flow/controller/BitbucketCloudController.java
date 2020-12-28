@@ -19,6 +19,7 @@ import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -122,7 +123,7 @@ public class BitbucketCloudController extends WebhookController {
                     .bugTracker(bt)
                     .filter(filter)
                     .hash(hash)
-                    .organizationId(getProjectNamespace(repository))
+                    .organizationId(getOrganizationid(repository))
                     .gitUrl(gitUrl)
                     .build();
 
@@ -221,7 +222,7 @@ public class BitbucketCloudController extends WebhookController {
                     .bugTracker(bt)
                     .filter(filter)
                     .hash(hash)
-                    .organizationId(getProjectNamespace(repository))
+                    .organizationId(getOrganizationid(repository))
                     .gitUrl(gitUrl)
                     .build();
 
@@ -263,6 +264,11 @@ public class BitbucketCloudController extends WebhookController {
         String repoSelfUrl = repository.getLinks().getSelf().getHref();
         request.putAdditionalMetadata(BitBucketService.REPO_SELF_URL, repoSelfUrl);
         request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, hookPayload);
+    }
+
+    private String getOrganizationid(Repository repository) {
+        // E.g. "cxflowtestuser/VB_3845" ==> "cxflowtestuser"
+        return StringUtils.substringBefore(repository.getFullName(), "/");
     }
 
 }
