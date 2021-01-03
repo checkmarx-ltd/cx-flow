@@ -63,7 +63,7 @@ public class CxIntegrationSteps {
 
     private CxGoConfigFromWebService getMockedCxGoConfig() {
         return CxGoConfigFromWebService.builder()
-                .cxgoSecret(CLIENT_SECRET)
+                .cxgoToken(CLIENT_SECRET)
                 .scmAccessToken(SCM_ACCESS_TOKEN)
                 .team(TEAM)
                 .build();

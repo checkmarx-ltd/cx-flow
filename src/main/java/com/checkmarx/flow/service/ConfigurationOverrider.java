@@ -294,7 +294,7 @@ public class ConfigurationOverrider {
                         log.info("Using team from {}", className);
                         overrideReport.put(TEAM_REPORT_KEY, team);
                     });
-            Optional.ofNullable(cxgoConfig.getCxgoSecret())
+            Optional.ofNullable(cxgoConfig.getCxgoToken())
                     .filter(StringUtils::isNotEmpty)
                     .ifPresent(secret -> {
                         request.setScannerApiSecret(secret);

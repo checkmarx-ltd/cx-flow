@@ -16,6 +16,6 @@ public class CxGoConfigFromWebService {
     public static final String SECTION_NAME = "cxGoConfig";
 
     private String team;
-    private String cxgoSecret;
+    private String cxgoToken;
     private String scmAccessToken;
 }
