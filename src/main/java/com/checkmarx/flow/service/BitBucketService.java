@@ -3,6 +3,7 @@ package com.checkmarx.flow.service;
 import com.checkmarx.flow.config.BitBucketProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.RepoComment;
+import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanDetails;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.Sources;
@@ -123,11 +124,16 @@ public class BitBucketService extends RepoService {
     }
 
     public void setBuildStartStatus(ScanRequest request) {
-
         if (properties.isBlockMerge()) {
-
             String cxBaseUrl = request.getAdditionalMetadata("cxBaseUrl");
-            JSONObject buildStatusBody = createBuildStatusRequestBody(BUILD_IN_PROGRESS,BUILD_STATUS_KEY_FOR_CXFLOW,"Checkmarx Scan Initiated", cxBaseUrl.concat(CX_USER_SCAN_QUEUE) ,"Waiting for scan to complete..");
+            String CxUrl = cxBaseUrl.concat(CX_USER_SCAN_QUEUE);
+
+//            if(request.getBugTracker().getType().equals(BugTracker.Type.BITBUCKETPULL))
+//            {
+//                CxUrl = ""; //Bitbucket cloud doesnt not support urls containing machine names. e.g- http://WIN-JSVVERPEKVB
+//            }
+
+            JSONObject buildStatusBody = createBuildStatusRequestBody(BUILD_IN_PROGRESS,BUILD_STATUS_KEY_FOR_CXFLOW,"Checkmarx Scan Initiated", CxUrl,"Waiting for scan to complete..");
             sendBuildStatus(request, buildStatusBody.toString());
         }
     }
@@ -183,8 +189,8 @@ public class BitBucketService extends RepoService {
     }
 
     public void sendServerMergeComment(ScanRequest request, String comment) {
-        HttpEntity<String> httpEntity = new HttpEntity<>(getServerJSONComment(comment).toString(), createAuthHeaders());
-        restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
+            HttpEntity<String> httpEntity = new HttpEntity<>(getServerJSONComment(comment).toString(), createAuthHeaders());
+            restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
     private void sendServerMergeTask(ScanRequest request, String comment) {

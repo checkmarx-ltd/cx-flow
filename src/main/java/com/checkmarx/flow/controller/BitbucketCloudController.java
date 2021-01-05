@@ -34,6 +34,7 @@ public class BitbucketCloudController extends WebhookController {
     private static final String EVENT = "X-Event-Key";
     private static final String PUSH = EVENT + "=repo:push";
     private static final String MERGE = EVENT + "=pullrequest:created";
+    private static final String BUILD_API_PATH = "/commit/{node}/statuses/build";
 
     private final FlowProperties flowProperties;
     private final BitBucketProperties properties;
@@ -43,6 +44,7 @@ public class BitbucketCloudController extends WebhookController {
     private final BitBucketService bitbucketService;
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
+    private final CxScannerService cxScannerService;
 
     /**
      * Push Request event webhook submitted.
@@ -94,6 +96,8 @@ public class BitbucketCloudController extends WebhookController {
             String gitUrl = repository.getLinks().getHtml().getHref().concat(".git");
             String mergeEndpoint = pullRequest.getLinks().getComments().getHref();
 
+            String buildStatusEndpoint = repository.getLinks().getSelf().getHref().concat(BUILD_API_PATH);
+            buildStatusEndpoint = buildStatusEndpoint.replace("{node}", hash);
 
             ScanRequest request = ScanRequest.builder()
                     .application(app)
@@ -121,6 +125,8 @@ public class BitbucketCloudController extends WebhookController {
 
             fillRequestWithAdditionalData(request, repository, body.toString());
             checkForConfigAsCode(request);
+            request.putAdditionalMetadata("buildStatusUrl", buildStatusEndpoint);
+            request.putAdditionalMetadata("cxBaseUrl",  cxScannerService.getProperties().getBaseUrl());
             request.setId(uid);
 
             if (helperService.isBranch2Scan(request, branches)) {

@@ -50,6 +50,7 @@ public class BugTrackerEventTrigger {
 
             case BITBUCKETPULL:
                 bbService.sendMergeComment(request, SCAN_MESSAGE);
+                bbService.setBuildStartStatus(request);
                 break;
 
             case BITBUCKETSERVERPULL:
