@@ -153,12 +153,11 @@ public class GitHubService extends RepoService {
             try {
                 ConfigProvider configProvider = ConfigProvider.getInstance();
                 Repository repository = event.getRepository();
-                String ref = event.getRef();
 
                 // According to GitHub the recommended way to extract the branch name
                 // is by using the 'ref' parameter which is in the following format: 'refs/heads/<branch>'
                 configProvider.init(uid, new RepoReader(properties.getApiUrl(), repository.getOwner().getName(),
-                        repository.getName(), ref.substring(ref.lastIndexOf('/') + 1),
+                        repository.getName(), ScanUtils.getBranchFromRef(event.getRef()),
                         properties.getToken(), SourceProviderType.GITHUB));
             } catch (ConfigurationException e) {
                 log.warn("Failed to init config provider with the following error: {}", e.getMessage());
