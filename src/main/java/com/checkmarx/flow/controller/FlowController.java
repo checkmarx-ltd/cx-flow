@@ -9,6 +9,7 @@ import com.checkmarx.flow.dto.EventResponse;
 import com.checkmarx.flow.dto.FlowOverride;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.InvalidTokenException;
+import com.checkmarx.flow.sastscanning.ScanRequestConverter;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
@@ -116,6 +117,20 @@ public class FlowController {
         return scanResults;
     }
 
+    /**
+     * The isAlive endpoint ensures that Fargate can check the status of containers
+     * running CxFlow instances.
+     *
+     * @return A string containing a generic message.
+     */
+    @GetMapping(value = "/isAlive")
+    public ResponseEntity<EventResponse> scanPostback() {
+        return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
+                .message("CxFlow is alive!")
+                .success(true)
+                .build());
+    }
+
     @PostMapping(value = "/postbackAction/{scanID}")
     public ResponseEntity<EventResponse> scanPostback(
             @RequestBody String postBackData,
@@ -124,7 +139,7 @@ public class FlowController {
         log.debug("Handling post-back from SAST");
         int maxNumberOfTokens = 100;
         PostRequestData prd = new PostRequestData();
-        String token = "";
+        String token = " ";
         String bugTracker = properties.getBugTracker();
         //
         /// Decode the scan details.
@@ -152,13 +167,21 @@ public class FlowController {
             String product = "CX";
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
             ScanRequest scanRequest = ScanRequest.builder()
-                                            .namespace(prd.namespace)
-                                            .repoName(prd.repoName)
-                                            .repoType(ScanRequest.Repository.GITHUB)
-                                            .product(p)
-                                            .branch(prd.branch)
-                                            .build();
-
+                    .namespace(prd.namespace)
+                    .repoName(prd.repoName)
+                    .project(prd.project)
+                    .team(prd.team)
+                    .repoType(ScanRequest.Repository.GITHUB)
+                    .product(p)
+                    .branch(prd.branch)
+                    .build();
+            // There won't be a scan ID on the post-back, so we need to fake it in the
+            // event shard support is turned on (very likely if using post-back support).
+            String uid = helperService.getShortUid();
+            MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
+            ScanRequestConverter src = sastScanner.getScanRequestConverter();
+            src.setShardPropertiesIfExists(scanRequest, prd.team);
+            // Now go ahead and process the scan as normal.
             ScanResults scanResults = cxService.getReportContentByScanId(Integer.parseInt(scanID), scanRequest.getFilter());
             scanRequest.putAdditionalMetadata("statuses_url", prd.pullRequestURL);
             scanRequest.setMergeNoteUri(prd.mergeNoteUri);
@@ -601,11 +624,12 @@ public class FlowController {
 }
 
 class PostRequestData {
-    String token = "";
     String mergeNoteUri = "";
     String pullRequestURL = "";
     String branch = "";
     String repoName = "";
     String namespace = "";
+    String team = "";
+    String project = "";
     BugTracker.Type bugType;
 }
