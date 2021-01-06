@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        CxSBSDK = "0.4.64"
+        CxSBSDK = "0.4.65"
         ConfigProviderVersion = "1.0.10"
         //cxVersion = "8.90.5"
         springBootVersion = '2.3.5.RELEASE'
@@ -81,6 +81,7 @@ dependencies {
     compile('commons-codec:commons-codec:1.13')
     compile('commons-io:commons-io:2.7')
     compile('org.apache.commons:commons-lang3:3.9')
+    compile('org.apache.commons:commons-collections4:4.4')
     compile('org.json:json:20201115')
     compile('com.fasterxml.jackson.core:jackson-databind:2.10.3')
     compile('org.springframework.boot:spring-boot-starter-web-services')
