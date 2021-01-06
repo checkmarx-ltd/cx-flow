@@ -1,4 +1,4 @@
-package com.checkmarx.flow.cucumber.integration.sca_scanner.scans.zip;
+package com.checkmarx.flow.cucumber.integration.sca_scanner.zip_scan;
 
 import io.cucumber.junit.Cucumber;
 import io.cucumber.junit.CucumberOptions;

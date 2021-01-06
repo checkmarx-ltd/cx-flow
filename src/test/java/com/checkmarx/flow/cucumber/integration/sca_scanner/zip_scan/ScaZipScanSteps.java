@@ -1,4 +1,4 @@
-package com.checkmarx.flow.cucumber.integration.sca_scanner.scans.zip;
+package com.checkmarx.flow.cucumber.integration.sca_scanner.zip_scan;
 
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.FlowProperties;
