@@ -4,6 +4,7 @@
 * [Thresholds](#thresholds)
 * [Configuration As Code](#configurationascode)
 * [SCA Scans From Command Line](#commandline)
+* [SCA ZIP Folder Scan](#zipFolderScan)
 
 ## <a name="configuration">Configuration</a>
 CxSCA scans can be triggered based on WebHooks using CxFlow. 
@@ -172,3 +173,10 @@ In order to open SCA security tickets, set the bug tracker in cxflow app.yml fil
   * -scan --app=MyApp --cx-team="my-team" --cx-project="project" --f="/Users/myProjects/project"
 * get latest scan results:
   * --project --app=MyApp --cx-team="my-team" --cx-project="project" ([use 'project' command](https://github.com/checkmarx-ltd/cx-flow/blob/develop/src/main/java/com/checkmarx/flow/dto/ScanRequest.java))
+
+
+## <a name="zipFolderScan">SCA ZIP folder scan</a>
+In order to change the default Cx-Flow SCA scan behaviour and to perform a SCA ZIP scan, the next configuration property should be added underneath the sca configuration section:
+```
+enabledZipScan: true
+```
