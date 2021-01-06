@@ -6,6 +6,7 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.service.SCAScanner;
 import com.checkmarx.flow.service.ScaConfigurationOverrider;
 import com.checkmarx.sdk.config.ScaProperties;
+import com.checkmarx.sdk.dto.ast.SCAResults;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Arrays;
@@ -45,5 +46,17 @@ public class ScaCommonSteps {
         return Arrays.stream(filters.split(","))
                 .map(String::trim)
                 .collect(Collectors.toList());
+    }
+
+    protected long getTotalHighFindings(SCAResults scaResults) {
+        return scaResults.getFindings().stream()
+                .filter(finding -> finding.getSeverity().name().equals("HIGH"))
+                .count();
+    }
+
+    protected long getTotalMediumFindings(SCAResults scaResults) {
+        return scaResults.getFindings().stream()
+                .filter(finding -> finding.getSeverity().name().equals("MEDIUM"))
+                .count();
     }
 }
