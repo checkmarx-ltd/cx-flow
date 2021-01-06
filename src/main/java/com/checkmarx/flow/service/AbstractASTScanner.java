@@ -9,13 +9,19 @@ import com.checkmarx.flow.dto.report.AnalyticsReport;
 import com.checkmarx.flow.dto.report.ScanReport;
 import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
+import com.checkmarx.sdk.config.Constants;
+import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.ast.ASTResults;
 import com.checkmarx.sdk.dto.ast.ASTResultsWrapper;
 import com.checkmarx.sdk.dto.ast.SCAResults;
 import com.checkmarx.sdk.dto.ast.ScanParams;
+import com.checkmarx.sdk.dto.cx.CxScanParams;
+import com.checkmarx.sdk.exception.CheckmarxException;
+import com.checkmarx.sdk.service.CxRepoFileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -30,12 +36,21 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
     private final FlowProperties flowProperties;
     private final String scanType;
     private final BugTrackerEventTrigger bugTrackerEventTrigger;
+    private final ScaProperties scaProperties;
+    private final CxRepoFileService cxRepoFileService;
 
     @Override
     public ScanResults scan(ScanRequest scanRequest) {
         ScanResults result = null;
         log.info("--------------------- Initiating new {} scan ---------------------", scanType);
         ScanParams sdkScanParams = toSdkScanParams(scanRequest);
+
+        if (scaProperties.isEnabledZipScan()) {
+            log.info("CxAST-SCA zip scan is enabled");
+            String scaZipFolderPath = getScaZipFolderPath(scanRequest);
+            sdkScanParams.setZipPath(scaZipFolderPath);
+        }
+
         ASTResultsWrapper internalResults = new ASTResultsWrapper(new SCAResults(), new ASTResults());
         try {
             bugTrackerEventTrigger.triggerScanStartedEvent(scanRequest);
@@ -85,6 +100,26 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
                 .build();
         ASTResultsWrapper internalResults = client.getLatestScanResults(sdkScanParams);
         return toScanResults(internalResults);
+    }
+
+    private String getScaZipFolderPath(ScanRequest scanRequest) {
+        CxScanParams cxScanParams = prepareScanParamsToCloneRepo(scanRequest);
+        try {
+            return cxRepoFileService.prepareRepoFile(cxScanParams);
+        } catch (CheckmarxException e) {
+            throw new MachinaRuntimeException(e.getMessage());
+        }
+    }
+
+    private CxScanParams prepareScanParamsToCloneRepo(ScanRequest scanRequest) {
+        CxScanParams cxScanParams = new CxScanParams();
+        cxScanParams.withGitUrl(scanRequest.getRepoUrlWithAuth());
+        cxScanParams.withFileExclude(scanRequest.getExcludeFiles());
+
+        if (StringUtils.isNotEmpty(scanRequest.getBranch())) {
+            cxScanParams.withBranch(Constants.CX_BRANCH_PREFIX.concat(scanRequest.getBranch()));
+        }
+        return cxScanParams;
     }
 
     private void treatError(ScanRequest scanRequest, ASTResultsWrapper internalResults, Exception e) {
