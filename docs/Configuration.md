@@ -131,6 +131,7 @@ cx-flow:
      username: xxx
      password: xxx
      enabled: true
+  zip-exclude: \.git/.*, .*\.png
 
 checkmarx:
   username: xxx
@@ -331,6 +332,7 @@ Refer to the sample configuration above for the entire yaml structure.
 | http-connection-timeout | 30000 | No* | Yes | Yes         | Http client connection timeout setting.  Not applied for the Jira client. |
 | http-read-timeout | 120000      | No* | Yes | Yes         | Http client read timeout setting.  Not applied for the Jira client. |
 | mail              | enabled:false | No* | Yes | Yes       | SMTP configuration - host, port, username, password, enabled (false by default).  When enabled, email is a valid feedback channel, and an html template is used to provide result details. During WebHook execution, the email is sent to the list of committers in the push event.
+| zip-exclude       |               |No   |No   |Yes        | Comma-separated list of regexes. Instructs CxFlow to exclude specific files when it creates a zip archive. See the details [here](Excluding-Files-from-Zip-Archive.md).|
 | auto-profile      | false         | No  | Yes | No        | During WebHook execution, language stats and files are gathered to help determine an appropriate preset to use.  By default, the profiling initially occurs only when a project is new/created for the first time.  Refer to [CxFlow Automated Code](https://checkmarx.atlassian.net/wiki/spaces/PTS/pages/1345586126/CxFlow+Automated+Code+Profiling) Profiling for details.
 | always-profile    | false         | No  | Yes | No        | This enforces the auto-profile execution for each scan request regardless of whether the project is new or not. |
 | profiling-depth   | 1             | No  | Yes | No        | The folder depth that is inspected for file names during the profiling process, which means looking for specific file references, i.e. web.xml/Web.config |
