@@ -87,9 +87,7 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
         return toScanResults(internalResults);
     }
 
-    protected void setScannerSpecificProperties(ScanRequest scanRequest, ScanParams scanParams) {
-        log.info("No scanner specific properties were initialized.");
-    }
+    protected abstract void setScannerSpecificProperties(ScanRequest scanRequest, ScanParams scanParams);
 
     private void treatError(ScanRequest scanRequest, ASTResultsWrapper internalResults, Exception e) {
         final String message = scanType + " scan failed.";
