@@ -284,7 +284,10 @@ public class CxFlowRunner implements ApplicationRunner {
                     exit(1);
                 }
                 mergeNoteUri = gitLabProperties.getMergeNoteUri(projectId, mergeId);
-                repoUrl = getNonEmptyRepoUrl(namespace, repoName, repoUrl, gitLabProperties.getGitUri(namespace, repoName));
+
+                if (!ScanUtils.empty(namespace) && !ScanUtils.empty(repoName)){
+                    repoUrl = getNonEmptyRepoUrl(namespace, repoName, repoUrl, gitLabProperties.getGitUri(namespace, repoName));
+                }
                 break;
             case BITBUCKETPULL:
             case bitbucketserverpull:
