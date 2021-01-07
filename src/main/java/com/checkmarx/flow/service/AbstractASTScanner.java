@@ -87,6 +87,8 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
         return toScanResults(internalResults);
     }
 
+    protected abstract void setScannerSpecificProperties(ScanRequest scanRequest, ScanParams scanParams);
+
     private void treatError(ScanRequest scanRequest, ASTResultsWrapper internalResults, Exception e) {
         final String message = scanType + " scan failed.";
         log.error(message, e);
@@ -139,12 +141,15 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
     private ScanParams toSdkScanParams(ScanRequest scanRequest) {
         URL parsedUrl = getRepoUrl(scanRequest);
 
-        return ScanParams.builder()
+        ScanParams scanParams = ScanParams.builder()
                 .projectName(scanRequest.getProject())
                 .remoteRepoUrl(parsedUrl)
                 .scaConfig(scanRequest.getScaConfig())
                 .filterConfiguration(scanRequest.getFilter())
                 .build();
+
+        setScannerSpecificProperties(scanRequest, scanParams);
+        return scanParams;
     }
 
     private URL getRepoUrl(ScanRequest scanRequest) {
