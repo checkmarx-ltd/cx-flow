@@ -109,7 +109,7 @@ public class ScanRequestConverter {
         return ownerId;
     }
 
-    private void setShardPropertiesIfExists(ScanRequest request, String fullTeamName) {
+    public void setShardPropertiesIfExists(ScanRequest request, String fullTeamName) {
         if (cxProperties.getEnableShardManager()) {
             ShardSession shard = sessionTracker.getShardSession();
             shard.setTeam(fullTeamName);
