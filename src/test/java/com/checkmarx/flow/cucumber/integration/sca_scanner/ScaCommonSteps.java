@@ -47,16 +47,4 @@ public class ScaCommonSteps {
                 .map(String::trim)
                 .collect(Collectors.toList());
     }
-
-    protected long getTotalHighFindings(SCAResults scaResults) {
-        return scaResults.getFindings().stream()
-                .filter(finding -> finding.getSeverity().name().equals("HIGH"))
-                .count();
-    }
-
-    protected long getTotalMediumFindings(SCAResults scaResults) {
-        return scaResults.getFindings().stream()
-                .filter(finding -> finding.getSeverity().name().equals("MEDIUM"))
-                .count();
-    }
 }

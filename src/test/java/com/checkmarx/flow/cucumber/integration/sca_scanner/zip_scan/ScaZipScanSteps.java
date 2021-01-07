@@ -9,6 +9,7 @@ import com.checkmarx.flow.service.ScaConfigurationOverrider;
 import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.ast.SCAResults;
+import com.cx.restclient.dto.scansummary.Severity;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
@@ -61,8 +62,16 @@ public class ScaZipScanSteps extends ScaCommonSteps {
 
     @Then("returned scan high and medium results are bigger than zero")
     public void validateResults() {
-        Assert.assertTrue("Expected scan total high results to be a positive number", getTotalHighFindings(scaResults) > 0);
-        Assert.assertTrue("Expected scan total medium results to be a positive number", getTotalMediumFindings(scaResults) > 0);
+        validateFindingCount(scaResults, Severity.HIGH.name());
+        validateFindingCount(scaResults, Severity.MEDIUM.name());
+    }
+
+    private void validateFindingCount(SCAResults scaResults, String severity) {
+        long count = scaResults.getFindings().stream()
+                .filter(finding -> finding.getSeverity().name().equals(severity))
+                .count();
+
+        Assert.assertTrue("Expected scan total " + severity + " results to be a positive number", count > 0);
     }
 
 }
