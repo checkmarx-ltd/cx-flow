@@ -69,3 +69,10 @@ Feature: Cx-Flow SCA Integration permutation tests
     And bug tracker contains open vulnerabilities
     When resolving on of the vulnerabilities
     Then resolved vulnerability status should getting update to closed
+
+  @SCA_Zip_Scan
+  Scenario: Publish SCA results by zip folder
+    Given scanner is SCA
+    And enabledZipScan property is set with true
+    When initiating a new scan
+    Then returned scan high and medium results are bigger than zero
