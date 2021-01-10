@@ -56,6 +56,7 @@ public class JiraService {
     private final String parentUrl;
     private final String grandParentUrl;
     private final CodeBashingService codeBashingService;
+    private final HelperService helperService;
     private Map<String, ScanResults.XIssue> nonPublishedScanResultsMap = new HashMap<>();
 
     private List<String> currentNewIssuesList = new ArrayList<>();
@@ -74,12 +75,15 @@ public class JiraService {
     private static final int MAX_RESULTS_ALLOWED = 1000000;
     private static final String SEARCH_ASSIGNABLE_USER = "%s/rest/api/latest/user/assignable/search?project={projectKey}&query={assignee}";
 
-    public JiraService(JiraProperties jiraProperties, FlowProperties flowProperties, CodeBashingService codeBashingService) {
+    public JiraService(JiraProperties jiraProperties, FlowProperties flowProperties,
+                       CodeBashingService codeBashingService,
+                       HelperService helperService) {
         this.jiraProperties = jiraProperties;
         this.flowProperties = flowProperties;
         parentUrl = jiraProperties.getParentUrl();
         grandParentUrl = jiraProperties.getGrandParentUrl();
         this.codeBashingService = codeBashingService;
+        this.helperService = helperService;
     }
 
     @PostConstruct
@@ -1170,6 +1174,10 @@ public class JiraService {
 
         codeBashingService.createLessonsMap();
         getAndModifyRequestApplication(request);
+
+        String jiraProjectKey = determineJiraProjectKey(request);
+        request.getBugTracker().setProjectKey(jiraProjectKey);
+
         loadCustomFields(request.getBugTracker().getProjectKey(), request.getBugTracker().getIssueType());
         if (this.jiraProperties.isChild()) {
             ScanRequest parent = new ScanRequest(request);
@@ -1254,6 +1262,27 @@ public class JiraService {
         setCurrentClosedIssuesList(closedIssues);
         
         return ticketsMap;
+    }
+
+    /**
+     * Determines effective jira project key that can be used by Bug tracker.
+     * @return project key based on a scan request or a Groovy script (if present).
+     */
+    private String determineJiraProjectKey(ScanRequest request) {
+        String jiraProjectKey = request.getBugTracker().getProjectKey();
+
+        log.debug("Determining jira project key for bug tracker.");
+        String nameOverride = tryGetJiraProjectKeyFromScript(request);
+        if (StringUtils.isNotEmpty(nameOverride)) {
+            log.debug("Jira Project key override is present. Using the override: {}.",
+                      nameOverride);
+            jiraProjectKey = nameOverride;
+        }
+        return jiraProjectKey;
+    }
+
+    private String tryGetJiraProjectKeyFromScript(ScanRequest request) {
+        return helperService.getJiraProjectKey(request);
     }
 
     public List<String> getCurrentNewIssuesList() {

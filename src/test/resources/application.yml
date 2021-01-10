@@ -135,6 +135,7 @@ jira:
     Informational: Lowest
   open-transition: In Progress
   close-transition: Done
+  #project-key-script: D:\\tmp\JiraProjectKey.groovy
 
   #  open-status:
   #    - To Do
