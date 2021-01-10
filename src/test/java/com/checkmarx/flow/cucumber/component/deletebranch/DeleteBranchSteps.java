@@ -107,7 +107,10 @@ public class DeleteBranchSteps {
         this.resultsServiceMock = mock(ResultsService.class);
         this.cxClientMock = mock(CxService.class);
         CxScannerService  cxScannerService = new CxScannerService(cxProperties, null, flowProperties,cxClientMock, null);
-        this.helperService = mock(HelperService.class, Mockito.withSettings().useConstructor(flowProperties, cxScannerService, null));
+        this.helperService = mock(HelperService.class,
+                                  Mockito.withSettings().useConstructor(flowProperties,
+                                                                        cxScannerService, null,
+                                                                        null));
         this.scmConfigOverrider = scmConfigOverrider;
         this.gitAuthUrlGenerator = gitAuthUrlGenerator;
     }
