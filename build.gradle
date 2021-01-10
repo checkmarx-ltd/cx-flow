@@ -73,6 +73,7 @@ configurations {
 }
 
 dependencies {
+    compile('org.apache.ant:ant:1.10.9')
     compile('org.springframework.boot:spring-boot-starter-actuator')
     compile('org.springframework.boot:spring-boot-starter-web')
     compile('org.springframework.boot:spring-boot-starter-aop')
