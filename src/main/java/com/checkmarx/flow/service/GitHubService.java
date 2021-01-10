@@ -25,12 +25,12 @@ import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpEntity;
@@ -135,7 +135,7 @@ public class GitHubService extends RepoService {
         List<RepoComment> result = new ArrayList<>();
         ObjectMapper objMapper = new ObjectMapper();
         JsonNode root = objMapper.readTree(response.getBody());
-        Iterator<JsonNode> it = root.getElements();
+        Iterator<JsonNode> it = root.elements();
         int iteration = 0;
         while (it.hasNext() && iteration < maxNumberOfComments) {
             JsonNode commentNode = it.next();
@@ -189,7 +189,7 @@ public class GitHubService extends RepoService {
 
 
     private RepoComment createRepoComment(JsonNode commentNode)  {
-        String commentBody = commentNode.path("body").getTextValue();
+        String commentBody = commentNode.path("body").textValue();
         long id = commentNode.path("id").asLong();
         String commentUrl = commentNode.path(("url")).asText();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
