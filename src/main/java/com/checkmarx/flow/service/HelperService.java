@@ -1,6 +1,7 @@
 package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.dto.CxProfile;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.Sources;
@@ -27,12 +28,16 @@ public class HelperService {
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(HelperService.class);
     private final FlowProperties properties;
     private final CxPropertiesBase cxProperties;
+    private final JiraProperties jiraProperties;
     private final ExternalScriptService scriptService;
     private List<CxProfile> profiles;
 
-    public HelperService(FlowProperties properties, CxScannerService cxScannerService,  ExternalScriptService scriptService) {
+    public HelperService(FlowProperties properties, CxScannerService cxScannerService,
+                         JiraProperties jiraProperties,
+                         ExternalScriptService scriptService) {
         this.properties = properties;
         this.cxProperties = cxScannerService.getProperties();
+        this.jiraProperties = jiraProperties;
         this.scriptService = scriptService;
     }
 
@@ -108,6 +113,12 @@ public class HelperService {
         String scriptFile = cxProperties.getProjectScript();
         String project = request.getProject();
         return getEffectiveEntityName(request, scriptFile, project, "project");
+    }
+
+    public String getJiraProjectKey(ScanRequest request) {
+        String scriptFile = jiraProperties.getProjectKeyScript();
+        String jiraProject = request.getBugTracker().getProjectKey();
+        return getEffectiveEntityName(request, scriptFile, jiraProject, "jira project");
     }
 
     public String getCxComment(ScanRequest request, String defaultValue){

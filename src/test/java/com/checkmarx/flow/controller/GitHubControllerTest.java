@@ -27,9 +27,12 @@ public class GitHubControllerTest {
 
     private static final FlowProperties flowProperties = new FlowProperties();
     private static final GitHubProperties properties = new GitHubProperties();
+    private static final JiraProperties jiraProperties = new JiraProperties();
     private static CxScannerService cxScannerService;
     private static final ExternalScriptService scriptService = new ExternalScriptService();
-    private static final HelperService helperService = new HelperService(flowProperties, cxScannerService, scriptService);
+    private static final HelperService helperService = new HelperService(flowProperties, cxScannerService,
+                                                                         jiraProperties,
+                                                                         scriptService);
     private static final List<VulnerabilityScanner> scanners = new ArrayList<>();
     private static final ProjectNameGenerator projectNameGenerator = new ProjectNameGenerator(helperService, cxScannerService);
     private static final FlowService flowService = new FlowService(scanners, projectNameGenerator, resultsService);
