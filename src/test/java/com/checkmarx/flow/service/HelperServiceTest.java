@@ -2,6 +2,7 @@ package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitLabProperties;
+import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.dto.CxProfile;
 import com.checkmarx.flow.dto.Sources;
 import com.checkmarx.sdk.config.Constants;
@@ -28,11 +29,13 @@ public class HelperServiceTest {
     public void testGetPresetFromSources() {
         FlowProperties properties = new FlowProperties();
         CxProperties cxProperties = new CxProperties();
+        JiraProperties jiraProperties = new JiraProperties();
         cxProperties.setScanPreset(Constants.CX_DEFAULT_PRESET);
 
         CxScannerService cxScannerService = new CxScannerService(cxProperties,null, null, null, null );
 
-        HelperService helperService = new HelperService(properties, cxScannerService, null);
+        HelperService helperService = new HelperService(properties, cxScannerService,
+                                                        jiraProperties, null);
         Sources sources = new Sources();
         Sources.Source src1 = new Sources.Source();
         src1.setFile("abc.java");

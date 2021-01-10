@@ -2,6 +2,7 @@ package com.checkmarx.flow.cucumber.integration.ast.scans;
 
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.cucumber.integration.sca_scanner.ScaCommonSteps;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
@@ -56,6 +57,7 @@ public class AstRemoteRepoScanSteps {
 
     private final CxProperties cxProperties;
     private final FlowProperties flowProperties;
+    private final JiraProperties jiraProperties;
     private final AstProperties astProperties;
     private final ScaProperties scaProperties;
     private final ConfigurationOverrider configOverrider;
@@ -287,7 +289,8 @@ public class AstRemoteRepoScanSteps {
         CxProperties cxProperties = new CxProperties();
         ExternalScriptService scriptService = new ExternalScriptService();
         CxScannerService cxScannerService = new CxScannerService(cxProperties,null, null, null, null );
-        HelperService helperService = new HelperService(flowProperties, cxScannerService, scriptService);
+        HelperService helperService = new HelperService(flowProperties, cxScannerService,
+                                                        jiraProperties, scriptService);
      
         ProjectNameGenerator projectNameGenerator = new ProjectNameGenerator(helperService, cxScannerService);
         FlowService flowService = new FlowService(new ArrayList<>(), projectNameGenerator, resultsServiceMock);
