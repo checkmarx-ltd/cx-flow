@@ -75,8 +75,8 @@ checkmarx:
   jira-custom-field:
   jira-issuetype-field:
   jira-assignee-field:
-  #project-script: D:\\tmp\CxProject.groovy
-  #team-script: D:\\tmp\CxTeam.groovy
+  #project-script:
+  #team-script:
   #exclude-files:
   #exclude-folders:
 
@@ -135,7 +135,7 @@ jira:
     Informational: Lowest
   open-transition: In Progress
   close-transition: Done
-  # project-key-script: \tmp\JiraProjectKey.groovy
+  # project-key-script:
   #  open-status:
   #    - To Do
   #    - In Progress
