@@ -103,6 +103,7 @@ jira:
     informational: Lowest
   open-transition: In Review
   close-transition: Done
+  # project-key-script:
   open-status:
     - To Do
     - In Progress
