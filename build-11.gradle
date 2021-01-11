@@ -9,6 +9,7 @@ buildscript {
         sonarqubeVersion = '2.8'
         atlassianVersion = "5.2.0"
         atlassianFugueVersion = "4.7.2"
+        jacksonVersion = "2.12.1"
         mainClass = 'com.checkmarx.flow.CxFlowApplication'
     }
 	repositories {
@@ -59,11 +60,14 @@ configurations {
 }
 
 dependencies {
+    compile('org.apache.ant:ant:1.10.9')
 	compile('org.springframework.boot:spring-boot-starter-actuator')
 	compile('org.springframework.boot:spring-boot-starter-web')
     compile('org.springframework.boot:spring-boot-starter-aop')
     compile('org.springframework.boot:spring-boot-starter-validation')
-    compile("com.github.checkmarx-ltd:cx-spring-boot-sdk:${CxSBSDK}")
+    compile("com.github.checkmarx-ltd:cx-spring-boot-sdk:${CxSBSDK}") {
+        exclude group: 'org.apache.ant', module: 'ant'
+    }
     compile ("org.apache.commons:commons-text:1.8")
     compile ('commons-codec:commons-codec:1.13')
     compile ('commons-io:commons-io:2.7')
@@ -74,11 +78,19 @@ dependencies {
     compile ('org.springframework.boot:spring-boot-starter-thymeleaf')
     compile ('com.github.ulisesbocchio:jasypt-spring-boot-starter:2.1.2')
     compile ("io.atlassian.fugue:fugue:${atlassianFugueVersion}")
-    compile ("com.atlassian.jira:jira-rest-java-client-core:${atlassianVersion}")
+    compile ("com.atlassian.jira:jira-rest-java-client-core:${atlassianVersion}") {
+        exclude group: 'org.codehaus.jackson', module: 'jackson-mapper-asl'
+        exclude group: 'org.codehaus.jackson', module: 'jackson-core-asl'
+    }
     compile ("com.atlassian.jira:jira-rest-java-client-api:${atlassianVersion}")
+    compile("com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}")
+    compile("com.fasterxml.jackson.core:jackson-core:${jacksonVersion}")
+    compile("com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}")
     compile ("org.thymeleaf:thymeleaf:3.0.11.RELEASE")
     compile ("org.apache.httpcomponents:httpclient:4.5.10")
-    compile ("org.codehaus.groovy:groovy-all:3.0.6")
+    compile ("org.codehaus.groovy:groovy-all:3.0.6") {
+        exclude group: 'org.apache.ant', module: 'ant'
+    }
     compile ("org.apache.ivy:ivy:2.5.0")
     compile ("org.apache.commons:commons-lang3:3.11")
     compile('org.apache.commons:commons-collections4:4.4')
