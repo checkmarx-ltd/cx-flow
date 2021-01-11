@@ -1271,12 +1271,15 @@ public class JiraService {
     private String determineJiraProjectKey(ScanRequest request) {
         String jiraProjectKey = request.getBugTracker().getProjectKey();
 
-        log.debug("Determining jira project key for bug tracker.");
+        log.info("Determining jira project key for bug tracker.");
         String nameOverride = tryGetJiraProjectKeyFromScript(request);
         if (StringUtils.isNotEmpty(nameOverride)) {
-            log.debug("Jira Project key override is present. Using the override: {}.",
+            log.info("Jira Project key override is present. Using the override: {}.",
                       nameOverride);
             jiraProjectKey = nameOverride;
+        } else {
+            log.info("Jira Project key override isn't present. Using the default: {}.",
+                     jiraProjectKey);
         }
         return jiraProjectKey;
     }
