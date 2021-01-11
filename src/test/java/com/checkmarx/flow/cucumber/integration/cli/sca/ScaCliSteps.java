@@ -179,7 +179,7 @@ public class ScaCliSteps {
             case 0:
                 customScaProjectName = "ci-2-to-0-findings-test";
                 break;
-            case 13:
+            case 12:
                 customScaProjectName = "cxflowtestuser-testsManual-master";
                 break;
             case 5:
