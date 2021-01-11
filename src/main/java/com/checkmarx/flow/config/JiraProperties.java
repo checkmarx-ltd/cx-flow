@@ -14,8 +14,6 @@ import java.util.Map;
 @Component
 @ConfigurationProperties(prefix = "jira")
 @Validated
-@Getter
-@Setter
 public class JiraProperties {
     private String url;
     private String username;
@@ -51,6 +49,7 @@ public class JiraProperties {
     private Integer maxJqlResults = 50;
     private List<String> statusCategoryOpenName = Arrays.asList("To Do", "In Progress");
     private List<String> statusCategoryClosedName = Arrays.asList("Done");
+    @Getter @Setter
     private String projectKeyScript;
 
 

@@ -99,7 +99,7 @@ jira:
     X: Y # Map Checkmarx severity : to JIRA Priority
   open-transition: Reopen Issue
   close-transition: Close Issue
-# project-key-script: D:\\tmp\JiraProjectKey.groovy
+# project-key-script: \tmp\JiraProjectKey.groovy
 #  open-status:
 #    - Open
 #    - In Progress
