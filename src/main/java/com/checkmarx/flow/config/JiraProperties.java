@@ -1,6 +1,8 @@
 package com.checkmarx.flow.config;
 
 import com.checkmarx.flow.dto.Field;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
@@ -47,6 +49,8 @@ public class JiraProperties {
     private Integer maxJqlResults = 50;
     private List<String> statusCategoryOpenName = Arrays.asList("To Do", "In Progress");
     private List<String> statusCategoryClosedName = Arrays.asList("Done");
+    @Getter @Setter
+    private String projectKeyScript;
 
 
     public String getUrl() {
