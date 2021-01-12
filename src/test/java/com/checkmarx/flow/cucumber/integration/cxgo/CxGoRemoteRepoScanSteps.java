@@ -206,7 +206,7 @@ public class CxGoRemoteRepoScanSteps {
         try {
             Awaitility.await()
                     .atMost(Duration.ofSeconds(secondsToWait))
-                    .pollInterval(Duration.ofSeconds(10))
+                    .pollInterval(Duration.ofSeconds(5))
                     .until(conditionEvaluator);
 
             log.info("wait completed");
