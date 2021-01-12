@@ -54,9 +54,11 @@ public class CxGoRemoteRepoScanSteps {
     private static final String GITLAB_BRANCH = "feature-branch";
     private static final String CXGO_PROJECT_NAME = "CxGo-Integration-Tests-develop";
     private static final String CXGO_TEAM_NAME = "\\Demo\\CxFlow";
+    private static final String PENDING_STATUS = "pending";
 
     private static final int MAX_TIME_FOR_SCAN_COMPLETED_IN_SEC = 600;
     private static final int MAX_TIME_FOR_PULL_REQUEST_UPDATE_IN_SEC = 60;
+    private static final int MAX_TIME_FOR_PULL_REQUEST_NOT_PENDING_IN_SEC = 15;
     private static final int MAX_TIME_FOR_BUG_TRACKER_UPDATE_IN_SEC = 150;
     private final GitHubProperties gitHubProperties;
     private final GitLabProperties gitLabProperties;
@@ -190,9 +192,10 @@ public class CxGoRemoteRepoScanSteps {
     }
 
     @And("Pull request comments updated in repo and status is {}")
-    public void validatePullRequestComment(String pullRequestStatus){
+    public void validatePullRequestComment(String pullRequestStatus) throws InterruptedException {
         waitForOperationToComplete(this::scanFinished, MAX_TIME_FOR_SCAN_COMPLETED_IN_SEC);
         waitForOperationToComplete(this::pullRequestHas2CxFlowComments, MAX_TIME_FOR_PULL_REQUEST_UPDATE_IN_SEC);
+        waitForOperationToComplete(this::pullRequestNotPending, MAX_TIME_FOR_PULL_REQUEST_NOT_PENDING_IN_SEC);
 
         String status = repoServiceMocker.getPullRequestStatus();
 
@@ -203,7 +206,7 @@ public class CxGoRemoteRepoScanSteps {
         try {
             Awaitility.await()
                     .atMost(Duration.ofSeconds(secondsToWait))
-                    .pollInterval(Duration.ofSeconds(10))
+                    .pollInterval(Duration.ofSeconds(5))
                     .until(conditionEvaluator);
 
             log.info("wait completed");
@@ -224,6 +227,12 @@ public class CxGoRemoteRepoScanSteps {
         List<RepoComment> comments = repoService.getComments(getBasicRequest());
         log.info("found {} comments in pull request", comments.size());
         return comments.size() > 1;
+    }
+
+    private boolean pullRequestNotPending() {
+        String status = repoServiceMocker.getPullRequestStatus();
+        log.info("pull request statues is: {}", status);
+        return !status.equalsIgnoreCase(PENDING_STATUS);
     }
 
     private boolean bugTrackerUpdateWithTickets(){
