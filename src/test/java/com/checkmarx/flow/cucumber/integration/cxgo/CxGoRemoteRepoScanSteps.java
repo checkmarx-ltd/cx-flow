@@ -58,7 +58,7 @@ public class CxGoRemoteRepoScanSteps {
 
     private static final int MAX_TIME_FOR_SCAN_COMPLETED_IN_SEC = 600;
     private static final int MAX_TIME_FOR_PULL_REQUEST_UPDATE_IN_SEC = 60;
-    private static final int MAX_TIME_FOR_PULL_REQUEST_NOT_PENDING_IN_SEC = 10;
+    private static final int MAX_TIME_FOR_PULL_REQUEST_NOT_PENDING_IN_SEC = 15;
     private static final int MAX_TIME_FOR_BUG_TRACKER_UPDATE_IN_SEC = 150;
     private final GitHubProperties gitHubProperties;
     private final GitLabProperties gitLabProperties;
