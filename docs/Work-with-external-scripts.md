@@ -16,6 +16,7 @@ return cxProject;
 * [Branch Script](#branchScript)
 * [SAST scan comment script](#scanComment)
 * [Use a Script to Filter Findings](#filterFindings)
+* [JIRA project key script](#jiraProjectKeyScript)
 
 ### <a name="projectScript">Project script</a>
 * CxFlow will use the string returned from the script execution to determine the cx-project name
@@ -115,3 +116,17 @@ An exception is thrown in the following cases:
 2. Filtering script doesn’t return a boolean value.
 3. Filtering script has invalid syntax.
 4. A runtime error happens during script execution (comparing to a non-existent property etc.)
+
+### <a name="jiraProjectKeyScript">JIRA project key script</a>
+
+* CxFlow will use the string returned from the script execution to determine the JIRA project key which is added to the bug tracker and used by CxFlow to issue tickets in it
+* To enable this flow add the following property to cxflow configuration (you can use any file name): 
+
+```yaml
+jira:
+  project-key-script: ...\CheckProjectKey.groovy
+```
+
+* Script input: [ScanRequest object](https://github.com/checkmarx-ltd/cx-flow/blob/develop/src/main/java/com/checkmarx/flow/dto/ScanRequest.java)
+* Return value: String
+* Script example: [JiraProjectKey.groovy](https://github.com/checkmarx-ltd/cx-flow/blob/develop/src/main/resources/samples/JiraProjectKey.groovy)
