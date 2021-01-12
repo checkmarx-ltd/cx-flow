@@ -232,7 +232,7 @@ public class CxGoRemoteRepoScanSteps {
     private boolean pullRequestNotPending() {
         String status = repoServiceMocker.getPullRequestStatus();
         log.info("pull request statues is: {}", status);
-        return status.equalsIgnoreCase(PENDING_STATUS);
+        return !status.equalsIgnoreCase(PENDING_STATUS);
     }
 
     private boolean bugTrackerUpdateWithTickets(){
