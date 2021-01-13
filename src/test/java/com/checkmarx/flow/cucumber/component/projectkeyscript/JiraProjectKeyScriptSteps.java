@@ -84,7 +84,8 @@ public class JiraProjectKeyScriptSteps {
 
     @Then("JIRA project key is equal to {string}")
     public void jiraProjectKeyIsEqualTo(String expectedProjectKey) {
-        log.info("Comparing expected comment '{}' to actual comment '{}'", expectedProjectKey,
+        log.info("Comparing expected project key '{}' to actual project key '{}'",
+                 expectedProjectKey,
                  request.getBugTracker().getProjectKey());
 
         assertEquals(expectedProjectKey,  request.getBugTracker().getProjectKey(), "fail comparing expected JIRA" +
