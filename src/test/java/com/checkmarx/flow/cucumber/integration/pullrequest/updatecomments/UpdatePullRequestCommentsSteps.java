@@ -28,6 +28,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
+import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -39,6 +40,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.io.File;
 import java.io.IOException;
@@ -153,15 +155,9 @@ public class UpdatePullRequestCommentsSteps {
         Using ScanResultsAnswerer::switchFilterConfiguration to change filter configuration in the between steps in same test scenario
          */
     }
-
-    @Given("no comments on pull request")
-    public void deletePRComments() throws IOException, InterruptedException {
-
-        if (sourceControl.equals(SourceControlType.GITHUB)) {
-            deleteGitHubComments();
-        } else if (sourceControl.equals(SourceControlType.ADO)) {
-            deleteADOComments();
-        }
+    
+    @And("no comments on pull request")
+    public void deletePRComments() throws IOException {
     }
 
     private void setBranches() {
@@ -171,10 +167,16 @@ public class UpdatePullRequestCommentsSteps {
 
     @After
     public void cleanUp() throws IOException {
-        if (sourceControl.equals(SourceControlType.GITHUB)) {
-            deleteGitHubComments();
-        } else if (sourceControl.equals(SourceControlType.ADO)) {
-            deleteADOComments();
+        try {
+            if (sourceControl.equals(SourceControlType.GITHUB)) {
+                deleteGitHubComments();
+            } else if (sourceControl.equals(SourceControlType.ADO)) {
+                deleteADOComments();
+            }
+        }catch(HttpClientErrorException e){
+            //the comments have already been deleted
+        }catch (Exception e){
+            throw e;
         }
     }
 

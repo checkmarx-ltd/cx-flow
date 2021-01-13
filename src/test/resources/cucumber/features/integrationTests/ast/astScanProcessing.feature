@@ -1,9 +1,7 @@
 @AstIntegrationTests @IntegrationTest
 Feature: Cx-Flow AST Integration permutation tests
 
-
   @ASTRemoteRepoScan
-  @Skip
   Scenario Outline: using multiple vulnerability scanners
     Given enabled vulnerability scanners are "<scanners>"
     Then scan results contain populated results for all scanners
@@ -16,21 +14,7 @@ Feature: Cx-Flow AST Integration permutation tests
       | AST      | 0            | > 0          |
       | AST,SCA  | > 0          | > 0          |
 
-  @ASTRemoteRepoScan @AdditionalFields
-  @Skip
-  Scenario Outline: validate AST additional fields
-    Given enabled vulnerability scanners are "<scanners>"
-    Then scan results contain populated results for all scanners
-    And each finding will contain AST populated description field
-    And finding with the same queryId will have the same description and there will be a unique finding description for each queryId
-
-    Examples:
-      | scanners |
-      | AST      |
-
-
   @ASTRemoteRepoScan @InvalidCredentials
-  @Skip
   Scenario Outline: Trying to scan with invalid credentials
     When CxFlow tries to start AST scan with the "<client id>" and "<client secret>" credentials
     Then an error will be thrown with the message containing "<message>"
@@ -41,10 +25,19 @@ Feature: Cx-Flow AST Integration permutation tests
       | my-wrong-client-id | <valid-secret>  | unauthorized                      |
       | <valid-client-id>  | <empty>         | AST client secret wasn't provided |
       | <empty>            | <valid-secret>  | AST client ID wasn't provided     |
+    
+  @ASTRemoteRepoScan @AdditionalFields
+  Scenario Outline: validate AST additional fields
+    Given enabled vulnerability scanners are "<scanners>"
+    Then scan results contain populated results for all scanners
+    And each finding will contain AST populated description field
+    And finding with the same queryId will have the same description and there will be a unique finding description for each queryId
 
-
+    Examples:
+      | scanners |
+      | AST      |
+    
   @ASTRemoteRepoScan
-  @Skip
   Scenario Outline: AST is not accessible
     When AST scan is initiated with API url: "<url>"
     Then an exception of type "MachinaRuntimeException" will be thrown with the message containing "ast scan failed"
@@ -57,7 +50,6 @@ Feature: Cx-Flow AST Integration permutation tests
       | http://192.168.199.200     |
 
   @AST_JIRA_issue_creation
-  @Skip
   Scenario: Publish AST results and check JIRA tickets are getting created
     Given scan initiator is AST
     And bug tracker is JIRA
