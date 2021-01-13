@@ -39,6 +39,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.io.File;
 import java.io.IOException;
@@ -171,10 +172,16 @@ public class UpdatePullRequestCommentsSteps {
 
     @After
     public void cleanUp() throws IOException {
-        if (sourceControl.equals(SourceControlType.GITHUB)) {
-            deleteGitHubComments();
-        } else if (sourceControl.equals(SourceControlType.ADO)) {
-            deleteADOComments();
+        try {
+            if (sourceControl.equals(SourceControlType.GITHUB)) {
+                deleteGitHubComments();
+            } else if (sourceControl.equals(SourceControlType.ADO)) {
+                deleteADOComments();
+            }
+        }catch(HttpClientErrorException e){
+            //failed to delete non existing comment
+        }catch(Exception e){
+            throw e;
         }
     }
 
