@@ -1268,12 +1268,12 @@ public class JiraService {
      * Determines effective jira project key that can be used by Bug tracker.
      * @return project key based on a scan request or a Groovy script (if present).
      */
-    private String determineJiraProjectKey(ScanRequest request) {
+    public String determineJiraProjectKey(ScanRequest request) {
         String jiraProjectKey = request.getBugTracker().getProjectKey();
 
         log.info("Determining jira project key for bug tracker.");
         String nameOverride = tryGetJiraProjectKeyFromScript(request);
-        if (StringUtils.isNotEmpty(nameOverride)) {
+        if (StringUtils.isNotEmpty(nameOverride) && !nameOverride.equals(jiraProjectKey)) {
             log.info("Jira Project key override is present. Using the override: {}.",
                       nameOverride);
             jiraProjectKey = nameOverride;
