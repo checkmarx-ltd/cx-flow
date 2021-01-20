@@ -81,7 +81,7 @@ public class ScanRequest {
     private ASTConfig astConfig;
 
     @Getter @Setter
-    private String scannerApiSecret;
+    private String scannerApiSec;
 
     /**
      * 'Organization' here means the top-most level of project hierarchy.
@@ -130,7 +130,7 @@ public class ScanRequest {
         this.scaConfig = other.scaConfig;
         this.astConfig = other.astConfig;
         this.thresholds = other.thresholds;
-        this.scannerApiSecret = other.scannerApiSecret;
+        this.scannerApiSec = other.scannerApiSec;
         this.organizationId = other.organizationId;
         this.gitUrl = other.gitUrl;
     }

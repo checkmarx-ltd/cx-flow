@@ -299,9 +299,9 @@ public class ConfigurationOverrider {
             Optional.ofNullable(cxgoConfig.getCxgoToken())
                     .filter(StringUtils::isNotEmpty)
                     .ifPresent(secret -> {
-                        request.setScannerApiSecret(secret);
+                        request.setScannerApiSec(secret);
                         log.info("Using scanner API secret from {}", className);
-                        overrideReport.put("scannerApiSecret", "<actually it's a secret>");
+                        overrideReport.put("scannerApiSec", "<actually it's a secret>");
                     });
             Optional.ofNullable(cxgoConfig.getScmAccessToken())
                     .filter(StringUtils::isNotEmpty)
