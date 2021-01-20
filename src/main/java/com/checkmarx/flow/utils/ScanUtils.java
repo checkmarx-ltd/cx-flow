@@ -362,31 +362,39 @@ public class ScanUtils {
   
 
     private static String getCustomScaSummaryIssueKey(ScanRequest request, ScanResults.ScaDetails scaDetails) {
+        String currentPackageVersion = getCurrentPackageVersion(scaDetails.getVulnerabilityPackage().getName());
+
         return String.format(SCATicketingConstants.SCA_SUMMARY_CUSTOM_ISSUE_KEY, HTMLHelper.getScanRequestIssueKeyWithDefaultProductValue(request, String.valueOf(scaDetails.getFinding().getSeverity())),
                 scaDetails.getFinding().getScore(), scaDetails.getFinding().getId(),
-                scaDetails.getVulnerabilityPackage().getName(),
-                scaDetails.getVulnerabilityPackage().getVersion(), request.getRepoName(), request.getBranch());
+                removePackageCurrentVersionFromPath(scaDetails.getVulnerabilityPackage().getName(), currentPackageVersion),
+                currentPackageVersion, request.getRepoName(), request.getBranch());
     }
 
     private static String getCustomScaSummaryIssueKeyWithoutBranch(ScanRequest request, ScanResults.ScaDetails scaDetails) {
+        String currentPackageVersion = getCurrentPackageVersion(scaDetails.getVulnerabilityPackage().getName());
+
         return String.format(SCATicketingConstants.SCA_SUMMARY_CUSTOM_ISSUE_KEY_WITHOUT_BRANCH, HTMLHelper.getScanRequestIssueKeyWithDefaultProductValue(request, String.valueOf(scaDetails.getFinding().getSeverity())),
                 scaDetails.getFinding().getScore(), scaDetails.getFinding().getId(),
-                scaDetails.getVulnerabilityPackage().getName(),
-                scaDetails.getVulnerabilityPackage().getVersion(), request.getRepoName());
+                removePackageCurrentVersionFromPath(scaDetails.getVulnerabilityPackage().getName(), currentPackageVersion),
+                currentPackageVersion, request.getRepoName());
     }
 
     private static String getJiraScaSummaryIssueKey(ScanRequest request, String issuePrefix, String issuePostfix, Finding detailsFindings, Package vulnerabilityPackage) {
+        String currentPackageVersion = getCurrentPackageVersion(vulnerabilityPackage.getName());
+
         return String.format(SCATicketingConstants.SCA_JIRA_ISSUE_KEY, issuePrefix, detailsFindings.getSeverity(),
                 detailsFindings.getScore(), detailsFindings.getId(),
-                vulnerabilityPackage.getName(),
-                vulnerabilityPackage.getVersion(), request.getRepoName(), request.getBranch(), issuePostfix);
+                removePackageCurrentVersionFromPath(vulnerabilityPackage.getName(), currentPackageVersion),
+                currentPackageVersion, request.getRepoName(), request.getBranch(), issuePostfix);
     }
 
     private static String getJiraScaSummaryIssueKeyWithoutBranch(ScanRequest request, String issuePrefix, String issuePostfix, Finding detailsFindings, Package vulnerabilityPackage) {
+        String currentPackageVersion = getCurrentPackageVersion(vulnerabilityPackage.getName());
+
         return String.format(SCATicketingConstants.SCA_JIRA_ISSUE_KEY_WITHOUT_BRANCH, issuePrefix, detailsFindings.getSeverity(),
                 detailsFindings.getScore(), detailsFindings.getId(),
-                vulnerabilityPackage.getName(),
-                vulnerabilityPackage.getVersion(), request.getRepoName(), issuePostfix);
+                removePackageCurrentVersionFromPath(vulnerabilityPackage.getName(), currentPackageVersion),
+                currentPackageVersion, request.getRepoName(), issuePostfix);
     }
 
 
@@ -592,5 +600,13 @@ public class ScanUtils {
         return map.keySet().stream()
                 .map(key -> key + "=" + map.get(key))
                 .collect(Collectors.joining(", ", "{", "}"));
+    }
+
+    public static String removePackageCurrentVersionFromPath(String packageName, String currentPackageVersion) {
+        return packageName.replace("-" + currentPackageVersion, "");
+    }
+
+    public static String getCurrentPackageVersion(String packageName) {
+        return StringUtils.substringAfterLast(packageName, "-");
     }
 }

@@ -231,7 +231,7 @@ public class HTMLHelper {
             scaDetailsMap.put("**Severity", any.getFinding().getSeverity().name());
             scaDetailsMap.put("**CVSS Score", String.valueOf(any.getFinding().getScore()));
             scaDetailsMap.put("**Publish Date", any.getFinding().getPublishDate());
-            scaDetailsMap.put("**Current Package Version", any.getVulnerabilityPackage().getVersion());
+            scaDetailsMap.put("**Current Package Version", ScanUtils.getCurrentPackageVersion(any.getVulnerabilityPackage().getName()));
             Optional.ofNullable(any.getFinding().getFixResolutionText())
                     .ifPresent(f -> scaDetailsMap.put("**Remediation Upgrade Recommendation", f)
 
@@ -366,7 +366,7 @@ public class HTMLHelper {
             scaDetailsMap.put("<b>Severity", any.getFinding().getSeverity().name());
             scaDetailsMap.put("<b>CVSS Score", String.valueOf(any.getFinding().getScore()));
             scaDetailsMap.put("<b>Publish Date", any.getFinding().getPublishDate());
-            scaDetailsMap.put("<b>Current Package Version", any.getVulnerabilityPackage().getVersion());
+            scaDetailsMap.put("<b>Current Package Version", ScanUtils.getCurrentPackageVersion(any.getVulnerabilityPackage().getName()));
             Optional.ofNullable(any.getFinding().getFixResolutionText())
                     .ifPresent(f -> scaDetailsMap.put("<b>Remediation Upgrade Recommendation", f)
 

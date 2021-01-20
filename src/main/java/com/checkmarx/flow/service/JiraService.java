@@ -948,19 +948,25 @@ public class JiraService {
     private String getScaDetailsIssueTitleFormat(ScanRequest request, String issuePrefix, String issuePostfix, ScanResults.XIssue issue) {
         ScanResults.ScaDetails scaDetails = issue.getScaDetails().get(0);
 
+        String currentPackageVersion = ScanUtils.getCurrentPackageVersion(scaDetails.getVulnerabilityPackage().getName());
+        String packagePathWithoutCurrentVersion = ScanUtils.removePackageCurrentVersionFromPath(scaDetails.getVulnerabilityPackage().getName(), currentPackageVersion);
+
         return String.format(SCATicketingConstants.SCA_JIRA_ISSUE_KEY, issuePrefix, scaDetails.getFinding().getSeverity(),
-        scaDetails.getFinding().getScore(), scaDetails.getFinding().getId(),
-        scaDetails.getVulnerabilityPackage().getName(),
-        scaDetails.getVulnerabilityPackage().getVersion(), request.getRepoName(), request.getBranch(), issuePostfix);
+                scaDetails.getFinding().getScore(), scaDetails.getFinding().getId(),
+                packagePathWithoutCurrentVersion,
+                currentPackageVersion, request.getRepoName(), request.getBranch(), issuePostfix);
     }
 
     private String getScaDetailsIssueTitleWithoutBranchFormat(ScanRequest request, String issuePrefix, String issuePostfix, ScanResults.XIssue issue) {
         ScanResults.ScaDetails scaDetails = issue.getScaDetails().get(0);
 
+        String currentPackageVersion = ScanUtils.getCurrentPackageVersion(scaDetails.getVulnerabilityPackage().getName());
+        String packagePathWithoutCurrentVersion = ScanUtils.removePackageCurrentVersionFromPath(scaDetails.getVulnerabilityPackage().getName(), currentPackageVersion);
+
         return String.format(SCATicketingConstants.SCA_JIRA_ISSUE_KEY_WITHOUT_BRANCH, issuePrefix, scaDetails.getFinding().getSeverity(),
                 scaDetails.getFinding().getScore(), scaDetails.getFinding().getId(),
-                scaDetails.getVulnerabilityPackage().getName(),
-                scaDetails.getVulnerabilityPackage().getVersion(), request.getRepoName(), issuePostfix);
+                packagePathWithoutCurrentVersion,
+                currentPackageVersion, request.getRepoName(), issuePostfix);
     }
 
     private String getBody(ScanResults.XIssue issue, ScanRequest request, String fileUrl) {
@@ -1121,11 +1127,12 @@ public class JiraService {
             ScanResults.ScaDetails scaDetails = s.stream().findAny().get();
 
             scaDetailsMap.put("Vulnerability ID", scaDetails.getFinding().getId());
-            scaDetailsMap.put("Package Name", scaDetails.getVulnerabilityPackage().getName());
+            String currentPackageVersion = ScanUtils.getCurrentPackageVersion(scaDetails.getVulnerabilityPackage().getName());
+            scaDetailsMap.put("Package Name", ScanUtils.removePackageCurrentVersionFromPath(scaDetails.getVulnerabilityPackage().getName(), currentPackageVersion));
             scaDetailsMap.put("Severity", scaDetails.getFinding().getSeverity().name());
             scaDetailsMap.put("CVSS Score", String.valueOf(scaDetails.getFinding().getScore()));
             scaDetailsMap.put("Publish Date", scaDetails.getFinding().getPublishDate());
-            scaDetailsMap.put("Current Package Version", scaDetails.getVulnerabilityPackage().getVersion());
+            scaDetailsMap.put("Current Package Version", currentPackageVersion);
             Optional.ofNullable(scaDetails.getFinding().getFixResolutionText()).ifPresent(f ->
                 scaDetailsMap.put("Remediation Upgrade Recommendation", f)
 

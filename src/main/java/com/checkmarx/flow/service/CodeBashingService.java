@@ -86,7 +86,7 @@ public class CodeBashingService {
         return String.format("%s-%s-%s", cwe, language, queryId);
     }
 
-    public void addCodebashingUrlToIssue(ScanResults.XIssue xIssue){
+    void addCodebashingUrlToIssue(ScanResults.XIssue xIssue){
         String mapKey = xIssue.getCwe();
         if(validateXIssueFields(xIssue) && codebashingProperties.getTenantBaseUrl() != null) {
             mapKey = buildMapKey(xIssue.getCwe(), xIssue.getLanguage(), xIssue.gerQueryId());
@@ -104,7 +104,10 @@ public class CodeBashingService {
             xIssue.getAdditionalDetails().put(FlowConstants.CODE_BASHING_LESSON, flowProperties.getCodebashUrl());
         }
 
-        log.debug("added codebashing lesson {} to xIssue: {}", xIssue.getAdditionalDetails().get(FlowConstants.CODE_BASHING_LESSON), mapKey);
+        Object lesson = xIssue.getAdditionalDetails().get(FlowConstants.CODE_BASHING_LESSON);
+        if (lesson != null) {
+            log.debug("added codebashing lesson {} to xIssue: {}", lesson, mapKey);
+        }
     }
 
     private HttpHeaders createAuthHeaders(){

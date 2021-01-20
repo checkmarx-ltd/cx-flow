@@ -118,8 +118,8 @@ public class ScanRequestConverter {
     }
 
     private String determineOwnerId(ScanRequest request, String team) throws CheckmarxException {
-        return (request.getScannerApiSecret() != null)
-                ? scannerClient.getTeamIdByClientSecret(team, request.getScannerApiSecret())
+        return (request.getScannerApiSec() != null)
+                ? scannerClient.getTeamIdByClientSecret(team, request.getScannerApiSec())
                 : scannerClient.getTeamId(team);
     }
 
@@ -222,7 +222,7 @@ public class ScanRequestConverter {
                 .withFileExclude(request.getExcludeFiles())
                 .withFolderExclude(request.getExcludeFolders())
                 .withScanConfiguration(request.getScanConfiguration())
-                .withClientSecret(request.getScannerApiSecret());
+                .withClientSecret(request.getScannerApiSec());
 
         if (StringUtils.isNotEmpty(request.getBranch())) {
             params.withBranch(Constants.CX_BRANCH_PREFIX.concat(request.getBranch()));
