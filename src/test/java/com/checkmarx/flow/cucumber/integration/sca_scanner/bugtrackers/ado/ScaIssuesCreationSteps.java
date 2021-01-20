@@ -76,10 +76,11 @@ public class ScaIssuesCreationSteps {
         resultsService.processResults(getBasicScanRequest(), scanResults, null);
     }
 
-    @Then("new 8 tickets should be created")
+    @Then("new 5 tickets should be created")
+    // Expects total of 5 tickets since there are multiple medium: Cx65603961-769c tickets that considered as one ticket
     public void ticketsCreationValidation() throws IOException {
         Assert.assertEquals("Azure new SCA results tickets number is not as expected",
-                8, azureDevopsClient.getIssueCount());
+                5, azureDevopsClient.getIssueCount());
     }
 
     private ScanRequest getBasicScanRequest() {

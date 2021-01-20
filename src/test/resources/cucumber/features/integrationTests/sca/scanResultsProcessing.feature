@@ -60,7 +60,7 @@ Feature: Cx-Flow SCA Integration permutation tests
     Given scan initiator is SCA
     And bug tracker is Azure
     When publishing new known unfiltered SCA results with 8 findings including 2 high and 6 medium vulnerabilities
-    Then new 8 tickets should be created
+    Then new 5 tickets should be created
 
   @SCA_Resolve_Issue
   Scenario: Resolve an open vulnerability and check status updates to closed
