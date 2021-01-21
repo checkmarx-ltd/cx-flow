@@ -358,42 +358,39 @@ public class ScanUtils {
         }
     }
 
-
-  
-
     private static String getCustomScaSummaryIssueKey(ScanRequest request, ScanResults.ScaDetails scaDetails) {
-        String currentPackageVersion = getCurrentPackageVersion(scaDetails.getVulnerabilityPackage().getName());
+        String currentPackageVersion = getCurrentPackageVersion(scaDetails.getVulnerabilityPackage().getId());
 
-        return String.format(SCATicketingConstants.SCA_SUMMARY_CUSTOM_ISSUE_KEY, HTMLHelper.getScanRequestIssueKeyWithDefaultProductValue(request, String.valueOf(scaDetails.getFinding().getSeverity())),
-                scaDetails.getFinding().getScore(), scaDetails.getFinding().getId(),
-                removePackageCurrentVersionFromPath(scaDetails.getVulnerabilityPackage().getName(), currentPackageVersion),
+        return String.format(SCATicketingConstants.SCA_SUMMARY_CUSTOM_ISSUE_KEY, request.getProduct().getProduct(),
+                scaDetails.getFinding().getId(),
+                removePackageCurrentVersionFromPath(scaDetails.getVulnerabilityPackage().getId(), currentPackageVersion),
                 currentPackageVersion, request.getRepoName(), request.getBranch());
     }
 
     private static String getCustomScaSummaryIssueKeyWithoutBranch(ScanRequest request, ScanResults.ScaDetails scaDetails) {
-        String currentPackageVersion = getCurrentPackageVersion(scaDetails.getVulnerabilityPackage().getName());
+        String currentPackageVersion = getCurrentPackageVersion(scaDetails.getVulnerabilityPackage().getId());
 
-        return String.format(SCATicketingConstants.SCA_SUMMARY_CUSTOM_ISSUE_KEY_WITHOUT_BRANCH, HTMLHelper.getScanRequestIssueKeyWithDefaultProductValue(request, String.valueOf(scaDetails.getFinding().getSeverity())),
-                scaDetails.getFinding().getScore(), scaDetails.getFinding().getId(),
-                removePackageCurrentVersionFromPath(scaDetails.getVulnerabilityPackage().getName(), currentPackageVersion),
+        return String.format(SCATicketingConstants.SCA_SUMMARY_CUSTOM_ISSUE_KEY_WITHOUT_BRANCH, request.getProduct().getProduct(),
+                scaDetails.getFinding().getId(),
+                removePackageCurrentVersionFromPath(scaDetails.getVulnerabilityPackage().getId(), currentPackageVersion),
                 currentPackageVersion, request.getRepoName());
     }
 
     private static String getJiraScaSummaryIssueKey(ScanRequest request, String issuePrefix, String issuePostfix, Finding detailsFindings, Package vulnerabilityPackage) {
-        String currentPackageVersion = getCurrentPackageVersion(vulnerabilityPackage.getName());
+        String currentPackageVersion = getCurrentPackageVersion(vulnerabilityPackage.getId());
 
-        return String.format(SCATicketingConstants.SCA_JIRA_ISSUE_KEY, issuePrefix, detailsFindings.getSeverity(),
-                detailsFindings.getScore(), detailsFindings.getId(),
-                removePackageCurrentVersionFromPath(vulnerabilityPackage.getName(), currentPackageVersion),
+        return String.format(SCATicketingConstants.SCA_JIRA_ISSUE_KEY, issuePrefix,
+                detailsFindings.getId(),
+                removePackageCurrentVersionFromPath(vulnerabilityPackage.getId(), currentPackageVersion),
                 currentPackageVersion, request.getRepoName(), request.getBranch(), issuePostfix);
     }
 
     private static String getJiraScaSummaryIssueKeyWithoutBranch(ScanRequest request, String issuePrefix, String issuePostfix, Finding detailsFindings, Package vulnerabilityPackage) {
-        String currentPackageVersion = getCurrentPackageVersion(vulnerabilityPackage.getName());
+        String currentPackageVersion = getCurrentPackageVersion(vulnerabilityPackage.getId());
 
-        return String.format(SCATicketingConstants.SCA_JIRA_ISSUE_KEY_WITHOUT_BRANCH, issuePrefix, detailsFindings.getSeverity(),
-                detailsFindings.getScore(), detailsFindings.getId(),
-                removePackageCurrentVersionFromPath(vulnerabilityPackage.getName(), currentPackageVersion),
+        return String.format(SCATicketingConstants.SCA_JIRA_ISSUE_KEY_WITHOUT_BRANCH, issuePrefix,
+                detailsFindings.getId(),
+                removePackageCurrentVersionFromPath(vulnerabilityPackage.getId(), currentPackageVersion),
                 currentPackageVersion, request.getRepoName(), issuePostfix);
     }
 
