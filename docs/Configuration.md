@@ -359,6 +359,9 @@ Refer to the sample configuration above for the entire yaml structure.
 | team-script |            | No | Yes | Yes | A **groovy** script that can be used for deciding the team to use in Checkmarx.  This is to allow for any client custom lookups and other integrations.  The script is passed a "request" object, which is of type **com.checkmarx.flow.dto.ScanRequest**, and must return **String** representing the team path to be used. If this script is provided, it is used for all decisions associated with determining project name.
 | incremental-threshold | 7 | No* | Yes | Yes (scan only) | The maximum number of days before a full scan is required |
 | offline | false | No* | No | Yes (parse only) | Use Table this only when parsing Checkmarx XML, this flag removes the dependency from Checkmarx APIs when parsing results.  This skips retrieving the issue description from Checkmarx. |
+| exclude-files     |                | No  | Yes | Yes      | Files to be excluded from Scan                                            |
+| exclude-folders   |                | No  | Yes | Yes      | Folders to be excluded from Scan                                          |
+
 
 No* = Default is applied
 
@@ -383,8 +386,8 @@ checkmarx:
    portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
    #project-script: D:\\tmp\CxProject.groovy
    #team-script: D:\\tmp\CxTeam.groovy
-   #exclude-files:
-   #exclude-folders:
+   exclude-files: "*.tst,*.json"
+   exclude-folders: ".git/,test/"
 ```
 **Note:**
 * Make sure to include **version: 9.0** (or higher) and **scope:  access_control_api sast_rest_api**
@@ -589,8 +592,8 @@ The sample below illustrates an override configuration in JSON format.  It has s
    "branches": ["develop", "master"],
    "incremental": true,
    "scan_preset": "Checkmarx Default",
-   "exclude_folders": "tmp/",
-   "exclude_files": "*.tst",
+   "exclude_folders": "tmp/,test/",
+   "exclude_files": "*.tst,*.tmp",
    "emails": ["xxxx@checkmarx.com"],
    "filters" : {
      "severity": ["High", "Medium"],
