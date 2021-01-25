@@ -332,11 +332,10 @@ An example of vulnerabilities displayed in the Security Dashboard can be found i
 
 ## Sample Gitlab config files for different scanners
 
- * [Gitlab config for AST](/src/main/resources/samples/gitlab/gitlab-ast-sample.yml)
- * [Gitlab config for SAST and SCA combined](/src/main/resources/samples/gitlab/gitlab-sast-sca-sample.yml)
- * [Gitlab config for AST Cloud](/src/main/resources/samples/gitlab/gitlab-astcloud-sample.yml)
- * [Github config for SCA](/src/main/resources/samples/gitlab/gitlab-sca-sample.yml)
-
+ * [Gitlab config for AST](https://github.com/checkmarx-ltd/cx-flow/blob/master/src/main/resources/samples/gitlab/gitlab-ast-sample.yml)
+ * [Gitlab config for SAST and SCA combined](https://github.com/checkmarx-ltd/cx-flow/blob/master/src/main/resources/samples/gitlab/gitlab-sast-sca-sample.yml)
+ * [Gitlab config for AST Cloud](https://github.com/checkmarx-ltd/cx-flow/blob/master/src/main/resources/samples/gitlab/gitlab-astcloud-sample.yml)
+ * [Github config for SCA](https://github.com/checkmarx-ltd/cx-flow/blob/master/src/main/resources/samples/gitlab/gitlab-sca-sample.yml)
 
 ## <a name="azure">Azure DevOps Webhook Lab</a>
 * [Prep](#adoprep)
