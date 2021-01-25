@@ -22,7 +22,7 @@ public class ScaCommonSteps {
 
     public static void initSCAConfig(ScaProperties scaProperties) {
         scaProperties.setAppUrl("https://sca.scacheckmarx.com");
-        scaProperties.setApiUrl("https://api.scacheckmarx.com");
+        scaProperties.setApiUrl("https://api-sca.checkmarx.net");
         scaProperties.setAccessControlUrl("https://platform.checkmarx.net");
     }
 
