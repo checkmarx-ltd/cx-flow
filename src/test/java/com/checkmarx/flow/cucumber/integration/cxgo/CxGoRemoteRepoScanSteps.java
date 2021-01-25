@@ -238,7 +238,7 @@ public class CxGoRemoteRepoScanSteps {
     private boolean bugTrackerUpdateWithTickets(){
         int numOfTickets = jiraUtils.getNumberOfIssuesInProject(JIRA_PROJECT);
         log.debug("found {} tickets in Jira project: {}", numOfTickets, JIRA_PROJECT);
-        return numOfTickets > 20;
+        return numOfTickets > 18;
     }
 
     private ScanRequest getBasicRequest() {
