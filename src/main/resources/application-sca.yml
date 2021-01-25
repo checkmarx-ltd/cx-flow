@@ -1,6 +1,6 @@
 sca:
   appUrl: https://sca.scacheckmarx.com
-  apiUrl: https://api.scacheckmarx.com
+  apiUrl: https://api-sca.checkmarx.net
   accessControlUrl: https://platform.checkmarx.net
   tenant:
   username:

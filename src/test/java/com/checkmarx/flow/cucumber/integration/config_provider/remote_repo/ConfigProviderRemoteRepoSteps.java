@@ -89,7 +89,7 @@ public class ConfigProviderRemoteRepoSteps {
 
     private void assertScaConfiguration() {
         Assert.assertEquals("https://sca.scacheckmarx.com//config-provider-test", scaConfiguration.getAppUrl());
-        Assert.assertEquals("https://api.scacheckmarx.com//config-provider-test", scaConfiguration.getApiUrl());
+        Assert.assertEquals("https://api-sca.checkmarx.net//config-provider-test", scaConfiguration.getApiUrl());
         Assert.assertEquals("https://platform.checkmarx.net//config-provider-test", scaConfiguration.getAccessControlUrl());
         Assert.assertEquals("cxflow", scaConfiguration.getTenant());
         Assert.assertEquals("{LOW=25, MEDIUM=18, HIGH=15}", StringUtils.join(scaConfiguration.getThresholdsSeverity()));
