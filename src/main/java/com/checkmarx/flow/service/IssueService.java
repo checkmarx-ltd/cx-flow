@@ -132,6 +132,7 @@ public class IssueService implements ApplicationContextAware {
                             }
                             if (tracker.isIssueOpened(i, request)) {
                                 /*Close the issue if in an open state*/
+                                log.info("Closing issue with key {}", i.getId());
                                 tracker.closeIssue(i, request);
                                 closedIssues.add(i.getId());
                             }
