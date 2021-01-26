@@ -4,6 +4,7 @@ package com.checkmarx.flow.dto.gitlab;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import lombok.Builder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
@@ -11,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "username",
     "avatar_url"
 })
+@Builder
 public class User {
 
     @JsonProperty("name")

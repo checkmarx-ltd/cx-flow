@@ -312,7 +312,7 @@ public class GitLabController extends WebhookController {
     }
 
     private void setMergeEndPointUri(ObjectAttributes objectAttributes, Project proj, ScanRequest request) {
-        String mergeEndpoint = scmConfigOverrider.determineConfigApiUrl(properties, request).concat(GitLabService.MERGE_NOTE_PATH);
+        String mergeEndpoint = scmConfigOverrider.determineConfigApiUrl(properties, request).concat(GitLabService.MERGE_NOTES_PATH);
         mergeEndpoint = mergeEndpoint.replace("{id}", proj.getId().toString());
         mergeEndpoint = mergeEndpoint.replace("{iid}", objectAttributes.getIid().toString());
         request.setMergeNoteUri(mergeEndpoint);

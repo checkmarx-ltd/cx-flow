@@ -4,6 +4,9 @@ package com.checkmarx.flow.dto.gitlab;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
@@ -14,6 +17,9 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "git_http_url",
     "git_ssh_url"
 })
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class Repository {
 
     @JsonProperty("name")
