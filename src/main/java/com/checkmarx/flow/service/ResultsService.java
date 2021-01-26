@@ -185,7 +185,7 @@ public class ResultsService {
             log.info(String.format("request : %s", request));
             log.info(String.format("results : %s", results));
             log.info(String.format("projectId : %s", projectId));
-            log.info("Process completed Succesfully");
+            log.info("Process completed Successfully");
         }
     }
 
