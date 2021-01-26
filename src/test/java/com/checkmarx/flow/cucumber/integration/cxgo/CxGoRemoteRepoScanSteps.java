@@ -46,7 +46,7 @@ import java.util.concurrent.Callable;
 public class CxGoRemoteRepoScanSteps {
 
     private static final String JIRA_PROJECT = "CT";
-    private static final String PR_COMMIT_HASH = "5686bbd0e2b2e9957c707ccd68ac1940512b3644";
+    private static final String PR_COMMIT_HASH = "1a137e46d2b83e580aa20eedf2fdf8d7ed2073a5";
     private static final int PULL_REQUEST_ID = 1;
     private static final String GITHUB_PROJECT_NAME = "CxGo-Integration-Tests";
     private static final String GITHUB_BRANCH = "develop";
