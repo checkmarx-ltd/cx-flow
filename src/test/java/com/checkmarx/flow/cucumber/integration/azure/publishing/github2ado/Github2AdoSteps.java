@@ -17,13 +17,14 @@ import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.ast.ASTResults;
+import com.checkmarx.sdk.dto.ast.AstSastResults;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxService;
-import com.cx.restclient.ast.dto.sast.AstSastResults;
-import com.cx.restclient.ast.dto.sast.report.AstSastSummaryResults;
-import com.cx.restclient.ast.dto.sast.report.Finding;
-import com.cx.restclient.ast.dto.sast.report.FindingNode;
+
+import com.checkmarx.sdk.dto.ast.report.AstSastSummaryResults;
+import com.checkmarx.sdk.dto.ast.report.Finding;
+import com.checkmarx.sdk.dto.ast.report.FindingNode;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cucumber.java.Before;

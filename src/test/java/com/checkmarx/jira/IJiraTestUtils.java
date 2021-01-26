@@ -2,7 +2,7 @@ package com.checkmarx.jira;
 
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.SearchResult;
-import com.checkmarx.sdk.dto.Filter;
+import com.checkmarx.sdk.dto.sast.Filter;
 
 import java.io.IOException;
 import java.util.Map;

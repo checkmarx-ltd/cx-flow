@@ -6,7 +6,8 @@ import com.checkmarx.flow.config.external.CxGoConfigFromWebService;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.service.ConfigurationOverrider;
 import com.checkmarx.flow.service.ReposManagerService;
-import com.checkmarx.sdk.dto.CxConfig;
+
+import com.checkmarx.sdk.dto.sast.CxConfig;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;

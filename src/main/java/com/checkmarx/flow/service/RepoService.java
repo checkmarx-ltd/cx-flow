@@ -3,7 +3,7 @@ package com.checkmarx.flow.service;
 import com.checkmarx.flow.dto.RepoComment;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.Sources;
-import com.checkmarx.sdk.dto.CxConfig;
+import com.checkmarx.sdk.dto.sast.CxConfig;
 
 import java.io.IOException;
 import java.util.List;

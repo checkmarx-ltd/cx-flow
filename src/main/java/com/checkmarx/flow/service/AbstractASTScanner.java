@@ -9,11 +9,14 @@ import com.checkmarx.flow.dto.report.AnalyticsReport;
 import com.checkmarx.flow.dto.report.ScanReport;
 import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
+import com.checkmarx.sdk.dto.AstScaResults;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.ast.ASTResults;
-import com.checkmarx.sdk.dto.ast.ASTResultsWrapper;
+
 import com.checkmarx.sdk.dto.ast.SCAResults;
 import com.checkmarx.sdk.dto.ast.ScanParams;
+
+import com.checkmarx.sdk.service.scanner.AbstractScanner;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,7 +29,7 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 @RequiredArgsConstructor
 public abstract class AbstractASTScanner implements VulnerabilityScanner {
-    private final com.checkmarx.sdk.service.AstClient client;
+    private final AbstractScanner client;
     private final FlowProperties flowProperties;
     private final String scanType;
     private final BugTrackerEventTrigger bugTrackerEventTrigger;
@@ -36,7 +39,7 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
         ScanResults result = null;
         log.info("--------------------- Initiating new {} scan ---------------------", scanType);
         ScanParams sdkScanParams = toSdkScanParams(scanRequest);
-        ASTResultsWrapper internalResults = new ASTResultsWrapper(new SCAResults(), new ASTResults());
+        AstScaResults internalResults = new AstScaResults(new SCAResults(), new ASTResults());
         try {
             bugTrackerEventTrigger.triggerScanStartedEvent(scanRequest);
             internalResults = client.scan(sdkScanParams);
@@ -83,13 +86,13 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
                 .scaConfig(request.getScaConfig())
                 .filterConfiguration(request.getFilter())
                 .build();
-        ASTResultsWrapper internalResults = client.getLatestScanResults(sdkScanParams);
+        AstScaResults internalResults = client.getLatestScanResults(sdkScanParams);
         return toScanResults(internalResults);
     }
 
     protected abstract void setScannerSpecificProperties(ScanRequest scanRequest, ScanParams scanParams);
 
-    private void treatError(ScanRequest scanRequest, ASTResultsWrapper internalResults, Exception e) {
+    private void treatError(ScanRequest scanRequest, AstScaResults internalResults, Exception e) {
         final String message = scanType + " scan failed.";
         log.error(message, e);
         OperationResult scanCreationFailure = new OperationResult(OperationStatus.FAILURE, e.getMessage());
@@ -112,7 +115,7 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
     private ScanResults actualScan(ScanRequest scanRequest, String path) {
         ScanResults result = null;
         log.info("--------------------- Initiating new {} scan ---------------------", scanType);
-        ASTResultsWrapper internalResults = new ASTResultsWrapper(new SCAResults(), new ASTResults());            
+        AstScaResults internalResults = new AstScaResults(new SCAResults(), new ASTResults());            
         try {
             ScanParams sdkScanParams = toSdkScanParams(scanRequest, path);
             internalResults = client.scan(sdkScanParams);
@@ -124,7 +127,7 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
         return result;
     }
 
-    protected abstract String getScanId(ASTResultsWrapper internalResults);
+    protected abstract String getScanId(AstScaResults internalResults);
 
     private ScanParams toSdkScanParams(ScanRequest scanRequest, String pathToScan) {
         return ScanParams.builder()
@@ -135,7 +138,7 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
                 .build();
     }
 
-    protected abstract ScanResults toScanResults(ASTResultsWrapper internalResults);
+    protected abstract ScanResults toScanResults(AstScaResults internalResults);
 
 
     private ScanParams toSdkScanParams(ScanRequest scanRequest) {
@@ -172,7 +175,7 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
 
     }
 
-    private void logRequest(ScanRequest request, ASTResultsWrapper internalResults, OperationResult scanCreationResult) {
+    private void logRequest(ScanRequest request, AstScaResults internalResults, OperationResult scanCreationResult) {
         String scanId = getScanId(internalResults);
         ScanReport report = new ScanReport(scanId, request, request.getRepoUrl(), scanCreationResult, AnalyticsReport.SCA);
         report.log();

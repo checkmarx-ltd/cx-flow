@@ -15,9 +15,9 @@ import com.checkmarx.flow.service.RepoService;
 import com.checkmarx.jira.IJiraTestUtils;
 import com.checkmarx.jira.JiraTestUtils;
 import com.checkmarx.sdk.config.CxGoProperties;
-import com.checkmarx.sdk.dto.Filter;
+import com.checkmarx.sdk.dto.sast.Filter;
 import com.checkmarx.sdk.exception.CheckmarxException;
-import com.cx.restclient.CxGoClientImpl;
+import com.checkmarx.sdk.service.scanner.GoScanner;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
@@ -65,7 +65,7 @@ public class CxGoRemoteRepoScanSteps {
     private final FlowProperties flowProperties;
     private Integer oldScanId;
     private Integer cxgoProjectId;
-    private CxGoClientImpl cxGoClient;
+    private GoScanner cxGoClient;
     private CxGoProperties cxGoProperties;
     private RepoServiceMocker repoServiceMocker;
     private RepoService repoService;
@@ -83,7 +83,7 @@ public class CxGoRemoteRepoScanSteps {
     private IJiraTestUtils jiraUtils;
 
 
-    public CxGoRemoteRepoScanSteps(CxGoProperties goProperties, GitHubController gitHubController, GitHubProperties gitHubProperties, GitHubService gitHubService, CxGoClientImpl client,
+    public CxGoRemoteRepoScanSteps(CxGoProperties goProperties, GitHubController gitHubController, GitHubProperties gitHubProperties, GitHubService gitHubService, GoScanner client,
                                    JiraProperties jiraProperties, GitLabController gitLabController, GitLabProperties gitLabProperties, FlowProperties flowProperties){
         this.gitHubProperties = gitHubProperties;
         this.gitHubController = gitHubController;

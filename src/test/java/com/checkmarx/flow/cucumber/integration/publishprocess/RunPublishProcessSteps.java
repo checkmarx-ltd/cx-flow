@@ -11,7 +11,7 @@ import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.jira.IJiraTestUtils;
 import com.checkmarx.jira.JiraTestUtils;
 import com.checkmarx.sdk.config.CxProperties;
-import com.checkmarx.sdk.dto.Filter;
+import com.checkmarx.sdk.dto.sast.Filter;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;

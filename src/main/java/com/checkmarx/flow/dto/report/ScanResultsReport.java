@@ -3,7 +3,7 @@ package com.checkmarx.flow.dto.report;
 import com.checkmarx.flow.config.FindingSeverity;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.service.ThresholdValidatorImpl;
-import com.checkmarx.sdk.dto.Filter;
+import com.checkmarx.sdk.dto.sast.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.fasterxml.jackson.annotation.JsonInclude;
 

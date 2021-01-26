@@ -11,6 +11,7 @@ import com.checkmarx.sdk.dto.cx.CxScanSummary;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.exception.CheckmarxRuntimeException;
+import com.checkmarx.sdk.service.scanner.CxClient;
 import com.checkmarx.sdk.service.*;
 import com.checkmarx.utils.TestsParseUtils;
 import io.cucumber.java.en.And;

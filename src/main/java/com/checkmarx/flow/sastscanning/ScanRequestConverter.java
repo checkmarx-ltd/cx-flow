@@ -12,7 +12,7 @@ import com.checkmarx.sdk.config.CxPropertiesBase;
 import com.checkmarx.sdk.dto.cx.CxScanParams;
 import com.checkmarx.sdk.dto.cx.CxScanSettings;
 import com.checkmarx.sdk.exception.CheckmarxException;
-import com.cx.restclient.ScannerClient;
+import com.checkmarx.sdk.service.scanner.ILegacyClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -34,7 +34,7 @@ public class ScanRequestConverter {
     private final BitBucketService bitBucketService;
     private final ADOService adoService;
     private final ShardSessionTracker sessionTracker;
-    private final ScannerClient scannerClient;
+    private final ILegacyClient scannerClient;
     private final CxPropertiesBase cxProperties;
     
     private static final String EMPTY_STRING = "";
