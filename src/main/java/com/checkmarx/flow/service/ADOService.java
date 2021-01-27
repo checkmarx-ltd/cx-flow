@@ -19,7 +19,6 @@ import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.CxPropertiesBase;
 import com.checkmarx.sdk.dto.sast.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
-import com.checkmarx.sdk.dto.sast.CxConfig;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

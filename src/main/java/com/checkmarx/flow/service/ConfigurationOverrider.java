@@ -18,7 +18,6 @@ import com.checkmarx.sdk.dto.sast.CxConfig;
 import com.checkmarx.sdk.dto.sast.Filter;
 import com.checkmarx.sdk.dto.filtering.EngineFilterConfiguration;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
-import com.checkmarx.sdk.dto.sast.CxConfig;
 import com.checkmarx.sdk.dto.sca.Sca;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
