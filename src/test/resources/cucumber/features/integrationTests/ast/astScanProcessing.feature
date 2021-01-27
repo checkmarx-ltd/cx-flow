@@ -10,7 +10,7 @@ Feature: Cx-Flow AST Integration permutation tests
     Examples:
     # Cannot rely on an exact number of findings, because it may change after backend version updates.
       | scanners | sca_findings | ast_findings |
-      #| SCA      | > 0          | 0            |
+      | SCA      | > 0          | 0            |
       | AST      | 0            | > 0          |
       | AST,SCA  | > 0          | > 0          |
 
