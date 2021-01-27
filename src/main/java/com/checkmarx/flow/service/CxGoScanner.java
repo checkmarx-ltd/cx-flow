@@ -6,8 +6,8 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.sastscanning.ScanRequestConverter;
 import com.checkmarx.sdk.config.CxGoProperties;
 import com.checkmarx.sdk.config.CxPropertiesBase;
-import com.cx.restclient.CxGoClientImpl;
-import com.cx.restclient.ScannerClient;
+import com.checkmarx.sdk.service.scanner.GoScanner;
+import com.checkmarx.sdk.service.scanner.ILegacyClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +18,7 @@ import java.util.List;
 @Slf4j
 public class CxGoScanner extends AbstractVulnerabilityScanner {
 
-    private final CxGoClientImpl cxGoClient;
+    private final GoScanner cxGoClient;
     protected final ScanRequestConverter scanRequestConverter;
     protected final CxGoProperties cxGoProperties;
 
@@ -27,7 +27,7 @@ public class CxGoScanner extends AbstractVulnerabilityScanner {
                        FlowProperties flowProperties,
                        ProjectNameGenerator projectNameGenerator,
                        BugTrackersDto bugTrackersDto,
-                       CxGoClientImpl cxGoClient,
+                       GoScanner cxGoClient,
                        CxGoProperties cxGoProperties) {
         super(resultsService, flowProperties,  projectNameGenerator, bugTrackersDto);
         this.cxGoClient = cxGoClient;
@@ -68,7 +68,7 @@ public class CxGoScanner extends AbstractVulnerabilityScanner {
         throw new UnsupportedOperationException();
     }
 
-    public ScannerClient getScannerClient() {
+    public ILegacyClient getScannerClient() {
         return cxGoClient;
     }
 

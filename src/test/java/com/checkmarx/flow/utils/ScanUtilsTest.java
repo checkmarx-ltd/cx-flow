@@ -6,7 +6,7 @@ import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.sdk.config.Constants;
-import com.checkmarx.sdk.dto.CxConfig;
+import com.checkmarx.sdk.dto.sast.CxConfig;
 import com.checkmarx.sdk.utils.ScanUtils;
 import org.junit.Before;
 import org.junit.Test;

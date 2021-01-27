@@ -14,21 +14,19 @@ import com.checkmarx.flow.service.*;
 
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
-import com.checkmarx.sdk.dto.Filter;
+import com.checkmarx.sdk.dto.ast.*;
+import com.checkmarx.sdk.dto.ast.report.AstSastSummaryResults;
+import com.checkmarx.sdk.dto.ast.report.StatusCounter;
+import com.checkmarx.sdk.dto.sast.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
-import com.checkmarx.sdk.dto.ast.ASTResults;
-import com.checkmarx.sdk.dto.ast.SCAResults;
-import com.checkmarx.sdk.dto.ast.Summary;
 import com.checkmarx.sdk.exception.CheckmarxException;
-import com.checkmarx.sdk.service.CxClient;
+import com.checkmarx.sdk.service.scanner.CxClient;
 import com.checkmarx.sdk.service.CxService;
 import com.checkmarx.test.flow.config.CxFlowMocksConfig;
-import com.cx.restclient.ast.dto.sast.AstSastResults;
 
-import com.cx.restclient.ast.dto.sast.report.AstSastSummaryResults;
-import com.cx.restclient.ast.dto.sast.report.FindingNode;
-import com.cx.restclient.ast.dto.sast.report.StatusCounter;
-import com.cx.restclient.dto.scansummary.Severity;
+import com.checkmarx.sdk.dto.ast.report.FindingNode;
+
+import com.checkmarx.sdk.dto.scansummary.Severity;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Then;
@@ -40,8 +38,7 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.springframework.boot.test.context.SpringBootTest;
-import com.cx.restclient.ast.dto.sast.report.Finding;
-
+import com.checkmarx.sdk.dto.ast.report.Finding;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -192,7 +189,7 @@ public class GitHubCommentsASTSteps {
 
         scaResults.setScanId("" + SCAN_ID);
 
-        List<com.cx.restclient.ast.dto.sca.report.Finding> findings = new LinkedList<>();
+        List<com.checkmarx.sdk.dto.sca.report.Finding> findings = new LinkedList<>();
         addFinding(high, findingCounts, findings, Severity.HIGH, Filter.Severity.HIGH);
         addFinding(medium, findingCounts, findings, Severity.MEDIUM, Filter.Severity.MEDIUM);
         addFinding(low, findingCounts, findings, Severity.LOW, Filter.Severity.LOW);
@@ -211,9 +208,9 @@ public class GitHubCommentsASTSteps {
                 .build();
     }
 
-    private static void addFinding(Integer countFindingsPerSeverity, Map<Filter.Severity, Integer> findingCounts, List<com.cx.restclient.ast.dto.sca.report.Finding> findings, Severity severity, Filter.Severity filterSeverity) {
+    private static void addFinding(Integer countFindingsPerSeverity, Map<Filter.Severity, Integer> findingCounts, List<com.checkmarx.sdk.dto.sca.report.Finding> findings, Severity severity, Filter.Severity filterSeverity) {
         for ( int i=0; i <countFindingsPerSeverity; i++) {
-            com.cx.restclient.ast.dto.sca.report.Finding fnd = new com.cx.restclient.ast.dto.sca.report.Finding();
+            com.checkmarx.sdk.dto.sca.report.Finding fnd = new com.checkmarx.sdk.dto.sca.report.Finding();
             fnd.setSeverity(severity);
             fnd.setPackageId("");
             findings.add(fnd);
@@ -222,7 +219,7 @@ public class GitHubCommentsASTSteps {
         findingCounts.put(filterSeverity, countFindingsPerSeverity);
     }
     
-    private  void addFinding(Integer countFindingsPerSeverity, List<StatusCounter> findingCounts, List<Finding> findings, String severity,boolean addNodes, String  queryName) {
+    private  void addFinding(Integer countFindingsPerSeverity, List<StatusCounter> findingCounts, List<Finding> findings, String severity, boolean addNodes, String  queryName) {
         for ( int i=0; i <countFindingsPerSeverity; i++) {
             Finding fnd = new Finding();
             fnd.setSeverity(severity);

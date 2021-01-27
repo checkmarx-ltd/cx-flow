@@ -10,7 +10,7 @@ import com.checkmarx.sdk.config.CxGoProperties;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.checkmarx.sdk.exception.CheckmarxException;
-import com.checkmarx.sdk.service.CxClient;
+import com.checkmarx.sdk.service.scanner.CxClient;
 import com.checkmarx.test.flow.config.CxFlowMocksConfig;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;

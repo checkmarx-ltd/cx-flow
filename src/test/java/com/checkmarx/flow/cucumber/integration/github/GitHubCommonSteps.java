@@ -7,7 +7,7 @@ import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.SastScanner;
 import com.checkmarx.flow.utils.github.GitHubTestUtilsImpl;
 import com.checkmarx.sdk.config.CxProperties;
-import com.checkmarx.sdk.dto.Filter;
+import com.checkmarx.sdk.dto.sast.Filter;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;

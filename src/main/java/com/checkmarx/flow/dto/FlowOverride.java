@@ -1,6 +1,6 @@
 package com.checkmarx.flow.dto;
 
-import com.checkmarx.sdk.dto.Credential;
+import com.checkmarx.sdk.dto.sast.Credential;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;

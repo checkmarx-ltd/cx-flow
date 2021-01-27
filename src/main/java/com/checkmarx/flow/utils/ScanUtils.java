@@ -10,14 +10,14 @@ import com.checkmarx.flow.dto.RepoIssue;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.sdk.config.Constants;
-import com.checkmarx.sdk.dto.Filter;
+import com.checkmarx.sdk.dto.sast.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.ast.SCAResults;
-import com.cx.restclient.ast.dto.sast.report.FindingNode;
+import com.checkmarx.sdk.dto.ast.report.FindingNode;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
 
-import com.cx.restclient.ast.dto.sca.report.Finding;
-import com.cx.restclient.ast.dto.sca.report.Package;
+import com.checkmarx.sdk.dto.sca.report.Finding;
+import com.checkmarx.sdk.dto.sca.report.Package;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.NotImplementedException;
@@ -98,7 +98,7 @@ public class ScanUtils {
 
         Map<String, Integer> severityCount = new HashMap<>();
 
-        List<com.cx.restclient.ast.dto.sast.report.Finding> findings = results.getAstResults().getResults().getFindings();
+        List<com.checkmarx.sdk.dto.ast.report.Finding> findings = results.getAstResults().getResults().getFindings();
         findings.forEach(finding -> {
             
             xIssueBuilder.cwe("" + finding.getCweID());
@@ -245,7 +245,7 @@ public class ScanUtils {
 
   
 
-    private static Map<String, Object> getAdditionalIssueDetails(com.cx.restclient.ast.dto.sast.report.Finding finding) {
+    private static Map<String, Object> getAdditionalIssueDetails(com.checkmarx.sdk.dto.ast.report.Finding finding) {
         Map<String, Object> additionalDetails = new HashMap<>();
          additionalDetails.put(CATEGORIES, TBD);
         additionalDetails.put(RECOMMENDED_FIX, TBD);

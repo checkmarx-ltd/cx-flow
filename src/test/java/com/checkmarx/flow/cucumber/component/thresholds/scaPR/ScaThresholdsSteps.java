@@ -21,15 +21,17 @@ import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.flow.service.ThresholdValidator;
 import com.checkmarx.flow.service.ThresholdValidatorImpl;
 import com.checkmarx.sdk.config.ScaProperties;
-import com.checkmarx.sdk.dto.Filter;
+import com.checkmarx.sdk.dto.AstScaResults;
+import com.checkmarx.sdk.dto.sast.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
-import com.checkmarx.sdk.dto.ast.ASTResultsWrapper;
+
 import com.checkmarx.sdk.dto.ast.SCAResults;
 import com.checkmarx.sdk.dto.ast.Summary;
+import com.checkmarx.sdk.service.scanner.ScaScanner;
 import com.checkmarx.test.flow.config.CxFlowMocksConfig;
-import com.cx.restclient.ScaClientImpl;
-import com.cx.restclient.dto.scansummary.Severity;
-import com.cx.restclient.ast.dto.sca.report.Finding;
+
+import com.checkmarx.sdk.dto.scansummary.Severity;
+import com.checkmarx.sdk.dto.sca.report.Finding;
 
 import io.cucumber.java.en.And;
 import org.junit.Assert;
@@ -71,12 +73,12 @@ public class ScaThresholdsSteps {
     private SCAResults scaResults;
     private ScaProperties scaProperties;
     private ThresholdValidatorImpl thresholdValidatorImpl;
-    private ScaClientImpl scaClientMock;
+    private ScaScanner scaClientMock;
     private boolean thresholdsSectionExist;
 
     public ScaThresholdsSteps(ThresholdValidatorImpl thresholdValidatorImpl,
                               FlowProperties flowProperties, ThresholdValidator thresholdValidator,
-                              ScaProperties scaProperties, IntegrationTestContext testContext, ScaClientImpl scaClient) {
+                              ScaProperties scaProperties, IntegrationTestContext testContext, ScaScanner scaClient) {
                 flowProperties.setThresholds(new HashMap<>());
         this.flowProperties = flowProperties;
         this.scaProperties = scaProperties;
@@ -226,7 +228,7 @@ public class ScaThresholdsSteps {
         Summary summary = new Summary();
         summary.setRiskScore(findingsScore);
         List<Finding> findings = new ArrayList<>();
-        Stream<com.checkmarx.sdk.dto.Filter.Severity> severityStream = Arrays.stream(Filter.Severity.values());
+        Stream<com.checkmarx.sdk.dto.sast.Filter.Severity> severityStream = Arrays.stream(Filter.Severity.values());
         Arrays.stream(Severity.values()).forEach(severity -> populateFindings(findings, severity, 10));
         scaResults.setFindings(findings);
         Map<Filter.Severity, Integer> findingCounts = severityStream
@@ -313,7 +315,7 @@ public class ScaThresholdsSteps {
         setDefaultFindings();
         SCAResults scaResults = getFakeSCAResults(DEFAULT_FINDINGS_CONFIG);
 
-        ASTResultsWrapper wrapper = new ASTResultsWrapper();
+        AstScaResults wrapper = new AstScaResults();
         wrapper.setScaResults(scaResults);
         when(scaClientMock.getLatestScanResults(any())).thenReturn(wrapper);
     }

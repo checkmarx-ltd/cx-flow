@@ -2,7 +2,7 @@ package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.sdk.config.ScaProperties;
-import com.checkmarx.sdk.dto.Filter;
+import com.checkmarx.sdk.dto.sast.Filter;
 import com.checkmarx.sdk.dto.filtering.EngineFilterConfiguration;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.checkmarx.sdk.service.FilterValidator;

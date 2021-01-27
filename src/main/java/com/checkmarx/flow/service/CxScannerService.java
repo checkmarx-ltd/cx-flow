@@ -4,25 +4,25 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.sdk.config.CxGoProperties;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.CxPropertiesBase;
-import com.checkmarx.sdk.service.CxClient;
+import com.checkmarx.sdk.service.scanner.CxClient;
 import com.checkmarx.sdk.service.CxService;
-import com.cx.restclient.CxGoClientImpl;
-import com.cx.restclient.ScannerClient;
+import com.checkmarx.sdk.service.scanner.GoScanner;
+import com.checkmarx.sdk.service.scanner.ILegacyClient;
 import org.springframework.stereotype.Service;
 
 @Service
 public class CxScannerService {
     
-    private final ScannerClient scannerClient;
+    private final ILegacyClient scannerClient;
     private final CxPropertiesBase cxPropertiesBase;
 
-    public CxScannerService(CxProperties cxProperties, CxGoProperties cxgoProperties, FlowProperties flowProperties, CxService cxService, CxGoClientImpl cxGoClient) {
+    public CxScannerService(CxProperties cxProperties, CxGoProperties cxgoProperties, FlowProperties flowProperties, CxService cxService, GoScanner cxGoClient) {
         
         this.scannerClient = getScannerClient(flowProperties, cxGoClient, cxService);
         this.cxPropertiesBase = getProperties(flowProperties, cxgoProperties, cxProperties);
     }
 
-    private ScannerClient getScannerClient(FlowProperties flowProperties, CxGoClientImpl cxGoClient, CxClient cxService) {
+    private ILegacyClient getScannerClient(FlowProperties flowProperties, GoScanner cxGoClient, CxClient cxService) {
         return flowProperties!=null && flowProperties.isCxGoEnabled() && cxGoClient!=null ? cxGoClient : cxService;
     }
 
@@ -30,7 +30,7 @@ public class CxScannerService {
         return flowProperties!=null && flowProperties.isCxGoEnabled() && cxgoProperties!=null ? cxgoProperties : cxProperties;
     }
     
-    public ScannerClient getScannerClient() {
+    public ILegacyClient getScannerClient() {
         return scannerClient;
     }
 

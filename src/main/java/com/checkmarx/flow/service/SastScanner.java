@@ -14,9 +14,9 @@ import com.checkmarx.sdk.config.CxPropertiesBase;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxProject;
 import com.checkmarx.sdk.exception.CheckmarxException;
-import com.checkmarx.sdk.service.CxClient;
-import com.checkmarx.sdk.service.CxOsaClient;
-import com.cx.restclient.ScannerClient;
+import com.checkmarx.sdk.service.scanner.CxClient;
+import com.checkmarx.sdk.service.scanner.CxOsaClient;
+import com.checkmarx.sdk.service.scanner.ILegacyClient;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
@@ -73,7 +73,7 @@ public class SastScanner extends AbstractVulnerabilityScanner {
         return result;
     }
 
-    public ScannerClient getScannerClient() {
+    public ILegacyClient getScannerClient() {
         return cxService;
     }
 

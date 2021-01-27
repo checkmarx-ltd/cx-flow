@@ -14,7 +14,7 @@ import com.checkmarx.flow.service.ResultsService;
 import com.checkmarx.flow.utils.github.GitHubTestUtils;
 import com.checkmarx.flow.utils.github.GitHubTestUtilsImpl;
 import com.checkmarx.sdk.config.Constants;
-import com.checkmarx.sdk.dto.Filter;
+import com.checkmarx.sdk.dto.sast.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import io.cucumber.java.After;
