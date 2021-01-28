@@ -25,7 +25,7 @@ public abstract class RepoService {
 
     public abstract List<RepoComment> getComments(ScanRequest scanRequest) throws IOException;
 
-    protected void sendMergeComment(ScanRequest request, String comment){
+    public void sendMergeComment(ScanRequest request, String comment){
 
         try {
             RepoComment commentToUpdate =
