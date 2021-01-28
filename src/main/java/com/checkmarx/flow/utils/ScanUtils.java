@@ -12,7 +12,7 @@ import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.dto.sast.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
-import com.checkmarx.sdk.dto.sca.SCAResults;
+import com.checkmarx.sdk.dto.ast.SCAResults;
 import com.checkmarx.sdk.dto.ast.report.FindingNode;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
 
@@ -91,14 +91,14 @@ public class ScanUtils {
         HashMap<String, Object> mapAdditionalDetails = new HashMap<>();
         ScanResults.XIssue.XIssueBuilder xIssueBuilder = ScanResults.XIssue.builder();
 
-        mapAdditionalDetails.put(SCAN_ID, results.getAstResults().getScanId());
+        mapAdditionalDetails.put(SCAN_ID, results.getAstResults().getResults().getScanId());
         results.setAdditionalDetails(mapAdditionalDetails);
         
         setAstScanSummary(results);
 
         Map<String, Integer> severityCount = new HashMap<>();
 
-        List<com.checkmarx.sdk.dto.ast.report.Finding> findings = results.getAstResults().getFindings();
+        List<com.checkmarx.sdk.dto.ast.report.Finding> findings = results.getAstResults().getResults().getFindings();
         findings.forEach(finding -> {
             
             xIssueBuilder.cwe("" + finding.getCweID());
@@ -148,11 +148,11 @@ public class ScanUtils {
 
     private static void setAstScanSummary( ScanResults results) {
         CxScanSummary scanSummary = new CxScanSummary();
-        scanSummary.setHighSeverity(results.getAstResults().getSummary().getHighVulnerabilityCount() );
-        scanSummary.setMediumSeverity(results.getAstResults().getSummary().getMediumVulnerabilityCount() );
-        scanSummary.setLowSeverity(results.getAstResults().getSummary().getLowVulnerabilityCount() );
+        scanSummary.setHighSeverity(results.getAstResults().getResults().getSummary().getHighVulnerabilityCount() );
+        scanSummary.setMediumSeverity(results.getAstResults().getResults().getSummary().getMediumVulnerabilityCount() );
+        scanSummary.setLowSeverity(results.getAstResults().getResults().getSummary().getLowVulnerabilityCount() );
         scanSummary.setInfoSeverity(0);
-        results.setLink(results.getAstResults().getWebReportLink());
+        results.setLink(results.getAstResults().getResults().getWebReportLink());
         results.setScanSummary( scanSummary);
         
     }
