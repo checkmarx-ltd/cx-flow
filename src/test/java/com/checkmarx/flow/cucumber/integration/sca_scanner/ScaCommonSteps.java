@@ -6,7 +6,7 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.service.SCAScanner;
 import com.checkmarx.flow.service.ScaConfigurationOverrider;
 import com.checkmarx.sdk.config.ScaProperties;
-
+import com.checkmarx.sdk.dto.ast.SCAResults;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Arrays;

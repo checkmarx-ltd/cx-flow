@@ -8,7 +8,7 @@ import com.checkmarx.flow.service.SCAScanner;
 import com.checkmarx.flow.service.ScaConfigurationOverrider;
 import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.ScanResults;
-import com.checkmarx.sdk.dto.sca.SCAResults;
+import com.checkmarx.sdk.dto.ast.SCAResults;
 import com.checkmarx.sdk.dto.scansummary.Severity;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;

@@ -17,10 +17,12 @@ import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.ast.ASTResults;
-import com.checkmarx.sdk.dto.ast.report.AstSummaryResults;
+import com.checkmarx.sdk.dto.ast.AstSastResults;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.CxService;
+
+import com.checkmarx.sdk.dto.ast.report.AstSastSummaryResults;
 import com.checkmarx.sdk.dto.ast.report.Finding;
 import com.checkmarx.sdk.dto.ast.report.FindingNode;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -369,18 +371,19 @@ public class Github2AdoSteps {
 
     private void createAstFindings(ScanResults result) {
         result.setAstResults(new ASTResults());
-        result.getAstResults().setScanId("111");
-        result.getAstResults().setWebReportLink(WEB_REPORT_LINK);
+        result.getAstResults().setResults(new AstSastResults());
+        result.getAstResults().getResults().setScanId("111");
+        result.getAstResults().getResults().setWebReportLink(WEB_REPORT_LINK);
         LinkedList<Finding> findings = new LinkedList();
         
         findings.add(createAstFinding(1));
         findings.add(createAstFinding(2));
         
-        result.getAstResults().setFindings(findings);
+        result.getAstResults().getResults().setFindings(findings);
 
         result.setScanSummary(new CxScanSummary());
 
-        result.getAstResults().setSummary(new AstSummaryResults());
+        result.getAstResults().getResults().setSummary(new AstSastSummaryResults());
     
  
     }
