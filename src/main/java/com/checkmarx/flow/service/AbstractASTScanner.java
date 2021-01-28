@@ -13,7 +13,7 @@ import com.checkmarx.sdk.dto.AstScaResults;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.ast.ASTResults;
 
-import com.checkmarx.sdk.dto.ast.SCAResults;
+import com.checkmarx.sdk.dto.sca.SCAResults;
 import com.checkmarx.sdk.dto.ast.ScanParams;
 
 import com.checkmarx.sdk.service.scanner.AbstractScanner;

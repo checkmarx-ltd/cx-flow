@@ -191,12 +191,12 @@ public class AstRemoteRepoScanSteps {
     
     @And("each finding will contain AST populated description field")
     public void validateAdditionalFields(){
-        assertTrue("AST description field is empty", StringUtils.isNotEmpty(scanResults.getAstResults().getResults().getFindings().get(0).getDescription()));
+        assertTrue("AST description field is empty", StringUtils.isNotEmpty(scanResults.getAstResults().getFindings().get(0).getDescription()));
     }
 
     @And("finding with the same queryId will have the same description and there will be a unique finding description for each queryId")
     public void validateDescriptions() {
-        validateDescriptions(scanResults.getAstResults().getResults().getFindings());
+        validateDescriptions(scanResults.getAstResults().getFindings());
     }
 
     private void validateDescriptions(List<Finding> findings) {
@@ -261,7 +261,7 @@ public class AstRemoteRepoScanSteps {
         }
         if(isAstEnabled) {
             assertNotNull("AST results are null.", scanResults.getAstResults());
-            assertTrue("AST scan ID is empty", StringUtils.isNotEmpty(scanResults.getAstResults().getResults().getScanId()));
+            assertTrue("AST scan ID is empty", StringUtils.isNotEmpty(scanResults.getAstResults().getScanId()));
         }
      }
 
@@ -271,7 +271,7 @@ public class AstRemoteRepoScanSteps {
             validateFindingCount(scaFindings, scanResults.getScaResults().getFindings(), "SCA");
         }
         if (isAstEnabled) {
-            validateFindingCount(astFindings, scanResults.getAstResults().getResults().getFindings(), "AST");
+            validateFindingCount(astFindings, scanResults.getAstResults().getFindings(), "AST");
         }
     }
 
