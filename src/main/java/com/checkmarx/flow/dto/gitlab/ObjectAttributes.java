@@ -4,6 +4,7 @@ package com.checkmarx.flow.dto.gitlab;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import lombok.Builder;
 
 import javax.validation.Valid;
 
@@ -32,6 +33,7 @@ import javax.validation.Valid;
     "action",
     "assignee"
 })
+@Builder
 public class ObjectAttributes {
 
     @JsonProperty("id")
