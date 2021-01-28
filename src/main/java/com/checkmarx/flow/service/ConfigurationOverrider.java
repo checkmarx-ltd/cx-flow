@@ -267,20 +267,11 @@ public class ConfigurationOverrider {
 
     private void applyCxGoDynamicConfig(Map<String, String> overrideReport, ScanRequest request) {
         if (cxIntegrationsProperties.isReadMultiTenantConfiguration()) {
-            String scmType = request.getRepoType().getRepository().toLowerCase();
+            String orgId = Optional.ofNullable(request.getOrganizationId())
+                    .orElseThrow(() -> new MachinaRuntimeException(
+                            "Organization id is missing for SCM: " + request.getRepoType().getRepository()));
 
-            /*
-                When ADO is the SCM event trigger, the Repos-Manager expects to get 'azure' in the URL path
-                rather than 'ado'. Was decided to make the change here rather than the other services
-             */
-            if (scmType.equalsIgnoreCase(ScanRequest.Repository.ADO.getRepository())) {
-                scmType = "azure";
-            }
-
-            CxGoConfigFromWebService cxgoConfig = reposManagerService.getCxGoDynamicConfig(
-                    scmType,
-                    Optional.ofNullable(request.getOrganizationId())
-                            .orElseThrow(() -> new MachinaRuntimeException("Organization id is missing for SCM: " + request.getRepoType().getRepository())));
+            CxGoConfigFromWebService cxgoConfig = reposManagerService.getCxGoDynamicConfig(request.getGitUrl(), orgId);
 
             if (cxgoConfig == null) {
                 log.error("Multi Tenant mode: missing CxGo configuration in Repos Manager Service. Working with Multi Tenant = false ");

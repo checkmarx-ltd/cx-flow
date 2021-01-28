@@ -23,20 +23,20 @@ public class ReposManagerService {
     private final RestTemplate restTemplate;
     private final CxIntegrationsProperties cxIntegrationsProperties;
 
-    private String cxGoConfigUrlPattern;
+    private final String cxGoConfigUrlPattern;
 
     public ReposManagerService(@Qualifier("flowRestTemplate") RestTemplate restTemplate,
                                CxIntegrationsProperties cxIntegrationsProperties) {
         this.restTemplate = restTemplate;
         this.cxIntegrationsProperties = cxIntegrationsProperties;
 
-        cxGoConfigUrlPattern = cxIntegrationsProperties.getUrl() + "/%s/orgs/%s/tenantConfig";
+        cxGoConfigUrlPattern = cxIntegrationsProperties.getUrl() + "/cxFlowConfig?orgId=%s&repoUrl=%s";
     }
 
-    public CxGoConfigFromWebService getCxGoDynamicConfig(String scmType, String orgId) {
+    public CxGoConfigFromWebService getCxGoDynamicConfig(String repoGitUrl, String orgId) {
         if (StringUtils.isNotEmpty(cxIntegrationsProperties.getUrl())) {
-            String urlPath = String.format(cxGoConfigUrlPattern, scmType, urlEncode(orgId));
-            log.info("Overriding Cx-Go configuration for SCM type: {} and organization ID: {}", scmType, orgId);
+            log.info("Overriding CxGo configuration for the '{}' repo and '{}' organization.", repoGitUrl, orgId);
+            String urlPath = String.format(cxGoConfigUrlPattern, urlEncode(repoGitUrl), urlEncode(orgId));
             ResponseEntity<CxGoConfigFromWebService> responseEntity;
             try {
                 responseEntity = restTemplate.getForEntity(urlPath, CxGoConfigFromWebService.class);
