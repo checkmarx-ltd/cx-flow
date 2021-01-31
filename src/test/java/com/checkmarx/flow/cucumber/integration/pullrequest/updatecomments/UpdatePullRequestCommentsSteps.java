@@ -3,8 +3,10 @@ package com.checkmarx.flow.cucumber.integration.pullrequest.updatecomments;
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
+import com.checkmarx.flow.config.GitLabProperties;
 import com.checkmarx.flow.controller.ADOController;
 import com.checkmarx.flow.controller.GitHubController;
+import com.checkmarx.flow.controller.GitLabController;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 import com.checkmarx.flow.cucumber.integration.sca_scanner.ScaCommonSteps;
 import com.checkmarx.flow.dto.ControllerRequest;
@@ -14,6 +16,7 @@ import com.checkmarx.flow.dto.azure.*;
 import com.checkmarx.flow.dto.github.PullEvent;
 import com.checkmarx.flow.dto.github.Repository;
 import com.checkmarx.flow.dto.github.*;
+import com.checkmarx.flow.dto.gitlab.MergeEvent;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
@@ -61,20 +64,33 @@ public class UpdatePullRequestCommentsSteps {
     @Autowired
     private CxClient cxClientMock;
     public static final int COMMENTS_POLL_INTERVAL = 5;
-    private static final String GIT_PROJECT_NAME = "vb_test_pr_comments";
-    private static final String GITHUB_PR_BASE_URL = "https://api.github.com/repos/cxflowtestuser/" + GIT_PROJECT_NAME;
+    private static final String GITHUB_PROJECT_NAME = "vb_test_pr_comments";
+    private static final String GITHUB_PR_BASE_URL = "https://api.github.com/repos/cxflowtestuser/" + GITHUB_PROJECT_NAME;
     private static final String GITHUB_PR_ID = "6";
     private static final String ADO_PR_ID = "90";
     public static final String PULL_REQUEST_COMMENTS_URL = GITHUB_PR_BASE_URL + "/issues/"+ GITHUB_PR_ID + "/comments";
-    private static final String GIT_URL = "https://github.com/cxflowtestuser/" + GIT_PROJECT_NAME;
+    private static final String GITHUB_URL = "https://github.com/cxflowtestuser/" + GITHUB_PROJECT_NAME;
+
+    private static final String GITLAB_BASE_URL = "https://gitlab.com/api/v4";
+    private static final String GITLAB_PROJECT_NAME = "cxflow-integration-gitlab-tests";
+    private static final String GITLAB_URL = "https://gitlab.com/cxflowtestuser/" + GITLAB_PROJECT_NAME;
+    private static final String GITLAB_PROJECT_ID = "23910442";
+    private static final String GITLAB_MERGE_REQUEST_ID = "3";
+    public static final String MERGE_REQUEST_NOTES_URL =
+            GITLAB_BASE_URL + "/projects/" + GITLAB_PROJECT_ID +
+                    "/merge_requests/" + GITLAB_MERGE_REQUEST_ID +"/notes";
+
     private static final String ADO_PR_COMMENTS_URL = "https://dev.azure.com/CxNamespace/d50fc6e5-a5ab-4123-9bc9-ccb756c0bf16/_apis/git/repositories/a89a9d2f-ab67-4bda-9c56-a571224c2c66/pullRequests/" + ADO_PR_ID + "/threads";
     private static final String filePath = "sample-sast-results/3-findings-filter-script-test.xml";
     private final GitHubService gitHubService;
+    private final GitLabService gitLabService;
     private final ADOService adoService;
     private final GitHubController gitHubControllerSpy;
     private final ADOController adoControllerSpy;
+    private final GitLabController gitLabControllerSpy;
     private final ObjectMapper mapper = new ObjectMapper();
     private final GitHubProperties gitHubProperties;
+    private final GitLabProperties gitLabProperties;
     private final HelperService helperService;
     private final ScaProperties scaProperties;
     private SourceControlType sourceControl;
@@ -87,8 +103,18 @@ public class UpdatePullRequestCommentsSteps {
     private FilterConfiguration filterMedium = getSeverityFilter("Medium");
     private FilterConfiguration filterLow = getSeverityFilter("Low");
 
-    public UpdatePullRequestCommentsSteps(GitHubService gitHubService, GitHubProperties gitHubProperties, GitHubController gitHubController, ADOService adoService,
-                                          ADOController adoController, FlowProperties flowProperties, CxProperties cxProperties, ScaProperties scaProperties) throws IOException {
+    public UpdatePullRequestCommentsSteps(GitHubService gitHubService,
+                                          GitLabService gitLabService,
+                                          GitHubProperties gitHubProperties,
+                                          GitHubController gitHubController, ADOService adoService,
+                                          ADOController adoController,
+                                          GitLabController gitLabControllerSpy,
+                                          GitLabProperties gitLabProperties,
+                                          FlowProperties flowProperties, CxProperties cxProperties,
+                                          ScaProperties scaProperties) throws IOException {
+        this.gitLabService = gitLabService;
+        this.gitLabControllerSpy =  Mockito.spy(gitLabControllerSpy);
+        this.gitLabProperties = gitLabProperties;
         this.helperService = mock(HelperService.class);
         this.gitHubService = gitHubService;
         this.gitHubProperties = gitHubProperties;
@@ -125,6 +151,7 @@ public class UpdatePullRequestCommentsSteps {
     @Before
     public void initConfiguration(){
         initGitHubProperties();
+        initGitlabProperties();
         ScaCommonSteps.initSCAConfig(scaProperties);
         flowProperties.getBranches().add("udi-tests-2");
         flowProperties.setEnabledVulnerabilityScanners(Arrays.asList("sast"));
@@ -156,9 +183,16 @@ public class UpdatePullRequestCommentsSteps {
         Using ScanResultsAnswerer::switchFilterConfiguration to change filter configuration in the between steps in same test scenario
          */
     }
-    
+
     @And("no comments on pull request")
     public void deletePRComments() throws IOException {
+        if (sourceControl.equals(SourceControlType.GITHUB)) {
+            deleteGitHubComments();
+        } else if (sourceControl.equals(SourceControlType.ADO)) {
+            deleteADOComments();
+        }  else if (sourceControl.equals(SourceControlType.GITLAB)) {
+            deleteGitLabComments();
+        }
     }
 
     private void setBranches() {
@@ -173,11 +207,11 @@ public class UpdatePullRequestCommentsSteps {
                 deleteGitHubComments();
             } else if (sourceControl.equals(SourceControlType.ADO)) {
                 deleteADOComments();
+            }  else if (sourceControl.equals(SourceControlType.GITLAB)) {
+                deleteGitLabComments();
             }
         }catch(HttpClientErrorException e){
             //the comments have already been deleted
-        }catch (Exception e){
-            throw e;
         }
     }
 
@@ -208,6 +242,11 @@ public class UpdatePullRequestCommentsSteps {
         sourceControl = SourceControlType.ADO;
     }
 
+    @Given("source control is Gitlab")
+    public void sourceControlIsGitlab() {
+        sourceControl = SourceControlType.GITLAB;
+    }
+
     private void deleteADOComments() throws IOException {
         List<RepoComment> adoComments = getRepoComments();
         for (RepoComment rc: adoComments) {
@@ -221,6 +260,12 @@ public class UpdatePullRequestCommentsSteps {
             gitHubService.deleteComment(comment.getCommentUrl(), getBasicRequest());
         }
     }
+    private void deleteGitLabComments() throws IOException {
+        List<RepoComment> comments = getRepoComments();
+        for (RepoComment comment: comments) {
+            gitLabService.deleteComment(comment.getCommentUrl(), getBasicRequest());
+        }
+    }
 
     private List<RepoComment> getRepoComments() throws IOException {
         if (sourceControl.equals(SourceControlType.GITHUB)) {
@@ -228,6 +273,9 @@ public class UpdatePullRequestCommentsSteps {
         }
         else if (sourceControl.equals(SourceControlType.ADO)){
             return adoService.getComments(ADO_PR_COMMENTS_URL, getBasicRequest());
+        }
+        else if (sourceControl.equals(SourceControlType.GITLAB)) {
+            return gitLabService.getComments(getBasicRequest());
         }
         throw new IllegalArgumentException("Unknown source control: " + sourceControl);
     }
@@ -238,13 +286,14 @@ public class UpdatePullRequestCommentsSteps {
             buildGitHubPullRequest();
         } else if (sourceControl.equals(SourceControlType.ADO)) {
             buildADOPullRequestEvent();
+        } else if (sourceControl.equals(SourceControlType.GITLAB)) {
+            buildGitlabPullRequestEvent();
         }
     }
 
     @Then("Wait for comments")
     public void waitForNewComments() {
         log.info("waiting for new comments. scanner type {}", scannerType);
-
         int minutesToWait = scannerType == ScannerType.BOTH ? 3 : 2;
         Awaitility.await()
                 .atMost(Duration.ofMinutes(minutesToWait))
@@ -383,17 +432,34 @@ public class UpdatePullRequestCommentsSteps {
     }
 
     private ScanRequest getBasicRequest() {
-        return ScanRequest.builder()
-                .mergeNoteUri(PULL_REQUEST_COMMENTS_URL)
-                .build();
+        if (sourceControl.equals(SourceControlType.GITLAB)) {
+            return ScanRequest.builder()
+                    .mergeNoteUri(MERGE_REQUEST_NOTES_URL)
+                    .repoProjectId(Integer.parseInt(GITLAB_PROJECT_ID))
+                    .additionalMetadata(new HashMap<String, String>() {{
+                        put("merge_id", GITLAB_MERGE_REQUEST_ID);
+                    }})
+                    .build();
+        } else
+            return ScanRequest.builder()
+                    .mergeNoteUri(PULL_REQUEST_COMMENTS_URL)
+                    .build();
     }
 
     private void initGitHubProperties() {
         this.gitHubProperties.setCxSummary(false);
         this.gitHubProperties.setFlowSummary(false);
-        this.gitHubProperties.setUrl(GIT_URL);
+        this.gitHubProperties.setUrl(GITHUB_URL);
         this.gitHubProperties.setWebhookToken("1234");
         this.gitHubProperties.setApiUrl("https://api.github.com/repos");
+    }
+
+    private void initGitlabProperties() {
+        this.gitLabProperties.setWebhookToken("1234");
+        this.gitLabProperties.setUrl(GITLAB_URL);
+        this.gitLabProperties.setApiUrl("https://gitlab.com/api/v4");
+        this.gitLabProperties.setFalsePositiveLabel("false-positive");
+        this.gitLabProperties.setBlockMerge(true);
     }
 
 
@@ -440,7 +506,7 @@ public class UpdatePullRequestCommentsSteps {
                     "SIGNATURE",
                     "CX",
                     controllerRequest
-                    );
+            );
 
         } catch (JsonProcessingException e) {
             fail("Unable to parse " + pullEvent.toString());
@@ -489,13 +555,56 @@ public class UpdatePullRequestCommentsSteps {
         adoControllerSpy.pullRequest(pullEvent,"Basic Y3hmbG93OjEyMzQ=", null, controllerRequest, adoRequest);
     }
 
+    private void buildGitlabPullRequestEvent() {
+        MergeEvent mergeEvent = new MergeEvent();
+        mergeEvent.setObjectKind("merge_request");
+        mergeEvent.setUser(com.checkmarx.flow.dto.gitlab.User.builder()
+                                   .name("cxflowtestuser")
+                                   .username("cxflowtestuser")
+                                   .avatarUrl("https://secure.gravatar.com/avatar/5b0716952104a8b0b496af18a335f1d2?s=80&d=identicon")
+                                   .build());
+        mergeEvent.setProject(com.checkmarx.flow.dto.gitlab.Project.builder()
+                                      .id(23910442).name("CxFlow Integration GitLab Tests")
+                                      .webUrl("https://gitlab.com/cxflowtestuser/cxflow-integration-gitlab-tests")
+                                      .gitSshUrl("git@gitlab.com:cxflowtestuser/cxflow-integration-gitlab-tests.git")
+                                      .gitHttpUrl("https://gitlab.com/cxflowtestuser/cxflow-integration-gitlab-tests.git")
+                                      .namespace("cxflowtestuser")
+                                      .visibilityLevel(0)
+                                      .pathWithNamespace("cxflowtestuser/cxflow-integration-gitlab-tests")
+                                      .defaultBranch("master")
+                                      .homepage("homepage")
+                                      .url("git@gitlab.com:cxflowtestuser/cxflow-integration-gitlab-tests.git")
+                                      .sshUrl("git@gitlab.com:cxflowtestuser/cxflow-integration-gitlab-tests.git")
+                                      .httpUrl("https://gitlab.com/cxflowtestuser/cxflow-integration-gitlab-tests.git")
+                                      .build());
+        mergeEvent.setRepository(com.checkmarx.flow.dto.gitlab.Repository.builder()
+                                         .name("CxFlow Integration GitLab Tests")
+                                         .url("git@gitlab.com:cxflowtestuser/cxflow-integration-gitlab-tests.git")
+                                         .description("")
+                                         .homepage("https://gitlab.com/cxflowtestuser/cxflow-integration-gitlab-tests")
+                                         .build());
+        com.checkmarx.flow.dto.gitlab.Target target = new com.checkmarx.flow.dto.gitlab.Target();
+        target.setDefaultBranch("master");
+        mergeEvent.setObjectAttributes(com.checkmarx.flow.dto.gitlab.ObjectAttributes.builder()
+                                               .id(86014571).targetBranch("master").sourceBranch("cxflow-test").sourceProjectId(23910442)
+                                               .authorId(7362071).title("Update README.md").createdAt("2021-01-25 14:32:47 UTC")
+                                               .updatedAt("2021-01-25 14:32:47 UTC").state("opened").mergeStatus("unchecked")
+                                               .targetProjectId(Integer.parseInt(GITLAB_PROJECT_ID)).iid(Integer.parseInt(GITLAB_MERGE_REQUEST_ID)).description("").workInProgress(false).target(target)
+                                               .action("open").build());
+        ControllerRequest controllerRequest = new ControllerRequest();
+        controllerRequest.setProject("cxflow-integration-gitlab-tests-Cxflow-test");
+        controllerRequest.setTeam("\\CxServer\\SP");
+        gitLabControllerSpy.mergeRequest(mergeEvent, "1234", null, controllerRequest);
+    }
+
     private FilterConfiguration getSeverityFilter(String filter){
         return FilterConfiguration.fromSimpleFilters(Collections.singletonList(new Filter(Filter.Type.SEVERITY, filter)));
     }
 
     enum SourceControlType {
         GITHUB,
-        ADO
+        ADO,
+        GITLAB
     }
 
     enum ScannerType {

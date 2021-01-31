@@ -429,6 +429,16 @@ public class BitBucketService extends RepoService {
     }
 
     @Override
+    public void updateComment(String commentUrl, String comment, ScanRequest scanRequest) {
+        // not implemented
+    }
+
+    @Override
+    public void addComment(ScanRequest scanRequest, String comment) {
+        // not implemented
+    }
+
+    @Override
     public List<RepoComment> getComments(ScanRequest scanRequest) {
         return Collections.emptyList();
     }

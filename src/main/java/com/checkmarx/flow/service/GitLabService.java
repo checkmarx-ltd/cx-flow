@@ -3,10 +3,13 @@ package com.checkmarx.flow.service;
 import com.checkmarx.flow.config.GitLabProperties;
 import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.dto.RepoComment;
+import com.checkmarx.flow.dto.RepoIssue;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.Sources;
+import com.checkmarx.flow.dto.gitlab.Comment;
 import com.checkmarx.flow.dto.gitlab.Note;
 import com.checkmarx.flow.exception.GitLabClientException;
+import com.checkmarx.flow.exception.GitLabClientRuntimeException;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.sast.CxConfig;
@@ -26,6 +29,8 @@ import org.springframework.web.client.RestTemplate;
 import java.beans.ConstructorProperties;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 
@@ -33,7 +38,8 @@ import java.util.*;
 public class GitLabService extends RepoService {
 
     private static final String PROJECT = "/projects/{namespace}{x}{repo}";
-    public static final String MERGE_NOTE_PATH = "/projects/{id}/merge_requests/{iid}/notes";
+    public static final String MERGE_NOTE_PATH = "/projects/%s/merge_requests/%s/notes/%s";
+    public static final String MERGE_NOTES_PATH = "/projects/{id}/merge_requests/{iid}/notes";
     public static final String MERGE_PATH = "/projects/{id}/merge_requests/{iid}";
     public static final String COMMIT_PATH = "/projects/{id}/repository/commits/{sha}/comments";
     private static final String FILE_CONTENT = "/projects/{id}/repository/files/{config}?ref={branch}";
@@ -113,7 +119,16 @@ public class GitLabService extends RepoService {
         }
     }
 
-    public void sendMergeComment(ScanRequest request, String comment){
+    @Override
+    public void updateComment(String commentUrl, String comment, ScanRequest scanRequest) {
+        log.debug("Updating existing comment. url: {}", commentUrl);
+        log.debug("Updated comment: {}" , comment);
+        HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONComment("body", comment).toString(), createAuthHeaders(scanRequest));
+        restTemplate.exchange(commentUrl, HttpMethod.PUT, httpEntity, String.class);
+    }
+
+    @Override
+    public void addComment(ScanRequest request, String comment) {
         Note note = Note.builder()
                 .body(comment)
                 .build();
@@ -155,7 +170,7 @@ public class GitLabService extends RepoService {
                     createAuthHeaders(request)
             );
             restTemplate.exchange(endpoint,
-                    HttpMethod.PUT, httpEntity, String.class);
+                                  HttpMethod.PUT, httpEntity, String.class);
         }
     }
 
@@ -172,11 +187,11 @@ public class GitLabService extends RepoService {
 
             HttpEntity httpEntity = new HttpEntity<>(
                     getJSONMergeTitle(request.getAdditionalMetadata(MERGE_TITLE)
-                            .replace("WIP:CX|","")).toString(),
+                                              .replace("WIP:CX|","")).toString(),
                     createAuthHeaders(request)
             );
             restTemplate.exchange(endpoint,
-                    HttpMethod.PUT, httpEntity, String.class);
+                                  HttpMethod.PUT, httpEntity, String.class);
         }
     }
 
@@ -295,12 +310,54 @@ public class GitLabService extends RepoService {
 
     @Override
     public void deleteComment(String url, ScanRequest scanRequest) {
-        // not implemented
+        HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders(scanRequest));
+        restTemplate.exchange(url, HttpMethod.DELETE, httpEntity, String.class);
     }
 
     @Override
     public List<RepoComment> getComments(ScanRequest scanRequest) {
-        return Collections.emptyList();
+        HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders(scanRequest));
+        ResponseEntity<Comment[]> response = restTemplate.exchange(scanRequest.getMergeNoteUri(),
+                                                                   HttpMethod.GET, httpEntity ,
+                                                                   Comment[].class);
+        List<Comment> comments = Arrays.asList(Objects.requireNonNull(response.getBody()));
+        return convertToListCxRepoComments(comments, scanRequest);
+    }
+
+    private List<RepoComment> convertToListCxRepoComments(List<Comment> comments, ScanRequest scanRequest) {
+        List<RepoComment> repoComments = new ArrayList<>();
+        for (Comment comment : comments) {
+            RepoComment repoComment = convertToRepoComment(comment, scanRequest);
+            if (PullRequestCommentsHelper.isCheckMarxComment(repoComment)) {
+                repoComments.add(repoComment);
+            }
+        }
+        return repoComments;
+    }
+
+    private RepoComment convertToRepoComment(Comment comment, ScanRequest scanRequest) {
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+        try {
+            return RepoComment.builder()
+                    .id(comment.getId())
+                    .comment(comment.getBody())
+                    .createdAt(sdf.parse(comment.getCreatedAt()))
+                    .updateTime(sdf.parse(comment.getUpdatedAt()))
+                    .commentUrl(getCommentUrl(scanRequest, comment.getId()))
+                    .build();
+        } catch (ParseException pe) {
+            throw new GitLabClientRuntimeException("Error parsing gitlab pull request created or " +
+                                                           "updated date", pe);
+        }
+    }
+
+    private String getCommentUrl(ScanRequest scanRequest, long commentId) {
+        String path = scmConfigOverrider.determineConfigApiUrl(properties, scanRequest).concat(MERGE_NOTE_PATH);
+        return String.format(path, scanRequest.getRepoProjectId().toString(),
+                             scanRequest.getAdditionalMetadata(MERGE_ID), commentId);
     }
 
 }

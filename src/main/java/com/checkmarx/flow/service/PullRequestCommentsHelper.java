@@ -31,7 +31,7 @@ public class PullRequestCommentsHelper {
     }
 
     public static RepoComment getCommentToUpdate(List<RepoComment> existingComments, String newComment) {
-        CommentType commentType = getCommnetType(newComment);
+        CommentType commentType = getCommentType(newComment);
         List<RepoComment> relevantComments= getCheckmarxCommentsForType(existingComments, commentType);
         if (relevantComments.size() == 1) {
             return relevantComments.get(0);
@@ -39,7 +39,7 @@ public class PullRequestCommentsHelper {
         return null;
     }
 
-    private static CommentType getCommnetType(String comment) {
+    private static CommentType getCommentType(String comment) {
         if (isSastAndScaComment(comment)) {
             return CommentType.SCA_AND_SAST;
         }
@@ -87,7 +87,7 @@ public class PullRequestCommentsHelper {
     private static List<RepoComment> getCheckmarxCommentsForType(List<RepoComment> allComments, CommentType commentType) {
         List<RepoComment> result = new ArrayList<>();
         for (RepoComment comment: allComments) {
-            if (getCommnetType(comment.getComment()).equals(commentType)) {
+            if (getCommentType(comment.getComment()).equals(commentType)) {
                 result.add(comment);
             }
         }
