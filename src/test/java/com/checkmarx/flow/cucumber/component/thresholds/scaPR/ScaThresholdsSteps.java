@@ -26,7 +26,8 @@ import com.checkmarx.sdk.dto.sast.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 
 import com.checkmarx.sdk.dto.sca.SCAResults;
-import com.checkmarx.sdk.dto.ast.Summary;
+
+import com.checkmarx.sdk.dto.sca.Summary;
 import com.checkmarx.sdk.service.scanner.ScaScanner;
 import com.checkmarx.test.flow.config.CxFlowMocksConfig;
 
