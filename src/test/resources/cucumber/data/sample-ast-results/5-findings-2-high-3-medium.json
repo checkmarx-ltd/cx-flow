@@ -12,7 +12,6 @@
   "scanSummary" : null,
   "scaResults" : null,
   "astResults" : {
-    "results" : {
       "scanId" : "c173eeb1-8399-4fcd-904c-95cb732406fb",
       "summary" : {
         "highVulnerabilityCount" : 2,
@@ -306,7 +305,6 @@
         "foundAt" : "2020-08-10T06:11:34Z",
         "status" : "RECURRENT"
       } ]
-    }
   },
   "xissues" : null,
   "sastScanId" : null,
