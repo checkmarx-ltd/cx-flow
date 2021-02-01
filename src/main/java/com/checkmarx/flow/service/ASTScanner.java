@@ -6,15 +6,10 @@ import com.checkmarx.sdk.config.AstProperties;
 import com.checkmarx.sdk.dto.AstScaResults;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.ast.ASTResults;
-
-import com.checkmarx.sdk.dto.ast.ASTResults;
 import com.checkmarx.sdk.dto.ast.ScanParams;
-
-
 import com.checkmarx.sdk.service.scanner.AstScanner;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
 import java.util.Optional;
 
 
