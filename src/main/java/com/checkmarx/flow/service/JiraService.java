@@ -40,6 +40,7 @@ import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Service
@@ -64,7 +65,7 @@ public class JiraService {
     private List<String> currentClosedIssuesList = new ArrayList<>();
 
     //Map used to store/retrieve custom field values
-    private Map<String, Map<String, String>> customFields = new HashMap<>();
+    private final ConcurrentHashMap<String, Map<String, String>> customFields = new ConcurrentHashMap<>();
 
     private static final String LABEL_FIELD_TYPE = "labels";
     private static final String SECURITY_FIELD_TYPE = "security";
