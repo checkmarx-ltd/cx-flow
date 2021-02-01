@@ -5,6 +5,7 @@
 * [Configuration As Code](#configurationascode)
 * [SCA Scans From Command Line](#commandline)
 * [SCA ZIP Folder Scan](#zipFolderScan)
+* [SCA Project Team Assignment](#scaProjectTeamAssignment)
 
 ## <a name="configuration">Configuration</a>
 CxSCA scans can be triggered based on WebHooks using CxFlow. 
@@ -180,3 +181,31 @@ In order to change the default CxFlow SCA scan behaviour and to perform a SCA ZI
 ```
 enabledZipScan: true
 ```
+
+## <a name="scaProjectTeamAssignment">SCA project team assignment</a>
+SCA project team assignment with CxFlow is performing on the SCA project creation stage. In order to set a project team, the next configuration property should be added underneath the sca configuration section:
+```
+team: /CxServer/MyTeam
+```
+* In order to declare a team within a tree hierarchy, make sure to use the forward slash ('/').
+* Declaring not existing team or team path will be resulted with 400 BAD REQUEST error.
+
+## <a name="scaProjectTeamAssignment">SCA project team assignment</a>
+SCA project team assignment with CxFlow is performing on the SCA project creation stage. In order to set a project team, the next configuration property should be added underneath the sca configuration section:
+```
+team: /CxServer/MyTeam
+```
+* In order to declare a team within a tree hierarchy, make sure to use the forward slash ('/').
+* Declaring not existing team or team path will be resulted with 400 BAD REQUEST error.
+
+## <a name="scaProjectTeamAssignment">SCA project team assignment</a>
+SCA project team assignment with CxFlow is performing on the SCA project creation stage. In order to set a project team, the next configuration property should be added underneath the sca configuration section:
+```
+teamForNewProjects: /team
+```
+Or within a tree hierarchy:
+```
+teamForNewProjects: /MainTeam/SubTeam
+```
+* In order to declare a team within a tree hierarchy, make sure to use the forward slash ('/').
+* Declaring not existing team or team path will be resulted with 400 BAD REQUEST error.
