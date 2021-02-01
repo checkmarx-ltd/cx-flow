@@ -185,11 +185,11 @@ enabledZipScan: true
 ## <a name="scaProjectTeamAssignment">SCA project team assignment</a>
 SCA project team assignment with CxFlow is performing on the SCA project creation stage. In order to set a project team, the next configuration property should be added underneath the sca configuration section:
 ```
-teamForNewProjects: /team
+team-for-new-projects: /team
 ```
 Or within a tree hierarchy:
 ```
-teamForNewProjects: /MainTeam/SubTeam
+team-for-new-projects: /MainTeam/SubTeam
 ```
 * In order to declare a team within a tree hierarchy, make sure to use the forward slash ('/').
 * Declaring not existing team or team path will be resulted with 400 BAD REQUEST error.

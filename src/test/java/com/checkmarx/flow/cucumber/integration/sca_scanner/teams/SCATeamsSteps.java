@@ -87,7 +87,6 @@ public class SCATeamsSteps extends ScaCommonSteps {
 
         if (assignedTeams.isEmpty()) {
             actualTeam = "";
-            actualTeam = "";
         } else {
             actualTeam = assignedTeams.get(0);
         }
@@ -102,7 +101,6 @@ public class SCATeamsSteps extends ScaCommonSteps {
 
 
     private void deleteProjectIfAlreadyExists() throws IOException {
-        String projectId = scaClientHelper.createRiskManagementProject(PROJECT_NAME);
         if (StringUtils.isNotEmpty(projectId)) {
             scaClientHelper.deleteProjectById(projectId);
         }
