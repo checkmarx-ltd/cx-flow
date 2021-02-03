@@ -103,10 +103,10 @@ dependencies {
     compile("org.codehaus.groovy:groovy-all:3.0.7") {
         exclude group: 'org.apache.ant', module: 'ant'
     }
-    compile group: 'org.codehaus.groovy', name: 'groovy', version: '3.0.7'
     compile("org.apache.ivy:ivy:2.5.0")
     compile("org.jasypt:jasypt:1.9.3")
     compile("org.eclipse.jgit:org.eclipse.jgit:5.5.1.201910021850-r")
+    compile group: 'com.google.guava', name: 'guava', version: '30.1-jre'
     compile group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.68'
     compile("com.auth0:java-jwt:3.10.3")
     compileOnly('org.springframework.boot:spring-boot-configuration-processor')
