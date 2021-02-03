@@ -29,7 +29,7 @@ public class ReposManagerService {
         String apiBaseUrl = cxIntegrationsProperties.getUrl();
         if (StringUtils.isNotEmpty(apiBaseUrl)) {
             String fullUrlTemplate = apiBaseUrl + CXFLOW_CONFIG_TEMPLATE;
-            log.info("Overriding CxGo configuration for the '{}' organization and repo URL: {}", repoGitUrl, orgId);
+            log.info("Overriding CxGo configuration for the '{}' organization. Repo URL: {}", orgId, repoGitUrl);
             return getConfigResponse(repoGitUrl, orgId, fullUrlTemplate);
         } else {
             throw new ReposManagerException("ReposManager cannot be reached. URL is blank or empty");
