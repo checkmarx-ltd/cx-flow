@@ -116,6 +116,7 @@ dependencies {
     compileOnly('org.springframework.boot:spring-boot-configuration-processor')
     runtime('org.springframework.boot:spring-boot-devtools')
     testImplementation('org.springframework.boot:spring-boot-starter-test')
+    compile group: 'org.springframework', name: 'spring-web', version: '5.3.3'
     compileJava.dependsOn(processResources)
     testImplementation("io.cucumber:cucumber-java:${cucumberVersion}")
     testImplementation("io.cucumber:cucumber-junit:${cucumberVersion}")
