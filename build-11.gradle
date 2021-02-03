@@ -92,6 +92,7 @@ dependencies {
     compile ("org.codehaus.groovy:groovy-all:3.0.7") {
         exclude group: 'org.apache.ant', module: 'ant'
     }
+    compile group: 'org.codehaus.groovy', name: 'groovy', version: '3.0.7'
     compile ("org.apache.ivy:ivy:2.5.0")
     compile ("org.apache.commons:commons-lang3:3.11")
     compile('org.apache.commons:commons-collections4:4.4')

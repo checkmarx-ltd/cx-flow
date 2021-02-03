@@ -103,6 +103,7 @@ dependencies {
     compile("org.codehaus.groovy:groovy-all:3.0.7") {
         exclude group: 'org.apache.ant', module: 'ant'
     }
+    compile group: 'org.codehaus.groovy', name: 'groovy', version: '3.0.7'
     compile("org.apache.ivy:ivy:2.5.0")
     compile("org.jasypt:jasypt:1.9.3")
     compile("org.eclipse.jgit:org.eclipse.jgit:5.5.1.201910021850-r")
