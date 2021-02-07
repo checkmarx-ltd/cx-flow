@@ -20,13 +20,17 @@ Feature: Cx-Flow CLI SAST Integration tests
     When running sast scan <filter>
     Then bugTracker contains <number of issue> issues
     And cxflow should exit with exit code: <return code>
+    And and enabledZipScan is set to "<enabledZipScan>"
 
     Examples:
-      | filter                 | number of issue | return code |
-      | no-filter              | x+y+z           | 10          |
-      | filter-High-and-Medium | x+y             | 10          |
-      | filter-only-Medium     | y               | 10          |
-      | filter-invalid-cwe     | 0               | 0           |
+      | filter                 | number of issue | return code | enabledZipScan    |
+      | no-filter              | x+y+z           | 10          | true              |
+      | no-filter              | x+y+z           | 10          | false             |
+      | filter-High-and-Medium | x+y             | 10          | true              |
+      | filter-High-and-Medium | x+y             | 10          | false             |
+      | filter-only-Medium     | y               | 10          | parameter missing |
+      | filter-only-Medium     | y               | 10          | parameter missing |
+      | filter-invalid-cwe     | 0               | 0           | parameter missing |
 
 
   Scenario: Testing SAST scans with bugTracker None
@@ -34,3 +38,5 @@ Feature: Cx-Flow CLI SAST Integration tests
     When running cxflow to execute SAST scan
     Then cxflow should not wait for scan results
     And cxflow should exit with exit code: 0
+
+ 
