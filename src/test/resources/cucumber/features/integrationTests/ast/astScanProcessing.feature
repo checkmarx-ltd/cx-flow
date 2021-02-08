@@ -1,4 +1,4 @@
-@AstIntegrationTests @IntegrationTest
+@Skip @AstIntegrationTests @IntegrationTest
 Feature: Cx-Flow AST Integration permutation tests
 
   @ASTRemoteRepoScan

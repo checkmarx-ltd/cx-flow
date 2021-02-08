@@ -1,4 +1,4 @@
-@Component
+@Skip @Component
 Feature: Test analytics for get results operation
 
   Scenario Outline: do get results operation for a known project, and validate the analytics created for the operation.
