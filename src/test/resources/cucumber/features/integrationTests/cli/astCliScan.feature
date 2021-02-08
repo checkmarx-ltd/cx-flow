@@ -1,4 +1,4 @@
-@AST_CLI_SCAN  @IntegrationTest
+@Skip @AST_CLI_SCAN  @IntegrationTest
 Feature: AST support in CxFlow command-line
     
     Scenario Outline: AST CLI scan of a local directory
