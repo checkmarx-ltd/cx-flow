@@ -45,6 +45,6 @@ Feature: Cx-Flow CLI SAST Integration tests
 
     Examples:
       | filter    | number of issue | return code | enabledZipScan |
-      | no-filter | x+y+z           | 10          | false          |
       | no-filter | x+y+z           | 10          | not set        |
+      | no-filter | x+y+z           | 10          | false          |
       | no-filter | x+y+z           | 10          | true           |
