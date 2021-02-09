@@ -2,6 +2,7 @@
 * [Bug-Trackers](#bug)
 * [Filters](#filters)
 * [Thresholds](#thresholds)
+* [Policy Management](#policyManagement)
 * [Configuration As Code](#configurationascode)
 * [SCA Scans From Command Line](#commandline)
 * [SCA ZIP Folder Scan](#zipFolderScan)
@@ -116,6 +117,19 @@ Cx-Flow uses the thresholds to ease its (no) tolerance of findings.
 <br/>An example for pull request failure: 
 <br/>
 [[/Images/SCA7.png|Example of Pull Request Failure]]
+
+## <a name="policyManagement">Policy Management</a>
+SCA supports with policy management control.
+Each policy can be customized by defining number of custom rules and conditions in which, if getting violated, can break a build.
+On the creation process or after it, a policy can be defined with 'Break build' flag or not.
+
+[[/Images/SCA-policy-creation.png|Example of Policy creation dashboard]]
+
+When performing a scan, if a defined policy is getting violated, Cx-Flow will fail the pull request and it will be marked as failed.
+* Violated policy occurs when at least one rule condition is getting violated AND when policy 'Break Build' flag in on.
+* In case of a CLI scan which violated a policy: Cx-Flow will fail with exit code 10.
+* If current scan violated any active SCA thresholds and also violated a policy, policy break build has the top priority.
+
 
 ## <a name="configurationascode">Configuration As Code</a>
 CxFlow supports configuration as code for CxSAST and CxSCA scans.
