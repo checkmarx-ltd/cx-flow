@@ -76,3 +76,10 @@ Feature: Cx-Flow SCA Integration permutation tests
     And enabledZipScan property is set with true
     When initiating a new scan
     Then returned scan high and medium results are bigger than zero
+
+  @SCA_Policy_Management
+  Scenario: Assign new violated policy to a project scan and validate that isPolicyViolated flag in SCA results is positive
+    Given scanner is SCA
+    And a violated policy is assigned to an existing project
+    When initiating a new scan
+    Then isPolicyViolated flag in SCA results should be positive

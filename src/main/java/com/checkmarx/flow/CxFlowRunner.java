@@ -61,7 +61,7 @@ public class CxFlowRunner implements ApplicationRunner {
     private final BuildProperties buildProperties;
     private final List<VulnerabilityScanner> scanners;
     private final ThresholdValidator thresholdValidator;
-    private static final String ERROR_BREAK_MSG = String.format("Exiting with Error code %d due to Checkmarx findings", ExitCode.BUILD_INTERRUPTED.getValue());
+    private static final String ERROR_BREAK_MSG = String.format("Exiting with Error code %d because some of the checks weren't passed", ExitCode.BUILD_INTERRUPTED.getValue());
 
     @PostConstruct
     private void logVersion() {
@@ -533,7 +533,7 @@ public class CxFlowRunner implements ApplicationRunner {
 
         if(thresholdValidator.isThresholdsConfigurationExist(request)){
             if(thresholdValidator.thresholdsExceeded(request, results)){
-                log.info("Fail build on Thresholds exceeded.");
+                log.info("Fail build because some of the checks weren't passed");
                 breakBuildResult = true;
             }
         } else if(flowProperties.isBreakBuild() && resultsService.filteredSastIssuesPresent(results)){
