@@ -150,7 +150,7 @@ public class ScaConfigurationOverrider {
     }
 
     private static void addToReport(ScaConfig config, Map<String, String> report) {
-        report.put("accessControlUrl", config.getAccessControlUrl());
+        report.put(ACCESS_CONTROL_URL, config.getAccessControlUrl());
         report.put(API_URL, config.getApiUrl());
         report.put(APP_URL, config.getAppUrl());
         report.put(TENANT, config.getTenant());
