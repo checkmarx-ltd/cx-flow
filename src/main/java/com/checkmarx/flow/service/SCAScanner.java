@@ -25,7 +25,7 @@ import java.util.Optional;
 public class SCAScanner extends AbstractASTScanner {
 
     private final ScaProperties scaProperties;
-    private CxRepoFileHelper cxRepoFileHelper;
+    private final CxRepoFileHelper cxRepoFileHelper;
 
     public SCAScanner(ScaScanner scaClient, FlowProperties flowProperties, BugTrackerEventTrigger bugTrackerEventTrigger,
                       ScaProperties scaProperties) {
@@ -51,8 +51,9 @@ public class SCAScanner extends AbstractASTScanner {
         try {
             if (scaProperties.isEnabledZipScan()) {
                 log.info("CxAST-SCA zip scan is enabled");
-                String scaZipFolderPath = cxRepoFileHelper.getScaZipFolderPath(scanRequest.getRepoUrlWithAuth(), scanRequest.getExcludeFiles(), scanRequest.getBranch());
-                scanParams.setZipPath(scaZipFolderPath);
+                String scaClonedFolderPath = cxRepoFileHelper.getScaClonedRepoFolderPath(scanRequest.getRepoUrlWithAuth(), scanRequest.getExcludeFiles(), scanRequest.getBranch());
+                scanParams.setSourceDir(scaClonedFolderPath);
+                scanParams.getScaConfig().setExcludeFiles(scanRequest.getExcludeFiles());
             }
         } catch (CheckmarxException e) {
             throw new MachinaRuntimeException(e.getMessage());
