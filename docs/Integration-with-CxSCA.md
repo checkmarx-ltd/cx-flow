@@ -195,6 +195,11 @@ In order to change the default CxFlow SCA scan behaviour and to perform a SCA ZI
 ```
 enabledZipScan: true
 ```
+Additional configuration in SCA zip scan flow - Include source files
+* Default value set to false, In order to change the default CxFlow SCA zip scan behaviour, the next configuration property should be added underneath the sca configuration section:
+```
+includeSources: true
+```
 
 ## <a name="scaProjectTeamAssignment">SCA project team assignment</a>
 SCA project team assignment with CxFlow is performing on the SCA project creation stage. In order to set a project team, the next configuration property should be added underneath the sca configuration section:

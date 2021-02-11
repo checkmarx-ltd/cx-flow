@@ -24,6 +24,17 @@ import java.util.Optional;
 public class ScaConfigurationOverrider {
     private static final ModelMapper modelMapper = new ModelMapper();
 
+    private static final String ACCESS_CONTROL_URL = "accessControlUrl";
+    private static final String API_URL = "apiUrl";
+    private static final String APP_URL = "appUrl";
+    private static final String TENANT = "tenant";
+    private static final String THRESHOLDS_SEVERITY = "thresholdsSeverity";
+    private static final String THRESHOLDS_SCORE = "thresholdsScore";
+    private static final String INCLUDE_SOURCES = "includeSources";
+
+    private static final String FILTER_SCORE = "filterScore";
+    private static final String FILTER_SEVERITY = "filterSeverity";
+
     private final ScaProperties scaProperties;
     private final ScaFilterFactory scaFilterFactory;
 
@@ -61,32 +72,37 @@ public class ScaConfigurationOverrider {
 
         sca.map(Sca::getAccessControlUrl).ifPresent(accessControlUrl -> {
             scaConfig.setAccessControlUrl(accessControlUrl);
-            overrideReport.put("accessControlUrl", accessControlUrl);
+            overrideReport.put(ACCESS_CONTROL_URL, accessControlUrl);
         });
 
         sca.map(Sca::getApiUrl).ifPresent(apiUrl -> {
             scaConfig.setApiUrl(apiUrl);
-            overrideReport.put("apiUrl", apiUrl);
+            overrideReport.put(API_URL, apiUrl);
         });
 
         sca.map(Sca::getAppUrl).ifPresent(appUrl -> {
             scaConfig.setAppUrl(appUrl);
-            overrideReport.put("appUrl", appUrl);
+            overrideReport.put(APP_URL, appUrl);
         });
 
         sca.map(Sca::getTenant).ifPresent(tenant -> {
             scaConfig.setTenant(tenant);
-            overrideReport.put("tenant", tenant);
+            overrideReport.put(TENANT, tenant);
         });
 
         sca.map(Sca::getThresholdsSeverity).ifPresent(thresholdsSeverity -> {
             scaConfig.setThresholdsSeverityDirectly(thresholdsSeverity);
-            overrideReport.put("thresholdsSeverity", ScanUtils.convertMapToString(thresholdsSeverity));
+            overrideReport.put(THRESHOLDS_SEVERITY, ScanUtils.convertMapToString(thresholdsSeverity));
         });
 
         sca.map(Sca::getThresholdsScore).ifPresent(thresholdsScore -> {
             scaConfig.setThresholdsScore(thresholdsScore);
-            overrideReport.put("thresholdsScore", String.valueOf(thresholdsScore));
+            overrideReport.put(THRESHOLDS_SCORE, String.valueOf(thresholdsScore));
+        });
+
+        sca.map(Sca::isIncludeSources).ifPresent(includeSources -> {
+            scaConfig.setIncludeSources(includeSources);
+            overrideReport.put(INCLUDE_SOURCES, String.valueOf(includeSources));
         });
 
         overrideSeverityFilters(request, sca, overrideReport);
@@ -100,7 +116,7 @@ public class ScaConfigurationOverrider {
         override.map(Sca::getFilterScore).ifPresent(score -> {
             Filter filterFromOverride = scaFilterFactory.getScoreFilter(score);
             if (replaceFiltersOfType(request, Collections.singletonList(filterFromOverride), Filter.Type.SCORE)) {
-                overrideReport.put("filterScore", String.valueOf(filterFromOverride));
+                overrideReport.put(FILTER_SCORE, String.valueOf(filterFromOverride));
             }
         });
     }
@@ -109,7 +125,7 @@ public class ScaConfigurationOverrider {
         override.map(Sca::getFilterSeverity).ifPresent(severities -> {
             List<Filter> filtersFromOverride = scaFilterFactory.getSeverityFilters(severities);
             if (replaceFiltersOfType(request, filtersFromOverride, Filter.Type.SEVERITY)) {
-                overrideReport.put("filterSeverity", severities.toString());
+                overrideReport.put(FILTER_SEVERITY, severities.toString());
             }
         });
     }
@@ -134,11 +150,11 @@ public class ScaConfigurationOverrider {
     }
 
     private static void addToReport(ScaConfig config, Map<String, String> report) {
-        report.put("accessControlUrl", config.getAccessControlUrl());
-        report.put("apiUrl", config.getApiUrl());
-        report.put("appUrl", config.getAppUrl());
-        report.put("tenant", config.getTenant());
-        report.put("thresholdsSeverity", ScanUtils.convertMapToString(config.getThresholdsSeverity()));
-        report.put("thresholdsScore", String.valueOf(config.getThresholdsScore()));
+        report.put(ACCESS_CONTROL_URL, config.getAccessControlUrl());
+        report.put(API_URL, config.getApiUrl());
+        report.put(APP_URL, config.getAppUrl());
+        report.put(TENANT, config.getTenant());
+        report.put(THRESHOLDS_SEVERITY, ScanUtils.convertMapToString(config.getThresholdsSeverity()));
+        report.put(THRESHOLDS_SCORE, String.valueOf(config.getThresholdsScore()));
     }
 }
