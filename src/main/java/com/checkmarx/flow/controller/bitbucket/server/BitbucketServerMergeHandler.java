@@ -32,6 +32,16 @@ public class BitbucketServerMergeHandler extends BitbucketServerEventHandler {
     @NonNull
     private String fromRefLatestCommit;
 
+    @NonNull
+    private String toProjectKey;
+
+    @NonNull
+    private String toSlug;
+
+    @NonNull
+    private String pullRequestId;
+
+
     @Override
     public ResponseEntity<EventResponse> execute() {
         String uid = configProvider.getHelperService().getShortUid();
@@ -68,37 +78,46 @@ public class BitbucketServerMergeHandler extends BitbucketServerEventHandler {
             List<String> branches = webhookUtils.getBranches(controllerRequest, configProvider.getFlowProperties());
             // String fromRefLatestCommit = fromRef.getLatestCommit();
 
-            BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, configProvider.getJiraProperties(),
-                    controllerRequest.getBug());
+            BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, 
+              configProvider.getJiraProperties(), controllerRequest.getBug());
 
-            FilterConfiguration filter = configProvider.getFilterFactory().getFilter(controllerRequest, configProvider.getFlowProperties());
+            FilterConfiguration filter = configProvider.getFilterFactory().getFilter(controllerRequest, 
+              configProvider.getFlowProperties());
 
-            String gitUrl = getGitUrl(fromRefRepository);
+            // String gitUrl = getGitUrl(fromRefRepository);
+            String gitUrl = getGitUrl();
             String gitAuthUrl = getGitAuthUrl(gitUrl);
 
-            String repoSelfUrl = getRepoSelfUrl(toRefRepository.getProject().getKey(), toRefRepository.getSlug());
+            // String repoSelfUrl = getRepoSelfUrl(toRefRepository.getProject().getKey(), toRefRepository.getSlug());
+            String repoSelfUrl = getRepoSelfUrl(toProjectKey, toSlug);
 
             String mergeEndpoint = repoSelfUrl.concat(MERGE_COMMENT);
-            mergeEndpoint = mergeEndpoint.replace("{id}", pullRequest.getId().toString());
+            // mergeEndpoint = mergeEndpoint.replace("{id}", pullRequest.getId().toString());
+            mergeEndpoint = mergeEndpoint.replace("{id}", pullRequestId);
 
-            String buildStatusEndpoint = properties.getUrl().concat(BUILD_API_PATH);
+            // String buildStatusEndpoint = properties.getUrl().concat(BUILD_API_PATH);
+            String buildStatusEndpoint = configProvider.getBitBucketProperties().getUrl().concat(BUILD_API_PATH);
             buildStatusEndpoint = buildStatusEndpoint.replace("{commit}", fromRefLatestCommit);
 
             String blockerCommentUrl = repoSelfUrl.concat(BLOCKER_COMMENT);
-            blockerCommentUrl = blockerCommentUrl.replace("{id}", pullRequest.getId().toString());
+            // blockerCommentUrl = blockerCommentUrl.replace("{id}", pullRequest.getId().toString());
+            blockerCommentUrl = blockerCommentUrl.replace("{id}", pullRequestId);
 
             ScanRequest request = ScanRequest.builder().application(application).product(p)
                     .project(controllerRequest.getProject())
                     .team(controllerRequest.getTeam())
-                    .namespace(getNamespace(fromRefRepository))
-                    .repoName(fromRefRepository.getName())
+                    // .namespace(getNamespace(fromRefRepository))
+                    .namespace(getNamespace())
+                    // .repoName(fromRefRepository.getName())
+                    .repoName(repositoryName)
                     .repoUrl(gitUrl)
                     .repoUrlWithAuth(gitAuthUrl)
                     .repoType(ScanRequest.Repository.BITBUCKETSERVER)
                     .branch(currentBranch)
                     .mergeTargetBranch(targetBranch)
                     .mergeNoteUri(mergeEndpoint)
-                    .refs(fromRef.getId())
+                    // .refs(fromRef.getId())
+                    .refs(refId)
                     .email(null)
                     .incremental(controllerRequest.getIncremental())
                     .scanPreset(controllerRequest.getPreset())
@@ -109,20 +128,21 @@ public class BitbucketServerMergeHandler extends BitbucketServerEventHandler {
                     .hash(fromRefLatestCommit)
                     .build();
 
-            setBrowseUrl(fromRefRepository, request);
-            fillRequestWithCommonAdditionalData(request, toRefRepository, body);
+            setBrowseUrl(request);
+            // fillRequestWithCommonAdditionalData(request, toRefRepository, body);
+            fillRequestWithCommonAdditionalData(request, toProjectKey, toSlug, webhookPayload);
             checkForConfigAsCode(request);
             request.putAdditionalMetadata("buildStatusUrl", buildStatusEndpoint);
-            request.putAdditionalMetadata("cxBaseUrl", cxScannerService.getProperties().getBaseUrl());
+            request.putAdditionalMetadata("cxBaseUrl", configProvider.getCxScannerService().getProperties().getBaseUrl());
             request.putAdditionalMetadata("blocker-comment-url", blockerCommentUrl);
             request.setId(uid);
 
             // only initiate scan/automation if target branch is applicable
-            if (helperService.isBranch2Scan(request, branches)) {
-                flowService.initiateAutomation(request);
+            if (configProvider.getHelperService().isBranch2Scan(request, branches)) {
+                configProvider.getFlowService().initiateAutomation(request);
             }
         } catch (IllegalArgumentException e) {
-            return getBadRequestMessage(e, controllerRequest, product);
+            return webhookUtils.getBadRequestMessage(e, controllerRequest, product);
         }
         return webhookUtils.getSuccessMessage();
     }
