@@ -1,4 +1,4 @@
-@Skip @AST_CLI_SCAN  @IntegrationTest
+@AST_CLI_SCAN  @IntegrationTest
 Feature: AST support in CxFlow command-line
     
     Scenario Outline: AST CLI scan of a local directory
@@ -9,8 +9,8 @@ Feature: AST support in CxFlow command-line
         And no exception is thrown
         Examples:
             | scanner | issueNumber |
-            | AST     | 32          |
-            | AST,SCA | 37          |
+            | AST     | 38          |
+            | AST,SCA | 43          |
 
 
     Scenario Outline: Running a AST scan with break-build enabled and command line arguments
@@ -30,6 +30,6 @@ Feature: AST support in CxFlow command-line
 
         Examples:
             | scanner | number of issue |
-            | AST     | 10               |
-            | AST,SCA | 22              |
+            | AST     | 12               |
+            | AST,SCA | 24              |
 
