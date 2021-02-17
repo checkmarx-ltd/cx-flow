@@ -167,7 +167,7 @@ public class BitbucketServerController implements ConfigContextProvider {
                 .product(product)
                 .build();
 
-        return handler.execute(uid);//workflow.doMergeEvent(body, product, controllerRequest);
+        return handler.execute(uid);
     }
 
 

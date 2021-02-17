@@ -40,13 +40,6 @@ public class BitbucketServerMergeHandler extends BitbucketServerEventHandler {
         controllerRequest = webhookUtils.ensureNotNull(controllerRequest);
 
         try {
-            // PullRequest pullRequest = event.getPullRequest();
-            // FromRef fromRef = pullRequest.getFromRef();
-            // ToRef toRef = pullRequest.getToRef();
-            // Repository fromRefRepository = fromRef.getRepository();
-            // Repository_ toRefRepository = toRef.getRepository();
-            
-            // String application = fromRefRepository.getName();
             if (!ScanUtils.empty(controllerRequest.getApplication())) {
                 application = controllerRequest.getApplication();
             }
@@ -61,10 +54,7 @@ public class BitbucketServerMergeHandler extends BitbucketServerEventHandler {
                 product = ScanRequest.Product.CX.getProduct();
             }
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
-            // String currentBranch = fromRef.getDisplayId();
-            // String targetBranch = toRef.getDisplayId();
             List<String> branches = webhookUtils.getBranches(controllerRequest, configProvider.getFlowProperties());
-            // String fromRefLatestCommit = fromRef.getLatestCommit();
 
             BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, 
               configProvider.getJiraProperties(), controllerRequest.getBug());
@@ -72,31 +62,24 @@ public class BitbucketServerMergeHandler extends BitbucketServerEventHandler {
             FilterConfiguration filter = configProvider.getFilterFactory().getFilter(controllerRequest, 
               configProvider.getFlowProperties());
 
-            // String gitUrl = getGitUrl(fromRefRepository);
             String gitUrl = getGitUrl();
             String gitAuthUrl = getGitAuthUrl(gitUrl);
 
-            // String repoSelfUrl = getRepoSelfUrl(toRefRepository.getProject().getKey(), toRefRepository.getSlug());
             String repoSelfUrl = getRepoSelfUrl(toProjectKey, toSlug);
 
             String mergeEndpoint = repoSelfUrl.concat(MERGE_COMMENT);
-            // mergeEndpoint = mergeEndpoint.replace("{id}", pullRequest.getId().toString());
             mergeEndpoint = mergeEndpoint.replace("{id}", pullRequestId);
 
-            // String buildStatusEndpoint = properties.getUrl().concat(BUILD_API_PATH);
             String buildStatusEndpoint = configProvider.getBitBucketProperties().getUrl().concat(BUILD_API_PATH);
             buildStatusEndpoint = buildStatusEndpoint.replace("{commit}", fromRefLatestCommit);
 
             String blockerCommentUrl = repoSelfUrl.concat(BLOCKER_COMMENT);
-            // blockerCommentUrl = blockerCommentUrl.replace("{id}", pullRequest.getId().toString());
             blockerCommentUrl = blockerCommentUrl.replace("{id}", pullRequestId);
 
             ScanRequest request = ScanRequest.builder().application(application).product(p)
                     .project(controllerRequest.getProject())
                     .team(controllerRequest.getTeam())
-                    // .namespace(getNamespace(fromRefRepository))
                     .namespace(getNamespace())
-                    // .repoName(fromRefRepository.getName())
                     .repoName(repositoryName)
                     .repoUrl(gitUrl)
                     .repoUrlWithAuth(gitAuthUrl)
@@ -104,7 +87,6 @@ public class BitbucketServerMergeHandler extends BitbucketServerEventHandler {
                     .branch(currentBranch)
                     .mergeTargetBranch(targetBranch)
                     .mergeNoteUri(mergeEndpoint)
-                    // .refs(fromRef.getId())
                     .refs(refId)
                     .email(null)
                     .incremental(controllerRequest.getIncremental())
@@ -117,7 +99,6 @@ public class BitbucketServerMergeHandler extends BitbucketServerEventHandler {
                     .build();
 
             setBrowseUrl(request);
-            // fillRequestWithCommonAdditionalData(request, toRefRepository, body);
             fillRequestWithCommonAdditionalData(request, toProjectKey, toSlug, webhookPayload);
             checkForConfigAsCode(request);
             request.putAdditionalMetadata("buildStatusUrl", buildStatusEndpoint);
