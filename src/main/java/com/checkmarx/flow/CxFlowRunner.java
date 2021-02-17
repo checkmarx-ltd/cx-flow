@@ -273,6 +273,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 break;
             case GITLABMERGE:
             case gitlabmerge:
+                log.info("Handling GitLab merge request for project: {}, merge id: {}", projectId, mergeId);
                 bugType = BugTracker.Type.GITLABMERGE;
                 bt = BugTracker.builder()
                         .type(bugType)
@@ -315,6 +316,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 .project(cxProject)
                 .repoName(repoName)
                 .mergeNoteUri(mergeNoteUri)
+                .repoProjectId(Integer.parseInt(projectId))
                 .repoUrl(repoUrl)
                 .repoUrlWithAuth(gitAuthUrl)
                 .repoType(repoType)
