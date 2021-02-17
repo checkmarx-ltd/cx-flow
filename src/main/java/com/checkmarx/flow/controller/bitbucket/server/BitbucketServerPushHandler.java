@@ -33,8 +33,6 @@ public class BitbucketServerPushHandler extends BitbucketServerEventHandler {
         controllerRequest = webhookUtils.ensureNotNull(controllerRequest);
 
         try {
-            // Repository repository = event.getRepository();
-            // String app = repository.getName();
             if (!ScanUtils.empty(controllerRequest.getApplication())) {
                 application = controllerRequest.getApplication();
             }
@@ -51,11 +49,8 @@ public class BitbucketServerPushHandler extends BitbucketServerEventHandler {
                 product = ScanRequest.Product.CX.getProduct();
             }
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
-            // String currentBranch =
-            // ScanUtils.getBranchFromRef(event.getChanges().get(INDEX_FROM_CHANGES).getRefId());
             String currentBranch = ScanUtils.getBranchFromRef(branchFromRef);
             List<String> branches = webhookUtils.getBranches(controllerRequest, configProvider.getFlowProperties());
-            // String latestCommit = event.getChanges().get(INDEX_FROM_CHANGES).getToHash();
             String latestCommit = toHash;
 
             BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType,
@@ -63,10 +58,6 @@ public class BitbucketServerPushHandler extends BitbucketServerEventHandler {
             FilterConfiguration filter = configProvider.getFilterFactory().getFilter(controllerRequest,
                     configProvider.getFlowProperties());
 
-            // List<String> emails = new ArrayList<>();
-            // emails.add(event.getActor().getEmailAddress());
-
-            // String gitUrl = getGitUrl(repository);
             String gitUrl = getGitUrl();
             String gitAuthUrl = getGitAuthUrl(gitUrl);
 
@@ -74,13 +65,11 @@ public class BitbucketServerPushHandler extends BitbucketServerEventHandler {
                     .project(controllerRequest.getProject())
                     .team(controllerRequest.getTeam())
                     .namespace(getNamespace())
-                    // .repoName(repository.getName())
                     .repoName(repositoryName)
                     .repoUrl(gitUrl)
                     .repoUrlWithAuth(gitAuthUrl)
                     .repoType(ScanRequest.Repository.BITBUCKETSERVER)
                     .branch(currentBranch)
-                    // .refs(event.getChanges().get(0).getRefId())
                     .refs(refId)
                     .email(emails)
                     .scanPreset(controllerRequest.getPreset())
@@ -92,9 +81,7 @@ public class BitbucketServerPushHandler extends BitbucketServerEventHandler {
                     .hash(latestCommit)
                     .build();
 
-            // setBrowseUrl(repository, request);
             setBrowseUrl(request);
-            // fillRequestWithCommonAdditionalData(request, repository, body);
             fillRequestWithCommonAdditionalData(request, toProjectKey, toSlug, webhookPayload);
             checkForConfigAsCode(request);
             request.setId(uid);
@@ -107,17 +94,4 @@ public class BitbucketServerPushHandler extends BitbucketServerEventHandler {
         }
         return webhookUtils.getSuccessMessage();
     }
-
-    /*
-     * private void fillRequestWithCommonAdditionalData(ScanRequest request,
-     * Repository_ repository, String hookPayload) {
-     * fillRequestWithCommonAdditionalData (request,
-     * repository.getProject().getKey(), repository.getSlug(), hookPayload); }
-     * 
-     * private void fillRequestWithCommonAdditionalData(ScanRequest request,
-     * Repository repository, String hookPayload) {
-     * fillRequestWithCommonAdditionalData (request,
-     * repository.getProject().getKey(), repository.getSlug(), hookPayload); }
-     */
-
 }
