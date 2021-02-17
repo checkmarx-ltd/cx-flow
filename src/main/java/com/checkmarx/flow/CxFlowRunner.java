@@ -317,7 +317,6 @@ public class CxFlowRunner implements ApplicationRunner {
                 .project(cxProject)
                 .repoName(repoName)
                 .mergeNoteUri(mergeNoteUri)
-                .repoProjectId(mergeProjectId)
                 .repoUrl(repoUrl)
                 .repoUrlWithAuth(gitAuthUrl)
                 .repoType(repoType)
@@ -334,6 +333,10 @@ public class CxFlowRunner implements ApplicationRunner {
                 .altFields(altFields)
                 .forceScan(force)
                 .build();
+
+        if(mergeProjectId != 0){
+            request.setRepoProjectId(mergeProjectId);
+        }
 
         request = configOverrider.overrideScanRequestProperties(flowOverride, request);
         /*Determine if BitBucket Cloud/Server is being used - this will determine formatting of URL that links to file/line in repository */
