@@ -105,6 +105,7 @@ public class CxFlowRunner implements ApplicationRunner {
         String branch;
         String mergeId;
         String mergeNoteUri = null;
+        int mergeProjectId = 0;
         String projectId;
         String assignee;
         List<String> emails;
@@ -285,7 +286,7 @@ public class CxFlowRunner implements ApplicationRunner {
                     exit(1);
                 }
                 mergeNoteUri = gitLabProperties.getMergeNoteUri(projectId, mergeId);
-
+                mergeProjectId = Integer.parseInt(projectId);
                 if (!ScanUtils.empty(namespace) && !ScanUtils.empty(repoName)){
                     repoUrl = getNonEmptyRepoUrl(namespace, repoName, repoUrl, gitLabProperties.getGitUri(namespace, repoName));
                 }
@@ -316,7 +317,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 .project(cxProject)
                 .repoName(repoName)
                 .mergeNoteUri(mergeNoteUri)
-                .repoProjectId(Integer.parseInt(projectId))
+                .repoProjectId(mergeProjectId)
                 .repoUrl(repoUrl)
                 .repoUrlWithAuth(gitAuthUrl)
                 .repoType(repoType)
