@@ -6,9 +6,8 @@ import lombok.Getter;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Getter
-public class PushEvent {
-    private BitbucketServerRepositoryOwner actor;
-    private BitbucketServerRepository repository;
-    private BitbucketPushDetail push;
-    private String[] branches;
+public class Target {
+
+    private String type;
+    private String hash;
 }
