@@ -20,6 +20,7 @@ import lombok.NonNull;
 import lombok.Singular;
 import lombok.experimental.SuperBuilder;
 
+
 @SuperBuilder
 public abstract class BitbucketServerEventHandler {
     protected static final String PROJECT_REPO_PATH = "/projects/{project}/repos/{repo}";
@@ -31,18 +32,12 @@ public abstract class BitbucketServerEventHandler {
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(BitbucketServerEventHandler.class);
 
 
-    public abstract ResponseEntity<EventResponse> execute();
+    public abstract ResponseEntity<EventResponse> execute(String uid);
 
     @NonNull
     protected String application;
 
     protected String product;
-
-    @NonNull
-    protected String branchFromRef;
-
-    @NonNull
-    protected String toHash;
 
     @NonNull
     protected String fromProjectKey;
@@ -82,8 +77,9 @@ public abstract class BitbucketServerEventHandler {
     // controllers and avoid copy/paste of SCM controller code.  If this extends WebhookController,
     // WebhookController would need to be annotated with @SuperBuilder and likely would cause problems.
     // This could be removed with a big refactor.
-    class WebhookUtils extends WebhookController
+    public class WebhookUtils extends WebhookController
     {
+
         public ResponseEntity<EventResponse> getSuccessMessage() {
             return super.getSuccessMessage();
         }
@@ -111,9 +107,10 @@ public abstract class BitbucketServerEventHandler {
     
     }
 
-    protected WebhookUtils webhookUtils = new WebhookUtils();
-
     
+    protected final WebhookUtils webhookUtils = new WebhookUtils();
+
+  
     protected String getGitUrl() {
         return configProvider.getBitBucketProperties().getUrl().concat("/scm/").concat(fromProjectKey.concat("/"))
                 .concat(fromSlug).concat(".git");

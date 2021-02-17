@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
-import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.EventResponse;
 import com.checkmarx.flow.dto.ScanRequest;
@@ -12,7 +11,6 @@ import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 
 import org.slf4j.Logger;
-import org.slf4j.MDC;
 import org.springframework.http.ResponseEntity;
 
 import lombok.NonNull;
@@ -33,23 +31,13 @@ public class BitbucketServerMergeHandler extends BitbucketServerEventHandler {
     private String fromRefLatestCommit;
 
     @NonNull
-    private String toProjectKey;
-
-    @NonNull
-    private String toSlug;
-
-    @NonNull
     private String pullRequestId;
 
 
     @Override
-    public ResponseEntity<EventResponse> execute() {
-        String uid = configProvider.getHelperService().getShortUid();
-        MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
+    public ResponseEntity<EventResponse> execute(String uid) {
 
         controllerRequest = webhookUtils.ensureNotNull(controllerRequest);
-
-        log.info("Processing BitBucket MERGE request");
 
         try {
             // PullRequest pullRequest = event.getPullRequest();
