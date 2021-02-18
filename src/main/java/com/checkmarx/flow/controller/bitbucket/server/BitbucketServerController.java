@@ -147,7 +147,7 @@ public class BitbucketServerController implements ConfigContextProvider {
             throw new MachinaRuntimeException(e);
         }
 
-        BitbucketServerMergeHandler handler = BitbucketServerMergeHandler.builder()
+        BitbucketServerEventHandler handler = BitbucketServerMergeHandler.builder()
                 .controllerRequest(controllerRequest)
                 .application(event.getPullRequest().getFromRef().getRepository().getName())
                 .currentBranch(event.getPullRequest().getFromRef().getDisplayId())
@@ -199,7 +199,7 @@ public class BitbucketServerController implements ConfigContextProvider {
             throw new MachinaRuntimeException(e);
         }
 
-        BitbucketServerPushHandler handler = BitbucketServerPushHandler.builder()
+        BitbucketServerEventHandler handler = BitbucketServerPushHandler.builder()
                 .controllerRequest(controllerRequest).application(event.getRepository().getName())
                 .branchFromRef(event.getChanges().get(INDEX_FROM_CHANGES).getRefId())
                 .toHash(event.getChanges().get(INDEX_FROM_CHANGES).getToHash())

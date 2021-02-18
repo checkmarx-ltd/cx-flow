@@ -1,41 +1,60 @@
 package com.checkmarx.flow.controller.bitbucket.server.postwebhook;
 
+import java.io.IOException;
+import java.util.Base64;
+
 import com.checkmarx.flow.config.BitBucketProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.constants.FlowConstants;
+import com.checkmarx.flow.controller.bitbucket.server.BitbucketServerEventHandler;
+import com.checkmarx.flow.controller.bitbucket.server.BitbucketServerPushHandler;
+import com.checkmarx.flow.controller.bitbucket.server.ConfigContextProvider;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.EventResponse;
+import com.checkmarx.flow.dto.bitbucketserver.plugin.postwebhook.PushEvent;
+import com.checkmarx.flow.exception.InvalidTokenException;
+import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.service.BitBucketService;
 import com.checkmarx.flow.service.ConfigurationOverrider;
 import com.checkmarx.flow.service.CxScannerService;
 import com.checkmarx.flow.service.FilterFactory;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.HelperService;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.slf4j.Logger;
+import org.slf4j.MDC;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
 
-
 @RestController
 @RequestMapping(value = "/")
 @RequiredArgsConstructor
-public class PostWebhookController {
+public class PostWebhookController implements ConfigContextProvider {
 
     private static final String EVENT = "X-Event-Key";
     private static final String PUSH = EVENT + "=repo:push";
     private static final String MERGE = EVENT + "=pullrequest:created";
     private static final String MERGED = EVENT + "=pullrequest:fulfilled";
     private static final String PR_SOURCE_BRANCH_UPDATED = EVENT + "=pullrequest:updated";
-    private static final String AUTH = "Authorization";
+    private static final String AUTH_HEADER = "Authorization";
     private static final String ROOT_PATH = "/postwebhook";
+    private static final String TOKEN_PARAM = "token";
+    private static final int PASSWORD_INDEX = 1;
+    private static final int CREDS_INDEX = 1;
+    private static final int CHANGE_INDEX = 0;
+    private static final int BROWSE_URL_INDEX = 0;
+
 
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(PostWebhookController.class);
 
@@ -49,51 +68,152 @@ public class PostWebhookController {
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
 
-    
-    // TODO: Validate the base64 encoded credentials for the token.
+    private void validateCredentials (String authHeader, String tokenParam)
+    {
+        if (authHeader == null && tokenParam == null)
+            throw new InvalidTokenException("Basic authorization header OR token parameter is required.");
 
-    @PostMapping(value = {ROOT_PATH + "/{product}", ROOT_PATH}, headers = PUSH)
-    public ResponseEntity<EventResponse> pushRequest(
-            @RequestBody String body,
+        if (tokenParam != null && tokenParam.compareTo(bitBucketProperties.getWebhookToken()) == 0)
+            return;
+
+        if (authHeader != null) {
+            if (!authHeader.matches("^Basic.*") )
+                throw new InvalidTokenException("Authorization method not supported.");
+
+            String[] headerComponents = authHeader.split(" ");
+            String creds = new String (Base64.getDecoder().decode (headerComponents[CREDS_INDEX]));
+            String[] credComponents = creds.split(":");
+
+            if (credComponents[PASSWORD_INDEX].compareTo(bitBucketProperties.getWebhookToken()) != 0)
+                throw new InvalidTokenException();
+        }
+    }
+
+    @PostMapping(value = { ROOT_PATH + "/{product}", ROOT_PATH }, headers = PUSH)
+    public ResponseEntity<EventResponse> pushRequest(@RequestBody String body,
             @PathVariable(value = "product", required = false) String product,
-            @RequestHeader(value = AUTH) String credentials,
-            ControllerRequest controllerRequest
-    ) {
-        log.debug("PostWebhookController:pushRequest:" + credentials);
+            @RequestHeader(value = AUTH_HEADER, required = false) String credentials,
+            @RequestParam(value = TOKEN_PARAM, required = false) String token, 
+            ControllerRequest controllerRequest) {
+        String uid = helperService.getShortUid();
+        MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
+
+        log.info("Processing BitBucket(Post Web Hook) PUSH request");
+        validateCredentials(credentials, token);
+
+        ObjectMapper mapper = new ObjectMapper()
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        PushEvent event;
+
+        try {
+            event = mapper.readValue(body, PushEvent.class);
+            
+        } catch (IOException e) {
+            throw new MachinaRuntimeException(e);
+        }
+
+        BitbucketServerEventHandler handler = BitbucketServerPushHandler.builder()
+                .controllerRequest(controllerRequest)
+                .application(event.getRepository().getSlug())
+                .toSlug(event.getRepository().getSlug())
+                .repositoryName(event.getRepository().getSlug())
+                .fromSlug(event.getRepository().getSlug())
+                .branchFromRef(event.getPush().getChanges()[CHANGE_INDEX].getOldState().getName())
+                .toHash(event.getPush().getChanges()[CHANGE_INDEX].getNewState().getTarget().getHash())
+                .email(event.getActor().getEmailAddress())
+                .fromProjectKey(event.getRepository().getProject().getKey())
+                .toProjectKey(event.getRepository().getProject().getKey())
+                .refId(event.getPush().getChanges()[CHANGE_INDEX].getNewState().getName())
+                .browseUrl(event.getRepository().getLinks().get("self").get(BROWSE_URL_INDEX).getHref() )
+                .webhookPayload(body)
+                .configProvider(this)
+                .product(product)
+                .build();        
+
+        return handler.execute(uid);
+    }
+
+    @PostMapping(value = { ROOT_PATH + "/{product}", ROOT_PATH }, headers = MERGE)
+    public ResponseEntity<EventResponse> mergeRequest(@RequestBody String body,
+            @PathVariable(value = "product", required = false) String product,
+            @RequestHeader(value = AUTH_HEADER, required = false) String credentials,
+            @RequestParam(value = TOKEN_PARAM, required = false) String token, 
+            ControllerRequest controllerRequest) {
+
+
+        log.info("Processing BitBucket(Post Web Hook) MERGE request");
+        validateCredentials(credentials, token);
         return null;
     }
 
-    @PostMapping(value = {ROOT_PATH + "/{product}", ROOT_PATH}, headers = MERGE)
-    public ResponseEntity<EventResponse> mergeRequest(
-            @RequestBody String body,
+    // @PostMapping(value = {ROOT_PATH + "/{product}", ROOT_PATH}, headers = MERGED)
+    // public ResponseEntity<EventResponse> mergedRequest(
+    // @RequestBody String body,
+    // @PathVariable(value = "product", required = false) String product,
+    // @RequestHeader(value = AUTH_HEADER, required = false) String credentials,
+    // @RequestParam(value = TOKEN_PARAM, required = false) String token,
+    // ControllerRequest controllerRequest
+    // ) {
+    // log.debug("PostWebhookController:mergedRequest");
+    // return null;
+    // }
+
+    @PostMapping(value = { ROOT_PATH + "/{product}", ROOT_PATH }, headers = PR_SOURCE_BRANCH_UPDATED)
+    public ResponseEntity<EventResponse> prSourceBranchUpdateRequest(@RequestBody String body,
             @PathVariable(value = "product", required = false) String product,
-            @RequestHeader(value = AUTH) String credentials,
-            ControllerRequest controllerRequest
-    ) {
-        log.debug("PostWebhookController:mergeRequest");
+            @RequestHeader(value = AUTH_HEADER, required = false) String credentials,
+            @RequestParam(value = TOKEN_PARAM, required = false) String token, 
+            ControllerRequest controllerRequest) {
+        log.info("Processing BitBucket(Post Web Hook) PR UPDATE request");
+        validateCredentials(credentials, token);
+
+
         return null;
     }
 
-    @PostMapping(value = {ROOT_PATH + "/{product}", ROOT_PATH}, headers = MERGED)
-    public ResponseEntity<EventResponse> mergedRequest(
-            @RequestBody String body,
-            @PathVariable(value = "product", required = false) String product,
-            @RequestHeader(value = AUTH) String credentials,
-            ControllerRequest controllerRequest
-    ) {
-        log.debug("PostWebhookController:mergedRequest");
-        return null;
+    @Override
+    public BitBucketProperties getBitBucketProperties() {
+        return bitBucketProperties;
     }
 
-    @PostMapping(value = {ROOT_PATH + "/{product}", ROOT_PATH}, headers = PR_SOURCE_BRANCH_UPDATED)
-    public ResponseEntity<EventResponse> prSourceBranchUpdateRequest(
-            @RequestBody String body,
-            @PathVariable(value = "product", required = false) String product,
-            @RequestHeader(value = AUTH) String credentials,
-            ControllerRequest controllerRequest
-    ) {
-        log.debug("PostWebhookController:prSourceBranchUpdateRequest");
-        return null;
+    @Override
+    public BitBucketService getBitbucketService() {
+        return bitbucketService;
+    }
+
+    @Override
+    public ConfigurationOverrider getConfigOverrider() {
+        return configOverrider;
+    }
+
+    @Override
+    public CxScannerService getCxScannerService() {
+        return cxScannerService;
+    }
+
+    @Override
+    public FilterFactory getFilterFactory() {
+        return filterFactory;
+    }
+
+    @Override
+    public FlowProperties getFlowProperties() {
+        return flowProperties;
+    }
+
+    @Override
+    public FlowService getFlowService() {
+        return flowService;
+    }
+
+    @Override
+    public HelperService getHelperService() {
+        return this.helperService;
+    }
+
+    @Override
+    public JiraProperties getJiraProperties() {
+        return jiraProperties;
     }
     
 }
