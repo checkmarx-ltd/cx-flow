@@ -13,6 +13,7 @@ import com.checkmarx.flow.controller.bitbucket.server.BitbucketServerPushHandler
 import com.checkmarx.flow.controller.bitbucket.server.ConfigContextProvider;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.EventResponse;
+import com.checkmarx.flow.dto.bitbucketserver.plugin.postwebhook.BitbucketPushChange;
 import com.checkmarx.flow.dto.bitbucketserver.plugin.postwebhook.BitbucketPushEvent;
 import com.checkmarx.flow.dto.bitbucketserver.plugin.postwebhook.BitbucketServerPullRequestEvent;
 import com.checkmarx.flow.exception.InvalidTokenException;
@@ -28,6 +29,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.slf4j.Logger;
 import org.slf4j.MDC;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -114,6 +116,22 @@ public class PostWebhookController implements ConfigContextProvider {
             throw new MachinaRuntimeException(e);
         }
 
+        // Post web hook sends a push on branch delete.  Return success for now, this
+        // might be a spot to implement deletion of the SAST project in the future.
+        BitbucketPushChange change = event.getPush().getChanges()[CHANGE_INDEX];
+        if (change.isClosed() && change.getNewState() == null)
+        {
+            log.debug(String.format("Branch %s deleted in repository %s at last commit %s",
+            change.getOldState().getName(),
+            event.getRepository().getFullName(),
+            change.getOldState().getTarget().getHash()));
+            return ResponseEntity.status(HttpStatus.OK).body(
+                    EventResponse.builder().message("Branch deletion handled successfully.")
+                    .success(true)
+                    .build());
+        }
+
+
         BitbucketServerEventHandler handler = BitbucketServerPushHandler.builder()
                 .controllerRequest(controllerRequest)
                 .application(event.getRepository().getSlug())
@@ -139,47 +157,10 @@ public class PostWebhookController implements ConfigContextProvider {
     public ResponseEntity<EventResponse> mergeRequest(@RequestBody String body,
             @PathVariable(value = "product", required = false) String product,
             @RequestHeader(value = AUTH_HEADER, required = false) String credentials,
-            @RequestParam(value = TOKEN_PARAM, required = false) String token, 
-            ControllerRequest controllerRequest) {
-
-        String uid = helperService.getShortUid();
-        MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
+            @RequestParam(value = TOKEN_PARAM, required = false) String token, ControllerRequest controllerRequest) {
         
-        log.info("Processing BitBucket(Post Web Hook) MERGE request");
-        validateCredentials(credentials, token);
-        
-        ObjectMapper mapper = new ObjectMapper();
-        BitbucketServerPullRequestEvent event;
+        return doMerge(body, product, credentials, token, controllerRequest, "MERGE");
 
-        try {
-            event = mapper.readValue(body, BitbucketServerPullRequestEvent.class);
-        } catch (IOException e) {
-            throw new MachinaRuntimeException(e);
-        }
-
-        BitbucketServerEventHandler handler = BitbucketServerMergeHandler.builder()
-                .controllerRequest(controllerRequest)
-
-                .application(event.getPullrequest().getFromRef().getRepository().getSlug())
-                .currentBranch(event.getPullrequest().getFromRef().getBranch().getName())
-                .targetBranch(event.getPullrequest().getToRef().getBranch().getName())
-                // .fromRefLatestCommit(event.getPullRequest().getFromRef().getLatestCommit())
-                // .fromProjectKey(event.getPullRequest().getFromRef().getRepository().getProject().getKey())
-                // .fromSlug(event.getPullRequest().getFromRef().getRepository().getSlug())
-                // .toProjectKey(event.getPullRequest().getToRef().getRepository().getProject().getKey())
-                // .toSlug(event.getPullRequest().getToRef().getRepository().getSlug())
-                // .pullRequestId(event.getPullRequest().getId().toString())
-                // .repositoryName(event.getPullRequest().getFromRef().getRepository().getName())
-                // .refId(event.getPullRequest().getFromRef().getId())
-                // .browseUrl(event.getPullRequest().getFromRef().getRepository().getLinks().getSelf().get(INDEX_FROM_SELF)
-                //         .getHref())
-
-                .webhookPayload(body)
-                .configProvider(this)
-                .product(product)
-                .build();
-
-        return handler.execute(uid);
     }
 
     // @PostMapping(value = {ROOT_PATH + "/{product}", ROOT_PATH}, headers = MERGED)
@@ -200,11 +181,52 @@ public class PostWebhookController implements ConfigContextProvider {
             @RequestHeader(value = AUTH_HEADER, required = false) String credentials,
             @RequestParam(value = TOKEN_PARAM, required = false) String token, 
             ControllerRequest controllerRequest) {
-        log.info("Processing BitBucket(Post Web Hook) PR UPDATE request");
+
+        return doMerge(body, product, credentials, token, controllerRequest, "PR UPDATE");
+    }
+
+    private ResponseEntity<EventResponse> doMerge(String body,
+            String product, String credentials, String token, 
+            ControllerRequest controllerRequest, String eventType)
+    {
+        String uid = helperService.getShortUid();
+        MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
+        
+        log.info(String.format ("Processing BitBucket(Post Web Hook) %s request", eventType) );
         validateCredentials(credentials, token);
+        
+        ObjectMapper mapper = new ObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        BitbucketServerPullRequestEvent event;
 
+        try {
+            event = mapper.readValue(body, BitbucketServerPullRequestEvent.class);
+        } catch (IOException e) {
+            throw new MachinaRuntimeException(e);
+        }
 
-        return null;
+        BitbucketServerEventHandler handler = BitbucketServerMergeHandler.builder()
+                .controllerRequest(controllerRequest)
+
+                .application(event.getPullrequest().getFromRef().getRepository().getSlug())
+                .currentBranch(event.getPullrequest().getFromRef().getBranch().getName())
+                .targetBranch(event.getPullrequest().getToRef().getBranch().getName())
+                .fromRefLatestCommit(event.getPullrequest().getFromRef().getCommit().getHash())
+                .fromProjectKey(event.getPullrequest().getFromRef().getRepository().getProject().getKey())
+                .fromSlug(event.getPullrequest().getFromRef().getRepository().getSlug())
+                .toProjectKey(event.getPullrequest().getToRef().getRepository().getProject().getKey())
+                .toSlug(event.getPullrequest().getToRef().getRepository().getSlug())
+                .pullRequestId(event.getPullrequest().getId())
+                .repositoryName(event.getPullrequest().getFromRef().getRepository().getSlug())
+                .refId(event.getPullrequest().getFromRef().getBranch().getName())
+                .browseUrl(event.getPullrequest().getFromRef().getRepository().getLinks()
+                    .get("self").get(BROWSE_URL_INDEX).getHref())
+                .webhookPayload(body)
+                .configProvider(this)
+                .product(product)
+                .build();
+
+        return handler.execute(uid);
     }
 
     @Override

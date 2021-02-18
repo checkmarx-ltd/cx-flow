@@ -4,18 +4,20 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Getter;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Getter
 public class BitbucketServerRepository {
-    // String scmId;
+    String scmId;
 	BitbucketServerProject project;
 	String slug;
 	Map<String,List<Link>> links;
-    // boolean public;
-	// String fullName; // repository full name
-    // BitbucketServerRepositoryOwner owner;
-	// String ownerName; // project name
+	@JsonProperty("public")
+    boolean isPublic;
+	String fullName;
+    BitbucketServerRepositoryOwner owner;
+	String ownerName;
 }

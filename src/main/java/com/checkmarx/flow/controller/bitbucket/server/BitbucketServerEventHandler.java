@@ -77,7 +77,7 @@ public abstract class BitbucketServerEventHandler {
     // controllers and avoid copy/paste of SCM controller code.  If this extends WebhookController,
     // WebhookController would need to be annotated with @SuperBuilder and likely would cause problems.
     // This could be removed with a big refactor.
-    public class WebhookUtils extends WebhookController
+    public static class WebhookUtils extends WebhookController
     {
 
         public ResponseEntity<EventResponse> getSuccessMessage() {
