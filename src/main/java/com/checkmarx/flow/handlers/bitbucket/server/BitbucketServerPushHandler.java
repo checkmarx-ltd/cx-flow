@@ -1,4 +1,4 @@
-package com.checkmarx.flow.controller.bitbucket.server;
+package com.checkmarx.flow.handlers.bitbucket.server;
 
 import java.util.List;
 import java.util.Locale;
@@ -17,26 +17,19 @@ import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
 @SuperBuilder
-public class BitbucketServerMergeHandler extends BitbucketServerEventHandler {
+public class BitbucketServerPushHandler extends BitbucketServerEventHandler {
 
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(BitbucketServerMergeHandler.class);
-
-    @NonNull
-    private String currentBranch;
+    private static final Logger log = org.slf4j.LoggerFactory.getLogger(BitbucketServerPushHandler.class);
 
     @NonNull
-    private String targetBranch;
-    
-    @NonNull
-    private String fromRefLatestCommit;
+    protected String branchFromRef;
 
     @NonNull
-    private String pullRequestId;
+    protected String toHash;
 
 
     @Override
     public ResponseEntity<EventResponse> execute(String uid) {
-
         controllerRequest = webhookUtils.ensureNotNull(controllerRequest);
 
         try {
@@ -44,37 +37,29 @@ public class BitbucketServerMergeHandler extends BitbucketServerEventHandler {
                 application = controllerRequest.getApplication();
             }
 
-            BugTracker.Type bugType = BugTracker.Type.BITBUCKETSERVERPULL;
-            if (!ScanUtils.empty(controllerRequest.getBug())) {
-                bugType = ScanUtils.getBugTypeEnum(controllerRequest.getBug(), configProvider.getFlowProperties().getBugTrackerImpl());
-            }
-            Optional.ofNullable(controllerRequest.getAppOnly()).ifPresent(configProvider.getFlowProperties()::setTrackApplicationOnly);
+            // set the default bug tracker as per yml
+            webhookUtils.setBugTracker(configProvider.getFlowProperties(), controllerRequest);
+            BugTracker.Type bugType = ScanUtils.getBugTypeEnum(controllerRequest.getBug(),
+                    configProvider.getFlowProperties().getBugTrackerImpl());
+
+            Optional.ofNullable(controllerRequest.getAppOnly())
+                    .ifPresent(configProvider.getFlowProperties()::setTrackApplicationOnly);
 
             if (ScanUtils.empty(product)) {
                 product = ScanRequest.Product.CX.getProduct();
             }
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
+            String currentBranch = ScanUtils.getBranchFromRef(branchFromRef);
             List<String> branches = webhookUtils.getBranches(controllerRequest, configProvider.getFlowProperties());
+            String latestCommit = toHash;
 
-            BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, 
-              configProvider.getJiraProperties(), controllerRequest.getBug());
-
-            FilterConfiguration filter = configProvider.getFilterFactory().getFilter(controllerRequest, 
-              configProvider.getFlowProperties());
+            BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType,
+                    configProvider.getJiraProperties(), controllerRequest.getBug());
+            FilterConfiguration filter = configProvider.getFilterFactory().getFilter(controllerRequest,
+                    configProvider.getFlowProperties());
 
             String gitUrl = getGitUrl();
             String gitAuthUrl = getGitAuthUrl(gitUrl);
-
-            String repoSelfUrl = getRepoSelfUrl(toProjectKey, toSlug);
-
-            String mergeEndpoint = repoSelfUrl.concat(MERGE_COMMENT);
-            mergeEndpoint = mergeEndpoint.replace("{id}", pullRequestId);
-
-            String buildStatusEndpoint = configProvider.getBitBucketProperties().getUrl().concat(BUILD_API_PATH);
-            buildStatusEndpoint = buildStatusEndpoint.replace("{commit}", fromRefLatestCommit);
-
-            String blockerCommentUrl = repoSelfUrl.concat(BLOCKER_COMMENT);
-            blockerCommentUrl = blockerCommentUrl.replace("{id}", pullRequestId);
 
             ScanRequest request = ScanRequest.builder().application(application).product(p)
                     .project(controllerRequest.getProject())
@@ -85,27 +70,21 @@ public class BitbucketServerMergeHandler extends BitbucketServerEventHandler {
                     .repoUrlWithAuth(gitAuthUrl)
                     .repoType(ScanRequest.Repository.BITBUCKETSERVER)
                     .branch(currentBranch)
-                    .mergeTargetBranch(targetBranch)
-                    .mergeNoteUri(mergeEndpoint)
                     .refs(refId)
-                    .email(null)
-                    .incremental(controllerRequest.getIncremental())
+                    .email(emails)
                     .scanPreset(controllerRequest.getPreset())
+                    .incremental(controllerRequest.getIncremental())
                     .excludeFolders(controllerRequest.getExcludeFolders())
                     .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)
                     .filter(filter)
-                    .hash(fromRefLatestCommit)
+                    .hash(latestCommit)
                     .build();
 
             setBrowseUrl(request);
             fillRequestWithCommonAdditionalData(request, toProjectKey, toSlug, webhookPayload);
             checkForConfigAsCode(request);
-            request.putAdditionalMetadata("buildStatusUrl", buildStatusEndpoint);
-            request.putAdditionalMetadata("cxBaseUrl", configProvider.getCxScannerService().getProperties().getBaseUrl());
-            request.putAdditionalMetadata("blocker-comment-url", blockerCommentUrl);
             request.setId(uid);
-
             // only initiate scan/automation if target branch is applicable
             if (configProvider.getHelperService().isBranch2Scan(request, branches)) {
                 configProvider.getFlowService().initiateAutomation(request);
@@ -115,5 +94,4 @@ public class BitbucketServerMergeHandler extends BitbucketServerEventHandler {
         }
         return webhookUtils.getSuccessMessage();
     }
-
 }

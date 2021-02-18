@@ -1,4 +1,4 @@
-package com.checkmarx.flow.controller.bitbucket.server;
+package com.checkmarx.flow.handlers.config;
 
 import com.checkmarx.flow.config.BitBucketProperties;
 import com.checkmarx.flow.config.FlowProperties;

@@ -1,4 +1,4 @@
-package com.checkmarx.flow.controller.bitbucket.server;
+package com.checkmarx.flow.handlers.bitbucket.server;
 
 import java.util.List;
 
@@ -7,6 +7,7 @@ import com.checkmarx.flow.controller.WebhookController;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.EventResponse;
 import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.handlers.config.ConfigContextProvider;
 import com.checkmarx.flow.service.BitBucketService;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;

@@ -7,10 +7,6 @@ import com.checkmarx.flow.config.BitBucketProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.constants.FlowConstants;
-import com.checkmarx.flow.controller.bitbucket.server.BitbucketServerEventHandler;
-import com.checkmarx.flow.controller.bitbucket.server.BitbucketServerMergeHandler;
-import com.checkmarx.flow.controller.bitbucket.server.BitbucketServerPushHandler;
-import com.checkmarx.flow.controller.bitbucket.server.ConfigContextProvider;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.EventResponse;
 import com.checkmarx.flow.dto.bitbucketserver.plugin.postwebhook.BitbucketPushChange;
@@ -18,6 +14,10 @@ import com.checkmarx.flow.dto.bitbucketserver.plugin.postwebhook.BitbucketPushEv
 import com.checkmarx.flow.dto.bitbucketserver.plugin.postwebhook.BitbucketServerPullRequestEvent;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
+import com.checkmarx.flow.handlers.bitbucket.server.BitbucketServerEventHandler;
+import com.checkmarx.flow.handlers.bitbucket.server.BitbucketServerMergeHandler;
+import com.checkmarx.flow.handlers.bitbucket.server.BitbucketServerPushHandler;
+import com.checkmarx.flow.handlers.config.ConfigContextProvider;
 import com.checkmarx.flow.service.BitBucketService;
 import com.checkmarx.flow.service.ConfigurationOverrider;
 import com.checkmarx.flow.service.CxScannerService;
@@ -122,9 +122,8 @@ public class PostWebhookController implements ConfigContextProvider {
         if (change.isClosed() && change.getNewState() == null)
         {
             log.debug("Branch {} deleted in repository {} at last commit {}",
-            change.getOldState().getName(),
-            event.getRepository().getFullName(),
-            change.getOldState().getTarget().getHash());
+                    change.getOldState().getName(), event.getRepository().getFullName(),
+                    change.getOldState().getTarget().getHash());
             return ResponseEntity.status(HttpStatus.OK).body(
                     EventResponse.builder().message("Branch deletion handled successfully.")
                     .success(true)
