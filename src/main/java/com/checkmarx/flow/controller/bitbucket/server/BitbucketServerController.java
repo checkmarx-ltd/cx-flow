@@ -14,6 +14,7 @@ import javax.xml.bind.DatatypeConverter;
 import com.checkmarx.flow.config.BitBucketProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.EventResponse;
 import com.checkmarx.flow.dto.bitbucketserver.PullEvent;
@@ -30,6 +31,7 @@ import com.checkmarx.flow.utils.ScanUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.slf4j.Logger;
+import org.slf4j.MDC;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -130,6 +132,11 @@ public class BitbucketServerController implements ConfigContextProvider {
     private ResponseEntity<EventResponse> doMergeEvent(String body, String product, String signature,
             ControllerRequest controllerRequest) {
 
+        String uid = helperService.getShortUid();
+        MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
+
+        log.info("Processing BitBucket MERGE request");
+        
         verifyHmacSignature(body, signature);
         ObjectMapper mapper = new ObjectMapper();
         PullEvent event;
@@ -141,25 +148,26 @@ public class BitbucketServerController implements ConfigContextProvider {
         }
 
         BitbucketServerMergeHandler handler = BitbucketServerMergeHandler.builder()
-        .application(event.getPullRequest().getFromRef().getRepository().getName() )
-        .currentBranch(event.getPullRequest().getFromRef().getDisplayId())
-        .targetBranch(event.getPullRequest().getToRef().getDisplayId())
-        .fromRefLatestCommit(event.getPullRequest().getFromRef().getLatestCommit())
-        .fromProjectKey(event.getPullRequest().getFromRef().getRepository().getProject().getKey())
-        .fromSlug(event.getPullRequest().getFromRef().getRepository().getSlug())
-        .toProjectKey(event.getPullRequest().getToRef().getRepository().getProject().getKey())
-        .toSlug(event.getPullRequest().getToRef().getRepository().getSlug())
-        .pullRequestId(event.getPullRequest().getId().toString())
-        .repositoryName(event.getPullRequest().getFromRef().getRepository().getName())
-        .refId(event.getPullRequest().getFromRef().getId())
-        .browseUrl(event.getPullRequest().getFromRef().getRepository().getLinks().getSelf().get(INDEX_FROM_SELF).getHref())
+                .controllerRequest(controllerRequest)
+                .application(event.getPullRequest().getFromRef().getRepository().getName())
+                .currentBranch(event.getPullRequest().getFromRef().getDisplayId())
+                .targetBranch(event.getPullRequest().getToRef().getDisplayId())
+                .fromRefLatestCommit(event.getPullRequest().getFromRef().getLatestCommit())
+                .fromProjectKey(event.getPullRequest().getFromRef().getRepository().getProject().getKey())
+                .fromSlug(event.getPullRequest().getFromRef().getRepository().getSlug())
+                .toProjectKey(event.getPullRequest().getToRef().getRepository().getProject().getKey())
+                .toSlug(event.getPullRequest().getToRef().getRepository().getSlug())
+                .pullRequestId(event.getPullRequest().getId().toString())
+                .repositoryName(event.getPullRequest().getFromRef().getRepository().getName())
+                .refId(event.getPullRequest().getFromRef().getId())
+                .browseUrl(event.getPullRequest().getFromRef().getRepository().getLinks().getSelf().get(INDEX_FROM_SELF)
+                        .getHref())
+                .webhookPayload(body)
+                .configProvider(this)
+                .product(product)
+                .build();
 
-        .webhookPayload(body)
-        .configProvider(this)
-        .product(product)
-        .build();
-
-        return handler.execute();//workflow.doMergeEvent(body, product, controllerRequest);
+        return handler.execute(uid);//workflow.doMergeEvent(body, product, controllerRequest);
     }
 
 
@@ -174,6 +182,11 @@ public class BitbucketServerController implements ConfigContextProvider {
             ControllerRequest controllerRequest
 
     ) {
+        String uid = helperService.getShortUid();
+        MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
+
+        log.info("Processing BitBucket PUSH request");
+
         verifyHmacSignature(body, signature);
 
         ObjectMapper mapper = new ObjectMapper();
@@ -187,25 +200,20 @@ public class BitbucketServerController implements ConfigContextProvider {
         }
 
         BitbucketServerPushHandler handler = BitbucketServerPushHandler.builder()
-        .controllerRequest(controllerRequest)
-        .application(event.getRepository().getName())
-        .branchFromRef(event.getChanges().get(INDEX_FROM_CHANGES).getRefId())
-        .toHash(event.getChanges().get(INDEX_FROM_CHANGES).getToHash())
-        .email(event.getActor().getEmailAddress())
-        .fromProjectKey(event.getRepository().getProject().getKey())
-        .fromSlug(event.getRepository().getSlug())
-        .toProjectKey(event.getRepository().getProject().getKey())
-        .toSlug(event.getRepository().getSlug())
-        .repositoryName(event.getRepository().getName())
-        .refId(event.getChanges().get(INDEX_FROM_CHANGES).getRefId())
-        .browseUrl(event.getRepository().getLinks().getSelf().get(INDEX_FROM_SELF).getHref())
-        .webhookPayload(body)
-        .configProvider(this)
-        .product(product)
-        .build();
-        
+                .controllerRequest(controllerRequest).application(event.getRepository().getName())
+                .branchFromRef(event.getChanges().get(INDEX_FROM_CHANGES).getRefId())
+                .toHash(event.getChanges().get(INDEX_FROM_CHANGES).getToHash())
+                .email(event.getActor().getEmailAddress()).fromProjectKey(event.getRepository().getProject().getKey())
+                .fromSlug(event.getRepository().getSlug()).toProjectKey(event.getRepository().getProject().getKey())
+                .toSlug(event.getRepository().getSlug()).repositoryName(event.getRepository().getName())
+                .refId(event.getChanges().get(INDEX_FROM_CHANGES).getRefId())
+                .browseUrl(event.getRepository().getLinks().getSelf().get(INDEX_FROM_SELF).getHref())
+                .webhookPayload(body)
+                .configProvider(this)
+                .product(product)
+                .build();        
 
-        return handler.execute();
+        return handler.execute(uid);
     }
 
     /**
