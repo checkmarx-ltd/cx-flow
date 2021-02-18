@@ -121,10 +121,10 @@ public class PostWebhookController implements ConfigContextProvider {
         BitbucketPushChange change = event.getPush().getChanges()[CHANGE_INDEX];
         if (change.isClosed() && change.getNewState() == null)
         {
-            log.debug(String.format("Branch %s deleted in repository %s at last commit %s",
+            log.debug("Branch {} deleted in repository {} at last commit {}",
             change.getOldState().getName(),
             event.getRepository().getFullName(),
-            change.getOldState().getTarget().getHash()));
+            change.getOldState().getTarget().getHash());
             return ResponseEntity.status(HttpStatus.OK).body(
                     EventResponse.builder().message("Branch deletion handled successfully.")
                     .success(true)
@@ -163,18 +163,6 @@ public class PostWebhookController implements ConfigContextProvider {
 
     }
 
-    // @PostMapping(value = {ROOT_PATH + "/{product}", ROOT_PATH}, headers = MERGED)
-    // public ResponseEntity<EventResponse> mergedRequest(
-    // @RequestBody String body,
-    // @PathVariable(value = "product", required = false) String product,
-    // @RequestHeader(value = AUTH_HEADER, required = false) String credentials,
-    // @RequestParam(value = TOKEN_PARAM, required = false) String token,
-    // ControllerRequest controllerRequest
-    // ) {
-    // log.debug("PostWebhookController:mergedRequest");
-    // return null;
-    // }
-
     @PostMapping(value = { ROOT_PATH + "/{product}", ROOT_PATH }, headers = PR_SOURCE_BRANCH_UPDATED)
     public ResponseEntity<EventResponse> prSourceBranchUpdateRequest(@RequestBody String body,
             @PathVariable(value = "product", required = false) String product,
@@ -192,7 +180,7 @@ public class PostWebhookController implements ConfigContextProvider {
         String uid = helperService.getShortUid();
         MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
         
-        log.info(String.format ("Processing BitBucket(Post Web Hook) %s request", eventType) );
+        log.info("Processing BitBucket(Post Web Hook) {} request", eventType);
         validateCredentials(credentials, token);
         
         ObjectMapper mapper = new ObjectMapper()
