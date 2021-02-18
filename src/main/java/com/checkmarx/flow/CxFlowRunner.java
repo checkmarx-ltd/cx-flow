@@ -105,6 +105,7 @@ public class CxFlowRunner implements ApplicationRunner {
         String branch;
         String mergeId;
         String mergeNoteUri = null;
+        int mergeProjectId = 0;
         String projectId;
         String assignee;
         List<String> emails;
@@ -273,6 +274,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 break;
             case GITLABMERGE:
             case gitlabmerge:
+                log.info("Handling GitLab merge request for project: {}, merge id: {}", projectId, mergeId);
                 bugType = BugTracker.Type.GITLABMERGE;
                 bt = BugTracker.builder()
                         .type(bugType)
@@ -284,7 +286,7 @@ public class CxFlowRunner implements ApplicationRunner {
                     exit(1);
                 }
                 mergeNoteUri = gitLabProperties.getMergeNoteUri(projectId, mergeId);
-
+                mergeProjectId = Integer.parseInt(projectId);
                 if (!ScanUtils.empty(namespace) && !ScanUtils.empty(repoName)){
                     repoUrl = getNonEmptyRepoUrl(namespace, repoName, repoUrl, gitLabProperties.getGitUri(namespace, repoName));
                 }
@@ -331,6 +333,10 @@ public class CxFlowRunner implements ApplicationRunner {
                 .altFields(altFields)
                 .forceScan(force)
                 .build();
+
+        if(mergeProjectId != 0){
+            request.setRepoProjectId(mergeProjectId);
+        }
 
         request = configOverrider.overrideScanRequestProperties(flowOverride, request);
         /*Determine if BitBucket Cloud/Server is being used - this will determine formatting of URL that links to file/line in repository */
