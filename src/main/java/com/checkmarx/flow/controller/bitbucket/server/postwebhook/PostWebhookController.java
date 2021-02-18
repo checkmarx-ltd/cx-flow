@@ -8,11 +8,13 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.controller.bitbucket.server.BitbucketServerEventHandler;
+import com.checkmarx.flow.controller.bitbucket.server.BitbucketServerMergeHandler;
 import com.checkmarx.flow.controller.bitbucket.server.BitbucketServerPushHandler;
 import com.checkmarx.flow.controller.bitbucket.server.ConfigContextProvider;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.EventResponse;
-import com.checkmarx.flow.dto.bitbucketserver.plugin.postwebhook.PushEvent;
+import com.checkmarx.flow.dto.bitbucketserver.plugin.postwebhook.BitbucketPushEvent;
+import com.checkmarx.flow.dto.bitbucketserver.plugin.postwebhook.BitbucketServerPullRequestEvent;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.service.BitBucketService;
@@ -103,10 +105,10 @@ public class PostWebhookController implements ConfigContextProvider {
 
         ObjectMapper mapper = new ObjectMapper()
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        PushEvent event;
+        BitbucketPushEvent event;
 
         try {
-            event = mapper.readValue(body, PushEvent.class);
+            event = mapper.readValue(body, BitbucketPushEvent.class);
             
         } catch (IOException e) {
             throw new MachinaRuntimeException(e);
@@ -140,10 +142,44 @@ public class PostWebhookController implements ConfigContextProvider {
             @RequestParam(value = TOKEN_PARAM, required = false) String token, 
             ControllerRequest controllerRequest) {
 
-
+        String uid = helperService.getShortUid();
+        MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
+        
         log.info("Processing BitBucket(Post Web Hook) MERGE request");
         validateCredentials(credentials, token);
-        return null;
+        
+        ObjectMapper mapper = new ObjectMapper();
+        BitbucketServerPullRequestEvent event;
+
+        try {
+            event = mapper.readValue(body, BitbucketServerPullRequestEvent.class);
+        } catch (IOException e) {
+            throw new MachinaRuntimeException(e);
+        }
+
+        BitbucketServerEventHandler handler = BitbucketServerMergeHandler.builder()
+                .controllerRequest(controllerRequest)
+
+                .application(event.getPullrequest().getFromRef().getRepository().getSlug())
+                .currentBranch(event.getPullrequest().getFromRef().getBranch().getName())
+                .targetBranch(event.getPullrequest().getToRef().getBranch().getName())
+                // .fromRefLatestCommit(event.getPullRequest().getFromRef().getLatestCommit())
+                // .fromProjectKey(event.getPullRequest().getFromRef().getRepository().getProject().getKey())
+                // .fromSlug(event.getPullRequest().getFromRef().getRepository().getSlug())
+                // .toProjectKey(event.getPullRequest().getToRef().getRepository().getProject().getKey())
+                // .toSlug(event.getPullRequest().getToRef().getRepository().getSlug())
+                // .pullRequestId(event.getPullRequest().getId().toString())
+                // .repositoryName(event.getPullRequest().getFromRef().getRepository().getName())
+                // .refId(event.getPullRequest().getFromRef().getId())
+                // .browseUrl(event.getPullRequest().getFromRef().getRepository().getLinks().getSelf().get(INDEX_FROM_SELF)
+                //         .getHref())
+
+                .webhookPayload(body)
+                .configProvider(this)
+                .product(product)
+                .build();
+
+        return handler.execute(uid);
     }
 
     // @PostMapping(value = {ROOT_PATH + "/{product}", ROOT_PATH}, headers = MERGED)
