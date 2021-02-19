@@ -20,6 +20,13 @@ public class BitbucketServerDeleteHandler extends BitbucketServerEventHandler {
     String branchNameForDelete;
 
     @Override
+    // This implementation is currently limited.
+    //
+    // Does not work if using config as code because it can't get the CaC settings for team and/or project name
+    // when the CaC file is deleted with the branch.  
+    //
+    // It will work if the project name is calculated or scripted and the team assigned to the project matches the 
+    // default team in the configuration.
     public ResponseEntity<EventResponse> execute(String uid) {
 
         ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
