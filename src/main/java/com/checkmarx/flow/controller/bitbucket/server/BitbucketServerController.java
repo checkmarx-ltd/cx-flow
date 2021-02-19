@@ -17,6 +17,7 @@ import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.EventResponse;
+import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.bitbucketserver.PullEvent;
 import com.checkmarx.flow.dto.bitbucketserver.PushEvent;
 import com.checkmarx.flow.exception.InvalidTokenException;
@@ -151,9 +152,19 @@ public class BitbucketServerController implements ConfigContextProvider {
             throw new MachinaRuntimeException(e);
         }
 
+        String application = event.getPullRequest().getFromRef().getRepository().getName();
+
+        if (!ScanUtils.empty(controllerRequest.getApplication())) {
+            application = controllerRequest.getApplication();
+        }
+
+        if (ScanUtils.empty(product)) {
+            product = ScanRequest.Product.CX.getProduct();
+        }
+
         BitbucketServerEventHandler handler = BitbucketServerMergeHandler.builder()
                 .controllerRequest(controllerRequest)
-                .application(event.getPullRequest().getFromRef().getRepository().getName())
+                .application(application)
                 .currentBranch(event.getPullRequest().getFromRef().getDisplayId())
                 .targetBranch(event.getPullRequest().getToRef().getDisplayId())
                 .fromRefLatestCommit(event.getPullRequest().getFromRef().getLatestCommit())
@@ -202,9 +213,19 @@ public class BitbucketServerController implements ConfigContextProvider {
         } catch (IOException e) {
             throw new MachinaRuntimeException(e);
         }
+        
+        String application = event.getRepository().getName();
+
+        if (!ScanUtils.empty(controllerRequest.getApplication())) {
+            application = controllerRequest.getApplication();
+        }
+
+        if (ScanUtils.empty(product)) {
+            product = ScanRequest.Product.CX.getProduct();
+        }
 
         BitbucketServerEventHandler handler = BitbucketServerPushHandler.builder()
-                .controllerRequest(controllerRequest).application(event.getRepository().getName())
+                .controllerRequest(controllerRequest)
                 .branchFromRef(event.getChanges().get(INDEX_FROM_CHANGES).getRefId())
                 .toHash(event.getChanges().get(INDEX_FROM_CHANGES).getToHash())
                 .email(event.getActor().getEmailAddress()).fromProjectKey(event.getRepository().getProject().getKey())
@@ -215,6 +236,7 @@ public class BitbucketServerController implements ConfigContextProvider {
                 .webhookPayload(body)
                 .configProvider(this)
                 .product(product)
+                .application(application)
                 .build();        
 
         return handler.execute(uid);
