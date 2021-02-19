@@ -44,28 +44,10 @@ public abstract class BitbucketServerEventHandler {
     protected String fromProjectKey;
 
     @NonNull
-    protected String fromSlug;
-
-    @NonNull
-    protected String toProjectKey;
-
-    @NonNull
-    protected String toSlug;
+    protected String webhookPayload;
 
     @NonNull
     protected String repositoryName;
-
-    @NonNull
-    protected String refId;
-
-    @NonNull
-    protected String browseUrl;
-
-    @NonNull
-    protected String webhookPayload;
-
-    @Singular
-    protected final List<String> emails;
 
     @NonNull
     protected ControllerRequest controllerRequest;
@@ -112,55 +94,12 @@ public abstract class BitbucketServerEventHandler {
     protected final WebhookUtils webhookUtils = new WebhookUtils();
 
   
-    protected String getGitUrl() {
-        return configProvider.getBitBucketProperties().getUrl().concat("/scm/").concat(fromProjectKey.concat("/"))
-                .concat(fromSlug).concat(".git");
-    }
 
-    protected String getGitAuthUrl(String gitUrl) {
-        String gitAuthUrl = gitUrl.replace(Constants.HTTPS,
-                Constants.HTTPS.concat(getEncodedAccessToken()).concat("@"));
-        return gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(getEncodedAccessToken()).concat("@"));
-    }
-
-    protected String getEncodedAccessToken() {
-        final String CREDENTIAL_SEPARATOR = ":";
-        String[] basicAuthCredentials = configProvider.getBitBucketProperties().getToken().split(CREDENTIAL_SEPARATOR);
-        String accessToken = basicAuthCredentials[1];
-
-        String encodedTokenString = ScanUtils.getStringWithEncodedCharacter(accessToken);
-
-        return basicAuthCredentials[0].concat(CREDENTIAL_SEPARATOR).concat(encodedTokenString);
-    }
-
-    protected void setBrowseUrl(ScanRequest targetRequest) {
-        try {
-            // targetRequest.putAdditionalMetadata("BITBUCKET_BROWSE",
-            // repo.getLinks().getSelf().get(0).getHref());
-            targetRequest.putAdditionalMetadata("BITBUCKET_BROWSE", browseUrl);
-        } catch (NullPointerException e) {
-            log.warn("Not able to determine file url for browsing", e);
-        }
-    }
 
     protected String getNamespace() {
         return fromProjectKey.replace(" ", "_");
     }
 
-    protected void fillRequestWithCommonAdditionalData(ScanRequest request, String projectKey, String slug,
-            String hookPayload) {
-        String repoSelfUrl = getRepoSelfUrl(projectKey, slug);
-        request.putAdditionalMetadata(BitBucketService.REPO_SELF_URL, repoSelfUrl);
-        request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, hookPayload);
-    }
-
-    protected String getRepoSelfUrl(String projectKey, String repoSlug) {
-        String repoSelfUrl = configProvider.getBitBucketProperties().getUrl()
-                .concat(configProvider.getBitBucketProperties().getApiPath()).concat(PROJECT_REPO_PATH);
-        repoSelfUrl = repoSelfUrl.replace("{project}", projectKey);
-        repoSelfUrl = repoSelfUrl.replace("{repo}", repoSlug);
-        return repoSelfUrl;
-    }
 
     protected void checkForConfigAsCode(ScanRequest request) {
         CxConfig cxConfig = configProvider.getBitbucketService().getCxConfigOverride(request);

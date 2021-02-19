@@ -16,7 +16,7 @@ import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
 @SuperBuilder
-public class BitbucketServerMergeHandler extends BitbucketServerEventHandler {
+public class BitbucketServerMergeHandler extends BitbucketServerScanEventHandler {
 
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(BitbucketServerMergeHandler.class);
 
@@ -39,9 +39,6 @@ public class BitbucketServerMergeHandler extends BitbucketServerEventHandler {
         controllerRequest = webhookUtils.ensureNotNull(controllerRequest);
 
         try {
-            if (!ScanUtils.empty(controllerRequest.getApplication())) {
-                application = controllerRequest.getApplication();
-            }
 
             BugTracker.Type bugType = BugTracker.Type.BITBUCKETSERVERPULL;
             if (!ScanUtils.empty(controllerRequest.getBug())) {
@@ -49,9 +46,6 @@ public class BitbucketServerMergeHandler extends BitbucketServerEventHandler {
             }
             Optional.ofNullable(controllerRequest.getAppOnly()).ifPresent(configProvider.getFlowProperties()::setTrackApplicationOnly);
 
-            if (ScanUtils.empty(product)) {
-                product = ScanRequest.Product.CX.getProduct();
-            }
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
             List<String> branches = webhookUtils.getBranches(controllerRequest, configProvider.getFlowProperties());
 
@@ -75,7 +69,9 @@ public class BitbucketServerMergeHandler extends BitbucketServerEventHandler {
             String blockerCommentUrl = repoSelfUrl.concat(BLOCKER_COMMENT);
             blockerCommentUrl = blockerCommentUrl.replace("{id}", pullRequestId);
 
-            ScanRequest request = ScanRequest.builder().application(application).product(p)
+            ScanRequest request = ScanRequest.builder()
+                    .application(application)
+                    .product(p)
                     .project(controllerRequest.getProject())
                     .team(controllerRequest.getTeam())
                     .namespace(getNamespace())

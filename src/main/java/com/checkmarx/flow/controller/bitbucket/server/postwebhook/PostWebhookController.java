@@ -9,11 +9,13 @@ import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.EventResponse;
+import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.bitbucketserver.plugin.postwebhook.BitbucketPushChange;
 import com.checkmarx.flow.dto.bitbucketserver.plugin.postwebhook.BitbucketPushEvent;
 import com.checkmarx.flow.dto.bitbucketserver.plugin.postwebhook.BitbucketServerPullRequestEvent;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
+import com.checkmarx.flow.handlers.bitbucket.server.BitbucketServerDeleteHandler;
 import com.checkmarx.flow.handlers.bitbucket.server.BitbucketServerEventHandler;
 import com.checkmarx.flow.handlers.bitbucket.server.BitbucketServerMergeHandler;
 import com.checkmarx.flow.handlers.bitbucket.server.BitbucketServerPushHandler;
@@ -24,12 +26,12 @@ import com.checkmarx.flow.service.CxScannerService;
 import com.checkmarx.flow.service.FilterFactory;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.HelperService;
+import com.checkmarx.flow.utils.ScanUtils;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.slf4j.Logger;
 import org.slf4j.MDC;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -105,6 +107,7 @@ public class PostWebhookController implements ConfigContextProvider {
         log.info("Processing BitBucket(Post Web Hook) PUSH request");
         validateCredentials(credentials, token);
 
+
         ObjectMapper mapper = new ObjectMapper()
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         BitbucketPushEvent event;
@@ -116,38 +119,73 @@ public class PostWebhookController implements ConfigContextProvider {
             throw new MachinaRuntimeException(e);
         }
 
-        // Post web hook sends a push on branch delete.  Return success for now, this
-        // might be a spot to implement deletion of the SAST project in the future.
+
+        String application = event.getRepository().getSlug();
+
+        if (!ScanUtils.empty(controllerRequest.getApplication())) {
+            application = controllerRequest.getApplication();
+        }
+
+        if (ScanUtils.empty(product)) {
+            product = ScanRequest.Product.CX.getProduct();
+        }
+
+
         BitbucketPushChange change = event.getPush().getChanges()[CHANGE_INDEX];
         if (change.isClosed() && change.getNewState() == null)
         {
-            log.debug("Branch {} deleted in repository {} at last commit {}",
-                    change.getOldState().getName(), event.getRepository().getFullName(),
-                    change.getOldState().getTarget().getHash());
-            return ResponseEntity.status(HttpStatus.OK).body(
-                    EventResponse.builder().message("Branch deletion handled successfully.")
-                    .success(true)
-                    .build());
+            return handleDelete(event, controllerRequest, product, application, body, uid);
         }
 
 
         BitbucketServerEventHandler handler = BitbucketServerPushHandler.builder()
                 .controllerRequest(controllerRequest)
-                .application(event.getRepository().getSlug())
                 .toSlug(event.getRepository().getSlug())
                 .repositoryName(event.getRepository().getSlug())
                 .fromSlug(event.getRepository().getSlug())
-                .branchFromRef(event.getPush().getChanges()[CHANGE_INDEX].getOldState().getName())
-                .toHash(event.getPush().getChanges()[CHANGE_INDEX].getNewState().getTarget().getHash())
+                .branchFromRef(change.getOldState().getName())
+                .toHash(change.getNewState().getTarget().getHash())
                 .email(event.getActor().getEmailAddress())
                 .fromProjectKey(event.getRepository().getProject().getKey())
                 .toProjectKey(event.getRepository().getProject().getKey())
-                .refId(event.getPush().getChanges()[CHANGE_INDEX].getNewState().getName())
+                .refId(change.getNewState().getName())
                 .browseUrl(event.getRepository().getLinks().get("self").get(BROWSE_URL_INDEX).getHref() )
                 .webhookPayload(body)
                 .configProvider(this)
                 .product(product)
+                .application(application)
                 .build();        
+
+        return handler.execute(uid);
+    }
+
+
+    private ResponseEntity<EventResponse> handleDelete(BitbucketPushEvent event, 
+            ControllerRequest controllerRequest, String product, String application,
+            String body, String uid) {
+        
+
+        BitbucketPushChange change = event.getPush().getChanges()[CHANGE_INDEX];
+
+        log.debug("{} {} deleted in repository {} at last commit {}",
+                change.getOldState().getType(), 
+                change.getOldState().getName(), 
+                event.getRepository().getFullName(),
+                change.getOldState().getTarget().getHash());
+
+        if (change.getOldState().getType().compareTo("branch") != 0)
+            return BitbucketServerDeleteHandler.getSuccessMessage();
+
+        BitbucketServerEventHandler handler = BitbucketServerDeleteHandler.builder()
+                .controllerRequest(controllerRequest)
+                .webhookPayload(body)
+                .configProvider(this)
+                .application(application)
+                .product(product)
+                .repositoryName(event.getRepository().getSlug())
+                .branchNameForDelete(change.getOldState().getName())
+                .fromProjectKey(event.getRepository().getProject().getKey())
+                .build();
 
         return handler.execute(uid);
     }
@@ -192,10 +230,19 @@ public class PostWebhookController implements ConfigContextProvider {
             throw new MachinaRuntimeException(e);
         }
 
+        String application = event.getPullrequest().getFromRef().getRepository().getSlug();
+
+        if (!ScanUtils.empty(controllerRequest.getApplication())) {
+            application = controllerRequest.getApplication();
+        }
+
+        if (ScanUtils.empty(product)) {
+            product = ScanRequest.Product.CX.getProduct();
+        }
+
+
         BitbucketServerEventHandler handler = BitbucketServerMergeHandler.builder()
                 .controllerRequest(controllerRequest)
-
-                .application(event.getPullrequest().getFromRef().getRepository().getSlug())
                 .currentBranch(event.getPullrequest().getFromRef().getBranch().getName())
                 .targetBranch(event.getPullrequest().getToRef().getBranch().getName())
                 .fromRefLatestCommit(event.getPullrequest().getFromRef().getCommit().getHash())
@@ -211,6 +258,7 @@ public class PostWebhookController implements ConfigContextProvider {
                 .webhookPayload(body)
                 .configProvider(this)
                 .product(product)
+                .application(application)
                 .build();
 
         return handler.execute(uid);

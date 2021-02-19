@@ -17,7 +17,7 @@ import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
 @SuperBuilder
-public class BitbucketServerPushHandler extends BitbucketServerEventHandler {
+public class BitbucketServerPushHandler extends BitbucketServerScanEventHandler {
 
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(BitbucketServerPushHandler.class);
 
@@ -33,9 +33,6 @@ public class BitbucketServerPushHandler extends BitbucketServerEventHandler {
         controllerRequest = webhookUtils.ensureNotNull(controllerRequest);
 
         try {
-            if (!ScanUtils.empty(controllerRequest.getApplication())) {
-                application = controllerRequest.getApplication();
-            }
 
             // set the default bug tracker as per yml
             webhookUtils.setBugTracker(configProvider.getFlowProperties(), controllerRequest);
@@ -45,9 +42,6 @@ public class BitbucketServerPushHandler extends BitbucketServerEventHandler {
             Optional.ofNullable(controllerRequest.getAppOnly())
                     .ifPresent(configProvider.getFlowProperties()::setTrackApplicationOnly);
 
-            if (ScanUtils.empty(product)) {
-                product = ScanRequest.Product.CX.getProduct();
-            }
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
             String currentBranch = ScanUtils.getBranchFromRef(branchFromRef);
             List<String> branches = webhookUtils.getBranches(controllerRequest, configProvider.getFlowProperties());
