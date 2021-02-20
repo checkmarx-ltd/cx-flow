@@ -9,7 +9,6 @@ import com.checkmarx.flow.dto.Sources;
 import com.checkmarx.flow.dto.gitlab.Comment;
 import com.checkmarx.flow.dto.gitlab.Note;
 import com.checkmarx.flow.exception.GitLabClientException;
-import com.checkmarx.flow.exception.GitLabClientRuntimeException;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.sast.CxConfig;
@@ -29,8 +28,9 @@ import org.springframework.web.client.RestTemplate;
 import java.beans.ConstructorProperties;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.*;
 
 
@@ -337,21 +337,19 @@ public class GitLabService extends RepoService {
 
     private RepoComment convertToRepoComment(Comment comment, ScanRequest scanRequest) {
 
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+        return RepoComment.builder()
+                .id(comment.getId())
+                .comment(comment.getBody())
+                .createdAt(parseDate(comment.getCreatedAt()))
+                .updateTime(parseDate(comment.getUpdatedAt()))
+                .commentUrl(getCommentUrl(scanRequest, comment.getId()))
+                .build();
+    }
 
-        try {
-            return RepoComment.builder()
-                    .id(comment.getId())
-                    .comment(comment.getBody())
-                    .createdAt(sdf.parse(comment.getCreatedAt()))
-                    .updateTime(sdf.parse(comment.getUpdatedAt()))
-                    .commentUrl(getCommentUrl(scanRequest, comment.getId()))
-                    .build();
-        } catch (ParseException pe) {
-            throw new GitLabClientRuntimeException("Error parsing gitlab pull request created or " +
-                                                           "updated date", pe);
-        }
+    private Date parseDate(String dateStr) {
+        LocalDateTime date = ZonedDateTime.parse(dateStr).toLocalDateTime();
+        ZonedDateTime zonedDateTime = date.atZone(ZoneId.systemDefault());
+        return Date.from(zonedDateTime.toInstant());
     }
 
     private String getCommentUrl(ScanRequest scanRequest, long commentId) {
