@@ -66,13 +66,39 @@ WebHook Events
   * When registering Push Events, use http://<cxflow>/ado/push 
 **Note** Only Push/Pull Create events are currently supported. Token should be sent as Basic Authentication Header.
 
-## <a name="bitbucketserver">Bitbucket Server</a>
-Similar to cloud, but requires a shared secret field, which is used to sign/authenticate the request.
-
 ## <a name="bitbucketcloud">Bitbucket Cloud</a>
-Bitbucket cloud does not support a shared key/secret for digitally signing and verifying the request, so we require the token paramater to be passed:
-<br> example: http://cxflow?token=XXXXX)
-<br>XXXX is the pre-shared token that the CxFlow webservice is using to validate and authenticate requests.
-<br>When configuring the API token in CxFlow YML config, the <userid>:<access token> is the expected value.
+Bitbucket cloud does not support a shared key/secret for digitally signing and verifying the request, so we require the token parameter to be passed:
+<br> example: http://cxflow?token=XXXXX
+<br>XXXX is the pre-shared token value set for `bitbucket.webhook-token` that the CxFlow webservice is using to validate and authenticate requests.
+
+When configuring the API token in CxFlow YML config using the `bitbucket.token` configuration value, the expected format is `<userid>:<access token>`. 
+
+
+## <a name="bitbucketserver">Bitbucket Server</a>
+
+### Native Webhooks
+Similar to cloud, but requires a shared secret field, which is used to sign/authenticate the request.  The `token` webhook URL parameter used in Bitbucket Cloud is therefore not necessary.
+
+### Post Webhooks
+The [Post Webhooks plugin](https://marketplace.atlassian.com/apps/1215474/post-webhooks-for-bitbucket?hosting=server&tab=overview) for Bitbucket server is supported by appending the path `/postwebhook` to the CxFlow webhook URL in the Post Webhooks configuration.
+
+example: `http://cxflow/postwebhook`
+
+
+Post Webhooks allows global, per-project and per-repository webhook configurations.  The native Bitbucket Server webhook configurations are not as flexible.  Using Config As Code with a single global webhook configuration may be an effective way to deploy CxFlow to your development organization.
+
+
+
+The Post Webhooks plugin does not support signature authentication, so one of the following two options must be used to present the shared key to CxFlow:
+
+* Use the `token` URL parameter<br>
+example: `http://cxflow/postwebhook?token=XXXXX`<br><br>
+
+
+* Use the "Basic Authentication" feature in the Post Webhooks configuration.  The username can be omitted from the configuration; the password should be configured to match the `bitbucket.webhook-token` configured value.  Example:
+
+[[/Images/postwebhooks_password.png | Post Webhooks token config]]
+
+
 
 

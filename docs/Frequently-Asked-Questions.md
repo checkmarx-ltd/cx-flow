@@ -59,6 +59,7 @@ The table below lists all the supported integrations, features and states the re
 |        | Pipelines |               |
 |        | Work Items |               |
 | **BitBucket** | WebHooks | >= 1.4.3 |
+|               | Post Webhooks (plugin) | >= 3.14.18 |
 |               | Merge Requests Scanning |         |
 |               | Pull Events |          |
 |               | Issue Tracker |         |

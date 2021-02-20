@@ -1,7 +1,7 @@
 
 ### Deleting CxSAST Project upon Branch Deletion
 
-xFlow is able to create a new CxSAST project when initiating scan, if the project doesn't exist yet.
+CxFlow is able to create a new CxSAST project when initiating scan, if the project doesn't exist yet.
 
 When working with CxFlow in web service mode and using webhook events to trigger CxSAST scan, CxFlow will create a new CxSAST project for each SCM feature branch which open a pull request into scanned branch. This might cause flood of projects on CxSAST for feature branch and unexpected consumption of licenses.
 
@@ -59,4 +59,10 @@ if the user delete feature-branch manually without complete pull request - CxFlo
 [[/Images/ADO_delete_branch.png|github delete webhook event]]
 
 
+## Bitbucket Server
+
+Bitbucket Server will delete a SAST project **only when using the Post Webhooks plugin**.  The current implementation is limited in that:
+
+* Project delete not work if using Config-As-Code given the settings for team and/or project name have been deleted from the branch.
+* Project delete will work if the project name is calculated or scripted and the team assigned to the project matches the default team in the CxFlow YAML configuration.
 
