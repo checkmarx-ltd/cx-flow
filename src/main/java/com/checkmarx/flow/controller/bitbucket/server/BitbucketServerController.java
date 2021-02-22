@@ -57,7 +57,6 @@ public class BitbucketServerController implements ConfigContextProvider {
     private static final String PING = EVENT + "=diagnostics:ping";
     private static final String PUSH = EVENT + "=repo:refs_changed";
     private static final String MERGE = EVENT + "=pr:opened";
-    private static final String MERGED = EVENT + "=pr:merged";
     private static final String PR_SOURCE_BRANCH_UPDATED = EVENT + "=pr:from_ref_updated";
     private static final String HMAC_ALGORITHM = "HMACSha256";
     protected static final Charset CHARSET = StandardCharsets.UTF_8;
@@ -100,19 +99,6 @@ public class BitbucketServerController implements ConfigContextProvider {
      */
     @PostMapping(value = {"/{product}", "/"}, headers = MERGE)
     public ResponseEntity<EventResponse> mergeRequest(
-            @RequestBody String body,
-            @PathVariable(value = "product", required = false) String product,
-            @RequestHeader(value = SIGNATURE) String signature,
-            ControllerRequest controllerRequest
-    ) {
-        return doMergeEvent(body, product, signature, controllerRequest);
-    }
-
-    /**
-     * Push Request event webhook submitted.
-     */
-    @PostMapping(value = {"/{product}", "/"}, headers = MERGED)
-    public ResponseEntity<EventResponse> mergedRequest(
             @RequestBody String body,
             @PathVariable(value = "product", required = false) String product,
             @RequestHeader(value = SIGNATURE) String signature,

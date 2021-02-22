@@ -51,7 +51,6 @@ public class PostWebhookController implements ConfigContextProvider {
     private static final String EVENT = "X-Event-Key";
     private static final String PUSH = EVENT + "=repo:push";
     private static final String MERGE = EVENT + "=pullrequest:created";
-    private static final String MERGED = EVENT + "=pullrequest:fulfilled";
     private static final String PR_SOURCE_BRANCH_UPDATED = EVENT + "=pullrequest:updated";
     private static final String AUTH_HEADER = "Authorization";
     private static final String ROOT_PATH = "/postwebhook";
