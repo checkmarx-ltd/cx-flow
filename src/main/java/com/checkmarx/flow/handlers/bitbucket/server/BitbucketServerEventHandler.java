@@ -8,17 +8,12 @@ import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.EventResponse;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.handlers.config.ConfigContextProvider;
-import com.checkmarx.flow.service.BitBucketService;
-import com.checkmarx.flow.utils.HTMLHelper;
-import com.checkmarx.flow.utils.ScanUtils;
-import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.dto.sast.CxConfig;
 
 import org.slf4j.Logger;
 import org.springframework.http.ResponseEntity;
 
 import lombok.NonNull;
-import lombok.Singular;
 import lombok.experimental.SuperBuilder;
 
 

@@ -61,8 +61,6 @@ public abstract class BitbucketServerScanEventHandler extends BitbucketServerEve
 
     protected void setBrowseUrl(ScanRequest targetRequest) {
         try {
-            // targetRequest.putAdditionalMetadata("BITBUCKET_BROWSE",
-            // repo.getLinks().getSelf().get(0).getHref());
             targetRequest.putAdditionalMetadata("BITBUCKET_BROWSE", browseUrl);
         } catch (NullPointerException e) {
             log.warn("Not able to determine file url for browsing", e);
