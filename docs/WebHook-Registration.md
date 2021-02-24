@@ -28,7 +28,7 @@ WebHooks can be registered at the namespace level (Organization in GitHub, Group
 * Make sure the GitHub App points to your CxFlow http endpoint
 * Available options for Events are same as WebHook registration mentioned above (Push, Pull, Delete Branch)
 * Ensure to download/save the Private key generated for the App
-* You must convert the key to PKCS8 formatted PEM using: ```openssl pkcs8 -topk8 -inform PEM -outform PEM -in private.pem -out private8.pem```
+* You must convert the key to PKCS8 formatted PEM using: ```openssl pkcs8 -topk8 -inform PEM -outform PEM -in private.pem -out private8.pem -nocrypt```
 * To make use of the GitHub App, you must add app-id and app-key-file to your configuration
 * The base headers are ```application/vnd.github.machine-man-preview+json, application/vnd.github.v3+json``` to update them use the app-header conifg under the github block
 ```
@@ -47,10 +47,11 @@ github:
 
 ### Permissions Required for GitHub App
 The following permissions are required
-  * Pull Request - Read/Write | For commenting on PR
+  * Contents - Read/Write | For access to repository contents
+  * Pull Request - Read/Write | For commenting on PR  
   * Commit statuses - Read/Write | For Block/Break Merge
   * Webhooks - Read/Write | For ability to Register WebHook Events
-  * Issues - Read/Write | If using GitHub as bug-tracker
+  * Issues - Read/Write | If using GitHub as bug-tracker  
 
 WebHook Events
   * Delete
