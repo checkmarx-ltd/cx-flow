@@ -48,8 +48,6 @@ public class AstRemoteRepoScanSteps {
     private static final String PUBLIC_PROJECT_NAME = "Public-Test-Test-Repo";
 
     private static final String BRANCH = "master";
-
-    //private static final String GITHUB_REPO_FOR_DESCRIPTION_TEST = "https://github.com/cxflowtestuser/public-rest-repo";
     
     private static final String PUBLIC_REPO = "https://github.com/cxflowtestuser/testsAST.git";
     private static final String SEPARATOR = ",";
@@ -189,6 +187,12 @@ public class AstRemoteRepoScanSteps {
     @Given("enabled vulnerability scanners are {string}")
     public void setScanInitiatorAndBranch(String initiatorList) {
         List<VulnerabilityScanner> scanners = setScanInitiator(initiatorList);
+        startScan(scanners, BRANCH, PUBLIC_REPO, false, "AstDetailsTest");
+    }
+
+    @Given("enabled vulnerability scanner is AST")
+    public void setScanInitiatorAst() {
+        List<VulnerabilityScanner> scanners = setScanInitiator("AST");
         startScan(scanners, BRANCH, PUBLIC_REPO, false, "AstDetailsTest");
     }
     
