@@ -195,9 +195,8 @@ public class AstCliSteps  {
     }
 
 
-    @When("running CxFlow with `scan local sources` options")
-    public void runningCxFlowWithScanLocalSourcesOptions() {
-        customAstProjectName = "ci-local-scan-test";
+    @When("running CxFlow with `scan local sources` option and {}")
+    public void runningCxFlowWithScanLocalSourcesOptions(String customAstProjectName) {
 
         String commandLine = String.format("--scan --cx-project=%s --app=MyApp --f=%s --blocksysexit",
                 customAstProjectName,

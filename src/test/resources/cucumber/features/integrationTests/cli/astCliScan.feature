@@ -4,13 +4,13 @@ Feature: AST support in CxFlow command-line
     Scenario Outline: AST CLI scan of a local directory
         Given scanner is <scanner>
         And source directory contains vulnerable files
-        When running CxFlow with `scan local sources` options
+        When running CxFlow with `scan local sources` option and <projectName>
         Then bug tracker contains <issueNumber> issues
         And no exception is thrown
         Examples:
-            | scanner | issueNumber |
-            | AST     | 38          |
-            | AST,SCA | 43          |
+            | scanner | issueNumber | projectName      |
+            | AST     | 38          | ast-cli-test     |
+            | AST,SCA | 43          | ast-cli-with-sca |
 
 
     Scenario Outline: Running a AST scan with break-build enabled and command line arguments

@@ -3,17 +3,28 @@ Feature: Cx-Flow AST Integration permutation tests
 
   @ASTRemoteRepoScan
   Scenario Outline: using multiple vulnerability scanners
-    Given enabled vulnerability scanners are "<scanners>"
+    Given enabled vulnerability scanners are "<scanners>" and repo "<isPublic>"
     Then scan results contain populated results for all scanners
     And sca finding count will be "<sca_findings>" and ast findings count "<ast_findings>" will be accordingly
-
+    
     Examples:
     # Cannot rely on an exact number of findings, because it may change after backend version updates.
-      | scanners | sca_findings | ast_findings |
-      | SCA      | > 0          | 0            |
-      | AST      | 0            | > 0          |
-      | AST,SCA  | > 0          | > 0          |
+      | scanners | sca_findings | ast_findings | isPublic |
+      | SCA      | > 0          | 0            | true     |
+      | SCA      | > 0          | 0            | false    |
+      | AST      | 0            | > 0          | true     |
+      | AST      | 0            | > 0          | false    |
+      | AST,SCA  | > 0          | > 0          | true     |
+      | AST,SCA  | > 0          | > 0          | false    |
 
+  @ASTRemoteRepoScan @AdditionalFields
+  Scenario: validate AST additional fields
+    Given enabled vulnerability scanner is AST
+    Then scan results contain populated results for all scanners
+    And each finding will contain AST populated description field
+    And finding with the same queryId will have the same description and there will be a unique finding description for each queryId
+
+    
   @ASTRemoteRepoScan @InvalidCredentials
   Scenario Outline: Trying to scan with invalid credentials
     When CxFlow tries to start AST scan with the "<client id>" and "<client secret>" credentials
@@ -25,18 +36,7 @@ Feature: Cx-Flow AST Integration permutation tests
       | my-wrong-client-id | <valid-secret>  | unauthorized                      |
       | <valid-client-id>  | <empty>         | AST client secret wasn't provided |
       | <empty>            | <valid-secret>  | AST client ID wasn't provided     |
-    
-  @ASTRemoteRepoScan @AdditionalFields
-  Scenario Outline: validate AST additional fields
-    Given enabled vulnerability scanners are "<scanners>"
-    Then scan results contain populated results for all scanners
-    And each finding will contain AST populated description field
-    And finding with the same queryId will have the same description and there will be a unique finding description for each queryId
 
-    Examples:
-      | scanners |
-      | AST      |
-    
   @ASTRemoteRepoScan
   Scenario Outline: AST is not accessible
     When AST scan is initiated with API url: "<url>"
