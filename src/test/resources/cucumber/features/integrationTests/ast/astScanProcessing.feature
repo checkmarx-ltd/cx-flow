@@ -3,29 +3,20 @@ Feature: Cx-Flow AST Integration permutation tests
 
   @ASTRemoteRepoScan
   Scenario Outline: using multiple vulnerability scanners
-    Given enabled vulnerability scanners are "<scanners>"
+    Given enabled vulnerability scanners are "<scanners>" and repo "<isPublic>"
     Then scan results contain populated results for all scanners
     And sca finding count will be "<sca_findings>" and ast findings count "<ast_findings>" will be accordingly
-
+    
     Examples:
     # Cannot rely on an exact number of findings, because it may change after backend version updates.
-      | scanners | sca_findings | ast_findings |
-      | SCA      | > 0          | 0            |
-      | AST      | 0            | > 0          |
-      | AST,SCA  | > 0          | > 0          |
+      | scanners | sca_findings | ast_findings | isPublic |
+      | SCA      | > 0          | 0            | true     |
+      | SCA      | > 0          | 0            | false    |
+      | AST      | 0            | > 0          | true     |
+      | AST      | 0            | > 0          | false    |
+      | AST,SCA  | > 0          | > 0          | true     |
+      | AST,SCA  | > 0          | > 0          | false    |
 
-  @ASTRemoteRepoScan @InvalidCredentials
-  Scenario Outline: Trying to scan with invalid credentials
-    When CxFlow tries to start AST scan with the "<client id>" and "<client secret>" credentials
-    Then an error will be thrown with the message containing "<message>"
-    Examples:
-    # <valid-xxx> values are replaced with actual values from the test config.
-      | client id          | client secret   | message                           |
-      | <valid-client-id>  | my-wrong-secret | unauthorized                      |
-      | my-wrong-client-id | <valid-secret>  | unauthorized                      |
-      | <valid-client-id>  | <empty>         | AST client secret wasn't provided |
-      | <empty>            | <valid-secret>  | AST client ID wasn't provided     |
-    
   @ASTRemoteRepoScan @AdditionalFields
   Scenario Outline: validate AST additional fields
     Given enabled vulnerability scanners are "<scanners>"
@@ -37,6 +28,18 @@ Feature: Cx-Flow AST Integration permutation tests
       | scanners |
       | AST      |
     
+  @ASTRemoteRepoScan @InvalidCredentials
+  Scenario Outline: Trying to scan with invalid credentials
+    When CxFlow tries to start AST scan with the "<client id>" and "<client secret>" credentials
+    Then an error will be thrown with the message containing "<message>"
+    Examples:
+    # <valid-xxx> values are replaced with actual values from the test config.
+      | client id          | client secret   | message                           |
+      | <valid-client-id>  | my-wrong-secret | unauthorized                      |
+      | my-wrong-client-id | <valid-secret>  | unauthorized                      |
+      | <valid-client-id>  | <empty>         | AST client secret wasn't provided |
+      | <empty>            | <valid-secret>  | AST client ID wasn't provided     |
+
   @ASTRemoteRepoScan
   Scenario Outline: AST is not accessible
     When AST scan is initiated with API url: "<url>"
