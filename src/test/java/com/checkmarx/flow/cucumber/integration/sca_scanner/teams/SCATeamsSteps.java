@@ -70,7 +70,7 @@ public class SCATeamsSteps extends ScaCommonSteps {
         if (team.equals("null")) {
             team = null;
         }
-        scaProperties.setTeamForNewProjects(team);
+        scaProperties.setTeam(team);
         try {
             projectId = scaClientHelper.createRiskManagementProject(PROJECT_NAME);
         } catch (CxHTTPClientException e) {
