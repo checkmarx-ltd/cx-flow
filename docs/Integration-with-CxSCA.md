@@ -145,6 +145,8 @@ CxFlow supports configuration as code for CxSAST and CxSCA scans.
   * thresholdsScore
   * filterSeverity
   * filterScore
+  * team (needs to be set with none empty value)
+  
 <br/>Example for SCA config file content:
 ```
 {
@@ -165,7 +167,8 @@ CxFlow supports configuration as code for CxSAST and CxSCA scans.
 		},
 		"thresholdsScore": 8.5,
 		"filterSeverity": ["high", "medium", "low"],
-		"filterScore": 7.5
+		"filterScore": 7.5,
+		"team": "/CxServer/MyTeam/SubTeam"
 	}
 }
 ```
@@ -204,11 +207,11 @@ includeSources: true
 ## <a name="scaProjectTeamAssignment">SCA project team assignment</a>
 SCA project team assignment with CxFlow is performing on the SCA project creation stage. In order to set a project team, the next configuration property should be added underneath the sca configuration section:
 ```
-team-for-new-projects: /team
+team: /team
 ```
 Or within a tree hierarchy:
 ```
-team-for-new-projects: /MainTeam/SubTeam
+team: /MainTeam/SubTeam
 ```
 * In order to declare a team within a tree hierarchy, make sure to use the forward slash ('/').
 * Declaring not existing team or team path will be resulted with 400 BAD REQUEST error.
