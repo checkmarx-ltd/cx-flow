@@ -182,8 +182,7 @@ public class ScanRequest {
     
     public enum Product {
         CX("CX"),
-        CXOSA("CXOSA"),
-        FORTIFY("FORTIFY");
+        CXOSA("CXOSA");
 
         private final String value;
 
