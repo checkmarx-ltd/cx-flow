@@ -1,3 +1,2 @@
-*
-!build*.gradle
-!build/libs/*
+Dockerfile
+Jenkinsfile
