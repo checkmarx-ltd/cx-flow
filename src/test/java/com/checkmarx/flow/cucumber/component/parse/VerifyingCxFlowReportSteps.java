@@ -35,7 +35,7 @@ public class VerifyingCxFlowReportSteps {
         verifySummaryFieldCount(report.getSummary(), 0);
     }
 
-    @Then("CxFlow report is generated with {} issues")
+    @Then("CxFlow report is generated with {} issue(s)")
     public void reportIsGeneratedWithNIssues(int expectedIssueCount) throws IOException {
         CxFlowReport report = CxFlowReport.parse(testContext);
         JsonNode issues = report.getIssues();

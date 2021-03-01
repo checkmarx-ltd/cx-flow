@@ -80,6 +80,17 @@ Feature: Parsing SAST results
     Then CxFlow report is generated with 2 issues
     And issue severities are: High, Critical
 
+  Scenario: Parsing SAST findings with customized severity
+  By default, finding severity is the same as the severity of its vulnerability type.
+  However, users are able to override severity for a specific finding.
+  Make sure that, while filtering, we use finding severity (and not its vulnerability type severity).
+    Given input has one vulnerability type with "Low" severity
+    And input has one finding with this vulnerability type
+    And user has overridden the severity of this specific finding with the "High" value
+    When parsing the input with severity filter: High
+    Then CxFlow report is generated with 1 issue
+    And the issue severity is High
+
   Scenario: Verify that generated reports match corresponding reference reports
     Given reference CxFlow reports are available for specific inputs
     When parsing each of these inputs
