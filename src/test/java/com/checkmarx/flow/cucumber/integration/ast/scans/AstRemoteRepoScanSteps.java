@@ -2,6 +2,7 @@ package com.checkmarx.flow.cucumber.integration.ast.scans;
 
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.cucumber.integration.sca_scanner.ScaCommonSteps;
 import com.checkmarx.flow.dto.BugTracker;
@@ -47,8 +48,6 @@ public class AstRemoteRepoScanSteps {
     private static final String PUBLIC_PROJECT_NAME = "Public-Test-Test-Repo";
 
     private static final String BRANCH = "master";
-
-    private static final String GITHUB_REPO_FOR_DESCRIPTION_TEST = "https://github.com/cxflowtestuser/public-rest-repo";
     
     private static final String PUBLIC_REPO = "https://github.com/cxflowtestuser/testsAST.git";
     private static final String SEPARATOR = ",";
@@ -62,7 +61,9 @@ public class AstRemoteRepoScanSteps {
     private final ScaProperties scaProperties;
     private final ConfigurationOverrider configOverrider;
     private final ScaConfigurationOverrider scaConfigOverrider;
-
+    private final GitAuthUrlGenerator gitAuthUrlGenerator;
+    private final GitHubProperties  gitHubProperties;
+    
     private ScanResults scanResults;
     private boolean isScaEnabled;
     private boolean isAstEnabled;
@@ -115,7 +116,7 @@ public class AstRemoteRepoScanSteps {
         astProperties.setClientSecret(toActualClientSecret(clientSecretDescr));
         isAstEnabled = true;
         try {
-            startScan(Collections.singletonList(astScanner), BRANCH, PUBLIC_REPO);
+            startScan(Collections.singletonList(astScanner), BRANCH, PUBLIC_REPO, true, "AstScanCred");
         } catch (Exception e) {
             scanException = e;
         }
@@ -172,7 +173,7 @@ public class AstRemoteRepoScanSteps {
         List<VulnerabilityScanner> scanners = new LinkedList<>();
         scanners.add(astScanner);
         try {
-            startScan(scanners, BRANCH, PUBLIC_REPO);
+            startScan(scanners, BRANCH, PUBLIC_REPO, true, "ast-negative-test");
             fail("no exception was thrown");
         } catch (Exception e) {
             assertEquals("Unexpected exception type.",exceptionType, e.getClass().getSimpleName());
@@ -183,10 +184,16 @@ public class AstRemoteRepoScanSteps {
         }
     }
 
-    @Given("enabled vulnerability scanners are {string} and branch is {string}")
-    public void setScanInitiatorAndBranch(String initiatorList, String branch) {
+    @Given("enabled vulnerability scanners are {string}")
+    public void setScanInitiatorAndBranch(String initiatorList) {
         List<VulnerabilityScanner> scanners = setScanInitiator(initiatorList);
-        startScan(scanners, branch, GITHUB_REPO_FOR_DESCRIPTION_TEST);
+        startScan(scanners, BRANCH, PUBLIC_REPO, false, "AstDetailsTest");
+    }
+
+    @Given("enabled vulnerability scanner is AST")
+    public void setScanInitiatorAst() {
+        List<VulnerabilityScanner> scanners = setScanInitiator("AST");
+        startScan(scanners, BRANCH, PUBLIC_REPO, false, "AstDetailsTest");
     }
     
     @And("each finding will contain AST populated description field")
@@ -224,10 +231,10 @@ public class AstRemoteRepoScanSteps {
         Assert.assertEquals(uniqueDescriptions.size(),mapDescriptions.size() );
     }
     
-    @Given("enabled vulnerability scanners are {string}")
-    public void startScanForInitiator(String initiatorList) {
+    @Given("enabled vulnerability scanners are {string} and repo {string}")
+    public void startScanForInitiator(String initiatorList, String isPublic) {
         List<VulnerabilityScanner> scanners = setScanInitiator(initiatorList);
-        startScan(scanners, BRANCH, PUBLIC_REPO);
+        startScan(scanners, BRANCH, PUBLIC_REPO, Boolean.parseBoolean(isPublic), "AstIntegrationTest");
 
     }
 
@@ -285,7 +292,7 @@ public class AstRemoteRepoScanSteps {
         assertTrue(message, countIsExpected);
     }
 
-    public void startScan(List<VulnerabilityScanner> scanners, String branch, String repo) {
+    public void startScan(List<VulnerabilityScanner> scanners, String branch, String repo, boolean isPublicRepo, String projectName) {
         CxProperties cxProperties = new CxProperties();
         ExternalScriptService scriptService = new ExternalScriptService();
         CxScannerService cxScannerService = new CxScannerService(cxProperties,null, null, null, null );
@@ -295,7 +302,7 @@ public class AstRemoteRepoScanSteps {
         ProjectNameGenerator projectNameGenerator = new ProjectNameGenerator(helperService, cxScannerService);
         FlowService flowService = new FlowService(new ArrayList<>(), projectNameGenerator, resultsServiceMock);
 
-        ScanRequest scanRequest = getBasicScanRequest(branch, repo);
+        ScanRequest scanRequest = getBasicScanRequest(branch, repo, isPublicRepo, projectName);
 
         scanRequest = configOverrider.overrideScanRequestProperties(new CxConfig(), scanRequest);
         scanRequest.setVulnerabilityScanners(scanners);
@@ -304,10 +311,19 @@ public class AstRemoteRepoScanSteps {
         flowService.initiateAutomation(scanRequest);
     }
 
-    private ScanRequest getBasicScanRequest(String branch, String repo) {
+    private ScanRequest getBasicScanRequest(String branch, String gitUrl,  boolean isPublicRepo, String projectName) {
+
+        String gitAuthUrl;
+        
+        if(isPublicRepo){
+            gitAuthUrl = gitUrl;
+        }else {
+            gitAuthUrl = gitAuthUrlGenerator.addCredToUrl(ScanRequest.Repository.GITHUB, gitUrl, gitHubProperties.getToken());
+        }
+        
         ScanRequest result = ScanRequest.builder()
-                .project(PUBLIC_PROJECT_NAME)
-                .repoUrlWithAuth(repo)
+                .project(projectName)
+                .repoUrlWithAuth(gitAuthUrl)
                 .branch(branch)
                 .repoType(ScanRequest.Repository.GITHUB)
                 .build();

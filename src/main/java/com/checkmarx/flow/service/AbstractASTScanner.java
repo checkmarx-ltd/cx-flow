@@ -145,6 +145,7 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
         URL parsedUrl = getRepoUrl(scanRequest);
 
         ScanParams scanParams = ScanParams.builder()
+                .branch(scanRequest.getBranch())
                 .projectName(scanRequest.getProject())
                 .remoteRepoUrl(parsedUrl)
                 .scaConfig(scanRequest.getScaConfig())

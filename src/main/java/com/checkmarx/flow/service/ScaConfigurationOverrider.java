@@ -28,6 +28,7 @@ public class ScaConfigurationOverrider {
     private static final String API_URL = "apiUrl";
     private static final String APP_URL = "appUrl";
     private static final String TENANT = "tenant";
+    private static final String TEAM = "team";
     private static final String THRESHOLDS_SEVERITY = "thresholdsSeverity";
     private static final String THRESHOLDS_SCORE = "thresholdsScore";
     private static final String INCLUDE_SOURCES = "includeSources";
@@ -103,6 +104,11 @@ public class ScaConfigurationOverrider {
         sca.map(Sca::isIncludeSources).ifPresent(includeSources -> {
             scaConfig.setIncludeSources(includeSources);
             overrideReport.put(INCLUDE_SOURCES, String.valueOf(includeSources));
+        });
+
+        sca.map(Sca::getTeam).ifPresent(team -> {
+            scaConfig.setTeam(team);
+            overrideReport.put(TEAM, team);
         });
 
         overrideSeverityFilters(request, sca, overrideReport);
