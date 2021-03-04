@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CxXMLResults InitiatorName="user1" Owner="user@local" ScanId="2078391" ProjectId="29811" ProjectName="testProject" TeamFullPathOnReportDate="CxServer" DeepLink="http://test.local/CxWebClient/ViewerMain.aspx?scanid=2078391&amp;projectid=29811" ScanStart="Wednesday, February 19, 2020 2:32:25 PM" Preset="Checkmarx Default" ScanTime="00h:02m:29s" LinesOfCodeScanned="233" FilesScanned="5" ReportCreationTime="Monday, March 1, 2021 3:55:57 PM" Team="CxServer" CheckmarxVersion="9.0.0.3299" ScanComments="" ScanType="Full" SourceOrigin="LocalPath" Visibility="Public">
+    <Query id="600" categories="NIST SP 800-53;SC-5 Denial of Service Protection (P1)" cweId="404" name="Improper_Resource_Shutdown_or_Release" group="Java_Low_Visibility" Severity="Low" Language="Java" LanguageHash="1621858418163027" LanguageChangeDate="2019-10-22T00:00:00.0000000" SeverityIndex="1" QueryPath="Java\Cx\Java Low Visibility\Improper Resource Shutdown or Release Version:1" QueryVersionCode="56205902">
+        <Result NodeId="20783910010" FileName="folder1/file1.java" Status="New" Line="61" Column="25" FalsePositive="False" Severity="High" AssignToUser="" state="0" Remark="admin admin testProject, [Monday, March 1, 2021 3:54:35 PM]: Changed severity to High" DeepLink="http://test.local/CxWebClient/ViewerMain.aspx?scanid=2078391&amp;projectid=29811&amp;pathid=10" SeverityIndex="3">
+            <Path ResultId="2078391" PathId="10" SimilarityId="-1750851115">
+                <PathNode>
+                    <FileName>folder1/file1.java</FileName>
+                    <Line>61</Line>
+                    <Column>25</Column>
+                    <NodeId>1</NodeId>
+                    <Name>FileReader</Name>
+                    <Type></Type>
+                    <Length>3</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>61</Number>
+                            <Code>        FileReader fr = new FileReader(fileName);</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+                <PathNode>
+                    <FileName>folder1/file1.java</FileName>
+                    <Line>61</Line>
+                    <Column>20</Column>
+                    <NodeId>2</NodeId>
+                    <Name>fr</Name>
+                    <Type></Type>
+                    <Length>2</Length>
+                    <Snippet>
+                        <Line>
+                            <Number>61</Number>
+                            <Code>        FileReader fr = new FileReader(fileName);</Code>
+                        </Line>
+                    </Snippet>
+                </PathNode>
+            </Path>
+        </Result>
+    </Query>
+</CxXMLResults>
