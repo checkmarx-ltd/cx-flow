@@ -260,7 +260,7 @@ PARAMS | Any additional parameters for CxFlow. For a full list of all the parame
 The gitlab configuration file is stored at a remote location within the cxflow repo. It can be directly used as a template using the following syntax.
 
 ```yaml
-include: 'https://raw.githubusercontent.com/checkmarx-ltd/cx-flow/master/src/main/resources/samples/gitlab-config.yml'
+include: 'https://raw.githubusercontent.com/checkmarx-ltd/cx-flow/master/templates/gitlab/v1/Checkmarx.gitlab-ci.yml'
 
 ```
 
@@ -273,7 +273,7 @@ The GitLab CI/CD pipeline is controlled by a file named ‘.gitlab-ci.yml’ loc
 ` # Note that image is a docker container maintained by Checkmarx`
 #### .checkmarx.yml (For SAST Scan)
 ```yaml
-include: 'https://raw.githubusercontent.com/checkmarx-ltd/cx-flow/master/src/main/resources/samples/gitlab-config.yml'
+include: 'https://raw.githubusercontent.com/checkmarx-ltd/cx-flow/master/templates/gitlab/v1/Checkmarx.gitlab-ci.yml'
 
 variables:
     CX_FLOW_ENABLED_VULNERABILITY_SCANNERS: sast
