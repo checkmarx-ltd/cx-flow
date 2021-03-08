@@ -53,7 +53,7 @@ public class RunningCxFlowSteps {
     }
 
     @When("running CxFlow with command line: {string}")
-    public void runningCxFlowWithCommandLineCommandLine(String commandLine) {
+    public void runningCxFlowWithCommandLine(String commandLine) {
         Throwable exception = null;
         try {
             TestUtils.runCxFlow(testContext.getCxFlowRunner(), commandLine);
