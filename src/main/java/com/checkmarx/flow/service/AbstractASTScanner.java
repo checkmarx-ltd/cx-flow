@@ -12,10 +12,8 @@ import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.sdk.dto.AstScaResults;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.ast.ASTResults;
-
-import com.checkmarx.sdk.dto.sca.SCAResults;
 import com.checkmarx.sdk.dto.ast.ScanParams;
-
+import com.checkmarx.sdk.dto.sca.SCAResults;
 import com.checkmarx.sdk.service.scanner.AbstractScanner;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +22,6 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @RequiredArgsConstructor
