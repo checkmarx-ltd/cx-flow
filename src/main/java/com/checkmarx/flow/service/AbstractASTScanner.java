@@ -105,7 +105,8 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
         ScanResults result = null;
         if (bugTrackerType.equals(BugTracker.Type.NONE)) {
             log.info("Not waiting for scan completion as Bug Tracker type is NONE");
-            CompletableFuture.supplyAsync(() -> actualScan(scanRequest, path));
+            ScanParams sdkScanParams = toSdkScanParams(scanRequest, path);
+            client.scanWithNoWaitingToResults(sdkScanParams);
         } else {
             result = actualScan(scanRequest, path);
         }

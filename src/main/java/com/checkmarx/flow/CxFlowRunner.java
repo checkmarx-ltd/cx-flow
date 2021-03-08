@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 
 import static com.checkmarx.flow.exception.ExitThrowable.exit;
@@ -522,15 +523,17 @@ public class CxFlowRunner implements ApplicationRunner {
     }
 
     private void processResults(ScanRequest request, ScanResults results) throws ExitThrowable {
-        try {
-            resultsService.processResults(request, results, null);
-            if (checkIfBreakBuild(request, results)) {
-                log.error(ERROR_BREAK_MSG);
-                exit(ExitCode.BUILD_INTERRUPTED);
-            }
+        if (Optional.ofNullable(results).isPresent()) {
+            try {
+                resultsService.processResults(request, results, null);
+                if (checkIfBreakBuild(request, results)) {
+                    log.error(ERROR_BREAK_MSG);
+                    exit(ExitCode.BUILD_INTERRUPTED);
+                }
 
-        } catch (MachinaException e) {
-            log.error("An error has occurred.", ExceptionUtils.getRootCause(e));
+            } catch (MachinaException e) {
+                log.error("An error has occurred.", ExceptionUtils.getRootCause(e));
+            }
         }
     }
 
