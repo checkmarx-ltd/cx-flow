@@ -93,6 +93,7 @@ public class BitbucketServerMergeHandler extends BitbucketServerScanEventHandler
                     .hash(fromRefLatestCommit)
                     .build();
 
+            webhookUtils.setScmInstance(controllerRequest, request);
             setBrowseUrl(request);
             fillRequestWithCommonAdditionalData(request, toProjectKey, toSlug, webhookPayload);
             checkForConfigAsCode(request);

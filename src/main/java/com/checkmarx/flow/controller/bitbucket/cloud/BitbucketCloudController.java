@@ -145,6 +145,7 @@ public class BitbucketCloudController extends WebhookController {
                     .gitUrl(gitUrl)
                     .build();
 
+            setScmInstance(controllerRequest, request);
             fillRequestWithAdditionalData(request, repository, body.toString());
             checkForConfigAsCode(request);
             request.setId(uid);
@@ -244,6 +245,7 @@ public class BitbucketCloudController extends WebhookController {
                     .gitUrl(gitUrl)
                     .build();
 
+            setScmInstance(controllerRequest, request);
             fillRequestWithAdditionalData(request, repository, body.toString());
             checkForConfigAsCode(request);
             request.setId(uid);

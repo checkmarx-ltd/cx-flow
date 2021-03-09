@@ -75,6 +75,7 @@ public class BitbucketServerPushHandler extends BitbucketServerScanEventHandler 
                     .hash(latestCommit)
                     .build();
 
+            webhookUtils.setScmInstance(controllerRequest, request);
             setBrowseUrl(request);
             fillRequestWithCommonAdditionalData(request, toProjectKey, toSlug, webhookPayload);
             checkForConfigAsCode(request);
