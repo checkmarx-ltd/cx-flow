@@ -241,7 +241,7 @@ public class JiraService {
             IssueType it = issueTypes.next();
             issueTypesList.add(it.getName());
             log.debug("getIssueType iterator: {}", it.getName());
-            if (it.getName().equals(type)) {
+            if (it.getName().equalsIgnoreCase(type)) {
                 return it;
             }
             iteration++;
@@ -302,9 +302,9 @@ public class JiraService {
             issueBuilder.setSummary(HTMLHelper.getScanRequestIssueKeyWithDefaultProductValue(request, summary));
             issueBuilder.setDescription(this.getBody(issue, request, fileUrl));
             if (assignee != null && !assignee.isEmpty()) {
-                    String accountId = getAssignee(assignee, projectKey);
-                    if(!accountId.isEmpty()) {
-                        issueBuilder.setFieldInput(new FieldInput(IssueFieldId.ASSIGNEE_FIELD, ComplexIssueInputFieldValue.with("accountId", accountId)));
+                String accountId = getAssignee(assignee, projectKey);
+                if(!accountId.isEmpty()) {
+                    issueBuilder.setFieldInput(new FieldInput(IssueFieldId.ASSIGNEE_FIELD, ComplexIssueInputFieldValue.with("accountId", accountId)));
                 }
             }
 
@@ -348,6 +348,56 @@ public class JiraService {
             log.error("Error occurred while creating JIRA issue.", e);
             throw new JiraClientException();
         }
+    }
+
+    /**
+     * for IAST
+     * @param projectKey
+     * @param summary
+     * @param description
+     * @param assignee
+     * @param priorities
+     * @return
+     * @throws JiraClientException
+     */
+    public String createIssue(String projectKey,
+                              String summary,
+                              String description,
+                              String assignee,
+                              String priorities) throws JiraClientException {
+        log.debug("Retrieving issuetype object for project {}, type {}", projectKey, jiraProperties.getIssueType());
+        try {
+
+            IssueType issueType = this.getIssueType(projectKey, jiraProperties.getIssueType());
+            IssueInputBuilder issueBuilder = new IssueInputBuilder(projectKey, issueType.getId());
+
+            issueBuilder.setSummary(summary);
+            issueBuilder.setDescription(description);
+            if (assignee != null && !assignee.isEmpty()) {
+                String accountId = getAssignee(assignee, projectKey);
+                if(!accountId.isEmpty()) {
+                    issueBuilder.setFieldInput(new FieldInput(IssueFieldId.ASSIGNEE_FIELD, ComplexIssueInputFieldValue.with("accountId", accountId)));
+                }
+            }
+            if (priorities != null) {
+                issueBuilder.setFieldValue("priority", ComplexIssueInputFieldValue.with("name", priorities));
+            }
+
+            log.debug("Creating JIRA issue");
+            BasicIssue basicIssue = this.issueClient.createIssue(issueBuilder.build()).claim();
+            log.debug("JIRA issue {} created", basicIssue.getKey());
+            return basicIssue.getKey();
+        } catch (RestClientException e) {
+            log.error("Error occurred while creating JIRA issue.", e);
+            throw new JiraClientException();
+        }
+    }
+
+
+    public String createIssue(String summary,
+                              String description,
+                              String priorities) throws JiraClientException {
+        return createIssue(jiraProperties.getProject(), summary, description, jiraProperties.getUsername(), priorities);
     }
 
     private String checkSummaryLength(String summary) {

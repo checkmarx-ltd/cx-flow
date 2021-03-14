@@ -90,21 +90,21 @@ checkmarx:
   #project-script:
 
 jira:
-  url: https://xxxxx.atlassian.net
-  username: xxxx
-  token: xxxx
-  project: APPSEC
-  issue-type: Bug
+  url: https://kecvens.atlassian.net
+  username: and.tetka@gmail.com
+  token: 2W5vCvbganI5aB4egT7RF9DF
+  project: BCB
+  issue-type: Task
   priorities:
     X: Y # Map Checkmarx severity : to JIRA Priority
   open-transition: Reopen Issue
   close-transition: Close Issue
 # project-key-script:
-#  open-status:
+  open-status: Open
 #    - Open
 #    - In Progress
 #    - Reopened
-#  closed-status:
+  closed-status: Closed
 #    - Closed
 #    - Resolved
 #  status-category-open-name:
@@ -113,6 +113,17 @@ jira:
 #  statusCategoryClosedName:
 #    - Done
 #  fields:
+
+iast:
+#  url: http://xxxxx.iast.net
+#  manager-port: 8380
+#  username: xxxx
+#  password: xxxx
+
+  url: http://localhost
+  manager-port: 8380
+  username: admin
+  password: Cx123456!
 
 cxgo:
   client-secret: xxx
