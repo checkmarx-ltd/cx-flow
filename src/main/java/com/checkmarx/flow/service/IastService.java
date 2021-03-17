@@ -82,7 +82,7 @@ public class IastService {
 
 
 
-        stopScanAndCreateJiraIssueFromIastSummary("11111");
+        stopScanAndCreateJiraIssueFromIastSummary("cx-scan-1");
 
     }
 
@@ -93,7 +93,6 @@ public class IastService {
             return;
         }
 
-//        Scan scanAggregated = apiScanAggregated(scanId);
         getVulnerabilitiesAndCreateJiraIssue(scanId);
     }
 
@@ -135,13 +134,12 @@ public class IastService {
 
         List<VulnerabilityInfo> vulnerabilities = scanVulnerabilities.getVulnerabilities();
         for (VulnerabilityInfo vulnerability : vulnerabilities) {
-            //TODO: have to be "!= 0"
-            if (vulnerability.getNewCount() == 0) {
+
+            if (vulnerability.getNewCount() != 0) {
                 final List<ResultInfo> scansResultsQuery = apiScanResults(scanId, vulnerability.getId());
 
                 for (ResultInfo scansResultQuery : scansResultsQuery) {
-                    //TODO: remove "!"
-                    if (!scansResultQuery.isNewResult()) {
+                    if (scansResultQuery.isNewResult()) {
                         try {
 
                             String title = scansResultQuery.getName() + ": " + scansResultQuery.getUrl();
@@ -172,32 +170,34 @@ public class IastService {
 
     private Long stopScanWithTag(String tag) throws IOException, InterruptedException {
         List<ProjectSummary> projectsSummary = apiProjectsSummary();
+
         for (ProjectSummary project : projectsSummary) {
+            if (! project.isDeletable()) {
 
-            RunningScanAggregation projectRunning = project.getRunning();
+                Page<Scan> scanPage = apiScanAggregation(project.getProjectId(), 0);
+                RunningScanAggregation projectRunning = project.getRunning();
 
+                for (Scan scan : scanPage.getContent()) {
+                    String projectTag = scan.getTag();
+                    if (tag.equals(projectTag)) {
+                        Long scanId = projectRunning.getScanId();
 
-//                TODO: Decomment work with tags
-//            String projectTag = projectRunning.getString("tag");
-//            if (tag.equals(projectTag)){
-            if (projectRunning.getRiskScore() != 0) {
-                Long scanId = projectRunning.getScanId();
-
-                for (int j = 0; j < 100; j++) {
-                    try {
-                        finishScanById(scanId);
-                    } catch (RuntimeException e) {
-                        log.trace("Can't stop scan. That is normal situation when we already stop that scan.", e);
-                    }
-                    if (finishDoneScanById(scanId)) {
-                        return scanId;
-                    } else {
-                        //If scan didn't stop have to wait and check again
-                        Thread.sleep(500);
+                        for (int j = 0; j < 100; j++) {
+                            try {
+                                finishScanById(scanId);
+                            } catch (RuntimeException e) {
+                                log.trace("Can't stop scan. That is normal situation when we already stop that scan.", e);
+                            }
+                            if (finishDoneScanById(scanId)) {
+                                return scanId;
+                            } else {
+                                //If scan didn't stop have to wait and check again
+                                Thread.sleep(500);
+                            }
+                        }
                     }
                 }
             }
-
         }
         return null;
     }
@@ -226,6 +226,10 @@ public class IastService {
 
     private Scan apiScanAggregated(Long scanId) throws IOException {
         return objectMapper.readValue(resultGetBodyOfDefaultConnectionToIast("scans/" + scanId + "?aggregated=false"), Scan.class);
+    }
+
+    private Page<Scan> apiScanAggregation(Long projectId, int pageNumber) throws IOException {
+        return objectMapper.readValue(resultGetBodyOfDefaultConnectionToIast("scans/aggregation?pageNumber=" + pageNumber + "&pageSize=100&projectId=" + projectId), new TypeReference<Page<Scan>>(){});
     }
 
     /**
