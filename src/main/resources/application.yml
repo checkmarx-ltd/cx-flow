@@ -94,25 +94,25 @@ jira:
   username: and.tetka@gmail.com
   token: 2W5vCvbganI5aB4egT7RF9DF
   project: BCB
-  issue-type: Task
+  issue-type: Bug
   priorities:
     X: Y # Map Checkmarx severity : to JIRA Priority
   open-transition: Reopen Issue
   close-transition: Close Issue
-# project-key-script:
-  open-status: Open
-#    - Open
-#    - In Progress
-#    - Reopened
-  closed-status: Closed
-#    - Closed
-#    - Resolved
-#  status-category-open-name:
-#    - To Do
-#    - In Progress
-#  statusCategoryClosedName:
-#    - Done
-#  fields:
+  # project-key-script:
+  #  open-status:
+  #    - Open
+  #    - In Progress
+  #    - Reopened
+  #  closed-status:
+  #    - Closed
+  #    - Resolved
+  #  status-category-open-name:
+  #    - To Do
+  #    - In Progress
+  #  statusCategoryClosedName:
+  #    - Done
+  #  fields:
 
 iast:
 #  url: http://xxxxx.iast.net
@@ -124,6 +124,15 @@ iast:
   manager-port: 8380
   username: admin
   password: Cx123456!
+  jira:
+    issue-type: Task
+    username: and.tetka@gmail.com
+    priorities:
+      X: Y # Map Checkmarx severity : to JIRA Priority
+    open-transition: Reopen Issue
+    close-transition: Close Issue
+    open-status: Open
+    closed-status: Closed
 
 cxgo:
   client-secret: xxx
