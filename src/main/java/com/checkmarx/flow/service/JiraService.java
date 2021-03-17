@@ -360,11 +360,12 @@ public class JiraService {
                               String summary,
                               String description,
                               String assignee,
-                              String priorities) throws JiraClientException {
-        log.debug("Retrieving issuetype object for project {}, type {}", projectKey, jiraProperties.getIssueType());
+                              String priorities,
+                              String issueTypeName) throws JiraClientException {
+        log.debug("Retrieving issuetype object for project {}, type {}", projectKey, issueTypeName);
         try {
 
-            IssueType issueType = this.getIssueType(projectKey, jiraProperties.getIssueType());
+            IssueType issueType = this.getIssueType(projectKey, issueTypeName);
             IssueInputBuilder issueBuilder = new IssueInputBuilder(projectKey, issueType.getId());
 
             issueBuilder.setSummary(summary);
@@ -387,13 +388,6 @@ public class JiraService {
             log.error("Error occurred while creating JIRA issue.", e);
             throw new JiraClientException();
         }
-    }
-
-
-    public String createIssue(String summary,
-                              String description,
-                              String priorities) throws JiraClientException {
-        return createIssue(jiraProperties.getProject(), summary, description, jiraProperties.getUsername(), priorities);
     }
 
     private String checkSummaryLength(String summary) {

@@ -1,11 +1,14 @@
 package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.config.IastProperties;
+import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.dto.iast.manager.dto.*;
 import com.checkmarx.flow.exception.JiraClientException;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,6 +23,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
@@ -40,7 +44,13 @@ public class IastService {
 
     private String authTokenHeader;
     private LocalDateTime authTokenHeaderDateGeneration;
+    private final ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule());
 
+
+
+    @Autowired
+    private JiraProperties jiraProperties;
 
     @Autowired
     private JiraService jiraService;
@@ -48,6 +58,7 @@ public class IastService {
 
     public IastService(IastProperties iastProperties) {
         this.iastProperties = iastProperties;
+        severityToPriority.put(0, "Low");
         severityToPriority.put(1, "Low");
         severityToPriority.put(2, "Medium");
         severityToPriority.put(3, "High");
@@ -71,17 +82,18 @@ public class IastService {
 
 
 
-        stopScanAndGetSummaryFromIast();
+        stopScanAndCreateJiraIssueFromIastSummary("11111");
 
     }
 
-    private void stopScanAndGetSummaryFromIast() throws IOException, InterruptedException {
-        Long scanId = stopScanWithTag("11111");
+
+    private void stopScanAndCreateJiraIssueFromIastSummary(String scanTag) throws IOException, InterruptedException {
+        Long scanId = stopScanWithTag(scanTag);
         if (scanId == null){
             return;
         }
 
-        JSONObject scanAggregated = getScanAggregated(scanId);
+//        Scan scanAggregated = apiScanAggregated(scanId);
         getVulnerabilitiesAndCreateJiraIssue(scanId);
     }
 
@@ -104,7 +116,7 @@ public class IastService {
 
             try (BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream(), StandardCharsets.UTF_8))) {
                 StringBuilder response = new StringBuilder();
-                String responseLine = null;
+                String responseLine;
                 while ((responseLine = br.readLine()) != null) {
                     response.append(responseLine.trim());
                 }
@@ -118,34 +130,36 @@ public class IastService {
     }
 
     private void getVulnerabilitiesAndCreateJiraIssue(Long scanId) throws IOException {
-        final JSONObject scanVulnerabilities =
-                new JSONObject(resultGetBodyOfDefaultConnectionToIast("scans/" + scanId + "/vulnerabilities"));
 
-        final JSONArray vulnerabilities = scanVulnerabilities.getJSONArray("vulnerabilities");
-        for (int i = 0; i < vulnerabilities.length(); i++) {
-            JSONObject vulnerability = vulnerabilities.getJSONObject(i);
+        final ScanVulnerabilities scanVulnerabilities = apiScanVulnerabilities(scanId);
 
+        List<VulnerabilityInfo> vulnerabilities = scanVulnerabilities.getVulnerabilities();
+        for (VulnerabilityInfo vulnerability : vulnerabilities) {
             //TODO: have to be "!= 0"
-            if (vulnerability.getNumber("newCount").intValue() == 0) {
-                final JSONArray scansResultsQuery =
-                        new JSONArray(resultGetBodyOfDefaultConnectionToIast("scans/" + scanId + "/results?queryId=" + vulnerability.getNumber("id").intValue()));
-                for (int j = 0; j < scansResultsQuery.length(); j++) {
-                    JSONObject scansResultQuery = scansResultsQuery.getJSONObject(j);
+            if (vulnerability.getNewCount() == 0) {
+                final List<ResultInfo> scansResultsQuery = apiScanResults(scanId, vulnerability.getId());
 
-                    //TODO: remove !
-                    if (!scansResultQuery.getBoolean("newResult")){
+                for (ResultInfo scansResultQuery : scansResultsQuery) {
+                    //TODO: remove "!"
+                    if (!scansResultQuery.isNewResult()) {
                         try {
 
-                            String title = scansResultQuery.getString("name") + ": " + scansResultQuery.getString("url");
+                            String title = scansResultQuery.getName() + ": " + scansResultQuery.getUrl();
 
-                            String description =    iastProperties.getUrl() + ":" + iastProperties.getManagerPort()
-                                    + "/iast-ui/#!/project/" + scanVulnerabilities.getNumber("projectId")
-                                    + "/scan/" + scanVulnerabilities.getNumber("scanId")
-                                    + "?rid=" + scansResultQuery.getNumber("resultId")
-                                    + "&vid=" + vulnerability.getNumber("id");
+                            String description = iastProperties.getUrl() + ":" + iastProperties.getManagerPort()
+                                    + "/iast-ui/#!/project/" + scanVulnerabilities.getProjectId()
+                                    + "/scan/" + scanVulnerabilities.getScanId()
+                                    + "?rid=" + scansResultQuery.getResultId()
+                                    + "&vid=" + vulnerability.getId();
 
 
-                            jiraService.createIssue(title, description, severityToPriority.get(scansResultQuery.getNumber("severity").intValue()));
+                            jiraService.createIssue(
+                                    jiraProperties.getProject(),
+                                    title,
+                                    description,
+                                    iastProperties.getJira().getUsername(),
+                                    severityToPriority.get(scansResultQuery.getSeverity().toValue()),
+                                    iastProperties.getJira().getIssueType());
                         } catch (JiraClientException e) {
                             e.printStackTrace();
                         }
@@ -157,37 +171,33 @@ public class IastService {
     }
 
     private Long stopScanWithTag(String tag) throws IOException, InterruptedException {
-        JSONArray projectsSummary = getAllScans();
-        for (int i = 0; i < projectsSummary.length(); i++) {
-            try {
+        List<ProjectSummary> projectsSummary = apiProjectsSummary();
+        for (ProjectSummary project : projectsSummary) {
 
-            JSONObject project = projectsSummary.getJSONObject(i);
-            JSONObject projectRunning = project.getJSONObject("running");
+            RunningScanAggregation projectRunning = project.getRunning();
 
 
 //                TODO: Decomment work with tags
 //            String projectTag = projectRunning.getString("tag");
 //            if (tag.equals(projectTag)){
-            if (projectRunning.getNumber("riskScore").intValue() != 0) {
-                Long scanId = projectRunning.getNumber("scanId").longValue();
+            if (projectRunning.getRiskScore() != 0) {
+                Long scanId = projectRunning.getScanId();
 
                 for (int j = 0; j < 100; j++) {
                     try {
                         finishScanById(scanId);
-                    } catch (RuntimeException e){
+                    } catch (RuntimeException e) {
                         log.trace("Can't stop scan. That is normal situation when we already stop that scan.", e);
                     }
-                    if (finishDoneScanById(scanId)){
+                    if (finishDoneScanById(scanId)) {
                         return scanId;
                     } else {
+                        //If scan didn't stop have to wait and check again
                         Thread.sleep(500);
                     }
                 }
             }
 
-            } catch (JSONException e){
-                log.trace("Can't find element. That is normal situation when we can't find 'tag'.", e);
-            }
         }
         return null;
     }
@@ -199,18 +209,23 @@ public class IastService {
     private Boolean finishDoneScanById(Long scanId) throws IOException {
         HttpURLConnection con = generateConnectionToIast("scans/" + scanId + "/finish/done", "PUT");
         int responseCode = con.getResponseCode();
-        if (responseCode == 400){
-            return true;
-        }
-        return false;
+        return responseCode == 400;
     }
 
-    private JSONArray getAllScans() throws IOException {
-        return new JSONArray(resultGetBodyOfDefaultConnectionToIast("projects/summary"));
+    private ScanVulnerabilities apiScanVulnerabilities(Long scanId) throws IOException {
+        return objectMapper.readValue(resultGetBodyOfDefaultConnectionToIast("scans/" + scanId + "/vulnerabilities"), ScanVulnerabilities.class);
     }
 
-    private JSONObject getScanAggregated(Long scanId) throws IOException {
-        return new JSONObject(resultGetBodyOfDefaultConnectionToIast("scans/" + scanId + "?aggregated=false"));
+    private List<ResultInfo> apiScanResults(Long scanId, Long vulnerabilityId) throws IOException {
+        return objectMapper.readValue(resultGetBodyOfDefaultConnectionToIast("scans/" + scanId + "/results?queryId=" + vulnerabilityId),  new TypeReference<List<ResultInfo>>(){});
+    }
+
+    private List<ProjectSummary> apiProjectsSummary() throws IOException {
+        return objectMapper.readValue(resultGetBodyOfDefaultConnectionToIast("projects/summary"), new TypeReference<List<ProjectSummary>>(){});
+    }
+
+    private Scan apiScanAggregated(Long scanId) throws IOException {
+        return objectMapper.readValue(resultGetBodyOfDefaultConnectionToIast("scans/" + scanId + "?aggregated=false"), Scan.class);
     }
 
     /**
@@ -239,7 +254,7 @@ public class IastService {
         try (BufferedReader br = new BufferedReader(
                 new InputStreamReader(con.getInputStream(), StandardCharsets.UTF_8))) {
             StringBuilder response = new StringBuilder();
-            String responseLine = null;
+            String responseLine;
             while ((responseLine = br.readLine()) != null) {
                 response.append(responseLine.trim());
             }
