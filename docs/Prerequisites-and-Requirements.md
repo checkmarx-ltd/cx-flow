@@ -7,8 +7,8 @@ The following applications are required:
 | **Jira** | 6.4, 7.x, 8 | Jira Cloud and Software have been tested |
 | **GitHub** | Cloud and Enterprise supported versions | Both WebHook and Issue integration |
 | **GitLab** | Cloud, Community and Enterprise supported versions | Both WebHook and Issue integration |
-| **BitBucket** | Cloud, Server (version 5.x and higher) | WebHook Integration only (no Issue integration) |
-| **Azure DevOps** | Cloud, Server 2019, TFS Server 2018 | Booth WebHook and WorkItem integration |
+| **BitBucket** | Cloud, Server (version 7.2 and higher) | Both WebHook and Issue integration |
+| **Azure DevOps** | Cloud, Server 2019, TFS Server 2018 | Both WebHook and WorkItem integration |
 
 ## Additional Requirements
 * The server requirements depend on your use case. The minimum requirements are: 2 core, 4GB RAM and 20GB disk space
