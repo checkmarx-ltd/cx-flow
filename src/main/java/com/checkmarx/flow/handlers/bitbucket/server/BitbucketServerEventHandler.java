@@ -3,11 +3,12 @@ package com.checkmarx.flow.handlers.bitbucket.server;
 import java.util.List;
 
 import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.controller.WebhookController;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.EventResponse;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.handlers.config.ConfigContextProvider;
+import com.checkmarx.flow.handlers.config.BitBucketConfigContextProvider;
 import com.checkmarx.sdk.dto.sast.CxConfig;
 
 import org.slf4j.Logger;
@@ -24,9 +25,7 @@ public abstract class BitbucketServerEventHandler {
     protected static final String BLOCKER_COMMENT = "/pull-requests/{id}/blocker-comments";
     protected static final String BUILD_API_PATH = "/rest/build-status/latest/commits/{commit}";
     
-
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(BitbucketServerEventHandler.class);
-
 
     public abstract ResponseEntity<EventResponse> execute(String uid);
 
@@ -48,7 +47,7 @@ public abstract class BitbucketServerEventHandler {
     protected ControllerRequest controllerRequest;
 
     @NonNull
-    protected ConfigContextProvider configProvider;
+    protected BitBucketConfigContextProvider configProvider;
 
     
     // WebhookController probably should have been a static utility class.  Doing this to avoid affecting other

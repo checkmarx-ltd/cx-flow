@@ -25,7 +25,7 @@ import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.handlers.bitbucket.server.BitbucketServerEventHandler;
 import com.checkmarx.flow.handlers.bitbucket.server.BitbucketServerMergeHandler;
 import com.checkmarx.flow.handlers.bitbucket.server.BitbucketServerPushHandler;
-import com.checkmarx.flow.handlers.config.ConfigContextProvider;
+import com.checkmarx.flow.handlers.config.BitBucketConfigContextProvider;
 import com.checkmarx.flow.service.BitBucketService;
 import com.checkmarx.flow.service.ConfigurationOverrider;
 import com.checkmarx.flow.service.CxScannerService;
@@ -50,7 +50,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping(value = "/")
 @RequiredArgsConstructor
-public class BitbucketServerController implements ConfigContextProvider {
+public class BitbucketServerController implements BitBucketConfigContextProvider {
 
     private static final String SIGNATURE = "X-Hub-Signature";
     private static final String EVENT = "X-Event-Key";

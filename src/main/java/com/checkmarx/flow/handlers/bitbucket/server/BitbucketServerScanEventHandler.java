@@ -1,7 +1,9 @@
 package com.checkmarx.flow.handlers.bitbucket.server;
 
 import java.util.List;
+import java.util.Optional;
 
+import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.service.BitBucketService;
 import com.checkmarx.flow.utils.HTMLHelper;
@@ -39,7 +41,12 @@ public abstract class BitbucketServerScanEventHandler extends BitbucketServerEve
 
 
     protected String getGitUrl() {
-        return configProvider.getBitBucketProperties().getUrl().concat("/scm/").concat(fromProjectKey.concat("/"))
+        // This is messy since there is no request at the point where the URL is determined, unlike in other SCMs.
+        String url = Optional.ofNullable(controllerRequest.getScmInstance())
+                .map(key -> configProvider.getBitBucketProperties().getOptionalInstances().get(key).getUrl() )
+                .orElse(configProvider.getBitBucketProperties().getUrl());        
+
+        return url.concat("/scm/").concat(fromProjectKey.concat("/"))
                 .concat(fromSlug).concat(".git");
     }
 
@@ -51,7 +58,12 @@ public abstract class BitbucketServerScanEventHandler extends BitbucketServerEve
 
     protected String getEncodedAccessToken() {
         final String CREDENTIAL_SEPARATOR = ":";
-        String[] basicAuthCredentials = configProvider.getBitBucketProperties().getToken().split(CREDENTIAL_SEPARATOR);
+
+        String token = Optional.ofNullable(controllerRequest.getScmInstance())
+                .map(key -> configProvider.getBitBucketProperties().getOptionalInstances().get(key).getToken() )
+                .orElse(configProvider.getBitBucketProperties().getToken() );        
+
+        String[] basicAuthCredentials = token.split(CREDENTIAL_SEPARATOR);
         String accessToken = basicAuthCredentials[1];
 
         String encodedTokenString = ScanUtils.getStringWithEncodedCharacter(accessToken);
@@ -75,8 +87,13 @@ public abstract class BitbucketServerScanEventHandler extends BitbucketServerEve
     }
 
     protected String getRepoSelfUrl(String projectKey, String repoSlug) {
-        String repoSelfUrl = configProvider.getBitBucketProperties().getUrl()
-                .concat(configProvider.getBitBucketProperties().getApiPath()).concat(PROJECT_REPO_PATH);
+
+        String url = Optional.ofNullable(controllerRequest.getScmInstance())
+                .map(key -> configProvider.getBitBucketProperties().getOptionalInstances().get(key).getApiUrl())
+                .orElse(configProvider.getBitBucketProperties().getUrl()
+                        .concat(configProvider.getBitBucketProperties().getApiPath()));
+
+        String repoSelfUrl = url.concat(PROJECT_REPO_PATH);
         repoSelfUrl = repoSelfUrl.replace("{project}", projectKey);
         repoSelfUrl = repoSelfUrl.replace("{repo}", repoSlug);
         return repoSelfUrl;

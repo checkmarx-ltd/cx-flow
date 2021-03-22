@@ -41,6 +41,7 @@ public class BitbucketServerDeleteHandler extends BitbucketServerEventHandler {
                 .branch(ScanUtils.getBranchFromRef(branchNameForDelete))
                 .build();
 
+        webhookUtils.setScmInstance(controllerRequest, request);
         checkForConfigAsCode(request);
         request.setId(uid);    
 

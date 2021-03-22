@@ -36,8 +36,6 @@ public class BitbucketServerMergeHandler extends BitbucketServerScanEventHandler
     @Override
     public ResponseEntity<EventResponse> execute(String uid) {
 
-        controllerRequest = webhookUtils.ensureNotNull(controllerRequest);
-
         try {
 
             BugTracker.Type bugType = BugTracker.Type.BITBUCKETSERVERPULL;

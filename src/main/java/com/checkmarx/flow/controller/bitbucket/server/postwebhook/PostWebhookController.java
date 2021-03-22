@@ -19,7 +19,7 @@ import com.checkmarx.flow.handlers.bitbucket.server.BitbucketServerDeleteHandler
 import com.checkmarx.flow.handlers.bitbucket.server.BitbucketServerEventHandler;
 import com.checkmarx.flow.handlers.bitbucket.server.BitbucketServerMergeHandler;
 import com.checkmarx.flow.handlers.bitbucket.server.BitbucketServerPushHandler;
-import com.checkmarx.flow.handlers.config.ConfigContextProvider;
+import com.checkmarx.flow.handlers.config.BitBucketConfigContextProvider;
 import com.checkmarx.flow.service.BitBucketService;
 import com.checkmarx.flow.service.ConfigurationOverrider;
 import com.checkmarx.flow.service.CxScannerService;
@@ -46,7 +46,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping(value = "/")
 @RequiredArgsConstructor
-public class PostWebhookController implements ConfigContextProvider {
+public class PostWebhookController implements BitBucketConfigContextProvider {
 
     private static final String EVENT = "X-Event-Key";
     private static final String PUSH = EVENT + "=repo:push";

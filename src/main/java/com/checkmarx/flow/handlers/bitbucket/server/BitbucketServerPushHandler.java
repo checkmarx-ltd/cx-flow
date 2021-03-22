@@ -30,7 +30,6 @@ public class BitbucketServerPushHandler extends BitbucketServerScanEventHandler 
 
     @Override
     public ResponseEntity<EventResponse> execute(String uid) {
-        controllerRequest = webhookUtils.ensureNotNull(controllerRequest);
 
         try {
 
