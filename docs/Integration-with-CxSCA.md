@@ -22,7 +22,22 @@ enabled-vulnerability-scanners:
 ```
 [[/Images/SCA1.png|YML example demonstrating enabled vulnerability scanners]]
 
-In addition, add a CxSCA section with the following properties:
+In addition, add one of the CxSCA sections with the following properties:
+
+#######1
+```
+sca:
+  appUrl: [https://sca.scacheckmarx.com](https://sca.scacheckmarx.com)
+  apiUrl: [https://api.scacheckmarx.com](https://api.scacheckmarx.com)
+  accessControlUrl: [https://platform.checkmarx.net](https://platform.checkmarx.net)
+  tenant: your tenant name
+  username: userxx
+  password: pasxx
+```
+
+[[/Images/SCA2.png|YML SCA example]]
+
+#######2
 ```
 sca:
   appUrl: https://eu.sca.checkmarx.net
@@ -33,7 +48,7 @@ sca:
   password: passxx
 ```
 
-[[/Images/SCA2.png|YML SCA example]]
+[[/Images/SCA2A.png|YML SCA example]]
 
 ## <a name="bug">Bug-Trackers</a>
 SCA integration supports tickets management with the following bug trackers :
@@ -186,9 +201,9 @@ In order to open SCA security tickets, set the bug tracker in cxflow app.yml fil
  
 ### CxFlow can init git scan or upload zip folder to scan by sca:
 * git scan:
-  * --scan  --enabled-vulnerability-scanners=sca --app=MyApp --cx-project=test --repo-url=my-repo-url --repo-name=my-repo --branch=master --github  
+  * -scan  --enabled-vulnerability-scanners=sca --app=MyApp --cx-project=test --repo-url=my-repo-url --repo-name=my-repo --branch=master --github  
 * local zip scan:
-  * --scan --app=MyApp --cx-team="my-team" --cx-project="project" --f="/Users/myProjects/project"
+  * -scan --app=MyApp --cx-team="my-team" --cx-project="project" --f="/Users/myProjects/project"
 * get latest scan results:
   * --project --app=MyApp --cx-team="my-team" --cx-project="project" ([use 'project' command](https://github.com/checkmarx-ltd/cx-flow/blob/develop/src/main/java/com/checkmarx/flow/dto/ScanRequest.java))
 
