@@ -47,6 +47,8 @@ public class CxFlowRunner implements ApplicationRunner {
     public static final String PARSE_OPTION = "parse";
     public static final String BATCH_OPTION = "batch";
 
+    private static final String MERGE_ID = "merge_id";
+
     private final FlowProperties flowProperties;
     private final CxScannerService cxScannerService;
     private final JiraProperties jiraProperties;
@@ -184,7 +186,7 @@ public class CxFlowRunner implements ApplicationRunner {
         boolean usingBitBucketCloud = args.containsOption("bb");
         boolean usingBitBucketServer = args.containsOption("bbs");
         CxPropertiesBase cxProperties = cxScannerService.getProperties();
-        
+
         if (((ScanUtils.empty(namespace) && ScanUtils.empty(repoName) && ScanUtils.empty(branch)) &&
                 ScanUtils.empty(application)) && !args.containsOption(BATCH_OPTION)) {
             log.error("Namespace/Repo/Branch or Application (app) must be provided");
@@ -335,10 +337,6 @@ public class CxFlowRunner implements ApplicationRunner {
                 .forceScan(force)
                 .build();
 
-        if(mergeProjectId != 0){
-            request.setRepoProjectId(mergeProjectId);
-        }
-
         request = configOverrider.overrideScanRequestProperties(flowOverride, request);
         /*Determine if BitBucket Cloud/Server is being used - this will determine formatting of URL that links to file/line in repository */
         request.setId(uid);
@@ -349,6 +347,9 @@ public class CxFlowRunner implements ApplicationRunner {
             request.setRepoType(ScanRequest.Repository.BITBUCKETSERVER);
             repoUrl = getBitBuckerServerBrowseUrl(repoUrl);
             request.putAdditionalMetadata("BITBUCKET_BROWSE", repoUrl);
+        } else if (bugType.equals(BugTracker.Type.GITLABMERGE)){
+            request.setRepoProjectId(mergeProjectId);
+            request.putAdditionalMetadata(MERGE_ID, mergeId);
         }
 
         try {
