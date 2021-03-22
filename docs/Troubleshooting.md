@@ -1,16 +1,26 @@
-## Common Issues
-This section refers to common issues that users are facing.
+<br>[Gotchas!](#gotchas)<br>
+<br>[SSL/TLS](#ssltls)
+<br>[XML Encoding](#xmlencoding)
+<br>[JDK Version](#jdk)
 
-### SSL/TLS
+
+## <a name="gotchas">Gotchas!</a>
+* Make sure the path to Git is configured in the Checkmarx web portal under Settings > Application Settings > General
+* The guides here were written for CxSAST version 8.9. For version 9.0+ please see the 9.0 update page. For example, team path now uses / instead of \\
+* Tokens have a maximum lifespan of 365 days. Having a secret rotation cycle in place is an important practice
+* It is important to choose an encryption algorithm appropriate for your deployment 
+* The automatic team name creation and assignment can be overwritten using the multi-tenant parameter in the .yml file
+
+## <a name="ssltls">SSL/TLS</a>
 If any of the connecting components are using an internal CA or self-signed certificate, the Java Runtime in use must trust the appropriate certificates.  Information on this can be found in the JRE folder of the installed Java Runtime, and there under **lib/security**. The Java trust store is typically named **cacerts** and has a default passphrase of **changeit** - note, this is outside of the control of Checkmarx and CxFlow.
 
-### XML Encoding
+## <a name="xmlencoding">XML Encoding</a>
 There have been cases when the Checkmarx REST API responds with XML that is not well encoded, and some defensive programming logic has been introduced to remove non-UTF-8 compatible characters.  This issue surfaces from time to time and detailed logging is required to find the exact problem - See below.
 
-### Debugging
+## <a name="debugging">Debugging</a>
 Debug logs can be enabled by adding the following configuration to the yaml (_application.yml_, or _application-\<profile\>.yml_) properties or by adding additional command line arguments when launching.
 
-#### YAML Configuration
+### YAML Configuration
 ```
 logging:
   file:
@@ -29,7 +39,7 @@ logging:
 ```
 **Note:** including the `wire` and `RestTemplate` sections (as in the example above) will produce lots of log output, including full contents of HTTP requests. Please be aware that such logs may expose sensitive data. If you don't want the log to be this detailed, just remove the whole `logging.level.org` section.   
 
-#### Log Grouping
+### Log Grouping
 Events that drive scanning/results feedback are given a unique ID and that ID is passed through the various logs to ensure you can make a link between all of the events.
 
 ```
@@ -45,12 +55,12 @@ Events that drive scanning/results feedback are given a unique ID and that ID is
 ```
 **Note**: **u9UzT5SU** is the unique event ID in this sample.
 
-#### Command Line Arguments
+### Command Line Arguments
 ```
 <cx-flow command> --logging.level.org.springframework.web.client.RestTemplate=TRACE 
 --logging.level.com.checkmarx.flow.service=DEBUG --logging.level.org.apache.http.wire=TRACE
 ```
-##### Sample Output
+#### Sample Output
 ```
 2019-05-02 10:45:53.052  INFO 23472 --- [  restartedMain] com.checkmarx.flow.CxFlowApplicationCmd  : Starting CxFlowApplicationCmd on xxxxxx with PID 23472 (started by xxxxxx)
 2019-05-02 10:45:53.053  INFO 23472 --- [  restartedMain] com.checkmarx.flow.CxFlowApplicationCmd  : The following profiles are active: cmd
@@ -185,8 +195,8 @@ Disconnected from the target VM, address: '127.0.0.1:61601', transport: 'socket
 2019-05-02 10:46:41.166  INFO 23472 --- [      Thread-24] o.s.s.concurrent.ThreadPoolTaskExecutor  : Shutting down ExecutorService 'webHook
 ```
 
-##### JDK Version
-If you run the Java 8 bundled version of CxFlow, but are using a system JRE/JDK of 10+, you have unsatisfied dependencies regarding SAX/JAXB parsing objects.  This is due to the fact that they have been removed in JRE 10 onward.  The message looks as illustrated below.Simply ensure that the correct JAR/JRE is leveraged to avoid this.  The need to maintain separate builds per JRE is linked to the use of SOAP based APIs for Checkmarx, of which only three APIs are still in use (Login, GetIssueDescription, CreateTeam).  The XML parsing is required as well for ingesting the XML results from Checkmarx.  If both move to a REST/JSON based API request/response model, the dependency is removed.
+## <a name="jdk">JDK Version</a>
+If you run the Java 8 bundled version of CxFlow, but are using a system JRE/JDK of 10+, you have unsatisfied dependencies regarding SAX/JAXB parsing objects.  This is due to the fact that they have been removed in JRE 10 onward.  The message looks as illustrated below. Simply ensure that the correct JAR/JRE is leveraged to avoid this.  The need to maintain separate builds per JRE is linked to the use of SOAP based APIs for Checkmarx, of which only three APIs are still in use (Login, GetIssueDescription, CreateTeam).  The XML parsing is required as well for ingesting the XML results from Checkmarx.  If both move to a REST/JSON based API request/response model, the dependency is removed.
 
 ```
 Error starting ApplicationContext. To display the conditions report re-run your application with 'debug' enabled.
