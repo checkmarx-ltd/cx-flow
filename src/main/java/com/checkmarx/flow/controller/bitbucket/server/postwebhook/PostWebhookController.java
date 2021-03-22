@@ -59,7 +59,7 @@ public class PostWebhookController implements BitBucketConfigContextProvider {
     private static final int CREDS_INDEX = 1;
     private static final int CHANGE_INDEX = 0;
     private static final int BROWSE_URL_INDEX = 0;
-
+    private static final String BROWSE_LINK_NAME = "self";
 
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(PostWebhookController.class);
 
@@ -137,18 +137,19 @@ public class PostWebhookController implements BitBucketConfigContextProvider {
         }
 
 
+
         BitbucketServerEventHandler handler = BitbucketServerPushHandler.builder()
                 .controllerRequest(controllerRequest)
                 .toSlug(event.getRepository().getSlug())
                 .repositoryName(event.getRepository().getSlug())
                 .fromSlug(event.getRepository().getSlug())
-                .branchFromRef(change.getOldState().getName())
+                .branchFromRef(!change.isCreated() ? change.getOldState().getName() : change.getNewState().getName() )
                 .toHash(change.getNewState().getTarget().getHash())
                 .email(event.getActor().getEmailAddress())
                 .fromProjectKey(event.getRepository().getProject().getKey())
                 .toProjectKey(event.getRepository().getProject().getKey())
                 .refId(change.getNewState().getName())
-                .browseUrl(event.getRepository().getLinks().get("self").get(BROWSE_URL_INDEX).getHref() )
+                .browseUrl(event.getRepository().getLinks().get(BROWSE_LINK_NAME).get(BROWSE_URL_INDEX).getHref() )
                 .webhookPayload(body)
                 .configProvider(this)
                 .product(product)
