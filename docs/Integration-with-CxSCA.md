@@ -201,9 +201,9 @@ In order to open SCA security tickets, set the bug tracker in cxflow app.yml fil
  
 ### CxFlow can init git scan or upload zip folder to scan by sca:
 * git scan:
-  * -scan  --enabled-vulnerability-scanners=sca --app=MyApp --cx-project=test --repo-url=my-repo-url --repo-name=my-repo --branch=master --github  
+  * --scan  --enabled-vulnerability-scanners=sca --app=MyApp --cx-project=test --repo-url=my-repo-url --repo-name=my-repo --branch=master --github  
 * local zip scan:
-  * -scan --app=MyApp --cx-team="my-team" --cx-project="project" --f="/Users/myProjects/project"
+  * --scan --app=MyApp --cx-team="my-team" --cx-project="project" --f="/Users/myProjects/project"
 * get latest scan results:
   * --project --app=MyApp --cx-team="my-team" --cx-project="project" ([use 'project' command](https://github.com/checkmarx-ltd/cx-flow/blob/develop/src/main/java/com/checkmarx/flow/dto/ScanRequest.java))
 
