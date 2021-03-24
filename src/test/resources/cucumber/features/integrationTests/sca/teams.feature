@@ -14,9 +14,3 @@ Feature: Cx-Flow SCA teams tests
       | null             |                  |
       | /CxServer        | /CxServer        |
       | /CxServer/MyTeam | /CxServer/MyTeam |
-
-
-  Scenario: Create project without existing team
-    Given scanner is SCA
-    When creating a new project with associated "no_exists_team" value
-    Then bad request error is expected to be thrown
