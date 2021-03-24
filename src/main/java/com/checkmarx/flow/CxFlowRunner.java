@@ -47,7 +47,6 @@ public class CxFlowRunner implements ApplicationRunner {
     public static final String PARSE_OPTION = "parse";
     public static final String BATCH_OPTION = "batch";
 
-    private static final String MERGE_ID = "merge_id";
 
     private final FlowProperties flowProperties;
     private final CxScannerService cxScannerService;
@@ -349,7 +348,7 @@ public class CxFlowRunner implements ApplicationRunner {
             request.putAdditionalMetadata("BITBUCKET_BROWSE", repoUrl);
         } else if (bugType.equals(BugTracker.Type.GITLABMERGE)){
             request.setRepoProjectId(mergeProjectId);
-            request.putAdditionalMetadata(MERGE_ID, mergeId);
+            request.putAdditionalMetadata(FlowConstants.MERGE_ID, mergeId);
         }
 
         try {

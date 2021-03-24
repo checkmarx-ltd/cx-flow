@@ -40,8 +40,6 @@ public class GitLabController extends WebhookController {
     private static final String EVENT = "X-Gitlab-Event";
     private static final String PUSH = EVENT + "=Push Hook";
     private static final String MERGE = EVENT + "=Merge Request Hook";
-    private static final String MERGE_ID = "merge_id";
-    private static final String MERGE_TITLE = "merge_title";
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(GitLabController.class);
     private final FlowService flowService;
     private final HelperService helperService;
@@ -161,8 +159,8 @@ public class GitLabController extends WebhookController {
             request = configOverrider.overrideScanRequestProperties(cxConfig, request);
 
             request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, body.toString());
-            request.putAdditionalMetadata(MERGE_ID,objectAttributes.getIid().toString());
-            request.putAdditionalMetadata(MERGE_TITLE, objectAttributes.getTitle());
+            request.putAdditionalMetadata(FlowConstants.MERGE_ID, objectAttributes.getIid().toString());
+            request.putAdditionalMetadata(FlowConstants.MERGE_TITLE, objectAttributes.getTitle());
 
             request.setId(uid);
             if(helperService.isBranch2Scan(request, branches)){
