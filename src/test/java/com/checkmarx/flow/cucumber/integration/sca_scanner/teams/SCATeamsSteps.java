@@ -92,10 +92,4 @@ public class SCATeamsSteps extends ScaCommonSteps {
 
         Assert.assertEquals(expectedAssignedTeam, actualTeam);
     }
-
-    @Then("bad request error is expected to be thrown")
-    public void validateNotExistsTeam() {
-        Assert.assertEquals(HttpStatus.SC_BAD_REQUEST, errorStatusCode);
-    }
-
 }
