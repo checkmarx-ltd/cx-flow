@@ -32,6 +32,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.slf4j.Logger;
 import org.slf4j.MDC;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -72,6 +73,14 @@ public class PostWebhookController implements BitBucketConfigContextProvider {
     private final BitBucketService bitbucketService;
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
+
+    private ResponseEntity<EventResponse> getEmptyCommitMessage() {
+        return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
+                .message("Empty commit has been handled.")
+                .success(true)
+                .build());
+    }
+
 
     private void validateCredentials (String authHeader, String tokenParam)
     {
@@ -129,6 +138,11 @@ public class PostWebhookController implements BitBucketConfigContextProvider {
             product = ScanRequest.Product.CX.getProduct();
         }
 
+        if (event.getPush().getChanges() == null || event.getPush().getChanges().length == 0)
+        {
+            log.warn("Empty commit, nothing to handle.");
+            return getEmptyCommitMessage();
+        }
 
         BitbucketPushChange change = event.getPush().getChanges()[CHANGE_INDEX];
         if (change.isClosed() && change.getNewState() == null)
