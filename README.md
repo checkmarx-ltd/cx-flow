@@ -11,111 +11,18 @@ https://github.com/checkmarx-ltd/cx-flow/wiki
 Please read latest features and fixes from the Release.txt file
 
 ## Build
-`gradlew clean build`
 
-## Parse
+Refer to [Build](https://github.com/checkmarx-ltd/cx-flow/wiki/Building-CxFlow-from-the-Source)
 
-_Parse mode will use the Checkmarx Scan XML as input to drive the automation_
+## Execution
 
-```
-java -jar ${AUTOMATION_JAR} \
---spring.config.location=${APPLICATION_YML} \
---parse \
---namespace=checkmarx \
---repo-name=Riches.NET \
---repo-url=https://github.com/Custodela/Riches.NET.git \
---branch=master \
---app=Riches.NET \
---f=Checkmarx/Reports/ScanReport.xml \
-```
+<br>Refer to [Parse](https://github.com/checkmarx-ltd/cx-flow/wiki/Execution#parse), for Parse Mode.  Parse mode will use the Checkmarx Scan XML as input to drive the automation.<br>
 
-| Option | Description |
----------|-------------|
---spring.config.location|	Override the main application.yml/properties file for the application.  Defaults to the application.yml packaged within the jar
---parse	| Indicates that a result XML file from Checkmarx will be provided (–f will also be mandatory)
---namespace |	Repository group (Gitlab)/organization (Github)/namesapce (BitBucket). Used as higher level grouping of repositories.  Used along with repo-name and branch for tracking purposes (Jira Only).  If these 3 are not present, then application attribute must be passed.  These values are stored in a Tracking label within Jira.  This value is also stored in the body of the issue.
---repo-name	| Name of the repository.  Used along with repo-name and branch for tracking purposes (Jira Only).  If these 3 are not present, then application attribute must be passed (--app).  These values are stored in a Tracking label within Jira.  This value is also stored in the body of the issue.
---branch |	Branch Used along with repo-name and branch for tracking purposes (Jira Only).  If these 3 are not present, then application attribute must be passed  (--app).  These values are stored in a Tracking label within Jira. This value is also stored in the body of the issue.
---app |	Alternatively used for Tracking purposes within Jira.  This value is also stored in the body of the issue.
---repo-url	| Required if issues tracking with GitHub Issues or GitLab Issues.  This value is also stored in the body of the issue.
---f	| File to be processed.  This the output from Checkmarx CLI, Jenkins/Bamboo Plugin, etc
---config |	Optional.  Configuration override file (JSON).  See details below.
---bbs | Optional.  Indicates the repository is of type BitBucket Server
---bb | Optional.  Indicates the repository is of type BitBucket Cloud
-
-## Project Results (ad-hoc)
-_Project Results/Ad-hoc mode retrieves the latest results for a given project under a specific team within Checkmarx and publishes issues to the configured bug tracking system._
-
-
-```
-java -jar ${AUTOMATION_JAR} \
---spring.config.location=${APPLICATION_YML} \
---project \
---cx-team="CxServer\SP\Checkmarx\custodela-test" \
---cx-project="riches-master" \
---namespace=Custodela \
---repo-name=Riches.NET \
---repo-url=https://github.com/Custodela/Riches.NET.git \
---branch=master \
---app=Riches.NET \
-```
-
-## Batch 
-
-**By Team**
-```
-java -jar ${AUTOMATION_JAR} \
---spring.config.location=${APPLICATION_YML} \
---batch --cx-team="CxServer\SP\Checkmarx\development"
-```
-
-**Entire Checkmarx Instance**
-```
-java -jar ${AUTOMATION_JAR} \
---spring.config.location=${APPLICATION_YML} \
---batch
-```
-
-
-|Option	|Description|
------|----|
---spring.config.location |	Optional.  Override the main application.yml/properties file for the application.  Defaults to the application.yml packaged within the jar
---project|	Indicates that this will be a project results request.
---cx-team|	Team within Checkmarx
---cx-project |	Project under the specify team that the latest results should be pulled for
---alt-project | Project under Azure ADO that should recieve the workitem
---alt-fields | Add additional fields to the workitem. Format is field-name1:field-value1,field-name2:field-value2,etc. Wrap in double quotes if any values contains spaces.
---namespace	| Repository group (Gitlab)/organization (Github)/namesapce (BitBucket). Used as higher level grouping of repositories.  Used along with repo-name and branch for tracking purposes (Jira Only).  If these 3 are not present, then application attribute must be passed.  These values are stored in a Tracking label within Jira.  This value is also stored in the body of the issue.
---repo-name	| Name of the repository.  Used along with repo-name and branch for tracking purposes (Jira Only).  If these 3 are not present, then application attribute must be passed (--app).  These values are stored in a Tracking label within Jira.  This value is also stored in the body of the issue.
---branch |	Branch Used along with repo-name and branch for tracking purposes (Jira Only).  If these 3 are not present, then application attribute must be passed  (--app).  These values are stored in a Tracking label within Jira. This value is also stored in the body of the issue.
---app |	Alternatively used for Tracking purposes within Jira.  This value is also stored in the body of the issue.
---repo-url	| Required if issues tracking with GitHub Issues or GitLab Issues.  This value is also stored in the body of the issue.
---bug-tracker |	Optional.  Default is whatever is specified in the application.yml properties.  Options are github, gitlab, jira, email, none
---config |	Optional.  Configuration override file (JSON).  See details below.
+<br>Refer to [Batch](https://github.com/checkmarx-ltd/cx-flow/wiki/Execution#batch), for Batch Mode.  Batch can be done per project, by team or entire instance.  Project Results/Ad-hoc mode retrieves the latest results for a given project under a specific team within Checkmarx and publishes issues to the configured bug tracking system.<br>
 
 ## WebHook Web Service
 
-**Workflow**
-
-<li>Webhook is registered at the namespace level (aka group, organization) or at the individual project/repository level within GitLab, GitHub, or Bitbucket using a shared key/token and pointing to the Automation Service
-Developer commit's code (PUSH Request)
-<li>WebHook fires a request to the Service along with commit details
-<li>All developers identified within the commit(s) of a PUSH request are notified via email that the scan has been submitted (note: email can be disabled)
-<li>Service determines if the branch is applicable to the service (see Branch details below)
-<li>Service creates a new team (if multi-tenant mode is on) and a project for the particular organization/repository within Checkmarx.  If a project already exists with the same name, the existing project is used
-<li>Project is set to use specific scanning rules (Preset)
-<li>Repository details are updated in the project within Checkmarx
-<li>Scan request is submitted for the project in Checkmarx
-<li>Service monitors the state of the scan, and waits until it is finished
-<li>Once scan is finished, a report is generated and retrieved by the Service
-<li>Findings are filtered based on defined criteria (see Filter details below)
-<li>Service sends an email notification to all committers that scan is complete
-<li>Email includes direct links to issues based on Filtering (optional)
-<li>Service publishes findings to defined Bug Tracking tool
-<li>Issues are collapsed (multiple issues of the same type in the same file are updated within 1 ticket) - See Bug Tracking details below
-<li>Tickets are closed if the issue is remediated on next iteration of scan
-<li>Tickets are re-opened in the event an issue is reintroduced
-<li>All references within a ticket must be addressed before the Ticket is closed
+Refer to [Workflow](https://github.com/checkmarx-ltd/cx-flow/wiki/Workflows), for detailed information on the workflows available.
 
 **Branch**
 Branches are applicable to the scanning platform can be specified through global configuration, url parameter overrides, JSON override file (both repository based and Base64 encoded url parameter)
@@ -517,15 +424,6 @@ GitHubController|	Ping, Push, Pull  (TBD) event HTTP listeners
 GitLabController|	Push, Merge (TBD) event HTTP listeners
 BitbucketController|	Push event HTTP listener
 flowController|	Unused, but intended for Call-back implementation
-
-## Build
-Executable JAR is compiled using Gradle (tested with version 4.10 and 5.0)
-
-**Java 8 JRE:**
-`gradle --build-cache assemble`
-
-**Java 11 JRE:**
-`gradle -b build-11.gradle --build-cache assemble`
 
 ## Contributing
 

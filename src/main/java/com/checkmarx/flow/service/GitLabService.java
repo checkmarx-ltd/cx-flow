@@ -2,6 +2,7 @@ package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.config.GitLabProperties;
 import com.checkmarx.flow.config.ScmConfigOverrider;
+import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.dto.RepoComment;
 import com.checkmarx.flow.dto.RepoIssue;
 import com.checkmarx.flow.dto.ScanRequest;
@@ -47,8 +48,6 @@ public class GitLabService extends RepoService {
     private static final String REPO_CONTENT = "/projects/{id}/repository/tree?ref={branch}";
     private static final int UNKNOWN_INT = -1;
     private static final Logger log = LoggerFactory.getLogger(GitLabService.class);
-    private static final String MERGE_ID = "merge_id";
-    private static final String MERGE_TITLE = "merge_title";
     private static final String HTTP_BODY_WARN_MESSAGE = "HTTP Body is null for content api ";
     private static final String CONTENT_NOT_FOUND_ERROR_MESSAGE = "Content not found in JSON response";
     private static final String ERROR_OCCURRED = "Error occurred";
@@ -156,8 +155,8 @@ public class GitLabService extends RepoService {
 
     public void startBlockMerge(ScanRequest request){
         if(properties.isBlockMerge()) {
-            String mergeId = request.getAdditionalMetadata(MERGE_ID);
-            if(ScanUtils.empty(request.getAdditionalMetadata(MERGE_ID)) || ScanUtils.empty(request.getAdditionalMetadata(MERGE_TITLE))){
+            String mergeId = request.getAdditionalMetadata(FlowConstants.MERGE_ID);
+            if(ScanUtils.empty(request.getAdditionalMetadata(FlowConstants.MERGE_ID)) || ScanUtils.empty(request.getAdditionalMetadata(FlowConstants.MERGE_TITLE))){
                 log.error("merge_id and merge_title was not provided within the request object, which is required for blocking / unblocking merge requests");
                 return;
             }
@@ -166,7 +165,7 @@ public class GitLabService extends RepoService {
             endpoint = endpoint.replace("{iid}", mergeId);
 
             HttpEntity httpEntity = new HttpEntity<>(
-                    getJSONMergeTitle("WIP:CX|".concat(request.getAdditionalMetadata(MERGE_TITLE))).toString(),
+                    getJSONMergeTitle("WIP:CX|".concat(request.getAdditionalMetadata(FlowConstants.MERGE_TITLE))).toString(),
                     createAuthHeaders(request)
             );
             restTemplate.exchange(endpoint,
@@ -176,8 +175,8 @@ public class GitLabService extends RepoService {
 
     void endBlockMerge(ScanRequest request){
         if(properties.isBlockMerge()) {
-            String mergeId = request.getAdditionalMetadata(MERGE_ID);
-            if(ScanUtils.empty(request.getAdditionalMetadata(MERGE_ID)) || ScanUtils.empty(request.getAdditionalMetadata(MERGE_TITLE))){
+            String mergeId = request.getAdditionalMetadata(FlowConstants.MERGE_ID);
+            if(ScanUtils.empty(request.getAdditionalMetadata(FlowConstants.MERGE_ID)) || ScanUtils.empty(request.getAdditionalMetadata(FlowConstants.MERGE_TITLE))){
                 log.error("merge_id and merge_title was not provided within the request object, which is required for blocking / unblocking merge requests");
                 return;
             }
@@ -186,7 +185,7 @@ public class GitLabService extends RepoService {
             endpoint = endpoint.replace("{iid}", mergeId);
 
             HttpEntity httpEntity = new HttpEntity<>(
-                    getJSONMergeTitle(request.getAdditionalMetadata(MERGE_TITLE)
+                    getJSONMergeTitle(request.getAdditionalMetadata(FlowConstants.MERGE_TITLE)
                                               .replace("WIP:CX|","")).toString(),
                     createAuthHeaders(request)
             );
@@ -355,7 +354,8 @@ public class GitLabService extends RepoService {
     private String getCommentUrl(ScanRequest scanRequest, long commentId) {
         String path = scmConfigOverrider.determineConfigApiUrl(properties, scanRequest).concat(MERGE_NOTE_PATH);
         return String.format(path, scanRequest.getRepoProjectId().toString(),
-                             scanRequest.getAdditionalMetadata(MERGE_ID), commentId);
+                             scanRequest.getAdditionalMetadata(FlowConstants.MERGE_ID),
+                             commentId);
     }
 
 }
