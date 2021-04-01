@@ -54,7 +54,7 @@ public class PostWebhookController implements BitBucketConfigContextProvider {
     private static final String MERGE = EVENT + "=pullrequest:created";
     private static final String PR_SOURCE_BRANCH_UPDATED = EVENT + "=pullrequest:updated";
     private static final String AUTH_HEADER = "Authorization";
-    private static final String ROOT_PATH = "/postwebhook";
+    private static final String ROOT = "/postwebhook";
     private static final String TOKEN_PARAM = "token";
     private static final int PASSWORD_INDEX = 1;
     private static final int CREDS_INDEX = 1;
@@ -103,7 +103,7 @@ public class PostWebhookController implements BitBucketConfigContextProvider {
         }
     }
 
-    @PostMapping(value = { ROOT_PATH + "/{product}", ROOT_PATH }, headers = PUSH)
+    @PostMapping(value = { ROOT + "/{product}", ROOT }, headers = PUSH)
     public ResponseEntity<EventResponse> pushRequest(@RequestBody String body,
             @PathVariable(value = "product", required = false) String product,
             @RequestHeader(value = AUTH_HEADER, required = false) String credentials,
@@ -204,7 +204,7 @@ public class PostWebhookController implements BitBucketConfigContextProvider {
         return handler.execute(uid);
     }
 
-    @PostMapping(value = { ROOT_PATH + "/{product}", ROOT_PATH }, headers = MERGE)
+    @PostMapping(value = { ROOT + "/{product}", ROOT }, headers = MERGE)
     public ResponseEntity<EventResponse> mergeRequest(@RequestBody String body,
             @PathVariable(value = "product", required = false) String product,
             @RequestHeader(value = AUTH_HEADER, required = false) String credentials,
@@ -214,7 +214,7 @@ public class PostWebhookController implements BitBucketConfigContextProvider {
 
     }
 
-    @PostMapping(value = { ROOT_PATH + "/{product}", ROOT_PATH }, headers = PR_SOURCE_BRANCH_UPDATED)
+    @PostMapping(value = { ROOT + "/{product}", ROOT }, headers = PR_SOURCE_BRANCH_UPDATED)
     public ResponseEntity<EventResponse> prSourceBranchUpdateRequest(@RequestBody String body,
             @PathVariable(value = "product", required = false) String product,
             @RequestHeader(value = AUTH_HEADER, required = false) String credentials,
