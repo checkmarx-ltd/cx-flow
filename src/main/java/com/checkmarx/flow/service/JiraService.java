@@ -302,9 +302,9 @@ public class JiraService {
             issueBuilder.setSummary(HTMLHelper.getScanRequestIssueKeyWithDefaultProductValue(request, summary));
             issueBuilder.setDescription(this.getBody(issue, request, fileUrl));
             if (assignee != null && !assignee.isEmpty()) {
-                    String accountId = getAssignee(assignee, projectKey);
-                    if(!accountId.isEmpty()) {
-                        issueBuilder.setFieldInput(new FieldInput(IssueFieldId.ASSIGNEE_FIELD, ComplexIssueInputFieldValue.with("accountId", accountId)));
+                    ComplexIssueInputFieldValue jiraAssignee = getAssignee(assignee, projectKey);
+                    if(jiraAssignee != null) {
+                        issueBuilder.setFieldInput(new FieldInput(IssueFieldId.ASSIGNEE_FIELD, jiraAssignee));
                 }
             }
 
@@ -777,7 +777,7 @@ public class JiraService {
         return issue;
     }
 
-    private String getAssignee(String assignee, String projectKey) {
+    private ComplexIssueInputFieldValue getAssignee(String assignee, String projectKey) {
 
         String urlTemplate = String.format(SEARCH_ASSIGNABLE_USER, jiraProperties.getUrl());
         URI endpoint = new DefaultUriBuilderFactory().expand(urlTemplate, projectKey, assignee);
@@ -785,20 +785,25 @@ public class JiraService {
         HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders());
         RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<String> response = restTemplate.exchange(endpoint, HttpMethod.GET, httpEntity, String.class);
-        String accountId = "";
-
+        
         try{
             if(response.getBody() != null) {
                 JSONArray usersArray = new JSONArray(response.getBody());
                 if(!usersArray.isEmpty()) {
                     JSONObject userDetails = usersArray.getJSONObject(0);
-                    accountId = (String) userDetails.get("accountId");
+                    if (userDetails.has("accountId"))
+                        return ComplexIssueInputFieldValue.with("accountId", userDetails.getString("accountId"));
+                    else if (userDetails.has("name"))
+                        return ComplexIssueInputFieldValue.with("name", userDetails.getString("name"));
+                    else
+                        log.warn(String.format("Unable to set assignee to %s for project %s - no user key found.", 
+                            assignee, projectKey));
                 }
             }
         }catch (NullPointerException e){
             log.error("Error retrieving assignee");
         }
-        return accountId;
+        return null;
     }
 
     private HttpHeaders createAuthHeaders(){
