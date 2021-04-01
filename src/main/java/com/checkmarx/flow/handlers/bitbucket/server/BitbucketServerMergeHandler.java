@@ -1,31 +1,27 @@
 package com.checkmarx.flow.handlers.bitbucket.server;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
 
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.EventResponse;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
-
-import org.slf4j.Logger;
-import org.springframework.http.ResponseEntity;
-
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
+import org.springframework.http.ResponseEntity;
+
+import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
 
 @SuperBuilder
 public class BitbucketServerMergeHandler extends BitbucketServerScanEventHandler {
-
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(BitbucketServerMergeHandler.class);
 
     @NonNull
     private String currentBranch;
 
     @NonNull
     private String targetBranch;
-    
+
     @NonNull
     private String fromRefLatestCommit;
 
@@ -47,11 +43,11 @@ public class BitbucketServerMergeHandler extends BitbucketServerScanEventHandler
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
             List<String> branches = webhookUtils.getBranches(controllerRequest, configProvider.getFlowProperties());
 
-            BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, 
-              configProvider.getJiraProperties(), controllerRequest.getBug());
+            BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType,
+                    configProvider.getJiraProperties(), controllerRequest.getBug());
 
-            FilterConfiguration filter = configProvider.getFilterFactory().getFilter(controllerRequest, 
-              configProvider.getFlowProperties());
+            FilterConfiguration filter = configProvider.getFilterFactory().getFilter(controllerRequest,
+                    configProvider.getFlowProperties());
 
             String gitUrl = getGitUrl();
             String gitAuthUrl = getGitAuthUrl(gitUrl);

@@ -1,25 +1,20 @@
 package com.checkmarx.flow.handlers.bitbucket.server;
 
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
-
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.EventResponse;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
-
-import org.slf4j.Logger;
-import org.springframework.http.ResponseEntity;
-
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
+import org.springframework.http.ResponseEntity;
+
+import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
 
 @SuperBuilder
 public class BitbucketServerPushHandler extends BitbucketServerScanEventHandler {
-
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(BitbucketServerPushHandler.class);
 
     @NonNull
     protected String branchFromRef;

@@ -1,50 +1,40 @@
 package com.checkmarx.flow.handlers.bitbucket.server;
 
-import java.util.List;
-import java.util.Optional;
-
-import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.service.BitBucketService;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
-
-import org.slf4j.Logger;
-
 import lombok.NonNull;
 import lombok.Singular;
 import lombok.experimental.SuperBuilder;
+import org.slf4j.Logger;
+
+import java.util.List;
+import java.util.Optional;
 
 @SuperBuilder
 public abstract class BitbucketServerScanEventHandler extends BitbucketServerEventHandler {
-    
-    @NonNull
-    protected String fromSlug;
-
-    @NonNull
-    protected String toProjectKey;
-
-    @NonNull
-    protected String toSlug;
-
-    @NonNull
-    protected String refId;
-
-    @NonNull
-    protected String browseUrl;
-
-    @Singular
-    protected final List<String> emails;
 
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(BitbucketServerScanEventHandler.class);
-
+    @Singular
+    protected final List<String> emails;
+    @NonNull
+    protected String fromSlug;
+    @NonNull
+    protected String toProjectKey;
+    @NonNull
+    protected String toSlug;
+    @NonNull
+    protected String refId;
+    @NonNull
+    protected String browseUrl;
 
     protected String getGitUrl() {
         // This is messy since there is no request at the point where the URL is determined, unlike in other SCMs.
         String url = Optional.ofNullable(controllerRequest.getScmInstance())
-                .map(key -> configProvider.getBitBucketProperties().getOptionalInstances().get(key).getUrl() )
-                .orElse(configProvider.getBitBucketProperties().getUrl());        
+                .map(key -> configProvider.getBitBucketProperties().getOptionalInstances().get(key).getUrl())
+                .orElse(configProvider.getBitBucketProperties().getUrl());
 
         return url.concat("/scm/").concat(fromProjectKey.concat("/"))
                 .concat(fromSlug).concat(".git");
@@ -60,8 +50,8 @@ public abstract class BitbucketServerScanEventHandler extends BitbucketServerEve
         final String CREDENTIAL_SEPARATOR = ":";
 
         String token = Optional.ofNullable(controllerRequest.getScmInstance())
-                .map(key -> configProvider.getBitBucketProperties().getOptionalInstances().get(key).getToken() )
-                .orElse(configProvider.getBitBucketProperties().getToken() );        
+                .map(key -> configProvider.getBitBucketProperties().getOptionalInstances().get(key).getToken())
+                .orElse(configProvider.getBitBucketProperties().getToken());
 
         String[] basicAuthCredentials = token.split(CREDENTIAL_SEPARATOR);
         String accessToken = basicAuthCredentials[1];
@@ -80,7 +70,7 @@ public abstract class BitbucketServerScanEventHandler extends BitbucketServerEve
     }
 
     protected void fillRequestWithCommonAdditionalData(ScanRequest request, String projectKey, String slug,
-            String hookPayload) {
+                                                       String hookPayload) {
         String repoSelfUrl = getRepoSelfUrl(projectKey, slug);
         request.putAdditionalMetadata(BitBucketService.REPO_SELF_URL, repoSelfUrl);
         request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, hookPayload);
@@ -98,5 +88,5 @@ public abstract class BitbucketServerScanEventHandler extends BitbucketServerEve
         repoSelfUrl = repoSelfUrl.replace("{repo}", repoSlug);
         return repoSelfUrl;
     }
-    
+
 }
