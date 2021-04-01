@@ -16,10 +16,10 @@ import java.util.List;
 
 @SuperBuilder
 public abstract class BitbucketServerEventHandler {
-    protected static final String PROJECT_REPO_PATH = "/projects/{project}/repos/{repo}";
+    protected static final String PROJECT_REPO = "/projects/{project}/repos/{repo}";
     protected static final String MERGE_COMMENT = "/pull-requests/{id}/comments";
     protected static final String BLOCKER_COMMENT = "/pull-requests/{id}/blocker-comments";
-    protected static final String BUILD_API_PATH = "/rest/build-status/latest/commits/{commit}";
+    protected static final String BUILD_STATUS = "/rest/build-status/latest/commits/{commit}";
 
     protected final WebhookUtils webhookUtils = new WebhookUtils();
     @NonNull

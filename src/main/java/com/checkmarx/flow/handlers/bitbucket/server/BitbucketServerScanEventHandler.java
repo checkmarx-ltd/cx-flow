@@ -83,7 +83,7 @@ public abstract class BitbucketServerScanEventHandler extends BitbucketServerEve
                 .orElse(configProvider.getBitBucketProperties().getUrl()
                         .concat(configProvider.getBitBucketProperties().getApiPath()));
 
-        String repoSelfUrl = url.concat(PROJECT_REPO_PATH);
+        String repoSelfUrl = url.concat(PROJECT_REPO);
         repoSelfUrl = repoSelfUrl.replace("{project}", projectKey);
         repoSelfUrl = repoSelfUrl.replace("{repo}", repoSlug);
         return repoSelfUrl;

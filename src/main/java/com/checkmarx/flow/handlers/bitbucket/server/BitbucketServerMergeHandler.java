@@ -57,7 +57,7 @@ public class BitbucketServerMergeHandler extends BitbucketServerScanEventHandler
             String mergeEndpoint = repoSelfUrl.concat(MERGE_COMMENT);
             mergeEndpoint = mergeEndpoint.replace("{id}", pullRequestId);
 
-            String buildStatusEndpoint = configProvider.getBitBucketProperties().getUrl().concat(BUILD_API_PATH);
+            String buildStatusEndpoint = configProvider.getBitBucketProperties().getUrl().concat(BUILD_STATUS);
             buildStatusEndpoint = buildStatusEndpoint.replace("{commit}", fromRefLatestCommit);
 
             String blockerCommentUrl = repoSelfUrl.concat(BLOCKER_COMMENT);
