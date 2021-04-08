@@ -44,14 +44,6 @@ public class IastService {
     private final ObjectMapper objectMapper = new ObjectMapper()
             .registerModule(new JavaTimeModule());
 
-
-
-    @Value("${iast-cmd}")
-    private String iastCmd;
-
-    @Value("${iast-scan-tag}")
-    private String iastScanTag;
-
     @Autowired
     private JiraProperties jiraProperties;
 
@@ -80,18 +72,6 @@ public class IastService {
         }
 
         this.iastUrlRoot = iastProperties.getUrl() + ":" + iastProperties.getManagerPort() + "/iast/";
-
-
-
-
-        switch (iastCmd.toLowerCase(Locale.ROOT)) {
-            case "get-scan-tag" :
-                System.out.println(generateUniqTag());
-                return;
-            case "create-jira-issue" :
-                stopScanAndCreateJiraIssueFromIastSummary(iastScanTag);
-                break;
-        }
     }
 
     public String generateUniqTag() {

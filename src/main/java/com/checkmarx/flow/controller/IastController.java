@@ -35,7 +35,6 @@ public class IastController {
                 .build());
     }
 
-
     @PostMapping(value = { "/stopScanAndCreateJiraTask/{scanId}"})
     public ResponseEntity<EventResponse> stopScanAndCreateJiraTask(
             @PathVariable(value = "scanId", required = false) String scanId,
