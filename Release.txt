@@ -226,7 +226,7 @@ Release 1.1
     String getXIssueKey(ScanResults.XIssue issue, ScanRequest request);
     boolean isIssueClosed(Issue issue);
     boolean isIssueOpened(Issue issue);
-* Introduce command line feature to trigger scans (zip) and provide Github Pull Request Feedback
+* Introduce command line feature to trigger scans (zip) and provide Gitub Pull Request Feedback
 
 #NOTES:
 Must include entries for custom bean implementations under the cx-flow yaml block like the following

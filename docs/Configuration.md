@@ -21,7 +21,7 @@
 CxFlow uses **SpringBoot** and requires using an **application.yml** file to drive the execution. The sections below outlines available properties and when/how they can be used in different execution modes.  In addition, all the SpringBoot configuration rules apply. For additional information on SpringBoot, refer to 
 https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html
 
-To allow for bootstrapping the launch process with various configurations, especially with containers, CxFlows uses overrides on the command line using the `--propery.name=Value` format as well as `PROPERTY_NAME` environment variable overrides.
+To allow for bootstrapping the launch process with various configurations, especially with containers, CxFlows uses overrides on the command line using the `--property.name=Value` format as well as `PROPERTY_NAME` environment variable overrides.
 
 All the relevant configuration is defined by the **application.yml** file that resides in the same directory as the jar file, or if an explicit configuration override is provided on the command line as follows:
 
@@ -212,17 +212,17 @@ jira:
      Critical: Highest
      High: High
      Medium: Medium
-     ow: Low
-     informational: Lowest
+     Low: Low
+     Informational: Lowest
   open-transition: In Review
   close-transition: Done
   open-status:
      - To Do
      - In Progress
      - In Review
-     - closed-status:
+  closed-status:
      - Done
- fields:
+  fields:
      - type: result
        name: application
        jira-field-name: Application
@@ -644,13 +644,4 @@ The sample below illustrates an override configuration in JSON format.  It has s
 
 ## <a name="bugtrackers">BugTrackers</a>
 
-The following BugTrackers / Feedback Channels are currently available:
-* XML
-* JSON
-* CSV
-* GitLab
-* GitHub
-* Azure
-* Jira
-
-Refer to the [Bug Tracker documentation](https://github.com/checkmarx-ltd/cx-flow/wiki/Bug-Trackers-and-Feedback-Channels) for further information.
+Refer to the [Bug Tracker documentation](https://github.com/checkmarx-ltd/cx-flow/wiki/Bug-Trackers-and-Feedback-Channels) for a list of all our BugTrackers and Feedback Channels.

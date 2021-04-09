@@ -26,7 +26,7 @@ Example Config As Code:
   "additionalProperties" : {
     "cxFlow": {
       "application": "test app",
-      "branches": ["develop", "master"],
+      "branches": ["develop", "main", "master"],
       "emails": ["xxxx@checkmarx.com"],
       "bugTracker": "JIRA|GitLab|GitHub|Azure",
       "jira": {
@@ -178,7 +178,7 @@ Example Config As Code:
 ```
 
 ## <a name="automatedcodeprofiling">Automated Code Profiling</a>
-Again, Config As Code is currently only implemented Github and GitLab Webhook execution
+Again, Config As Code is currently only implemented GitHub and GitLab Webhook execution
 
 [[/Images/automatedWorkflow1.png|Automated code profiling workflow diagram]]
 [[/Images/automatedWorkflow2.png|Automated code profiling swim lane diagram]]
@@ -187,6 +187,7 @@ Again, Config As Code is currently only implemented Github and GitLab Webhook ex
     * Registration of the webhook will be for push events
 * CxFlow will be configured to process events associated with branches deemed important/protected across the enterprise
     * master
+    * main
     * develop
     * release*
     * etc (TBD)

@@ -1,17 +1,17 @@
 ## <a name="tableofcontents">Table of Contents</a>
-* [Requirements For Labs](#requirementsforlabs)
+* [Requirements For Tutorials](#requirementsfortutorials)
 * [Quick Start](#quickstart)
 * [Triggering Webhook Scans with CxFlow](#webhooktriggering)
-* [GitHub Webhook Lab](#github)
+* [GitHub Webhook Tutorial](#github)
     * [Prep](#githubprep)
-* [GitLab Webhook Lab](#gitlabWebhook)
+* [GitLab Webhook Tutorial](#gitlabWebhook)
     * [Prep](#gitlabprep)
 * [GitLab CI/CD](#gitlabcicd)
     * [Requirements](#gitlabcicdrequirements)
     * [CI/CD Variables](#gitlabcicdvaiables)
     * [Pipeline Configuration](#gitlabpipelineconfiguration)
     * [Run Pipeline and review the results](#gitlabrunpipeline)
-* [Azure DevOps Webhook Lab](#azure)
+* [Azure DevOps Webhook Tutorial](#azure)
     * [Prep](#adoprep)
 * [Azure DevOps Pipeline](#adopipeline)
     * [Windows Agents](#windowsagents)
@@ -22,12 +22,12 @@
     * [Scripts](#adopipelinescripts)
     * [Building](#adopipelinebuilding)
     * [Wget Script](#adopipelinewget)
-* [Bitbucket Cloud Webhook Lab](#bitbucket)
+* [Bitbucket Cloud Webhook Tutorial](#bitbucket)
     * [Prep](#bitbucketprep)
-* [CxFlow CLI & JIRA Lab](#clijira)
+* [CxFlow CLI & JIRA Tutorial](#clijira)
     * [Prep](#cliprep)
     * [Triggering CLI Scans with CxFlow](#clitriggering)
-* [CxFow Batch Mode Lab](#batch)
+* [CxFlow Batch Mode Tutorial](#batch)
     * [Requirements](#batchrequirements)
     * [SMTP Server Prep](#smtpserverprep)
     * [Triggering Scans with CxFlow](#batchtriggering)
@@ -36,7 +36,7 @@
 <br/>
 
 
-## <a name="requirementsforlabs">Requirements For Labs:</a> 
+## <a name="requirementsfortutorials">Requirements For Tutorials:</a> 
 * Create a folder on the C:\ drive called CxFlow
 * Into this folder, download the latest CxFlow .jar for JDK8
 <br/>https://github.com/checkmarx-ltd/cx-flow/releases
@@ -62,7 +62,7 @@ cd C:\CxFlow
 ngrok http 8982
 ```
 ## <a name="quickstart">Quick Start</a>
-This quick start guide describes how to trigger a CxSAST scan on a Pull Request and a Push to a protected Github branch. Pushes to a protected branch will create GitHub Issues from the scan results.
+This quick start guide describes how to trigger a CxSAST scan on a Pull Request and a Push to a protected GitHub branch. Pushes to a protected branch will create GitHub Issues from the scan results.
 
 Requirements:
 * Create a folder called CxFlow
@@ -71,7 +71,7 @@ Requirements:
 <br>**Note** This guide is using CxFlow version 1.5.4, if you download another version, input your version in the command below
 * In the folder create a file titled application.yml
 * Add the text below to the application.yml file replacing any values enclosed in ###\<\>### with your appropriate value 
-<br> Under the Checkmarx heading, you should enter your service account's username, password, and confirm the base-url. Under the Github heading please enter your Github token and web-hook token if you have entered a value for the web-token different from this guide's value of 12345. Finally, enter another port if you are using a port other than 8982.
+<br> Under the Checkmarx heading, you should enter your service account's username, password, and confirm the base-url. Under the GitHub heading please enter your GitHub token and web-hook token if you have entered a value for the web-token different from this guide's value of 12345. Finally, enter another port if you are using a port other than 8982.
 <br>**Note** This .yml file is for CxSAST version 8.9. For later versions, navigate to the 9.0 link on the side bar
 <br>**Note** The client-secret value included here is the correct value for CxSAST and is not actually a secret value. It is the OIDC client secret used for API login to Checkmarx.
 
@@ -128,7 +128,7 @@ github:
 ngrok http 8982
 ```
 * Create an account at www.github.com
-* Create a public repository titled CxFlowGithub
+* Create a public repository titled CxFlowGitHub
 * Import code from your favorite small demo codebase on github. This guide will use <br>https://github.com/psiinon/bodgeit
 * Create a token by clicking on your profile in upper right corner > settings
     * Click Developer settings > Personal Access Tokens > Generate New Token
@@ -149,16 +149,16 @@ java -jar cx-flow-1.5.4.jar --spring.config.location="<path\to>\CxFlow\applicati
     * Click Add Webhook, there should be a checkmarx next to the hook name now
 * Open your IDE of choice. This demo will use IntelliJ
     * Check out code using Check out from Version Control, input the URL for your repo example:
-<br>[https://github.com/<username\>/CxFlowGithub](http://github.com)
+<br>[https://github.com/<username\>/CxFlowGitHub](http://github.com)
     * Open README.md and add a line, example: CxFlowMasterPush-Test1
     * Commit to local git repo and push to origin with comments by clicking the following: VCS > Git > Commit File enter a message like CxFlow push to a protected branch
     * Click commit and push
-    * Click Push and enter Github credentials on popup. Username is your username, password is the token you created above.
+    * Click Push and enter GitHub credentials on popup. Username is your username, password is the token you created above.
 * Navigate to the Checkmarx web portal. You should see a new scan in the CxSAST queue
 <br>Notice the project name is the RepoName-Branch
-<br>Notice the team is the Github organization. This is set by the team line in the .yml file. It auto creates a team if it does not exist. This can be overridden in the config file with the multi-tenant setting. Please see the CxFlow configuration page for more information.
-* When the scan finishes, you should see issues on the Issue tab of your Github repo 
-<br>[https://github.com/<username\>/CxFlowGithub/issues](http://github.com/)
+<br>Notice the team is the GitHub organization. This is set by the team line in the .yml file. It auto creates a team if it does not exist. This can be overridden in the config file with the multi-tenant setting. Please see the CxFlow configuration page for more information.
+* When the scan finishes, you should see issues on the Issue tab of your GitHub repo 
+<br>[https://github.com/<username\>/CxFlowGitHub/issues](http://github.com/)
 * Examine the following issue CX SQL_Injection @ roost/basket.jsp [master]
 * Open the Checkmarx link and examine the finding
 * We will now trigger CxFlow from a Pull Request to a protected branch, from branch security-fix to master
@@ -183,22 +183,22 @@ ResetSet rs = preparedStatement.executeQuery();
     * File > Save All
     * VCS > Git > Commit File and add commit message like added prepared statement on line 55
     * Click Commit and Push, then Push
-* Navigate to Github
+* Navigate to GitHub
     * Navigate to Pull Requests
     * Click Compare and Pull Request > Create Pull Request
     * Alternatively you can create the pull request through the IDE. In IntelliJ click VCS > Create Pull Request
-* In Github there will be some checks that have not finished yet - Checkmarx Scan
+* In GitHub there will be some checks that have not finished yet - Checkmarx Scan
 * In the Checkmarx web portal there will be a new CxSAST scan where the project name is RepoName-Branch
-    * Once the scan finished you can see the post in the Github merge pull request comments with all the vulnerabilites found
+    * Once the scan finished you can see the post in the GitHub merge pull request comments with all the vulnerabilites found
     * The basket.jsp SQLi is gone
     * Click Merge Pull Request > Confirm Merge to accept the risk CxSAST has posted in the comments
 * After confirming the pull request, there will be a new CxSAST scan in the Checkmarx web portal for the master branch
-* In Github Issues there will be one fewer vulnerability
-* In the Checkmarx web portal, the CxFlowGithub-master project will now have both solved and recurrent issues.
+* In GitHub Issues there will be one fewer vulnerability
+* In the Checkmarx web portal, the CxFlowGitHub-master project will now have both solved and recurrent issues.
 
 ## <a name="webhooktriggering">Triggering Webhook Scans with CxFlow</a>
 [Back to Table of Contents](#tableofcontents)
-* Open your IDE of choice. This lab will use IntelliJ
+* Open your IDE of choice. This tutorial will use IntelliJ
     * Check out code using Check out from Version Control, input the URL for your repo example:
 <br/>https://github.com/<username\>/CxFlowBodgeit
     * Open README.md and add a line, example: CxFlowMasterPush-Test1
@@ -248,14 +248,14 @@ ResetSet rs = preparedStatement.executeQuery();
 * In the Checkmarx web portal, the CxFlowBodgeit-master project will now have both solved and recurrent issues. 
 
 
-## <a name="github">GitHub Webhook Lab</a>
+## <a name="github">GitHub Webhook Tutorial</a>
 * [Prep](#githubprep)
 * [Triggering Webhook Scans with CxFlow](#webhooktriggering)
 
 [Back to Table of Contents](#tableofcontents)
 <br/>
 
-This lab is designed to teach the following topics:
+This tutorial is designed to teach the following topics:
 
 * How to scan on a Pull Request to a Protected Branch
 * How to scan on a Push to Protected Branch
@@ -288,21 +288,21 @@ bug-tracker: GitHub
     * Click Add Webhook, there should be a checkmarx next to the hook name now
 * Continue to [Triggering Webhook Scans with CxFlow](#webhooktriggering)
 
-## <a name="gitlabWebhook">GitLab Webhook Lab</a>
+## <a name="gitlabWebhook">GitLab Webhook Tutorial</a>
 * [Prep](#gitlabprep)
 * [Triggering Webhook Scans with CxFlow](#webhooktriggering)
 
 [Back to Table of Contents](#tableofcontents)
 <br/>
 
-This lab is designed to teach the following topics:
+This tutorial is designed to teach the following topics:
 
 * How to scan on a Merge Request to a Protected Branch
 * How to scan on a Push to Protected Branch
 * GitLab Issue Creation on a Push to Protected Branch
         
-### <a name="gitlabprep">Gitlab Prep</a>
-##### [Top of Lab](#gitlabWebhook)
+### <a name="gitlabprep">GitLab Prep</a>
+##### [Top of Tutorial](#gitlabWebhook)
 * Update the bugtracker section of the application.yml file with the following
 ```yaml
 bug-tracker: GitLab
@@ -312,9 +312,9 @@ bug-tracker: GitLab
 * Create an account at http://www.gitlab.com
 * Create a new private group called <yourname\>-checkmarx
 * Create a new subgroup called GitLab CxFlow
-* Create a new private project called cxFlowGitLab
+* Create a new private project called CxFlowGitLab
     * Import code from your favorite small demo codebase
-    * This lab will use https://github.com/psiion/bodgeit
+    * This tutorial will use https://github.com/psiion/bodgeit
 * Click Import Project \> Repo By URL
     * Git Repository URL https://github.com/psiion/bodgeit
     * Project Name = CxFlowGitLab
@@ -340,7 +340,7 @@ bug-tracker: GitLab
   * [Pipeline Configuration](#gitlabpipelineconfiguration)
   * [Run Pipeline and review the results](#gitlabrunpipeline)
 
-[Back to Labs Table of Contents](#tableofcontents)
+[Back to Tutorials Table of Contents](#tableofcontents)
 
 There are several ways of integrating Checkmarx security scans into GitLab’s ecosystem. This document specifically outlines how to integrate GitLab with Checkmarx’s Containerized CxFlow CLI.
 Checkmarx integrates with GitLab, enabling the identification of new security vulnerabilities with proximity to their creation.  GitLab integration triggers Checkmarx scans as defined by the GitLab CI/CD pipeline.  Once a scan is completed, both scan summary information and a link to the Checkmarx Scan Results will be provided.  Both CxSAST and CxSCA are supported within the GitLab integration.
@@ -357,14 +357,14 @@ The following steps represent the containerized CxFlow CLI integration flow:
 
 ` ! Within GitLab, CxFlow CLI will zip the source directory of the repository and send it to the Checkmarx Scan Manager to perform the security scan `
  
-##### [Top of Lab](#gitlabcicd)
+##### [Top of Tutorial](#gitlabcicd)
 ### <a name="gitlabcicdrequirements">Requirements</a>
 GitLab can access a running Checkmarx CxSAST Server with an up-to-date Checkmarx license
 If performing CxSCA scans, you must have a valid CxSCA license and GitLab must be able to access the CxSCA tenant
 To review scan results within GitLab’s Security Dashboard, you need the Gold/Ultimate tier or the GitLab project must be public
   * To review results in the issue management of your choice (i.e. JIRA) configuration is needed in the CxFlow YAML file, please refer to [Bug Tracker documentation](https://github.com/checkmarx-ltd/cx-flow/wiki/Bug-Trackers-and-Feedback-Channels)
 
-##### [Top of Lab](#gitlabcicd)
+##### [Top of Tutorial](#gitlabcicd)
 ### <a name="gitlabcicdvaiables">CI/CD Variables</a>
 To allow for easy configuration, it is necessary to create environment variables with GitLab to run the integration.  For more information on GitLab CI/CD variables, visit here: [GitLab: CI/CD - Environment Variables](https://gitlab.com/help/ci/variables/README#gitlab-cicd-environment-variables)
 Edit the CI/CD variables under Settings → CI / CD → Variables and add the following variables for a CxSAST and/or CxSCA scan :
@@ -374,7 +374,7 @@ Edit the CI/CD variables under Settings → CI / CD → Variables and add the fo
 
 Variable/ Inputs     | Value 
 --------------------|-------------------
-GITLAB_TOKEN | <p>API token to create Merge Request Overview entries, should have “api” privileges. <br>To create a personal token, click your Gitlab profile in the upper right corner >settings <br><br>- Click Access Tokens and add a personal access token.Click Access Tokens and add a personal access token. <br>- Give the token api, read_user, write_repository, read_registry scopes. <br><br> For additional information on creating a Personal Access Token, refer to [GitLab: Personal Access Tokens](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) </p> 
+GITLAB_TOKEN | <p>API token to create Merge Request Overview entries, should have “api” privileges. <br>To create a personal token, click your GitLab profile in the upper right corner >settings <br><br>- Click Access Tokens and add a personal access token.Click Access Tokens and add a personal access token. <br>- Give the token api, read_user, write_repository, read_registry scopes. <br><br> For additional information on creating a Personal Access Token, refer to [GitLab: Personal Access Tokens](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) </p> 
 CX_FLOW_BUG_TRACKER   (Type: Variable)| Type of bug tracking ('GitLabDashboard' or ‘GitLab’).  For vulnerabilities to be exported to GitLab’s Dashboard, use ‘GitLabDashboard’ and for vulnerabilities to be added to GitLab’s Issues, use ‘GitLab’  For more details on complete list of Bug Trackers, please refer to [CxFlow Configuration](https://github.com/checkmarx-ltd/cx-flow/wiki/Configuration) 
 CX_FLOW_ENABLED_VULNERABILITY_SCANNERS | Vulnerability Scanners (sast, sca, ast, cxgo). Multiple comma seperated values allowed.
 CHECKMARX_PASSWORD   (Type: Variable) | Password for CxSAST 
@@ -401,7 +401,7 @@ include: 'https://raw.githubusercontent.com/checkmarx-ltd/cx-flow/master/templat
 
 ```
 
-##### [Top of Lab](#gitlabcicd)
+##### [Top of Tutorial](#gitlabcicd)
 ### <a name="gitlabpipelineconfiguration">Pipeline Configuration</a>
 The GitLab CI/CD pipeline is controlled by a file named ‘.gitlab-ci.yml’ located in the root directory of the project.  Please refer to [GitLab: CI YAML](https://docs.gitlab.com/ee/ci/yaml/README.html) for more info.
 
@@ -434,7 +434,7 @@ stages:
 
 ```
 
-##### [Top of Lab](#gitlabcicd)
+##### [Top of Tutorial](#gitlabcicd)
 ### <a name="gitlabrunpipeline">Run Pipeline and review the results</a>
 ####Run pipeline
 To run a Checkmarx scan, you need to trigger the pipeline.  The trigger is based on the .gitlab-ci.yml and in the provided sample above, it will be triggered on Merge Requests and on changes to the master branch
@@ -465,22 +465,22 @@ An example of Issues created can be found in the below image.
 With the Gold/Ultimate tier for GitLab, or if the project is public, you can review results in GitLab’s Security Dashboard.For information on GitLab’s Security Dashboard, please refer to [GitLab: Security Dashboard](https://docs.gitlab.com/ee/user/application_security/security_dashboard/index.html)
 
 An example of vulnerabilities displayed in the Security Dashboard can be found in the below image.
-##### [Top of Lab](#gitlabcicd)
+##### [Top of Tutorial](#gitlabcicd)
 
-## Sample Gitlab config files for different scanners
+## Sample GitLab config files for different scanners
 
- * [Gitlab config for AST](https://github.com/checkmarx-ltd/cx-flow/blob/master/src/main/resources/samples/gitlab/gitlab-ast-sample.yml)
- * [Gitlab config for SAST and SCA combined](https://github.com/checkmarx-ltd/cx-flow/blob/master/src/main/resources/samples/gitlab/gitlab-sast-sca-sample.yml)
- * [Gitlab config for AST Cloud](https://github.com/checkmarx-ltd/cx-flow/blob/master/src/main/resources/samples/gitlab/gitlab-astcloud-sample.yml)
- * [Gitlab config for SCA](https://github.com/checkmarx-ltd/cx-flow/blob/master/src/main/resources/samples/gitlab/gitlab-sca-sample.yml)
+ * [GitLab config for AST](https://github.com/checkmarx-ltd/cx-flow/blob/master/src/main/resources/samples/gitlab/gitlab-ast-sample.yml)
+ * [GitLab config for SAST and SCA combined](https://github.com/checkmarx-ltd/cx-flow/blob/master/src/main/resources/samples/gitlab/gitlab-sast-sca-sample.yml)
+ * [GitLab config for AST Cloud](https://github.com/checkmarx-ltd/cx-flow/blob/master/src/main/resources/samples/gitlab/gitlab-astcloud-sample.yml)
+ * [GitLab config for SCA](https://github.com/checkmarx-ltd/cx-flow/blob/master/src/main/resources/samples/gitlab/gitlab-sca-sample.yml)
 
 ## <a name="azure">Azure DevOps Webhook Lab</a>
 * [Prep](#adoprep)
 * [Triggering Webhook Scans with CxFlow](#webhooktriggering)
 
-[Back to Labs Table of Contents](#tableofcontents)
+[Back to Tutorials Table of Contents](#tableofcontents)
 <br/>
-This lab is designed to teach the following topics:
+This tutorial is designed to teach the following topics:
 
 * How to  scan on a Merge Request to a Protected Branch
 * How to  scan on a Push to Protected Branch
@@ -498,7 +498,7 @@ bug-tracker: Azure
 * Create a new private project called CxFlowBodgeit
     * Make sure repo type is Git under Advanced
 * Click Repos & Import code from your favorite small demo codebase on GitHub
-    * This lab will use https://github.com/psiinon/bodgeit 
+    * This tutorial will use https://github.com/psiinon/bodgeit 
 * Create a token by clicking your profile in upper right corner > Personal Access Tokens
     * Give the token a name and change Expiration to Custom defined and set to a year
     * Give the token full access to Work Items, Code, Build, Release
@@ -531,7 +531,7 @@ bug-tracker: Azure
     * Click Add Webhook 
 * Continue to [Triggering Webhook Scans with CxFlow](#webhooktriggering)
 
-##### [Top of Lab](#azure)
+##### [Top of Tutorial](#azure)
 
 
 ## <a name="adopipeline">Azure DevOps Pipeline</a>
@@ -544,7 +544,7 @@ bug-tracker: Azure
 * [Building](#adopipelinebuilding)
 * [Wget Script](#adopipelinewget)
 
-[Back to Labs Table of Contents](#tableofcontents)
+[Back to Tutorials Table of Contents](#tableofcontents)
 <br/>
 This documentation is to help organizations create and run CxFlow in Azure DevOps (ADO) Pipelines.
 <br/>The key features of doing this are:
@@ -561,7 +561,7 @@ This documentation is to help organizations create and run CxFlow in Azure DevOp
 <br/>Below are examples of Azure DevOps Pipeline YAML files that use CxFlow to scan the code and create [Work Items](https://docs.microsoft.com/en-us/azure/devops/boards/work-items/about-work-items?view=azure-devops&tabs=agile-process) with vulnerabilities. CxFlow is invoked with custom workflow(s) that an organization might require.
 
 ### <a name="windowsagents">Windows Agents</a>
-##### [Top of Lab](#adopipeline)
+##### [Top of Tutorial](#adopipeline)
 This Windows based script is called entrypoint.ps1 which is the Powershell script that allows developers to run a wrapper around CxFlow. This can be distributed to all (security focused) Agents in the environment along with the application.yml and the Java archive of CxFlow.
 <br/> **Auto-downloader**
 <br/> The Powershell script has the ability to download automatically the current release of CxFlow as a Jar off the GitHub Releases. This feature can be disabled in environments that do not allow out-bound connections to the internet or downloading of binaries.
@@ -586,7 +586,7 @@ stages:
         filePath: '.\entrypoint.ps1'
 ```
 ### <a name="adopipelinedocker">Docker Containers</a>
-##### [Top of Lab](#adopipeline)
+##### [Top of Tutorial](#adopipeline)
 The docker container version of CxFlow runs the exact same code as the Linux based Agents do. The only primary difference is that you can create a Docker image (container all the code and configuration) in a single binary which is immutable and can be distributed by using Docker Registries.
 
 ```yaml
@@ -610,7 +610,7 @@ stages:
         CHECKMARX_PASSWORD: $(CHECKMARX_PASSWORD)
 ```
 ### <a name="adopipelineconfiguration">Configuration</a>
-##### [Top of Lab](#adopipeline)
+##### [Top of Tutorial](#adopipeline)
 The application.yml is where most of the static settings are stored that do not change. These can be configured per organisation and nothing sensitive should be stored in this file unless encrypted (encrypt them using [Jasypt](http://www.jasypt.org/)).
 
 ```yaml
@@ -638,7 +638,7 @@ azure:
   block-merge: true
 ```
 ### <a name="adopipelinenine">When Upgrading to CxSAST v9.0 and above</a>
-##### [Top of Lab](#adopipeline)
+##### [Top of Tutorial](#adopipeline)
 When updating to CxSAST version 9.0 or above, the REST API changes so CxFlow needs to swap to version 9.0 support and some configuration changes need to be done. This requires the following changes:
 <br/>More information can be found on the CxSAST Version 9.0 page
 
@@ -655,7 +655,7 @@ checkmarx:
 The Team syntax changes from version 8.9 to 9.0. Originally back-slashes are now forward-slashes.
 
 ### <a name="adopipelineenvironmentvariables">Environment Variables</a>
-##### [Top of Lab](#adopipeline)
+##### [Top of Tutorial](#adopipeline)
 
 Here is a list the different variables that can be passed into the Docker environment or the endpoint.sh script.
 
@@ -673,13 +673,13 @@ CXFLOW_KEY | No | This key is used for decryption of the tokens or sensitive dat
 CXFLOW_KEY_ALGORITHM | No | Custom algorithm you want to use with Jasypt. The default value is PBEWITHHMACSHA512ANDAES_256.
 
 ### <a name="adopipelinescripts">Scripts</a>
-##### [Top of Lab](#adopipeline)
+##### [Top of Tutorial](#adopipeline)
 These scripts are used on an Azure DevOps Agent as part of a Pipeline. They provide a wrapper around CxFlow to automatically pull out various [built-in Azure Pipeline variables](https://docs.microsoft.com/en-us/azure/devops/pipelines/build/variables?view=azure-devops&tabs=yaml) to provide a seamless experience for organizations. Many of the variables are dictated based on environment variables passed into the Docker container at run time or the application.yml.
 <br/>These can be updated to your requirements and can be different from organization-to-organization.
 <br/>The entrypoint.sh script is to support both Linux based agents and it’s the entry point for the Docker image.
 
 ### <a name="adopipelinebuilding">Building</a>
-##### [Top of Lab](#adopipeline)
+##### [Top of Tutorial](#adopipeline)
 **Docker Image**<br/>
 We recommend that organizations create a git repository of these files to track changes and easily deploy the images for all pipelines in the organisation in a private registry. 
 <br/>Note: This Docker image can be used for any pipelines as long as the ADO variables being supplied are updated to corresponding build systems/bug tracking systems.
@@ -722,7 +722,7 @@ steps:
 ```
 
 ### <a name="adopipelinewget">Wget Script</a>
-##### [Top of Lab](#adopipeline)
+##### [Top of Tutorial](#adopipeline)
 Alternatively, you can download the CxFlow jar directly from the GitHub release page and run using the shell command below to scan the workspace and open work items.
 
 ```yaml
@@ -746,26 +746,26 @@ stages:
 ```
 
 
-## <a name="bitbucket">Bitbucket Cloud Webhook Lab</a>
+## <a name="bitbucket">Bitbucket Cloud Webhook Tutorial</a>
 * [Prep](#bitbucketprep)
 * [Triggering Webhook Scans with CxFlow](#webhooktriggering)
   
 [Back to Table of Contents](#tableofcontents)
 <br/>
 
-This lab is designed to teach the following topics:
+This tutorial is designed to teach the following topics:
 * How to scan on a Merge Request to a Protected Branch
 * How to scan on a Push to Protected Branch which opens tickets in JIRA
 
 ### <a name="bitbucketprep">Bitbucket Prep</a>
-##### [Top of Lab](#bitbucket)
+##### [Top of Tutorial](#bitbucket)
 * Login or sign up for an account at https://www.bitbucket.org
 * **Note** Use the same email address you used or will use to setup JIRA
 * Ensure JIRA & the application.yml are setup according to [CxFlow CLI & JIRA](#clijira)
 * [Connect JIRA and Bitbucket](https://support.atlassian.com/bitbucket-cloud/docs/connect-bitbucket-cloud-to-jira-software-cloud/)
 * Create a new private repository named CxFlowBodgeit by clicking the + button on the sidebar
 * Click Import repository to import code from your favorite small demo codebase on GitHub
-    * This lab will use https://github.com/psiinon/bodgeit 
+    * This tutorial will use https://github.com/psiinon/bodgeit 
 * Create a token by clicking your profile in lower-left corner & Personal settings
     * Click App Passwords & Create app password
     * Create a Label (i.e. CxFlow)
@@ -781,22 +781,22 @@ This lab is designed to teach the following topics:
 * Click Save
 * Continue to [Triggering Webhook Scans with CxFlow](#webhooktriggering)
 
-##### [Top of Lab](#bitbucket)
+##### [Top of Tutorial](#bitbucket)
 
 
-## <a name="clijira">CxFlow CLI & JIRA Lab</a>
+## <a name="clijira">CxFlow CLI & JIRA Tutorial</a>
 * [Prep](#cliprep)
 * [Triggering CLI Scans with CxFlow](#clitriggering)
-* [Back to Labs Table of Contents](#tableofcontents)
+* [Back to Tutorials Table of Contents](#tableofcontents)
 <br/>
 
-This lab is designed to teach the following topics:
+This tutorial is designed to teach the following topics:
 * How to configure a Jira project for CxFlow
 * Automated ticket creation using CxFlow CLI
 * Scanning via CxFlow CLI
 
 ### <a name="cliprep">Jira Prep</a>
-##### [Top of Lab](#clijira)
+##### [Top of Tutorial](#clijira)
 * Sign up for free Atlassian Cloud account at https://www.atlassian.com/try/cloud/signup?bundle=jira-software&edition=free
 * **Note** If your company email is already associated with an Atlassian account, to follow this guide:
     * Open an incognito browser window
@@ -818,7 +818,7 @@ This lab is designed to teach the following topics:
     * Click Copy to clipboard, then paste the token to your script, or elsewhere to save: it should be pasted into the token: <\> of the application.yml
 * Create a custom field for this project and issue type screen by clicking the settings wheel in the top right  corner
     * Click Issues \> Custom Fields \> Create Custom Field
-    * Click Labels and give it a name “Application”
+    * Click Tutorialels and give it a name “Application”
     * Description = CxSAST Project
     * Select the checkboxes next to APPSEC: Kanban Bug Screen & APPSEC: Kanban Default Issue Screen
     * Click Update
@@ -829,7 +829,7 @@ This lab is designed to teach the following topics:
     * Click Update
 
 ### <a name="clitriggering">Triggering Scans with CxFlow</a>
-##### [Top of Lab](#clijira)
+##### [Top of Tutorial](#clijira)
 
 * Update the bugtracker section of the application.yml file with the following
 ```yaml
@@ -864,23 +864,23 @@ apk add --update curl
 curl -O -k https://github.com/checkmarx-ltd/cx-flow/releases/download/1.6.12/cx-flow-1.6.12.jar
 java -jar cx-flow-1.6.12.jar --spring.config.location="./application.yml" --scan --f=. --cx-team="CxServer" --cx-project="Bodgeit" --app="Bodgeit"
 ```
-* [Back to Labs Table of Contents](#tableofcontents)
+* [Back to Tutorials Table of Contents](#tableofcontents)
 
-## <a name="batch">CxFlow Batch Mode Lab</a>
+## <a name="batch">CxFlow Batch Mode Tutorial</a>
 * [Requirements](#batchrequirements)
 * [SMTP Server Prep](#smtpserverprep)
 * [Triggering Scans with CxFlow](#batchtriggering)
 * [EmailPNEVulns.ps1](#emailpne)
 
-[Back to Labs Table of Contents](#tableofcontents)
+[Back to Tutorials Table of Contents](#tableofcontents)
 <br/>
 
-This lab is designed to teach the following topics:
+This tutorial is designed to teach the following topics:
 * Run CxFlow CLI with XML results output
 * Automate email notifications on Proposed Not Exploitable Vulnerabilities using the [EmailPNEVulns.ps1](#emailpne) script below
 
 ### <a name="batchrequirements">Requirements:</a>
-##### [Top of Lab](#batch)
+##### [Top of Tutorial](#batch)
 * Create a folder on the C:\ drive called CxFlow
 * Into this folder, download the latest CxFlow .jar for JDK8
 <br/>https://github.com/checkmarx-ltd/cx-flow/releases
@@ -889,7 +889,7 @@ This lab is designed to teach the following topics:
 * Create a new file called EmailPNEVulns.ps1 in C:\Flow with the text at the bottom of the page and replace any values surrounded in ###<\>### with your appropriate values, see [SMTP Server Prep](#smtpserverprep) steps below
 * In the same folder create a file titled application-email.yml
 * Add the text below to the application-email.yml file replacing any values enclosed in ###\<\>### with your appropriate value 
-<br/> Under the Checkmarx heading, you should enter your service account's username, password, and confirm the base-url. Under the Github heading please enter your Github token and web-hook token if you have entered a value for the web-token different from this guide's value of 12345. Finally, enter another port if you are using a port other than 8982.
+<br/> Under the Checkmarx heading, you should enter your service account's username, password, and confirm the base-url. Under the GitHub heading please enter your GitHub token and web-hook token if you have entered a value for the web-token different from this guide's value of 12345. Finally, enter another port if you are using a port other than 8982.
 <br/>**Note** This .yml file is for CxSAST version 8.9. For later versions, navigate to the 9.0 link on the side bar
 <br/>**Note** The client-secret value included here is the correct value for CxSAST and is not actually a secret value. It is the OIDC client secret used for API login to Checkmarx.
 ```yaml
@@ -931,7 +931,7 @@ cx-xml:
 ```
 
 ### <a name="smtpserverprep">SMTP Server Prep</a>
-##### [Top of Lab](#batch)
+##### [Top of Tutorial](#batch)
 * Open a google chrome browser window & signup for SendGrid using a personal or fake email
     * https://signup.sendgrid.com/
     * **Note** After April 6, 2020, Single Sender Verification may be required, see:
@@ -948,7 +948,7 @@ cx-xml:
 * After the scan completes, open the CxViewer & mark all SQL_Injection as Proposed Not Exploitable
 
 ### <a name="batchtriggering">Triggering Scans with CxFlow</a>
-##### [Top of Lab](#batch)
+##### [Top of Tutorial](#batch)
 * After the .YML file and .PS1 file are completely filled out and saved
 * Run CxFlow in batch mode & the email PowerShell script by opening a Powershell prompt and typing the following
 ```
@@ -963,7 +963,7 @@ java -jar cx-flow-1.6.12.jar --spring.config.location="C:\CxFlow\application-ema
 You can use Windows Task Scheduler to call the above commands/scripts & run this every evening.
 
 ### <a name="emailpne">EmailPNEVulns.ps1</a>
-##### [Top of Lab](#batch)
+##### [Top of Tutorial](#batch)
 ```powershell
 
 # Usage: EmailPNEVulns.ps1 -results_xml <path-to-xml-results> -email_to <comma-separated-email-addresses>
@@ -1086,18 +1086,17 @@ catch {
 }
 
 ```
-* [Back to Labs Table of Contents](#tableofcontents)
-##### [Top of Lab](#batch)
-
+* [Back to Tutorials Table of Contents](#tableofcontents)
+##### [Top of Tutorial](#batch)
 
 
 Pre-requisites:
 
-Have a JIRA project ready with the Application and Category custom fields (see previous labs)
+Have a JIRA project ready with the Application and Category custom fields (see previous tutorials)
 
 Have a private GitHub repo (no webhook required)
 
-Be familiar with config-as-code overrides (see previous labs)
+Be familiar with config-as-code overrides (see previous tutorials)
 
 Goal:
 
@@ -1182,7 +1181,7 @@ Here is a complete main.yml working example with GitHub Secrets. Notice the top 
 
 ## <a name="actions">GitHub Actions with JIRA Integration</a>
 ### Pre-requisites
-* Have a JIRA project ready with the Application and Category custom fields (see previous labs)
+* Have a JIRA project ready with the Application and Category custom fields (see previous tutorials)
 * Have a private GitHub repo (no webhook required)
 * Be familiar with config-as-code overrides
 

@@ -3,11 +3,11 @@ The following applications are required:
 | Software | Version | Notes |
 | -------- | ------- | ----- |
 | **Java Runtime** | 8, 11 | Specific builds exist for both Java 8 and 11. CxFlow can run anywhere with Java 1.8/11+ Runtime available |
-| **CxSAST** | 8.8, 8.9, 9.0 | CxFlow uses Checkmarx's REST APIs, available for version 8.8 and higher |
+| **CxSAST** | 8.8, 8.9, 9.x | CxFlow uses Checkmarx's REST APIs, available for version 8.8 and higher |
 | **Jira** | 6.4, 7.x, 8 | Jira Cloud and Software have been tested |
 | **GitHub** | Cloud and Enterprise supported versions | Both WebHook and Issue integration |
 | **GitLab** | Cloud, Community and Enterprise supported versions | Both WebHook and Issue integration |
-| **BitBucket** | Cloud, Server (version 7.2 and higher) | Both WebHook and Issue integration |
+| **BitBucket** | Cloud, Server (version 7.2 and higher) | WebHook |
 | **Azure DevOps** | Cloud, Server 2019, TFS Server 2018 | Both WebHook and WorkItem integration |
 
 ## Additional Requirements
@@ -21,7 +21,7 @@ The following applications are required:
 * Self-signed certificates must be explicitly trusted by installing them into the Java JRE trustsore (cacerts)
 * To enable automated scanning orchestration and project creation (WebHook Web Service integration), the source repository must be capable of supporting WebHooks, specifically:
   * GitLab
-  * BitBucket Servr/Cloud
+  * BitBucket Server/Cloud
   * GitHub
   * Azure DevOps
   * TFS

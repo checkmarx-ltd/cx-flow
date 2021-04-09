@@ -41,7 +41,7 @@ jira:
       High: High
       Medium: Medium
       Low: Low
-         informational: Lowest
+      Informational: Lowest
    pen-transition: In Review
    close-transition: Done
    open-status:
@@ -83,7 +83,7 @@ priorities:
   High: High
   Medium: Medium
   Low: Low
-  informational: Lowest
+  Informational: Lowest
 ```
 
 The value on the left side reflects the Checkmarx severity. The value to the right reflects the priority assigned to the respective issue in Jira.
@@ -91,14 +91,14 @@ The value on the left side reflects the Checkmarx severity. The value to the rig
 ### <a name="transitions">Transitions</a>
 It is very important that issues driven by CxFlow have the ability to transition to and from the open or close transition states regardless of what state the issue is in.  In the event that an issue cannot use the appropriate transition defined, it will fail.
 ```
-open-transition: In Review`
-close-transition: Done*`
-open-status:`
-  - To Do`
-  - In Progress`
-  - In Review`
-closed-status:`
-  - Done`
+open-transition: In Review
+close-transition: Done*
+open-status:
+  - To Do
+  - In Progress
+  - In Review
+closed-status:
+  - Done
 ```
 
 * open-transition → this is the transition to apply to an issue when **re-opening** an issue 
