@@ -47,34 +47,32 @@ import java.util.stream.Collectors;
 @Slf4j
 public class JiraService {
 
-    private JiraRestClient client;
-    private IssueRestClient issueClient;
-    private ProjectRestClient projectClient;
-    private MetadataRestClient metaClient;
-    private URI jiraURI;
+    private static final String LABEL_FIELD_TYPE = "labels";
+    private static final String SECURITY_FIELD_TYPE = "security";
+    private static final String VALUE_FIELD_TYPE = "value";
+    private static final String NAME_FIELD_TYPE = "name";
+    private static final String CHILD_FIELD_TYPE = "child";
+    private static final String ACCOUNT_ID = "accountId";
+    private static final String CASCADE_PARENT_CHILD_DELIMITER = ";";
+    private static final int MAX_RESULTS_ALLOWED = 1000000;
+    private static final String SEARCH_ASSIGNABLE_USER = "%s/rest/api/latest/user/assignable/search?project={projectKey}&query={assignee}";
     private final JiraProperties jiraProperties;
     private final FlowProperties flowProperties;
     private final String parentUrl;
     private final String grandParentUrl;
     private final CodeBashingService codeBashingService;
     private final HelperService helperService;
+    //Map used to store/retrieve custom field values
+    private final ConcurrentHashMap<String, Map<String, String>> customFields = new ConcurrentHashMap<>();
+    private JiraRestClient client;
+    private IssueRestClient issueClient;
+    private ProjectRestClient projectClient;
+    private MetadataRestClient metaClient;
+    private URI jiraURI;
     private Map<String, ScanResults.XIssue> nonPublishedScanResultsMap = new HashMap<>();
-
     private List<String> currentNewIssuesList = new ArrayList<>();
     private List<String> currentUpdatedIssuesList = new ArrayList<>();
     private List<String> currentClosedIssuesList = new ArrayList<>();
-
-    //Map used to store/retrieve custom field values
-    private final ConcurrentHashMap<String, Map<String, String>> customFields = new ConcurrentHashMap<>();
-
-    private static final String LABEL_FIELD_TYPE = "labels";
-    private static final String SECURITY_FIELD_TYPE = "security";
-    private static final String VALUE_FIELD_TYPE = "value";
-    private static final String NAME_FIELD_TYPE = "name";
-    private static final String CHILD_FIELD_TYPE = "child";
-    private static final String CASCADE_PARENT_CHILD_DELIMITER  = ";";
-    private static final int MAX_RESULTS_ALLOWED = 1000000;
-    private static final String SEARCH_ASSIGNABLE_USER = "%s/rest/api/latest/user/assignable/search?project={projectKey}&query={assignee}";
 
     public JiraService(JiraProperties jiraProperties, FlowProperties flowProperties,
                        CodeBashingService codeBashingService,
@@ -85,6 +83,20 @@ public class JiraService {
         grandParentUrl = jiraProperties.getGrandParentUrl();
         this.codeBashingService = codeBashingService;
         this.helperService = helperService;
+    }
+
+    private static void validateFieldRequestParams(String jiraProject, String issueType) {
+        String missingField = null;
+        if (StringUtils.isEmpty(jiraProject)) {
+            missingField = "Jira project";
+        } else if (StringUtils.isEmpty(issueType)) {
+            missingField = "Issue type";
+        }
+        if (missingField != null) {
+            throw new IllegalArgumentException(String.format(
+                    "Unable to load custom fields. %s is not specified. Please make sure it is present in the configuration.",
+                    missingField));
+        }
     }
 
     @PostConstruct
@@ -113,12 +125,10 @@ public class JiraService {
         }
     }
 
-
     private void configJira() {
         if (flowProperties.getBugTracker().equalsIgnoreCase("JIRA") ||
-            flowProperties.getBugTrackerImpl().stream().map(String::toLowerCase)
-                    .collect(Collectors.toList()).contains("jira"))
-        {
+                flowProperties.getBugTrackerImpl().stream().map(String::toLowerCase)
+                        .collect(Collectors.toList()).contains("jira")) {
             configurOpenClosedStatuses();
         }
     }
@@ -127,8 +137,8 @@ public class JiraService {
         prepareJiraOpenClosedStatuses();
         if (jiraProperties.getClosedStatus().isEmpty()) {
             Iterable<Status> statuses = client.getMetadataClient().getStatuses().claim();
-            for(Status status: statuses) {
-                if(isStatusClosed(status)) {
+            for (Status status : statuses) {
+                if (isStatusClosed(status)) {
                     jiraProperties.getClosedStatus().add(status.getName());
                 }
             }
@@ -136,8 +146,8 @@ public class JiraService {
 
         if (jiraProperties.getOpenStatus().isEmpty()) {
             Iterable<Status> statuses = client.getMetadataClient().getStatuses().claim();
-            for(Status status: statuses) {
-                if(isStatusOpen(status)) {
+            for (Status status : statuses) {
+                if (isStatusOpen(status)) {
                     jiraProperties.getOpenStatus().add(status.getName());
                 }
             }
@@ -154,8 +164,6 @@ public class JiraService {
     private boolean isStatusOpen(Status status) {
         return jiraProperties.getStatusCategoryOpenName().contains(status.getStatusCategory().getName());
     }
-
-
 
     private List<Issue> getIssues(ScanRequest request) {
         log.info("Executing getIssues API call");
@@ -180,8 +188,7 @@ public class JiraService {
                     jiraProperties.getLabelTracker(),
                     jiraProperties.getBranchLabelPrefix(), request.getBranch()
             );
-        }/*Only application and repo provided */
-        else if (!ScanUtils.empty(request.getApplication()) && !ScanUtils.empty(request.getRepoName())) {
+        }/*Only application and repo provided */ else if (!ScanUtils.empty(request.getApplication()) && !ScanUtils.empty(request.getRepoName())) {
 
             jql = String.format("project = %s and issueType = \"%s\" and (\"%s\" = \"%s\" and \"%s\" = \"%s:%s\" and \"%s\" = \"%s:%s\")",
                     bugTracker.getProjectKey(),
@@ -194,8 +201,7 @@ public class JiraService {
                     jiraProperties.getRepoLabelPrefix(), request.getRepoName()
             );
 
-        }/*Only application provided*/
-        else if (!ScanUtils.empty(request.getApplication())) {
+        }/*Only application provided*/ else if (!ScanUtils.empty(request.getApplication())) {
             jql = String.format("project = %s and issueType = \"%s\" and (\"%s\" = \"%s\" and \"%s\" = \"%s:%s\")",
                     bugTracker.getProjectKey(),
                     bugTracker.getIssueType(),
@@ -210,15 +216,15 @@ public class JiraService {
         }
         log.debug("jql query: {}", jql);
         HashSet<String> fields = new HashSet<>();
-        Collections.addAll(fields, "key","project","issuetype","summary",LABEL_FIELD_TYPE,"created","updated","status");
-        
+        Collections.addAll(fields, "key", "project", "issuetype", "summary", LABEL_FIELD_TYPE, "created", "updated", "status");
+
 
         SearchResult searchResults;
         int totalResultsCount = MAX_RESULTS_ALLOWED;
         SearchRestClient searchClient = this.client.getSearchClient();
         //Retrieve JQL results through pagination (jira.max-jql-results per page -> default 50), don't allow less than 10.
         int maxJqlResultsPerPage = Integer.max(10, jiraProperties.getMaxJqlResults());
-        for ( int startAt = 0 ; startAt < totalResultsCount ; startAt += maxJqlResultsPerPage ) {
+        for (int startAt = 0; startAt < totalResultsCount; startAt += maxJqlResultsPerPage) {
             searchResults = searchClient.searchJql(jql, maxJqlResultsPerPage, startAt, fields).claim();
             searchResults.getIssues().forEach(issues::add);
             totalResultsCount = Integer.min(searchResults.getTotal(), MAX_RESULTS_ALLOWED);
@@ -302,9 +308,9 @@ public class JiraService {
             issueBuilder.setSummary(HTMLHelper.getScanRequestIssueKeyWithDefaultProductValue(request, summary));
             issueBuilder.setDescription(this.getBody(issue, request, fileUrl));
             if (assignee != null && !assignee.isEmpty()) {
-                    String accountId = getAssignee(assignee, projectKey);
-                    if(!accountId.isEmpty()) {
-                        issueBuilder.setFieldInput(new FieldInput(IssueFieldId.ASSIGNEE_FIELD, ComplexIssueInputFieldValue.with("accountId", accountId)));
+                ComplexIssueInputFieldValue jiraAssignee = getAssignee(assignee, projectKey);
+                if (jiraAssignee != null) {
+                    issueBuilder.setFieldInput(new FieldInput(IssueFieldId.ASSIGNEE_FIELD, jiraAssignee));
                 }
             }
 
@@ -522,7 +528,7 @@ public class JiraService {
                                 break;
                             case "loc":
                                 value = "";
-                                if(issue.getDetails() != null) {
+                                if (issue.getDetails() != null) {
                                     List<Integer> lines = issue.getDetails().entrySet()
                                             .stream()
                                             .filter(x -> x.getKey() != null && x.getValue() != null && !x.getValue().isFalsePositive())
@@ -574,8 +580,8 @@ public class JiraService {
                                 if (issue.getDetails() != null) {
                                     issue.getDetails().entrySet()
                                             .stream()
-                                            .filter( x -> x.getKey( ) != null && x.getValue() != null && x.getValue().getComment() != null && !x.getValue().getComment().isEmpty())
-                                            .forEach( c -> comments.append(String.format(commentFmt, c.getKey(), c.getValue().getComment())));
+                                            .filter(x -> x.getKey() != null && x.getValue() != null && x.getValue().getComment() != null && !x.getValue().getComment().isEmpty())
+                                            .forEach(c -> comments.append(String.format(commentFmt, c.getKey(), c.getValue().getComment())));
                                     value = comments.toString();
                                 }
                                 break;
@@ -683,13 +689,12 @@ public class JiraService {
         // neither can be empty; enclose in quotes if spaces/special characters
         // must match case
         String[] selectedValues = StringUtils.split(value, CASCADE_PARENT_CHILD_DELIMITER);
-        if(selectedValues.length == 2) {
+        if (selectedValues.length == 2) {
             Map<String, Object> cascadingValues = new HashMap<>();
             cascadingValues.put(VALUE_FIELD_TYPE, selectedValues[0].trim());
             cascadingValues.put(CHILD_FIELD_TYPE, ComplexIssueInputFieldValue.with(VALUE_FIELD_TYPE, selectedValues[1].trim()));
             issueBuilder.setFieldValue(customField, new ComplexIssueInputFieldValue(cascadingValues));
-        }
-        else {
+        } else {
             log.warn("Invalid value for jira field type {}", f.getJiraFieldType());
         }
     }
@@ -719,9 +724,8 @@ public class JiraService {
 
     /**
      * Transitions an issue based on the issue id and transition name
-     *
+     * <p>
      * TODO handle re-open transition fields
-     *
      */
     private Issue transitionIssue(String bugId, String transitionName) throws JiraClientException {
         Issue issue;
@@ -777,7 +781,7 @@ public class JiraService {
         return issue;
     }
 
-    private String getAssignee(String assignee, String projectKey) {
+    private ComplexIssueInputFieldValue getAssignee(String assignee, String projectKey) {
 
         String urlTemplate = String.format(SEARCH_ASSIGNABLE_USER, jiraProperties.getUrl());
         URI endpoint = new DefaultUriBuilderFactory().expand(urlTemplate, projectKey, assignee);
@@ -785,23 +789,28 @@ public class JiraService {
         HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders());
         RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<String> response = restTemplate.exchange(endpoint, HttpMethod.GET, httpEntity, String.class);
-        String accountId = "";
 
-        try{
-            if(response.getBody() != null) {
+        try {
+            if (response.getBody() != null) {
                 JSONArray usersArray = new JSONArray(response.getBody());
-                if(!usersArray.isEmpty()) {
+                if (!usersArray.isEmpty()) {
                     JSONObject userDetails = usersArray.getJSONObject(0);
-                    accountId = (String) userDetails.get("accountId");
+                    if (userDetails.has(ACCOUNT_ID))
+                        return ComplexIssueInputFieldValue.with(ACCOUNT_ID, userDetails.getString(ACCOUNT_ID));
+                    else if (userDetails.has("name"))
+                        return ComplexIssueInputFieldValue.with("name", userDetails.getString("name"));
+                    else
+                        log.warn(String.format("Unable to set assignee to %s for project %s - no user key found.",
+                                assignee, projectKey));
                 }
             }
-        }catch (NullPointerException e){
+        } catch (NullPointerException e) {
             log.error("Error retrieving assignee");
         }
-        return accountId;
+        return null;
     }
 
-    private HttpHeaders createAuthHeaders(){
+    private HttpHeaders createAuthHeaders() {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
         httpHeaders.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
@@ -856,9 +865,9 @@ public class JiraService {
             Map<String, String> fields = new HashMap<>();
             CimProject cim = iterator.next();
             cim.getIssueTypes().forEach(issueTypes ->
-                issueTypes.getFields().forEach((id, value) ->
-                    fields.put(value.getName(), id)
-                )
+                    issueTypes.getFields().forEach((id, value) ->
+                            fields.put(value.getName(), id)
+                    )
             );
 
             log.info("finished Loading {} new custom fields", fields.size());
@@ -868,25 +877,11 @@ public class JiraService {
 
     }
 
-    private static void validateFieldRequestParams(String jiraProject, String issueType) {
-        String missingField = null;
-        if (StringUtils.isEmpty(jiraProject)) {
-            missingField = "Jira project";
-        } else if (StringUtils.isEmpty(issueType)) {
-            missingField = "Issue type";
-        }
-        if (missingField != null) {
-            throw new IllegalArgumentException(String.format(
-                    "Unable to load custom fields. %s is not specified. Please make sure it is present in the configuration.",
-                    missingField));
-        }
-    }
-
     private String getCustomFieldByName(String jiraProject, String issueType, String fieldName) {
         log.debug("Getting custom field {}", fieldName);
         //TODO logic for forcing a refresh of custom fields
         Map<String, String> fields = this.customFields.get(jiraProject.concat(issueType));
-        if(!fields.isEmpty()){
+        if (!fields.isEmpty()) {
             return fields.get(fieldName);
         }
         return null;
@@ -910,12 +905,12 @@ public class JiraService {
         List<ScanResults.XIssue> issues = new ArrayList<>();
 
 
-        Optional.ofNullable(results.getAstResults()).ifPresent( s -> {
+        Optional.ofNullable(results.getAstResults()).ifPresent(s -> {
             List<ScanResults.XIssue> scaIssues = ScanUtils.setASTXIssuesInScanResults(results);
             issues.addAll(scaIssues);
         });
-        
-        Optional.ofNullable(results.getScaResults()).ifPresent( s -> {
+
+        Optional.ofNullable(results.getScaResults()).ifPresent(s -> {
             List<ScanResults.XIssue> scaIssues = ScanUtils.scaToXIssues(s);
             issues.addAll(scaIssues);
         });
@@ -978,7 +973,7 @@ public class JiraService {
         boolean useBranch = isUseBranch(request);
 
         if (useBranch) {
-            if (Optional.ofNullable(issue.getScaDetails()).isPresent() ) {
+            if (Optional.ofNullable(issue.getScaDetails()).isPresent()) {
                 issue.getScaDetails().stream().findAny().ifPresent(any -> {
                     body.append(any.getFinding().getDescription()).append(HTMLHelper.CRLF).append(HTMLHelper.CRLF);
                     body.append(String.format(SCATicketingConstants.SCA_JIRA_ISSUE_BODY, any.getFinding().getSeverity(), any.getVulnerabilityPackage().getName(), request.getBranch())).append(HTMLHelper.CRLF).append(HTMLHelper.CRLF);
@@ -988,7 +983,7 @@ public class JiraService {
             }
 
         } else {
-            if (Optional.ofNullable(issue.getScaDetails()).isPresent() ) {
+            if (Optional.ofNullable(issue.getScaDetails()).isPresent()) {
                 issue.getScaDetails().stream().findAny().ifPresent(any -> {
                     body.append(any.getFinding().getDescription()).append(HTMLHelper.CRLF).append(HTMLHelper.CRLF);
                     body.append(String.format(SCATicketingConstants.SCA_JIRA_ISSUE_BODY_WITHOUT_BRANCH, any.getFinding().getSeverity(), any.getVulnerabilityPackage().getName())).append(HTMLHelper.CRLF).append(HTMLHelper.CRLF);
@@ -1001,7 +996,7 @@ public class JiraService {
         Optional.ofNullable(issue.getDescription())
                 .ifPresent(d -> body.append(d.trim()).append(HTMLHelper.CRLF).append(HTMLHelper.CRLF));
 
-        Map<String, String> displayedParametersMap = new LinkedHashMap <>();
+        Map<String, String> displayedParametersMap = new LinkedHashMap<>();
 
         displayedParametersMap.put("*Namespace:* ", request.getNamespace());
         displayedParametersMap.put("*Repository:* ", request.getRepoName());
@@ -1013,8 +1008,8 @@ public class JiraService {
         displayedParametersMap.put("*Severity:* ", issue.getSeverity());
         displayedParametersMap.put("*CWE:* ", issue.getCwe());
         displayedParametersMap.put("*Status:* ", issue.getVulnerabilityStatus());
-        
-        displayedParametersMap.forEach((k, v ) -> {
+
+        displayedParametersMap.forEach((k, v) -> {
             if (!ScanUtils.empty(v)) {
                 body.append(k).append(v).append(HTMLHelper.CRLF);
             }
@@ -1024,7 +1019,7 @@ public class JiraService {
                 .append("*Addition Info*").append(HTMLHelper.CRLF)
                 .append("----").append(HTMLHelper.CRLF);
 
-        if (!ScanUtils.empty(issue.getLink()) ) {
+        if (!ScanUtils.empty(issue.getLink())) {
             body.append("[Checkmarx|").append(issue.getLink()).append("]").append(HTMLHelper.CRLF);
         }
         if (!ScanUtils.anyEmpty(issue.getCwe(), flowProperties.getMitreUrl())) {
@@ -1033,8 +1028,7 @@ public class JiraService {
 
         Map<String, Object> additionalDetails = issue.getAdditionalDetails();
 
-        if (!MapUtils.isEmpty(additionalDetails) && additionalDetails.containsKey(FlowConstants.CODE_BASHING_LESSON))
-        {
+        if (!MapUtils.isEmpty(additionalDetails) && additionalDetails.containsKey(FlowConstants.CODE_BASHING_LESSON)) {
             body.append("[Training|").append(additionalDetails.get(FlowConstants.CODE_BASHING_LESSON)).append("]").append(HTMLHelper.CRLF);
         }
         if (!ScanUtils.empty(flowProperties.getWikiUrl())) {
@@ -1042,7 +1036,7 @@ public class JiraService {
         }
 
         if (MapUtils.isNotEmpty(additionalDetails) && additionalDetails.containsKey(ScanUtils.RECOMMENDED_FIX)) {
-           body.append("[Recommended Fix|").append(additionalDetails.get(ScanUtils.RECOMMENDED_FIX)).append("]").append(HTMLHelper.CRLF);
+            body.append("[Recommended Fix|").append(additionalDetails.get(ScanUtils.RECOMMENDED_FIX)).append("]").append(HTMLHelper.CRLF);
         }
 
         if (issue.getDetails() != null && !issue.getDetails().isEmpty()) {
@@ -1135,7 +1129,7 @@ public class JiraService {
             scaDetailsMap.put("Publish Date", scaDetails.getFinding().getPublishDate());
             scaDetailsMap.put("Current Package Version", currentPackageVersion);
             Optional.ofNullable(scaDetails.getFinding().getFixResolutionText()).ifPresent(f ->
-                scaDetailsMap.put("Remediation Upgrade Recommendation", f)
+                    scaDetailsMap.put("Remediation Upgrade Recommendation", f)
 
             );
 
@@ -1196,7 +1190,7 @@ public class JiraService {
             parent.setBugTracker(bugTracker);
             issuesParent = this.getIssues(parent);
             if (grandParentUrl.length() == 0) {
-                 log.info("Grandparent field is empty");
+                log.info("Grandparent field is empty");
                 issuesGrandParent = null;
             } else {
                 BugTracker bugTrackerGrandParenet;
@@ -1232,8 +1226,7 @@ public class JiraService {
                         Issue fpIssue;
                         fpIssue = checkForFalsePositiveIssuesInList(request, xIssue, currentIssue, issue);
                         closeIssueInCaseOfIssueIsInOpenState(request, closedIssues, fpIssue);
-                    }/*Ignore any with label indicating false positive*/
-                    else if (!issue.getLabels().contains(jiraProperties.getFalsePositiveLabel())) {
+                    }/*Ignore any with label indicating false positive*/ else if (!issue.getLabels().contains(jiraProperties.getFalsePositiveLabel())) {
                         updateIssueAndAddToNewIssuesList(request, updatedIssues, xIssue, currentIssue, issue);
                     } else {
                         log.info("Skipping issue marked as false-positive or has False Positive state with key {}", issueCurrentKey);
@@ -1268,12 +1261,13 @@ public class JiraService {
         setCurrentNewIssuesList(newIssues);
         setCurrentUpdatedIssuesList(updatedIssues);
         setCurrentClosedIssuesList(closedIssues);
-        
+
         return ticketsMap;
     }
 
     /**
      * Determines effective jira project key that can be used by Bug tracker.
+     *
      * @return project key based on a scan request or a Groovy script (if present).
      */
     public String determineJiraProjectKey(ScanRequest request) {
@@ -1283,11 +1277,11 @@ public class JiraService {
         String nameOverride = tryGetJiraProjectKeyFromScript(request);
         if (StringUtils.isNotEmpty(nameOverride) && !nameOverride.equals(jiraProjectKey)) {
             log.info("Jira Project key override is present. Using the override: {}.",
-                      nameOverride);
+                    nameOverride);
             jiraProjectKey = nameOverride;
         } else {
             log.info("Jira Project key override isn't present. Using the default: {}.",
-                     jiraProjectKey);
+                    jiraProjectKey);
         }
         return jiraProjectKey;
     }
@@ -1300,12 +1294,27 @@ public class JiraService {
         return currentNewIssuesList;
     }
 
+    private void setCurrentNewIssuesList(List<String> currentNewIssuesList) {
+        this.currentNewIssuesList.clear();
+        this.currentNewIssuesList.addAll(currentNewIssuesList);
+    }
+
     public List<String> getCurrentUpdatedIssuesList() {
         return currentUpdatedIssuesList;
     }
 
+    private void setCurrentUpdatedIssuesList(List<String> currentUpdatedIssuesList) {
+        this.currentUpdatedIssuesList.clear();
+        this.currentUpdatedIssuesList.addAll(currentUpdatedIssuesList);
+    }
+
     public List<String> getCurrentClosedIssuesList() {
         return currentClosedIssuesList;
+    }
+
+    private void setCurrentClosedIssuesList(List<String> currentClosedIssuesList) {
+        this.currentClosedIssuesList.clear();
+        this.currentClosedIssuesList.addAll(currentClosedIssuesList);
     }
 
     private void logJiraTickets(ScanRequest request, ScanDetails scanDetails, ImmutableMap<String, List<String>> ticketsMap) {
@@ -1323,14 +1332,14 @@ public class JiraService {
             try {
                 if (!map.containsKey(jiraIssue.getKey()) && (request.getBugTracker().getOpenStatus().contains(jiraIssue.getValue().getStatus().getName()))) {
                     /*Close the issue*/
-                    log.info("Closing issue {} with key {}",jiraIssue.getValue().getKey(), jiraIssue.getKey());
+                    log.info("Closing issue {} with key {}", jiraIssue.getValue().getKey(), jiraIssue.getKey());
                     this.transitionCloseIssue(jiraIssue.getValue().getKey(),
                             request.getBugTracker().getCloseTransition(), request.getBugTracker(), false); //No false positives
                     closedIssues.add(jiraIssue.getValue().getKey());
 
                 }
             } catch (HttpClientErrorException e) {
-                log.error("Error occurred while processing issue {} with key {}",jiraIssue.getValue().getKey(), jiraIssue.getKey(), e);
+                log.error("Error occurred while processing issue {} with key {}", jiraIssue.getValue().getKey(), jiraIssue.getKey(), e);
             }
         }
     }
@@ -1385,9 +1394,9 @@ public class JiraService {
     Map<String, ScanResults.XIssue> getNonPublishedScanResults() {
         return nonPublishedScanResultsMap;
     }
-    
+
     boolean parentCheck(String key, List<Issue> issues) {
-        if (issues != null){
+        if (issues != null) {
             Map<String, Issue> jiraMap;
             jiraMap = this.getJiraIssueMap(issues);
             if (this.jiraProperties.isChild() && (jiraMap.containsKey(key))) {
@@ -1398,9 +1407,9 @@ public class JiraService {
         }
         return false;
     }
-    
+
     boolean grandparentCheck(String key, List<Issue> issues) {
-        if (issues != null){
+        if (issues != null) {
             Map<String, Issue> jiraMap;
             jiraMap = this.getJiraIssueMap(issues);
             if (this.jiraProperties.isChild() && (jiraMap.containsKey(key))) {
@@ -1420,20 +1429,5 @@ public class JiraService {
         if (sourceMap != null && !sourceMap.isEmpty()) {
             destinationMap.putAll(sourceMap);
         }
-    }
-
-    private void setCurrentNewIssuesList(List<String> currentNewIssuesList) {
-        this.currentNewIssuesList.clear();
-        this.currentNewIssuesList.addAll(currentNewIssuesList);
-    }
-
-    private void setCurrentUpdatedIssuesList(List<String> currentUpdatedIssuesList) {
-        this.currentUpdatedIssuesList.clear();
-        this.currentUpdatedIssuesList.addAll(currentUpdatedIssuesList);
-    }
-
-    private void setCurrentClosedIssuesList(List<String> currentClosedIssuesList) {
-        this.currentClosedIssuesList.clear();
-        this.currentClosedIssuesList.addAll(currentClosedIssuesList);
     }
 }

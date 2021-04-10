@@ -21,7 +21,7 @@ The following applications are required:
 * Self-signed certificates must be explicitly trusted by installing them into the Java JRE trustsore (cacerts)
 * To enable automated scanning orchestration and project creation (WebHook Web Service integration), the source repository must be capable of supporting WebHooks, specifically:
   * GitLab
-  * BitBucket Servr/Cloud
+  * BitBucket Server/Cloud
   * GitHub
   * Azure DevOps
   * TFS

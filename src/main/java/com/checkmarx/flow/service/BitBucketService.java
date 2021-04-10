@@ -2,6 +2,7 @@ package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.config.BitBucketProperties;
 import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.dto.RepoComment;
 import com.checkmarx.flow.dto.ScanDetails;
 import com.checkmarx.flow.dto.ScanRequest;
@@ -12,8 +13,8 @@ import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.exception.BitBucketClientException;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
-import com.checkmarx.sdk.dto.sast.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
+import com.checkmarx.sdk.dto.sast.CxConfig;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +29,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import java.beans.ConstructorProperties;
 import java.util.*;
 
 @Slf4j
@@ -36,12 +36,9 @@ import java.util.*;
 public class BitBucketService extends RepoService {
 
     public static final String REPO_SELF_URL = "repo-self-url";
+    public static final String CX_USER_SCAN_QUEUE = "/CxWebClient/UserQueue.aspx";
+    public static final String PATH_SEPARATOR = "/";
     private static final String LOG_COMMENT = "comment: {}";
-    private final RestTemplate restTemplate;
-    private final BitBucketProperties properties;
-    private final FlowProperties flowProperties;
-    private final ThresholdValidator thresholdValidator;
-
     private static final String BUILD_IN_PROGRESS = "INPROGRESS";
     private static final String BUILD_SUCCESSFUL = "SUCCESSFUL";
     private static final String BUILD_FAILED = "FAILED";
@@ -53,18 +50,25 @@ public class BitBucketService extends RepoService {
     private static final String BROWSE_CONTENT_FOR_BB_SERVER = "/browse/{path}?at={branch}";
     private static final String BROWSE_CONTENT_FOR_BB_CLOUD_WITH_DEPTH_PARAM = "/src/{hash}/?pagelen=100&max_depth={depth}";
     private static final String BUILD_STATUS_KEY_FOR_CXFLOW = "cxflow";
-    public static final String CX_USER_SCAN_QUEUE = "/CxWebClient/UserQueue.aspx";
     private static final String HTTP_BODY_IS_NULL = "Unable to download Config as code file. Response body is null.";
     private static final String CONTENT_NOT_FOUND_IN_RESPONSE = "Content not found in JSON response for Config as code";
-    public static final String PATH_SEPARATOR = "/";
+    private final RestTemplate restTemplate;
+    private final BitBucketProperties properties;
+    private final FlowProperties flowProperties;
+    private final ThresholdValidator thresholdValidator;
+    private final ScmConfigOverrider scmConfigOverrider;
     private String browseRepoEndpoint = "";
 
-    @ConstructorProperties({"restTemplate", "properties","flowProperties", "thresholdValidator"})
-    public BitBucketService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, BitBucketProperties properties, FlowProperties flowProperties, ThresholdValidator thresholdValidator) {
+    public BitBucketService(@Qualifier("flowRestTemplate") RestTemplate restTemplate,
+                            BitBucketProperties properties,
+                            FlowProperties flowProperties,
+                            ThresholdValidator thresholdValidator,
+                            ScmConfigOverrider scmConfigOverrider) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.flowProperties = flowProperties;
         this.thresholdValidator = thresholdValidator;
+        this.scmConfigOverrider = scmConfigOverrider;
     }
 
     private static JSONObject getJSONComment(String comment) {
@@ -81,8 +85,9 @@ public class BitBucketService extends RepoService {
         return requestBody;
     }
 
-    private HttpHeaders createAuthHeaders() {
-        String encoding = Base64.getEncoder().encodeToString(properties.getToken().getBytes());
+    private HttpHeaders createAuthHeaders(String scmInstance) {
+        String token = scmConfigOverrider.determineConfigToken(properties, scmInstance);
+        String encoding = Base64.getEncoder().encodeToString(token.getBytes());
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
         httpHeaders.set(HttpHeaders.AUTHORIZATION, "Basic ".concat(encoding));
@@ -127,7 +132,7 @@ public class BitBucketService extends RepoService {
         if (properties.isBlockMerge()) {
 
             String cxBaseUrl = request.getAdditionalMetadata("cxBaseUrl");
-            JSONObject buildStatusBody = createBuildStatusRequestBody(BUILD_IN_PROGRESS,BUILD_STATUS_KEY_FOR_CXFLOW,"Checkmarx Scan Initiated", cxBaseUrl.concat(CX_USER_SCAN_QUEUE) ,"Waiting for scan to complete..");
+            JSONObject buildStatusBody = createBuildStatusRequestBody(BUILD_IN_PROGRESS, BUILD_STATUS_KEY_FOR_CXFLOW, "Checkmarx Scan Initiated", cxBaseUrl.concat(CX_USER_SCAN_QUEUE), "Waiting for scan to complete..");
             sendBuildStatus(request, buildStatusBody.toString());
         }
     }
@@ -141,21 +146,20 @@ public class BitBucketService extends RepoService {
                 status = BUILD_FAILED;
             }
 
-            JSONObject buildStatusBody = createBuildStatusRequestBody(status,BUILD_STATUS_KEY_FOR_CXFLOW,"Checkmarx Scan Results", results.getLink(),results.getScanSummary().toString());
+            JSONObject buildStatusBody = createBuildStatusRequestBody(status, BUILD_STATUS_KEY_FOR_CXFLOW, "Checkmarx Scan Results", results.getLink(), results.getScanSummary().toString());
 
             sendBuildStatus(request, buildStatusBody.toString());
         }
     }
 
-    public void setBuildFailedStatus(ScanRequest request, String buildName, String buildUrl, String description){
-        if(properties.isBlockMerge()) {
-            JSONObject buildStatusBody = createBuildStatusRequestBody(BUILD_FAILED,BUILD_STATUS_KEY_FOR_CXFLOW, buildName , buildUrl , description);
-            sendBuildStatus(request,buildStatusBody.toString());
+    public void setBuildFailedStatus(ScanRequest request, String buildName, String buildUrl, String description) {
+        if (properties.isBlockMerge()) {
+            JSONObject buildStatusBody = createBuildStatusRequestBody(BUILD_FAILED, BUILD_STATUS_KEY_FOR_CXFLOW, buildName, buildUrl, description);
+            sendBuildStatus(request, buildStatusBody.toString());
         }
     }
 
-    private JSONObject createBuildStatusRequestBody(String buildState, String buildKey, String buildName, String buildUrl, String buildDescription)
-    {
+    private JSONObject createBuildStatusRequestBody(String buildState, String buildKey, String buildName, String buildUrl, String buildDescription) {
         JSONObject buildJsonBody = new JSONObject();
         buildJsonBody.put("state", buildState);
         buildJsonBody.put("key", buildKey);
@@ -173,17 +177,17 @@ public class BitBucketService extends RepoService {
 
     private void sendBuildStatus(ScanRequest request, String buildStatusRequestBody) {
         String buildStatusApiUrl = request.getAdditionalMetadata("buildStatusUrl");
-        HttpEntity<String> httpEntity = new HttpEntity<>(buildStatusRequestBody, createAuthHeaders());
+        HttpEntity<String> httpEntity = new HttpEntity<>(buildStatusRequestBody, createAuthHeaders(request.getScmInstance()));
         restTemplate.exchange(buildStatusApiUrl, HttpMethod.POST, httpEntity, String.class);
     }
 
     public void sendMergeComment(ScanRequest request, String comment) {
-        HttpEntity<String> httpEntity = new HttpEntity<>(getJSONComment(comment).toString(), createAuthHeaders());
+        HttpEntity<String> httpEntity = new HttpEntity<>(getJSONComment(comment).toString(), createAuthHeaders(request.getScmInstance()));
         restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
     public void sendServerMergeComment(ScanRequest request, String comment) {
-        HttpEntity<String> httpEntity = new HttpEntity<>(getServerJSONComment(comment).toString(), createAuthHeaders());
+        HttpEntity<String> httpEntity = new HttpEntity<>(getServerJSONComment(comment).toString(), createAuthHeaders(request.getScmInstance()));
         restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
@@ -202,14 +206,14 @@ public class BitBucketService extends RepoService {
             taskBody.put("severity", "BLOCKER");
             taskBody.put("text", comment);
 
-            HttpEntity<String> httpEntity = new HttpEntity<>(taskBody.toString(), createAuthHeaders());
+            HttpEntity<String> httpEntity = new HttpEntity<>(taskBody.toString(), createAuthHeaders(request.getScmInstance()));
             restTemplate.exchange(request.getMergeNoteUri().concat("/" + taskId), HttpMethod.PUT, httpEntity, String.class);
 
         } else {
             JSONObject taskBody = new JSONObject();
             taskBody.put("severity", "BLOCKER");
             taskBody.put("text", comment);
-            HttpEntity<String> httpEntity = new HttpEntity<>(taskBody.toString(), createAuthHeaders());
+            HttpEntity<String> httpEntity = new HttpEntity<>(taskBody.toString(), createAuthHeaders(request.getScmInstance()));
             restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
         }
     }
@@ -249,7 +253,7 @@ public class BitBucketService extends RepoService {
         Map<String, String> params = new HashMap<>();
         params.put("state", "OPEN");
 
-        HttpEntity<Object> httpEntity = new HttpEntity<>(createAuthHeaders());
+        HttpEntity<Object> httpEntity = new HttpEntity<>(createAuthHeaders(request.getScmInstance()));
         return restTemplate.exchange(blockerCommentUrl.concat("?state={state}"), HttpMethod.GET, httpEntity, String.class, params);
 
     }
@@ -268,7 +272,7 @@ public class BitBucketService extends RepoService {
     private void sendCommitComment(ScanRequest request, String comment) {
         JSONObject note = new JSONObject();
         note.put("note", comment);
-        HttpEntity<String> httpEntity = new HttpEntity<>(note.toString(), createAuthHeaders());
+        HttpEntity<String> httpEntity = new HttpEntity<>(note.toString(), createAuthHeaders(request.getScmInstance()));
         restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
@@ -276,17 +280,15 @@ public class BitBucketService extends RepoService {
     public Sources getRepoContent(ScanRequest request) {
 
         log.debug("Auto profiling is enabled");
-        if(ScanUtils.anyEmpty(request.getNamespace(), request.getRepoName(), request.getBranch())){
+        if (ScanUtils.anyEmpty(request.getNamespace(), request.getRepoName(), request.getBranch())) {
             return null;
         }
-        Sources sources =  new Sources();
+        Sources sources = new Sources();
         browseRepoEndpoint = getBitbucketEndPoint(request);
         if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)) {
-            scanGitContentFromBitbucketServer(0, browseRepoEndpoint, sources);
-        }
-        else
-        {
-            scanGitContentFromBBCloud(browseRepoEndpoint, sources);
+            scanGitContentFromBitbucketServer(0, browseRepoEndpoint, request.getScmInstance(), sources);
+        } else {
+            scanGitContentFromBBCloud(browseRepoEndpoint, request.getScmInstance(), sources);
         }
         return sources;
     }
@@ -298,8 +300,7 @@ public class BitBucketService extends RepoService {
         if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)) {
             endpoint = repoSelfUrl.concat(BROWSE_CONTENT_FOR_BB_SERVER);
             endpoint = endpoint.replace("{branch}", request.getBranch());
-        }
-        else {
+        } else {
             endpoint = repoSelfUrl.concat(BROWSE_CONTENT_FOR_BB_CLOUD_WITH_DEPTH_PARAM);
             endpoint = endpoint.replace("{hash}", request.getHash());
             endpoint = endpoint.replace("{depth}", flowProperties.getProfilingDepth().toString());
@@ -307,14 +308,14 @@ public class BitBucketService extends RepoService {
         return endpoint;
     }
 
-    private void scanGitContentFromBBCloud(String endpoint, Sources sources){
+    private void scanGitContentFromBBCloud(String endpoint, String scmInstance, Sources sources) {
 
-        com.checkmarx.flow.dto.bitbucket.Content content = getRepoContentFromBBCloud(endpoint);
+        com.checkmarx.flow.dto.bitbucket.Content content = getRepoContentFromBBCloud(endpoint, scmInstance);
         List<com.checkmarx.flow.dto.bitbucket.Value> values = content.getValues();
 
-        for(com.checkmarx.flow.dto.bitbucket.Value value: values){
+        for (com.checkmarx.flow.dto.bitbucket.Value value : values) {
             String type = value.getType();
-            if (type.equals(BITBUCKET_CLOUD_FILE)){
+            if (type.equals(BITBUCKET_CLOUD_FILE)) {
                 String fileName = value.getEscapedPath();
                 String filePath = value.getPath();
                 sources.addSource(filePath, fileName);
@@ -322,10 +323,10 @@ public class BitBucketService extends RepoService {
         }
     }
 
-    private com.checkmarx.flow.dto.bitbucket.Content getRepoContentFromBBCloud(String endpoint) {
+    private com.checkmarx.flow.dto.bitbucket.Content getRepoContentFromBBCloud(String endpoint, String scmInstance) {
         log.info("Getting repo content from {}", endpoint);
         com.checkmarx.flow.dto.bitbucket.Content content = new com.checkmarx.flow.dto.bitbucket.Content();
-        HttpHeaders headers = createAuthHeaders();
+        HttpHeaders headers = createAuthHeaders(scmInstance);
         try {
             ResponseEntity<String> response = restTemplate.exchange(
                     endpoint,
@@ -333,11 +334,11 @@ public class BitBucketService extends RepoService {
                     new HttpEntity<>(headers),
                     String.class
             );
-            if(response.getBody() == null){
+            if (response.getBody() == null) {
                 log.warn(HTTP_BODY_IS_NULL);
             }
             ObjectMapper objectMapper = new ObjectMapper();
-            content =  objectMapper.readValue(response.getBody(), com.checkmarx.flow.dto.bitbucket.Content.class);
+            content = objectMapper.readValue(response.getBody(), com.checkmarx.flow.dto.bitbucket.Content.class);
             return content;
         } catch (NullPointerException e) {
             log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
@@ -349,10 +350,10 @@ public class BitBucketService extends RepoService {
         return content;
     }
 
-    private Content getRepoContentFromBitbucketServer(String endpoint) {
+    private Content getRepoContentFromBitbucketServer(String endpoint, String scmInstance) {
         log.info("Getting repo content from {}", endpoint);
         Content content = new Content();
-        HttpHeaders headers = createAuthHeaders();
+        HttpHeaders headers = createAuthHeaders(scmInstance);
         try {
             ResponseEntity<String> response = restTemplate.exchange(
                     endpoint,
@@ -360,7 +361,7 @@ public class BitBucketService extends RepoService {
                     new HttpEntity<>(headers),
                     String.class
             );
-            if(response.getBody() == null){
+            if (response.getBody() == null) {
                 log.warn(HTTP_BODY_IS_NULL);
             }
             ObjectMapper objectMapper = new ObjectMapper();
@@ -376,28 +377,27 @@ public class BitBucketService extends RepoService {
         return content;
     }
 
-    private void scanGitContentFromBitbucketServer(int depth, String endpoint, Sources sources){
+    private void scanGitContentFromBitbucketServer(int depth, String endpoint, String scmInstance, Sources sources) {
 
-        if(depth >= flowProperties.getProfilingDepth()){
+        if (depth >= flowProperties.getProfilingDepth()) {
             return;
         }
-        if(depth == 0) {
+        if (depth == 0) {
             endpoint = endpoint.replace("{path}", Strings.EMPTY);
         }
 
-        Content content = getRepoContentFromBitbucketServer(endpoint);
+        Content content = getRepoContentFromBitbucketServer(endpoint, scmInstance);
         List<Value> values = content.getChildren().getValues();
 
-        for(Value value: values){
+        for (Value value : values) {
             String type = value.getType();
-            if(type.equals(BITBUCKET_DIRECTORY)){
+            if (type.equals(BITBUCKET_DIRECTORY)) {
                 String directoryName = value.getPath().getToString();
                 String fullDirectoryPath = content.getPath().getToString();
                 fullDirectoryPath = fullDirectoryPath + PATH_SEPARATOR + directoryName;
-                String directoryURL = browseRepoEndpoint.replace("{path}",fullDirectoryPath);
-                scanGitContentFromBitbucketServer(depth + 1, directoryURL, sources);
-            }
-            else if (type.equals(BITBUCKET_FILE)){
+                String directoryURL = browseRepoEndpoint.replace("{path}", fullDirectoryPath);
+                scanGitContentFromBitbucketServer(depth + 1, directoryURL, scmInstance, sources);
+            } else if (type.equals(BITBUCKET_FILE)) {
                 String directoryName = content.getPath().getToString();
                 String fileName = value.getPath().getToString();
                 String fullPath = directoryName.concat("/").concat(fileName);
@@ -445,7 +445,7 @@ public class BitBucketService extends RepoService {
 
     private CxConfig loadCxConfigFromBitbucket(ScanRequest request) {
         CxConfig cxConfig;
-        HttpHeaders headers = createAuthHeaders();
+        HttpHeaders headers = createAuthHeaders(request.getScmInstance());
         String repoSelfUrl = request.getAdditionalMetadata(REPO_SELF_URL);
 
         String urlTemplate;
