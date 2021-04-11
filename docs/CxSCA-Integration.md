@@ -55,7 +55,7 @@ SCA integration supports tickets management with the following bug trackers :
 * Jira
 * GitLab
 * Azure
-* Github
+* GitHub
 <br/>The tickets format is the same for each of the bug trackers.
 
 ### Opening Tickets in Jira

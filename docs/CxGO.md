@@ -101,7 +101,7 @@ java -jar <cx-flow-x.x.x.jar> --spring.config.location=application.yml --scan --
 ### Filters
 For details refer to [Filters](https://github.com/checkmarx-ltd/cx-flow/wiki/Configuration#filtering)
 
-For SCA filtering refer to [SCA filters](https://github.com/checkmarx-ltd/cx-flow/wiki/Integration-with-CxSCA#filters)
+For SCA filtering refer to [SCA filters](https://github.com/checkmarx-ltd/cx-flow/wiki/CxSCA-Integration#filters)
 
 ### Thresholds
 To apply thresholds refer to [CxFlow Thresholds](https://github.com/checkmarx-ltd/cx-flow/wiki/Thresholds-and-policies)

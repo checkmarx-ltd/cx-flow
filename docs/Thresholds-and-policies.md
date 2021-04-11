@@ -35,7 +35,7 @@ github:
 
 in order to use CxFlow status checks to control vulnerable code and block developers actions, you need to configure it in the SCM branches settings:
 
-<u>**Github**</u>:
+<u>**GitHub**</u>:
 
 Under settings->branches, mark checkmarx status check as required to pass before merging:
 [[/Images/github_status_check.png|github status check]]
@@ -97,7 +97,7 @@ In terms of prioritization - Thresholds are checked after the execution of filte
 
 1. If thresholds section exists, break-build is always true
 2. If thresholds section exists, CxFlow expects thresholds configuration for each scanner (SAST and SCA)
-3. For SCA thresholds, see this page: [SCA Thresholds](https://github.com/checkmarx-ltd/cx-flow/wiki/Integration-with-CxSCA#thresholds)
+3. For SCA thresholds, see this page: [SCA Thresholds](https://github.com/checkmarx-ltd/cx-flow/wiki/CxSCA-Integration#thresholds)
 
 
 ## <a name="filterByGroovyScript">Filter vulnerabilities by groovy script</a>
