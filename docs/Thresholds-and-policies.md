@@ -1,8 +1,8 @@
-When using CxFlow to initiate checkmarx scans (SAST or SCA), you can use CxFlow parse logic to control pull requests or build status.
+When using CxFlow to initiate checkmarx scans (CxSAST or CxSCA), you can use CxFlow parse logic to control pull requests or build status.
 
 * [Break build](#breakBuild)
 * [Block pull request](#blockPullRequest)
-  * [SCM configurations](#scmConfigurations)
+* [SCM configurations](#scmConfigurations)
 * [Thresholds vs Basic filters](#thresholds)
 * [Filter vulnerabilities by groovy script](#filterByGroovyScript)
 
@@ -33,7 +33,7 @@ github:
 
 #### <a name="scmConfigurations">SCM configurations</a>
 
-in order to use CxFlow status checks to control vulnerable code and block developers actions, you need to configure it in the SCM branches settings:
+In order to use CxFlow status checks to control vulnerable code and block developers actions, you need to configure it in the SCM branches settings:
 
 <u>**GitHub**</u>:
 
@@ -47,8 +47,6 @@ Under Branch policies configuration, enable Checkmarx scan as ‘required’ (ht
 [[/Images/azure_branch_policies.png|azure branch policies]]
 
 [[/Images/azure_enable_checkmarx_scan.png|enable checkmarx scan]]
-
-
 
 ## <a name="thresholds">Thresholds vs Basic filters</a>
 
@@ -98,7 +96,6 @@ In terms of prioritization - Thresholds are checked after the execution of filte
 1. If thresholds section exists, break-build is always true
 2. If thresholds section exists, CxFlow expects thresholds configuration for each scanner (SAST and SCA)
 3. For SCA thresholds, see this page: [SCA Thresholds](https://github.com/checkmarx-ltd/cx-flow/wiki/CxSCA-Integration#thresholds)
-
 
 ## <a name="filterByGroovyScript">Filter vulnerabilities by groovy script</a>
 

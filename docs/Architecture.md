@@ -29,7 +29,7 @@
   * GitLab
 * CxFlow is configured to process events associated with branches considered important/protected across the enterprise based on the following:
   * List of static values
-    * master
+    * main
     * develop
     * release
   * List of regular expressions

@@ -3,7 +3,6 @@ The presence of a cx.config file in the root of the source repository is used to
 ### **Note: Currently only implemented for GitHub, GitLab, Bitbucket Server, Bitbucket Cloud and Azure DevOps, for WebHook execution.**
 
 * [Current Overrides](#current)
-* [Future Overrides](#future)
 * [Automated Code Profiling](#automatedcodeprofiling)
 * [Automated Profile Configuration](#automatedprofileconfiguration)
 * [CxProfile Config](#cxprofileconfig)
@@ -19,11 +18,11 @@ Example Config As Code:
     "preset": "",
     "engineConfiguration": "",
     "incremental": "true|false",
-    "forceScan" : "true",
+    "forceScan": "true",
     "fileExcludes": "",
     "folderExcludes": ""
   },
-  "additionalProperties" : {
+  "additionalProperties": {
     "cxFlow": {
       "application": "test app",
       "branches": ["develop", "main", "master"],
@@ -67,7 +66,7 @@ Example Config As Code:
           }
         ]
       },
-      "filters" : {
+      "filters": {
         "severity": ["High", "Medium"],
         "cwe": ["79", "89"],
         "category": ["XSS_Reflected", "SQL_Injection"],
@@ -76,105 +75,6 @@ Example Config As Code:
     }
   }
 }
-```
-
-## <a name="future">Future Specs</a>
-Example Config As Code:
-```
-{
-  "version": 1.0,
-  "project": "XYZ-${repo}-${branch}",
-  "team": "/a/b/c",
-  "host": "cx01.whatever.com",
-  "credential": {
-    "type": "prompt|plain|enc|external->vault/environment/parameter",
-    "username": "ENC(XXXXXXX)",
-    "password": "ENC(XXXXXXX)",
-    "oidcClient": "ENC(XXXXXXXX)",
-    "oidcClientSecret": "ENC(XXXXXXX)"
-  },
-  "policy":"",
-  "customFields":{
-    "key":"value",
-    "key2":"value"
-  },
-  "sast": {
-    "preset": "",
-    "engineConfiguration": "",
-    "incremental": "true|false",
-    "forceScan" : "true",
-    "fileExcludes": "",
-    "folderExcludes": ""
-  },
-  "osa": {
-    "fileExcludes": "",
-    "folderExcludes": ""
-  },
-  "additionalProperties" : {
-    "intellij": {...Intellij specific configs...},
-    "jenkins": {...Jenkins specific configs...},
-    "...other plugins...": {...},
-    "cxFlow": {
-      "application": "test app",
-      "branches": ["develop", "master"],
-      "emails": ["xxxx@checkmarx.com"],
-      "bugTracker": "JIRA|GitLab|GitHub|Azure",
-      "jira": {
-        "url": "",
-        "credential": {
-          "type": "prompt|plain|enc|external->vault/environment/parameter",
-          "username": "ENC(XXXXXXX)",
-          "password": "ENC(XXXXXXX)",
-          "oidcClient": "ENC(XXXXXXXX)",
-          "oidcClientSecret": "ENC(XXXXXXX)"
-        },
-        "project": "APPSEC",
-        "issue_type": "Bug",
-        "assignee": "admin",
-        "opened_status": ["Open","Reopen"],
-        "closed_status": ["Closed","Done"],
-        "open_transition": "Reopen Issue",
-        "close_transition": "Close Issue",
-        "close_transition_field": "resolution",
-        "close_transition_value": "Done",
-        "priorities": {
-          "High": "High",
-          "Medium": "High",
-          "Low": "High"
-        },
-        "fields": [
-          {
-            "type": "cx",
-            "name": "xxx",
-            "jira_field_name": "xxxx",
-            "jira_field_type": "text",
-            "jira_default_value": "xxx"
-          },
-          {
-            "type": "result",
-            "name": "xxx",
-            "jira_field_name": "xxxx",
-            "jira_field_type": "label"
-          },
-          {
-            "type": "static",
-            "name": "xxx",
-            "jira_field_name": "xxxx",
-            "jira_field_type": "label",
-            "jira_default_value": "xxx"
-          }
-        ]
-      },
-      "filters" : {
-        "severity": ["High", "Medium"],
-        "cwe": ["79", "89"],
-        "category": ["XSS_Reflected", "SQL_Injection"],
-        "status": ["Confirmed", "New"]
-      }
-    }
-  }
-}
-
 ```
 
 ## <a name="automatedcodeprofiling">Automated Code Profiling</a>
