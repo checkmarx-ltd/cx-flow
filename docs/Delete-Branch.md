@@ -32,6 +32,7 @@ This will make CxFlow to always read configuration-as-code from repository defau
 * [GitHub](#github)
 * [Azure Devops](#ado)
 * [GitLab](#gitlab)
+* [BitBucket] (#bitbucket)
 
 #### <a name="github">GitHub</a>
 
@@ -56,10 +57,9 @@ In case of Azure, in order to overcome it, when CxFlow detect ADO push-DELETE ev
 
 This raise the following limitation:
 
-<u>Limitation:</u>  when using configuration-as-code to define CxSAST project name, CxSAST-project will be deleted only if the user delete the branch by merge the PR:
+<u>Limitation:</u>  when using configuration-as-code to define CxSAST project name, CxSAST project will be deleted only if the user delete the branch by merge the PR:
 
 [[/Images/ADO__merge_and_delete.png|github delete webhook event]]
-
 
 if the user delete feature-branch manually without complete pull request - CxFlow can’t read project name from default branch and will not delete the corresponding CxSAST project
 
@@ -68,3 +68,10 @@ if the user delete feature-branch manually without complete pull request - CxFlo
 #### <a name="gitlab">GitLab</a>
 
 GitLab does not support webhook delete events therefore CxFlow does not support GitLab branch deletion.
+
+#### <a name="bitbucket">Bitbucket Server</a>
+
+Bitbucket Server will delete a SAST project **only when using the Post Webhooks plugin**.  The current implementation is limited in that:
+
+* Project delete not work if using Config-As-Code given the settings for team and/or project name have been deleted from the branch.
+* Project delete will work if the project name is calculated or scripted and the team assigned to the project matches the default team in the CxFlow YAML configuration.

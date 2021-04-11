@@ -1,32 +1,50 @@
-package com.checkmarx.flow.controller;
+package com.checkmarx.flow.controller.bitbucket.cloud;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 import com.checkmarx.flow.config.BitBucketProperties;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.constants.FlowConstants;
+import com.checkmarx.flow.controller.WebhookController;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.EventResponse;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.dto.bitbucket.*;
+import com.checkmarx.flow.dto.bitbucket.Change;
+import com.checkmarx.flow.dto.bitbucket.Commit;
+import com.checkmarx.flow.dto.bitbucket.MergeEvent;
+import com.checkmarx.flow.dto.bitbucket.Pullrequest;
+import com.checkmarx.flow.dto.bitbucket.PushEvent;
+import com.checkmarx.flow.dto.bitbucket.Repository;
 import com.checkmarx.flow.exception.InvalidTokenException;
-import com.checkmarx.flow.service.*;
+import com.checkmarx.flow.service.BitBucketService;
+import com.checkmarx.flow.service.ConfigurationOverrider;
+import com.checkmarx.flow.service.FilterFactory;
+import com.checkmarx.flow.service.FlowService;
+import com.checkmarx.flow.service.GitAuthUrlGenerator;
+import com.checkmarx.flow.service.HelperService;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
-import com.checkmarx.sdk.dto.sast.CxConfig;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import com.checkmarx.sdk.dto.sast.CxConfig;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 @RestController
@@ -127,6 +145,7 @@ public class BitbucketCloudController extends WebhookController {
                     .gitUrl(gitUrl)
                     .build();
 
+            setScmInstance(controllerRequest, request);
             fillRequestWithAdditionalData(request, repository, body.toString());
             checkForConfigAsCode(request);
             request.setId(uid);
@@ -226,6 +245,7 @@ public class BitbucketCloudController extends WebhookController {
                     .gitUrl(gitUrl)
                     .build();
 
+            setScmInstance(controllerRequest, request);
             fillRequestWithAdditionalData(request, repository, body.toString());
             checkForConfigAsCode(request);
             request.setId(uid);
