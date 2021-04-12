@@ -84,14 +84,14 @@ logging:
 cxflow:
   bug-tracker: GitHub
   bug-tracker-impl:
-  - GitHub
+    - GitHub
   branches:
-  - main
+    - main
   filter-severity:
   filter-category:
-  - SQL_Injection
-  - Stored_XSS
-  - Reflected_XSS_All_Clients
+    - SQL_Injection
+    - Stored_XSS
+    - Reflected_XSS_All_Clients
   filter-cwe:
   filter-status:
   #mitre-url: https://cwe.mitre.org/data/definitions/%s.html
@@ -245,7 +245,6 @@ ResetSet rs = preparedStatement.executeQuery();
 * In Issues section of the source control there will be one fewer vulnerability
 * In the Checkmarx web portal, the CxFlowBodgeit-main project will now have both solved and recurrent issues. 
 
-
 ## <a name="github">GitHub Webhook Tutorial</a>
 * [Prep](#githubprep)
 * [Triggering Webhook Scans with CxFlow](#webhooktriggering)
@@ -331,7 +330,6 @@ bug-tracker: GitLab
     * Click Add Webhook
 * Continue to [Triggering Webhook Scans with CxFlow](#webhooktriggering) 
 
-
 ## <a name="gitlabcicd">GitLab CI/CD</a>
   * [Requirements](#gitlabcicdrequirements)
   * [CI/CD Variables](#gitlabcicdvaiables)
@@ -366,7 +364,6 @@ To review scan results within GitLab’s Security Dashboard, you need the Gold/U
 ### <a name="gitlabcicdvaiables">CI/CD Variables</a>
 To allow for easy configuration, it is necessary to create environment variables with GitLab to run the integration.  For more information on GitLab CI/CD variables, visit here: [GitLab: CI/CD - Environment Variables](https://gitlab.com/help/ci/variables/README#gitlab-cicd-environment-variables)
 Edit the CI/CD variables under Settings → CI / CD → Variables and add the following variables for a CxSAST and/or CxSCA scan:
-
 
 [[/Images/gitlab_settings.png]]
 
@@ -530,7 +527,6 @@ bug-tracker: Azure
 * Continue to [Triggering Webhook Scans with CxFlow](#webhooktriggering)
 
 ##### [Top of Tutorial](#azure)
-
 
 ## <a name="adopipeline">Azure DevOps Pipeline</a>
 * [Windows Agents](#windowsagents)
@@ -743,7 +739,6 @@ stages:
 
 ```
 
-
 ## <a name="bitbucket">Bitbucket Cloud Webhook Tutorial</a>
 * [Prep](#bitbucketprep)
 * [Triggering Webhook Scans with CxFlow](#webhooktriggering)
@@ -780,7 +775,6 @@ This tutorial is designed to teach the following topics:
 * Continue to [Triggering Webhook Scans with CxFlow](#webhooktriggering)
 
 ##### [Top of Tutorial](#bitbucket)
-
 
 ## <a name="clijira">CxFlow CLI & JIRA Tutorial</a>
 * [Prep](#cliprep)
@@ -986,8 +980,6 @@ param (
 
 #=======================================
 
-
-
 [string[]] $recipients = $email_to -split ","
 
 #Parse XML file into an object
@@ -1045,7 +1037,6 @@ Foreach ($Vuln in $Vulns) {
     Write-Debug $message
 
     $issue_count++
-
 } 
 
 $message += "<br><b>Total New Vulnerabilities : " + $issue_count + "</b>"
@@ -1057,20 +1048,20 @@ Write-Output "Sending notifications to $recipients"
 # Notify email list
 try {
     $secP = ConvertTo-SecureString $smtpPass -AsPlainText -Force
-	$smtpCreds = New-Object System.Management.Automation.PSCredential $smtpUser,$secP
+	  $smtpCreds = New-Object System.Management.Automation.PSCredential $smtpUser,$secP
 	
-	$smtpMessage = @{
-		SmtpServer = $smtpServer
-		Port = $smtpPort
-		UseSsl = $true
-		Credential  = $smtpCreds
-		From = $smtpFrom
-		To = $recipients
-		Subject = $subject
-		Body = $message
-	}
+	  $smtpMessage = @{
+	 	  SmtpServer = $smtpServer
+		  Port = $smtpPort
+		  UseSsl = $true
+		  Credential  = $smtpCreds
+		  From = $smtpFrom
+		  To = $recipients
+		  Subject = $subject
+		  Body = $message
+    }
 
-	Send-MailMessage @smtpMessage -BodyAsHtml
+    Send-MailMessage @smtpMessage -BodyAsHtml
 	
     $message = "Found and notified [$email_to] about " + $issue_count + " NEW vulnerabilities."
     Remove-Item -path .\xmlresults.xml
@@ -1086,7 +1077,6 @@ catch {
 ```
 * [Back to Tutorials Table of Contents](#tableofcontents)
 ##### [Top of Tutorial](#batch)
-
 
 Pre-requisites:
 
@@ -1175,8 +1165,6 @@ params: --bug-tracker=jira --config=cx.config --repo-name=DSVW --namespace=jbrui
 
 Here is a complete main.yml working example with GitHub Secrets. Notice the top section with the name of the workflow and the triggers configuration and also the bottom parameters.
 
-
-
 ## <a name="actions">GitHub Actions with JIRA Integration</a>
 ### Pre-requisites
 * Have a JIRA project ready with the Application and Category custom fields (see previous tutorials)
@@ -1257,6 +1245,7 @@ name: CxFlow
 
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the main branch
+
 on:
   push:
     branches: [ master, main ]
@@ -1306,6 +1295,7 @@ jobs:
           params: --bug-tracker=jira --config=cx.config --repo-name=DSVW --namespace=jbruinaud --branch=main --jira.url=${{secrets.JIRA_URL}} --jira.username=${{secrets.JIRA_USER}} --jira.token=${{secrets.JIRA_TOKEN}}
 ```
 <br>Click “Start commit” then “Commit new file” to complete the process. This will trigger the workflow automatically since we are committing a new file to the main branch.<br>
+
 [[/Images/gh5.png|Commit]]
 ### Step 3: Monitor the workflow execution
 <br>Click on “Actions”. You will see your workflow execution details, in yellow (in execution), green (succeeded) or red (failed). Click on it.<br>

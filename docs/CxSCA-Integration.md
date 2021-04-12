@@ -35,6 +35,9 @@ sca:
 ```
 
 To use an European tenant:
+=======
+In addition, add one of the CxSCA sections with the following properties:
+
 ```
 sca:
   appUrl: https://eu.sca.checkmarx.net
@@ -46,14 +49,13 @@ sca:
   team: "/CxServer/MyTeam/SubTeam"
 ```
 
-[[/Images/SCA2.png|YML SCA example]]
-
 ## <a name="bug">Bug-Trackers</a>
 SCA integration supports tickets management with the following bug trackers:
 * Jira
 * GitLab
 * Azure
 * GitHub
+
 <br/>The tickets format is the same for each of the bug trackers.
 
 ### Opening Tickets in Jira
@@ -195,7 +197,6 @@ CxFlow supports configuration as code for CxSAST and CxSCA scans.
 
 ### CxFlow can open security tickets upon SCA scan results 
 In order to open SCA security tickets, set the bug tracker in CxFlow app.yml file or in add the argument with your bug tracker type (for example: --bug-tracker=Jira) 
-
  
 ### CxFlow can init git scan or upload zip folder to scan by sca:
 * git scan:
@@ -205,14 +206,13 @@ In order to open SCA security tickets, set the bug tracker in CxFlow app.yml fil
 * get latest scan results:
   * --project --app=MyApp --cx-team="my-team" --cx-project="project"
 
-
-## <a name="zipFolderScan">SCA ZIP folder scan</a>
-In order to change the default CxFlow SCA scan behavior and to perform a SCA ZIP scan, the next configuration property should be added underneath the sca configuration section:
 ```
 enabledZipScan: true
 ```
 Additional configuration in SCA zip scan flow - Include source files
+
 * Default value set to false, In order to change the default CxFlow SCA zip scan behavior, the next configuration property should be added underneath the sca configuration section:
+
 ```
 includeSources: true
 ```

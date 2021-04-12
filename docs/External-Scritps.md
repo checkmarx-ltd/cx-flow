@@ -4,7 +4,6 @@ For example, you can determine the Checkmarx project name that CxFlow will trigg
 
 Here is an example of how you can add a static prefix to branch name and CxFlow will use it when determine the cx-project name:
 
-
 ```groovy
 String branch = request.getBranch();
 
@@ -20,7 +19,7 @@ return cxProject;
 * [JIRA project key script](#jiraProjectKeyScript)
 
 ### <a name="projectScript">Project script</a>
-* CxFlow will use the string returned from the script execution to determine the cx-project name
+* CxFlow will use the string returned from the script execution to determine the Checkmarx project name
 * To enable this flow add the following property to CxFlow configuration (you can use any file name): 
 
 ```yaml
@@ -75,8 +74,6 @@ cx-flow:
 
 * Script input: [ScanRequest object](https://github.com/checkmarx-ltd/cx-flow/blob/develop/src/main/java/com/checkmarx/flow/dto/ScanRequest.java)
 * Return value: String
-
-
 
 ### <a name="filterFindings">Use a Script to Filter Findings</a>
 
