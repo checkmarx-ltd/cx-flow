@@ -75,7 +75,7 @@ public class UpdatePullRequestCommentsSteps {
     private static final String GITLAB_PROJECT_NAME = "cxflow-integration-gitlab-tests";
     private static final String GITLAB_URL = "https://gitlab.com/cxflowtestuser/" + GITLAB_PROJECT_NAME;
     private static final String GITLAB_PROJECT_ID = "23910442";
-    private static final String GITLAB_MERGE_REQUEST_ID = "3";
+    private static final String GITLAB_MERGE_REQUEST_ID = "4";
     public static final String MERGE_REQUEST_NOTES_URL =
             GITLAB_BASE_URL + "/projects/" + GITLAB_PROJECT_ID +
                     "/merge_requests/" + GITLAB_MERGE_REQUEST_ID +"/notes";
