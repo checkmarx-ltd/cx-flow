@@ -30,7 +30,7 @@ WebHooks can be registered at the namespace level (Organization in GitHub, Group
 * Ensure to download/save the Private key generated for the App
 * You must convert the key to PKCS8 formatted PEM using: ```openssl pkcs8 -topk8 -inform PEM -outform PEM -in private.pem -out private8.pem -nocrypt```
 * To make use of the GitHub App, you must add app-id and app-key-file to your configuration
-* The base headers are ```application/vnd.github.machine-man-preview+json, application/vnd.github.v3+json``` to update them use the app-header conifg under the github block
+* The base headers are ```application/vnd.github.machine-man-preview+json, application/vnd.github.v3+json``` to update them use the app-header config under the github block
 ```
 github:
   app-id: XXXXX #This ID will be found in your GitHub App configuration settings

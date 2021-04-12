@@ -1,8 +1,8 @@
 CxFlow is able to use inputs from external groovy scripts, according to runtime information and specific logic that is implemented in the script
 
-for example, you can determine the Cx-project name that cxflow will trigger\create when initiating scan and use realtime information from the webhook payload, and edit it in the desired format in the script logic
-for example you can add a static prefix to branch name and cxflow will use it when determine the cx-project name:
+For example, you can determine the Checkmarx project name that CxFlow will trigger and/or create when initiating scan and use realtime information from the webhook payload, and edit it in the desired format in the script logic.
 
+Here is an example of how you can add a static prefix to branch name and CxFlow will use it when determine the cx-project name:
 
 ```groovy
 String branch = request.getBranch();
@@ -19,8 +19,8 @@ return cxProject;
 * [JIRA project key script](#jiraProjectKeyScript)
 
 ### <a name="projectScript">Project script</a>
-* CxFlow will use the string returned from the script execution to determine the cx-project name
-* To enable this flow add the following property to cxflow configuration (you can use any file name): 
+* CxFlow will use the string returned from the script execution to determine the Checkmarx project name
+* To enable this flow add the following property to CxFlow configuration (you can use any file name): 
 
 ```yaml
 checkmarx:
@@ -64,7 +64,7 @@ checkmarx:
 
 ### <a name="scanComment">SAST scan comment script</a>
 
-* CxFlow will use the string returned from the script execution to determine the scan comment that is added to the scan initiated by cxflow
+* CxFlow will use the string returned from the script execution to determine the scan comment that is added to the scan initiated by CxFlow
 * To enable this flow add the following property to cxflow configuration (you can use any file name): 
 
 ```yaml
@@ -74,8 +74,6 @@ cx-flow:
 
 * Script input: [ScanRequest object](https://github.com/checkmarx-ltd/cx-flow/blob/develop/src/main/java/com/checkmarx/flow/dto/ScanRequest.java)
 * Return value: String
-
-
 
 ### <a name="filterFindings">Use a Script to Filter Findings</a>
 
@@ -120,7 +118,7 @@ An exception is thrown in the following cases:
 ### <a name="jiraProjectKeyScript">JIRA project key script</a>
 
 * CxFlow will use the string returned from the script execution to determine the JIRA project key which is added to the bug tracker and used by CxFlow to issue tickets in it
-* To enable this flow add the following property to cxflow configuration (you can use any file name): 
+* To enable this flow add the following property to CxFlow configuration (you can use any file name): 
 
 ```yaml
 jira:

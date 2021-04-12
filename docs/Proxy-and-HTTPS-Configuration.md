@@ -32,13 +32,13 @@ https.proxyPassword - Optional and only needed if the proxy server needs authent
 ### Using only host and port
 
 ```
-java -Dhttp.proxyHost=myproxyserver.com -Dhttp.proxyPort=9595 -jar cxflow.jar <Additional-cxflow-parameters>
+java -Dhttp.proxyHost=myproxyserver.com -Dhttp.proxyPort=9595 -jar cxflow.jar <Additional-CxFlow-parameters>
 ```
 
 ### Using host, port, user and password
 
 ```
-java -Dhttp.proxyHost=myproxyserver.com -Dhttp.proxyPort=9595 -Dhttp.proxyUser=<proxy user> -Dhttp.proxyPassword=<proxy password> -jar cxflow.jar <Additional-cxflow-parameters>
+java -Dhttp.proxyHost=myproxyserver.com -Dhttp.proxyPort=9595 -Dhttp.proxyUser=<proxy user> -Dhttp.proxyPassword=<proxy password> -jar cxflow.jar <Additional-CxFlow-parameters>
 ```
 
 # HTTPS Config
@@ -84,7 +84,7 @@ Insert the following into the application.yml file
   port: 443
   ssl:
     key-store: C:\keystorecxflow.p12
-    key-store-password: P@ssword1
+    key-store-password: xxxxx
     key-store-type: PKCS12
     key-alias: cxflow
     enabled-protocols:

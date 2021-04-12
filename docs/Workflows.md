@@ -31,7 +31,7 @@ Running CxFlow as a web service will enable registering WebHook Push and Pull/Me
 ## Command Line
 ### Parse
 The Parse mode uses the Checkmarx Scan XML as input to drive the automation:
-[[/Images/workflow5.png|Detailed diagram of CxFlow CLI implmentation]]
+[[/Images/workflow5.png|Detailed diagram of CxFlow CLI implementation]]
 [[/Images/workflow6.png]]
 [[/Images/workflow7.png]]
 

@@ -2,6 +2,11 @@
 * [CxSAST v9.0 .yml Example File](#ninedotzero)
 
 ### <a name="nine">9.0 Configuration Changes</a>
+
+**The Two Changes needed from 8.9:**
+* Make sure to include **version: 9.0** (or higher) and **scope:  access_control_api sast_rest_api**
+* The Team path must include the unix path separator **/**, the path is for example defined as follows: **/CxServer/Checkmarx/CxFlow**
+
 ```
 checkmarx:
    version: 9.0
@@ -25,9 +30,6 @@ checkmarx:
    #exclude-files:
    #exclude-folders:
 ```
-**Note:**
-* Make sure to include **version: 9.0** (or higher) and **scope:  access_control_api sast_rest_api**
-* The Team path must include the unix path separator **/**, the path is for example defined as follows: **/CxServer/Checkmarx/CxFlow**
 
 ### <a name="ninedotzero">CxSAST v9.0 .yml Example File</a>
 ```
@@ -47,7 +49,7 @@ cxflow:
     # - Rally
     # - Json
   branches:
-  - master
+  - main
   - dev\w+
   - release-\w+
   filter-severity:

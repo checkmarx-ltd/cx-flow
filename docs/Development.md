@@ -63,7 +63,7 @@ cx-flow:
   bug-tracker-impl:
     - Json
 ```
-5. Ensure the bug-tracker is specified to be your new bean, if you wish for this to be the default.  It can also be provided as an override through webhook url paramater (bug=Json), or on the command line (--cx-flow.bug-tracker=Json).  
+5. Ensure the bug-tracker is specified to be your new bean, if you wish for this to be the default.  It can also be provided as an override through webhook url parameter (bug=Json), or on the command line (--cx-flow.bug-tracker=Json).  
 <br>**Note** This bean is case sensitive
 
 ## Source

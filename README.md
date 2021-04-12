@@ -71,6 +71,7 @@ cx-flow:
     - Csv
   branches:
     - develop
+    - main
     - master
     - security
   filter-severity:
@@ -279,58 +280,58 @@ When providing --config override file you can override many elements associated 
 
 ```json
 {
-"application": "test app", //WebHook Web Service Only
-"branches": ["develop", "master"], //WebHook Web Service Only
-"incremental": true, //WebHook Web Service Only
-"scan_preset": "Checkmarx Default", //WebHook Web Service Only
-"exclude_folders": "tmp/", //WebHook Web Service Only
-"exclude_files": "*.tst", //WebHook Web Service Only
-"emails": [checkmarx, "xxxx@checkmarx.com"], //Override email addresses if email issue tracking is enabled
- "jira": { //override JIRA specific configurations
-"project": "APPSEC", //JIRA project
- "issue_type": "Bug", // JIRA issueType
- "assignee": "admin", // Defaul assignee
- "opened_status": ["Open","Reopen"], //Transitions in JIRA workflow that represent Open status
- "closed_status": ["Closed","Done"], //Transitions in JIRA workflow that represent Closed status
- "open_transition": "Reopen Issue", //Transition to apply to re-open an issue
- "close_transition": "Close Issue", //Transition to apply to close an issue
- "close_transition_field": "resolution", //Transition field if required during closure
- "close_transition_value": "Done", //Transition value if required during closue
- "priorities": { //Override ticket priorities
-"High": "High",
- "Medium": "Medium",
- "Low": "Low"
- },
- "fields": [ //JIRA custom field mappings. See field mapping details above
-{
-"type": "cx", //cx, static, result.
- "name": "xxx",
- "jira_field_name": "xxxx",
- "jira_field_type": "text", //security text | label | single-select | multi-select
- "jira_default_value": "xxx"
- },
- {
-"type": "result",
- "name": "xxx",
- "jira_field_name": "xxxx",
- "jira_field_type": "label"
- },
- {
-"type": "static",
- "name": "xxx",
- "jira_field_name": "xxxx",
- "jira_field_type": "label",
- "jira_default_value": "xxx"
- }
-]
-},
- "filters" : { //Override filters used when determining whether a result from Checkmarx will be tracked with a defect
-"severity": ["High", "Medium"],
- "cwe": ["79", "89"],
- "category": ["XSS_Reflected", "SQL_Injection"],
- "status": ["New", "Reoccured"],
- "state": ["Urgent", "Confirmed"]
-}
+  "application": "test app", //WebHook Web Service Only
+  "branches": ["develop", "main"], //WebHook Web Service Only
+  "incremental": true, //WebHook Web Service Only
+  "scan_preset": "Checkmarx Default", //WebHook Web Service Only
+  "exclude_folders": "tmp/", //WebHook Web Service Only
+  "exclude_files": "*.tst", //WebHook Web Service Only
+  "emails": [checkmarx, "xxxx@checkmarx.com"], //Override email addresses if email issue tracking is enabled
+  "jira": { //override JIRA specific configurations
+    "project": "APPSEC", //JIRA project
+    "issue_type": "Bug", // JIRA issueType
+    "assignee": "admin", // Defaul assignee
+    "opened_status": ["Open","Reopen"], //Transitions in JIRA workflow that represent Open status
+    "closed_status": ["Closed","Done"], //Transitions in JIRA workflow that represent Closed status
+    "open_transition": "Reopen Issue", //Transition to apply to re-open an issue
+    "close_transition": "Close Issue", //Transition to apply to close an issue
+    "close_transition_field": "resolution", //Transition field if required during closure
+    "close_transition_value": "Done", //Transition value if required during closue
+    "priorities": { //Override ticket priorities
+    "High": "High",
+    "Medium": "Medium",
+    "Low": "Low"
+  },
+  "fields": [ //JIRA custom field mappings. See field mapping details above
+    {
+    "type": "cx", //cx, static, result.
+    "name": "xxx",
+    "jira_field_name": "xxxx",
+    "jira_field_type": "text", //security text | label | single-select | multi-select
+    "jira_default_value": "xxx"
+    },
+    {
+    "type": "result",
+    "name": "xxx",
+    "jira_field_name": "xxxx",
+    "jira_field_type": "label"
+    },
+    {
+    "type": "static",
+    "name": "xxx",
+    "jira_field_name": "xxxx",
+    "jira_field_type": "label",
+    "jira_default_value": "xxx"
+    }
+  ]
+  },
+ "filters": { //Override filters used when determining whether a result from Checkmarx will be tracked with a defect
+   "severity": ["High", "Medium"],
+   "cwe": ["79", "89"],
+   "category": ["XSS_Reflected", "SQL_Injection"],
+   "status": ["New", "Reoccured"],
+   "state": ["Urgent", "Confirmed"]
+  }
 }
 ```
 All overrides are optional.  If a value is not provided, the default provided in the application.yml is used.  If a value is provided with an empty attribute, it is overridden as empty.  i.e. if severity is high, medium within the default configuration and an empty filter attribute is provided, it will no long apply any filters ("filters":{})

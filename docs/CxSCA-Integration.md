@@ -22,40 +22,40 @@ enabled-vulnerability-scanners:
 ```
 [[/Images/SCA1.png|YML example demonstrating enabled vulnerability scanners]]
 
-In addition, add one of the CxSCA sections with the following properties:
-
-#######1
+In addition, add a CxSCA section with the following properties:
 ```
 sca:
-  appUrl: [https://sca.scacheckmarx.com](https://sca.scacheckmarx.com)
-  apiUrl: [https://api.scacheckmarx.com](https://api.scacheckmarx.com)
-  accessControlUrl: [https://platform.checkmarx.net](https://platform.checkmarx.net)
-  tenant: your tenant name
-  username: userxx
-  password: pasxx
+  appUrl: https://sca.checkmarx.net
+  apiUrl: https://api-sca.checkmarx.net
+  accessControlUrl: https://platform.checkmarx.net
+  tenant: your-tenant
+  username: username
+  password: xxxxx
+  team: "/CxServer/MyTeam/SubTeam"
 ```
 
-[[/Images/SCA2.png|YML SCA example]]
+To use an European tenant:
+=======
+In addition, add one of the CxSCA sections with the following properties:
 
-#######2
 ```
 sca:
   appUrl: https://eu.sca.checkmarx.net
   apiUrl: https://eu.api-sca.checkmarx.net
   accessControlUrl: https://eu.platform.checkmarx.net
   tenant: your-tenant
-  username: userxx
-  password: passxx
+  username: username
+  password: xxxxx
+  team: "/CxServer/MyTeam/SubTeam"
 ```
 
-[[/Images/SCA2A.png|YML SCA example]]
-
 ## <a name="bug">Bug-Trackers</a>
-SCA integration supports tickets management with the following bug trackers :
+SCA integration supports tickets management with the following bug trackers:
 * Jira
 * GitLab
 * Azure
 * GitHub
+
 <br/>The tickets format is the same for each of the bug trackers.
 
 ### Opening Tickets in Jira
@@ -192,29 +192,27 @@ CxFlow supports configuration as code for CxSAST and CxSCA scans.
 ### CxFlow can initiate SCA scans with command line mode
 <br/>There are 2 options to add SCA scan to the cli run:
 * Add scanner argument to the cli command:  --scanner=sca 
-* Add sca to the active vulnerabilities scanner in cxflow app.yml: 
-[[/Images/SCA8.png|Example of enables-vulnerbaility-scanners]]
+* Add sca to the active vulnerabilities scanner in CxFlow app.yml: 
+[[/Images/SCA8.png|Example of enables-vulnerability-scanners]]
 
 ### CxFlow can open security tickets upon SCA scan results 
-In order to open SCA security tickets, set the bug tracker in cxflow app.yml file or in add the argument with your bug tracker type (for example: --bug-tracker=Jira) 
-
+In order to open SCA security tickets, set the bug tracker in CxFlow app.yml file or in add the argument with your bug tracker type (for example: --bug-tracker=Jira) 
  
 ### CxFlow can init git scan or upload zip folder to scan by sca:
 * git scan:
-  * --scan  --enabled-vulnerability-scanners=sca --app=MyApp --cx-project=test --repo-url=my-repo-url --repo-name=my-repo --branch=master --github  
+  * --scan  --enabled-vulnerability-scanners=sca --app=MyApp --cx-project=test --repo-url=my-repo-url --repo-name=my-repo --branch=main --github  
 * local zip scan:
   * --scan --app=MyApp --cx-team="my-team" --cx-project="project" --f="/Users/myProjects/project"
 * get latest scan results:
-  * --project --app=MyApp --cx-team="my-team" --cx-project="project" ([use 'project' command](https://github.com/checkmarx-ltd/cx-flow/blob/develop/src/main/java/com/checkmarx/flow/dto/ScanRequest.java))
+  * --project --app=MyApp --cx-team="my-team" --cx-project="project"
 
-
-## <a name="zipFolderScan">SCA ZIP folder scan</a>
-In order to change the default CxFlow SCA scan behaviour and to perform a SCA ZIP scan, the next configuration property should be added underneath the sca configuration section:
 ```
 enabledZipScan: true
 ```
 Additional configuration in SCA zip scan flow - Include source files
-* Default value set to false, In order to change the default CxFlow SCA zip scan behaviour, the next configuration property should be added underneath the sca configuration section:
+
+* Default value set to false, In order to change the default CxFlow SCA zip scan behavior, the next configuration property should be added underneath the sca configuration section:
+
 ```
 includeSources: true
 ```
