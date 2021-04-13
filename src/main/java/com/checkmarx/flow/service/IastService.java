@@ -33,7 +33,8 @@ public class IastService {
     private final Map<Integer, String> severityToPriority = new HashMap<>();
 
     private Random random = new Random();
-    private final int UPDATE_TOKEN_SECONDS = 115; //Token live only 2 minutes
+    //TODO: вытащить в параметр
+    private int updateTokenSeconds;
 
 
     private String iastUrlRoot;
@@ -53,24 +54,27 @@ public class IastService {
 
     public IastService(IastProperties iastProperties) {
         this.iastProperties = iastProperties;
-        severityToPriority.put(0, "Low");
-        severityToPriority.put(1, "Low");
-        severityToPriority.put(2, "Medium");
-        severityToPriority.put(3, "High");
     }
 
     @PostConstruct
     public void init() throws IOException, InterruptedException {
+        severityToPriority.put(0, "Low");
+        severityToPriority.put(1, "Low");
+        severityToPriority.put(2, "Medium");
+        severityToPriority.put(3, "High");
+
 
         if (iastProperties == null
                 || ScanUtils.empty(iastProperties.getUrl())
                 || ScanUtils.empty(iastProperties.getUsername())
                 || ScanUtils.empty(iastProperties.getPassword())
-                || ScanUtils.empty(iastProperties.getManagerPort())) {
+                || ScanUtils.empty(iastProperties.getManagerPort())
+                || ScanUtils.emptyObj(iastProperties.getUpdateTokenSeconds())) {
             log.error("not all IAST properties doesn't setup.");
             throw new RuntimeException("IAST properties doesn't setup.");
         }
 
+        updateTokenSeconds = iastProperties.getUpdateTokenSeconds();
         this.iastUrlRoot = iastProperties.getUrl() + ":" + iastProperties.getManagerPort() + "/iast/";
     }
 
@@ -198,7 +202,7 @@ public class IastService {
      * If that is need, then update it.
      */
     private void checkAuthorization(){
-        if (authTokenHeader == null || authTokenHeaderDateGeneration.plusSeconds(UPDATE_TOKEN_SECONDS).isAfter(LocalDateTime.now())){
+        if (authTokenHeader == null || authTokenHeaderDateGeneration.plusSeconds(updateTokenSeconds).isBefore(LocalDateTime.now())){
             authorization();
         }
     }
