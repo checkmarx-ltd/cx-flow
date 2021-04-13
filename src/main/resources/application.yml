@@ -92,7 +92,7 @@ checkmarx:
 jira:
   url: https://kecvens.atlassian.net
   username: and.tetka@gmail.com
-  token: 2W5vCvbganI5aB4egT7RF9DF
+  token: g7JH0DgONqd81mmBLKkF7FEB
   project: BCB
   issue-type: Bug
   priorities:
@@ -124,6 +124,7 @@ iast:
   manager-port: 8380
   username: admin
   password: Cx123456!
+  update-token-seconds: 150  # By default token live only 5 minutes
   jira:
     issue-type: Task
     username: and.tetka@gmail.com
