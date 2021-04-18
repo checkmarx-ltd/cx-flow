@@ -23,6 +23,7 @@ import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.google.common.collect.ImmutableMap;
+import io.atlassian.util.concurrent.Promise;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -42,6 +43,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Service
 @Slf4j
@@ -356,12 +358,26 @@ public class JiraService {
         }
     }
 
+    public List<Issue> searchIssueByLabel(String label){
+        SearchRestClient searchClient = client.getSearchClient();
+        String jql = "labels=\"" + label + "\"";
+
+        Promise<SearchResult> searchResultPromise = searchClient.searchJql(jql);
+        Iterable<Issue> issues = searchResultPromise.claim().getIssues();
+
+        List<Issue> result = new ArrayList<>();
+        issues.forEach(result::add);
+
+        return result;
+    }
+
     public String createIssue(String projectKey,
                               String summary,
                               String description,
                               String assignee,
                               String priorities,
-                              String issueTypeName) throws JiraClientException {
+                              String issueTypeName,
+                              List<String> labels) throws JiraClientException {
         log.debug("Retrieving issuetype object for project {}, type {}", projectKey, issueTypeName);
         try {
 
@@ -370,6 +386,7 @@ public class JiraService {
 
             issueBuilder.setSummary(summary);
             issueBuilder.setDescription(description);
+            issueBuilder.setFieldValue("labels", labels);
             if (assignee != null && !assignee.isEmpty()) {
                 String accountId = getAssignee(assignee, projectKey);
                 if(!accountId.isEmpty()) {
@@ -379,6 +396,7 @@ public class JiraService {
             if (priorities != null) {
                 issueBuilder.setFieldValue("priority", ComplexIssueInputFieldValue.with("name", priorities));
             }
+
 
             log.debug("Creating JIRA issue");
             BasicIssue basicIssue = this.issueClient.createIssue(issueBuilder.build()).claim();

@@ -33,7 +33,7 @@ public class IastService {
     private final Map<Integer, String> severityToPriority = new HashMap<>();
 
     private Random random = new Random();
-    //TODO: вытащить в параметр
+
     private int updateTokenSeconds;
 
 
@@ -51,6 +51,12 @@ public class IastService {
     @Autowired
     private JiraService jiraService;
 
+
+    @Value("${iast.cmd}")
+    private String iastCmd;
+
+    @Value("${iast.tag}")
+    private String iastScanTag;
 
     public IastService(IastProperties iastProperties) {
         this.iastProperties = iastProperties;
@@ -76,6 +82,22 @@ public class IastService {
 
         updateTokenSeconds = iastProperties.getUpdateTokenSeconds();
         this.iastUrlRoot = iastProperties.getUrl() + ":" + iastProperties.getManagerPort() + "/iast/";
+
+
+
+
+        switch (iastCmd.toLowerCase(Locale.ROOT)) {
+            case "get-scan-tag" :
+                System.out.println(generateUniqTag());
+                return;
+            case "create-jira-issue" :
+                stopScanAndCreateJiraIssueFromIastSummary(iastScanTag);
+                break;
+            case "search-issue-by-label" :
+                jiraService.searchIssueByLabel(iastScanTag);
+                break;
+        }
+
     }
 
     public String generateUniqTag() {
@@ -137,11 +159,11 @@ public class IastService {
             List<VulnerabilityInfo> vulnerabilities = scanVulnerabilities.getVulnerabilities();
             for (VulnerabilityInfo vulnerability : vulnerabilities) {
 
-                if (vulnerability.getNewCount() != 0) {
+                if (vulnerability.getNewCount() == 0) {
                     final List<ResultInfo> scansResultsQuery = apiScanResults(scan.getScanId(), vulnerability.getId());
 
                     for (ResultInfo scansResultQuery : scansResultsQuery) {
-                        if (scansResultQuery.isNewResult()) {
+                        if (!scansResultQuery.isNewResult()) {
 
                             String title = scansResultQuery.getName() + ": " + scansResultQuery.getUrl();
 
@@ -158,7 +180,8 @@ public class IastService {
                                     description,
                                     iastProperties.getJira().getUsername(),
                                     severityToPriority.get(scansResultQuery.getSeverity().toValue()),
-                                    iastProperties.getJira().getIssueType());
+                                    iastProperties.getJira().getIssueType(),
+                                    Collections.singletonList(scan.getTag()));
 
                         }
                     }

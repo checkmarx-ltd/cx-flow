@@ -1,17 +1,18 @@
 package com.checkmarx.flow.controller;
 
+import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.checkmarx.flow.dto.EventResponse;
 import com.checkmarx.flow.service.IastService;
+import com.checkmarx.flow.service.JiraService;
 import com.checkmarx.flow.utils.TokenUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.util.Random;
+import java.util.List;
 
 import static com.atlassian.sal.api.xsrf.XsrfHeaderValidator.TOKEN_HEADER;
 
@@ -26,17 +27,19 @@ public class IastController {
     private IastService iastService;
     @Autowired
     private TokenUtils tokenUtils;
+    @Autowired
+    private JiraService jiraService;
 
-    @PostMapping(value = { "/iniqTag"})
-    public ResponseEntity<EventResponse> generateUniqTag(){
+    @PostMapping(value = { "/generate-tag"})
+    public ResponseEntity<EventResponse> generateTag(){
         return ResponseEntity.accepted().body(EventResponse.builder()
                 .message(iastService.generateUniqTag())
                 .success(true)
                 .build());
     }
 
-    @PostMapping(value = { "/stopScanAndCreateJiraTask/{scanId}"})
-    public ResponseEntity<EventResponse> stopScanAndCreateJiraTask(
+    @PostMapping(value = { "/stop-scan-and-create-jira-issue/{scanId}"})
+    public ResponseEntity<EventResponse> stopScanAndCreateJiraIssue(
             @PathVariable(value = "scanId", required = false) String scanId,
             @RequestHeader(value = TOKEN_HEADER) String token){
 //         Validate shared API token from header
@@ -57,6 +60,14 @@ public class IastController {
                 .success(false)
                 .build());
     }
+
+
+    @GetMapping(value = { "/jira/{label}"})
+    public List<Issue> jiraIssue(@PathVariable(value = "label", required = false) String label){
+        return jiraService.searchIssueByLabel(label);
+
+    }
+
 
 
 }
