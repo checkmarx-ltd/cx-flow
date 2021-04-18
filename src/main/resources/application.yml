@@ -90,10 +90,10 @@ checkmarx:
   #project-script:
 
 jira:
-  url: https://kecvens.atlassian.net
-  username: and.tetka@gmail.com
-  token: g7JH0DgONqd81mmBLKkF7FEB
-  project: BCB
+  url: https://xxxxx.atlassian.net
+  username: xxxx
+  token: xxxx
+  project: APPSEC
   issue-type: Bug
   priorities:
     X: Y # Map Checkmarx severity : to JIRA Priority
@@ -115,19 +115,14 @@ jira:
   #  fields:
 
 iast:
-#  url: http://xxxxx.iast.net
-#  manager-port: 8380
-#  username: xxxx
-#  password: xxxx
-
-  url: http://localhost
+  url: http://xxxxx.iast.net
   manager-port: 8380
-  username: admin
-  password: Cx123456!
+  username: xxxx
+  password: xxxx
   update-token-seconds: 150  # By default token live only 5 minutes
   jira:
     issue-type: Task
-    username: and.tetka@gmail.com
+    username: xxxx
     priorities:
       X: Y # Map Checkmarx severity : to JIRA Priority
     open-transition: Reopen Issue
