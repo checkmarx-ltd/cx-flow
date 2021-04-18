@@ -2,6 +2,7 @@ package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.config.IastProperties;
 import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.iast.manager.dto.*;
 import com.checkmarx.flow.exception.JiraClientException;
 import com.checkmarx.flow.utils.ScanUtils;
@@ -51,13 +52,6 @@ public class IastService {
     @Autowired
     private JiraService jiraService;
 
-
-    @Value("${iast.cmd}")
-    private String iastCmd;
-
-    @Value("${iast.tag}")
-    private String iastScanTag;
-
     public IastService(IastProperties iastProperties) {
         this.iastProperties = iastProperties;
     }
@@ -83,26 +77,28 @@ public class IastService {
         updateTokenSeconds = iastProperties.getUpdateTokenSeconds();
         this.iastUrlRoot = iastProperties.getUrl() + ":" + iastProperties.getManagerPort() + "/iast/";
 
-
-
-
-        switch (iastCmd.toLowerCase(Locale.ROOT)) {
-            case "get-scan-tag" :
-                System.out.println(generateUniqTag());
-                return;
-            case "create-jira-issue" :
-                stopScanAndCreateJiraIssueFromIastSummary(iastScanTag);
-                break;
-            case "search-issue-by-label" :
-                jiraService.searchIssueByLabel(iastScanTag);
-                break;
-        }
-
     }
 
     public String generateUniqTag() {
         return "cx-flow-" + LocalDateTime.now() + "-" + Math.abs(random.nextLong());
     }
+
+    public void stopScanAndCreateJiraIssueFromIastSummary(ScanRequest request, String scanTag) throws IOException {
+        log.debug("start stopScanAndCreateJiraIssueFromIastSummary with scanTag:" + scanTag);
+        Scan scan = null;
+        try {
+            scan = apiScansScanTagFinish(scanTag);
+        } catch (FileNotFoundException e){
+            log.warn("Can't find scan with current tag: " + scanTag, e);
+        }
+
+        if (scan == null){
+            return;
+        }
+
+        getVulnerabilitiesAndCreateJiraIssue(request, scan);
+    }
+
 
     public void stopScanAndCreateJiraIssueFromIastSummary(String scanTag) throws IOException {
         log.debug("start stopScanAndCreateJiraIssueFromIastSummary with scanTag:" + scanTag);
@@ -149,6 +145,47 @@ public class IastService {
 
         } catch (IOException e) {
             log.error("Can't authorize in IAST server", e);
+        }
+    }
+
+    private void getVulnerabilitiesAndCreateJiraIssue(ScanRequest request, Scan scan) {
+        try {
+            final ScanVulnerabilities scanVulnerabilities = apiScanVulnerabilities(scan.getScanId());
+
+            List<VulnerabilityInfo> vulnerabilities = scanVulnerabilities.getVulnerabilities();
+            for (VulnerabilityInfo vulnerability : vulnerabilities) {
+
+                if (vulnerability.getNewCount() == 0) {
+                    final List<ResultInfo> scansResultsQuery = apiScanResults(scan.getScanId(), vulnerability.getId());
+
+                    for (ResultInfo scansResultQuery : scansResultsQuery) {
+                        if (!scansResultQuery.isNewResult()) {
+
+                            String title = scansResultQuery.getName() + ": " + scansResultQuery.getUrl();
+
+                            String description = iastProperties.getUrl() + ":" + iastProperties.getManagerPort()
+                                    + "/iast-ui/#!/project/" + scanVulnerabilities.getProjectId()
+                                    + "/scan/" + scanVulnerabilities.getScanId()
+                                    + "?rid=" + scansResultQuery.getResultId()
+                                    + "&vid=" + vulnerability.getId();
+
+                            jiraService.createIssue(
+                                    jiraProperties.getProject(),
+                                    title,
+                                    description,
+                                    iastProperties.getJira().getUsername(),
+                                    severityToPriority.get(scansResultQuery.getSeverity().toValue()),
+                                    iastProperties.getJira().getIssueType(),
+                                    Collections.singletonList(scan.getTag()));
+
+                        }
+                    }
+                }
+            }
+        } catch (JiraClientException e) {
+            log.error("Can't create Jira issue", e);
+        } catch (IOException e) {
+            log.error("Can't send api request", e);
         }
     }
 

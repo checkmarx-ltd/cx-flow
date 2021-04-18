@@ -3,7 +3,9 @@ package com.checkmarx.flow;
 import com.checkmarx.flow.config.*;
 import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.dto.*;
-import com.checkmarx.flow.exception.*;
+import com.checkmarx.flow.exception.ExitThrowable;
+import com.checkmarx.flow.exception.MachinaException;
+import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
@@ -46,6 +48,7 @@ public class CxFlowRunner implements ApplicationRunner {
 
     public static final String PARSE_OPTION = "parse";
     public static final String BATCH_OPTION = "batch";
+    public static final String IAST = "iast";
 
 
     private final FlowProperties flowProperties;
@@ -53,6 +56,8 @@ public class CxFlowRunner implements ApplicationRunner {
     private final JiraProperties jiraProperties;
     private final GitHubProperties gitHubProperties;
     private final GitLabProperties gitLabProperties;
+    private final IastProperties iastProperties;
+    private final IastService iastService;
     private final ADOProperties adoProperties;
     private final HelperService helperService;
     private final List<ThreadPoolTaskExecutor> executors;
@@ -119,6 +124,7 @@ public class CxFlowRunner implements ApplicationRunner {
         String altProject;
         String altFields;
         String config;
+        String scanTag;
         List<String> severity;
         List<String> cwe;
         List<String> category;
@@ -140,8 +146,12 @@ public class CxFlowRunner implements ApplicationRunner {
             exit(ExitCode.SUCCESS);
         }
 
-        if (!args.containsOption("scan") && !args.containsOption(PARSE_OPTION) && !args.containsOption(BATCH_OPTION) && !args.containsOption("project")) {
-            log.error("--scan | --parse | --batch | --project option must be specified");
+        if (!args.containsOption("scan")
+                && !args.containsOption(PARSE_OPTION)
+                && !args.containsOption(BATCH_OPTION)
+                && !args.containsOption("project")
+                && !args.containsOption(IAST)) {
+            log.error("--scan | --parse | --batch | --iast | --project option must be specified");
             exit(1);
         }
 
@@ -172,6 +182,7 @@ public class CxFlowRunner implements ApplicationRunner {
         assignee = getOptionValues(args, "assignee");
         mergeId = getOptionValues(args, "merge-id");
         preset = getOptionValues(args, "preset");
+        scanTag = getOptionValues(args, "scan-tag");
         osa = args.getOptionValues("osa") != null;
         force = args.getOptionValues("forcescan") != null;
         /*Collect command line options (List of Strings)*/
@@ -187,8 +198,13 @@ public class CxFlowRunner implements ApplicationRunner {
         CxPropertiesBase cxProperties = cxScannerService.getProperties();
 
         if (((ScanUtils.empty(namespace) && ScanUtils.empty(repoName) && ScanUtils.empty(branch)) &&
-                ScanUtils.empty(application)) && !args.containsOption(BATCH_OPTION)) {
+                ScanUtils.empty(application)) && !args.containsOption(BATCH_OPTION) && !args.containsOption(IAST)) {
             log.error("Namespace/Repo/Branch or Application (app) must be provided");
+            exit(1);
+        }
+
+        if (args.containsOption(IAST) && (scanTag == null)) {
+            log.error("--scan-tag must be provided for IAST tracking");
             exit(1);
         }
 
@@ -408,6 +424,8 @@ public class CxFlowRunner implements ApplicationRunner {
                 } else {
                     log.error("No valid option was provided for driving scan");
                 }
+            } else if (args.containsOption(IAST)) {
+                configurateIast(request, scanTag);
             }
         } catch (Exception e) {
             log.error("An error occurred while processing request", e);
@@ -425,6 +443,10 @@ public class CxFlowRunner implements ApplicationRunner {
             repoUrl = repoUrl.concat("/browse");
         }
         return repoUrl;
+    }
+
+    private void configurateIast(ScanRequest request, String scanTag) throws IOException {
+        iastService.stopScanAndCreateJiraIssueFromIastSummary(scanTag);
     }
 
     private BugTracker.BugTrackerBuilder jiraPropertiesToBugTracker() {
