@@ -30,7 +30,7 @@
         </encoder>
     </appender>
     
-    <logger name="jsonLogger" level="ERROR">
+    <logger name="jsonLogger" level="INFO">
         <appender-ref ref="json" />
     </logger>
     

@@ -48,7 +48,7 @@ public class CxFlowRunner implements ApplicationRunner {
 
     public static final String PARSE_OPTION = "parse";
     public static final String BATCH_OPTION = "batch";
-    public static final String IAST = "iast";
+    public static final String IAST_OPTION = "iast";
 
 
     private final FlowProperties flowProperties;
@@ -56,7 +56,6 @@ public class CxFlowRunner implements ApplicationRunner {
     private final JiraProperties jiraProperties;
     private final GitHubProperties gitHubProperties;
     private final GitLabProperties gitLabProperties;
-    private final IastProperties iastProperties;
     private final IastService iastService;
     private final ADOProperties adoProperties;
     private final HelperService helperService;
@@ -150,7 +149,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 && !args.containsOption(PARSE_OPTION)
                 && !args.containsOption(BATCH_OPTION)
                 && !args.containsOption("project")
-                && !args.containsOption(IAST)) {
+                && !args.containsOption(IAST_OPTION)) {
             log.error("--scan | --parse | --batch | --iast | --project option must be specified");
             exit(1);
         }
@@ -198,12 +197,12 @@ public class CxFlowRunner implements ApplicationRunner {
         CxPropertiesBase cxProperties = cxScannerService.getProperties();
 
         if (((ScanUtils.empty(namespace) && ScanUtils.empty(repoName) && ScanUtils.empty(branch)) &&
-                ScanUtils.empty(application)) && !args.containsOption(BATCH_OPTION) && !args.containsOption(IAST)) {
+                ScanUtils.empty(application)) && !args.containsOption(BATCH_OPTION) && !args.containsOption(IAST_OPTION)) {
             log.error("Namespace/Repo/Branch or Application (app) must be provided");
             exit(1);
         }
 
-        if (args.containsOption(IAST) && (scanTag == null)) {
+        if (args.containsOption(IAST_OPTION) && (scanTag == null)) {
             log.error("--scan-tag must be provided for IAST tracking");
             exit(1);
         }
@@ -424,7 +423,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 } else {
                     log.error("No valid option was provided for driving scan");
                 }
-            } else if (args.containsOption(IAST)) {
+            } else if (args.containsOption(IAST_OPTION)) {
                 configurateIast(request, scanTag);
             }
         } catch (Exception e) {
