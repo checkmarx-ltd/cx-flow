@@ -120,15 +120,6 @@ iast:
   username: xxxx
   password: xxxx
   update-token-seconds: 150  # By default token live only 5 minutes
-  jira:
-    issue-type: Task
-    username: xxxx
-    priorities:
-      X: Y # Map Checkmarx severity : to JIRA Priority
-    open-transition: Reopen Issue
-    close-transition: Close Issue
-    open-status: Open
-    closed-status: Closed
 
 cxgo:
   client-secret: xxx

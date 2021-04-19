@@ -61,13 +61,9 @@ public class IastController {
                 .build());
     }
 
-
     @GetMapping(value = { "/jira/{label}"})
     public List<Issue> jiraIssue(@PathVariable(value = "label", required = false) String label){
         return jiraService.searchIssueByLabel(label);
 
     }
-
-
-
 }

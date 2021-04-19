@@ -2,6 +2,7 @@ package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.config.IastProperties;
 import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.iast.manager.dto.*;
 import com.checkmarx.flow.exception.JiraClientException;
@@ -101,19 +102,7 @@ public class IastService {
 
 
     public void stopScanAndCreateJiraIssueFromIastSummary(String scanTag) throws IOException {
-        log.debug("start stopScanAndCreateJiraIssueFromIastSummary with scanTag:" + scanTag);
-        Scan scan = null;
-        try {
-            scan = apiScansScanTagFinish(scanTag);
-        } catch (FileNotFoundException e){
-            log.warn("Can't find scan with current tag: " + scanTag, e);
-        }
-
-        if (scan == null){
-            return;
-        }
-
-        getVulnerabilitiesAndCreateJiraIssue(scan);
+        stopScanAndCreateJiraIssueFromIastSummary(null, scanTag);
     }
 
     private void authorization() {
@@ -163,19 +152,43 @@ public class IastService {
 
                             String title = scansResultQuery.getName() + ": " + scansResultQuery.getUrl();
 
+                            String assignee;
+                            String issueType;
+                            String project;
+                            if (request != null && request.getBugTracker() != null){
+                                BugTracker bugTracker = request.getBugTracker();
+
+                                assignee = bugTracker.getAssignee() != null ? bugTracker.getAssignee()
+                                                                            : jiraProperties.getUsername();
+
+                                issueType = bugTracker.getIssueType() != null   ? bugTracker.getIssueType()
+                                                                                : jiraProperties.getIssueType();
+
+                                project = bugTracker.getProjectKey() != null    ? bugTracker.getProjectKey()
+                                                                                : jiraProperties.getProject();
+
+                            } else {
+                                assignee = jiraProperties.getUsername();
+                                issueType = jiraProperties.getIssueType();
+                                project = jiraProperties.getProject();
+                            }
+
+
+
                             String description = iastProperties.getUrl() + ":" + iastProperties.getManagerPort()
                                     + "/iast-ui/#!/project/" + scanVulnerabilities.getProjectId()
                                     + "/scan/" + scanVulnerabilities.getScanId()
                                     + "?rid=" + scansResultQuery.getResultId()
                                     + "&vid=" + vulnerability.getId();
 
+
                             jiraService.createIssue(
-                                    jiraProperties.getProject(),
+                                    project,
                                     title,
                                     description,
-                                    iastProperties.getJira().getUsername(),
+                                    assignee,
                                     severityToPriority.get(scansResultQuery.getSeverity().toValue()),
-                                    iastProperties.getJira().getIssueType(),
+                                    issueType,
                                     Collections.singletonList(scan.getTag()));
 
                         }
@@ -188,50 +201,6 @@ public class IastService {
             log.error("Can't send api request", e);
         }
     }
-
-    private void getVulnerabilitiesAndCreateJiraIssue(Scan scan) {
-        try {
-            final ScanVulnerabilities scanVulnerabilities = apiScanVulnerabilities(scan.getScanId());
-
-            List<VulnerabilityInfo> vulnerabilities = scanVulnerabilities.getVulnerabilities();
-            for (VulnerabilityInfo vulnerability : vulnerabilities) {
-
-                if (vulnerability.getNewCount() == 0) {
-                    final List<ResultInfo> scansResultsQuery = apiScanResults(scan.getScanId(), vulnerability.getId());
-
-                    for (ResultInfo scansResultQuery : scansResultsQuery) {
-                        if (!scansResultQuery.isNewResult()) {
-
-                            String title = scansResultQuery.getName() + ": " + scansResultQuery.getUrl();
-
-                            String description = iastProperties.getUrl() + ":" + iastProperties.getManagerPort()
-                                    + "/iast-ui/#!/project/" + scanVulnerabilities.getProjectId()
-                                    + "/scan/" + scanVulnerabilities.getScanId()
-                                    + "?rid=" + scansResultQuery.getResultId()
-                                    + "&vid=" + vulnerability.getId();
-
-
-                            jiraService.createIssue(
-                                    jiraProperties.getProject(),
-                                    title,
-                                    description,
-                                    iastProperties.getJira().getUsername(),
-                                    severityToPriority.get(scansResultQuery.getSeverity().toValue()),
-                                    iastProperties.getJira().getIssueType(),
-                                    Collections.singletonList(scan.getTag()));
-
-                        }
-                    }
-                }
-            }
-        } catch (JiraClientException e) {
-            log.error("Can't create Jira issue", e);
-        } catch (IOException e) {
-            log.error("Can't send api request", e);
-        }
-    }
-
-
 
     private ScanVulnerabilities apiScanVulnerabilities(Long scanId) throws IOException {
         return objectMapper.readValue(resultGetBodyOfDefaultConnectionToIast("scans/" + scanId + "/vulnerabilities"), ScanVulnerabilities.class);
