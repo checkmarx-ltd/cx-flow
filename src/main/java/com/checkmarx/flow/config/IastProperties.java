@@ -18,6 +18,5 @@ public class IastProperties {
     private String username;
     private String password;
     private String managerPort;
-    private JiraProperties jira;
     private Integer updateTokenSeconds;
 }
