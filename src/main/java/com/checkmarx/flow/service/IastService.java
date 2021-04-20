@@ -13,7 +13,6 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -28,7 +27,6 @@ import java.util.*;
 @Slf4j
 @Service
 public class IastService {
-
     private final String NEW_LOW = "newLow";
     private final String NEW_MEDIUM = "newMedium";
     private final String NEW_HIGH = "newHigh";
@@ -37,7 +35,6 @@ public class IastService {
     private Random random = new Random();
 
     private int updateTokenSeconds;
-
 
     private String iastUrlRoot;
     private final IastProperties iastProperties;
@@ -64,7 +61,6 @@ public class IastService {
         severityToPriority.put(2, "Medium");
         severityToPriority.put(3, "High");
 
-
         if (iastProperties == null
                 || ScanUtils.empty(iastProperties.getUrl())
                 || ScanUtils.empty(iastProperties.getUsername())
@@ -77,7 +73,6 @@ public class IastService {
 
         updateTokenSeconds = iastProperties.getUpdateTokenSeconds();
         this.iastUrlRoot = iastProperties.getUrl() + ":" + iastProperties.getManagerPort() + "/iast/";
-
     }
 
     public String generateUniqTag() {
@@ -89,11 +84,11 @@ public class IastService {
         Scan scan = null;
         try {
             scan = apiScansScanTagFinish(scanTag);
-        } catch (FileNotFoundException e){
+        } catch (FileNotFoundException e) {
             log.warn("Can't find scan with current tag: " + scanTag, e);
         }
 
-        if (scan == null){
+        if (scan == null) {
             return;
         }
 
@@ -149,48 +144,7 @@ public class IastService {
 
                     for (ResultInfo scansResultQuery : scansResultsQuery) {
                         if (!scansResultQuery.isNewResult()) {
-
-                            String title = scansResultQuery.getName() + ": " + scansResultQuery.getUrl();
-
-                            String assignee;
-                            String issueType;
-                            String project;
-                            if (request != null && request.getBugTracker() != null){
-                                BugTracker bugTracker = request.getBugTracker();
-
-                                assignee = bugTracker.getAssignee() != null ? bugTracker.getAssignee()
-                                                                            : jiraProperties.getUsername();
-
-                                issueType = bugTracker.getIssueType() != null   ? bugTracker.getIssueType()
-                                                                                : jiraProperties.getIssueType();
-
-                                project = bugTracker.getProjectKey() != null    ? bugTracker.getProjectKey()
-                                                                                : jiraProperties.getProject();
-
-                            } else {
-                                assignee = jiraProperties.getUsername();
-                                issueType = jiraProperties.getIssueType();
-                                project = jiraProperties.getProject();
-                            }
-
-
-
-                            String description = iastProperties.getUrl() + ":" + iastProperties.getManagerPort()
-                                    + "/iast-ui/#!/project/" + scanVulnerabilities.getProjectId()
-                                    + "/scan/" + scanVulnerabilities.getScanId()
-                                    + "?rid=" + scansResultQuery.getResultId()
-                                    + "&vid=" + vulnerability.getId();
-
-
-                            jiraService.createIssue(
-                                    project,
-                                    title,
-                                    description,
-                                    assignee,
-                                    severityToPriority.get(scansResultQuery.getSeverity().toValue()),
-                                    issueType,
-                                    Collections.singletonList(scan.getTag()));
-
+                            createJiraIssue(scanVulnerabilities, request, scansResultQuery, vulnerability, scan);
                         }
                     }
                 }
@@ -202,16 +156,65 @@ public class IastService {
         }
     }
 
+
+    private void createJiraIssue(ScanVulnerabilities scanVulnerabilities,
+                                 ScanRequest request,
+                                 ResultInfo scansResultQuery,
+                                 VulnerabilityInfo vulnerability,
+                                 Scan scan) throws JiraClientException {
+
+        String title = scansResultQuery.getName() + ": " + scansResultQuery.getUrl();
+
+        String assignee;
+        String issueType;
+        String project;
+        if (request != null && request.getBugTracker() != null) {
+            BugTracker bugTracker = request.getBugTracker();
+
+            assignee = bugTracker.getAssignee() != null ? bugTracker.getAssignee()
+                    : jiraProperties.getUsername();
+
+            issueType = bugTracker.getIssueType() != null ? bugTracker.getIssueType()
+                    : jiraProperties.getIssueType();
+
+            project = bugTracker.getProjectKey() != null ? bugTracker.getProjectKey()
+                    : jiraProperties.getProject();
+
+        } else {
+            assignee = jiraProperties.getUsername();
+            issueType = jiraProperties.getIssueType();
+            project = jiraProperties.getProject();
+        }
+
+
+        String description = iastProperties.getUrl() + ":" + iastProperties.getManagerPort()
+                + "/iast-ui/#!/project/" + scanVulnerabilities.getProjectId()
+                + "/scan/" + scanVulnerabilities.getScanId()
+                + "?rid=" + scansResultQuery.getResultId()
+                + "&vid=" + vulnerability.getId();
+
+        jiraService.createIssue(
+                project,
+                title,
+                description,
+                assignee,
+                severityToPriority.get(scansResultQuery.getSeverity().toValue()),
+                issueType,
+                Collections.singletonList(scan.getTag()));
+    }
+
     private ScanVulnerabilities apiScanVulnerabilities(Long scanId) throws IOException {
         return objectMapper.readValue(resultGetBodyOfDefaultConnectionToIast("scans/" + scanId + "/vulnerabilities"), ScanVulnerabilities.class);
     }
 
     private List<ResultInfo> apiScanResults(Long scanId, Long vulnerabilityId) throws IOException {
-        return objectMapper.readValue(resultGetBodyOfDefaultConnectionToIast("scans/" + scanId + "/results?queryId=" + vulnerabilityId),  new TypeReference<List<ResultInfo>>(){});
+        return objectMapper.readValue(resultGetBodyOfDefaultConnectionToIast("scans/" + scanId + "/results?queryId=" + vulnerabilityId), new TypeReference<List<ResultInfo>>() {
+        });
     }
 
     private List<ProjectSummary> apiProjectsSummary() throws IOException {
-        return objectMapper.readValue(resultGetBodyOfDefaultConnectionToIast("projects/summary"), new TypeReference<List<ProjectSummary>>(){});
+        return objectMapper.readValue(resultGetBodyOfDefaultConnectionToIast("projects/summary"), new TypeReference<List<ProjectSummary>>() {
+        });
     }
 
     private Scan apiScansScanTagFinish(String scanTag) throws IOException {
@@ -223,15 +226,16 @@ public class IastService {
     }
 
     private Page<Scan> apiScanAggregation(Long projectId, int pageNumber) throws IOException {
-        return objectMapper.readValue(resultGetBodyOfDefaultConnectionToIast("scans/aggregation?pageNumber=" + pageNumber + "&pageSize=100&projectId=" + projectId), new TypeReference<Page<Scan>>(){});
+        return objectMapper.readValue(resultGetBodyOfDefaultConnectionToIast("scans/aggregation?pageNumber=" + pageNumber + "&pageSize=100&projectId=" + projectId), new TypeReference<Page<Scan>>() {
+        });
     }
 
     /**
      * Check need to update token.
      * If that is need, then update it.
      */
-    private void checkAuthorization(){
-        if (authTokenHeader == null || authTokenHeaderDateGeneration.plusSeconds(updateTokenSeconds).isBefore(LocalDateTime.now())){
+    private void checkAuthorization() {
+        if (authTokenHeader == null || authTokenHeaderDateGeneration.plusSeconds(updateTokenSeconds).isBefore(LocalDateTime.now())) {
             authorization();
         }
     }
@@ -239,9 +243,11 @@ public class IastService {
     private String resultGetBodyOfDefaultConnectionToIast(String urlConnection) throws IOException {
         return resultBodyOfDefaultConnectionToIast(urlConnection, "GET");
     }
+
     private String resultPostBodyOfDefaultConnectionToIast(String urlConnection) throws IOException {
         return resultBodyOfDefaultConnectionToIast(urlConnection, "POST");
     }
+
     private String resultPutBodyOfDefaultConnectionToIast(String urlConnection) throws IOException {
         return resultBodyOfDefaultConnectionToIast(urlConnection, "PUT");
     }

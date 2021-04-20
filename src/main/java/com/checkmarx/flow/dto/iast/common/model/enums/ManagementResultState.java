@@ -4,9 +4,6 @@ import lombok.Getter;
 
 import java.io.Serializable;
 
-/**
- * Created by yonatanh on 17/09/2017.
- */
 public enum ManagementResultState implements Serializable {
     TO_VERIFY("To Verify"),
     CONFIRMED("Confirmed"),
