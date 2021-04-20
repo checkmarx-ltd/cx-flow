@@ -60,17 +60,17 @@ cx-flow:
   filter-category:
   filter-cwe:
   filter-status:
-# track-application-only: false
+  # track-application-only: false
   mitre-url: https://cwe.mitre.org/data/definitions/%s.html
-#  break-build: true
-#  wiki-url: https://custodela.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
-#  codebash-url: https://cxa.codebashing.com/courses/
-#  mail:
- #    host: smtp.gmail.com
- #    port: 587
- #    username: xxx
- #    password: xxx
- #    enabled:
+  #  break-build: true
+  #  wiki-url: https://custodela.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
+  #  codebash-url: https://cxa.codebashing.com/courses/
+  #  mail:
+  #    host: smtp.gmail.com
+  #    port: 587
+  #    username: xxx
+  #    password: xxx
+  #    enabled:
 
 checkmarx:
   username: xxxxx
@@ -84,7 +84,7 @@ checkmarx:
   url: ${checkmarx.base-url}/cxrestapi
   #preserve-xml: true
   #incremental: true
-#WSDL Config
+  #WSDL Config
   portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
   #team-script:
   #project-script:

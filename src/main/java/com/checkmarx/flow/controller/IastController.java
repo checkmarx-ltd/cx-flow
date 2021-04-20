@@ -8,6 +8,7 @@ import com.checkmarx.flow.utils.TokenUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,7 +23,6 @@ import static com.atlassian.sal.api.xsrf.XsrfHeaderValidator.TOKEN_HEADER;
 @RequiredArgsConstructor
 public class IastController {
 
-
     @Autowired
     private IastService iastService;
     @Autowired
@@ -30,19 +30,19 @@ public class IastController {
     @Autowired
     private JiraService jiraService;
 
-    @PostMapping(value = { "/generate-tag"})
-    public ResponseEntity<EventResponse> generateTag(){
+    @PostMapping(value = {"/generate-tag"})
+    public ResponseEntity<EventResponse> generateTag() {
         return ResponseEntity.accepted().body(EventResponse.builder()
                 .message(iastService.generateUniqTag())
                 .success(true)
                 .build());
     }
 
-    @PostMapping(value = { "/stop-scan-and-create-jira-issue/{scanId}"})
+    @PostMapping(value = {"/stop-scan-and-create-jira-issue/{scanId}"})
     public ResponseEntity<EventResponse> stopScanAndCreateJiraIssue(
             @PathVariable(value = "scanId", required = false) String scanId,
-            @RequestHeader(value = TOKEN_HEADER) String token){
-//         Validate shared API token from header
+            @RequestHeader(value = TOKEN_HEADER) String token) {
+        //Validate shared API token from header
         tokenUtils.validateToken(token);
         try {
             iastService.stopScanAndCreateJiraIssueFromIastSummary(scanId);
@@ -55,15 +55,14 @@ public class IastController {
             log.warn("Can't stop scan or create jira task", e);
         }
 
-        return ResponseEntity.status(500).body(EventResponse.builder()
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(EventResponse.builder()
                 .message("Internal Server Error")
                 .success(false)
                 .build());
     }
 
-    @GetMapping(value = { "/jira/label/{label}"})
-    public List<Issue> jiraIssue(@PathVariable(value = "label", required = false) String label){
+    @GetMapping(value = {"/jira/label/{label}"})
+    public List<Issue> jiraIssue(@PathVariable(value = "label", required = false) String label) {
         return jiraService.searchIssueByLabel(label);
-
     }
 }
