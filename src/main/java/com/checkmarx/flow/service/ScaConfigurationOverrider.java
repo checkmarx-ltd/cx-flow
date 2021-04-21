@@ -68,8 +68,7 @@ public class ScaConfigurationOverrider {
             return;
         }
 
-        ScaConfig scaConfig = ScaConfig.builder()
-                .build();
+        ScaConfig scaConfig = request.getScaConfig();
 
         sca.map(Sca::getAccessControlUrl).ifPresent(accessControlUrl -> {
             scaConfig.setAccessControlUrl(accessControlUrl);
@@ -114,8 +113,6 @@ public class ScaConfigurationOverrider {
         overrideSeverityFilters(request, sca, overrideReport);
 
         overrideScoreFilter(request, sca, overrideReport);
-
-        request.setScaConfig(scaConfig);
     }
 
     private void overrideScoreFilter(ScanRequest request, Optional<Sca> override, Map<String, String> overrideReport) {

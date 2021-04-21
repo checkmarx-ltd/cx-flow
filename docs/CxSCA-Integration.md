@@ -187,6 +187,7 @@ CxFlow supports configuration as code for CxSAST and CxSCA scans.
 	}
 }
 ```
+<br/> When a configuration as code property is set, it will only override the corresponded global configuration property. In case of a list property (e.g. 'filterSeverity'), the whole global corresponded list will be overridden.
 
 ## <a name="commandline">SCA Scans From Command Line</a>
 ### CxFlow can initiate SCA scans with command line mode
