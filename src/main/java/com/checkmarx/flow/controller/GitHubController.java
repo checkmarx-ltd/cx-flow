@@ -206,6 +206,7 @@ public class GitHubController extends WebhookController {
                     .filter(filter)
                     .organizationId(getOrganizationid(repository))
                     .gitUrl(gitUrl)
+                    .hash(event.getPullRequest().getHead().getSha())
                     .build();
 
             setScmInstance(controllerRequest, request);
@@ -343,6 +344,7 @@ public class GitHubController extends WebhookController {
                     .filter(filter)
                     .organizationId(getOrganizationid(repository))
                     .gitUrl(gitUrl)
+                    .hash(event.getAfter())
                     .build();
 
             setScmInstance(controllerRequest, request);
