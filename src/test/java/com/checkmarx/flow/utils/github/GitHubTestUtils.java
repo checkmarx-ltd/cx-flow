@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 
 @TestComponent
 @Slf4j
-public class GitHubTestUtils implements GitHubTestUtilsImpl {
+public class GitHubTestUtils {
 
     @Autowired
     private GitHubIssueTracker gitHubIssueTracker;
@@ -42,26 +42,22 @@ public class GitHubTestUtils implements GitHubTestUtilsImpl {
     @Autowired
     private GitHubProperties gitHubProperties;
 
-    @Override
     public List<Issue> getIssues(ScanRequest request) {
         return gitHubIssueTracker.getIssues(request);
     }
 
-    @Override
     public List<Issue> filterIssuesByState(List<Issue> issuesList, String state) {
         return issuesList.stream()
                 .filter(issue -> issue.getState().equals(state))
                 .collect(Collectors.toList());
     }
 
-    @Override
     public List<Issue> filterIssuesByStateAndByVulnerabilityName(List<Issue> issuesList, String state, String vulnerabilityName) {
         return issuesList.stream()
                 .filter(issue -> issue.getState().equals(state) && issue.getTitle().contains(vulnerabilityName))
                 .collect(Collectors.toList());
     }
 
-    @Override
     public int getIssueLinesCount(Issue issue) {
         String bodyLinePattern = "Line #[0-9]+";
         Pattern pattern = Pattern.compile(bodyLinePattern);
@@ -75,7 +71,6 @@ public class GitHubTestUtils implements GitHubTestUtilsImpl {
         return count;
     }
 
-    @Override
     public void closeIssue(Issue issue, ScanRequest request) {
         try {
             gitHubIssueTracker.closeIssue(issue, request);
@@ -84,7 +79,6 @@ public class GitHubTestUtils implements GitHubTestUtilsImpl {
         }
     }
 
-    @Override
     public void closeAllIssues(List<Issue> issuesList, ScanRequest request) {
         if (issuesList != null) {
             issuesList.forEach(issue ->
@@ -92,7 +86,6 @@ public class GitHubTestUtils implements GitHubTestUtilsImpl {
         }
     }
 
-    @Override
     public String createSignature(String requestBody) {
         final String HMAC_ALGORITHM = "HmacSHA1";
         String result = null;
@@ -113,7 +106,6 @@ public class GitHubTestUtils implements GitHubTestUtilsImpl {
         return result;
     }
 
-    @Override
     public String loadWebhookRequestBody(EventType eventType) {
         String filename = (eventType == GitHubTestUtils.EventType.PULL_REQUEST) ?
                 "github-pull-request.json" : "github-push.json";
@@ -126,7 +118,6 @@ public class GitHubTestUtils implements GitHubTestUtilsImpl {
         }
     }
 
-    @Override
     public HttpEntity<String> prepareWebhookRequest(EventType eventType) {
         String body = loadWebhookRequestBody(eventType);
 
