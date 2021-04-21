@@ -33,7 +33,7 @@ Feature: SCA support in CxFlow command-line
             | none       | 17              |
             | High       | 6               |
             | Medium,Low | 11              |
-            | Low        | 1               |
+            | Low        | 2               |
 
 
     Scenario Outline: Publishing latest scan results
