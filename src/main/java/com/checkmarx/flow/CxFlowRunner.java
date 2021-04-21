@@ -184,6 +184,7 @@ public class CxFlowRunner implements ApplicationRunner {
         excludeFolders = args.getOptionValues("exclude-folders");
         boolean usingBitBucketCloud = args.containsOption("bb");
         boolean usingBitBucketServer = args.containsOption("bbs");
+        boolean disableCertificateValidation = args.containsOption("trust-cert"); //or proxy-insecure or trusted-certs
         CxPropertiesBase cxProperties = cxScannerService.getProperties();
 
         if (((ScanUtils.empty(namespace) && ScanUtils.empty(repoName) && ScanUtils.empty(branch)) &&
@@ -334,6 +335,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 .altProject(altProject)
                 .altFields(altFields)
                 .forceScan(force)
+                .disableCertificateValidation(disableCertificateValidation)
                 .build();
 
         request = configOverrider.overrideScanRequestProperties(flowOverride, request);
@@ -519,7 +521,6 @@ public class CxFlowRunner implements ApplicationRunner {
 
     private void publishLatestScanResults(ScanRequest request) throws ExitThrowable {
         ScanResults scanResults = runOnActiveScanners(scanner -> scanner.getLatestScanResults(request));
-        processResults(request, scanResults);
     }
 
     private void processResults(ScanRequest request, ScanResults results) throws ExitThrowable {
