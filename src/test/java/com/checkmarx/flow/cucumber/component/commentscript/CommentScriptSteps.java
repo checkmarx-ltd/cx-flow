@@ -126,7 +126,7 @@ public class CommentScriptSteps {
         }
     }
 
-    @And("Scan request contain feature branch name {string}")
+    @And("Scan request contains feature branch name {string}")
     public void setScanRequestBranch(String branchName){
 
         this.branchName = branchName;
@@ -147,7 +147,7 @@ public class CommentScriptSteps {
     }
 
 
-    @When("CxFlow Triggering sast scan")
+    @When("CxFlow triggers SAST scan")
     public void cxFlowTriggerScan() {
         FlowController.CxScanRequest cxScanRequest = new FlowController.CxScanRequest();
         cxScanRequest.setProduct(ScanRequest.Product.CX.toString());
@@ -163,8 +163,7 @@ public class CommentScriptSteps {
 
     @Then("CxFlow scan comment is equal to {string}")
     public void compareComments(String expectedComment){
-        log.info("Comparing expected comment '{}' to actual comment '{}'", expectedComment, commentMessageFromRequest);
-
-        assertEquals(expectedComment, commentMessageFromRequest, "fail comparing expected comment to actual comment in scan request");
+        assertEquals(expectedComment, commentMessageFromRequest,
+                "fail comparing expected comment to actual comment in scan request");
     }
 }
