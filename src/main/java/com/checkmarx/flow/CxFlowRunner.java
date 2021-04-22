@@ -3,7 +3,9 @@ package com.checkmarx.flow;
 import com.checkmarx.flow.config.*;
 import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.dto.*;
-import com.checkmarx.flow.exception.*;
+import com.checkmarx.flow.exception.ExitThrowable;
+import com.checkmarx.flow.exception.MachinaException;
+import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
@@ -46,8 +48,7 @@ public class CxFlowRunner implements ApplicationRunner {
 
     public static final String PARSE_OPTION = "parse";
     public static final String BATCH_OPTION = "batch";
-
-
+    private static final String ERROR_BREAK_MSG = String.format("Exiting with Error code %d because some of the checks weren't passed", ExitCode.BUILD_INTERRUPTED.getValue());
     private final FlowProperties flowProperties;
     private final CxScannerService cxScannerService;
     private final JiraProperties jiraProperties;
@@ -63,7 +64,6 @@ public class CxFlowRunner implements ApplicationRunner {
     private final BuildProperties buildProperties;
     private final List<VulnerabilityScanner> scanners;
     private final ThresholdValidator thresholdValidator;
-    private static final String ERROR_BREAK_MSG = String.format("Exiting with Error code %d because some of the checks weren't passed", ExitCode.BUILD_INTERRUPTED.getValue());
 
     @PostConstruct
     private void logVersion() {
@@ -184,7 +184,7 @@ public class CxFlowRunner implements ApplicationRunner {
         excludeFolders = args.getOptionValues("exclude-folders");
         boolean usingBitBucketCloud = args.containsOption("bb");
         boolean usingBitBucketServer = args.containsOption("bbs");
-        boolean disableCertificateValidation = args.containsOption("trust-cert"); //or proxy-insecure or trusted-certs
+        boolean disableCertificateValidation = args.containsOption("trust-cert");
         CxPropertiesBase cxProperties = cxScannerService.getProperties();
 
         if (((ScanUtils.empty(namespace) && ScanUtils.empty(repoName) && ScanUtils.empty(branch)) &&
@@ -290,7 +290,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 }
                 mergeNoteUri = gitLabProperties.getMergeNoteUri(projectId, mergeId);
                 mergeProjectId = Integer.parseInt(projectId);
-                if (!ScanUtils.empty(namespace) && !ScanUtils.empty(repoName)){
+                if (!ScanUtils.empty(namespace) && !ScanUtils.empty(repoName)) {
                     repoUrl = getNonEmptyRepoUrl(namespace, repoName, repoUrl, gitLabProperties.getGitUri(namespace, repoName));
                 }
                 break;
@@ -348,7 +348,7 @@ public class CxFlowRunner implements ApplicationRunner {
             request.setRepoType(ScanRequest.Repository.BITBUCKETSERVER);
             repoUrl = getBitBuckerServerBrowseUrl(repoUrl);
             request.putAdditionalMetadata("BITBUCKET_BROWSE", repoUrl);
-        } else if (bugType.equals(BugTracker.Type.GITLABMERGE)){
+        } else if (bugType.equals(BugTracker.Type.GITLABMERGE)) {
             request.setRepoProjectId(mergeProjectId);
             request.putAdditionalMetadata(FlowConstants.MERGE_ID, mergeId);
         }
@@ -520,7 +520,7 @@ public class CxFlowRunner implements ApplicationRunner {
     }
 
     private void publishLatestScanResults(ScanRequest request) throws ExitThrowable {
-        ScanResults scanResults = runOnActiveScanners(scanner -> scanner.getLatestScanResults(request));
+        runOnActiveScanners(scanner -> scanner.getLatestScanResults(request));
     }
 
     private void processResults(ScanRequest request, ScanResults results) throws ExitThrowable {
@@ -538,19 +538,18 @@ public class CxFlowRunner implements ApplicationRunner {
         }
     }
 
-    private boolean checkIfBreakBuild(ScanRequest request, ScanResults results){
+    private boolean checkIfBreakBuild(ScanRequest request, ScanResults results) {
         boolean breakBuildResult = false;
 
-        if(thresholdValidator.isThresholdsConfigurationExist(request)){
-            if(thresholdValidator.thresholdsExceeded(request, results)){
+        if (thresholdValidator.isThresholdsConfigurationExist(request)) {
+            if (thresholdValidator.thresholdsExceeded(request, results)) {
                 log.info("Fail build because some of the checks weren't passed");
                 breakBuildResult = true;
             }
-        } else if(flowProperties.isBreakBuild() && resultsService.filteredSastIssuesPresent(results)){
+        } else if (flowProperties.isBreakBuild() && resultsService.filteredSastIssuesPresent(results)) {
             log.info("Build failed because some issues were found");
             breakBuildResult = true;
-        }
-        else {
+        } else {
             log.info("Build succeeded. all checks passed");
         }
 
