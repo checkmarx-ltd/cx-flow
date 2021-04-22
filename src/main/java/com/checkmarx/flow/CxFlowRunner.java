@@ -195,7 +195,7 @@ public class CxFlowRunner implements ApplicationRunner {
 
         if (((ScanUtils.empty(namespace) && ScanUtils.empty(repoName) && ScanUtils.empty(branch)) &&
                 ScanUtils.empty(application)) && !args.containsOption(BATCH_OPTION) && !args.containsOption(IAST_OPTION)) {
-            log.error("Namespace/Repo/Branch or Application (app) must be provided");
+            log.error("Namespace/Repo/Branch/Iast or Application (app) must be provided");
             exit(1);
         }
 
@@ -438,7 +438,7 @@ public class CxFlowRunner implements ApplicationRunner {
     }
 
     private void configurateIast(ScanRequest request, String scanTag) throws IOException {
-        iastService.stopScanAndCreateJiraIssueFromIastSummary(scanTag);
+        iastService.stopScanAndCreateJiraIssueFromIastSummary(request, scanTag);
     }
 
     private BugTracker.BugTrackerBuilder jiraPropertiesToBugTracker() {

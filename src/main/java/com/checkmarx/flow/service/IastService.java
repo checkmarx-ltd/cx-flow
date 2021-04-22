@@ -56,13 +56,24 @@ public class IastService {
 
     @PostConstruct
     public void init() throws IOException, InterruptedException {
+        checkRequiredParameters();
+
         severityToPriority.put(0, "Low");
         severityToPriority.put(1, "Low");
         severityToPriority.put(2, "Medium");
         severityToPriority.put(3, "High");
 
-        if (iastProperties == null
-                || ScanUtils.empty(iastProperties.getUrl())
+        updateTokenSeconds = iastProperties.getUpdateTokenSeconds();
+        this.iastUrlRoot = iastProperties.getUrl() + ":" + iastProperties.getManagerPort() + "/iast/";
+    }
+
+    private void checkRequiredParameters(){
+        if (iastProperties == null){
+            log.error("IAST properties doesn't setup.");
+            throw new RuntimeException("IAST properties doesn't setup.");
+        }
+
+        if (ScanUtils.empty(iastProperties.getUrl())
                 || ScanUtils.empty(iastProperties.getUsername())
                 || ScanUtils.empty(iastProperties.getPassword())
                 || ScanUtils.empty(iastProperties.getManagerPort())
@@ -70,9 +81,6 @@ public class IastService {
             log.error("not all IAST properties doesn't setup.");
             throw new RuntimeException("IAST properties doesn't setup.");
         }
-
-        updateTokenSeconds = iastProperties.getUpdateTokenSeconds();
-        this.iastUrlRoot = iastProperties.getUrl() + ":" + iastProperties.getManagerPort() + "/iast/";
     }
 
     public String generateUniqTag() {
