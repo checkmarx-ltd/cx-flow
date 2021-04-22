@@ -31,7 +31,15 @@ public class ScanRequest {
 
     private Map<String, String> cxFields;
     private String site;
+
+    /**
+     * git commit ID, also known as 'SHA' or 'commit hash'.
+     * <br>- For push event: ID of the last commit in the push event.
+     * <br>- For pull request event: ID of the last commit in the pull request source branch.
+     * <br>Currently only supported for Bitbucket Cloud/Server and GitHub.
+     */
     private String hash;
+
     private String repoUrl;
     private String repoUrlWithAuth;
     private String repoName;

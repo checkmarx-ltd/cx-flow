@@ -2,14 +2,14 @@ CxFlow is able to use inputs from external groovy scripts, according to runtime 
 
 For example, you can determine the Checkmarx project name that CxFlow will trigger and/or create when initiating scan and use realtime information from the webhook payload, and edit it in the desired format in the script logic.
 
-Here is an example of how you can add a static prefix to branch name and CxFlow will use it when determine the cx-project name:
+Here is an example of how you can use a static prefix, branch name and commit hash to determine Checkmarx project name:
 
 ```groovy
-String branch = request.getBranch();
-
-String cxProject = "script-prefix-" + branch;
-return cxProject;
+String cxProject = "script-prefix-" + request.getBranch() + "-" + request.getHash() 
+return cxProject
 ```
+The resulting project name will look like this: `script-prefix-master-fa907029c049b781f961e452a375d606402102a6`.
+For more information about the `getHash()` property, see the `hash` field documentation in [ScanRequest object](https://github.com/checkmarx-ltd/cx-flow/blob/develop/src/main/java/com/checkmarx/flow/dto/ScanRequest.java).
 
 * [Project script](#projectScript)
 * [Team script](#teamScript)
