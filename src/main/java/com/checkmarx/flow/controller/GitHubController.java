@@ -195,7 +195,7 @@ public class GitHubController extends WebhookController {
                     .branch(currentBranch)
                     .defaultBranch(repository.getDefaultBranch())
                     .refs(Constants.CX_BRANCH_PREFIX.concat(currentBranch))
-                    .mergeNoteUri(event.getPullRequest().getIssueUrl().concat("/comments"))
+                    .mergeNoteUri(pullRequest.getIssueUrl().concat("/comments"))
                     .mergeTargetBranch(targetBranch)
                     .email(null)
                     .scanPreset(controllerRequest.getPreset())
@@ -206,7 +206,7 @@ public class GitHubController extends WebhookController {
                     .filter(filter)
                     .organizationId(getOrganizationid(repository))
                     .gitUrl(gitUrl)
-                    .hash(event.getPullRequest().getHead().getSha())
+                    .hash(pullRequest.getHead().getSha())
                     .build();
 
             setScmInstance(controllerRequest, request);
@@ -221,7 +221,7 @@ public class GitHubController extends WebhookController {
             CxConfig cxConfig =  gitHubService.getCxConfigOverride(request);
             request = configOverrider.overrideScanRequestProperties(cxConfig, request);
             request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, body);
-            request.putAdditionalMetadata("statuses_url", event.getPullRequest().getStatusesUrl());
+            request.putAdditionalMetadata("statuses_url", pullRequest.getStatusesUrl());
             request.setId(uid);
             //only initiate scan/automation if target branch is applicable
             if(helperService.isBranch2Scan(request, branches)){
