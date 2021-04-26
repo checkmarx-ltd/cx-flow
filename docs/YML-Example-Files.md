@@ -3,24 +3,25 @@
 * [CxSAST v9.0 .yml Example File](#ninedotzero)
 
 ### <a name="overview">Overview</a>
-This is a set of example yml file configurations used with CxFlow to integrate with Checkmarx.
+This is a set of example yml file configurations used to execute CxFlow.
 <br/>All files have configuration examples for the following
 
-* **Webhooks**
+**Webhooks**
 * Azure
 * BitBucket
 * GitHub
 * GitLab
 
-* **Issue Tracking**
+**Issue Tracking**
 * Azure
-* GitHUb
+* GitHub
 * GitLab
 * JIRA
 
 **Note** The current examples use http communication. It is recommended that the webtokens be changed to use a more secure protocol.
 
 ### <a name="eightdotnine">CxSAST v8.9 .yml Example File</a>
+
 ```
 server:
   port: ${PORT:8982}
@@ -39,6 +40,7 @@ cxflow:
     # - Json
   branches:
   - master
+  - main
   - dev\w+
   - release-\w+
   filter-severity:
@@ -164,14 +166,15 @@ cxflow:
     # - Json
   branches:
   - master
+  - main
   - dev\w+
   - release-\w+
   filter-severity:
-  # - High
+  - High
   filter-category:
-  - SQL_Injection
-  - Stored_XSS
-  - Reflected_XSS_All_Clients
+  # - SQL_Injection
+  # - Stored_XSS
+  # - Reflected_XSS_All_Clients
   filter-cwe:
   filter-status:
   # - Urgent
@@ -180,6 +183,9 @@ cxflow:
   #mitre-url: https://cwe.mitre.org/data/definitions/%s.html
   #wiki-url: https://custodela.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
   codebash-url: https://checkmarx-demo.codebashing.com/courses/
+  enabled-vulnerability-scanners:
+  #  - sca
+    - sast
 
 checkmarx:
   version: 9.0

@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 
 import static com.checkmarx.flow.exception.ExitThrowable.exit;
@@ -46,6 +47,7 @@ public class CxFlowRunner implements ApplicationRunner {
     public static final String PARSE_OPTION = "parse";
     public static final String BATCH_OPTION = "batch";
 
+
     private final FlowProperties flowProperties;
     private final CxScannerService cxScannerService;
     private final JiraProperties jiraProperties;
@@ -61,7 +63,7 @@ public class CxFlowRunner implements ApplicationRunner {
     private final BuildProperties buildProperties;
     private final List<VulnerabilityScanner> scanners;
     private final ThresholdValidator thresholdValidator;
-    private static final String ERROR_BREAK_MSG = String.format("Exiting with Error code %d due to Checkmarx findings", ExitCode.BUILD_INTERRUPTED.getValue());
+    private static final String ERROR_BREAK_MSG = String.format("Exiting with Error code %d because some of the checks weren't passed", ExitCode.BUILD_INTERRUPTED.getValue());
 
     @PostConstruct
     private void logVersion() {
@@ -105,6 +107,7 @@ public class CxFlowRunner implements ApplicationRunner {
         String branch;
         String mergeId;
         String mergeNoteUri = null;
+        int mergeProjectId = 0;
         String projectId;
         String assignee;
         List<String> emails;
@@ -182,7 +185,7 @@ public class CxFlowRunner implements ApplicationRunner {
         boolean usingBitBucketCloud = args.containsOption("bb");
         boolean usingBitBucketServer = args.containsOption("bbs");
         CxPropertiesBase cxProperties = cxScannerService.getProperties();
-        
+
         if (((ScanUtils.empty(namespace) && ScanUtils.empty(repoName) && ScanUtils.empty(branch)) &&
                 ScanUtils.empty(application)) && !args.containsOption(BATCH_OPTION)) {
             log.error("Namespace/Repo/Branch or Application (app) must be provided");
@@ -273,6 +276,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 break;
             case GITLABMERGE:
             case gitlabmerge:
+                log.info("Handling GitLab merge request for project: {}, merge id: {}", projectId, mergeId);
                 bugType = BugTracker.Type.GITLABMERGE;
                 bt = BugTracker.builder()
                         .type(bugType)
@@ -284,7 +288,7 @@ public class CxFlowRunner implements ApplicationRunner {
                     exit(1);
                 }
                 mergeNoteUri = gitLabProperties.getMergeNoteUri(projectId, mergeId);
-
+                mergeProjectId = Integer.parseInt(projectId);
                 if (!ScanUtils.empty(namespace) && !ScanUtils.empty(repoName)){
                     repoUrl = getNonEmptyRepoUrl(namespace, repoName, repoUrl, gitLabProperties.getGitUri(namespace, repoName));
                 }
@@ -342,6 +346,9 @@ public class CxFlowRunner implements ApplicationRunner {
             request.setRepoType(ScanRequest.Repository.BITBUCKETSERVER);
             repoUrl = getBitBuckerServerBrowseUrl(repoUrl);
             request.putAdditionalMetadata("BITBUCKET_BROWSE", repoUrl);
+        } else if (bugType.equals(BugTracker.Type.GITLABMERGE)){
+            request.setRepoProjectId(mergeProjectId);
+            request.putAdditionalMetadata(FlowConstants.MERGE_ID, mergeId);
         }
 
         try {
@@ -516,15 +523,17 @@ public class CxFlowRunner implements ApplicationRunner {
     }
 
     private void processResults(ScanRequest request, ScanResults results) throws ExitThrowable {
-        try {
-            resultsService.processResults(request, results, null);
-            if (checkIfBreakBuild(request, results)) {
-                log.error(ERROR_BREAK_MSG);
-                exit(ExitCode.BUILD_INTERRUPTED);
-            }
+        if (Optional.ofNullable(results).isPresent()) {
+            try {
+                resultsService.processResults(request, results, null);
+                if (checkIfBreakBuild(request, results)) {
+                    log.error(ERROR_BREAK_MSG);
+                    exit(ExitCode.BUILD_INTERRUPTED);
+                }
 
-        } catch (MachinaException e) {
-            log.error("An error has occurred.", ExceptionUtils.getRootCause(e));
+            } catch (MachinaException e) {
+                log.error("An error has occurred.", ExceptionUtils.getRootCause(e));
+            }
         }
     }
 
@@ -533,7 +542,7 @@ public class CxFlowRunner implements ApplicationRunner {
 
         if(thresholdValidator.isThresholdsConfigurationExist(request)){
             if(thresholdValidator.thresholdsExceeded(request, results)){
-                log.info("Fail build on Thresholds exceeded.");
+                log.info("Fail build because some of the checks weren't passed");
                 breakBuildResult = true;
             }
         } else if(flowProperties.isBreakBuild() && resultsService.filteredSastIssuesPresent(results)){

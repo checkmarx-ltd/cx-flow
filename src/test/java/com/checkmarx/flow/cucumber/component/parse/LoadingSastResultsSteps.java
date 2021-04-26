@@ -105,6 +105,13 @@ public class LoadingSastResultsSteps {
         testContext.setBaseFilenames(baseFilenames);
     }
 
+    @Given("^(?:input has one vulnerability type with \"Low\" severity" +
+            "|input has one finding with this vulnerability type" +
+            "|user has overridden the severity of this specific finding with the \"High\" value)$")
+    public void inputHasOneLow() {
+        testContext.setInputFilename("1-finding-custom-severity.xml");
+    }
+
     private List<String> getSastResultsHavingReferenceReports() throws IOException, URISyntaxException {
         Set<String> sampleSastResults = getResourceFilenames(Constants.SAMPLE_SAST_RESULTS_DIR,
                 TestContext.SAST_RESULT_EXTENSION);

@@ -60,7 +60,7 @@ For changes that address core functionality or would require breaking changes (e
 
 In general, we follow the _fork-and-pull_ Git workflow
 
-1. Fork the repository to your own Github account
+1. Fork the repository to your own GitHub account
 2. Clone the project to your machine
 3. Create a branch locally with a succinct but descriptive name (prefix with feature/<issue#>-descriptive-name> or hotfix/<issue#>-descriptive-name)
 4. Commit changes to the branch

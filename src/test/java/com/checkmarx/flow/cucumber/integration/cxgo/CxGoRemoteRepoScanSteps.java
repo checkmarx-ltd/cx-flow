@@ -33,10 +33,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 
@@ -46,7 +43,7 @@ import java.util.concurrent.Callable;
 public class CxGoRemoteRepoScanSteps {
 
     private static final String JIRA_PROJECT = "CT";
-    private static final String PR_COMMIT_HASH = "1a137e46d2b83e580aa20eedf2fdf8d7ed2073a5";
+    private static final String PR_COMMIT_HASH = "9a3476a23512d1829cb178ce6c3e73ed6b80cdeb";
     private static final int PULL_REQUEST_ID = 1;
     private static final String GITHUB_PROJECT_NAME = "CxGo-Integration-Tests";
     private static final String GITHUB_BRANCH = "develop";
@@ -186,13 +183,13 @@ public class CxGoRemoteRepoScanSteps {
         log.info("pulling all issues from bug tracker");
         Map<Filter.Severity, Integer> actualJira = jiraUtils.getIssuesPerSeverity(jiraProperties.getProject());
 
-        Assert.assertTrue("HIGH severity vulnerabilities not found in project", actualJira.get(Filter.Severity.HIGH) > 0);
-        Assert.assertTrue("MEDIUM severity vulnerabilities not found in project", actualJira.get(Filter.Severity.MEDIUM) > 0);
-        Assert.assertTrue("LOW severity vulnerabilities not found in project", actualJira.get(Filter.Severity.LOW) > 0);
+        validateIssuesArePresent(actualJira, Filter.Severity.HIGH);
+        validateIssuesArePresent(actualJira, Filter.Severity.MEDIUM);
+        validateIssuesArePresent(actualJira, Filter.Severity.LOW);
     }
 
     @And("Pull request comments updated in repo and status is {}")
-    public void validatePullRequestComment(String pullRequestStatus) throws InterruptedException {
+    public void validatePullRequestComment(String pullRequestStatus) {
         waitForOperationToComplete(this::scanFinished, MAX_TIME_FOR_SCAN_COMPLETED_IN_SEC);
         waitForOperationToComplete(this::pullRequestHas2CxFlowComments, MAX_TIME_FOR_PULL_REQUEST_UPDATE_IN_SEC);
         waitForOperationToComplete(this::pullRequestNotPending, MAX_TIME_FOR_PULL_REQUEST_NOT_PENDING_IN_SEC);
@@ -200,6 +197,14 @@ public class CxGoRemoteRepoScanSteps {
         String status = repoServiceMocker.getPullRequestStatus();
 
         Assert.assertEquals(pullRequestStatus, status);
+    }
+
+    private void validateIssuesArePresent(Map<Filter.Severity, Integer> issuesPerSeverity, Filter.Severity severity) {
+        String message = String.format("%s severity vulnerabilities are not found in project", severity);
+        // issuesPerSeverity.get() can return null if a timeout has been exceeded.
+        int issueCount = Optional.ofNullable(issuesPerSeverity.get(severity)).orElse(0);
+        Assert.assertTrue(message, issueCount > 0);
+
     }
 
     private void waitForOperationToComplete(Callable<Boolean> conditionEvaluator, int secondsToWait){

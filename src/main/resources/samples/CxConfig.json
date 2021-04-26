@@ -21,7 +21,7 @@
     "preset": "",
     "engineConfiguration": "",
     "incremental": true,
-    "forceScan" : true,
+    "forceScan": true,
     "fileExcludes": "",
     "folderExcludes": ""
   },
@@ -29,7 +29,7 @@
     "fileExcludes": "",
     "folderExcludes": ""
   },
-  "additionalProperties" : {
+  "additionalProperties": {
     "cxFlow": {
       "application": "test app",
       "branches": ["develop", "master"],
@@ -81,7 +81,7 @@
           }
         ]
       },
-      "filters" : {
+      "filters": {
         "severity": ["High", "Medium"],
         "cwe": ["79", "89"],
         "category": ["XSS_Reflected", "SQL_Injection"],

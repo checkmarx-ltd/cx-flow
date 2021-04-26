@@ -6,7 +6,7 @@
     "assignee": "admin",
     "fields": []
   },
-  "filters" : {
+  "filters": {
     "severity": ["High", "Medium"]
   }
 }

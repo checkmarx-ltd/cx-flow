@@ -43,7 +43,7 @@ cx-flow:
     - Azure
   branches:
     - develop
-    - master
+    - main
     - security
   filter-severity:
     - High
@@ -235,7 +235,7 @@ cx-flow:
     - Azure
   branches:
     - develop
-    - master
+    - main
     - security
   filter-severity:
     - High

@@ -5,7 +5,7 @@ import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.service.FlowService;
 import com.checkmarx.flow.service.SastScanner;
-import com.checkmarx.flow.utils.github.GitHubTestUtilsImpl;
+import com.checkmarx.flow.utils.github.GitHubTestUtils;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.sast.Filter;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
@@ -35,7 +35,7 @@ public abstract class GitHubCommonSteps {
     protected FlowService flowService;
 
     @Autowired
-    protected GitHubTestUtilsImpl gitHubTestUtils;
+    protected GitHubTestUtils gitHubTestUtils;
 
     @Autowired
     protected SastScanner sastScanner;

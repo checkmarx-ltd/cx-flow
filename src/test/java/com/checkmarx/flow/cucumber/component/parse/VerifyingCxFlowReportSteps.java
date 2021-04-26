@@ -35,11 +35,11 @@ public class VerifyingCxFlowReportSteps {
         verifySummaryFieldCount(report.getSummary(), 0);
     }
 
-    @Then("CxFlow report is generated with {} issues")
+    @Then("CxFlow report is generated with {} issue(s)")
     public void reportIsGeneratedWithNIssues(int expectedIssueCount) throws IOException {
         CxFlowReport report = CxFlowReport.parse(testContext);
         JsonNode issues = report.getIssues();
-        assertEquals(expectedIssueCount, issues.size());
+        assertEquals("Unexpected issue count in CxFlow response.", expectedIssueCount, issues.size());
     }
 
     @And("each issue contains {} results and the same number of details")
@@ -74,7 +74,7 @@ public class VerifyingCxFlowReportSteps {
         }
     }
 
-    @And("issue severities are: {}")
+    @And("^(?:the issue severity is|issue severities are:) (.+)$")
     public void issueSeveritiesAre(String severities) throws IOException {
         String[] expectedSeverities = TestsParseUtils.parseCSV(severities).toArray(String[]::new);
 

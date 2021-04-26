@@ -5,6 +5,7 @@
 * [Configuration Definitions](#configuration)
   * [9.0 Configuration Changes](#nine)
   * [Filtering](#filtering)
+  * [Excluding Files from Zip Archive](#excludezip)
   * [Break build](#break)
   * [Override SAST project setting](#override)
 * [WebHook Configuration](#webhook)
@@ -21,7 +22,7 @@
 CxFlow uses **SpringBoot** and requires using an **application.yml** file to drive the execution. The sections below outlines available properties and when/how they can be used in different execution modes.  In addition, all the SpringBoot configuration rules apply. For additional information on SpringBoot, refer to 
 https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html
 
-To allow for bootstrapping the launch process with various configurations, especially with containers, CxFlows uses overrides on the command line using the `--propery.name=Value` format as well as `PROPERTY_NAME` environment variable overrides.
+To allow for bootstrapping the launch process with various configurations, especially with containers, CxFlows uses overrides on the command line using the `--property.name=Value` format as well as `PROPERTY_NAME` environment variable overrides.
 
 All the relevant configuration is defined by the **application.yml** file that resides in the same directory as the jar file, or if an explicit configuration override is provided on the command line as follows:
 
@@ -99,7 +100,7 @@ cx-flow:
     - Rally
   branches:
     - develop
-    - master
+    - main
     - release`-\w+ # regular expressions supported. If branch-script is provided, this is ignored. branch-script: D:\\tmp\Branch.groovy #default empty/not used
   filter-severity:
     - High
@@ -212,17 +213,17 @@ jira:
      Critical: Highest
      High: High
      Medium: Medium
-     ow: Low
-     informational: Lowest
+     Low: Low
+     Informational: Lowest
   open-transition: In Review
   close-transition: Done
   open-status:
      - To Do
      - In Progress
      - In Review
-     - closed-status:
+  closed-status:
      - Done
- fields:
+  fields:
      - type: result
        name: application
        jira-field-name: Application
@@ -312,7 +313,7 @@ Refer to the sample configuration above for the entire yaml structure.
 |             |         |          |         |              | Rally |
 | branches    |         | No       | Yes     | No           | List of protected branches that drive scanning within the WebHook flow.  If a pull or push event is initiated to one of the protected branches listed here, the scan is initiated.  For example |
 |             |         |          |         |              | develop |
-|             |         |          |         |              | master |
+|             |         |          |         |              | main |
 |             |         |          |         |              | security |
 |             |         |          |         |              | release-\w+ |
 |             |         |          |         |              | If no value is provided, all branches are applicable |
@@ -400,6 +401,46 @@ Filtering, as specified above, is available on the following criteria:
 * **CWE** → CWE value from Checkmarx
 * **State** → Urgent | Confirmed
 All values are case sensitive as per the output from Checkmarx (i.e. High severity, Stored_XSS, Confirmed)
+
+### <a name="excludezip">Excluding Files from Zip Archive</a>
+
+The `cx-flow.zip-exclude` configuration option instructs CxFlow to exclude specific files when it creates a zip archive.
+
+#### Example
+The following option excludes all `.png` files from the archive, as well as all files inside a root-level `.git` directory:
+```
+cx-flow:
+  zip-exclude: \.git/.*, .*\.png
+```
+
+#### Details
+The meaning and syntax of the `cx-flow.zip-exclude` option are different as opposed to the `checkmarx.exclude-folders` and `checkmarx.exclude-files` options.
+
+|cx-flow.zip-exclude|checkmarx.exclude-folders, checkmarx.exclude-files|
+|-------------|---------|
+|Uses regexes|Use wildcards|
+|Works locally, before the sources are sent for scan|Work in CxSAST when it already has the sources|
+
+`cx-flow.zip-exclude` is a comma-separated list. Each of the list items is a regex (not a wildcard). Spaces before and after a comma are ignored.
+
+During zipping, CxFlow checks each file in the target directory against each of the regexes in `cx-flow.zip-exclude`. If there is a match, CxFlow excludes the file from the archive. In this case, when log level is **debug**, CxFlow writes a message to the log having the following format:
+```
+match: <regex>|<relative_file_path>
+```
+
+CxFlow uses relative file path to test the regex match. E.g. if the following file exists:
+```   
+c:\cxdev\projectsToScan\myproj\bin\internal-dir\exclude-me.txt
+```
+and we specify this CLI option: `--f="c:\cxdev\projectsToScan\myproj`,
+
+then CxFlow will check the following relative file path against the regexes:
+```
+bin/internal-dir/exclude-me.txt
+```
+CxFlow normalizes slashes in the relative path into a forward slash (`/`).
+
+For a file to be excluded, a regex must match the **whole** relative file path. Thus, the `.*` regex expression should be used where necessary.
 
 ### <a name="break">Break Build</a>
 The configuration can be set or overridden at execution time using the command line (`--cx-flow.break-build=true`) to exit the command line execution flow for a single project result or scan for results that meet the filter criteria.
@@ -589,13 +630,13 @@ The sample below illustrates an override configuration in JSON format.  It has s
 ```
 {
    "application": "test app",
-   "branches": ["develop", "master"],
+   "branches": ["develop", "main"],
    "incremental": true,
    "scan_preset": "Checkmarx Default",
    "exclude_folders": "tmp/,test/",
    "exclude_files": "*.tst,*.tmp",
    "emails": ["xxxx@checkmarx.com"],
-   "filters" : {
+   "filters": {
      "severity": ["High", "Medium"],
      "cwe": ["79", "89"],
      "category": ["XSS_Reflected", "SQL_Injection"],
@@ -644,13 +685,4 @@ The sample below illustrates an override configuration in JSON format.  It has s
 
 ## <a name="bugtrackers">BugTrackers</a>
 
-The following BugTrackers / Feedback Channels are currently available:
-* XML
-* JSON
-* CSV
-* GitLab
-* GitHub
-* Azure
-* Jira
-
-Refer to the [Bug Tracker documentation](https://github.com/checkmarx-ltd/cx-flow/wiki/Bug-Trackers-and-Feedback-Channels) for further information.
+Refer to the [Bug Tracker documentation](https://github.com/checkmarx-ltd/cx-flow/wiki/Bug-Trackers-and-Feedback-Channels) for a list of all our BugTrackers and Feedback Channels.

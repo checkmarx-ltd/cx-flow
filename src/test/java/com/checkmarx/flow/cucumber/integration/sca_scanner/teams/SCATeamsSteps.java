@@ -44,7 +44,7 @@ public class SCATeamsSteps extends ScaCommonSteps {
                          ScaConfigurationOverrider scaConfigOverrider, ScaProperties scaProperties) {
         super(flowProperties, scaScanner, scaConfigOverrider);
         this.scaProperties = scaProperties;
-        this.scaClientHelper = new ScaClientHelper(createRestClientConfig(), log, scaProperties);
+        this.scaClientHelper = new ScaClientHelper(createRestClientConfig(scaProperties, PROJECT_NAME), log, scaProperties);
     }
 
     @After()
@@ -58,7 +58,6 @@ public class SCATeamsSteps extends ScaCommonSteps {
     public void init() throws IOException {
         initSCAConfig(scaProperties);
         scaClientHelper.init();
-        deleteProjectIfAlreadyExists();
     }
 
     @Given("scanner is SCA")
@@ -71,7 +70,7 @@ public class SCATeamsSteps extends ScaCommonSteps {
         if (team.equals("null")) {
             team = null;
         }
-        scaProperties.setTeamForNewProjects(team);
+        scaProperties.setTeam(team);
         try {
             projectId = scaClientHelper.createRiskManagementProject(PROJECT_NAME);
         } catch (CxHTTPClientException e) {
@@ -92,33 +91,5 @@ public class SCATeamsSteps extends ScaCommonSteps {
         }
 
         Assert.assertEquals(expectedAssignedTeam, actualTeam);
-    }
-
-    @Then("bad request error is expected to be thrown")
-    public void validateNotExistsTeam() {
-        Assert.assertEquals(HttpStatus.SC_BAD_REQUEST, errorStatusCode);
-    }
-
-
-    private void deleteProjectIfAlreadyExists() throws IOException {
-        if (StringUtils.isNotEmpty(projectId)) {
-            scaClientHelper.deleteProjectById(projectId);
-        }
-    }
-
-    private RestClientConfig createRestClientConfig() {
-        ScaConfig scaConfig = new ScaConfig();
-        scaConfig.setTenant(scaProperties.getTenant());
-        scaConfig.setApiUrl(scaProperties.getApiUrl());
-        scaConfig.setUsername(scaProperties.getUsername());
-        scaConfig.setPassword(scaProperties.getPassword());
-        scaConfig.setAccessControlUrl(scaProperties.getAccessControlUrl());
-        scaConfig.setRemoteRepositoryInfo(new RemoteRepositoryInfo());
-
-        RestClientConfig restClientConfig = new RestClientConfig();
-        restClientConfig.setScaConfig(scaConfig);
-        restClientConfig.setProjectName(PROJECT_NAME);
-
-        return restClientConfig;
     }
 }

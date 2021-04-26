@@ -29,7 +29,7 @@
   * GitLab
 * CxFlow is configured to process events associated with branches considered important/protected across the enterprise based on the following:
   * List of static values
-    * master
+    * main
     * develop
     * release
   * List of regular expressions
@@ -138,6 +138,6 @@ Refer to the [Development](https://github.com/checkmarx-ltd/cx-flow/wiki/Develop
 Issues and feature requests are managed [here](https://github.com/checkmarx-ts/cx-flow/issues).
 
 ## <a name="build">Build/Release</a>
-Build and Release is managed via CircleCI using Gradle.  Releases are published automatically (develop branch for TS version) to 
-* **GitHub Release**: [https://github.com/checkmarx-ts/cx-flow/releases](https://github.com/checkmarx-ts/cx-flow/releases) (compile JAR)
-* **DockerHub**: [https://hub.docker.com/r/checkmarxts/cxflow](https://hub.docker.com/r/checkmarxts/cxflow)
+Build and Release is managed via CircleCI using Gradle.  Releases are published automatically (develop branch) to 
+* **GitHub Release**: [https://github.com/checkmarx-ltd/cx-flow/releases](https://github.com/checkmarx-ltd/cx-flow/releases) (compiled JAR)
+* **DockerHub**: [https://hub.docker.com/r/checkmarx/cx-flow](https://hub.docker.com/r/checkmarx/cx-flow)

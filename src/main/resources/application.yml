@@ -39,7 +39,7 @@ logging:
 cx-flow:
   # Agreed upon shared API token
   token: xxxx
-  bug-tracker: JIRA
+  bug-tracker: None
   bug-tracker-impl:
     - CxXml
     - Json
@@ -90,7 +90,7 @@ checkmarx:
   #project-script:
 
 jira:
-  url: https://xxxxx.atlassian.net
+
   username: xxxx
   token: xxxx
   project: APPSEC

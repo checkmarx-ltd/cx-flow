@@ -2,6 +2,7 @@
 * [Bug-Trackers](#bug)
 * [Filters](#filters)
 * [Thresholds](#thresholds)
+* [Policy Management](#policyManagement)
 * [Configuration As Code](#configurationascode)
 * [SCA Scans From Command Line](#commandline)
 * [SCA ZIP Folder Scan](#zipFolderScan)
@@ -24,22 +25,37 @@ enabled-vulnerability-scanners:
 In addition, add a CxSCA section with the following properties:
 ```
 sca:
-  appUrl: [https://sca.scacheckmarx.com](https://sca.scacheckmarx.com)
-  apiUrl: [https://api.scacheckmarx.com](https://api.scacheckmarx.com)
-  accessControlUrl: [https://platform.checkmarx.net](https://platform.checkmarx.net)
-  tenant: your tenant name
-  username: userxx
-  password: pasxx
+  appUrl: https://sca.checkmarx.net
+  apiUrl: https://api-sca.checkmarx.net
+  accessControlUrl: https://platform.checkmarx.net
+  tenant: your-tenant
+  username: username
+  password: xxxxx
+  team: "/CxServer/MyTeam/SubTeam"
 ```
 
-[[/Images/SCA2.png|YML SCA example]]
+To use an European tenant:
+=======
+In addition, add one of the CxSCA sections with the following properties:
+
+```
+sca:
+  appUrl: https://eu.sca.checkmarx.net
+  apiUrl: https://eu.api-sca.checkmarx.net
+  accessControlUrl: https://eu.platform.checkmarx.net
+  tenant: your-tenant
+  username: username
+  password: xxxxx
+  team: "/CxServer/MyTeam/SubTeam"
+```
 
 ## <a name="bug">Bug-Trackers</a>
-SCA integration supports tickets management with the following bug trackers :
+SCA integration supports tickets management with the following bug trackers:
 * Jira
 * GitLab
 * Azure
-* Github
+* GitHub
+
 <br/>The tickets format is the same for each of the bug trackers.
 
 ### Opening Tickets in Jira
@@ -117,6 +133,19 @@ Cx-Flow uses the thresholds to ease its (no) tolerance of findings.
 <br/>
 [[/Images/SCA7.png|Example of Pull Request Failure]]
 
+## <a name="policyManagement">Policy Management</a>
+SCA supports with policy management control.
+Each policy can be customized by defining number of custom rules and conditions in which, if getting violated, can break a build.
+On the creation process or after it, a policy can be defined with 'Break build' flag or not.
+
+[[/Images/SCA-policy-creation.png|Example of Policy creation dashboard]]
+
+When performing a scan, if a defined policy is getting violated, Cx-Flow will fail the pull request and it will be marked as failed.
+* Violated policy occurs when at least one rule condition is getting violated AND when policy 'Break Build' flag in on.
+* In case of a CLI scan which violated a policy: Cx-Flow will fail with exit code 10.
+* If current scan violated any active SCA thresholds and also violated a policy, policy break build has the top priority.
+
+
 ## <a name="configurationascode">Configuration As Code</a>
 CxFlow supports configuration as code for CxSAST and CxSCA scans.
 <br/>Available overrides for SCA properties:
@@ -131,6 +160,8 @@ CxFlow supports configuration as code for CxSAST and CxSCA scans.
   * thresholdsScore
   * filterSeverity
   * filterScore
+  * team (needs to be set with none empty value)
+  
 <br/>Example for SCA config file content:
 ```
 {
@@ -151,45 +182,50 @@ CxFlow supports configuration as code for CxSAST and CxSCA scans.
 		},
 		"thresholdsScore": 8.5,
 		"filterSeverity": ["high", "medium", "low"],
-		"filterScore": 7.5
+		"filterScore": 7.5,
+		"team": "/CxServer/MyTeam/SubTeam"
 	}
 }
 ```
+<br/> When a configuration as code property is set, it will only override the corresponded global configuration property. In case of a list property (e.g. 'filterSeverity'), the whole global corresponded list will be overridden.
 
 ## <a name="commandline">SCA Scans From Command Line</a>
 ### CxFlow can initiate SCA scans with command line mode
 <br/>There are 2 options to add SCA scan to the cli run:
 * Add scanner argument to the cli command:  --scanner=sca 
-* Add sca to the active vulnerabilities scanner in cxflow app.yml: 
-[[/Images/SCA8.png|Example of enables-vulnerbaility-scanners]]
+* Add sca to the active vulnerabilities scanner in CxFlow app.yml: 
+[[/Images/SCA8.png|Example of enables-vulnerability-scanners]]
 
 ### CxFlow can open security tickets upon SCA scan results 
-In order to open SCA security tickets, set the bug tracker in cxflow app.yml file or in add the argument with your bug tracker type (for example: --bug-tracker=Jira) 
-
+In order to open SCA security tickets, set the bug tracker in CxFlow app.yml file or in add the argument with your bug tracker type (for example: --bug-tracker=Jira) 
  
 ### CxFlow can init git scan or upload zip folder to scan by sca:
 * git scan:
-  * -scan  --enabled-vulnerability-scanners=sca --app=MyApp --cx-project=test --repo-url=my-repo-url --repo-name=my-repo --branch=master --github  
+  * --scan  --enabled-vulnerability-scanners=sca --app=MyApp --cx-project=test --repo-url=my-repo-url --repo-name=my-repo --branch=main --github  
 * local zip scan:
-  * -scan --app=MyApp --cx-team="my-team" --cx-project="project" --f="/Users/myProjects/project"
+  * --scan --app=MyApp --cx-team="my-team" --cx-project="project" --f="/Users/myProjects/project"
 * get latest scan results:
-  * --project --app=MyApp --cx-team="my-team" --cx-project="project" ([use 'project' command](https://github.com/checkmarx-ltd/cx-flow/blob/develop/src/main/java/com/checkmarx/flow/dto/ScanRequest.java))
+  * --project --app=MyApp --cx-team="my-team" --cx-project="project"
 
-
-## <a name="zipFolderScan">SCA ZIP folder scan</a>
-In order to change the default CxFlow SCA scan behaviour and to perform a SCA ZIP scan, the next configuration property should be added underneath the sca configuration section:
 ```
 enabledZipScan: true
+```
+Additional configuration in SCA zip scan flow - Include source files
+
+* Default value set to false, In order to change the default CxFlow SCA zip scan behavior, the next configuration property should be added underneath the sca configuration section:
+
+```
+includeSources: true
 ```
 
 ## <a name="scaProjectTeamAssignment">SCA project team assignment</a>
 SCA project team assignment with CxFlow is performing on the SCA project creation stage. In order to set a project team, the next configuration property should be added underneath the sca configuration section:
 ```
-team-for-new-projects: /team
+team: /team
 ```
 Or within a tree hierarchy:
 ```
-team-for-new-projects: /MainTeam/SubTeam
+team: /MainTeam/SubTeam
 ```
 * In order to declare a team within a tree hierarchy, make sure to use the forward slash ('/').
 * Declaring not existing team or team path will be resulted with 400 BAD REQUEST error.

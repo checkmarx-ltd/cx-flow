@@ -11,6 +11,7 @@ import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.ScaConfig;
 import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.ScanResults;
+import com.checkmarx.sdk.dto.sca.SCAResults;
 import com.checkmarx.sdk.dto.scansummary.Severity;
 import com.checkmarx.sdk.dto.sca.report.Finding;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -62,11 +63,11 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
             isMergeAllowed = isAllowed(scanResults, pullRequestReport.getScanRequest());
 
             if (!isMergeAllowed) {
-                log.info("Merge is not allowed, because some thresholds were exceeded.");
+                log.info("Merge is not allowed because some of the checks weren't passed");
                 requestResult = new OperationResult(OperationStatus.FAILURE, MERGE_FAILURE_DESCRIPTION);
             }
             else{
-                log.info("Merge is allowed, because no thresholds were exceeded.");
+                log.info("Merge is allowed. all checks passed");
             }
         }
 
@@ -164,13 +165,28 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
         Map<Severity, Integer> scaThresholdsSeverity = getScaEffectiveThresholdsSeverity(request);
         Double scaThresholdsScore = getScaEffectiveThresholdsScore(request);
 
-        writeMapToLog(scaThresholdsSeverity, "Using CxSCA thresholds severity");
-        writeMapToLog(scaThresholdsScore, "Using CxSCA thresholds score");
 
-        boolean isAllowedSca = !isAnyScaThresholdsExceeded(scanResults, scaThresholdsSeverity, scaThresholdsScore);
-        logIsAllowed(isAllowedSca);
+        boolean isAllowedSca;
+        // isPolicyViolated flag gets the top priority whether to the break build or not
+        SCAResults scaResults = scanResults.getScaResults();
+        if (scaResults.isPolicyViolated()) {
+            printViolatedPoliciesNames(scaResults.getViolatedPolicies());
+            isAllowedSca = false;
+        } else {
+            writeMapToLog(scaThresholdsSeverity, "Using CxSCA thresholds severity");
+            writeMapToLog(scaThresholdsScore, "Using CxSCA thresholds score");
+            isAllowedSca = !isAnyScaThresholdsExceeded(scanResults, scaThresholdsSeverity, scaThresholdsScore);
+            logIsAllowed(isAllowedSca);
+        }
 
         return isAllowedSca;
+    }
+
+    private void printViolatedPoliciesNames(List<String> violatedPoliciesNames) {
+        log.info("SCA current scan violated {} defined policies", violatedPoliciesNames.size());
+        String policiesViolatedName = violatedPoliciesNames.stream()
+                .collect(Collectors.joining("', '", "'", "'"));
+        log.info(policiesViolatedName);
     }
 
     private boolean isAllowedSast(ScanResults scanResults, ScanRequest request) {

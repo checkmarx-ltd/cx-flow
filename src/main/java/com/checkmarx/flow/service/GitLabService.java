@@ -2,6 +2,7 @@ package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.config.GitLabProperties;
 import com.checkmarx.flow.config.ScmConfigOverrider;
+import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.dto.RepoComment;
 import com.checkmarx.flow.dto.RepoIssue;
 import com.checkmarx.flow.dto.ScanRequest;
@@ -9,7 +10,6 @@ import com.checkmarx.flow.dto.Sources;
 import com.checkmarx.flow.dto.gitlab.Comment;
 import com.checkmarx.flow.dto.gitlab.Note;
 import com.checkmarx.flow.exception.GitLabClientException;
-import com.checkmarx.flow.exception.GitLabClientRuntimeException;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.sast.CxConfig;
@@ -29,8 +29,9 @@ import org.springframework.web.client.RestTemplate;
 import java.beans.ConstructorProperties;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.*;
 
 
@@ -47,8 +48,6 @@ public class GitLabService extends RepoService {
     private static final String REPO_CONTENT = "/projects/{id}/repository/tree?ref={branch}";
     private static final int UNKNOWN_INT = -1;
     private static final Logger log = LoggerFactory.getLogger(GitLabService.class);
-    private static final String MERGE_ID = "merge_id";
-    private static final String MERGE_TITLE = "merge_title";
     private static final String HTTP_BODY_WARN_MESSAGE = "HTTP Body is null for content api ";
     private static final String CONTENT_NOT_FOUND_ERROR_MESSAGE = "Content not found in JSON response";
     private static final String ERROR_OCCURRED = "Error occurred";
@@ -156,8 +155,8 @@ public class GitLabService extends RepoService {
 
     public void startBlockMerge(ScanRequest request){
         if(properties.isBlockMerge()) {
-            String mergeId = request.getAdditionalMetadata(MERGE_ID);
-            if(ScanUtils.empty(request.getAdditionalMetadata(MERGE_ID)) || ScanUtils.empty(request.getAdditionalMetadata(MERGE_TITLE))){
+            String mergeId = request.getAdditionalMetadata(FlowConstants.MERGE_ID);
+            if(ScanUtils.empty(request.getAdditionalMetadata(FlowConstants.MERGE_ID)) || ScanUtils.empty(request.getAdditionalMetadata(FlowConstants.MERGE_TITLE))){
                 log.error("merge_id and merge_title was not provided within the request object, which is required for blocking / unblocking merge requests");
                 return;
             }
@@ -166,7 +165,7 @@ public class GitLabService extends RepoService {
             endpoint = endpoint.replace("{iid}", mergeId);
 
             HttpEntity httpEntity = new HttpEntity<>(
-                    getJSONMergeTitle("WIP:CX|".concat(request.getAdditionalMetadata(MERGE_TITLE))).toString(),
+                    getJSONMergeTitle("WIP:CX|".concat(request.getAdditionalMetadata(FlowConstants.MERGE_TITLE))).toString(),
                     createAuthHeaders(request)
             );
             restTemplate.exchange(endpoint,
@@ -176,8 +175,8 @@ public class GitLabService extends RepoService {
 
     void endBlockMerge(ScanRequest request){
         if(properties.isBlockMerge()) {
-            String mergeId = request.getAdditionalMetadata(MERGE_ID);
-            if(ScanUtils.empty(request.getAdditionalMetadata(MERGE_ID)) || ScanUtils.empty(request.getAdditionalMetadata(MERGE_TITLE))){
+            String mergeId = request.getAdditionalMetadata(FlowConstants.MERGE_ID);
+            if(ScanUtils.empty(request.getAdditionalMetadata(FlowConstants.MERGE_ID)) || ScanUtils.empty(request.getAdditionalMetadata(FlowConstants.MERGE_TITLE))){
                 log.error("merge_id and merge_title was not provided within the request object, which is required for blocking / unblocking merge requests");
                 return;
             }
@@ -186,7 +185,7 @@ public class GitLabService extends RepoService {
             endpoint = endpoint.replace("{iid}", mergeId);
 
             HttpEntity httpEntity = new HttpEntity<>(
-                    getJSONMergeTitle(request.getAdditionalMetadata(MERGE_TITLE)
+                    getJSONMergeTitle(request.getAdditionalMetadata(FlowConstants.MERGE_TITLE)
                                               .replace("WIP:CX|","")).toString(),
                     createAuthHeaders(request)
             );
@@ -337,27 +336,26 @@ public class GitLabService extends RepoService {
 
     private RepoComment convertToRepoComment(Comment comment, ScanRequest scanRequest) {
 
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+        return RepoComment.builder()
+                .id(comment.getId())
+                .comment(comment.getBody())
+                .createdAt(parseDate(comment.getCreatedAt()))
+                .updateTime(parseDate(comment.getUpdatedAt()))
+                .commentUrl(getCommentUrl(scanRequest, comment.getId()))
+                .build();
+    }
 
-        try {
-            return RepoComment.builder()
-                    .id(comment.getId())
-                    .comment(comment.getBody())
-                    .createdAt(sdf.parse(comment.getCreatedAt()))
-                    .updateTime(sdf.parse(comment.getUpdatedAt()))
-                    .commentUrl(getCommentUrl(scanRequest, comment.getId()))
-                    .build();
-        } catch (ParseException pe) {
-            throw new GitLabClientRuntimeException("Error parsing gitlab pull request created or " +
-                                                           "updated date", pe);
-        }
+    private Date parseDate(String dateStr) {
+        LocalDateTime date = ZonedDateTime.parse(dateStr).toLocalDateTime();
+        ZonedDateTime zonedDateTime = date.atZone(ZoneId.systemDefault());
+        return Date.from(zonedDateTime.toInstant());
     }
 
     private String getCommentUrl(ScanRequest scanRequest, long commentId) {
         String path = scmConfigOverrider.determineConfigApiUrl(properties, scanRequest).concat(MERGE_NOTE_PATH);
         return String.format(path, scanRequest.getRepoProjectId().toString(),
-                             scanRequest.getAdditionalMetadata(MERGE_ID), commentId);
+                             scanRequest.getAdditionalMetadata(FlowConstants.MERGE_ID),
+                             commentId);
     }
 
 }

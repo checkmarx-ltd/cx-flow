@@ -18,8 +18,8 @@ The relevant configuration is determined by the **application.yml** file that re
 The CxFlow docker images on Docker Hub [checkmarx/cx-flow](https://hub.docker.com/r/checkmarx/cx-flow) contain the latest and previous versions of CxFlow.
 
 ```
-docker pull checkmarxts/cxflow
-docker run --env-file=.checkmarx --name=cxflow --detach -p <host port>:8080 checkmarxts/cxflow`
+docker pull checkmarx/cx-flow
+docker run --env-file=.checkmarx --name=cx-flow --detach -p <host port>:8080 checkmarx/cx-flow
 ```
 
 The env-file provides the necessary overrides during the bootstrap process - urls, credentials, etc - sample below.
@@ -56,8 +56,8 @@ CxFlow can be integrated via command line using several ways. The table below li
 | `--project` | Indicates that we would like to retrieve the latest scan results for a given team/project and provide feedback (defect / issue tracking). No value provided (flag) |
 | `--batch` | Indicates that the entire instance or a given team is iterated through and the latest results are retrieved for each project and feedback is provided (defect/issue tracking) |
 | `--cx-team` | Used to override the team that is used as a base team (optionally defined globally in the yaml configuration).  This team is used when creating a project in Source/Scan (zip) mode as well as the team to use when retrieving latest project results in project/batch modes (--project/--batch) | `--cx-project` | Used to create the project in Source/Scan (zip) mode and to indicate, for which project to retrieve the latest results in Project mode (`--project`) |
-| `--namespace` | Repository group (Gitlab)/organization (Github)/namespace (BitBucket). Used as higher level grouping of repositories.  Used along with repo-name and branch for tracking purposes (Jira only).  If these three components are not present, an application attribute must be passed (**--app**).  These values are stored in a tracking label within Jira.  This value is also stored in the body of the issue. |
-| `repo-name` | Name of the repository.  Used along with repo-name and branch for tracking purposes (Jira Only).  If these three components are not present, application attribute must be passed (**--app**).  These values are stored in a tracking label within Jira.  This value is also stored in the body of the issue. |
+| `--namespace` | Repository group (GitLab)/organization (GitHub)/namespace (BitBucket). Used as higher level grouping of repositories.  Used along with repo-name and branch for tracking purposes (Jira only).  If these three components are not present, an application attribute must be passed (**--app**).  These values are stored in a tracking label within Jira.  This value is also stored in the body of the issue. |
+| `--repo-name` | Name of the repository.  Used along with repo-name and branch for tracking purposes (Jira Only).  If these three components are not present, application attribute must be passed (**--app**).  These values are stored in a tracking label within Jira.  This value is also stored in the body of the issue. |
 | `--branch` | Branch used along with repo-name and branch for tracking purposes (Jira only).  If these three components are not present, then an application attribute must be passed  (**--app**).  These values are stored in a Tracking label within Jira. This value is also stored in the body of the issue. |
 | `--app` | Alternatively used for Tracking purposes.  This value is also stored in the body of the issue. |
 | `--repo-url` | Required for issues tracking with GitHub Issues or GitLab Issues.  This value is also stored in the body of the issue. |
@@ -70,7 +70,7 @@ CxFlow can be integrated via command line using several ways. The table below li
 | `--bug-tracker` | Optional: Used to override the globally configured bug tracker as defined by the base YAML configuration.  The name is case-sensitive and must match the exact bean name as specified in the --bug-tracker-impl list of available implementations. JIRA is the only option that is not on this list, but can be used as well |
 | `--spring.config.location` | Path to application.yml. This file contains the global configuration for CxFlow.  It is only required, if the jar file and the application.yml file are not in the current working directory.  Refer to the [Spring Boot Documentation](https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html) (section 24.3) |
 | `--offline` | If this flag is raised, the Checkmarx instance is not contacted.  This means that no issue description is provided and Checkmarx custom fields cannot be used |
-| `blocksysexit` | Optional: Mainly for build/test purposes. Avoid `System.exit()` in the code and exit with java exception |
+| `--blocksysexit` | Optional: Mainly for build/test purposes. Avoid `System.exit()` in the code and exit with java exception |
 
 ## <a name="parse">Parse</a>
 
@@ -80,7 +80,7 @@ java -jar cx-flow-<ver>.jar  \
 --namespace=checkmarx \
 --repo-name=Riches.NET \
 --repo-url=https://github.com/xxxx/xxxx.git \
---branch=master \
+--branch=main \
 --app=ABC \
 --f=Checkmarx/Reports/ScanReport.xml
 ```
@@ -90,21 +90,39 @@ java -jar cx-flow-<ver>.jar  \
 `java -jar cx-flow-<ver>.jar --batch`
 
 ### Specific Team
-`java -jar cx-flow-<ver>.jar --batch --cx-team="CxServer\SP\Checkmarx\development"`
+Example for Checkmarx v9.x:
+
+`java -jar cx-flow-<ver>.jar --batch --cx-team="CxServer/SP/Checkmarx/development"`
+
+Example for Checkmarx v8.x:
+
+`java -jar cx-flow-<ver>.jar --batch --cx-team="CxServer\SP\Checkmarx/development"`
 
 ### Single Project
+
+Example for Checkmarx v9.x:
+
+```
+java -jar cx-flow-<ver>.jar \
+--project \
+--cx-team="CxServer/SP/Checkmarx/Test" \
+--cx-project="riches-main" \
+--app=AppName
+```
+
+Example for Checkmarx v8.x:
 
 ```
 java -jar cx-flow-<ver>.jar \
 --project \
 --cx-team="CxServer\SP\Checkmarx\Test" \
---cx-project="riches-master" \
+--cx-project="riches-main" \
 --app=AppName
 ```
 
 ### Docker
 
 ```
-docker pull checkmarxts/cxflow
-docker run checkmarxts/cxflow <applicable parameters>
+docker pull checkmarx/cx-flow
+docker run checkmarx/cx-flow <applicable parameters>
 ```

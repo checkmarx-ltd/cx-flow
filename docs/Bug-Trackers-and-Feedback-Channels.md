@@ -41,7 +41,7 @@ jira:
       High: High
       Medium: Medium
       Low: Low
-         informational: Lowest
+      Informational: Lowest
    pen-transition: In Review
    close-transition: Done
    open-status:
@@ -83,7 +83,7 @@ priorities:
   High: High
   Medium: Medium
   Low: Low
-  informational: Lowest
+  Informational: Lowest
 ```
 
 The value on the left side reflects the Checkmarx severity. The value to the right reflects the priority assigned to the respective issue in Jira.
@@ -91,14 +91,14 @@ The value on the left side reflects the Checkmarx severity. The value to the rig
 ### <a name="transitions">Transitions</a>
 It is very important that issues driven by CxFlow have the ability to transition to and from the open or close transition states regardless of what state the issue is in.  In the event that an issue cannot use the appropriate transition defined, it will fail.
 ```
-open-transition: In Review`
-close-transition: Done*`
-open-status:`
-  - To Do`
-  - In Progress`
-  - In Review`
-closed-status:`
-  - Done`
+open-transition: In Review
+close-transition: Done*
+open-status:
+  - To Do
+  - In Progress
+  - In Review
+closed-status:
+  - Done
 ```
 
 * open-transition → this is the transition to apply to an issue when **re-opening** an issue 
@@ -146,7 +146,7 @@ Jira tickets can be assigned to a user when they are created. This can be achiev
 
 * As a webhook url parameter - The url parameter 'assignee' can be appended to the url in the webhook configuration and a user's email address to whom the tickets should be assigned, is provided as the value of the parameter.
 
-  E.g - http​&#65279;://a7674e6a169f.ngrok.io?assignee=someUsersEmail@&#65279;xyz.com
+  E.g - http​&#65279;://companyname.checkmarx.com?assignee=someUsersEmail@&#65279;xyz.com
 
 ## <a name="custom">Custom Bug Trackers</a>
 Refer to the [development section](https://github.com/checkmarx-ltd/cx-flow/wiki/Development) for the implementation approach.
@@ -165,17 +165,21 @@ cx-flow:
 ```
 
 Valid options for `bug-tracker-impl` are currently the following ones:
+* Azure
 * CxXML - Only available for SAST 8.x|9.x
 * Csv
+* JIRA
 * Json
 * GitHub
 * GitLab
-* Azure
 * GitLabDashboard
+* Rally
+* ServiceNow
+* Sarif
 
 ## <a name="azure">Azure DevOps WorkItems</a>
-Azure DevOps workitems only supports an issue body/description.  Custom/template field values are not available at present.  The available issue-type values are built/tested around issue and impediment (Scrum)
-[[/Images/bug1.png|Screenshot of Azure Devop work item]]
+Azure DevOps work items only supports an issue body/description.  Custom/template field values are not available at present.  The available issue-type values are built/tested around issue and impediment (Scrum)
+[[/Images/bug1.png|Screenshot of Azure Devops work item]]
 
 ## <a name="gitlab">GitLab Issues</a>
 GitLab Issues leverages the same configuration as specified for WebHook listeners → API token (**token**) and valid urls are required
@@ -410,20 +414,41 @@ The "XIssue" item looks like the following sample:
 } 
 ```
 
-
-
-
 ## <a name="csv">CSV</a>
-```
-checkmarx:
-  ...
-  ...
-    preserve-xml: true
- 
-cx-xml:
-  file-name-format: "[NAMESPACE]-[REPO]-[BRANCH]-[TIME].xml"
-  data-folder: "C:\\tmp"
-```
+csv:
+  file-name-format: "[PROJECT]-[TIME].csv"
+  data-folder: "D:\\tmp"
+  include-header: true
+  fields:
+    - header: Customer field (Application)
+      name: application
+      default-value: unknown
+    - header: Primary URL
+      name: static
+      default-value: ${tmp.url}
+    - header: severity
+      name: severity
+    - header: Vulnerability ID
+      name: summary
+      prefix: "[APP]:"
+    - header: file
+      name: filename
+    - header: Vulnerability ID
+      name: summary
+    - header: Vulnerability Name
+      name: category
+    - header: Category ID
+      name: cwe
+    - header: Description
+      name: summary
+      prefix: "*"
+      postfix: "*"
+    - header: Severity
+      name: severity
+    - header: recommendation
+      name: recommendation
+
+
 The file system path and the file naming format are required.
 
 **NOTE**: All of the file based outputs have a file-name-format attribute, which allows for dynamic naming substitution.  File name follows a substitution pattern with the following elements:

@@ -159,8 +159,8 @@ public class GitLabController extends WebhookController {
             request = configOverrider.overrideScanRequestProperties(cxConfig, request);
 
             request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, body.toString());
-            request.putAdditionalMetadata("merge_id",objectAttributes.getIid().toString());
-            request.putAdditionalMetadata("merge_title", objectAttributes.getTitle());
+            request.putAdditionalMetadata(FlowConstants.MERGE_ID, objectAttributes.getIid().toString());
+            request.putAdditionalMetadata(FlowConstants.MERGE_TITLE, objectAttributes.getTitle());
 
             request.setId(uid);
             if(helperService.isBranch2Scan(request, branches)){

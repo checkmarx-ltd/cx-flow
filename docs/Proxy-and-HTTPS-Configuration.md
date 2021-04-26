@@ -1,3 +1,48 @@
+
+# Proxy Config
+
+CxFlow can use a proxy server for making HTTP/HTTPS connections to the internet by adding additional arguments to the startup command. Irrespective of which scan engine is used, the proxy configuration will remain the same.
+
+The following arguments are required:
+
+### 1)Using HTTP
+http.proxyHost – the host or IP address of the proxy server.
+
+http.proxyPort – the port used by the proxy server.
+
+http.proxyUser - Optional and only needed if the proxy server needs authentication.
+
+http.proxyPassword - Optional and only needed if the proxy server needs authentication.
+
+Or
+
+### 2)Using HTTPS
+
+https.proxyHost - the host or IP address of the proxy server.
+
+https.proxyPort - the port used by the proxy server.
+
+https.proxyUser - Optional and only needed if the proxy server needs authentication.
+
+https.proxyPassword - Optional and only needed if the proxy server needs authentication.
+
+
+## Syntax
+
+### Using only host and port
+
+```
+java -Dhttp.proxyHost=myproxyserver.com -Dhttp.proxyPort=9595 -jar cxflow.jar <Additional-CxFlow-parameters>
+```
+
+### Using host, port, user and password
+
+```
+java -Dhttp.proxyHost=myproxyserver.com -Dhttp.proxyPort=9595 -Dhttp.proxyUser=<proxy user> -Dhttp.proxyPassword=<proxy password> -jar cxflow.jar <Additional-CxFlow-parameters>
+```
+
+# HTTPS Config
+
 To use CxFlow over HTTPS, an SSL certificate is required to be imported into a keystore.
 <br>See documentation on importing certificates here: 
 <br>[https://docs.oracle.com/cd/E54932_01/doc.705/e54936/cssg_create_ssl_cert.htm#CSVSG180](https://docs.oracle.com/cd/E54932_01/doc.705/e54936/cssg_create_ssl_cert.htm#CSVSG180)
@@ -39,7 +84,7 @@ Insert the following into the application.yml file
   port: 443
   ssl:
     key-store: C:\keystorecxflow.p12
-    key-store-password: P@ssword1
+    key-store-password: xxxxx
     key-store-type: PKCS12
     key-alias: cxflow
     enabled-protocols:
