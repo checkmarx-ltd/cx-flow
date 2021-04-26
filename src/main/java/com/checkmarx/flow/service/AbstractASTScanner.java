@@ -133,6 +133,7 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
                 .sourceDir(pathToScan)
                 .scaConfig(scanRequest.getScaConfig())
                 .filterConfiguration(scanRequest.getFilter())
+                .disableCertificateValidation(scanRequest.isDisableCertificateValidation())
                 .build();
     }
 

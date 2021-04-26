@@ -49,6 +49,15 @@ To use CxFlow over HTTPS, an SSL certificate is required to be imported into a k
 <br>[https://www.baeldung.com/spring-boot-https-self-signed-certificate](https://www.baeldung.com/spring-boot-https-self-signed-certificate)
 <br>[https://support.code42.com/Administrator/6/Configuring/Install_a_CA-signed_SSL_certificate_for_HTTPS_console_access](https://support.code42.com/Administrator/6/Configuring/Install_a_CA-signed_SSL_certificate_for_HTTPS_console_access)
 
+
+#Self-Signed Certificates
+
+To allow CxFlow to trust self-signed certificates, the parameter '--trust-cert' needs to be provided via command line when starting the cxflow.
+
+```
+java -Dhttp.proxyHost=myproxyserver.com -Dhttp.proxyPort=9595 -jar cxflow.jar --trust-cert <Additional-CxFlow-parameters>
+```
+
 ## Configuration
 CxFlow is a Springboot application driven by a YAML configuration file. CxFlow can be configured to run over HTTPS by updating the application.yml configuration file.
 <br>Edit the application.yml file and update the server section as follows:
@@ -91,3 +100,4 @@ Insert the following into the application.yml file
     - TLSv1.3
     - TLSv1.2
 ```
+

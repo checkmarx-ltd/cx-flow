@@ -102,6 +102,9 @@ public class ScanRequest {
     @Getter @Setter
     private String gitUrl;
 
+    @Getter @Setter
+    private boolean disableCertificateValidation;
+
     public ScanRequest(ScanRequest other) {
         this.namespace = other.namespace;
         this.application = other.application;
@@ -141,6 +144,7 @@ public class ScanRequest {
         this.scannerApiSec = other.scannerApiSec;
         this.organizationId = other.organizationId;
         this.gitUrl = other.gitUrl;
+        this.disableCertificateValidation = other.disableCertificateValidation;
     }
 
     public Map<String,String> getAltFields() {
