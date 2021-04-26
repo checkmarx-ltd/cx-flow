@@ -43,7 +43,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 @Service
 @Slf4j
@@ -131,11 +130,11 @@ public class JiraService {
         if (flowProperties.getBugTracker().equalsIgnoreCase("JIRA") ||
                 flowProperties.getBugTrackerImpl().stream().map(String::toLowerCase)
                         .collect(Collectors.toList()).contains("jira")) {
-            configurOpenClosedStatuses();
+            configureOpenClosedStatuses();
         }
     }
 
-    private void configurOpenClosedStatuses() {
+    private void configureOpenClosedStatuses() {
         prepareJiraOpenClosedStatuses();
         if (jiraProperties.getClosedStatus().isEmpty()) {
             Iterable<Status> statuses = client.getMetadataClient().getStatuses().claim();
@@ -387,16 +386,17 @@ public class JiraService {
             issueBuilder.setSummary(summary);
             issueBuilder.setDescription(description);
             issueBuilder.setFieldValue("labels", labels);
+
             if (assignee != null && !assignee.isEmpty()) {
-                String accountId = getAssignee(assignee, projectKey);
-                if(!accountId.isEmpty()) {
-                    issueBuilder.setFieldInput(new FieldInput(IssueFieldId.ASSIGNEE_FIELD, ComplexIssueInputFieldValue.with("accountId", accountId)));
+                ComplexIssueInputFieldValue jiraAssignee = getAssignee(assignee, projectKey);
+                if (jiraAssignee != null) {
+                    issueBuilder.setFieldInput(new FieldInput(IssueFieldId.ASSIGNEE_FIELD, jiraAssignee));
                 }
             }
+
             if (priorities != null) {
                 issueBuilder.setFieldValue("priority", ComplexIssueInputFieldValue.with("name", priorities));
             }
-
 
             log.debug("Creating JIRA issue");
             BasicIssue basicIssue = this.issueClient.createIssue(issueBuilder.build()).claim();
