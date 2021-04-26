@@ -147,11 +147,11 @@ public class IastService {
             List<VulnerabilityInfo> vulnerabilities = scanVulnerabilities.getVulnerabilities();
             for (VulnerabilityInfo vulnerability : vulnerabilities) {
 
-                if (vulnerability.getNewCount() == 0) {
+                if (vulnerability.getNewCount() != 0) {
                     final List<ResultInfo> scansResultsQuery = apiScanResults(scan.getScanId(), vulnerability.getId());
 
                     for (ResultInfo scansResultQuery : scansResultsQuery) {
-                        if (!scansResultQuery.isNewResult()) {
+                        if (scansResultQuery.isNewResult()) {
                             createJiraIssue(scanVulnerabilities, request, scansResultQuery, vulnerability, scan);
                         }
                     }
