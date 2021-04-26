@@ -27,17 +27,14 @@ import java.util.*;
 @Slf4j
 @Service
 public class IastService {
-    private final String NEW_LOW = "newLow";
-    private final String NEW_MEDIUM = "newMedium";
-    private final String NEW_HIGH = "newHigh";
-    private final Map<Integer, String> severityToPriority = new HashMap<>();
+    private static Random random = new Random();
 
-    private Random random = new Random();
+    private final Map<Integer, String> severityToPriority = new HashMap<>();
+    private final IastProperties iastProperties;
 
     private int updateTokenSeconds;
 
     private String iastUrlRoot;
-    private final IastProperties iastProperties;
 
     private String authTokenHeader;
     private LocalDateTime authTokenHeaderDateGeneration;
@@ -164,7 +161,6 @@ public class IastService {
         }
     }
 
-
     private void createJiraIssue(ScanVulnerabilities scanVulnerabilities,
                                  ScanRequest request,
                                  ResultInfo scansResultQuery,
@@ -194,7 +190,6 @@ public class IastService {
             project = jiraProperties.getProject();
         }
 
-
         String description = iastProperties.getUrl() + ":" + iastProperties.getManagerPort()
                 + "/iast-ui/#!/project/" + scanVulnerabilities.getProjectId()
                 + "/scan/" + scanVulnerabilities.getScanId()
@@ -220,22 +215,8 @@ public class IastService {
         });
     }
 
-    private List<ProjectSummary> apiProjectsSummary() throws IOException {
-        return objectMapper.readValue(resultGetBodyOfDefaultConnectionToIast("projects/summary"), new TypeReference<List<ProjectSummary>>() {
-        });
-    }
-
     private Scan apiScansScanTagFinish(String scanTag) throws IOException {
         return objectMapper.readValue(resultPutBodyOfDefaultConnectionToIast("scans/scan-tag/" + scanTag + "/finish"), Scan.class);
-    }
-
-    private Scan apiScanAggregated(Long scanId) throws IOException {
-        return objectMapper.readValue(resultGetBodyOfDefaultConnectionToIast("scans/" + scanId + "?aggregated=false"), Scan.class);
-    }
-
-    private Page<Scan> apiScanAggregation(Long projectId, int pageNumber) throws IOException {
-        return objectMapper.readValue(resultGetBodyOfDefaultConnectionToIast("scans/aggregation?pageNumber=" + pageNumber + "&pageSize=100&projectId=" + projectId), new TypeReference<Page<Scan>>() {
-        });
     }
 
     /**
@@ -250,10 +231,6 @@ public class IastService {
 
     private String resultGetBodyOfDefaultConnectionToIast(String urlConnection) throws IOException {
         return resultBodyOfDefaultConnectionToIast(urlConnection, "GET");
-    }
-
-    private String resultPostBodyOfDefaultConnectionToIast(String urlConnection) throws IOException {
-        return resultBodyOfDefaultConnectionToIast(urlConnection, "POST");
     }
 
     private String resultPutBodyOfDefaultConnectionToIast(String urlConnection) throws IOException {
