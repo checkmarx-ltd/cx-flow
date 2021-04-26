@@ -12,8 +12,13 @@ public class PushEvent extends EventCommon{
     private String ref;
     @JsonProperty("before")
     private String before;
+
+    /**
+     * The SHA of the most recent commit on ref after the push.
+     */
     @JsonProperty("after")
     private String after;
+
     @JsonProperty("created")
     private Boolean created;
     @JsonProperty("deleted")

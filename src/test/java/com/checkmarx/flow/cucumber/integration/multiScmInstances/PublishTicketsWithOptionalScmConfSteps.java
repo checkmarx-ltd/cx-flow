@@ -12,7 +12,6 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.service.ResultsService;
 import com.checkmarx.flow.utils.github.GitHubTestUtils;
-import com.checkmarx.flow.utils.github.GitHubTestUtilsImpl;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.dto.sast.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
@@ -45,7 +44,7 @@ public class PublishTicketsWithOptionalScmConfSteps {
     private static final String REPO_NAME = "VB_3845";
     private static final String SCM_INSTANCE_NAME = "instance1";
 
-    private final GitHubTestUtilsImpl gitHubTestUtils;
+    private final GitHubTestUtils gitHubTestUtils;
     private final GitHubProperties gitHubProperties;
     private final ResultsService resultsService;
     private final FlowProperties flowProperties;
@@ -60,7 +59,7 @@ public class PublishTicketsWithOptionalScmConfSteps {
     }
 
     @After("@Scm_Optional_Instance")
-    public void closeIssues() throws MachinaException {
+    public void closeIssues() {
         List<Issue> openIssues = gitHubTestUtils.filterIssuesByState(gitHubTestUtils.getIssues(scanRequest), "open");
         gitHubTestUtils.closeAllIssues(openIssues, scanRequest);
     }

@@ -4,7 +4,6 @@ import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 import com.checkmarx.flow.utils.github.GitHubTestUtils;
-import com.checkmarx.flow.utils.github.GitHubTestUtilsImpl;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
@@ -38,7 +37,7 @@ public class WebHookSteps {
 
     private final List<CompletableFuture<Long>> requestSendingTasks = new ArrayList<>();
 
-    private final GitHubTestUtilsImpl testUtils;
+    private final GitHubTestUtils testUtils;
 
     private HttpEntity<String> webHookRequest;
     private String cxFlowPort;
