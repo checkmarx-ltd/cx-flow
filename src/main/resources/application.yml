@@ -99,20 +99,27 @@ jira:
     X: Y # Map Checkmarx severity : to JIRA Priority
   open-transition: Reopen Issue
   close-transition: Close Issue
-# project-key-script:
-#  open-status:
-#    - Open
-#    - In Progress
-#    - Reopened
-#  closed-status:
-#    - Closed
-#    - Resolved
-#  status-category-open-name:
-#    - To Do
-#    - In Progress
-#  statusCategoryClosedName:
-#    - Done
-#  fields:
+  # project-key-script:
+  #  open-status:
+  #    - Open
+  #    - In Progress
+  #    - Reopened
+  #  closed-status:
+  #    - Closed
+  #    - Resolved
+  #  status-category-open-name:
+  #    - To Do
+  #    - In Progress
+  #  statusCategoryClosedName:
+  #    - Done
+  #  fields:
+
+iast:
+  url: http://xxxxx.iast.net
+  manager-port: 8380
+  username: xxxx
+  password: xxxx
+  update-token-seconds: 150  # By default token live only 5 minutes
 
 iast:
 #  url: http://xxxxx.iast.net
