@@ -115,13 +115,6 @@ jira:
   #  fields:
 
 iast:
-  url: http://xxxxx.iast.net
-  manager-port: 8380
-  username: xxxx
-  password: xxxx
-  update-token-seconds: 150  # By default token live only 5 minutes
-
-iast:
 #  url: http://xxxxx.iast.net
 #  manager-port: 8380
 #  username: xxxx
