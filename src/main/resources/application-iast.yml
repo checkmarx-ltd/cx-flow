@@ -90,10 +90,10 @@ checkmarx:
   #project-script:
 
 jira:
-
-  username: xxxx
-  token: xxxx
-  project: APPSEC
+  url: https://kecvens.atlassian.net
+  username: and.tetka@gmail.com
+  token: 3Kxti0dkTpj4Vabjj2Qt6044
+  project: BCB
   issue-type: Bug
   priorities:
     X: Y # Map Checkmarx severity : to JIRA Priority
@@ -115,10 +115,10 @@ jira:
   #  fields:
 
 iast:
-  #  url: http://xxxxx.iast.net
-  #  manager-port: 8380
-  #  username: xxxx
-  #  password: xxxx
+  url: http://localhost
+  manager-port: 8380
+  username: admin
+  password: Cx123456!
   update-token-seconds: 250  # seconds. By default token live only 5 minutes
 
 cxgo:
