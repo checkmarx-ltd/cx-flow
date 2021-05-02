@@ -47,6 +47,7 @@ public class FlowProperties {
     private boolean listFalsePositives = false;
     private boolean scanResubmit = false;
     private Mail mail;
+    private boolean preserveProjectName = false;
     private Map<FindingSeverity,Integer> thresholds;
 
     public String getContact() {
@@ -160,6 +161,14 @@ public class FlowProperties {
 
     public void setFilterStatus(List<String> filterStatus) {
         this.filterStatus = filterStatus;
+    }
+
+    public boolean getPreserveProjectName() {
+        return this.preserveProjectName;
+    }
+
+    public void setPreserveProjectName(boolean preserveProjectName) {
+        this.preserveProjectName = preserveProjectName;
     }
 
     public List<String> getEnabledVulnerabilityScanners() {
