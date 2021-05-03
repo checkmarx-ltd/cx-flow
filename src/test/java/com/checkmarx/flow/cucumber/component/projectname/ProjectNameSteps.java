@@ -6,46 +6,36 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.service.CxScannerService;
 import com.checkmarx.flow.service.HelperService;
 import com.checkmarx.flow.service.ProjectNameGenerator;
-import com.checkmarx.sdk.config.CxPropertiesBase;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import io.cucumber.spring.CucumberContextConfiguration;
-import org.junit.Before;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.mockito.Mockito.mock;
 
 @SpringBootTest(classes = {CxFlowApplication.class})
 @CucumberContextConfiguration
 public class ProjectNameSteps {
 
-    private final ProjectNameGenerator projectNameGenerator;
+    private ProjectNameGenerator projectNameGenerator;
     private final FlowProperties flowProperties;
     private final CxScannerService cxScannerService;
-    private ScanRequest scanRequest;
-    private final CxPropertiesBase cxProperties;
-    @MockBean
-    private HelperService helperService;
+    private final ScanRequest scanRequest = new ScanRequest();
+    private final HelperService helperService;
 
-    public ProjectNameSteps(CxScannerService cxScannerService, FlowProperties flowProperties, CxPropertiesBase cxProperties) {
+    public ProjectNameSteps(CxScannerService cxScannerService, FlowProperties flowProperties, ProjectNameGenerator projectNameGenerator, HelperService helperService) {
         this.flowProperties = flowProperties;
-        this.cxProperties = cxProperties;
         this.cxScannerService = cxScannerService;
-        //?--
-        this.projectNameGenerator = new ProjectNameGenerator(helperService, cxScannerService, flowProperties);
-    }
-
-    @Before
-    public void setup() {
-        int a = 1;
+        this.projectNameGenerator = projectNameGenerator;
+        this.helperService = mock(HelperService.class);
     }
 
     @Given("preserve-project-name is {} and is-multi-tenant true")
     public void setPresrveProjectName(boolean presrveProjectName) {
         flowProperties.setPreserveProjectName(presrveProjectName);
-        cxProperties.setMultiTenant(true);
     }
 
     @When("scan request arrives with repo-name {} and branch is {string}")
@@ -57,15 +47,19 @@ public class ProjectNameSteps {
     @Then("project name used by scanner is {}")
     public void checkProjectNameGenerationResult(String projectNameResult) {
         String projectName = projectNameGenerator.determineProjectName(scanRequest);
-        assertEquals(projectName, projectNameResult);
+        assertThat(projectName, equalTo(projectNameResult));
     }
 
-    @Given("is-multi-tenant {string}")
-    public void isMultiTenant(String arg0) {
-
+    @Given("is-multi-tenant {}")
+    public void isMultiTenant(boolean isMultiTenant) {
+        cxScannerService.getProperties().setMultiTenant(isMultiTenant);
     }
 
     @When("scan request arrives with namespace {}, repo-name {}, branch {} and application {}")
-    public void scanRequestArrivesWithNamespaceRepoNameBranchAndApplication(String arg0, String arg1, String arg2, String arg3) {
+    public void scanRequestArrivesWithNamespaceRepoNameBranchAndApplication(String namespace, String repoName, String branch, String application) {
+        scanRequest.setNamespace(namespace);
+        scanRequest.setRepoName(repoName);
+        scanRequest.setBranch(branch);
+        scanRequest.setApplication(application);
     }
 }
