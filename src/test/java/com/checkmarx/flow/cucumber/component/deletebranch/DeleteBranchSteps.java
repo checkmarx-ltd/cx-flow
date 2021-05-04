@@ -20,7 +20,6 @@ import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.sast.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.exception.CheckmarxException;
-import com.checkmarx.sdk.service.scanner.CxClient;
 import com.checkmarx.sdk.service.CxService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -337,7 +336,7 @@ public class DeleteBranchSteps {
     private void initServices() {
         CxScannerService cxScannerService = new CxScannerService(cxProperties,null, flowProperties, cxClientMock, null );
 
-        ProjectNameGenerator projectNameGeneratorSpy = spy(new ProjectNameGenerator(helperService, cxScannerService));
+        ProjectNameGenerator projectNameGeneratorSpy = spy(new ProjectNameGenerator(helperService, cxScannerService, flowProperties));
             initProjectNameGeneratorSpy(projectNameGeneratorSpy);
  
         ScanRequestConverter scanRequestConverter = new ScanRequestConverter(helperService, flowProperties, gitHubService, null, null, null, null,cxClientMock,cxProperties);

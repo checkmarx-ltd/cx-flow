@@ -1,5 +1,6 @@
 package com.checkmarx.flow.service;
 
+import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.sdk.config.CxPropertiesBase;
@@ -15,14 +16,17 @@ import org.springframework.stereotype.Service;
 public class ProjectNameGenerator {
     private final HelperService helperService;
     private final CxPropertiesBase cxProperties;
+    private final FlowProperties flowProperties;
 
-    public ProjectNameGenerator(HelperService helperService, CxScannerService cxScannerService) {
+    public ProjectNameGenerator(HelperService helperService, CxScannerService cxScannerService, FlowProperties flowProperties) {
         this.helperService = helperService;
         this.cxProperties = cxScannerService.getProperties();
+        this.flowProperties = flowProperties;
     }
 
     /**
      * Determines effective project name that can be used by vulnerability scanners.
+     *
      * @return project name based on a scan request or a Groovy script (if present).
      */
     public String determineProjectName(ScanRequest request) {
@@ -41,8 +45,7 @@ public class ProjectNameGenerator {
             if (StringUtils.isNotEmpty(branch)) {
                 log.debug("Multi-tenant mode is enabled. Branch is specified. Using repo name and branch.");
                 projectName = projectName.concat("-").concat(branch);
-            }
-            else {
+            } else {
                 log.debug("Multi-tenant mode is enabled. Branch is not specified. Using repo name only.");
             }
         } else {
@@ -59,16 +62,21 @@ public class ProjectNameGenerator {
             }
         }
 
-        return normalize(projectName);
+        return normalize(projectName, flowProperties.isPreserveProjectName());
     }
 
-    private static String normalize(String rawProjectName) {
+    private static String normalize(String rawProjectName, boolean preserveProjectName) {
         String result = null;
         if (rawProjectName != null) {
-            //only allow specific chars in project name in checkmarx
-            result = rawProjectName.replaceAll("[^a-zA-Z0-9-_.]+", "-");
-            if (!result.equals(rawProjectName)) {
-                log.debug("Project name ({}) has been normalized to allow only valid characters.", rawProjectName);
+            if (!preserveProjectName) {
+                //only allow specific chars in project name in checkmarx
+                result = rawProjectName.replaceAll("[^a-zA-Z0-9-_.]+", "-");
+                if (!result.equals(rawProjectName)) {
+                    log.debug("Project name ({}) has been normalized to allow only valid characters.", rawProjectName);
+                }
+            } else {
+                result = rawProjectName;
+                log.info("Project name ({}) has not been normalized.", rawProjectName);
             }
             log.info("Project name being used: {}", result);
         } else {
