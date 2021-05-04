@@ -62,7 +62,7 @@ public class ProjectNameGenerator {
             }
         }
 
-        return normalize(projectName, flowProperties.getPreserveProjectName());
+        return normalize(projectName, flowProperties.isPreserveProjectName());
     }
 
     private static String normalize(String rawProjectName, boolean preserveProjectName) {

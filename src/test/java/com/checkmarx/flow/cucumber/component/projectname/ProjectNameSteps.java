@@ -33,7 +33,7 @@ public class ProjectNameSteps {
         this.helperService = mock(HelperService.class);
     }
 
-    @Given("preserve-project-name is {} and is-multi-tenant true")
+    @Given("preserve-project-name is {} and multi-tenant is true")
     public void setPresrveProjectName(boolean presrveProjectName) {
         flowProperties.setPreserveProjectName(presrveProjectName);
     }
@@ -50,7 +50,7 @@ public class ProjectNameSteps {
         assertThat(projectName, equalTo(projectNameResult));
     }
 
-    @Given("is-multi-tenant {}")
+    @Given("multi-tenant is {}")
     public void isMultiTenant(boolean isMultiTenant) {
         cxScannerService.getProperties().setMultiTenant(isMultiTenant);
     }
