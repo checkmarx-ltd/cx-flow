@@ -34,7 +34,7 @@ public class GitHubControllerTest {
                                                                          jiraProperties,
                                                                          scriptService);
     private static final List<VulnerabilityScanner> scanners = new ArrayList<>();
-    private static final ProjectNameGenerator projectNameGenerator = new ProjectNameGenerator(helperService, cxScannerService);
+    private static final ProjectNameGenerator projectNameGenerator = new ProjectNameGenerator(helperService, cxScannerService, flowProperties);
     private static final FlowService flowService = new FlowService(scanners, projectNameGenerator, resultsService);
     private static final FilterFactory filterFactory = new FilterFactory();
 

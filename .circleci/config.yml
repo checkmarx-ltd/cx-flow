@@ -663,9 +663,6 @@ workflows:
       - sca-integration-tests:
           requires:
             - deploy-cxflow
-      - ast-integration-tests:
-          requires:
-          - deploy-cxflow
       - jira-integration-tests:
           requires:
             - deploy-cxflow
@@ -676,9 +673,6 @@ workflows:
           requires:
             - deploy-cxflow
       - SCA-CLI-integration-tests:
-          requires:
-            - deploy-cxflow
-      - AST-CLI-integration-tests:
           requires:
             - deploy-cxflow
       - CxGo-integration-tests:
@@ -695,12 +689,10 @@ workflows:
             - e2e-tests
             - integration-tests
             - sca-integration-tests
-            - ast-integration-tests
             - jira-integration-tests
             - pullRequestComments-integration-tests
             - SAST-CLI-integration-tests
             - SCA-CLI-integration-tests
-            - AST-CLI-integration-tests
             - CxGo-integration-tests
             - CodeBashing-integration-tests
       - docker-push-stable:
@@ -711,11 +703,9 @@ workflows:
             - e2e-tests
             - integration-tests
             - sca-integration-tests
-            - ast-integration-tests
             - jira-integration-tests
             - pullRequestComments-integration-tests
             - SAST-CLI-integration-tests
-            - AST-CLI-integration-tests
             - CxGo-integration-tests
             - CodeBashing-integration-tests
       - publish-github-release:
@@ -726,12 +716,10 @@ workflows:
             - e2e-tests
             - integration-tests
             - sca-integration-tests
-            - ast-integration-tests
             - jira-integration-tests
             - pullRequestComments-integration-tests
             - SAST-CLI-integration-tests
             - SCA-CLI-integration-tests
-            - AST-CLI-integration-tests
             - CxGo-integration-tests
             - CodeBashing-integration-tests
       - cleanup:
@@ -750,12 +738,10 @@ workflows:
             - e2e-tests
             - integration-tests
             - sca-integration-tests
-            - ast-integration-tests
             - jira-integration-tests
             - pullRequestComments-integration-tests
             - SAST-CLI-integration-tests
             - SCA-CLI-integration-tests
-            - AST-CLI-integration-tests
             - CxGo-integration-tests
             - CodeBashing-integration-tests
   nightly-cleanup:

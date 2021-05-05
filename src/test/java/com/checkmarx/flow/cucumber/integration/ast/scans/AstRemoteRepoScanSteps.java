@@ -299,7 +299,7 @@ public class AstRemoteRepoScanSteps {
         HelperService helperService = new HelperService(flowProperties, cxScannerService,
                                                         jiraProperties, scriptService);
      
-        ProjectNameGenerator projectNameGenerator = new ProjectNameGenerator(helperService, cxScannerService);
+        ProjectNameGenerator projectNameGenerator = new ProjectNameGenerator(helperService, cxScannerService, flowProperties);
         FlowService flowService = new FlowService(new ArrayList<>(), projectNameGenerator, resultsServiceMock);
 
         ScanRequest scanRequest = getBasicScanRequest(branch, repo, isPublicRepo, projectName);

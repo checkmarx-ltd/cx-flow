@@ -1,6 +1,8 @@
 package com.checkmarx.flow.config;
 
 import com.checkmarx.sdk.config.CxGoProperties;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
@@ -47,6 +49,8 @@ public class FlowProperties {
     private boolean listFalsePositives = false;
     private boolean scanResubmit = false;
     private Mail mail;
+    @Getter @Setter
+    private boolean preserveProjectName;
     private Map<FindingSeverity,Integer> thresholds;
 
     public String getContact() {
@@ -315,6 +319,7 @@ public class FlowProperties {
     public void setThresholds(Map<FindingSeverity, Integer> thresholds) {
         this.thresholds = thresholds;
     }
+
 
     public static class Mail {
         private String host;
