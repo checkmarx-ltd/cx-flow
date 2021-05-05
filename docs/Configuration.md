@@ -124,6 +124,7 @@ cx-flow:
   scan-result-queue: 8
   break-build: false
   scan-resubmit: false
+  preserve-project-name: false
   http-connection-timeout: xxx #milliseconds - default 30000
   http-read-timeout: xxx #milliseconds - default 120000
   mail:
@@ -339,6 +340,7 @@ Refer to the sample configuration above for the entire yaml structure.
 | profiling-depth   | 1             | No  | Yes | No        | The folder depth that is inspected for file names during the profiling process, which means looking for specific file references, i.e. web.xml/Web.config |
 | profile-config    | CxProfile.json | No | Yes | No        | The file that contains the profile configuration mapping. |
 | scan-resubmit     | false          | No | Yes | Yes       | When **True**: If a scan is active for the same project, CxFlow cancels the active scan and submits a new scan. When **False**: If a scan is active for the same project, CxFlow does not submit a new scan. |
+| preserve-project-name | false      | No | Yes | Yes       | When **False**: The project name will be the repository name after normalization (i.e. Front-End-dev). Legal characters are: `a-z`, `A-Z`, `0-9`, `-`, `_`, `.`. All other characters will be replaced in the normalization process with "-". <br/> When **True**: The project name will be the exact project name inputted without normalization (i.e. Front End-dev). For attention: Not all scanners allow project names with invalid characters. |
 | **checkmarx**     |                |    |     |           |                                                                           |
 | username          |                | Yes | Yes | Yes      | Service account for Checkmarx                                             |
 | password          |                | Yes | Yes | Yes      | Service account password Checkmarx                                        |
