@@ -357,9 +357,9 @@ public class JiraService {
         }
     }
 
-    public List<Issue> searchIssueByLabel(String label){
+    public List<Issue> searchIssueByDescription(String searchDescription){
         SearchRestClient searchClient = client.getSearchClient();
-        String jql = "labels=\"" + label + "\"";
+        String jql = "description ~ \"" + searchDescription + "\"";
 
         Promise<SearchResult> searchResultPromise = searchClient.searchJql(jql);
         Iterable<Issue> issues = searchResultPromise.claim().getIssues();
@@ -368,6 +368,14 @@ public class JiraService {
         issues.forEach(result::add);
 
         return result;
+    }
+    public String createIssue(String projectKey,
+                              String summary,
+                              String description,
+                              String assignee,
+                              String priorities,
+                              String issueTypeName) throws JiraClientException {
+        return createIssue(projectKey, summary, description,assignee,priorities,issueTypeName, null);
     }
 
     public String createIssue(String projectKey,
@@ -385,7 +393,10 @@ public class JiraService {
 
             issueBuilder.setSummary(summary);
             issueBuilder.setDescription(description);
-            issueBuilder.setFieldValue("labels", labels);
+
+            if (labels != null && !labels.isEmpty()) {
+                issueBuilder.setFieldValue("labels", labels);
+            }
 
             if (assignee != null && !assignee.isEmpty()) {
                 ComplexIssueInputFieldValue jiraAssignee = getAssignee(assignee, projectKey);

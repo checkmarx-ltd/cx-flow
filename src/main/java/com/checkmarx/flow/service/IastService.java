@@ -4,64 +4,59 @@ import com.checkmarx.flow.config.IastProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.dto.iast.manager.dto.*;
+import com.checkmarx.flow.dto.iast.manager.dto.ResultInfo;
+import com.checkmarx.flow.dto.iast.manager.dto.Scan;
+import com.checkmarx.flow.dto.iast.manager.dto.ScanVulnerabilities;
+import com.checkmarx.flow.dto.iast.manager.dto.VulnerabilityInfo;
+import com.checkmarx.flow.dto.iast.ql.utils.Severity;
+import com.checkmarx.flow.exception.IastThresholdsSeverityException;
 import com.checkmarx.flow.exception.JiraClientException;
 import com.checkmarx.flow.utils.ScanUtils;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
-import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 @Slf4j
 @Service
 public class IastService {
-    private static Random random = new Random();
+    private Random random = new Random();
 
     private final Map<Integer, String> severityToPriority = new HashMap<>();
     private final IastProperties iastProperties;
 
-    private int updateTokenSeconds;
-
-    private String iastUrlRoot;
-
-    private String authTokenHeader;
-    private LocalDateTime authTokenHeaderDateGeneration;
-    private final ObjectMapper objectMapper = new ObjectMapper()
-            .registerModule(new JavaTimeModule());
-
-    @Autowired
     private JiraProperties jiraProperties;
 
-    @Autowired
     private JiraService jiraService;
 
-    public IastService(IastProperties iastProperties) {
-        this.iastProperties = iastProperties;
-    }
+    private IastServiceRequests iastServiceRequests;
 
-    @PostConstruct
-    public void init() throws IOException, InterruptedException {
+    @Autowired
+    public IastService(JiraProperties jiraProperties,
+                       JiraService jiraService,
+                       IastProperties iastProperties,
+                       IastServiceRequests iastServiceRequests) {
+        this.iastProperties = iastProperties;
+        this.jiraProperties = jiraProperties;
+        this.jiraService = jiraService;
+        this.iastServiceRequests = iastServiceRequests;
+
+
         checkRequiredParameters();
 
         severityToPriority.put(0, "Low");
         severityToPriority.put(1, "Low");
         severityToPriority.put(2, "Medium");
         severityToPriority.put(3, "High");
-
-        updateTokenSeconds = iastProperties.getUpdateTokenSeconds();
-        this.iastUrlRoot = iastProperties.getUrl() + ":" + iastProperties.getManagerPort() + "/iast/";
     }
 
     private void checkRequiredParameters(){
@@ -74,21 +69,28 @@ public class IastService {
                 || ScanUtils.empty(iastProperties.getUsername())
                 || ScanUtils.empty(iastProperties.getPassword())
                 || ScanUtils.empty(iastProperties.getManagerPort())
-                || ScanUtils.emptyObj(iastProperties.getUpdateTokenSeconds())) {
+                || ScanUtils.emptyObj(iastProperties.getUpdateTokenSeconds())
+                || iastProperties.getFilterSeverity().isEmpty()) {
             log.error("not all IAST properties doesn't setup.");
             throw new RuntimeException("IAST properties doesn't setup.");
         }
+
+
+        for (Severity severity : Severity.values()){
+            iastProperties.getThresholdsSeverity().putIfAbsent(severity, -1);
+        }
+
     }
 
     public String generateUniqTag() {
         return "cx-flow-" + LocalDateTime.now() + "-" + Math.abs(random.nextLong());
     }
 
-    public void stopScanAndCreateJiraIssueFromIastSummary(ScanRequest request, String scanTag) throws IOException {
+    public void stopScanAndCreateJiraIssueFromIastSummary(ScanRequest request, String scanTag) throws IOException, JiraClientException {
         log.debug("start stopScanAndCreateJiraIssueFromIastSummary with scanTag:" + scanTag);
         Scan scan = null;
         try {
-            scan = apiScansScanTagFinish(scanTag);
+            scan = iastServiceRequests.apiScansScanTagFinish(scanTag);
         } catch (FileNotFoundException e) {
             log.warn("Can't find scan with current tag: " + scanTag, e);
         }
@@ -101,64 +103,72 @@ public class IastService {
     }
 
 
-    public void stopScanAndCreateJiraIssueFromIastSummary(String scanTag) throws IOException {
+    public void stopScanAndCreateJiraIssueFromIastSummary(String scanTag) throws IOException, JiraClientException {
         stopScanAndCreateJiraIssueFromIastSummary(null, scanTag);
     }
 
-    private void authorization() {
+
+    private void getVulnerabilitiesAndCreateJiraIssue(ScanRequest request, Scan scan) throws IOException, JiraClientException {
         try {
-            URL url = new URL(iastUrlRoot + "login");
-            HttpURLConnection con = (HttpURLConnection) url.openConnection();
-            con.setRequestMethod("POST");
-            con.setRequestProperty("Content-Type", "application/json; utf-8");
-            con.setRequestProperty("Accept", "application/json");
-            con.setDoOutput(true);
-            JSONObject params = new JSONObject();
-            params.put("userName", iastProperties.getUsername());
-            params.put("password", iastProperties.getPassword());
-            String jsonInputString = params.toString();
-            try (OutputStream os = con.getOutputStream()) {
-                byte[] input = jsonInputString.getBytes(StandardCharsets.UTF_8);
-                os.write(input, 0, input.length);
-            }
-
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream(), StandardCharsets.UTF_8))) {
-                StringBuilder response = new StringBuilder();
-                String responseLine;
-                while ((responseLine = br.readLine()) != null) {
-                    response.append(responseLine.trim());
-                }
-                authTokenHeader = response.substring(1, response.length() - 1); // remove first and last "
-                authTokenHeaderDateGeneration = LocalDateTime.now();
-            }
-
-        } catch (IOException e) {
-            log.error("Can't authorize in IAST server", e);
-        }
-    }
-
-    private void getVulnerabilitiesAndCreateJiraIssue(ScanRequest request, Scan scan) {
-        try {
-            final ScanVulnerabilities scanVulnerabilities = apiScanVulnerabilities(scan.getScanId());
-
+            final ScanVulnerabilities scanVulnerabilities = iastServiceRequests.apiScanVulnerabilities(scan.getScanId());
             List<VulnerabilityInfo> vulnerabilities = scanVulnerabilities.getVulnerabilities();
+
             for (VulnerabilityInfo vulnerability : vulnerabilities) {
 
                 if (vulnerability.getNewCount() != 0) {
-                    final List<ResultInfo> scansResultsQuery = apiScanResults(scan.getScanId(), vulnerability.getId());
+                    final List<ResultInfo> scansResultsQuery = iastServiceRequests.apiScanResults(scan.getScanId(), vulnerability.getId());
 
                     for (ResultInfo scansResultQuery : scansResultsQuery) {
-                        if (scansResultQuery.isNewResult()) {
+                        if (scansResultQuery.isNewResult() && filterSeverity(scansResultQuery)) {
                             createJiraIssue(scanVulnerabilities, request, scansResultQuery, vulnerability, scan);
                         }
                     }
                 }
             }
+            thresholdsSeverity(scanVulnerabilities);
         } catch (JiraClientException e) {
-            log.error("Can't create Jira issue", e);
+            throw new JiraClientException("Can't create Jira issue", e);
         } catch (IOException e) {
-            log.error("Can't send api request", e);
+            throw new IOException("Can't send api request", e);
         }
+    }
+
+    /**
+     * create an exception if the severity thresholds are exceeded
+     */
+    private void thresholdsSeverity(ScanVulnerabilities scanVulnerabilities) {
+        Map<Severity, AtomicInteger> thresholdsSeverity = new HashMap<>(7);
+        for (Severity severity : Severity.values()){
+            thresholdsSeverity.put(severity, new AtomicInteger(0));
+        }
+        boolean throwThresholdsSeverity = false;
+        for (int i = 0; i < scanVulnerabilities.getVulnerabilities().size(); i++) {
+            VulnerabilityInfo vulnerabilityInfo = scanVulnerabilities.getVulnerabilities().get(i);
+
+            int countSeverityVulnerabilities = thresholdsSeverity.get(vulnerabilityInfo.getHighestSeverity()).incrementAndGet();
+            Integer countPossibleVulnerability = iastProperties.getThresholdsSeverity().get(vulnerabilityInfo.getHighestSeverity());
+            if (countPossibleVulnerability != -1
+                    && countSeverityVulnerabilities >= countPossibleVulnerability){
+                throwThresholdsSeverity = true;
+            }
+        }
+
+        if (throwThresholdsSeverity) {
+            log.warn("\nThresholds severity are exceeded. " +
+                    "\n High:   " + thresholdsSeverity.get(Severity.HIGH).incrementAndGet() + " / " + iastProperties.getThresholdsSeverity().get(Severity.HIGH) +
+                    "\n Medium: " + thresholdsSeverity.get(Severity.MEDIUM).incrementAndGet() + " / " + iastProperties.getThresholdsSeverity().get(Severity.MEDIUM) +
+                    "\n Low:    " + thresholdsSeverity.get(Severity.LOW).incrementAndGet() + " / " + iastProperties.getThresholdsSeverity().get(Severity.LOW) +
+                    "\n Info:   " + thresholdsSeverity.get(Severity.INFO).incrementAndGet() + " / " + iastProperties.getThresholdsSeverity().get(Severity.INFO));
+
+            throw new IastThresholdsSeverityException();
+        }
+    }
+
+    /**
+     * @return false if not need to create issue
+     */
+    private boolean filterSeverity(ResultInfo scansResultQuery) {
+        return iastProperties.getFilterSeverity().contains(scansResultQuery.getSeverity());
     }
 
     private void createJiraIssue(ScanVulnerabilities scanVulnerabilities,
@@ -166,9 +176,6 @@ public class IastService {
                                  ResultInfo scansResultQuery,
                                  VulnerabilityInfo vulnerability,
                                  Scan scan) throws JiraClientException {
-
-        String title = scansResultQuery.getName() + ": " + scansResultQuery.getUrl();
-
         String assignee;
         String issueType;
         String project;
@@ -190,80 +197,45 @@ public class IastService {
             project = jiraProperties.getProject();
         }
 
+        String title = scansResultQuery.getName();
+
+        if (scansResultQuery.getUrl() != null){
+            title += ": " + scansResultQuery.getUrl();
+        }
+
         String description = iastProperties.getUrl() + ":" + iastProperties.getManagerPort()
                 + "/iast-ui/#!/project/" + scanVulnerabilities.getProjectId()
                 + "/scan/" + scanVulnerabilities.getScanId()
                 + "?rid=" + scansResultQuery.getResultId()
-                + "&vid=" + vulnerability.getId();
+                + "&vid=" + vulnerability.getId()
+                + "\n\nScan Tag: " + scan.getTag();
 
-        jiraService.createIssue(
-                project,
-                title,
-                description,
-                assignee,
-                severityToPriority.get(scansResultQuery.getSeverity().toValue()),
-                issueType,
-                Collections.singletonList(scan.getTag()));
-    }
-
-    private ScanVulnerabilities apiScanVulnerabilities(Long scanId) throws IOException {
-        return objectMapper.readValue(resultGetBodyOfDefaultConnectionToIast("scans/" + scanId + "/vulnerabilities"), ScanVulnerabilities.class);
-    }
-
-    private List<ResultInfo> apiScanResults(Long scanId, Long vulnerabilityId) throws IOException {
-        return objectMapper.readValue(resultGetBodyOfDefaultConnectionToIast("scans/" + scanId + "/results?queryId=" + vulnerabilityId), new TypeReference<List<ResultInfo>>() {
-        });
-    }
-
-    private Scan apiScansScanTagFinish(String scanTag) throws IOException {
-        return objectMapper.readValue(resultPutBodyOfDefaultConnectionToIast("scans/scan-tag/" + scanTag + "/finish"), Scan.class);
-    }
-
-    /**
-     * Check need to update token.
-     * If that is need, then update it.
-     */
-    private void checkAuthorization() {
-        if (authTokenHeader == null || authTokenHeaderDateGeneration.plusSeconds(updateTokenSeconds).isBefore(LocalDateTime.now())) {
-            authorization();
-        }
-    }
-
-    private String resultGetBodyOfDefaultConnectionToIast(String urlConnection) throws IOException {
-        return resultBodyOfDefaultConnectionToIast(urlConnection, "GET");
-    }
-
-    private String resultPutBodyOfDefaultConnectionToIast(String urlConnection) throws IOException {
-        return resultBodyOfDefaultConnectionToIast(urlConnection, "PUT");
-    }
-
-    private String resultBodyOfDefaultConnectionToIast(String urlConnection, String requestMethod) throws IOException {
-        log.info("request to IAST manager. Url:" + urlConnection);
-        HttpURLConnection con = generateConnectionToIast(urlConnection, requestMethod);
-
-        try (BufferedReader br = new BufferedReader(
-                new InputStreamReader(con.getInputStream(), StandardCharsets.UTF_8))) {
-            StringBuilder response = new StringBuilder();
-            String responseLine;
-            while ((responseLine = br.readLine()) != null) {
-                response.append(responseLine.trim());
+        if (request != null) {
+            if (request.getRepoName() != null) {
+                description += "\n Repository: " + request.getRepoName();
             }
-            return response.toString();
+
+            if (request.getBranch() != null) {
+                description += "\n Branch: " + request.getBranch();
+                title += " [" + request.getBranch() + "]";
+            }
         }
+
+        String issueKey;
+        try {
+            issueKey = jiraService.createIssue(
+                    project,
+                    title,
+                    description,
+                    assignee,
+                    severityToPriority.get(scansResultQuery.getSeverity().toValue()),
+                    issueType);
+
+        } catch (JiraClientException e){
+            throw new JiraClientException("Can't create Jira issue.", e);
+        }
+
+        log.info("Create task: " + jiraProperties.getUrl() + "/browse/" + issueKey);
     }
 
-    private HttpURLConnection generateConnectionToIast(String urlConnection, String requestMethod) throws IOException {
-        checkAuthorization();
-
-        URL url = new URL(iastUrlRoot + urlConnection);
-        HttpURLConnection con = (HttpURLConnection) url.openConnection();
-        con.setRequestMethod(requestMethod);
-        con.setRequestProperty("Content-Type", "application/json; utf-8");
-        con.setRequestProperty("Accept", "application/json");
-        con.setDoOutput(true);
-
-        con.setRequestProperty("Authorization", "Bearer " + authTokenHeader);
-
-        return con;
-    }
 }

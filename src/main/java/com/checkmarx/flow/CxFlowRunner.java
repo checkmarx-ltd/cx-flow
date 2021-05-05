@@ -4,6 +4,7 @@ import com.checkmarx.flow.config.*;
 import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.exception.ExitThrowable;
+import com.checkmarx.flow.exception.JiraClientException;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.service.*;
@@ -444,7 +445,7 @@ public class CxFlowRunner implements ApplicationRunner {
         return repoUrl;
     }
 
-    private void configurateIast(ScanRequest request, String scanTag) throws IOException {
+    private void configurateIast(ScanRequest request, String scanTag) throws IOException, JiraClientException {
         iastService.stopScanAndCreateJiraIssueFromIastSummary(request, scanTag);
     }
 

@@ -115,11 +115,21 @@ jira:
   #  fields:
 
 iast:
-  url: http://localhost
+  url: http://xxxxx.iast.net
   manager-port: 8380
-  username: admin
-  password: Cx123456!
+  username: xxxx
+  password: xxxx
   update-token-seconds: 250  # seconds. By default token live only 5 minutes
+  filter-severity:
+    - HIGH
+    - MEDIUM
+    - LOW
+#    - INFO
+  thresholds-severity:
+    HIGH: -1
+    MEDIUM: -1
+    LOW: -1
+    INFO: -1
 
 cxgo:
   client-secret: xxx

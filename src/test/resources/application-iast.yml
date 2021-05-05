@@ -129,23 +129,21 @@ jira:
   project: BCB
   issue-type: Bug
   priorities:
-    High: High
-    Medium: Medium
-    Low: Low
-    Informational: Lowest
-  open-transition: In Progress
-  close-transition: Done
-  # project-key-script:
-  #  open-status:
-  #    - To Do
-  #    - In Progress
-  #  closed-status:
-  #    - DONE
-  #  status-category-open-name:
-  #    - To Do
-  #    - In Progress
-  # status-category-closed-name:
-  #  - Done
+    X: Y # Map Checkmarx severity : to JIRA Priority
+  open-transition: Reopen Issue
+  close-transition: Close Issue
+  open-status:
+    - Open
+    - In Progress
+    - Reopened
+  closed-status:
+    - Closed
+    - Resolved
+  status-category-open-name:
+    - To Do
+    - In Progress
+  statusCategoryClosedName:
+    - Done
 
   fields:
     - type: result
@@ -190,11 +188,21 @@ jira:
   #description-postfix: "<POST>-"
 
 iast:
-  url: http://localhost
+  url: http://xxxxx.iast.net
   manager-port: 8380
-  username: admin
-  password: Cx123456!
-  update-token-seconds: 250  # By default token live only 5 minutes
+  username: xxxx
+  password: xxxx
+  update-token-seconds: 250  # seconds. By default token live only 5 minutes
+  filter-severity:
+    - HIGH
+    - MEDIUM
+    - LOW
+#    - INFO
+  thresholds-severity:
+    HIGH: -1
+    MEDIUM: -1
+    LOW: -1
+    INFO: -1
 
 github:
   webhook-token: 1234

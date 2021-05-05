@@ -90,36 +90,46 @@ checkmarx:
   #project-script:
 
 jira:
-
-  username: xxxx
-  token: xxxx
-  project: APPSEC
-  issue-type: Bug
+  url: https://kecvens.atlassian.net
+  username: and.tetka@gmail.com
+  token: 4jpcFVOAeL14VbCMGGbW3EED
+  project: BCB
+  issue-type: Task
   priorities:
     X: Y # Map Checkmarx severity : to JIRA Priority
   open-transition: Reopen Issue
   close-transition: Close Issue
-  # project-key-script:
-  #  open-status:
-  #    - Open
-  #    - In Progress
-  #    - Reopened
-  #  closed-status:
-  #    - Closed
-  #    - Resolved
-  #  status-category-open-name:
-  #    - To Do
-  #    - In Progress
-  #  statusCategoryClosedName:
-  #    - Done
+  open-status:
+    - Open
+    - In Progress
+    - Reopened
+  closed-status:
+    - Closed
+    - Resolved
+  status-category-open-name:
+    - To Do
+    - In Progress
+  statusCategoryClosedName:
+    - Done
   #  fields:
 
 iast:
-  #  url: http://xxxxx.iast.net
-  #  manager-port: 8380
-  #  username: xxxx
-  #  password: xxxx
+  url: http://xxxxx.iast.net
+# ssl-certificate-file-path: "/tmp/iast/certificate.cer"
+  manager-port: 8380
+  username: xxxx
+  password: xxxx
   update-token-seconds: 250  # seconds. By default token live only 5 minutes
+  filter-severity:
+    - HIGH
+    - MEDIUM
+    - LOW
+#    - INFO
+  thresholds-severity:
+    HIGH: -1
+    MEDIUM: -1
+    LOW: -1
+    INFO: -1
 
 cxgo:
   client-secret: xxx

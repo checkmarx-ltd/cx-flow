@@ -2,6 +2,7 @@ package com.checkmarx.flow.controller;
 
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.checkmarx.flow.dto.EventResponse;
+import com.checkmarx.flow.exception.JiraClientException;
 import com.checkmarx.flow.service.IastService;
 import com.checkmarx.flow.service.JiraService;
 import com.checkmarx.flow.utils.TokenUtils;
@@ -38,31 +39,31 @@ public class IastController {
                 .build());
     }
 
-    @PostMapping(value = {"/stop-scan-and-create-jira-issue/{scanId}"})
+    @PostMapping(value = {"/stop-scan-and-create-jira-issue/{scanTag}"})
     public ResponseEntity<EventResponse> stopScanAndCreateJiraIssue(
-            @PathVariable(value = "scanId", required = false) String scanId,
+            @PathVariable(value = "scanTag", required = false) String scanTag,
             @RequestHeader(value = TOKEN_HEADER) String token) {
         //Validate shared API token from header
         tokenUtils.validateToken(token);
         try {
-            iastService.stopScanAndCreateJiraIssueFromIastSummary(scanId);
+            iastService.stopScanAndCreateJiraIssueFromIastSummary(scanTag);
             return ResponseEntity.accepted().body(EventResponse.builder()
                     .message("OK")
                     .success(true)
                     .build());
 
-        } catch (IOException e) {
-            log.warn("Can't stop scan or create jira task", e);
-        }
+        } catch (IOException | JiraClientException e) {
+            log.error(e.getMessage(), e);
 
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(EventResponse.builder()
-                .message("Internal Server Error")
-                .success(false)
-                .build());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(EventResponse.builder()
+                    .message(e.getMessage())
+                    .success(false)
+                    .build());
+        }
     }
 
-    @GetMapping(value = {"/jira/label/{label}"})
-    public List<Issue> jiraIssue(@PathVariable(value = "label", required = false) String label) {
-        return jiraService.searchIssueByLabel(label);
+    @GetMapping(value = {"/jira/description/{description}"})
+    public List<Issue> jiraSearchIssueByDescription(@PathVariable(value = "description", required = false) String description) {
+        return jiraService.searchIssueByDescription(description);
     }
 }

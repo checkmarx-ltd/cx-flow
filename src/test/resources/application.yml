@@ -189,6 +189,23 @@ jira:
   #description-prefix: "<PRE>-"
   #description-postfix: "<POST>-"
 
+iast:
+  url: http://xxxxx.iast.net
+  manager-port: 8380
+  username: xxxx
+  password: xxxx
+  update-token-seconds: 250  # seconds. By default token live only 5 minutes
+  filter-severity:
+    - HIGH
+    - MEDIUM
+    - LOW
+  #    - INFO
+  thresholds-severity:
+    HIGH: -1
+    MEDIUM: -1
+    LOW: -1
+    INFO: -1
+
 github:
   webhook-token: 1234
   token: xxxx
