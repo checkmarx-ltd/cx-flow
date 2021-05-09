@@ -202,8 +202,7 @@ public class ConfigurationOverrider {
                 .ifPresent(p -> {
                     /*Replace ${repo} and ${branch}  with the actual reponame and branch - then strip out non-alphanumeric (-_ are allowed)*/
                     String project = p.replace("${repo}", request.getRepoName())
-                            .replace("${branch}", request.getBranch())
-                            .replaceAll("[^a-zA-Z0-9-_.]+", "-");
+                            .replace("${branch}", request.getBranch());
                     request.setProject(project);
                     overrideReport.put("project", project);
                 });
