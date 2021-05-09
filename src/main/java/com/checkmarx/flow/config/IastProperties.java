@@ -18,6 +18,7 @@ import java.util.Map;
 public class IastProperties {
 
     private String url;
+    private String sslCertificateFilePath;
     private String username;
     private String password;
     private String managerPort;

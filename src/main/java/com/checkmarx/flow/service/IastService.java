@@ -29,16 +29,17 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 @Service
 public class IastService {
-    private Random random = new Random();
+
+    private final Random random = new Random();
 
     private final Map<Integer, String> severityToPriority = new HashMap<>();
     private final IastProperties iastProperties;
 
-    private JiraProperties jiraProperties;
+    private final JiraProperties jiraProperties;
 
-    private JiraService jiraService;
+    private final JiraService jiraService;
 
-    private IastServiceRequests iastServiceRequests;
+    private final IastServiceRequests iastServiceRequests;
 
     @Autowired
     public IastService(JiraProperties jiraProperties,
@@ -50,7 +51,6 @@ public class IastService {
         this.jiraService = jiraService;
         this.iastServiceRequests = iastServiceRequests;
 
-
         checkRequiredParameters();
 
         severityToPriority.put(0, "Low");
@@ -59,12 +59,11 @@ public class IastService {
         severityToPriority.put(3, "High");
     }
 
-    private void checkRequiredParameters(){
-        if (iastProperties == null){
+    private void checkRequiredParameters() {
+        if (iastProperties == null) {
             log.error("IAST properties doesn't setup.");
             throw new RuntimeException("IAST properties doesn't setup.");
         }
-
         if (ScanUtils.empty(iastProperties.getUrl())
                 || ScanUtils.empty(iastProperties.getUsername())
                 || ScanUtils.empty(iastProperties.getPassword())
@@ -74,19 +73,17 @@ public class IastService {
             log.error("not all IAST properties doesn't setup.");
             throw new RuntimeException("IAST properties doesn't setup.");
         }
-
-
-        for (Severity severity : Severity.values()){
+        for (Severity severity : Severity.values()) {
             iastProperties.getThresholdsSeverity().putIfAbsent(severity, -1);
         }
-
     }
 
     public String generateUniqTag() {
         return "cx-flow-" + LocalDateTime.now() + "-" + Math.abs(random.nextLong());
     }
 
-    public void stopScanAndCreateJiraIssueFromIastSummary(ScanRequest request, String scanTag) throws IOException, JiraClientException {
+    public void stopScanAndCreateJiraIssueFromIastSummary(ScanRequest request, String scanTag)
+            throws IOException, JiraClientException {
         log.debug("start stopScanAndCreateJiraIssueFromIastSummary with scanTag:" + scanTag);
         Scan scan = null;
         try {
@@ -102,21 +99,20 @@ public class IastService {
         getVulnerabilitiesAndCreateJiraIssue(request, scan);
     }
 
-
     public void stopScanAndCreateJiraIssueFromIastSummary(String scanTag) throws IOException, JiraClientException {
         stopScanAndCreateJiraIssueFromIastSummary(null, scanTag);
     }
 
-
-    private void getVulnerabilitiesAndCreateJiraIssue(ScanRequest request, Scan scan) throws IOException, JiraClientException {
+    private void getVulnerabilitiesAndCreateJiraIssue(ScanRequest request, Scan scan)
+            throws IOException, JiraClientException {
         try {
-            final ScanVulnerabilities scanVulnerabilities = iastServiceRequests.apiScanVulnerabilities(scan.getScanId());
+            final ScanVulnerabilities scanVulnerabilities =
+                    iastServiceRequests.apiScanVulnerabilities(scan.getScanId());
             List<VulnerabilityInfo> vulnerabilities = scanVulnerabilities.getVulnerabilities();
-
             for (VulnerabilityInfo vulnerability : vulnerabilities) {
-
                 if (vulnerability.getNewCount() != 0) {
-                    final List<ResultInfo> scansResultsQuery = iastServiceRequests.apiScanResults(scan.getScanId(), vulnerability.getId());
+                    final List<ResultInfo> scansResultsQuery =
+                            iastServiceRequests.apiScanResults(scan.getScanId(), vulnerability.getId());
 
                     for (ResultInfo scansResultQuery : scansResultsQuery) {
                         if (scansResultQuery.isNewResult() && filterSeverity(scansResultQuery)) {
@@ -138,27 +134,32 @@ public class IastService {
      */
     private void thresholdsSeverity(ScanVulnerabilities scanVulnerabilities) {
         Map<Severity, AtomicInteger> thresholdsSeverity = new HashMap<>(7);
-        for (Severity severity : Severity.values()){
+        for (Severity severity : Severity.values()) {
             thresholdsSeverity.put(severity, new AtomicInteger(0));
         }
         boolean throwThresholdsSeverity = false;
         for (int i = 0; i < scanVulnerabilities.getVulnerabilities().size(); i++) {
             VulnerabilityInfo vulnerabilityInfo = scanVulnerabilities.getVulnerabilities().get(i);
-
-            int countSeverityVulnerabilities = thresholdsSeverity.get(vulnerabilityInfo.getHighestSeverity()).incrementAndGet();
-            Integer countPossibleVulnerability = iastProperties.getThresholdsSeverity().get(vulnerabilityInfo.getHighestSeverity());
+            int countSeverityVulnerabilities =
+                    thresholdsSeverity.get(vulnerabilityInfo.getHighestSeverity()).incrementAndGet();
+            Integer countPossibleVulnerability =
+                    iastProperties.getThresholdsSeverity().get(vulnerabilityInfo.getHighestSeverity());
             if (countPossibleVulnerability != -1
-                    && countSeverityVulnerabilities >= countPossibleVulnerability){
+                    && countSeverityVulnerabilities >= countPossibleVulnerability) {
                 throwThresholdsSeverity = true;
             }
         }
 
         if (throwThresholdsSeverity) {
             log.warn("\nThresholds severity are exceeded. " +
-                    "\n High:   " + thresholdsSeverity.get(Severity.HIGH).incrementAndGet() + " / " + iastProperties.getThresholdsSeverity().get(Severity.HIGH) +
-                    "\n Medium: " + thresholdsSeverity.get(Severity.MEDIUM).incrementAndGet() + " / " + iastProperties.getThresholdsSeverity().get(Severity.MEDIUM) +
-                    "\n Low:    " + thresholdsSeverity.get(Severity.LOW).incrementAndGet() + " / " + iastProperties.getThresholdsSeverity().get(Severity.LOW) +
-                    "\n Info:   " + thresholdsSeverity.get(Severity.INFO).incrementAndGet() + " / " + iastProperties.getThresholdsSeverity().get(Severity.INFO));
+                    "\n High:   " + thresholdsSeverity.get(Severity.HIGH).incrementAndGet() + " / " +
+                    iastProperties.getThresholdsSeverity().get(Severity.HIGH) +
+                    "\n Medium: " + thresholdsSeverity.get(Severity.MEDIUM).incrementAndGet() + " / " +
+                    iastProperties.getThresholdsSeverity().get(Severity.MEDIUM) +
+                    "\n Low:    " + thresholdsSeverity.get(Severity.LOW).incrementAndGet() + " / " +
+                    iastProperties.getThresholdsSeverity().get(Severity.LOW) +
+                    "\n Info:   " + thresholdsSeverity.get(Severity.INFO).incrementAndGet() + " / " +
+                    iastProperties.getThresholdsSeverity().get(Severity.INFO));
 
             throw new IastThresholdsSeverityException();
         }
@@ -181,16 +182,12 @@ public class IastService {
         String project;
         if (request != null && request.getBugTracker() != null) {
             BugTracker bugTracker = request.getBugTracker();
-
             assignee = bugTracker.getAssignee() != null ? bugTracker.getAssignee()
                     : jiraProperties.getUsername();
-
             issueType = bugTracker.getIssueType() != null ? bugTracker.getIssueType()
                     : jiraProperties.getIssueType();
-
             project = bugTracker.getProjectKey() != null ? bugTracker.getProjectKey()
                     : jiraProperties.getProject();
-
         } else {
             assignee = jiraProperties.getUsername();
             issueType = jiraProperties.getIssueType();
@@ -199,7 +196,7 @@ public class IastService {
 
         String title = scansResultQuery.getName();
 
-        if (scansResultQuery.getUrl() != null){
+        if (scansResultQuery.getUrl() != null) {
             title += ": " + scansResultQuery.getUrl();
         }
 
@@ -231,11 +228,10 @@ public class IastService {
                     severityToPriority.get(scansResultQuery.getSeverity().toValue()),
                     issueType);
 
-        } catch (JiraClientException e){
+        } catch (JiraClientException e) {
             throw new JiraClientException("Can't create Jira issue.", e);
         }
 
         log.info("Create task: " + jiraProperties.getUrl() + "/browse/" + issueKey);
     }
-
 }

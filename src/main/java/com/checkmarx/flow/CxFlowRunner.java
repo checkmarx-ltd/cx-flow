@@ -425,7 +425,7 @@ public class CxFlowRunner implements ApplicationRunner {
                     log.error("No valid option was provided for driving scan");
                 }
             } else if (args.containsOption(IAST_OPTION)) {
-                configurateIast(request, scanTag);
+                configureIast(request, scanTag);
             }
         } catch (Exception e) {
             log.error("An error occurred while processing request", e);
@@ -445,7 +445,7 @@ public class CxFlowRunner implements ApplicationRunner {
         return repoUrl;
     }
 
-    private void configurateIast(ScanRequest request, String scanTag) throws IOException, JiraClientException {
+    private void configureIast(ScanRequest request, String scanTag) throws IOException, JiraClientException {
         iastService.stopScanAndCreateJiraIssueFromIastSummary(request, scanTag);
     }
 
