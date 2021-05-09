@@ -3,7 +3,7 @@
 * [Filters](#filters)
 * [Thresholds](#thresholds)
 * [Bug Trackers](#bugTrackers)
-* [Example of CLI command](#exampleOfCli)
+* [CLI Example](#cliExample)
 
 ## <a name="suggestedFlow">Suggested Flow</a>
 CxIAST can be integrated within a CI/CD pipeline using CxFlow.  
@@ -26,11 +26,13 @@ To allow communication between CxFlow and CxIAST, the following `iast` section m
 ```
 iast:
   url: http://xxxxx.iast.net
+  # ssl-certificate-file-path: "/tmp/iast/certificate.cer"
   manager-port: 8380
   username: xxxx
   password: xxxx
   update-token-seconds: 250  # CxAccessControl token timeout
 ```
+**Note:** To allow connection to CxIAST server using a self-signed certificate, uncomment `ssl-certificate-file-path`.
  
 ## <a name="filters">Filters</a>
 CxFlow may filter CxIAST vulnerabilities according to the vulnerability severity before creating bug tracker tickets.  
@@ -46,10 +48,10 @@ iast:
 To ignore a severity, remove or comment that severity from the configuration file.
 
 ## <a name="thresholds">Thresholds</a>
-CxFlow returns a status the the CI pipeline when called.  
+CxFlow returns a status the CI pipeline when called.  
 To control this, a threshold can be configured per vulnerability severity.  
 Each severity threshold is determined by the allowed vulnerability count with that severity.  
-To remove a threshold from a severity, set the relevant severity to `-1`. In the example below, the trhreshold has been removed from **info**. 
+To remove a threshold from a severity, set the relevant severity to `-1`. In the example below, the threshold has been removed from **info**. 
 Thresholds are configured in the `iast` section:
 ```
 iast:
@@ -74,14 +76,12 @@ The ticket is structured as follows:
 - The **title** field is set to `<CxIAST Vulnerability name>:  <Triggering API URL>`.
 - The **priority** field is set based on the CxIAST vulnerability severity.
 - The **assignee** field is set based on the `--assignee` argument that was passed to CxFlow, or based on the configured Jira username. Refer to [Jira Configuration](https://github.com/checkmarx-ltd/cx-flow/wiki/Bug-Trackers-and-Feedback-Channels#jira) for additional information.
-- The **description** field contains a link to the vulnerability in CxIAST Manager, branch and repository name.
-
+- The **description** field contains a link to the vulnerability in CxIAST Manager, scan tag, branch and repository name.
 
 An example for a Jira ticket is available here:  
 [[/Images/IAST2.png|Jira ticket example]]
 
-
-## <a name="exampleOfCli">Example of CLI command</a>
+## <a name="cliExample">CLI Example</a>
 
 ```
 java -jar cx-flow-1.6.18.jar 
