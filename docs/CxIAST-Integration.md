@@ -3,6 +3,7 @@
 * [Filters](#filters)
 * [Thresholds](#thresholds)
 * [Bug Trackers](#bugTrackers)
+* [Example of CLI command](#exampleOfCli)
 
 ## <a name="suggestedFlow">Suggested Flow</a>
 CxIAST can be integrated within a CI/CD pipeline using CxFlow.  
@@ -28,23 +29,23 @@ iast:
   manager-port: 8380
   username: xxxx
   password: xxxx
-  update-token-seconds: 150  # CxAccessControl token timeout
+  update-token-seconds: 250  # CxAccessControl token timeout
 ```
  
-## <a name="filters">Filters - to be implemented</a>
+## <a name="filters">Filters</a>
 CxFlow may filter CxIAST vulnerabilities according to the vulnerability severity before creating bug tracker tickets.  
 To allow severities, add the relevant severity to the `iast` section in the configuration file:
 ```
 iast:
   filter-severity:
-    - high
-    - medium
-    - low
-    - info    
+    - HIGH
+    - MEDIUM
+    - LOW
+    - INFO    
 ```
-To ignore a severity, remove that severity from the configuration file.
+To ignore a severity, remove or comment that severity from the configuration file.
 
-## <a name="thresholds">Thresholds - to be implemented</a>
+## <a name="thresholds">Thresholds</a>
 CxFlow returns a status the the CI pipeline when called.  
 To control this, a threshold can be configured per vulnerability severity.  
 Each severity threshold is determined by the allowed vulnerability count with that severity.  
@@ -53,13 +54,13 @@ Thresholds are configured in the `iast` section:
 ```
 iast:
   thresholds-severity:
-    high: 1
-    medium: 3
-    low: 10
-    info: -1
+    HIGH: 1
+    MEDIUM: 3
+    LOW: 10
+    INFO: -1
 ```
 When triggered in CLI mode, CxFlow returns status code `10`, if a threshold has been exceeded.  
-When triggered in web mode, the `/iast/stop-scan-and-create-jira-issue/{scanTag}` returns `Threshold exceeded: <threshold information>` in the HTTP body.
+When triggered in web mode, the `/iast/stop-scan-and-create-jira-issue/{scanTag}` returns HTTP status 412.
 
 ## <a name="bugTrackers">Bug Trackers</a>
 At present, CxFlow only supports Jira as a bug tracker when used with CxIAST.  
@@ -73,8 +74,44 @@ The ticket is structured as follows:
 - The **title** field is set to `<CxIAST Vulnerability name>:  <Triggering API URL>`.
 - The **priority** field is set based on the CxIAST vulnerability severity.
 - The **assignee** field is set based on the `--assignee` argument that was passed to CxFlow, or based on the configured Jira username. Refer to [Jira Configuration](https://github.com/checkmarx-ltd/cx-flow/wiki/Bug-Trackers-and-Feedback-Channels#jira) for additional information.
-- The **description** field contains a link to the vulnerability in CxIAST Manager.
-- The **labels** field contains the CxIAST scan tag.
+- The **description** field contains a link to the vulnerability in CxIAST Manager, branch and repository name.
+
 
 An example for a Jira ticket is available here:  
 [[/Images/IAST2.png|Jira ticket example]]
+
+
+## <a name="exampleOfCli">Example of CLI command</a>
+
+```
+java -jar cx-flow-1.6.18.jar 
+--spring.config.location=application.yml
+--iast
+--bug-tracker="jira"
+--assignee="email@mail.com"
+--scan-tag="cx-scan-20"
+--repo-name="checkmarx-ltd/cx-flow"
+--branch="develop"
+```
+
+You can also pass the parameters that you want to set in application.yml
+for example:
+
+```
+java -jar cx-flow-1.6.18.jar 
+--spring.config.location=application.yml
+--iast
+--bug-tracker="jira"
+--assignee="email@mail.com"
+--scan-tag="cx-scan-20"
+--repo-name="checkmarx-ltd/cx-flow"
+--branch="develop"
+
+--jira.username=email@mail.com
+--jira.token=token-xxxx
+--iast.username="user"
+--iast.password="pass"
+--jira.issue-type="Bug"
+...
+```
+
