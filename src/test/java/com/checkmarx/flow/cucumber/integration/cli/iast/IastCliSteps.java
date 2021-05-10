@@ -2,16 +2,14 @@ package com.checkmarx.flow.cucumber.integration.cli.iast;
 
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.CxFlowRunner;
-import com.checkmarx.flow.config.IastProperties;
-import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.config.*;
+import com.checkmarx.flow.cucumber.integration.cli.IntegrationTestContext;
 import com.checkmarx.flow.dto.iast.common.model.enums.ManagementResultState;
 import com.checkmarx.flow.dto.iast.common.model.enums.QueryDisplayType;
 import com.checkmarx.flow.dto.iast.manager.dto.*;
 import com.checkmarx.flow.dto.iast.ql.utils.Severity;
 import com.checkmarx.flow.exception.JiraClientException;
-import com.checkmarx.flow.service.IastService;
-import com.checkmarx.flow.service.IastServiceRequests;
-import com.checkmarx.flow.service.JiraService;
+import com.checkmarx.flow.service.*;
 import com.checkmarx.jira.JiraTestUtils;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
@@ -20,11 +18,17 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.DefaultApplicationArguments;
+import org.springframework.boot.info.BuildProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpMethod;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -37,23 +41,77 @@ import static org.mockito.Mockito.*;
 @RequiredArgsConstructor
 @ActiveProfiles({"iast"})
 public class IastCliSteps {
-    private static final String ARGS = " --iast --bug-tracker=\"jira\" --assignee=\"email@mail.com\" --jira.url=https://xxxx.atlassian.net --jira.username=email@gmail.com --jira.token=token --jira.project=BCB --iast.url=\"http://localhost\" --iast.manager-port=8380 --iast.username=\"username\" --iast.password=\"password\" --iast.update-token-seconds=150 --jira.issue-type=\"Task\"”\n";
+    private static String ARGS = "--iast --bug-tracker=jira --assignee=email@mail.com --jira.url=https://xxxx.atlassian.net --jira.username=email@gmail.com --jira.token=token --jira.project=BCB --iast.url=http://localhost --iast.manager-port=8380 --iast.username=username --iast.password=password --iast.update-token-seconds=250 --jira.issue-type=Task";
 
-    private final CxFlowRunner cxFlowRunner;
-    private String scanTag;
-    private String numberOfIssue;
+    private CxFlowRunner cxFlowRunner;
 
     @Autowired
     private IastProperties iastProperties;
     @Autowired
     private JiraProperties jiraProperties;
 
-
     private JiraService jiraService = mock(JiraService.class);
     private IastServiceRequests iastServiceRequests = mock(IastServiceRequests.class);
 
     private IastService iastService;
+    private ApplicationArguments args;
 
+    private final FlowProperties flowProperties;
+    private final CxScannerService cxScannerService;
+    private final GitHubProperties gitHubProperties;
+    private final GitLabProperties gitLabProperties;
+    private final ADOProperties adoProperties;
+    private final HelperService helperService;
+    private final List<ThreadPoolTaskExecutor> executors;
+    private final ResultsService resultsService;
+    private final OsaScannerService osaScannerService;
+    private final FilterFactory filterFactory;
+    private final ConfigurationOverrider configOverrider;
+    private final BuildProperties buildProperties;
+    private final List<VulnerabilityScanner> scanners;
+    private final ThresholdValidator thresholdValidator;
+
+    private final IntegrationTestContext testContext;
+
+    @Given("mock CLI runner {}")
+    public void mockCliRunner(String scanTag) {
+        cxFlowRunner = new CxFlowRunner(
+                flowProperties,
+                cxScannerService,
+                jiraProperties,
+                gitHubProperties,
+                gitLabProperties,
+                iastService,
+                adoProperties,
+                helperService,
+                executors,
+                resultsService,
+                osaScannerService,
+                filterFactory,
+                configOverrider,
+                buildProperties,
+                scanners,
+                thresholdValidator);
+        String arguments = ARGS + " --scan-tag=" + scanTag;
+        String[] argsParam = arguments.split(" ");
+        this.args = new DefaultApplicationArguments(argsParam);
+    }
+
+    @SneakyThrows
+    @When("running cli {}")
+    public void runningIastCli(String exitCode) {
+        try {
+            Method method = cxFlowRunner.getClass().getDeclaredMethod("commandLineRunner", ApplicationArguments.class);
+            method.setAccessible(true);
+            method.invoke(cxFlowRunner, args);
+        } catch (Throwable e) {
+            //catch ExitThrowable. That exception throw when we try to finish application. That is normal situation.
+            String messageExitCode = ((InvocationTargetException) e).getTargetException().getMessage();
+
+            if (!("Exit Code:" + exitCode).equals(messageExitCode)) {
+            }
+        }
+    }
 
     @SneakyThrows
     @Given("mock services {} {}")
@@ -66,20 +124,17 @@ public class IastCliSteps {
         }
         iastProperties.setFilterSeverity(filterSeverity);
 
-        this.scanTag = scanTag;
         this.iastService = new IastService(jiraProperties, jiraService, iastProperties, iastServiceRequests);
         Scan scan = mockIastServiceRequestsApiScansScanTagFinish(scanTag);
         ScanVulnerabilities scanVulnerabilities = mockIastServiceRequestsApiScanVulnerabilities(scan);
         mockIastServiceRequestsApiScanResults(scan, scanVulnerabilities.getVulnerabilities().get(0));
         mockIastServiceRequestsApiScanResults(scan, scanVulnerabilities.getVulnerabilities().get(1));
         mockJiraServiceCreateIssue();
-
-//        tryRunCxFlow(" --scan-tag=\"" + scanTag + "\" " + ARGS);
     }
 
     @SneakyThrows
-    @When("running iast cli {}")
-    public void runningIastCli(String scanTag) {
+    @When("running iast service {}")
+    public void runningIastService(String scanTag) {
         iastService.stopScanAndCreateJiraIssueFromIastSummary(scanTag);
     }
 
@@ -148,7 +203,6 @@ public class IastCliSteps {
         vulnerabilityInfo.setQueryDisplayType(QueryDisplayType.SIMPLE);
         vulnerabilities.add(vulnerabilityInfo);
 
-
         VulnerabilityInfo vulnerabilityInfo2 = new VulnerabilityInfo();
         vulnerabilityInfo2.setId(76L);
         vulnerabilityInfo2.setName("Missing_Expect_CT_Header");
@@ -157,7 +211,6 @@ public class IastCliSteps {
         vulnerabilityInfo2.setNewCount(1);
         vulnerabilityInfo2.setQueryDisplayType(QueryDisplayType.RESPONSE);
         vulnerabilities.add(vulnerabilityInfo2);
-
 
         when((iastServiceRequests.apiScanVulnerabilities(scan.getScanId()))).thenReturn(scanVulnerabilities);
         return scanVulnerabilities;
@@ -178,20 +231,4 @@ public class IastCliSteps {
         when((iastServiceRequests.apiScansScanTagFinish(scanTag))).thenReturn(scan);
         return scan;
     }
-//
-//    @Given("IAST running env {}")
-//    public void iast_running_env(String scanTag) {
-//        System.out.println("IAST running env {}" + scanTag + " " + numberOfIssue );
-//        // Write code here that turns the phrase above into concrete actions
-//
-//    }
-//
-//    private void tryRunCxFlow(String commandLine) {
-//        try {
-//            TestUtils.runCxFlow(cxFlowRunner, commandLine);
-//        } catch (Throwable e) {
-//            log.info("Caught CxFlow execution exception: {}.", e.getClass().getSimpleName());
-//        }
-//    }
-
 }
