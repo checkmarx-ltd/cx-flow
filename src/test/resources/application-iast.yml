@@ -123,29 +123,27 @@ cxgo:
   scan-preset: 1,2,3,4,5,9
 
 jira:
-  url: http://localhost:8080
-  username: xxxx
-  token: xxxx
-  project: APPSEC
+  url: https://kecvens.atlassian.net
+  username: and.tetka@gmail.com
+  token: 3Kxti0dkTpj4Vabjj2Qt6044
+  project: BCB
   issue-type: Bug
   priorities:
-    High: High
-    Medium: Medium
-    Low: Low
-    Informational: Lowest
-  open-transition: In Progress
-  close-transition: Done
-  # project-key-script:
-  #  open-status:
-  #    - To Do
-  #    - In Progress
-  #  closed-status:
-  #    - DONE
-  #  status-category-open-name:
-  #    - To Do
-  #    - In Progress
-  # status-category-closed-name:
-  #  - Done
+    X: Y # Map Checkmarx severity : to JIRA Priority
+  open-transition: Reopen Issue
+  close-transition: Close Issue
+  open-status:
+    - Open
+    - In Progress
+    - Reopened
+  closed-status:
+    - Closed
+    - Resolved
+  status-category-open-name:
+    - To Do
+    - In Progress
+  statusCategoryClosedName:
+    - Done
 
   fields:
     - type: result
@@ -188,7 +186,6 @@ jira:
   #issue-postfix: "-<POSTFIX>"
   #description-prefix: "<PRE>-"
   #description-postfix: "<POST>-"
-
 iast:
   url: http://xxxxx.iast.net
   manager-port: 8380

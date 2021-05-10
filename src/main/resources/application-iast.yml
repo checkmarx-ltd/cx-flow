@@ -92,25 +92,26 @@ checkmarx:
 jira:
   url: https://kecvens.atlassian.net
   username: and.tetka@gmail.com
-  token: 4jpcFVOAeL14VbCMGGbW3EED
+  token: 3Kxti0dkTpj4Vabjj2Qt6044
   project: BCB
-  issue-type: Task
+  issue-type: Bug
   priorities:
     X: Y # Map Checkmarx severity : to JIRA Priority
   open-transition: Reopen Issue
   close-transition: Close Issue
-  open-status:
-    - Open
-    - In Progress
-    - Reopened
-  closed-status:
-    - Closed
-    - Resolved
-  status-category-open-name:
-    - To Do
-    - In Progress
-  statusCategoryClosedName:
-    - Done
+  # project-key-script:
+  #  open-status:
+  #    - Open
+  #    - In Progress
+  #    - Reopened
+  #  closed-status:
+  #    - Closed
+  #    - Resolved
+  #  status-category-open-name:
+  #    - To Do
+  #    - In Progress
+  #  statusCategoryClosedName:
+  #    - Done
   #  fields:
 
 iast:
