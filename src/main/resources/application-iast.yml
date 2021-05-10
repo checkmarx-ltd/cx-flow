@@ -88,7 +88,6 @@ checkmarx:
   portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
   #team-script:
   #project-script:
-
 jira:
 
   username: xxxx

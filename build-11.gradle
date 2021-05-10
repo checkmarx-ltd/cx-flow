@@ -1,7 +1,7 @@
 import org.gradle.api.tasks.testing.Test
 
 buildscript {
-	ext {
+    ext {
         CxSBSDK = "0.4.97"
         ConfigProviderVersion = "1.0.9"
         //cxVersion = "8.90.5"
@@ -12,7 +12,7 @@ buildscript {
         jacksonVersion = "2.12.1"
         mainClass = 'com.checkmarx.flow.CxFlowApplication'
     }
-	repositories {
+    repositories {
         jcenter()
         mavenLocal()
         mavenCentral()
@@ -20,8 +20,8 @@ buildscript {
             url = 'https://packages.atlassian.com/mvn/maven-external'
         }
         gradlePluginPortal()
-	}
-	dependencies {
+    }
+    dependencies {
         classpath ("gradle.plugin.com.gorylenko.gradle-git-properties:gradle-git-properties:2.0.0")
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
         classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:${sonarqubeVersion}"
@@ -46,7 +46,7 @@ def junitVersion = '5.7.0'
 
 repositories {
     mavenLocal()
-	mavenCentral()
+    mavenCentral()
     maven {
         url = 'https://packages.atlassian.com/mvn/maven-external'
     }
@@ -62,8 +62,8 @@ configurations {
 dependencies {
     compile group: 'com.beust', name: 'jcommander', version: '1.78'
     compile('org.apache.ant:ant:1.10.10')
-	compile('org.springframework.boot:spring-boot-starter-actuator')
-	compile('org.springframework.boot:spring-boot-starter-web')
+    compile('org.springframework.boot:spring-boot-starter-actuator')
+    compile('org.springframework.boot:spring-boot-starter-web')
     compile('org.springframework.boot:spring-boot-starter-aop')
     compile('org.springframework.boot:spring-boot-starter-validation')
     compile("com.github.checkmarx-ltd:cx-spring-boot-sdk:${CxSBSDK}") {
