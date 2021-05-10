@@ -116,6 +116,7 @@ jira:
 
 iast:
   url: http://xxxxx.iast.net
+  # ssl-certificate-file-path: "/tmp/iast/certificate.cer"
   manager-port: 8380
   username: xxxx
   password: xxxx
