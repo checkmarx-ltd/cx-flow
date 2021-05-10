@@ -32,7 +32,14 @@ iast:
   password: xxxx
   update-token-seconds: 250  # CxAccessControl token timeout
 ```
-**Note:** To allow connection to CxIAST server using a self-signed certificate, uncomment `ssl-certificate-file-path`.
+**Note:** To allow connection to CxIAST server using a self-signed certificate, uncomment `ssl-certificate-file-path`.  
+A certificate file for your CxIAST server can be found in an extracted CxIAST agent folder.  
+Alternatively, to get the certificate from a running CxIAST instance, you could use openssl.  
+On linux, for example:
+```
+# If you access CxIAST UI at https://my-iast.com:443
+openssl s_client -showcerts -servername my-iast.com -connect my-iast.com:443 < /dev/null > iast.cer
+```
  
 ## <a name="filters">Filters</a>
 CxFlow may filter CxIAST vulnerabilities according to the vulnerability severity before creating bug tracker tickets.  
