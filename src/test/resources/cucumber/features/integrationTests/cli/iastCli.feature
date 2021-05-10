@@ -13,4 +13,5 @@ And command line example: ”java -jar cx-flow-1.6.18.jar --spring.config.locati
       | scanTag     | create jira issue | filter-severity         |
       | cx-scan-1   | 2                 | HIGH,MEDIUM,LOW,INFO    |
       | cx-scan-2   | 2                 | HIGH,MEDIUM,LOW,INFO    |
+      | cx-scan-2   | 1                 | HIGH,MEDIUM             |
       | cx-scan-2   | 0                 | HIGH                    |

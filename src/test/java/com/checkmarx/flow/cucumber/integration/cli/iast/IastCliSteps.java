@@ -57,7 +57,7 @@ public class IastCliSteps {
 
     @SneakyThrows
     @Given("mock services {} {}")
-    public void mockServices(String scanTag, String filter) throws IOException {
+    public void mockServices(String scanTag, String filter) {
         filter = filter.replaceAll("\"", "");
         List<Severity> filterSeverity = new ArrayList<>(4);
         String[] filterNames = filter.split(",");
@@ -113,7 +113,11 @@ public class IastCliSteps {
         scansResultQuery.setName("SSRF");
         scansResultQuery.setUrl("bank-gateway/name?name=test_CheckBalance");
         scansResultQuery.setDate(new Date().toInstant());
-        scansResultQuery.setSeverity(Severity.MEDIUM);
+        if (vulnerabilityInfo.getId() == 73L){
+            scansResultQuery.setSeverity(Severity.MEDIUM);
+        } else {
+            scansResultQuery.setSeverity(Severity.LOW);
+        }
         scansResultQuery.setHttpMethod(HttpMethod.GET);
         scansResultQuery.setNewResult(true);
         scansResultQuery.setResolved(ResolutionStatus.NOT_RESOLVED);
@@ -146,14 +150,14 @@ public class IastCliSteps {
         vulnerabilities.add(vulnerabilityInfo);
 
 
-        vulnerabilityInfo = new VulnerabilityInfo();
-        vulnerabilityInfo.setId(76L);
-        vulnerabilityInfo.setName("Missing_Expect_CT_Header");
-        vulnerabilityInfo.setHighestSeverity(Severity.LOW);
-        vulnerabilityInfo.setCount(1);
-        vulnerabilityInfo.setNewCount(1);
-        vulnerabilityInfo.setQueryDisplayType(QueryDisplayType.RESPONSE);
-        vulnerabilities.add(vulnerabilityInfo);
+        VulnerabilityInfo vulnerabilityInfo2 = new VulnerabilityInfo();
+        vulnerabilityInfo2.setId(76L);
+        vulnerabilityInfo2.setName("Missing_Expect_CT_Header");
+        vulnerabilityInfo2.setHighestSeverity(Severity.LOW);
+        vulnerabilityInfo2.setCount(1);
+        vulnerabilityInfo2.setNewCount(1);
+        vulnerabilityInfo2.setQueryDisplayType(QueryDisplayType.RESPONSE);
+        vulnerabilities.add(vulnerabilityInfo2);
 
 
         when((iastServiceRequests.apiScanVulnerabilities(scan.getScanId()))).thenReturn(scanVulnerabilities);
