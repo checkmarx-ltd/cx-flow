@@ -8,6 +8,7 @@ import com.checkmarx.flow.dto.iast.common.model.enums.ManagementResultState;
 import com.checkmarx.flow.dto.iast.common.model.enums.QueryDisplayType;
 import com.checkmarx.flow.dto.iast.manager.dto.*;
 import com.checkmarx.flow.dto.iast.ql.utils.Severity;
+import com.checkmarx.flow.exception.IastThresholdsSeverityException;
 import com.checkmarx.flow.exception.JiraClientException;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.jira.JiraTestUtils;
@@ -17,6 +18,7 @@ import io.cucumber.java.en.When;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Assert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.DefaultApplicationArguments;
@@ -29,9 +31,7 @@ import org.springframework.test.context.ActiveProfiles;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 import static org.mockito.Mockito.*;
 
@@ -104,25 +104,33 @@ public class IastCliSteps {
             Method method = cxFlowRunner.getClass().getDeclaredMethod("commandLineRunner", ApplicationArguments.class);
             method.setAccessible(true);
             method.invoke(cxFlowRunner, args);
-        } catch (Throwable e) {
-            //catch ExitThrowable. That exception throw when we try to finish application. That is normal situation.
-            String messageExitCode = ((InvocationTargetException) e).getTargetException().getMessage();
+        } catch (InvocationTargetException e) {
+            //catch ExitThrowable. That exception throw when we try to finish application. That is normal situation whe we fall build by Thresholds Severity
+            String messageExitCode = e.getTargetException().getMessage();
 
-            if (!("Exit Code:" + exitCode).equals(messageExitCode)) {
-            }
+            Assert.assertEquals(messageExitCode, "Exit Code:" + removeQuotes(exitCode));
         }
     }
 
     @SneakyThrows
-    @Given("mock services {} {}")
-    public void mockServices(String scanTag, String filter) {
-        filter = filter.replaceAll("\"", "");
+    @Given("mock services {} {} {}")
+    public void mockServices(String scanTag, String filter, String thresholdsSeverity) {
         List<Severity> filterSeverity = new ArrayList<>(4);
-        String[] filterNames = filter.split(",");
-        for (int i = 0; i < filterNames.length; i++) {
-            filterSeverity.add(Severity.valueOf(filterNames[i].trim()));
+        String[] filterNames = removeQuotes(filter).split(",");
+        for (String filterName : filterNames) {
+            filterSeverity.add(Severity.valueOf(filterName.trim()));
         }
         iastProperties.setFilterSeverity(filterSeverity);
+
+
+        String[] thresholdsSeverityArray = thresholdsSeverity.split(",");
+        Map<Severity, Integer> thresholdsSeverityMap = new HashMap<>();
+        for (String s : thresholdsSeverityArray) {
+            String[] split = s.split("=");
+            thresholdsSeverityMap.put(Severity.valueOf(removeQuotes(split[0])), new Integer(removeQuotes(split[1])));
+        }
+        iastProperties.setThresholdsSeverity(thresholdsSeverityMap);
+
 
         this.iastService = new IastService(jiraProperties, jiraService, iastProperties, iastServiceRequests);
         Scan scan = mockIastServiceRequestsApiScansScanTagFinish(scanTag);
@@ -132,16 +140,24 @@ public class IastCliSteps {
         mockJiraServiceCreateIssue();
     }
 
+    private String removeQuotes(String text) {
+        return text.replaceAll("\"", "").trim();
+    }
+
     @SneakyThrows
     @When("running iast service {}")
     public void runningIastService(String scanTag) {
-        iastService.stopScanAndCreateJiraIssueFromIastSummary(scanTag);
+        try {
+            iastService.stopScanAndCreateJiraIssueFromIastSummary(scanTag);
+        } catch (IastThresholdsSeverityException e) {
+            //that is ok. Just Thresholds Severity
+        }
     }
 
     @SneakyThrows
     @Then("check how many create issue {}")
     public void checkHowManyCreateIssue(String createJiraIssue) {
-        verify(jiraService, times(Integer.parseInt(createJiraIssue.replaceAll("\"", "")))).createIssue(anyString(),
+        verify(jiraService, times(Integer.parseInt(removeQuotes(createJiraIssue)))).createIssue(anyString(),
                 anyString(),
                 anyString(),
                 anyString(),
