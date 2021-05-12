@@ -1,19 +1,21 @@
-* [Suggested Flow](#suggestedFlow)
+* [Overview](#Overview)
 * [Configuration](#configuration)
 * [Filters](#filters)
 * [Thresholds](#thresholds)
 * [Bug Trackers](#bugTrackers)
 * [CLI Example](#cliExample)
 
-## <a name="suggestedFlow">Suggested Flow</a>
-CxIAST can be integrated within a CI/CD pipeline using CxFlow.  
-A CxIAST scan starts automatically when an application with an attached CxIAST agent is being tested.  
+## <a name="Overview">Overview</a>
+CxIAST can be integrated within a CI/CD pipeline using CxFlow.
+CxIAST scans start automatically when an application with an attached CxIAST agent is being tested.
+To attach a CxIAST agent, refer to [CxIAST documentation](https://checkmarx.atlassian.net/wiki/spaces/CCD/pages/727417048/Configuring+the+AUT+Environment).
+
 CxIAST scans can be stopped in two ways:
 1. Manually stopped via the CxIAST manager.
 2. By terminating the running application.
 
-After scans have been completed, CxFlow is used to stop the running CxIAST scan.  
-CxFlow collects the results from CxIAST, analyzes them, and opens tasks/tickets in the configured bug tracker.  
+Once tests are completed, CxFlow is used to stop the running CxIAST scan.
+CxFlow will then collect the results from CxIAST, analyze them, and open tasks/tickets in the configured [Bug Tracker](#bugTrackers).
 To make sure the correct scan is stopped by CxFlow, CxIAST scan tags are used:  
 [[/Images/IAST1.png|IAST flow example]]
 
@@ -31,9 +33,19 @@ iast:
   username: xxxx
   password: xxxx
   update-token-seconds: 250  # CxAccessControl token timeout
+  filter-severity:
+    - HIGH
+    - MEDIUM
+    - LOW
+    - INFO
+  thresholds-severity:
+    HIGH: 1
+    MEDIUM: 3
+    LOW: 10
+    INFO: -1
 ```
-**Note:** To allow connection to CxIAST server using a self-signed certificate, uncomment `ssl-certificate-file-path`.  
-A certificate file for your CxIAST server can be found in an extracted CxIAST agent folder.  
+**Note:** To allow connection to CxIAST server using a self-signed certificate, uncomment `ssl-certificate-file-path`.
+A certificate file for your CxIAST server can be found in an extracted CxIAST agent folder.
 Alternatively, to get the certificate from a running CxIAST instance, you could use openssl.  
 On linux, for example:
 ```
@@ -43,15 +55,7 @@ openssl s_client -showcerts -servername my-iast.com -connect my-iast.com:443 < /
  
 ## <a name="filters">Filters</a>
 CxFlow may filter CxIAST vulnerabilities according to the vulnerability severity before creating bug tracker tickets.  
-To allow severities, add the relevant severity to the `iast` section in the configuration file:
-```
-iast:
-  filter-severity:
-    - HIGH
-    - MEDIUM
-    - LOW
-    - INFO    
-```
+To allow severities, add the relevant severity to the `filter-severity` section in the `iast` section in the configuration file.  
 To ignore a severity, remove or comment that severity from the configuration file.
 
 ## <a name="thresholds">Thresholds</a>
@@ -59,15 +63,7 @@ CxFlow returns a status the CI pipeline when called.
 To control this, a threshold can be configured per vulnerability severity.  
 Each severity threshold is determined by the allowed vulnerability count with that severity.  
 To remove a threshold from a severity, set the relevant severity to `-1`. In the example below, the threshold has been removed from **info**. 
-Thresholds are configured in the `iast` section:
-```
-iast:
-  thresholds-severity:
-    HIGH: 1
-    MEDIUM: 3
-    LOW: 10
-    INFO: -1
-```
+Thresholds are configured in the `thresholds-severity` section in the `iast` section.  
 When triggered in CLI mode, CxFlow returns status code `10`, if a threshold has been exceeded.  
 When triggered in web mode, the `/iast/stop-scan-and-create-jira-issue/{scanTag}` returns HTTP status 412.
 
@@ -91,7 +87,7 @@ An example for a Jira ticket is available here:
 ## <a name="cliExample">CLI Example</a>
 
 ```
-java -jar cx-flow-1.6.18.jar 
+java -jar cx-flow.jar 
 --spring.config.location=application.yml
 --iast
 --bug-tracker="jira"
@@ -105,7 +101,7 @@ You can also pass the parameters that you want to set in application.yml
 for example:
 
 ```
-java -jar cx-flow-1.6.18.jar 
+java -jar cx-flow.jar 
 --spring.config.location=application.yml
 --iast
 --bug-tracker="jira"
