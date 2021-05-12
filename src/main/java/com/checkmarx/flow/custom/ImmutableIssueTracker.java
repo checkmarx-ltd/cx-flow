@@ -51,7 +51,7 @@ public abstract class ImmutableIssueTracker implements IssueTracker {
     @Override
     public String getXIssueKey(ScanResults.XIssue issue, ScanRequest request) {
         return ScanUtils.isSAST(issue)
-                ? issue.getFilename()
+                ? issue.getFilename().concat(issue.getCwe())
                 : ScanUtils.getScaSummaryIssueKey(request, issue);
     }
 

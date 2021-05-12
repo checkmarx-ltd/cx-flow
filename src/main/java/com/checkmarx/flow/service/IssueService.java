@@ -108,6 +108,7 @@ public class IssueService implements ApplicationContextAware {
             if(issues == null){
                 issues = Collections.emptyList();
             }
+            //map all Xissues according to scanner; the key is the fileName
             xMap = this.getXIssueMap(tracker, results, request);
             iMap = this.getIssueMap(tracker, issues, request);
 
