@@ -52,7 +52,7 @@ public class IastController {
                     .success(true)
                     .build());
 
-        } catch (IOException | JiraClientException e) {
+        } catch (IOException | JiraClientException | RuntimeException e) {
             log.error(e.getMessage(), e);
 
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(EventResponse.builder()

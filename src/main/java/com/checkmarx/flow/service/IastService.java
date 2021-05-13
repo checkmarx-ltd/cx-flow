@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 
 
 @Slf4j
@@ -86,6 +87,7 @@ public class IastService {
     public void stopScanAndCreateJiraIssueFromIastSummary(ScanRequest request, String scanTag)
             throws IOException, JiraClientException {
         log.debug("start stopScanAndCreateJiraIssueFromIastSummary with scanTag:" + scanTag);
+        validateScanTag(scanTag);
         Scan scan = null;
         try {
             scan = iastServiceRequests.apiScansScanTagFinish(scanTag);
@@ -98,6 +100,13 @@ public class IastService {
         }
 
         getVulnerabilitiesAndCreateJiraIssue(request, scan);
+    }
+
+    private void validateScanTag(String scanTag) {
+        //Regex validation for a data having a simple format
+        if (!Pattern.matches("[a-zA-Z0-9\\s\\-]{1,50}", scanTag)) {
+            throw new RuntimeException("The scan tag is invalid. The scan tag must contain only [a-zA-Z0-9\\s\\-] and the size is less than 50.");
+        }
     }
 
     public void stopScanAndCreateJiraIssueFromIastSummary(String scanTag) throws IOException, JiraClientException {
