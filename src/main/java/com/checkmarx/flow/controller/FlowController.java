@@ -47,6 +47,7 @@ public class FlowController {
 
     // Simple (shared) API token
     private static final String TOKEN_HEADER = "x-cx-token";
+    private static final String TEAM = "team";
 
     private final FlowProperties properties;
     private final CxScannerService cxScannerService;
@@ -67,7 +68,7 @@ public class FlowController {
             @RequestParam(value = "project") String project,
             @RequestHeader(value = TOKEN_HEADER) String token,
             // Optional parameters
-            @RequestParam(value = "team", required = false) String team,
+            @RequestParam(value = TEAM, required = false) String team,
             @RequestParam(value = "application", required = false) String application,
             @RequestParam(value = "severity", required = false) List<String> severity,
             @RequestParam(value = "cwe", required = false) List<String> cwe,
