@@ -83,7 +83,7 @@ public class IssueService implements ApplicationContextAware {
         return xMap;
     }
 
-    Map<String, List<String>> process(ScanResults results, ScanRequest request) throws MachinaException {
+    public Map<String, List<String>> process(ScanResults results, ScanRequest request) throws MachinaException {
         Map<String, ScanResults.XIssue> xMap;
         Map<String, Issue> iMap;
         List<String> newIssues = new ArrayList<>();
@@ -108,6 +108,7 @@ public class IssueService implements ApplicationContextAware {
             if(issues == null){
                 issues = Collections.emptyList();
             }
+
             xMap = this.getXIssueMap(tracker, results, request);
             iMap = this.getIssueMap(tracker, issues, request);
 
