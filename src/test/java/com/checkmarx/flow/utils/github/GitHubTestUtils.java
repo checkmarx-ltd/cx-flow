@@ -8,7 +8,11 @@ import com.checkmarx.flow.custom.GitHubIssueTracker;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.dto.github.PullEvent;
+import com.checkmarx.flow.dto.github.PushEvent;
 import com.checkmarx.flow.exception.MachinaException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -135,10 +139,19 @@ public class GitHubTestUtils {
         String body = loadWebhookRequestBody(eventType);
         String signature = createSignature(body);
         ControllerRequest request = ControllerRequest.builder().project(projectNameOverride).build();
+        ObjectMapper mapper = new ObjectMapper();
         if (eventType == EventType.PULL_REQUEST) {
-            controller.pullRequest(body, signature, null, request);
+            try {
+                controller.pullRequest(mapper.readValue(body, PullEvent.class), signature, null, request);
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
         } else {
-            controller.pushRequest(body, signature, null, request);
+            try {
+                controller.pushRequest(mapper.readValue(body, PushEvent.class), signature, null, request);
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
         }
     }
 

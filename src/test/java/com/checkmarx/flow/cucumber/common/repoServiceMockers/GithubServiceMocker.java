@@ -121,8 +121,8 @@ public class GithubServiceMocker implements RepoServiceMocker {
 
         pullEvent.setPullRequest(pullRequest);
 
-        try {
-            String pullEventStr = mapper.writeValueAsString(pullEvent);
+//        try {
+//            String pullEventStr = mapper.writeValueAsString(pullEvent);
             ControllerRequest controllerRequest = new ControllerRequest();
             controllerRequest.setApplication(githubProjectName);
             controllerRequest.setBranch(Collections.singletonList(branchName));
@@ -131,15 +131,15 @@ public class GithubServiceMocker implements RepoServiceMocker {
             controllerRequest.setPreset("default");
             controllerRequest.setIncremental(false);
             gitHubControllerSpy.pullRequest(
-                    pullEventStr,
+                    pullEvent,
                     "SIGNATURE",
                     "CX",
                     controllerRequest
             );
 
-        } catch (JsonProcessingException e) {
-            fail("Unable to parse " + pullEvent.toString());
-        }
+//        } catch (JsonProcessingException e) {
+//            fail("Unable to parse " + pullEvent.toString());
+//        }
     }
 
     @Override
@@ -188,8 +188,8 @@ public class GithubServiceMocker implements RepoServiceMocker {
         pushEvent.setPusher(pusher);
 
         pushEvent.setRef("refs/head/" + branchName);
-        try {
-            String pushEventStr = mapper.writeValueAsString(pushEvent);
+//        try {
+//            String pushEventStr = mapper.writeValueAsString(pushEvent);
             ControllerRequest request = ControllerRequest.builder()
                     .application(githubProjectName)
                     .branch(Collections.singletonList(branchName))
@@ -199,10 +199,10 @@ public class GithubServiceMocker implements RepoServiceMocker {
                     .preset("default")
                     .build();
 
-            gitHubControllerSpy.pushRequest(pushEventStr, "SIGNATURE", "CX", request);
+            gitHubControllerSpy.pushRequest(pushEvent, "SIGNATURE", "CX", request);
 
-        } catch (JsonProcessingException e) {
-            fail("Unable to parse " + pushEvent.toString());
-        }
+//        } catch (JsonProcessingException e) {
+//            fail("Unable to parse " + pushEvent.toString());
+//        }
     }
 }

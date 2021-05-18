@@ -492,8 +492,8 @@ public class UpdatePullRequestCommentsSteps {
 
         pullEvent.setPullRequest(pullRequest);
 
-        try {
-            String pullEventStr = mapper.writeValueAsString(pullEvent);
+//        try {
+//            String pullEventStr = mapper.writeValueAsString(pullEvent);
             ControllerRequest controllerRequest = new ControllerRequest();
             controllerRequest.setApplication("VB");
             controllerRequest.setBranch(Arrays.asList(branchGitHub));
@@ -502,15 +502,15 @@ public class UpdatePullRequestCommentsSteps {
             controllerRequest.setPreset("default");
             controllerRequest.setIncremental(false);
             gitHubControllerSpy.pullRequest(
-                    pullEventStr,
+                    pullEvent,
                     "SIGNATURE",
                     "CX",
                     controllerRequest
             );
-
-        } catch (JsonProcessingException e) {
-            fail("Unable to parse " + pullEvent.toString());
-        }
+//
+//        } catch (JsonProcessingException e) {
+//            fail("Unable to parse " + pullEvent.toString());
+//        }
     }
 
 

@@ -206,7 +206,7 @@ public class Github2AdoSteps {
                     .preset("default")
                     .build();
 
-            gitHubControllerSpy.pushRequest(pullEventStr, "SIGNATURE", "CX", request);
+            gitHubControllerSpy.pushRequest(pushEvent, "SIGNATURE", "CX", request);
 
         } catch (JsonProcessingException e) {
             fail("Unable to parse " + pushEvent.toString());

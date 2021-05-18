@@ -169,7 +169,7 @@ public class CxConfigSteps {
                     .preset("default")
                     .build();
 
-            gitHubController.pullRequest(pullEventStr, "SIGNATURE", "CX", request);
+            gitHubController.pullRequest(pullEvent, "SIGNATURE", "CX", request);
 
         } catch (JsonProcessingException e) {
             fail("Unable to parse " + pullEvent.toString());

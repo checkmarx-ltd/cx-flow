@@ -235,7 +235,7 @@ public class CxConfigBugTrackerSteps {
                     .preset("default")
                     .build();
 
-            gitHubControllerSpy.pullRequest(pullEventStr, "SIGNATURE", "CX", request);
+            gitHubControllerSpy.pullRequest(pullEvent, "SIGNATURE", "CX", request);
 
         } catch (JsonProcessingException e) {
             fail("Unable to parse " + pullEvent.toString());
@@ -271,7 +271,7 @@ public class CxConfigBugTrackerSteps {
                     .preset("default")
                     .build();
 
-            gitHubControllerSpy.pushRequest(pullEventStr, "SIGNATURE", "CX", request);
+            gitHubControllerSpy.pushRequest(pushEvent, "SIGNATURE", "CX", request);
 
         } catch (JsonProcessingException e) {
             fail("Unable to parse " + pushEvent.toString());
