@@ -97,7 +97,7 @@ public class GitHubController extends WebhookController {
      */
     @PostMapping(value={"/{product}","/"}, headers = PULL)
     public ResponseEntity<EventResponse> pullRequest(
-            @RequestBody String body,
+            @RequestBody PullEvent body,
             @RequestHeader(value = SIGNATURE) String signature,
             @PathVariable(value = "product", required = false) String product,
             ControllerRequest controllerRequest
@@ -105,24 +105,24 @@ public class GitHubController extends WebhookController {
         String uid = helperService.getShortUid();
         MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
         log.info("Processing GitHub PULL request");
-        PullEvent event;
-        ObjectMapper mapper = new ObjectMapper();
+//        PullEvent event;
+//        ObjectMapper mapper = new ObjectMapper();
         Integer installationId = null;
         controllerRequest = ensureNotNull(controllerRequest);
 
-        try {
-            event = mapper.readValue(body, PullEvent.class);
-        } catch (IOException e) {
-            throw new MachinaRuntimeException(e);
-        }
+//        try {
+//            event = mapper.readValue(body, PullEvent.class);
+//        } catch (IOException e) {
+//            throw new MachinaRuntimeException(e);
+//        }
 
-        gitHubService.initConfigProviderOnPullEvent(uid, event);
+        gitHubService.initConfigProviderOnPullEvent(uid, body);
 
         //verify message signature
-        verifyHmacSignature(body, signature, controllerRequest);
+        verifyHmacSignature(body.toString(), signature, controllerRequest);
 
         try {
-            String action = event.getAction();
+            String action = body.getAction();
             if(!action.equalsIgnoreCase("opened") &&
                     !action.equalsIgnoreCase("reopened") &&
                     !action.equalsIgnoreCase("synchronize")){
@@ -132,7 +132,7 @@ public class GitHubController extends WebhookController {
                         .success(true)
                         .build());
             }
-            Repository repository = event.getRepository();
+            Repository repository = body.getRepository();
             String app = repository.getName();
             if(!ScanUtils.empty(controllerRequest.getApplication())){
                 app = controllerRequest.getApplication();
@@ -156,7 +156,7 @@ public class GitHubController extends WebhookController {
                 product = ScanRequest.Product.CX.getProduct();
             }
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
-            PullRequest pullRequest = event.getPullRequest();
+            PullRequest pullRequest = body.getPullRequest();
             String currentBranch = pullRequest.getHead().getRef();
             String targetBranch = pullRequest.getBase().getRef();
             List<String> branches = getBranches(controllerRequest, flowProperties);
@@ -172,8 +172,8 @@ public class GitHubController extends WebhookController {
             String gitAuthUrl;
             log.info("Using url: {}", gitUrl);
 
-            if(event.getInstallation() != null && event.getInstallation().getId() != null){
-                installationId = event.getInstallation().getId();
+            if(body.getInstallation() != null && body.getInstallation().getId() != null){
+                installationId = body.getInstallation().getId();
                 token = gitHubAppAuthService.getInstallationToken(installationId);
                 token = FlowConstants.GITHUB_APP_CLONE_USER.concat(":").concat(token);
             }
@@ -220,7 +220,7 @@ public class GitHubController extends WebhookController {
             /*Check for Config as code (cx.config) and override*/
             CxConfig cxConfig =  gitHubService.getCxConfigOverride(request);
             request = configOverrider.overrideScanRequestProperties(cxConfig, request);
-            request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, body);
+            request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, body.toString());
             request.putAdditionalMetadata("statuses_url", pullRequest.getStatusesUrl());
             request.setId(uid);
             //only initiate scan/automation if target branch is applicable
@@ -239,30 +239,30 @@ public class GitHubController extends WebhookController {
      */
     @PostMapping(value = {"/{product}", "/"}, headers = PUSH)
     public ResponseEntity<EventResponse> pushRequest(
-            @RequestBody String body,
+            @RequestBody PushEvent body,
             @RequestHeader(value = SIGNATURE) String signature,
             @PathVariable(value = "product", required = false) String product,
             ControllerRequest controllerRequest) {
         String uid = helperService.getShortUid();
         MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
         log.info("Processing GitHub PUSH request");
-        PushEvent event;
+//        PushEvent event;
         Integer installationId = null;
-        ObjectMapper mapper = new ObjectMapper();
+//        ObjectMapper mapper = new ObjectMapper();
         controllerRequest = ensureNotNull(controllerRequest);
 
-        try {
-            event = mapper.readValue(body, PushEvent.class);
-        } catch (NullPointerException | IOException | IllegalArgumentException e) {
-            throw new MachinaRuntimeException(e);
-        }
+//        try {
+//            event = mapper.readValue(body, PushEvent.class);
+//        } catch (NullPointerException | IOException | IllegalArgumentException e) {
+//            throw new MachinaRuntimeException(e);
+//        }
         // Delete event is triggering a push event that needs to be ignored
-        if(event.getDeleted() != null && event.getDeleted()){
+        if(body.getDeleted() != null && body.getDeleted()){
             log.info("Push event is associated with a Delete branch event...ignoring request");
             return getSuccessMessage();
         }
         
-        gitHubService.initConfigProviderOnPushEvent(uid, event);
+        gitHubService.initConfigProviderOnPushEvent(uid, body);
 
         if (flowProperties == null ) {
             log.error("Properties have null values");
@@ -270,10 +270,10 @@ public class GitHubController extends WebhookController {
         }
 
         //verify message signature
-        verifyHmacSignature(body, signature, controllerRequest);
+        verifyHmacSignature(body.toString(), signature, controllerRequest);
 
         try {
-            String app = event.getRepository().getName();
+            String app = body.getRepository().getName();
             if(!ScanUtils.empty(controllerRequest.getApplication())){
                 app = controllerRequest.getApplication();
             }
@@ -295,21 +295,21 @@ public class GitHubController extends WebhookController {
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
 
             //determine branch (without refs)
-            String currentBranch = ScanUtils.getBranchFromRef(event.getRef());
+            String currentBranch = ScanUtils.getBranchFromRef(body.getRef());
             List<String> branches = getBranches(controllerRequest, flowProperties);
 
             BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
             FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
 
             //build request object
-            Repository repository = event.getRepository();
+            Repository repository = body.getRepository();
             String gitUrl = repository.getCloneUrl();
             String token;
             String gitAuthUrl;
             log.info("Using url: {}", gitUrl);
 
-            if(event.getInstallation() != null && event.getInstallation().getId() != null){
-                installationId = event.getInstallation().getId();
+            if(body.getInstallation() != null && body.getInstallation().getId() != null){
+                installationId = body.getInstallation().getId();
                 token = gitHubAppAuthService.getInstallationToken(installationId);
                 token = FlowConstants.GITHUB_APP_CLONE_USER.concat(":").concat(token);
             }
@@ -334,8 +334,8 @@ public class GitHubController extends WebhookController {
                     .repoType(ScanRequest.Repository.GITHUB)
                     .branch(currentBranch)
                     .defaultBranch(repository.getDefaultBranch())
-                    .refs(event.getRef())
-                    .email(determineEmails(event))
+                    .refs(body.getRef())
+                    .email(determineEmails(body))
                     .scanPreset(controllerRequest.getPreset())
                     .incremental(controllerRequest.getIncremental())
                     .excludeFolders(controllerRequest.getExcludeFolders())
@@ -344,7 +344,7 @@ public class GitHubController extends WebhookController {
                     .filter(filter)
                     .organizationId(getOrganizationid(repository))
                     .gitUrl(gitUrl)
-                    .hash(event.getAfter())
+                    .hash(body.getAfter())
                     .build();
 
             setScmInstance(controllerRequest, request);
@@ -360,7 +360,7 @@ public class GitHubController extends WebhookController {
             CxConfig cxConfig =  gitHubService.getCxConfigOverride(request);
             request = configOverrider.overrideScanRequestProperties(cxConfig, request);
 
-            request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, body);
+            request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, body.toString());
             request.setId(uid);
 
             //only initiate scan/automation if branch is applicable
