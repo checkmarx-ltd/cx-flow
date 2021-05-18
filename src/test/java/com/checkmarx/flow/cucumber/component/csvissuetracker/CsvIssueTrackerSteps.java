@@ -2,7 +2,6 @@ package com.checkmarx.flow.cucumber.component.csvissuetracker;
 
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.custom.CsvIssueTracker;
 import com.checkmarx.flow.custom.CsvProperties;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
@@ -46,7 +45,7 @@ public class CsvIssueTrackerSteps {
 
     private final String workDir = setWorkDir();
 
-    public CsvIssueTrackerSteps(IssueService issueService, FlowProperties flowProperties, CodeBashingService codeBashingService, ApplicationContext applicationContext, CsvIssueTracker csvIssueTracker, CsvProperties properties) {
+    public CsvIssueTrackerSteps(IssueService issueService, FlowProperties flowProperties, ApplicationContext applicationContext, CsvProperties properties) {
         this.issueService = issueService;
         this.flowProperties = flowProperties;
         this.applicationContext = applicationContext;
@@ -54,6 +53,7 @@ public class CsvIssueTrackerSteps {
     }
 
     private static final Map<String, List<ScanResults.XIssue>> sastFilenamesByDescription;
+
     static {
         ScanResults.XIssue issueA = createXIssueWithFile("Admin.jsp", "Open_Redirect", "1");
         Map<String, List<ScanResults.XIssue>> temp = new HashMap<>();
@@ -78,15 +78,13 @@ public class CsvIssueTrackerSteps {
 
     @When("publish findings using Csv issue tracker")
     public void publishFindingsUsingCsvIssueTracker() throws MachinaException {
-        issueService.setApplicationContext(applicationContext);
         setScanRequestWithCsvBugTracker();
-        String stringFormat = "[TEAM]-[PROJECT]-123.csv";
-        properties.setFileNameFormat(stringFormat);
+        properties.setFileNameFormat("[TEAM]-[PROJECT]-123.csv");
         properties.setDataFolder(workDir);
-        issueService.process(scanResults, scanRequest);
         flowProperties.setMitreUrl("url");
+        issueService.setApplicationContext(applicationContext);
+        issueService.process(scanResults, scanRequest);
     }
-
 
     @Then("Csv result generated with {} issue\\(s)")
     public void checkCsvResult(long numberOfIssues) throws IOException {
