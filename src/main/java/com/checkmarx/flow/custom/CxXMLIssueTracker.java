@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
 import javax.xml.bind.JAXBException;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -43,7 +44,7 @@ public class CxXMLIssueTracker extends ImmutableIssueTracker {
     public void complete(ScanRequest request, ScanResults results) throws MachinaException {
         try {
             if (!ScanUtils.empty(results.getOutput())) {
-                Files.write(Paths.get(request.getFilename()), results.getOutput().getBytes());
+                Files.write(Paths.get(new File(request.getFilename()).getCanonicalPath()), results.getOutput().getBytes());
             }
 
             marshalScaResults(request, results);
