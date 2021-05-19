@@ -36,7 +36,7 @@ public class ScanRequest {
      * git commit ID, also known as 'SHA' or 'commit hash'.
      * <br>- For push event: ID of the last commit in the push event.
      * <br>- For pull request event: ID of the last commit in the pull request source branch.
-     * <br>Currently only supported for Bitbucket Cloud/Server and GitHub.
+     * <br>Currently supported for Bitbucket Cloud/Server, GitHub and GitLab.
      */
     private String hash;
 
