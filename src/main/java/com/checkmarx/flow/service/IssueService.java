@@ -83,7 +83,7 @@ public class IssueService implements ApplicationContextAware {
         return xMap;
     }
 
-    public Map<String, List<String>> process(ScanResults results, ScanRequest request) throws MachinaException {
+    public void process(ScanResults results, ScanRequest request) throws MachinaException {
         Map<String, ScanResults.XIssue> xMap;
         Map<String, Issue> iMap;
         List<String> newIssues = new ArrayList<>();
@@ -192,7 +192,6 @@ public class IssueService implements ApplicationContextAware {
 
             tracker.complete(request, results);
 
-            return issuesMap;
         } catch (BeansException e){
             log.error("Specified bug tracker bean was not found or properly loaded.", e);
             throw new MachinaRuntimeException();

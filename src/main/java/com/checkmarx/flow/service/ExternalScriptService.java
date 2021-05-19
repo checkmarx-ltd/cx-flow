@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -57,7 +58,7 @@ public class ExternalScriptService {
     }
 
     private static String getStringFromFile(String path) throws IOException {
-        return new String(Files.readAllBytes(Paths.get(path.intern())));
+        return new String(Files.readAllBytes(Paths.get(new File(path).getCanonicalPath())));
     }
 
     private Object runScript(String script, Map<String, Object> bindings){
