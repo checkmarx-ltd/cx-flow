@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -73,7 +74,7 @@ public class CsvIssueTracker extends ImmutableIssueTracker {
         String csv = convertToCSV(values).concat(HTMLHelper.CRLF);
 
         try {
-            Files.write(Paths.get(request.getFilename()), csv.getBytes(), StandardOpenOption.APPEND);
+            Files.write(Paths.get(new File(request.getFilename()).getCanonicalPath()), csv.getBytes(), StandardOpenOption.APPEND);
         } catch (IOException e) {
             log.error("Error writing to file {}, value {}", request.getFilename(), csv, e);
         }
