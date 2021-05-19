@@ -16,26 +16,23 @@ import com.checkmarx.flow.dto.azure.*;
 import com.checkmarx.flow.dto.github.PullEvent;
 import com.checkmarx.flow.dto.github.Repository;
 import com.checkmarx.flow.dto.github.*;
+import com.checkmarx.flow.dto.gitlab.LastCommit;
 import com.checkmarx.flow.dto.gitlab.MergeEvent;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.ScaProperties;
-import com.checkmarx.sdk.dto.sast.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
+import com.checkmarx.sdk.dto.sast.Filter;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.scanner.CxClient;
-import com.checkmarx.sdk.service.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
-import io.cucumber.java.en.And;
-import io.cucumber.java.en.Given;
-import io.cucumber.java.en.Then;
-import io.cucumber.java.en.When;
+import io.cucumber.java.en.*;
 import lombok.extern.slf4j.Slf4j;
 import org.awaitility.Awaitility;
 import org.junit.Assert;
@@ -154,7 +151,7 @@ public class UpdatePullRequestCommentsSteps {
         initGitlabProperties();
         ScaCommonSteps.initSCAConfig(scaProperties);
         flowProperties.getBranches().add("udi-tests-2");
-        flowProperties.setEnabledVulnerabilityScanners(Arrays.asList("sast"));
+        flowProperties.setEnabledVulnerabilityScanners(Collections.singletonList("sast"));
         cxProperties.setOffline(true);
         initGitHubControllerSpy();
         initHelperServiceMock();
@@ -219,10 +216,10 @@ public class UpdatePullRequestCommentsSteps {
     public void setScanner(String scanner) {
         if ("sast".equals(scanner)) {
             scannerType = ScannerType.SAST;
-            flowProperties.setEnabledVulnerabilityScanners(Arrays.asList("sast"));
+            flowProperties.setEnabledVulnerabilityScanners(Collections.singletonList("sast"));
         } else if ("sca".equals(scanner)) {
             scannerType = ScannerType.SCA;
-            flowProperties.setEnabledVulnerabilityScanners(Arrays.asList("sca"));
+            flowProperties.setEnabledVulnerabilityScanners(Collections.singletonList("sca"));
         } else if ("both".equals(scanner)) {
             scannerType = ScannerType.BOTH;
             flowProperties.setEnabledVulnerabilityScanners(Arrays.asList("sca", "sast"));
@@ -308,7 +305,7 @@ public class UpdatePullRequestCommentsSteps {
         int expectedNumOfComments = getExpectedNumOfNewComments();
         List<RepoComment> comments = getRepoComments();
         Assert.assertEquals("Wrong number of comments", expectedNumOfComments, comments.size());
-        comments.stream().forEach(c -> Assert.assertTrue("Comment is not new (probably updated)", isCommentNew(c)));
+        comments.forEach(c -> Assert.assertTrue("Comment is not new (probably updated)", isCommentNew(c)));
 
         log.info("Found the correct comments in pull request !!");
     }
@@ -496,7 +493,7 @@ public class UpdatePullRequestCommentsSteps {
             String pullEventStr = mapper.writeValueAsString(pullEvent);
             ControllerRequest controllerRequest = new ControllerRequest();
             controllerRequest.setApplication("VB");
-            controllerRequest.setBranch(Arrays.asList(branchGitHub));
+            controllerRequest.setBranch(Collections.singletonList(branchGitHub));
             controllerRequest.setProject("VB");
             controllerRequest.setTeam("\\CxServer\\SP");
             controllerRequest.setPreset("default");
@@ -509,7 +506,7 @@ public class UpdatePullRequestCommentsSteps {
             );
 
         } catch (JsonProcessingException e) {
-            fail("Unable to parse " + pullEvent.toString());
+            fail("Unable to parse " + pullEvent);
         }
     }
 
@@ -589,8 +586,14 @@ public class UpdatePullRequestCommentsSteps {
                                                .id(86014571).targetBranch("master").sourceBranch("cxflow-test").sourceProjectId(23910442)
                                                .authorId(7362071).title("Update README.md").createdAt("2021-01-25 14:32:47 UTC")
                                                .updatedAt("2021-01-25 14:32:47 UTC").state("opened").mergeStatus("unchecked")
-                                               .targetProjectId(Integer.parseInt(GITLAB_PROJECT_ID)).iid(Integer.parseInt(GITLAB_MERGE_REQUEST_ID)).description("").workInProgress(false).target(target)
-                                               .action("open").build());
+                                               .targetProjectId(Integer.parseInt(GITLAB_PROJECT_ID))
+                                               .iid(Integer.parseInt(GITLAB_MERGE_REQUEST_ID))
+                                               .description("")
+                                               .workInProgress(false)
+                                               .target(target)
+                                               .lastCommit(new LastCommit().withId("fa907029c049b781f961e452a375d606402102a6"))
+                                               .action("open")
+                                               .build());
         ControllerRequest controllerRequest = new ControllerRequest();
         controllerRequest.setProject("cxflow-integration-gitlab-tests-Cxflow-test");
         controllerRequest.setTeam("\\CxServer\\SP");
@@ -610,6 +613,6 @@ public class UpdatePullRequestCommentsSteps {
     enum ScannerType {
         SAST,
         SCA,
-        BOTH;
+        BOTH
     }
 }
