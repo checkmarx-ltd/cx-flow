@@ -144,6 +144,7 @@ public class GitLabController extends WebhookController {
                     .filter(filter)
                     .organizationId(getOrganizationId(proj))
                     .gitUrl(gitUrl)
+                    .hash(objectAttributes.getLastCommit().getId())
                     .build();
 
             setMergeEndPointUri(objectAttributes, proj, request);
@@ -247,6 +248,7 @@ public class GitLabController extends WebhookController {
                     .filter(filter)
                     .organizationId(getOrganizationId(proj))
                     .gitUrl(gitUrl)
+                    .hash(body.getAfter())
                     .build();
 
             /*Determine emails*/
