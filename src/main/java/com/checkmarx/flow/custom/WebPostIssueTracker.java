@@ -45,7 +45,7 @@ public class WebPostIssueTracker implements IssueTracker {
 
     @Override
     public void init(ScanRequest request, ScanResults results) throws MachinaException {
-        if(request != null) {
+        if (request != null) {
             String initialFilename = "cx.".concat(UUID.randomUUID().toString());
             String filename = filenameFormatter.formatPath(request, initialFilename, properties.getDataFolder());
             request.setFilename(filename);
@@ -68,11 +68,11 @@ public class WebPostIssueTracker implements IssueTracker {
         try {
             ObjectMapper mapper = new ObjectMapper();
             mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-            if(request != null && results != null) {
+            if (request != null && results != null) {
                 mapper.writeValue(new File(request.getFilename()).getCanonicalFile(), results);
                 String resultUrl = request.getAdditionalMetadata("result_url");
                 String filename = request.getFilename();
-                if(ScanUtils.anyEmpty(resultUrl, filename)){
+                if (ScanUtils.anyEmpty(resultUrl, filename)) {
                     log.error("result_url | temporary file was massing from the ScanRequest metadata");
                     throw new MachinaException();
                 }
@@ -92,10 +92,10 @@ public class WebPostIssueTracker implements IssueTracker {
         } catch (IOException e) {
             log.error("Issue occurred while writing file {}", request.getFilename(), e);
             throw new MachinaException();
-        }catch (URISyntaxException e){
+        } catch (URISyntaxException e) {
             log.error("Error occurred: {}", ExceptionUtils.getMessage(e), e);
             throw new MachinaException();
-        }catch (HttpClientErrorException e){
+        } catch (HttpClientErrorException e) {
             log.error("HttpClientErrorException occurred: {}", ExceptionUtils.getMessage(e), e);
             throw new MachinaException();
         }
@@ -133,7 +133,7 @@ public class WebPostIssueTracker implements IssueTracker {
 
     @Override
     public String getXIssueKey(ScanResults.XIssue issue, ScanRequest request) {
-        return issue != null ? issue.getFilename(): "";
+        return issue != null ? issue.getFilename() : "";
     }
 
     @Override
