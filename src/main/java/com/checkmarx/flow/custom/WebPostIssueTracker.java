@@ -69,7 +69,7 @@ public class WebPostIssueTracker implements IssueTracker {
             ObjectMapper mapper = new ObjectMapper();
             mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
             if(request != null && results != null) {
-                mapper.writeValue(new File(request.getFilename()), results);
+                mapper.writeValue(new File(request.getFilename()).getCanonicalFile(), results);
                 String resultUrl = request.getAdditionalMetadata("result_url");
                 String filename = request.getFilename();
                 if(ScanUtils.anyEmpty(resultUrl, filename)){

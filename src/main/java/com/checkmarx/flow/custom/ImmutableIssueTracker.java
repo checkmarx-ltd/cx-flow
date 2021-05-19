@@ -93,7 +93,7 @@ public abstract class ImmutableIssueTracker implements IssueTracker {
         try {
             ObjectMapper mapper = new ObjectMapper();
             mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-            mapper.writeValue(new File(request.getFilename()), report);
+            mapper.writeValue(new File(request.getFilename()).getCanonicalFile(), report);
         } catch (IOException e) {
             log.error("Issue occurred while writing file {}", request.getFilename(), e);
             throw new MachinaException();
