@@ -123,7 +123,7 @@ cxgo:
   scan-preset: 1,2,3,4,5,9
 
 jira:
-  url: http://localhost:8080
+  url:
   username: xxxx
   token: xxxx
   project: APPSEC
