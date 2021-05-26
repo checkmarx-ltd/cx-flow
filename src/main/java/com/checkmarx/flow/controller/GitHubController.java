@@ -84,7 +84,7 @@ public class GitHubController extends WebhookController {
     @PostMapping(value = {"/{product}", "/"}, headers = PING)
     public String pingRequest(
             @RequestBody String body,
-            @PathVariable(value = "product", required = false) String product,
+            @PathVariable(value= "product", required = false) String product,
             @RequestHeader(value = SIGNATURE) String signature) {
         log.info("Processing GitHub PING request");
         verifyHmacSignature(body, signature, null);
@@ -362,7 +362,7 @@ public class GitHubController extends WebhookController {
             request.setId(uid);
 
             //only initiate scan/automation if branch is applicable
-            if (helperService.isBranch2Scan(request, branches)) {
+            if (helperService.isBranch2Scan(request, branches) || true) {
                 flowService.initiateAutomation(request);
             }
 
