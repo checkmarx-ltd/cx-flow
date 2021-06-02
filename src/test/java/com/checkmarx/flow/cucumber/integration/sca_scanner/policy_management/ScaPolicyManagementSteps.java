@@ -8,10 +8,7 @@ import com.checkmarx.flow.service.SCAScanner;
 import com.checkmarx.flow.service.ScaConfigurationOverrider;
 import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.ScanResults;
-import com.checkmarx.sdk.dto.sca.Policy;
-import com.checkmarx.sdk.dto.sca.PolicyRule;
-import com.checkmarx.sdk.dto.sca.RuleCondition;
-import com.checkmarx.sdk.dto.sca.SCAResults;
+import com.checkmarx.sdk.dto.sca.*;
 import com.checkmarx.sdk.dto.sca.report.PolicyAction;
 import com.checkmarx.sdk.utils.scanner.client.ScaClientHelper;
 import io.cucumber.java.After;
@@ -86,9 +83,13 @@ public class ScaPolicyManagementSteps extends ScaCommonSteps {
                 .parameter("VulnerabilitySeverity")
                 .build();
 
+        ConditionGroups conditionGroups = ConditionGroups.builder()
+                .conditions(Collections.singletonList(ruleCondition))
+                .build();
+
         PolicyRule policyRule = PolicyRule.builder()
                 .name("No High Severity Rule")
-                .conditions(Collections.singletonList(ruleCondition))
+                .conditionGroups(Collections.singletonList(conditionGroups))
                 .build();
 
         Policy policy = Policy.builder()
