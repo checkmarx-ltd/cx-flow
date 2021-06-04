@@ -158,6 +158,8 @@ checkmarx:
   sdk-wsdl: ${checkmarx.base-url}/SDK/CxSDKWebService.asmx?wsdl
   project-script: D:\\tmp\CxProject.groovy #default empty/not used
   team-script: D:\\tmp\CxTeam.groovy #default empty/not used
+  custom-state-map:
+    "5": "SUSPICIOUS"
 
 github:
   webhook-token: XXXXX
@@ -364,7 +366,7 @@ Refer to the sample configuration above for the entire yaml structure.
 | offline | false | No* | No | Yes (parse only) | Use Table this only when parsing Checkmarx XML, this flag removes the dependency from Checkmarx APIs when parsing results.  This skips retrieving the issue description from Checkmarx. |
 | exclude-files     |                | No  | Yes | Yes      | Files to be excluded from Scan                                            |
 | exclude-folders   |                | No  | Yes | Yes      | Folders to be excluded from Scan                                          |
-
+| custom-state-map  |                | No  | No  | Yes      | A map of custom result state identifiers to custom result state names |
 
 No* = Default is applied
 
