@@ -49,6 +49,7 @@ import java.util.stream.Collectors;
 public class JiraService {
 
     private static final String LABEL_FIELD_TYPE = "labels";
+    private static final String PRIORITY_FIELD_TYPE = "priority";
     private static final String SECURITY_FIELD_TYPE = "security";
     private static final String VALUE_FIELD_TYPE = "value";
     private static final String NAME_FIELD_TYPE = "name";
@@ -316,7 +317,7 @@ public class JiraService {
             }
 
             if (bugTracker.getPriorities() != null && bugTracker.getPriorities().containsKey(severity)) {
-                issueBuilder.setFieldValue("priority", ComplexIssueInputFieldValue.with("name",
+                issueBuilder.setFieldValue(PRIORITY_FIELD_TYPE, ComplexIssueInputFieldValue.with("name",
                         bugTracker.getPriorities().get(severity)));
             }
 
@@ -396,7 +397,7 @@ public class JiraService {
             issueBuilder.setDescription(description);
 
             if (labels != null && !labels.isEmpty()) {
-                issueBuilder.setFieldValue("labels", labels);
+                issueBuilder.setFieldValue(LABEL_FIELD_TYPE, labels);
             }
 
             if (assignee != null && !assignee.isEmpty()) {
@@ -407,7 +408,7 @@ public class JiraService {
             }
 
             if (priorities != null) {
-                issueBuilder.setFieldValue("priority", ComplexIssueInputFieldValue.with("name", priorities));
+                issueBuilder.setFieldValue(PRIORITY_FIELD_TYPE, ComplexIssueInputFieldValue.with("name", priorities));
             }
 
             log.debug("Creating JIRA issue");
@@ -448,7 +449,7 @@ public class JiraService {
         issueBuilder.setDescription(this.getBody(issue, request, fileUrl));
 
         if (bugTracker.getPriorities().containsKey(severity)) {
-            issueBuilder.setFieldValue("priority", ComplexIssueInputFieldValue.with("name",
+            issueBuilder.setFieldValue(PRIORITY_FIELD_TYPE, ComplexIssueInputFieldValue.with("name",
                     bugTracker.getPriorities().get(severity)));
         }
 

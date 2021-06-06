@@ -9,7 +9,9 @@ import com.checkmarx.flow.dto.iast.manager.dto.Scan;
 import com.checkmarx.flow.dto.iast.manager.dto.ScanVulnerabilities;
 import com.checkmarx.flow.dto.iast.manager.dto.VulnerabilityInfo;
 import com.checkmarx.flow.dto.iast.ql.utils.Severity;
+import com.checkmarx.flow.exception.IastPropertiesNotSetupException;
 import com.checkmarx.flow.exception.IastThresholdsSeverityException;
+import com.checkmarx.flow.exception.IastValidationScanTagFailedException;
 import com.checkmarx.flow.exception.JiraClientException;
 import com.checkmarx.flow.utils.ScanUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -63,8 +65,7 @@ public class IastService {
 
     private void checkRequiredParameters() {
         if (iastProperties == null) {
-            log.error("IAST properties doesn't setup.");
-            throw new RuntimeException("IAST properties doesn't setup.");
+            throw new IastPropertiesNotSetupException("IAST properties doesn't setup.");
         }
         if (ScanUtils.empty(iastProperties.getUrl())
                 || ScanUtils.empty(iastProperties.getUsername())
@@ -72,8 +73,7 @@ public class IastService {
                 || ScanUtils.empty(iastProperties.getManagerPort())
                 || ScanUtils.emptyObj(iastProperties.getUpdateTokenSeconds())
                 || iastProperties.getFilterSeverity().isEmpty()) {
-            log.error("not all IAST properties doesn't setup.");
-            throw new RuntimeException("IAST properties doesn't setup.");
+            throw new IastPropertiesNotSetupException("not all IAST properties setup.");
         }
         for (Severity severity : Severity.values()) {
             iastProperties.getThresholdsSeverity().putIfAbsent(severity, -1);
@@ -105,7 +105,7 @@ public class IastService {
     private void validateScanTag(String scanTag) {
         //Regex validation for a data having a simple format
         if (!Pattern.matches("[a-zA-Z0-9\\s\\-]{1,256}", scanTag)) {
-            throw new RuntimeException("The scan tag is invalid. The scan tag must contain only [a-zA-Z0-9\\s\\-] and the size is less than 256.");
+            throw new IastValidationScanTagFailedException("The scan tag is invalid. The scan tag must contain only [a-zA-Z0-9\\s\\-] and the size is less than 256.");
         }
     }
 

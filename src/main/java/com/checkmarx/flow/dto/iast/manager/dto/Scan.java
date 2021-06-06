@@ -74,15 +74,6 @@ public class Scan {
         return Math.min(100, high * 8 + medium * 4 + low);
     }
 
-    private int extractIntValue(Number num) {
-        return num != null ? num.intValue() : 0;
-    }
-
-    private double extractDoubleValue(Number num) {
-        return num != null ? num.doubleValue() : 0;
-    }
-
-
     public void setRiskScore(Number riskScore) {
         this.riskScore = riskScore.intValue();
     }

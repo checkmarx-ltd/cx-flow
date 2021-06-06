@@ -52,6 +52,7 @@ public class ResultInfo implements Comparable<ResultInfo> {
     public int compareTo(ResultInfo o) {
         int resultSeverity = o.severity.compareTo(severity);
         final int resultName = name.compareTo(o.name);
-        return (resultSeverity != 0) ? resultSeverity : ((resultName != 0) ? resultName : o.getDate().compareTo(date));
+        int resultNameOrDate = (resultName != 0) ? resultName : o.getDate().compareTo(date);
+        return (resultSeverity != 0) ? resultSeverity : resultNameOrDate;
     }
 }

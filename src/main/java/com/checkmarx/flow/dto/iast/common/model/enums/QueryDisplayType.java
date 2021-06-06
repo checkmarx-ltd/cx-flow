@@ -24,6 +24,6 @@ public enum QueryDisplayType implements Serializable {
     }
 
     public boolean isFormatted() {
-        return this.name().endsWith("_FORMATTED");
+        return this.name().endsWith(FORMATTED_SUFFIX);
     }
 }
