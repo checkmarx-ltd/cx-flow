@@ -22,7 +22,6 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
@@ -30,8 +29,6 @@ import java.util.regex.Pattern;
 @Slf4j
 @Service
 public class IastService {
-
-    private final Random random = new Random();
 
     private final Map<Integer, String> severityToPriority = new HashMap<>();
 
@@ -43,15 +40,18 @@ public class IastService {
 
     private final IastServiceRequests iastServiceRequests;
 
+    private final HelperService helperService;
+
     @Autowired
     public IastService(JiraProperties jiraProperties,
                        JiraService jiraService,
                        IastProperties iastProperties,
-                       IastServiceRequests iastServiceRequests) {
+                       IastServiceRequests iastServiceRequests, HelperService helperService) {
         this.iastProperties = iastProperties;
         this.jiraProperties = jiraProperties;
         this.jiraService = jiraService;
         this.iastServiceRequests = iastServiceRequests;
+        this.helperService = helperService;
 
         checkRequiredParameters();
 
@@ -81,7 +81,7 @@ public class IastService {
     }
 
     public String generateUniqTag() {
-        return "cx-flow-" + LocalDateTime.now() + "-" + Math.abs(random.nextLong());
+        return "cx-flow-" + LocalDateTime.now() + "-" + helperService.getShortUid();
     }
 
     public void stopScanAndCreateJiraIssueFromIastSummary(ScanRequest request, String scanTag)

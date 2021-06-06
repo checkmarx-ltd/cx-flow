@@ -138,7 +138,7 @@ public class IastCliSteps {
         iastProperties.setThresholdsSeverity(thresholdsSeverityMap);
 
 
-        this.iastService = new IastService(jiraProperties, jiraService, iastProperties, iastServiceRequests);
+        this.iastService = new IastService(jiraProperties, jiraService, iastProperties, iastServiceRequests, helperService);
         Scan scan = mockIastServiceRequestsApiScansScanTagFinish(scanTag);
         ScanVulnerabilities scanVulnerabilities = mockIastServiceRequestsApiScanVulnerabilities(scan);
         mockIastServiceRequestsApiScanResults(scan, scanVulnerabilities.getVulnerabilities().get(0));

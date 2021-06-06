@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.MDC;
 import org.springframework.boot.ApplicationArguments;
@@ -197,12 +198,12 @@ public class CxFlowRunner implements ApplicationRunner {
         CxPropertiesBase cxProperties = cxScannerService.getProperties();
 
         if (((ScanUtils.empty(namespace) && ScanUtils.empty(repoName) && ScanUtils.empty(branch)) &&
-                ScanUtils.empty(application)) && !args.containsOption(BATCH_OPTION) && !args.containsOption(IAST_OPTION)) {
-            log.error("Namespace/Repo/Branch/Iast or Application (app) must be provided");
+                ScanUtils.empty(application)) && !args.containsOption(BATCH_OPTION)) {
+            log.error("Namespace/Repo/Branch or Application (app) must be provided");
             exit(1);
         }
 
-        if (args.containsOption(IAST_OPTION) && (scanTag == null)) {
+        if (args.containsOption(IAST_OPTION) && StringUtils.isEmpty(scanTag)) {
             log.error("--scan-tag must be provided for IAST tracking");
             exit(1);
         }
