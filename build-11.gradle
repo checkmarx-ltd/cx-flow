@@ -9,7 +9,7 @@ buildscript {
         sonarqubeVersion = '2.8'
         atlassianVersion = "5.2.0"
         atlassianFugueVersion = "4.7.2"
-        jacksonVersion = "2.12.1"
+        jacksonVersion = "2.12.2"
         mainClass = 'com.checkmarx.flow.CxFlowApplication'
     }
 	repositories {
@@ -87,6 +87,7 @@ dependencies {
     compile("com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}")
     compile("com.fasterxml.jackson.core:jackson-core:${jacksonVersion}")
     compile("com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}")
+    compile("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersion}")
     compile ("org.thymeleaf:thymeleaf:3.0.11.RELEASE")
     compile ("org.apache.httpcomponents:httpclient:4.5.13")
     compile ("org.codehaus.groovy:groovy-all:3.0.7") {
@@ -122,6 +123,8 @@ dependencies {
     compile("com.checkmarx:cx-config-provider:${ConfigProviderVersion}")
     compile("org.jasypt:jasypt:1.9.3")
     compileJava.dependsOn(processResources)
+
+    compile("javax.persistence:javax.persistence-api:2.2")
 }
 
 springBoot {

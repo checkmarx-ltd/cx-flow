@@ -36,6 +36,7 @@ public class BatchComponentSteps {
     private final CxGoProperties cxgoProperties;
     private final JiraProperties jiraProperties;
     private final GitHubProperties gitHubProperties;
+    private final IastService iastService;
     private final GitLabProperties gitLabProperties;
     private final ADOProperties adoProperties;
     private final FlowService flowService;
@@ -70,6 +71,7 @@ public class BatchComponentSteps {
                 jiraProperties,
                 gitHubProperties,
                 gitLabProperties,
+                iastService,
                 adoProperties,
                 helperService,
                 executors,

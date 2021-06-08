@@ -4,6 +4,7 @@ import com.checkmarx.flow.config.*;
 import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.exception.ExitThrowable;
+import com.checkmarx.flow.exception.JiraClientException;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.service.*;
@@ -16,6 +17,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.MDC;
 import org.springframework.boot.ApplicationArguments;
@@ -48,12 +50,14 @@ public class CxFlowRunner implements ApplicationRunner {
 
     public static final String PARSE_OPTION = "parse";
     public static final String BATCH_OPTION = "batch";
+    public static final String IAST_OPTION = "iast";
     private static final String ERROR_BREAK_MSG = String.format("Exiting with Error code %d because some of the checks weren't passed", ExitCode.BUILD_INTERRUPTED.getValue());
     private final FlowProperties flowProperties;
     private final CxScannerService cxScannerService;
     private final JiraProperties jiraProperties;
     private final GitHubProperties gitHubProperties;
     private final GitLabProperties gitLabProperties;
+    private final IastService iastService;
     private final ADOProperties adoProperties;
     private final HelperService helperService;
     private final List<ThreadPoolTaskExecutor> executors;
@@ -119,6 +123,7 @@ public class CxFlowRunner implements ApplicationRunner {
         String altProject;
         String altFields;
         String config;
+        String scanTag;
         List<String> severity;
         List<String> cwe;
         List<String> category;
@@ -140,8 +145,12 @@ public class CxFlowRunner implements ApplicationRunner {
             exit(ExitCode.SUCCESS);
         }
 
-        if (!args.containsOption("scan") && !args.containsOption(PARSE_OPTION) && !args.containsOption(BATCH_OPTION) && !args.containsOption("project")) {
-            log.error("--scan | --parse | --batch | --project option must be specified");
+        if (!args.containsOption("scan")
+                && !args.containsOption(PARSE_OPTION)
+                && !args.containsOption(BATCH_OPTION)
+                && !args.containsOption("project")
+                && !args.containsOption(IAST_OPTION)) {
+            log.error("--scan | --parse | --batch | --iast | --project option must be specified");
             exit(1);
         }
 
@@ -172,6 +181,7 @@ public class CxFlowRunner implements ApplicationRunner {
         assignee = getOptionValues(args, "assignee");
         mergeId = getOptionValues(args, "merge-id");
         preset = getOptionValues(args, "preset");
+        scanTag = getOptionValues(args, "scan-tag");
         osa = args.getOptionValues("osa") != null;
         force = args.getOptionValues("forcescan") != null;
         /*Collect command line options (List of Strings)*/
@@ -190,6 +200,11 @@ public class CxFlowRunner implements ApplicationRunner {
         if (((ScanUtils.empty(namespace) && ScanUtils.empty(repoName) && ScanUtils.empty(branch)) &&
                 ScanUtils.empty(application)) && !args.containsOption(BATCH_OPTION)) {
             log.error("Namespace/Repo/Branch or Application (app) must be provided");
+            exit(1);
+        }
+
+        if (args.containsOption(IAST_OPTION) && StringUtils.isEmpty(scanTag)) {
+            log.error("--scan-tag must be provided for IAST tracking");
             exit(1);
         }
 
@@ -410,6 +425,8 @@ public class CxFlowRunner implements ApplicationRunner {
                 } else {
                     log.error("No valid option was provided for driving scan");
                 }
+            } else if (args.containsOption(IAST_OPTION)) {
+                configureIast(request, scanTag);
             }
         } catch (Exception e) {
             log.error("An error occurred while processing request", e);
@@ -427,6 +444,10 @@ public class CxFlowRunner implements ApplicationRunner {
             repoUrl = repoUrl.concat("/browse");
         }
         return repoUrl;
+    }
+
+    private void configureIast(ScanRequest request, String scanTag) throws IOException, JiraClientException {
+        iastService.stopScanAndCreateJiraIssueFromIastSummary(request, scanTag);
     }
 
     private BugTracker.BugTrackerBuilder jiraPropertiesToBugTracker() {

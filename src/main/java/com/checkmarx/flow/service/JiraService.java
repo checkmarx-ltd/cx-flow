@@ -23,6 +23,7 @@ import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.google.common.collect.ImmutableMap;
+import io.atlassian.util.concurrent.Promise;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -48,6 +49,7 @@ import java.util.stream.Collectors;
 public class JiraService {
 
     private static final String LABEL_FIELD_TYPE = "labels";
+    private static final String PRIORITY_FIELD_TYPE = "priority";
     private static final String SECURITY_FIELD_TYPE = "security";
     private static final String VALUE_FIELD_TYPE = "value";
     private static final String NAME_FIELD_TYPE = "name";
@@ -129,11 +131,11 @@ public class JiraService {
         if (flowProperties.getBugTracker().equalsIgnoreCase("JIRA") ||
                 flowProperties.getBugTrackerImpl().stream().map(String::toLowerCase)
                         .collect(Collectors.toList()).contains("jira")) {
-            configurOpenClosedStatuses();
+            configureOpenClosedStatuses();
         }
     }
 
-    private void configurOpenClosedStatuses() {
+    private void configureOpenClosedStatuses() {
         prepareJiraOpenClosedStatuses();
         if (jiraProperties.getClosedStatus().isEmpty()) {
             Iterable<Status> statuses = client.getMetadataClient().getStatuses().claim();
@@ -247,7 +249,7 @@ public class JiraService {
             IssueType it = issueTypes.next();
             issueTypesList.add(it.getName());
             log.debug("getIssueType iterator: {}", it.getName());
-            if (it.getName().equals(type)) {
+            if (it.getName().equalsIgnoreCase(type)) {
                 return it;
             }
             iteration++;
@@ -315,7 +317,7 @@ public class JiraService {
             }
 
             if (bugTracker.getPriorities() != null && bugTracker.getPriorities().containsKey(severity)) {
-                issueBuilder.setFieldValue("priority", ComplexIssueInputFieldValue.with("name",
+                issueBuilder.setFieldValue(PRIORITY_FIELD_TYPE, ComplexIssueInputFieldValue.with("name",
                         bugTracker.getPriorities().get(severity)));
             }
 
@@ -356,6 +358,69 @@ public class JiraService {
         }
     }
 
+    public List<Issue> searchIssueByDescription(String searchDescription) {
+        SearchRestClient searchClient = client.getSearchClient();
+        String jql = "description ~ \"" + searchDescription + "\"";
+
+        Promise<SearchResult> searchResultPromise = searchClient.searchJql(jql);
+        Iterable<Issue> issues = searchResultPromise.claim().getIssues();
+
+        List<Issue> result = new ArrayList<>();
+        issues.forEach(result::add);
+
+        return result;
+    }
+
+    public String createIssue(String projectKey,
+                              String summary,
+                              String description,
+                              String assignee,
+                              String priorities,
+                              String issueTypeName) throws JiraClientException {
+        return createIssue(projectKey, summary, description, assignee, priorities, issueTypeName, null);
+    }
+
+    public String createIssue(String projectKey,
+                              String summary,
+                              String description,
+                              String assignee,
+                              String priorities,
+                              String issueTypeName,
+                              List<String> labels) throws JiraClientException {
+        log.debug("Retrieving issuetype object for project {}, type {}", projectKey, issueTypeName);
+        try {
+
+            IssueType issueType = this.getIssueType(projectKey, issueTypeName);
+            IssueInputBuilder issueBuilder = new IssueInputBuilder(projectKey, issueType.getId());
+
+            issueBuilder.setSummary(summary);
+            issueBuilder.setDescription(description);
+
+            if (labels != null && !labels.isEmpty()) {
+                issueBuilder.setFieldValue(LABEL_FIELD_TYPE, labels);
+            }
+
+            if (assignee != null && !assignee.isEmpty()) {
+                ComplexIssueInputFieldValue jiraAssignee = getAssignee(assignee, projectKey);
+                if (jiraAssignee != null) {
+                    issueBuilder.setFieldInput(new FieldInput(IssueFieldId.ASSIGNEE_FIELD, jiraAssignee));
+                }
+            }
+
+            if (priorities != null) {
+                issueBuilder.setFieldValue(PRIORITY_FIELD_TYPE, ComplexIssueInputFieldValue.with("name", priorities));
+            }
+
+            log.debug("Creating JIRA issue");
+            BasicIssue basicIssue = this.issueClient.createIssue(issueBuilder.build()).claim();
+            log.debug("JIRA issue {} created", basicIssue.getKey());
+            return basicIssue.getKey();
+        } catch (RestClientException e) {
+            log.error("Error occurred while creating JIRA issue.", e);
+            throw new JiraClientException();
+        }
+    }
+
     private String checkSummaryLength(String summary) {
         /* Summary can only be 255 chars */
         if (summary.length() > 255) {
@@ -384,7 +449,7 @@ public class JiraService {
         issueBuilder.setDescription(this.getBody(issue, request, fileUrl));
 
         if (bugTracker.getPriorities().containsKey(severity)) {
-            issueBuilder.setFieldValue("priority", ComplexIssueInputFieldValue.with("name",
+            issueBuilder.setFieldValue(PRIORITY_FIELD_TYPE, ComplexIssueInputFieldValue.with("name",
                     bugTracker.getPriorities().get(severity)));
         }
 
