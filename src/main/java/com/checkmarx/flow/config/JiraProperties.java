@@ -51,6 +51,8 @@ public class JiraProperties {
     private List<String> statusCategoryClosedName = Arrays.asList("Done");
     @Getter @Setter
     private String projectKeyScript;
+    private String sastIssueSummaryFormat = "[PREFIX][VULNERABILITY] @ [FILENAME][SUFFIX]";
+    private String sastIssueSummaryBranchFormat = "[PREFIX][VULNERABILITY] @ [FILENAME] [[BRANCH]][SUFFIX]";
 
 
     public String getUrl() {
@@ -335,4 +337,15 @@ public class JiraProperties {
         this.statusCategoryClosedName = statusCategoryClosedName;
     }
 
+    public String getSastIssueSummaryFormat() { return this.sastIssueSummaryFormat; }
+
+    public void setSastIssueSummaryFormat(String sastIssueSummaryFormat) {
+        this.sastIssueSummaryFormat = sastIssueSummaryFormat;
+    }
+
+    public String getSastIssueSummaryBranchFormat() { return this.sastIssueSummaryBranchFormat; }
+
+    public void setSastIssueSummaryBranchFormat(String sastIssueSummaryBranchFormat) {
+        this.sastIssueSummaryBranchFormat = sastIssueSummaryBranchFormat;
+    }
 }
