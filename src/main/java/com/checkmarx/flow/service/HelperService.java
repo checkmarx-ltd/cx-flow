@@ -72,6 +72,10 @@ public class HelperService {
             }
         }
 
+        if (CollectionUtils.isEmpty(branches)) {
+            return true;
+        }
+
         // Override branches if provided in the request
         if (CollectionUtils.isNotEmpty(request.getActiveBranches())) {
             branches = request.getActiveBranches();
