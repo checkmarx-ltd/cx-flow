@@ -4,6 +4,8 @@ import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.CxFlowRunner;
 import com.checkmarx.flow.config.*;
 import com.checkmarx.flow.cucumber.integration.cli.IntegrationTestContext;
+import com.checkmarx.flow.dto.BugTracker;
+import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.iast.common.model.enums.ManagementResultState;
 import com.checkmarx.flow.dto.iast.common.model.enums.QueryDisplayType;
 import com.checkmarx.flow.dto.iast.manager.dto.*;
@@ -70,6 +72,7 @@ public class IastCliSteps {
     private final BuildProperties buildProperties;
     private final List<VulnerabilityScanner> scanners;
     private final ThresholdValidator thresholdValidator;
+    private final GitHubService gitHubService;
 
     private final IntegrationTestContext testContext;
 
@@ -138,7 +141,7 @@ public class IastCliSteps {
         iastProperties.setThresholdsSeverity(thresholdsSeverityMap);
 
 
-        this.iastService = new IastService(jiraProperties, jiraService, iastProperties, iastServiceRequests, helperService);
+        this.iastService = new IastService(jiraProperties, jiraService, iastProperties, iastServiceRequests, helperService, gitHubService);
         Scan scan = mockIastServiceRequestsApiScansScanTagFinish(scanTag);
         ScanVulnerabilities scanVulnerabilities = mockIastServiceRequestsApiScanVulnerabilities(scan);
         mockIastServiceRequestsApiScanResults(scan, scanVulnerabilities.getVulnerabilities().get(0));
@@ -155,7 +158,18 @@ public class IastCliSteps {
     public void runningIastService(String scanTag) {
         scanTag = removeQuotes(scanTag);
         try {
-            iastService.stopScanAndCreateJiraIssueFromIastSummary(scanTag);
+            BugTracker.Type bugType = BugTracker.Type.GITHUBISSUE;
+            String assignee = "test_user";
+            BugTracker bt = BugTracker.builder()
+                    .type(bugType)
+                    .assignee(assignee)
+                    .build();
+
+            ScanRequest request = ScanRequest.builder()
+                    .bugTracker(bt)
+                    .build();
+
+            iastService.stopScanAndCreateIssue(request, scanTag);
         } catch (IastThresholdsSeverityException e) {
             //that is ok. Just Thresholds Severity
         }

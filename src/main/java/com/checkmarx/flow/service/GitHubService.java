@@ -8,12 +8,7 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.constants.FlowConstants;
-import com.checkmarx.flow.dto.OperationResult;
-import com.checkmarx.flow.dto.RepoComment;
-import com.checkmarx.flow.dto.RepoIssue;
-import com.checkmarx.flow.dto.ScanDetails;
-import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.dto.Sources;
+import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.github.Content;
 import com.checkmarx.flow.dto.github.PullEvent;
 import com.checkmarx.flow.dto.github.PushEvent;
@@ -23,8 +18,8 @@ import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.exception.GitHubClientRunTimeException;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
-import com.checkmarx.sdk.dto.sast.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
+import com.checkmarx.sdk.dto.sast.CxConfig;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -207,12 +202,30 @@ public class GitHubService extends RepoService {
     @Override
     public void addComment(ScanRequest request, String comment) {
         log.debug("Adding a new comment");
-        HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONComment("body",comment).toString(), createAuthHeaders(request));
+        HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONComment("body", comment).toString(), createAuthHeaders(request));
         restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
-    public void startBlockMerge(ScanRequest request, String url){
-        if(properties.isBlockMerge()) {
+    public void createIssue(ScanRequest request,
+                            String title,
+                            String description,
+                            String assignee) {
+        log.debug("Creating a new issue");
+
+        Map<String, String> params = new HashMap<>();
+        params.put("title", title);
+        params.put("body", description);
+        params.put("assignee", assignee);
+
+        HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONObject(params).toString(), createAuthHeaders(request));
+        ResponseEntity<JsonNode> exchange = restTemplate.exchange(properties.getIssueUri(request.getNamespace(), request.getRepoName()), HttpMethod.POST, httpEntity, JsonNode.class);
+        String number = exchange.getBody().get("number").toString();
+
+        log.info("https://github.com/" + request.getNamespace() + "/" + request.getRepoName() + "/issues/" + number);
+    }
+
+    public void startBlockMerge(ScanRequest request, String url) {
+        if (properties.isBlockMerge()) {
             final String PULL_REQUEST_STATUS = "pending";
             HttpEntity<?> httpEntity = new HttpEntity<>(
                     getJSONStatus(PULL_REQUEST_STATUS, url, "Checkmarx Scan Initiated").toString(),

@@ -1,13 +1,22 @@
 package com.checkmarx.flow.controller;
 
 import com.atlassian.jira.rest.client.api.domain.Issue;
+import com.checkmarx.flow.CxFlowRunner;
+import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.EventResponse;
+import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.dto.iast.CreateIssue;
+import com.checkmarx.flow.exception.ExitThrowable;
+import com.checkmarx.flow.exception.IastThatPropertiesIsRequiredException;
 import com.checkmarx.flow.exception.JiraClientException;
 import com.checkmarx.flow.service.IastService;
 import com.checkmarx.flow.service.JiraService;
 import com.checkmarx.flow.utils.TokenUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +36,13 @@ public class IastController {
     @Autowired
     private IastService iastService;
     @Autowired
+    private JiraProperties jiraProperties;
+    @Autowired
+    private FlowProperties flowProperties;
+    @Autowired
+    private CxFlowRunner cxFlowRunner;
+
+    @Autowired
     private TokenUtils tokenUtils;
     @Autowired
     private JiraService jiraService;
@@ -39,20 +55,36 @@ public class IastController {
                 .build());
     }
 
-    @PostMapping(value = {"/stop-scan-and-create-jira-issue/{scanTag}"})
+    @PostMapping(value = {"/stop-scan-and-create-{traker}-issue/{scanTag}"})
     public ResponseEntity<EventResponse> stopScanAndCreateJiraIssue(
             @PathVariable(value = "scanTag", required = false) String scanTag,
-            @RequestHeader(value = TOKEN_HEADER) String token) {
+            @PathVariable(value = "traker", required = false) String bugTrackerName,
+            @RequestHeader(value = TOKEN_HEADER) String token,
+            @RequestBody CreateIssue body) {
         //Validate shared API token from header
         tokenUtils.validateToken(token);
         try {
-            iastService.stopScanAndCreateJiraIssueFromIastSummary(scanTag);
+            ScanRequest request;
+            switch (bugTrackerName) {
+                case "jira":
+                    request = getJiraScanRequest(body);
+                    break;
+
+                case "github":
+                    request = getGithubScanRequest(body);
+                    break;
+
+                default:
+                    throw new NotImplementedException(bugTrackerName + ". That bug tracker not implemented.");
+            }
+
+            iastService.stopScanAndCreateIssue(request, scanTag);
             return ResponseEntity.accepted().body(EventResponse.builder()
                     .message("OK")
                     .success(true)
                     .build());
 
-        } catch (IOException | JiraClientException | RuntimeException e) {
+        } catch (IOException | JiraClientException | RuntimeException | ExitThrowable e) {
             log.error(e.getMessage(), e);
 
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(EventResponse.builder()
@@ -65,5 +97,45 @@ public class IastController {
     @GetMapping(value = {"/jira/description/{description}"})
     public List<Issue> jiraSearchIssueByDescription(@PathVariable(value = "description", required = false) String description) {
         return jiraService.searchIssueByDescription(description);
+    }
+
+    private ScanRequest getJiraScanRequest(CreateIssue body) throws ExitThrowable {
+        String assignee = body.getAssignee() != null ? body.getAssignee()
+                : jiraProperties.getUsername();
+
+        BugTracker bt = cxFlowRunner.jiraPropertiesToBugTracker()
+                .type(BugTracker.Type.JIRA)
+                .assignee(assignee)
+                .build();
+
+        return ScanRequest.builder()
+                .bugTracker(bt)
+                .build();
+    }
+
+    private ScanRequest getGithubScanRequest(CreateIssue body) {
+
+        if (body.getAssignee() == null) {
+            throw new IastThatPropertiesIsRequiredException("Property \"assignee\" is required");
+        }
+        if (body.getRepoName() == null) {
+            throw new IastThatPropertiesIsRequiredException("Property \"repoName\" is required");
+        }
+        if (body.getNamespace() == null) {
+            throw new IastThatPropertiesIsRequiredException("Property \"namespace\" is required");
+        }
+
+        BugTracker.Type bugType = BugTracker.Type.GITHUBISSUE;
+        String assignee = body.getAssignee();
+        BugTracker bt = BugTracker.builder()
+                .type(bugType)
+                .assignee(assignee)
+                .build();
+
+        return ScanRequest.builder()
+                .bugTracker(bt)
+                .repoName(body.getRepoName())
+                .namespace(body.getNamespace())
+                .build();
     }
 }
