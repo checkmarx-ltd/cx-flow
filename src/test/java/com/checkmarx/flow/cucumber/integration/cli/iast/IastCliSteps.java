@@ -43,7 +43,7 @@ import static org.mockito.Mockito.*;
 @RequiredArgsConstructor
 @ActiveProfiles({"iast"})
 public class IastCliSteps {
-    private static String ARGS = "--iast --bug-tracker=jira --assignee=email@mail.com --jira.url=https://xxxx.atlassian.net --jira.username=email@gmail.com --jira.token=token --jira.project=BCB --iast.url=http://localhost --iast.manager-port=8380 --iast.username=username --iast.password=password --iast.update-token-seconds=250 --jira.issue-type=Task";
+    private static String ARGS = "--iast --assignee=email@mail.com --repo-name=repository --branch=master --namespace=test --jira.url=https://xxxx.atlassian.net --jira.username=email@gmail.com --jira.token=token --github.token=token --jira.project=BCB --iast.url=http://localhost --iast.manager-port=8380 --iast.username=username --iast.password=password --iast.update-token-seconds=250 --jira.issue-type=Task";
 
     private CxFlowRunner cxFlowRunner;
 
@@ -53,6 +53,7 @@ public class IastCliSteps {
     private JiraProperties jiraProperties;
 
     private JiraService jiraService = mock(JiraService.class);
+    private GitHubService gitHubService = mock(GitHubService.class);
     private IastServiceRequests iastServiceRequests = mock(IastServiceRequests.class);
 
     private IastService iastService;
@@ -72,13 +73,13 @@ public class IastCliSteps {
     private final BuildProperties buildProperties;
     private final List<VulnerabilityScanner> scanners;
     private final ThresholdValidator thresholdValidator;
-    private final GitHubService gitHubService;
 
     private final IntegrationTestContext testContext;
 
-    @Given("mock CLI runner {}")
-    public void mockCliRunner(String scanTag) {
+    @Given("mock CLI runner {} {}")
+    public void mockCliRunner(String scanTag, String bugTracker) {
         scanTag = removeQuotes(scanTag);
+        bugTracker = removeQuotes(bugTracker);
         cxFlowRunner = new CxFlowRunner(
                 flowProperties,
                 cxScannerService,
@@ -96,7 +97,7 @@ public class IastCliSteps {
                 buildProperties,
                 scanners,
                 thresholdValidator);
-        String arguments = ARGS + " --scan-tag=" + scanTag;
+        String arguments = ARGS + " --scan-tag=" + scanTag + " --bug-tracker=" + bugTracker;
         String[] argsParam = arguments.split(" ");
         this.args = new DefaultApplicationArguments(argsParam);
     }
@@ -113,7 +114,7 @@ public class IastCliSteps {
             //catch ExitThrowable. That exception throw when we try to finish application. That is normal situation whe we fall build by Thresholds Severity
             String messageExitCode = e.getTargetException().getMessage();
 
-            Assert.assertEquals(messageExitCode, "Exit Code:" + exitCode);
+            Assert.assertEquals("Exit Code:" + exitCode, messageExitCode);
         }
     }
 
@@ -146,7 +147,7 @@ public class IastCliSteps {
         ScanVulnerabilities scanVulnerabilities = mockIastServiceRequestsApiScanVulnerabilities(scan);
         mockIastServiceRequestsApiScanResults(scan, scanVulnerabilities.getVulnerabilities().get(0));
         mockIastServiceRequestsApiScanResults(scan, scanVulnerabilities.getVulnerabilities().get(1));
-        mockJiraServiceCreateIssue();
+        mockServiceCreateIssue();
     }
 
     private String removeQuotes(String text) {
@@ -176,20 +177,30 @@ public class IastCliSteps {
     }
 
     @SneakyThrows
-    @Then("check how many create issue {}")
-    public void checkHowManyCreateIssue(String createJiraIssue) {
-        createJiraIssue = removeQuotes(createJiraIssue);
+    @Then("check how many create issue {} {}")
+    public void checkHowManyCreateIssue(String createIssue, String bugTracker) {
+        createIssue = removeQuotes(createIssue);
 
-        verify(jiraService, times(Integer.parseInt(createJiraIssue))).createIssue(anyString(),
-                anyString(),
-                anyString(),
-                anyString(),
-                anyString(),
-                anyString());
+        switch (bugTracker) {
+            case "jira":
+                verify(jiraService, times(Integer.parseInt(createIssue))).createIssue(anyString(),
+                        anyString(),
+                        anyString(),
+                        anyString(),
+                        anyString(),
+                        anyString());
+                break;
+            case "githubissue":
+                verify(gitHubService, times(Integer.parseInt(createIssue))).createIssue(any(),
+                        anyString(),
+                        anyString(),
+                        anyString());
+                break;
+        }
     }
 
 
-    private void mockJiraServiceCreateIssue() throws JiraClientException {
+    private void mockServiceCreateIssue() throws JiraClientException {
         when(jiraService.createIssue(anyString(),
                 anyString(),
                 anyString(),
@@ -197,6 +208,12 @@ public class IastCliSteps {
                 anyString(),
                 anyString()
         )).thenReturn("BCB-202");
+
+        doNothing().when(gitHubService).createIssue(any(),
+                anyString(),
+                anyString(),
+                anyString()
+        );
     }
 
     private void mockIastServiceRequestsApiScanResults(Scan scan, VulnerabilityInfo vulnerabilityInfo) throws IOException {
