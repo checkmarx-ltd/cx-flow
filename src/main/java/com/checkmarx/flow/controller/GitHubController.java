@@ -269,7 +269,7 @@ public class GitHubController extends WebhookController {
             throw new MachinaRuntimeException();
         }
 
-        //verify message signature
+        // verify message signature
         verifyHmacSignature(body, signature, controllerRequest);
 
         try {
