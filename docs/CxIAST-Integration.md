@@ -62,29 +62,55 @@ To ignore a severity, remove or comment that severity from the configuration fil
 CxFlow returns a status the CI pipeline when called.  
 To control this, a threshold can be configured per vulnerability severity.  
 Each severity threshold is determined by the allowed vulnerability count with that severity.  
-To remove a threshold from a severity, set the relevant severity to `-1`. In the example below, the threshold has been removed from **info**. 
-Thresholds are configured in the `thresholds-severity` section in the `iast` section.  
+To remove a threshold from a severity, set the relevant severity to `-1`. In the example below, the threshold has been removed
+from **info**. Thresholds are configured in the `thresholds-severity` section in the `iast` section.  
 When triggered in CLI mode, CxFlow returns status code `10`, if a threshold has been exceeded.  
-When triggered in web mode, the `/iast/stop-scan-and-create-jira-issue/{scanTag}` returns HTTP status 412.
+When triggered in web mode, the `/iast/stop-scan-and-create-jira-issue/{scanTag}`
+or `/iast/stop-scan-and-create-github-issue/{scanTag}` returns HTTP status 412.
 
 ## <a name="bugTrackers">Bug Trackers</a>
-At present, CxFlow only supports Jira as a bug tracker when used with CxIAST.  
-Refer to [Jira Configuration](https://github.com/checkmarx-ltd/cx-flow/wiki/Bug-Trackers-and-Feedback-Channels#jira) for instructions on configuring CxFlow to work with Jira.
+
+At present, CxFlow only supports Jira and Github issue as a bug tracker when used with CxIAST.  
+Refer to [Jira Configuration](https://github.com/checkmarx-ltd/cx-flow/wiki/Bug-Trackers-and-Feedback-Channels#jira) for
+instructions on configuring CxFlow to work with Jira. Refer
+to [Github issue Configuration](https://github.com/checkmarx-ltd/cx-flow/wiki/Bug-Trackers-and-Feedback-Channels#github) for
+instructions on configuring CxFlow to work with Github issue.
 
 ### Opening Tickets in Jira
 CxFlow can open Jira tickets according to the CxIAST scan results.  
 At present, CxFlow opens a separate Jira ticket for every new vulnerability of any severity discovered by CxIAST.
 
 The ticket is structured as follows:
-- The **title** field is set to `<CxIAST Vulnerability name>:  <Triggering API URL>`.
+
+- The **title** field is set to `<CxIAST Vulnerability name> @ <Triggering API URL>`.
 - The **priority** field is set based on the CxIAST vulnerability severity.
-- The **assignee** field is set based on the `--assignee` argument that was passed to CxFlow, or based on the configured Jira username. Refer to [Jira Configuration](https://github.com/checkmarx-ltd/cx-flow/wiki/Bug-Trackers-and-Feedback-Channels#jira) for additional information.
-- The **description** field contains a link to the vulnerability in CxIAST Manager, scan tag, branch and repository name.
+- The **assignee** field is set based on the `--assignee` argument that was passed to CxFlow, or based on the configured Jira
+  username. Refer to [Jira Configuration](https://github.com/checkmarx-ltd/cx-flow/wiki/Bug-Trackers-and-Feedback-Channels#jira)
+  for additional information.
+- The **description** field contains a link to the vulnerability in CxIAST Manager, scan tag, branch, repository name and severity
+  of vulnerability.
 
 An example for a Jira ticket is available here:  
 [[/Images/IAST2.png|Jira ticket example]]
 
+### Opening Tickets in Github issue
+
+CxFlow can open Github Issue tickets according to the CxIAST scan results.  
+At present, CxFlow opens a separate github issue for every new vulnerability of any severity discovered by CxIAST.
+
+The ticket is structured as follows:
+
+- The **title** field is set to `<CxIAST Vulnerability name> @ <Triggering API URL>`.
+- The **assignee** field is set based on the `--assignee` argument that was passed to CxFlow.
+- The **description** field contains a link to the vulnerability in CxIAST Manager, scan tag, branch, repository name and severity
+  of vulnerability.
+
+An example for a Jira ticket is available here:  
+[[/Images/IAST3.png|Github issue example]]
+
 ## <a name="cliExample">CLI Example</a>
+
+### Example opening Tickets in Jira
 
 ```
 java -jar cx-flow.jar 
@@ -97,8 +123,7 @@ java -jar cx-flow.jar
 --branch="develop"
 ```
 
-You can also pass the parameters that you want to set in application.yml
-for example:
+You can also pass the jira parameters that you want to set in application.yml for example:
 
 ```
 java -jar cx-flow.jar 
@@ -115,6 +140,23 @@ java -jar cx-flow.jar
 --iast.username="user"
 --iast.password="pass"
 --jira.issue-type="Bug"
+...
+```
+
+### Example opening Tickets in Github issue
+
+```
+java -jar cx-flow.jar 
+--spring.config.location=application.yml
+--iast
+--bug-tracker="githubissue"
+--assignee="email@mail.com"
+--scan-tag="cx-scan-20"
+--namespace="checkmarx-ltd"
+--repo-name="cx-flow"
+--branch="develop"
+
+--github.token=token-xxxx
 ...
 ```
 

@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
 @Service
 public class IastService {
 
-    private final Map<Integer, String> severityToPriority = new HashMap<>();
+    private final Map<Severity, String> jiraSeverityToPriority = new HashMap<>();
 
     private final IastProperties iastProperties;
 
@@ -60,10 +60,10 @@ public class IastService {
 
         checkRequiredParameters();
 
-        severityToPriority.put(0, "Low");
-        severityToPriority.put(1, "Low");
-        severityToPriority.put(2, "Medium");
-        severityToPriority.put(3, "High");
+        jiraSeverityToPriority.put(Severity.INFO, "Low");
+        jiraSeverityToPriority.put(Severity.LOW, "Low");
+        jiraSeverityToPriority.put(Severity.MEDIUM, "Medium");
+        jiraSeverityToPriority.put(Severity.HIGH, "High");
     }
 
     private void checkRequiredParameters() {
@@ -216,6 +216,7 @@ public class IastService {
             BugTracker bugTracker = request.getBugTracker();
             assignee = bugTracker.getAssignee();
         }
+
         gitHubService.createIssue(request, title, description, assignee);
     }
 
@@ -251,7 +252,7 @@ public class IastService {
                     title,
                     description,
                     assignee,
-                    severityToPriority.get(scansResultQuery.getSeverity().toValue()),
+                    jiraSeverityToPriority.get(scansResultQuery.getSeverity()),
                     issueType);
 
         } catch (JiraClientException e) {
@@ -278,35 +279,36 @@ public class IastService {
                                           VulnerabilityInfo vulnerability,
                                           Scan scan) {
 
-        String description = generateIastLinkToVulnerability(scanVulnerabilities, scansResultQuery, vulnerability)
-                + "\n\nScan Tag: " + scan.getTag();
+        StringBuilder description = new StringBuilder();
+        description.append(generateIastLinkToVulnerability(scanVulnerabilities, scansResultQuery, vulnerability)).append("\n\nScan Tag: ").append(scan.getTag());
 
-        if (request != null) {
-            if (request.getRepoName() != null) {
-                description += "\n Repository: " + request.getRepoName();
-            }
+        description.append("\n Severity: ").append(scansResultQuery.getSeverity().getName());
 
-            if (request.getBranch() != null) {
-                description += "\n Branch: " + request.getBranch();
-            }
+        if (request.getRepoName() != null) {
+            description.append("\n Repository: ").append(request.getRepoName());
         }
-        return description;
+
+        if (request.getBranch() != null) {
+            description.append("\n Branch: ").append(request.getBranch());
+        }
+        return description.toString();
     }
 
 
     private String createIssueTitle(ScanRequest request,
                                     ResultInfo scansResultQuery) {
-        String title = scansResultQuery.getName();
+        StringBuilder title = new StringBuilder();
+        title.append(scansResultQuery.getName());
 
         if (scansResultQuery.getUrl() != null) {
-            title += ": " + scansResultQuery.getUrl();
+            title.append(" @ ").append(scansResultQuery.getUrl());
         }
         if (request != null) {
             if (request.getBranch() != null) {
-                title += " [" + request.getBranch() + "]";
+                title.append(" [").append(request.getBranch()).append("]");
             }
         }
-        return title;
+        return title.toString();
     }
 
 }

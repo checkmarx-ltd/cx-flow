@@ -65,12 +65,13 @@ public class IastController {
         tokenUtils.validateToken(token);
         try {
             ScanRequest request;
-            switch (bugTrackerName) {
+            switch (bugTrackerName.toLowerCase()) {
                 case "jira":
                     request = getJiraScanRequest(body);
                     break;
 
                 case "github":
+                case "githubissue":
                     request = getGithubScanRequest(body);
                     break;
 
