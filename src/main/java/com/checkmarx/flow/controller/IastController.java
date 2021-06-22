@@ -55,10 +55,10 @@ public class IastController {
                 .build());
     }
 
-    @PostMapping(value = {"/stop-scan-and-create-{traker}-issue/{scanTag}"})
+    @PostMapping(value = {"/stop-scan-and-create-{tracker}-issue/{scanTag}"})
     public ResponseEntity<EventResponse> stopScanAndCreateJiraIssue(
             @PathVariable(value = "scanTag", required = false) String scanTag,
-            @PathVariable(value = "traker", required = false) String bugTrackerName,
+            @PathVariable(value = "tracker", required = false) String bugTrackerName,
             @RequestHeader(value = TOKEN_HEADER) String token,
             @RequestBody CreateIssue body) {
         //Validate shared API token from header

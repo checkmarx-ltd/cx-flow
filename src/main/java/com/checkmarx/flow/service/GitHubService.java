@@ -219,9 +219,13 @@ public class GitHubService extends RepoService {
 
         HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONObject(params).toString(), createAuthHeaders(request));
         ResponseEntity<JsonNode> exchange = restTemplate.exchange(properties.getIssueUri(request.getNamespace(), request.getRepoName()), HttpMethod.POST, httpEntity, JsonNode.class);
-        String number = exchange.getBody().get("number").toString();
+        try {
+            String number = Objects.requireNonNull(exchange.getBody()).get("number").toString();
+            log.info("https://github.com/" + request.getNamespace() + "/" + request.getRepoName() + "/issues/" + number);
+        } catch (RuntimeException e) {
+            log.error("Can't get number of new issue.", e);
+        }
 
-        log.info("https://github.com/" + request.getNamespace() + "/" + request.getRepoName() + "/issues/" + number);
     }
 
     public void startBlockMerge(ScanRequest request, String url) {

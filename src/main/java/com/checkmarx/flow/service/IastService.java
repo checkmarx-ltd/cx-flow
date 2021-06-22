@@ -60,7 +60,7 @@ public class IastService {
 
         checkRequiredParameters();
 
-        jiraSeverityToPriority.put(Severity.INFO, "Low");
+        jiraSeverityToPriority.put(Severity.INFO, "Info");
         jiraSeverityToPriority.put(Severity.LOW, "Low");
         jiraSeverityToPriority.put(Severity.MEDIUM, "Medium");
         jiraSeverityToPriority.put(Severity.HIGH, "High");
@@ -92,8 +92,13 @@ public class IastService {
         log.debug("start stopScanAndCreateIssueFromIastSummary with scanTag:" + scanTag);
         validateScanTag(scanTag);
 
+        if (request == null) {
+            log.error("ScanRequest is null. Something went wrong.");
+            throw new IastScanRequestMustProvideException("ScanRequest is null. Something went wrong. Please contact with IAST support.");
+        }
+
         if (request.getBugTracker() == null) {
-            log.error("BugTracker is not provide. Please");
+            log.error("BugTracker is not provide. Please provide a bug tracker");
         }
 
         Scan scan = null;
@@ -212,7 +217,7 @@ public class IastService {
 
         String assignee = null;
 
-        if (request != null && request.getBugTracker() != null) {
+        if (request.getBugTracker() != null) {
             BugTracker bugTracker = request.getBugTracker();
             assignee = bugTracker.getAssignee();
         }
@@ -303,10 +308,8 @@ public class IastService {
         if (scansResultQuery.getUrl() != null) {
             title.append(" @ ").append(scansResultQuery.getUrl());
         }
-        if (request != null) {
-            if (request.getBranch() != null) {
-                title.append(" [").append(request.getBranch()).append("]");
-            }
+        if (request.getBranch() != null) {
+            title.append(" [").append(request.getBranch()).append("]");
         }
         return title.toString();
     }

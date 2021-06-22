@@ -74,7 +74,7 @@ At present, CxFlow only supports Jira and Github issue as a bug tracker when use
 Refer to [Jira Configuration](https://github.com/checkmarx-ltd/cx-flow/wiki/Bug-Trackers-and-Feedback-Channels#jira) for
 instructions on configuring CxFlow to work with Jira. Refer
 to [Github issue Configuration](https://github.com/checkmarx-ltd/cx-flow/wiki/Bug-Trackers-and-Feedback-Channels#github) for
-instructions on configuring CxFlow to work with Github issue.
+instructions on configuring CxFlow to work with Github issues.
 
 ### Opening Tickets in Jira
 CxFlow can open Jira tickets according to the CxIAST scan results.  
@@ -93,10 +93,10 @@ The ticket is structured as follows:
 An example for a Jira ticket is available here:  
 [[/Images/IAST2.png|Jira ticket example]]
 
-### Opening Tickets in Github issue
+### Opening Github Issues
 
-CxFlow can open Github Issue tickets according to the CxIAST scan results.  
-At present, CxFlow opens a separate github issue for every new vulnerability of any severity discovered by CxIAST.
+CxFlow can open Github issues according to the CxIAST scan results. At present, CxFlow opens a separate github issue for every new
+vulnerability of any severity discovered by CxIAST.
 
 The ticket is structured as follows:
 

@@ -198,7 +198,7 @@ public class CxFlowRunner implements ApplicationRunner {
         CxPropertiesBase cxProperties = cxScannerService.getProperties();
 
         if (((ScanUtils.empty(namespace) && ScanUtils.empty(repoName) && ScanUtils.empty(branch)) &&
-                ScanUtils.empty(application)) && !args.containsOption(BATCH_OPTION)) {
+                ScanUtils.empty(application)) && !args.containsOption(BATCH_OPTION) && !args.containsOption(IAST_OPTION)) {
             log.error("Namespace/Repo/Branch or Application (app) must be provided");
             exit(1);
         }
