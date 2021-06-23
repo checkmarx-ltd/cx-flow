@@ -18,7 +18,9 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
@@ -32,11 +34,15 @@ public class ADOIssueTracker implements IssueTracker {
     private static final String STATE_FIELD = "System.State";
     private static final String TITLE_FIELD = "System.Title";
     private static final String TAGS_FIELD = "System.Tags";
+    private static final String ASSIGNEE_FIELD = "System.AssignedTo";
+    private static final String DESCRIPTION = "Description";
     private static final String FIELD_PREFIX="System.";
     private static final String PROPOSED_STATE="Proposed";
     private static final String ADO_PROJECT="alt-project";
     private static final String CREATE_WORK_ITEM_URL_TEMPLATE =
             "%s/{namespace}/{project}/_apis/wit/workitems/${work-item-type}?api-version={version}";
+    private static final String VIEW_WORK_ITEM_URL_TEMPLATE =
+            "%s/{namespace}/{project}/_workitems/edit/{id}";
     private static final String SEARCH_WORK_ITEM_URL_TEMPLATE ="%s/{namespace}/{project}/_apis/wit/wiql?api-version={version}";
     private static final String WIQ_BASE = "Select [System.Id], [System.Title], " +
             "[System.State], [System.State], [System.WorkItemType] From WorkItems Where ";
@@ -206,8 +212,6 @@ public class ADOIssueTracker implements IssueTracker {
         log.debug("Executing createIssue Azure API call");
         String issueBody = request.getAdditionalMetadata(Constants.ADO_ISSUE_BODY_KEY);
 
-        String projectName = calculateProjectName(request);
-        URI endpoint = getCreationEndpoint(projectName, request);
         /*Namespace/Repo/Branch provided*/
         StringBuilder tags = new StringBuilder();
         tags.append(request.getProduct().getProduct()).append("; ");
@@ -248,6 +252,54 @@ public class ADOIssueTracker implements IssueTracker {
 
         List<CreateWorkItemAttr> body = new ArrayList<>(Arrays.asList(title, description, tagsBlock));
 
+        return createIssueADO(body, issueBody, request);
+    }
+
+    public Issue createIssue(String title, ScanResults.XIssue resultIssue, ScanRequest request, List<String> listTags) throws MachinaException {
+        log.debug("Executing createIssue Azure API call");
+
+        CreateWorkItemAttr titleItem = new CreateWorkItemAttr();
+        titleItem.setOp("add");
+        titleItem.setPath(Constants.ADO_FIELD.concat(TITLE_FIELD));
+        titleItem.setValue(title);
+
+        CreateWorkItemAttr description = new CreateWorkItemAttr();
+        description.setOp("add");
+        description.setPath(Constants.ADO_FIELD.concat(FIELD_PREFIX.concat(DESCRIPTION)));
+        description.setValue(resultIssue.getDescription());
+
+        StringBuilder tags = new StringBuilder();
+        tags.append(request.getProduct().getProduct()).append("; ");
+
+        if (!StringUtils.isEmpty(properties.getProjectName()) && !StringUtils.isEmpty(properties.getNamespace())) {
+            tags = getNamespaceTag(properties.getNamespace()).append("; ");
+        }
+        tags.append(String.join(";", listTags));
+
+        log.debug("tags: {}", tags);
+        CreateWorkItemAttr tagsBlock = new CreateWorkItemAttr();
+        tagsBlock.setOp("add");
+        tagsBlock.setPath(Constants.ADO_FIELD.concat(TAGS_FIELD));
+        tagsBlock.setValue(tags.toString());
+
+        List<CreateWorkItemAttr> body = new ArrayList<>(Arrays.asList(titleItem, description, tagsBlock));
+
+        if (request.getBugTracker() != null && !request.getBugTracker().getAssignee().isEmpty()) {
+            CreateWorkItemAttr assignee = new CreateWorkItemAttr();
+            assignee.setOp("add");
+            assignee.setPath(Constants.ADO_FIELD.concat(ASSIGNEE_FIELD));
+            assignee.setValue(request.getBugTracker().getAssignee());
+            body.add(assignee);
+        }
+
+        Issue createdIssue = createIssueADO(body, DESCRIPTION, request);
+        URI issueUrl = getViewIssueUrl(properties.getProjectName(), request, createdIssue.getId());
+        log.info(issueUrl.toString());
+        return createdIssue;
+    }
+
+    public Issue createIssueADO(List<CreateWorkItemAttr> body, String issueBody, ScanRequest request) throws MachinaException {
+
         for (Map.Entry<String, String> map : request.getAltFields().entrySet()) {
             log.debug("Custom field: {},  value: {}", map.getKey(), map.getValue());
             CreateWorkItemAttr fieldBlock = new CreateWorkItemAttr();
@@ -259,6 +311,9 @@ public class ADOIssueTracker implements IssueTracker {
 
         log.debug("Request body: {}", body);
         HttpEntity<List<CreateWorkItemAttr>> httpEntity = new HttpEntity<>(body, ADOUtils.createPatchAuthHeaders(scmConfigOverrider.determineConfigToken(properties, request.getScmInstance())));
+
+        String projectName = calculateProjectName(request);
+        URI endpoint = getCreationEndpoint(projectName, request);
 
         ResponseEntity<String> response = restTemplate.exchange(endpoint, HttpMethod.POST, httpEntity, String.class);
         try {
@@ -320,6 +375,17 @@ public class ADOIssueTracker implements IssueTracker {
 
         URI result = new DefaultUriBuilderFactory()
                 .expand(urlTemplate, adoNamespace, adoProject, properties.getApiVersion());
+
+        log.debug("Endpoint URI: {}", result);
+        return result;
+    }
+
+    private URI getViewIssueUrl(String adoProject, ScanRequest request, String id) {
+        String urlTemplate = String.format(VIEW_WORK_ITEM_URL_TEMPLATE, properties.getUrl());
+        String adoNamespace = determineNamespace(request);
+
+        URI result = new DefaultUriBuilderFactory()
+                .expand(urlTemplate, adoNamespace, adoProject, id);
 
         log.debug("Endpoint URI: {}", result);
         return result;

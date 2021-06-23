@@ -1,7 +1,9 @@
 package com.checkmarx.flow.service;
 
+import com.checkmarx.flow.config.ADOProperties;
 import com.checkmarx.flow.config.IastProperties;
 import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.custom.ADOIssueTracker;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.iast.manager.dto.ResultInfo;
@@ -11,6 +13,8 @@ import com.checkmarx.flow.dto.iast.manager.dto.VulnerabilityInfo;
 import com.checkmarx.flow.dto.iast.ql.utils.Severity;
 import com.checkmarx.flow.exception.*;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.config.Constants;
+import com.checkmarx.sdk.dto.ScanResults;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +23,7 @@ import org.springframework.stereotype.Service;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +47,10 @@ public class IastService {
 
     private final HelperService helperService;
 
+    private final ADOIssueTracker azureService;
+
+    private final ADOProperties adoProperties;
+
     private final GitHubService gitHubService;
 
     @Autowired
@@ -50,12 +59,16 @@ public class IastService {
                        IastProperties iastProperties,
                        IastServiceRequests iastServiceRequests,
                        HelperService helperService,
-                       GitHubService gitHubService) {
+                       GitHubService gitHubService,
+                       ADOIssueTracker azureService,
+                       ADOProperties adoProperties) {
         this.jiraProperties = jiraProperties;
         this.jiraService = jiraService;
         this.iastProperties = iastProperties;
         this.iastServiceRequests = iastServiceRequests;
         this.helperService = helperService;
+        this.azureService = azureService;
+        this.adoProperties = adoProperties;
         this.gitHubService = gitHubService;
 
         checkRequiredParameters();
@@ -94,7 +107,8 @@ public class IastService {
 
         if (request == null) {
             log.error("ScanRequest is null. Something went wrong.");
-            throw new IastScanRequestMustProvideException("ScanRequest is null. Something went wrong. Please contact with IAST support.");
+            throw new IastScanRequestMustProvideException(
+                    "ScanRequest is null. Something went wrong. Please contact with IAST support.");
         }
 
         if (request.getBugTracker() == null) {
@@ -118,7 +132,8 @@ public class IastService {
     private void validateScanTag(String scanTag) {
         //Regex validation for a data having a simple format
         if (!Pattern.matches("^[a-zA-Z0-9\\:\\.\\s\\-]{1,256}$", scanTag)) {
-            throw new IastValidationScanTagFailedException("The scan tag is invalid. The scan tag must contain only [a-zA-Z0-9\\:\\.\\s\\-] and the size is less than 256.");
+            throw new IastValidationScanTagFailedException(
+                    "The scan tag is invalid. The scan tag must contain only [a-zA-Z0-9\\:\\.\\s\\-] and the size is less than 256.");
         }
     }
 
@@ -138,29 +153,38 @@ public class IastService {
                         if (scansResultQuery.isNewResult() && filterSeverity(scansResultQuery)) {
                             switch (request.getBugTracker().getType()) {
                                 case JIRA:
-                                    createJiraIssue(scanVulnerabilities, request, scansResultQuery, vulnerability, scan);
+                                    createJiraIssue(scanVulnerabilities, request, scansResultQuery, vulnerability,
+                                            scan);
                                     break;
                                 case GITHUBISSUE:
-                                    createGithubIssue(scanVulnerabilities, request, scansResultQuery, vulnerability, scan);
+                                    createGithubIssue(scanVulnerabilities, request, scansResultQuery, vulnerability,
+                                            scan);
+                                    break;
+                                case AZUREISSUE:
+                                    createAzureIssue(scanVulnerabilities, request, scansResultQuery, vulnerability,
+                                            scan);
                                     break;
                                 default:
-                                    throw new NotImplementedException(request.getBugTracker().getType().getType() + ". That bug tracker not implemented.");
-
+                                    throw new NotImplementedException(request.getBugTracker().getType().getType() +
+                                            ". That bug tracker not implemented.");
                             }
                         }
                     }
                 }
-            }
 
-            thresholdsSeverity(scanVulnerabilities);
+                thresholdsSeverity(scanVulnerabilities);
+            }
         } catch (NotImplementedException e) {
-            throw new NotImplementedException(request.getBugTracker().getType().getType() + ". That bug tracker not implemented.");
+            throw new NotImplementedException(
+                    request.getBugTracker().getType().getType() + ". That bug tracker not implemented.");
         } catch (RuntimeException e) {
             throw new IastBugTrackerClientException("Can't create issue", e);
         } catch (IOException e) {
             throw new IOException("Can't send api request", e);
         }
     }
+
+
 
     /**
      * create an exception if the severity thresholds are exceeded
@@ -225,6 +249,30 @@ public class IastService {
         gitHubService.createIssue(request, title, description, assignee, priority);
     }
 
+    private void createAzureIssue(ScanVulnerabilities scanVulnerabilities,
+                                  ScanRequest request,
+                                  ResultInfo scansResultQuery,
+                                  VulnerabilityInfo vulnerability,
+                                  Scan scan) {
+
+        String title = createIssueTitle(request, scansResultQuery);
+        String description = createIssueDescription(scanVulnerabilities, request, scansResultQuery, vulnerability, scan, true);
+
+        ScanResults.XIssue issue = ScanResults.XIssue.builder()
+                .description(description)
+                .vulnerability(vulnerability.getName())
+                .build();
+
+        request.putAdditionalMetadata(Constants.ADO_ISSUE_BODY_KEY, description);
+        request.putAdditionalMetadata(Constants.ADO_ISSUE_KEY, adoProperties.getIssueType());
+
+        try {
+            azureService.createIssue(title, issue, request, Arrays.asList(scan.getTag()));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     private void createJiraIssue(ScanVulnerabilities scanVulnerabilities,
                                  ScanRequest request,
                                  ResultInfo scansResultQuery,
@@ -279,26 +327,41 @@ public class IastService {
     }
 
     private String createIssueDescription(ScanVulnerabilities scanVulnerabilities,
+            ScanRequest request,
+            ResultInfo scansResultQuery,
+            VulnerabilityInfo vulnerability,
+            Scan scan) {
+        return createIssueDescription(scanVulnerabilities,
+                request,
+                scansResultQuery,
+                vulnerability,
+                scan,
+                false);
+    }
+
+    private String createIssueDescription(ScanVulnerabilities scanVulnerabilities,
                                           ScanRequest request,
                                           ResultInfo scansResultQuery,
                                           VulnerabilityInfo vulnerability,
-                                          Scan scan) {
-
+                                          Scan scan,
+                                          boolean html) {
+        String newLine = html ? "<br>" : System.lineSeparator();
         StringBuilder description = new StringBuilder();
-        description.append(generateIastLinkToVulnerability(scanVulnerabilities, scansResultQuery, vulnerability)).append("\n\nScan Tag: ").append(scan.getTag());
+        description.append(generateIastLinkToVulnerability(scanVulnerabilities, scansResultQuery, vulnerability))
+                .append(newLine).append(newLine)
+                .append("Scan Tag: ").append(scan.getTag());
 
-        description.append("\n Severity: ").append(scansResultQuery.getSeverity().getName());
+        description.append(newLine).append("Severity: ").append(scansResultQuery.getSeverity().getName());
 
         if (request.getRepoName() != null) {
-            description.append("\n Repository: ").append(request.getRepoName());
+            description.append(newLine).append("Repository: ").append(request.getRepoName());
         }
 
         if (request.getBranch() != null) {
-            description.append("\n Branch: ").append(request.getBranch());
+            description.append(newLine).append("Branch: ").append(request.getBranch());
         }
         return description.toString();
     }
-
 
     private String createIssueTitle(ScanRequest request,
                                     ResultInfo scansResultQuery) {

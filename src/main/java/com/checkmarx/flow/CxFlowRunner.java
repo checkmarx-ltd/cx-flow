@@ -337,6 +337,19 @@ public class CxFlowRunner implements ApplicationRunner {
                         .customBean(bugTracker)
                         .build();
                 break;
+            case AZUREISSUE:
+                bugType = BugTracker.Type.AZUREISSUE;
+                bt = BugTracker.builder()
+                        .type(bugType)
+                        .assignee(assignee)
+                        .build();
+                repoType = ScanRequest.Repository.ADO;
+
+                if (ScanUtils.empty(namespace) || ScanUtils.empty(repoName)) {
+                    log.error("--namespace and --repo-name must be provided for AZUREISSUE bug tracking");
+                    exit(1);
+                }
+                break;
             default:
                 log.warn("No supported bug tracking type provided");
         }
