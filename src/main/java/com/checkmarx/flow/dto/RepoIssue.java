@@ -71,7 +71,7 @@ public class RepoIssue {
         return requestBody;
     }
 
-    public static JSONObject getJSONObject(Map<String, String> data) throws JSONException {
+    public static JSONObject getJSONObject(Map<String, Object> data) throws JSONException {
         JSONObject requestBody = new JSONObject();
         data.forEach(requestBody::put);
         return requestBody;

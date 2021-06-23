@@ -209,13 +209,19 @@ public class GitHubService extends RepoService {
     public void createIssue(ScanRequest request,
                             String title,
                             String description,
-                            String assignee) {
+                            String assignee,
+                            String priority) {
         log.debug("Creating a new issue");
 
-        Map<String, String> params = new HashMap<>();
+        Map<String, Object> params = new HashMap<>();
         params.put("title", title);
         params.put("body", description);
         params.put("assignee", assignee);
+
+        List<String> labels = new ArrayList<>();
+        labels.add("Priority: " + priority);
+
+        params.put("labels", labels);
 
         HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONObject(params).toString(), createAuthHeaders(request));
         ResponseEntity<JsonNode> exchange = restTemplate.exchange(properties.getIssueUri(request.getNamespace(), request.getRepoName()), HttpMethod.POST, httpEntity, JsonNode.class);

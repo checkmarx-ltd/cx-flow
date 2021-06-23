@@ -221,8 +221,9 @@ public class IastService {
             BugTracker bugTracker = request.getBugTracker();
             assignee = bugTracker.getAssignee();
         }
+        String priority = scansResultQuery.getSeverity().getName();
 
-        gitHubService.createIssue(request, title, description, assignee);
+        gitHubService.createIssue(request, title, description, assignee, priority);
     }
 
     private void createJiraIssue(ScanVulnerabilities scanVulnerabilities,

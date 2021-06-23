@@ -103,7 +103,7 @@ The ticket is structured as follows:
 - The **title** field is set to `<CxIAST Vulnerability name> @ <Triggering API URL>`.
 - The **assignee** field is set based on the `--assignee` argument that was passed to CxFlow.
 - The **description** field contains a link to the vulnerability in CxIAST Manager, scan tag, branch, repository name and severity
-  of vulnerability.
+- The **Labels** field have information about priority based on severity. of vulnerability.
 
 An example for a Jira ticket is available here:  
 [[/Images/IAST3.png|Github issue example]]
