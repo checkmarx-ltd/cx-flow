@@ -194,6 +194,7 @@ public class IastCliSteps {
                 verify(gitHubService, times(Integer.parseInt(createIssue))).createIssue(any(),
                         anyString(),
                         anyString(),
+                        anyString(),
                         anyString());
                 break;
         }
@@ -210,6 +211,7 @@ public class IastCliSteps {
         )).thenReturn("BCB-202");
 
         doNothing().when(gitHubService).createIssue(any(),
+                anyString(),
                 anyString(),
                 anyString(),
                 anyString()
