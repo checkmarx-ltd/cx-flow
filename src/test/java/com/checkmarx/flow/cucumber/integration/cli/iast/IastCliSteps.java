@@ -4,6 +4,7 @@ import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.CxFlowRunner;
 import com.checkmarx.flow.config.*;
 import com.checkmarx.flow.cucumber.integration.cli.IntegrationTestContext;
+import com.checkmarx.flow.custom.ADOIssueTracker;
 import com.checkmarx.flow.dto.iast.common.model.enums.ManagementResultState;
 import com.checkmarx.flow.dto.iast.common.model.enums.QueryDisplayType;
 import com.checkmarx.flow.dto.iast.manager.dto.*;
@@ -52,6 +53,7 @@ public class IastCliSteps {
 
     private JiraService jiraService = mock(JiraService.class);
     private IastServiceRequests iastServiceRequests = mock(IastServiceRequests.class);
+    private ADOIssueTracker adoIssueTracker = mock(ADOIssueTracker.class);
 
     private IastService iastService;
     private ApplicationArguments args;
@@ -138,7 +140,7 @@ public class IastCliSteps {
         iastProperties.setThresholdsSeverity(thresholdsSeverityMap);
 
 
-        this.iastService = new IastService(jiraProperties, jiraService, iastProperties, iastServiceRequests, helperService);
+        this.iastService = new IastService(jiraProperties, jiraService, iastProperties, iastServiceRequests, helperService, adoIssueTracker, adoProperties);
         Scan scan = mockIastServiceRequestsApiScansScanTagFinish(scanTag);
         ScanVulnerabilities scanVulnerabilities = mockIastServiceRequestsApiScanVulnerabilities(scan);
         mockIastServiceRequestsApiScanResults(scan, scanVulnerabilities.getVulnerabilities().get(0));
