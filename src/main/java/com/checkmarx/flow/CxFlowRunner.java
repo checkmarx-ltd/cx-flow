@@ -305,6 +305,21 @@ public class CxFlowRunner implements ApplicationRunner {
                 }
                 repoUrl = getNonEmptyRepoUrl(namespace, repoName, repoUrl, gitHubProperties.getGitUri(namespace, repoName));
                 break;
+            case GITLABISSUE:
+            case gitlabissue:
+                bugType = BugTracker.Type.GITLABISSUE;
+                bt = BugTracker.builder()
+                        .type(bugType)
+                        .assignee(assignee)
+                        .build();
+                repoType = ScanRequest.Repository.GITLAB;
+
+                if (ScanUtils.empty(namespace) || ScanUtils.empty(repoName)) {
+                    log.error("--namespace and --repo must be provided for GITLABISSUE bug tracking");
+                    exit(1);
+                }
+                repoUrl = getNonEmptyRepoUrl(namespace, repoName, repoUrl, gitLabProperties.getGitUri(namespace, repoName));
+                break;
             case GITLABMERGE:
             case gitlabmerge:
                 log.info("Handling GitLab merge request for project: {}, merge id: {}", projectId, mergeId);

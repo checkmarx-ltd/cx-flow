@@ -81,6 +81,8 @@ public class BugTracker {
         githubissue("githubissue"),
         GITHUBCOMMIT("GITHUBCOMMIT"),
         GITLABCOMMIT("GITLABCOMMIT"),
+        GITLABISSUE("GITLABISSUE"),
+        gitlabissue("gitlabissue"),
         GITLABMERGE("GITLABMERGE"),
         gitlabmerge("gitlabmerge"),
         EMAIL("EMAIL"),

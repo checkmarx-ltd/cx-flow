@@ -18,6 +18,7 @@ import com.checkmarx.sdk.dto.sast.CxConfig;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.logging.log4j.util.Strings;
@@ -478,6 +479,15 @@ public class BitBucketService extends RepoService {
             }
         }
         return cxConfig;
+    }
+
+
+    public String createIssue(ScanRequest request,
+                              String title,
+                              String description,
+                              String assignee,
+                              String priority) {
+        throw new NotImplementedException("Not Implemented Exception");
     }
 
 }

@@ -72,7 +72,12 @@ public class IastController {
 
                 case "github":
                 case "githubissue":
-                    request = getGithubScanRequest(body);
+                    request = getGithubOrGitlabScanRequest(body, BugTracker.Type.GITHUBISSUE);
+                    break;
+
+                case "gitlab":
+                case "gitlabissue":
+                    request = getGithubOrGitlabScanRequest(body, BugTracker.Type.GITLABISSUE);
                     break;
 
                 default:
@@ -114,7 +119,7 @@ public class IastController {
                 .build();
     }
 
-    private ScanRequest getGithubScanRequest(CreateIssue body) {
+    private ScanRequest getGithubOrGitlabScanRequest(CreateIssue body, BugTracker.Type tracker) {
 
         if (body.getAssignee() == null) {
             throw new IastThatPropertiesIsRequiredException("Property \"assignee\" is required");
@@ -126,10 +131,9 @@ public class IastController {
             throw new IastThatPropertiesIsRequiredException("Property \"namespace\" is required");
         }
 
-        BugTracker.Type bugType = BugTracker.Type.GITHUBISSUE;
         String assignee = body.getAssignee();
         BugTracker bt = BugTracker.builder()
-                .type(bugType)
+                .type(tracker)
                 .assignee(assignee)
                 .build();
 
@@ -139,4 +143,5 @@ public class IastController {
                 .namespace(body.getNamespace())
                 .build();
     }
+
 }

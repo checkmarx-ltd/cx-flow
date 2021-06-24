@@ -54,6 +54,7 @@ public class IastCliSteps {
 
     private JiraService jiraService = mock(JiraService.class);
     private GitHubService gitHubService = mock(GitHubService.class);
+    private GitLabService gitLabService = mock(GitLabService.class);
     private IastServiceRequests iastServiceRequests = mock(IastServiceRequests.class);
 
     private IastService iastService;
@@ -142,7 +143,7 @@ public class IastCliSteps {
         iastProperties.setThresholdsSeverity(thresholdsSeverityMap);
 
 
-        this.iastService = new IastService(jiraProperties, jiraService, iastProperties, iastServiceRequests, helperService, gitHubService);
+        this.iastService = new IastService(jiraProperties, jiraService, iastProperties, iastServiceRequests, helperService, gitHubService, gitLabService);
         Scan scan = mockIastServiceRequestsApiScansScanTagFinish(scanTag);
         ScanVulnerabilities scanVulnerabilities = mockIastServiceRequestsApiScanVulnerabilities(scan);
         mockIastServiceRequestsApiScanResults(scan, scanVulnerabilities.getVulnerabilities().get(0));
@@ -197,6 +198,13 @@ public class IastCliSteps {
                         anyString(),
                         anyString());
                 break;
+            case "gitlabissue":
+                verify(gitLabService, times(Integer.parseInt(createIssue))).createIssue(any(),
+                        anyString(),
+                        anyString(),
+                        anyString(),
+                        anyString());
+                break;
         }
     }
 
@@ -210,12 +218,20 @@ public class IastCliSteps {
                 anyString()
         )).thenReturn("BCB-202");
 
-        doNothing().when(gitHubService).createIssue(any(),
+        when(gitHubService.createIssue(any(),
                 anyString(),
                 anyString(),
                 anyString(),
                 anyString()
-        );
+        )).thenReturn("42");
+
+        when(gitLabService.createIssue(any(),
+                anyString(),
+                anyString(),
+                anyString(),
+                anyString()
+        )).thenReturn("42");
+
     }
 
     private void mockIastServiceRequestsApiScanResults(Scan scan, VulnerabilityInfo vulnerabilityInfo) throws IOException {

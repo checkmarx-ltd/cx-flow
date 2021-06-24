@@ -44,19 +44,23 @@ public class IastService {
 
     private final GitHubService gitHubService;
 
+    private final GitLabService gitLabService;
+
     @Autowired
     public IastService(JiraProperties jiraProperties,
                        JiraService jiraService,
                        IastProperties iastProperties,
                        IastServiceRequests iastServiceRequests,
                        HelperService helperService,
-                       GitHubService gitHubService) {
+                       GitHubService gitHubService,
+                       GitLabService gitLabService) {
         this.jiraProperties = jiraProperties;
         this.jiraService = jiraService;
         this.iastProperties = iastProperties;
         this.iastServiceRequests = iastServiceRequests;
         this.helperService = helperService;
         this.gitHubService = gitHubService;
+        this.gitLabService = gitLabService;
 
         checkRequiredParameters();
 
@@ -144,6 +148,10 @@ public class IastService {
                                 case GITHUBISSUE:
                                     createGithubIssue(scanVulnerabilities, request, scansResultQuery, vulnerability, scan);
                                     break;
+                                case gitlabissue:
+                                case GITLABISSUE:
+                                    createGitlabIssue(scanVulnerabilities, request, scansResultQuery, vulnerability, scan);
+                                    break;
                                 default:
                                     throw new NotImplementedException(request.getBugTracker().getType().getType() + ". That bug tracker not implemented.");
 
@@ -226,6 +234,26 @@ public class IastService {
         gitHubService.createIssue(request, title, description, assignee, priority);
     }
 
+    private void createGitlabIssue(ScanVulnerabilities scanVulnerabilities,
+                                   ScanRequest request,
+                                   ResultInfo scansResultQuery,
+                                   VulnerabilityInfo vulnerability,
+                                   Scan scan) {
+
+        String title = createIssueTitle(request, scansResultQuery);
+        String description = createIssueDescription(scanVulnerabilities, request, scansResultQuery, vulnerability, scan);
+
+        String assignee = null;
+
+        if (request.getBugTracker() != null) {
+            BugTracker bugTracker = request.getBugTracker();
+            assignee = bugTracker.getAssignee();
+        }
+        String priority = scansResultQuery.getSeverity().getName();
+
+        gitLabService.createIssue(request, title, description, assignee, priority);
+    }
+
     private void createJiraIssue(ScanVulnerabilities scanVulnerabilities,
                                  ScanRequest request,
                                  ResultInfo scansResultQuery,
@@ -288,14 +316,14 @@ public class IastService {
         StringBuilder description = new StringBuilder();
         description.append(generateIastLinkToVulnerability(scanVulnerabilities, scansResultQuery, vulnerability)).append("\n\nScan Tag: ").append(scan.getTag());
 
-        description.append("\n Severity: ").append(scansResultQuery.getSeverity().getName());
+        description.append("\nSeverity: ").append(scansResultQuery.getSeverity().getName());
 
         if (request.getRepoName() != null) {
-            description.append("\n Repository: ").append(request.getRepoName());
+            description.append("\nRepository: ").append(request.getRepoName());
         }
 
         if (request.getBranch() != null) {
-            description.append("\n Branch: ").append(request.getBranch());
+            description.append("\nBranch: ").append(request.getBranch());
         }
         return description.toString();
     }

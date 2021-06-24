@@ -16,6 +16,7 @@ import com.checkmarx.flow.dto.github.Repository;
 import com.checkmarx.flow.dto.report.AnalyticsReport;
 import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.exception.GitHubClientRunTimeException;
+import com.checkmarx.flow.exception.IastIssueNotCreatedException;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
@@ -206,11 +207,12 @@ public class GitHubService extends RepoService {
         restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
-    public void createIssue(ScanRequest request,
-                            String title,
-                            String description,
-                            String assignee,
-                            String priority) {
+    @Override
+    public String createIssue(ScanRequest request,
+                              String title,
+                              String description,
+                              String assignee,
+                              String priority) {
         log.debug("Creating a new issue");
 
         Map<String, Object> params = new HashMap<>();
@@ -227,11 +229,13 @@ public class GitHubService extends RepoService {
         ResponseEntity<JsonNode> exchange = restTemplate.exchange(properties.getIssueUri(request.getNamespace(), request.getRepoName()), HttpMethod.POST, httpEntity, JsonNode.class);
         try {
             String number = Objects.requireNonNull(exchange.getBody()).get("number").toString();
-            log.info("https://github.com/" + request.getNamespace() + "/" + request.getRepoName() + "/issues/" + number);
+            String issueUrl = "https://github.com/" + request.getNamespace() + "/" + request.getRepoName() + "/issues/" + number;
+            log.info(issueUrl);
+            return issueUrl;
         } catch (RuntimeException e) {
-            log.error("Can't get number of new issue.", e);
+            log.error("Probably can't get number of new issue.", e);
+            throw new IastIssueNotCreatedException("Incorrect URI", e);
         }
-
     }
 
     public void startBlockMerge(ScanRequest request, String url) {

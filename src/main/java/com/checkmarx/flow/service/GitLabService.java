@@ -10,25 +10,31 @@ import com.checkmarx.flow.dto.Sources;
 import com.checkmarx.flow.dto.gitlab.Comment;
 import com.checkmarx.flow.dto.gitlab.Note;
 import com.checkmarx.flow.exception.GitLabClientException;
+import com.checkmarx.flow.exception.IastIssueNotCreatedException;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
-import com.checkmarx.sdk.dto.sast.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
+import com.checkmarx.sdk.dto.sast.CxConfig;
 import org.apache.commons.codec.binary.Base64;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.beans.ConstructorProperties;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -46,6 +52,8 @@ public class GitLabService extends RepoService {
     private static final String FILE_CONTENT = "/projects/{id}/repository/files/{config}?ref={branch}";
     private static final String LANGUAGE_TYPES = "/projects/{id}/languages";
     private static final String REPO_CONTENT = "/projects/{id}/repository/tree?ref={branch}";
+    private static final String CREATE_ISSUE = "/projects/{id}/issues?title={title}";
+    private static final String USER_INFO = "/users?username={username}";
     private static final int UNKNOWN_INT = -1;
     private static final Logger log = LoggerFactory.getLogger(GitLabService.class);
     private static final String HTTP_BODY_WARN_MESSAGE = "HTTP Body is null for content api ";
@@ -55,6 +63,8 @@ public class GitLabService extends RepoService {
     private final GitLabProperties properties;
     private final ScmConfigOverrider scmConfigOverrider;
 
+    @Autowired
+    private GitLabService gitLabService;
 
     @ConstructorProperties({"restTemplate", "properties", "scmConfigOverrider"})
     public GitLabService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, GitLabProperties properties, ScmConfigOverrider scmConfigOverrider) {
@@ -354,8 +364,74 @@ public class GitLabService extends RepoService {
     private String getCommentUrl(ScanRequest scanRequest, long commentId) {
         String path = scmConfigOverrider.determineConfigApiUrl(properties, scanRequest).concat(MERGE_NOTE_PATH);
         return String.format(path, scanRequest.getRepoProjectId().toString(),
-                             scanRequest.getAdditionalMetadata(FlowConstants.MERGE_ID),
-                             commentId);
+                scanRequest.getAdditionalMetadata(FlowConstants.MERGE_ID),
+                commentId);
     }
+
+
+    @Override
+    public String createIssue(ScanRequest request,
+                              String title,
+                              String description,
+                              String assignee,
+                              String priority) {
+        try {
+            String url = scmConfigOverrider.determineConfigApiUrl(properties, request).concat(CREATE_ISSUE);
+
+            String id = request.getRepoProjectId() != null
+                    ? request.getRepoProjectId().toString()
+                    : request.getNamespace() + "%2F" + request.getRepoName();
+
+            url = url.replace("{id}", id);
+            url = url.replace("{title}", URLEncoder.encode(title, String.valueOf(StandardCharsets.UTF_8)));
+            URI uri = new URI(url);
+
+            Map<String, Object> params = new HashMap<>();
+            params.put("description", description);
+            params.put("labels", "Priority: " + priority);
+            Long accountId = gitLabService.getAccountId(request, assignee);     //gitLabService - for cache
+            params.put("assignee_id", accountId);
+
+
+            HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONObject(params).toString(), createAuthHeaders(request));
+
+            ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.POST, httpEntity, String.class);
+            JSONObject obj = new JSONObject(response.getBody());
+
+            String issueUrl = "https://gitlab.com/" + request.getNamespace() + "/" + request.getRepoName() + "/-/issues/" + obj.getInt("iid");
+            log.info(issueUrl);
+            return issueUrl;
+        } catch (UnsupportedEncodingException | URISyntaxException e) {
+            log.error("Incorrect URI", e);
+            throw new IastIssueNotCreatedException("Incorrect URI", e);
+        }
+
+    }
+
+    @Cacheable(value = "gitlabAccounts", key = "#assignee")
+    public Long getAccountId(ScanRequest request, String assignee) {
+        try {
+            String url = scmConfigOverrider.determineConfigApiUrl(properties, request).concat(USER_INFO);
+            url = url.replace("{username}", assignee);
+            URI uri = new URI(url);
+            HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders(request));
+
+            ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, httpEntity, String.class);
+            JSONArray userArray = new JSONArray(response.getBody());
+            long id = userArray.getJSONObject(0).getLong("id");
+
+            log.info("gitlab user \"" + assignee + "\" have id = " + id);
+            return id;
+        } catch (HttpClientErrorException e) {
+            log.error("Error calling gitlab project api {}", e.getResponseBodyAsString(), e);
+        } catch (JSONException e) {
+            log.error("Error parsing gitlab project response.", e);
+        } catch (URISyntaxException e) {
+            log.error("Incorrect URI", e);
+        }
+
+        return 0L;
+    }
+
 
 }
