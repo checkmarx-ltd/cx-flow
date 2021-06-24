@@ -144,7 +144,6 @@ public class IastService {
                                 case JIRA:
                                     createJiraIssue(scanVulnerabilities, request, scansResultQuery, vulnerability, scan);
                                     break;
-                                case githubissue:
                                 case GITHUBISSUE:
                                     createGithubIssue(scanVulnerabilities, request, scansResultQuery, vulnerability, scan);
                                     break;
