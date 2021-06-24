@@ -147,7 +147,6 @@ public class IastService {
                                 case GITHUBISSUE:
                                     createGithubIssue(scanVulnerabilities, request, scansResultQuery, vulnerability, scan);
                                     break;
-                                case gitlabissue:
                                 case GITLABISSUE:
                                     createGitlabIssue(scanVulnerabilities, request, scansResultQuery, vulnerability, scan);
                                     break;

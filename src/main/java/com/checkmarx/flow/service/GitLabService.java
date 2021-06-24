@@ -64,7 +64,7 @@ public class GitLabService extends RepoService {
     private final ScmConfigOverrider scmConfigOverrider;
 
     @Autowired
-    private GitLabService gitLabService;
+    private GitLabService service;
 
     @ConstructorProperties({"restTemplate", "properties", "scmConfigOverrider"})
     public GitLabService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, GitLabProperties properties, ScmConfigOverrider scmConfigOverrider) {
@@ -389,7 +389,7 @@ public class GitLabService extends RepoService {
             Map<String, Object> params = new HashMap<>();
             params.put("description", description);
             params.put("labels", "Priority: " + priority);
-            Long accountId = gitLabService.getAccountId(request, assignee);     //gitLabService - for cache
+            Long accountId = service.getAccountId(request, assignee);     //gitLabService - for cache
             params.put("assignee_id", accountId);
 
 
@@ -402,8 +402,7 @@ public class GitLabService extends RepoService {
             log.info(issueUrl);
             return issueUrl;
         } catch (UnsupportedEncodingException | URISyntaxException e) {
-            log.error("Incorrect URI", e);
-            throw new IastIssueNotCreatedException("Incorrect URI", e);
+            throw new IastIssueNotCreatedException("Incorrect URI or unsupported encoding", e);
         }
 
     }
@@ -420,14 +419,14 @@ public class GitLabService extends RepoService {
             JSONArray userArray = new JSONArray(response.getBody());
             long id = userArray.getJSONObject(0).getLong("id");
 
-            log.info("gitlab user \"" + assignee + "\" have id = " + id);
+            log.info("gitlab user \"{}\" have id = {}", assignee, id);
             return id;
         } catch (HttpClientErrorException e) {
             log.error("Error calling gitlab project api {}", e.getResponseBodyAsString(), e);
         } catch (JSONException e) {
             log.error("Error parsing gitlab project response.", e);
         } catch (URISyntaxException e) {
-            log.error("Incorrect URI", e);
+            log.error("Incorrect URI syntax", e);
         }
 
         return 0L;

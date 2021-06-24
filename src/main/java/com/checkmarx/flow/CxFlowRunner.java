@@ -305,7 +305,6 @@ public class CxFlowRunner implements ApplicationRunner {
                 repoUrl = getNonEmptyRepoUrl(namespace, repoName, repoUrl, gitHubProperties.getGitUri(namespace, repoName));
                 break;
             case GITLABISSUE:
-            case gitlabissue:
                 bugType = BugTracker.Type.GITLABISSUE;
                 bt = BugTracker.builder()
                         .type(bugType)
