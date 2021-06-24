@@ -121,8 +121,8 @@ public class IastService {
 
     private void validateScanTag(String scanTag) {
         //Regex validation for a data having a simple format
-        if (!Pattern.matches("[a-zA-Z0-9\\s\\-]{1,256}", scanTag)) {
-            throw new IastValidationScanTagFailedException("The scan tag is invalid. The scan tag must contain only [a-zA-Z0-9\\s\\-] and the size is less than 256.");
+        if (!Pattern.matches("[a-zA-Z0-9:\\s\\-]{1,256}", scanTag)) {
+            throw new IastValidationScanTagFailedException("The scan tag is invalid. The scan tag must contain only [a-zA-Z0-9:\\s\\-] and the size is less than 256.");
         }
     }
 
