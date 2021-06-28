@@ -255,7 +255,7 @@ public class ADOIssueTracker implements IssueTracker {
         return createIssueADO(body, issueBody, request);
     }
 
-    public Issue createIssue(String title, ScanResults.XIssue resultIssue, ScanRequest request, List<String> listTags) throws MachinaException {
+    public Issue createIssue(ScanRequest request, String title, String description, List<String> listTags) throws MachinaException {
         log.debug("Executing createIssue Azure API call");
 
         CreateWorkItemAttr titleItem = new CreateWorkItemAttr();
@@ -263,10 +263,10 @@ public class ADOIssueTracker implements IssueTracker {
         titleItem.setPath(Constants.ADO_FIELD.concat(TITLE_FIELD));
         titleItem.setValue(title);
 
-        CreateWorkItemAttr description = new CreateWorkItemAttr();
-        description.setOp("add");
-        description.setPath(Constants.ADO_FIELD.concat(FIELD_PREFIX.concat(DESCRIPTION)));
-        description.setValue(resultIssue.getDescription());
+        CreateWorkItemAttr descriptionItem = new CreateWorkItemAttr();
+        descriptionItem.setOp("add");
+        descriptionItem.setPath(Constants.ADO_FIELD.concat(FIELD_PREFIX.concat(DESCRIPTION)));
+        descriptionItem.setValue(description);
 
         StringBuilder tags = new StringBuilder();
         tags.append(request.getProduct().getProduct()).append("; ");
@@ -282,7 +282,7 @@ public class ADOIssueTracker implements IssueTracker {
         tagsBlock.setPath(Constants.ADO_FIELD.concat(TAGS_FIELD));
         tagsBlock.setValue(tags.toString());
 
-        List<CreateWorkItemAttr> body = new ArrayList<>(Arrays.asList(titleItem, description, tagsBlock));
+        List<CreateWorkItemAttr> body = new ArrayList<>(Arrays.asList(titleItem, descriptionItem, tagsBlock));
 
         if (request.getBugTracker() != null && !request.getBugTracker().getAssignee().isEmpty()) {
             CreateWorkItemAttr assignee = new CreateWorkItemAttr();

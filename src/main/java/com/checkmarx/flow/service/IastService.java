@@ -258,16 +258,11 @@ public class IastService {
         String title = createIssueTitle(request, scansResultQuery);
         String description = createIssueDescription(scanVulnerabilities, request, scansResultQuery, vulnerability, scan, true);
 
-        ScanResults.XIssue issue = ScanResults.XIssue.builder()
-                .description(description)
-                .vulnerability(vulnerability.getName())
-                .build();
-
         request.putAdditionalMetadata(Constants.ADO_ISSUE_BODY_KEY, description);
         request.putAdditionalMetadata(Constants.ADO_ISSUE_KEY, adoProperties.getIssueType());
 
         try {
-            azureService.createIssue(title, issue, request, Arrays.asList(scan.getTag()));
+            azureService.createIssue(request, title, description, Arrays.asList(scan.getTag()));
         } catch (Exception e) {
             e.printStackTrace();
         }
