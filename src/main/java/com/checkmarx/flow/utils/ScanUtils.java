@@ -168,7 +168,7 @@ public class ScanUtils {
                     Map<String, List<Finding>> packageMap = findingsListBySeverity.stream()
                             .collect(Collectors.groupingBy(f-> f.getId() + f.getPackageId()));
                     packageMap.forEach((k,v) -> {
-                        ScanResults.XIssue issue = ScanResults.XIssue.builder()
+                        ScanResults.XIssue issue = ScanResults.XIssue.builder().severity(s.toString())
                                 .build();
                         issue.setScaDetails(getScaDetailsListBySeverity(scaResults, v));
                         issueList.add(issue);
