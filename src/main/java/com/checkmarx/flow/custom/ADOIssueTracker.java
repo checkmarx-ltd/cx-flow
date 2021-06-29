@@ -284,7 +284,7 @@ public class ADOIssueTracker implements IssueTracker {
 
         List<CreateWorkItemAttr> body = new ArrayList<>(Arrays.asList(titleItem, descriptionItem, tagsBlock));
 
-        if (request.getBugTracker() != null && !request.getBugTracker().getAssignee().isEmpty()) {
+        if (request.getBugTracker() != null && StringUtils.isNotEmpty(request.getBugTracker().getAssignee())) {
             CreateWorkItemAttr assignee = new CreateWorkItemAttr();
             assignee.setOp("add");
             assignee.setPath(Constants.ADO_FIELD.concat(ASSIGNEE_FIELD));

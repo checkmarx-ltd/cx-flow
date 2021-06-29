@@ -6,13 +6,13 @@ import com.checkmarx.flow.config.*;
 import com.checkmarx.flow.cucumber.integration.cli.IntegrationTestContext;
 import com.checkmarx.flow.custom.ADOIssueTracker;
 import com.checkmarx.flow.dto.BugTracker;
+import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.iast.common.model.enums.ManagementResultState;
 import com.checkmarx.flow.dto.iast.common.model.enums.QueryDisplayType;
 import com.checkmarx.flow.dto.iast.manager.dto.*;
 import com.checkmarx.flow.dto.iast.ql.utils.Severity;
 import com.checkmarx.flow.exception.IastThresholdsSeverityException;
-import com.checkmarx.flow.exception.JiraClientException;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.jira.JiraTestUtils;
 import io.cucumber.java.en.Given;
@@ -134,7 +134,6 @@ public class IastCliSteps {
         }
         iastProperties.setFilterSeverity(filterSeverity);
 
-
         String[] thresholdsSeverityArray = thresholdsSeverity.split(",");
         Map<Severity, Integer> thresholdsSeverityMap = new HashMap<>();
         for (String s : thresholdsSeverityArray) {
@@ -142,7 +141,6 @@ public class IastCliSteps {
             thresholdsSeverityMap.put(Severity.valueOf(split[0]), new Integer(split[1]));
         }
         iastProperties.setThresholdsSeverity(thresholdsSeverityMap);
-
 
         this.iastService = new IastService(jiraProperties, jiraService, iastProperties, iastServiceRequests, helperService, gitHubService, adoIssueTracker, adoProperties);
         Scan scan = mockIastServiceRequestsApiScansScanTagFinish(scanTag);
@@ -183,7 +181,7 @@ public class IastCliSteps {
     public void checkHowManyCreateIssue(String createIssue, String bugTracker) {
         createIssue = removeQuotes(createIssue);
 
-        switch (bugTracker) {
+        switch (removeQuotes(bugTracker)) {
             case "jira":
                 verify(jiraService, times(Integer.parseInt(createIssue))).createIssue(anyString(),
                         anyString(),
@@ -199,11 +197,18 @@ public class IastCliSteps {
                         anyString(),
                         anyString());
                 break;
+            case "azureissue":
+                verify(adoIssueTracker, times(Integer.parseInt(createIssue))).createIssue(any(),
+                        anyString(),
+                        anyString(),
+                        anyList());
+                break;
+            default:
+                throw new UnsupportedOperationException("Invalid bug tracker " + bugTracker);
         }
     }
 
-
-    private void mockServiceCreateIssue() throws JiraClientException {
+    private void mockServiceCreateIssue() throws Exception {
         when(jiraService.createIssue(anyString(),
                 anyString(),
                 anyString(),
@@ -218,6 +223,12 @@ public class IastCliSteps {
                 anyString(),
                 anyString()
         );
+
+        when(adoIssueTracker.createIssue(any(),
+                anyString(),
+                anyString(),
+                anyList()
+        )).thenReturn(mock(Issue.class));
     }
 
     private void mockIastServiceRequestsApiScanResults(Scan scan, VulnerabilityInfo vulnerabilityInfo) throws IOException {

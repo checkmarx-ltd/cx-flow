@@ -74,6 +74,9 @@ public class IastController {
                 case "githubissue":
                     request = getGithubScanRequest(body);
                     break;
+                case "azureissue":
+                    request = iastService.getAzureScanRequest(body);
+                    break;
 
                 default:
                     throw new NotImplementedException(bugTrackerName + ". That bug tracker not implemented.");

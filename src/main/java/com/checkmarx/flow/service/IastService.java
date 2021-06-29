@@ -6,6 +6,7 @@ import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.custom.ADOIssueTracker;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.dto.iast.CreateIssue;
 import com.checkmarx.flow.dto.iast.manager.dto.ResultInfo;
 import com.checkmarx.flow.dto.iast.manager.dto.Scan;
 import com.checkmarx.flow.dto.iast.manager.dto.ScanVulnerabilities;
@@ -14,7 +15,6 @@ import com.checkmarx.flow.dto.iast.ql.utils.Severity;
 import com.checkmarx.flow.exception.*;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
-import com.checkmarx.sdk.dto.ScanResults;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -183,8 +183,6 @@ public class IastService {
             throw new IOException("Can't send api request", e);
         }
     }
-
-
 
     /**
      * create an exception if the severity thresholds are exceeded
@@ -370,6 +368,30 @@ public class IastService {
             title.append(" [").append(request.getBranch()).append("]");
         }
         return title.toString();
+    }
+
+    public ScanRequest getAzureScanRequest(CreateIssue body) {
+
+        if (body.getRepoName() == null) {
+            throw new IastThatPropertiesIsRequiredException("Property \"repoName\" is required");
+        }
+        if (body.getNamespace() == null) {
+            throw new IastThatPropertiesIsRequiredException("Property \"namespace\" is required");
+        }
+
+        BugTracker.Type bugType = BugTracker.Type.AZUREISSUE;
+        String assignee = body.getAssignee();
+        BugTracker bt = BugTracker.builder()
+                .type(bugType)
+                .assignee(assignee)
+                .build();
+
+        return ScanRequest.builder()
+                .bugTracker(bt)
+                .product(ScanRequest.Product.CX)
+                .repoName(body.getRepoName())
+                .namespace(body.getNamespace())
+                .build();
     }
 
 }
