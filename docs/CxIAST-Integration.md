@@ -103,10 +103,25 @@ The ticket is structured as follows:
 - The **title** field is set to `<CxIAST Vulnerability name> @ <Triggering API URL>`.
 - The **assignee** field is set based on the `--assignee` argument that was passed to CxFlow.
 - The **description** field contains a link to the vulnerability in CxIAST Manager, scan tag, branch, repository name and severity
-- The **Labels** field have information about priority based on severity. of vulnerability.
+- The **labels** field have information about priority based on severity. of vulnerability.
 
 An example for a Jira ticket is available here:  
 [[/Images/IAST3.png|Github issue example]]
+
+### Opening Gitlab Issues
+
+CxFlow can open Gitlab issues according to the CxIAST scan results. At present, CxFlow opens a separate gitlab issue for every new
+vulnerability of any severity discovered by CxIAST.
+
+The ticket is structured as follows:
+
+- The **title** field is set to `<CxIAST Vulnerability name> @ <Triggering API URL>`.
+- The **assignee** field is set based on the `--assignee` argument that was passed to CxFlow.
+- The **description** field contains a link to the vulnerability in CxIAST Manager, scan tag, branch, repository name and severity
+- The **labels** field have information about priority based on severity. of vulnerability.
+
+An example for a Jira ticket is available here:  
+[[/Images/IAST4.png|Gitlab issue example]]
 
 ## <a name="cliExample">CLI Example</a>
 
@@ -157,6 +172,24 @@ java -jar cx-flow.jar
 --branch="develop"
 
 --github.token=token-xxxx
+...
+```
+
+### Example opening Tickets in Gitlab issue
+
+```
+java -jar cx-flow.jar 
+--spring.config.location=application.yml
+--iast
+--bug-tracker="githubissue"
+--assignee="email@mail.com"
+--scan-tag="cx-scan-20"
+--namespace="checkmarx-ltd"
+--repo-name="cx-flow"
+--branch="develop"
+
+--gitlab.token=token-xxxx
+
 ...
 ```
 
