@@ -72,12 +72,12 @@ public class IastController {
 
                 case "github":
                 case "githubissue":
-                    request = getGithubOrGitlabScanRequest(body, BugTracker.Type.GITHUBISSUE);
+                    request = getRepoScanRequest(body, BugTracker.Type.GITHUBISSUE);
                     break;
 
                 case "gitlab":
                 case "gitlabissue":
-                    request = getGithubOrGitlabScanRequest(body, BugTracker.Type.GITLABISSUE);
+                    request = getRepoScanRequest(body, BugTracker.Type.GITLABISSUE);
                     break;
 
                 default:
@@ -119,7 +119,7 @@ public class IastController {
                 .build();
     }
 
-    private ScanRequest getGithubOrGitlabScanRequest(CreateIssue body, BugTracker.Type tracker) {
+    private ScanRequest getRepoScanRequest(CreateIssue body, BugTracker.Type tracker) {
 
         if (body.getAssignee() == null) {
             throw new IastThatPropertiesIsRequiredException("Property \"assignee\" is required");
