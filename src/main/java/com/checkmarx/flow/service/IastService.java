@@ -9,9 +9,11 @@ import com.checkmarx.flow.dto.iast.manager.dto.Scan;
 import com.checkmarx.flow.dto.iast.manager.dto.ScanVulnerabilities;
 import com.checkmarx.flow.dto.iast.manager.dto.VulnerabilityInfo;
 import com.checkmarx.flow.dto.iast.ql.utils.Severity;
+import com.checkmarx.flow.exception.IastPropertiesNotSetupException;
 import com.checkmarx.flow.exception.IastThresholdsSeverityException;
 import com.checkmarx.flow.exception.IastValidationScanTagFailedException;
 import com.checkmarx.flow.exception.JiraClientException;
+import com.checkmarx.flow.utils.ScanUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -53,7 +55,7 @@ public class IastService {
         this.iastServiceRequests = iastServiceRequests;
         this.helperService = helperService;
 
-        checkRequiredParameters();
+//        checkRequiredParameters();
 
         severityToPriority.put(0, "Low");
         severityToPriority.put(1, "Low");
@@ -62,20 +64,20 @@ public class IastService {
     }
 
     private void checkRequiredParameters() {
-//        if (iastProperties == null) {
-//            throw new IastPropertiesNotSetupException("IAST properties doesn't setup.");
-//        }
-//        if (ScanUtils.empty(iastProperties.getUrl())
-//                || ScanUtils.empty(iastProperties.getUsername())
-//                || ScanUtils.empty(iastProperties.getPassword())
-//                || ScanUtils.empty(iastProperties.getManagerPort())
-//                || ScanUtils.emptyObj(iastProperties.getUpdateTokenSeconds())
-//                || iastProperties.getFilterSeverity().isEmpty()) {
-//            throw new IastPropertiesNotSetupException("not all IAST properties setup.");
-//        }
-//        for (Severity severity : Severity.values()) {
-//            iastProperties.getThresholdsSeverity().putIfAbsent(severity, -1);
-//        }
+        if (iastProperties == null) {
+            throw new IastPropertiesNotSetupException("IAST properties doesn't setup.");
+        }
+        if (ScanUtils.empty(iastProperties.getUrl())
+                || ScanUtils.empty(iastProperties.getUsername())
+                || ScanUtils.empty(iastProperties.getPassword())
+                || ScanUtils.empty(iastProperties.getManagerPort())
+                || ScanUtils.emptyObj(iastProperties.getUpdateTokenSeconds())
+                || iastProperties.getFilterSeverity().isEmpty()) {
+            throw new IastPropertiesNotSetupException("not all IAST properties setup.");
+        }
+        for (Severity severity : Severity.values()) {
+            iastProperties.getThresholdsSeverity().putIfAbsent(severity, -1);
+        }
     }
 
     public String generateUniqTag() {
