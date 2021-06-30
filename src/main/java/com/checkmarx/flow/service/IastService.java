@@ -37,6 +37,8 @@ public class IastService {
 
     private final Map<Severity, String> jiraSeverityToPriority = new HashMap<>();
 
+    private final Map<Severity, AtomicInteger> thresholdsSeverity = new HashMap<>(7);
+
     private final IastProperties iastProperties;
 
     private final JiraProperties jiraProperties;
@@ -137,20 +139,24 @@ public class IastService {
         }
     }
 
-    private void getVulnerabilitiesAndCreateIssue(ScanRequest request, Scan scan)
-            throws IOException, JiraClientException {
-        try {
-            final ScanVulnerabilities scanVulnerabilities =
-                    iastServiceRequests.apiScanVulnerabilities(scan.getScanId());
-            List<VulnerabilityInfo> vulnerabilities = scanVulnerabilities.getVulnerabilities();
+    private void getVulnerabilitiesAndCreateIssue(ScanRequest request, Scan scan) throws IOException {
 
-            for (VulnerabilityInfo vulnerability : vulnerabilities) {
-                if (vulnerability.getNewCount() != 0) {
-                    final List<ResultInfo> scansResultsQuery =
-                            iastServiceRequests.apiScanResults(scan.getScanId(), vulnerability.getId());
+        final ScanVulnerabilities scanVulnerabilities = iastServiceRequests.apiScanVulnerabilities(scan.getScanId());
+        List<VulnerabilityInfo> vulnerabilities = scanVulnerabilities.getVulnerabilities();
 
-                    for (ResultInfo scansResultQuery : scansResultsQuery) {
-                        if (scansResultQuery.isNewResult() && filterSeverity(scansResultQuery)) {
+        for (VulnerabilityInfo vulnerability : vulnerabilities) {
+            if (vulnerability.getNewCount() != 0) {
+
+                final List<ResultInfo> scansResultsQuery;
+                try {
+                    scansResultsQuery = iastServiceRequests.apiScanResults(scan.getScanId(), vulnerability.getId());
+                } catch (IOException e) {
+                    throw new IOException("Can't send api request", e);
+                }
+
+                for (ResultInfo scansResultQuery : scansResultsQuery) {
+                    if (scansResultQuery.isNewResult() && filterSeverity(scansResultQuery)) {
+                        try {
                             switch (request.getBugTracker().getType()) {
                                 case JIRA:
                                     createJiraIssue(scanVulnerabilities, request, scansResultQuery, vulnerability,
@@ -160,7 +166,7 @@ public class IastService {
                                     createGithubIssue(scanVulnerabilities, request, scansResultQuery, vulnerability,
                                             scan);
                                     break;
-                                case AZUREISSUE:
+                                case AZURE:
                                     createAzureIssue(scanVulnerabilities, request, scansResultQuery, vulnerability,
                                             scan);
                                     break;
@@ -168,27 +174,25 @@ public class IastService {
                                     throw new NotImplementedException(request.getBugTracker().getType().getType() +
                                             ". That bug tracker not implemented.");
                             }
+                        } catch (NotImplementedException e) {
+                            throw new NotImplementedException(
+                                    request.getBugTracker().getType().getType() + ". That bug tracker not implemented.");
+                        } catch (Exception e) {
+                            log.error("Can't create issue", e);
                         }
                     }
                 }
-
-                thresholdsSeverity(scanVulnerabilities);
             }
-        } catch (NotImplementedException e) {
-            throw new NotImplementedException(
-                    request.getBugTracker().getType().getType() + ". That bug tracker not implemented.");
-        } catch (RuntimeException e) {
-            throw new IastBugTrackerClientException("Can't create issue", e);
-        } catch (IOException e) {
-            throw new IOException("Can't send api request", e);
         }
+
+        thresholdsSeverity(scanVulnerabilities);
     }
 
     /**
      * create an exception if the severity thresholds are exceeded
      */
     private void thresholdsSeverity(ScanVulnerabilities scanVulnerabilities) {
-        Map<Severity, AtomicInteger> thresholdsSeverity = new HashMap<>(7);
+
         for (Severity severity : Severity.values()) {
             thresholdsSeverity.put(severity, new AtomicInteger(0));
         }
@@ -207,15 +211,14 @@ public class IastService {
 
         if (throwThresholdsSeverity) {
             log.warn("\nThresholds severity are exceeded. " +
-                    "\n High:   " + thresholdsSeverity.get(Severity.HIGH).incrementAndGet() + " / " +
+                    "\n High:   " + thresholdsSeverity.get(Severity.HIGH).get() + " / " +
                     iastProperties.getThresholdsSeverity().get(Severity.HIGH) +
-                    "\n Medium: " + thresholdsSeverity.get(Severity.MEDIUM).incrementAndGet() + " / " +
+                    "\n Medium: " + thresholdsSeverity.get(Severity.MEDIUM).get() + " / " +
                     iastProperties.getThresholdsSeverity().get(Severity.MEDIUM) +
-                    "\n Low:    " + thresholdsSeverity.get(Severity.LOW).incrementAndGet() + " / " +
+                    "\n Low:    " + thresholdsSeverity.get(Severity.LOW).get() + " / " +
                     iastProperties.getThresholdsSeverity().get(Severity.LOW) +
-                    "\n Info:   " + thresholdsSeverity.get(Severity.INFO).incrementAndGet() + " / " +
+                    "\n Info:   " + thresholdsSeverity.get(Severity.INFO).get() + " / " +
                     iastProperties.getThresholdsSeverity().get(Severity.INFO));
-
             throw new IastThresholdsSeverityException();
         }
     }
@@ -379,7 +382,7 @@ public class IastService {
             throw new IastThatPropertiesIsRequiredException("Property \"namespace\" is required");
         }
 
-        BugTracker.Type bugType = BugTracker.Type.AZUREISSUE;
+        BugTracker.Type bugType = BugTracker.Type.AZURE;
         String assignee = body.getAssignee();
         BugTracker bt = BugTracker.builder()
                 .type(bugType)

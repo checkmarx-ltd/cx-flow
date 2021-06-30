@@ -62,7 +62,7 @@ To ignore a severity, remove or comment that severity from the configuration fil
 CxFlow returns a status the CI pipeline when called.  
 To control this, a threshold can be configured per vulnerability severity.  
 Each severity threshold is determined by the allowed vulnerability count with that severity.  
-To remove a threshold from a severity, set the relevant severity to `-1`. In the example below, the threshold has been removed
+To remove a threshold from a severity, set the relevant severity to `-1`. In the configuration example above, the threshold has been removed
 from **info**. Thresholds are configured in the `thresholds-severity` section in the `iast` section.  
 When triggered in CLI mode, CxFlow returns status code `10`, if a threshold has been exceeded.  
 When triggered in web mode, the `/iast/stop-scan-and-create-jira-issue/{scanTag}`
@@ -107,6 +107,22 @@ The ticket is structured as follows:
 
 An example for a Jira ticket is available here:  
 [[/Images/IAST3.png|Github issue example]]
+
+### Opening Azure DevOps Issues
+
+CxFlow can open Azure DevOps issues according to the CxIAST scan results. At present, CxFlow opens a separate Azure DevOps
+issue for every new vulnerability of any severity discovered by CxIAST.
+
+The ticket is structured as follows:
+
+- The **title** field is set to `<CxIAST Vulnerability name> @ <Triggering API URL>`.
+- The **assignee** field is set based on the `--assignee` argument that was passed to CxFlow.
+- The **description** field contains a link to the vulnerability in CxIAST Manager, scan tag, branch, repository name and severity
+- The **Labels** field have information about priority based on severity of vulnerability and the owner of the issue 
+  (this value is based on the `--assignee` argument).
+
+An example for a Jira ticket is available here:  
+[[/Images/IAST4.png|Azure DevOps issue example]]
 
 ## <a name="cliExample">CLI Example</a>
 
@@ -160,3 +176,16 @@ java -jar cx-flow.jar
 ...
 ```
 
+### Example opening Tickets in Azure DevOps issue
+
+```
+java -jar cx-flow.jar 
+--iast
+--bug-tracker="azureissue"
+--assignee="assignee@email.com"
+--scan-tag="cx-scan-21"
+--repo-name="myRepoApplication"
+--branch="master"
+--azure.token="MY_AZURE_TOKEN"
+--azure.project-name="AzureProjectName"
+--azure.namespace="AzureNameSpace"

@@ -127,10 +127,10 @@ iast:
     - LOW
   #    - INFO
   thresholds-severity:
-    HIGH: -1
-    MEDIUM: -1
-    LOW: -1
-    INFO: -1
+    HIGH: 1
+    MEDIUM: 1
+    LOW: 1
+    INFO: 1
 
 cxgo:
   client-secret: xxx

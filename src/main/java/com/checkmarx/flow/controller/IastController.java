@@ -56,7 +56,7 @@ public class IastController {
     }
 
     @PostMapping(value = {"/stop-scan-and-create-{tracker}-issue/{scanTag}"})
-    public ResponseEntity<EventResponse> stopScanAndCreateJiraIssue(
+    public ResponseEntity<EventResponse> stopScanAndCreateIssue(
             @PathVariable(value = "scanTag", required = false) String scanTag,
             @PathVariable(value = "tracker", required = false) String bugTrackerName,
             @RequestHeader(value = TOKEN_HEADER) String token,
@@ -74,7 +74,7 @@ public class IastController {
                 case "githubissue":
                     request = getGithubScanRequest(body);
                     break;
-                case "azureissue":
+                case "azure":
                     request = iastService.getAzureScanRequest(body);
                     break;
 
@@ -99,7 +99,7 @@ public class IastController {
     }
 
     @GetMapping(value = {"/jira/description/{description}"})
-    public List<Issue> jiraSearchIssueByDescription(@PathVariable(value = "description", required = false) String description) {
+    public List<Issue> searchIssueByDescription(@PathVariable(value = "description", required = false) String description) {
         return jiraService.searchIssueByDescription(description);
     }
 
