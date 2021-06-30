@@ -197,7 +197,7 @@ public class IastCliSteps {
                         anyString(),
                         anyString());
                 break;
-            case "azureissue":
+            case "azure":
                 verify(adoIssueTracker, times(Integer.parseInt(createIssue))).createIssue(any(),
                         anyString(),
                         anyString(),
