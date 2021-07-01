@@ -18,4 +18,9 @@ public enum Severity {
     public static Severity fromValue(Integer val) {
         return values()[val];
     }
+
+    public String getName() {
+        String name = this.toString().toLowerCase();
+        return name.substring(0, 1).toUpperCase() + name.substring(1);
+    }
 }

@@ -198,7 +198,7 @@ public class CxFlowRunner implements ApplicationRunner {
         CxPropertiesBase cxProperties = cxScannerService.getProperties();
 
         if (((ScanUtils.empty(namespace) && ScanUtils.empty(repoName) && ScanUtils.empty(branch)) &&
-                ScanUtils.empty(application)) && !args.containsOption(BATCH_OPTION)) {
+                ScanUtils.empty(application)) && !args.containsOption(BATCH_OPTION) && !args.containsOption(IAST_OPTION)) {
             log.error("Namespace/Repo/Branch or Application (app) must be provided");
             exit(1);
         }
@@ -290,6 +290,34 @@ public class CxFlowRunner implements ApplicationRunner {
                 mergeNoteUri = gitHubProperties.getMergeNoteUri(namespace, repoName, mergeId);
                 repoUrl = getNonEmptyRepoUrl(namespace, repoName, repoUrl, gitHubProperties.getGitUri(namespace, repoName));
                 break;
+            case GITHUBISSUE:
+                bugType = BugTracker.Type.GITHUBISSUE;
+                bt = BugTracker.builder()
+                        .type(bugType)
+                        .assignee(assignee)
+                        .build();
+                repoType = ScanRequest.Repository.GITHUB;
+
+                if (ScanUtils.empty(namespace) || ScanUtils.empty(repoName)) {
+                    log.error("--namespace and --repo must be provided for GITHUBISSUE bug tracking");
+                    exit(1);
+                }
+                repoUrl = getNonEmptyRepoUrl(namespace, repoName, repoUrl, gitHubProperties.getGitUri(namespace, repoName));
+                break;
+            case GITLABISSUE:
+                bugType = BugTracker.Type.GITLABISSUE;
+                bt = BugTracker.builder()
+                        .type(bugType)
+                        .assignee(assignee)
+                        .build();
+                repoType = ScanRequest.Repository.GITLAB;
+
+                if (ScanUtils.empty(namespace) || ScanUtils.empty(repoName)) {
+                    log.error("--namespace and --repo must be provided for GITLABISSUE bug tracking");
+                    exit(1);
+                }
+                repoUrl = getNonEmptyRepoUrl(namespace, repoName, repoUrl, gitLabProperties.getGitUri(namespace, repoName));
+                break;
             case GITLABMERGE:
             case gitlabmerge:
                 log.info("Handling GitLab merge request for project: {}, merge id: {}", projectId, mergeId);
@@ -352,6 +380,15 @@ public class CxFlowRunner implements ApplicationRunner {
                 .forceScan(force)
                 .disableCertificateValidation(disableCertificateValidation)
                 .build();
+
+        if (projectId != null) {
+            try {
+                Integer repoProjectId = Integer.parseInt(projectId);
+                request.setRepoProjectId(repoProjectId);
+            } catch (RuntimeException e) {
+                log.error("Can't parse project-id", e);
+            }
+        }
 
         request = configOverrider.overrideScanRequestProperties(flowOverride, request);
         /*Determine if BitBucket Cloud/Server is being used - this will determine formatting of URL that links to file/line in repository */
@@ -447,10 +484,10 @@ public class CxFlowRunner implements ApplicationRunner {
     }
 
     private void configureIast(ScanRequest request, String scanTag) throws IOException, JiraClientException {
-        iastService.stopScanAndCreateJiraIssueFromIastSummary(request, scanTag);
+        iastService.stopScanAndCreateIssue(request, scanTag);
     }
 
-    private BugTracker.BugTrackerBuilder jiraPropertiesToBugTracker() {
+    public BugTracker.BugTrackerBuilder jiraPropertiesToBugTracker() {
         return BugTracker.builder()
                 .projectKey(jiraProperties.getProject())
                 .issueType(jiraProperties.getIssueType())
@@ -464,7 +501,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 .fields(jiraProperties.getFields());
     }
 
-    private BugTracker.Type getBugTrackerType(String bugTracker) throws ExitThrowable {
+    public BugTracker.Type getBugTrackerType(String bugTracker) throws ExitThrowable {
         //set the default bug tracker as per yml
         BugTracker.Type bugTypeEnum;
         try {
