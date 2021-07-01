@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -84,7 +83,7 @@ public class IastService {
     }
 
     public String generateUniqTag() {
-        return "cx-flow-" + LocalDateTime.now() + "-" + helperService.getShortUid();
+        return "cx-flow-" + System.currentTimeMillis() + "-" + helperService.getShortUid();
     }
 
     public void stopScanAndCreateIssue(ScanRequest request, String scanTag)
