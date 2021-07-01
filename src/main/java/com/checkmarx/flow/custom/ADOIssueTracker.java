@@ -22,6 +22,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 
@@ -53,6 +54,9 @@ public class ADOIssueTracker implements IssueTracker {
             "[System.TeamProject] = @project AND [Tags] Contains '%s' AND [Tags] Contains '%s:%s'";
     private static final String WIQ_PROJECT_NAME_AND_NAMESPACE = WIQ_BASE +
             "[System.TeamProject] = @project AND [Tags] Contains '%s'";
+    private static final String WIQ_ISSUE_BY_DESCRIPTION = "Select [System.Id], [System.Title], " +
+            "[System.State], [System.State], [System.WorkItemType] From WorkItems " +
+            "Where [System.Description] Contains '%s'";
     private static final Logger log = LoggerFactory.getLogger(ADOIssueTracker.class);
 
     private final RestTemplate restTemplate;
@@ -160,6 +164,49 @@ public class ADOIssueTracker implements IssueTracker {
             throw new MachinaException("Application must be set at minimum");
         }
         log.debug(wiq);
+        JSONObject wiqJson = new JSONObject();
+        wiqJson.put("query", wiq);
+        HttpEntity<String> httpEntity = new HttpEntity<>(wiqJson.toString(), ADOUtils.createAuthHeaders(scmConfigOverrider.determineConfigToken(properties, request.getScmInstance())));
+
+        ResponseEntity<String> response = restTemplate.exchange(endpoint,
+                HttpMethod.POST, httpEntity, String.class);
+        if(response.getBody() == null) return issues;
+
+        JSONObject json = new JSONObject(response.getBody());
+        JSONArray workItems = json.getJSONArray("workItems");
+
+        if(workItems.length() < 1) return issues;
+
+        for (int i = 0; i < workItems.length(); i++) {
+            JSONObject workItem = workItems.getJSONObject(i);
+            String workItemUri = workItem.getString("url");
+            Issue wi = getIssue(workItemUri, issueBody, request);
+            if(wi != null){
+                issues.add(wi);
+            }
+        }
+        return issues;
+    }
+
+    /**
+     * Get all issues for a Azure repository
+     *
+     * @return List of Azure Issues
+     * @ full name (owner/repo format)
+     */
+    public List<Issue> searchIssuesByDescription(String description, ScanRequest request) throws MachinaException {
+        log.info("Executing getIssues Azure API call");
+        List<Issue> issues = new ArrayList<>();
+
+        String projectName = calculateProjectName(request);
+
+        URI  endpoint = getSearchEndpoint(projectName, request);
+
+        String issueBody = request.getAdditionalMetadata(Constants.ADO_ISSUE_BODY_KEY);
+        String wiq = String.format(WIQ_ISSUE_BY_DESCRIPTION, description);
+
+        log.debug(wiq);
+
         JSONObject wiqJson = new JSONObject();
         wiqJson.put("query", wiq);
         HttpEntity<String> httpEntity = new HttpEntity<>(wiqJson.toString(), ADOUtils.createAuthHeaders(scmConfigOverrider.determineConfigToken(properties, request.getScmInstance())));
@@ -315,7 +362,15 @@ public class ADOIssueTracker implements IssueTracker {
         String projectName = calculateProjectName(request);
         URI endpoint = getCreationEndpoint(projectName, request);
 
-        ResponseEntity<String> response = restTemplate.exchange(endpoint, HttpMethod.POST, httpEntity, String.class);
+        ResponseEntity<String> response;
+        try {
+            response = restTemplate.exchange(endpoint, HttpMethod.POST, httpEntity, String.class);
+        } catch (RestClientException e) {
+            log.error("Request body: {}", body);
+            throw e;
+        }
+
+
         try {
             String url = new JSONObject(response.getBody()).getJSONObject("_links").getJSONObject("self").getString("href");
             return getIssue(url, issueBody, request);

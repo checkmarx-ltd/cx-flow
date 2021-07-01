@@ -17,6 +17,7 @@ import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -374,16 +375,18 @@ public class IastService {
     }
 
     public ScanRequest getAzureScanRequest(CreateIssue body) {
+        return getAzureScanRequest(body.getRepoName(), body.getNamespace(), body.getAssignee());
+    }
 
-        if (body.getRepoName() == null) {
+    public ScanRequest getAzureScanRequest(String repoName, String namespace, String assignee) {
+        if (Strings.isEmpty(repoName)) {
             throw new IastThatPropertiesIsRequiredException("Property \"repoName\" is required");
         }
-        if (body.getNamespace() == null) {
+        if (Strings.isEmpty(namespace)) {
             throw new IastThatPropertiesIsRequiredException("Property \"namespace\" is required");
         }
 
         BugTracker.Type bugType = BugTracker.Type.AZURE;
-        String assignee = body.getAssignee();
         BugTracker bt = BugTracker.builder()
                 .type(bugType)
                 .assignee(assignee)
@@ -392,9 +395,26 @@ public class IastService {
         return ScanRequest.builder()
                 .bugTracker(bt)
                 .product(ScanRequest.Product.CX)
-                .repoName(body.getRepoName())
-                .namespace(body.getNamespace())
+                .repoName(repoName)
+                .namespace(namespace)
                 .build();
+    }
+
+    public List<?> searchIssueByDescription(String bugTracker, Map<String, String> properties)
+            throws MachinaException {
+
+        switch (bugTracker) {
+            case "jira":
+                return jiraService.searchIssueByDescription(properties.get("description"));
+            case "azure":
+                ScanRequest scanRequest = getAzureScanRequest(properties.get("reponame"), properties.get("namespace"), null);
+                Map<String, String> map = new HashMap<>();
+                map.put(Constants.ADO_ISSUE_BODY_KEY, "Description");
+                scanRequest.setAdditionalMetadata(map);
+                return azureService.searchIssuesByDescription(properties.get("description"), scanRequest);
+            default:
+                throw new NotImplementedException(bugTracker + ". That bug tracker not implemented.");
+        }
     }
 
 }

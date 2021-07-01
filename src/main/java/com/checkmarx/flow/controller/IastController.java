@@ -1,6 +1,5 @@
 package com.checkmarx.flow.controller;
 
-import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.checkmarx.flow.CxFlowRunner;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
@@ -11,6 +10,7 @@ import com.checkmarx.flow.dto.iast.CreateIssue;
 import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.flow.exception.IastThatPropertiesIsRequiredException;
 import com.checkmarx.flow.exception.JiraClientException;
+import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.service.IastService;
 import com.checkmarx.flow.service.JiraService;
 import com.checkmarx.flow.utils.TokenUtils;
@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import static com.atlassian.sal.api.xsrf.XsrfHeaderValidator.TOKEN_HEADER;
 
@@ -98,9 +99,15 @@ public class IastController {
         }
     }
 
-    @GetMapping(value = {"/jira/description/{description}"})
-    public List<Issue> searchIssueByDescription(@PathVariable(value = "description", required = false) String description) {
-        return jiraService.searchIssueByDescription(description);
+    @GetMapping(value = {"/{tracker}/description/{description}"})
+    public List<?> searchIssueByDescription(
+            @PathVariable(value = "tracker", required = false) String tracker,
+            @PathVariable(value = "description", required = false) String description,
+            @RequestParam(required = false) Map<String, String> queryParams
+    ) throws MachinaException {
+        queryParams.put("description", description);
+        List<?> jsonArray = iastService.searchIssueByDescription(tracker, queryParams);
+        return jsonArray;
     }
 
     private ScanRequest getJiraScanRequest(CreateIssue body) throws ExitThrowable {
