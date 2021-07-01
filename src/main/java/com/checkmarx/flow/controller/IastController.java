@@ -92,6 +92,7 @@ public class IastController {
                 case "gitlabissue":
                     request = getRepoScanRequest(body, BugTracker.Type.GITLABCOMMIT);
                     break;
+
                 default:
                     throw new NotImplementedException(bugTrackerName + ". That bug tracker not implemented.");
             }

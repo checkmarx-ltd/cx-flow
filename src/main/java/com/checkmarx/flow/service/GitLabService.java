@@ -46,6 +46,7 @@ public class GitLabService extends RepoService {
     private static final String FILE_CONTENT = "/projects/{id}/repository/files/{config}?ref={branch}";
     private static final String LANGUAGE_TYPES = "/projects/{id}/languages";
     private static final String REPO_CONTENT = "/projects/{id}/repository/tree?ref={branch}";
+    private static final String USER_INFO = "/users?username={username}";
     private static final int UNKNOWN_INT = -1;
     private static final Logger log = LoggerFactory.getLogger(GitLabService.class);
     private static final String HTTP_BODY_WARN_MESSAGE = "HTTP Body is null for content api ";

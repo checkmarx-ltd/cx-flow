@@ -33,4 +33,10 @@ public class CreateIssue {
     @Min(0)
     private Integer projectId;
 
+    @JsonProperty("project-name")
+    @Valid
+    @Pattern(regexp = "^[\\w\\.-\\s]{1,255}$")
+    private Integer projectName;
+
+
 }
