@@ -55,7 +55,7 @@ public class IastService {
         this.iastServiceRequests = iastServiceRequests;
         this.helperService = helperService;
 
-        checkRequiredParameters();
+//        checkRequiredParameters();
 
         severityToPriority.put(0, "Low");
         severityToPriority.put(1, "Low");

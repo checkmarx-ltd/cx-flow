@@ -54,10 +54,15 @@ public class IastServiceRequests {
 
     @PostConstruct
     public void init() throws IOException, InterruptedException {
-        this.updateTokenSeconds = iastProperties.getUpdateTokenSeconds();
-        this.iastUrlRoot = iastProperties.getUrl() + ":" + iastProperties.getManagerPort() + "/iast/";
-        sslEnabledOnIast = iastUrlRoot.contains("https://");
-        loadCerToKeyStoreAndSslContext();
+        if (iastProperties != null
+                && iastProperties.getUpdateTokenSeconds() != null
+                && iastProperties.getUrl() != null
+                && iastProperties.getManagerPort() != null) {
+            this.updateTokenSeconds = iastProperties.getUpdateTokenSeconds();
+            this.iastUrlRoot = iastProperties.getUrl() + ":" + iastProperties.getManagerPort() + "/iast/";
+            sslEnabledOnIast = iastUrlRoot.contains("https://");
+            loadCerToKeyStoreAndSslContext();
+        }
     }
 
     public ScanVulnerabilities apiScanVulnerabilities(Long scanId) throws IOException {
