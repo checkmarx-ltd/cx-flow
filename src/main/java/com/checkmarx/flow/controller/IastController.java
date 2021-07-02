@@ -61,7 +61,8 @@ public class IastController {
             @PathVariable(value = "scanTag", required = false) String scanTag,
             @PathVariable(value = "tracker", required = false) String bugTrackerName,
             @RequestHeader(value = TOKEN_HEADER) String token,
-            @RequestBody CreateIssue body) {
+            @RequestBody CreateIssue body,
+            @RequestParam(required = false) Map<String, String> queryParams) {
         //Validate shared API token from header
         tokenUtils.validateToken(token);
         try {
@@ -70,15 +71,13 @@ public class IastController {
                 case "jira":
                     request = getJiraScanRequest(body);
                     break;
-
                 case "github":
                 case "githubissue":
                     request = getGithubScanRequest(body);
                     break;
                 case "azure":
-                    request = iastService.getAzureScanRequest(body);
+                    request = iastService.getAzureScanRequest(body, queryParams);
                     break;
-
                 default:
                     throw new NotImplementedException(bugTrackerName + ". That bug tracker not implemented.");
             }
@@ -106,8 +105,7 @@ public class IastController {
             @RequestParam(required = false) Map<String, String> queryParams
     ) throws MachinaException {
         queryParams.put("description", description);
-        List<?> jsonArray = iastService.searchIssueByDescription(tracker, queryParams);
-        return jsonArray;
+        return iastService.searchIssueByDescription(tracker, queryParams);
     }
 
     private ScanRequest getJiraScanRequest(CreateIssue body) throws ExitThrowable {

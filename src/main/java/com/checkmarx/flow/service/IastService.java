@@ -374,44 +374,55 @@ public class IastService {
         return title.toString();
     }
 
-    public ScanRequest getAzureScanRequest(CreateIssue body) {
-        return getAzureScanRequest(body.getRepoName(), body.getNamespace(), body.getAssignee());
+    public ScanRequest getAzureScanRequest(Map<String, String> queryParams) {
+        return getAzureScanRequest(queryParams.get("azureprojectname"), queryParams.get("azurenamespace"), null, null, null);
     }
 
-    public ScanRequest getAzureScanRequest(String repoName, String namespace, String assignee) {
-        if (Strings.isEmpty(repoName)) {
-            throw new IastThatPropertiesIsRequiredException("Property \"repoName\" is required");
+    public ScanRequest getAzureScanRequest(CreateIssue body, Map<String, String> queryParams) {
+        return getAzureScanRequest(queryParams.get("azurenamespace"), queryParams.get("azureprojectname"), body.getRepoName(),
+                body.getNamespace(), body.getAssignee());
+    }
+
+    public ScanRequest getAzureScanRequest(String azureNamespace, String azureProjectName, String repoName,
+                                           String namespace, String assignee) {
+
+        if (Strings.isEmpty(azureNamespace)) {
+            throw new IastThatPropertiesIsRequiredException("Property \"azureNamespace\" is required");
         }
-        if (Strings.isEmpty(namespace)) {
-            throw new IastThatPropertiesIsRequiredException("Property \"namespace\" is required");
+        if (Strings.isEmpty(azureProjectName)) {
+            throw new IastThatPropertiesIsRequiredException("Property \"azureProjectName\" is required");
         }
 
-        BugTracker.Type bugType = BugTracker.Type.AZURE;
+        Map<String, String> map = new HashMap<>();
+        map.put(ADOIssueTracker.ADO_NAMESPACE, azureNamespace);
+
         BugTracker bt = BugTracker.builder()
-                .type(bugType)
+                .type(BugTracker.Type.AZURE)
                 .assignee(assignee)
                 .build();
 
         return ScanRequest.builder()
                 .bugTracker(bt)
+                .altProject(azureProjectName)
+                .additionalMetadata(map)
                 .product(ScanRequest.Product.CX)
                 .repoName(repoName)
                 .namespace(namespace)
                 .build();
     }
 
-    public List<?> searchIssueByDescription(String bugTracker, Map<String, String> properties)
+    public List<?> searchIssueByDescription(String bugTracker, Map<String, String> queryParams)
             throws MachinaException {
 
         switch (bugTracker) {
             case "jira":
-                return jiraService.searchIssueByDescription(properties.get("description"));
+                return jiraService.searchIssueByDescription(queryParams.get("description"));
             case "azure":
-                ScanRequest scanRequest = getAzureScanRequest(properties.get("reponame"), properties.get("namespace"), null);
+                ScanRequest scanRequest = getAzureScanRequest(queryParams);
                 Map<String, String> map = new HashMap<>();
                 map.put(Constants.ADO_ISSUE_BODY_KEY, "Description");
                 scanRequest.setAdditionalMetadata(map);
-                return azureService.searchIssuesByDescription(properties.get("description"), scanRequest);
+                return azureService.searchIssuesByDescription(queryParams.get("description"), scanRequest);
             default:
                 throw new NotImplementedException(bugTracker + ". That bug tracker not implemented.");
         }

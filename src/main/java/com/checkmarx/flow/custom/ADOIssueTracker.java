@@ -13,6 +13,7 @@ import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.dto.ScanResults;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.util.Strings;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -40,6 +41,7 @@ public class ADOIssueTracker implements IssueTracker {
     private static final String FIELD_PREFIX="System.";
     private static final String PROPOSED_STATE="Proposed";
     private static final String ADO_PROJECT="alt-project";
+    public  static final String ADO_NAMESPACE = "alt-namespace";
     private static final String CREATE_WORK_ITEM_URL_TEMPLATE =
             "%s/{namespace}/{project}/_apis/wit/workitems/${work-item-type}?api-version={version}";
     private static final String VIEW_WORK_ITEM_URL_TEMPLATE =
@@ -200,7 +202,7 @@ public class ADOIssueTracker implements IssueTracker {
 
         String projectName = calculateProjectName(request);
 
-        URI  endpoint = getSearchEndpoint(projectName, request);
+        URI endpoint = getSearchEndpoint(projectName, request);
 
         String issueBody = request.getAdditionalMetadata(Constants.ADO_ISSUE_BODY_KEY);
         String wiq = String.format(WIQ_ISSUE_BY_DESCRIPTION, description);
@@ -340,7 +342,7 @@ public class ADOIssueTracker implements IssueTracker {
         }
 
         Issue createdIssue = createIssueADO(body, DESCRIPTION, request);
-        URI issueUrl = getViewIssueUrl(properties.getProjectName(), request, createdIssue.getId());
+        URI issueUrl = getViewIssueUrl(calculateProjectName(request), request, createdIssue.getId());
         log.info(issueUrl.toString());
         return createdIssue;
     }
@@ -459,7 +461,11 @@ public class ADOIssueTracker implements IssueTracker {
                     "are specified in the properties.",
                     namespace);
         } else {
-            namespace = request.getNamespace();
+
+            namespace = request.getAdditionalMetadata(ADO_NAMESPACE);
+            if(Strings.isEmpty(namespace)) {
+                namespace = request.getNamespace();
+            }
             log.debug("Using namespace from the scan request: {}", namespace);
         }
         log.debug("Returning azure namespace: {}", namespace);
