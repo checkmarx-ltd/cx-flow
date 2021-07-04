@@ -316,9 +316,11 @@ public class JiraService {
                 }
             }
 
-            if (bugTracker.getPriorities() != null && bugTracker.getPriorities().containsKey(severity)) {
+            String scannerTypeSeverity = getScannerTypeSeverity(issue, severity, scaDetails);
+
+            if (bugTracker.getPriorities() != null && bugTracker.getPriorities().containsKey(scannerTypeSeverity)) {
                 issueBuilder.setFieldValue(PRIORITY_FIELD_TYPE, ComplexIssueInputFieldValue.with("name",
-                        bugTracker.getPriorities().get(severity)));
+                        bugTracker.getPriorities().get(scannerTypeSeverity)));
             }
 
             /*Add labels for tracking existing issues*/
@@ -356,6 +358,20 @@ public class JiraService {
             log.error("Error occurred while creating JIRA issue.", e);
             throw new JiraClientException();
         }
+    }
+
+    private String getScannerTypeSeverity(ScanResults.XIssue issue, String severity, List<ScanResults.ScaDetails> scaDetails) {
+        String scannerTypeSeverity;
+        if (ScanUtils.isSAST(issue)) {
+            scannerTypeSeverity = severity;
+        } else {
+            /*
+                Format should be aligned with SAST format
+                In SCA case - HIGH -> High
+             */
+            scannerTypeSeverity = StringUtils.capitalize(Objects.requireNonNull(scaDetails).get(0).getFinding().getSeverity().name().toLowerCase());
+        }
+        return scannerTypeSeverity;
     }
 
     public List<Issue> searchIssueByDescription(String searchDescription) {
