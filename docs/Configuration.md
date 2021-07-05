@@ -226,6 +226,8 @@ jira:
      - In Review
   closed-status:
      - Done
+  sast-issue-summary-format: "[VULNERABILITY] in [PROJECT] with severity [SEVERITY] @ [FILENAME]"
+  sast-issue-summary-branch-format: "[VULNERABILITY] in [PROJECT] with severity [SEVERITY] @ [FILENAME][[BRANCH]]"
   fields:
      - type: result
        name: application
