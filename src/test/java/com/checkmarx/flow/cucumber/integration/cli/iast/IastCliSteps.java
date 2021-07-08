@@ -277,8 +277,6 @@ public class IastCliSteps {
             case "azure":
                 issueTracker = adoIssueTracker;
                 break;
-            default:
-                throw new UnsupportedOperationException("Invalid bug tracker " + bugTracker);
         }
         if(issueTracker != null) {
             verify(issueTracker, times(createdIssues)).createIssue(any(), any());
