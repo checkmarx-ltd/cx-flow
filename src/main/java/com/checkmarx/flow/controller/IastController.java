@@ -37,16 +37,9 @@ public class IastController {
     @Autowired
     private IastService iastService;
     @Autowired
-    private JiraProperties jiraProperties;
-    @Autowired
-    private FlowProperties flowProperties;
-    @Autowired
     private CxFlowRunner cxFlowRunner;
-
     @Autowired
     private TokenUtils tokenUtils;
-    @Autowired
-    private JiraService jiraService;
 
     @PostMapping(value = {"/generate-tag"})
     public ResponseEntity<EventResponse> generateTag() {
@@ -78,24 +71,25 @@ public class IastController {
             }
 
             ScanRequest request;
+            BugTracker.Type bugTrackerType;
             switch (bugTrackerName.toLowerCase()) {
                 case "jira":
-                    request = getRepoScanRequest(body, BugTracker.Type.JIRA);
+                    bugTrackerType = BugTracker.Type.JIRA;
                     break;
-
                 case "github":
-                case "githubissue":
-                    request = getRepoScanRequest(body, BugTracker.Type.GITHUBCOMMIT);
+                    bugTrackerType = BugTracker.Type.GITHUBISSUE;
                     break;
-
                 case "gitlab":
-                case "gitlabissue":
-                    request = getRepoScanRequest(body, BugTracker.Type.GITLABCOMMIT);
+                    bugTrackerType = BugTracker.Type.GITLABISSUE;
                     break;
-
+                case "azure":
+                    bugTrackerType = BugTracker.Type.AZURE;
+                    break;
                 default:
                     throw new NotImplementedException(bugTrackerName + ". That bug tracker not implemented.");
             }
+
+            request = getRepoScanRequest(body, bugTrackerType);
 
             iastService.stopScanAndCreateIssue(request, scanTag);
         } catch (InvalidTokenException e) {
@@ -135,9 +129,19 @@ public class IastController {
                     .assignee(assignee)
                     .build();
         }
+
+        String altFields = null;
+        if(tracker == BugTracker.Type.AZURE) {
+            if (!Strings.isEmpty(assignee)) {
+                altFields = "System.AssignedTo:" + assignee;
+            }
+        }
+
         return ScanRequest.builder()
                 .bugTracker(bt)
+                .altProject(body.getBugTrackerProject())
                 .repoName(body.getRepoName())
+                .altFields(altFields)
                 .namespace(body.getNamespace())
                 .repoProjectId(body.getProjectId())
                 .product(ScanRequest.Product.CX)

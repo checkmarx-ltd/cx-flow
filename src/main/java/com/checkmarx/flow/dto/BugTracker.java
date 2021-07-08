@@ -77,6 +77,7 @@ public class BugTracker {
         adopull("adopull"),
         GITHUBPULL("GITHUBPULL"),
         githubpull("githubpull"),
+        AZURE("AZURE"),
         GITHUBISSUE("GITHUBISSUE"),
         GITHUBCOMMIT("GITHUBCOMMIT"),
         GITLABCOMMIT("GITLABCOMMIT"),

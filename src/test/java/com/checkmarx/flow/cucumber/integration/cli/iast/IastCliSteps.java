@@ -7,6 +7,7 @@ import com.checkmarx.flow.controller.IastController;
 import com.checkmarx.flow.custom.GitHubIssueTracker;
 import com.checkmarx.flow.custom.GitLabIssueTracker;
 import com.checkmarx.flow.custom.IssueTracker;
+import com.checkmarx.flow.custom.ADOIssueTracker;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
@@ -74,6 +75,9 @@ public class IastCliSteps {
     @Autowired
     private IastController iastController;
     @Autowired
+
+   private ADOIssueTracker adoIssueTracker = mock(ADOIssueTracker.class);
+
     private IastService iastService;
 
     @Autowired
@@ -265,15 +269,21 @@ public class IastCliSteps {
                 verify(jiraService, times(createdIssues)).createIssue(any(), any());
                 return;
             case "github":
-                issueTracker = gitHubIssueTracker;
+                verify(gitHubIssueTracker, times(Integer.parseInt(createIssue))).createIssue(any(), any());
                 break;
             case "gitlab":
-                issueTracker = gitLabIssueTracker;
+                verify(gitLabIssueTracker, times(Integer.parseInt(createIssue))).createIssue(any(), any());
                 break;
+            case "azure":
+                verify(adoIssueTracker, times(Integer.parseInt(createIssue))).createIssue(any(),any());
+                break;
+            default:
+                throw new UnsupportedOperationException("Invalid bug tracker " + bugTracker);
+
         }
         if(issueTracker != null) {
             verify(issueTracker, times(createdIssues)).createIssue(any(), any());
-        }
+           }
     }
 
 
@@ -283,6 +293,8 @@ public class IastCliSteps {
         when(gitHubIssueTracker.createIssue(any(), any())).thenReturn(mock(Issue.class));
 
         when(gitLabIssueTracker.createIssue(any(), any())).thenReturn(mock(Issue.class));
+
+        when(adoIssueTracker.createIssue(any(), any())).thenReturn(mock(Issue.class));
 
     }
 
@@ -308,6 +320,9 @@ public class IastCliSteps {
         scansResultsQuery.add(scansResultQuery);
 
         when(iastServiceRequests.apiScanResults(scan.getScanId(), vulnerabilityInfo.getId())).thenReturn(scansResultsQuery);
+        VulnerabilityDescription vulnerabilityDescription = mock(VulnerabilityDescription.class);
+        when(iastServiceRequests.apiVulnerabilitiesDescription(any(), any())).thenReturn(vulnerabilityDescription);
+        when(vulnerabilityDescription.getRisk()).thenReturn("MOCK_RISK");
     }
 
     @SneakyThrows
