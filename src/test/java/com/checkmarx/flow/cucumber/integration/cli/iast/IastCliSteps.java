@@ -3,15 +3,17 @@ package com.checkmarx.flow.cucumber.integration.cli.iast;
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.CxFlowRunner;
 import com.checkmarx.flow.config.*;
-import com.checkmarx.flow.cucumber.integration.cli.IntegrationTestContext;
+import com.checkmarx.flow.controller.IastController;
 import com.checkmarx.flow.custom.GitHubIssueTracker;
 import com.checkmarx.flow.custom.GitLabIssueTracker;
+import com.checkmarx.flow.custom.IssueTracker;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.iast.common.model.enums.ManagementResultState;
 import com.checkmarx.flow.dto.iast.common.model.enums.QueryDisplayType;
 import com.checkmarx.flow.dto.iast.manager.dto.*;
+import com.checkmarx.flow.dto.iast.manager.dto.description.VulnerabilityDescription;
 import com.checkmarx.flow.dto.iast.ql.utils.Severity;
 import com.checkmarx.flow.exception.IastThresholdsSeverityException;
 import com.checkmarx.flow.exception.MachinaException;
@@ -22,31 +24,46 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
+import org.json.JSONObject;
 import org.junit.Assert;
+import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.DefaultApplicationArguments;
 import org.springframework.boot.info.BuildProperties;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 
+import static com.atlassian.sal.api.xsrf.XsrfHeaderValidator.TOKEN_HEADER;
 import static org.mockito.Mockito.*;
 
-
-@SpringBootTest(classes = {CxFlowApplication.class, JiraTestUtils.class})
-@Slf4j
+@RunWith(SpringRunner.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK, classes = {CxFlowApplication.class, JiraTestUtils.class})
+@AutoConfigureMockMvc
+@TestPropertySource(properties = { "spring.config.location=classpath:application-iast.yml" })
 @RequiredArgsConstructor
 @ActiveProfiles({"iast"})
+@MockBean({IastServiceRequests.class, JiraService.class, GitHubIssueTracker.class, GitLabIssueTracker.class})
 public class IastCliSteps {
-    private static String ARGS = "--iast --assignee=email@mail.com --repo-name=repository --branch=master --namespace=test --jira.url=https://xxxx.atlassian.net --jira.username=email@gmail.com --jira.token=token --github.token=token --jira.project=BCB --iast.url=http://localhost --iast.manager-port=8380 --iast.username=username --iast.password=password --iast.update-token-seconds=250 --jira.issue-type=Task";
+    private static String ARGS = "--iast --assignee=email@mail.com --repo-name=repository --branch=master --namespace=test --jira.url=https://xxxx.atlassian.net --jira.username=email@gmail.com --jira.token=token --github.token=token --gitlab.token=token --jira.project=BCB --iast.url=http://localhost --iast.manager-port=8380 --iast.username=username --iast.password=password --iast.update-token-seconds=250 --jira.issue-type=Task --project-id=1";
 
     private CxFlowRunner cxFlowRunner;
 
@@ -54,13 +71,22 @@ public class IastCliSteps {
     private IastProperties iastProperties;
     @Autowired
     private JiraProperties jiraProperties;
-
-    private JiraService jiraService = mock(JiraService.class);
-    private GitHubIssueTracker gitHubIssueTracker = mock(GitHubIssueTracker.class);
-    private GitLabIssueTracker gitLabIssueTracker = mock(GitLabIssueTracker.class);
-    private IastServiceRequests iastServiceRequests = mock(IastServiceRequests.class);
-
+    @Autowired
+    private MockMvc mvc;
+    @Autowired
+    private IastController iastController;
+    @Autowired
     private IastService iastService;
+
+    @Autowired
+    private IastServiceRequests iastServiceRequests;
+    @Autowired
+    private JiraService jiraService;
+    @Autowired
+    private GitHubIssueTracker gitHubIssueTracker;
+    @Autowired
+    private GitLabIssueTracker gitLabIssueTracker;
+
     private ApplicationArguments args;
 
     private final FlowProperties flowProperties;
@@ -78,12 +104,16 @@ public class IastCliSteps {
     private final List<VulnerabilityScanner> scanners;
     private final ThresholdValidator thresholdValidator;
 
-    private final IntegrationTestContext testContext;
+    private String urlRequest;
+    private HttpHeaders headers;
+    private JSONObject body;
+    private MvcResult mvcResult;
 
-    @Given("mock CLI runner {} {}")
-    public void mockCliRunner(String scanTag, String bugTracker) {
+    @Given("mock CLI runner {} {} {}")
+    public void mockCliRunner(String scanTag, String bugTracker, String args) {
         scanTag = removeQuotes(scanTag);
         bugTracker = removeQuotes(bugTracker);
+        args = removeQuotes(args);
         cxFlowRunner = new CxFlowRunner(
                 flowProperties,
                 cxScannerService,
@@ -101,7 +131,7 @@ public class IastCliSteps {
                 buildProperties,
                 scanners,
                 thresholdValidator);
-        String arguments = ARGS + " --scan-tag=" + scanTag + " --bug-tracker=" + bugTracker;
+        String arguments = ARGS + " --scan-tag=" + scanTag + " --bug-tracker=" + bugTracker + " " + args;
         String[] argsParam = arguments.split(" ");
         this.args = new DefaultApplicationArguments(argsParam);
     }
@@ -123,9 +153,48 @@ public class IastCliSteps {
         }
     }
 
+    @When("I am using these parameters {} {} {} {} {}")
+    public void requestBodyBuild(String projectId, String namespace, String assignee, String bugTrackerProject, String repoName) {
+        body = new JSONObject();
+        if (!Strings.isEmpty(projectId)) {
+            body.put("project-id", Integer.valueOf(removeQuotes(projectId, false)));
+        }
+        if (!Strings.isEmpty(namespace)) {
+            body.put("namespace", removeQuotes(namespace, false));
+        }
+        if (!Strings.isEmpty(assignee)) {
+            body.put("assignee", removeQuotes(assignee, false));
+        }
+        if (!Strings.isEmpty(bugTrackerProject)) {
+            body.put("bugTrackerProject", removeQuotes(bugTrackerProject, false));
+        }
+        if (!Strings.isEmpty(repoName)) {
+            body.put("repoName", removeQuotes(repoName, false));
+        }
+    }
+
+    @When("I do a request to bug tracker {} using this scan tag {} and this request token {}")
+    public void doRequest(String bugTracker, String scanTag, String requestToken) throws Exception {
+        headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.add(TOKEN_HEADER, requestToken);
+
+        urlRequest = "/iast/stop-scan-and-create-" + removeQuotes(bugTracker, false) + "-issue/" + removeQuotes(scanTag, false);
+
+        mvcResult = mvc.perform(MockMvcRequestBuilders.post(urlRequest)
+                .content(body.toString())
+                .headers(headers)
+        ).andReturn();
+    }
+
     @SneakyThrows
+    @Then("the status code should be equals to {}")
+    public void checkStatusCode(int statusCode) {
+        Assert.assertEquals(mvcResult.getResponse().getStatus(), statusCode);
+    }
+
     @Given("mock services {} {} {}")
-    public void mockServices(String scanTag, String filter, String thresholdsSeverity) {
+    public void mockServices(String scanTag, String filter, String thresholdsSeverity) throws Exception {
         scanTag = removeQuotes(scanTag);
         filter = removeQuotes(filter);
         thresholdsSeverity = removeQuotes(thresholdsSeverity);
@@ -137,7 +206,6 @@ public class IastCliSteps {
         }
         iastProperties.setFilterSeverity(filterSeverity);
 
-
         String[] thresholdsSeverityArray = thresholdsSeverity.split(",");
         Map<Severity, Integer> thresholdsSeverityMap = new HashMap<>();
         for (String s : thresholdsSeverityArray) {
@@ -146,8 +214,8 @@ public class IastCliSteps {
         }
         iastProperties.setThresholdsSeverity(thresholdsSeverityMap);
 
+        Mockito.reset(jiraService, gitHubIssueTracker, gitLabIssueTracker);
 
-        this.iastService = new IastService(jiraService, iastProperties, iastServiceRequests, helperService, gitHubIssueTracker, gitLabIssueTracker);
         Scan scan = mockIastServiceRequestsApiScansScanTagFinish(scanTag);
         ScanVulnerabilities scanVulnerabilities = mockIastServiceRequestsApiScanVulnerabilities(scan);
         mockIastServiceRequestsApiScanResults(scan, scanVulnerabilities.getVulnerabilities().get(0));
@@ -156,7 +224,16 @@ public class IastCliSteps {
     }
 
     private String removeQuotes(String text) {
-        return text.replaceAll("\"", "").trim();
+        return removeQuotes(text, true);
+    }
+
+    private String removeQuotes(String text, boolean trim) {
+        String retText = text.replaceAll("\"", "");
+
+        if (trim) {
+            return retText.trim();
+        }
+        return retText;
     }
 
     @SneakyThrows
@@ -184,18 +261,21 @@ public class IastCliSteps {
     @SneakyThrows
     @Then("check how many create issue {} {}")
     public void checkHowManyCreateIssue(String createIssue, String bugTracker) {
-        createIssue = removeQuotes(createIssue);
-
+        int createdIssues = Integer.parseInt(removeQuotes(createIssue));
+        IssueTracker issueTracker = null;
         switch (bugTracker) {
             case "jira":
-                verify(jiraService, times(Integer.parseInt(createIssue))).createIssue(any(), any());
-                break;
+                verify(jiraService, times(createdIssues)).createIssue(any(), any());
+                return;
             case "githubissue":
-                verify(gitHubIssueTracker, times(Integer.parseInt(createIssue))).createIssue(any(), any());
+                issueTracker = gitHubIssueTracker;
                 break;
             case "gitlabissue":
-                verify(gitLabIssueTracker, times(Integer.parseInt(createIssue))).createIssue(any(), any());
+                issueTracker = gitLabIssueTracker;
                 break;
+        }
+        if(issueTracker != null) {
+            verify(issueTracker, times(createdIssues)).createIssue(any(), any());
         }
     }
 
@@ -203,9 +283,9 @@ public class IastCliSteps {
     private void mockServiceCreateIssue() throws MachinaException {
         when(jiraService.createIssue(any(), any())).thenReturn("BCB-202");
 
-        when(gitHubIssueTracker.createIssue(any(), any())).thenReturn(new Issue());
+        when(gitHubIssueTracker.createIssue(any(), any())).thenReturn(mock(Issue.class));
 
-        when(gitLabIssueTracker.createIssue(any(), any())).thenReturn(new Issue());
+        when(gitLabIssueTracker.createIssue(any(), any())).thenReturn(mock(Issue.class));
 
     }
 
@@ -261,7 +341,7 @@ public class IastCliSteps {
         vulnerabilityInfo2.setQueryDisplayType(QueryDisplayType.RESPONSE);
         vulnerabilities.add(vulnerabilityInfo2);
 
-        when((iastServiceRequests.apiScanVulnerabilities(scan.getScanId()))).thenReturn(scanVulnerabilities);
+        when(iastServiceRequests.apiScanVulnerabilities(scan.getScanId())).thenReturn(scanVulnerabilities);
         return scanVulnerabilities;
     }
 
@@ -277,7 +357,11 @@ public class IastCliSteps {
         scan.setCoverage(0.585);
         scan.setApiCoverage(5.56);
 
-        when((iastServiceRequests.apiScansScanTagFinish(scanTag))).thenReturn(scan);
+        when(iastServiceRequests.apiScansScanTagFinish(scanTag)).thenReturn(scan);
+
+        VulnerabilityDescription vulnerabilityDescription = mock(VulnerabilityDescription.class);
+        when(iastServiceRequests.apiVulnerabilitiesDescription(any(), any())).thenReturn(vulnerabilityDescription);
+        when(vulnerabilityDescription.getRisk()).thenReturn("MOCK_RISK");
         return scan;
     }
 }

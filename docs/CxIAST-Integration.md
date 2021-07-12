@@ -54,14 +54,12 @@ On linux, for example:
 openssl s_client -showcerts -servername my-iast.com -connect my-iast.com:443 < /dev/null > iast.cer
 ```
 
-
 ## <a name="filters">Filters</a>
 CxFlow may filter CxIAST vulnerabilities according to the vulnerability severity before creating bug tracker tickets.  
 To allow severities, add the relevant severity to the `filter-severity` section in the `iast` section in the configuration file.  
 To ignore a severity, remove or comment that severity from the configuration file.
 
 ## <a name="thresholds">Thresholds</a>
-
 CxFlow returns a status the CI pipeline when called.  
 To control this, a threshold can be configured per vulnerability severity.  
 Each severity threshold is determined by the allowed vulnerability count with that severity.  
@@ -110,7 +108,6 @@ instructions on configuring CxFlow to work with Gitlab issues.
 * `gitlab.token=token-xxxx`
 
 ### Opening Tickets in Jira
-
 CxFlow can open Jira tickets according to the CxIAST scan results.  
 At present, CxFlow opens a separate Jira ticket for every new vulnerability of any severity discovered by CxIAST.
 
@@ -118,7 +115,7 @@ The ticket is structured as follows:
 
 - The **title** field is set to `<CxIAST Vulnerability name> @ <Triggering API URL>`.
 - The **priority** field is set based on the CxIAST vulnerability severity.
-- The **assignee** field is set based on the `--assignee` argument that was passed to CxFlow, or based on the configured Jira
+- The **assignee** field is set based on the `--assignee` argument that was passed to CxFlow, or based on the configured Jira.
   username. Refer to [Jira Configuration](https://github.com/checkmarx-ltd/cx-flow/wiki/Bug-Trackers-and-Feedback-Channels#jira)
   for additional information.
 - The **description** field contains a link to the vulnerability in CxIAST Manager, scan tag, branch, repository name and severity
@@ -141,14 +138,14 @@ vulnerability of any severity discovered by CxIAST.
 The ticket is structured as follows:
 
 - The **title** field is set to `<CxIAST Vulnerability name> @ <Triggering API URL>`.
-- The **assignee** field is set based on the `--assignee` argument that was passed to CxFlow.
 - The **description** field contains a link to the vulnerability in CxIAST Manager, scan tag, branch, repository name and severity
 
 #### Required parameters for create github ticket in CLI mode:
 
 * iast
 * scan-tag=tag
-* bug-tracker=githubissue
+* --bug-tracker="custom"
+* --github
 * `repo-name=repository-name`
 * `namespace=checkmarx-ltd`
 
@@ -163,14 +160,16 @@ vulnerability of any severity discovered by CxIAST.
 The ticket is structured as follows:
 
 - The **title** field is set to `<CxIAST Vulnerability name> @ <Triggering API URL>`.
-- The **assignee** field is set based on the `--assignee` argument that was passed to CxFlow.
 - The **description** field contains a link to the vulnerability in CxIAST Manager, scan tag, branch, repository name and severity
 
 #### Required parameters for create github ticket in CLI mode:
 
 * iast
 * scan-tag=tag
-* bug-tracker=gitlabissue
+* --bug-tracker="custom"
+* --gitlab
+* --project-id=xxxxxx
+  
 * `gitlab.token=token-xxxx`
 * `project-id=xxxxxx`
 
@@ -220,8 +219,8 @@ java -jar cx-flow.jar
 java -jar cx-flow.jar 
 --spring.config.location=application.yml
 --iast
---bug-tracker="githubissue"
---assignee="email@mail.com"
+--bug-tracker="custom"
+--github
 --scan-tag="scanTag"
 --namespace="checkmarx-ltd"
 --repo-name="cx-flow"
@@ -239,12 +238,13 @@ java -jar cx-flow.jar
 java -jar cx-flow.jar 
 --spring.config.location=application.yml
 --iast
---bug-tracker="githubissue"
---assignee="email@mail.com"
+--bug-tracker="custom"
+--gitlab
 --scan-tag="cx-scan-20"
 --namespace="checkmarx-ltd"
 --repo-name="cx-flow"
 --branch="develop"
+--project-id=xxxxxxxx
 
 --gitlab.token=token-xxxx
 

@@ -4,7 +4,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.http.HttpHeaders;
 
-import java.util.Map;
 import java.util.Objects;
 
 public class RepoIssue {
@@ -58,22 +57,15 @@ public class RepoIssue {
         requestBody.put(transitionField, transition);
         return requestBody;
     }
-
     /**
      * Create JSON http request body for an create/update Issue POST request to GitHub/GitLab
      *
      * @return JSON Object of create issue request
      */
-    public static JSONObject getJSONCreateIssue(String title, String bodyField, String body) throws JSONException {
+    public static JSONObject getJSONCreateIssue(String title, String bodyField, String body) throws JSONException{
         JSONObject requestBody = new JSONObject();
         requestBody.put("title", title);
         requestBody.put(bodyField, body);
-        return requestBody;
-    }
-
-    public static JSONObject getJSONObject(Map<String, Object> data) throws JSONException {
-        JSONObject requestBody = new JSONObject();
-        data.forEach(requestBody::put);
         return requestBody;
     }
 

@@ -15,9 +15,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -42,20 +40,12 @@ public class GitLabIssueTracker implements IssueTracker {
     private static final String NEW_ISSUE_PATH = "/projects/{id}/issues";
     private static final String ISSUE_PATH = "/projects/{id}/issues/{iid}";
     private static final String COMMENT_PATH = "/projects/{id}/issues/{iid}/notes";
-    private static final String USER_INFO = "/users?username={username}";
     private static final Logger log = LoggerFactory.getLogger(GitLabIssueTracker.class);
     private static final int UNKNOWN_INT = -1;
     private final RestTemplate restTemplate;
     private final GitLabProperties properties;
     private final FlowProperties flowProperties;
     private final ScmConfigOverrider scmConfigOverrider;
-
-    @Autowired
-    private GitLabIssueTracker issueTracker;
-
-    public GitLabProperties getProperties() {
-        return properties;
-    }
 
     public GitLabIssueTracker(@Qualifier("flowRestTemplate") RestTemplate restTemplate, GitLabProperties properties, FlowProperties flowProperties,
                               ScmConfigOverrider scmConfigOverrider) {
@@ -333,50 +323,14 @@ public class GitLabIssueTracker implements IssueTracker {
         String fileUrl = getFileUrl(request, resultIssue.getFilename());
         String body = HTMLHelper.getMDBody(resultIssue, request.getBranch(), fileUrl, flowProperties);
         String title = HTMLHelper.getScanRequestIssueKeyWithDefaultProductValue(request, this, resultIssue);
-        Long accountId = issueTracker.getAccountId(request);     //gitLabIssueTracker - for cache
 
         try {
             requestBody.put("title", title);
             requestBody.put("description", body);
-            if (accountId != null) {
-                requestBody.put("assignee_id", accountId);
-            }
         } catch (JSONException e) {
             log.error("Error creating JSON Create Issue Object - JSON Object will be empty", e);
         }
         return requestBody;
-    }
-
-    @Cacheable(value = "gitlabAccounts")
-    public Long getAccountId(ScanRequest request) {
-        try {
-            String assignee;
-            if (request.getBugTracker() != null && request.getBugTracker().getAssignee() != null) {
-                assignee = request.getBugTracker().getAssignee();
-            } else {
-                return null;
-            }
-
-            String url = scmConfigOverrider.determineConfigApiUrl(properties, request).concat(USER_INFO);
-            url = url.replace("{username}", assignee);
-            URI uri = new URI(url);
-            HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders(request));
-
-            ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, httpEntity, String.class);
-            JSONArray userArray = new JSONArray(response.getBody());
-            long id = userArray.getJSONObject(0).getLong("id");
-
-            log.info("gitlab user \"{}\" have id = {}", assignee, id);
-            return id;
-        } catch (HttpClientErrorException e) {
-            log.error("Error calling gitlab project api {}", e.getResponseBodyAsString(), e);
-        } catch (JSONException e) {
-            log.error("Error parsing gitlab project response.", e);
-        } catch (URISyntaxException e) {
-            log.error("Incorrect URI syntax", e);
-        }
-
-        return null;
     }
 
     @Override

@@ -172,13 +172,13 @@ public class IastService {
                         log.info("Create jira issue: " + jiraService.getJiraProperties().getUrl() + "/browse/" + jiraIssue);
                     }
                     break;
-                case GITHUBISSUE:
-                    issue = postIssueToTracker(scanVulnerabilities, request, scansResultQuery, vulnerability, scan, gitHubIssueTracker);
-                    log.info("Create github issue: " + issue.getUrl());
-                    break;
                 case GITLABISSUE:
                     issue = postIssueToTracker(scanVulnerabilities, request, scansResultQuery, vulnerability, scan, gitLabIssueTracker);
                     log.info("Create gitlab issue: " + issue.getUrl());
+                    break;
+                case GITHUBISSUE:
+                    issue = postIssueToTracker(scanVulnerabilities, request, scansResultQuery, vulnerability, scan, gitHubIssueTracker);
+                    log.info("Create github issue: " + issue.getUrl());
                     break;
                 default:
                     throw new NotImplementedException(request.getBugTracker().getType().getType() + ". That bug tracker not implemented.");

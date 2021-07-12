@@ -12,8 +12,8 @@ import com.checkmarx.flow.dto.gitlab.Note;
 import com.checkmarx.flow.exception.GitLabClientException;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
-import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.sast.CxConfig;
+import com.checkmarx.sdk.dto.ScanResults;
 import org.apache.commons.codec.binary.Base64;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -54,6 +54,7 @@ public class GitLabService extends RepoService {
     private final RestTemplate restTemplate;
     private final GitLabProperties properties;
     private final ScmConfigOverrider scmConfigOverrider;
+
 
     @ConstructorProperties({"restTemplate", "properties", "scmConfigOverrider"})
     public GitLabService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, GitLabProperties properties, ScmConfigOverrider scmConfigOverrider) {
@@ -353,8 +354,8 @@ public class GitLabService extends RepoService {
     private String getCommentUrl(ScanRequest scanRequest, long commentId) {
         String path = scmConfigOverrider.determineConfigApiUrl(properties, scanRequest).concat(MERGE_NOTE_PATH);
         return String.format(path, scanRequest.getRepoProjectId().toString(),
-                scanRequest.getAdditionalMetadata(FlowConstants.MERGE_ID),
-                commentId);
+                             scanRequest.getAdditionalMetadata(FlowConstants.MERGE_ID),
+                             commentId);
     }
 
 }

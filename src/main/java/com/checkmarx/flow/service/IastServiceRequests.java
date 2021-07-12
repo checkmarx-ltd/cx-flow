@@ -13,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 
@@ -84,7 +83,6 @@ public class IastServiceRequests {
                 .readValue(resultPutBodyOfDefaultConnectionToIast("scans/scan-tag/" + scanTag + "/finish"), Scan.class);
     }
 
-    @Cacheable(value = "vulnerabilitiesDescription")
     public VulnerabilityDescription apiVulnerabilitiesDescription(Long vulnerabilityId, String lang) throws IOException {
         return objectMapper
                 .readValue(resultGetBodyOfDefaultConnectionToIast("vulnerabilities/" + vulnerabilityId + "/description?programmingLanguage=" + lang), VulnerabilityDescription.class);
