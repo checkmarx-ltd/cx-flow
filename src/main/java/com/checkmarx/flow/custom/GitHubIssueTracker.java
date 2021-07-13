@@ -40,6 +40,10 @@ public class GitHubIssueTracker implements IssueTracker {
     private final ScmConfigOverrider scmConfigOverrider;
     private final GitHubService gitHubService;
 
+    public GitHubProperties getProperties() {
+        return properties;
+    }
+
     public GitHubIssueTracker(@Qualifier("flowRestTemplate") RestTemplate restTemplate, GitHubProperties properties, FlowProperties flowProperties,
                               ScmConfigOverrider scmConfigOverrider, GitHubService gitHubService) {
         this.restTemplate = restTemplate;
@@ -256,6 +260,9 @@ public class GitHubIssueTracker implements IssueTracker {
         try {
             requestBody.put("title", title);
             requestBody.put("body", body);
+            if (request.getBugTracker() != null && request.getBugTracker().getAssignee() != null) {
+                requestBody.put("assignee", request.getBugTracker().getAssignee());
+            }
         } catch (JSONException e) {
             log.error("Error creating JSON Create Issue Object - JSON Object will be empty", e);
         }
