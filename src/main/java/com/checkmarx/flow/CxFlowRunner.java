@@ -331,8 +331,8 @@ public class CxFlowRunner implements ApplicationRunner {
                         .build();
                 repoType = ScanRequest.Repository.ADO;
 
-                if (ScanUtils.empty(namespace) || ScanUtils.empty(repoName)) {
-                    log.error("--namespace and --repo-name must be provided for azure bug tracking");
+                if (ScanUtils.empty(namespace)) {
+                    log.error("--namespace must be provided for azure bug tracking");
                     exit(1);
                 }
                 break;
