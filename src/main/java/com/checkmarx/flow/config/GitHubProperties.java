@@ -38,10 +38,5 @@ public class GitHubProperties extends RepoProperties {
         //sample: https://github.com/namespace/repo.git
     }
 
-    public String getIssueUri(String namespace, String repo) {
-        String format = "%s/%s/%s/issues";
-        return String.format(format, getApiUrl(), namespace, repo);
-        //sample: https://api.github.com/repos/kecven/stady_scala_spark/issues
-    }
 
 }
