@@ -8,6 +8,7 @@ import com.checkmarx.flow.dto.EventResponse;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.iast.CreateIssue;
 import com.checkmarx.flow.exception.IastThatPropertiesIsRequiredException;
+import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.exception.JiraClientException;
 import com.checkmarx.flow.service.IastService;
 import com.checkmarx.flow.service.JiraService;
@@ -15,6 +16,7 @@ import com.checkmarx.flow.utils.TokenUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.io.IOException;
+import java.security.InvalidParameterException;
 
 import static com.atlassian.sal.api.xsrf.XsrfHeaderValidator.TOKEN_HEADER;
 
@@ -59,9 +62,21 @@ public class IastController {
             @PathVariable(value = "tracker", required = false) String bugTrackerName,
             @RequestHeader(value = TOKEN_HEADER) String token,
             @RequestBody @Valid CreateIssue body) {
-        //Validate shared API token from header
-        tokenUtils.validateToken(token);
+
+        HttpStatus httpStatusReturn = HttpStatus.OK;
+        String returnMessage = "OK";
         try {
+            //Validate shared API token from header
+            tokenUtils.validateToken(token);
+
+            if (Strings.isBlank(bugTrackerName.trim())) {
+                throw new InvalidParameterException("tracker parameter cannot be empty.");
+            }
+
+            if (Strings.isBlank(scanTag)) {
+                throw new InvalidParameterException("scanTag parameter cannot be empty.");
+            }
+
             ScanRequest request;
             switch (bugTrackerName.toLowerCase()) {
                 case "jira":
@@ -77,25 +92,28 @@ public class IastController {
                 case "gitlabissue":
                     request = getRepoScanRequest(body, BugTracker.Type.GITLABISSUE);
                     break;
-
                 default:
                     throw new NotImplementedException(bugTrackerName + ". That bug tracker not implemented.");
             }
 
             iastService.stopScanAndCreateIssue(request, scanTag);
-            return ResponseEntity.accepted().body(EventResponse.builder()
-                    .message("OK")
-                    .success(true)
-                    .build());
-
+        } catch (InvalidTokenException e) {
+            log.error(e.getMessage(), e);
+            returnMessage = e.getMessage();
+            httpStatusReturn = HttpStatus.FORBIDDEN;
+        } catch (InvalidParameterException | NotImplementedException e) {
+            log.error(e.getMessage(), e);
+            returnMessage = e.getMessage();
+            httpStatusReturn = HttpStatus.BAD_REQUEST;
         } catch (IOException | JiraClientException | RuntimeException e) {
             log.error(e.getMessage(), e);
-
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(EventResponse.builder()
-                    .message(e.getMessage())
-                    .success(false)
-                    .build());
+            returnMessage = e.getMessage();
+            httpStatusReturn = HttpStatus.INTERNAL_SERVER_ERROR;
         }
+        return ResponseEntity.status(httpStatusReturn).body(EventResponse.builder()
+                .message(returnMessage)
+                .success(httpStatusReturn == HttpStatus.OK)
+                .build());
     }
 
     private ScanRequest getRepoScanRequest(CreateIssue body, BugTracker.Type tracker) {
