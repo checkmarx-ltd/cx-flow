@@ -1,8 +1,6 @@
 package com.checkmarx.flow.controller;
 
 import com.checkmarx.flow.CxFlowRunner;
-import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.EventResponse;
 import com.checkmarx.flow.dto.ScanRequest;
@@ -11,7 +9,6 @@ import com.checkmarx.flow.exception.IastThatPropertiesIsRequiredException;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.exception.JiraClientException;
 import com.checkmarx.flow.service.IastService;
-import com.checkmarx.flow.service.JiraService;
 import com.checkmarx.flow.utils.TokenUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
