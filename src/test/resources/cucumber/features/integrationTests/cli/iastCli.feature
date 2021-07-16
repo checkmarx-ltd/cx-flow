@@ -5,38 +5,39 @@ And command line example: ”java -jar cx-flow-1.6.21.jar --spring.config.locati
 
   Scenario Outline: test cli runner
     Given mock services "<scanTag>" "<filter-severity>" "<thresholds severity>"
-    Given mock CLI runner "<scanTag>" "<bug tracker>" "<args>"
+    Given mock CLI runner "<scanTag>" "<bug tracker>"
     When running cli "<exit code>" "<scanTag>"
     Then check how many create issue "<create issue>" "<bug tracker>"
 
     Examples:
-      | scanTag    | bug tracker | filter-severity      | thresholds severity              | exit code | create issue | args     |
-      | cx-scan-1  | jira        | HIGH,MEDIUM,LOW,INFO | HIGH=-1,MEDIUM=-1,LOW=-1,INFO=-1 | 0         | 2            |          |
-      | cx-scan-2  | jira        | HIGH,MEDIUM,LOW,INFO | HIGH=-1,MEDIUM=-1,LOW=-1,INFO=-1 | 0         | 2            |          |
-      | cx-scan-3  | jira        | HIGH,MEDIUM          | HIGH=-1,MEDIUM=-1,LOW=-1,INFO=-1 | 0         | 1            |          |
-      | cx-scan-4  | jira        | HIGH                 | HIGH=-1,MEDIUM=-1,LOW=-1,INFO=-1 | 0         | 0            |          |
-      | cx-scan-5  | jira        | HIGH,MEDIUM,LOW,INFO | HIGH=-1,MEDIUM=1,LOW=-1,INFO=-1  | 10        | 2            |          |
-      | cx-scan-6  | jira        | HIGH,LOW,INFO        | HIGH=-1,MEDIUM=1,LOW=-1,INFO=-1  | 10        | 1            |          |
-      | cx-scan-7  | jira        | HIGH,MEDIUM,LOW,INFO | HIGH=-1,MEDIUM=1,LOW=1,INFO=-1   | 10        | 2            |          |
-      | cx-scan-8  | jira        | HIGH,MEDIUM,LOW,INFO | HIGH=-1,INFO=-1                  | 0         | 2            |          |
+      | scanTag    | bug tracker | filter-severity      | thresholds severity              | exit code | create issue |
+      | cx-scan-1  | jira        | HIGH,MEDIUM,LOW,INFO | HIGH=-1,MEDIUM=-1,LOW=-1,INFO=-1 | 0         | 2            |
+      | cx-scan-2  | jira        | HIGH,MEDIUM,LOW,INFO | HIGH=-1,MEDIUM=-1,LOW=-1,INFO=-1 | 0         | 2            |
+      | cx-scan-3  | jira        | HIGH,MEDIUM          | HIGH=-1,MEDIUM=-1,LOW=-1,INFO=-1 | 0         | 1            |
+      | cx-scan-4  | jira        | HIGH                 | HIGH=-1,MEDIUM=-1,LOW=-1,INFO=-1 | 0         | 0            |
+      | cx-scan-5  | jira        | HIGH,MEDIUM,LOW,INFO | HIGH=-1,MEDIUM=1,LOW=-1,INFO=-1  | 10        | 2            |
+      | cx-scan-6  | jira        | HIGH,LOW,INFO        | HIGH=-1,MEDIUM=1,LOW=-1,INFO=-1  | 10        | 1            |
+      | cx-scan-7  | jira        | HIGH,MEDIUM,LOW,INFO | HIGH=-1,MEDIUM=1,LOW=1,INFO=-1   | 10        | 2            |
+      | cx-scan-8  | jira        | HIGH,MEDIUM,LOW,INFO | HIGH=-1,INFO=-1                  | 0         | 2            |
 
-      | cx-scan-9  | CUSTOM      | HIGH,MEDIUM,LOW,INFO | HIGH=-1,MEDIUM=-1,LOW=-1,INFO=-1 | 0         | 2            | --github |
-      | cx-scan-10 | CUSTOM      | HIGH,MEDIUM,LOW,INFO | HIGH=-1,MEDIUM=-1,LOW=-1,INFO=-1 | 0         | 2            | --github |
-      | cx-scan-11 | CUSTOM      | HIGH,MEDIUM          | HIGH=-1,MEDIUM=-1,LOW=-1,INFO=-1 | 0         | 1            | --github |
-      | cx-scan-12 | CUSTOM      | HIGH                 | HIGH=-1,MEDIUM=-1,LOW=-1,INFO=-1 | 0         | 0            | --github |
-      | cx-scan-13 | CUSTOM      | HIGH,MEDIUM,LOW,INFO | HIGH=-1,MEDIUM=1,LOW=-1,INFO=-1  | 10        | 2            | --github |
-      | cx-scan-14 | CUSTOM      | HIGH,LOW,INFO        | HIGH=-1,MEDIUM=1,LOW=-1,INFO=-1  | 10        | 1            | --github |
-      | cx-scan-15 | CUSTOM      | HIGH,MEDIUM,LOW,INFO | HIGH=-1,MEDIUM=1,LOW=1,INFO=-1   | 10        | 2            | --github |
-      | cx-scan-16 | CUSTOM      | HIGH,MEDIUM,LOW,INFO | HIGH=-1,INFO=-1                  | 0         | 2            | --github |
+      | cx-scan-9  | githubissue | HIGH,MEDIUM,LOW,INFO | HIGH=-1,MEDIUM=-1,LOW=-1,INFO=-1 | 0         | 2            |
+      | cx-scan-10 | githubissue | HIGH,MEDIUM,LOW,INFO | HIGH=-1,MEDIUM=-1,LOW=-1,INFO=-1 | 0         | 2            |
+      | cx-scan-11 | githubissue | HIGH,MEDIUM          | HIGH=-1,MEDIUM=-1,LOW=-1,INFO=-1 | 0         | 1            |
+      | cx-scan-12 | githubissue | HIGH                 | HIGH=-1,MEDIUM=-1,LOW=-1,INFO=-1 | 0         | 0            |
+      | cx-scan-13 | githubissue | HIGH,MEDIUM,LOW,INFO | HIGH=-1,MEDIUM=1,LOW=-1,INFO=-1  | 10        | 2            |
+      | cx-scan-14 | githubissue | HIGH,LOW,INFO        | HIGH=-1,MEDIUM=1,LOW=-1,INFO=-1  | 10        | 1            |
+      | cx-scan-15 | githubissue | HIGH,MEDIUM,LOW,INFO | HIGH=-1,MEDIUM=1,LOW=1,INFO=-1   | 10        | 2            |
+      | cx-scan-16 | githubissue | HIGH,MEDIUM,LOW,INFO | HIGH=-1,INFO=-1                  | 0         | 2            |
 
-      | cx-scan-17 | CUSTOM      | HIGH,MEDIUM,LOW,INFO | HIGH=-1,MEDIUM=-1,LOW=-1,INFO=-1 | 0         | 2            | --gitlab |
-      | cx-scan-18 | CUSTOM      | HIGH,MEDIUM,LOW,INFO | HIGH=-1,MEDIUM=-1,LOW=-1,INFO=-1 | 0         | 2            | --gitlab |
-      | cx-scan-19 | CUSTOM      | HIGH,MEDIUM          | HIGH=-1,MEDIUM=-1,LOW=-1,INFO=-1 | 0         | 1            | --gitlab |
-      | cx-scan-20 | CUSTOM      | HIGH                 | HIGH=-1,MEDIUM=-1,LOW=-1,INFO=-1 | 0         | 0            | --gitlab |
-      | cx-scan-21 | CUSTOM      | HIGH,MEDIUM,LOW,INFO | HIGH=-1,MEDIUM=1,LOW=-1,INFO=-1  | 10        | 2            | --gitlab |
-      | cx-scan-22 | CUSTOM      | HIGH,LOW,INFO        | HIGH=-1,MEDIUM=1,LOW=-1,INFO=-1  | 10        | 1            | --gitlab |
-      | cx-scan-22 | CUSTOM      | HIGH,MEDIUM,LOW,INFO | HIGH=-1,MEDIUM=1,LOW=1,INFO=-1   | 10        | 2            | --gitlab |
-      | cx-scan-23 | CUSTOM      | HIGH,MEDIUM,LOW,INFO | HIGH=-1,INFO=-1                  | 0         | 2            | --gitlab |
+
+      | cx-scan-17 | gitlabissue | HIGH,MEDIUM,LOW,INFO | HIGH=-1,MEDIUM=-1,LOW=-1,INFO=-1 | 0         | 2            |
+      | cx-scan-18 | gitlabissue | HIGH,MEDIUM,LOW,INFO | HIGH=-1,MEDIUM=-1,LOW=-1,INFO=-1 | 0         | 2            |
+      | cx-scan-19 | gitlabissue | HIGH,MEDIUM          | HIGH=-1,MEDIUM=-1,LOW=-1,INFO=-1 | 0         | 1            |
+      | cx-scan-20 | gitlabissue | HIGH                 | HIGH=-1,MEDIUM=-1,LOW=-1,INFO=-1 | 0         | 0            |
+      | cx-scan-21 | gitlabissue | HIGH,MEDIUM,LOW,INFO | HIGH=-1,MEDIUM=1,LOW=-1,INFO=-1  | 10        | 2            |
+      | cx-scan-22 | gitlabissue | HIGH,LOW,INFO        | HIGH=-1,MEDIUM=1,LOW=-1,INFO=-1  | 10        | 1            |
+      | cx-scan-22 | gitlabissue | HIGH,MEDIUM,LOW,INFO | HIGH=-1,MEDIUM=1,LOW=1,INFO=-1   | 10        | 2            |
+      | cx-scan-23 | gitlabissue | HIGH,MEDIUM,LOW,INFO | HIGH=-1,INFO=-1                  | 0         | 2            |
 
 
   Scenario Outline: test web runner
@@ -63,8 +64,8 @@ And command line example: ”java -jar cx-flow-1.6.21.jar --spring.config.locati
       | cx-scan-7  | jira        | HIGH,MEDIUM,LOW,INFO | HIGH=-1,MEDIUM=1,LOW=1,INFO=-1   | 2            | xxxx          | 500         |            | ns        | email@server.com |                     | reponame  |
       | cx-scan-8  | jira        | HIGH,MEDIUM,LOW,INFO | HIGH=-1,INFO=-1                  | 2            | xxxx          | 200         |            | ns        | email@server.com |                     | reponame  |
 
-      | cx-scan-9  | github      | HIGH,MEDIUM,LOW,INFO | HIGH=-1,MEDIUM=-1,LOW=-1,INFO=-1 | 2            | xxxx          | 200         | 1234       | ns        | email@server.com |                     | reponame  |
-      | cx-scan-10 | github      | HIGH,MEDIUM,LOW,INFO | HIGH=-1,MEDIUM=-1,LOW=-1,INFO=-1 | 2            | xxxx          | 200         | 1234       | ns        | email@server.com |                     | reponame  |
+      | cx-scan-9  | githubissue | HIGH,MEDIUM,LOW,INFO | HIGH=-1,MEDIUM=-1,LOW=-1,INFO=-1 | 2            | xxxx          | 200         | 1234       | ns        | email@server.com |                     | reponame  |
+      | cx-scan-10 | githubissue | HIGH,MEDIUM,LOW,INFO | HIGH=-1,MEDIUM=-1,LOW=-1,INFO=-1 | 2            | xxxx          | 200         | 1234       | ns        | email@server.com |                     | reponame  |
       | cx-scan-11 | githubissue | HIGH,MEDIUM          | HIGH=-1,MEDIUM=-1,LOW=-1,INFO=-1 | 1            | xxxx          | 200         | 1234       | ns        | email@server.com |                     | reponame  |
       | cx-scan-12 | githubissue | HIGH                 | HIGH=-1,MEDIUM=-1,LOW=-1,INFO=-1 | 0            | xxxx          | 200         | 1234       | ns        | email@server.com |                     | reponame  |
       | cx-scan-13 | githubissue | HIGH,MEDIUM,LOW,INFO | HIGH=-1,MEDIUM=1,LOW=-1,INFO=-1  | 2            | xxxx          | 500         | 1234       | ns        | email@server.com |                     | reponame  |
@@ -72,8 +73,8 @@ And command line example: ”java -jar cx-flow-1.6.21.jar --spring.config.locati
       | cx-scan-15 | githubissue | HIGH,MEDIUM,LOW,INFO | HIGH=-1,MEDIUM=1,LOW=1,INFO=-1   | 2            | xxxx          | 500         | 1234       | ns        | email@server.com |                     | reponame  |
       | cx-scan-16 | githubissue | HIGH,MEDIUM,LOW,INFO | HIGH=-1,INFO=-1                  | 2            | xxxx          | 200         | 1234       | ns        | email@server.com |                     | reponame  |
 
-      | cx-scan-17 | gitlab      | HIGH,MEDIUM,LOW,INFO | HIGH=-1,MEDIUM=-1,LOW=-1,INFO=-1 | 2            | xxxx          | 200         | 1234       | ns        | email@server.com |                     |           |
-      | cx-scan-18 | gitlab      | HIGH,MEDIUM,LOW,INFO | HIGH=-1,MEDIUM=-1,LOW=-1,INFO=-1 | 2            | xxxx          | 200         | 1234       | ns        | email@server.com |                     |           |
+      | cx-scan-17 | gitlabissue | HIGH,MEDIUM,LOW,INFO | HIGH=-1,MEDIUM=-1,LOW=-1,INFO=-1 | 2            | xxxx          | 200         | 1234       | ns        | email@server.com |                     |           |
+      | cx-scan-18 | gitlabissue | HIGH,MEDIUM,LOW,INFO | HIGH=-1,MEDIUM=-1,LOW=-1,INFO=-1 | 2            | xxxx          | 200         | 1234       | ns        | email@server.com |                     |           |
       | cx-scan-19 | gitlabissue | HIGH,MEDIUM          | HIGH=-1,MEDIUM=-1,LOW=-1,INFO=-1 | 1            | xxxx          | 200         | 1234       | ns        | email@server.com |                     |           |
       | cx-scan-20 | gitlabissue | HIGH                 | HIGH=-1,MEDIUM=-1,LOW=-1,INFO=-1 | 0            | xxxx          | 200         | 1234       | ns        | email@server.com |                     |           |
       | cx-scan-21 | gitlabissue | HIGH,MEDIUM,LOW,INFO | HIGH=-1,MEDIUM=1,LOW=-1,INFO=-1  | 2            | xxxx          | 500         | 1234       | ns        | email@server.com |                     |           |

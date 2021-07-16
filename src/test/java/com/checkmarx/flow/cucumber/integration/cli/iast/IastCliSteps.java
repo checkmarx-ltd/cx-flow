@@ -36,9 +36,7 @@ import org.springframework.boot.info.BuildProperties;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
+import org.springframework.http.*;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
@@ -63,7 +61,7 @@ import static org.mockito.Mockito.*;
 @ActiveProfiles({"iast"})
 @MockBean({IastServiceRequests.class, JiraService.class, GitHubIssueTracker.class, GitLabIssueTracker.class})
 public class IastCliSteps {
-    private static String ARGS = "--iast --assignee=email@mail.com --repo-name=repository --branch=master --namespace=test --jira.url=https://xxxx.atlassian.net --jira.username=email@gmail.com --jira.token=token --github.token=token --gitlab.token=token --jira.project=BCB --iast.url=http://localhost --iast.manager-port=8380 --iast.username=username --iast.password=password --iast.update-token-seconds=250 --jira.issue-type=Task --project-id=1";
+    private static String ARGS = "--iast --assignee=email@mail.com --repo-name=repository --branch=master --namespace=test --jira.url=https://xxxx.atlassian.net --jira.username=email@gmail.com --jira.token=token --github.token=token --jira.project=BCB --iast.url=http://localhost --iast.manager-port=8380 --iast.username=username --iast.password=password --iast.update-token-seconds=250 --jira.issue-type=Task --project-id=1";
 
     private CxFlowRunner cxFlowRunner;
 
@@ -109,11 +107,10 @@ public class IastCliSteps {
     private JSONObject body;
     private MvcResult mvcResult;
 
-    @Given("mock CLI runner {} {} {}")
-    public void mockCliRunner(String scanTag, String bugTracker, String args) {
+    @Given("mock CLI runner {} {}")
+    public void mockCliRunner(String scanTag, String bugTracker) {
         scanTag = removeQuotes(scanTag);
         bugTracker = removeQuotes(bugTracker);
-        args = removeQuotes(args);
         cxFlowRunner = new CxFlowRunner(
                 flowProperties,
                 cxScannerService,
@@ -131,7 +128,7 @@ public class IastCliSteps {
                 buildProperties,
                 scanners,
                 thresholdValidator);
-        String arguments = ARGS + " --scan-tag=" + scanTag + " --bug-tracker=" + bugTracker + " " + args;
+        String arguments = ARGS + " --scan-tag=" + scanTag + " --bug-tracker=" + bugTracker;
         String[] argsParam = arguments.split(" ");
         this.args = new DefaultApplicationArguments(argsParam);
     }
