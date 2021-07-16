@@ -60,7 +60,7 @@ import static org.mockito.Mockito.*;
 @TestPropertySource(properties = { "spring.config.location=classpath:application-iast.yml" })
 @RequiredArgsConstructor
 @ActiveProfiles({"iast"})
-@MockBean({IastServiceRequests.class, JiraService.class, GitHubIssueTracker.class, GitLabIssueTracker.class})
+@MockBean({IastServiceRequests.class, JiraService.class, GitHubIssueTracker.class, GitLabIssueTracker.class, ADOIssueTracker.class})
 public class IastCliSteps {
     private static String ARGS = "--iast --assignee=email@mail.com --repo-name=repository --branch=master --namespace=test --jira.url=https://xxxx.atlassian.net --jira.username=email@gmail.com --jira.token=token --github.token=token --jira.project=BCB --iast.url=http://localhost --iast.manager-port=8380 --iast.username=username --iast.password=password --iast.update-token-seconds=250 --jira.issue-type=Task --project-id=1";
 
@@ -76,8 +76,6 @@ public class IastCliSteps {
     private IastController iastController;
     @Autowired
 
-   private ADOIssueTracker adoIssueTracker = mock(ADOIssueTracker.class);
-
     private IastService iastService;
 
     @Autowired
@@ -88,6 +86,8 @@ public class IastCliSteps {
     private GitHubIssueTracker gitHubIssueTracker;
     @Autowired
     private GitLabIssueTracker gitLabIssueTracker;
+    @Autowired
+    private ADOIssueTracker adoIssueTracker;
 
     private ApplicationArguments args;
 
@@ -268,22 +268,21 @@ public class IastCliSteps {
             case "jira":
                 verify(jiraService, times(createdIssues)).createIssue(any(), any());
                 return;
-            case "github":
-                verify(gitHubIssueTracker, times(Integer.parseInt(createIssue))).createIssue(any(), any());
+            case "githubissue":
+                issueTracker = gitHubIssueTracker;
                 break;
-            case "gitlab":
-                verify(gitLabIssueTracker, times(Integer.parseInt(createIssue))).createIssue(any(), any());
+            case "gitlabissue":
+                issueTracker = gitLabIssueTracker;
                 break;
             case "azure":
-                verify(adoIssueTracker, times(Integer.parseInt(createIssue))).createIssue(any(),any());
+                issueTracker = adoIssueTracker;
                 break;
             default:
                 throw new UnsupportedOperationException("Invalid bug tracker " + bugTracker);
-
         }
         if(issueTracker != null) {
             verify(issueTracker, times(createdIssues)).createIssue(any(), any());
-           }
+        }
     }
 
 
