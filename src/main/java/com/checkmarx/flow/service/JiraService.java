@@ -464,9 +464,15 @@ public class JiraService {
         String fileUrl = ScanUtils.getFileUrl(request, issue.getFilename());
         issueBuilder.setDescription(this.getBody(issue, request, fileUrl));
 
-        if (bugTracker.getPriorities().containsKey(severity)) {
+        List<ScanResults.ScaDetails> scaDetails = issue.getScaDetails();
+        String scannerTypeSeverity = getScannerTypeSeverity(issue, severity, scaDetails);
+
+        if (bugTracker.getPriorities() != null && bugTracker.getPriorities().containsKey(scannerTypeSeverity)) {
+            log.debug("Updating JIRA issue #{} priority is {}, of type {}.", bugId, scannerTypeSeverity, PRIORITY_FIELD_TYPE);
             issueBuilder.setFieldValue(PRIORITY_FIELD_TYPE, ComplexIssueInputFieldValue.with("name",
-                    bugTracker.getPriorities().get(severity)));
+                    bugTracker.getPriorities().get(scannerTypeSeverity)));
+        } else {
+            log.debug("JIRA issue #{} priority is {}, of type {} and it's NOT being updated.", bugId, scannerTypeSeverity, PRIORITY_FIELD_TYPE);
         }
 
         log.info("Updating JIRA issue #{}", bugId);
@@ -1409,15 +1415,25 @@ public class JiraService {
     }
 
     private void closeIssueInCaseNotWithinResults(ScanRequest request, Map<String, ScanResults.XIssue> map, Map<String, Issue> jiraMap, List<String> closedIssues) throws JiraClientException {
+        log.debug("CxFlow JIRA 'open-status' configuration list is {}. Transition configured in 'close-status' is [{}].", request.getBugTracker().getOpenStatus().toString(), request.getBugTracker().getCloseTransition());
         for (Map.Entry<String, Issue> jiraIssue : jiraMap.entrySet()) {
             try {
-                if (!map.containsKey(jiraIssue.getKey()) && (request.getBugTracker().getOpenStatus().contains(jiraIssue.getValue().getStatus().getName()))) {
+                boolean isJiraIssueAVulnerability = map.containsKey(jiraIssue.getKey());
+                log.trace("Trying to close JIRA issue {} with key {}.", jiraIssue.getValue().getKey(), jiraIssue.getKey());
+                if (!isJiraIssueAVulnerability && (request.getBugTracker().getOpenStatus().contains(jiraIssue.getValue().getStatus().getName()))) {
                     /*Close the issue*/
-                    log.info("Closing issue {} with key {}", jiraIssue.getValue().getKey(), jiraIssue.getKey());
+                    log.info("Closing issue {} with key {}.", jiraIssue.getValue().getKey(), jiraIssue.getKey());
                     this.transitionCloseIssue(jiraIssue.getValue().getKey(),
                             request.getBugTracker().getCloseTransition(), request.getBugTracker(), false); //No false positives
                     closedIssues.add(jiraIssue.getValue().getKey());
 
+                } else {
+                    if (isJiraIssueAVulnerability) {
+                        log.debug("JIRA issue {} with key {} not closed, it still is a vulnerability.", jiraIssue.getValue().getKey(), jiraIssue.getKey());
+                    }
+                    else {
+                        log.debug("JIRA issue {} with key {} isn't a vulnerability and its current [{}] status doesn't match any of CxFlow's configured 'open-status' value.", jiraIssue.getValue().getKey(), jiraIssue.getKey(), jiraIssue.getValue().getStatus().getName());
+                    }
                 }
             } catch (HttpClientErrorException e) {
                 log.error("Error occurred while processing issue {} with key {}", jiraIssue.getValue().getKey(), jiraIssue.getKey(), e);
