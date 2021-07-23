@@ -28,6 +28,7 @@ Example Config As Code:
       "branches": ["develop", "main", "master"],
       "emails": ["xxxx@checkmarx.com"],
       "bugTracker": "JIRA|GitLab|GitHub|Azure",
+      "scanResubmit": "true|false",
       "jira": {
         "project": "APPSEC",
         "issue_type": "Bug",
