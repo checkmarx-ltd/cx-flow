@@ -22,8 +22,8 @@ public class FlowOverride {
     public List<String> branches = null;
     @JsonProperty("emails")
     public List<String> emails = null;
-    @JsonProperty
-    public String scanResubmit;
+    @JsonProperty("scanResubmit")
+    public String scanResubmit = "undefined";
     @JsonProperty("bugTracker")
     public String bugTracker;
     @JsonProperty("jira")
