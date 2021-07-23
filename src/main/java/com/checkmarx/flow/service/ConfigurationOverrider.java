@@ -120,6 +120,13 @@ public class ConfigurationOverrider {
                     overrideReport.put("application", a);
                 });
 
+        Optional.ofNullable(override.getScanResubmit())
+                .filter(StringUtils::isNotBlank)
+                .ifPresent(sr -> {
+                    request.setScanResubmit(sr);
+                    overrideReport.put("scanResubmit", sr);
+                });
+
         Optional.ofNullable(override.getBranches())
                 .filter(CollectionUtils::isNotEmpty)
                 .ifPresent(br -> {
