@@ -172,11 +172,11 @@ public class IastService {
                         log.info("Create jira issue: " + jiraService.getJiraProperties().getUrl() + "/browse/" + jiraIssue);
                     }
                     break;
-                case GITLABISSUE:
+                case GITLABCOMMIT:
                     issue = postIssueToTracker(scanVulnerabilities, request, scansResultQuery, vulnerability, scan, gitLabIssueTracker);
                     log.info("Create gitlab issue: " + issue.getUrl());
                     break;
-                case GITHUBISSUE:
+                case GITHUBCOMMIT:
                     issue = postIssueToTracker(scanVulnerabilities, request, scansResultQuery, vulnerability, scan, gitHubIssueTracker);
                     log.info("Create github issue: " + issue.getUrl());
                     break;

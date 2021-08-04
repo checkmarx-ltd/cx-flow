@@ -85,12 +85,12 @@ public class IastController {
 
                 case "github":
                 case "githubissue":
-                    request = getRepoScanRequest(body, BugTracker.Type.GITHUBISSUE);
+                    request = getRepoScanRequest(body, BugTracker.Type.GITHUBCOMMIT);
                     break;
 
                 case "gitlab":
                 case "gitlabissue":
-                    request = getRepoScanRequest(body, BugTracker.Type.GITLABISSUE);
+                    request = getRepoScanRequest(body, BugTracker.Type.GITLABCOMMIT);
                     break;
                 default:
                     throw new NotImplementedException(bugTrackerName + ". That bug tracker not implemented.");
@@ -144,14 +144,14 @@ public class IastController {
     }
 
     private void checksForGitLab(CreateIssue body, BugTracker.Type tracker) {
-        if (tracker == BugTracker.Type.GITLABISSUE && body.getProjectId() == null) {
+        if (tracker == BugTracker.Type.GITLABCOMMIT && body.getProjectId() == null) {
             throw new IastThatPropertiesIsRequiredException("Property \"project-id\" is required");
         }
     }
 
 
     private void checksForGitHub(CreateIssue body, BugTracker.Type tracker) {
-        if (tracker == BugTracker.Type.GITHUBISSUE) {
+        if (tracker == BugTracker.Type.GITHUBCOMMIT) {
             if (body.getRepoName() == null) {
                 throw new IastThatPropertiesIsRequiredException("Property \"repoName\" is required");
             }

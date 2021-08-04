@@ -238,7 +238,7 @@ public class IastCliSteps {
     public void runningIastService(String scanTag) {
         scanTag = removeQuotes(scanTag);
         try {
-            BugTracker.Type bugType = BugTracker.Type.GITHUBISSUE;
+            BugTracker.Type bugType = BugTracker.Type.GITHUBCOMMIT;
             String assignee = "test_user";
             BugTracker bt = BugTracker.builder()
                     .type(bugType)
@@ -264,10 +264,10 @@ public class IastCliSteps {
             case "jira":
                 verify(jiraService, times(createdIssues)).createIssue(any(), any());
                 return;
-            case "githubissue":
+            case "github":
                 issueTracker = gitHubIssueTracker;
                 break;
-            case "gitlabissue":
+            case "gitlab":
                 issueTracker = gitLabIssueTracker;
                 break;
         }

@@ -460,11 +460,11 @@ public class CxFlowRunner implements ApplicationRunner {
     private void configureIast(ScanRequest request, String scanTag, ApplicationArguments args) throws IOException, JiraClientException {
         if (args.containsOption("github")) {
             request.setBugTracker(BugTracker.builder()
-                    .type(BugTracker.Type.GITHUBISSUE)
+                    .type(BugTracker.Type.GITHUBCOMMIT)
                     .build());
         } else if (args.containsOption("gitlab")) {
             request.setBugTracker(BugTracker.builder()
-                    .type(BugTracker.Type.GITLABISSUE)
+                    .type(BugTracker.Type.GITLABCOMMIT)
                     .build());
         }
         iastService.stopScanAndCreateIssue(request, scanTag);

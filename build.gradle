@@ -144,7 +144,6 @@ dependencies {
     }
 
     compile("javax.persistence:javax.persistence-api:2.2")
-    compile 'org.springframework.boot:spring-boot-starter-cache'
 
 }
 
