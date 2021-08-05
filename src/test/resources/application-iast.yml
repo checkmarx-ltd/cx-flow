@@ -221,6 +221,7 @@ github:
 
 gitlab:
   webhook-token: 1234
+  token: "****"
   url: https://gitlab.com
   api-url: https://gitlab.com/api/v4/
   block-merge: true

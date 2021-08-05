@@ -76,6 +76,10 @@ public class JiraService {
     private List<String> currentUpdatedIssuesList = new ArrayList<>();
     private List<String> currentClosedIssuesList = new ArrayList<>();
 
+    public JiraProperties getJiraProperties() {
+        return jiraProperties;
+    }
+
     public JiraService(JiraProperties jiraProperties, FlowProperties flowProperties,
                        CodeBashingService codeBashingService,
                        HelperService helperService) {
@@ -264,7 +268,7 @@ public class JiraService {
         return String.join(", ", issueTypesList);
     }
 
-    private String createIssue(ScanResults.XIssue issue, ScanRequest request) throws JiraClientException {
+    public String createIssue(ScanResults.XIssue issue, ScanRequest request) throws JiraClientException {
         log.debug("Retrieving issuetype object for project {}, type {}", request.getBugTracker().getProjectKey(), request.getBugTracker().getIssueType());
         try {
             BugTracker bugTracker = request.getBugTracker();
@@ -316,9 +320,11 @@ public class JiraService {
                 }
             }
 
-            if (bugTracker.getPriorities() != null && bugTracker.getPriorities().containsKey(severity)) {
+            String scannerTypeSeverity = getScannerTypeSeverity(issue, severity, scaDetails);
+
+            if (bugTracker.getPriorities() != null && bugTracker.getPriorities().containsKey(scannerTypeSeverity)) {
                 issueBuilder.setFieldValue(PRIORITY_FIELD_TYPE, ComplexIssueInputFieldValue.with("name",
-                        bugTracker.getPriorities().get(severity)));
+                        bugTracker.getPriorities().get(scannerTypeSeverity)));
             }
 
             /*Add labels for tracking existing issues*/
@@ -358,6 +364,20 @@ public class JiraService {
         }
     }
 
+    private String getScannerTypeSeverity(ScanResults.XIssue issue, String severity, List<ScanResults.ScaDetails> scaDetails) {
+        String scannerTypeSeverity;
+        if (ScanUtils.isSAST(issue)) {
+            scannerTypeSeverity = severity;
+        } else {
+            /*
+                Format should be aligned with SAST format
+                In SCA case - HIGH -> High
+             */
+            scannerTypeSeverity = StringUtils.capitalize(Objects.requireNonNull(scaDetails).get(0).getFinding().getSeverity().name().toLowerCase());
+        }
+        return scannerTypeSeverity;
+    }
+
     public List<Issue> searchIssueByDescription(String searchDescription) {
         SearchRestClient searchClient = client.getSearchClient();
         String jql = "description ~ \"" + searchDescription + "\"";
@@ -369,56 +389,6 @@ public class JiraService {
         issues.forEach(result::add);
 
         return result;
-    }
-
-    public String createIssue(String projectKey,
-                              String summary,
-                              String description,
-                              String assignee,
-                              String priorities,
-                              String issueTypeName) throws JiraClientException {
-        return createIssue(projectKey, summary, description, assignee, priorities, issueTypeName, null);
-    }
-
-    public String createIssue(String projectKey,
-                              String summary,
-                              String description,
-                              String assignee,
-                              String priorities,
-                              String issueTypeName,
-                              List<String> labels) throws JiraClientException {
-        log.debug("Retrieving issuetype object for project {}, type {}", projectKey, issueTypeName);
-        try {
-
-            IssueType issueType = this.getIssueType(projectKey, issueTypeName);
-            IssueInputBuilder issueBuilder = new IssueInputBuilder(projectKey, issueType.getId());
-
-            issueBuilder.setSummary(summary);
-            issueBuilder.setDescription(description);
-
-            if (labels != null && !labels.isEmpty()) {
-                issueBuilder.setFieldValue(LABEL_FIELD_TYPE, labels);
-            }
-
-            if (assignee != null && !assignee.isEmpty()) {
-                ComplexIssueInputFieldValue jiraAssignee = getAssignee(assignee, projectKey);
-                if (jiraAssignee != null) {
-                    issueBuilder.setFieldInput(new FieldInput(IssueFieldId.ASSIGNEE_FIELD, jiraAssignee));
-                }
-            }
-
-            if (priorities != null) {
-                issueBuilder.setFieldValue(PRIORITY_FIELD_TYPE, ComplexIssueInputFieldValue.with("name", priorities));
-            }
-
-            log.debug("Creating JIRA issue");
-            BasicIssue basicIssue = this.issueClient.createIssue(issueBuilder.build()).claim();
-            log.debug("JIRA issue {} created", basicIssue.getKey());
-            return basicIssue.getKey();
-        } catch (RestClientException e) {
-            log.error("Error occurred while creating JIRA issue.", e);
-            throw new JiraClientException();
-        }
     }
 
     private String checkSummaryLength(String summary) {
@@ -448,9 +418,15 @@ public class JiraService {
         String fileUrl = ScanUtils.getFileUrl(request, issue.getFilename());
         issueBuilder.setDescription(this.getBody(issue, request, fileUrl));
 
-        if (bugTracker.getPriorities().containsKey(severity)) {
+        List<ScanResults.ScaDetails> scaDetails = issue.getScaDetails();
+        String scannerTypeSeverity = getScannerTypeSeverity(issue, severity, scaDetails);
+
+        if (bugTracker.getPriorities() != null && bugTracker.getPriorities().containsKey(scannerTypeSeverity)) {
+            log.debug("Updating JIRA issue #{} priority is {}, of type {}.", bugId, scannerTypeSeverity, PRIORITY_FIELD_TYPE);
             issueBuilder.setFieldValue(PRIORITY_FIELD_TYPE, ComplexIssueInputFieldValue.with("name",
-                    bugTracker.getPriorities().get(severity)));
+                    bugTracker.getPriorities().get(scannerTypeSeverity)));
+        } else {
+            log.debug("JIRA issue #{} priority is {}, of type {} and it's NOT being updated.", bugId, scannerTypeSeverity, PRIORITY_FIELD_TYPE);
         }
 
         log.info("Updating JIRA issue #{}", bugId);
@@ -1393,15 +1369,25 @@ public class JiraService {
     }
 
     private void closeIssueInCaseNotWithinResults(ScanRequest request, Map<String, ScanResults.XIssue> map, Map<String, Issue> jiraMap, List<String> closedIssues) throws JiraClientException {
+        log.debug("CxFlow JIRA 'open-status' configuration list is {}. Transition configured in 'close-status' is [{}].", request.getBugTracker().getOpenStatus(), request.getBugTracker().getCloseTransition());
         for (Map.Entry<String, Issue> jiraIssue : jiraMap.entrySet()) {
             try {
-                if (!map.containsKey(jiraIssue.getKey()) && (request.getBugTracker().getOpenStatus().contains(jiraIssue.getValue().getStatus().getName()))) {
+                boolean isJiraIssueAVulnerability = map.containsKey(jiraIssue.getKey());
+                log.trace("Trying to close JIRA issue {} with key {}.", jiraIssue.getValue().getKey(), jiraIssue.getKey());
+                if (!isJiraIssueAVulnerability && (request.getBugTracker().getOpenStatus().contains(jiraIssue.getValue().getStatus().getName()))) {
                     /*Close the issue*/
-                    log.info("Closing issue {} with key {}", jiraIssue.getValue().getKey(), jiraIssue.getKey());
+                    log.info("Closing issue {} with key {}.", jiraIssue.getValue().getKey(), jiraIssue.getKey());
                     this.transitionCloseIssue(jiraIssue.getValue().getKey(),
                             request.getBugTracker().getCloseTransition(), request.getBugTracker(), false); //No false positives
                     closedIssues.add(jiraIssue.getValue().getKey());
 
+                } else {
+                    if (isJiraIssueAVulnerability) {
+                        log.debug("JIRA issue {} with key {} not closed, it still is a vulnerability.", jiraIssue.getValue().getKey(), jiraIssue.getKey());
+                    }
+                    else {
+                        log.debug("JIRA issue {} with key {} isn't a vulnerability and its current [{}] status doesn't match any of CxFlow's configured 'open-status' value.", jiraIssue.getValue().getKey(), jiraIssue.getKey(), jiraIssue.getValue().getStatus().getName());
+                    }
                 }
             } catch (HttpClientErrorException e) {
                 log.error("Error occurred while processing issue {} with key {}", jiraIssue.getValue().getKey(), jiraIssue.getKey(), e);

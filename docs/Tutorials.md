@@ -33,6 +33,11 @@
     * [Triggering Scans with CxFlow](#batchtriggering)
     * [EmailPNEVulns.ps1](#emailpne)
 * [GitHub Actions with JIRA Integration](#actions)
+* [CxFlow IAST Integration Tutorial](#IASTintegrations)
+    * [Prerequisites](#IASTprerequisites)
+    * [General Procedure](#IASTgeneralprocedures)
+    * [Sample Jenkins Pipeline](#IASTJenkinsPipeline)
+    * [Yaml - application.yml file](#IASTYaml)
 <br/>
 
 
@@ -1311,3 +1316,345 @@ jobs:
 ```
 --cx-flow.filter-state=Confirmed,Urgent
 ```
+
+## <a name="IASTintegrations">CxFlow IAST Integration Tutorial</a>
+[Back to Table of Contents](#tableofcontents)
+### <a name="IASTprerequisites">Prerequisites</a>
+<br>The following must be set up:<br>
+
+* CxIAST Management Server (refer to CxIAST Setup Guide and Installing the CxIAST Management Server)
+* The application under test (AUT) (refer to Configuring the AUT Environment)  
+* Jenkins server (refer to Installing Jenkins) 
+* Bug Tracker (refer to Bug Tracker)
+
+### <a name="IASTgeneralprocedures">General Procedure</a>
+
+<br> Create a pipeline in Jenkins that will perform the following:<br>
+1. Start CxFlow.
+2. Create a scan tag so that CxFLow can identify the scan.
+3. Start the AUT with a CxIAST agent.
+4. Start an E2E test suite on the AUT.
+5. Stop the CxIAST scan and open tickets
+
+### <a name="IASTJenkinsPipeline">Sample Jenkins Pipeline</a>
+Following is a description of a sample Jenkins declarative pipeline written in Groovy.
+#### Stage 1. Start CxFlow
+```
+        // 1. Get CxFlow - download CxFlow .jar and save it in a "cx-flow" folder
+        stage('Build CxFlow Jar'){
+            steps {
+                script{
+                    dir("cx-flow"){
+                        sh "curl https://github.com/checkmarx-ltd/cx-flow/releases/download/${CX_FLOW_VERSION}/cx-flow-${CX_FLOW_VERSION}.jar --output cx-flow.jar"
+                    }
+                }
+            }
+        }
+
+        // CxFlow can be used in server mode, or in CLI mode.
+        // If used in CLI mode - skip this step.
+        // If used in server mode, run it (needs to happen before running the AUT):
+        stage('Run CxFlow in server mode'){
+            steps{
+                script{
+                    dir('cx-flow'){
+                        sh """
+                            JENKINS_NODE_COOKIE=dontKillMe nohup java -jar cx-flow*.jar --spring.config.location=/var/jenkins/CxFlow/application.yml --web&>/tmp/start_app.log &
+                        """
+                        sleep 30
+                    }
+                }
+            }
+        }
+```
+#### Stage 2. Create a Scan ID Tag
+```
+        // 2. Create a scan tag so that CxFlow can identify the scan.
+        // CxIAST scan is started with the generated scan tag so CxFlow can stop it after tests are finished.
+
+        stage('Generate Scan Tag'){
+            steps{
+                script{
+                    def tag = ""
+
+                    // CxFlow can be used in server mode, or in CLI mode
+
+                    // If CxFlow is in server mode, get a generated scan tag from CxFlow:
+                    def response = sh(script: "curl --header \"Content-Type:application/json\" \
+                                                    --header \"X-Atlassian-Token:xxxx\" \
+                                                    --request POST \
+                                                     --data '{\"success\":\"true\",\"message\":\"ok\"}' \
+                                                     http://CXFLOW-URL/iast/generate-tag",returnStdout: true)
+                    def jsonSlurper = new JsonSlurper(type: JsonParserType.INDEX_OVERLAY)
+                    def object = jsonSlurper.parseText(response)
+                    tag = object.message
+
+                    // If CxFlow is in CLI mode, generate a scan tag (make sure it's unique)
+                    def now = new Date()
+                    tag =  now.format("yyMMddHHmmSS", TimeZone.getTimeZone('UTC'))
+
+                    // Used in following steps
+                    APP_TAG = tag
+                }
+            }
+        }
+```
+#### Stage 3. Start the Application Under Test (AUT)
+```
+        // 3. Start the AUT with a CxIAST agent.
+        // This example downloads a Java agent from CxIAST manager, extracts it, and runs WebGoat8 with an agent attached
+
+        stage('Run The App'){
+            steps {
+                script {
+                    sh "curl http://CXIAST-URL/iast/compilation/download/JAVA --output javaagent.zip"
+                    sh "unzip javaagent.zip -d javaagent"
+                    sh "JENKINS_NODE_COOKIE=dontKillMe nohup java -javaagent:javaagent/cx-launcher.jar -Dcx.appName=WebGoat -DcxScanTag=${APP_TAG} -jar /var/jenkins/webgoat-server-8.0.0.M21.jar --server.address=0.0.0.0 &>/tmp/run_webgoat.log &"
+                }
+            }
+        }
+```
+#### Stage 4. Start E2E test suite on the AUT
+```
+        // 4. Start an E2E test suite on the AUT.
+        // This example uses jmeter to run tests against WebGoat8
+
+        stage('Run Jmeter'){
+            steps{
+                script{
+                    sh "/var/jenkins/apache-jmeter-5.4.1/bin/jmeter.sh -n -t WebGoat8.jmx"
+                }
+            }
+        }
+```
+#### Stage 5. Stop the CxIAST scan and open tickets
+```
+        // 5. Stop the CxIAST scan and open tickets.
+        // CxFlow can be used in server mode, or in CLI mode
+
+        stage('Stop Scan - Server mode'){
+            steps{
+                script{
+
+                    // If bug tracker is Jira
+                    sh "curl --header \"Content-Type:application/json\" \
+                            --header \"X-Atlassian-Token:xxxx\" \
+                            --request POST \
+                             --data '{\"success\":\"true\",\"message\":\"ok\"}' \
+                             http://CXFLOW-URL/iast/stop-scan-and-create-jira-issue/${appTag}"
+                    }
+
+                    // ------------- OR ------------
+
+                    // If bug tracker is GitHub
+                    sh "curl --header \"Content-Type:application/json\" \
+                            --header \"X-Atlassian-Token:xxxx\" \
+                            --request POST \
+                            --data '{\"success\":\"true\",\"message\":\"ok\", \"assignee\":\"talilabok\", \"repoName\":\"cxflow-github\", \"namespace\":\"CxIAST\"}' \
+                             http://CXFLOW-URL/iast/stop-scan-and-create-github-issue/${appTag}"
+                }
+            }
+
+        // ---------OR-----------
+
+        stage("Stop Scan - Cli Mode"){
+            steps{
+                script{
+
+                    // If bug tracker is Jira
+                    dir("cx-flow"){
+                       echo "tag is ${APP_TAG}"
+                       sh """
+                       java -jar cx-flow*.jar --spring.config.location=/var/jenkins/CxFlow/application.yml --iast --scan-tag=\"${appTag}\" --bug-tracker=\"jira\"
+                       """
+                    }
+
+                    // ------------- OR ------------
+
+                    // If bug tracker is GitHub
+                    dir("cx-flow"){
+                        sh """
+                        java -jar cx-flow*.jar --spring.config.location=/var/jenkins/CxFlow/application.yml --iast --scan-tag=\"${appTag}\" --bug-tracker=\"githubissue\" --github.token=\"${githubToken}\" --repo-name=\"cxflow-github\" --namespace=\"CxIAST\" --assignee=\"CxIastCi\"
+                        """
+                    }
+
+                }
+            }
+        }
+    }
+}
+```
+### <a name="IASTYaml">Yaml - application.yml file</a>
+```
+server:
+  port: CXFLOW-PORT # used when CxFlow is in server mode
+
+logging:
+  pattern:
+    console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{15}){cyan}  [%clr(%X{cx}){blue}] %clr(:){faint} %replace(%m){'([\\|])','\\$1'}%n%wEx"
+    file: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{15}){cyan}  [%clr(%X{cx}){blue}] %clr(:){faint} %replace(%m){'([\\|])','\\$1'}%n%wEx"
+  file:
+    name: cx-flow.log
+
+
+cx-flow:
+  # Agreed upon shared API token
+  token: xxxx
+  bug-tracker: JIRA
+  bug-tracker-impl:
+    - CxXml
+    - Json
+    - JIRA
+    - GitLab
+    - GitHub
+    - Csv
+    - Azure
+    - Rally
+    - ServiceNow
+    - Sarif
+  branches:
+    - develop
+    - master
+    - security
+  filter-severity:
+    - High
+  filter-category:
+  filter-cwe:
+  filter-status:
+  mitre-url: https://cwe.mitre.org/data/definitions/%s.html
+
+checkmarx:
+  username: xxxxx
+  password: xxxxx
+  client-secret: xxxxx
+  base-url: http://cx.local
+  multi-tenant: true
+  configuration: Default Configuration
+  scan-preset: Checkmarx Default
+  team: \CxServer\SP\Checkmarx
+  url: ${checkmarx.base-url}/cxrestapi
+#WSDL Config
+  portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
+
+jira:
+  url: https://cx-iast-ci.atlassian.net
+  username: xxxxx
+  token: xxxxx
+  project: CIC
+  issue-type: Bug
+  priorities:
+    X: Y # Map Checkmarx severity : to JIRA Priority
+  open-transition: Reopen Issue
+  close-transition: Close Issue
+
+iast:
+  url: http://CXIAST-HOSTNAME
+  manager-port: CXIAST-PORT
+  username: xxxxx
+  password: xxxxx
+  update-token-seconds: 150  # By default token live only 5 minutes
+  filter-severity:
+    - HIGH
+    - MEDIUM
+    - LOW
+  #    - INFO
+  thresholds-severity:
+    HIGH: -1
+    MEDIUM: -1
+    LOW: -1
+    INFO: -1
+
+cxgo:
+  client-secret: xxx
+  base-url: https://cxgo-url
+  portal-url: https://cxgo-url
+  # CxOD Business unit that will contain the project/application/scan
+  team: \Demo\CxFlow
+  url: ${cxgo.base-url}
+  multi-tenant: true
+  configuration: Default Configuration
+  scan-preset: 1,2,3,4,5,9
+
+cx-integrations:
+  url: https://cx.local
+  read-multi-tenant-configuration: false
+
+rally:
+  token: xxxx
+  rally-project-id: xxxx
+  rally-workspace-id: xxxx
+  url: https://rallydev.com
+  api-url: https://xxxxx.rallydev.com/slm/webservice/v2.0
+
+servicenow:
+  token: 123
+  servicenow-project-id: xxxx
+  servicenow-workspace-id: xxxx
+  url: https://servicenow.com
+  apiUrl: https://xxxxx.service-now.com/api/now/table
+  username: xxxx
+  password: xxxx
+
+github:
+  webhook-token: xxxx
+  token: xxxxx
+  url: https://github.com
+  api-url: https://api.github.com/repos/
+  false-positive-label: false-positive
+  block-merge: true
+
+gitlab:
+  webhook-token: xxxx
+  token: xxxx
+  url: https://gitlab.com
+  api-url: https://gitlab.com/api/v4/
+  false-positive-label: false-positive
+  block-merge: true
+
+azure:
+  webhook-token: xxxx
+  token: xxxx
+  url: https://dev.azure.com
+  issue-type: issue
+  api-version: 5.0
+  false-positive-label: false-positive
+
+json:
+  file-name-format: "[TEAM]-[PROJECT]-[TIME].json"
+  data-folder: "/tmp/cxflow"
+
+cx-xml:
+  file-name-format: "[TEAM]-[PROJECT]-[TIME].xml"
+  data-folder: "/tmp/cxflow"
+
+csv:
+  file-name-format: "[TEAM]-[PROJECT]-[TIME].csv"
+  data-folder: "/tmp/cxflow"
+  include-header: true
+  fields:
+    - header: Application
+      name: application
+      default-value: unknown
+    - header: severity
+      name: severity
+    - header: Vulnerability ID
+      name: summary
+      prefix: "[APP]:"
+    - header: file
+      name: filename
+    - header: Vulnerability ID
+      name: summary
+    - header: Vulnerability Name
+      name: category
+    - header: Category ID
+      name: cwe
+    - header: Description
+      name: description
+    - header: Severity
+      name: severity
+    - header: recommendation
+      name: recommendation
+    - header: Similarity ID
+      name: similarity-id
+```
+	
