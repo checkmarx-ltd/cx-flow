@@ -76,6 +76,10 @@ public class JiraService {
     private List<String> currentUpdatedIssuesList = new ArrayList<>();
     private List<String> currentClosedIssuesList = new ArrayList<>();
 
+    public JiraProperties getJiraProperties() {
+        return jiraProperties;
+    }
+
     public JiraService(JiraProperties jiraProperties, FlowProperties flowProperties,
                        CodeBashingService codeBashingService,
                        HelperService helperService) {
@@ -264,7 +268,7 @@ public class JiraService {
         return String.join(", ", issueTypesList);
     }
 
-    private String createIssue(ScanResults.XIssue issue, ScanRequest request) throws JiraClientException {
+    public String createIssue(ScanResults.XIssue issue, ScanRequest request) throws JiraClientException {
         log.debug("Retrieving issuetype object for project {}, type {}", request.getBugTracker().getProjectKey(), request.getBugTracker().getIssueType());
         try {
             BugTracker bugTracker = request.getBugTracker();
@@ -385,56 +389,6 @@ public class JiraService {
         issues.forEach(result::add);
 
         return result;
-    }
-
-    public String createIssue(String projectKey,
-                              String summary,
-                              String description,
-                              String assignee,
-                              String priorities,
-                              String issueTypeName) throws JiraClientException {
-        return createIssue(projectKey, summary, description, assignee, priorities, issueTypeName, null);
-    }
-
-    public String createIssue(String projectKey,
-                              String summary,
-                              String description,
-                              String assignee,
-                              String priorities,
-                              String issueTypeName,
-                              List<String> labels) throws JiraClientException {
-        log.debug("Retrieving issuetype object for project {}, type {}", projectKey, issueTypeName);
-        try {
-
-            IssueType issueType = this.getIssueType(projectKey, issueTypeName);
-            IssueInputBuilder issueBuilder = new IssueInputBuilder(projectKey, issueType.getId());
-
-            issueBuilder.setSummary(summary);
-            issueBuilder.setDescription(description);
-
-            if (labels != null && !labels.isEmpty()) {
-                issueBuilder.setFieldValue(LABEL_FIELD_TYPE, labels);
-            }
-
-            if (assignee != null && !assignee.isEmpty()) {
-                ComplexIssueInputFieldValue jiraAssignee = getAssignee(assignee, projectKey);
-                if (jiraAssignee != null) {
-                    issueBuilder.setFieldInput(new FieldInput(IssueFieldId.ASSIGNEE_FIELD, jiraAssignee));
-                }
-            }
-
-            if (priorities != null) {
-                issueBuilder.setFieldValue(PRIORITY_FIELD_TYPE, ComplexIssueInputFieldValue.with("name", priorities));
-            }
-
-            log.debug("Creating JIRA issue");
-            BasicIssue basicIssue = this.issueClient.createIssue(issueBuilder.build()).claim();
-            log.debug("JIRA issue {} created", basicIssue.getKey());
-            return basicIssue.getKey();
-        } catch (RestClientException e) {
-            log.error("Error occurred while creating JIRA issue.", e);
-            throw new JiraClientException();
-        }
     }
 
     private String checkSummaryLength(String summary) {

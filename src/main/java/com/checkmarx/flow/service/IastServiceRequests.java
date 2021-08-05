@@ -4,6 +4,7 @@ import com.checkmarx.flow.config.IastProperties;
 import com.checkmarx.flow.dto.iast.manager.dto.ResultInfo;
 import com.checkmarx.flow.dto.iast.manager.dto.Scan;
 import com.checkmarx.flow.dto.iast.manager.dto.ScanVulnerabilities;
+import com.checkmarx.flow.dto.iast.manager.dto.description.VulnerabilityDescription;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -82,6 +83,11 @@ public class IastServiceRequests {
                 .readValue(resultPutBodyOfDefaultConnectionToIast("scans/scan-tag/" + scanTag + "/finish"), Scan.class);
     }
 
+    public VulnerabilityDescription apiVulnerabilitiesDescription(Long vulnerabilityId, String lang) throws IOException {
+        return objectMapper
+                .readValue(resultGetBodyOfDefaultConnectionToIast("vulnerabilities/" + vulnerabilityId + "/description?programmingLanguage=" + lang), VulnerabilityDescription.class);
+    }
+
     /**
      * Update IAST authorization token if needed.
      */
@@ -113,7 +119,10 @@ public class IastServiceRequests {
             }
             return response.toString();
         } catch (IOException e) {
-            String msg = "Can't stop scan. " + e.getMessage();
+            String msg = e.getMessage();
+            if (e.getMessage().contains("scans/scan-tag/") && e.getMessage().contains("/finish")) {
+                msg = "Can't stop scan. " + msg;
+            }
             if (e.getMessage().contains("/iast/scans/scan-tag/")) {
                 msg = "Scan have to start and you must use a unique scan tag. " +
                         "You may have used a non-unique scan tag. " + msg;

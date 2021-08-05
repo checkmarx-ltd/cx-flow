@@ -144,6 +144,7 @@ dependencies {
     }
 
     compile("javax.persistence:javax.persistence-api:2.2")
+
 }
 
 springBoot {
