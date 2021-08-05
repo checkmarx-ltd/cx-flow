@@ -168,7 +168,7 @@ The sast-issue-summary-format and sast-issue-summary-branch-format properties ca
 
 **[VULNERABILTY]** → The vulnerability
 
-The default Jira issue summary format (for CxSAST issues) is `[PREFIX][VULNERABILITY] @ [FILENAME][SUFFIX]` (`[PREFIX][VULNERABILITY] @ [FILENAME] [[BRANCH]][SUFFIX]` if the `--branch` command line option has been used).
+The default Jira issue summary format (for CxSAST issues) is `[PREFIX][VULNERABILITY] @ [FILENAME][POSTFIX]` (`[PREFIX][VULNERABILITY] @ [FILENAME] [[BRANCH]][POSTFIX]` if the `--branch` command line option has been used).
 
 ## <a name="custom">Custom Bug Trackers</a>
 Refer to the [development section](https://github.com/checkmarx-ltd/cx-flow/wiki/Development) for the implementation approach.
