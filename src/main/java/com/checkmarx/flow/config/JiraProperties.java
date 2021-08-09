@@ -51,8 +51,8 @@ public class JiraProperties {
     private List<String> statusCategoryClosedName = Arrays.asList("Done");
     @Getter @Setter
     private String projectKeyScript;
-    private String sastIssueSummaryFormat = "[PREFIX][VULNERABILITY] @ [FILENAME][SUFFIX]";
-    private String sastIssueSummaryBranchFormat = "[PREFIX][VULNERABILITY] @ [FILENAME] [[BRANCH]][SUFFIX]";
+    private String sastIssueSummaryFormat = "[PREFIX][VULNERABILITY] @ [FILENAME][POSTFIX]";
+    private String sastIssueSummaryBranchFormat = "[PREFIX][VULNERABILITY] @ [FILENAME] [[BRANCH]][POSTFIX]";
 
 
     public String getUrl() {
