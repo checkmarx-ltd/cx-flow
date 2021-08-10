@@ -1496,10 +1496,7 @@ public class JiraService {
 
     private static String fillPlaceholder(String summary, String placeholder, String actualValue){
         if(StringUtils.isNotEmpty(actualValue)) {
-            actualValue = actualValue.replaceAll("[^a-zA-Z0-9-_]+","_");
             summary = summary.replace(placeholder, actualValue);
-            log.debug(actualValue);
-            log.debug(summary);
         }
         return summary;
     }
