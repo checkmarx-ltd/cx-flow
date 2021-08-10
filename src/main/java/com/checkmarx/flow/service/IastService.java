@@ -186,10 +186,10 @@ public class IastService {
                     }
                     //  jiraService is not an instance of IssueTracker, because of that the "return" here is a shortcut to stop the execution
                     return;
-                case GITHUBISSUE:
+                case GITHUBCOMMIT:
                     issueTracker = gitHubIssueTracker;
                     break;
-                case GITLABISSUE:
+                case GITLABCOMMIT:
                     issueTracker = gitLabIssueTracker;
                     break;
                 case AZURE:

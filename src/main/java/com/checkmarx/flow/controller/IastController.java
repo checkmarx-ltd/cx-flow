@@ -74,10 +74,10 @@ public class IastController {
                     bugTrackerType = BugTracker.Type.JIRA;
                     break;
                 case "github":
-                    bugTrackerType = BugTracker.Type.GITHUBISSUE;
+                    bugTrackerType = BugTracker.Type.GITHUBCOMMIT;
                     break;
                 case "gitlab":
-                    bugTrackerType = BugTracker.Type.GITLABISSUE;
+                    bugTrackerType = BugTracker.Type.GITLABCOMMIT;
                     break;
                 case "azure":
                     bugTrackerType = BugTracker.Type.AZURE;
