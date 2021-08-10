@@ -32,11 +32,9 @@ public class GitHubProperties extends RepoProperties {
         //sample: https://api.github.com/repos/octocat/Hello-World/issues/1347/comments
     }
 
-    public String getGitUri(String namespace, String repo) {
+    public String getGitUri(String namespace, String repo){
         String format = "%s/%s/%s.git";
         return String.format(format, getUrl(), namespace, repo);
         //sample: https://github.com/namespace/repo.git
     }
-
-
 }

@@ -268,10 +268,10 @@ public class IastCliSteps {
             case "jira":
                 verify(jiraService, times(createdIssues)).createIssue(any(), any());
                 return;
-            case "githubissue":
+            case "github":
                 issueTracker = gitHubIssueTracker;
                 break;
-            case "gitlabissue":
+            case "gitlab":
                 issueTracker = gitLabIssueTracker;
                 break;
             case "azure":

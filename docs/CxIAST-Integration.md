@@ -145,8 +145,8 @@ The ticket is structured as follows:
 
 * iast
 * scan-tag=tag
-* --bug-tracker="custom"
-* --github
+* bug-tracker="custom"
+* github
 * `repo-name=repository-name`
 * `namespace=checkmarx-ltd`
 
@@ -167,9 +167,9 @@ The ticket is structured as follows:
 
 * iast
 * scan-tag=tag
-* --bug-tracker="custom"
-* --gitlab
-* --project-id=xxxxxx
+* bug-tracker="custom"
+* gitlab
+* project-id=xxxxxx
   
 * `gitlab.token=token-xxxx`
 * `project-id=xxxxxx`

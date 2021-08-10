@@ -8,7 +8,12 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.constants.FlowConstants;
-import com.checkmarx.flow.dto.*;
+import com.checkmarx.flow.dto.OperationResult;
+import com.checkmarx.flow.dto.RepoComment;
+import com.checkmarx.flow.dto.RepoIssue;
+import com.checkmarx.flow.dto.ScanDetails;
+import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.dto.Sources;
 import com.checkmarx.flow.dto.github.Content;
 import com.checkmarx.flow.dto.github.PullEvent;
 import com.checkmarx.flow.dto.github.PushEvent;
@@ -202,12 +207,12 @@ public class GitHubService extends RepoService {
     @Override
     public void addComment(ScanRequest request, String comment) {
         log.debug("Adding a new comment");
-        HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONComment("body", comment).toString(), createAuthHeaders(request));
+        HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONComment("body",comment).toString(), createAuthHeaders(request));
         restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     }
 
-    public void startBlockMerge(ScanRequest request, String url) {
-        if (properties.isBlockMerge()) {
+    public void startBlockMerge(ScanRequest request, String url){
+        if(properties.isBlockMerge()) {
             final String PULL_REQUEST_STATUS = "pending";
             HttpEntity<?> httpEntity = new HttpEntity<>(
                     getJSONStatus(PULL_REQUEST_STATUS, url, "Checkmarx Scan Initiated").toString(),

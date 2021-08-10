@@ -50,13 +50,6 @@ public class GitLabIssueTracker implements IssueTracker {
     private final FlowProperties flowProperties;
     private final ScmConfigOverrider scmConfigOverrider;
 
-    @Autowired
-    private GitLabIssueTracker issueTracker;
-
-    public GitLabProperties getProperties() {
-        return properties;
-    }
-
     public GitLabIssueTracker(@Qualifier("flowRestTemplate") RestTemplate restTemplate, GitLabProperties properties, FlowProperties flowProperties,
                               ScmConfigOverrider scmConfigOverrider) {
         this.restTemplate = restTemplate;
@@ -333,50 +326,14 @@ public class GitLabIssueTracker implements IssueTracker {
         String fileUrl = getFileUrl(request, resultIssue.getFilename());
         String body = HTMLHelper.getMDBody(resultIssue, request.getBranch(), fileUrl, flowProperties);
         String title = HTMLHelper.getScanRequestIssueKeyWithDefaultProductValue(request, this, resultIssue);
-        Long accountId = issueTracker.getAccountId(request);     //gitLabIssueTracker - for cache
 
         try {
             requestBody.put("title", title);
             requestBody.put("description", body);
-            if (accountId != null) {
-                requestBody.put("assignee_id", accountId);
-            }
         } catch (JSONException e) {
             log.error("Error creating JSON Create Issue Object - JSON Object will be empty", e);
         }
         return requestBody;
-    }
-
-    @Cacheable(value = "gitlabAccounts")
-    public Long getAccountId(ScanRequest request) {
-        try {
-            String assignee;
-            if (request.getBugTracker() != null && request.getBugTracker().getAssignee() != null) {
-                assignee = request.getBugTracker().getAssignee();
-            } else {
-                return null;
-            }
-
-            String url = scmConfigOverrider.determineConfigApiUrl(properties, request).concat(USER_INFO);
-            url = url.replace("{username}", assignee);
-            URI uri = new URI(url);
-            HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders(request));
-
-            ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, httpEntity, String.class);
-            JSONArray userArray = new JSONArray(response.getBody());
-            long id = userArray.getJSONObject(0).getLong("id");
-
-            log.info("gitlab user \"{}\" have id = {}", assignee, id);
-            return id;
-        } catch (HttpClientErrorException e) {
-            log.error("Error calling gitlab project api {}", e.getResponseBodyAsString(), e);
-        } catch (JSONException e) {
-            log.error("Error parsing gitlab project response.", e);
-        } catch (URISyntaxException e) {
-            log.error("Incorrect URI syntax", e);
-        }
-
-        return null;
     }
 
     @Override
