@@ -80,7 +80,7 @@ public class IastController {
                     bugTrackerType = BugTracker.Type.GITLABCOMMIT;
                     break;
                 case "azure":
-                    bugTrackerType = BugTracker.Type.AZURE;
+                    bugTrackerType = BugTracker.Type.ADOPULL;
                     break;
                 default:
                     throw new NotImplementedException(bugTrackerName + ". That bug tracker not implemented.");
@@ -128,7 +128,7 @@ public class IastController {
         }
 
         String altFields = null;
-        if(tracker == BugTracker.Type.AZURE) {
+        if(tracker == BugTracker.Type.ADOPULL || tracker == BugTracker.Type.adopull ) {
             if (!Strings.isEmpty(assignee)) {
                 altFields = "System.AssignedTo:" + assignee;
             }

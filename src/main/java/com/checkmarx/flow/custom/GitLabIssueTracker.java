@@ -15,9 +15,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -42,7 +40,6 @@ public class GitLabIssueTracker implements IssueTracker {
     private static final String NEW_ISSUE_PATH = "/projects/{id}/issues";
     private static final String ISSUE_PATH = "/projects/{id}/issues/{iid}";
     private static final String COMMENT_PATH = "/projects/{id}/issues/{iid}/notes";
-    private static final String USER_INFO = "/users?username={username}";
     private static final Logger log = LoggerFactory.getLogger(GitLabIssueTracker.class);
     private static final int UNKNOWN_INT = -1;
     private final RestTemplate restTemplate;

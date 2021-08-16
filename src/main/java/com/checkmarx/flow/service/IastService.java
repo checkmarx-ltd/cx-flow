@@ -192,7 +192,8 @@ public class IastService {
                 case GITLABCOMMIT:
                     issueTracker = gitLabIssueTracker;
                     break;
-                case AZURE:
+                case adopull:
+                case ADOPULL:
                     issueTracker = azureIssueTracker;
                     htmlDescription = true;
                     request.putAdditionalMetadata(Constants.ADO_ISSUE_BODY_KEY, "Description");
