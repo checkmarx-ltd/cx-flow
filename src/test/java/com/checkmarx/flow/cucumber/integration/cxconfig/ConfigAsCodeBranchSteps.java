@@ -8,6 +8,7 @@ import com.checkmarx.flow.controller.GitHubController;
 import com.checkmarx.flow.dto.github.PullEvent;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.sdk.config.CxProperties;
+import com.checkmarx.sdk.service.CxService;
 import com.checkmarx.sdk.ShardManager.ShardSessionTracker;
 import io.cucumber.java.en.*;
 import lombok.RequiredArgsConstructor;
