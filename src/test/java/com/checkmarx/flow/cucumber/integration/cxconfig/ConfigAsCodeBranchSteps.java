@@ -37,7 +37,7 @@ public class ConfigAsCodeBranchSteps {
     private final GitHubAppAuthService gitHubAppAuthService;
     private final GitAuthUrlGenerator gitAuthUrlGenerator;
     private final ShardSessionTracker sessionTrackerMock;
-    private final CxClient cxService;
+    private final CxClient cxServiceMock;
     private String defaultBranch;
     private String actualBranch;
 
