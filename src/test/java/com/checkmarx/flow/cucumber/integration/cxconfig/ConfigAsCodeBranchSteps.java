@@ -8,6 +8,7 @@ import com.checkmarx.flow.controller.GitHubController;
 import com.checkmarx.flow.dto.github.PullEvent;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.sdk.config.CxProperties;
+import com.checkmarx.sdk.ShardManager.ShardSessionTracker;
 import io.cucumber.java.en.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +36,8 @@ public class ConfigAsCodeBranchSteps {
     private final ScmConfigOverrider scmConfigOverrider;
     private final GitHubAppAuthService gitHubAppAuthService;
     private final GitAuthUrlGenerator gitAuthUrlGenerator;
+    private final ShardSessionTracker sessionTrackerMock;
+    private final CxClient cxService;
     private String defaultBranch;
     private String actualBranch;
 
@@ -68,7 +71,10 @@ public class ConfigAsCodeBranchSteps {
         // Don't start automation.
         FlowService flowServiceMock = mock(FlowService.class);
 
-        GitHubService gitHubService = new GitHubService(restTemplateMock, gitHubProperties, flowProperties, null, scmConfigOverrider, gitHubAppAuthService);
+        this.sessionTrackerMock = mock(SessionTracker.class);
+        this.cxServiceMock = mock(CxService.class);
+    
+        GitHubService gitHubService = new GitHubService(restTemplateMock, gitHubProperties, flowProperties, null, scmConfigOverrider, gitHubAppAuthService, sessionTrackerMock, cxServiceMock);
         GitHubAppAuthService gitHubAppAuthService = new GitHubAppAuthService(restTemplateMock, gitHubProperties);
 
         GitHubController gitHubControllerSpy = Mockito.spy(new GitHubController(gitHubProperties,

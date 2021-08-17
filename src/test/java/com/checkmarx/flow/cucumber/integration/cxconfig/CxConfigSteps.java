@@ -17,6 +17,7 @@ import com.checkmarx.sdk.dto.cx.CxScanSummary;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.scanner.CxClient;
 import com.checkmarx.sdk.service.CxService;
+import com.checkmarx.sdk.ShardManager.ShardSessionTracker;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -70,6 +71,7 @@ public class CxConfigSteps {
     private final ConfigurationOverrider configOverrider;
     private final ScmConfigOverrider scmConfigOverrider;
     private final GitAuthUrlGenerator gitAuthUrlGenerator;
+    private final ShardSessionTracker sessionTrackerMock;
 
     private ScanResults scanResultsToInject;
 
@@ -86,9 +88,10 @@ public class CxConfigSteps {
                          CxProperties cxProperties, GitHubProperties gitHubProperties, ConfigurationOverrider configOverrider, JiraProperties jiraProperties,
                          ThresholdValidator thresholdValidator, FilterFactory filterFactory, FlowService flowService, EmailService emailService,
                          ScmConfigOverrider scmConfigOverrider, GitHubAppAuthService gitHubAppAuthService,
-                         GitAuthUrlGenerator gitAuthUrlGenerator) {
+                         GitAuthUrlGenerator gitAuthUrlGenerator, ShardSessionTracker sessionTracker) {
 
         this.cxClientMock = mock(CxService.class);
+        this.sessionTrackerMock = mock(ShardSessionTracker.class);
 
         this.flowProperties = flowProperties;
 
@@ -561,7 +564,9 @@ public class CxConfigSteps {
                 flowProperties,
                 thresholdValidator,
                 scmConfigOverrider,
-                gitHubAppAuthService);
+                gitHubAppAuthService,
+                sessionTrackerMock,
+                cxClientMock);
 
         CxScannerService cxScannerService = new CxScannerService(cxProperties,null, null, cxClientMock, null );
 
