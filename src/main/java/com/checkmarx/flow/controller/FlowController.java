@@ -13,7 +13,10 @@ import com.checkmarx.flow.sastscanning.ScanRequestConverter;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.Constants;
+import com.checkmarx.sdk.ShardManager.ShardSession;
+import com.checkmarx.sdk.ShardManager.ShardSessionTracker;
 import com.checkmarx.sdk.dto.sast.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
@@ -58,6 +61,8 @@ public class FlowController {
     private final SastScanner sastScanner;
     private final ResultsService resultsService;
     private final CxClient cxService;
+    private final CxProperties cxProperties;
+    private final ShardSessionTracker sessionTracker;
 
     private final CxGoScanner cxgoScanner;
     
@@ -81,6 +86,19 @@ public class FlowController {
         MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
         // Validate shared API token from header
         validateToken(token);
+
+        // This primes the shard when Shard Manager is turned on
+        if(cxProperties.getEnableShardManager()) {
+            ShardSession shard = sessionTracker.getShardSession();
+            // sometimes the team comes in missing the leading "/"
+            // like this: CxServer/my-proj. The following check
+            // ensures this gets fixed like this: /CxServer/CHECKMARX
+            if(team.charAt(0) != '/') {
+                team = ("/" + team);
+            }
+            shard.setTeam(team);
+            shard.setProject(project);
+        }
 
         // Create bug tracker
         BugTracker bugTracker = getBugTracker(assignee, bug);

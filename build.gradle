@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        CxSBSDK = "0.4.98"
+        CxSBSDK = "0.4.99"
         ConfigProviderVersion = "1.0.10"
         //cxVersion = "8.90.5"
         springBootVersion = '2.3.5.RELEASE'
@@ -198,7 +198,6 @@ task componentTest(type: Test) {
             events "passed", "skipped", "failed"
         }
     }
-    check.dependsOn.remove(test)
 }
 
 
@@ -213,7 +212,6 @@ task e2eTests(type: Test) {
         }
     }
 
-    check.dependsOn.remove(test)
 }
 
 task integrationTest(type: Test) {
