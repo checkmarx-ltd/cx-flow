@@ -90,6 +90,25 @@ public class SastScanner extends AbstractVulnerabilityScanner {
             exit(3);
         }
     }
+
+    /**
+     * This method sets scan preset override parameter.
+     * If webhook parameter preset is given then method will sets  scan preset override to true
+     * If setting-override parameter is true then preset value will be taken from application.yml file.
+     * 1st preference will be given to webhook parameter preset value and then value present in application.yml file.
+     * @param scanRequest
+     */
+    @Override
+    protected void overrideScanPreset(ScanRequest scanRequest) {
+        if (StringUtils.isNotEmpty(scanRequest.getScanPreset())) {
+            scanRequest.setScanPresetOverride(true);
+        }else{
+            if(cxProperties.getSettingsOverride()) {
+                scanRequest.setScanPresetOverride(true);
+            }
+            scanRequest.setScanPreset(getCxPropertiesBase().getScanPreset());
+        }
+    }
     /**
      * Process Projects in batch mode - JIRA ONLY
      */
