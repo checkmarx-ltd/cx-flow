@@ -79,6 +79,7 @@ public class IastController {
                 case "gitlab":
                     bugTrackerType = BugTracker.Type.GITLABCOMMIT;
                     break;
+                case "ado":
                 case "azure":
                     bugTrackerType = BugTracker.Type.ADOPULL;
                     break;
@@ -112,6 +113,7 @@ public class IastController {
 
         checksForGitHub(body, tracker);
         checksForGitLab(body, tracker);
+        checksForAzure(body, tracker);
 
         String assignee = body.getAssignee();
         BugTracker bt;
@@ -148,6 +150,17 @@ public class IastController {
     private void checksForGitLab(CreateIssue body, BugTracker.Type tracker) {
         if (tracker == BugTracker.Type.GITLABCOMMIT && body.getProjectId() == null) {
             throw new IastThatPropertiesIsRequiredException("Property \"project-id\" is required");
+        }
+    }
+
+    private void checksForAzure(CreateIssue body, BugTracker.Type tracker) {
+        if (tracker == BugTracker.Type.ADOPULL) {
+            if (body.getBugTrackerProject() == null) {
+                throw new IastThatPropertiesIsRequiredException("Property \"bugTrackerProject\" is required");
+            }
+            if (body.getNamespace() == null) {
+                throw new IastThatPropertiesIsRequiredException("Property \"namespace\" is required");
+            }
         }
     }
 

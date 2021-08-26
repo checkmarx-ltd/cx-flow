@@ -111,10 +111,11 @@ public class IastCliSteps {
     private JSONObject body;
     private MvcResult mvcResult;
 
-    @Given("mock CLI runner {} {}")
-    public void mockCliRunner(String scanTag, String bugTracker) {
+    @Given("mock CLI runner {} {} {}")
+    public void mockCliRunner(String scanTag, String bugTracker, String params) {
         scanTag = removeQuotes(scanTag);
         bugTracker = removeQuotes(bugTracker);
+        params = removeQuotes(params);
         cxFlowRunner = new CxFlowRunner(
                 flowProperties,
                 cxScannerService,
@@ -132,7 +133,7 @@ public class IastCliSteps {
                 buildProperties,
                 scanners,
                 thresholdValidator);
-        String arguments = ARGS + " --scan-tag=" + scanTag + " --bug-tracker=" + bugTracker;
+        String arguments = ARGS + " --scan-tag=" + scanTag + " --bug-tracker=" + bugTracker + " " + params;
         String[] argsParam = arguments.split(" ");
         this.args = new DefaultApplicationArguments(argsParam);
     }
@@ -274,7 +275,7 @@ public class IastCliSteps {
             case "gitlab":
                 issueTracker = gitLabIssueTracker;
                 break;
-            case "azure":
+            case "ado":
                 issueTracker = adoIssueTracker;
                 break;
         }

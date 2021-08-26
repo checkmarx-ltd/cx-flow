@@ -468,7 +468,7 @@ public class CxFlowRunner implements ApplicationRunner {
             request.setBugTracker(BugTracker.builder()
                     .type(BugTracker.Type.GITLABCOMMIT)
                     .build());
-        } else if (args.containsOption("azure")) {
+        } else if (args.containsOption("ado")) {
             if (ScanUtils.empty(getOptionValues(args, "namespace"))) {
                 log.error("--namespace must be provided for azure bug tracking");
                 exit(1);

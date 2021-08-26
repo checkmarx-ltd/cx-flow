@@ -232,8 +232,10 @@ java -jar cx-flow.jar
 ```
 java -jar cx-flow.jar 
 --iast
---bug-tracker="azure"
 --scan-tag="cx-scan-00"
+
+--bug-tracker="custom"
+--ado
 --repo-name="myRepoName"
 --branch="myBranchName"
 --azure.token="AZURE_TOKEN"
@@ -248,13 +250,13 @@ java -jar cx-flow.jar
 java -jar cx-flow.jar 
 --spring.config.location=application.yml
 --iast
---bug-tracker="custom"
---github
 --scan-tag="scanTag"
 --namespace="checkmarx-ltd"
 --repo-name="cx-flow"
 --branch="develop"
 
+--bug-tracker="custom"
+--github
 --github.token=token-xxxx
 ...
 ```
@@ -267,14 +269,14 @@ java -jar cx-flow.jar
 java -jar cx-flow.jar 
 --spring.config.location=application.yml
 --iast
---bug-tracker="custom"
---gitlab
 --scan-tag="cx-scan-20"
 --namespace="checkmarx-ltd"
 --repo-name="cx-flow"
 --branch="develop"
 --project-id=xxxxxxxx
 
+--bug-tracker="custom"
+--gitlab
 --gitlab.token=token-xxxx
 
 ...
