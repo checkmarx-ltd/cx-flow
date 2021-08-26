@@ -163,6 +163,7 @@ public class ADOService {
 
     void endBlockMerge(ScanRequest request, ScanResults results, ScanDetails scanDetails){
         if(properties.isBlockMerge()) {
+            Integer projectId = Integer.parseInt(results.getProjectId());
             String url = request.getAdditionalMetadata("statuses_url");
             String statusId = request.getAdditionalMetadata("status_id");
             String threadUrl = request.getMergeNoteUri().concat("/").concat(request.getAdditionalMetadata("ado_thread_id"));
@@ -189,6 +190,18 @@ public class ADOService {
             restTemplate.exchange(getFullAdoApiUrl(url).concat("-preview"),
                     HttpMethod.PATCH, httpEntity, Void.class);
 
+            /*
+                if the SAST server fails to scan a project it generates a result with ProjectId = -1
+                This if statement adds a status of failed to the ADO PR, and sets the status of thread to
+                CLOSED.
+             */
+            if(projectId == -1){
+                log.debug("SAST scan could not be processed due to some error. Creating status of failed to {}", url);
+                createStatus("failed", "Checkmarx Scan could not be processed.", url, results.getLink(), request);
+                createThreadStatus(CLOSED,threadUrl,request);
+                return;
+            }
+
             boolean isMergeAllowed = thresholdValidator.isMergeAllowed(results, properties, new PullRequestReport(scanDetails, request));
 
             if(!isMergeAllowed){
@@ -210,7 +223,7 @@ public class ADOService {
                 ADOUtils.createAuthHeaders(scmConfigOverrider.determineConfigToken(properties, scanRequest.getScmInstance())
         ));
         //TODO remove preview once applicable
-        log.info("Adding pending status to pull {}", url);
+        log.info("Adding {} status to pull {}",state, url);
         ResponseEntity<String> response = restTemplate.exchange(getFullAdoApiUrl(url).concat("-preview"),
                 HttpMethod.POST, httpEntity, String.class);
         log.debug(String.valueOf(response.getStatusCode()));
