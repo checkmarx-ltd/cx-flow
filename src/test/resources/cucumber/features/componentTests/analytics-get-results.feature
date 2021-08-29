@@ -1,4 +1,4 @@
-@Component
+@Component @Skip
 Feature: Test analytics for get results operation
 
 

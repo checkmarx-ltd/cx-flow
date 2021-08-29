@@ -599,18 +599,6 @@ workflows:
       jobs:
         - checkmarx/circleci-kpi-shipper
 
-  sonar:
-    jobs:
-      - sonar:
-          context: sonarcloud
-          filters:
-            branches:
-              only:
-                - master
-                - develop
-                - /pr-.*/
-                - /pr .*/
-                - sonar
   build_deploy:
     jobs:
       - build
