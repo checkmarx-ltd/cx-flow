@@ -50,6 +50,7 @@ public class ScanResultsBuilder {
                 .description("Description: Reflected_XSS_All_Clients")
                 .details(getIssueDetails())
                 .additionalDetails(new HashMap<>())
+                .groupBySeverity(true)
                 .build();
         return Collections.singletonList(xIssue);
 
@@ -72,6 +73,7 @@ public class ScanResultsBuilder {
                 .description("Description: SQL_Injection")
                 .details(getIssueDetails())
                 .additionalDetails(new HashMap<>())
+                .groupBySeverity(true)
                 .build();
         collection.add(xIssue);
         
