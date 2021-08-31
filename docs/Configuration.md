@@ -85,7 +85,8 @@ server:
   port: ${PORT:8080}
 
 logging:
-  file: flow.log
+  file:
+    name: flow.log
 
 cx-flow:
   contact: admin@cx.com

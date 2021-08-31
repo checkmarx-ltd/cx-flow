@@ -38,7 +38,8 @@ checkmarx:
 server:
   port: ${PORT:8982}
 logging:
-  file: flow.log
+  file:
+    name: flow.log
 
 cxflow:
   bug-tracker: JIRA

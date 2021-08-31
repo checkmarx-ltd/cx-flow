@@ -2,7 +2,8 @@ server:
   port: ${PORT:8080}
 
 logging:
-  file: flow.log
+  file:
+    name: flow.log
 
 cx-flow:
   # Agreed upon shared API token
