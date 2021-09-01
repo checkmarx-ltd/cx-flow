@@ -198,7 +198,7 @@ public class CxFlowRunner implements ApplicationRunner {
         CxPropertiesBase cxProperties = cxScannerService.getProperties();
 
         if (((ScanUtils.empty(namespace) && ScanUtils.empty(repoName) && ScanUtils.empty(branch)) &&
-                ScanUtils.empty(application)) && !args.containsOption(BATCH_OPTION)) {
+                ScanUtils.empty(application)) && !args.containsOption(BATCH_OPTION) && !args.containsOption(IAST_OPTION)) {
             log.error("Namespace/Repo/Branch or Application (app) must be provided");
             exit(1);
         }
@@ -353,6 +353,15 @@ public class CxFlowRunner implements ApplicationRunner {
                 .disableCertificateValidation(disableCertificateValidation)
                 .build();
 
+        if (projectId != null) {
+            try {
+                Integer repoProjectId = Integer.parseInt(projectId);
+                request.setRepoProjectId(repoProjectId);
+            } catch (RuntimeException e) {
+                log.error("Can't parse project-id", e);
+            }
+        }
+
         request = configOverrider.overrideScanRequestProperties(flowOverride, request);
         /*Determine if BitBucket Cloud/Server is being used - this will determine formatting of URL that links to file/line in repository */
         request.setId(uid);
@@ -399,7 +408,7 @@ public class CxFlowRunner implements ApplicationRunner {
                     exit(ExitCode.ARGUMENT_NOT_PROVIDED);
                 }
                 publishLatestScanResults(request);
-            } else if (args.containsOption("scan")) {
+            } else if (args.containsOption("scan") || args.containsOption(IAST_OPTION)) {
                 log.info("Executing scan process");
                 //GitHub Scan with Git Clone
                 if (args.containsOption("github")) {
@@ -408,14 +417,14 @@ public class CxFlowRunner implements ApplicationRunner {
                     gitAuthUrl = repoUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(token).concat("@"));
                     gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(token).concat("@"));
 
-                    scanRemoteRepo(request, repoUrl, gitAuthUrl, branch, ScanRequest.Repository.GITHUB);
+                    scanRemoteRepo(request, repoUrl, gitAuthUrl, branch, ScanRequest.Repository.GITHUB, args);
                 } //GitLab Scan with Git Clone
                 else if (args.containsOption("gitlab") && !ScanUtils.anyEmpty(namespace, repoName)) {
                     repoUrl = getNonEmptyRepoUrl(namespace, repoName, repoUrl, gitLabProperties.getGitUri(namespace, repoName));
                     String token = gitLabProperties.getToken();
                     gitAuthUrl = repoUrl.replace(Constants.HTTPS, Constants.HTTPS_OAUTH2.concat(token).concat("@"));
                     gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP_OAUTH2.concat(token).concat("@"));
-                    scanRemoteRepo(request, repoUrl, gitAuthUrl, branch, ScanRequest.Repository.GITLAB);
+                    scanRemoteRepo(request, repoUrl, gitAuthUrl, branch, ScanRequest.Repository.GITLAB, args);
                 } else if (args.containsOption("bitbucket") && containsRepoArgs(namespace, repoName, branch)) {
                     log.warn("Bitbucket git clone scan not implemented");
                 } else if (args.containsOption("ado") && containsRepoArgs(namespace, repoName, branch)) {
@@ -425,8 +434,10 @@ public class CxFlowRunner implements ApplicationRunner {
                 } else {
                     log.error("No valid option was provided for driving scan");
                 }
-            } else if (args.containsOption(IAST_OPTION)) {
-                configureIast(request, scanTag);
+
+                if (args.containsOption(IAST_OPTION)) {
+                    configureIast(request, scanTag, args);
+                }
             }
         } catch (Exception e) {
             log.error("An error occurred while processing request", e);
@@ -446,11 +457,20 @@ public class CxFlowRunner implements ApplicationRunner {
         return repoUrl;
     }
 
-    private void configureIast(ScanRequest request, String scanTag) throws IOException, JiraClientException {
-        iastService.stopScanAndCreateJiraIssueFromIastSummary(request, scanTag);
+    private void configureIast(ScanRequest request, String scanTag, ApplicationArguments args) throws IOException, JiraClientException {
+        if (args.containsOption("github")) {
+            request.setBugTracker(BugTracker.builder()
+                    .type(BugTracker.Type.GITHUBCOMMIT)
+                    .build());
+        } else if (args.containsOption("gitlab")) {
+            request.setBugTracker(BugTracker.builder()
+                    .type(BugTracker.Type.GITLABCOMMIT)
+                    .build());
+        }
+        iastService.stopScanAndCreateIssue(request, scanTag);
     }
 
-    private BugTracker.BugTrackerBuilder jiraPropertiesToBugTracker() {
+    public BugTracker.BugTrackerBuilder jiraPropertiesToBugTracker() {
         return BugTracker.builder()
                 .projectKey(jiraProperties.getProject())
                 .issueType(jiraProperties.getIssueType())
@@ -464,7 +484,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 .fields(jiraProperties.getFields());
     }
 
-    private BugTracker.Type getBugTrackerType(String bugTracker) throws ExitThrowable {
+    public BugTracker.Type getBugTrackerType(String bugTracker) throws ExitThrowable {
         //set the default bug tracker as per yml
         BugTracker.Type bugTypeEnum;
         try {
@@ -505,7 +525,7 @@ public class CxFlowRunner implements ApplicationRunner {
         }
     }
 
-    private void scanRemoteRepo(ScanRequest request, String gitUrl, String gitAuthUrl, String branch, ScanRequest.Repository repoType) throws ExitThrowable {
+    private void scanRemoteRepo(ScanRequest request, String gitUrl, String gitAuthUrl, String branch, ScanRequest.Repository repoType, ApplicationArguments args) throws ExitThrowable {
         log.info("Initiating scan using Checkmarx git clone");
         request.setRepoType(repoType);
         log.info("Git url: {}", gitUrl);
@@ -515,8 +535,10 @@ public class CxFlowRunner implements ApplicationRunner {
         request.setRepoUrlWithAuth(gitAuthUrl);
         request.setRefs(Constants.CX_BRANCH_PREFIX.concat(branch));
 
-        ScanResults scanResults = runOnActiveScanners(scanner -> scanner.scanCli(request, "Scan-git-clone"));
-        processResults(request, scanResults);
+        if (!args.containsOption(IAST_OPTION)) {
+            ScanResults scanResults = runOnActiveScanners(scanner -> scanner.scanCli(request, "Scan-git-clone"));
+            processResults(request, scanResults);
+        }
     }
 
     private void scanLocalPath(ScanRequest request, String path) throws ExitThrowable {

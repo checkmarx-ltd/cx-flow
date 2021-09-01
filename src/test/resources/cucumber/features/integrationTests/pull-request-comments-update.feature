@@ -62,6 +62,9 @@ Feature: After scan that was initiated by pull request, CxFlow should update the
       | sast    |
       | both    |
 
+
+
+  @Skip
   Scenario Outline: CxFlow should create new comments on Gitlab Pull request with scan results summary
     Given scanner is set to "<scanner>"
     Given source control is Gitlab
@@ -76,6 +79,8 @@ Feature: After scan that was initiated by pull request, CxFlow should update the
       | sast    |
       | both    |
 
+
+  @Skip
   Scenario Outline: CxFlow should update existing comments on Gitlab Pull request with scan results summary
     Given scanner is set to "<scanner>"
     Given source control is Gitlab

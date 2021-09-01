@@ -1,4 +1,4 @@
-@CsvIssueTracker
+@CsvIssueTracker @Skip
 Feature: Csv issue tracker flow
 
   Scenario Outline: Csv issue tracker
