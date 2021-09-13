@@ -1,8 +1,10 @@
 package com.checkmarx.flow.service;
 
+import com.checkmarx.flow.config.ADOProperties;
 import com.checkmarx.flow.config.IastProperties;
 import com.checkmarx.flow.custom.GitHubIssueTracker;
 import com.checkmarx.flow.custom.GitLabIssueTracker;
+import com.checkmarx.flow.custom.ADOIssueTracker;
 import com.checkmarx.flow.custom.IssueTracker;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
@@ -14,6 +16,7 @@ import com.checkmarx.flow.dto.iast.manager.dto.description.VulnerabilityDescript
 import com.checkmarx.flow.dto.iast.ql.utils.Severity;
 import com.checkmarx.flow.exception.*;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.dto.ScanResults;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
@@ -28,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 
 @Slf4j
@@ -46,6 +50,10 @@ public class IastService {
 
     private final HelperService helperService;
 
+    private final ADOIssueTracker azureIssueTracker;
+
+    private final ADOProperties adoProperties;
+
     private final GitHubIssueTracker gitHubIssueTracker;
 
     private final GitLabIssueTracker gitLabIssueTracker;
@@ -57,13 +65,17 @@ public class IastService {
                        IastServiceRequests iastServiceRequests,
                        HelperService helperService,
                        GitHubIssueTracker gitHubIssueTracker,
-                       GitLabIssueTracker gitLabIssueTracker) {
+                       GitLabIssueTracker gitLabIssueTracker,
+                       ADOIssueTracker azureIssueTracker,
+                       ADOProperties adoProperties) {
         this.jiraService = jiraService;
         this.iastProperties = iastProperties;
         this.iastServiceRequests = iastServiceRequests;
         this.helperService = helperService;
         this.gitLabIssueTracker = gitLabIssueTracker;
         this.gitHubIssueTracker = gitHubIssueTracker;
+        this.azureIssueTracker = azureIssueTracker;
+        this.adoProperties = adoProperties;
 
         jiraSeverityToPriority.put(Severity.INFO, "Info");
         jiraSeverityToPriority.put(Severity.LOW, "Low");
@@ -142,10 +154,9 @@ public class IastService {
                     final List<ResultInfo> scansResultsQuery =
                             iastServiceRequests.apiScanResults(scan.getScanId(), vulnerability.getId());
 
-                    for (ResultInfo scansResultQuery : scansResultsQuery) {
-                        if (scansResultQuery.isNewResult() && filterSeverity(scansResultQuery)) {
-                            createIssue(scanVulnerabilities, request, scansResultQuery, vulnerability, scan);
-                        }
+                    for (ResultInfo scansResultQuery: scansResultsQuery.stream().filter(scansResultQuery ->
+                            scansResultQuery.isNewResult() && filterSeverity(scansResultQuery)).collect(Collectors.toList())) {
+                        createIssue(scanVulnerabilities, request, scansResultQuery, vulnerability, scan);
                     }
                 }
             }
@@ -165,24 +176,36 @@ public class IastService {
                              Scan scan) {
         try {
             Issue issue;
+            IssueTracker issueTracker;
+            boolean htmlDescription = false;
             switch (request.getBugTracker().getType()) {
                 case JIRA:
                     String jiraIssue = postIssueToJira(scanVulnerabilities, request, scansResultQuery, vulnerability, scan);
                     if (jiraService.getJiraProperties() != null) {
                         log.info("Create jira issue: " + jiraService.getJiraProperties().getUrl() + "/browse/" + jiraIssue);
                     }
+                    //  jiraService is not an instance of IssueTracker, because of that the "return" here is a shortcut to stop the execution
+                    return;
+                case GITHUBCOMMIT:
+                    issueTracker = gitHubIssueTracker;
                     break;
                 case GITLABCOMMIT:
-                    issue = postIssueToTracker(scanVulnerabilities, request, scansResultQuery, vulnerability, scan, gitLabIssueTracker);
-                    log.info("Create gitlab issue: " + issue.getUrl());
+                    issueTracker = gitLabIssueTracker;
                     break;
-                case GITHUBCOMMIT:
-                    issue = postIssueToTracker(scanVulnerabilities, request, scansResultQuery, vulnerability, scan, gitHubIssueTracker);
-                    log.info("Create github issue: " + issue.getUrl());
+                case adopull:
+                case ADOPULL:
+                    issueTracker = azureIssueTracker;
+                    htmlDescription = true;
+                    request.putAdditionalMetadata(Constants.ADO_ISSUE_BODY_KEY, "Description");
+                    request.putAdditionalMetadata(Constants.ADO_ISSUE_KEY, adoProperties.getIssueType());
                     break;
                 default:
                     throw new NotImplementedException(request.getBugTracker().getType().getType() + ". That bug tracker not implemented.");
             }
+
+            issue = postIssueToTracker(scanVulnerabilities, request, scansResultQuery, vulnerability, scan, issueTracker, htmlDescription);
+            log.info("Create {} issue: {}", request.getBugTracker().getType().getType(), issue.getUrl());
+
         } catch (MachinaException e) {
             log.error("Problem with creating issue.", e);
         } catch (RuntimeException e) {
@@ -238,19 +261,21 @@ public class IastService {
                                      ResultInfo scansResultQuery,
                                      VulnerabilityInfo vulnerability,
                                      Scan scan,
-                                     IssueTracker issueTracker) throws MachinaException {
+                                     IssueTracker issueTracker,
+                                     boolean htmlDescription) throws MachinaException {
 
-        ScanResults.XIssue xIssue = generateXIssue(scanVulnerabilities, scansResultQuery, scan, vulnerability);
+        ScanResults.XIssue xIssue = generateXIssue(scanVulnerabilities, scansResultQuery, scan, vulnerability, htmlDescription);
         return issueTracker.createIssue(xIssue, request);
     }
 
     private ScanResults.XIssue generateXIssue(ScanVulnerabilities scanVulnerabilities,
                                               ResultInfo scansResultQuery,
                                               Scan scan,
-                                              VulnerabilityInfo vulnerability) {
+                                              VulnerabilityInfo vulnerability,
+                                              boolean htmlDescription) {
         return ScanResults.XIssue.builder()
                 .cwe(scansResultQuery.getCwe().toString())
-                .description(generateDescription(vulnerability, scan))
+                .description(generateDescription(vulnerability, scan, htmlDescription))
                 .severity(scansResultQuery.getSeverity().getName())
                 .link(generateIastLinkToVulnerability(scanVulnerabilities, scansResultQuery, vulnerability))
                 .file(scansResultQuery.getUrl())
@@ -259,11 +284,17 @@ public class IastService {
     }
 
     private String generateDescription(VulnerabilityInfo vulnerability,
-                                       Scan scan) {
+                                       Scan scan,
+                                       boolean htmlDescription) {
         StringBuilder result = new StringBuilder();
+        String lineSeparator = System.lineSeparator();
+        if (htmlDescription) {
+            lineSeparator = "<br>";
+        }
+
         try {
             VulnerabilityDescription vulnerabilityDescription = iastServiceRequests.apiVulnerabilitiesDescription(vulnerability.getId(), DEFAULT_LANG);
-            result.append(vulnerabilityDescription.getRisk()).append(System.lineSeparator());
+            result.append(vulnerabilityDescription.getRisk()).append(lineSeparator);
         } catch (IOException | RuntimeException e) {
             log.error("Can't get information about vulnerability", e);
         }
@@ -277,7 +308,7 @@ public class IastService {
                                    VulnerabilityInfo vulnerability,
                                    Scan scan) throws JiraClientException {
 
-        ScanResults.XIssue xIssue = generateXIssue(scanVulnerabilities, scansResultQuery, scan, vulnerability);
+        ScanResults.XIssue xIssue = generateXIssue(scanVulnerabilities, scansResultQuery, scan, vulnerability, false);
         return jiraService.createIssue(xIssue, request);
     }
 

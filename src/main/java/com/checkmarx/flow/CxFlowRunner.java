@@ -428,7 +428,9 @@ public class CxFlowRunner implements ApplicationRunner {
                 } else if (args.containsOption("bitbucket") && containsRepoArgs(namespace, repoName, branch)) {
                     log.warn("Bitbucket git clone scan not implemented");
                 } else if (args.containsOption("ado") && containsRepoArgs(namespace, repoName, branch)) {
-                    log.warn("Azure DevOps git clone scan not implemented");
+                    if (!args.containsOption(IAST_OPTION)) {    //Azure implement for IAST integration
+                        log.warn("Azure DevOps git clone scan not implemented");
+                    }
                 } else if (file != null) {
                     scanLocalPath(request, file);
                 } else {
@@ -457,7 +459,7 @@ public class CxFlowRunner implements ApplicationRunner {
         return repoUrl;
     }
 
-    private void configureIast(ScanRequest request, String scanTag, ApplicationArguments args) throws IOException, JiraClientException {
+    private void configureIast(ScanRequest request, String scanTag, ApplicationArguments args) throws IOException, JiraClientException, ExitThrowable {
         if (args.containsOption("github")) {
             request.setBugTracker(BugTracker.builder()
                     .type(BugTracker.Type.GITHUBCOMMIT)
@@ -466,6 +468,13 @@ public class CxFlowRunner implements ApplicationRunner {
             request.setBugTracker(BugTracker.builder()
                     .type(BugTracker.Type.GITLABCOMMIT)
                     .build());
+        } else if (args.containsOption("ado")) {
+            if (ScanUtils.empty(getOptionValues(args, "namespace"))) {
+                log.error("--namespace must be provided for azure bug tracking");
+                exit(1);
+            }
+            request.setRepoType(ScanRequest.Repository.ADO);
+            request.getBugTracker().setType(BugTracker.Type.ADOPULL);
         }
         iastService.stopScanAndCreateIssue(request, scanTag);
     }
