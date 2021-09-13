@@ -293,7 +293,10 @@ public class ThresholdsSteps {
         } else {
             issueTruckerType = BugTracker.Type.ADOPULL;
             additionalMetadata.put("status_id", Integer.toString(1));
+            additionalMetadata.put("ado_thread_id",Integer.toString(0));
             scanRequest.setRepoType(ScanRequest.Repository.ADO);
+            scanRequest.setMergeNoteUri(MERGE_NOTE_URL);
+            scanResultsToInject.setProjectId(Integer.toString(0));
     }
         BugTracker issueTracker = BugTracker.builder().type(issueTruckerType).build();
         scanRequest.setBugTracker(issueTracker);
