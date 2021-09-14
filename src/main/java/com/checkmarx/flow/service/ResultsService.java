@@ -101,6 +101,9 @@ public class ResultsService {
                     processResults(scanRequest, scanResults, new ScanDetails(projectId, scanResults.getSastScanId(), null));
                     logScanDetails(scanRequest, projectId, scanResults);
                 }
+                else{
+                    processResults(scanRequest, scanResults, new ScanDetails(null, scanResults.getSastScanId(), null));
+                }
             } else {
                 processResults(scanRequest, scanResults, new ScanDetails(null, scanResults.getSastScanId(), null));
             }
