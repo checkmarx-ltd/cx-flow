@@ -375,6 +375,7 @@ Refer to the sample configuration above for the entire yaml structure.
 | custom-state-map  |                | No  | No  | Yes      | A map of custom result state identifiers to custom result state names |
 | scan-queuing       | false | No* | Yes | No | When **True**: If a scan is active for the same project, CxFlow submits a new scan and puts in queue. When scan-queue is **False**: the CxFlow behavior is according to scan-resubmit settings. |                 |
 | scan-queuing-timeout       | 720  | No* | Yes | No | If scan-queuing is true then scan-queuing-timeout Defaults to 12h. '0' would be for waiting forever with the scan in the queue.                 |
+| settings-override | false          | No  | No  | Yes      | Must be set to `true` if overriding preset, engine configuration or file/folder exclusions for an existing project |
 No* = Default is applied
 
 ### <a name="nine">9.0 Configuration Changes</a>
