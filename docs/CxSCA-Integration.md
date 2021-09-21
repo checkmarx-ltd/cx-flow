@@ -231,6 +231,6 @@ team: /MainTeam/SubTeam
 * Declaring not existing team or team path will be resulted with 400 BAD REQUEST error.
 
 ## <a name="scaScanTimeOut">SCA Scan Timeout</a>
-In order to set Scan TimeOut for SCA, the configuration property should be added underneath the sca configuration section:
+In order  to set Scan TimeOut for SCA, the configuration property should be added underneath the sca configuration section:
 ```
  scan-timeout: 120
