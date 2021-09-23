@@ -51,6 +51,7 @@ public class JiraProperties {
     private List<String> statusCategoryClosedName = Arrays.asList("Done");
     @Getter @Setter
     private String projectKeyScript;
+    private String labelPrefix;
 
 
     public String getUrl() {
@@ -333,6 +334,14 @@ public class JiraProperties {
 
     public void setStatusCategoryClosedName(List<String> statusCategoryClosedName) {
         this.statusCategoryClosedName = statusCategoryClosedName;
+    }
+
+    public String getLabelPrefix() {
+        return labelPrefix;
+    }
+
+    public void setLabelPrefix(String labelPrefix) {
+        this.labelPrefix = labelPrefix;
     }
 
 }
