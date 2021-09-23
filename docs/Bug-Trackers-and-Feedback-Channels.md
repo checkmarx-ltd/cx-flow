@@ -1,5 +1,6 @@
 * [Understanding the Data](#data)
 * [Jira](#jira)
+  * [Label Prefix](#labelPrefix)
   * [Priorities](#priorities)
   * [Transitions](#transitions)
   * [Fields](#fields)
@@ -37,6 +38,7 @@ jira:
    token: xxxx
    project: SS
    issue-type: Application Security Bug
+   label-prefix: < CUSTOM PREFIX NAME >
    priorities:
       High: High
       Medium: Medium
@@ -76,6 +78,12 @@ jira:
        jira-field-type: label
        jira-default-value: XXXXX
 ```
+
+### <a name="labelPrefix">Label Prefix</a>
+```
+label-prefix: < CUSTOM PREFIX NAME > 
+```
+The label-prefix property is used to set a custom prefix for Jira issues. If this value is not provided then CxFlow will use the default issue prefix "CX".
 
 ### <a name="priorities">Priorities</a>
 ```
