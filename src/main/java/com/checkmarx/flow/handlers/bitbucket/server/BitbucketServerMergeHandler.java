@@ -1,5 +1,6 @@
 package com.checkmarx.flow.handlers.bitbucket.server;
 
+import com.checkmarx.flow.controller.bitbucket.server.BitbucketServerController;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.EventResponse;
 import com.checkmarx.flow.dto.ScanRequest;
@@ -8,13 +9,15 @@ import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 import org.springframework.http.ResponseEntity;
-
+import org.slf4j.Logger;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
 @SuperBuilder
 public class BitbucketServerMergeHandler extends BitbucketServerScanEventHandler {
+
+    private static final Logger log = org.slf4j.LoggerFactory.getLogger(BitbucketServerController.class);
 
     @NonNull
     private String currentBranch;
@@ -101,6 +104,7 @@ public class BitbucketServerMergeHandler extends BitbucketServerScanEventHandler
                 configProvider.getFlowService().initiateAutomation(request);
             }
         } catch (IllegalArgumentException e) {
+            log.debug("Error occurred while processing the request " + e);
             return webhookUtils.getBadRequestMessage(e, controllerRequest, product);
         }
         return webhookUtils.getSuccessMessage();
