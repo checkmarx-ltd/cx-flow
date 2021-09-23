@@ -134,7 +134,9 @@ public class BitbucketServerController implements BitBucketConfigContextProvider
 
         try {
             event = mapper.readValue(body, PullEvent.class);
+            log.debug("Successfully consumed request payload : {}",body);
         } catch (IOException e) {
+            log.debug("Error occurred while consuming request payload, body {}, error {}",body,e);
             throw new MachinaRuntimeException(e);
         }
 
