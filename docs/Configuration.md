@@ -392,7 +392,7 @@ checkmarx:
    #project-script: D:\\tmp\CxProject.groovy
    #team-script: D:\\tmp\CxTeam.groovy
    exclude-files: "*.tst,*.json"
-   exclude-folders: ".git/,test/"
+   exclude-folders: ".git,test"
 ```
 **Note:**
 * Make sure to include **version: 9.0** (or higher) and **scope:  access_control_api sast_rest_api**
