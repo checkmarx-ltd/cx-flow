@@ -7,6 +7,7 @@ import com.checkmarx.flow.controller.IastController;
 import com.checkmarx.flow.custom.GitHubIssueTracker;
 import com.checkmarx.flow.custom.GitLabIssueTracker;
 import com.checkmarx.flow.custom.IssueTracker;
+import com.checkmarx.flow.custom.ADOIssueTracker;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
@@ -59,7 +60,7 @@ import static org.mockito.Mockito.*;
 @TestPropertySource(properties = { "spring.config.location=classpath:application-iast.yml" })
 @RequiredArgsConstructor
 @ActiveProfiles({"iast"})
-@MockBean({IastServiceRequests.class, JiraService.class, GitHubIssueTracker.class, GitLabIssueTracker.class})
+@MockBean({IastServiceRequests.class, JiraService.class, GitHubIssueTracker.class, GitLabIssueTracker.class, ADOIssueTracker.class})
 public class IastCliSteps {
     private static String ARGS = "--iast --assignee=email@mail.com --repo-name=repository --branch=master --namespace=test --jira.url=https://xxxx.atlassian.net --jira.username=email@gmail.com --jira.token=token --github.token=token --jira.project=BCB --iast.url=http://localhost --iast.manager-port=8380 --iast.username=username --iast.password=password --iast.update-token-seconds=250 --jira.issue-type=Task --project-id=1";
 
@@ -74,6 +75,7 @@ public class IastCliSteps {
     @Autowired
     private IastController iastController;
     @Autowired
+
     private IastService iastService;
 
     @Autowired
@@ -84,6 +86,8 @@ public class IastCliSteps {
     private GitHubIssueTracker gitHubIssueTracker;
     @Autowired
     private GitLabIssueTracker gitLabIssueTracker;
+    @Autowired
+    private ADOIssueTracker adoIssueTracker;
 
     private ApplicationArguments args;
 
@@ -107,10 +111,11 @@ public class IastCliSteps {
     private JSONObject body;
     private MvcResult mvcResult;
 
-    @Given("mock CLI runner {} {}")
-    public void mockCliRunner(String scanTag, String bugTracker) {
+    @Given("mock CLI runner {} {} {}")
+    public void mockCliRunner(String scanTag, String bugTracker, String params) {
         scanTag = removeQuotes(scanTag);
         bugTracker = removeQuotes(bugTracker);
+        params = removeQuotes(params);
         cxFlowRunner = new CxFlowRunner(
                 flowProperties,
                 cxScannerService,
@@ -128,7 +133,7 @@ public class IastCliSteps {
                 buildProperties,
                 scanners,
                 thresholdValidator);
-        String arguments = ARGS + " --scan-tag=" + scanTag + " --bug-tracker=" + bugTracker;
+        String arguments = ARGS + " --scan-tag=" + scanTag + " --bug-tracker=" + bugTracker + " " + params;
         String[] argsParam = arguments.split(" ");
         this.args = new DefaultApplicationArguments(argsParam);
     }
@@ -270,6 +275,9 @@ public class IastCliSteps {
             case "gitlab":
                 issueTracker = gitLabIssueTracker;
                 break;
+            case "ado":
+                issueTracker = adoIssueTracker;
+                break;
         }
         if(issueTracker != null) {
             verify(issueTracker, times(createdIssues)).createIssue(any(), any());
@@ -283,6 +291,8 @@ public class IastCliSteps {
         when(gitHubIssueTracker.createIssue(any(), any())).thenReturn(mock(Issue.class));
 
         when(gitLabIssueTracker.createIssue(any(), any())).thenReturn(mock(Issue.class));
+
+        when(adoIssueTracker.createIssue(any(), any())).thenReturn(mock(Issue.class));
 
     }
 
@@ -308,6 +318,9 @@ public class IastCliSteps {
         scansResultsQuery.add(scansResultQuery);
 
         when(iastServiceRequests.apiScanResults(scan.getScanId(), vulnerabilityInfo.getId())).thenReturn(scansResultsQuery);
+        VulnerabilityDescription vulnerabilityDescription = mock(VulnerabilityDescription.class);
+        when(iastServiceRequests.apiVulnerabilitiesDescription(any(), any())).thenReturn(vulnerabilityDescription);
+        when(vulnerabilityDescription.getRisk()).thenReturn("MOCK_RISK");
     }
 
     @SneakyThrows

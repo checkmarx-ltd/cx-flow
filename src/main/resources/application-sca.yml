@@ -5,3 +5,4 @@ sca:
   tenant:
   username:
   password:
+  scan-timeout:

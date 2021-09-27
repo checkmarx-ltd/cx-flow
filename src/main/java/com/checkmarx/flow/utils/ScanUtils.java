@@ -121,6 +121,7 @@ public class ScanUtils {
             // Add additional details
             Map<String, Object> additionalDetails = getAdditionalIssueDetails(finding);
             xIssueBuilder.additionalDetails(additionalDetails);
+            xIssueBuilder.groupBySeverity(false);
             
             ScanResults.XIssue issue = xIssueBuilder.build();
 
@@ -169,6 +170,7 @@ public class ScanUtils {
                             .collect(Collectors.groupingBy(f-> f.getId() + f.getPackageId()));
                     packageMap.forEach((k,v) -> {
                         ScanResults.XIssue issue = ScanResults.XIssue.builder()
+                                .groupBySeverity(false)
                                 .build();
                         issue.setScaDetails(getScaDetailsListBySeverity(scaResults, v));
                         issueList.add(issue);
