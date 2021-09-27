@@ -7,7 +7,7 @@
 * [SCA Scans From Command Line](#commandline)
 * [SCA ZIP Folder Scan](#zipFolderScan)
 * [SCA Project Team Assignment](#scaProjectTeamAssignment)
-
+* [SCA Scan Timeout](#scaScanTimeOut)
 ## <a name="configuration">Configuration</a>
 CxSCA scans can be triggered based on WebHooks using CxFlow. 
 For instructions on registering CxFlow to WebHook, refer to [WebHook Registration](
