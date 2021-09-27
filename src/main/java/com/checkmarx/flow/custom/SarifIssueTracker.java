@@ -29,6 +29,7 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
     private final SarifProperties properties;
     private final FilenameFormatter filenameFormatter;
     private static final String DEFAULT_LEVEL = "error";
+    private static final String DEFAULT_SEVERITY = "9.0";
     private static final String MARKDOWN_TABLE_FORMAT = "| %s | %s | %s | %s |";
     private static final String RECOMMENDED_FIX = "recommendedFix";
 
@@ -175,6 +176,7 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                         .build())
                 .properties(Properties.builder()
                         .tags(Arrays.asList("security", "external/cwe/cwe-".concat(i.getCwe())))
+                        .securitySeverity(properties.getSecuritySeverityMap().get(i.getSeverity()) != null ? properties.getSecuritySeverityMap().get(i.getSeverity()) : DEFAULT_SEVERITY)
                         .build())
                 .build()).collect(Collectors.toList());
         //All issues to create the results/locations that are not all false positive
@@ -305,6 +307,8 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
         @JsonProperty("precision")
         @Builder.Default
         private String precision = "";
+        @JsonProperty("security-severity")
+        public String securitySeverity;
     }
 
     @Data
