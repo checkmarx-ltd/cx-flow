@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.MarshalException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -44,13 +45,17 @@ public class CxXMLIssueTracker extends ImmutableIssueTracker {
     public void complete(ScanRequest request, ScanResults results) throws MachinaException {
         try {
             if (!ScanUtils.empty(results.getOutput())) {
+                log.debug("Configured filename path: {} | Output Length: {}", new File(request.getFilename()).getCanonicalPath(), results.getOutput().length());
                 Files.write(Paths.get(new File(request.getFilename()).getCanonicalPath()), results.getOutput().getBytes());
+            } else {
+                log.debug("Scan Results output is EMPTY!");
             }
-
+            log.debug("Parsing SCA results");
             marshalScaResults(request, results);
 
         } catch (IOException | JAXBException e) {
             log.error("Issue occurred while writing file: {} with error message: {}", request.getFilename(), e.getMessage());
+            log.error("Full stack trace: ", e);
         }
     }
 
@@ -72,7 +77,12 @@ public class CxXMLIssueTracker extends ImmutableIssueTracker {
     private void marshalScaResults(ScanRequest request, ScanResults results) throws JAXBException {
         SCAResults scaResults = results.getScaResults();
         if (scaResults != null) {
-            JAXBHelper.convertObjectIntoXml(scaResults, request.getFilename());
+            log.debug("SCA Results (total of {}): {}", scaResults.getFindings().size(), scaResults.getFindings().toString());
+            try {
+                JAXBHelper.convertObjectIntoXml(scaResults, request.getFilename());
+            } catch(MarshalException e) {
+                JAXBHelper.convertObjectIntoXml(scaResults, SCAResults.class, request.getFilename());
+            }
         }
     }
 }
