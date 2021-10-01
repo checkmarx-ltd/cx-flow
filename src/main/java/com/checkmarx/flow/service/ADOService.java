@@ -166,7 +166,10 @@ public class ADOService {
             Integer projectId = Integer.parseInt(results.getProjectId());
             String url = request.getAdditionalMetadata("statuses_url");
             String statusId = request.getAdditionalMetadata("status_id");
-            String threadUrl = request.getMergeNoteUri().concat("/").concat(request.getAdditionalMetadata("ado_thread_id"));
+            String threadUrl = null;
+            if(request.getAdditionalMetadata("ado_thread_id") != null){
+                threadUrl = request.getMergeNoteUri().concat("/").concat(request.getAdditionalMetadata("ado_thread_id"));
+            }
             if(statusId == null){
                 log.warn("No status Id found, skipping status update");
                 return;
@@ -198,7 +201,9 @@ public class ADOService {
             if(projectId == -1){
                 log.debug("SAST scan could not be processed due to some error. Creating status of failed to {}", url);
                 createStatus("failed", "Checkmarx Scan could not be processed.", url, results.getLink(), request);
-                createThreadStatus(CLOSED,threadUrl,request);
+                if(threadUrl != null) {
+                    createThreadStatus(CLOSED, threadUrl, request);
+                }
                 return;
             }
 
@@ -207,12 +212,16 @@ public class ADOService {
             if(!isMergeAllowed){
                 log.debug("Creating status of failed to {}", url);
                 createStatus("failed", "Checkmarx Scan Completed", url, results.getLink(), request);
-                createThreadStatus(CLOSED,threadUrl,request);
+                if(threadUrl != null) {
+                    createThreadStatus(CLOSED, threadUrl, request);
+                }
             }
             else{
                 log.debug("Creating status of succeeded to {}", url);
                 createStatus("succeeded", "Checkmarx Scan Completed", url, results.getLink(), request);
-                createThreadStatus(RESOLVED,threadUrl,request);
+                if(threadUrl != null) {
+                    createThreadStatus(RESOLVED, threadUrl, request);
+                }
             }
         }
     }
