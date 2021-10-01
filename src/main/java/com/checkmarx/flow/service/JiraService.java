@@ -674,7 +674,7 @@ public class JiraService {
                             String[] l = StringUtils.split(value, ",");
                             list = new ArrayList<>();
                             for (String x : l) {
-                                list.add(x.replaceAll("[^a-zA-Z0-9:-_]+", "_"));
+                                list.add(x.replaceAll("[^a-zA-Z0-9:\\-_]+", "_"));
                             }
 
                             if (!ScanUtils.empty(list)) {

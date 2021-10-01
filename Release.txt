@@ -153,7 +153,7 @@ github:
 checkmarx:
   ...
   exclude-files: "*.jpg, *.gif" #comma separated
-  exclude-folders: "node_modules/" #comma separated
+  exclude-folders: "node_modules" #comma separated
 
 # FIXES
 * Fix for JiraService bean init failure when jira configuration block is excluded from application.yml
