@@ -74,6 +74,7 @@ cx-flow:
 
 * Script input: [ScanRequest object](https://github.com/checkmarx-ltd/cx-flow/blob/develop/src/main/java/com/checkmarx/flow/dto/ScanRequest.java)
 * Return value: String
+* Script example: [ScanComment.groovy](../src/main/resources/samples/ScanComment.groovy)
 
 ### <a name="filterFindings">Use a Script to Filter Findings</a>
 
