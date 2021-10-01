@@ -51,7 +51,7 @@ checkmarx:
 * To enable this flow add the following property to cxflow configuration (you can use any file name): 
 
 ```yaml
-checkmarx:
+cx-flow:
   branch-script: ...\CheckBranch.groovy
 ```
 
