@@ -38,6 +38,7 @@ import org.springframework.web.util.DefaultUriBuilderFactory;
 import javax.annotation.PostConstruct;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -1483,6 +1484,7 @@ public class JiraService {
     }
 
     private String formatSastIssueSummary(String summary, ScanResults.XIssue issue, ScanRequest request) {
+        summary = fillPlaceholder(summary, "[BASENAME]", Paths.get(issue.getFilename()).getFileName().toString());
         summary = fillPlaceholder(summary, "[BRANCH]", request.getBranch());
         summary = fillPlaceholder(summary, "[FILENAME]", issue.getFilename());
         summary = fillPlaceholder(summary, "[POSTFIX]", jiraProperties.getIssuePostfix());

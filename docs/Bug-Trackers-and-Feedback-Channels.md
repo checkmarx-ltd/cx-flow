@@ -162,9 +162,11 @@ Jira tickets can be assigned to a user when they are created. This can be achiev
 
 The sast-issue-summary-format and sast-issue-summary-branch-format properties can be used to configure the issue summary of the issues that CxFlow creates in Jira for vulnerabilities detected by CxSAST. The following substitutions are performed on the properties’ values to generate the issue summary:
 
+**[BASENAME]** → The basename of the file in which the vulnerabilities were found
+
 **[BRANCH]** → The value of the `--branch` command line option
 
-**[FILENAME]** → The name of the file in which the vulnerabilities were found
+**[FILENAME]** → The full path of the file in which the vulnerabilities were found
 
 **[POSTFIX]** → The issue summary’s suffix (as specified by the Jira issue-postfix property)
 
