@@ -58,8 +58,12 @@ public class FlowService {
         ScanResults combinedResults = new ScanResults();
 
         scanners.forEach(scanner -> {
-            ScanResults scanResults = scanner.scan(scanRequest);
-            combinedResults.mergeWith(scanResults);
+            try{
+                ScanResults scanResults = scanner.scan(scanRequest);
+                combinedResults.mergeWith(scanResults);
+            } catch (Exception continueOtherScanners){
+                log.warn("Scan failed. Continuing with other scanners.");
+            }
         });
         resultsService.publishCombinedResults(scanRequest, combinedResults);
     }
