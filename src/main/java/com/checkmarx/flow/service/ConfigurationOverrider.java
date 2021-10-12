@@ -175,7 +175,8 @@ public class ConfigurationOverrider {
             ControllerRequest controllerRequest = new ControllerRequest(override.getSeverity(),
                     override.getCwe(),
                     override.getCategory(),
-                    override.getStatus());
+                    override.getStatus(),
+                    override.getState());
             FilterConfiguration filterConfig = filterFactory.getFilter(controllerRequest, null);
             request.setFilter(filterConfig);
 
@@ -356,7 +357,8 @@ public class ConfigurationOverrider {
             ControllerRequest controllerRequest = new ControllerRequest(filtersObj.getSeverity(),
                     filtersObj.getCwe(),
                     filtersObj.getCategory(),
-                    filtersObj.getStatus());
+                    filtersObj.getStatus(),
+                    filtersObj.getState());
             FilterConfiguration filter = filterFactory.getFilter(controllerRequest, null);
             request.setFilter(filter);
         }

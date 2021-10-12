@@ -27,6 +27,7 @@ public class ControllerRequest {
     private String project;
     private String team;
     private List<String> status;
+    private List<String> state;
     private String assignee;
     private String preset;
     private Boolean incremental;
@@ -44,10 +45,12 @@ public class ControllerRequest {
     public ControllerRequest(List<String> severity,
                              List<String> cwe,
                              List<String> category,
-                             List<String> status) {
+                             List<String> status,
+                             List<String> state) {
         this.severity = severity;
         this.cwe = cwe;
         this.category = category;
         this.status = status;
+        this.state = state;
     }
 }

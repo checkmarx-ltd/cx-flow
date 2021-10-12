@@ -51,6 +51,9 @@ cxflow:
   - Reflected_XSS_All_Clients
   filter-cwe:
   filter-status:
+  # - New
+  # - Reoccured
+  filter-state:
   # - Urgent
   # - Confirmed
   # - To Verify
@@ -177,6 +180,9 @@ cxflow:
   # - Reflected_XSS_All_Clients
   filter-cwe:
   filter-status:
+  # - New
+  # - Reoccured
+  filter-state:
   # - Urgent
   # - Confirmed
   # - To Verify

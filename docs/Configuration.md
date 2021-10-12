@@ -488,7 +488,8 @@ For additional information, refer to the workflow for [WebHooks](https://github.
 @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders,
 @RequestParam(value = "override", required = false) String override,
 @RequestParam(value = "bug", required = false) String bug,
-@RequestParam(value = "app-only", required = false) Boolean appOnlyTracking
+@RequestParam(value = "app-only", required = false) Boolean appOnlyTracking,
+@RequestParam(value = "state", required = false) List<String> state
 ```
 
 ### <a name="details">WebHook URL Override Parameters - Details</a>
@@ -503,7 +504,8 @@ These parameters are related to the WebHook URL parameters above.
 | category      | Override the category filters.  For multiple category, simply list category multiple times,  i.e. `category=Stored_XSS&category=SQL_Injection` |
 | project       | Override the project name that will be created/used in Checkmarx.  This allows for greater flexibility for incremental scan relating to pull requests,  i.e. use a standardized pull project name that is always used regardless of the branch - `?project=repo-pull` |
 | team          | Override the team within Checkmarx to use/create project under. |
-| state         | Override the state filters (Confirmed/Urgent)
+| state         | Override the state filters (Confirmed/Urgent). For multiple state, simply list the state multiple times,  i.e. `status=Confirmed&status=Urgent` |
+| status        | Override the status filter. For multiple status, simply list the status multiple times,  i.e. `status=New&status=Reoccured` |
 | assignee      | Override the assignee  |
 | preset        | Override the Checkmarx preset rules for scanning |
 | incremental   | Override incremental property to enable/disable incremental scan support |

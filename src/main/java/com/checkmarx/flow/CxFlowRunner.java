@@ -208,7 +208,7 @@ public class CxFlowRunner implements ApplicationRunner {
             exit(1);
         }
 
-        ControllerRequest controllerRequest = new ControllerRequest(severity, cwe, category, status);
+        ControllerRequest controllerRequest = new ControllerRequest(severity, cwe, category, status, null);
         FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
 
         //Adding default file/folder exclusions from properties if they are not provided as an override
