@@ -140,7 +140,7 @@ public class IssueService implements ApplicationContextAware {
 
                         }
                         else if (!i.getLabels().contains(fpLabel)) { /*Ignore any with label indicating false positive*/
-                            log.info("Issue still exists.  Updating issue with key {}", xIssue.getKey());
+                            log.info("Issue still exists. Updating issue with key {}", xIssue.getKey());
                             fileUrl = ScanUtils.getFileUrl(request, currentIssue.getFilename());
                             currentIssue.setGitUrl(fileUrl);
                             Issue updatedIssue = tracker.updateIssue(i, currentIssue, request);
