@@ -71,7 +71,7 @@ CxFlow can be integrated via command line using several ways. The table below li
 | `--spring.config.location` | Path to application.yml. This file contains the global configuration for CxFlow.  It is only required, if the jar file and the application.yml file are not in the current working directory.  Refer to the [Spring Boot Documentation](https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html) (section 24.3) |
 | `--offline` | If this flag is raised, the Checkmarx instance is not contacted.  This means that no issue description is provided and Checkmarx custom fields cannot be used |
 | `--blocksysexit` | Optional: Mainly for build/test purposes. Avoid `System.exit()` in the code and exit with java exception |
-
+| `--alt-project` | Name of the project in ADO. This parameter is required in addition to cx-project parameter. |
 ## <a name="parse">Parse</a>
 
 ```

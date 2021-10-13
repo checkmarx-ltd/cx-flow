@@ -130,6 +130,7 @@ jira:
   token: ###<jira api token>###
   project: APPSEC
   issue-type: Bug
+  label-prefix: < CUSTOM PREFIX NAME >
   priorities:
     High: High
     Medium: Medium
