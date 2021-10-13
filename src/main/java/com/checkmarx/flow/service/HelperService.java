@@ -72,10 +72,6 @@ public class HelperService {
             }
         }
 
-        if (CollectionUtils.isEmpty(branches)) {
-            return true;
-        }
-
         // Override branches if provided in the request
         if (CollectionUtils.isNotEmpty(request.getActiveBranches())) {
             branches = request.getActiveBranches();
@@ -83,6 +79,10 @@ public class HelperService {
 
         // If the script fails above, default to base property check functionality (regex list)
         if (isBranchProtected(branchToCheck, branches, request)) {
+            return true;
+        }
+
+        if (CollectionUtils.isEmpty(branches)) {
             return true;
         }
 
