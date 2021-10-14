@@ -212,6 +212,7 @@ jira:
   token: XXXXX
   project: <JIRA PROJECT KEY>
   issue-type: <JIRA ISSUE TYPE>
+  label-prefix: <CUSTOM PREFIX NAME >
   priorities:
      Critical: Highest
      High: High
@@ -463,9 +464,11 @@ checkmarx
 ## <a name="webhook">WebHook Configuration</a>
 Each repository type requires its own specific configuration block as defined below.  Each of these have available overrides that can be provided in the form of URL parameters or as a JSON configuration blob that is base64 encoded and provided as a url parameter (override=<XXXXXX>).
 
-WebHook scans are triggered based on the protected branches list. This configuration is under the config block
+WebHook scans are triggered based on the protected branches list. This configuration is under the config block.
 
-For **Pull/Merge** - if a request is made to pull/merge code into one of the listed protected branches, CxFlow triggers the scan.  The pull/merge is commented with the filtered findings from Checkmarx. 
+The protected branches list can be provided in the application.yml file under the cx-flow section or it can be provided in the config-as-code file. If branches are provided in application.yml as well as config-as-code file then the branches in config-as-code file will override the branches in application.yml. If protected branches is not provided in either of the files then cx-flow triggers scan for PUSH/PULL/Merge event for all the branches.
+
+For **Pull/Merge** - if a request is made to pull/merge code into one of the listed protected branches, CxFlow triggers the scan.  The pull/merge is commented with the filtered findings from Checkmarx.
 
 For **Push**, the findings are published according to the specified bug-tracker in the main or overridden configuration - i.e. JSON/CSV/XML output or Jira defect.
 

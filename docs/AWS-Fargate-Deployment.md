@@ -272,6 +272,7 @@ jira:
   project: APPSEC
   http-timeout: 50000
   issue-type: Application Security Bug
+  label-prefix: < CUSTOM PREFIX NAME >
   priorities:
     High: High
     Medium: Medium
