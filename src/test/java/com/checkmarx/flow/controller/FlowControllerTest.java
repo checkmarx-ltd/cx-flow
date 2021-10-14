@@ -95,7 +95,7 @@ public class FlowControllerTest {
         List<String> categoryFilters = TestsParseUtils.parseCsvToList(category);
         List<String> statusFilters = TestsParseUtils.parseCsvToList(status);
         ScanResults scanResults = flowController.latestScanResults(testProps.getProject(), flowProperties.getToken(), ScanFixture.TEAM_ID, testProps.getApplication(), severityFilters,
-                cweFilters, categoryFilters, statusFilters, assignee, override, bug,null);
+                cweFilters, categoryFilters, statusFilters, assignee, override, bug);
         verify(sastScanner, times(1)).getLatestScanResultsAsync(captor.capture(), isNull());
         ScanRequest actual = captor.getValue();
         assertScanResultsRequest(actual, testProps.getApplication(), ScanFixture.TEAM_ID, severityFilters, cweFilters, categoryFilters, statusFilters);

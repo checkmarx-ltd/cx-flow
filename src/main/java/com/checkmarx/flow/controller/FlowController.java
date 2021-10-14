@@ -75,8 +75,7 @@ public class FlowController {
             @RequestParam(value = "status", required = false) List<String> status,
             @RequestParam(value = "assignee", required = false) String assignee,
             @RequestParam(value = "override", required = false) String override,
-            @RequestParam(value = "bug", required = false) String bug,
-            @RequestParam(value = "state", required = false) List<String> state) {
+            @RequestParam(value = "bug", required = false) String bug) {
 
         String uid = helperService.getShortUid();
         MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
@@ -87,7 +86,7 @@ public class FlowController {
         BugTracker bugTracker = getBugTracker(assignee, bug);
 
         // Create filters if available
-        ControllerRequest request = new ControllerRequest(severity, cwe, category, status,state);
+        ControllerRequest request = new ControllerRequest(severity, cwe, category, status,null);
         FilterConfiguration filter = filterFactory.getFilter(request, properties);
 
         // Create the scan request
