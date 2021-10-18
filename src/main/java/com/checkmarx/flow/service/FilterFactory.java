@@ -33,7 +33,7 @@ public class FilterFactory {
                     request.getCwe(),
                     request.getCategory(),
                     request.getStatus(),
-                    null,
+                    request.getState(),
                     null);
         } else if (flowProperties != null) {
             result = getFilterFromProperties(flowProperties);
@@ -74,7 +74,8 @@ public class FilterFactory {
         return CollectionUtils.isNotEmpty(request.getSeverity())
                 || CollectionUtils.isNotEmpty(request.getCwe())
                 || CollectionUtils.isNotEmpty(request.getCategory())
-                || CollectionUtils.isNotEmpty(request.getStatus());
+                || CollectionUtils.isNotEmpty(request.getStatus())
+                || CollectionUtils.isNotEmpty(request.getState());
     }
 
     /**

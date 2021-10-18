@@ -125,6 +125,8 @@ public class FlowOverride {
         public List<String> category = null;
         @JsonProperty("status")
         public List<String> status = null;
+        @JsonProperty("state")
+        public List<String> state = null;
 
         public List<String> getSeverity() {
             return this.severity;
@@ -142,6 +144,8 @@ public class FlowOverride {
             return this.status;
         }
 
+        public List<String> getState() { return this.state; }
+
         public void setSeverity(List<String> severity) {
             this.severity = severity;
         }
@@ -157,6 +161,8 @@ public class FlowOverride {
         public void setStatus(List<String> status) {
             this.status = status;
         }
+
+        public void setState(List<String> status) { this.state = state; }
     }
 
     public class Jira {

@@ -86,7 +86,7 @@ public class FlowController {
         BugTracker bugTracker = getBugTracker(assignee, bug);
 
         // Create filters if available
-        ControllerRequest request = new ControllerRequest(severity, cwe, category, status);
+        ControllerRequest request = new ControllerRequest(severity, cwe, category, status,null);
         FilterConfiguration filter = filterFactory.getFilter(request, properties);
 
         // Create the scan request
