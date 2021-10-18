@@ -34,7 +34,6 @@ import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.checkmarx.sdk.dto.sast.CxConfig;
 
 import org.apache.commons.lang3.StringUtils;
-import org.graalvm.util.CollectionsUtil;
 import org.slf4j.MDC;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
