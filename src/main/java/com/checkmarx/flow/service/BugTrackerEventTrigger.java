@@ -130,6 +130,10 @@ public class BugTrackerEventTrigger {
                 eventsWereTriggered = false;
                 break; // No action is needed
 
+            case NONE:
+                log.warn("Bug tracker events were not triggered, because bug tracker type is '{}'.", bugTrackerType);
+                break;
+
             default:
                 eventsWereTriggered = false;
                 log.warn("Bug-Tracker type: {} is not supported", bugTrackerType);
