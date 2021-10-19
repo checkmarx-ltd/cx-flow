@@ -77,6 +77,7 @@ public class BitbucketCloudController extends WebhookController {
             @RequestParam(value = "token") String token
 
     ) {
+        log.debug("Merge Request body contents are {}",body.toString());
         String uid = helperService.getShortUid();
         MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
         validateBitBucketRequest(token);
@@ -172,6 +173,7 @@ public class BitbucketCloudController extends WebhookController {
             @RequestParam(value = "token") String token
 
     ) {
+        log.debug("Push Request body contents are {}", body.toString());
         String uid = helperService.getShortUid();
         MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
         validateBitBucketRequest(token);
@@ -197,10 +199,15 @@ public class BitbucketCloudController extends WebhookController {
             }
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
             List<Change> changeList = body.getPush().getChanges();
-            String currentBranch = changeList.get(0).getNew().getName();
+            String currentBranch = null;
+            if(changeList != null) {
+                currentBranch = changeList.get(0).getNew().getName();
+            }
             List<String> branches = getBranches(controllerRequest, flowProperties);
-            String hash = changeList.get(0).getNew().getTarget().getHash();
-
+            String hash = null;
+            if(changeList != null) {
+                hash = changeList.get(0).getNew().getTarget().getHash();
+            }
             BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
 
             FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
@@ -208,11 +215,13 @@ public class BitbucketCloudController extends WebhookController {
             /*Determine emails*/
             List<String> emails = new ArrayList<>();
 
-            for (Change ch : changeList) {
-                for (Commit c : ch.getCommits()) {
-                    String author = c.getAuthor().getRaw();
-                    if (!ScanUtils.empty(author)) {
-                        emails.add(author);
+            if(changeList != null){
+                for (Change ch : changeList) {
+                    for (Commit c : ch.getCommits()) {
+                        String author = c.getAuthor().getRaw();
+                        if (!ScanUtils.empty(author)) {
+                            emails.add(author);
+                        }
                     }
                 }
             }
