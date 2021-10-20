@@ -47,8 +47,8 @@ public class JiraProperties {
     private boolean child = false;
     private Integer httpTimeout = 20000;
     private Integer maxJqlResults = 50;
-    private List<String> statusCategoryOpenName = Arrays.asList("To Do", "In Progress");
-    private List<String> statusCategoryClosedName = Arrays.asList("Done");
+    private List<String> statusCategoryOpenName = Arrays.asList("To Do", "In Progress", "Reopened");
+    private List<String> statusCategoryClosedName = Arrays.asList("Done", "Resolve", "Closed");
     @Getter @Setter
     private String projectKeyScript;
     private String labelPrefix;
