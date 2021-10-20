@@ -5,7 +5,9 @@
 
 
 ## <a name="whatisit">What is it?</a>
-CxFlow is a Spring Boot application that can run anywhere Java is installed. CxFlow glues together Checkmarx CxSAST and CxSCA scans with feedback to issue tracking systems via webhooks triggered by SCM events. CxFlow can also run as a CLI tool embedded in CI/CD pipelines. 
+CxFlow is a Spring Boot application that can run anywhere Java is installed. CxFlow glues together Checkmarx CxSAST and CxSCA scans with feedback to issue tracking systems via webhooks triggered by SCM events. 
+
+CxFlow can also run as a CLI tool embedded in CI/CD pipelines. 
 
 ## <a name="quickstart">Quick Start</a>
 For a Quick Start Lab, please refer to [Quick Start](https://github.com/checkmarx-ltd/cx-flow/wiki/Labs#quickstart)

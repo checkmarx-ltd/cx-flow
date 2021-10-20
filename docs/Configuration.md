@@ -19,18 +19,18 @@
 * [JSON Config Override](#json)
 * [BugTrackers](#bugtrackers)
 
-CxFlow uses **SpringBoot** and requires using an **application.yml** file to drive the execution. The sections below outlines available properties and when/how they can be used in different execution modes.  In addition, all the SpringBoot configuration rules apply. For additional information on SpringBoot, refer to 
+CxFlow uses **Spring Boot** and requires using an **application.yml** file to drive the execution. The sections below outlines available properties and when/how they can be used in different execution modes. In addition, all the Spring Boot configuration rules apply. For additional information on Spring Boot, refer to 
 https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html
 
 To allow for bootstrapping the launch process with various configurations, especially with containers, CxFlows uses overrides on the command line using the `--property.name=Value` format as well as `PROPERTY_NAME` environment variable overrides.
 
-All the relevant configuration is defined by the **application.yml** file that resides in the same directory as the jar file, or if an explicit configuration override is provided on the command line as follows:
+All the relevant configuration is defined by the **application.yml** file that resides in the same directory as the JAR file, or if an explicit configuration override is provided on the command line as follows:
 
 `java -jar cx-flow-<ver>.jar --spring.config.location=/path/to/application.yml`
 
 ## <a name="monitoring">Monitoring</a>
 CxFlow has Actuator built in and enabled for monitoring purposes:
-https://docs.spring.io/spring-boot/docs/2.2.0.M2/reference/html/production-ready-features.html
+https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html
 
 ## <a name="encryption">Encryption</a>
 CxFlow is bundled with support for Jasypt for encrypting property files:
@@ -80,7 +80,7 @@ For additional information, refer to the configuration options below.
 
 ### Application Properties Sample
 
-```
+```yaml
 server:
   port: ${PORT:8080}
 
@@ -136,6 +136,7 @@ cx-flow:
   zip-exclude: \.git/.*, .*\.png
 
 checkmarx:
+  version: 9.0
   username: xxx
   password: xxx
   client-secret: xxx
