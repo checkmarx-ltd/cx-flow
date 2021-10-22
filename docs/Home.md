@@ -14,3 +14,7 @@ For a Quick Start Lab, please refer to [Quick Start](https://github.com/checkmar
 
 ## <a name="configuration">Configuration Details</a>
 For Configuration details, please refer to [Configuration Definitions](https://github.com/checkmarx-ltd/cx-flow/wiki/Configuration#configuration-definitions)
+
+## <a name="monitoring">Monitoring</a>
+CxFlow has Spring Actuator built in and enabled for monitoring purposes:
+https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html
