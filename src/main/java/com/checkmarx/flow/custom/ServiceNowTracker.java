@@ -137,12 +137,13 @@ public class ServiceNowTracker implements IssueTracker {
     public List<Issue> getIssues(ScanRequest request) throws MachinaException {
         log.debug("Executing getIssues Service Now API call");
         String apiRequest = createServiceNowRequest(request);
+        String tag = createServiceNowTag(request);
         try {
             Optional<Result> res = Optional.ofNullable(restOperations.getForObject(apiRequest, Result.class));
             if (res.isPresent()) {
                 return res.get().getIncidents()
-                        .stream()
-                        .map(i -> this.mapToIssue(i))
+                        .stream().filter(i -> i.getComments().toLowerCase(Locale.ROOT).contains(tag.toLowerCase(Locale.ROOT)))
+                        .map(i -> mapToIssue(i))
                         .collect(Collectors.toList());
             }
         } catch(RestClientException e) {
@@ -162,8 +163,7 @@ public class ServiceNowTracker implements IssueTracker {
         if(ScanUtils.emptyObj(request)){
             throw new RuntimeException("ScanRequest object is empty");
         }
-        String tag = createServiceNowTag(request);
-        String url = String.format("%s%s?sysparm_query=short_description>=%s AND commentsLIKE%s&sysparm_limit=%s", properties.getApiUrl(), INCIDENTS, request.getProduct().getProduct(), tag, MAX_RECORDS);
+        String url = String.format("%s%s?sysparm_query=short_descriptionSTARTSWITH%s&sysparm_limit=%s&sysparm_display_value=true", properties.getApiUrl(), INCIDENTS, request.getProduct().getProduct(), MAX_RECORDS);
         log.debug("ServiceNow Get Issues URL: {}", url);
         return url;
     }
@@ -388,7 +388,6 @@ public class ServiceNowTracker implements IssueTracker {
 
     /**
      * Create Service Now object out of the Issue/ScanRequest for close issue.
-     * @param request ScanRequest object
      * @return Incident object
      */
     private Incident getCloseIncident() {
