@@ -351,7 +351,7 @@ Refer to the sample configuration above for the entire yaml structure.
 | password          |                | Yes | Yes | Yes      | Service account password Checkmarx                                        |
 | client-secret     |                | Yes | Yes | Yes      | OIDC client secret for API login to Checkmarx                             |
 | base-url          |                | Yes | Yes | Yes      | Base FQDN and port for Checkmarx                                          |
-| multi-tenant      | false          | No* | Yes | Yes (Scan only) | If yes, the name space is created or reused, if it has been pre-registered or already created for previous scans)    |
+| multi-tenant      | true          | No* | Yes | Yes (Scan only) | If yes, the name space is created or reused, if it has been pre-registered or already created for previous scans)    |
 | scan-preset       | Checkmarx Default | No* | Yes | Yes (Scan only) | The default preset used for the triggered scan                 |
 | configuration      | Default Configuration | No* | Yes | Yes (Scan only) | Checkmarx scan configuration setting |
 | team          |                | Yes (not for XML parse mode) | Yes | Yes (Scan only)  | Base team in Checkmarx to drive scanning and retrieving of results |
