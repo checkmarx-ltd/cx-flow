@@ -1497,9 +1497,8 @@ public class JiraService {
     }
 
     private static String fillPlaceholder(String summary, String placeholder, String actualValue){
-        if(StringUtils.isNotEmpty(actualValue)) {
-            summary = summary.replace(placeholder, actualValue);
-        }
+        actualValue = StringUtils.defaultIfEmpty(actualValue, "");
+        summary = summary.replace(placeholder, actualValue);
         return summary;
     }
 }
