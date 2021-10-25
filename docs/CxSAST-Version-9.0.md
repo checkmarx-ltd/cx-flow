@@ -29,6 +29,8 @@ checkmarx:
    #team-script: D:\\tmp\CxTeam.groovy
    #exclude-files:
    #exclude-folders:
+   scan-queuing: false
+   scan-queuing-timeout: 720
 ```
 
 ### <a name="ninedotzero">CxSAST v9.0 .yml Example File</a>
@@ -88,6 +90,8 @@ checkmarx:
   sdk-url: ${checkmarx.base-url}/cxwebinterface/SDK/CxSDKWebService.asmx
   portal-wsdl: ${checkmarx.base-url}/Portal/CxWebService.asmx?wsdl
   sdk-wsdl: ${checkmarx.base-url}/SDK/CxSDKWebService.asmx?wsdl
+  scan-queuing: false
+  scan-queuing-timeout: 720
 
 azure:
   webhook-token: cxflow:12345

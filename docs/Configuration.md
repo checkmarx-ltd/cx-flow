@@ -151,6 +151,8 @@ checkmarx:
   jira-assignee-field: jira-assignee
   preserve-xml: true
   url: ${checkmarx.base-url}/cxrestapi
+  scan-queuing: false
+  scan-queuing-timeout: 720
 #WSDL Config
   portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
   sdk-url: ${checkmarx.base-url}/cxwebinterface/SDK/CxSDKWebService.asmx
@@ -368,7 +370,8 @@ Refer to the sample configuration above for the entire yaml structure.
 | exclude-files     |                | No  | Yes | Yes      | Files to be excluded from Scan                                            |
 | exclude-folders   |                | No  | Yes | Yes      | Folders to be excluded from Scan                                          |
 | custom-state-map  |                | No  | No  | Yes      | A map of custom result state identifiers to custom result state names |
-
+| scan-queuing       | false | No* | Yes | No | When **True**: If a scan is active for the same project, CxFlow submits a new scan and puts in queue. When scan-queue is **False**: the CxFlow behavior is according to scan-resubmit settings. |                 |
+| scan-queuing-timeout       | 720  | No* | Yes | No | If scan-queuing is true then scan-queuing-timeout Defaults to 12h. '0' would be for waiting forever with the scan in the queue.                 |
 No* = Default is applied
 
 ### <a name="nine">9.0 Configuration Changes</a>
@@ -394,6 +397,8 @@ checkmarx:
    #team-script: D:\\tmp\CxTeam.groovy
    exclude-files: "*.tst,*.json"
    exclude-folders: ".git,test"
+   scan-queuing: false
+   scan-queuing-timeout: 720
 ```
 **Note:**
 * Make sure to include **version: 9.0** (or higher) and **scope:  access_control_api sast_rest_api**
