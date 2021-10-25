@@ -128,13 +128,15 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
     protected abstract String getScanId(AstScaResults internalResults);
 
     private ScanParams toSdkScanParams(ScanRequest scanRequest, String pathToScan) {
-        return ScanParams.builder()
+        ScanParams scanParams = ScanParams.builder()
                 .projectName(scanRequest.getProject())
                 .sourceDir(pathToScan)
                 .scaConfig(scanRequest.getScaConfig())
                 .filterConfiguration(scanRequest.getFilter())
                 .disableCertificateValidation(scanRequest.isDisableCertificateValidation())
                 .build();
+        setScannerSpecificProperties(scanRequest,scanParams);
+        return scanParams;
     }
 
     protected abstract ScanResults toScanResults(AstScaResults internalResults);
