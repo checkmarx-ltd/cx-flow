@@ -32,6 +32,10 @@ sca:
   username: username
   password: xxxxx
   team: "/CxServer/MyTeam/SubTeam"
+  include-sources: true
+  exclude-files: "**/*.xml"
+  manifests-include-pattern: "!**/*.xml, **/*.yml"
+  fingerprints-include-pattern: "**/*.yml"
 ```
 
 To use an European tenant:
@@ -47,6 +51,10 @@ sca:
   username: username
   password: xxxxx
   team: "/CxServer/MyTeam/SubTeam"
+  include-sources: true 
+  exclude-files: "**/*.xml"
+  manifests-include-pattern: "!**/*.xml, **/*.yml"
+  fingerprints-include-pattern: "**/*.yml"
 ```
 
 ## <a name="bug">Bug-Trackers</a>
@@ -217,6 +225,13 @@ Additional configuration in SCA zip scan flow - Include source files
 ```
 includeSources: true
 ```
+
+* When includeSources is set to true cx-flow will consider all the files for scanning. If there is need to exclude files the **exclude-files** parameter is used. This parameter expects a regular expression for the files to be excluded. e.g ``` exclude-files: "**/*.xml"``` will exclude all the .xml files present in the source folder.
+
+
+* When includeSources is set to false cx-flow will consider the manifest-files and calculate fingerprint for it. If there is a need to exclude files then in this case the **manifests-include-pattern** and the **fingerprints-include-pattern** is used. These parameters also requires regular expression. e.g ``` manifests-include-pattern: **/*.xml, !**/*.yml``` will include the all the xml file and exclude all the yml files.
+  
+  **Note** The files to be excluded must begin with !. (Only applicable for manifests-include-pattern and fingerprints-include-pattern properties).
 
 ## <a name="scaProjectTeamAssignment">SCA project team assignment</a>
 SCA project team assignment with CxFlow is performing on the SCA project creation stage. In order to set a project team, the next configuration property should be added underneath the sca configuration section:
