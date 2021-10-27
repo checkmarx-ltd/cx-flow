@@ -38,6 +38,7 @@ import org.springframework.web.util.DefaultUriBuilderFactory;
 import javax.annotation.PostConstruct;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -303,9 +304,9 @@ public class JiraService {
                 summary = ScanUtils.getScaSummaryIssueKey(request, issue, issuePrefix, issuePostfix);
             } else {
                 if (useBranch) {
-                    summary = String.format(JiraConstants.JIRA_ISSUE_TITLE_KEY_WITH_BRANCH, issuePrefix, vulnerability, filename, branch, issuePostfix);
+                    summary = formatSastIssueSummary(jiraProperties.getSastIssueSummaryBranchFormat(), issue, request);
                 } else {
-                    summary = String.format(JiraConstants.JIRA_ISSUE_TITLE_KEY, issuePrefix, vulnerability, filename, issuePostfix);
+                    summary = formatSastIssueSummary(jiraProperties.getSastIssueSummaryFormat(), issue, request);
                 }
             }
             String fileUrl = ScanUtils.getFileUrl(request, issue.getFilename());
@@ -970,11 +971,11 @@ public class JiraService {
             String key;
             if (useBranch) {
                 key = ScanUtils.isSAST(issue)
-                        ? String.format(JiraConstants.JIRA_ISSUE_TITLE_KEY_WITH_BRANCH, issuePrefix, issue.getVulnerability(), issue.getFilename(), request.getBranch(), issuePostfix)
+                        ? formatSastIssueSummary(jiraProperties.getSastIssueSummaryBranchFormat(), issue, request)
                         : getScaDetailsIssueTitleFormat(request, issuePrefix, issuePostfix, issue);
             } else {
                 key = ScanUtils.isSAST(issue)
-                        ? String.format(JiraConstants.JIRA_ISSUE_TITLE_KEY, issuePrefix, issue.getVulnerability(), issue.getFilename(), issuePostfix)
+                        ? formatSastIssueSummary(jiraProperties.getSastIssueSummaryFormat(), issue, request)
                         : getScaDetailsIssueTitleWithoutBranchFormat(request, issuePrefix, issuePostfix, issue);
             }
             map.put(HTMLHelper.getScanRequestIssueKeyWithDefaultProductValue(request, key,jiraProperties.getLabelPrefix()), issue);
@@ -1480,5 +1481,24 @@ public class JiraService {
         if (sourceMap != null && !sourceMap.isEmpty()) {
             destinationMap.putAll(sourceMap);
         }
+    }
+
+    private String formatSastIssueSummary(String summary, ScanResults.XIssue issue, ScanRequest request) {
+        summary = fillPlaceholder(summary, "[BASENAME]", Paths.get(issue.getFilename()).getFileName().toString());
+        summary = fillPlaceholder(summary, "[BRANCH]", request.getBranch());
+        summary = fillPlaceholder(summary, "[FILENAME]", issue.getFilename());
+        summary = fillPlaceholder(summary, "[POSTFIX]", jiraProperties.getIssuePostfix());
+        summary = fillPlaceholder(summary, "[PREFIX]", jiraProperties.getIssuePrefix());
+        summary = fillPlaceholder(summary, "[PROJECT]", request.getProject());
+        summary = fillPlaceholder(summary, "[SEVERITY]", issue.getSeverity());
+        summary = fillPlaceholder(summary, "[VULNERABILITY]", issue.getVulnerability());
+
+        return summary;
+    }
+
+    private static String fillPlaceholder(String summary, String placeholder, String actualValue){
+        actualValue = StringUtils.defaultIfEmpty(actualValue, "");
+        summary = summary.replace(placeholder, actualValue);
+        return summary;
     }
 }

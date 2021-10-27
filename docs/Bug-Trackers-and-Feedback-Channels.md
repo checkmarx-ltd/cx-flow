@@ -5,6 +5,7 @@
   * [Transitions](#transitions)
   * [Fields](#fields)
   * [Assigning tickets to a user](#assigningTickets)
+  * [Configuring the Jira Issue Summary](#issueSummaryFormat)
 * [Custom Bug trackers](#custom)
 * [Azure DevOps Work Items](#azure)
 * [GitLab Issues](#gitlab)
@@ -52,6 +53,8 @@ jira:
       - In Review
    closed-status:
       - Done
+   sast-issue-summary-format: "[VULNERABILITY] in [PROJECT] with severity [SEVERITY] @ [FILENAME]"
+   sast-issue-summary-branch-format: "[VULNERABILITY] in [PROJECT] with severity [SEVERITY] @ [FILENAME][[BRANCH]]"
    fields:
 #    - type: cx #[ cx | static | result ]
 #      name: Platform # cx custom field name | cwe, category, severity, application, *project*, repo-name, branch, repo-url, namespace, recommendations, loc, site, issueLink, filename, language
@@ -155,6 +158,28 @@ Jira tickets can be assigned to a user when they are created. This can be achiev
 * As a webhook url parameter - The url parameter 'assignee' can be appended to the url in the webhook configuration and a user's email address to whom the tickets should be assigned, is provided as the value of the parameter.
 
   E.g - http​&#65279;://companyname.checkmarx.com?assignee=someUsersEmail@&#65279;xyz.com
+
+### <a name="issueSummaryFormat">Configuring the Jira Issue Summary</a>
+
+The sast-issue-summary-format and sast-issue-summary-branch-format properties can be used to configure the issue summary of the issues that CxFlow creates in Jira for vulnerabilities detected by CxSAST. The following substitutions are performed on the properties’ values to generate the issue summary:
+
+**[BASENAME]** → The basename of the file in which the vulnerabilities were found
+
+**[BRANCH]** → The value of the `--branch` command line option
+
+**[FILENAME]** → The full path of the file in which the vulnerabilities were found
+
+**[POSTFIX]** → The issue summary’s suffix (as specified by the Jira issue-postfix property)
+
+**[PREFIX]** → The issue summary’s prefix (as specified by the Jira issue-prefix property)
+
+**[PROJECT]** → The Checkmarx project
+
+**[SEVERITY]** → The severity of the vulnerability
+
+**[VULNERABILTY]** → The vulnerability
+
+The default Jira issue summary format (for CxSAST issues) is `[PREFIX][VULNERABILITY] @ [FILENAME][POSTFIX]` (`[PREFIX][VULNERABILITY] @ [FILENAME] [[BRANCH]][POSTFIX]` if the `--branch` command line option has been used).
 
 ## <a name="custom">Custom Bug Trackers</a>
 Refer to the [development section](https://github.com/checkmarx-ltd/cx-flow/wiki/Development) for the implementation approach.
