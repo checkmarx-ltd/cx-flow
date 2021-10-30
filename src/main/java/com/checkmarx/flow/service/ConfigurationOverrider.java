@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
@@ -112,6 +113,10 @@ public class ConfigurationOverrider {
         }
 
         request.setBugTracker(bt);
+
+        if(override.getSshKeyIdentifier() != null && !override.getSshKeyIdentifier().isEmpty() ) {
+            flowProperties.setSshkeypath(override.getSshKeyIdentifier());
+        }
 
         Optional.ofNullable(override.getApplication())
                 .filter(StringUtils::isNotBlank)
