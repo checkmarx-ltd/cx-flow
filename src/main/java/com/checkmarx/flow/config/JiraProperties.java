@@ -52,6 +52,8 @@ public class JiraProperties {
     @Getter @Setter
     private String projectKeyScript;
     private String labelPrefix;
+    private String sastIssueSummaryFormat = "[PREFIX][VULNERABILITY] @ [FILENAME][POSTFIX]";
+    private String sastIssueSummaryBranchFormat = "[PREFIX][VULNERABILITY] @ [FILENAME] [[BRANCH]][POSTFIX]";
 
 
     public String getUrl() {
@@ -342,6 +344,18 @@ public class JiraProperties {
 
     public void setLabelPrefix(String labelPrefix) {
         this.labelPrefix = labelPrefix;
+    }
+
+    public String getSastIssueSummaryFormat() { return this.sastIssueSummaryFormat; }
+
+    public void setSastIssueSummaryFormat(String sastIssueSummaryFormat) {
+        this.sastIssueSummaryFormat = sastIssueSummaryFormat;
+    }
+
+    public String getSastIssueSummaryBranchFormat() { return this.sastIssueSummaryBranchFormat; }
+
+    public void setSastIssueSummaryBranchFormat(String sastIssueSummaryBranchFormat) {
+        this.sastIssueSummaryBranchFormat = sastIssueSummaryBranchFormat;
     }
 
 }
