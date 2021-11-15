@@ -81,6 +81,7 @@ public class ConfigurationOverrider {
         } catch (IllegalArgumentException e) {
             log.warn("Error parsing cxFlow object from CxConfig.", e);
         }
+        
         return request;
     }
 
@@ -113,11 +114,7 @@ public class ConfigurationOverrider {
         }
 
         request.setBugTracker(bt);
-
-        if(override.getSshKeyIdentifier() != null && !override.getSshKeyIdentifier().isEmpty() ) {
-            flowProperties.setSshkeypath(override.getSshKeyIdentifier());
-        }
-
+        
         Optional.ofNullable(override.getApplication())
                 .filter(StringUtils::isNotBlank)
                 .ifPresent(a -> {
@@ -367,7 +364,11 @@ public class ConfigurationOverrider {
             FilterConfiguration filter = filterFactory.getFilter(controllerRequest, null);
             request.setFilter(filter);
         }
-
+        
+        if(!StringUtils.isEmpty(override.getSshKeyIdentifier() ) ) {
+            request.setSshKeyIdentifier(override.getSshKeyIdentifier());
+        }
+        
         return request;
     }
 
