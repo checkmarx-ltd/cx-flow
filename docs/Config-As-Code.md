@@ -1,6 +1,6 @@
 # Config as Code
 The presence of a cx.config file in the root of the source repository is used to drive/override project/scanning configuration within CxFlow
-### **Note: Currently only implemented for GitHub, GitLab, Bitbucket Server, Bitbucket Cloud and Azure DevOps, for WebHook execution.**
+### **Note: Currently implemented for GitHub, GitLab, Bitbucket Server, Bitbucket Cloud and Azure DevOps, for WebHook execution, and for local source scanning in batch mode.**
 
 * [Current Overrides](#current)
 * [Automated Code Profiling](#automatedcodeprofiling)
@@ -78,7 +78,6 @@ Example Config As Code:
 ```
 
 ## <a name="automatedcodeprofiling">Automated Code Profiling</a>
-Again, Config As Code is currently only implemented GitHub and GitLab Webhook execution
 
 [[/Images/automatedWorkflow1.png|Automated code profiling workflow diagram]]
 [[/Images/automatedWorkflow2.png|Automated code profiling swim lane diagram]]

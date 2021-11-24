@@ -72,6 +72,7 @@ CxFlow can be integrated via command line using several ways. The table below li
 | `--offline` | If this flag is raised, the Checkmarx instance is not contacted.  This means that no issue description is provided and Checkmarx custom fields cannot be used |
 | `--blocksysexit` | Optional: Mainly for build/test purposes. Avoid `System.exit()` in the code and exit with java exception |
 | `--alt-project` | Name of the project in ADO. This parameter is required in addition to cx-project parameter. |
+| `--project-custom-field` | Specify a project-level custom field to be set if a project is created or the `checkmarx.settings-override` property is set. The custom field are specified as *name:value* (i.e., the field name cannot include a colon). This option may be specified multiple times to set multiple fields. |
 ## <a name="parse">Parse</a>
 
 ```

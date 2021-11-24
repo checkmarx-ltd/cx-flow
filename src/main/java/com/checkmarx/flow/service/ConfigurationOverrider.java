@@ -242,6 +242,7 @@ public class ConfigurationOverrider {
                 overrideReport.put("scan configuration", scanConfiguration);
             });
         });
+        override.map(CxConfig::getCustomFields).ifPresent(s -> request.setCxFields(s));
         overrideUsingConfigProvider(override, overrideReport, request);
     }
 
