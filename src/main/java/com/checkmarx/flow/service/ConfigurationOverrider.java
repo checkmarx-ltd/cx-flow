@@ -113,6 +113,10 @@ public class ConfigurationOverrider {
             overrideJiraBugProperties(override, bt);
         }
 
+        if(!StringUtils.isEmpty(override.getSshKeyIdentifier() ) ) {
+            request.setSshKeyIdentifier(override.getSshKeyIdentifier());
+        }
+        
         request.setBugTracker(bt);
         
         Optional.ofNullable(override.getApplication())
@@ -364,11 +368,6 @@ public class ConfigurationOverrider {
             FilterConfiguration filter = filterFactory.getFilter(controllerRequest, null);
             request.setFilter(filter);
         }
-        
-        if(!StringUtils.isEmpty(override.getSshKeyIdentifier() ) ) {
-            request.setSshKeyIdentifier(override.getSshKeyIdentifier());
-        }
-        
         return request;
     }
 

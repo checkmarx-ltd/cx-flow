@@ -222,6 +222,7 @@ public class ScanRequestConverter {
                 .withFileExclude(request.getExcludeFiles())
                 .withFolderExclude(request.getExcludeFolders())
                 .withScanConfiguration(request.getScanConfiguration())
+                .withSshKeyIdentifier(request.getSshKeyIdentifier())
                 .withClientSecret(request.getScannerApiSec());
 
         if (StringUtils.isNotEmpty(request.getBranch())) {
