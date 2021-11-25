@@ -83,7 +83,9 @@ public class HelperService {
         }
 
         if (CollectionUtils.isEmpty(branches)) {
-            return true;
+            if(properties.isScanUnprotectedBranches()) {
+                return true;
+            }
         }
 
         log.info("Branch {} did not meet the scanning criteria [{}]", branchToCheck, branches);

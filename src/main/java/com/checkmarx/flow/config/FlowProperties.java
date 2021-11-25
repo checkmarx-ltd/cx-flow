@@ -53,6 +53,7 @@ public class FlowProperties {
     @Getter @Setter
     private boolean preserveProjectName;
     private Map<FindingSeverity,Integer> thresholds;
+    private boolean scanUnprotectedBranches= false;
 
     public String getContact() {
         return this.contact;
@@ -402,5 +403,13 @@ public class FlowProperties {
 
     private boolean anyScannerEnabled() {
         return enabledVulnerabilityScanners != null && !enabledVulnerabilityScanners.isEmpty();
+    }
+
+    public boolean isScanUnprotectedBranches() {
+        return scanUnprotectedBranches;
+    }
+
+    public void setScanUnprotectedBranches(boolean scanUnprotectedBranches) {
+        this.scanUnprotectedBranches = scanUnprotectedBranches;
     }
 }

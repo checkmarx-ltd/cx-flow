@@ -102,6 +102,7 @@ cx-flow:
     - develop
     - main
     - release`-\w+ # regular expressions supported. If branch-script is provided, this is ignored. branch-script: D:\\tmp\Branch.groovy #default empty/not used
+  scan-unprotected-branches: true (scan all the branches if no protected branch set in application.yml or in cx.config file.
   filter-severity:
     - High
   filter-category:
@@ -352,6 +353,7 @@ Refer to the sample configuration above for the entire yaml structure.
 | profile-config    | CxProfile.json | No | Yes | No        | The file that contains the profile configuration mapping. |
 | scan-resubmit     | false          | No | Yes | No       | When **True**: If a scan is active for the same project, CxFlow cancels the active scan and submits a new scan. When **False**: If a scan is active for the same project, CxFlow does not submit a new scan. |
 | preserve-project-name | false      | No | Yes | Yes       | When **False**: The project name will be the repository name after normalization (i.e. Front-End-dev). Legal characters are: `a-z`, `A-Z`, `0-9`, `-`, `_`, `.`. All other characters will be replaced in the normalization process with "-". <br/> When **True**: The project name will be the exact project name inputted without normalization (i.e. Front End-dev). <br/> **For attention:** <br/> 1. Not all scanners allow project names with invalid characters.<br/> 2. The preserve-project-name parameter is also effective for project name coming from config-as-code. |
+| scan-unprotected-branches | false | No | Yes | No | When **False**: Scan is performed only when a PUSH or PULL event is performed on the protected branches. When **True** scan is performed when a PUSH or PULL Event is performed on any branch given that the branches in application.yml or cx.config file is empty. |
 | **checkmarx**     |                |    |     |           |                                                                           |
 | username          |                | Yes | Yes | Yes      | Service account for Checkmarx                                             |
 | password          |                | Yes | Yes | Yes      | Service account password Checkmarx                                        |
