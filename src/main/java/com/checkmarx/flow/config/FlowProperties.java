@@ -48,6 +48,7 @@ public class FlowProperties {
     private Integer httpReadTimeout = 120000;
     private boolean listFalsePositives = false;
     private boolean scanResubmit = false;
+    private String sshKeyPath;
     private Mail mail;
     @Getter @Setter
     private boolean preserveProjectName;
@@ -320,6 +321,13 @@ public class FlowProperties {
         this.thresholds = thresholds;
     }
 
+    public void setSshkeypath(String sshKeyPath) {
+        this.sshKeyPath = sshKeyPath;
+    }
+
+    public String getSshkeypath() {
+        return sshKeyPath;
+    }
 
     public static class Mail {
         private String host;

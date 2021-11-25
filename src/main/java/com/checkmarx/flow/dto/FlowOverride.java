@@ -32,6 +32,8 @@ public class FlowOverride {
     public Thresholds thresholds;
     @JsonProperty("vulnerabilityScanners")
     public List<String> vulnerabilityScanners = null;
+    @JsonProperty("sshKeyIdentifier")
+    public String sshKeyIdentifier;
     
     public FlowOverride() {
     }
@@ -96,8 +98,16 @@ public class FlowOverride {
 
     public Thresholds getThresholds() { return this.thresholds;}
 
+    public void setSshKeyIdentifier(String sshKeyIdentifier) {
+        this.sshKeyIdentifier = sshKeyIdentifier;
+    }
+
+    public String getSshKeyIdentifier() {
+        return sshKeyIdentifier;
+    }
+
     public String toString() {
-        return "FlowOverride(application=" + this.getApplication() + ", branches=" + this.getBranches() + " emails=" + this.getEmails() + ", jira=" + this.getJira() + ", filters=" + this.getFilters() + "thresholds=" + this.getThresholds() + ")";
+        return "FlowOverride(application=" + this.getApplication() + ", branches=" + this.getBranches() + " emails=" + this.getEmails() + ", jira=" + this.getJira() + ", filters=" + this.getFilters() + "thresholds=" + this.getThresholds() + ", sshKeyIdentifier=" + this.getSshKeyIdentifier() +")";
     }
 
 
