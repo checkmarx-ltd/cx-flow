@@ -104,6 +104,10 @@ public class ScanRequest {
 
     @Getter @Setter
     private boolean disableCertificateValidation;
+    
+    //SSH Key per repo
+    @Getter @Setter
+    private String sshKeyIdentifier;
 
     public ScanRequest(ScanRequest other) {
         this.namespace = other.namespace;
@@ -145,6 +149,7 @@ public class ScanRequest {
         this.organizationId = other.organizationId;
         this.gitUrl = other.gitUrl;
         this.disableCertificateValidation = other.disableCertificateValidation;
+        this.sshKeyIdentifier = other.sshKeyIdentifier;
     }
 
     public Map<String,String> getAltFields() {
