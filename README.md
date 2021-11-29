@@ -46,7 +46,8 @@ server:
   port: ${PORT:8080}
 
 logging:
-  file: cx-flow.log
+  file:
+    name: cx-flow.log
 #  level:
 #    com:
 #      checkmarx:

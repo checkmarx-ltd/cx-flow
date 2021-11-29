@@ -26,7 +26,8 @@ This is a set of example yml file configurations used to execute CxFlow.
 server:
   port: ${PORT:8982}
 logging:
-  file: flow.log
+  file:
+    name: flow.log
 
 cxflow:
   bug-tracker: JIRA
@@ -156,7 +157,8 @@ jira:
 server:
   port: ${PORT:8982}
 logging:
-  file: flow.log
+  file:
+    name: flow.log
 
 cxflow:
   bug-tracker: JIRA
