@@ -59,7 +59,7 @@ enum Repository {
         private GitHubApiHandler api;
 
         @Override
-        Boolean hasWebHook() {
+        Boolean hasWebHook() {        
             JSONArray hooks = api.getHooks(getHeaders(), gitHubProperties.getApiUrl(), namespace, repo);
             assertNotNull(hooks, "could not create webhook configuration");
             return !hooks.isEmpty();
@@ -144,7 +144,23 @@ enum Repository {
             committer.setName("CxFlowTestUser");
             committer.setEmail("CxFlowTestUser@checkmarx.com");
             try {
-                if (activeBranch.equals(EMPTY_STRING)){
+            	
+            	//attempt to delete a file if found
+            	try {
+            		
+            		JSONObject response = api.getRepoContent("GitHubToJira test message", committer, getHeaders(),
+                            gitHubProperties.getApiUrl(), namespace, repo, theFilePath, activeBranch);
+            		
+            		if(response != null) {
+            			JSONObject delResponse = api.deleteRepoContent("GitHubToJira test message", committer, getHeaders(),
+                                gitHubProperties.getApiUrl(), namespace, repo, theFilePath, activeBranch);
+            			log.error(theFilePath + " existed. Deleted successfully so that pre-condition works.");
+            		}            		            		
+            	}catch(Exception e) {
+            		
+            	}
+            	
+                if (activeBranch.equals(EMPTY_STRING)){                	
                     JSONObject response = api.pushFile(content, "GitHubToJira test message", committer, getHeaders(),
                             gitHubProperties.getApiUrl(), namespace, repo, theFilePath);
                     createdFilesSha.put( response.getJSONObject("content").getString("sha") , theFilePath);
