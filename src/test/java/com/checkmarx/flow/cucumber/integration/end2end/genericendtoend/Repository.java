@@ -179,7 +179,7 @@ enum Repository {
                     String message = "There is already a file with the specified name (" + theFilePath
                             + "). please delete the file before running the test";
                     log.error(message);
-                    throw new PreconditionViolationException(message);
+                    throw new PreconditionViolationException(message, e);
                 } else {
                     throw e;
                 }
