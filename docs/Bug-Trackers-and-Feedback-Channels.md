@@ -143,7 +143,7 @@ language - Language provided by Checkmarx issue
 similarity-id - Cx Similarity ID
 ```
 
-* **jira-field-name** - Custom field name in Jira (readable name, not Custom field name)
+* **jira-field-name** - Custom field name in Jira (readable name, not Custom field name).  **NOTE: Configuring the jira-field-name parameter to Labels would affect issue tracking and might result in duplicate bug creation or bugs not closing or opening.**
 * **jira-field-type** - Type of custom field in Jira:
   * _label_ (if using static or cx values, the CSV format is used and broken into multiple labels)
   * _text_ (applies to many custom field types: url, text box, text, etc
