@@ -44,6 +44,7 @@ cxflow:
   - main
   - dev\w+
   - release-\w+
+  scan-unprotected-branches: true (scan all the branches if no protected branch set in application.yml or in cx.config file.
   filter-severity:
   # - High
   filter-category:
@@ -175,6 +176,7 @@ cxflow:
   - main
   - dev\w+
   - release-\w+
+  scan-unprotected-branches: true (scan all the branches if no protected branch set in application.yml or in cx.config file.
   filter-severity:
   - High
   filter-category:
