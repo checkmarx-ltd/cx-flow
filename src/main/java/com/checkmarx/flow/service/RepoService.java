@@ -48,8 +48,7 @@ public abstract class RepoService {
         }
         catch (Exception e) {
             // We "swallow" the exception so that the flow will not be terminated because of errors in GIT comments
-            log.error("Error while adding or updating {} repo pull request comment",
-                      request.getRepoType(), e);
+            log.warn("Error while adding or updating {} repo pull request comment", request.getRepoType());
         }
 
     }
