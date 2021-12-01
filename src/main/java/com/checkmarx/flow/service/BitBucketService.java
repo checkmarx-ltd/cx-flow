@@ -480,4 +480,9 @@ public class BitBucketService extends RepoService {
         return cxConfig;
     }
 
+	@Override
+	public boolean isScanSubmittedComment() {
+		return this.properties.isScanSubmittedComment();
+	}
+
 }

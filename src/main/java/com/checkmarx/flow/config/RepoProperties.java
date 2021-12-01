@@ -27,6 +27,7 @@ public class RepoProperties {
     private boolean cxSummary = false;
     private String cxSummaryHeader = "Checkmarx Scan Summary";
     private Map<String, OptionalScmInstanceProperties> optionalInstances;
+    private boolean scanSubmittedComment = true;
 
     public Map<String, OptionalScmInstanceProperties> getOptionalInstances() {
         return optionalInstances;
@@ -122,6 +123,14 @@ public class RepoProperties {
 
     public void setBlockMerge(boolean blockMerge) {
         this.blockMerge = blockMerge;
+    }
+    
+    public boolean isScanSubmittedComment() {
+    	return scanSubmittedComment;
+    }
+    
+    public void setScanSubmittedComment(boolean scanSubmittedComment) {
+    	this.scanSubmittedComment = scanSubmittedComment;
     }
 
     /**
