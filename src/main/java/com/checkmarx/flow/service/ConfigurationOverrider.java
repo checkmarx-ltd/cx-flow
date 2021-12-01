@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
@@ -80,6 +81,7 @@ public class ConfigurationOverrider {
         } catch (IllegalArgumentException e) {
             log.warn("Error parsing cxFlow object from CxConfig.", e);
         }
+        
         return request;
     }
 
@@ -111,8 +113,12 @@ public class ConfigurationOverrider {
             overrideJiraBugProperties(override, bt);
         }
 
+        if(!StringUtils.isEmpty(override.getSshKeyIdentifier() ) ) {
+            request.setSshKeyIdentifier(override.getSshKeyIdentifier());
+        }
+        
         request.setBugTracker(bt);
-
+        
         Optional.ofNullable(override.getApplication())
                 .filter(StringUtils::isNotBlank)
                 .ifPresent(a -> {
@@ -363,7 +369,6 @@ public class ConfigurationOverrider {
             FilterConfiguration filter = filterFactory.getFilter(controllerRequest, null);
             request.setFilter(filter);
         }
-
         return request;
     }
 

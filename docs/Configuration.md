@@ -85,7 +85,8 @@ server:
   port: ${PORT:8080}
 
 logging:
-  file: flow.log
+  file:
+    name: flow.log
 
 cx-flow:
   contact: admin@cx.com
@@ -102,6 +103,7 @@ cx-flow:
     - develop
     - main
     - release`-\w+ # regular expressions supported. If branch-script is provided, this is ignored. branch-script: D:\\tmp\Branch.groovy #default empty/not used
+  scan-unprotected-branches: true (scan all the branches if no protected branch set in application.yml or in cx.config file.
   filter-severity:
     - High
   filter-category:
@@ -149,10 +151,14 @@ checkmarx:
   jira-issuetype-field: jira-issuetype
   jira-custom-field: jira-fields
   jira-assignee-field: jira-assignee
+  ssh-key: Path/of/the/private/key 
   preserve-xml: true
   url: ${checkmarx.base-url}/cxrestapi
   scan-queuing: false
   scan-queuing-timeout: 720
+  ssh-key-list:
+    repo_specific_key1: Path/of/the/private/key
+    repo_specific_key2: Path/of/the/private/key
 #WSDL Config
   portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
   sdk-url: ${checkmarx.base-url}/cxwebinterface/SDK/CxSDKWebService.asmx
@@ -324,9 +330,10 @@ Refer to the sample configuration above for the entire yaml structure.
 |             |         |          |         |              | main |
 |             |         |          |         |              | security |
 |             |         |          |         |              | release-\w+ |
-|             |         |          |         |              | If no value is provided, all branches are applicable |
+|             |         |          |         |              | If no value is provided, then scanning of branches depends on the value of scan-unprotected-branches property. When **False** no branches are applicable for scan. When **True** all the branches are applicable. The default value of scan-unprotected-branches is **False**. If there is a need to scan all the branches when no protected branches are defined then set the value of scan-unprotected-branches to true. |
 |             |         |          |         |              | Regular expressions are supported. (i.e. release-\w+ will match any branches starting with release-) |
 | branch-script |       | No       | Yes     | No           | A **groovy** script that can be used to decide, if a branch is applicable for scanning. This applies to any client custom lookups and other integrations.  The script is passed as a **"request"** object of the type **com.checkmarx.flow.dto.ScanRequest** and must return **boolean** (true/false). If this script is provided, it is used for all decisions associated with determining applicability for a branch event to be scanned. **A sample script is attached to this page. |
+| scan-unprotected-branches | false | No | Yes | No | When **False**: Scan is performed only when a PUSH or PULL event is performed on the protected branches. When **True** scan is performed when a PUSH or PULL Event is performed on any branch given that the branches in application.yml or cx.config file is empty. |
 | filter-severity |     | No       | Yes    | Yes           | The severity can be filtered during feedback (**High**, **Medium**, **Low**, **Informational**).  If no value is provided, all severity levels are applicable. |
 | filter-category |     | No       | Yes    | Yes           | The list of vulnerability types to be included with the results (**Stored_XSS**, **SQL_Injection**) as defined within Checkmarx.  If no value is provided, all categories are applicable. |
 | filter-cwe      |     | No       | Yes    | Yes           | The list of CWEs to be included with the results (**79**, **89**).  If no value is provided, all categories are applicable. |
@@ -374,6 +381,9 @@ Refer to the sample configuration above for the entire yaml structure.
 | custom-state-map  |                | No  | No  | Yes      | A map of custom result state identifiers to custom result state names |
 | scan-queuing       | false | No* | Yes | No | When **True**: If a scan is active for the same project, CxFlow submits a new scan and puts in queue. When scan-queue is **False**: the CxFlow behavior is according to scan-resubmit settings. |                 |
 | scan-queuing-timeout       | 720  | No* | Yes | No | If scan-queuing is true then scan-queuing-timeout Defaults to 12h. '0' would be for waiting forever with the scan in the queue.                 |
+| settings-override | false          | No  | No  | Yes      | Must be set to `true` if overriding preset, engine configuration or file/folder exclusions for an existing project |
+| ssh-key-list | | No | Yes | No | A map of sshKeyIdentifier to their actual SSH private key file path. Currently only works with GitHub.  |
+| ssh-key | | No | Yes | Yes | Holds the location of the ssh private key file when SSH method is used instead of Personal Access Token. |
 No* = Default is applied
 
 ### <a name="nine">9.0 Configuration Changes</a>
@@ -392,6 +402,7 @@ checkmarx:
    team: /CxServer/Checkmarx/CxFlow
    url: ${checkmarx.base-url}/cxrestapi
    preserve-xml: true
+   ssh-key: Path/of/the/private/key
    incremental: true
    #WSDL Config
    portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
@@ -401,6 +412,10 @@ checkmarx:
    exclude-folders: ".git,test"
    scan-queuing: false
    scan-queuing-timeout: 720
+   ssh-key-list:
+    repo_specific_key1: Path/of/the/private/key
+    repo_specific_key2: Path/of/the/private/key
+   
 ```
 **Note:**
 * Make sure to include **version: 9.0** (or higher) and **scope:  access_control_api sast_rest_api**

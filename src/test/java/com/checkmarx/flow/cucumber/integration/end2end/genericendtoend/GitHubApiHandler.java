@@ -16,6 +16,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 import io.cucumber.java.PendingException;
@@ -116,7 +117,66 @@ public class GitHubApiHandler {
         hook.setConfig(config);
         return new HttpEntity<>(hook, headers);
     }
+    
+	/**
+	 * Get a file content from a GitHub repository, Using GitHub's API <br>
+	 * 
+	 * 
+	 * @param message   the commit message
+	 * @param committer the Committer doing the commit
+	 * @param headers   must include the Authentication and content type.
+	 * @param apiUrl    the url of GitHub (can be a local server)
+	 * @param namespace usually the company or user who created the project
+	 * @param repo      the key of the repository
+	 * @param filePath  where to put place the file in the repo
+	 * @param branch    the branch to push to
+	 * @return the Json of the response
+	 * @throws JsonProcessingException indicates problem in creating the file for
+	 *                                 commit
+	 * @throws Exception               indicates an error
+	 */
+	public JSONObject getRepoContent(String message, Committer committer, HttpHeaders headers,
+			String apiUrl, String namespace, String repo, String filePath, String branch)
+			throws JsonProcessingException, Exception {
+				
+		if(StringUtils.isEmpty(branch))
+			branch = "master";
+		String path = String.format(URL_PATERN_CONTENTS, apiUrl, namespace, repo, filePath);
+		ResponseEntity<String> response = doGet(path, headers);
+		return new JSONObject(response.getBody());
+	}
 
+	/**
+	 * Delete a file from a GitHub repository, Using GitHub's API <br>
+	 * 
+	 * 
+	 * @param message   the commit message
+	 * @param committer the Committer doing the commit
+	 * @param headers   must include the Authentication and content type.
+	 * @param apiUrl    the url of GitHub (can be a local server)
+	 * @param namespace usually the company or user who created the project
+	 * @param repo      the key of the repository
+	 * @param filePath  where to put place the file in the repo
+	 * @param branch    the branch to push to
+	 * @return the Json of the response
+	 * @throws JsonProcessingException indicates problem in creating the file for
+	 *                                 commit
+	 * @throws Exception               indicates an error
+	 */
+	public JSONObject deleteRepoContent(String message, Committer committer, HttpHeaders headers,
+			String apiUrl, String namespace, String repo, String filePath, String branch)
+			throws JsonProcessingException, Exception {
+				
+		if(StringUtils.isEmpty(branch))
+			branch = "master";
+				
+		String path = String.format(URL_PATERN_CONTENTS, apiUrl, namespace, repo, filePath);
+		RestTemplate restTemplate = new RestTemplate();
+        HttpEntity<String> requestEntity = new HttpEntity<>(null, headers);
+        ResponseEntity<String> response = restTemplate.exchange(path, HttpMethod.DELETE, requestEntity, String.class);
+        return new JSONObject(response.getBody());
+	}
+	
     private JSONArray getJSONArray(String uri, HttpHeaders headers) {
         ResponseEntity<String> response = doGet(uri, headers);
         String body = response.getBody();
