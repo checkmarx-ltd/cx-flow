@@ -469,6 +469,9 @@ public class JiraService {
                 continue;
             }
             if (!ScanUtils.empty(customField)) {
+                if(customField.equalsIgnoreCase("Labels")){
+                    log.warn("Configuring the Labels parameter would affect issue tracking and might result in duplicate bug creation or bugs not closing or opening.");
+                }
                 /*cx | static | other - specific values that can be linked from scan request or the issue details*/
                 String fieldType = f.getType();
                 if (ScanUtils.empty(fieldType)) {

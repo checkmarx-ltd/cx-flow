@@ -240,7 +240,7 @@ jira:
   fields:
      - type: result
        name: application
-       jira-field-name: Application
+       jira-field-name: Application (NOTE: Configuring the "jira-field-name" parameter to Labels would affect issue tracking and might result in duplicate bug creation or bugs not closing or opening.)
        jira-field-type: label
      - type: result
        name: cve
