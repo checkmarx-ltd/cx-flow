@@ -13,6 +13,7 @@ import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxPropertiesBase;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
+import com.checkmarx.sdk.dto.sast.CxConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import lombok.RequiredArgsConstructor;
@@ -30,8 +31,11 @@ import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.FileSystems;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -196,6 +200,7 @@ public class CxFlowRunner implements ApplicationRunner {
         boolean usingBitBucketServer = args.containsOption("bbs");
         boolean disableCertificateValidation = args.containsOption("trust-cert");
         CxPropertiesBase cxProperties = cxScannerService.getProperties();
+        Map<String, String> projectCustomFields = makeCustomFieldMap(args.getOptionValues("project-custom-field"));
 
         if (((ScanUtils.empty(namespace) && ScanUtils.empty(repoName) && ScanUtils.empty(branch)) &&
                 ScanUtils.empty(application)) && !args.containsOption(BATCH_OPTION) && !args.containsOption(IAST_OPTION)) {
@@ -351,6 +356,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 .altFields(altFields)
                 .forceScan(force)
                 .disableCertificateValidation(disableCertificateValidation)
+                .cxFields(projectCustomFields)
                 .build();
 
         if (projectId != null) {
@@ -555,7 +561,11 @@ public class CxFlowRunner implements ApplicationRunner {
             log.error("Please provide --cx-project to define the project in Checkmarx");
             exit(ExitCode.ARGUMENT_NOT_PROVIDED);
         }
-        ScanResults scanResults = runOnActiveScanners(scanner -> scanner.scanCli(request, "cxFullScan", new File(path)));
+        CxConfig cxConfig = getCxConfigOverride(path, "cx.config");
+        request = configOverrider.overrideScanRequestProperties(cxConfig, request);
+        // A lambda rquires a final or effectively final parameter
+        ScanRequest finalRequest = request;
+        ScanResults scanResults = runOnActiveScanners(scanner -> scanner.scanCli(finalRequest, "cxFullScan", new File(path)));
         processResults(request, scanResults);
     }
 
@@ -619,5 +629,47 @@ public class CxFlowRunner implements ApplicationRunner {
         } catch (MachinaRuntimeException e) {
             throw (ExitThrowable) (e.getCause());
         }
+    }
+
+    /**
+     * Converts a List of Strings representing one or more custom fields to
+     * a Map. Each String is expected to be of the form "name:value".
+     *
+     * @param values a List of Strings representing custom fields
+     * @return a Map of custom fields (or null if values is null)
+     */
+    private Map<String, String> makeCustomFieldMap(List<String> values) {
+        if (values != null) {
+            Map<String, String> customFields = new HashMap<>();
+            for (String value : values) {
+                String[] nvp = value.split(":", 2);
+                if (nvp.length == 2) {
+                    customFields.put(nvp[0], nvp[1]);
+                } else {
+                    log.warn("{}: invalid project custom field", value);
+                }
+            }
+            return customFields;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Load a config-as-code file from the specified directory.
+     *
+     * @param path the path of the directory containing the config-as-code file
+     * @param name the name of the config-as-code file
+     * @return the config-as-code configuration
+     */
+    private CxConfig getCxConfigOverride(String path, String name) {
+        log.debug("getCxConfigOverride: path: {}", path);
+        CxConfig config = null;
+        File file = FileSystems.getDefault().getPath(path, name).toFile();
+        if (file.exists()) {
+            log.debug("Loading config-as-code from {}", file);
+            config = com.checkmarx.sdk.utils.ScanUtils.getConfigAsCode(file);
+        }
+        return config;
     }
 }

@@ -381,7 +381,7 @@ Refer to the sample configuration above for the entire yaml structure.
 | custom-state-map  |                | No  | No  | Yes      | A map of custom result state identifiers to custom result state names |
 | scan-queuing       | false | No* | Yes | No | When **True**: If a scan is active for the same project, CxFlow submits a new scan and puts in queue. When scan-queue is **False**: the CxFlow behavior is according to scan-resubmit settings. |                 |
 | scan-queuing-timeout       | 720  | No* | Yes | No | If scan-queuing is true then scan-queuing-timeout Defaults to 12h. '0' would be for waiting forever with the scan in the queue.                 |
-| settings-override | false          | No  | No  | Yes      | Must be set to `true` if overriding preset, engine configuration or file/folder exclusions for an existing project |
+| settings-override | false          | No  | No  | Yes      | Must be set to `true` if overriding preset, engine configuration, file/folder exclusions, or project-level custom fields for an existing project |
 | ssh-key-list | | No | Yes | No | A map of sshKeyIdentifier to their actual SSH private key file path. Currently only works with GitHub.  |
 | ssh-key | | No | Yes | Yes | Holds the location of the ssh private key file when SSH method is used instead of Personal Access Token. |
 No* = Default is applied

@@ -223,7 +223,8 @@ public class ScanRequestConverter {
                 .withFolderExclude(request.getExcludeFolders())
                 .withScanConfiguration(request.getScanConfiguration())
                 .withSshKeyIdentifier(request.getSshKeyIdentifier())
-                .withClientSecret(request.getScannerApiSec());
+                .withClientSecret(request.getScannerApiSec())
+                .withCustomFields(request.getCxFields());
 
         if (StringUtils.isNotEmpty(request.getBranch())) {
             params.withBranch(Constants.CX_BRANCH_PREFIX.concat(request.getBranch()));
