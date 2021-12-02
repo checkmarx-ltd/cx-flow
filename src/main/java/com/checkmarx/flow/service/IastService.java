@@ -153,9 +153,10 @@ public class IastService {
                 if (vulnerability.getNewCount() != 0) {
                     final List<ResultInfo> scansResultsQuery =
                             iastServiceRequests.apiScanResults(scan.getScanId(), vulnerability.getId());
+                    final List<ResultInfo> scansResultQueryList = scansResultsQuery.stream().filter(scansResultQuery ->
+                            scansResultQuery.isNewResult() && filterSeverity(scansResultQuery)).collect(Collectors.toList());
 
-                    for (ResultInfo scansResultQuery: scansResultsQuery.stream().filter(scansResultQuery ->
-                            scansResultQuery.isNewResult() && filterSeverity(scansResultQuery)).collect(Collectors.toList())) {
+                    for (ResultInfo scansResultQuery: scansResultQueryList) {
                         createIssue(scanVulnerabilities, request, scansResultQuery, vulnerability, scan);
                     }
                 }
@@ -273,13 +274,19 @@ public class IastService {
                                               Scan scan,
                                               VulnerabilityInfo vulnerability,
                                               boolean htmlDescription) {
+        String cwe = "";
+        if (scansResultQuery.getCwe() != null){
+            cwe = scansResultQuery.getCwe().toString();
+        }
+
         return ScanResults.XIssue.builder()
-                .cwe(scansResultQuery.getCwe().toString())
+                .cwe(cwe)
                 .description(generateDescription(vulnerability, scan, htmlDescription))
                 .severity(scansResultQuery.getSeverity().getName())
                 .link(generateIastLinkToVulnerability(scanVulnerabilities, scansResultQuery, vulnerability))
                 .file(scansResultQuery.getUrl())
                 .vulnerability(vulnerability.getName())
+                .groupBySeverity(false)
                 .build();
     }
 
