@@ -201,6 +201,7 @@ public class CxFlowRunner implements ApplicationRunner {
         boolean disableCertificateValidation = args.containsOption("trust-cert");
         CxPropertiesBase cxProperties = cxScannerService.getProperties();
         Map<String, String> projectCustomFields = makeCustomFieldMap(args.getOptionValues("project-custom-field"));
+        Map<String, String> scanCustomFields = makeCustomFieldMap(args.getOptionValues("scan-custom-field"));
 
         if (((ScanUtils.empty(namespace) && ScanUtils.empty(repoName) && ScanUtils.empty(branch)) &&
                 ScanUtils.empty(application)) && !args.containsOption(BATCH_OPTION) && !args.containsOption(IAST_OPTION)) {
@@ -357,6 +358,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 .forceScan(force)
                 .disableCertificateValidation(disableCertificateValidation)
                 .cxFields(projectCustomFields)
+                .scanFields(scanCustomFields)
                 .build();
 
         if (projectId != null) {
