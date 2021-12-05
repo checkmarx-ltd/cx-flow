@@ -74,6 +74,14 @@ Example Config As Code:
         "status": ["Confirmed", "New"]
       }
     }
+  },
+  "customFields": {
+    "field1": "value1",
+    "field2": "value2"
+  },
+  "scanCustomFields": {
+    "field3": "value3",
+    "field4": "value4"
   }
 }
 ```
