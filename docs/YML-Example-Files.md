@@ -70,6 +70,7 @@ checkmarx:
   base-url: http://localhost
   team: \CxServer\SP\Company
   url: ${checkmarx.base-url}/cxrestapi
+  cx-branch: true
   #scan-preset: Checkmarx Default
   #incremental: true
   #WSDL Config
@@ -208,6 +209,7 @@ checkmarx:
   base-url: http://cx.local
   #multi-tenant: true
   configuration: Default Configuration
+  cx-branch: true
   #scan-preset: Checkmarx Defaul
   preserve-xml: true
   team: /CxServer/Checkmarx/CxFlow
