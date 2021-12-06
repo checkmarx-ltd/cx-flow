@@ -231,6 +231,10 @@ public class ScanRequestConverter {
             params.withBranch(Constants.CX_BRANCH_PREFIX.concat(request.getBranch()));
         }
 
+        if(StringUtils.isNotEmpty(request.getDefaultBranch())) {
+            params.withDefaultBranch(Constants.CX_BRANCH_PREFIX.concat(request.getDefaultBranch()));
+        }
+
         if (cxFile != null) {
             params.setSourceType(CxScanParams.Type.FILE);
             params.setFilePath(cxFile.getAbsolutePath());

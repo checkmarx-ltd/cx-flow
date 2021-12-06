@@ -145,6 +145,7 @@ checkmarx:
   multi-tenant: true
   scan-preset: Checkmarx Default
   configuration: Default Configuration
+  cx-branch: true
   team: \CxServer\SP\Machina
   scan-timeout: 120 #Webhook and --scan command line only, number of minutes
   jira-project-field: jira-project
@@ -384,6 +385,7 @@ Refer to the sample configuration above for the entire yaml structure.
 | settings-override | false          | No  | No  | Yes      | Must be set to `true` if overriding preset, engine configuration, file/folder exclusions, or project-level custom fields for an existing project |
 | ssh-key-list | | No | Yes | No | A map of sshKeyIdentifier to their actual SSH private key file path. Currently only works with GitHub.  |
 | ssh-key | | No | Yes | Yes | Holds the location of the ssh private key file when SSH method is used instead of Personal Access Token. |
+| cx-branch | false | No | Yes | No | Request coming from branch of a project will create a branched project instead of a new project in SAST. Must be set to `true` to create a branched project from a base project. |
 No* = Default is applied
 
 ### <a name="nine">9.0 Configuration Changes</a>
