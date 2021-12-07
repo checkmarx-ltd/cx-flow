@@ -287,6 +287,9 @@ public class ScanUtils {
         String branch = request.getBranch();
         if(!ScanUtils.empty(request.getRepoUrl()) && !ScanUtils.empty(branch)) {
             String repoUrl = request.getRepoUrl().replace(".git", "/");
+            if(!(repoUrl.substring(repoUrl.length() - 1).equals("/"))){
+                repoUrl = repoUrl.concat("/");
+            }
             if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)) {
                 String url = request.getAdditionalMetadata("BITBUCKET_BROWSE");
                 if(url != null && !url.isEmpty()){
