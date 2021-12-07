@@ -235,6 +235,15 @@ public class ScanRequestConverter {
             params.withDefaultBranch(Constants.CX_BRANCH_PREFIX.concat(request.getDefaultBranch()));
         }
 
+        if(StringUtils.isEmpty(request.getDefaultBranch()) && StringUtils.isNotEmpty(request.getMergeTargetBranch())) {
+            params.withDefaultBranch(Constants.CX_BRANCH_PREFIX.concat(request.getMergeTargetBranch()));
+        }
+
+        if(StringUtils.isEmpty(request.getDefaultBranch()) && StringUtils.isEmpty(request.getMergeTargetBranch())) {
+            params.withDefaultBranch(Constants.CX_BRANCH_PREFIX.concat(""));
+        }
+
+
         if (cxFile != null) {
             params.setSourceType(CxScanParams.Type.FILE);
             params.setFilePath(cxFile.getAbsolutePath());
