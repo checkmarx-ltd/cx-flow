@@ -30,6 +30,7 @@ public class ScanRequest {
     private String altFields;
 
     private Map<String, String> cxFields;
+    private Map<String, String> scanFields;
     private String site;
 
     /**
@@ -116,6 +117,7 @@ public class ScanRequest {
         this.team = other.team;
         this.project = other.project;
         this.cxFields = other.cxFields;
+        this.scanFields = other.scanFields;
 		this.altProject = other.altProject;
         this.altFields = other.altFields;
         this.site = other.site;
