@@ -570,6 +570,7 @@ github:
    false-positive-label: false-positive
    block-merge: true
    detailed: false
+   scan-submitted-comment: false
 ```
 
 | Configuration | Default | Description     |
@@ -580,6 +581,7 @@ github:
 | api-url       |         | The API endpoint for GitHub, which is a different context or potentially FQDN than the main repo url.
 | false-positive-label | false-positive | A label that can be defined within the GitHub Issue feedback that is used to ignore issues |
 | block-merge | false | When triggering scans based on PullRequest, this will create a new status of pending, which will block the merge ability until the scan is complete in Checkmarx. |
+| scan-submitted-comment | true | Comment on PullRequest with "Scan submitted (or not submitted) to Checkmarx ...". | 
 
 **Note**: A service account is required with access to the repositories that will be scanned, pull requests that will be commented on, and GitHub issues that will be created/updated.
 
@@ -602,6 +604,7 @@ gitlab:
 | api-url       |         | The API endpoint for GitLab, which serves a different context or potential FQDN than the main repo url. |
 | false-positive-label | false-positive | A label that can be defined within the GitLab Issue feedback to ignore issues |
 | block-merge   | false | When triggering scans based on Merge Request, the Merge request is marked as WIP in GitLab, which blocks the merge ability until the scan is complete in Checkmarx. |
+| scan-submitted-comment | true | Comment on Merge Request with "Scan submitted (or not submitted) to Checkmarx ...". | 
 
 **Note**: A service account is required with access to the repositories that are going to be scanned, pull requests that are commented on, and GitLab issues that are created/updated.
 
@@ -654,6 +657,7 @@ bitbucket:
 | url           |         | [https://api.bitbucket.org](https://api.bitbucket.org) (URL for the Cloud BitBucket) |
 |               |         | [https://api.companyxyzbitbucket](https://api.companyxyzbitbucket) (URL for the BitBucket server is just the server hostname with **api.** prefixed) |
 | api-path      |         | The API URL path (appended to the URL) for BitBucket |
+| scan-submitted-comment | true | Comment on Merge Request with "Scan submitted (or not submitted) to Checkmarx ...". | 
 
 **Note**: As mentioned in the prerequisites, a service account is required that has appropriate access to the repositories that will be scanned, pull requests that will be commented on, GitHub issues that will be created/updated.
 
