@@ -99,7 +99,7 @@ public class MarkDownHelper {
             case GITHUB:
             case GITLAB:
             case ADO:
-                lineBreak = LINE_BREAK;
+                lineBreak = HTMLHelper.CRLF;
                 break;
             default:
                 lineBreak = HTMLHelper.CRLF + HTMLHelper.CRLF;
