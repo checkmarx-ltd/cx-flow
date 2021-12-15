@@ -76,7 +76,13 @@ dependencies {
     compile group: 'com.beust', name: 'jcommander', version: '1.78'
     compile('org.apache.ant:ant:1.10.10')
     compile('org.springframework.boot:spring-boot-starter-actuator')
-    compile('org.springframework.boot:spring-boot-starter-web')
+    compile('org.springframework.boot:spring-boot-starter-web'){
+        exclude group: 'org.apache.ant', module: 'ant'
+        exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j-impl'
+        exclude group: 'org.apache.logging.log4j', module: 'log4j-api'
+        exclude group: 'org.apache.logging.log4j', module: 'log4j-core'
+    }
+    
     compile('org.springframework.boot:spring-boot-starter-aop')
     compile('org.springframework.boot:spring-boot-starter-validation')
     compile("com.github.checkmarx-ltd:cx-spring-boot-sdk:${CxSBSDK}") {
@@ -141,8 +147,13 @@ dependencies {
     compile 'org.modelmapper:modelmapper:2.4.0'
     compile("com.checkmarx:cx-config-provider:${ConfigProviderVersion}") {
         exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j-impl'
+        exclude group: 'org.apache.logging.log4j', module: 'log4j-api'
+        exclude group: 'org.apache.logging.log4j', module: 'log4j-core'
+        		    
     }
-
+    compile("org.apache.logging.log4j:log4j-core:2.16.0")
+    compile("org.apache.logging.log4j:log4j-slf4j-impl:2.16.0")
+    compile("org.apache.logging.log4j:log4j-api:2.16.0")
     compile("javax.persistence:javax.persistence-api:2.2")
 
 }
