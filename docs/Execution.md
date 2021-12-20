@@ -19,7 +19,7 @@ The CxFlow docker images on Docker Hub [checkmarx/cx-flow](https://hub.docker.co
 
 ```
 docker pull checkmarx/cx-flow
-docker run --env-file=.checkmarx --name=cx-flow --detach -p <host port>:8080 checkmarx/cx-flow
+docker run -e JAVA_OPTS="Specify JVM options here" --env-file=.checkmarx --name=cx-flow --detach -p <host port>:8080 checkmarx/cx-flow
 ```
 
 The env-file provides the necessary overrides during the bootstrap process - urls, credentials, etc - sample below.
