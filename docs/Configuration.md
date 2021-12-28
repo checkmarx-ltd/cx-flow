@@ -516,7 +516,11 @@ For additional information, refer to the workflow for [WebHooks](https://github.
 @RequestParam(value = "override", required = false) String override,
 @RequestParam(value = "bug", required = false) String bug,
 @RequestParam(value = "app-only", required = false) Boolean appOnlyTracking,
-@RequestParam(value = "state", required = false) List<String> state
+@RequestParam(value = "state", required = false) List<String> state,
+@RequestParam(value = "threshold-high, required = false) String thresholdHigh,
+@RequestParam(value = "threshold-medium, required = false) String thresholdMedium,
+@RequestParam(value = "threshold-low, required = false) String thresholdLow,
+@RequestParam(value = "threshold-info, required = false) String thresholdInfo
 ```
 
 ### <a name="details">WebHook URL Override Parameters - Details</a>
@@ -541,6 +545,10 @@ These parameters are related to the WebHook URL parameters above.
 | override        | Override a complete **JSON** blob as defined below |
 | bug             | Override the default configured bug |
 | app-only | This forces Jira issues to be tracked according to the defined application / repo name, as opposed to defining uniqueness per namespace/repo/branch |
+| threshold-high | Override High severity count threshold | 
+| threshold-medium | Override Medium severity count threshold | 
+| threshold-low | Override Low severity count threshold | 
+| threshold-info | Override Info severity count threshold | 
 
 **Note**:  Overrides are not required.  You only need it, if you want to override the global configuration specified from the main **application.yml**
 
