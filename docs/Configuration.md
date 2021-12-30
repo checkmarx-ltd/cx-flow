@@ -517,10 +517,10 @@ For additional information, refer to the workflow for [WebHooks](https://github.
 @RequestParam(value = "bug", required = false) String bug,
 @RequestParam(value = "app-only", required = false) Boolean appOnlyTracking,
 @RequestParam(value = "state", required = false) List<String> state,
-@RequestParam(value = "threshold-high, required = false) String thresholdHigh,
-@RequestParam(value = "threshold-medium, required = false) String thresholdMedium,
-@RequestParam(value = "threshold-low, required = false) String thresholdLow,
-@RequestParam(value = "threshold-info, required = false) String thresholdInfo
+@RequestParam(value = "threshold-high, required = false) Integer thresholdHigh,
+@RequestParam(value = "threshold-medium, required = false) Integer thresholdMedium,
+@RequestParam(value = "threshold-low, required = false) Integer thresholdLow,
+@RequestParam(value = "threshold-info, required = false) Integer thresholdInfo
 ```
 
 ### <a name="details">WebHook URL Override Parameters - Details</a>
