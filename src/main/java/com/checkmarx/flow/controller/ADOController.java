@@ -1,9 +1,6 @@
 package com.checkmarx.flow.controller;
 
-import com.checkmarx.flow.config.ADOProperties;
-import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.config.JiraProperties;
-import com.checkmarx.flow.config.ScmConfigOverrider;
+import com.checkmarx.flow.config.*;
 import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ControllerRequest;
@@ -123,6 +120,8 @@ public class ADOController extends AdoControllerBase {
 
             FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
 
+            Map<FindingSeverity,Integer> thresholdMap = getThresholds(controllerRequest);
+
             //build request object
             String gitUrl = repository.getWebUrl();
             String token = scmConfigOverrider.determineConfigToken(properties, controllerRequest.getScmInstance());
@@ -150,6 +149,7 @@ public class ADOController extends AdoControllerBase {
                     .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)
                     .filter(filter)
+                    .thresholds(thresholdMap)
                     .organizationId(determineNamespace(resourceContainers))
                     .gitUrl(gitUrl)
                     .build();
@@ -234,6 +234,8 @@ public class ADOController extends AdoControllerBase {
 
             FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
 
+            Map<FindingSeverity,Integer> thresholdMap = getThresholds(controllerRequest);
+
             List<String> emails = determineEmails(resource);
 
             //build request object
@@ -264,6 +266,7 @@ public class ADOController extends AdoControllerBase {
                     .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)
                     .filter(filter)
+                    .thresholds(thresholdMap)
                     .organizationId(determineNamespace(resourceContainers))
                     .gitUrl(gitUrl)
                     .build();

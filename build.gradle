@@ -72,6 +72,8 @@ configurations {
     all*.exclude module: 'wss-agent-api'
 }
 
+ext['tomcat.version'] = '9.0.54'
+
 dependencies {
     compile group: 'com.beust', name: 'jcommander', version: '1.78'
     compile('org.apache.ant:ant:1.10.10')
@@ -151,10 +153,11 @@ dependencies {
         exclude group: 'org.apache.logging.log4j', module: 'log4j-core'
         		    
     }
-    compile("org.apache.logging.log4j:log4j-core:2.16.0")
-    compile("org.apache.logging.log4j:log4j-slf4j-impl:2.16.0")
-    compile("org.apache.logging.log4j:log4j-api:2.16.0")
+    compile("org.apache.logging.log4j:log4j-core:2.17.1")
+    compile("org.apache.logging.log4j:log4j-slf4j-impl:2.17.1")
+    compile("org.apache.logging.log4j:log4j-api:2.17.1")
     compile("javax.persistence:javax.persistence-api:2.2")
+    compile group:'org.apache.tomcat', name:'tomcat-juli', version:property('tomcat.version')
 
 }
 
