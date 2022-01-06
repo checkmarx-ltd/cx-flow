@@ -29,15 +29,15 @@ public class SarifProperties {
         severityMap.put("High", "error");
         severityMap.put("Medium", "error");
         severityMap.put("Low", "warning");
-        severityMap.put("Informational", "warning");
+        severityMap.put("Information", "warning");
     }
 
     @PostConstruct
     private void loadSecuritySeverityMap() {
-        securitySeverityMap.put("High", "10.0");
-        securitySeverityMap.put("Medium", "8.0");
-        securitySeverityMap.put("Low", "5.0");
-        securitySeverityMap.put("Informational", "2.0");
+        securitySeverityMap.put("High", "7.0");
+        securitySeverityMap.put("Medium", "4.0");
+        securitySeverityMap.put("Low", "3.9");
+        securitySeverityMap.put("Information", "3.9");
     }
 
     public String getFilePath() {
