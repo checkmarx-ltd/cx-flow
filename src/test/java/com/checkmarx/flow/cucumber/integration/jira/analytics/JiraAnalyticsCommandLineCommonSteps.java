@@ -24,7 +24,7 @@ import java.util.List;
 class JiraAnalyticsCommandLineCommonSteps {
 
     static final String PROJECT_KEY = "AT1";
-    static final String JIRA_URL = "https://cxflow.atlassian.net/";
+    static final String JIRA_URL = "https://cxflow2.atlassian.net/";
 
     @Autowired
     protected CxProperties cxProperties;
