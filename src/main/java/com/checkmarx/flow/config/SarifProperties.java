@@ -22,6 +22,7 @@ public class SarifProperties {
     private String sarifVersion = "2.1.0";
     private String semanticVersion = "1.0.0";
     private Map<String, String> severityMap = new HashMap<>();
+    private Map<String, String> securitySeverityMap = new HashMap<>();
 
     @PostConstruct
     private void loadSeverityMap(){
@@ -29,6 +30,14 @@ public class SarifProperties {
         severityMap.put("Medium", "error");
         severityMap.put("Low", "warning");
         severityMap.put("Informational", "warning");
+    }
+
+    @PostConstruct
+    private void loadSecuritySeverityMap() {
+        securitySeverityMap.put("High", "10.0");
+        securitySeverityMap.put("Medium", "8.0");
+        securitySeverityMap.put("Low", "5.0");
+        securitySeverityMap.put("Informational", "2.0");
     }
 
     public String getFilePath() {
@@ -102,5 +111,13 @@ public class SarifProperties {
 
     public void setSeverityMap(Map<String, String> severityMap) {
         this.severityMap = severityMap;
+    }
+
+    public Map<String, String> getSecuritySeverityMap() {
+        return securitySeverityMap;
+    }
+
+    public void setSecuritySeverityMap(Map<String, String> securitySeverityMap) {
+        this.securitySeverityMap = securitySeverityMap;
     }
 }
