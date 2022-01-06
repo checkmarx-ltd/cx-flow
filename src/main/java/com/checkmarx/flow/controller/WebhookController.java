@@ -1,5 +1,6 @@
 package com.checkmarx.flow.controller;
 
+import com.checkmarx.flow.config.FindingSeverity;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.EventResponse;
@@ -10,9 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Contains common logic for controllers that receive webhook requests.
@@ -66,5 +65,22 @@ public abstract class WebhookController {
 
     protected void setScmInstance(ControllerRequest controllerRequest, ScanRequest request) {
         Optional.ofNullable(controllerRequest.getScmInstance()).ifPresent(request::setScmInstance);
+    }
+
+    protected Map<FindingSeverity,Integer> getThresholds(ControllerRequest controllerRequest) {
+        Map<FindingSeverity,Integer> thresholdMap = new EnumMap<>(FindingSeverity.class);
+        if(controllerRequest.getThresholdHigh() != null) {
+            thresholdMap.put(FindingSeverity.HIGH,controllerRequest.getThresholdHigh());
+        }
+        if(controllerRequest.getThresholdMedium() != null) {
+            thresholdMap.put(FindingSeverity.MEDIUM,controllerRequest.getThresholdMedium());
+        }
+        if(controllerRequest.getThresholdLow() != null) {
+            thresholdMap.put(FindingSeverity.LOW, controllerRequest.getThresholdLow());
+        }
+        if(controllerRequest.getThresholdInfo() != null) {
+            thresholdMap.put(FindingSeverity.INFO, controllerRequest.getThresholdInfo());
+        }
+        return thresholdMap;
     }
 }
