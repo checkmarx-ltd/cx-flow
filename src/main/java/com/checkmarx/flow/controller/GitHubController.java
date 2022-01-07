@@ -117,6 +117,7 @@ public class GitHubController extends WebhookController {
 
         try {
             String action = event.getAction();
+            // synchronize - happens when user pushes code into a branch for which a pull request exists
             if(!action.equalsIgnoreCase("opened") &&
                     !action.equalsIgnoreCase("reopened") &&
                     !action.equalsIgnoreCase("synchronize")){
