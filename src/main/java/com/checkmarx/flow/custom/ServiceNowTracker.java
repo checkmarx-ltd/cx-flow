@@ -25,9 +25,13 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestOperations;
 
 import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.Locale;
 
 /**
  * Service Now Issue Tracker custom integration. It provides Service Now
@@ -37,7 +41,7 @@ import java.util.stream.Collectors;
 public class ServiceNowTracker implements IssueTracker {
     private static final String TRANSITION_CLOSE = "7";
     private static final String TRANSITION_OPEN = "1";
-    private static final int MAX_RECORDS = 1000;
+    private static final int MAX_RECORDS = 10000;
 
     private static final Logger log = LoggerFactory.getLogger(ServiceNowTracker.class);
     private static final String INCIDENTS = "/incident";
@@ -72,8 +76,8 @@ public class ServiceNowTracker implements IssueTracker {
         }
 
         restOperations = new RestTemplateBuilder()
-                            .basicAuthentication(properties.getUsername(), properties.getPassword())
-                            .build();
+                .basicAuthentication(properties.getUsername(), properties.getPassword())
+                .build();
 
         createSeviceNowTags(request);
     }
@@ -135,14 +139,17 @@ public class ServiceNowTracker implements IssueTracker {
     @Override
     public List<Issue> getIssues(ScanRequest request) throws MachinaException {
         log.debug("Executing getIssues Service Now API call");
-        String apiRequest = createServiceNowRequest(request);
         try {
-            Optional<Result> res = Optional.ofNullable(restOperations.getForObject(apiRequest, Result.class));
+            String apiRequest = createServiceNowRequest(request);
+            URI apiRequestUri = URI.create(apiRequest);
+            Optional<Result> res = Optional.ofNullable(restOperations.getForObject(apiRequestUri, Result.class));
             if (res.isPresent()) {
-                return res.get().getIncidents()
+                List results = res.get().getIncidents()
                         .stream()
-                        .map(i -> this.mapToIssue(i))
+                        .map(i -> mapToIssue(i))
                         .collect(Collectors.toList());
+                log.debug("Found {} issues in ServiceNow for this project.", results != null ? results.size() : 0);
+                return results;
             }
         } catch(RestClientException e) {
             log.error("Error occurred while fetching ServiceNow Issues");
@@ -157,12 +164,22 @@ public class ServiceNowTracker implements IssueTracker {
      * @param request
      * @return query string value.
      */
-    private String createServiceNowRequest(ScanRequest request) {
+    private String createServiceNowRequest(ScanRequest request) throws MachinaException {
         if(ScanUtils.emptyObj(request)){
             throw new RuntimeException("ScanRequest object is empty");
         }
+        String serviceNowTagSearchURL = null;
         String tag = createServiceNowTag(request);
-        return String.format("%s%s?comments=%s&sysparm_limit=", properties.getApiUrl(), INCIDENTS, tag, MAX_RECORDS);
+        try {
+            log.debug("ServiceNow tag to search for: {}", tag);
+            serviceNowTagSearchURL = String.format("%s%s?sysparm_limit=%s&comments=%s", properties.getApiUrl(), INCIDENTS, MAX_RECORDS, URLEncoder.encode(tag, StandardCharsets.UTF_8.toString()));
+            log.debug("ServiceNow Get Issues URL: {}", serviceNowTagSearchURL);
+        } catch(UnsupportedEncodingException e) {
+            log.error("Error occurred while encoding ServiceNow tag: {}", tag);
+            log.error(ExceptionUtils.getStackTrace(e));
+            throw new MachinaRuntimeException();
+        }
+        return serviceNowTagSearchURL;
     }
 
     /**
@@ -271,10 +288,11 @@ public class ServiceNowTracker implements IssueTracker {
 
     @Override
     public void closeIssue(Issue issue, ScanRequest request) throws MachinaException {
-        log.info("Executing updateIssue Service Now API call");
-        Incident incident = getCloseIncident(request);
+        log.info("Executing closeIssue Service Now API call");
+        Incident incident = getCloseIncident();
         try {
             String query = String.format("%s%s/%s", properties.getApiUrl(), INCIDENTS, issue.getId());
+            log.debug("ServiceNow Close Issues URL: {}", query);
             restOperations.put(query, incident);
         } catch (HttpClientErrorException e) {
             log.error("Error closing issue.Details are:" + e.getMessage());
@@ -285,10 +303,10 @@ public class ServiceNowTracker implements IssueTracker {
     @Override
     public Issue updateIssue(Issue issue, ScanResults.XIssue resultIssue, ScanRequest request) throws MachinaException {
         log.info("Executing updateIssue Service Now API call");
-        Incident incident = updateIncidentFromIssue(issue, request, resultIssue);
+        Incident incident = updateIncidentFromIssue(issue, resultIssue);
         try {
             String query = String.format("%s%s/%s", properties.getApiUrl(), INCIDENTS, issue.getId());
-            this.addComment(incident, resultIssue.getGitUrl(),"Issue still exists. ");
+            this.addComment(incident, resultIssue.getLink(), "Issue still exists.");
             restOperations.put(query, incident);
             return getIssues(request).stream().findFirst()
                     .orElseThrow(() -> new MachinaException("Incident record hasn't been found."));
@@ -314,16 +332,16 @@ public class ServiceNowTracker implements IssueTracker {
      * Update Incident from Issue.
      *
      * @param issue
-     * @param request
      * @param resultIssue
      * @return Incident object.
      */
-    private Incident updateIncidentFromIssue(Issue issue, ScanRequest request, ScanResults.XIssue resultIssue) {
-            Incident incident = new Incident();
-            incident.setSysId(issue.getId());
-            incident.setSeverity(resultIssue.getSeverity());
-            incident.setState(TRANSITION_OPEN);
-            return incident;
+    private Incident updateIncidentFromIssue(Issue issue, ScanResults.XIssue resultIssue) {
+        Incident incident = new Incident();
+        incident.setSysId(issue.getId());
+        incident.setSeverity(getSeverityId(resultIssue.getSeverity()));
+        incident.setState(TRANSITION_OPEN);
+        incident.setIncidentState(TRANSITION_OPEN);
+        return incident;
     }
 
     @Override
@@ -334,10 +352,12 @@ public class ServiceNowTracker implements IssueTracker {
     @Override
     public String getXIssueKey(ScanResults.XIssue issue, ScanRequest request) {
         if(flowProperties.isTrackApplicationOnly() || ScanUtils.empty(request.getBranch())){
-            return String.format("%s @ %s", issue.getVulnerability(), issue.getFilename());
+            return String.format(ScanUtils.ISSUE_TITLE_KEY, request.getProduct().getProduct(), issue.getVulnerability(), issue.getFilename());
         }
         else {
-            return String.format("%s @ %s [%s]", issue.getVulnerability(), issue.getFilename(), request.getBranch());
+            return ScanUtils.isSAST(issue)
+                    ? String.format(ScanUtils.ISSUE_TITLE_KEY_WITH_BRANCH, request.getProduct().getProduct(), issue.getVulnerability(), issue.getFilename(), request.getBranch())
+                    : ScanUtils.getScaSummaryIssueKey(request, issue);
         }
     }
 
@@ -371,23 +391,23 @@ public class ServiceNowTracker implements IssueTracker {
         Incident incident = new Incident();
         incident.setShortDescription(title);
         incident.setDescription(convertToText(body));
-        incident.setSeverity(resultIssue.getSeverity());
+        incident.setSeverity(getSeverityId(resultIssue.getSeverity()));
         incident.setComments(tag);
         incident.setWorkNotes(request.getAdditionalMetadata("tagsList"));
         incident.setState(TRANSITION_OPEN);
+        incident.setIncidentState(TRANSITION_OPEN);
 
         return incident;
     }
 
     /**
      * Create Service Now object out of the Issue/ScanRequest for close issue.
-     * @param request ScanRequest object
      * @return Incident object
      */
-    private Incident getCloseIncident(ScanRequest request) {
+    private Incident getCloseIncident() {
         Incident incident = new Incident();
-        incident.setSysId(request.getId());
         incident.setState(TRANSITION_CLOSE);
+        incident.setIncidentState(TRANSITION_CLOSE);
         incident.setCloseNotes(String.format("Closing reason: %s", CLOSING_NOTE));
         incident.setCloseCode(CLOSE_CODE);
 
@@ -401,5 +421,21 @@ public class ServiceNowTracker implements IssueTracker {
      */
     private String convertToText(String value) {
         return value.replaceAll("<.+?>", "");
+    }
+
+    /**
+     * Get ServiceNow Severity ID
+     * @param severity (High, Medium, Low)
+     * @return - Severity ID
+     */
+    private String getSeverityId(String severity) {
+        switch (severity.toLowerCase(Locale.ROOT)) {
+            case "high":
+                return "1";
+            case "medium":
+                return "2";
+            default:
+                return "3";
+        }
     }
 }
