@@ -14,6 +14,7 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -170,9 +171,11 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                 .shortDescription(ShortDescription.builder().text(i.getVulnerability()).build())
                 .fullDescription(FullDescription.builder().text(i.getVulnerability()).build())
                 .help(Help.builder()
-                        .markdown(String.format("[%s Details](%s)",
+                        .markdown(String.format("[%s Details](%s) <br />" +
+                                                "[Results](%s)",
                                 i.getVulnerability(),
-                                (i.getAdditionalDetails().get(RECOMMENDED_FIX)==null) ? "":i.getAdditionalDetails().get(RECOMMENDED_FIX)))
+                                (i.getAdditionalDetails().get(RECOMMENDED_FIX)==null) ? "":i.getAdditionalDetails().get(RECOMMENDED_FIX),
+                                i.getLink()))
                         .text((String)((i.getAdditionalDetails().get(RECOMMENDED_FIX)==null) ? "Fix not available.":i.getAdditionalDetails().get(RECOMMENDED_FIX)))
                         .build())
                 .properties(Properties.builder()
@@ -187,6 +190,7 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                     int i = count.getAndIncrement();
                     List<Location> locations = Lists.newArrayList();
                     issue.getDetails().forEach((k, v) -> {
+                        k = (k == 0) ? 1 : k; /* Sarif format does not support 0 as line number */
                         if (!v.isFalsePositive()) {
                             locations.add(Location.builder()
                                     .physicalLocation(PhysicalLocation.builder()
@@ -201,7 +205,7 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                                                     .build())
                                             .build())
                                     .message(Message.builder()
-                                            .text(v.getCodeSnippet()).build())
+                                            .text(StringUtils.isEmpty(v.getCodeSnippet()) ? "Code Snippet" : v.getCodeSnippet()).build())
                                     .build());
 
                         }
@@ -228,7 +232,7 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                                     .locations(locations)
                                     .codeFlows(codeFlows)
                                     .message(Message.builder()
-                                            .text(issue.getDescription())
+                                            .text(StringUtils.isEmpty(issue.getDescription()) ? issue.getVulnerability() : issue.getDescription())
                                             .build())
                                     .ruleId(issue.getVulnerability())
                                     .build()
