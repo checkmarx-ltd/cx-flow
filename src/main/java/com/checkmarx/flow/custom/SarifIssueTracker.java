@@ -14,8 +14,10 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -29,6 +31,7 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
     private final SarifProperties properties;
     private final FilenameFormatter filenameFormatter;
     private static final String DEFAULT_LEVEL = "error";
+    private static final String DEFAULT_SEVERITY = "9.0";
     private static final String MARKDOWN_TABLE_FORMAT = "| %s | %s | %s | %s |";
     private static final String RECOMMENDED_FIX = "recommendedFix";
 
@@ -168,43 +171,68 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                 .shortDescription(ShortDescription.builder().text(i.getVulnerability()).build())
                 .fullDescription(FullDescription.builder().text(i.getVulnerability()).build())
                 .help(Help.builder()
-                        .markdown(String.format("[%s Details](%s)",
+                        .markdown(String.format("[%s Details](%s) <br />" +
+                                                "[Results](%s)",
                                 i.getVulnerability(),
-                                (i.getAdditionalDetails().get(RECOMMENDED_FIX)==null) ? "":i.getAdditionalDetails().get(RECOMMENDED_FIX)))
+                                (i.getAdditionalDetails().get(RECOMMENDED_FIX)==null) ? "":i.getAdditionalDetails().get(RECOMMENDED_FIX),
+                                i.getLink()))
                         .text((String)((i.getAdditionalDetails().get(RECOMMENDED_FIX)==null) ? "Fix not available.":i.getAdditionalDetails().get(RECOMMENDED_FIX)))
                         .build())
                 .properties(Properties.builder()
                         .tags(Arrays.asList("security", "external/cwe/cwe-".concat(i.getCwe())))
+                        .securitySeverity(properties.getSecuritySeverityMap().get(i.getSeverity()) != null ? properties.getSecuritySeverityMap().get(i.getSeverity()) : DEFAULT_SEVERITY)
                         .build())
                 .build()).collect(Collectors.toList());
         //All issues to create the results/locations that are not all false positive
-
+        AtomicInteger count = new AtomicInteger();
         filteredXIssues.forEach(
                 issue -> {
+                    int i = count.getAndIncrement();
                     List<Location> locations = Lists.newArrayList();
                     issue.getDetails().forEach((k, v) -> {
+                        k = (k == 0) ? 1 : k; /* Sarif format does not support 0 as line number */
                         if (!v.isFalsePositive()) {
                             locations.add(Location.builder()
                                     .physicalLocation(PhysicalLocation.builder()
                                             .artifactLocation(ArtifactLocation.builder()
                                                     .uri(issue.getFilename())
+                                                    .uriBaseId("%SRCROOT%")
+                                                    .index(i)
                                                     .build())
                                             .region(Region.builder()
                                                     .startLine(k)
                                                     .endLine(k)
                                                     .build())
                                             .build())
+                                    .message(Message.builder()
+                                            .text(StringUtils.isEmpty(v.getCodeSnippet()) ? "Code Snippet" : v.getCodeSnippet()).build())
                                     .build());
 
                         }
                     });
+                    List<ThreadFlowLocation> threadFlowLocations = Lists.newArrayList();
+                    locations.forEach(
+                            location -> {
+                                threadFlowLocations.add(ThreadFlowLocation.builder()
+                                        .location(location).build());
+                            }
+                    );
+
+                    List<ThreadFlow> threadFlows = Lists.newArrayList();
+                    threadFlows.add(ThreadFlow.builder()
+                            .locations(threadFlowLocations).build());
+                    List<CodeFlow> codeFlows = Lists.newArrayList();
+                    codeFlows.add(CodeFlow.builder()
+                            .threadFlows(threadFlows).build());
+
                     // Build collection of the results -> locations
                     sastScanresultList.add(
                             Result.builder()
                                     .level(properties.getSeverityMap().get(issue.getSeverity()) != null ? properties.getSeverityMap().get(issue.getSeverity()) : DEFAULT_LEVEL)
                                     .locations(locations)
+                                    .codeFlows(codeFlows)
                                     .message(Message.builder()
-                                            .text(issue.getDescription())
+                                            .text(StringUtils.isEmpty(issue.getDescription()) ? issue.getVulnerability() : issue.getDescription())
                                             .build())
                                     .ruleId(issue.getVulnerability())
                                     .build()
@@ -305,6 +333,8 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
         @JsonProperty("precision")
         @Builder.Default
         private String precision = "";
+        @JsonProperty("security-severity")
+        public String securitySeverity;
     }
 
     @Data
@@ -346,6 +376,8 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
         private List<Location> locations;
         @JsonProperty("partialFingerprints")
         private PartialFingerprints partialFingerprints;
+        @JsonProperty("codeFlows")
+        private List<CodeFlow> codeFlows;
     }
 
     @Data
@@ -353,6 +385,8 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
     public static class Location {
         @JsonProperty("physicalLocation")
         public PhysicalLocation physicalLocation;
+        @JsonProperty("message")
+        public Message message;
     }
 
     @Data
@@ -360,6 +394,10 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
     public static class ArtifactLocation {
         @JsonProperty("uri")
         public String uri;
+        @JsonProperty("uriBaseId")
+        public String uriBaseId;
+        @JsonProperty("index")
+        public Integer index;
     }
 
     @Data
@@ -390,4 +428,26 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
         @JsonProperty("region")
         public Region region;
     }
+
+    @Data
+    @Builder
+    public static class CodeFlow {
+        @JsonProperty("threadFlows")
+        private List<ThreadFlow> threadFlows;
+    }
+
+    @Data
+    @Builder
+    public static class ThreadFlow {
+        @JsonProperty("locations")
+        private List<ThreadFlowLocation> locations;
+    }
+
+    @Data
+    @Builder
+    public static class ThreadFlowLocation {
+        @JsonProperty("location")
+        public Location location;
+    }
+
 }

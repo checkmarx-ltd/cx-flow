@@ -1,9 +1,6 @@
 package com.checkmarx.flow.controller;
 
-import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.config.GitHubProperties;
-import com.checkmarx.flow.config.JiraProperties;
-import com.checkmarx.flow.config.ScmConfigOverrider;
+import com.checkmarx.flow.config.*;
 import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ControllerRequest;
@@ -36,10 +33,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Class used to manage Controller for GitHub WebHooks
@@ -123,6 +117,7 @@ public class GitHubController extends WebhookController {
 
         try {
             String action = event.getAction();
+            // synchronize - happens when user pushes code into a branch for which a pull request exists
             if(!action.equalsIgnoreCase("opened") &&
                     !action.equalsIgnoreCase("reopened") &&
                     !action.equalsIgnoreCase("synchronize")){
@@ -162,6 +157,7 @@ public class GitHubController extends WebhookController {
             List<String> branches = getBranches(controllerRequest, flowProperties);
             BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
             FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
+            Map<FindingSeverity,Integer> thresholdMap = getThresholds(controllerRequest);
             
             //build request object
             String gitUrl = Optional.ofNullable(pullRequest.getHead().getRepo())
@@ -204,6 +200,7 @@ public class GitHubController extends WebhookController {
                     .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)
                     .filter(filter)
+                    .thresholds(thresholdMap)
                     .organizationId(getOrganizationid(repository))
                     .gitUrl(gitUrl)
                     .hash(pullRequest.getHead().getSha())
@@ -301,6 +298,8 @@ public class GitHubController extends WebhookController {
             BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
             FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
 
+            Map<FindingSeverity,Integer> thresholdMap = getThresholds(controllerRequest);
+
             //build request object
             Repository repository = event.getRepository();
             String gitUrl = repository.getCloneUrl();
@@ -342,6 +341,7 @@ public class GitHubController extends WebhookController {
                     .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)
                     .filter(filter)
+                    .thresholds(thresholdMap)
                     .organizationId(getOrganizationid(repository))
                     .gitUrl(gitUrl)
                     .hash(event.getAfter())

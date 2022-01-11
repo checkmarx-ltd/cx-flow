@@ -237,6 +237,8 @@ public class BitbucketServerController implements BitBucketConfigContextProvider
         byte[] sig = hmac.doFinal(message.getBytes(CHARSET));
         String computedSignature = "sha256=" + DatatypeConverter.printHexBinary(sig);
         if (!computedSignature.equalsIgnoreCase(signature)) {
+            log.error("Fail to verify signature: BodySignature: {} != Signature: {}", computedSignature, signature);
+            log.error("Please make sure the Webhook Secret configured on Bitbucket Server matches bitbucket.webhook-token in application.yml");
             throw new InvalidTokenException();
         }
         log.info("Signature verified");

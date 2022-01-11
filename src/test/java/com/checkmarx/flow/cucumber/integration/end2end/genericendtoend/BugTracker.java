@@ -40,6 +40,7 @@ enum BugTracker {
             CustomAsynchronousJiraRestClientFactory factory = new CustomAsynchronousJiraRestClientFactory();
             URI jiraURI;
             try {
+                log.info(jiraProperties.getUrl());
                 jiraURI = new URI(jiraProperties.getUrl());
             } catch (URISyntaxException e) {
                 fail("Error constructing URI for JIRA");
@@ -52,10 +53,13 @@ enum BugTracker {
 
         @Override
         void verifyIssueCreated(String severities, String engine) {
+            log.info("JIRA Project: {}",jiraProperties.getProject());
             jqlQuery =  String.format("project = %s", jiraProperties.getProject());
+            log.info("JQL Query before: {}",jqlQuery);
             jqlQuery =  (CxProperties.CONFIG_PREFIX.equalsIgnoreCase(engine) || CxGoProperties.CONFIG_PREFIX.equalsIgnoreCase(engine))
                     ? String.format("project = %s and priority  in %s", jiraProperties.getProject(), severities)
                     : String.format("project = %s and summary ~\"CVE-?\"", jiraProperties.getProject());
+            log.info("JQL Query finished: {}",jqlQuery);
             log.info("filtering issue with jql: {}", jqlQuery);
             Set<String> fields = new HashSet<>();
             fields.addAll(
