@@ -584,8 +584,7 @@ public class CxFlowRunner implements ApplicationRunner {
     }
 
     private void publishLatestScanResults(ScanRequest request) throws ExitThrowable {
-        ScanResults scanResults = runOnActiveScanners(scanner -> scanner.getLatestScanResults(request));
-        processResults(request, scanResults);
+        runOnActiveScanners(scanner -> scanner.getLatestScanResults(request));
     }
 
     private void processResults(ScanRequest request, ScanResults results) throws ExitThrowable {
