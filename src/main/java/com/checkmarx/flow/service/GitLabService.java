@@ -55,7 +55,6 @@ public class GitLabService extends RepoService {
     private final GitLabProperties properties;
     private final ScmConfigOverrider scmConfigOverrider;
 
-
     @ConstructorProperties({"restTemplate", "properties", "scmConfigOverrider"})
     public GitLabService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, GitLabProperties properties, ScmConfigOverrider scmConfigOverrider) {
         this.restTemplate = restTemplate;
@@ -354,8 +353,8 @@ public class GitLabService extends RepoService {
     private String getCommentUrl(ScanRequest scanRequest, long commentId) {
         String path = scmConfigOverrider.determineConfigApiUrl(properties, scanRequest).concat(MERGE_NOTE_PATH);
         return String.format(path, scanRequest.getRepoProjectId().toString(),
-                             scanRequest.getAdditionalMetadata(FlowConstants.MERGE_ID),
-                             commentId);
+                scanRequest.getAdditionalMetadata(FlowConstants.MERGE_ID),
+                commentId);
     }
 
 }

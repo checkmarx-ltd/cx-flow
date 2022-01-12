@@ -16,28 +16,30 @@ Refer to [Build](https://github.com/checkmarx-ltd/cx-flow/wiki/Building-CxFlow-f
 
 ## Execution
 
-<br>Refer to [Parse](https://github.com/checkmarx-ltd/cx-flow/wiki/Execution#parse), for Parse Mode.  Parse mode will use the Checkmarx Scan XML as input to drive the automation.<br>
+Refer to [Parse](https://github.com/checkmarx-ltd/cx-flow/wiki/Execution#parse), for Parse Mode.  Parse mode will use the Checkmarx Scan XML as input to drive the automation.
 
-<br>Refer to [Batch](https://github.com/checkmarx-ltd/cx-flow/wiki/Execution#batch), for Batch Mode.  Batch can be done per project, by team or entire instance.  Project Results/Ad-hoc mode retrieves the latest results for a given project under a specific team within Checkmarx and publishes issues to the configured bug tracking system.<br>
+Refer to [Batch](https://github.com/checkmarx-ltd/cx-flow/wiki/Execution#batch), for Batch Mode.  Batch can be done per project, per team or entire instance.  Project Results/Ad-Hoc mode retrieves the latest results for a given project under a specific team within Checkmarx and publishes issues to the configured bug tracking system.
 
 ## WebHook Web Service
 
-Refer to [Workflow](https://github.com/checkmarx-ltd/cx-flow/wiki/Workflows), for detailed information on the workflows available.
+Refer to [Workflow](https://github.com/checkmarx-ltd/cx-flow/wiki/Workflows) for detailed information on the workflows available.
 
 **Branch**
-Branches are applicable to the scanning platform can be specified through global configuration, url parameter overrides, JSON override file (both repository based and Base64 encoded url parameter)
+Branches are applicable to the scanning platform can be specified through global configuration, URL parameter overrides and a JSON override file (both repository based and Base64 encoded URL parameter).
 
 **Filters**
-Filters help filter out unwanted issues from making it through to the bug tracking systems.  Filtering can be done by Severity (High, Medium) , Category (XSS, SQL_Injection) and CWE (79, 89) numbers.  Any combination of these can be leveraged.
+Filters help filter out unwanted issues from making it through to the bug tracking systems. Filtering can be done by Severity (High, Medium) , by Category (XSS, SQL_Injection) and CWE (79, 89) numbers.  Any combination of these can be leveraged.
 
 **Preset**
-The preset used within Checkmarx, which defines scanning rules, is set globally but can be overridden by URL parameters or JSON override file 
+The preset used within Checkmarx, which defines scanning rules, is set globally but can be overridden by URL parameters or JSON override file. 
 
 **Bug Tracking**
-Bug tracking systems is specified at a global level and can be one of JIRA, GitHub, GitLab or BitBucket.  In the case of JIRA, you can use a standard bug, or enable an advanced bug that includes additional fields to aid with metrics for application security.  The bug tracking system per project can be overridden by URL parameters or JSON override file.
+Bug tracking systems is specified at a global level and can be one of JIRA, GitHub, GitLab or BitBucket.  In JIRA's, you can use a standard bug, or enable an advanced bug that includes additional fields to aid with metrics for application security.  The bug tracking system per project can be overridden by URL parameters or JSON override file.
 
 **Overrides**
 Overrides to global configuration are possible through URL parameters or JSON configuration file, which can be loaded from the applicable repository upon scan request or provided as a base64 encoded value within a URL parameter.
+
+All the configurations can also be overridden with environment variables and command line arguments. The Github token can be overridden with an Environment Variable `GITHUB_TOKEN` or command line argument `--github.token=XXXXXXX`.
 
 See configuration/Override details below
 ```yaml
@@ -46,7 +48,8 @@ server:
   port: ${PORT:8080}
 
 logging:
-  file: cx-flow.log
+  file:
+    name: cx-flow.log
 #  level:
 #    com:
 #      checkmarx:
@@ -81,6 +84,7 @@ cx-flow:
   codebash-url: https://cxa.codebashing.com/courses/
 
 checkmarx:
+  # version: 9.0   # Add this if your CxSAST instance is version 9.x
   username: xxx
   password: xxx
   client-secret: 014DF517-39D1-4453-B7B3-9930C563627C
@@ -92,6 +96,8 @@ checkmarx:
   configuration: Default Configuration
   team: \CxServer\SP\Checkmarx
   scan-timeout: 120
+  scan-queuing: false
+  scan-queuing-timeout: 720
 #WSDL Config
   portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
   sdk-url: ${checkmarx.base-url}/cxwebinterface/SDK/CxSDKWebService.asmx
@@ -228,12 +234,6 @@ csv:
       name: recommendation
 ```
 
-Note: All of the above configurations can be overridden with environment variables and command line arguments.  The github token can be overridden with:
-`
-Environment variable GITHUB_TOKEN
-`
-or Command line argument `--github.token=XXXXXXX`
-
 ## Jira Configuration
 **Jira Custom Fields**
 * *type*:
@@ -278,36 +278,36 @@ When result is provided it must be one of the following:
 ## Override Files
 When providing --config override file you can override many elements associated with the bug tracking within Jira.
 
-```json
+```jsonc
 {
-  "application": "test app", //WebHook Web Service Only
-  "branches": ["develop", "main"], //WebHook Web Service Only
-  "incremental": true, //WebHook Web Service Only
-  "scan_preset": "Checkmarx Default", //WebHook Web Service Only
-  "exclude_folders": "tmp/", //WebHook Web Service Only
-  "exclude_files": "*.tst", //WebHook Web Service Only
-  "emails": [checkmarx, "xxxx@checkmarx.com"], //Override email addresses if email issue tracking is enabled
-  "jira": { //override JIRA specific configurations
-    "project": "APPSEC", //JIRA project
+  "application": "test app", // WebHook Web Service Only
+  "branches": ["develop", "main"], // WebHook Web Service Only
+  "incremental": true, // WebHook Web Service Only
+  "scan_preset": "Checkmarx Default", // WebHook Web Service Only
+  "exclude_folders": "tmp/", // WebHook Web Service Only
+  "exclude_files": "*.tst", // WebHook Web Service Only
+  "emails": [checkmarx, "xxxx@checkmarx.com"], // Override email addresses if email issue tracking is enabled
+  "jira": { // override JIRA specific configurations
+    "project": "APPSEC", // JIRA project
     "issue_type": "Bug", // JIRA issueType
     "assignee": "admin", // Defaul assignee
-    "opened_status": ["Open","Reopen"], //Transitions in JIRA workflow that represent Open status
-    "closed_status": ["Closed","Done"], //Transitions in JIRA workflow that represent Closed status
-    "open_transition": "Reopen Issue", //Transition to apply to re-open an issue
-    "close_transition": "Close Issue", //Transition to apply to close an issue
-    "close_transition_field": "resolution", //Transition field if required during closure
-    "close_transition_value": "Done", //Transition value if required during closue
-    "priorities": { //Override ticket priorities
+    "opened_status": ["Open","Reopen"], // Transitions in JIRA workflow that represent Open status
+    "closed_status": ["Closed","Done"], // Transitions in JIRA workflow that represent Closed status
+    "open_transition": "Reopen Issue", // Transition to apply to re-open an issue
+    "close_transition": "Close Issue", // Transition to apply to close an issue
+    "close_transition_field": "resolution", // Transition field if required during closure
+    "close_transition_value": "Done", // Transition value if required during closue
+    "priorities": { // Override ticket priorities
     "High": "High",
     "Medium": "Medium",
     "Low": "Low"
   },
-  "fields": [ //JIRA custom field mappings. See field mapping details above
+  "fields": [ // JIRA custom field mappings. See field mapping details above
     {
     "type": "cx", //cx, static, result.
     "name": "xxx",
     "jira_field_name": "xxxx",
-    "jira_field_type": "text", //security text | label | single-select | multi-select
+    "jira_field_type": "text", // security text | label | single-select | multi-select
     "jira_default_value": "xxx"
     },
     {
@@ -325,7 +325,7 @@ When providing --config override file you can override many elements associated 
     }
   ]
   },
- "filters": { //Override filters used when determining whether a result from Checkmarx will be tracked with a defect
+ "filters": { // Override filters used when determining whether a result from Checkmarx will be tracked with a defect
    "severity": ["High", "Medium"],
    "cwe": ["79", "89"],
    "category": ["XSS_Reflected", "SQL_Injection"],
@@ -334,13 +334,13 @@ When providing --config override file you can override many elements associated 
   }
 }
 ```
-All overrides are optional.  If a value is not provided, the default provided in the application.yml is used.  If a value is provided with an empty attribute, it is overridden as empty.  i.e. if severity is high, medium within the default configuration and an empty filter attribute is provided, it will no long apply any filters ("filters":{})
+All overrides are optional.  If a value is not provided, the default provided in the `application.yml` is used.  If a value is provided with an empty attribute, it is overridden as empty.  i.e. if severity is high, medium within the default configuration and an empty filter attribute is provided, it will no long apply any filters ("filters":{})
 
 ## Post-back Mode
 
-The default CxFlow mode polls for results until scans are complete, but post-back mode turns the process around and puts CxFlow into an event-drive mode of operation. When using post-back mode a Checkmarx post-back-action will be added to the Checkmarx project and that action will trigger the /postbackAction endpoint on CxFlow. The /postbackAction endpoint will use information contained in the scan results to resume the results handling process.
+The default CxFlow mode polls for results until scans are complete, but post-back mode turns the process around and puts CxFlow into an event-drive mode of operation. When using post-back mode a Checkmarx post-back-action will be added to the Checkmarx project and that action will trigger the `/postbackAction` endpoint on CxFlow. The `/postbackAction` endpoint will use information contained in the scan results to resume the results handling process.
 
-First, I recommend you configured CxFlow and verify it is working correctly before enabling post-back-action mode. Before you enable post-back mode you need to configure a post-back-action in your Checkmarx instance. Do this by openning settings -> scan settings -> Pre & Post Scan Actions. It is important that you know the database ID for the action that will be used by CxFlow, this is easy to determine if you only create one action because it will be 1. If you have created more then one action or deleted one and created a new one you will need look up the ID directly in the database, but doing that beyond the scope of this guide. This guide assumes you've created only one postback action and that its database ID will be 1. 
+First, it's recommended to configure CxFlow and verify if it is working correctly before enabling post-back action mode. Before you enable post-back mode, you'll need to configure a post-back action in your Checkmarx instance. Do this by openning *Settings -> Scan Settings -> Pre & Post Scan Actions*. It is important that you know the database ID for the action that will be used by CxFlow: this is easy to determine if you only create one action because it will be id 1. If you have created more then one action or deleted one and created a new one, you will need look up the ID directly in the database, but doing that is beyond the scope of this guide. This guide assumes you've created only one post-back action and that its database ID will be 1. 
 
 Do the following to create the post back action:
 
@@ -349,7 +349,7 @@ Do the following to create the post back action:
 3. Set the "command" to cxflow.bat
 4. Set the "arguments" to *[XML_output];<your-token>;<your-server-url>/postbackAction*
 
-The *your-token* value needs to match the token value from the cx-flow section of your CxFlow application.yml file. The *your-server-url* value needs to point back to your Checkmarx instance. Now that the post-back-action is configured you need add the post-back scripts to the following folder
+The *your-token* value needs to match the token value from the cx-flow section of your CxFlow `application.yml` file. The *your-server-url* value needs to point back to your Checkmarx instance. Now that the post-back-action is configured you need add the post-back scripts to the following folder:
   
 ```batch
   c:\Program Files\Checkmarx\Executables
@@ -357,14 +357,14 @@ The *your-token* value needs to match the token value from the cx-flow section o
   
 The following two scripts need to be added to the Executables folder:
 
-cxflow.bat
+### `cxflow.bat`
 
 ```batch
   cd "%~dp0"
   powershell ".\cxflow.ps1" '%1' '%2' '%3'
 ```
 
-cxflow.ps1
+### `cxflow.ps1`
 
 ```powershell
   $resultsFile = $args[0]
@@ -380,7 +380,7 @@ cxflow.ps1
   Invoke-RestMethod -Method 'Post' -Uri $cxURL -Body $body 
 ```
 
-Once the inital setup is out of the way you can update your CxFlow application file so it looks like this to activate the post-back-action mode:
+Once the inital setup is out of the way you can update your CxFlow application file so it looks like this to activate the post-back action mode:
 
 ```yaml
   checkmarx:

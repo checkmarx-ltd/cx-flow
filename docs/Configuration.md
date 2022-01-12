@@ -85,7 +85,8 @@ server:
   port: ${PORT:8080}
 
 logging:
-  file: flow.log
+  file:
+    name: flow.log
 
 cx-flow:
   contact: admin@cx.com
@@ -102,6 +103,7 @@ cx-flow:
     - develop
     - main
     - release`-\w+ # regular expressions supported. If branch-script is provided, this is ignored. branch-script: D:\\tmp\Branch.groovy #default empty/not used
+  scan-unprotected-branches: true (scan all the branches if no protected branch set in application.yml or in cx.config file.
   filter-severity:
     - High
   filter-category:
@@ -143,14 +145,21 @@ checkmarx:
   multi-tenant: true
   scan-preset: Checkmarx Default
   configuration: Default Configuration
+  cx-branch: true
   team: \CxServer\SP\Machina
   scan-timeout: 120 #Webhook and --scan command line only, number of minutes
   jira-project-field: jira-project
   jira-issuetype-field: jira-issuetype
   jira-custom-field: jira-fields
   jira-assignee-field: jira-assignee
+  ssh-key: Path/of/the/private/key 
   preserve-xml: true
   url: ${checkmarx.base-url}/cxrestapi
+  scan-queuing: false
+  scan-queuing-timeout: 720
+  ssh-key-list:
+    repo_specific_key1: Path/of/the/private/key
+    repo_specific_key2: Path/of/the/private/key
 #WSDL Config
   portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
   sdk-url: ${checkmarx.base-url}/cxwebinterface/SDK/CxSDKWebService.asmx
@@ -212,6 +221,7 @@ jira:
   token: XXXXX
   project: <JIRA PROJECT KEY>
   issue-type: <JIRA ISSUE TYPE>
+  label-prefix: <CUSTOM PREFIX NAME >
   priorities:
      Critical: Highest
      High: High
@@ -226,10 +236,12 @@ jira:
      - In Review
   closed-status:
      - Done
+  sast-issue-summary-format: "[VULNERABILITY] in [PROJECT] with severity [SEVERITY] @ [FILENAME]"
+  sast-issue-summary-branch-format: "[VULNERABILITY] in [PROJECT] with severity [SEVERITY] @ [FILENAME][[BRANCH]]"
   fields:
      - type: result
        name: application
-       jira-field-name: Application
+       jira-field-name: Application (NOTE: Configuring the "jira-field-name" parameter to Labels would affect issue tracking and might result in duplicate bug creation or bugs not closing or opening.)
        jira-field-type: label
      - type: result
        name: cve
@@ -319,9 +331,10 @@ Refer to the sample configuration above for the entire yaml structure.
 |             |         |          |         |              | main |
 |             |         |          |         |              | security |
 |             |         |          |         |              | release-\w+ |
-|             |         |          |         |              | If no value is provided, all branches are applicable |
+|             |         |          |         |              | If no value is provided, then scanning of branches depends on the value of scan-unprotected-branches property. When **False** no branches are applicable for scan. When **True** all the branches are applicable. The default value of scan-unprotected-branches is **False**. If there is a need to scan all the branches when no protected branches are defined then set the value of scan-unprotected-branches to true. |
 |             |         |          |         |              | Regular expressions are supported. (i.e. release-\w+ will match any branches starting with release-) |
 | branch-script |       | No       | Yes     | No           | A **groovy** script that can be used to decide, if a branch is applicable for scanning. This applies to any client custom lookups and other integrations.  The script is passed as a **"request"** object of the type **com.checkmarx.flow.dto.ScanRequest** and must return **boolean** (true/false). If this script is provided, it is used for all decisions associated with determining applicability for a branch event to be scanned. **A sample script is attached to this page. |
+| scan-unprotected-branches | false | No | Yes | No | When **False**: Scan is performed only when a PUSH or PULL event is performed on the protected branches. When **True** scan is performed when a PUSH or PULL Event is performed on any branch given that the branches in application.yml or cx.config file is empty. |
 | filter-severity |     | No       | Yes    | Yes           | The severity can be filtered during feedback (**High**, **Medium**, **Low**, **Informational**).  If no value is provided, all severity levels are applicable. |
 | filter-category |     | No       | Yes    | Yes           | The list of vulnerability types to be included with the results (**Stored_XSS**, **SQL_Injection**) as defined within Checkmarx.  If no value is provided, all categories are applicable. |
 | filter-cwe      |     | No       | Yes    | Yes           | The list of CWEs to be included with the results (**79**, **89**).  If no value is provided, all categories are applicable. |
@@ -341,14 +354,14 @@ Refer to the sample configuration above for the entire yaml structure.
 | always-profile    | false         | No  | Yes | No        | This enforces the auto-profile execution for each scan request regardless of whether the project is new or not. |
 | profiling-depth   | 1             | No  | Yes | No        | The folder depth that is inspected for file names during the profiling process, which means looking for specific file references, i.e. web.xml/Web.config |
 | profile-config    | CxProfile.json | No | Yes | No        | The file that contains the profile configuration mapping. |
-| scan-resubmit     | false          | No | Yes | Yes       | When **True**: If a scan is active for the same project, CxFlow cancels the active scan and submits a new scan. When **False**: If a scan is active for the same project, CxFlow does not submit a new scan. |
+| scan-resubmit     | false          | No | Yes | No       | When **True**: If a scan is active for the same project, CxFlow cancels the active scan and submits a new scan. When **False**: If a scan is active for the same project, CxFlow does not submit a new scan. |
 | preserve-project-name | false      | No | Yes | Yes       | When **False**: The project name will be the repository name after normalization (i.e. Front-End-dev). Legal characters are: `a-z`, `A-Z`, `0-9`, `-`, `_`, `.`. All other characters will be replaced in the normalization process with "-". <br/> When **True**: The project name will be the exact project name inputted without normalization (i.e. Front End-dev). <br/> **For attention:** <br/> 1. Not all scanners allow project names with invalid characters.<br/> 2. The preserve-project-name parameter is also effective for project name coming from config-as-code. |
 | **checkmarx**     |                |    |     |           |                                                                           |
 | username          |                | Yes | Yes | Yes      | Service account for Checkmarx                                             |
 | password          |                | Yes | Yes | Yes      | Service account password Checkmarx                                        |
 | client-secret     |                | Yes | Yes | Yes      | OIDC client secret for API login to Checkmarx                             |
 | base-url          |                | Yes | Yes | Yes      | Base FQDN and port for Checkmarx                                          |
-| multi-tenant      | false          | No* | Yes | Yes (Scan only) | If yes, the name space is created or reused, if it has been pre-registered or already created for previous scans)    |
+| multi-tenant      | true          | No* | Yes | Yes (Scan only) | If yes, the name space is created or reused, if it has been pre-registered or already created for previous scans)    |
 | scan-preset       | Checkmarx Default | No* | Yes | Yes (Scan only) | The default preset used for the triggered scan                 |
 | configuration      | Default Configuration | No* | Yes | Yes (Scan only) | Checkmarx scan configuration setting |
 | team          |                | Yes (not for XML parse mode) | Yes | Yes (Scan only)  | Base team in Checkmarx to drive scanning and retrieving of results |
@@ -367,7 +380,12 @@ Refer to the sample configuration above for the entire yaml structure.
 | exclude-files     |                | No  | Yes | Yes      | Files to be excluded from Scan                                            |
 | exclude-folders   |                | No  | Yes | Yes      | Folders to be excluded from Scan                                          |
 | custom-state-map  |                | No  | No  | Yes      | A map of custom result state identifiers to custom result state names |
-
+| scan-queuing       | false | No* | Yes | No | When **True**: If a scan is active for the same project, CxFlow submits a new scan and puts in queue. When scan-queue is **False**: the CxFlow behavior is according to scan-resubmit settings. |                 |
+| scan-queuing-timeout       | 720  | No* | Yes | No | If scan-queuing is true then scan-queuing-timeout Defaults to 12h. '0' would be for waiting forever with the scan in the queue.                 |
+| settings-override | false          | No  | No  | Yes      | Must be set to `true` if overriding preset, engine configuration, file/folder exclusions, or project-level custom fields for an existing project |
+| ssh-key-list | | No | Yes | No | A map of sshKeyIdentifier to their actual SSH private key file path. Currently only works with GitHub.  |
+| ssh-key | | No | Yes | Yes | Holds the location of the ssh private key file when SSH method is used instead of Personal Access Token. |
+| cx-branch | false | No | Yes | No | Request coming from branch of a project will create a branched project instead of a new project in SAST. Must be set to `true` to create a branched project from a base project. |
 No* = Default is applied
 
 ### <a name="nine">9.0 Configuration Changes</a>
@@ -386,13 +404,20 @@ checkmarx:
    team: /CxServer/Checkmarx/CxFlow
    url: ${checkmarx.base-url}/cxrestapi
    preserve-xml: true
+   ssh-key: Path/of/the/private/key
    incremental: true
    #WSDL Config
    portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
    #project-script: D:\\tmp\CxProject.groovy
    #team-script: D:\\tmp\CxTeam.groovy
    exclude-files: "*.tst,*.json"
-   exclude-folders: ".git/,test/"
+   exclude-folders: ".git,test"
+   scan-queuing: false
+   scan-queuing-timeout: 720
+   ssh-key-list:
+    repo_specific_key1: Path/of/the/private/key
+    repo_specific_key2: Path/of/the/private/key
+   
 ```
 **Note:**
 * Make sure to include **version: 9.0** (or higher) and **scope:  access_control_api sast_rest_api**
@@ -463,9 +488,11 @@ checkmarx
 ## <a name="webhook">WebHook Configuration</a>
 Each repository type requires its own specific configuration block as defined below.  Each of these have available overrides that can be provided in the form of URL parameters or as a JSON configuration blob that is base64 encoded and provided as a url parameter (override=<XXXXXX>).
 
-WebHook scans are triggered based on the protected branches list. This configuration is under the config block
+WebHook scans are triggered based on the protected branches list. This configuration is under the config block.
 
-For **Pull/Merge** - if a request is made to pull/merge code into one of the listed protected branches, CxFlow triggers the scan.  The pull/merge is commented with the filtered findings from Checkmarx. 
+The protected branches list can be provided in the application.yml file under the cx-flow section or it can be provided in the config-as-code file. If branches are provided in application.yml as well as config-as-code file then the branches in config-as-code file will override the branches in application.yml. If protected branches is not provided in either of the files then cx-flow triggers scan for PUSH/PULL/Merge event for all the branches.
+
+For **Pull/Merge** - if a request is made to pull/merge code into one of the listed protected branches, CxFlow triggers the scan.  The pull/merge is commented with the filtered findings from Checkmarx.
 
 For **Push**, the findings are published according to the specified bug-tracker in the main or overridden configuration - i.e. JSON/CSV/XML output or Jira defect.
 
@@ -488,7 +515,12 @@ For additional information, refer to the workflow for [WebHooks](https://github.
 @RequestParam(value = "exclude-folders", required = false) List<String> excludeFolders,
 @RequestParam(value = "override", required = false) String override,
 @RequestParam(value = "bug", required = false) String bug,
-@RequestParam(value = "app-only", required = false) Boolean appOnlyTracking
+@RequestParam(value = "app-only", required = false) Boolean appOnlyTracking,
+@RequestParam(value = "state", required = false) List<String> state,
+@RequestParam(value = "threshold-high, required = false) Integer thresholdHigh,
+@RequestParam(value = "threshold-medium, required = false) Integer thresholdMedium,
+@RequestParam(value = "threshold-low, required = false) Integer thresholdLow,
+@RequestParam(value = "threshold-info, required = false) Integer thresholdInfo
 ```
 
 ### <a name="details">WebHook URL Override Parameters - Details</a>
@@ -503,7 +535,8 @@ These parameters are related to the WebHook URL parameters above.
 | category      | Override the category filters.  For multiple category, simply list category multiple times,  i.e. `category=Stored_XSS&category=SQL_Injection` |
 | project       | Override the project name that will be created/used in Checkmarx.  This allows for greater flexibility for incremental scan relating to pull requests,  i.e. use a standardized pull project name that is always used regardless of the branch - `?project=repo-pull` |
 | team          | Override the team within Checkmarx to use/create project under. |
-| state         | Override the state filters (Confirmed/Urgent)
+| state         | Override the state filters (Confirmed/Urgent). For multiple state, simply list the state multiple times,  i.e. `status=Confirmed&status=Urgent` |
+| status        | Override the status filter. For multiple status, simply list the status multiple times,  i.e. `status=New&status=Reoccured` |
 | assignee      | Override the assignee  |
 | preset        | Override the Checkmarx preset rules for scanning |
 | incremental   | Override incremental property to enable/disable incremental scan support |
@@ -512,6 +545,10 @@ These parameters are related to the WebHook URL parameters above.
 | override        | Override a complete **JSON** blob as defined below |
 | bug             | Override the default configured bug |
 | app-only | This forces Jira issues to be tracked according to the defined application / repo name, as opposed to defining uniqueness per namespace/repo/branch |
+| threshold-high | Override High severity count threshold | 
+| threshold-medium | Override Medium severity count threshold | 
+| threshold-low | Override Low severity count threshold | 
+| threshold-info | Override Info severity count threshold | 
 
 **Note**:  Overrides are not required.  You only need it, if you want to override the global configuration specified from the main **application.yml**
 

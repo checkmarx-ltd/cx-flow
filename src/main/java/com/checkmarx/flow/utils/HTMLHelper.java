@@ -103,9 +103,15 @@ public class HTMLHelper {
         return xIssueKeyValue;
     }
 
-    public static String getScanRequestIssueKeyWithDefaultProductValue(ScanRequest scanRequest, String titleToConcat) {
-        String productPrefix = scanRequest.getProduct().getProduct();
-        if (!titleToConcat.startsWith(productPrefix)) {
+    public static String getScanRequestIssueKeyWithDefaultProductValue(ScanRequest scanRequest, String titleToConcat,String labelPrefix) {
+        String productPrefix;
+        if(labelPrefix != null){
+            productPrefix = labelPrefix;
+        } else{
+            productPrefix = scanRequest.getProduct().getProduct();
+        }
+
+        if(!titleToConcat.startsWith(productPrefix)) {
             titleToConcat = productPrefix + " " + titleToConcat;
         }
         return titleToConcat;

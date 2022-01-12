@@ -62,6 +62,9 @@ public class ADOService {
     private static final String IS_DELETED_FIELD_NAME = "isDeleted";
     private static final String NO_CONTENT_FOUND_IN_RESPONSE = "No content found in JSON response.";
     private static final String HTTP_RESPONSE_BODY_IS_NULL = "Response body is empty.";
+    private static final Integer RESOLVED = 2;
+    private static final Integer CLOSED = 4;
+    private static final String PREVIEW = "-preview";
     private final RestTemplate restTemplate;
     private final ADOProperties properties;
     private final FlowProperties flowProperties;
@@ -160,8 +163,13 @@ public class ADOService {
 
     void endBlockMerge(ScanRequest request, ScanResults results, ScanDetails scanDetails){
         if(properties.isBlockMerge()) {
+            Integer projectId = Integer.parseInt(results.getProjectId());
             String url = request.getAdditionalMetadata("statuses_url");
             String statusId = request.getAdditionalMetadata("status_id");
+            String threadUrl = null;
+            if(request.getAdditionalMetadata("ado_thread_id") != null){
+                threadUrl = request.getMergeNoteUri().concat("/").concat(request.getAdditionalMetadata("ado_thread_id"));
+            }
             if(statusId == null){
                 log.warn("No status Id found, skipping status update");
                 return;
@@ -185,15 +193,35 @@ public class ADOService {
             restTemplate.exchange(getFullAdoApiUrl(url).concat("-preview"),
                     HttpMethod.PATCH, httpEntity, Void.class);
 
+            /*
+                if the SAST server fails to scan a project it generates a result with ProjectId = -1
+                This if statement adds a status of failed to the ADO PR, and sets the status of thread to
+                CLOSED.
+             */
+            if(projectId == -1){
+                log.debug("SAST scan could not be processed due to some error. Creating status of failed to {}", url);
+                createStatus("failed", "Checkmarx Scan could not be processed.", url, results.getLink(), request);
+                if(threadUrl != null) {
+                    createThreadStatus(CLOSED, threadUrl, request);
+                }
+                return;
+            }
+
             boolean isMergeAllowed = thresholdValidator.isMergeAllowed(results, properties, new PullRequestReport(scanDetails, request));
 
             if(!isMergeAllowed){
                 log.debug("Creating status of failed to {}", url);
                 createStatus("failed", "Checkmarx Scan Completed", url, results.getLink(), request);
+                if(threadUrl != null) {
+                    createThreadStatus(CLOSED, threadUrl, request);
+                }
             }
             else{
                 log.debug("Creating status of succeeded to {}", url);
                 createStatus("succeeded", "Checkmarx Scan Completed", url, results.getLink(), request);
+                if(threadUrl != null) {
+                    createThreadStatus(RESOLVED, threadUrl, request);
+                }
             }
         }
     }
@@ -204,7 +232,7 @@ public class ADOService {
                 ADOUtils.createAuthHeaders(scmConfigOverrider.determineConfigToken(properties, scanRequest.getScmInstance())
         ));
         //TODO remove preview once applicable
-        log.info("Adding pending status to pull {}", url);
+        log.info("Adding {} status to pull {}",state, url);
         ResponseEntity<String> response = restTemplate.exchange(getFullAdoApiUrl(url).concat("-preview"),
                 HttpMethod.POST, httpEntity, String.class);
         log.debug(String.valueOf(response.getStatusCode()));
@@ -217,6 +245,30 @@ public class ADOService {
             log.error("Error retrieving status id");
         }
         return -1;
+    }
+
+    /*
+        This function is used to update the status of the Thread
+        of the PR on Azure from Active to either a RESOLVED or CLOSED based on the status
+        of the scan is Succeeded or Failed respectively.
+        The status is sent as an Integer value
+        status of 2 = RESOLVED
+        status of 4 = CLOSED
+     */
+    void createThreadStatus(Integer status, String url, ScanRequest scanRequest){
+        HttpEntity<String> httpEntity = new HttpEntity<>(
+                getJSONThreadUpdate(status).toString(),
+                ADOUtils.createAuthHeaders(scmConfigOverrider.determineConfigToken(properties, scanRequest.getScmInstance())
+                ));
+        ResponseEntity<String> response = restTemplate.exchange(getFullAdoApiUrl(url).concat(PREVIEW),
+                HttpMethod.PATCH, httpEntity, String.class);
+        try{
+            if(response.getBody() != null) {
+                log.info("Successfully Updated thread status to {}",status);
+            }
+        }catch (NullPointerException e) {
+            log.error("Error updating the thread status");
+        }
     }
 
     private JSONObject getJSONStatus(String state, String url, String description){
@@ -251,6 +303,17 @@ public class ADOService {
         requestBody.put("parentCommentId", 1);
         requestBody.put("commentType", 1);
 
+        return requestBody;
+    }
+
+    /*
+        getJSONThreadUpdate is used to create a JSON Payload with the thread status
+        value to update it in the PR
+     */
+    private JSONObject getJSONThreadUpdate(Integer status)
+    {
+        JSONObject requestBody = new JSONObject();
+        requestBody.put("status",status);
         return requestBody;
     }
 

@@ -33,4 +33,8 @@ public class CreateIssue {
     @Min(0)
     private Integer projectId;
 
+    @JsonProperty("bugTrackerProject")
+    @Valid
+    private String bugTrackerProject;
+
 }

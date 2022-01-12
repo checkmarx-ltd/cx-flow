@@ -1,7 +1,5 @@
-@Component
+@Component @Skip
 Feature: Test analytics for get results operation
-
-
 
 
   Scenario Outline: do get results operation for a known project, and validate the analytics created for the operation.
@@ -21,8 +19,10 @@ Feature: Test analytics for get results operation
       | high | medium | low |
       | 10   | 0      | 0  |
       | 10   | 5      | 0  |
-      | 0    | 0      | 10  | 
-    
+      | 0    | 0      | 10  |
+
+
+
    Scenario Outline: do get results operation for a known project with filters, and validate the analytics created for the operation.
      When doing get results operation on SAST scan with <high> <medium> <low> <info> results and filter is "<filter>"
      Then we should see the expected number of tickets in analytics for SAST

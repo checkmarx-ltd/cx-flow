@@ -5,6 +5,7 @@
 * [Configure Bug Trackers](#configureBugTrackers)
 * [Bug Trackers](#bugTrackers)
 * [CLI Example](#cliExample)
+* [Web Mode](#webMode)
 
 ## <a name="Overview">Overview</a>
 CxIAST can be integrated within a CI/CD pipeline using CxFlow.
@@ -63,7 +64,7 @@ To ignore a severity, remove or comment that severity from the configuration fil
 CxFlow returns a status the CI pipeline when called.  
 To control this, a threshold can be configured per vulnerability severity.  
 Each severity threshold is determined by the allowed vulnerability count with that severity.  
-To remove a threshold from a severity, set the relevant severity to `-1`. In the example below, the threshold has been removed
+To remove a threshold from a severity, set the relevant severity to `-1`. In the configuration example above, the threshold has been removed
 from **info**. Thresholds are configured in the `thresholds-severity` section in the `iast` section.  
 When triggered in CLI mode, CxFlow returns status code `10`, if a threshold has been exceeded.  
 When triggered in web mode, the `/iast/stop-scan-and-create-jira-issue/{scanTag}`
@@ -144,8 +145,8 @@ The ticket is structured as follows:
 
 * iast
 * scan-tag=tag
-* --bug-tracker="custom"
-* --github
+* bug-tracker="custom"
+* github
 * `repo-name=repository-name`
 * `namespace=checkmarx-ltd`
 
@@ -166,15 +167,30 @@ The ticket is structured as follows:
 
 * iast
 * scan-tag=tag
-* --bug-tracker="custom"
-* --gitlab
-* --project-id=xxxxxx
+* bug-tracker="custom"
+* gitlab
+* project-id=xxxxxx
   
 * `gitlab.token=token-xxxx`
 * `project-id=xxxxxx`
 
 An example for a Jira ticket is available here:  
 [[/Images/iast_gitlab_issue.png|Gitlab issue example]]
+
+### Opening Azure DevOps Issues
+
+CxFlow can open Azure DevOps issues according to the CxIAST scan results. At present, CxFlow opens a separate Azure DevOps
+issue for every new vulnerability of any severity discovered by CxIAST.
+
+The ticket is structured as follows:
+
+- The **title** field is set to `<CxIAST Vulnerability name> @ <END_POINT> / <BRANCH>`.
+- Different from the other integrations, on azure if you want assignee a task to the user using CLI mode, you should use 
+  the following argument: `--alt-fields=System.AssignedTo:<assignee@email.com>`.
+- The **description** field contains a link to the vulnerability in CxIAST Manager, scan tag, branch, repository name and severity
+
+An example for Azure DevOps ticket is available here:  
+[[/Images/IAST4.png|Azure DevOps issue example]]
 
 ## <a name="cliExample">CLI Example</a>
 
@@ -211,7 +227,22 @@ java -jar cx-flow.jar
 ...
 ```
 
-[[/Images/iast_jira_issue.png|Jira ticket example]]
+### Example opening Tickets in Azure DevOps issue
+
+```
+java -jar cx-flow.jar 
+--iast
+--scan-tag="cx-scan-00"
+
+--bug-tracker="custom"
+--ado
+--repo-name="myRepoName"
+--branch="myBranchName"
+--azure.token="AZURE_TOKEN"
+--azure.project-name="AZURE_PROJECT_NAME"
+--azure.namespace="AZURE_ORGANIZATION_NAME"
+--alt-fields=System.AssignedTo:assignee@email.com
+```
 
 ### Example opening Tickets in Github issue
 
@@ -219,13 +250,13 @@ java -jar cx-flow.jar
 java -jar cx-flow.jar 
 --spring.config.location=application.yml
 --iast
---bug-tracker="custom"
---github
 --scan-tag="scanTag"
 --namespace="checkmarx-ltd"
 --repo-name="cx-flow"
 --branch="develop"
 
+--bug-tracker="custom"
+--github
 --github.token=token-xxxx
 ...
 ```
@@ -238,18 +269,76 @@ java -jar cx-flow.jar
 java -jar cx-flow.jar 
 --spring.config.location=application.yml
 --iast
---bug-tracker="custom"
---gitlab
 --scan-tag="cx-scan-20"
 --namespace="checkmarx-ltd"
 --repo-name="cx-flow"
 --branch="develop"
 --project-id=xxxxxxxx
 
+--bug-tracker="custom"
+--gitlab
 --gitlab.token=token-xxxx
 
 ...
 ```
 
 [[/Images/iast_gitlab_issue.png|Gitlab issue example]]
+
+## <a name="webMode">Web Mode</a>
+
+As well as the Cx-Flow can be executed as CLI mode, it is possible to run it as web mode, allowing to the user perform 
+create issues process via API calls.
+
+This is the API request URL, followed by request body structure: 
+```
+POST: /iast/stop-scan-and-create-{tracker}-issue/{scanTag}
+
+Body
+{
+  "assignee": "<assignee>", 
+  "namespace": "<namespace>", 
+  "repoName": "<reponame>",
+  "bugTrackerProject": "<project>"
+}
+```
+
+**URL parameters:**
+- `{tracker}` replaced by issue tracker identifier
+- `{scanTag}` replace by the scan tag
+
+**Body parameters**
+
+| Name | Type | Required | Description |
+|---|:---:|:---:|---|
+| assignee  | String | No | Identifier to assign the issue on target bug tracker |
+| namespace | String | Yes | ? |
+| repoName  | String | Yes | ? |
+| bugTrackerProject  | String | No | Information related to the target bug tracker |
+
+
+### Azure example
+
+```
+{tracker} = azure
+{scanTag} = <SCAN TAG>
+```
+
+In order to create issues on Azure DevOps, it is necessary to assign the organization name and also the project name.
+The organization is defined by `namespace` body parameter, and the project name should be assigned on `bugTrackerProject`
+variable:
+
+```
+{ 
+    "assignee": "gustavo.cortarelli@checkmarx.com", 
+    "namespace": "AZURE_ORGANIZATION_NAME", 
+    "repoName": "reponame",
+    "bugTrackerProject": "AZURE_PROJECT_NAME"
+}
+```
+
+So, regarding the values that was presented before, this is the expected URL:
+
+```
+/iast/stop-scan-and-create-azure-issue/<SCAN TAG>
+```
 

@@ -38,6 +38,7 @@ import org.springframework.web.util.DefaultUriBuilderFactory;
 import javax.annotation.PostConstruct;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -303,15 +304,15 @@ public class JiraService {
                 summary = ScanUtils.getScaSummaryIssueKey(request, issue, issuePrefix, issuePostfix);
             } else {
                 if (useBranch) {
-                    summary = String.format(JiraConstants.JIRA_ISSUE_TITLE_KEY_WITH_BRANCH, issuePrefix, vulnerability, filename, branch, issuePostfix);
+                    summary = formatSastIssueSummary(jiraProperties.getSastIssueSummaryBranchFormat(), issue, request);
                 } else {
-                    summary = String.format(JiraConstants.JIRA_ISSUE_TITLE_KEY, issuePrefix, vulnerability, filename, issuePostfix);
+                    summary = formatSastIssueSummary(jiraProperties.getSastIssueSummaryFormat(), issue, request);
                 }
             }
             String fileUrl = ScanUtils.getFileUrl(request, issue.getFilename());
             summary = checkSummaryLength(summary);
 
-            issueBuilder.setSummary(HTMLHelper.getScanRequestIssueKeyWithDefaultProductValue(request, summary));
+            issueBuilder.setSummary(HTMLHelper.getScanRequestIssueKeyWithDefaultProductValue(request, summary, jiraProperties.getLabelPrefix()));
             issueBuilder.setDescription(this.getBody(issue, request, fileUrl));
             if (assignee != null && !assignee.isEmpty()) {
                 ComplexIssueInputFieldValue jiraAssignee = getAssignee(assignee, projectKey);
@@ -468,6 +469,9 @@ public class JiraService {
                 continue;
             }
             if (!ScanUtils.empty(customField)) {
+                if(customField.equalsIgnoreCase("Labels")){
+                    log.warn("Configuring the Labels parameter would affect issue tracking and might result in duplicate bug creation or bugs not closing or opening.");
+                }
                 /*cx | static | other - specific values that can be linked from scan request or the issue details*/
                 String fieldType = f.getType();
                 if (ScanUtils.empty(fieldType)) {
@@ -673,7 +677,7 @@ public class JiraService {
                             String[] l = StringUtils.split(value, ",");
                             list = new ArrayList<>();
                             for (String x : l) {
-                                list.add(x.replaceAll("[^a-zA-Z0-9-_]+", "_"));
+                                list.add(x.replaceAll("[^a-zA-Z0-9:\\-_]+", "_"));
                             }
 
                             if (!ScanUtils.empty(list)) {
@@ -970,14 +974,14 @@ public class JiraService {
             String key;
             if (useBranch) {
                 key = ScanUtils.isSAST(issue)
-                        ? String.format(JiraConstants.JIRA_ISSUE_TITLE_KEY_WITH_BRANCH, issuePrefix, issue.getVulnerability(), issue.getFilename(), request.getBranch(), issuePostfix)
+                        ? formatSastIssueSummary(jiraProperties.getSastIssueSummaryBranchFormat(), issue, request)
                         : getScaDetailsIssueTitleFormat(request, issuePrefix, issuePostfix, issue);
             } else {
                 key = ScanUtils.isSAST(issue)
-                        ? String.format(JiraConstants.JIRA_ISSUE_TITLE_KEY, issuePrefix, issue.getVulnerability(), issue.getFilename(), issuePostfix)
+                        ? formatSastIssueSummary(jiraProperties.getSastIssueSummaryFormat(), issue, request)
                         : getScaDetailsIssueTitleWithoutBranchFormat(request, issuePrefix, issuePostfix, issue);
             }
-            map.put(HTMLHelper.getScanRequestIssueKeyWithDefaultProductValue(request, key), issue);
+            map.put(HTMLHelper.getScanRequestIssueKeyWithDefaultProductValue(request, key,jiraProperties.getLabelPrefix()), issue);
         }
         return map;
     }
@@ -1480,5 +1484,24 @@ public class JiraService {
         if (sourceMap != null && !sourceMap.isEmpty()) {
             destinationMap.putAll(sourceMap);
         }
+    }
+
+    private String formatSastIssueSummary(String summary, ScanResults.XIssue issue, ScanRequest request) {
+        summary = fillPlaceholder(summary, "[BASENAME]", Paths.get(issue.getFilename()).getFileName().toString());
+        summary = fillPlaceholder(summary, "[BRANCH]", request.getBranch());
+        summary = fillPlaceholder(summary, "[FILENAME]", issue.getFilename());
+        summary = fillPlaceholder(summary, "[POSTFIX]", jiraProperties.getIssuePostfix());
+        summary = fillPlaceholder(summary, "[PREFIX]", jiraProperties.getIssuePrefix());
+        summary = fillPlaceholder(summary, "[PROJECT]", request.getProject());
+        summary = fillPlaceholder(summary, "[SEVERITY]", issue.getSeverity());
+        summary = fillPlaceholder(summary, "[VULNERABILITY]", issue.getVulnerability());
+
+        return summary;
+    }
+
+    private static String fillPlaceholder(String summary, String placeholder, String actualValue){
+        actualValue = StringUtils.defaultIfEmpty(actualValue, "");
+        summary = summary.replace(placeholder, actualValue);
+        return summary;
     }
 }

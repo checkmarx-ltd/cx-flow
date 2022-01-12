@@ -30,6 +30,7 @@ public class ScanRequest {
     private String altFields;
 
     private Map<String, String> cxFields;
+    private Map<String, String> scanFields;
     private String site;
 
     /**
@@ -52,6 +53,8 @@ public class ScanRequest {
     private String refs;
     private List<String> email;
     private boolean forceScan;
+    @Getter @Setter
+    private String scanResubmit;
     private Boolean incremental;
     private String scanPreset;
 
@@ -104,6 +107,10 @@ public class ScanRequest {
 
     @Getter @Setter
     private boolean disableCertificateValidation;
+    
+    //SSH Key per repo
+    @Getter @Setter
+    private String sshKeyIdentifier;
 
     public ScanRequest(ScanRequest other) {
         this.namespace = other.namespace;
@@ -112,6 +119,7 @@ public class ScanRequest {
         this.team = other.team;
         this.project = other.project;
         this.cxFields = other.cxFields;
+        this.scanFields = other.scanFields;
 		this.altProject = other.altProject;
         this.altFields = other.altFields;
         this.site = other.site;
@@ -137,6 +145,7 @@ public class ScanRequest {
         this.activeBranches = other.activeBranches;
         this.filter = other.filter;
         this.forceScan = other.forceScan;
+        this.scanResubmit = other.scanResubmit;
         this.vulnerabilityScanners = other.vulnerabilityScanners;
         this.scaConfig = other.scaConfig;
         this.astConfig = other.astConfig;
@@ -145,6 +154,7 @@ public class ScanRequest {
         this.organizationId = other.organizationId;
         this.gitUrl = other.gitUrl;
         this.disableCertificateValidation = other.disableCertificateValidation;
+        this.sshKeyIdentifier = other.sshKeyIdentifier;
     }
 
     public Map<String,String> getAltFields() {
@@ -182,7 +192,7 @@ public class ScanRequest {
     }
 
     public String toString() {
-        return "ScanRequest(namespace=" + this.getNamespace() + ", application=" + this.getApplication() + ", org=" + this.getOrg() + ", team=" + this.getTeam() + ", project=" + this.getProject() + ", cxFields=" + this.getCxFields() + ", site=" + this.getSite() + ", repoUrl=" + this.getRepoUrl() + ", repoName=" + this.getRepoName() + ", branch=" + this.getBranch() + ", mergeTargetBranch=" + this.getMergeTargetBranch() + ", mergeNoteUri=" + this.getMergeNoteUri() + ", repoProjectId=" + this.getRepoProjectId() + ", refs=" + this.getRefs() + ", email=" + this.getEmail() + ", incremental=" + this.isIncremental() + ", scanPreset=" + this.getScanPreset() + ", excludeFiles=" + this.getExcludeFiles() + ", excludeFolders=" + this.getExcludeFolders() + ", repoType=" + this.getRepoType() + ", product=" + this.getProduct() + ", bugTracker=" + this.getBugTracker() + ", type=" + this.getType() + ", activeBranches=" + this.getActiveBranches() + ", filter=" + this.getFilter() + ")";
+        return "ScanRequest(namespace=" + this.getNamespace() + ", application=" + this.getApplication() + ", org=" + this.getOrg() + ", team=" + this.getTeam() + ", project=" + this.getProject() + ", cxFields=" + this.getCxFields() + ", site=" + this.getSite() + ", repoUrl=" + this.getRepoUrl() + ", repoName=" + this.getRepoName() + ", branch=" + this.getBranch() + ", mergeTargetBranch=" + this.getMergeTargetBranch() + ", mergeNoteUri=" + this.getMergeNoteUri() + ", repoProjectId=" + this.getRepoProjectId() + ", refs=" + this.getRefs() + ", email=" + this.getEmail() + ", incremental=" + this.isIncremental() + ", scanPreset=" + this.getScanPreset() + ", excludeFiles=" + this.getExcludeFiles() + ", excludeFolders=" + this.getExcludeFolders() + ", repoType=" + this.getRepoType() + ", product=" + this.getProduct() + ", bugTracker=" + this.getBugTracker() + ", type=" + this.getType() + ", activeBranches=" + this.getActiveBranches() + ", filter=" + this.getFilter()+ ", scanResubmit=" + this.getScanResubmit() + ")";
     }
 
     public Boolean isIncremental() {

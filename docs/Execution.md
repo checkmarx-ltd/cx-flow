@@ -19,7 +19,7 @@ The CxFlow docker images on Docker Hub [checkmarx/cx-flow](https://hub.docker.co
 
 ```
 docker pull checkmarx/cx-flow
-docker run --env-file=.checkmarx --name=cx-flow --detach -p <host port>:8080 checkmarx/cx-flow
+docker run -e JAVA_OPTS="Specify JVM options here" --env-file=.checkmarx --name=cx-flow --detach -p <host port>:8080 checkmarx/cx-flow
 ```
 
 The env-file provides the necessary overrides during the bootstrap process - urls, credentials, etc - sample below.
@@ -71,7 +71,9 @@ CxFlow can be integrated via command line using several ways. The table below li
 | `--spring.config.location` | Path to application.yml. This file contains the global configuration for CxFlow.  It is only required, if the jar file and the application.yml file are not in the current working directory.  Refer to the [Spring Boot Documentation](https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html) (section 24.3) |
 | `--offline` | If this flag is raised, the Checkmarx instance is not contacted.  This means that no issue description is provided and Checkmarx custom fields cannot be used |
 | `--blocksysexit` | Optional: Mainly for build/test purposes. Avoid `System.exit()` in the code and exit with java exception |
-
+| `--alt-project` | Name of the project in ADO. This parameter is required in addition to cx-project parameter. |
+| `--project-custom-field` | Specify a project-level custom field to be set if a project is created or the `checkmarx.settings-override` property is set. The custom field is specified as *name:value* (i.e., the field name cannot include a colon). This option may be specified multiple times to set multiple fields. |
+| `--scan-custom-field` | Specify a scan-level custom field. The custom field is specified as *name:value* (i.e., the field name cannot include a colon). This option may be specified multiple times to set multiple fields. |
 ## <a name="parse">Parse</a>
 
 ```

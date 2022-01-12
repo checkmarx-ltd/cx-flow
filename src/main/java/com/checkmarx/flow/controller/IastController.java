@@ -1,8 +1,6 @@
 package com.checkmarx.flow.controller;
 
 import com.checkmarx.flow.CxFlowRunner;
-import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.EventResponse;
 import com.checkmarx.flow.dto.ScanRequest;
@@ -11,7 +9,6 @@ import com.checkmarx.flow.exception.IastThatPropertiesIsRequiredException;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.exception.JiraClientException;
 import com.checkmarx.flow.service.IastService;
-import com.checkmarx.flow.service.JiraService;
 import com.checkmarx.flow.utils.TokenUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,16 +34,9 @@ public class IastController {
     @Autowired
     private IastService iastService;
     @Autowired
-    private JiraProperties jiraProperties;
-    @Autowired
-    private FlowProperties flowProperties;
-    @Autowired
     private CxFlowRunner cxFlowRunner;
-
     @Autowired
     private TokenUtils tokenUtils;
-    @Autowired
-    private JiraService jiraService;
 
     @PostMapping(value = {"/generate-tag"})
     public ResponseEntity<EventResponse> generateTag() {
@@ -78,23 +68,26 @@ public class IastController {
             }
 
             ScanRequest request;
+            BugTracker.Type bugTrackerType;
             switch (bugTrackerName.toLowerCase()) {
                 case "jira":
-                    request = getRepoScanRequest(body, BugTracker.Type.JIRA);
+                    bugTrackerType = BugTracker.Type.JIRA;
                     break;
-
                 case "github":
-                case "githubissue":
-                    request = getRepoScanRequest(body, BugTracker.Type.GITHUBCOMMIT);
+                    bugTrackerType = BugTracker.Type.GITHUBCOMMIT;
                     break;
-
                 case "gitlab":
-                case "gitlabissue":
-                    request = getRepoScanRequest(body, BugTracker.Type.GITLABCOMMIT);
+                    bugTrackerType = BugTracker.Type.GITLABCOMMIT;
+                    break;
+                case "ado":
+                case "azure":
+                    bugTrackerType = BugTracker.Type.ADOPULL;
                     break;
                 default:
                     throw new NotImplementedException(bugTrackerName + ". That bug tracker not implemented.");
             }
+
+            request = getRepoScanRequest(body, bugTrackerType);
 
             iastService.stopScanAndCreateIssue(request, scanTag);
         } catch (InvalidTokenException e) {
@@ -120,6 +113,7 @@ public class IastController {
 
         checksForGitHub(body, tracker);
         checksForGitLab(body, tracker);
+        checksForAzure(body, tracker);
 
         String assignee = body.getAssignee();
         BugTracker bt;
@@ -134,9 +128,19 @@ public class IastController {
                     .assignee(assignee)
                     .build();
         }
+
+        String altFields = null;
+        if(tracker == BugTracker.Type.ADOPULL || tracker == BugTracker.Type.adopull ) {
+            if (!Strings.isEmpty(assignee)) {
+                altFields = "System.AssignedTo:" + assignee;
+            }
+        }
+
         return ScanRequest.builder()
                 .bugTracker(bt)
+                .altProject(body.getBugTrackerProject())
                 .repoName(body.getRepoName())
+                .altFields(altFields)
                 .namespace(body.getNamespace())
                 .repoProjectId(body.getProjectId())
                 .product(ScanRequest.Product.CX)
@@ -146,6 +150,17 @@ public class IastController {
     private void checksForGitLab(CreateIssue body, BugTracker.Type tracker) {
         if (tracker == BugTracker.Type.GITLABCOMMIT && body.getProjectId() == null) {
             throw new IastThatPropertiesIsRequiredException("Property \"project-id\" is required");
+        }
+    }
+
+    private void checksForAzure(CreateIssue body, BugTracker.Type tracker) {
+        if (tracker == BugTracker.Type.ADOPULL) {
+            if (body.getBugTrackerProject() == null) {
+                throw new IastThatPropertiesIsRequiredException("Property \"bugTrackerProject\" is required");
+            }
+            if (body.getNamespace() == null) {
+                throw new IastThatPropertiesIsRequiredException("Property \"namespace\" is required");
+            }
         }
     }
 

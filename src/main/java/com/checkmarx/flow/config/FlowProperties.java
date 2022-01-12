@@ -48,10 +48,12 @@ public class FlowProperties {
     private Integer httpReadTimeout = 120000;
     private boolean listFalsePositives = false;
     private boolean scanResubmit = false;
+    private String sshKeyPath;
     private Mail mail;
     @Getter @Setter
     private boolean preserveProjectName;
     private Map<FindingSeverity,Integer> thresholds;
+    private boolean scanUnprotectedBranches= false;
 
     public String getContact() {
         return this.contact;
@@ -320,6 +322,13 @@ public class FlowProperties {
         this.thresholds = thresholds;
     }
 
+    public void setSshkeypath(String sshKeyPath) {
+        this.sshKeyPath = sshKeyPath;
+    }
+
+    public String getSshkeypath() {
+        return sshKeyPath;
+    }
 
     public static class Mail {
         private String host;
@@ -394,5 +403,13 @@ public class FlowProperties {
 
     private boolean anyScannerEnabled() {
         return enabledVulnerabilityScanners != null && !enabledVulnerabilityScanners.isEmpty();
+    }
+
+    public boolean isScanUnprotectedBranches() {
+        return scanUnprotectedBranches;
+    }
+
+    public void setScanUnprotectedBranches(boolean scanUnprotectedBranches) {
+        this.scanUnprotectedBranches = scanUnprotectedBranches;
     }
 }
