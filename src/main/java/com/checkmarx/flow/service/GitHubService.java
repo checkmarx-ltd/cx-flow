@@ -23,8 +23,15 @@ import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.exception.GitHubClientRunTimeException;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.ShardManager.ShardSession;
+import com.checkmarx.sdk.ShardManager.ShardSessionTracker;
+import com.checkmarx.sdk.config.CxProperties;
+import com.checkmarx.sdk.config.CxPropertiesBase;
+import com.checkmarx.sdk.dto.cx.CxProject;
 import com.checkmarx.sdk.dto.sast.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
+import com.checkmarx.sdk.exception.CheckmarxException;
+import com.checkmarx.sdk.service.scanner.CxClient;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +52,8 @@ import org.springframework.web.util.DefaultUriBuilderFactory;
 
 import javax.naming.ConfigurationException;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -56,6 +65,7 @@ public class GitHubService extends RepoService {
     private static final String CONTENT_NOT_FOUND_IN_RESPONSE = "Content not found in JSON response";
     private static final String STATUSES_URL_KEY = "statuses_url";
     private static final String STATUSES_URL_NOT_PROVIDED = "statuses_url was not provided within the request object, which is required for blocking / unblocking pull requests";
+    private static final String URL_INVALID = "Invalid system URL";
 
     public static final String MERGE_SUCCESS = "success";
     public static final String MERGE_FAILURE = "failure";
@@ -67,6 +77,9 @@ public class GitHubService extends RepoService {
     private final FlowProperties flowProperties;
     private final ThresholdValidator thresholdValidator;
     private final ScmConfigOverrider scmConfigOverrider;
+    private final CxProperties cxProperties;
+    private final ShardSessionTracker sessionTracker;
+    private final CxClient cxService;
 
     private static final String FILE_CONTENT = "/{namespace}/{repo}/contents/{config}?ref={branch}";
     private static final String LANGUAGE_TYPES = "/{namespace}/{repo}/languages";
@@ -84,13 +97,19 @@ public class GitHubService extends RepoService {
                          FlowProperties flowProperties,
                          ThresholdValidator thresholdValidator,
                          ScmConfigOverrider scmConfigOverrider,
-                         GitHubAppAuthService gitHubAppAuthService) {
+                         GitHubAppAuthService gitHubAppAuthService, 
+                         CxProperties cxProperties,
+                         ShardSessionTracker sessionTracker,
+                         CxClient cxService) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.flowProperties = flowProperties;
         this.thresholdValidator = thresholdValidator;
         this.scmConfigOverrider = scmConfigOverrider;
         this.gitHubAppAuthService = gitHubAppAuthService;
+        this.cxProperties = cxProperties;
+        this.sessionTracker = sessionTracker;
+        this.cxService = cxService;
     }
 
     public HttpHeaders createAuthHeaders(ScanRequest scanRequest){
@@ -214,6 +233,28 @@ public class GitHubService extends RepoService {
     public void startBlockMerge(ScanRequest request, String url){
         if(properties.isBlockMerge()) {
             final String PULL_REQUEST_STATUS = "pending";
+            // When Shard Manager is enabled overide the PULL url.
+            if(cxProperties.getEnableShardManager()) {
+                ShardSession shard = sessionTracker.getShardSession();
+                try {
+                    //
+                    /// This code is very specific to CapOne, it required the introduction
+                    /// of new properties to the GitHubService like: ShardManager and CxService.
+                    //
+                    String teamId = cxService.getTeamId(request.getTeam());
+                    List<CxProject> projects = cxService.getProjects(teamId);
+                    String projectID = "0";
+                    //String projName = request.getRepoName() + "-" + request.getBranch();
+                    for(CxProject project: projects) {
+                        if(project.getName().equals(request.getProject())) {
+                            projectID = project.getId().toString();
+                        }
+                    }
+                    url = shard.getUrl() + "/cxwebclient/portal#/projectState/" + projectID + "/Summary";
+                } catch(CheckmarxException e) {
+                    log.error(URL_INVALID);
+                }
+            }
             HttpEntity<?> httpEntity = new HttpEntity<>(
                     getJSONStatus(PULL_REQUEST_STATUS, url, "Checkmarx Scan Initiated").toString(),
                     createAuthHeaders(request)
