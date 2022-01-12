@@ -233,14 +233,10 @@ public class GitHubService extends RepoService {
     public void startBlockMerge(ScanRequest request, String url){
         if(properties.isBlockMerge()) {
             final String PULL_REQUEST_STATUS = "pending";
-            // When Shard Manager is enabled overide the PULL url.
+            // When Shard Manager is enabled overide the PULL url to link to the correct shard.
             if(cxProperties.getEnableShardManager()) {
                 ShardSession shard = sessionTracker.getShardSession();
-                try {
-                    //
-                    /// This code is very specific to CapOne, it required the introduction
-                    /// of new properties to the GitHubService like: ShardManager and CxService.
-                    //
+                try {                    
                     String teamId = cxService.getTeamId(request.getTeam());
                     List<CxProject> projects = cxService.getProjects(teamId);
                     String projectID = "0";
