@@ -222,11 +222,31 @@ public class ScanRequestConverter {
                 .withFileExclude(request.getExcludeFiles())
                 .withFolderExclude(request.getExcludeFolders())
                 .withScanConfiguration(request.getScanConfiguration())
-                .withClientSecret(request.getScannerApiSec());
+                .withSshKeyIdentifier(request.getSshKeyIdentifier())
+                .withClientSecret(request.getScannerApiSec())
+                .withCustomFields(request.getCxFields())
+                .withScanCustomFields(request.getScanFields());
 
         if (StringUtils.isNotEmpty(request.getBranch())) {
             params.withBranch(Constants.CX_BRANCH_PREFIX.concat(request.getBranch()));
         }
+
+        if (StringUtils.isEmpty(request.getBranch())) {
+            params.withBranch(Constants.CX_BRANCH_PREFIX.concat(""));
+        }
+
+        if(StringUtils.isNotEmpty(request.getDefaultBranch())) {
+            params.withDefaultBranch(Constants.CX_BRANCH_PREFIX.concat(request.getDefaultBranch()));
+        }
+
+        if(StringUtils.isEmpty(request.getDefaultBranch()) && StringUtils.isNotEmpty(request.getMergeTargetBranch())) {
+            params.withDefaultBranch(Constants.CX_BRANCH_PREFIX.concat(request.getMergeTargetBranch()));
+        }
+
+        if(StringUtils.isEmpty(request.getDefaultBranch()) && StringUtils.isEmpty(request.getMergeTargetBranch())) {
+            params.withDefaultBranch(Constants.CX_BRANCH_PREFIX.concat(""));
+        }
+
 
         if (cxFile != null) {
             params.setSourceType(CxScanParams.Type.FILE);

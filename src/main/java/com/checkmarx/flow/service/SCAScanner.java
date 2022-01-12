@@ -14,9 +14,11 @@ import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.scanner.ScaScanner;
 import com.checkmarx.sdk.utils.CxRepoFileHelper;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 
@@ -53,7 +55,13 @@ public class SCAScanner extends AbstractASTScanner {
                 log.info("CxAST-SCA zip scan is enabled");
                 String scaClonedFolderPath = cxRepoFileHelper.getScaClonedRepoFolderPath(scanRequest.getRepoUrlWithAuth(), scanRequest.getExcludeFiles(), scanRequest.getBranch());
                 scanParams.setSourceDir(scaClonedFolderPath);
+            }
+            if(scanRequest.getExcludeFiles() != null) {
                 scanParams.getScaConfig().setExcludeFiles(scanRequest.getExcludeFiles());
+            } else if(scaProperties.getExcludeFiles() != null){
+                List<String> excludeFiles = new ArrayList<String>(Arrays.asList(scaProperties.getExcludeFiles().split(",")));
+                log.debug("Exclude Files list contains : {}", excludeFiles);
+                scanParams.getScaConfig().setExcludeFiles(excludeFiles);
             }
         } catch (CheckmarxException e) {
             throw new MachinaRuntimeException(e.getMessage());

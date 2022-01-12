@@ -84,7 +84,8 @@ Requirements:
 server:
   port: 8982
 logging:
-  file: flow.log
+  file:
+    name: flow.log
 
 cxflow:
   bug-tracker: GitHub
@@ -893,7 +894,8 @@ This tutorial is designed to teach the following topics:
 server:
   port: 8982
 logging:
-  file: flow.log
+  file:
+    name: flow.log
 
 cxflow:
   bug-tracker: CxXml

@@ -26,7 +26,8 @@ This is a set of example yml file configurations used to execute CxFlow.
 server:
   port: ${PORT:8982}
 logging:
-  file: flow.log
+  file:
+    name: flow.log
 
 cxflow:
   bug-tracker: JIRA
@@ -43,6 +44,7 @@ cxflow:
   - main
   - dev\w+
   - release-\w+
+  scan-unprotected-branches: true (scan all the branches if no protected branch set in application.yml or in cx.config file.
   filter-severity:
   # - High
   filter-category:
@@ -51,6 +53,9 @@ cxflow:
   - Reflected_XSS_All_Clients
   filter-cwe:
   filter-status:
+  # - New
+  # - Reoccured
+  filter-state:
   # - Urgent
   # - Confirmed
   # - To Verify
@@ -65,6 +70,7 @@ checkmarx:
   base-url: http://localhost
   team: \CxServer\SP\Company
   url: ${checkmarx.base-url}/cxrestapi
+  cx-branch: true
   #scan-preset: Checkmarx Default
   #incremental: true
   #WSDL Config
@@ -131,7 +137,7 @@ jira:
   fields:
     - type: result
       name: application
-      jira-field-name: Application
+      jira-field-name: Application (NOTE: Configuring the "jira-field-name" parameter to Labels would affect issue tracking and might result in duplicate bug creation or bugs not closing or opening.)
       jira-field-type: label
     - type: result
       name: cwe
@@ -153,7 +159,8 @@ jira:
 server:
   port: ${PORT:8982}
 logging:
-  file: flow.log
+  file:
+    name: flow.log
 
 cxflow:
   bug-tracker: JIRA
@@ -170,6 +177,7 @@ cxflow:
   - main
   - dev\w+
   - release-\w+
+  scan-unprotected-branches: true (scan all the branches if no protected branch set in application.yml or in cx.config file.
   filter-severity:
   - High
   filter-category:
@@ -178,6 +186,9 @@ cxflow:
   # - Reflected_XSS_All_Clients
   filter-cwe:
   filter-status:
+  # - New
+  # - Reoccured
+  filter-state:
   # - Urgent
   # - Confirmed
   # - To Verify
@@ -198,6 +209,7 @@ checkmarx:
   base-url: http://cx.local
   #multi-tenant: true
   configuration: Default Configuration
+  cx-branch: true
   #scan-preset: Checkmarx Defaul
   preserve-xml: true
   team: /CxServer/Checkmarx/CxFlow
@@ -268,7 +280,7 @@ jira:
   fields:
     - type: result
       name: application
-      jira-field-name: Application
+      jira-field-name: Application (NOTE: Configuring the "jira-field-name" parameter to Labels would affect issue tracking and might result in duplicate bug creation or bugs not closing or opening.)
       jira-field-type: label
     - type: result
       name: cwe

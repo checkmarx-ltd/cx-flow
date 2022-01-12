@@ -9,7 +9,7 @@ String cxProject = "script-prefix-" + request.getBranch() + "-" + request.getHas
 return cxProject
 ```
 The resulting project name will look like this: `script-prefix-master-fa907029c049b781f961e452a375d606402102a6`.
-For more information about the `getHash()` property, see the `hash` field documentation in [ScanRequest object](https://github.com/checkmarx-ltd/cx-flow/blob/develop/src/main/java/com/checkmarx/flow/dto/ScanRequest.java).
+For more information about the `getHash()` property, see the `hash` field documentation in [ScanRequest object](../src/main/java/com/checkmarx/flow/dto/ScanRequest.java).
 
 * [Project script](#projectScript)
 * [Team script](#teamScript)
@@ -27,7 +27,7 @@ checkmarx:
   project-script: ...\CheckProject.groovy
 ```
 
-* Script input: [ScanRequest object](https://github.com/checkmarx-ltd/cx-flow/blob/develop/src/main/java/com/checkmarx/flow/dto/ScanRequest.java)
+* Script input: [ScanRequest object](../src/main/java/com/checkmarx/flow/dto/ScanRequest.java)
 * Return value: String
 
 
@@ -41,7 +41,7 @@ checkmarx:
   team-script: ...\CheckTeam.groovy
 ```
 
-* Script input: [ScanRequest object](https://github.com/checkmarx-ltd/cx-flow/blob/develop/src/main/java/com/checkmarx/flow/dto/ScanRequest.java)
+* Script input: [ScanRequest object](../src/main/java/com/checkmarx/flow/dto/ScanRequest.java)
 * Return value: String
 
 
@@ -51,12 +51,12 @@ checkmarx:
 * To enable this flow add the following property to cxflow configuration (you can use any file name): 
 
 ```yaml
-checkmarx:
+cx-flow:
   branch-script: ...\CheckBranch.groovy
 ```
 
 * Script input: 
-  * [ScanRequest object](https://github.com/checkmarx-ltd/cx-flow/blob/develop/src/main/java/com/checkmarx/flow/dto/ScanRequest.java)
+  * [ScanRequest object](../src/main/java/com/checkmarx/flow/dto/ScanRequest.java)
   * List<String> branches
 
 * Return value: String
@@ -72,8 +72,9 @@ cx-flow:
   comment-script: ...\Checkcomment.groovy
 ```
 
-* Script input: [ScanRequest object](https://github.com/checkmarx-ltd/cx-flow/blob/develop/src/main/java/com/checkmarx/flow/dto/ScanRequest.java)
+* Script input: [ScanRequest object](../src/main/java/com/checkmarx/flow/dto/ScanRequest.java)
 * Return value: String
+* Script example: [ScanComment.groovy](../src/main/resources/samples/ScanComment.groovy)
 
 ### <a name="filterFindings">Use a Script to Filter Findings</a>
 
@@ -125,6 +126,6 @@ jira:
   project-key-script: ...\CheckProjectKey.groovy
 ```
 
-* Script input: [ScanRequest object](https://github.com/checkmarx-ltd/cx-flow/blob/develop/src/main/java/com/checkmarx/flow/dto/ScanRequest.java)
+* Script input: [ScanRequest object](../src/main/java/com/checkmarx/flow/dto/ScanRequest.java)
 * Return value: String
-* Script example: [JiraProjectKey.groovy](https://github.com/checkmarx-ltd/cx-flow/blob/develop/src/main/resources/samples/JiraProjectKey.groovy)
+* Script example: [JiraProjectKey.groovy](../src/main/resources/samples/JiraProjectKey.groovy)

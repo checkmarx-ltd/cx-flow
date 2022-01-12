@@ -47,11 +47,13 @@ public class JiraProperties {
     private boolean child = false;
     private Integer httpTimeout = 20000;
     private Integer maxJqlResults = 50;
-    private List<String> statusCategoryOpenName = Arrays.asList("To Do", "In Progress");
-    private List<String> statusCategoryClosedName = Arrays.asList("Done");
+    private List<String> statusCategoryOpenName = Arrays.asList("To Do", "In Progress", "Reopened");
+    private List<String> statusCategoryClosedName = Arrays.asList("Done", "Resolve", "Closed");
     @Getter @Setter
     private String projectKeyScript;
     private String labelPrefix;
+    private String sastIssueSummaryFormat = "[PREFIX][VULNERABILITY] @ [FILENAME][POSTFIX]";
+    private String sastIssueSummaryBranchFormat = "[PREFIX][VULNERABILITY] @ [FILENAME] [[BRANCH]][POSTFIX]";
 
 
     public String getUrl() {
@@ -342,6 +344,18 @@ public class JiraProperties {
 
     public void setLabelPrefix(String labelPrefix) {
         this.labelPrefix = labelPrefix;
+    }
+
+    public String getSastIssueSummaryFormat() { return this.sastIssueSummaryFormat; }
+
+    public void setSastIssueSummaryFormat(String sastIssueSummaryFormat) {
+        this.sastIssueSummaryFormat = sastIssueSummaryFormat;
+    }
+
+    public String getSastIssueSummaryBranchFormat() { return this.sastIssueSummaryBranchFormat; }
+
+    public void setSastIssueSummaryBranchFormat(String sastIssueSummaryBranchFormat) {
+        this.sastIssueSummaryBranchFormat = sastIssueSummaryBranchFormat;
     }
 
 }

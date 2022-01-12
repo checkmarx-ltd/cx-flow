@@ -18,6 +18,7 @@ checkmarx:
    base-url: http://cx.local
    multi-tenant: true
    configuration: Default Configuration
+   cx-branch: true
    scan-preset: Checkmarx Default
    team: /CxServer/Checkmarx/CxFlow
    url: ${checkmarx.base-url}/cxrestapi
@@ -29,6 +30,8 @@ checkmarx:
    #team-script: D:\\tmp\CxTeam.groovy
    #exclude-files:
    #exclude-folders:
+   scan-queuing: false
+   scan-queuing-timeout: 720
 ```
 
 ### <a name="ninedotzero">CxSAST v9.0 .yml Example File</a>
@@ -36,7 +39,8 @@ checkmarx:
 server:
   port: ${PORT:8982}
 logging:
-  file: flow.log
+  file:
+    name: flow.log
 
 cxflow:
   bug-tracker: JIRA
@@ -77,6 +81,7 @@ checkmarx:
   base-url: http://cx.local
   #multi-tenant: true
   configuration: Default Configuration
+  cx-branch: true
   #scan-preset: Checkmarx Defaul
   preserve-xml: true
   team: /CxServer/Checkmarx/CxFlow
@@ -88,6 +93,8 @@ checkmarx:
   sdk-url: ${checkmarx.base-url}/cxwebinterface/SDK/CxSDKWebService.asmx
   portal-wsdl: ${checkmarx.base-url}/Portal/CxWebService.asmx?wsdl
   sdk-wsdl: ${checkmarx.base-url}/SDK/CxSDKWebService.asmx?wsdl
+  scan-queuing: false
+  scan-queuing-timeout: 720
 
 azure:
   webhook-token: cxflow:12345

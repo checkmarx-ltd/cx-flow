@@ -2,7 +2,7 @@ import org.gradle.api.tasks.testing.Test
 
 buildscript {
 	ext {
-        CxSBSDK = "0.5.01"
+        CxSBSDK = "0.5.09"
         ConfigProviderVersion = "1.0.9"
         //cxVersion = "8.90.5"
         springBootVersion = '2.3.5.RELEASE'
@@ -59,11 +59,17 @@ configurations {
     all*.exclude module: 'wss-agent-api'
 }
 
+ext['tomcat.version'] = '9.0.54'
+
 dependencies {
     compile group: 'com.beust', name: 'jcommander', version: '1.78'
     compile('org.apache.ant:ant:1.10.10')
 	compile('org.springframework.boot:spring-boot-starter-actuator')
-	compile('org.springframework.boot:spring-boot-starter-web')
+	compile('org.springframework.boot:spring-boot-starter-web'){
+	    exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j-impl'
+        exclude group: 'org.apache.logging.log4j', module: 'log4j-api'
+        exclude group: 'org.apache.logging.log4j', module: 'log4j-core'
+	}
     compile('org.springframework.boot:spring-boot-starter-aop')
     compile('org.springframework.boot:spring-boot-starter-validation')
     compile("com.github.checkmarx-ltd:cx-spring-boot-sdk:${CxSBSDK}") {
@@ -111,6 +117,7 @@ dependencies {
     testImplementation("io.cucumber:cucumber-java:${cucumberVersion}")
     testImplementation("io.cucumber:cucumber-junit:${cucumberVersion}")
     testImplementation("io.cucumber:cucumber-spring:${cucumberVersion}")
+    testImplementation("com.github.java-json-tools:json-patch:1.11")
     testImplementation( "org.junit.jupiter:junit-jupiter-api:${junitVersion}")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:${junitVersion}")
@@ -124,7 +131,11 @@ dependencies {
     compile("org.jasypt:jasypt:1.9.3")
     compileJava.dependsOn(processResources)
 
+    compile("org.apache.logging.log4j:log4j-core:2.17.1")
+    compile("org.apache.logging.log4j:log4j-slf4j-impl:2.17.1")
+    compile("org.apache.logging.log4j:log4j-api:2.17.1")
     compile("javax.persistence:javax.persistence-api:2.2")
+    compile group:'org.apache.tomcat', name:'tomcat-juli', version:property('tomcat.version')
 }
 
 springBoot {

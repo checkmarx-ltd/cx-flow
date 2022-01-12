@@ -168,11 +168,13 @@ public class ScanUtils {
                     List<Finding> findingsListBySeverity = getFindingsListBySeverity(findings, s);
                     Map<String, List<Finding>> packageMap = findingsListBySeverity.stream()
                             .collect(Collectors.groupingBy(f-> f.getId() + f.getPackageId()));
+                    
                     packageMap.forEach((k,v) -> {
                         ScanResults.XIssue issue = ScanResults.XIssue.builder()
                                 .groupBySeverity(false)
                                 .build();
                         issue.setScaDetails(getScaDetailsListBySeverity(scaResults, v));
+                        issue.setFalsePositiveCount(getFalsePositiveCount(v));
                         issueList.add(issue);
                     });
                 });
@@ -285,6 +287,9 @@ public class ScanUtils {
         String branch = request.getBranch();
         if(!ScanUtils.empty(request.getRepoUrl()) && !ScanUtils.empty(branch)) {
             String repoUrl = request.getRepoUrl().replace(".git", "/");
+            if(!(repoUrl.substring(repoUrl.length() - 1).equals("/"))){
+                repoUrl = repoUrl.concat("/");
+            }
             if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)) {
                 String url = request.getAdditionalMetadata("BITBUCKET_BROWSE");
                 if(url != null && !url.isEmpty()){
@@ -553,6 +558,13 @@ public class ScanUtils {
         return scaDetailsList;
     }
 
+    private static int getFalsePositiveCount(List<Finding> v) {
+    	
+    	long falsePositiveCount = v.stream().filter(f-> f.isIgnored()).collect(Collectors.counting());
+        	
+        return (int)falsePositiveCount;
+    }
+    
 
     public static String getStringWithEncodedCharacter(String str)
     {

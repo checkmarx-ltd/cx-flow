@@ -2,7 +2,8 @@ server:
   port: ${PORT:8585}
 
 logging:
-  file: cx-flow.log
+  file:
+    name: cx-flow.log
 #  level:
 #    com:
 #      checkmarx:

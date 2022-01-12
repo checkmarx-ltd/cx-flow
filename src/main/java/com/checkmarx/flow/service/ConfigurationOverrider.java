@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
@@ -80,6 +81,7 @@ public class ConfigurationOverrider {
         } catch (IllegalArgumentException e) {
             log.warn("Error parsing cxFlow object from CxConfig.", e);
         }
+        
         return request;
     }
 
@@ -111,8 +113,12 @@ public class ConfigurationOverrider {
             overrideJiraBugProperties(override, bt);
         }
 
+        if(!StringUtils.isEmpty(override.getSshKeyIdentifier() ) ) {
+            request.setSshKeyIdentifier(override.getSshKeyIdentifier());
+        }
+        
         request.setBugTracker(bt);
-
+        
         Optional.ofNullable(override.getApplication())
                 .filter(StringUtils::isNotBlank)
                 .ifPresent(a -> {
@@ -175,7 +181,8 @@ public class ConfigurationOverrider {
             ControllerRequest controllerRequest = new ControllerRequest(override.getSeverity(),
                     override.getCwe(),
                     override.getCategory(),
-                    override.getStatus());
+                    override.getStatus(),
+                    override.getState());
             FilterConfiguration filterConfig = filterFactory.getFilter(controllerRequest, null);
             request.setFilter(filterConfig);
 
@@ -241,6 +248,8 @@ public class ConfigurationOverrider {
                 overrideReport.put("scan configuration", scanConfiguration);
             });
         });
+        override.map(CxConfig::getCustomFields).ifPresent(s -> request.setCxFields(s));
+        override.map(CxConfig::getScanCustomFields).ifPresent(s -> request.setScanFields(s));
         overrideUsingConfigProvider(override, overrideReport, request);
     }
 
@@ -356,11 +365,11 @@ public class ConfigurationOverrider {
             ControllerRequest controllerRequest = new ControllerRequest(filtersObj.getSeverity(),
                     filtersObj.getCwe(),
                     filtersObj.getCategory(),
-                    filtersObj.getStatus());
+                    filtersObj.getStatus(),
+                    filtersObj.getState());
             FilterConfiguration filter = filterFactory.getFilter(controllerRequest, null);
             request.setFilter(filter);
         }
-
         return request;
     }
 

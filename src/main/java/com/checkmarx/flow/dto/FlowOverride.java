@@ -22,6 +22,8 @@ public class FlowOverride {
     public List<String> branches = null;
     @JsonProperty("emails")
     public List<String> emails = null;
+    @JsonProperty("scanResubmit")
+    public String scanResubmit = null;
     @JsonProperty("bugTracker")
     public String bugTracker;
     @JsonProperty("jira")
@@ -32,6 +34,8 @@ public class FlowOverride {
     public Thresholds thresholds;
     @JsonProperty("vulnerabilityScanners")
     public List<String> vulnerabilityScanners = null;
+    @JsonProperty("sshKeyIdentifier")
+    public String sshKeyIdentifier;
     
     public FlowOverride() {
     }
@@ -56,12 +60,20 @@ public class FlowOverride {
         return this.emails;
     }
 
+    public String getScanResubmit() {
+        return scanResubmit;
+    }
+
     public String getBugTracker() {
         return bugTracker;
     }
 
     public void setBugTracker(String bugTracker) {
         this.bugTracker = bugTracker;
+    }
+
+    public void setScanResubmit(String scanResubmit) {
+        this.scanResubmit = scanResubmit;
     }
 
     public Jira getJira() {
@@ -96,8 +108,16 @@ public class FlowOverride {
 
     public Thresholds getThresholds() { return this.thresholds;}
 
+    public void setSshKeyIdentifier(String sshKeyIdentifier) {
+        this.sshKeyIdentifier = sshKeyIdentifier;
+    }
+
+    public String getSshKeyIdentifier() {
+        return sshKeyIdentifier;
+    }
+
     public String toString() {
-        return "FlowOverride(application=" + this.getApplication() + ", branches=" + this.getBranches() + " emails=" + this.getEmails() + ", jira=" + this.getJira() + ", filters=" + this.getFilters() + "thresholds=" + this.getThresholds() + ")";
+        return "FlowOverride(application=" + this.getApplication() + ", branches=" + this.getBranches() + " emails=" + this.getEmails() + ", jira=" + this.getJira() + ", filters=" + this.getFilters() + "thresholds=" + this.getThresholds() + ", sshKeyIdentifier=" + this.getSshKeyIdentifier() +")";
     }
 
 
@@ -125,6 +145,8 @@ public class FlowOverride {
         public List<String> category = null;
         @JsonProperty("status")
         public List<String> status = null;
+        @JsonProperty("state")
+        public List<String> state = null;
 
         public List<String> getSeverity() {
             return this.severity;
@@ -142,6 +164,8 @@ public class FlowOverride {
             return this.status;
         }
 
+        public List<String> getState() { return this.state; }
+
         public void setSeverity(List<String> severity) {
             this.severity = severity;
         }
@@ -157,6 +181,8 @@ public class FlowOverride {
         public void setStatus(List<String> status) {
             this.status = status;
         }
+
+        public void setState(List<String> status) { this.state = state; }
     }
 
     public class Jira {
