@@ -9,6 +9,7 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.github.*;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.service.*;
+import com.checkmarx.sdk.ShardManager.ShardSessionTracker;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.sast.Filter;
@@ -70,6 +71,8 @@ public class CxConfigSteps {
     private final ConfigurationOverrider configOverrider;
     private final ScmConfigOverrider scmConfigOverrider;
     private final GitAuthUrlGenerator gitAuthUrlGenerator;
+    private final ShardSessionTracker sessionTracker;
+    private final CxClient cxService;
 
     private ScanResults scanResultsToInject;
 
@@ -86,7 +89,7 @@ public class CxConfigSteps {
                          CxProperties cxProperties, GitHubProperties gitHubProperties, ConfigurationOverrider configOverrider, JiraProperties jiraProperties,
                          ThresholdValidator thresholdValidator, FilterFactory filterFactory, FlowService flowService, EmailService emailService,
                          ScmConfigOverrider scmConfigOverrider, GitHubAppAuthService gitHubAppAuthService,
-                         GitAuthUrlGenerator gitAuthUrlGenerator) {
+                         GitAuthUrlGenerator gitAuthUrlGenerator, ShardSessionTracker sessionTracker, CxClient cxService) {
 
         this.cxClientMock = mock(CxService.class);
 
@@ -106,6 +109,9 @@ public class CxConfigSteps {
         this.scmConfigOverrider = scmConfigOverrider;
         this.gitHubAppAuthService = gitHubAppAuthService;
         this.gitAuthUrlGenerator = gitAuthUrlGenerator;
+        this.sessionTracker = sessionTracker;
+        this.cxService = cxService;
+
         initGitHubProperties();
     }
 
@@ -561,7 +567,10 @@ public class CxConfigSteps {
                 flowProperties,
                 thresholdValidator,
                 scmConfigOverrider,
-                gitHubAppAuthService);
+                gitHubAppAuthService,
+                cxProperties,
+                sessionTracker,
+                cxService);
 
         CxScannerService cxScannerService = new CxScannerService(cxProperties,null, null, cxClientMock, null );
 

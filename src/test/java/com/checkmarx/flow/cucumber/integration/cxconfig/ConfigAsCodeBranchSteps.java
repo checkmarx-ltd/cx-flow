@@ -7,7 +7,9 @@ import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.controller.GitHubController;
 import com.checkmarx.flow.dto.github.PullEvent;
 import com.checkmarx.flow.service.*;
+import com.checkmarx.sdk.ShardManager.ShardSessionTracker;
 import com.checkmarx.sdk.config.CxProperties;
+import com.checkmarx.sdk.service.scanner.CxClient;
 import io.cucumber.java.en.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +39,8 @@ public class ConfigAsCodeBranchSteps {
     private final GitAuthUrlGenerator gitAuthUrlGenerator;
     private String defaultBranch;
     private String actualBranch;
-
+    private final ShardSessionTracker sessionTracker;
+    private final CxClient cxService;
 
     @Given("use-config-as-code-from-default-branch property in application.yml is set to {string}")
     public void useConfigAsCodeFromDefaultBranch(String useDefaultBranch) {
@@ -68,7 +71,7 @@ public class ConfigAsCodeBranchSteps {
         // Don't start automation.
         FlowService flowServiceMock = mock(FlowService.class);
 
-        GitHubService gitHubService = new GitHubService(restTemplateMock, gitHubProperties, flowProperties, null, scmConfigOverrider, gitHubAppAuthService);
+        GitHubService gitHubService = new GitHubService(restTemplateMock, gitHubProperties, flowProperties, null, scmConfigOverrider, gitHubAppAuthService,cxProperties,sessionTracker,cxService);
         GitHubAppAuthService gitHubAppAuthService = new GitHubAppAuthService(restTemplateMock, gitHubProperties);
 
         GitHubController gitHubControllerSpy = Mockito.spy(new GitHubController(gitHubProperties,

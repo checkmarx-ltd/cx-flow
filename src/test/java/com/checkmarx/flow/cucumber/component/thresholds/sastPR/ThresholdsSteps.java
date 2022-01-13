@@ -9,6 +9,7 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.service.*;
+import com.checkmarx.sdk.ShardManager.ShardSessionTracker;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.ScaProperties;
@@ -78,6 +79,8 @@ public class ThresholdsSteps {
     private final GitHubAppAuthService gitHubAppAuthService;
     private final ScmConfigOverrider scmConfigOverrider;
     private final ScaProperties scaProperties;
+    private final ShardSessionTracker sessionTracker;
+    private final CxClient cxService;
 
     private ScanResults scanResultsToInject;
     private ResultsService resultsService;
@@ -87,7 +90,7 @@ public class ThresholdsSteps {
 
     public ThresholdsSteps(IntegrationTestContext testContext, CxService cxClientMock, RestTemplate restTemplateMock, FlowProperties flowProperties, ADOProperties adoProperties,
                            CxProperties cxProperties, GitHubProperties gitHubProperties, ThresholdValidator thresholdValidator,
-                           EmailService emailService, GitHubAppAuthService gitHubAppAuthService, ScmConfigOverrider scmConfigOverrider, ScaProperties scaProperties) {
+                           EmailService emailService, GitHubAppAuthService gitHubAppAuthService, ScmConfigOverrider scmConfigOverrider, ScaProperties scaProperties, ShardSessionTracker sessionTracker, CxClient cxService) {
 
         this.cxClientMock = cxClientMock;
         this.restTemplateMock = restTemplateMock;
@@ -97,6 +100,8 @@ public class ThresholdsSteps {
         this.cxProperties = cxProperties;
         this.gitHubAppAuthService = gitHubAppAuthService;
         this.scaProperties = scaProperties;
+        this.sessionTracker = sessionTracker;
+        this.cxService = cxService;
         flowProperties.setThresholds(new HashMap<>());
         gitHubProperties.setCxSummary(false);
         this.gitHubProperties = gitHubProperties;
@@ -341,7 +346,10 @@ public class ThresholdsSteps {
                 flowProperties,
                 thresholdValidator,
                 scmConfigOverrider,
-                gitHubAppAuthService);
+                gitHubAppAuthService,
+                cxProperties,
+                sessionTracker,
+                cxService);
 
         CxScannerService cxScannerService = new CxScannerService(cxProperties,null, null, cxClientMock, null );
 
