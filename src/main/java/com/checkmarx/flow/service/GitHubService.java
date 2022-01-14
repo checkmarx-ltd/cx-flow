@@ -113,7 +113,7 @@ public class GitHubService extends RepoService {
         }
         return httpHeaders;
     }
-
+    
     void processPull(ScanRequest request, ScanResults results) {
             String comment = HTMLHelper.getMergeCommentMD(request, results, properties);
             log.debug("comment: {}", comment);
@@ -566,5 +566,10 @@ public class GitHubService extends RepoService {
                     "However, default branch couldn't be determined.");
         }
         return result;
+    }
+    
+    @Override
+    public boolean isScanSubmittedComment() {
+    	return this.properties.isScanSubmittedComment();
     }
 }

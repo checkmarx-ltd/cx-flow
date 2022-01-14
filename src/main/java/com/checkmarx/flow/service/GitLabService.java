@@ -357,4 +357,9 @@ public class GitLabService extends RepoService {
                 commentId);
     }
 
+	@Override
+	public boolean isScanSubmittedComment() {
+		return this.properties.isScanSubmittedComment();
+	}
+
 }
