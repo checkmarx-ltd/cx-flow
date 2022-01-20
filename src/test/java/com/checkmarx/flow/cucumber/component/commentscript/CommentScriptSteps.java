@@ -11,6 +11,7 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.sastscanning.ScanRequestConverter;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.ShardManager.ShardSessionTracker;
 import com.checkmarx.sdk.config.CxProperties;
 
 import com.checkmarx.sdk.dto.ScanResults;
@@ -58,7 +59,7 @@ public class CommentScriptSteps {
                               JiraProperties jiraProperties, FilterFactory filterFactory, ConfigurationOverrider configOverrider,
                               ResultsService resultService, ProjectNameGenerator projectNameGenerator, BugTrackerEventTrigger btet){
 
-        
+
         cxClientMock = mock(CxService.class);
         
         scanRequestConverterMock = mock(ScanRequestConverter.class, Mockito.withSettings().useConstructor(
@@ -78,7 +79,7 @@ public class CommentScriptSteps {
         FlowService flowService = new FlowService(Collections.singletonList(sastScanner), projectNameGenerator, resultService);
 
         CxScannerService scannerService = new CxScannerService(cxProperties, null, flowProperties, cxClientMock, null);
-        this.flowController = new FlowController(flowProperties, scannerService, flowService, helperService, jiraProperties, filterFactory, configOverrider, sastScanner, null, null, null);
+        this.flowController = new FlowController(flowProperties, scannerService, flowService, helperService, jiraProperties, filterFactory, configOverrider, sastScanner, null, null, null,null, null);
     }
 
 

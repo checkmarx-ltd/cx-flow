@@ -17,6 +17,7 @@ import com.checkmarx.flow.service.GitHubService;
 import com.checkmarx.flow.service.ThresholdValidator;
 import com.checkmarx.flow.service.ResultsService;
 import com.checkmarx.flow.utils.AesEncryptionUtils;
+import com.checkmarx.sdk.ShardManager.ShardSessionTracker;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.sast.Filter;
@@ -74,6 +75,8 @@ public class AnalyticsSteps {
     private final CxProperties cxProperties;
     private final RestTemplate restTemplateMock;
     private final GitHubAppAuthService gitHubAppAuthService;
+    private final ShardSessionTracker sessionTracker;
+    private final CxClient cxService;
 
     private static class State {
         ScanResults scanResultsToInject;
@@ -239,7 +242,10 @@ public class AnalyticsSteps {
                 flowProperties,
                 thresholdValidator,
                 scmConfigOverrider,
-                gitHubAppAuthService);
+                gitHubAppAuthService,
+                cxProperties,
+                sessionTracker,
+                cxService);
                 
         
         CxScannerService cxScannerService = new CxScannerService(cxProperties,null, null, cxClientMock, null );
