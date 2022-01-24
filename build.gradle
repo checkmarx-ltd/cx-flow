@@ -73,22 +73,32 @@ configurations {
 }
 
 ext['tomcat.version'] = '9.0.54'
+ext['groovy.version'] = '3.0.9'
+ext['logback-classic.version'] = '1.2.10'
 
 dependencies {
     compile group: 'com.beust', name: 'jcommander', version: '1.78'
-    compile('org.apache.ant:ant:1.10.10')
-    compile('org.springframework.boot:spring-boot-starter-actuator')
+    compile('org.apache.ant:ant:1.10.12')
+    compile('org.springframework.boot:spring-boot-starter-actuator'){
+        exclude group: 'ch.qos.logback', module: 'logback-core'
+    }
     compile('org.springframework.boot:spring-boot-starter-web'){
         exclude group: 'org.apache.ant', module: 'ant'
         exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j-impl'
         exclude group: 'org.apache.logging.log4j', module: 'log4j-api'
         exclude group: 'org.apache.logging.log4j', module: 'log4j-core'
+        exclude group: 'ch.qos.logback', module: 'logback-core'
     }
     
-    compile('org.springframework.boot:spring-boot-starter-aop')
-    compile('org.springframework.boot:spring-boot-starter-validation')
+    compile('org.springframework.boot:spring-boot-starter-aop'){
+        exclude group: 'ch.qos.logback', module: 'logback-core'
+    }
+    compile('org.springframework.boot:spring-boot-starter-validation'){
+        exclude group: 'ch.qos.logback', module: 'logback-core'
+    }
     compile("com.github.checkmarx-ltd:cx-spring-boot-sdk:${CxSBSDK}") {
         exclude group: 'org.apache.ant', module: 'ant'
+        exclude group: 'ch.qos.logback', module: 'logback-core'
     }
     compile("org.apache.commons:commons-text:1.8")
     compile('commons-codec:commons-codec:1.13')
@@ -97,9 +107,15 @@ dependencies {
     compile('org.apache.commons:commons-collections4:4.4')
     compile('org.json:json:20210307')
     compile('com.fasterxml.jackson.core:jackson-databind:2.10.3')
-    compile('org.springframework.boot:spring-boot-starter-web-services')
-    compile('org.springframework.boot:spring-boot-starter-mail')
-    compile('org.springframework.boot:spring-boot-starter-thymeleaf')
+    compile('org.springframework.boot:spring-boot-starter-web-services'){
+        exclude group: 'ch.qos.logback', module: 'logback-core'
+    }
+    compile('org.springframework.boot:spring-boot-starter-mail'){
+        exclude group: 'ch.qos.logback', module: 'logback-core'
+    }
+    compile('org.springframework.boot:spring-boot-starter-thymeleaf'){
+        exclude group: 'ch.qos.logback', module: 'logback-core'
+    }
     compile('com.github.ulisesbocchio:jasypt-spring-boot-starter:2.1.2')
     compile("io.atlassian.fugue:fugue:${atlassianFugueVersion}")
     compile("com.atlassian.jira:jira-rest-java-client-core:${atlassianVersion}") {
@@ -113,38 +129,53 @@ dependencies {
     compile("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersion}")
     compile("org.apache.httpcomponents:httpclient:4.5.13")
     compile("org.thymeleaf:thymeleaf:3.0.11.RELEASE")
-    compile("org.codehaus.groovy:groovy-all:3.0.7") {
+    compile("org.codehaus.groovy:groovy-all:3.0.9") {
         exclude group: 'org.apache.ant', module: 'ant'
+        exclude group: 'org.webjars', module: 'jquery'
     }
     compile("org.apache.ivy:ivy:2.5.0")
     compile("org.jasypt:jasypt:1.9.3")
-    compile("org.eclipse.jgit:org.eclipse.jgit:5.5.1.201910021850-r")
+    compile("org.eclipse.jgit:org.eclipse.jgit:5.13.0.202109080827-r")
     compile group: 'com.google.guava', name: 'guava', version: '30.1.1-jre'
-    compile group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.68'
+    compile group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.70'
     compile("com.auth0:java-jwt:3.10.3")
     compileOnly('org.springframework.boot:spring-boot-configuration-processor')
     runtime('org.springframework.boot:spring-boot-devtools')
-    testImplementation('org.springframework.boot:spring-boot-starter-test')
+    testImplementation('org.springframework.boot:spring-boot-starter-test'){
+        exclude group:'net.minidev', module:'json-smart'
+        exclude group: 'ch.qos.logback', module: 'logback-core'
+    }
     compileJava.dependsOn(processResources)
     testImplementation("io.cucumber:cucumber-java:${cucumberVersion}")
     testImplementation("io.cucumber:cucumber-junit:${cucumberVersion}")
     testImplementation("io.cucumber:cucumber-spring:${cucumberVersion}")
     testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
     testImplementation('org.awaitility:awaitility:4.0.2')
-    testImplementation('com.microsoft.azure:azure:1.31.1')
-
+    testImplementation('com.microsoft.azure:azure:1.31.1'){
+        exclude group:'net.minidev', module:'json-smart'
+    }
     testImplementation('com.microsoft.rest:client-runtime:1.7.1')
     testImplementation('com.microsoft.azure:azure-client-runtime:1.7.1')
-    testImplementation('com.microsoft.azure:azure-client-authentication:1.7.1')
-
+    testImplementation('com.microsoft.azure:azure-client-authentication:1.7.14'){
+        exclude group:'net.minidev', module:'json-smart'
+    }
+    testImplementation('net.minidev:json-smart:2.4.7')
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
     testImplementation("com.github.java-json-tools:json-patch:1.11")
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:${junitVersion}")
     testCompile("org.mockito:mockito-core:+")
     compile("org.projectlombok:lombok:1.18.10")
-    compile("ch.qos.logback:logback-classic:1.2.3")
-    compile("ch.qos.logback.contrib:logback-json-classic:0.1.5")
-    compile("ch.qos.logback.contrib:logback-jackson:0.1.5")
+    compile("ch.qos.logback:logback-classic:1.2.10"){
+        exclude group: 'ch.qos.logback', module: 'logback-core'
+    }
+    compile("ch.qos.logback.contrib:logback-json-classic:0.1.5"){
+        exclude group: 'ch.qos.logback', module: 'logback-classic'
+        exclude group: 'ch.qos.logback', module: 'logback-core'
+    }
+    compile("ch.qos.logback.contrib:logback-jackson:0.1.5"){
+        exclude group: 'ch.qos.logback', module: 'logback-core'
+    }
+    compile("ch.qos.logback:logback-core:1.2.10")
     compile("net.logstash.logback:logstash-logback-encoder:5.2")
     compile 'org.modelmapper:modelmapper:2.4.0'
     compile("com.checkmarx:cx-config-provider:${ConfigProviderVersion}") {
