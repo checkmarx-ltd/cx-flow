@@ -64,6 +64,7 @@ public class SCAScanner extends AbstractASTScanner {
                 scanParams.getScaConfig().setExcludeFiles(excludeFiles);
             }
         } catch (CheckmarxException e) {
+            log.error("Error occurred while setting scanner properties", e);
             throw new MachinaRuntimeException(e.getMessage());
         }
     }
