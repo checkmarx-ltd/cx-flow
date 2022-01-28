@@ -116,6 +116,7 @@ checkmarx:
   team-script: D:\\tmp\CxTeam.groovy # default empty/not used
   custom-state-map:
     "5": "SUSPICIOUS"
+  cx-branch: false
 
 github:
   webhook-token: XXXXX
@@ -411,33 +412,42 @@ The configuration can be set or overridden at execution time using the command l
 
 ### `checkmarx` section
 
-| Config                    | Default               | Required | WebHook | Command Line | Notes                                                                    |
-|---------------------------|-----------------------|----------|---------|--------------|--------------------------------------------------------------------------|
-| `username`                |                       | Yes      | Yes     | Yes      | Service account for Checkmarx                                             |
-| `password`                |                       | Yes      | Yes     | Yes      | Service account password Checkmarx                                        |
-| `client-secret`           |                       | Yes      | Yes     | Yes      | OIDC client secret for API login to Checkmarx                             |
-| `base-url`                |                       | Yes      | Yes     | Yes      | Base FQDN and port for Checkmarx                                          |
-| `multi-tenant`            | false                 | No*      | Yes     | Yes (Scan only) | If yes, the name space is created or reused, if it has been pre-registered or already created for previous scans)    |
-| `scan-preset`             | Checkmarx Default     | No*      | Yes     | Yes (Scan only) | The default preset used for the triggered scan                 |
-| `configuration`           | Default Configuration | No*      | Yes     | Yes (Scan only) | Checkmarx scan configuration setting |
-| `team`                    |                       | Yes (not for XML parse mode) | Yes | Yes (Scan only)  | Base team in Checkmarx to drive scanning and retrieving of results |
-| `scan-timeout`            | 120                   | No*      | Yes     | Yes (scan only) | The amount of time (in minutes) that CxFlow will wait for a scan to complete to process the results.  The Checkmarx scan remains as is, but no feedback is provided |
-| `jira-project-field`      | jira-project          | No       | Yes     | Yes | Custom Checkmarx field name to override Jira Project setting for a given Checkmarx scan result / project |
-| `jira-issuetype-field`    | jira-issuetype        | No       | Yes     | Yes | Custom Checkmarx field name to override Jira Issue Type settings for a given Checkmarx scan result / project |
-| `jira-custom-field`       | jira-fields           | No       | Yes     | Yes | Custom Checkmarx field name to override Jira custom field mappings for a given Checkmarx scan result / project |
-| `jira-assignee-field`     | jira-assignee         | No       | Yes     | Yes | Custom Checkmarx field name to override Jira assignees for a given Checkmarx scan result / project |
-| `preserve-xml`            | false                 | No*      | Yes     | Yes | This flag is used to preserve the original XML results retrieved by the Checkmarx scan inside the ScanResults object to be later used by a Custom bug tracker implementation, if required.  Currently, **CxXMLIssueTracker** uses this flag |
-| `incremental`             | false                 | No*      | Yes     | Yes | Enables support for incremental scan support when CxFlow is triggering scans.  The incremental-num-scans and incremental-threshold values must not be exceeded for the last available full scan criteria. |
-| `incremental-num-scans`   | 5                     | No*      | Yes     | Yes (scan only) | The maximum number of scans before a full scan is required |
-| `project-script`          |                       | No       | Yes     | Yes | A **groovy** script that can be used for deciding the name of the project to create/use in Checkmarx. This is to allow for any client custom lookups and other integrations.  The script is passed a "**request**" object, which is of type **com.checkmarx.flow.dto.ScanRequest**, and must return **String** representing the **team name** to be used. If this script is provided, it is used for all decisions associated with the determining project name |
-| `team-script`             |                       | No       | Yes     | Yes | A **groovy** script that can be used for deciding the team to use in Checkmarx.  This is to allow for any client custom lookups and other integrations.  The script is passed a "request" object, which is of type **com.checkmarx.flow.dto.ScanRequest**, and must return **String** representing the team path to be used. If this script is provided, it is used for all decisions associated with determining project name.
-| `incremental-threshold`   | 7                     | No*      | Yes     | Yes (scan only) | The maximum number of days before a full scan is required |
-| `offline`                 | false                 | No*      | No      | Yes (parse only) | Use Table this only when parsing Checkmarx XML, this flag removes the dependency from Checkmarx APIs when parsing results.  This skips retrieving the issue description from Checkmarx. |
-| `exclude-files`           |                       | No       | Yes     | Yes      | Files to be excluded from Scan                                            |
-| `exclude-folders`         |                       | No       | Yes     | Yes      | Folders to be excluded from Scan                                          |
-| `custom-state-map`        |                       | No       | No      | Yes      | A map of custom result state identifiers to custom result state names |
+| Config                  | Default              | Required | WebHook | Command Line | Notes                                                                    |
+|-------------------------|----------------------|----------|---------|--------------|--------------------------------------------------------------------------|
+| `username`              |                      | Yes      | Yes     | Yes      | Service account for Checkmarx                                             |
+| `password`              |                      | Yes      | Yes     | Yes      | Service account password Checkmarx                                        |
+| `client-secret`         |                      | Yes      | Yes     | Yes      | OIDC client secret for API login to Checkmarx                             |
+| `base-url`              |                      | Yes      | Yes     | Yes      | Base FQDN and port for Checkmarx                                          |
+| `multi-tenant`          | false                | No*      | Yes     | Yes (Scan only) | If yes, the name space is created or reused, if it has been pre-registered or already created for previous scans)    |
+| `scan-preset`           | Checkmarx Default    | No*      | Yes     | Yes (Scan only) | The default preset used for the triggered scan                 |
+| `configuration`         | Default Configuration | No*      | Yes     | Yes (Scan only) | Checkmarx scan configuration setting |
+| `team`                  |                      | Yes (not for XML parse mode) | Yes | Yes (Scan only)  | Base team in Checkmarx to drive scanning and retrieving of results |
+| `scan-timeout`          | 120                  | No*      | Yes     | Yes (scan only) | The amount of time (in minutes) that CxFlow will wait for a scan to complete to process the results.  The Checkmarx scan remains as is, but no feedback is provided |
+| `jira-project-field`    | jira-project         | No       | Yes     | Yes | Custom Checkmarx field name to override Jira Project setting for a given Checkmarx scan result / project |
+| `jira-issuetype-field`  | jira-issuetype       | No       | Yes     | Yes | Custom Checkmarx field name to override Jira Issue Type settings for a given Checkmarx scan result / project |
+| `jira-custom-field`     | jira-fields          | No       | Yes     | Yes | Custom Checkmarx field name to override Jira custom field mappings for a given Checkmarx scan result / project |
+| `jira-assignee-field`   | jira-assignee        | No       | Yes     | Yes | Custom Checkmarx field name to override Jira assignees for a given Checkmarx scan result / project |
+| `preserve-xml`          | false                | No*      | Yes     | Yes | This flag is used to preserve the original XML results retrieved by the Checkmarx scan inside the ScanResults object to be later used by a Custom bug tracker implementation, if required.  Currently, **CxXMLIssueTracker** uses this flag |
+| `incremental`           | false                | No*      | Yes     | Yes | Enables support for incremental scan support when CxFlow is triggering scans.  The incremental-num-scans and incremental-threshold values must not be exceeded for the last available full scan criteria. |
+| `incremental-num-scans` | 5                    | No*      | Yes     | Yes (scan only) | The maximum number of scans before a full scan is required |
+| `project-script`        |                      | No       | Yes     | Yes | A **groovy** script that can be used for deciding the name of the project to create/use in Checkmarx. This is to allow for any client custom lookups and other integrations.  The script is passed a "**request**" object, which is of type **com.checkmarx.flow.dto.ScanRequest**, and must return **String** representing the **team name** to be used. If this script is provided, it is used for all decisions associated with the determining project name |
+| `team-script`           |                      | No       | Yes     | Yes | A **groovy** script that can be used for deciding the team to use in Checkmarx.  This is to allow for any client custom lookups and other integrations.  The script is passed a "request" object, which is of type **com.checkmarx.flow.dto.ScanRequest**, and must return **String** representing the team path to be used. If this script is provided, it is used for all decisions associated with determining project name.
+| `incremental-threshold` | 7                    | No*      | Yes     | Yes (scan only) | The maximum number of days before a full scan is required |
+| `offline`               | false                | No*      | No      | Yes (parse only) | Use Table this only when parsing Checkmarx XML, this flag removes the dependency from Checkmarx APIs when parsing results.  This skips retrieving the issue description from Checkmarx. |
+| `exclude-files`         |                      | No       | Yes     | Yes      | Files to be excluded from Scan                                            |
+| `exclude-folders`       |                      | No       | Yes     | Yes      | Folders to be excluded from Scan                                          |
+| `custom-state-map`      |                      | No       | No      | Yes      | A map of custom result state identifiers to custom result state names |
+| `cx-branch`             | false                | No       | Yes     | Yes      | A Flag to enable branching of projects in cxSAST server. |
 
 No* = Default is applied
+
+#### Branched Projects
+
+A branched project is a child of a base project. Only the base project will take  space of a project in CxSAST server and all the branched project will be under the base project. The first scan performed for any new project will create a base project and any event generated afterwards from any branches of the project will create branched project. Branching of projects can be enabled by setting the `cx-branch` property to true. Any PUSH/PULL event generated from a branch creates a branched project having the project name as base project's name followed by the branch name.
+
+**Example**
+* When a **PUSH\PULL** scan is generated for a new project from a branch e.g `master` of repo `ABC` a base project will be created in CxSAST with name `ABC-master`.
+* When any **PUSH/PULL** event is generated from a branch `XYZ`  of a repo `ABC` and a base project is present in CxSAST server  then  a branched project will be created with name `ABC-XYZ`. 
 
 #### <a name="nine">9.0 Configuration Changes</a>
 ```yaml
