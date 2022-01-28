@@ -41,7 +41,7 @@ Feature: Using Groovy script to filter SAST findings
       | invalid script        |
       | (finding.severity     |
       | 12q3C = Z'            |
-      | Bonnie Prince Charlie |
+
 
   @NegativeTest
   Scenario Outline: Script runtime error
@@ -55,6 +55,8 @@ Feature: Using Groovy script to filter SAST findings
       | invalid script               |
       | finding.creativity == 'HIGH' |
       | nonExistingVar > 23          |
+      | Bonnie Prince Charlie |
+
 
   @NegativeTest
   Scenario: Script returns a non-boolean value
