@@ -37,6 +37,7 @@ apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
+apply plugin: 'com.gorylenko.gradle-git-properties'
 
 group = 'com.checkmarx'
 version = file('version.txt').text.trim()
@@ -84,6 +85,7 @@ dependencies {
     compile("com.github.checkmarx-ltd:cx-spring-boot-sdk:${CxSBSDK}") {
         exclude group: 'org.apache.ant', module: 'ant'
         exclude group: 'ch.qos.logback', module: 'logback-core'
+        exclude group: 'org.bouncycastle', module:'bcprov-jdk15on'
     }
     compile ("org.apache.commons:commons-text:1.8")
     compile ('commons-codec:commons-codec:1.13')
@@ -118,7 +120,9 @@ dependencies {
     compile ("org.apache.ivy:ivy:2.5.0")
     compile ("org.apache.commons:commons-lang3:3.12.0")
     compile('org.apache.commons:commons-collections4:4.4')
-    compile ("org.eclipse.jgit:org.eclipse.jgit:5.13.0.202109080827-r")
+    compile ("org.eclipse.jgit:org.eclipse.jgit:5.5.1.201910021850-r"){
+        exclude group: 'org.bouncycastle', module:'bcprov-jdk15onj'
+    }
     compile group: 'com.google.guava', name: 'guava', version: '30.1.1-jre'
     compile group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.70'
     compile("com.auth0:java-jwt:3.10.3")
@@ -174,9 +178,168 @@ configurations {
     libsDirName = 'libs/java11'
 }
 
-test {
-    useJUnit {
-        systemProperty "testprofile", "unit"
+task componentTest(type: Test) {
+    useJUnitPlatform() {
+        systemProperty "testprofile", "component"
+
+        include 'com/checkmarx/flow/cucumber/component/**'
+
+        testLogging {
+            events "passed", "skipped", "failed"
+        }
+    }
+    check.dependsOn.remove(test)
+}
+
+
+task e2eTests(type: Test) {
+    useJUnitPlatform() {
+        systemProperty "testprofile", "e2e"
+
+        include 'com/checkmarx/flow/cucumber/integration/end2end/genericendtoend/**'
+
+        testLogging {
+            events "passed", "skipped", "failed"
+        }
+    }
+
+    check.dependsOn.remove(test)
+}
+
+task integrationTest(type: Test) {
+    useJUnitPlatform() {
+        systemProperty "testprofile", "integration"
+
+        include 'com/checkmarx/flow/cucumber/integration/github/**'
+        include 'com/checkmarx/flow/cucumber/integration/azure/publishing/**'
+        include 'com/checkmarx/flow/cucumber/integration/azure/publishing/github2ado/*'
+        include 'com/checkmarx/flow/cucumber/integration/cxconfig/*'
+        include 'com/checkmarx/flow/cucumber/integration/config_provider/**'
+        include 'com/checkmarx/flow/cucumber/integration/cxconfigbugtracker/**'
+        include 'com/checkmarx/flow/cucumber/integration/multiScmInstances/**'
+
+        testLogging {
+            events "passed", "skipped", "failed"
+        }
+    }
+}
+
+task ScaIntegrationTest(type: Test) {
+    useJUnitPlatform() {
+        systemProperty "testprofile", "scaIntegration"
+
+        include 'com/checkmarx/flow/cucumber/integration/sca_scanner/**'
+
+        testLogging {
+            events "passed", "skipped", "failed"
+        }
+    }
+}
+
+task ASTIntegrationTest(type: Test) {
+    useJUnitPlatform() {
+        systemProperty "testprofile", "astIntegration"
+
+        include 'com/checkmarx/flow/cucumber/integration/ast/bugtrackers/jira/**'
+        include  'com/checkmarx/flow/cucumber/integration/ast/scans/**'
+
+        testLogging {
+            events "passed", "skipped", "failed"
+        }
+    }
+}
+
+task JiraIntegrationTest(type: Test) {
+    useJUnitPlatform() {
+        systemProperty "testprofile", "jiraIntegration"
+
+        include 'com/checkmarx/flow/cucumber/integration/jira/manualconfig/**'
+        include 'com/checkmarx/flow/cucumber/integration/jira/autoconfig/*'
+        include 'com/checkmarx/flow/cucumber/integration/jira/analytics/*'
+        include 'com/checkmarx/flow/cucumber/integration/publishprocess/**'
+        include 'com/checkmarx/flow/cucumber/integration/negative_tests/**'
+
+        testLogging {
+            events "passed", "skipped", "failed"
+        }
+    }
+}
+
+task PullRequestCommnetsIntegrationTest(type: Test) {
+    useJUnitPlatform() {
+        systemProperty "testprofile", "pullrequestCommentIntegration"
+        include 'com/checkmarx/flow/cucumber/integration/pullrequest/updatecomments/**'
+
+        testLogging {
+            events "passed", "skipped", "failed"
+        }
+    }
+}
+
+task SastCliIntegrationTest(type: Test) {
+    useJUnitPlatform() {
+        systemProperty "testprofile", "sastCliIntegration"
+
+        include 'com/checkmarx/flow/cucumber/integration/cli/sast/**'
+
+        testLogging {
+            events "passed", "skipped", "failed"
+        }
+    }
+}
+
+task AstCliIntegrationTest(type: Test) {
+    useJUnitPlatform() {
+        systemProperty "testprofile", "astCliIntegration"
+
+        include 'com/checkmarx/flow/cucumber/integration/cli/ast/**'
+
+        testLogging {
+            events "passed", "skipped", "failed"
+        }
+    }
+}
+
+task ScaCliIntegrationTest(type: Test) {
+    useJUnitPlatform() {
+        systemProperty "testprofile", "scaCliIntegration"
+
+        include 'com/checkmarx/flow/cucumber/integration/cli/sca/**'
+
+        testLogging {
+            events "passed", "skipped", "failed"
+        }
+    }
+}
+
+task CxGoIntegrationTest(type: Test) {
+    useJUnitPlatform() {
+        systemProperty "testprofile", "cxgoIntegration"
+
+        include 'com/checkmarx/flow/cucumber/integration/cxgo/**'
+
+        testLogging {
+            events "passed", "skipped", "failed"
+        }
+    }
+}
+
+task CodeBashingIntegrationTest(type: Test) {
+    useJUnitPlatform() {
+        systemProperty "testprofile", "codebashingIntegration"
+
+        include 'com/checkmarx/flow/cucumber/integration/codebashing/**'
+
+        testLogging {
+            events "passed", "skipped", "failed"
+        }
+    }
+}
+
+
+task getVersion {
+    doLast {
+        println "${version}"
     }
 }
 
