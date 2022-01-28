@@ -10,17 +10,17 @@ ENTRYPOINT ["java", "-Xms512m", "-Xmx2048m", "-Djava.security.egd=file:/dev/./ur
 EXPOSE 8080
 
 
-FROM alpine:3.14 AS java11
+FROM alpine:3.15 AS java11
 
 WORKDIR app
 RUN apk update && \
     apk upgrade 
-RUN apk add openjdk11=11.0.13_p8-r0 --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community
+RUN apk add openjdk11=11.0.14_p9-r0 --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community
 COPY build/libs/java11/*.jar cx-flow.jar
 ENTRYPOINT ["java", "-Xms512m", "-Xmx2048m","-Djava.security.egd=file:/dev/./urandom", "-Dspring.profiles.active=web", "-jar", "cx-flow.jar"]
 EXPOSE 8080
 
-FROM alpine:3.14 AS cxgo8
+FROM alpine:3.15 AS cxgo8
 
 WORKDIR app
 RUN apk update && \
