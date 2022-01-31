@@ -8,6 +8,7 @@
   * [Excluding Files from Zip Archive](#excludezip)
   * [Break build](#break)
   * [Override SAST project setting](#override)
+  * [Create Branched Project](#branchProject)
 * [WebHook Configuration](#webhook)
   * [WebHook URL Parameters - Code](#code)
   * [WebHook URL Override Parameters - Details](#details)
@@ -118,8 +119,8 @@ checkmarx:
     "5": "SUSPICIOUS"
   post-action-postback-id: 123456
   settings-override: true #default false if not provide
-  
-	
+    cx-branch: false
+
 github:
   webhook-token: XXXXX
   token: XXXXX
@@ -441,6 +442,7 @@ The configuration can be set or overridden at execution time using the command l
 | `custom-state-map`        |                       | No       | No      | Yes      | A map of custom result state identifiers to custom result state names |
 | `post-action-postback-id` |                       | No       | Yes     | Yes      | Sets the SAST project's post-scan action to use the post-scan action with the provided Id defined in SAST.If not provided, the project does not get configured to use a post-scan action. |
 | `settings-override`       |                       | No       | Yes     | Yes      | Defaults value false, if set to true the projects settings are re-written/overridden when each SAST scan is invoked from CxFlow |
+| `cx-branch` | false | No | Yes | Yes | A flag to enable branching of projects in CxSAST. |
 
 No* = Default is applied
 
@@ -464,6 +466,7 @@ checkmarx:
    portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
    exclude-files: "*.tst,*.json"
    exclude-folders: ".git,test"
+   cx-branch: false
 ```
 **Note:**
 * Make sure to include `version: 9.0` (or higher) and `scope: access_control_api sast_rest_api`
@@ -489,6 +492,13 @@ checkmarx
   settings-override: true #default false if not provide
 ```
 
+### <a name="branchProject">Branched Project</a>
+A branched project is a child of a base project in CxSAST. Upon initiating a scan from the default branch of a repository, CxSAST creates a base project in the server with name `RepoName-defaultBranchName` and any subsequent scans from the branches of that repository will create child projects off of it with name `RepoName-currentBranchName`. The project count in CxSAST does not increase when a branched project is added. Branching of projects can be enabled by setting the `cx-branch` property to `true`.
+```yaml
+checkmarx
+  ...
+  cx-branch: true #default false if not provided
+```
 
 ## <a name="webhook">WebHook Configuration</a>
 Each repository type requires its own specific configuration block as defined below.  Each of these have available overrides that can be provided in the form of URL parameters or as a JSON configuration blob that is base64 encoded and provided as an url parameter (override=<XXXXXX>).
