@@ -1,5 +1,6 @@
 buildscript {
     ext {
+        azureClientVersion = '1.7.14'
         CxSBSDK = "0.5.09"
         ConfigProviderVersion = "1.0.10"
         //cxVersion = "8.90.5"
@@ -158,9 +159,9 @@ dependencies {
     testImplementation('com.microsoft.azure:azure:1.41.2') {
         exclude group: 'net.minidev', module: 'json-smart'
     }
-    testImplementation('com.microsoft.rest:client-runtime:1.7.14')
-    testImplementation('com.microsoft.azure:azure-client-runtime:1.7.14')
-    testImplementation('com.microsoft.azure:azure-client-authentication:1.7.14') {
+    testImplementation("com.microsoft.rest:client-runtime:${azureClientVersion}")
+    testImplementation("com.microsoft.azure:azure-client-runtime:${azureClientVersion}")
+    testImplementation("com.microsoft.azure:azure-client-authentication:${azureClientVersion}") {
         exclude group: 'net.minidev', module: 'json-smart'
     }
     testImplementation('net.minidev:json-smart:2.4.7')
