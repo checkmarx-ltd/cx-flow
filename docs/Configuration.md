@@ -439,7 +439,7 @@ The configuration can be set or overridden at execution time using the command l
 | `exclude-files`           |                       | No       | Yes     | Yes      | Files to be excluded from Scan                                            |
 | `exclude-folders`         |                       | No       | Yes     | Yes      | Folders to be excluded from Scan                                          |
 | `custom-state-map`        |                       | No       | No      | Yes      | A map of custom result state identifiers to custom result state names |
-| `post-action-postback-id` |                       | No       | Yes     | Yes      | Sets the SAST project's post-scan action to use the post-scan action with the provided ID defined in SAST.If not provided, the project does not get configured to use a post-scan action.On using post-back mode, Checkmarx post-back-action will be added to the Checkmarx project and that action will trigger the /postbackAction endpoint on CxFlow. |
+| `post-action-postback-id` |                       | No       | Yes     | Yes      | Sets the SAST project's post-scan action to use the post-scan action with the provided Id defined in SAST.If not provided, the project does not get configured to use a post-scan action. |
 | `settings-override`       |                       | No       | Yes     | Yes      | Defaults value false, if set to true the projects settings are re-written/overridden when each SAST scan is invoked from CxFlow |
 
 No* = Default is applied
@@ -469,6 +469,14 @@ checkmarx:
 * Make sure to include `version: 9.0` (or higher) and `scope: access_control_api sast_rest_api`
 * The Team path must include the unix path separator **/**, the path is for example defined as follows: `/CxServer/Checkmarx/CxFlow`
 
+### <a name="override">Post back action </a>
+On using post back mode, Checkmarx post back action will be added to the Checkmarx project and that action will trigger the /postbackAction endpoint on CxFlow.
+
+```yaml
+checkmarx
+  ...
+  post-action-postback-id: 123456
+```
 
 ### <a name="override">Override project settings</a>
 The configuration can be set to override project settings with Cxflow configuration when triggering new scan for SAST project, or to avoid project setting update if property set to 'false'.
