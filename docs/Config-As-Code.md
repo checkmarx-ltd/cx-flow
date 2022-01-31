@@ -49,10 +49,10 @@ Example Config As Code:
         },
         "fields": [
           {
-            "type": "cx",
+            "type": "cx", // cx, static, result
             "name": "xxx",
             "jira_field_name": "xxxx",
-            "jira_field_type": "text",
+            "jira_field_type": "text", // security text | label | single-select | multi-select
             "jira_default_value": "xxx"
           },
           {

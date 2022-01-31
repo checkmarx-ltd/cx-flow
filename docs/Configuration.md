@@ -719,10 +719,10 @@ for more details, please refer to [Config as Code](https://github.com/checkmarx-
         },
         "fields": [
           {
-            "type": "cx",
+            "type": "cx", // cx, static, result
             "name": "xxx",
             "jira_field_name": "xxxx",
-            "jira_field_type": "text",
+            "jira_field_type": "text", // security text | label | single-select | multi-select
             "jira_default_value": "xxx"
           },
           {
