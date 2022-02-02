@@ -1,4 +1,3 @@
 *
 !build*.gradle
-!build/libs/*
-build/libs/cx-flow-?.?.??-plain.jar
+!build/libs/cx-flow-?.?.??.jar
