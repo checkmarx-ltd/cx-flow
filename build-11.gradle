@@ -347,5 +347,5 @@ task getVersion {
 }
 
 bootJar {
-    mainClassName = "${mainClass}"
+    mainClass = "${mainClassPath}"
 }
