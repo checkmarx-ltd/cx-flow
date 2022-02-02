@@ -1,4 +1,4 @@
 *
 !build*.gradle
 !build/libs/*
-build/libs/*-plain.jar
+build/libs/*-plain
