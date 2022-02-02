@@ -5,7 +5,7 @@ RUN apk update && \
     apk upgrade && \
     apk upgrade
 RUN apk add openjdk8=8.302.08-r2 --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community
-COPY build/libs/cx-flow-?.?.??.jar cx-flow.jar
+COPY build/libs/*.jar cx-flow.jar
 ENTRYPOINT ["java", "-Xms512m", "-Xmx2048m", "-Djava.security.egd=file:/dev/./urandom", "-Dspring.profiles.active=web", "-jar", "cx-flow.jar"]
 EXPOSE 8080
 
@@ -16,7 +16,7 @@ WORKDIR app
 RUN apk update && \
     apk upgrade 
 RUN apk add openjdk11=11.0.14_p9-r0 --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community
-COPY build/libs/java11/cx-flow-?.??.??.jar cx-flow.jar
+COPY build/libs/java11/*.jar cx-flow.jar
 ENTRYPOINT ["java", "-Xms512m", "-Xmx2048m","-Djava.security.egd=file:/dev/./urandom", "-Dspring.profiles.active=web", "-jar", "cx-flow.jar"]
 EXPOSE 8080
 
@@ -26,6 +26,6 @@ WORKDIR app
 RUN apk update && \
     apk upgrade
 RUN apk add openjdk8=8.302.08-r2 --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community
-COPY build/libs/cxgo/cx-flow-?.?.??.jar cx-flow.jar
+COPY build/libs/cxgo/*.jar cx-flow.jar
 ENTRYPOINT ["java", "-Xms512m", "-Xmx2048m", "-Djava.security.egd=file:/dev/./urandom", "-Dspring.profiles.active=cxgo", "-jar", "cx-flow.jar"]
 EXPOSE 8080
