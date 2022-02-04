@@ -89,6 +89,8 @@ cx-flow:
      username: xxx
      password: xxx
      enabled: true
+     notification: true # default is false
+     cc: myemail@mycompany.com # comma-separated list of e-mails
   zip-exclude: \.git/.*, .*\.png
 
 checkmarx:
@@ -314,6 +316,8 @@ cx-flow:
      username: xxx
      password: xxx
      enabled: true
+     notification: true # default is false
+     cc: myemail@mycompany.com # comma-separated list of e-mails
   zip-exclude: \.git/.*, .*\.png
 ```
 
@@ -347,6 +351,20 @@ cx-flow:
 | `preserve-project-name`   | false                 | No       | Yes     | Yes          | When **False**: The project name will be the repository name after normalization (i.e. Front-End-dev). Legal characters are: `a-z`, `A-Z`, `0-9`, `-`, `_`, `.`. All other characters will be replaced in the normalization process with "-". <br/> When **True**: The project name will be the exact project name inputted without normalization (i.e. Front End-dev). <br/> **For attention:** <br/> 1. Not all scanners allow project names with invalid characters.<br/> 2. The preserve-project-name parameter is also effective for project name coming from config-as-code. |
 
 No* = Default is applied
+
+#### <a name="filtering">E-Mail notifications</a>
+
+```yaml
+cx-flow:
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: xxx
+    password: xxx
+    enabled: true
+    notification: true # default is false
+    cc: myemail@mycompany.com # comma-separated list of e-mails
+```
 
 #### <a name="filtering">Filtering</a>
 Filtering, as specified above, is available on the following criteria:
@@ -677,61 +695,86 @@ bitbucket:
 **Note**: As mentioned in the prerequisites, a service account is required that has appropriate access to the repositories that will be scanned, pull requests that will be commented on, GitHub issues that will be created/updated.
 
 ## <a name="json">JSON Config Override</a>
-The sample below illustrates an override configuration in JSON format. It has similarities with the YAML config blocks.  Its main use is to override cx-flow and Jira yaml configuration.
+The sample below illustrates an override configuration in JSON format. It has similarities with the YAML config blocks.  Its main use is to override cx-flow and Jira Yaml configuration.
+
+for more details, please refer to [Config as Code](https://github.com/checkmarx-ltd/cx-flow/wiki/Config-As-Code)
 
 ```jsonc
 {
-   "application": "test app",
-   "branches": ["develop", "main"],
-   "incremental": true,
-   "scan_preset": "Checkmarx Default",
-   "exclude_folders": "tmp/,test/",
-   "exclude_files": "*.tst,*.tmp",
-   "emails": ["xxxx@checkmarx.com"],
-   "filters": {
-     "severity": ["High", "Medium"],
-     "cwe": ["79", "89"],
-     "category": ["XSS_Reflected", "SQL_Injection"],
-     "state": ["Confirmed", "New"]
-   },
-   "jira": {
-     "project": "APPSEC",
-     "issue_type": "Bug",
-      "assignee": "admin",
-      "opened_status": ["Open","Reopen"],
-      "closed_status": ["Closed","Done"],
-      "open_transition": "Reopen Issue",
-      "close_transition": "Close Issue",
-      "close_transition_field": "resolution",
-      "close_transition_value": "Done",
-      "priorities": {
+  "version": 1.0,
+  "project": "XYZ-${repo}-${branch}",
+  "team": "/a/b/c",
+  "sast": {
+    "preset": "",
+    "engineConfiguration": "",
+    "incremental": "false", // values: "true" or "false"
+    "forceScan": "true", // values: "true" or "false"
+    "fileExcludes": "*.pyc, *.test, *.class",
+    "folderExcludes": "*test, out/, *bin"
+  },
+  "additionalProperties": {
+    "cxFlow": {
+      "application": "test app",
+      "branches": ["develop", "main", "master"],
+      "emails": ["xxxx@checkmarx.com"],
+      "bugTracker": "JIRA", // other possible values: "GitLab", "GitHub", "Azure"
+      "scanResubmit": "true", // values: "true" or "false"
+      "sshKeyIdentifier": "Key of the ssh-key-list parameter present in application.yml file."
+      "jira": {
+        "project": "APPSEC",
+        "issue_type": "Bug",
+        "assignee": "admin",
+        "opened_status": ["Open","Reopen"],
+        "closed_status": ["Closed","Done"],
+        "open_transition": "Reopen Issue",
+        "close_transition": "Close Issue",
+        "close_transition_field": "resolution",
+        "close_transition_value": "Done",
+        "priorities": {
           "High": "High",
           "Medium": "High",
           "Low": "High"
-       },
-       "fields": [
-         {
-           "type": "cx", //cx, static, result
-           "name": "xxx",
-           "jira_field_name": "xxxx",
-           "jira_field_type": "text", // security text | label | single-select | multi-select
-           "jira_default_value": "xxx"
-         },
-         {
+        },
+        "fields": [
+          {
+            "type": "cx", // cx, static, result
+            "name": "xxx",
+            "jira_field_name": "xxxx",
+            "jira_field_type": "text", // security text | label | single-select | multi-select
+            "jira_default_value": "xxx"
+          },
+          {
             "type": "result",
             "name": "xxx",
             "jira_field_name": "xxxx",
             "jira_field_type": "label"
-         },
-         {
+          },
+          {
             "type": "static",
             "name": "xxx",
             "jira_field_name": "xxxx",
             "jira_field_type": "label",
             "jira_default_value": "xxx"
-         }
-      ]
-   }
+          }
+        ]
+      },
+      "filters": {
+        "severity": ["High", "Medium"],
+        "cwe": ["79", "89"],
+        "category": ["XSS_Reflected", "SQL_Injection"],
+        "status": ["New", "Recurring"],
+        "state": ["Confirmed", "To Verify"]
+      }
+    }
+  },
+  "customFields": {
+    "field1": "value1",
+    "field2": "value2"
+  },
+  "scanCustomFields": {
+    "field3": "value3",
+    "field4": "value4"
+  }
 }
 ```
 

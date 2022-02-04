@@ -2,15 +2,15 @@ import org.gradle.api.tasks.testing.Test
 
 buildscript {
 	ext {
-        CxSBSDK = "0.5.09"
+        CxSBSDK = "0.5.10"
         ConfigProviderVersion = "1.0.9"
         //cxVersion = "8.90.5"
-        springBootVersion = '2.3.5.RELEASE'
+        springBootVersion = '2.6.1'
         sonarqubeVersion = '2.8'
         atlassianVersion = "5.2.0"
         atlassianFugueVersion = "4.7.2"
-        jacksonVersion = "2.12.2"
-        mainClass = 'com.checkmarx.flow.CxFlowApplication'
+        jacksonVersion = "2.12.6"
+        mainClassPath = 'com.checkmarx.flow.CxFlowApplication'
     }
 	repositories {
         jcenter()
@@ -98,6 +98,7 @@ dependencies {
     compile ('org.springframework.boot:spring-boot-starter-mail')
     compile ('org.springframework.boot:spring-boot-starter-thymeleaf'){
         exclude group: 'ch.qos.logback', module: 'logback-core'
+        exclude group: 'org.thymeleaf', module: 'thymeleaf-spring5'
     }
     compile ('com.github.ulisesbocchio:jasypt-spring-boot-starter:2.1.2')
     compile ("io.atlassian.fugue:fugue:${atlassianFugueVersion}")
@@ -110,7 +111,9 @@ dependencies {
     compile("com.fasterxml.jackson.core:jackson-core:${jacksonVersion}")
     compile("com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}")
     compile("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersion}")
-    compile ("org.thymeleaf:thymeleaf:3.0.11.RELEASE")
+    compile("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${jacksonVersion}")
+    //compile ("org.thymeleaf:thymeleaf:3.0.11.RELEASE")
+    compile("org.thymeleaf:thymeleaf-spring5:3.0.15.RELEASE")
     compile ("org.apache.httpcomponents:httpclient:4.5.13")
     compile ("org.codehaus.groovy:groovy-all:3.0.9") {
         exclude group: 'org.apache.ant', module: 'ant'
@@ -170,7 +173,7 @@ dependencies {
 }
 
 springBoot {
-    mainClassName = "${mainClass}"
+    mainClass = "${mainClassPath}"
     buildInfo()
 }
 
@@ -188,7 +191,8 @@ task componentTest(type: Test) {
             events "passed", "skipped", "failed"
         }
     }
-    check.dependsOn.remove(test)
+    //check.dependsOn.remove(test)
+    test.enabled = false
 }
 
 
@@ -203,7 +207,8 @@ task e2eTests(type: Test) {
         }
     }
 
-    check.dependsOn.remove(test)
+    //check.dependsOn.remove(test)
+    test.enabled = false
 }
 
 task integrationTest(type: Test) {
@@ -344,5 +349,9 @@ task getVersion {
 }
 
 bootJar {
-    mainClassName = "${mainClass}"
+    mainClass = "${mainClassPath}"
+}
+
+jar {
+    enabled = false
 }

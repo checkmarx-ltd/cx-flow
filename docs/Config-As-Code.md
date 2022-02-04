@@ -1,6 +1,7 @@
 # Config as Code
-The presence of a cx.config file in the root of the source repository is used to drive/override project/scanning configuration within CxFlow
-### **Note: Currently implemented for GitHub, GitLab, Bitbucket Server, Bitbucket Cloud and Azure DevOps, for WebHook execution, and for local source scanning in batch mode.**
+The presence of a `cx.config` file in the root of the source repository is used to drive/override project/scanning configuration within CxFlow.
+
+**Note: Currently implemented for GitHub, GitLab, Bitbucket Server, Bitbucket Cloud and Azure DevOps, for WebHook execution, and for local source scanning in batch mode.**
 
 * [Current Overrides](#current)
 * [Automated Code Profiling](#automatedcodeprofiling)
@@ -9,7 +10,8 @@ The presence of a cx.config file in the root of the source repository is used to
 
 ## <a name="current">Current Overrides Available</a>
 Example Config As Code:
-```
+
+```jsonc
 {
   "version": 1.0,
   "project": "XYZ-${repo}-${branch}",
@@ -17,18 +19,18 @@ Example Config As Code:
   "sast": {
     "preset": "",
     "engineConfiguration": "",
-    "incremental": "true|false",
-    "forceScan": "true",
-    "fileExcludes": "",
-    "folderExcludes": ""
+    "incremental": "false", // values: "true" or "false"
+    "forceScan": "true", // values: "true" or "false"
+    "fileExcludes": "*.pyc, *.test, *.class",
+    "folderExcludes": "*test, out/, *bin"
   },
   "additionalProperties": {
     "cxFlow": {
       "application": "test app",
       "branches": ["develop", "main", "master"],
       "emails": ["xxxx@checkmarx.com"],
-      "bugTracker": "JIRA|GitLab|GitHub|Azure",
-      "scanResubmit": "true|false",
+      "bugTracker": "JIRA", // other possible values: "GitLab", "GitHub", "Azure"
+      "scanResubmit": "true", // values: "true" or "false"
       "sshKeyIdentifier": "Key of the ssh-key-list parameter present in application.yml file."
       "jira": {
         "project": "APPSEC",
@@ -47,10 +49,10 @@ Example Config As Code:
         },
         "fields": [
           {
-            "type": "cx",
+            "type": "cx", // cx, static, result
             "name": "xxx",
             "jira_field_name": "xxxx",
-            "jira_field_type": "text",
+            "jira_field_type": "text", // security text | label | single-select | multi-select
             "jira_default_value": "xxx"
           },
           {
@@ -72,7 +74,8 @@ Example Config As Code:
         "severity": ["High", "Medium"],
         "cwe": ["79", "89"],
         "category": ["XSS_Reflected", "SQL_Injection"],
-        "status": ["Confirmed", "New"]
+        "status": ["New", "Recurring"],
+        "state": ["Confirmed", "To Verify"]
       }
     }
   },
@@ -123,23 +126,24 @@ Example Config As Code:
         * Results will be published according to the configured feedback channel(s)
 
 ## <a name="automatedprofileconfiguration">Automated Profile Configuration</a>
-Default file is CxProfile.json unless provided as an override in the configuration yaml for CxFlow
+Default file is `CxProfile.json` unless provided as an override in the configuration yaml for CxFlow
 
 The configuration is evaluated in order found within the file, and upon meeting the first match based on the criteria, the preset is selected.  
 <br/>The default entry should be last, otherwise it will be selected as soon as it is reached.
-Key | Description
----------|---------
-name|Identifier for the profile.  If Default is the name, the rules are not evaluated and the preset is selected as this entry is reached.
-preset|The Checkmarx scan preset that is associated with the profile
-files|List of regular expressions that match file/path patterns.  All references in the list must be found for a match
-weight|List of weighting criteria based on language percentages that must all match for the profile to be selected
-weight→type|This is the associated language name based on the information from the repository (i.e. Java, C#, ASP, HTML, CSS)
+
+Key          | Description
+-------------|---------
+name         |Identifier for the profile.  If Default is the name, the rules are not evaluated and the preset is selected as this entry is reached.
+preset       |The Checkmarx scan preset that is associated with the profile
+files        |List of regular expressions that match file/path patterns.  All references in the list must be found for a match
+weight       |List of weighting criteria based on language percentages that must all match for the profile to be selected
+weight→type  |This is the associated language name based on the information from the repository (i.e. Java, C#, ASP, HTML, CSS)
 weight→weight|The minimum percentage of code required for a match
 
 All criteria must be met (file matches, weighting matches) to match and select the given profile
 
 ## <a name="cxprofileconfig">CxProfile Config</a>
-```
+```jsonc
 [{
   "name:": "C# Web",
   "preset": "Checkmarx Default",
