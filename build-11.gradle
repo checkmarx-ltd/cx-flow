@@ -1,18 +1,20 @@
 import org.gradle.api.tasks.testing.Test
 
 buildscript {
-	ext {
+    ext {
+        azureClientVersion = '1.7.14'
         CxSBSDK = "0.5.10"
-        ConfigProviderVersion = "1.0.9"
+        ConfigProviderVersion = "1.0.10"
         //cxVersion = "8.90.5"
         springBootVersion = '2.6.1'
         sonarqubeVersion = '2.8'
         atlassianVersion = "5.2.0"
         atlassianFugueVersion = "4.7.2"
-        jacksonVersion = "2.12.6"
+        jacksonVersion = '2.13.1'
+        log4jVersion = '2.17.1'
         mainClassPath = 'com.checkmarx.flow.CxFlowApplication'
     }
-	repositories {
+    repositories {
         jcenter()
         mavenLocal()
         mavenCentral()
@@ -20,9 +22,9 @@ buildscript {
             url = 'https://packages.atlassian.com/mvn/maven-external'
         }
         gradlePluginPortal()
-	}
-	dependencies {
-        classpath ("gradle.plugin.com.gorylenko.gradle-git-properties:gradle-git-properties:2.0.0")
+    }
+    dependencies {
+        classpath("gradle.plugin.com.gorylenko.gradle-git-properties:gradle-git-properties:2.0.0")
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
         classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:${sonarqubeVersion}"
     }
@@ -47,7 +49,7 @@ def junitVersion = '5.7.0'
 
 repositories {
     mavenLocal()
-	mavenCentral()
+    mavenCentral()
     maven {
         url = 'https://packages.atlassian.com/mvn/maven-external'
     }
@@ -67,96 +69,97 @@ ext['logback-classic.version'] = '1.2.10'
 dependencies {
     compile group: 'com.beust', name: 'jcommander', version: '1.78'
     compile('org.apache.ant:ant:1.10.12')
-	compile('org.springframework.boot:spring-boot-starter-actuator'){
+    compile('org.springframework.boot:spring-boot-starter-actuator') {
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
-	compile('org.springframework.boot:spring-boot-starter-web'){
-	    exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j-impl'
+    compile('org.springframework.boot:spring-boot-starter-web') {
+        exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j-impl'
         exclude group: 'org.apache.logging.log4j', module: 'log4j-api'
         exclude group: 'org.apache.logging.log4j', module: 'log4j-core'
         exclude group: 'ch.qos.logback', module: 'logback-core'
-	}
-    compile('org.springframework.boot:spring-boot-starter-aop'){
+    }
+
+    compile('org.springframework.boot:spring-boot-starter-aop') {
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
-    compile('org.springframework.boot:spring-boot-starter-validation'){
+    compile('org.springframework.boot:spring-boot-starter-validation') {
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
     compile("com.github.checkmarx-ltd:cx-spring-boot-sdk:${CxSBSDK}") {
         exclude group: 'org.apache.ant', module: 'ant'
         exclude group: 'ch.qos.logback', module: 'logback-core'
-        exclude group: 'org.bouncycastle', module:'bcprov-jdk15on'
+        exclude group: 'org.bouncycastle', module: 'bcprov-jdk15on'
     }
-    compile ("org.apache.commons:commons-text:1.8")
-    compile ('commons-codec:commons-codec:1.13')
-    compile ('commons-io:commons-io:2.8.0')
-    compile ('org.json:json:20210307')
-    compile ('com.fasterxml.jackson.core:jackson-databind:2.10.3')
-    compile ('org.springframework.boot:spring-boot-starter-web-services'){
+    compile("org.apache.commons:commons-text:1.9")
+    compile('commons-codec:commons-codec:1.15')
+    compile('commons-io:commons-io:2.11.0')
+    compile('org.json:json:20211205')
+    compile("com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}")
+    compile('org.springframework.boot:spring-boot-starter-web-services') {
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
-    compile ('org.springframework.boot:spring-boot-starter-mail')
-    compile ('org.springframework.boot:spring-boot-starter-thymeleaf'){
+    compile('org.springframework.boot:spring-boot-starter-mail')
+    compile('org.springframework.boot:spring-boot-starter-thymeleaf') {
         exclude group: 'ch.qos.logback', module: 'logback-core'
         exclude group: 'org.thymeleaf', module: 'thymeleaf-spring5'
     }
-    compile ('com.github.ulisesbocchio:jasypt-spring-boot-starter:2.1.2')
-    compile ("io.atlassian.fugue:fugue:${atlassianFugueVersion}")
-    compile ("com.atlassian.jira:jira-rest-java-client-core:${atlassianVersion}") {
+    compile('com.github.ulisesbocchio:jasypt-spring-boot-starter:2.1.2')
+    compile("io.atlassian.fugue:fugue:${atlassianFugueVersion}")
+    compile("com.atlassian.jira:jira-rest-java-client-core:${atlassianVersion}") {
         exclude group: 'org.codehaus.jackson', module: 'jackson-mapper-asl'
         exclude group: 'org.codehaus.jackson', module: 'jackson-core-asl'
     }
-    compile ("com.atlassian.jira:jira-rest-java-client-api:${atlassianVersion}")
+    compile("com.atlassian.jira:jira-rest-java-client-api:${atlassianVersion}")
     compile("com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}")
     compile("com.fasterxml.jackson.core:jackson-core:${jacksonVersion}")
     compile("com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}")
     compile("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersion}")
     compile("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${jacksonVersion}")
-    //compile ("org.thymeleaf:thymeleaf:3.0.11.RELEASE")
+
     compile("org.thymeleaf:thymeleaf-spring5:3.0.15.RELEASE")
-    compile ("org.apache.httpcomponents:httpclient:4.5.13")
-    compile ("org.codehaus.groovy:groovy-all:3.0.9") {
+    compile("org.apache.httpcomponents:httpclient:4.5.13")
+    compile("org.codehaus.groovy:groovy-all:3.0.9") {
         exclude group: 'org.apache.ant', module: 'ant'
         exclude group: 'org.webjars', module: 'jquery'
 
     }
-    compile ("org.apache.ivy:ivy:2.5.0")
-    compile ("org.apache.commons:commons-lang3:3.12.0")
+    compile("org.apache.ivy:ivy:2.5.0")
+    compile("org.apache.commons:commons-lang3:3.12.0")
     compile('org.apache.commons:commons-collections4:4.4')
-    compile ("org.eclipse.jgit:org.eclipse.jgit:5.5.1.201910021850-r"){
-        exclude group: 'org.bouncycastle', module:'bcprov-jdk15onj'
+    compile("org.eclipse.jgit:org.eclipse.jgit:5.5.1.201910021850-r") {
+        exclude group: 'org.bouncycastle', module: 'bcprov-jdk15onj'
     }
     compile group: 'com.google.guava', name: 'guava', version: '30.1.1-jre'
     compile group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.70'
-    compile("com.auth0:java-jwt:3.10.3")
+    compile("com.auth0:java-jwt:3.18.3")
     compile group: 'com.sun.xml.bind', name: 'jaxb-impl', version: '2.4.0-b180830.0438'
     compile group: 'javax.xml.ws', name: 'jaxws-api', version: '2.3.1'
     compile group: 'com.sun.xml.bind', name: 'jaxb-core', version: '2.3.0.1'
     compile group: 'com.sun.xml.messaging.saaj', name: 'saaj-impl', version: '1.4.0'
-    compileOnly ('org.springframework.boot:spring-boot-configuration-processor')
+    compileOnly('org.springframework.boot:spring-boot-configuration-processor')
 
     runtime('org.springframework.boot:spring-boot-devtools')
-    testCompile('org.springframework.boot:spring-boot-starter-test'){
-        exclude group:'net.minidev', module:'json-smart'
+    testCompile('org.springframework.boot:spring-boot-starter-test') {
+        exclude group: 'net.minidev', module: 'json-smart'
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
     testImplementation("io.cucumber:cucumber-java:${cucumberVersion}")
     testImplementation("io.cucumber:cucumber-junit:${cucumberVersion}")
     testImplementation("io.cucumber:cucumber-spring:${cucumberVersion}")
     testImplementation("com.github.java-json-tools:json-patch:1.11")
-    testImplementation( "org.junit.jupiter:junit-jupiter-api:${junitVersion}")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:${junitVersion}")
     testCompile("org.mockito:mockito-core:+")
     compile("org.projectlombok:lombok:1.18.10")
-    compile("ch.qos.logback:logback-classic:1.2.10"){
+    compile("ch.qos.logback:logback-classic:1.2.10") {
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
-    compile("ch.qos.logback.contrib:logback-json-classic:0.1.5"){
+    compile("ch.qos.logback.contrib:logback-json-classic:0.1.5") {
         exclude group: 'ch.qos.logback', module: 'logback-classic'
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
-    compile("ch.qos.logback.contrib:logback-jackson:0.1.5"){
+    compile("ch.qos.logback.contrib:logback-jackson:0.1.5") {
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
     compile("ch.qos.logback:logback-core:1.2.10")
@@ -165,11 +168,11 @@ dependencies {
     compile("org.jasypt:jasypt:1.9.3")
     compileJava.dependsOn(processResources)
 
-    compile("org.apache.logging.log4j:log4j-core:2.17.1")
-    compile("org.apache.logging.log4j:log4j-slf4j-impl:2.17.1")
-    compile("org.apache.logging.log4j:log4j-api:2.17.1")
+    compile("org.apache.logging.log4j:log4j-core:${log4jVersion}")
+    compile("org.apache.logging.log4j:log4j-slf4j-impl:${log4jVersion}")
+    compile("org.apache.logging.log4j:log4j-api:${log4jVersion}")
     compile("javax.persistence:javax.persistence-api:2.2")
-    compile group:'org.apache.tomcat', name:'tomcat-juli', version:property('tomcat.version')
+    compile group: 'org.apache.tomcat', name: 'tomcat-juli', version: property('tomcat.version')
 }
 
 springBoot {
@@ -246,7 +249,7 @@ task ASTIntegrationTest(type: Test) {
         systemProperty "testprofile", "astIntegration"
 
         include 'com/checkmarx/flow/cucumber/integration/ast/bugtrackers/jira/**'
-        include  'com/checkmarx/flow/cucumber/integration/ast/scans/**'
+        include 'com/checkmarx/flow/cucumber/integration/ast/scans/**'
 
         testLogging {
             events "passed", "skipped", "failed"
