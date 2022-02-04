@@ -182,7 +182,7 @@ public class FlowOverride {
             this.status = status;
         }
 
-        public void setState(List<String> status) { this.state = state; }
+        public void setState(List<String> stateList) { this.state = stateList; }
     }
 
     public class Jira {

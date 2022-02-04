@@ -677,61 +677,86 @@ bitbucket:
 **Note**: As mentioned in the prerequisites, a service account is required that has appropriate access to the repositories that will be scanned, pull requests that will be commented on, GitHub issues that will be created/updated.
 
 ## <a name="json">JSON Config Override</a>
-The sample below illustrates an override configuration in JSON format. It has similarities with the YAML config blocks.  Its main use is to override cx-flow and Jira yaml configuration.
+The sample below illustrates an override configuration in JSON format. It has similarities with the YAML config blocks.  Its main use is to override cx-flow and Jira Yaml configuration.
+
+for more details, please refer to [Config as Code](https://github.com/checkmarx-ltd/cx-flow/wiki/Config-As-Code)
 
 ```jsonc
 {
-   "application": "test app",
-   "branches": ["develop", "main"],
-   "incremental": true,
-   "scan_preset": "Checkmarx Default",
-   "exclude_folders": "tmp/,test/",
-   "exclude_files": "*.tst,*.tmp",
-   "emails": ["xxxx@checkmarx.com"],
-   "filters": {
-     "severity": ["High", "Medium"],
-     "cwe": ["79", "89"],
-     "category": ["XSS_Reflected", "SQL_Injection"],
-     "state": ["Confirmed", "New"]
-   },
-   "jira": {
-     "project": "APPSEC",
-     "issue_type": "Bug",
-      "assignee": "admin",
-      "opened_status": ["Open","Reopen"],
-      "closed_status": ["Closed","Done"],
-      "open_transition": "Reopen Issue",
-      "close_transition": "Close Issue",
-      "close_transition_field": "resolution",
-      "close_transition_value": "Done",
-      "priorities": {
+  "version": 1.0,
+  "project": "XYZ-${repo}-${branch}",
+  "team": "/a/b/c",
+  "sast": {
+    "preset": "",
+    "engineConfiguration": "",
+    "incremental": "false", // values: "true" or "false"
+    "forceScan": "true", // values: "true" or "false"
+    "fileExcludes": "*.pyc, *.test, *.class",
+    "folderExcludes": "*test, out/, *bin"
+  },
+  "additionalProperties": {
+    "cxFlow": {
+      "application": "test app",
+      "branches": ["develop", "main", "master"],
+      "emails": ["xxxx@checkmarx.com"],
+      "bugTracker": "JIRA", // other possible values: "GitLab", "GitHub", "Azure"
+      "scanResubmit": "true", // values: "true" or "false"
+      "sshKeyIdentifier": "Key of the ssh-key-list parameter present in application.yml file."
+      "jira": {
+        "project": "APPSEC",
+        "issue_type": "Bug",
+        "assignee": "admin",
+        "opened_status": ["Open","Reopen"],
+        "closed_status": ["Closed","Done"],
+        "open_transition": "Reopen Issue",
+        "close_transition": "Close Issue",
+        "close_transition_field": "resolution",
+        "close_transition_value": "Done",
+        "priorities": {
           "High": "High",
           "Medium": "High",
           "Low": "High"
-       },
-       "fields": [
-         {
-           "type": "cx", //cx, static, result
-           "name": "xxx",
-           "jira_field_name": "xxxx",
-           "jira_field_type": "text", // security text | label | single-select | multi-select
-           "jira_default_value": "xxx"
-         },
-         {
+        },
+        "fields": [
+          {
+            "type": "cx", // cx, static, result
+            "name": "xxx",
+            "jira_field_name": "xxxx",
+            "jira_field_type": "text", // security text | label | single-select | multi-select
+            "jira_default_value": "xxx"
+          },
+          {
             "type": "result",
             "name": "xxx",
             "jira_field_name": "xxxx",
             "jira_field_type": "label"
-         },
-         {
+          },
+          {
             "type": "static",
             "name": "xxx",
             "jira_field_name": "xxxx",
             "jira_field_type": "label",
             "jira_default_value": "xxx"
-         }
-      ]
-   }
+          }
+        ]
+      },
+      "filters": {
+        "severity": ["High", "Medium"],
+        "cwe": ["79", "89"],
+        "category": ["XSS_Reflected", "SQL_Injection"],
+        "status": ["New", "Recurring"],
+        "state": ["Confirmed", "To Verify"]
+      }
+    }
+  },
+  "customFields": {
+    "field1": "value1",
+    "field2": "value2"
+  },
+  "scanCustomFields": {
+    "field3": "value3",
+    "field4": "value4"
+  }
 }
 ```
 
