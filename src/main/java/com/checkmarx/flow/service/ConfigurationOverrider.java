@@ -207,9 +207,22 @@ public class ConfigurationOverrider {
         override.map(CxConfig::getProject)
                 .filter(StringUtils::isNotBlank)
                 .ifPresent(p -> {
-                    /*Replace ${repo} and ${branch}  with the actual reponame and branch - then strip out non-alphanumeric (-_ are allowed)*/
-                    String project = p.replace("${repo}", request.getRepoName())
-                            .replace("${branch}", request.getBranch());
+                    /* Replace ${repo} and ${branch}  with the actual reponame and branch - then strip out non-alphanumeric (-_ are allowed) */
+                    String project = p;
+                    String repoName = request.getRepoName();
+                    if (repoName != null) {
+                        project = project.replace("${repo}", request.getRepoName());
+                    } else {
+                        log.warn("Overriding main properties: Repo name is not defined.");
+                    }
+
+                    String branch = request.getBranch();
+                    if (branch != null) {
+                        project = project.replace("${branch}", request.getBranch());
+                    } else {
+                        log.warn("Overriding main properties: Branch is not defined.");
+                    }
+
                     request.setProject(project);
                     overrideReport.put("project", project);
                 });
