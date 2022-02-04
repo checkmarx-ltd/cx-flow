@@ -60,7 +60,18 @@ public class EmailService {
                 messageHelper.setFrom(contact);
             }
 
-            String[] ccList = (flowProperties.getMail().getCc()).toArray(new String[0]);
+            FlowProperties.Mail mailProperties = flowProperties.getMail();
+            String[] ccList = new String[0];
+            if (mailProperties != null) {
+                List<String> cc = mailProperties.getCc();
+
+                if (cc != null) {
+                    ccList = cc.toArray(new String[0]);
+                } else {
+                    log.warn("Property cx-flow.mail.cc is not defined.");
+                }
+            }
+
             if (CollectionUtils.isNotEmpty(recipients)) {
                 messageHelper.setTo(recipients.toArray(new String[0]));
                 messageHelper.setCc(ccList);

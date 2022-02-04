@@ -89,6 +89,8 @@ cx-flow:
      username: xxx
      password: xxx
      enabled: true
+     notification: true # default is false
+     cc: myemail@mycompany.com # comma-separated list of e-mails
   zip-exclude: \.git/.*, .*\.png
 
 checkmarx:
@@ -314,6 +316,8 @@ cx-flow:
      username: xxx
      password: xxx
      enabled: true
+     notification: true # default is false
+     cc: myemail@mycompany.com # comma-separated list of e-mails
   zip-exclude: \.git/.*, .*\.png
 ```
 
@@ -347,6 +351,20 @@ cx-flow:
 | `preserve-project-name`   | false                 | No       | Yes     | Yes          | When **False**: The project name will be the repository name after normalization (i.e. Front-End-dev). Legal characters are: `a-z`, `A-Z`, `0-9`, `-`, `_`, `.`. All other characters will be replaced in the normalization process with "-". <br/> When **True**: The project name will be the exact project name inputted without normalization (i.e. Front End-dev). <br/> **For attention:** <br/> 1. Not all scanners allow project names with invalid characters.<br/> 2. The preserve-project-name parameter is also effective for project name coming from config-as-code. |
 
 No* = Default is applied
+
+#### <a name="filtering">E-Mail notifications</a>
+
+```yaml
+cx-flow:
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: xxx
+    password: xxx
+    enabled: true
+    notification: true # default is false
+    cc: myemail@mycompany.com # comma-separated list of e-mails
+```
 
 #### <a name="filtering">Filtering</a>
 Filtering, as specified above, is available on the following criteria:
