@@ -21,9 +21,9 @@ Here, secret is the x-api-key of the codebashing application, provided on tenant
 
  ```
 codebashing:
-  codebashingApiUrl: https://api.codebashing.com/lessons
-  tenantBaseUrl: https://{tenant}.codebashing.com
-  apiSecret: {SECRET}
+  codebashing-api-url: https://api.codebashing.com/lessons
+  tenant-base-url: https://{tenant}.codebashing.com
+  api-secret: {SECRET}
  ```
 
 
