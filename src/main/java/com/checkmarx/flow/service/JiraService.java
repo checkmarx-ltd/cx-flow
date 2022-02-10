@@ -564,7 +564,7 @@ public class JiraService {
                                     recommendation.append("Mitre Details: ").append(String.format(flowProperties.getMitreUrl(), issue.getCwe())).append(HTMLHelper.CRLF);
                                 }
                                 if (!ScanUtils.empty(flowProperties.getCodebashUrl())) {
-                                    recommendation.append("Training: ").append(flowProperties.getCodebashUrl()).append(HTMLHelper.CRLF);
+                                    recommendation.append("Training: ").append(issue.getAdditionalDetails().get(FlowConstants.CODE_BASHING_LESSON)).append(HTMLHelper.CRLF);
                                 }
                                 if (!ScanUtils.empty(flowProperties.getWikiUrl())) {
                                     recommendation.append("Guidance: ").append(flowProperties.getWikiUrl()).append(HTMLHelper.CRLF);
