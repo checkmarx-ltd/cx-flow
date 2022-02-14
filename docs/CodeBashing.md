@@ -8,21 +8,22 @@ The link to CodeBashing is added under '**Training**' in the ticket recommendati
 By default CxFlow puts codebashing-url value in the link url
 ```
 cx-flow:
-  codebash-url: https:...
+  codebash-url: https://api.codebashing.com/lessons
 ```
 
 Now each customer (CodeBashing tenant), can use CxFlow to add training link to his tickets - with direct link to relevant course per language and CWE!
 The link will direct to the specific lesson under the customer CodeBashing account.
-for example:  (https://cxflow-account.codebashing.com/courses/backend_java/lessons/sql_injection)
+for example:  (https://{tenant}.codebashing.com/courses/backend_java/lessons/sql_injection)
 
 
-To get direct CodeBashing integration and connect it to your own tenant, add the following section to CxFlow configuration:
+To get direct CodeBashing integration you need your own tenant specific url for organization and secret.
+Here, secret is the x-api-key of the codebashing application, provided on tenant creation.
 
  ```
 codebashing:
-  codebashingApiUrl: https://api.codebashing.com/lessons
-  tenantBaseUrl: https://xxxxx.codebashing.com
-  apiSecret: SECRET
+  codebashing-api-url: https://api.codebashing.com/lessons
+  tenant-base-url: https://{tenant}.codebashing.com
+  api-secret: {SECRET}
  ```
 
 
