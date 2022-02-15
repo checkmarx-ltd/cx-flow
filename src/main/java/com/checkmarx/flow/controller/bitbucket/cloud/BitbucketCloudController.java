@@ -54,6 +54,7 @@ public class BitbucketCloudController extends WebhookController {
     private static final String EVENT = "X-Event-Key";
     private static final String PUSH = EVENT + "=repo:push";
     private static final String MERGE = EVENT + "=pullrequest:created";
+    private static final String MERGE_UPDATED = EVENT + "=pullrequest:updated";
 
     private final FlowProperties flowProperties;
     private final BitBucketProperties properties;
@@ -77,6 +78,24 @@ public class BitbucketCloudController extends WebhookController {
             @RequestParam(value = "token") String token
 
     ) {
+       return handleMergeEvent(body, product, controllerRequest, token);
+    }
+
+    /**
+     * Recieve Pull Request Updated Event
+     */
+    @PostMapping(value = {"/{product}", "/"}, headers = MERGE_UPDATED)
+    public ResponseEntity<EventResponse> pushRequestupdated(
+            @RequestBody MergeEvent body,
+            @PathVariable(value = "product", required = false) String product,
+            ControllerRequest controllerRequest,
+            @RequestParam(value = "token") String token
+
+    ) {
+        return handleMergeEvent(body,product,controllerRequest,token);
+    }
+
+    public ResponseEntity<EventResponse> handleMergeEvent(MergeEvent body, String product, ControllerRequest controllerRequest, String token){
         log.debug("Merge Request body contents are {}",body.toString());
         String uid = helperService.getShortUid();
         MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
