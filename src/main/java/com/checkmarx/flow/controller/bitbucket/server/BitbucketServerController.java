@@ -22,6 +22,7 @@ import com.checkmarx.flow.dto.bitbucketserver.PullEvent;
 import com.checkmarx.flow.dto.bitbucketserver.PushEvent;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
+import com.checkmarx.flow.handlers.bitbucket.server.BitbucketServerDeleteHandler;
 import com.checkmarx.flow.handlers.bitbucket.server.BitbucketServerEventHandler;
 import com.checkmarx.flow.handlers.bitbucket.server.BitbucketServerMergeHandler;
 import com.checkmarx.flow.handlers.bitbucket.server.BitbucketServerPushHandler;
@@ -201,6 +202,11 @@ public class BitbucketServerController implements BitBucketConfigContextProvider
         } catch (IOException e) {
             throw new MachinaRuntimeException(e);
         }
+
+        if(event.getChanges().get(0).getType().equalsIgnoreCase("DELETE")){
+            log.info("Push event is associated with a Delete branch event...ignoring request");
+            return handleDeleteEvent(body,uid,event,signature,product,controllerRequest);
+        }
         
         String application = event.getRepository().getName();
 
@@ -242,6 +248,38 @@ public class BitbucketServerController implements BitBucketConfigContextProvider
             throw new InvalidTokenException();
         }
         log.info("Signature verified");
+    }
+
+    public ResponseEntity<EventResponse> handleDeleteEvent(String body, String uid, PushEvent event, String signature, String product, ControllerRequest controllerRequest){
+        log.info("Processing BitBucket DELETE branch request");
+        if(flowProperties == null){
+            log.error("Properties have null values");
+            throw new MachinaRuntimeException();
+        }
+
+        verifyHmacSignature(body, signature);
+
+        String application = event.getRepository().getName();
+        if(!ScanUtils.empty(controllerRequest.getApplication())){
+            application = controllerRequest.getApplication();
+        }
+
+        if(ScanUtils.empty(product)){
+            product = ScanRequest.Product.CX.getProduct();
+        }
+
+        BitbucketServerEventHandler handler = BitbucketServerDeleteHandler.builder()
+                .controllerRequest(controllerRequest)
+                .branchNameForDelete(event.getChanges().get(INDEX_FROM_CHANGES).getRefId())
+                .fromProjectKey(event.getRepository().getProject().getKey())
+                .repositoryName(event.getRepository().getName())
+                .product(product)
+                .application(application)
+                .webhookPayload(body)
+                .configProvider(this)
+                .build();
+
+        return handler.execute(uid);
     }
 
     public FlowProperties getFlowProperties() {
