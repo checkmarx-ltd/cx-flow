@@ -78,88 +78,7 @@ public class BitbucketCloudController extends WebhookController {
             @RequestParam(value = "token") String token
 
     ) {
-        log.debug("Merge Request body contents are {}",body.toString());
-        String uid = helperService.getShortUid();
-        MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
-        validateBitBucketRequest(token);
-        log.info("Processing BitBucket MERGE request");
-        controllerRequest = ensureNotNull(controllerRequest);
-
-        try {
-            Repository repository = body.getRepository();
-            String app = repository.getName();
-            if (!ScanUtils.empty(controllerRequest.getApplication())) {
-                app = controllerRequest.getApplication();
-            }
-
-            BugTracker.Type bugType = BugTracker.Type.BITBUCKETPULL;
-            if (!ScanUtils.empty(controllerRequest.getBug())) {
-                bugType = ScanUtils.getBugTypeEnum(controllerRequest.getBug(), flowProperties.getBugTrackerImpl());
-            }
-
-            if (controllerRequest.getAppOnly() != null) {
-                flowProperties.setTrackApplicationOnly(controllerRequest.getAppOnly());
-            }
-
-            if (ScanUtils.empty(product)) {
-                product = ScanRequest.Product.CX.getProduct();
-            }
-            ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
-            Pullrequest pullRequest = body.getPullrequest();
-            String currentBranch = pullRequest.getSource().getBranch().getName();
-            String targetBranch = pullRequest.getDestination().getBranch().getName();
-            List<String> branches = getBranches(controllerRequest, flowProperties);
-            String hash = pullRequest.getSource().getCommit().getHash();
-
-            BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
-
-            FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
-
-            String gitUrl = repository.getLinks().getHtml().getHref().concat(".git");
-            String configToken = scmConfigOverrider.determineConfigToken(properties, controllerRequest.getScmInstance());
-            String gitAuthUrl = gitAuthUrlGenerator.addCredToUrl(ScanRequest.Repository.BITBUCKET, gitUrl, configToken);
-            String mergeEndpoint = pullRequest.getLinks().getComments().getHref();
-
-
-            ScanRequest request = ScanRequest.builder()
-                    .application(app)
-                    .product(p)
-                    .project(controllerRequest.getProject())
-                    .team(controllerRequest.getTeam())
-                    .namespace(getProjectNamespace(repository))
-                    .repoName(repository.getName())
-                    .repoUrl(gitUrl)
-                    .repoUrlWithAuth(gitAuthUrl)
-                    .repoType(ScanRequest.Repository.BITBUCKET)
-                    .branch(currentBranch)
-                    .mergeTargetBranch(targetBranch)
-                    .mergeNoteUri(mergeEndpoint)
-                    .refs(Constants.CX_BRANCH_PREFIX.concat(currentBranch))
-                    .email(null)
-                    .scanPreset(controllerRequest.getPreset())
-                    .incremental(controllerRequest.getIncremental())
-                    .excludeFolders(controllerRequest.getExcludeFolders())
-                    .excludeFiles(controllerRequest.getExcludeFiles())
-                    .bugTracker(bt)
-                    .filter(filter)
-                    .hash(hash)
-                    .organizationId(getOrganizationid(repository))
-                    .gitUrl(gitUrl)
-                    .build();
-
-            setScmInstance(controllerRequest, request);
-            fillRequestWithAdditionalData(request, repository, body.toString());
-            checkForConfigAsCode(request);
-            request.setId(uid);
-
-            if (helperService.isBranch2Scan(request, branches)) {
-                flowService.initiateAutomation(request);
-            }
-
-        } catch (IllegalArgumentException e) {
-            return getBadRequestMessage(e, controllerRequest, product);
-        }
-        return getSuccessMessage();
+       return handleMergeEvent(body, product, controllerRequest, token);
     }
 
     /**
@@ -173,6 +92,10 @@ public class BitbucketCloudController extends WebhookController {
             @RequestParam(value = "token") String token
 
     ) {
+        return handleMergeEvent(body,product,controllerRequest,token);
+    }
+
+    public ResponseEntity<EventResponse> handleMergeEvent(MergeEvent body, String product, ControllerRequest controllerRequest, String token){
         log.debug("Merge Request body contents are {}",body.toString());
         String uid = helperService.getShortUid();
         MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
