@@ -32,7 +32,7 @@ This will make CxFlow to always read configuration-as-code from repository defau
 * [GitHub](#github)
 * [Azure Devops](#ado)
 * [GitLab](#gitlab)
-* [BitBucket] (#bitbucket)
+* [BitBucket](#bitbucket)
 
 #### <a name="github">GitHub</a>
 
@@ -71,7 +71,14 @@ GitLab does not support webhook delete events therefore CxFlow does not support 
 
 #### <a name="bitbucket">Bitbucket Server</a>
 
-Bitbucket Server will delete a SAST project **only when using the Post Webhooks plugin**.  The current implementation is limited in that:
+* Uses the webhook PUSH event
+* When an unprotected branch is deleted BitBucket server sends a PUSH event of type DELETE.
+
+Bitbucket Server will delete a SAST project either using the PUSH webhook event or using the Post Webhooks plugin.  The current implementation is limited in that:
 
 * Project delete not work if using Config-As-Code given the settings for team and/or project name have been deleted from the branch.
 * Project delete will work if the project name is calculated or scripted and the team assigned to the project matches the default team in the CxFlow YAML configuration.
+
+**Bitbucket Cloud**
+
+Bitbucket cloud currently does not support deleting project in CxSAST when unprotected branch is deleted.
