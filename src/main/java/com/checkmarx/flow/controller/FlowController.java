@@ -233,18 +233,23 @@ public class FlowController {
                     prd.branch = scanDetailToken;
                     break;
                 case 4:
+                    prd.project = scanDetailToken;
+                case 5:
+                    prd.team = scanDetailToken;
+                case 6:
                     prd.mergeNoteUri = scanDetailToken;
                     break;
-                case 5:
+                case 7:
                     prd.pullRequestURL = scanDetailToken;
                     break;
-                case 6:
+                case 8:
                     if(scanDetailToken.equals("PULL")) {
                         prd.bugType = BugTracker.Type.GITHUBPULL;
                     } else {
                         prd.bugType = BugTracker.Type.CUSTOM;
                     }
                     break;
+
                 default:
                     // Nothing to do.
                     break;
