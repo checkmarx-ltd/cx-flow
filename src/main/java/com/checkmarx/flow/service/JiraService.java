@@ -529,11 +529,11 @@ public class JiraService {
                                 break;
                             case "dev-dependency":
                                 log.debug("dev-dependency: {}", issue.getScaDetails().get(0).getVulnerabilityPackage().isDevelopment());
-                                value = String.valueOf(issue.getScaDetails().get(0).getVulnerabilityPackage().isDevelopment());
+                                value = String.valueOf(issue.getScaDetails().get(0).getVulnerabilityPackage().isDevelopment()).toUpperCase();
                                 break;
                             case "direct-dependency":
                                 log.debug("direct-dependency: {}", issue.getScaDetails().get(0).getVulnerabilityPackage().isDirectDependency());
-                                value = String.valueOf(issue.getScaDetails().get(0).getVulnerabilityPackage().isDirectDependency());
+                                value = String.valueOf(issue.getScaDetails().get(0).getVulnerabilityPackage().isDirectDependency()).toUpperCase();
                                 break;
                             case "risk-score":
                                 log.debug("risk score: {}", issue.getScaDetails().get(0).getVulnerabilityPackage().getRiskScore());
@@ -541,8 +541,12 @@ public class JiraService {
                                 break;
                             case "outdated":
                                 log.debug("outdated: {}", issue.getScaDetails().get(0).getVulnerabilityPackage().isOutdated());
-                                value = String.valueOf(issue.getScaDetails().get(0).getVulnerabilityPackage().isOutdated());
+                                value = String.valueOf(issue.getScaDetails().get(0).getVulnerabilityPackage().isOutdated()).toUpperCase();
                                 break;
+                            case "violates-policy":
+                                log.debug("Violates-Policy: {}", issue.getScaDetails().get(0).getFinding().isViolatingPolicy());
+                                value = String.valueOf(issue.getScaDetails().get(0).getFinding().isViolatingPolicy()).toUpperCase();
+
                         }
                         break;
                     case "static":
