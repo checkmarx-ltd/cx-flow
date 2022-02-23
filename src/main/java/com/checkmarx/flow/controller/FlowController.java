@@ -192,6 +192,7 @@ public class FlowController {
                     .repoType(ScanRequest.Repository.GITHUB)
                     .product(p)
                     .branch(prd.branch)
+                    .additionalMetadata(prd.additionalMetadata)
                     .build();
             // There won't be a scan ID on the post-back, so we need to fake it in the
             // event shard support is turned on (very likely if using post-back support).
@@ -243,6 +244,8 @@ public class FlowController {
                     prd.pullRequestURL = scanDetailToken;
                     break;
                 case 8:
+                    prd.additionalMetadata.put("github-installation-id", scanDetailToken);
+                case 9:
                     if(scanDetailToken.equals("PULL")) {
                         prd.bugType = BugTracker.Type.GITHUBPULL;
                     } else {
@@ -654,5 +657,6 @@ class PostRequestData {
     String namespace = "";
     String team = "";
     String project = "";
+    Map<String, String> additionalMetadata;
     BugTracker.Type bugType;
 }
