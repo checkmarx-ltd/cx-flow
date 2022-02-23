@@ -499,6 +499,10 @@ public class JiraService {
                         }
                         break;
                     case "sca-results":
+                        if(issue.getScaDetails() == null){
+                            log.debug("Sca details not available");
+                            break;
+                        }
                         fieldName = f.getName();
                         switch (fieldName) {
                             case "package-name":
@@ -606,7 +610,7 @@ public class JiraService {
                             case "cve":
                                 if(issue.getScaDetails() != null){
                                     log.debug("cve: {}", issue.getScaDetails().get(0).getFinding().getId());
-                                    value = issue.getScaDetails().get(0).getFinding().getCveName();
+                                    value = issue.getScaDetails().get(0).getFinding().getId();
                                 }else{
                                     log.debug("cve: {}", issue.getCve());
                                     value = issue.getCve();
