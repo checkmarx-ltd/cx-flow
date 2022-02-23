@@ -152,6 +152,46 @@ jira:
       jira-field-name: LOC
       jira-field-type: label
       jira-default-value: XXXXX
+    - type: sca-results
+      name: package-name
+      jira-field-name: Package Name
+      jira-field-type: label
+    - type: sca-results
+      name: current-version
+      jira-field-name: Current Version
+      jira-field-type: label
+    - type: sca-results
+      name: fixed-version
+      jira-field-name: Fixed Version
+      jira-field-type: label
+    - type: sca-results
+      name: newest-version
+      jira-field-name: Newest Version
+      jira-field-type: label
+    - type: sca-results
+      name: locations
+      jira-field-name: Locations
+      jira-field-type: label
+    - type: sca-results
+      name: risk-score
+      jira-field-name: Risk Score
+      jira-field-type: label
+    - type: sca-results
+      name: dev-dependency
+      jira-field-name: Development
+      jira-field-type: single-select
+    - type: sca-results
+      name: direct-dependency
+      jira-field-name: Direct
+      jira-field-type: single-select
+    - type: sca-results
+      name: outdated
+      jira-field-name: Outdated
+      jira-field-type: single-select
+    - type: sca-results
+      name: violates-policy
+      jira-field-name: Violates Policy
+      jira-field-type: single-select
 ```
 
 ### <a name="ninedotzero">CxSAST v9.0 .yml Example File</a>
@@ -295,4 +335,44 @@ jira:
       jira-field-name: LOC
       jira-field-type: label
       jira-default-value: XXXXX
+    - type: sca-results
+      name: package-name
+      jira-field-name: Package Name
+      jira-field-type: label
+    - type: sca-results
+      name: current-version
+      jira-field-name: Current Version
+      jira-field-type: label
+    - type: sca-results
+      name: fixed-version
+      jira-field-name: Fixed Version
+      jira-field-type: label
+    - type: sca-results
+      name: newest-version
+      jira-field-name: Newest Version
+      jira-field-type: label
+    - type: sca-results
+      name: locations
+      jira-field-name: Locations
+      jira-field-type: label
+    - type: sca-results
+      name: risk-score
+      jira-field-name: Risk Score
+      jira-field-type: label
+    - type: sca-results
+      name: dev-dependency
+      jira-field-name: Development
+      jira-field-type: single-select
+    - type: sca-results
+      name: direct-dependency
+      jira-field-name: Direct
+      jira-field-type: single-select
+    - type: sca-results
+      name: outdated
+      jira-field-name: Outdated
+      jira-field-type: single-select
+    - type: sca-results
+      name: violates-policy
+      jira-field-name: Violates Policy
+      jira-field-type: single-select
 ```
