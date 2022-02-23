@@ -154,7 +154,7 @@ public class FlowController {
             @RequestBody String postBackData,
             @PathVariable(value = "scanID") String scanID
     ) {
-        log.debug("Handling post-back from SAST");
+        log.info("Handling post-back from SAST");
         int maxNumberOfTokens = 100;
         PostRequestData prd = new PostRequestData();
         String token = " ";
