@@ -192,7 +192,6 @@ public class FlowController {
                     .repoType(ScanRequest.Repository.GITHUB)
                     .product(p)
                     .branch(prd.branch)
-                    .additionalMetadata(prd.additionalMetadata)
                     .build();
             // There won't be a scan ID on the post-back, so we need to fake it in the
             // event shard support is turned on (very likely if using post-back support).
@@ -203,6 +202,7 @@ public class FlowController {
             // Now go ahead and process the scan as normal.
             ScanResults scanResults = cxService.getReportContentByScanId(Integer.parseInt(scanID), scanRequest.getFilter());
             scanRequest.putAdditionalMetadata("statuses_url", prd.pullRequestURL);
+            scanRequest.putAdditionalMetadata("github-installation-id", prd.installationId);
             scanRequest.setMergeNoteUri(prd.mergeNoteUri);
             BugTracker bt = ScanUtils.getBugTracker(null, prd.bugType, jiraProperties, bugTracker);
             scanRequest.setBugTracker(bt);
@@ -235,8 +235,10 @@ public class FlowController {
                     break;
                 case 4:
                     prd.project = scanDetailToken;
+                    break;
                 case 5:
                     prd.team = scanDetailToken;
+                    break;
                 case 6:
                     prd.mergeNoteUri = scanDetailToken;
                     break;
@@ -244,7 +246,8 @@ public class FlowController {
                     prd.pullRequestURL = scanDetailToken;
                     break;
                 case 8:
-                    prd.additionalMetadata.put("github-installation-id", scanDetailToken);
+                    prd.installationId = scanDetailToken;
+                    break;
                 case 9:
                     if(scanDetailToken.equals("PULL")) {
                         prd.bugType = BugTracker.Type.GITHUBPULL;
@@ -657,6 +660,6 @@ class PostRequestData {
     String namespace = "";
     String team = "";
     String project = "";
-    Map<String, String> additionalMetadata;
+    String installationId = "";
     BugTracker.Type bugType;
 }
