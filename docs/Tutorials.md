@@ -1680,7 +1680,7 @@ csv:
 ```
     sonar.host.url=http://localhost:9000
     sonar.projectKey={PROJECT_KEY}
-    sonar.projectName={PROJECT_NAME
+    sonar.projectName={PROJECT_NAME}
     sonar.projectVersion=1.0
     sonar.sources=.
     sonar.externalIssuesReportPaths={PATH_TO_CX_FLOW_SONAR_REPORT}
