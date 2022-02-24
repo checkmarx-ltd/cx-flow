@@ -1514,6 +1514,7 @@ cx-flow:
     - Rally
     - ServiceNow
     - Sarif
+    -SonarQube
   branches:
     - develop
     - master
@@ -1659,4 +1660,45 @@ csv:
     - header: Similarity ID
       name: similarity-id
 ```
-	
+
+## <a name="SonarQubeIntegrations">CxFlow SonarQube Integration</a>
+[Back to Table of Contents](#tableofcontents)
+### <a name="SonarQubePrerequisites">Prerequisites</a>
+<br>The following must be set up:<br>
+
+* SonarQube Server (refer to SonarQube Setup Guide on [here](https://docs.sonarqube.org/latest/setup/install-server))
+
+* SonarQube Scanner (refer to SonarQube Scanner Installation on [here](https://docs.sonarqube.org/latest/setup/get-started-2-minutes))
+
+* Generate the Sonar Qube Issue Report by configuring bug tracker as SonarQube.
+
+### <a name="SonarQubeGeneralprocedures">General Procedure</a>
+
+<br> Upload the CxFlow Sonar Qube Report generated for SAST or SCA scan:<br>
+1. Set Sonar Scanner in Windows PATH Varaible.
+2. Edit {SONAR_SCANNER_HOME}\conf\sonar-scanner.properties for below properties:
+```
+    sonar.host.url=http://localhost:9000
+    sonar.projectKey={PROJECT_KEY}
+    sonar.projectName={PROJECT_NAME
+    sonar.projectVersion=1.0
+    sonar.sources=.
+    sonar.externalIssuesReportPaths={PATH_TO_CX_FLOW_SONAR_REPORT}
+    sonar.issuesReport.json.enable=true
+    sonar.verbose=true
+    sonar.showProfiling=true
+    sonar.login={SONARQUBE_USER_TOKEN}
+```
+
+3. Create sonar-project.properties in base path of code or repository as below:
+```
+   sonar.projectKey={PROJECT_KEY}
+   sonar.organization={ORGANIZATION}
+   sonar.java.binaries={CLASS_FOLDER}(e.g:./target/classes)
+   sonar.exclusions={EXCLUDE_FOLDER}(e.g:src/test/resources/**)
+```
+
+4. Run the below command from the floder where sonar-project.properties is located:
+```
+   sonar-scanner -X
+```
