@@ -1682,7 +1682,7 @@ csv:
   cx-flow:
     bug-tracker: SonarQube
     bug-tracker-impl:
-      - SonarQube
+      -SonarQube
 ```
 
 ```
@@ -1701,3 +1701,13 @@ csv:
 ```
    sonar-scanner -X
 ```
+
+### <a name="SonarQubeSeverityMapping">Severity Mapping</a>
+<br>Issue Severity Mapping for SAST and SCA:<br>
+
+| SAST / SCA Seveirty | SonarQube Severity | 
+|---------------------|--------------------|
+| `High`              | `CRITICAL`         |  
+| `Medium`            | `MAJOR`            | 
+| `Low`               | `MINOR`            |
+| `Information`       | `INFO`             |
