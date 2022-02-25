@@ -22,6 +22,7 @@ import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
+import com.checkmarx.sdk.dto.sca.Sca;
 import com.google.common.collect.ImmutableMap;
 import io.atlassian.util.concurrent.Promise;
 import lombok.extern.slf4j.Slf4j;
@@ -463,7 +464,8 @@ public class JiraService {
         for (com.checkmarx.flow.dto.Field f : bugTracker.getFields()) {
 
             String customField = getCustomFieldByName(projectKey, issueTypeStr, f.getJiraFieldName());
-            String value;
+            String value = "";
+            String fieldName;
             if (update && f.isSkipUpdate()) {
                 log.debug("Skip update to field {}", f.getName());
                 continue;
@@ -496,12 +498,67 @@ public class JiraService {
                             value = "";
                         }
                         break;
+                    case "sca-results":
+                        if(issue.getScaDetails() == null){
+                            log.debug("Sca details not available");
+                            break;
+                        }
+                        fieldName = f.getName();
+                        switch (fieldName) {
+                            case "package-name":
+                                log.debug("package-name: {}", issue.getScaDetails().get(0).getVulnerabilityPackage().getId());
+                                value = issue.getScaDetails().get(0).getVulnerabilityPackage().getId();
+                                break;
+                            case "current-version":
+                                log.debug("current-version: {}", issue.getScaDetails().get(0).getVulnerabilityPackage().getVersion());
+                                value = issue.getScaDetails().get(0).getVulnerabilityPackage().getVersion();
+                                break;
+                            case "fixed-version":
+                                log.debug("fixed-version: {}", issue.getScaDetails().get(0).getFinding().getFixResolutionText());
+                                value = issue.getScaDetails().get(0).getFinding().getFixResolutionText();
+                                break;
+                            case "newest-version":
+                                log.debug(issue.getScaDetails().get(0).getVulnerabilityPackage().getNewestVersion());
+                                value = issue.getScaDetails().get(0).getVulnerabilityPackage().getNewestVersion();
+                                break;
+                            case "locations":
+                                List<String> locations = issue.getScaDetails().get(0).getVulnerabilityPackage().getLocations();
+                                String location = null;
+                                for (String l: locations
+                                     ) {
+                                    location = l + ",";
+                                }
+                                log.debug("locations: {}", location);
+                                value = location.substring(0,location.length()-1);
+                                break;
+                            case "dev-dependency":
+                                log.debug("dev-dependency: {}", issue.getScaDetails().get(0).getVulnerabilityPackage().isDevelopment());
+                                value = String.valueOf(issue.getScaDetails().get(0).getVulnerabilityPackage().isDevelopment()).toUpperCase();
+                                break;
+                            case "direct-dependency":
+                                log.debug("direct-dependency: {}", issue.getScaDetails().get(0).getVulnerabilityPackage().isDirectDependency());
+                                value = String.valueOf(issue.getScaDetails().get(0).getVulnerabilityPackage().isDirectDependency()).toUpperCase();
+                                break;
+                            case "risk-score":
+                                log.debug("risk score: {}", issue.getScaDetails().get(0).getVulnerabilityPackage().getRiskScore());
+                                value = String.valueOf(issue.getScaDetails().get(0).getVulnerabilityPackage().getRiskScore());
+                                break;
+                            case "outdated":
+                                log.debug("outdated: {}", issue.getScaDetails().get(0).getVulnerabilityPackage().isOutdated());
+                                value = String.valueOf(issue.getScaDetails().get(0).getVulnerabilityPackage().isOutdated()).toUpperCase();
+                                break;
+                            case "violates-policy":
+                                log.debug("Violates-Policy: {}", issue.getScaDetails().get(0).getFinding().isViolatingPolicy());
+                                value = String.valueOf(issue.getScaDetails().get(0).getFinding().isViolatingPolicy()).toUpperCase();
+
+                        }
+                        break;
                     case "static":
                         log.debug("Static value {} - {}", f.getName(), f.getJiraDefaultValue());
                         value = f.getJiraDefaultValue();
                         break;
                     default:  //result
-                        String fieldName = f.getName();
+                        fieldName = f.getName();
                         if (fieldName == null) {
                             log.warn("Field name not supplied for custom field: {}. Skipping.", customField);
                             /* there is no default, move on to the next field */
@@ -534,8 +591,13 @@ public class JiraService {
                                 value = request.getBranch();
                                 break;
                             case "severity":
-                                log.debug("severity: {}", issue.getSeverity());
-                                value = ScanUtils.toProperCase(issue.getSeverity());
+                                if(issue.getScaDetails() != null){
+                                    log.debug("severity: {}", issue.getScaDetails().get(0).getFinding().getSeverity());
+                                    value = ScanUtils.toProperCase(String.valueOf(issue.getScaDetails().get(0).getFinding().getSeverity()));
+                                }else{
+                                    log.debug("severity: {}", issue.getSeverity());
+                                    value = ScanUtils.toProperCase(issue.getSeverity());
+                                }
                                 break;
                             case "category":
                                 log.debug("category: {}", issue.getVulnerability());
@@ -546,8 +608,13 @@ public class JiraService {
                                 value = issue.getCwe();
                                 break;
                             case "cve":
-                                log.debug("cve: {}", issue.getCve());
-                                value = issue.getCve();
+                                if(issue.getScaDetails() != null){
+                                    log.debug("cve: {}", issue.getScaDetails().get(0).getFinding().getId());
+                                    value = issue.getScaDetails().get(0).getFinding().getId();
+                                }else{
+                                    log.debug("cve: {}", issue.getCve());
+                                    value = issue.getCve();
+                                }
                                 break;
                             case "system-date":
                                 DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -607,8 +674,13 @@ public class JiraService {
                                 value = request.getSite();
                                 break;
                             case "issue-link":
-                                log.debug("issue-link: {}", issue.getLink());
-                                value = issue.getLink();
+                                if(issue.getScaDetails() != null){
+                                    log.debug("issue-link: {}", issue.getScaDetails().get(0).getVulnerabilityLink());
+                                    value = issue.getScaDetails().get(0).getVulnerabilityLink();
+                                }else{
+                                    log.debug("issue-link: {}", issue.getLink());
+                                    value = issue.getLink();
+                                }
                                 break;
                             case "filename":
                                 log.debug("filename: {}", issue.getFilename());
