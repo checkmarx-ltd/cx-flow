@@ -5,6 +5,8 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.service.FilenameFormatter;
 import com.checkmarx.sdk.dto.ScanResults;
+import com.checkmarx.sdk.dto.sca.report.Finding;
+import com.checkmarx.sdk.dto.sca.report.Package;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
 import lombok.Builder;
@@ -59,7 +61,40 @@ public class SonarQubeIssueTracker extends ImmutableIssueTracker {
 
     private void generateScaResults(ScanResults results, List<Issue> sonarIssues) {
         // Sonar Report for Sca Result
+        Map<String, List<Finding>> findingsMap = results.getScaResults()
+                .getFindings().stream().collect(Collectors.groupingBy(Finding::getPackageId));
 
+        List<Package> packages = new ArrayList<>(results.getScaResults()
+                .getPackages());
+
+        Map<String, Package> map = new HashMap<>();
+        for (Package p : packages) map.put(p.getId(), p);
+
+        for (Map.Entry<String, List<Finding>> entry : findingsMap.entrySet()) {
+
+            String key = entry.getKey();
+            Package vulnerablePackage = map.get(key);
+            StringBuilder messageBuilder = new StringBuilder();
+            List<Finding> val = entry.getValue();
+            List<String> tags = new ArrayList<>();
+            val.forEach(v -> {
+                vulnerablePackage.getLocations().forEach(k -> {
+                    messageBuilder.append("Package:").append(v.getPackageId()).append(",")
+                            .append("Description:").append(v.getDescription()).append(",")
+                            .append("Score:").append(v.getScore());
+                    sonarIssues.add(Issue.builder().engineId(properties.getScaScannerName())
+                            .ruleId(v.getId())
+                            .severity(properties.getSeverityMap().get(v.getSeverity()) != null ? properties.getSeverityMap().get(v.getSeverity()):DEFAULT_LEVEL)
+                            .type("VULNERABILITY")
+                            .primaryLocation(ILocation.builder()
+                                    .filePath(k)
+                                    .message(messageBuilder.toString())
+                                    .textRange(TextRange.builder().
+                                            startLine(1)
+                                            .endLine(1).build()).build()).build());
+                });
+            });
+        }
     }
 
     private void generateSastResults(ScanResults results, List<Issue> sonarIssues) {

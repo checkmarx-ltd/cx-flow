@@ -1514,6 +1514,7 @@ cx-flow:
     - Rally
     - ServiceNow
     - Sarif
+    -SonarQube
   branches:
     - develop
     - master
@@ -1524,6 +1525,9 @@ cx-flow:
   filter-cwe:
   filter-status:
   mitre-url: https://cwe.mitre.org/data/definitions/%s.html
+
+sonarqube:
+  file-path: C:\Checkmarx\SonarQube\cxSonarQube.json
 
 checkmarx:
   username: xxxxx
@@ -1659,4 +1663,51 @@ csv:
     - header: Similarity ID
       name: similarity-id
 ```
-	
+
+## <a name="SonarQubeIntegrations">CxFlow SonarQube Integration</a>
+[Back to Table of Contents](#tableofcontents)
+### <a name="SonarQubePrerequisites">Prerequisites</a>
+<br>The following must be set up:<br>
+
+* SonarQube Server (refer to SonarQube Setup Guide on [here](https://docs.sonarqube.org/latest/setup/install-server))
+
+* SonarQube Scanner (refer to SonarQube Scanner Installation on [here](https://docs.sonarqube.org/latest/setup/get-started-2-minutes))
+
+* Generate the Sonar Qube Issue Report by configuring bug tracker as SonarQube.
+
+### <a name="SonarQubeGeneralprocedures">General Procedure</a>
+<br>Configure cx-flow to generate SonarQube Report for SAST or SCA:<br>
+
+```
+  cx-flow:
+    bug-tracker: SonarQube
+    bug-tracker-impl:
+      -SonarQube
+```
+
+```
+  sonarqube:
+    file-path: C:\Checkmarx\SonarQube\cxSonarQube.json
+```
+
+<br> Upload the CxFlow Sonar Qube Report generated for SAST or SCA scan:<br>
+1. Set Sonar Scanner in Windows PATH Varaible.
+2. Edit {SONAR_SCANNER_HOME}\conf\sonar-scanner.properties for below properties:
+```
+    sonar.externalIssuesReportPaths={PATH_TO_CX_FLOW_SONAR_REPORT}
+```
+
+3. Run the below command from the folder where sonar-project.properties is located:
+```
+   sonar-scanner -X
+```
+
+### <a name="SonarQubeSeverityMapping">Severity Mapping</a>
+<br>Issue Severity Mapping for SAST and SCA:<br>
+
+| SAST / SCA Seveirty | SonarQube Severity | 
+|---------------------|--------------------|
+| `High`              | `CRITICAL`         |  
+| `Medium`            | `MAJOR`            | 
+| `Low`               | `MINOR`            |
+| `Information`       | `INFO`             |
