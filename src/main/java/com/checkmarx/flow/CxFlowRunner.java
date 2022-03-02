@@ -415,9 +415,11 @@ public class CxFlowRunner implements ApplicationRunner {
                     log.error("cx-project must be provided when --project option is used");
                     exit(ExitCode.ARGUMENT_NOT_PROVIDED);
                 }
+                request.setCliMode("project");
                 publishLatestScanResults(request);
             } else if (args.containsOption("scan") || args.containsOption(IAST_OPTION)) {
                 log.info("Executing scan process");
+                request.setCliMode("scan");
                 //GitHub Scan with Git Clone
                 if (args.containsOption("github")) {
                     repoUrl = getNonEmptyRepoUrl(namespace, repoName, repoUrl, gitHubProperties.getGitUri(namespace, repoName));

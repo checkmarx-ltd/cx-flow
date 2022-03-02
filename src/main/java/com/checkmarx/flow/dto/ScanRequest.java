@@ -112,6 +112,10 @@ public class ScanRequest {
     @Getter @Setter
     private String sshKeyIdentifier;
 
+    //SSH Key per repo
+    @Getter @Setter
+    private String cliMode;
+
     public ScanRequest(ScanRequest other) {
         this.namespace = other.namespace;
         this.application = other.application;
@@ -155,6 +159,7 @@ public class ScanRequest {
         this.gitUrl = other.gitUrl;
         this.disableCertificateValidation = other.disableCertificateValidation;
         this.sshKeyIdentifier = other.sshKeyIdentifier;
+        this.cliMode = other.cliMode;
     }
 
     public Map<String,String> getAltFields() {
