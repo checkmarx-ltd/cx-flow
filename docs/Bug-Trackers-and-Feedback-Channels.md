@@ -361,14 +361,23 @@ cx-flow:
 ```
 
 ## <a name="cxxml">CxXML</a>
-The XML bug-tracker (defined as CxXml) is useful, if you want to retrieve the latest scan results per project (batch mode) from Checkmarx per project, Team, or the entire instance.  This is the original XML report provided by Checkmarx.  
+The XML bug-tracker (defined as CxXml) is useful, if you want to retrieve the latest scan results per project (batch mode) from Checkmarx per project, Team, or the entire instance. This is the original XML report provided by Checkmarx. When using CxXML with both CxSAST and CxSCA scanners enabled, two seprate reports will be generated, one for CxSAST report and one for CxSCA report.
 
-**Note**: The Checkmarx config block must specify `preserve-xml` as `true` for this feedback type.  *Only available for SAST 8.x|9.x*
+CxSCA currently does not support `--batch` mode, but retrieving latest scan for a particular project (project mode) is still possible.
+
+When both the scanners are enabled it is a known issue that duplicate CxSAST reports are generated.
+
+**Note**: The Checkmarx,Sca config blocks must specify `preserve-xml` as `true` for this feedback type.  
 ```
 checkmarx:
    ...
    ...
      preserve-xml: true
+     
+sca:
+  ....
+  ....
+  preserve-xml:true     
 cx-xml:
    file-name-format: "[NAMESPACE]-[REPO]-[BRANCH]-[TIME].xml"
    data-folder: "C:\\tmp"
