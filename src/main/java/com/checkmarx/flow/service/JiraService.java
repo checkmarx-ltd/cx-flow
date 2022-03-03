@@ -7,6 +7,7 @@ import com.atlassian.jira.rest.client.api.domain.input.FieldInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
 import com.atlassian.jira.rest.client.api.domain.input.TransitionInput;
 import com.atlassian.jira.rest.client.internal.async.CustomAsynchronousJiraRestClientFactory;
+import com.checkmarx.flow.config.CliMode;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.constants.FlowConstants;
@@ -223,7 +224,7 @@ public class JiraService {
             log.error("Namespace/Repo/Branch or App must be provided in order to properly track ");
             throw new MachinaRuntimeException();
         }
-        if(!scannerFilter.isEmpty()){
+        if(!StringUtils.isEmpty(scannerFilter)){
             jql = jql.concat(String.format(" and \"%s\" in (%s)",
                                     jiraProperties.getLabelTracker(),
                                     scannerFilter
@@ -1235,7 +1236,7 @@ public class JiraService {
         List<String> closedIssues = new ArrayList<>();
         String filterScanner = "";
 
-        if("scan".equals(request.getCliMode())){
+        if(CliMode.SCAN.equals(request.getCliMode())){
             if (null != results.getScaResults()) {
                 filterScanner=JIRA_ISSUE_LABEL_SCA;
             }

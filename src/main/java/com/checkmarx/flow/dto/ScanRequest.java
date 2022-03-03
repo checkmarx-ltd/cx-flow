@@ -1,5 +1,6 @@
 package com.checkmarx.flow.dto;
 
+import com.checkmarx.flow.config.CliMode;
 import com.checkmarx.flow.config.FindingSeverity;
 import com.checkmarx.flow.config.external.ASTConfig;
 import com.checkmarx.flow.service.VulnerabilityScanner;
@@ -112,9 +113,9 @@ public class ScanRequest {
     @Getter @Setter
     private String sshKeyIdentifier;
 
-    //SSH Key per repo
+    //command line mode
     @Getter @Setter
-    private String cliMode;
+    private CliMode cliMode;
 
     public ScanRequest(ScanRequest other) {
         this.namespace = other.namespace;
