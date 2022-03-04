@@ -1,5 +1,6 @@
 package com.checkmarx.flow.dto;
 
+import com.checkmarx.flow.config.CliMode;
 import com.checkmarx.flow.config.FindingSeverity;
 import com.checkmarx.flow.config.external.ASTConfig;
 import com.checkmarx.flow.service.VulnerabilityScanner;
@@ -112,6 +113,10 @@ public class ScanRequest {
     @Getter @Setter
     private String sshKeyIdentifier;
 
+    //command line mode
+    @Getter @Setter
+    private CliMode cliMode;
+
     public ScanRequest(ScanRequest other) {
         this.namespace = other.namespace;
         this.application = other.application;
@@ -155,6 +160,7 @@ public class ScanRequest {
         this.gitUrl = other.gitUrl;
         this.disableCertificateValidation = other.disableCertificateValidation;
         this.sshKeyIdentifier = other.sshKeyIdentifier;
+        this.cliMode = other.cliMode;
     }
 
     public Map<String,String> getAltFields() {

@@ -7,6 +7,7 @@ import com.atlassian.jira.rest.client.api.domain.input.FieldInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
 import com.atlassian.jira.rest.client.api.domain.input.TransitionInput;
 import com.atlassian.jira.rest.client.internal.async.CustomAsynchronousJiraRestClientFactory;
+import com.checkmarx.flow.config.CliMode;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.constants.FlowConstants;
@@ -57,6 +58,8 @@ public class JiraService {
     private static final String NAME_FIELD_TYPE = "name";
     private static final String CHILD_FIELD_TYPE = "child";
     private static final String ACCOUNT_ID = "accountId";
+    private static final String JIRA_ISSUE_LABEL_SCA = "scanner:SCA";
+    private static final String JIRA_ISSUE_LABEL_SAST = "scanner:SAST";
     private static final String CASCADE_PARENT_CHILD_DELIMITER = ";";
     private static final int MAX_RESULTS_ALLOWED = 1000000;
     private static final String SEARCH_ASSIGNABLE_USER = "%s/rest/api/latest/user/assignable/search?project={projectKey}&query={assignee}";
@@ -173,7 +176,7 @@ public class JiraService {
         return jiraProperties.getStatusCategoryOpenName().contains(status.getStatusCategory().getName());
     }
 
-    private List<Issue> getIssues(ScanRequest request) {
+    private List<Issue> getIssues(ScanRequest request,String scannerFilter) {
         log.info("Executing getIssues API call");
         List<Issue> issues = new ArrayList<>();
         String jql;
@@ -222,6 +225,14 @@ public class JiraService {
             log.error("Namespace/Repo/Branch or App must be provided in order to properly track ");
             throw new MachinaRuntimeException();
         }
+        if(!StringUtils.isEmpty(scannerFilter)){
+            jql = jql.concat(String.format(" and \"%s\" in (%s)",
+                                    jiraProperties.getLabelTracker(),
+                                    scannerFilter
+                                )
+                            );
+        }
+
         log.debug("jql query: {}", jql);
         HashSet<String> fields = new HashSet<>();
         Collections.addAll(fields, "key", "project", "issuetype", "summary", LABEL_FIELD_TYPE, "created", "updated", "status");
@@ -343,6 +354,11 @@ public class JiraService {
             } else if (!ScanUtils.empty(application)) {
                 labels.add(request.getProduct().getProduct());
                 labels.add(jiraProperties.getAppLabelPrefix().concat(":").concat(application));
+            }
+            if (null != scaDetails) { 
+                labels.add(JIRA_ISSUE_LABEL_SCA);
+            }else{
+                labels.add(JIRA_ISSUE_LABEL_SAST);
             }
             log.debug("Adding tracker labels: {} - {}", jiraProperties.getLabelTracker(), labels);
             if (!jiraProperties.getLabelTracker().equals(LABEL_FIELD_TYPE)) {
@@ -1290,6 +1306,20 @@ public class JiraService {
         List<String> newIssues = new ArrayList<>();
         List<String> updatedIssues = new ArrayList<>();
         List<String> closedIssues = new ArrayList<>();
+        String filterScanner = "";
+
+        if(CliMode.SCAN.equals(request.getCliMode())){
+            if (null != results.getScaResults()) {
+                filterScanner=JIRA_ISSUE_LABEL_SCA;
+            }
+            if(null != results.getXIssues()){
+                if(filterScanner.isEmpty()){
+                    filterScanner=JIRA_ISSUE_LABEL_SAST;
+                }else{
+                    filterScanner=filterScanner + "," + JIRA_ISSUE_LABEL_SAST;
+                }
+            }
+        }
 
         codeBashingService.createLessonsMap();
         getAndModifyRequestApplication(request);
@@ -1305,7 +1335,7 @@ public class JiraService {
             bugTracker = parent.getBugTracker();
             bugTracker.setProjectKey(parentUrl);
             parent.setBugTracker(bugTracker);
-            issuesParent = this.getIssues(parent);
+            issuesParent = this.getIssues(parent,filterScanner);
             if (grandParentUrl.length() == 0) {
                 log.info("Grandparent field is empty");
                 issuesGrandParent = null;
@@ -1314,7 +1344,7 @@ public class JiraService {
                 bugTrackerGrandParenet = grandparent.getBugTracker();
                 bugTrackerGrandParenet.setProjectKey(grandParentUrl);
                 grandparent.setBugTracker(bugTrackerGrandParenet);
-                issuesGrandParent = this.getIssues(grandparent);
+                issuesGrandParent = this.getIssues(grandparent,filterScanner);
             }
         } else {
             issuesParent = null;
@@ -1325,7 +1355,7 @@ public class JiraService {
 
         map = this.getIssueMap(results, request);
         setMapWithScanResults(map, nonPublishedScanResultsMap);
-        jiraMap = this.getJiraIssueMap(this.getIssues(request));
+        jiraMap = this.getJiraIssueMap(this.getIssues(request,filterScanner));
 
 
         for (Map.Entry<String, ScanResults.XIssue> xIssue : map.entrySet()) {
