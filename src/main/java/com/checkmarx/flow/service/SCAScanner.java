@@ -52,6 +52,9 @@ public class SCAScanner extends AbstractASTScanner {
     @Override
     protected void setScannerSpecificProperties(ScanRequest scanRequest, ScanParams scanParams) {
         try {
+//            If bugtracker is not empty and type is CxXML then set
+//            preserveXml to true, as it is needed to retrieve sca
+//            report in xml format
             if(!ScanUtils.empty(scanRequest.getBugTracker().getCustomBean()) && scanRequest.getBugTracker().getCustomBean().equalsIgnoreCase("CxXml")){
                 scaProperties.setPreserveXml(true);
             }
