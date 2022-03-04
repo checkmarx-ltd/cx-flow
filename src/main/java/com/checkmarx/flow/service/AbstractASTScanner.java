@@ -83,6 +83,7 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
                 .scaConfig(request.getScaConfig())
                 .filterConfiguration(request.getFilter())
                 .build();
+        setScannerSpecificProperties(request,sdkScanParams);
         AstScaResults internalResults = client.getLatestScanResults(sdkScanParams);
         return toScanResults(internalResults);
     }

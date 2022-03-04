@@ -13,7 +13,9 @@ import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
 import javax.xml.bind.JAXBException;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -28,15 +30,8 @@ public class CxXMLIssueTracker extends ImmutableIssueTracker {
 
     @Override
     public void init(ScanRequest request, ScanResults results) throws MachinaException {
-        String filename = filenameFormatter.formatPath(request, properties.getFileNameFormat(), properties.getDataFolder());
-        request.setFilename(filename);
-        log.info("Creating file {}, Deleting if already exists", filename);
-        try {
-            Files.deleteIfExists(Paths.get(filename));
-            Files.createDirectories(Paths.get(properties.getDataFolder()));
-            Files.createFile(Paths.get(filename));
-        } catch (IOException e){
-            log.error("Issue deleting or creating file {}", filename,e);
+        if(!ScanUtils.empty(results.getOutput())){
+            createFile(request, properties.getFileNameFormat());
         }
     }
 
@@ -49,7 +44,7 @@ public class CxXMLIssueTracker extends ImmutableIssueTracker {
 
             marshalScaResults(request, results);
 
-        } catch (IOException | JAXBException e) {
+        } catch (IOException e) {
             log.error("Issue occurred while writing file: {} with error message: {}", request.getFilename(), e.getMessage());
         }
     }
@@ -69,10 +64,27 @@ public class CxXMLIssueTracker extends ImmutableIssueTracker {
         return null;
     }
 
-    private void marshalScaResults(ScanRequest request, ScanResults results) throws JAXBException {
+    private void marshalScaResults(ScanRequest request, ScanResults results) throws IOException {
         SCAResults scaResults = results.getScaResults();
         if (scaResults != null) {
-            JAXBHelper.convertObjectIntoXml(scaResults, request.getFilename());
+            String filenameFormat = "SCA-Risk-Report"+ properties.getFileNameFormat();
+            createFile(request, filenameFormat);
+            if(!ScanUtils.empty(scaResults.getOutput())){
+                Files.write(Paths.get(new File(request.getFilename()).getCanonicalPath()), scaResults.getOutput().getBytes());
+            }
+        }
+    }
+
+    private void createFile(ScanRequest request, String filenameFormat){
+        String effectiveFilename = filenameFormatter.formatPath(request, filenameFormat, properties.getDataFolder());
+        request.setFilename(effectiveFilename);
+        log.info("Creating file {}, Deleting if already exists", effectiveFilename);
+        try {
+            Files.deleteIfExists(Paths.get(effectiveFilename));
+            Files.createDirectories(Paths.get(properties.getDataFolder()));
+            Files.createFile(Paths.get(effectiveFilename));
+        } catch (IOException e){
+            log.error("Issue deleting or creating file {}", effectiveFilename,e);
         }
     }
 }
