@@ -36,6 +36,7 @@ sca:
   exclude-files: "**/*.xml"
   manifests-include-pattern: "!**/*.xml, **/*.yml"
   fingerprints-include-pattern: "**/*.yml"
+  preserve-xml: true
 ```
 
 To use an European tenant:
@@ -55,6 +56,7 @@ sca:
   exclude-files: "**/*.xml"
   manifests-include-pattern: "!**/*.xml, **/*.yml"
   fingerprints-include-pattern: "**/*.yml"
+  preserve-xml: true
 ```
 
 ## <a name="bug">Bug-Trackers</a>
@@ -63,6 +65,7 @@ SCA integration supports tickets management with the following bug trackers:
 * GitLab
 * Azure
 * GitHub
+* CxXML
 
 <br/>The tickets format is the same for each of the bug trackers.
 

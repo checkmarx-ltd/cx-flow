@@ -4,6 +4,7 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 
+import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.AstScaResults;
@@ -51,6 +52,12 @@ public class SCAScanner extends AbstractASTScanner {
     @Override
     protected void setScannerSpecificProperties(ScanRequest scanRequest, ScanParams scanParams) {
         try {
+//            If bugtracker is not empty and type is CxXML then set
+//            preserveXml to true, as it is needed to retrieve sca
+//            report in xml format
+            if(!ScanUtils.empty(scanRequest.getBugTracker().getCustomBean()) && scanRequest.getBugTracker().getCustomBean().equalsIgnoreCase("CxXml")){
+                scaProperties.setPreserveXml(true);
+            }
             if (scaProperties.isEnabledZipScan()) {
                 log.info("CxAST-SCA zip scan is enabled");
                 String scaClonedFolderPath = cxRepoFileHelper.getScaClonedRepoFolderPath(scanRequest.getRepoUrlWithAuth(), scanRequest.getExcludeFiles(), scanRequest.getBranch());
