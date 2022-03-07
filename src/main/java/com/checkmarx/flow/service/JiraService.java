@@ -993,7 +993,7 @@ public class JiraService {
 
             if (!iterator.hasNext()) {
                 log.error("Failed to load custom fields, The Jira project ({}) is not accessible", jiraProject);
-                throw new IllegalArgumentException("The Jira project " + jiraProject + " is not accessible");
+                throw new IllegalArgumentException(String.format("The Jira project %s is not accessible",jiraProject));
             }
             Map<String, String> fields = new HashMap<>();
             CimProject cim = iterator.next();
