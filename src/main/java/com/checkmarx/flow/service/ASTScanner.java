@@ -2,6 +2,7 @@ package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.sdk.config.AstProperties;
 import com.checkmarx.sdk.dto.AstScaResults;
 import com.checkmarx.sdk.dto.ScanResults;
@@ -10,6 +11,8 @@ import com.checkmarx.sdk.dto.ast.ScanParams;
 import com.checkmarx.sdk.service.scanner.AstScanner;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.io.File;
 import java.util.Optional;
 
 
@@ -18,8 +21,8 @@ import java.util.Optional;
 @Slf4j
 public class ASTScanner extends AbstractASTScanner {
 
-    public ASTScanner(AstScanner astClient, FlowProperties flowProperties, BugTrackerEventTrigger bugTrackerEventTrigger) {
-        super(astClient, flowProperties, AstProperties.CONFIG_PREFIX, bugTrackerEventTrigger);
+    public ASTScanner(AstScanner astClient, FlowProperties flowProperties, BugTrackerEventTrigger bugTrackerEventTrigger,ResultsService resultsService) {
+        super(astClient, flowProperties, AstProperties.CONFIG_PREFIX, bugTrackerEventTrigger,resultsService);
     }
 
     @Override
@@ -27,6 +30,11 @@ public class ASTScanner extends AbstractASTScanner {
         return ScanResults.builder()
                 .astResults(internalResults.getAstResults())
                 .build();
+    }
+
+    @Override
+    protected void cxParseResults(ScanRequest request, File file) throws ExitThrowable {
+
     }
 
     @Override
