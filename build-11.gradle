@@ -63,6 +63,7 @@ configurations {
 ext['tomcat.version'] = '9.0.54'
 ext['groovy.version'] = '3.0.9'
 ext['logback-classic.version'] = '1.2.10'
+ext['spring-core.version'] = '5.3.16'
 
 dependencies {
     compile group: 'com.beust', name: 'jcommander', version: '1.78'
@@ -170,6 +171,7 @@ dependencies {
     compile("org.apache.logging.log4j:log4j-api:2.17.1")
     compile("javax.persistence:javax.persistence-api:2.2")
     compile group:'org.apache.tomcat', name:'tomcat-juli', version:property('tomcat.version')
+    compile group:'org.springframework', name:'spring-core', version:property('spring-core.version')
 }
 
 springBoot {
