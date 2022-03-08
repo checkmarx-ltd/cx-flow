@@ -1,10 +1,7 @@
 package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.dto.BugTracker;
-import com.checkmarx.flow.dto.OperationResult;
-import com.checkmarx.flow.dto.OperationStatus;
-import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.report.AnalyticsReport;
 import com.checkmarx.flow.dto.report.ScanReport;
 import com.checkmarx.flow.exception.ExitThrowable;
@@ -27,9 +24,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public abstract class AbstractASTScanner implements VulnerabilityScanner {
     private final AbstractScanner client;
-    private final FlowProperties flowProperties;
+    protected final FlowProperties flowProperties;
     private final String scanType;
     private final BugTrackerEventTrigger bugTrackerEventTrigger;
+
+    protected final ResultsService resultsService;
+    protected ScanDetails scanDetails = null;
+    protected static final String ERROR_BREAK_MSG = "Exiting with Error code 10 due to issues present";
+
 
     @Override
     public ScanResults scan(ScanRequest scanRequest) {
@@ -48,7 +50,7 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
         
         return result;
     }
-
+    protected abstract void cxParseResults(ScanRequest request, File file) throws ExitThrowable;
     @Override
     public ScanResults scanCli(ScanRequest request, String scanType, File... files) {
         ScanResults scanResults = null;
@@ -61,6 +63,8 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
                     scanResults = scan(request, files[0].getPath());
                     break;
                 case "cxParse":
+                    cxParseResults(request, files[0]);
+                    break;
                 case "cxBatch":
                 default:
                     log.warn("ScaScanner does not support scanType of {}, ignoring.", scanType);

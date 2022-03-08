@@ -400,11 +400,23 @@ public class CxFlowRunner implements ApplicationRunner {
                     }
                     cxOsaParse(request, f, libs);
                 } else { //SAST
+                    List<String> enabledScanners = flowProperties.getEnabledVulnerabilityScanners();
                     if (args.containsOption("offline")) {
                         cxProperties.setOffline(true);
                     }
                     log.info("Processing Checkmarx result file {}", file);
 
+                    if((bugType.equals(BugTracker.Type.CUSTOM))){
+                        if(request.getBugTracker().getCustomBean().equalsIgnoreCase("CxXml")){
+                            log.error("The CxXml bugtracker is not support for parse mode{}");
+                            exit(ExitCode.BUILD_INTERRUPTED);
+                        }
+                    }
+
+                    if(enabledScanners.contains("sast")&&enabledScanners.contains("sca")){
+                        log.error("At a time only single scanner type is supported for parse mode implementation{}");
+                        exit(ExitCode.BUILD_INTERRUPTED);
+                    }
                     cxParse(request, f);
                 }
             } else if (args.containsOption(BATCH_OPTION)) {
