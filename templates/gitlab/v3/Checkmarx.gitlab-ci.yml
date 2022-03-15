@@ -127,10 +127,16 @@ checkmarx-scan-security-dashboard-on-mr:
       CX_FLOW_BUG_TRACKER_IMPL: ${CX_FLOW_BUG_TRACKER}
   script:
     - ${CX_FLOW_EXE}
-          --batch
-          --cx-team="${CX_TEAM}" 
-          --cx-project="${CX_PROJECT}" 
-          --spring.profiles.active="${CX_FLOW_ENABLED_VULNERABILITY_SCANNERS}" 
+          --project
+          --app="${CI_PROJECT_NAME}"
+          --namespace="${CI_PROJECT_NAMESPACE}"
+          --repo-name="${CI_PROJECT_NAME}"
+          --repo-url="${CI_REPOSITORY_URL}"
+          --cx-team="${CX_TEAM}"
+          --cx-project="${CX_PROJECT}"
+          --branch="${CI_COMMIT_BRANCH}"
+          --spring.profiles.active="${CX_FLOW_ENABLED_VULNERABILITY_SCANNERS}"
+          --f=.
           ${PARAMS}
   artifacts:
     reports:
