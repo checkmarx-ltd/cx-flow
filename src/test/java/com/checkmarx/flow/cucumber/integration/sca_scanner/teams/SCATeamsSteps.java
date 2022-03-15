@@ -1,31 +1,25 @@
 package com.checkmarx.flow.cucumber.integration.sca_scanner.teams;
 
 import com.checkmarx.flow.CxFlowApplication;
-import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.config.properties.FlowProperties;
 import com.checkmarx.flow.cucumber.integration.sca_scanner.ScaCommonSteps;
 import com.checkmarx.flow.service.SCAScanner;
 import com.checkmarx.flow.service.ScaConfigurationOverrider;
-import com.checkmarx.sdk.config.RestClientConfig;
 import com.checkmarx.sdk.config.ScaProperties;
-import com.checkmarx.sdk.dto.RemoteRepositoryInfo;
-import com.checkmarx.sdk.dto.sca.ScaConfig;
 import com.checkmarx.sdk.dto.sca.Project;
 import com.checkmarx.sdk.exception.CxHTTPClientException;
 import com.checkmarx.sdk.utils.scanner.client.ScaClientHelper;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
-import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.HttpStatus;
 import org.junit.Assert;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.IOException;
-import java.rmi.Remote;
 import java.util.Collections;
 import java.util.List;
 

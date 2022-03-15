@@ -1,8 +1,8 @@
 package com.checkmarx.flow.cucumber.component.csvissuetracker;
 
 import com.checkmarx.flow.CxFlowApplication;
-import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.custom.CsvProperties;
+import com.checkmarx.flow.config.properties.FlowProperties;
+import com.checkmarx.flow.config.properties.CsvProperties;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaException;

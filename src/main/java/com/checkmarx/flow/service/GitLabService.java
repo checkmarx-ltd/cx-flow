@@ -1,6 +1,6 @@
 package com.checkmarx.flow.service;
 
-import com.checkmarx.flow.config.GitLabProperties;
+import com.checkmarx.flow.config.properties.GitLabProperties;
 import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.dto.RepoComment;

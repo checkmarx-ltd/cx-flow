@@ -1,5 +1,6 @@
-package com.checkmarx.flow.config;
+package com.checkmarx.flow.config.properties;
 
+import com.checkmarx.flow.config.FindingSeverity;
 import com.checkmarx.sdk.config.CxGoProperties;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,7 +19,8 @@ import java.util.Map;
 public class FlowProperties {
     private String contact;
     private String token;
-    @NotNull @NotBlank
+    @NotNull
+    @NotBlank
     private String bugTracker;
     private List<String> bugTrackerImpl;
     private List<String> branches;
@@ -50,10 +52,11 @@ public class FlowProperties {
     private boolean scanResubmit = false;
     private String sshKeyPath;
     private Mail mail;
-    @Getter @Setter
+    @Getter
+    @Setter
     private boolean preserveProjectName;
-    private Map<FindingSeverity,Integer> thresholds;
-    private boolean scanUnprotectedBranches= false;
+    private Map<FindingSeverity, Integer> thresholds;
+    private boolean scanUnprotectedBranches = false;
 
     public String getContact() {
         return this.contact;
@@ -178,10 +181,11 @@ public class FlowProperties {
 
     /**
      * Defines how uniqueness is determined while correlating CxFlow issues with bug tracker issues.
-     * @return
-     * true: issues will be tracked according to the application name. The application name defaults to the repo name
+     *
+     * @return true: issues will be tracked according to the application name. The application name defaults to the repo name
      * but can be overridden in the WebHook flow.<br>
-     * false: issues will be tracked by a combination of namespace/repo name/branch.  */
+     * false: issues will be tracked by a combination of namespace/repo name/branch.
+     */
     public boolean isTrackApplicationOnly() {
         return trackApplicationOnly;
     }
@@ -310,9 +314,13 @@ public class FlowProperties {
         this.listFalsePositives = listFalsePositives;
     }
 
-    public boolean getScanResubmit() {return scanResubmit;}
+    public boolean getScanResubmit() {
+        return scanResubmit;
+    }
 
-    public void setScanResubmit(boolean scanResubmit) {this.scanResubmit = scanResubmit;}
+    public void setScanResubmit(boolean scanResubmit) {
+        this.scanResubmit = scanResubmit;
+    }
 
     public Map<FindingSeverity, Integer> getThresholds() {
         return thresholds;
@@ -360,7 +368,9 @@ public class FlowProperties {
             return this.notificationEnabled;
         }
 
-        public boolean isEmptyMailAllowed() { return this.allowEmptyMail; }
+        public boolean isEmptyMailAllowed() {
+            return this.allowEmptyMail;
+        }
 
         public void setHost(String host) {
             this.host = host;
@@ -382,7 +392,9 @@ public class FlowProperties {
             this.notificationEnabled = notification;
         }
 
-        public List<String> getCc() { return this.cc; }
+        public List<String> getCc() {
+            return this.cc;
+        }
 
         public void setCc(List<String> cc) {
             this.cc = cc;
@@ -392,9 +404,13 @@ public class FlowProperties {
             this.allowEmptyMail = allowEmptyMail;
         }
 
-        public String getTemplate() { return template; }
+        public String getTemplate() {
+            return template;
+        }
 
-        public void setTemplate(String template) { this.template = template; }
+        public void setTemplate(String template) {
+            this.template = template;
+        }
     }
 
     public boolean isCxGoEnabled() {

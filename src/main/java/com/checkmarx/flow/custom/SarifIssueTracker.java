@@ -1,6 +1,6 @@
 package com.checkmarx.flow.custom;
 
-import com.checkmarx.flow.config.SarifProperties;
+import com.checkmarx.flow.config.properties.SarifProperties;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.service.FilenameFormatter;

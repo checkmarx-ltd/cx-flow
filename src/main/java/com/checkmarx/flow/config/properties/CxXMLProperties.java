@@ -1,16 +1,24 @@
-package com.checkmarx.flow.custom;
+package com.checkmarx.flow.config.properties;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
 @Component
-@ConfigurationProperties(prefix = "web")
+@ConfigurationProperties(prefix = "cx-xml")
 @Validated
-public class WebPostProperties {
+public class CxXMLProperties {
+    //TEAM, PROJECT, APP, BRANCH, REPO, NAMESPACE, TIME (YYYYMMDD.HHMMSS
     private String fileNameFormat = "[APP]-[BRANCH]-[TIME]";
     private String dataFolder = "/tmp";
 
+    public String getFileNameFormat() {
+        return fileNameFormat;
+    }
+
+    public void setFileNameFormat(String fileNameFormat) {
+        this.fileNameFormat = fileNameFormat;
+    }
 
     public String getDataFolder() {
         return dataFolder;

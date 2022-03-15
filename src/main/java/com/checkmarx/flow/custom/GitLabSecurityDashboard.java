@@ -1,7 +1,7 @@
 package com.checkmarx.flow.custom;
 
-import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.config.GitLabProperties;
+import com.checkmarx.flow.config.properties.FlowProperties;
+import com.checkmarx.flow.config.properties.GitLabProperties;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.service.FilenameFormatter;

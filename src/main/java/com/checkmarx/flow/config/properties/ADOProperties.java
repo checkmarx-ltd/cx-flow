@@ -1,4 +1,4 @@
-package com.checkmarx.flow.config;
+package com.checkmarx.flow.config.properties;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -7,7 +7,7 @@ import org.springframework.validation.annotation.Validated;
 @Component
 @ConfigurationProperties(prefix = "azure")
 @Validated
-public class ADOProperties extends RepoProperties{
+public class ADOProperties extends RepoProperties {
 
     private boolean deleteCxProject = false;
     private String issueType = "issue";

@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import com.checkmarx.flow.config.BitBucketProperties;
-import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.config.properties.BitBucketProperties;
+import com.checkmarx.flow.config.properties.FlowProperties;
+import com.checkmarx.flow.config.properties.JiraProperties;
 import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.controller.WebhookController;

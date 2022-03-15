@@ -3,7 +3,7 @@ package com.checkmarx.flow.service;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.checkmarx.flow.config.GitHubProperties;
+import com.checkmarx.flow.config.properties.GitHubProperties;
 import com.checkmarx.flow.exception.GitHubClientRunTimeException;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Data;

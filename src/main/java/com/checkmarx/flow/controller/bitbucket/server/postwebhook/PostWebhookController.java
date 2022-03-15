@@ -3,9 +3,9 @@ package com.checkmarx.flow.controller.bitbucket.server.postwebhook;
 import java.io.IOException;
 import java.util.Base64;
 
-import com.checkmarx.flow.config.BitBucketProperties;
-import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.config.properties.BitBucketProperties;
+import com.checkmarx.flow.config.properties.FlowProperties;
+import com.checkmarx.flow.config.properties.JiraProperties;
 import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.EventResponse;

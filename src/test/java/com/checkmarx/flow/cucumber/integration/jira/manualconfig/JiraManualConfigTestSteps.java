@@ -2,7 +2,7 @@ package com.checkmarx.flow.cucumber.integration.jira.manualconfig;
 
 
 import com.checkmarx.flow.CxFlowApplication;
-import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.config.properties.JiraProperties;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import org.junit.Assert;

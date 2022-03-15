@@ -1,6 +1,7 @@
 package com.checkmarx.flow.custom;
 
-import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.config.properties.CsvProperties;
+import com.checkmarx.flow.config.properties.FlowProperties;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaException;

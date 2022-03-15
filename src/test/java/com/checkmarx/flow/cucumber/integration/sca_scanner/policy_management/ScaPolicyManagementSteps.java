@@ -1,7 +1,7 @@
 package com.checkmarx.flow.cucumber.integration.sca_scanner.policy_management;
 
 import com.checkmarx.flow.CxFlowApplication;
-import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.config.properties.FlowProperties;
 import com.checkmarx.flow.cucumber.integration.sca_scanner.ScaCommonSteps;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.service.SCAScanner;

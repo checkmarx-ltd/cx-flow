@@ -1,6 +1,6 @@
 package com.checkmarx.flow.sastscanning;
 
-import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.config.properties.FlowProperties;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.Sources;
 import com.checkmarx.flow.service.*;
@@ -96,7 +96,7 @@ public class ScanRequestConverter {
 
             ownerId = determineOwnerId(request, team);
             if (cxProperties.isMultiTenant() && !ScanUtils.empty(namespace)) {
-                ownerId = aquireTeamMultiTenant(request, ownerId, namespace, fullTeamName);
+                ownerId = acquireTeamMultiTenant(request, ownerId, namespace, fullTeamName);
             } else {
                 request.setTeam(team);
             }
@@ -123,7 +123,7 @@ public class ScanRequestConverter {
                 : scannerClient.getTeamId(team);
     }
 
-    private String aquireTeamMultiTenant(ScanRequest request, String ownerId, String namespace, String fullTeamName) throws CheckmarxException {
+    private String acquireTeamMultiTenant(ScanRequest request, String ownerId, String namespace, String fullTeamName) throws CheckmarxException {
         request.setTeam(fullTeamName);
         String tmpId = scannerClient.getTeamId(fullTeamName);
         log.info("Existing team with " + fullTeamName + " was not found. Creating one ...");

@@ -1,6 +1,9 @@
 package com.checkmarx.flow.controller;
 
 import com.checkmarx.flow.config.*;
+import com.checkmarx.flow.config.properties.ADOProperties;
+import com.checkmarx.flow.config.properties.FlowProperties;
+import com.checkmarx.flow.config.properties.JiraProperties;
 import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ControllerRequest;

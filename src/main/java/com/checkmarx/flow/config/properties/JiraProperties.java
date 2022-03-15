@@ -1,4 +1,4 @@
-package com.checkmarx.flow.config;
+package com.checkmarx.flow.config.properties;
 
 import com.checkmarx.flow.dto.Field;
 import lombok.Getter;

@@ -1,7 +1,7 @@
 package com.checkmarx.flow.utils;
 
-import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.config.RepoProperties;
+import com.checkmarx.flow.config.properties.FlowProperties;
+import com.checkmarx.flow.config.properties.RepoProperties;
 import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.constants.SCATicketingConstants;
 import com.checkmarx.flow.custom.IssueTracker;

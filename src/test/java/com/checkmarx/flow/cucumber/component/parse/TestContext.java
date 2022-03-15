@@ -1,7 +1,7 @@
 package com.checkmarx.flow.cucumber.component.parse;
 
 import com.checkmarx.flow.CxFlowRunner;
-import com.checkmarx.flow.custom.JsonProperties;
+import com.checkmarx.flow.config.properties.JsonProperties;
 import org.apache.commons.io.FileUtils;
 import org.springframework.stereotype.Component;
 

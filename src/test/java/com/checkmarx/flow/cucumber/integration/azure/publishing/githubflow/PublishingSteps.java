@@ -1,21 +1,19 @@
 package com.checkmarx.flow.cucumber.integration.azure.publishing.githubflow;
 
 import com.checkmarx.flow.CxFlowApplication;
-import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.config.GitHubProperties;
+import com.checkmarx.flow.config.properties.FlowProperties;
+import com.checkmarx.flow.config.properties.GitHubProperties;
 import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.controller.*;
 import com.checkmarx.flow.cucumber.integration.azure.publishing.AzureDevopsClient;
 import com.checkmarx.flow.cucumber.integration.azure.publishing.PublishingStepsBase;
 import com.checkmarx.flow.dto.BugTrackersDto;
-import com.checkmarx.flow.sastscanning.ScanRequestConverter;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.github.GitHubTestUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.exception.CheckmarxException;
-import com.checkmarx.sdk.service.scanner.CxClient;
 import com.checkmarx.sdk.service.CxService;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;

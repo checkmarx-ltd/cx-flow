@@ -1,7 +1,7 @@
 package com.checkmarx.flow.cucumber.integration.jira.analytics;
 
-import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.config.properties.FlowProperties;
+import com.checkmarx.flow.config.properties.JiraProperties;
 import com.checkmarx.flow.cucumber.common.JsonLoggerTestUtils;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;

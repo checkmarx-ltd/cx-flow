@@ -1,8 +1,8 @@
 package com.checkmarx.flow.cucumber.integration.sca_scanner.bugtrackers.github;
 
 import com.checkmarx.flow.CxFlowApplication;
-import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.config.properties.FlowProperties;
+import com.checkmarx.flow.config.properties.JiraProperties;
 import com.checkmarx.flow.cucumber.common.utils.JsonUtils;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 import com.checkmarx.flow.dto.BugTracker;

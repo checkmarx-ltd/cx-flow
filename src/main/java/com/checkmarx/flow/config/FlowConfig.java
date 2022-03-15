@@ -1,5 +1,6 @@
 package com.checkmarx.flow.config;
 
+import com.checkmarx.flow.config.properties.FlowProperties;
 import com.checkmarx.flow.filter.CaseTransformingFilter;
 import com.checkmarx.flow.utils.ScanUtils;
 import org.apache.http.impl.client.HttpClientBuilder;

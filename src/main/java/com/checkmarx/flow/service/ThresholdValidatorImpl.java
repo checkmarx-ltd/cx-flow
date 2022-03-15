@@ -1,8 +1,8 @@
 package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.config.FindingSeverity;
-import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.config.RepoProperties;
+import com.checkmarx.flow.config.properties.FlowProperties;
+import com.checkmarx.flow.config.properties.RepoProperties;
 import com.checkmarx.flow.dto.OperationResult;
 import com.checkmarx.flow.dto.OperationStatus;
 import com.checkmarx.flow.dto.ScanRequest;

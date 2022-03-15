@@ -13,8 +13,8 @@ import com.atlassian.jira.rest.client.api.SearchRestClient;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.SearchResult;
 import com.atlassian.jira.rest.client.internal.async.CustomAsynchronousJiraRestClientFactory;
-import com.checkmarx.flow.config.GitLabProperties;
-import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.config.properties.GitLabProperties;
+import com.checkmarx.flow.config.properties.JiraProperties;
 
 import com.checkmarx.sdk.config.CxGoProperties;
 import com.checkmarx.sdk.config.CxProperties;

@@ -1,9 +1,9 @@
 package com.checkmarx.flow.cucumber.integration.azure.publishing.github2ado;
 
 import com.checkmarx.flow.CxFlowApplication;
-import com.checkmarx.flow.config.ADOProperties;
-import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.config.GitHubProperties;
+import com.checkmarx.flow.config.properties.ADOProperties;
+import com.checkmarx.flow.config.properties.FlowProperties;
+import com.checkmarx.flow.config.properties.GitHubProperties;
 import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.controller.*;
 import com.checkmarx.flow.cucumber.integration.azure.publishing.AzureDevopsClient;

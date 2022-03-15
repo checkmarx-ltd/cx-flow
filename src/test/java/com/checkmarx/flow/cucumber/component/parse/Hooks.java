@@ -1,6 +1,6 @@
 package com.checkmarx.flow.cucumber.component.parse;
 
-import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.config.properties.FlowProperties;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import lombok.RequiredArgsConstructor;

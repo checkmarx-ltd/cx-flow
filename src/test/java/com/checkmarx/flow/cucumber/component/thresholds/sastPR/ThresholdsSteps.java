@@ -2,6 +2,9 @@ package com.checkmarx.flow.cucumber.component.thresholds.sastPR;
 
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.*;
+import com.checkmarx.flow.config.properties.ADOProperties;
+import com.checkmarx.flow.config.properties.FlowProperties;
+import com.checkmarx.flow.config.properties.GitHubProperties;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 import com.checkmarx.flow.cucumber.integration.cli.IntegrationTestContext;
 import com.checkmarx.flow.dto.BugTracker;

@@ -1,7 +1,7 @@
 package com.checkmarx.flow.handlers.config;
 
-import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.config.properties.FlowProperties;
+import com.checkmarx.flow.config.properties.JiraProperties;
 import com.checkmarx.flow.service.ConfigurationOverrider;
 import com.checkmarx.flow.service.CxScannerService;
 import com.checkmarx.flow.service.FilterFactory;

@@ -1,7 +1,7 @@
 package com.checkmarx.flow.cucumber.component.projectname;
 
 import com.checkmarx.flow.CxFlowApplication;
-import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.config.properties.FlowProperties;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.service.CxScannerService;
 import com.checkmarx.flow.service.HelperService;

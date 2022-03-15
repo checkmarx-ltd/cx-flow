@@ -1,5 +1,7 @@
 package com.checkmarx.flow.config;
 
+import com.checkmarx.flow.config.properties.OptionalScmInstanceProperties;
+import com.checkmarx.flow.config.properties.RepoProperties;
 import com.checkmarx.flow.dto.ControllerRequest;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
@@ -53,7 +55,7 @@ public class ScmConfigOverrider {
                     value = validateOptionalInstanceValue(configParams, key, optionalInstanceKey.getApiUrl());
                     break;
                 default:
-                    throw new MachinaRuntimeException("Scm key: " + key + "is not supported");
+                    throw new MachinaRuntimeException("SCM key: " + key + "is not supported");
             }
         }
         return value;

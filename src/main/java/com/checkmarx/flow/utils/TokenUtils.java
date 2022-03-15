@@ -1,7 +1,7 @@
 package com.checkmarx.flow.utils;
 
 
-import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.config.properties.FlowProperties;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,6 +1,6 @@
 package com.checkmarx.flow.cucumber.integration.github;
 
-import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.config.properties.FlowProperties;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.service.FlowService;

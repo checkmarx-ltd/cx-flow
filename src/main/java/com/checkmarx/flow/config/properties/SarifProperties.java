@@ -1,4 +1,4 @@
-package com.checkmarx.flow.config;
+package com.checkmarx.flow.config.properties;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -9,26 +9,35 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Component
-@ConfigurationProperties(prefix = "sonarqube")
+@ConfigurationProperties(prefix = "sarif")
 @Validated
-public class SonarQubeProperties {
-    private String filePath = "./cxSonarQube.json";
-    private String scaScannerName = "Cx - SCA";
-    private String sastScannerName = "Cx - SAST";
-    private String scaOrganization = "Checkmarx";
-    private String sastOrganization = "Checkmarx";
+public class SarifProperties {
+    private String filePath = "./cx.sarif";
+    private String scaScannerName = "Checkmarx - SCA";
+    private String sastScannerName = "Checkmarx - SAST";
+    private String scaOrganization = "Checkmarx - SCA";
+    private String sastOrganization = "Checkmarx - SAST";
 
-    private String sonarQubeSchema="";
-    private String sonarQubeVersion = "2.1.0";
+    private String sarifSchema="https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json";
+    private String sarifVersion = "2.1.0";
     private String semanticVersion = "1.0.0";
     private Map<String, String> severityMap = new HashMap<>();
+    private Map<String, String> securitySeverityMap = new HashMap<>();
 
     @PostConstruct
     private void loadSeverityMap(){
-        severityMap.put("High", "CRITICAL");
-        severityMap.put("Medium", "MAJOR");
-        severityMap.put("Low", "MINOR");
-        severityMap.put("Information", "INFO");
+        severityMap.put("High", "error");
+        severityMap.put("Medium", "error");
+        severityMap.put("Low", "warning");
+        severityMap.put("Information", "warning");
+    }
+
+    @PostConstruct
+    private void loadSecuritySeverityMap() {
+        securitySeverityMap.put("High", "7.0");
+        securitySeverityMap.put("Medium", "4.0");
+        securitySeverityMap.put("Low", "3.9");
+        securitySeverityMap.put("Information", "3.9");
     }
 
     public String getFilePath() {
@@ -56,8 +65,8 @@ public class SonarQubeProperties {
         this.sastScannerName = sastScannerName;
     }
 
-    public String getSonarQubeSchema() {
-        return sonarQubeSchema;
+    public String getSarifSchema() {
+        return sarifSchema;
     }
 
     public String getScaOrganization() {
@@ -76,16 +85,16 @@ public class SonarQubeProperties {
         this.sastOrganization = sastOrganization;
     }
 
-    public void setSonarQubeSchema(String sonarQubeSchema) {
-        this.sonarQubeSchema = sonarQubeSchema;
+    public void setSarifSchema(String sarifSchema) {
+        this.sarifSchema = sarifSchema;
     }
 
-    public String getSonarQubeVersion() {
-        return sonarQubeVersion;
+    public String getSarifVersion() {
+        return sarifVersion;
     }
 
-    public void setSonarQubeVersion(String sonarQubeVersion) {
-        this.sonarQubeVersion = sonarQubeVersion;
+    public void setSarifVersion(String sarifVersion) {
+        this.sarifVersion = sarifVersion;
     }
 
     public String getSemanticVersion() {
@@ -102,5 +111,13 @@ public class SonarQubeProperties {
 
     public void setSeverityMap(Map<String, String> severityMap) {
         this.severityMap = severityMap;
+    }
+
+    public Map<String, String> getSecuritySeverityMap() {
+        return securitySeverityMap;
+    }
+
+    public void setSecuritySeverityMap(Map<String, String> securitySeverityMap) {
+        this.securitySeverityMap = securitySeverityMap;
     }
 }

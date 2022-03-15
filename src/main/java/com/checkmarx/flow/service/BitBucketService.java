@@ -1,7 +1,7 @@
 package com.checkmarx.flow.service;
 
-import com.checkmarx.flow.config.BitBucketProperties;
-import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.config.properties.BitBucketProperties;
+import com.checkmarx.flow.config.properties.FlowProperties;
 import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.dto.RepoComment;
 import com.checkmarx.flow.dto.ScanDetails;

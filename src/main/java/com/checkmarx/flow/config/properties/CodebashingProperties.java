@@ -1,4 +1,4 @@
-package com.checkmarx.flow.config;
+package com.checkmarx.flow.config.properties;
 
 import lombok.Getter;
 import lombok.Setter;

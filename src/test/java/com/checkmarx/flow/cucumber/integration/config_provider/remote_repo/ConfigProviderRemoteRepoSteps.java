@@ -4,7 +4,7 @@ import com.checkmarx.configprovider.ConfigProvider;
 import com.checkmarx.configprovider.dto.SourceProviderType;
 import com.checkmarx.configprovider.readers.RepoReader;
 import com.checkmarx.flow.CxFlowApplication;
-import com.checkmarx.flow.config.GitHubProperties;
+import com.checkmarx.flow.config.properties.GitHubProperties;
 import com.checkmarx.flow.config.external.ASTConfig;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.sdk.config.AstProperties;

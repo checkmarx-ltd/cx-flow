@@ -2,7 +2,7 @@ package com.checkmarx.flow.cucumber.component.batch;
 
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.CxFlowRunner;
-import com.checkmarx.flow.config.*;
+import com.checkmarx.flow.config.properties.*;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 import com.checkmarx.flow.cucumber.component.scan.ScanFixture;
 import com.checkmarx.flow.service.*;

@@ -1,7 +1,7 @@
 package com.checkmarx.flow.utils;
 
-import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.config.CxIntegrationsProperties;
+import com.checkmarx.flow.config.properties.FlowProperties;
+import com.checkmarx.flow.config.properties.CxIntegrationsProperties;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.service.*;

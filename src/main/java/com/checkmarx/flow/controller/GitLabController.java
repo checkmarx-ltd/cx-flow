@@ -1,8 +1,8 @@
 package com.checkmarx.flow.controller;
 
-import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.config.GitLabProperties;
-import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.config.properties.FlowProperties;
+import com.checkmarx.flow.config.properties.GitLabProperties;
+import com.checkmarx.flow.config.properties.JiraProperties;
 import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.dto.BugTracker;
@@ -61,13 +61,13 @@ public class GitLabController extends WebhookController {
     /**
      * Merge Request event webhook submitted.
      */
-    @PostMapping(value = {"/{product}","/"}, headers = MERGE)
+    @PostMapping(value = {"/{product}", "/"}, headers = MERGE)
     public ResponseEntity<EventResponse> mergeRequest(
             @RequestBody MergeEvent body,
             @RequestHeader(value = TOKEN_HEADER) String token,
             @PathVariable(value = "product", required = false) String product,
             ControllerRequest controllerRequest
-    ){
+    ) {
         String uid = helperService.getShortUid();
         MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
         log.info("Processing GitLab MERGE request");
@@ -76,8 +76,8 @@ public class GitLabController extends WebhookController {
 
         try {
             ObjectAttributes objectAttributes = body.getObjectAttributes();
-            if(!objectAttributes.getState().equalsIgnoreCase("opened") ||
-                    isWIP(body)){
+            if (!objectAttributes.getState().equalsIgnoreCase("opened") ||
+                    isWIP(body)) {
                 log.info("Merge requested not processed.  Status was not opened , or was WIP ({})", objectAttributes.getState());
 
                 return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
@@ -86,7 +86,7 @@ public class GitLabController extends WebhookController {
                         .build());
             }
             String app = body.getRepository().getName();
-            if(StringUtils.isNotEmpty(controllerRequest.getApplication())){
+            if (StringUtils.isNotEmpty(controllerRequest.getApplication())) {
                 app = controllerRequest.getApplication();
             }
 
@@ -95,11 +95,11 @@ public class GitLabController extends WebhookController {
                 bugType = ScanUtils.getBugTypeEnum(controllerRequest.getBug(), flowProperties.getBugTrackerImpl());
             }
 
-            if(controllerRequest.getAppOnly() != null){
+            if (controllerRequest.getAppOnly() != null) {
                 flowProperties.setTrackApplicationOnly(controllerRequest.getAppOnly());
             }
 
-            if(ScanUtils.empty(product)){
+            if (ScanUtils.empty(product)) {
                 product = ScanRequest.Product.CX.getProduct();
             }
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
@@ -126,7 +126,7 @@ public class GitLabController extends WebhookController {
                     .product(p)
                     .project(controllerRequest.getProject())
                     .team(controllerRequest.getTeam())
-                    .namespace(proj.getNamespace().replace(" ","_"))
+                    .namespace(proj.getNamespace().replace(" ", "_"))
                     .repoName(proj.getName())
                     .repoUrl(proj.getGitHttpUrl())
                     .repoUrlWithAuth(gitAuthUrl)
@@ -151,12 +151,12 @@ public class GitLabController extends WebhookController {
 
             setScmInstance(controllerRequest, request);
 
-            if(proj.getId() != null) {
+            if (proj.getId() != null) {
                 request.setRepoProjectId(proj.getId());
             }
 
             /*Check for Config as code (cx.config) and override*/
-            CxConfig cxConfig =  gitLabService.getCxConfigOverride(request);
+            CxConfig cxConfig = gitLabService.getCxConfigOverride(request);
             request = configOverrider.overrideScanRequestProperties(cxConfig, request);
 
             request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, body.toString());
@@ -164,7 +164,7 @@ public class GitLabController extends WebhookController {
             request.putAdditionalMetadata(FlowConstants.MERGE_TITLE, objectAttributes.getTitle());
 
             request.setId(uid);
-            if(helperService.isBranch2Scan(request, branches)){
+            if (helperService.isBranch2Scan(request, branches)) {
                 flowService.initiateAutomation(request);
             }
 
@@ -177,13 +177,13 @@ public class GitLabController extends WebhookController {
     /**
      * Push Request event webhook submitted.
      */
-    @PostMapping(value = {"/{product}","/"}, headers = PUSH)
+    @PostMapping(value = {"/{product}", "/"}, headers = PUSH)
     public ResponseEntity<EventResponse> pushRequest(
             @RequestBody PushEvent body,
             @RequestHeader(value = TOKEN_HEADER) String token,
             @PathVariable(value = "product", required = false) String product,
             ControllerRequest controllerRequest
-    ){
+    ) {
         String uid = helperService.getShortUid();
         MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
         controllerRequest = ensureNotNull(controllerRequest);
@@ -197,32 +197,31 @@ public class GitLabController extends WebhookController {
                 throw new IllegalArgumentException("Request body or request repository cannot be null");
             }
 
-            if(StringUtils.isNotEmpty(controllerRequest.getApplication())){
+            if (StringUtils.isNotEmpty(controllerRequest.getApplication())) {
                 app = controllerRequest.getApplication();
             }
-
 
             //set the default bug tracker as per yml
             setBugTracker(flowProperties, controllerRequest);
             BugTracker.Type bugType = ScanUtils.getBugTypeEnum(controllerRequest.getBug(), flowProperties.getBugTrackerImpl());
 
-            if(controllerRequest.getAppOnly() != null){
+            if (controllerRequest.getAppOnly() != null) {
                 flowProperties.setTrackApplicationOnly(controllerRequest.getAppOnly());
             }
-            if(ScanUtils.empty(product)){
+            if (ScanUtils.empty(product)) {
                 product = ScanRequest.Product.CX.getProduct();
             }
-            ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
+            ScanRequest.Product scanRequestProduct = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
             //extract branch from ref (refs/heads/master -> master)
             String currentBranch = ScanUtils.getBranchFromRef(body.getRef());
             List<String> branches = getBranches(controllerRequest, flowProperties);
 
-            BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
+            BugTracker bugTracker = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
             FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
 
-            Project proj = body.getProject();
+            Project project = body.getProject();
 
-            String gitUrl = proj.getGitHttpUrl();
+            String gitUrl = project.getGitHttpUrl();
             log.debug("Using url: {}", gitUrl);
             String configToken = scmConfigOverrider.determineConfigToken(properties, controllerRequest.getScmInstance());
             String gitAuthUrl = gitAuthUrlGenerator.addCredToUrl(ScanRequest.Repository.GITLAB, gitUrl, configToken);
@@ -230,12 +229,12 @@ public class GitLabController extends WebhookController {
             ScanRequest request = ScanRequest.builder()
                     .id(String.valueOf(body.getProjectId()))
                     .application(app)
-                    .product(p)
+                    .product(scanRequestProduct)
                     .project(controllerRequest.getProject())
                     .team(controllerRequest.getTeam())
-                    .namespace(proj.getNamespace().replace(" ","_"))
-                    .repoName(proj.getName())
-                    .repoUrl(proj.getGitHttpUrl())
+                    .namespace(project.getNamespace().replace(" ", "_"))
+                    .repoName(project.getName())
+                    .repoUrl(project.getGitHttpUrl())
                     .repoUrlWithAuth(gitAuthUrl)
                     .repoType(ScanRequest.Repository.GITLAB)
                     .branch(currentBranch)
@@ -244,9 +243,9 @@ public class GitLabController extends WebhookController {
                     .scanPreset(controllerRequest.getPreset())
                     .excludeFolders(controllerRequest.getExcludeFolders())
                     .excludeFiles(controllerRequest.getExcludeFiles())
-                    .bugTracker(bt)
+                    .bugTracker(bugTracker)
                     .filter(filter)
-                    .organizationId(getOrganizationId(proj))
+                    .organizationId(getOrganizationId(project))
                     .gitUrl(gitUrl)
                     .hash(body.getAfter())
                     .build();
@@ -254,7 +253,8 @@ public class GitLabController extends WebhookController {
             /*Determine emails*/
             List<String> emails = new ArrayList<>();
             String commitEndpoint = null;
-            commitEndpoint = setUserEmail(body, bugType, proj, request, emails, commitEndpoint);
+            commitEndpoint = parseCommits(body, bugType, project, request, emails, commitEndpoint);
+            setUserEmail(body, request, emails);
 
             request.setMergeNoteUri(commitEndpoint);
             request.setEmail(emails);
@@ -266,18 +266,18 @@ public class GitLabController extends WebhookController {
                 request.setScanPresetOverride(true);
             }
 
-            if(proj.getId() != null) {
-                request.setRepoProjectId(proj.getId());
+            if (project.getId() != null) {
+                request.setRepoProjectId(project.getId());
             }
 
             /*Check for Config as code (cx.config) and override*/
-            CxConfig cxConfig =  gitLabService.getCxConfigOverride(request);
+            CxConfig cxConfig = gitLabService.getCxConfigOverride(request);
             request = configOverrider.overrideScanRequestProperties(cxConfig, request);
 
             request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, body.toString());
             request.setId(uid);
 
-            if(helperService.isBranch2Scan(request, branches)){
+            if (helperService.isBranch2Scan(request, branches)) {
                 flowService.initiateAutomation(request);
             }
         } catch (IllegalArgumentException e) {
@@ -295,22 +295,29 @@ public class GitLabController extends WebhookController {
         return StringUtils.substringBefore(proj.getPathWithNamespace(), "/");
     }
 
-    private String setUserEmail(@RequestBody PushEvent body, BugTracker.Type bugType, Project proj, ScanRequest request, List<String> emails, String commitEndpoint) {
+    private String parseCommits(@RequestBody PushEvent body, BugTracker.Type bugType, Project project, ScanRequest request, List<String> emails, String commitEndpoint) {
         for (Commit c : body.getCommits()) {
             Author author = c.getAuthor();
             if (author != null && StringUtils.isNotEmpty(author.getEmail())) {
                 emails.add(author.getEmail());
             }
+
             if (StringUtils.isNotEmpty(c.getUrl()) && bugType.equals(BugTracker.Type.GITLABCOMMIT)) {
                 commitEndpoint = scmConfigOverrider.determineConfigApiUrl(properties, request).concat(GitLabService.COMMIT_PATH);
-                commitEndpoint = commitEndpoint.replace("{id}", proj.getId().toString());
+                commitEndpoint = commitEndpoint.replace("{id}", project.getId().toString());
                 commitEndpoint = commitEndpoint.replace("{sha}", c.getId());
             }
         }
-        if(StringUtils.isNotEmpty(body.getUserEmail())) {
-            emails.add(body.getUserEmail());
-        }
+
         return commitEndpoint;
+    }
+
+    private void setUserEmail(@RequestBody PushEvent body, ScanRequest request, List<String> emails) {
+        if (StringUtils.isNotEmpty(body.getUserEmail())) {
+            String pusherEmail = body.getUserEmail();
+            request.setPusherEmail(pusherEmail);
+            emails.add(pusherEmail);
+        }
     }
 
     private void setMergeEndPointUri(ObjectAttributes objectAttributes, Project proj, ScanRequest request) {
@@ -320,9 +327,9 @@ public class GitLabController extends WebhookController {
         request.setMergeNoteUri(mergeEndpoint);
     }
 
-    private void validateGitLabRequest(String token, ControllerRequest controllerRequest){
+    private void validateGitLabRequest(String token, ControllerRequest controllerRequest) {
         log.info("Validating GitLab request token");
-        if(!scmConfigOverrider.determineConfigWebhookToken(properties, controllerRequest).equals(token)){
+        if (!scmConfigOverrider.determineConfigWebhookToken(properties, controllerRequest).equals(token)) {
             log.error("GitLab request token validation failed");
             throw new InvalidTokenException();
         }
@@ -332,14 +339,14 @@ public class GitLabController extends WebhookController {
     /**
      * Check if the merge event is being driven by updates to 'work item in progress' status.
      */
-    private boolean isWIP(MergeEvent event){
+    private boolean isWIP(MergeEvent event) {
         /*Merge has been marked WIP, ignoring*/
         Boolean inProgress = event.getObjectAttributes().getWorkInProgress();
         if (Boolean.TRUE.equals(inProgress)) {
             return true;
         }
         Changes changes = event.getChanges();
-        if(!properties.isBlockMerge()){ //skip looking for WIP changes
+        if (!properties.isBlockMerge()) { //skip looking for WIP changes
             return false;
         }
         /*Merge has been changed from WIP to not-WIP, ignoring*/

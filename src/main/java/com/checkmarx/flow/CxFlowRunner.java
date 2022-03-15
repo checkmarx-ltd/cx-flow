@@ -1,6 +1,7 @@
 package com.checkmarx.flow;
 
 import com.checkmarx.flow.config.*;
+import com.checkmarx.flow.config.properties.*;
 import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.exception.ExitThrowable;

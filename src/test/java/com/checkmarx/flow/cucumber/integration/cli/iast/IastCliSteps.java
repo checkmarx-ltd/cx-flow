@@ -2,7 +2,7 @@ package com.checkmarx.flow.cucumber.integration.cli.iast;
 
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.CxFlowRunner;
-import com.checkmarx.flow.config.*;
+import com.checkmarx.flow.config.properties.*;
 import com.checkmarx.flow.controller.IastController;
 import com.checkmarx.flow.custom.GitHubIssueTracker;
 import com.checkmarx.flow.custom.GitLabIssueTracker;

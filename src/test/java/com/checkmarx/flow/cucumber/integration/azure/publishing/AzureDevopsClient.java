@@ -1,6 +1,6 @@
 package com.checkmarx.flow.cucumber.integration.azure.publishing;
 
-import com.checkmarx.flow.config.ADOProperties;
+import com.checkmarx.flow.config.properties.ADOProperties;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.azure.CreateWorkItemAttr;
 import com.fasterxml.jackson.core.JsonProcessingException;

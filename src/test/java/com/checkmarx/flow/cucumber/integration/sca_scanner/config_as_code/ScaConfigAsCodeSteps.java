@@ -1,7 +1,7 @@
 package com.checkmarx.flow.cucumber.integration.sca_scanner.config_as_code;
 
 import com.checkmarx.flow.CxFlowApplication;
-import com.checkmarx.flow.config.GitHubProperties;
+import com.checkmarx.flow.config.properties.GitHubProperties;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.service.ConfigurationOverrider;
 import com.checkmarx.flow.service.GitHubService;

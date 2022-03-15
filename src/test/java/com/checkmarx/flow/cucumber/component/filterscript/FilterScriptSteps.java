@@ -1,7 +1,7 @@
 package com.checkmarx.flow.cucumber.component.filterscript;
 
 import com.checkmarx.flow.CxFlowApplication;
-import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.config.properties.FlowProperties;
 import com.checkmarx.flow.cucumber.common.Constants;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 import com.checkmarx.flow.service.FilterFactory;

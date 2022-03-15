@@ -2,8 +2,8 @@ package com.checkmarx.flow.cucumber.component.ast.parse;
 
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.FindingSeverity;
-import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.config.GitHubProperties;
+import com.checkmarx.flow.config.properties.FlowProperties;
+import com.checkmarx.flow.config.properties.GitHubProperties;
 import com.checkmarx.flow.cucumber.common.JsonLoggerTestUtils;
 import com.checkmarx.flow.dto.BugTracker;
 

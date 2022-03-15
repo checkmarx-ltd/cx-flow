@@ -1,6 +1,6 @@
 package com.checkmarx.flow.service;
 
-import com.checkmarx.flow.config.GitHubProperties;
+import com.checkmarx.flow.config.properties.GitHubProperties;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.Sources;
 import com.checkmarx.sdk.dto.sast.CxConfig;

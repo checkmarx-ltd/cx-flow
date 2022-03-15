@@ -6,7 +6,7 @@ import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.IssueType;
 import com.atlassian.jira.rest.client.api.domain.SearchResult;
 import com.atlassian.jira.rest.client.internal.async.CustomAsynchronousJiraRestClientFactory;
-import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.config.properties.JiraProperties;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.sast.Filter;
 import com.fasterxml.jackson.core.JsonProcessingException;

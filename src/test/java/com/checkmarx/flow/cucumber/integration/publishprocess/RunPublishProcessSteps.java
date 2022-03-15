@@ -1,7 +1,7 @@
 package com.checkmarx.flow.cucumber.integration.publishprocess;
 
 import com.checkmarx.flow.CxFlowApplication;
-import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.config.properties.JiraProperties;
 import com.checkmarx.flow.service.SastScanner;
 import com.checkmarx.jira.IPublishUtils;
 import com.checkmarx.jira.PublishUtils;

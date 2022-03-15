@@ -1,9 +1,9 @@
 package com.checkmarx.flow.cucumber.integration.pullrequest.updatecomments;
 
 import com.checkmarx.flow.CxFlowApplication;
-import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.config.GitHubProperties;
-import com.checkmarx.flow.config.GitLabProperties;
+import com.checkmarx.flow.config.properties.FlowProperties;
+import com.checkmarx.flow.config.properties.GitHubProperties;
+import com.checkmarx.flow.config.properties.GitLabProperties;
 import com.checkmarx.flow.controller.ADOController;
 import com.checkmarx.flow.controller.GitHubController;
 import com.checkmarx.flow.controller.GitLabController;

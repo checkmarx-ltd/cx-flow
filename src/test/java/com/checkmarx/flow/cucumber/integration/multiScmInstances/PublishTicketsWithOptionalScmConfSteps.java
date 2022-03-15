@@ -1,9 +1,9 @@
 package com.checkmarx.flow.cucumber.integration.multiScmInstances;
 
 import com.checkmarx.flow.CxFlowApplication;
-import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.config.GitHubProperties;
-import com.checkmarx.flow.config.OptionalScmInstanceProperties;
+import com.checkmarx.flow.config.properties.FlowProperties;
+import com.checkmarx.flow.config.properties.GitHubProperties;
+import com.checkmarx.flow.config.properties.OptionalScmInstanceProperties;
 import com.checkmarx.flow.cucumber.common.utils.JsonUtils;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 import com.checkmarx.flow.dto.BugTracker;

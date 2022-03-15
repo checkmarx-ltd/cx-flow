@@ -1,6 +1,6 @@
 package com.checkmarx.flow.utils.github;
 
-import com.checkmarx.flow.config.GitHubProperties;
+import com.checkmarx.flow.config.properties.GitHubProperties;
 import com.checkmarx.flow.controller.GitHubController;
 import com.checkmarx.flow.cucumber.common.Constants;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;

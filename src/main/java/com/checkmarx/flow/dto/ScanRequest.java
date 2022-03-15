@@ -24,7 +24,7 @@ public class ScanRequest {
     private String org;
     private String team;
     private String project;
-	private String altProject;
+    private String altProject;
 
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
@@ -52,9 +52,14 @@ public class ScanRequest {
     //project repoProjectId used by GitLab
     private Integer repoProjectId;
     private String refs;
+
     private List<String> email;
+    private String ownerEmail;
+    private String pusherEmail;
+
     private boolean forceScan;
-    @Getter @Setter
+    @Getter
+    @Setter
     private String scanResubmit;
     private Boolean incremental;
     private String scanPreset;
@@ -74,7 +79,7 @@ public class ScanRequest {
     private boolean scanPresetOverride = false;
 
     /**
-    Also known as scan engine configuration.
+     * Also known as scan engine configuration.
      */
     private String scanConfiguration;
 
@@ -92,7 +97,8 @@ public class ScanRequest {
     private ScaConfig scaConfig;
     private ASTConfig astConfig;
 
-    @Getter @Setter
+    @Getter
+    @Setter
     private String scannerApiSec;
 
     /**
@@ -100,21 +106,26 @@ public class ScanRequest {
      * E.g. if SCM supports several levels of hierarchy, path to the project may look like org1/suborg/my-project.
      * In such case the value of organizationId should be 'org1'.
      */
-    @Getter @Setter
+    @Getter
+    @Setter
     private String organizationId;
 
-    @Getter @Setter
+    @Getter
+    @Setter
     private String gitUrl;
 
-    @Getter @Setter
+    @Getter
+    @Setter
     private boolean disableCertificateValidation;
-    
+
     //SSH Key per repo
-    @Getter @Setter
+    @Getter
+    @Setter
     private String sshKeyIdentifier;
 
     //command line mode
-    @Getter @Setter
+    @Getter
+    @Setter
     private CliMode cliMode;
 
     public ScanRequest(ScanRequest other) {
@@ -125,7 +136,7 @@ public class ScanRequest {
         this.project = other.project;
         this.cxFields = other.cxFields;
         this.scanFields = other.scanFields;
-		this.altProject = other.altProject;
+        this.altProject = other.altProject;
         this.altFields = other.altFields;
         this.site = other.site;
         this.hash = other.hash;
@@ -139,6 +150,8 @@ public class ScanRequest {
         this.repoProjectId = other.repoProjectId;
         this.refs = other.refs;
         this.email = other.email;
+        this.pusherEmail = other.pusherEmail;
+        this.ownerEmail = other.ownerEmail;
         this.incremental = other.incremental;
         this.scanPreset = other.scanPreset;
         this.excludeFiles = other.excludeFiles;
@@ -163,51 +176,52 @@ public class ScanRequest {
         this.cliMode = other.cliMode;
     }
 
-    public Map<String,String> getAltFields() {
-        if(this.altFields == null){
+    public Map<String, String> getAltFields() {
+        if (this.altFields == null) {
             return Collections.emptyMap();
         }
-        Map<String,String> map = new HashMap<>();
-        for( String s : this.altFields.split(",")) {
+        Map<String, String> map = new HashMap<>();
+        for (String s : this.altFields.split(",")) {
             String[] split = s.split(":");
-            map.put(split[0],split[1]);
+            map.put(split[0], split[1]);
         }
         return map;
     }
 
-    public void putAdditionalMetadata(String key, String value){
-        if(this.additionalMetadata == null){
+    public void putAdditionalMetadata(String key, String value) {
+        if (this.additionalMetadata == null) {
             this.additionalMetadata = new HashMap<>();
         }
         this.additionalMetadata.put(key, value);
     }
 
-    public String getAdditionalMetadata(String key){
+    public String getAdditionalMetadata(String key) {
         if (this.additionalMetadata != null) {
             return this.additionalMetadata.get(key);
         }
         return null;
     }
 
-    public String getFilename(){
+    public String getFilename() {
         return this.getAdditionalMetadata("filename");
     }
 
-    public void setFilename(String filename){
+    public void setFilename(String filename) {
         this.putAdditionalMetadata("filename", filename);
     }
 
     public String toString() {
-        return "ScanRequest(namespace=" + this.getNamespace() + ", application=" + this.getApplication() + ", org=" + this.getOrg() + ", team=" + this.getTeam() + ", project=" + this.getProject() + ", cxFields=" + this.getCxFields() + ", site=" + this.getSite() + ", repoUrl=" + this.getRepoUrl() + ", repoName=" + this.getRepoName() + ", branch=" + this.getBranch() + ", mergeTargetBranch=" + this.getMergeTargetBranch() + ", mergeNoteUri=" + this.getMergeNoteUri() + ", repoProjectId=" + this.getRepoProjectId() + ", refs=" + this.getRefs() + ", email=" + this.getEmail() + ", incremental=" + this.isIncremental() + ", scanPreset=" + this.getScanPreset() + ", excludeFiles=" + this.getExcludeFiles() + ", excludeFolders=" + this.getExcludeFolders() + ", repoType=" + this.getRepoType() + ", product=" + this.getProduct() + ", bugTracker=" + this.getBugTracker() + ", type=" + this.getType() + ", activeBranches=" + this.getActiveBranches() + ", filter=" + this.getFilter()+ ", scanResubmit=" + this.getScanResubmit() + ")";
+        return "ScanRequest(namespace=" + this.getNamespace() + ", application=" + this.getApplication() + ", org=" + this.getOrg() + ", team=" + this.getTeam() + ", project=" + this.getProject() + ", cxFields=" + this.getCxFields() + ", site=" + this.getSite() + ", repoUrl=" + this.getRepoUrl() + ", repoName=" + this.getRepoName() + ", branch=" + this.getBranch() + ", mergeTargetBranch=" + this.getMergeTargetBranch() + ", mergeNoteUri=" + this.getMergeNoteUri() + ", repoProjectId=" + this.getRepoProjectId() + ", refs=" + this.getRefs() + ", email=" + this.getEmail() + ", incremental=" + this.isIncremental() + ", scanPreset=" + this.getScanPreset() + ", excludeFiles=" + this.getExcludeFiles() + ", excludeFolders=" + this.getExcludeFolders() + ", repoType=" + this.getRepoType() + ", product=" + this.getProduct() + ", bugTracker=" + this.getBugTracker() + ", type=" + this.getType() + ", activeBranches=" + this.getActiveBranches() + ", filter=" + this.getFilter() + ", scanResubmit=" + this.getScanResubmit() + ")";
     }
 
     public Boolean isIncremental() {
         return Optional.ofNullable(incremental).orElse(Boolean.FALSE);
     }
+
     public Boolean getIncrementalField() {
         return incremental;
     }
-    
+
     public enum Product {
         CX("CX"),
         CXOSA("CXOSA");

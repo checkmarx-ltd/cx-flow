@@ -1,6 +1,6 @@
 package com.checkmarx.flow.service;
 
-import com.checkmarx.flow.config.IastProperties;
+import com.checkmarx.flow.config.properties.IastProperties;
 import com.checkmarx.flow.dto.iast.manager.dto.ResultInfo;
 import com.checkmarx.flow.dto.iast.manager.dto.Scan;
 import com.checkmarx.flow.dto.iast.manager.dto.ScanVulnerabilities;

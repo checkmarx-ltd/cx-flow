@@ -1,4 +1,4 @@
-package com.checkmarx.flow.config;
+package com.checkmarx.flow.config.properties;
 
 import com.checkmarx.flow.service.PullRequestCommentsHelper;
 import org.apache.commons.lang3.StringUtils;

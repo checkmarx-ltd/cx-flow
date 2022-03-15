@@ -1,5 +1,6 @@
 package com.checkmarx.flow.custom;
 
+import com.checkmarx.flow.config.properties.JsonProperties;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.service.FilenameFormatter;
 import com.checkmarx.flow.service.SanitizingFilenameFormatter;

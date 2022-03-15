@@ -1,8 +1,8 @@
 package com.checkmarx.flow.cucumber.component.commentscript;
 
 import com.checkmarx.flow.CxFlowApplication;
-import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.config.properties.FlowProperties;
+import com.checkmarx.flow.config.properties.JiraProperties;
 import com.checkmarx.flow.controller.FlowController;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 import com.checkmarx.flow.dto.BugTracker;
@@ -11,7 +11,6 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.sastscanning.ScanRequestConverter;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.ScanUtils;
-import com.checkmarx.sdk.ShardManager.ShardSessionTracker;
 import com.checkmarx.sdk.config.CxProperties;
 
 import com.checkmarx.sdk.dto.ScanResults;

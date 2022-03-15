@@ -1,8 +1,8 @@
 package com.checkmarx.flow.cucumber.integration.sca_scanner.bugtrackers.ado;
 
 import com.checkmarx.flow.CxFlowApplication;
-import com.checkmarx.flow.config.ADOProperties;
-import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.config.properties.ADOProperties;
+import com.checkmarx.flow.config.properties.FlowProperties;
 import com.checkmarx.flow.cucumber.common.utils.JsonUtils;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 import com.checkmarx.flow.cucumber.integration.azure.publishing.AzureDevopsClient;
@@ -22,9 +22,7 @@ import io.cucumber.java.en.When;
 import lombok.RequiredArgsConstructor;
 import org.junit.Assert;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.io.ClassPathResource;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 

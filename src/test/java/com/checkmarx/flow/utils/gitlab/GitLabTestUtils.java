@@ -1,6 +1,6 @@
 package com.checkmarx.flow.utils.gitlab;
 
-import com.checkmarx.flow.config.GitLabProperties;
+import com.checkmarx.flow.config.properties.GitLabProperties;
 import com.checkmarx.flow.dto.Issue;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;

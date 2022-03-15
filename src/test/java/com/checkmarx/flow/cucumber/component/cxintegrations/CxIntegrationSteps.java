@@ -1,7 +1,7 @@
 package com.checkmarx.flow.cucumber.component.cxintegrations;
 
 import com.checkmarx.flow.CxFlowApplication;
-import com.checkmarx.flow.config.CxIntegrationsProperties;
+import com.checkmarx.flow.config.properties.CxIntegrationsProperties;
 import com.checkmarx.flow.config.external.CxGoConfigFromWebService;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.service.ConfigurationOverrider;

@@ -1,5 +1,6 @@
 package com.checkmarx.flow.custom;
 
+import com.checkmarx.flow.config.properties.WebPostProperties;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaException;

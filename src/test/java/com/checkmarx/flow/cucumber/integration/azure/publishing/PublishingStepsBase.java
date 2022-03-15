@@ -1,6 +1,6 @@
 package com.checkmarx.flow.cucumber.integration.azure.publishing;
 
-import com.checkmarx.flow.config.ADOProperties;
+import com.checkmarx.flow.config.properties.ADOProperties;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 import lombok.AccessLevel;
 import lombok.Getter;

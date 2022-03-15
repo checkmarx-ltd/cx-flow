@@ -1,7 +1,7 @@
 package com.checkmarx.flow.cucumber.common.repoServiceMockers;
 
-import com.checkmarx.flow.config.GitHubProperties;
-import com.checkmarx.flow.config.RepoProperties;
+import com.checkmarx.flow.config.properties.GitHubProperties;
+import com.checkmarx.flow.config.properties.RepoProperties;
 import com.checkmarx.flow.controller.GitHubController;
 import com.checkmarx.flow.controller.WebhookController;
 import com.checkmarx.flow.dto.ControllerRequest;

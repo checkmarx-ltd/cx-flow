@@ -14,9 +14,9 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import com.checkmarx.flow.config.ADOProperties;
-import com.checkmarx.flow.config.GitHubProperties;
-import com.checkmarx.flow.config.GitLabProperties;
+import com.checkmarx.flow.config.properties.ADOProperties;
+import com.checkmarx.flow.config.properties.GitHubProperties;
+import com.checkmarx.flow.config.properties.GitLabProperties;
 import com.checkmarx.flow.dto.azure.ConsumerInputs;
 import com.checkmarx.flow.dto.azure.PublisherInputs;
 import com.checkmarx.flow.dto.azure.Subscription;

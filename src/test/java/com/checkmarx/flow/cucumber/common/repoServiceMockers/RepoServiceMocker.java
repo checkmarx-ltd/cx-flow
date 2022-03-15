@@ -1,8 +1,7 @@
 package com.checkmarx.flow.cucumber.common.repoServiceMockers;
 
-import com.checkmarx.flow.config.RepoProperties;
+import com.checkmarx.flow.config.properties.RepoProperties;
 import com.checkmarx.flow.controller.WebhookController;
-import com.checkmarx.flow.dto.ScanRequest;
 import org.springframework.web.client.RestTemplate;
 
 public interface RepoServiceMocker {

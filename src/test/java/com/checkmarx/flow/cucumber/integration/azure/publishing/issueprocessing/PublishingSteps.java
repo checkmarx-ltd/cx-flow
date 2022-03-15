@@ -1,7 +1,7 @@
 package com.checkmarx.flow.cucumber.integration.azure.publishing.issueprocessing;
 
 import com.checkmarx.flow.CxFlowApplication;
-import com.checkmarx.flow.config.ADOProperties;
+import com.checkmarx.flow.config.properties.ADOProperties;
 import com.checkmarx.flow.cucumber.common.Constants;
 import com.checkmarx.flow.cucumber.common.utils.JsonUtils;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;

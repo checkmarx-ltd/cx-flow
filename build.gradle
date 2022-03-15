@@ -197,7 +197,7 @@ dependencies {
     compile("javax.persistence:javax.persistence-api:2.2")
     compile group:'org.apache.tomcat', name:'tomcat-juli', version:property('tomcat.version')
     compile group:'org.springframework', name:'spring-core', version:property('spring-core.version')
-
+    compile 'com.slack.api:slack-api-client:1.20.1'
 }
 
 springBoot {

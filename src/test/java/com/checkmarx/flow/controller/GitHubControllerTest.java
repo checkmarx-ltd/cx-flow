@@ -1,6 +1,8 @@
 package com.checkmarx.flow.controller;
 
-import com.checkmarx.flow.config.*;
+import com.checkmarx.flow.config.properties.FlowProperties;
+import com.checkmarx.flow.config.properties.GitHubProperties;
+import com.checkmarx.flow.config.properties.JiraProperties;
 import com.checkmarx.flow.exception.InvalidCredentialsException;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;

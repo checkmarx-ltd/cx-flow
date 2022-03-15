@@ -1,7 +1,7 @@
 package com.checkmarx.flow.cucumber.integration.jira.load;
 
 import com.checkmarx.flow.CxFlowApplication;
-import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.config.properties.JiraProperties;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.ExitThrowable;
@@ -21,7 +21,6 @@ import org.junit.Assert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import javax.validation.constraints.AssertTrue;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;

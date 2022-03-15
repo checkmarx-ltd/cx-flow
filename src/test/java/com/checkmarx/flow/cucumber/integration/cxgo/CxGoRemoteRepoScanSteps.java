@@ -2,6 +2,10 @@ package com.checkmarx.flow.cucumber.integration.cxgo;
 
 import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.*;
+import com.checkmarx.flow.config.properties.FlowProperties;
+import com.checkmarx.flow.config.properties.GitHubProperties;
+import com.checkmarx.flow.config.properties.GitLabProperties;
+import com.checkmarx.flow.config.properties.JiraProperties;
 import com.checkmarx.flow.controller.GitHubController;
 import com.checkmarx.flow.controller.GitLabController;
 import com.checkmarx.flow.cucumber.common.repoServiceMockers.GithubServiceMocker;

@@ -2,8 +2,8 @@ package com.checkmarx.flow.service;
 
 import com.checkmarx.configprovider.ConfigProvider;
 import com.checkmarx.flow.config.FindingSeverity;
-import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.config.CxIntegrationsProperties;
+import com.checkmarx.flow.config.properties.FlowProperties;
+import com.checkmarx.flow.config.properties.CxIntegrationsProperties;
 import com.checkmarx.flow.config.external.ASTConfig;
 import com.checkmarx.flow.config.external.CxGoConfigFromWebService;
 import com.checkmarx.flow.constants.FlowConstants;
@@ -23,7 +23,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Service;

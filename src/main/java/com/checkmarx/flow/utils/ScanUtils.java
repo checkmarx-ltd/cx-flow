@@ -1,7 +1,7 @@
 package com.checkmarx.flow.utils;
 
 
-import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.config.properties.JiraProperties;
 import com.checkmarx.flow.constants.SCATicketingConstants;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.Field;

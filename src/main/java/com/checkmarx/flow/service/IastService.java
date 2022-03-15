@@ -1,7 +1,7 @@
 package com.checkmarx.flow.service;
 
-import com.checkmarx.flow.config.ADOProperties;
-import com.checkmarx.flow.config.IastProperties;
+import com.checkmarx.flow.config.properties.ADOProperties;
+import com.checkmarx.flow.config.properties.IastProperties;
 import com.checkmarx.flow.custom.GitHubIssueTracker;
 import com.checkmarx.flow.custom.GitLabIssueTracker;
 import com.checkmarx.flow.custom.ADOIssueTracker;

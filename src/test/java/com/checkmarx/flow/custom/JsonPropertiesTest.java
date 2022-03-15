@@ -1,8 +1,7 @@
 package com.checkmarx.flow.custom;
 
+import com.checkmarx.flow.config.properties.JsonProperties;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
 
 public class JsonPropertiesTest {
 

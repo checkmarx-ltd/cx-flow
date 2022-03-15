@@ -1,7 +1,7 @@
 package com.checkmarx.flow.cucumber.component.projectkeyscript;
 
 import com.checkmarx.flow.CxFlowApplication;
-import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.config.properties.JiraProperties;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanRequest;

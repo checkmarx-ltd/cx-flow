@@ -1,5 +1,6 @@
 package com.checkmarx.flow.config;
 
+import com.checkmarx.flow.config.properties.FlowProperties;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;

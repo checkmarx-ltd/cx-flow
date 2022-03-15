@@ -2,8 +2,7 @@ package com.checkmarx.flow.cucumber.integration.jira.autoconfig;
 
 
 import com.checkmarx.flow.CxFlowApplication;
-import com.checkmarx.flow.config.JiraProperties;
-import io.cucumber.java.en.Given;
+import com.checkmarx.flow.config.properties.JiraProperties;
 import io.cucumber.java.en.Then;
 import org.junit.Assert;
 import org.springframework.beans.factory.annotation.Autowired;

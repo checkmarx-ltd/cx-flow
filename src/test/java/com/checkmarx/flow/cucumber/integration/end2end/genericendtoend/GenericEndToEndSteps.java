@@ -1,7 +1,7 @@
 package com.checkmarx.flow.cucumber.integration.end2end.genericendtoend;
 
 import com.checkmarx.flow.CxFlowApplication;
-import com.checkmarx.flow.config.*;
+import com.checkmarx.flow.config.properties.*;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 
 import com.checkmarx.sdk.config.ScaProperties;
@@ -40,14 +40,18 @@ public class GenericEndToEndSteps {
     /*
      * repositories
      */
-    @Autowired GitHubProperties gitHubProperties;
-    @Autowired ADOProperties adoProperties;
-    @Autowired GitLabProperties gitLabProperties;
+    @Autowired
+    GitHubProperties gitHubProperties;
+    @Autowired
+    ADOProperties adoProperties;
+    @Autowired
+    GitLabProperties gitLabProperties;
 
     /*
      * bug-trackers
      */
-    @Autowired JiraProperties jiraProperties;
+    @Autowired
+    JiraProperties jiraProperties;
 
     private Repository repository;
     private BugTracker bugTracker;

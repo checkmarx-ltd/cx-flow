@@ -1,6 +1,6 @@
 package com.checkmarx.flow.service;
 
-import com.checkmarx.flow.config.CxIntegrationsProperties;
+import com.checkmarx.flow.config.properties.CxIntegrationsProperties;
 import com.checkmarx.flow.config.external.CxGoConfigFromWebService;
 import com.checkmarx.flow.exception.ReposManagerException;
 import lombok.extern.slf4j.Slf4j;
