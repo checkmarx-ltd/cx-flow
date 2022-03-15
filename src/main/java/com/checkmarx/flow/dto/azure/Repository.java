@@ -28,7 +28,7 @@ public class Repository {
     @JsonProperty("project")
     private Project project;
     @JsonProperty("size")
-    private Integer size;
+    private Long size;
     @JsonProperty("defaultBranch")
     private String defaultBranch;
     @JsonProperty("remoteUrl")
@@ -88,12 +88,12 @@ public class Repository {
     }
     
     @JsonProperty("size")
-    public Integer getSize() {
+    public Long getSize() {
         return size;
     }
 
     @JsonProperty("size")
-    public void setSize(Integer size) {
+    public void setSize(Long size) {
         this.size = size;
     }
 
