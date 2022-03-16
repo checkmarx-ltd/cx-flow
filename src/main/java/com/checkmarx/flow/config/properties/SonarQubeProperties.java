@@ -18,13 +18,13 @@ public class SonarQubeProperties {
     private String scaOrganization = "Checkmarx";
     private String sastOrganization = "Checkmarx";
 
-    private String sonarQubeSchema="";
+    private String sonarQubeSchema = "";
     private String sonarQubeVersion = "2.1.0";
     private String semanticVersion = "1.0.0";
     private Map<String, String> severityMap = new HashMap<>();
 
     @PostConstruct
-    private void loadSeverityMap(){
+    private void loadSeverityMap() {
         severityMap.put("High", "CRITICAL");
         severityMap.put("Medium", "MAJOR");
         severityMap.put("Low", "MINOR");

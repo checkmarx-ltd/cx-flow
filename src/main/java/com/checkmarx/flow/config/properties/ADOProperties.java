@@ -22,7 +22,7 @@ public class ADOProperties extends RepoProperties {
     private String closedStatus = "Done";
     private String projectName;
     private String namespace;
-    
+
     public String getNamespace() {
         return namespace;
     }
@@ -31,7 +31,7 @@ public class ADOProperties extends RepoProperties {
         this.namespace = namespace;
     }
 
-            
+
     public void setProjectName(String projectName) {
         this.projectName = projectName;
     }
@@ -39,6 +39,7 @@ public class ADOProperties extends RepoProperties {
     public String getProjectName() {
         return projectName;
     }
+
     public String getApiVersion() {
         return apiVersion;
     }
@@ -119,15 +120,15 @@ public class ADOProperties extends RepoProperties {
         this.testRepository = testRepository;
     }
 
-    public boolean getDeleteCxProject(){
+    public boolean getDeleteCxProject() {
         return deleteCxProject;
     }
 
-    public void setDeleteCxProject(boolean deleteProject){
+    public void setDeleteCxProject(boolean deleteProject) {
         this.deleteCxProject = deleteProject;
     }
 
-    public String getMergeNoteUri(String namespace, String repo, String mergeId){
+    public String getMergeNoteUri(String namespace, String repo, String mergeId) {
         String format = "%s/%s/_apis/git/repositories/%s/pullRequests/%s/threads";
         return String.format(format, getUrl(), namespace, repo, mergeId);
         //http://localhost:8080/tfs/DefaultCollection/Checkmarx/_apis/git/repositories/Checkmarx/pullRequests/2/threads

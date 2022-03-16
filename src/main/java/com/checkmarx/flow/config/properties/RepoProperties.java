@@ -124,13 +124,13 @@ public class RepoProperties {
     public void setBlockMerge(boolean blockMerge) {
         this.blockMerge = blockMerge;
     }
-    
+
     public boolean isScanSubmittedComment() {
-    	return scanSubmittedComment;
+        return scanSubmittedComment;
     }
-    
+
     public void setScanSubmittedComment(boolean scanSubmittedComment) {
-    	this.scanSubmittedComment = scanSubmittedComment;
+        this.scanSubmittedComment = scanSubmittedComment;
     }
 
     /**
@@ -186,7 +186,7 @@ public class RepoProperties {
 
     @PostConstruct
     private void postConstruct() {
-        if(apiUrl != null && apiUrl.endsWith("/")){
+        if (apiUrl != null && apiUrl.endsWith("/")) {
             setApiUrl(StringUtils.chop(apiUrl));
         }
     }

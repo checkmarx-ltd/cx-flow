@@ -1,6 +1,5 @@
 package com.checkmarx.flow.config.properties;
 
-import com.checkmarx.flow.config.properties.RepoProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;

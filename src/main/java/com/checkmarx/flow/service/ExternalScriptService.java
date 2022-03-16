@@ -32,8 +32,7 @@ public class ExternalScriptService {
             Object rawResult = runScript(script, bindings);
             if (rawResult instanceof String) {
                 result = ((String) rawResult);
-            }
-            else {
+            } else {
                 log.error("Script must return a result of type 'java.lang.String'");
             }
         } catch (IOException e) {
@@ -61,13 +60,13 @@ public class ExternalScriptService {
         return new String(Files.readAllBytes(Paths.get(new File(path).getCanonicalPath())));
     }
 
-    private Object runScript(String script, Map<String, Object> bindings){
+    private Object runScript(String script, Map<String, Object> bindings) {
         Binding binding = new Binding();
-        if(bindings != null) {
+        if (bindings != null) {
             for (Map.Entry<String, Object> entry : bindings.entrySet()) {
                 String param = entry.getKey();
                 Object value = entry.getValue();
-                if(!ScanUtils.empty(param) && value != null){
+                if (!ScanUtils.empty(param) && value != null) {
                     binding.setVariable(param, value);
                 }
             }
@@ -75,7 +74,7 @@ public class ExternalScriptService {
         try {
             GroovyShell shell = new GroovyShell(binding);
             return shell.evaluate(script);
-        }catch (GroovyRuntimeException e){
+        } catch (GroovyRuntimeException e) {
             log.error("Error occurred while executing external script, returning null - {}", ExceptionUtils.getMessage(e));
             return null;
         }

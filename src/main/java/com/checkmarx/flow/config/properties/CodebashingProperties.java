@@ -1,7 +1,6 @@
 package com.checkmarx.flow.config.properties;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -11,8 +10,7 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "codebashing")
 @Validated
 @Slf4j
-@Getter
-@Setter
+@Data
 public class CodebashingProperties {
 
     private String codebashingApiUrl = "https://api.codebashing.com/lessons";

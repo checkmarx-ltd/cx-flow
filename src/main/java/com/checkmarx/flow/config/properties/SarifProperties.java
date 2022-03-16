@@ -18,14 +18,14 @@ public class SarifProperties {
     private String scaOrganization = "Checkmarx - SCA";
     private String sastOrganization = "Checkmarx - SAST";
 
-    private String sarifSchema="https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json";
+    private String sarifSchema = "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json";
     private String sarifVersion = "2.1.0";
     private String semanticVersion = "1.0.0";
     private Map<String, String> severityMap = new HashMap<>();
     private Map<String, String> securitySeverityMap = new HashMap<>();
 
     @PostConstruct
-    private void loadSeverityMap(){
+    private void loadSeverityMap() {
         severityMap.put("High", "error");
         severityMap.put("Medium", "error");
         severityMap.put("Low", "warning");

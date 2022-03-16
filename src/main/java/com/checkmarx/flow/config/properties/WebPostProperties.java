@@ -11,7 +11,6 @@ public class WebPostProperties {
     private String fileNameFormat = "[APP]-[BRANCH]-[TIME]";
     private String dataFolder = "/tmp";
 
-
     public String getDataFolder() {
         return dataFolder;
     }

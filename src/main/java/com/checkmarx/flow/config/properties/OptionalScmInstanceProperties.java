@@ -1,10 +1,8 @@
 package com.checkmarx.flow.config.properties;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
+@Data
 public class OptionalScmInstanceProperties {
 
     private String webhookToken;

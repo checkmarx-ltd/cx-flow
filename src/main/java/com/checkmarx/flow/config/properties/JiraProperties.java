@@ -49,7 +49,8 @@ public class JiraProperties {
     private Integer maxJqlResults = 50;
     private List<String> statusCategoryOpenName = Arrays.asList("To Do", "In Progress", "Reopened");
     private List<String> statusCategoryClosedName = Arrays.asList("Done", "Resolve", "Closed");
-    @Getter @Setter
+    @Getter
+    @Setter
     private String projectKeyScript;
     private String labelPrefix;
     private String sastIssueSummaryFormat = "[PREFIX][VULNERABILITY] @ [FILENAME][POSTFIX]";
@@ -285,10 +286,10 @@ public class JiraProperties {
 
     /**
      * Affects the way how CxFlow checks if an issue already exists in Jira.
-     * @return
-     *      false: only search among issues specified by {@link #getUrl()} (top level issues).<br>
-     *      true: in addition to the top level, also search among issues specified by {@link #getParentUrl()} and
-     *      {@link #getGrandParentUrl()}, i.e. 3 levels deep.
+     *
+     * @return false: only search among issues specified by {@link #getUrl()} (top level issues).<br>
+     * true: in addition to the top level, also search among issues specified by {@link #getParentUrl()} and
+     * {@link #getGrandParentUrl()}, i.e. 3 levels deep.
      */
     public boolean isChild() {
         return child;
@@ -346,13 +347,17 @@ public class JiraProperties {
         this.labelPrefix = labelPrefix;
     }
 
-    public String getSastIssueSummaryFormat() { return this.sastIssueSummaryFormat; }
+    public String getSastIssueSummaryFormat() {
+        return this.sastIssueSummaryFormat;
+    }
 
     public void setSastIssueSummaryFormat(String sastIssueSummaryFormat) {
         this.sastIssueSummaryFormat = sastIssueSummaryFormat;
     }
 
-    public String getSastIssueSummaryBranchFormat() { return this.sastIssueSummaryBranchFormat; }
+    public String getSastIssueSummaryBranchFormat() {
+        return this.sastIssueSummaryBranchFormat;
+    }
 
     public void setSastIssueSummaryBranchFormat(String sastIssueSummaryBranchFormat) {
         this.sastIssueSummaryBranchFormat = sastIssueSummaryBranchFormat;
