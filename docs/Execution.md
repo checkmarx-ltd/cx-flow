@@ -19,7 +19,12 @@ The CxFlow docker images on Docker Hub [checkmarx/cx-flow](https://hub.docker.co
 
 ```
 docker pull checkmarx/cx-flow
-docker run -e JAVA_OPTS="Specify JVM options here" --env-file=.checkmarx --name=cx-flow --detach -p <host port>:8080 checkmarx/cx-flow
+docker run --env-file=.checkmarx --name=cx-flow --detach -p <host port>:8080 checkmarx/cx-flow
+```
+
+To provide `JAVA_OPTS` to the docker image, the `entrypoint` of the docker image can be overridden in the following way
+```
+docker run --env=.checkmarx --entrypoint java  checkmarx/cx-flow:latest -Xms512m -Xmx4096m -XshowSettings:vm -jar /app/cx-flow.jar
 ```
 
 The env-file provides the necessary overrides during the bootstrap process - urls, credentials, etc - sample below.
