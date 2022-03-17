@@ -74,25 +74,23 @@ cx-flow:
     enabled: true
 
 checkmarx:
-  version: 9.0 # Required for version 9.x
-  username: leonelsanches
-  password: Codingcraft88#
+  username: xxxxx
+  password: xxxxx
   client-secret: 014DF517-39D1-4453-B7B3-9930C563627C
-  base-url: http://localhost
+  base-url: http://cx.local
   multi-tenant: true
   configuration: Default Configuration
   scan-preset: Checkmarx Default
-  team: \CxServer
+  team: \CxServer\SP\Checkmarx
   url: ${checkmarx.base-url}/cxrestapi
-  #preserve-xml: true
-  #incremental: true
-#WSDL Config
+  # preserve-xml: true
+  # incremental: true
+  # WSDL Config
   portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
-  #team-script:
-  #project-script:
+  # team-script:
+  # project-script:
 
 jira:
-
   username: xxxx
   token: xxxx
   project: APPSEC
@@ -181,16 +179,16 @@ servicenow:
   password: xxxx
 
 github:
-  webhook-token: 12345
-  token: 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
+  webhook-token: xxxx
+  token: xxxx
   url: https://github.com
   api-url: https://api.github.com/repos/
   false-positive-label: false-positive
   block-merge: true
 
 gitlab:
-  webhook-token: 12345
-  token: glpat-GBToz2o7hsLXHf4N9Qka
+  webhook-token: xxxx
+  token: xxxx
   url: https://gitlab.com
   api-url: https://gitlab.com/api/v4/
   false-positive-label: false-positive
