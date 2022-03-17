@@ -1,5 +1,5 @@
 server:
-  port: 9095
+  port: 8080
 
 #management:
 #  endpoint:
@@ -39,7 +39,7 @@ logging:
 cx-flow:
   # Agreed upon shared API token
   token: xxxx
-  bug-tracker: Slack
+  bug-tracker: None
   bug-tracker-impl:
     - CxXml
     - Json
@@ -66,12 +66,12 @@ cx-flow:
 #  break-build: true
 #  wiki-url: https://custodela.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
 #  codebash-url: https://cxa.codebashing.com/courses/
-  mail:
-    host: smtp.mailtrap.io
-    port: 587
-    username: a3719d219e8968
-    password: 35bd75a97d7d7a
-    enabled: true
+#  mail:
+#    host: smtp.gmail.com
+#    port: 587
+#    username: xxx
+#    password: xxx
+#    enabled:
 
 checkmarx:
   username: xxxxx
