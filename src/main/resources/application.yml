@@ -39,7 +39,7 @@ logging:
 cx-flow:
   # Agreed upon shared API token
   token: xxxx
-  bug-tracker: EmailIssue
+  bug-tracker: Slack
   bug-tracker-impl:
     - CxXml
     - Json
@@ -51,7 +51,7 @@ cx-flow:
     - Rally
     - ServiceNow
     - Sarif
-    - EmailIssue
+    - Slack
   branches:
     - develop
     - master
@@ -196,8 +196,21 @@ gitlab:
   false-positive-label: false-positive
   block-merge: true
 
+# To use Slack, you'll need a Bot Token and some scopes defined.
+# The Bot token can be obtained creating an App and adding the following scopes to it:
+# - channels:join
+# - chat:write
+# - chat:write.customize
+# - chat:write.public
 slack:
-  bot-token: xoxb-3232373007782-3224434765415-dhVbYByvkYWPXFA2EpWNavcd
+  bot-token: xoxb-12345-12345-12345 # This is required.
+  # channel-name: This is optional, default: random (it doesn't require the # in front).
+  # channel-script: Use this to return what channel should receive the notification
+  #                  (since user handles in SCM can be different from user handles in Slack).
+  # highs-threshold: Optional. If set, will only report if number of high vulnerabilities in a scan is higher than this number
+  #                  default: 0
+  # mediums-threshold: Optional. If set, will only report if number of medium vulnerabilities in a scan is higher than this number
+  #                  default: 0
 
 azure:
   webhook-token: xxxx
