@@ -38,6 +38,8 @@
     * [General Procedure](#IASTgeneralprocedures)
     * [Sample Jenkins Pipeline](#IASTJenkinsPipeline)
     * [Yaml - application.yml file](#IASTYaml)
+* [CxSAST Branching Project](#branchedProject)
+    * [Steps to create branched project](#stepsForBranchProject)
 <br/>
 
 
@@ -1711,3 +1713,26 @@ csv:
 | `Medium`            | `MAJOR`            | 
 | `Low`               | `MINOR`            |
 | `Information`       | `INFO`             |
+
+## <a name="branchedProject">CxSAST Branching Project</a>
+CxFlow supports creating branched project in CxSAST server from a project created from default branch of a repository, without incrementing the count of utilized licensed project in CxSAST. 
+
+### <a name="stepsForBranchProject">Steps to create branched project</a>
+* Set cx-branch option under checkmarx section in the application yml file to true.
+```
+  checkmarx:
+    ...
+    cx-branch:true  
+```
+
+* Create a PULL/PUSH event from a repository's default branch.
+[[Images/bp_db1.png|GitHubProject]]
+
+* This will create a licensed project in CxSAST with name `JavaVulnerabilityLabE-master` and the count of licensed project increases by 1.
+[[Images/CxSAST_default_project.png|ProjectInSAST]]
+[[Images/CxSAST_Licensed_Projects.png|LicensedProjectCount]]
+
+* Since cx-branch option is enabled and a project from default branch of a repository exists in CxSAST, When a PUSH event is generated from `feature-branch` a project with name `JavaVulnerabilityLabE-feature-branch` is created but the count of total licensed projects utilized in CxSAST server stays same.
+[[Images/fbranch.png|FeatureBranch]]
+[[Images/CxSAST_branch_project.png|ProjectInSAST]]
+[[Images/CxSAST_project_count.png|LicensedProjectCount]]
