@@ -16,6 +16,7 @@
 * [CxXML](#cxxml)
 * [Json](#json)
 * [CSV](#csv)
+* [Slack](#slack)
 * [NONE|WAIT](#none)
 
 ##  <a name="data">Understanding the Data</a>
@@ -571,6 +572,62 @@ The file system path and the file naming format are required.
 **[BRANCH]** → Checkmarx Project [PROJECT] → Branch name (if available)
 
 **[TIMESTAMP]** → Current timestamp (yyyyMMdd.HHmmss format)
+
+## <a name="slack">Slack</a>
+
+For now, the Slack support in CxFlow is only for post-scan notifications. More events can be implemented in the future.
+
+Slack notifications require a `slack` section to be defined in either `application.yml`, or through environment variables (starting by `SLACK_`).
+
+```yaml
+# To use Slack, you'll need a Bot Token and some scopes defined.
+# The Bot token can be obtained creating an App and adding the following scopes to it:
+# - channels:join
+# - chat:write
+# - chat:write.customize
+# - chat:write.public
+slack:
+  bot-token: xoxb-12345-12345-12345 # This is required.
+  # channel-name: This is optional, default: random (it doesn't require the # in front).
+  # channel-script: Use this to return what channel should receive the notification
+  #                  (since user handles in SCM can be different from user handles in Slack).
+  # highs-threshold: Optional. If set, will only report if number of high vulnerabilities in a scan is higher than this number
+  #                  default: 0
+  # mediums-threshold: Optional. If set, will only report if number of medium vulnerabilities in a scan is higher than this number
+  #                  default: 0
+```
+
+It also requires defining Slack as a Bug Tracker:
+
+```yaml
+cx-flow:
+  token: xxxx
+  bug-tracker: Slack
+  bug-tracker-impl:
+    - CxXml
+    - Json
+    - JIRA
+    - GitLab
+    - GitHub
+    - Csv
+    - Azure
+    - Rally
+    - ServiceNow
+    - Sarif
+    - Slack
+```
+
+### Slack Channel Script
+
+This was created because there are situations that Slack bots need to send DM's to users with scan reports. 
+
+Considering that mapping user handles from SCMs to Slack handles is a very difficult task (mostly they are different), you can obtain the scan request in a script and use its information to determine which user should receive the scan report. 
+
+```groovy
+// Here you have the `request` object (ScanRequest) that has all the details
+// sent by the SCM in a Webhook, for instance.
+return "#random"
+```
 
 
 ## <a name="none">NONE | WAIT</a>

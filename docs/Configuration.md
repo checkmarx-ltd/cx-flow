@@ -210,6 +210,22 @@ jira:
        jira-field-name: LOC
        jira-field-type: label
        jira-default-value: XXXXX
+       
+# To use Slack, you'll need a Bot Token and some scopes defined.
+# The Bot token can be obtained creating an App and adding the following scopes to it:
+# - channels:join
+# - chat:write
+# - chat:write.customize
+# - chat:write.public
+slack:
+  bot-token: xoxb-12345-12345-12345 # This is required.
+  # channel-name: This is optional, default: random (it doesn't require the # in front).
+  # channel-script: Use this to return what channel should receive the notification
+  #                  (since user handles in SCM can be different from user handles in Slack).
+  # highs-threshold: Optional. If set, will only report if number of high vulnerabilities in a scan is higher than this number
+  #                  default: 0
+  # mediums-threshold: Optional. If set, will only report if number of medium vulnerabilities in a scan is higher than this number
+  #                  default: 0
 
 json:
   file-name-format: "[NAMESPACE]-[REPO]-[BRANCH]-[TIME].json"
@@ -630,15 +646,15 @@ gitlab:
    block-merge: true
 ```
 
-| Configuration          | Default        | Description      |
-|------------------------|----------------|------------------|
-| `webhook-token`        |                | Token used as a shared secret when calling the CxFlow WebHook WebService.  It authenticates users for the request. |
-| `token`                |                | This is the API token with access to the repository, with at least Read only access to code, the ability to add comments to pull requests, and the ability to create GitLab issues. |
-| `url`                  |                | Main repo url for GitLab. |
-| `api-url`              |                | The API endpoint for GitLab, which serves a different context or potential FQDN than the main repo url. |
-| `false-positive-label` | false-positive | A label that can be defined within the GitLab Issue feedback to ignore issues |
-| `block-merge`          | false          | When triggering scans based on Merge Request, the Merge request is marked as WIP in GitLab, which blocks the merge ability until the scan is complete in Checkmarx. |
-| `scan-submitted-comment` | true           | Comment on Merge Request with "Scan submitted (or not submitted) to Checkmarx ...". | 
+| Configuration              | Default        | Description      |
+|----------------------------|----------------|------------------|
+| `webhook-token`            |                | Token used as a shared secret when calling the CxFlow WebHook WebService.  It authenticates users for the request. |
+| `token`                    |                | This is the API token with access to the repository, with at least Read only access to code, the ability to add comments to pull requests, and the ability to create GitLab issues. |
+| `url`                      |                | Main repo url for GitLab. |
+| `api-url`                  |                | The API endpoint for GitLab, which serves a different context or potential FQDN than the main repo url. |
+| `false-positive-label`     | false-positive | A label that can be defined within the GitLab Issue feedback to ignore issues |
+| `block-merge`              | false          | When triggering scans based on Merge Request, the Merge request is marked as WIP in GitLab, which blocks the merge ability until the scan is complete in Checkmarx. |
+| `scan-submitted-comment`   | true           | Comment on Merge Request with "Scan submitted (or not submitted) to Checkmarx ...". | 
 
 **Note**: A service account is required with access to the repositories that are going to be scanned, pull requests that are commented on, and GitLab issues that are created/updated.
 
