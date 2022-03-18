@@ -9,6 +9,7 @@
   * [Break build](#break)
   * [Override SAST project setting](#override)
   * [Create Branched Project](#branchProject)
+  * [Scan Queuing and Scan Queuing Timeout](#scanQueuing)
 * [WebHook Configuration](#webhook)
   * [WebHook URL Parameters - Code](#code)
   * [WebHook URL Override Parameters - Details](#details)
@@ -121,7 +122,9 @@ checkmarx:
     "5": "SUSPICIOUS"
   post-action-postback-id: 123456
   settings-override: true #default false if not provide
-    cx-branch: false
+  cx-branch: false
+  scan-queuing: true
+  scan-queuing-timeout: 720 # Webhook and --scan command line only, number of minutes
 
 github:
   webhook-token: XXXXX
@@ -461,6 +464,8 @@ The configuration can be set or overridden at execution time using the command l
 | `post-action-postback-id` |                       | No       | Yes     | Yes      | Sets the SAST project's post-scan action to use the post-scan action with the provided Id defined in SAST.If not provided, the project does not get configured to use a post-scan action. |
 | `settings-override`       |                       | No       | Yes     | Yes      | Defaults value false, if set to true the projects settings are re-written/overridden when each SAST scan is invoked from CxFlow |
 | `cx-branch` | false | No | Yes | Yes | A flag to enable branching of projects in CxSAST. |
+| `scan-queuing` | false | No | Yes | Yes | A flag to enable queuing of scan events. |
+| `scan-queuing-timeout` | 720 | No | Yes | Yes | The amount of time (in minutes) for which cx-flow will keep a scan event data in its queue before sending to CxSAST, when all the available concurrent scans in CxSAST are in use. | 
 
 No* = Default is applied
 
@@ -485,6 +490,8 @@ checkmarx:
    exclude-files: "*.tst,*.json"
    exclude-folders: ".git,test"
    cx-branch: false
+   scan-queuing: true
+   scan-queuing-timeout: 720 # Webhook and --scan command line only, number of minutes  
 ```
 **Note:**
 * Make sure to include `version: 9.0` (or higher) and `scope: access_control_api sast_rest_api`
@@ -513,9 +520,18 @@ checkmarx
 ### <a name="branchProject">Branched Project</a>
 A branched project is a child of a base project in CxSAST. Upon initiating a scan from the default branch of a repository, CxSAST creates a base project in the server with name `RepoName-defaultBranchName` and any subsequent scans from the branches of that repository will create child projects off of it with name `RepoName-currentBranchName`. The project count in CxSAST does not increase when a branched project is added. Branching of projects can be enabled by setting the `cx-branch` property to `true`.
 ```yaml
-checkmarx
+checkmarx:
   ...
   cx-branch: true #default false if not provided
+```
+
+### <a name="scanQueuing"> Scan Queuing and Scan Queuing Timeout</a>
+If the number of concurrent scans which can run on CxSAST server is all utilized, then enabling `scan-queuing` will allow CxFlow to keep the event of the scan within itself and let the existing scans finish before sending the new scan event to CxSAST. Cx-flow keeps events with itself for a number of minutes, specified by the `scan-queuing-timeout` parameter, with a default value of **120** minutes.
+```yaml
+checkmarx:
+  ...
+  scan-queuing: true
+  scan-queuing-timeout: 720 #Amount of time in minutes
 ```
 
 ## <a name="webhook">WebHook Configuration</a>
