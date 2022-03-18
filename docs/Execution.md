@@ -24,7 +24,7 @@ docker run --env-file=.checkmarx --name=cx-flow --detach -p <host port>:8080 che
 
 To provide `JAVA_OPTS` to the docker image, the `entrypoint` of the docker image can be overridden in the following way
 ```
-docker run --env=.checkmarx --entrypoint java  checkmarx/cx-flow:latest -Xms512m -Xmx4096m -XshowSettings:vm -jar /app/cx-flow.jar
+docker run --env-file=.checkmarx --entrypoint java  checkmarx/cx-flow:latest -Xms512m -Xmx4096m -XshowSettings:vm -jar /app/cx-flow.jar
 ```
 
 The env-file provides the necessary overrides during the bootstrap process - urls, credentials, etc - sample below.
