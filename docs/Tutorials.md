@@ -1321,6 +1321,62 @@ jobs:
 --cx-flow.filter-state=Confirmed,Urgent
 ```
 
+### Create a workflow without using config-as-code
+<br>Configure Jira Parameter in workflow yml file instead of cx.config.     
+<br>Here is a complete main.yml working example with GitHub Secrets. Notice the top section with the name of the workflow and the triggers configuration and also the bottom parameters.
+```yaml
+# This workflow is to automate Checkmarx SAST scans.  It runs on a push to the main branch.
+#
+# The following GitHub Secrets must be first defined:
+#   - CHECKMARX_URL
+#   - CHECKMARX_USER
+#   - CHECKMARX_PASSWORD
+#   - CHECKMARX_CLIENT_SECRET
+#
+# The following variables must be inserted below:
+#   - <ProjectName>
+#
+# Update the 'team' field to reflect the team name used in Checkmarx.
+#
+# For full documentation, including a list of all inputs, please refer to the README https://github.com/checkmarx-ts/checkmarx-cxflow-github-action
+
+name: Checkmarx SAST Scan
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Checkmarx CxFlow Action
+        uses: checkmarx-ts/checkmarx-cxflow-github-action@v1.4 #Github Action version
+        with:
+          project: ${{ secrets.CHECKMARX_PROJECT }} # <-- Insert Checkmarx SAST Project Name
+          team: ${{ secrets.CHECKMARX_TEAMS }}
+          checkmarx_url: ${{ secrets.CHECKMARX_URL }} # To be stored in GitHub Secrets.
+          checkmarx_username: ${{ secrets.CHECKMARX_USER }} # To be stored in GitHub Secrets.
+          checkmarx_password: ${{ secrets.CHECKMARX_PASSWORD }} # To be stored in GitHub Secrets.
+          checkmarx_client_secret: ${{ secrets.CHECKMARX_CLIENT_SECRET }} # To be stored in GitHub Secrets.
+          break_build: false
+          scanners: sast
+          bug_tracker: JIRA
+          jira_url: ${{ secrets.JIRA_URL }}
+          jira_username: ${{ secrets.JIRA_USERNAME }}
+          jira_token: ${{ secrets.JIRA_TOKEN }}
+          jira_project: ${{ secrets.JIRA_PROJECT }}
+          jira_issue_type: 'Application Security Bug'
+          jira_open_transition: 'In Progress'
+          jira_close_transition: 'Done'
+          jira_open_status: 'Backlog,Selected for Development,In Progress'
+          jira_closed_status: 'Done'
+          params: --namespace=${{ github.repository_owner }} --repo-name=${{ github.event.repository.name }} --branch=${{ github.ref }} --cx-flow.filterSeverity --cx-flow.filterCategory --jira.priorities.High=High --jira.priorities.Medium=Medium --jira.priorities.Low=Low --jira.priorities.Informational=Lowest
+```
+
 ## <a name="IASTintegrations">CxFlow IAST Integration Tutorial</a>
 [Back to Table of Contents](#tableofcontents)
 ### <a name="IASTprerequisites">Prerequisites</a>
