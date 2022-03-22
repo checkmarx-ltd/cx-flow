@@ -38,8 +38,11 @@
     * [General Procedure](#IASTgeneralprocedures)
     * [Sample Jenkins Pipeline](#IASTJenkinsPipeline)
     * [Yaml - application.yml file](#IASTYaml)
+* [CxFlow SonarQube Integration](#SonarQubeIntegrations)
 * [CxSAST Branching Project](#branchedProject)
     * [Steps to create branched project](#stepsForBranchProject)
+* [CxFlow CircleCI](#CxFlowCircleCI)
+
 <br/>
 
 
@@ -1792,3 +1795,18 @@ CxFlow supports creating branched project in CxSAST server from a project create
 [[Images/fbranch.png|FeatureBranch]]
 [[Images/CxSAST_branch_project.png|ProjectInSAST]]
 [[Images/CxSAST_project_count.png|LicensedProjectCount]]
+
+## <a name="CxFlowCircleCI">CxFlow CircleCI</a>
+[Back to Table of Contents](#tableofcontents)
+<br/>
+CircleCI can be configured with CxFlow.
+Checkmarx CxFlow Orb can be used to simplify your configuration.
+
+* Checkmarx CxFlow Orb Readme
+<br>https://github.com/checkmarx-ts/checkmarx-cxflow-orb#readme
+
+* Checkmarx CxFlow Orb Documentation
+<br>https://circleci.com/developer/orbs/orb/checkmarx-ts/cxflow
+
+* Orb Introduction
+<br>https://circleci.com/docs/2.0/orb-intro/?section=configuration
