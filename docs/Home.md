@@ -10,7 +10,7 @@ CxFlow is a Spring Boot application that can run anywhere Java is installed. CxF
 CxFlow can also run as a CLI tool embedded in CI/CD pipelines. 
 
 ## <a name="quickstart">Quick Start</a>
-For a Quick Start Lab, please refer to [Quick Start](https://github.com/checkmarx-ltd/cx-flow/wiki/Labs#quickstart)
+For a Quick Start Tutorial, please refer to [Quick Start](https://github.com/checkmarx-ltd/cx-flow/wiki/Tutorials#quickstart)
 
 ## <a name="configuration">Configuration Details</a>
 For Configuration details, please refer to [Configuration Definitions](https://github.com/checkmarx-ltd/cx-flow/wiki/Configuration#configuration-definitions)
