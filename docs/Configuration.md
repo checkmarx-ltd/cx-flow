@@ -372,7 +372,7 @@ No* = Default is applied
 cx-flow:
   ...
   scanTimeout: 120 #Amount of time in minutes
-  scanPolling: 20000 #Amount of time in miiseconds
+  scanPolling: 20000 #Amount of time in miliseconds
 ```
 
 ### <a name="reportTimeoutAndreportPolling"> Report Timeout and Report Polling</a>
@@ -381,8 +381,8 @@ The amount of time (in milliseconds) in which cx-flow pings CxSAST server to get
 ```yaml
 cx-flow:
   ...
-  reportTimeout: 300000 #Amount of time in miiseconds
-  reportPolling: 5000 #Amount of time in miiseconds
+  reportTimeout: 300000 #Amount of time in miliseconds
+  reportPolling: 5000 #Amount of time in miliseconds
 ```
 
 
