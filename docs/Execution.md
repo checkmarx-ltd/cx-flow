@@ -79,6 +79,22 @@ CxFlow can be integrated via command line using several ways. The table below li
 | `--alt-project` | Name of the project in ADO. This parameter is required in addition to cx-project parameter. |
 | `--project-custom-field` | Specify a project-level custom field to be set if a project is created or the `checkmarx.settings-override` property is set. The custom field is specified as *name:value* (i.e., the field name cannot include a colon). This option may be specified multiple times to set multiple fields. |
 | `--scan-custom-field` | Specify a scan-level custom field. The custom field is specified as *name:value* (i.e., the field name cannot include a colon). This option may be specified multiple times to set multiple fields. |
+
+* By using the CLI, any parameter in the application.yml file can be given a value.
+* To provide value for parameter present in application yml file through CLI, follow below example
+* **Section in YML**
+```yaml
+github:
+  webhook-token: XXXXX
+  token: XXXXX
+  url: https://github.com
+  api-url: https://api.github.com/repos/
+  false-positive-label: false-positive
+  block-merge: true
+```
+* The value for `token` in `github` section can be provided in the following way:
+* `--github.token=<GH_TOKEN_VALUE`
+
 ## <a name="parse">Parse</a>
 
 ```
