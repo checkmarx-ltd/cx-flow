@@ -1,4 +1,5 @@
 * [Understanding the Data](#data)
+* [Understanding the result summary](#resultSummary)
 * [Jira](#jira)
   * [Label Prefix](#labelPrefix)
   * [Priorities](#priorities)
@@ -28,6 +29,33 @@ The breakdown of the XML includes the following:
 Issues are filtered based on the criteria found in the main configuration of CxFlow along with any particular overrides (severity, category, cwe, status).  From the XML structure, the **Source** identifier is the main tracking element.  The **Vulnerability+File** path is the key, and as additional line references are found for the same key, it is appended to the same issue reference.  See the development section for details on the ScanResults/Issue object structure.
 
 The best fix location would be a more appropriate value to track, which is currently unavailable.
+
+## <a name="resultSummary">Understanding the Result Summary</a>
+Once scan is finished and the results are retrieved then, cx-flow combines all issues in a single file that have the same category into a single issue, then the provided overrides for filters(severity,cwe,status,category,etc) are applied on those issues and a final list of Xissues is generated. Issues in the provided bug tracker are opened for the generated Xissues.
+
+**Example**</br>
+If **12 Medium level issues** were found in a file **src/authService.js** as described below
+
+| Sr. No. | Line Number | Issue Category                                                               |
+|---------|-------------|------------------------------------------------------------------------------|
+| 1       | 56 58       | Client HTML5 Insecure Storage\Path 1: -1(Clubbed with 5)                     |
+| 2       | 54 58       | Client HTML5 Insecure Storage\Path 2:                                        |
+| 3       | 165 167     | Client HTML5 Insecure Storage\Path 3: -1(Clubbed with 6)                     |
+| 4       | 161 167     | Client HTML5 Insecure Storage\Path 4:                                        |
+| 5       | 56 58       | Client HTML5 Insecure Storage\Path 4: -2(Clubbed with 1)                     |
+| 6       | 165 167     | Client HTML5 Insecure Storage\Path 4: -2(Clubbed with 3)                     |
+| 7       | 58 58       | Client HTML5 Insecure Storage\Path 7:                                        |
+| 8       | 167 167     | Client HTML5 Insecure Storage\Path 8:                                        |
+| 9       | 58 58       | Client HTML5 Store Sensitive data In Web Storage\Path 1: -2(Clubbed with 10) |
+| 10      | 58 58       | Client HTML5 Store Sensitive data In Web Storage\Path 2: -1(Clubbed with 9)  |
+| 11      | 167 167     | Client HTML5 Store Sensitive data In Web Storage\Path 3: -2(Clubbed with 12) |
+| 12      | 167 167     | Client HTML5 Store Sensitive data In Web Storage\Path 4: -1(Clubbed with 11) |
+
+Issues **[1]**, and **[5]** are clubbed as the category of the issue and the filename is same. Similarly, issues **[3]** and **[6]**, **[9]** and **[10]**, and **[11]** and **[12]** are clubbed. 
+
+Since the issues are clubbed the total count of **12 Medium issues** is now converted to **8 Medium issues**.
+
+The **Cx-SAST/ Cx-SCA summary** in a PR displays all the unfiltered issues which are present in the project. While the Violation summary displays all the filtered issues.
 
 ## <a name="jira">Jira</a>
 Jira has the most complex configuration use case as it supports a variety of custom fields, custom workflows and custom transitions.
