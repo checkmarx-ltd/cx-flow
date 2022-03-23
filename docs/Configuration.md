@@ -191,6 +191,10 @@ jira:
      - In Review
   closed-status:
      - Done
+  suppress-code-snippets:
+      - Hardcoded_Password_in_Connection_String
+      - Password_In_Comment
+      - Use_Of_Hardcoded_Password
   fields:
      - type: result
        name: application

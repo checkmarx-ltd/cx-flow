@@ -1215,9 +1215,12 @@ public class JiraService {
                             } else {
                                 body.append("Line #").append(entry.getKey()).append(HTMLHelper.CRLF);
                             }
-                            body.append("{code}").append(HTMLHelper.CRLF);
-                            body.append(entry.getValue().getCodeSnippet()).append(HTMLHelper.CRLF);
-                            body.append("{code}").append(HTMLHelper.CRLF);
+                            if (jiraProperties.getSuppressCodeSnippets() == null ||
+                                    !jiraProperties.getSuppressCodeSnippets().contains(issue.getVulnerability())) {
+                                body.append("{code}").append(HTMLHelper.CRLF);
+                                body.append(entry.getValue().getCodeSnippet()).append(HTMLHelper.CRLF);
+                                body.append("{code}").append(HTMLHelper.CRLF);
+                            }
                         }
                     });
             body.append("----").append(HTMLHelper.CRLF);
