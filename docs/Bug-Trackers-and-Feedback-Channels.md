@@ -20,7 +20,7 @@
 * [NONE|WAIT](#none)
 
 ##  <a name="data">Understanding the Data</a>
-Checkmarx results are processed according to the following [scheme](https://checkmarx.atlassian.net/wiki/download/attachments/1276543114/cx.xsd?version=1&modificationDate=1557257271078&cacheVersion=1&api=v2).
+Checkmarx results are processed according to the following [scheme](https://raw.githubusercontent.com/checkmarx-ltd/cx-flow/develop/src/main/resources/samples/cx.xsd).
 
 The breakdown of the XML includes the following:
 
