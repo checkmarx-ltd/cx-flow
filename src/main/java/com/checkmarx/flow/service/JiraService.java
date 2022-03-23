@@ -1202,21 +1202,21 @@ public class JiraService {
                     .sorted(Map.Entry.comparingByKey())
                     .forEach(entry -> {
                         if (!ScanUtils.empty(entry.getValue().getCodeSnippet())) {
-                            body.append("----").append(HTMLHelper.CRLF);
-                            if (!ScanUtils.empty(fileUrl)) {
-                                String line = "[Line #";
-                                if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)) {
-                                    body.append(line).append(entry.getKey()).append(":|").append(fileUrl).append("#").append(entry.getKey()).append("]").append(HTMLHelper.CRLF);
-                                } else if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)) { //BB Cloud
-                                    body.append(line).append(entry.getKey()).append(":|").append(fileUrl).append(lines).append(entry.getKey()).append("]").append(HTMLHelper.CRLF);
-                                } else {
-                                    body.append(line).append(entry.getKey()).append(":|").append(fileUrl).append("#L").append(entry.getKey()).append("]").append(HTMLHelper.CRLF);
-                                }
-                            } else {
-                                body.append("Line #").append(entry.getKey()).append(HTMLHelper.CRLF);
-                            }
                             if (jiraProperties.getSuppressCodeSnippets() == null ||
                                     !jiraProperties.getSuppressCodeSnippets().contains(issue.getVulnerability())) {
+                                body.append("----").append(HTMLHelper.CRLF);
+                                if (!ScanUtils.empty(fileUrl)) {
+                                    String line = "[Line #";
+                                    if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)) {
+                                        body.append(line).append(entry.getKey()).append(":|").append(fileUrl).append("#").append(entry.getKey()).append("]").append(HTMLHelper.CRLF);
+                                    } else if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKET)) { //BB Cloud
+                                        body.append(line).append(entry.getKey()).append(":|").append(fileUrl).append(lines).append(entry.getKey()).append("]").append(HTMLHelper.CRLF);
+                                    } else {
+                                        body.append(line).append(entry.getKey()).append(":|").append(fileUrl).append("#L").append(entry.getKey()).append("]").append(HTMLHelper.CRLF);
+                                    }
+                                } else {
+                                    body.append("Line #").append(entry.getKey()).append(HTMLHelper.CRLF);
+                                }
                                 body.append("{code}").append(HTMLHelper.CRLF);
                                 body.append(entry.getValue().getCodeSnippet()).append(HTMLHelper.CRLF);
                                 body.append("{code}").append(HTMLHelper.CRLF);
