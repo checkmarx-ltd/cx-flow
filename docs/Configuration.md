@@ -10,6 +10,8 @@
   * [Override SAST project setting](#override)
   * [Create Branched Project](#branchProject)
   * [Scan Queuing and Scan Queuing Timeout](#scanQueuing)
+  * [Scan Timeout and Scan polling](#scanTimeoutAndscanPolling)
+  * [Report Timeout and Report polling](#reportTimeoutAndreportPolling)
 * [WebHook Configuration](#webhook)
   * [WebHook URL Parameters - Code](#code)
   * [WebHook URL Override Parameters - Details](#details)
@@ -313,6 +315,10 @@ cx-flow:
   preserve-project-name: false
   http-connection-timeout: xxx # milliseconds - default 30000
   http-read-timeout: xxx # milliseconds - default 120000
+  scanTimeout: 120
+  scanPolling: 20000
+  reportTimeout: 300000
+  reportPolling: 5000
   mail:
      host: smtp.gmail.com
      port: 587
@@ -352,8 +358,33 @@ cx-flow:
 | `profile-config`          | CxProfile.json        | No       | Yes     | No           | The file that contains the profile configuration mapping. |
 | `scan-resubmit`           | false                 | No       | Yes     | No           | When **True**: If a scan is active for the same project, CxFlow cancels the active scan and submits a new scan. When **False**: If a scan is active for the same project, CxFlow does not submit a new scan. |
 | `preserve-project-name`   | false                 | No       | Yes     | Yes          | When **False**: The project name will be the repository name after normalization (i.e. Front-End-dev). Legal characters are: `a-z`, `A-Z`, `0-9`, `-`, `_`, `.`. All other characters will be replaced in the normalization process with "-". <br/> When **True**: The project name will be the exact project name inputted without normalization (i.e. Front End-dev). <br/> **For attention:** <br/> 1. Not all scanners allow project names with invalid characters.<br/> 2. The preserve-project-name parameter is also effective for project name coming from config-as-code. |
+| `scanTimeout`             | 120                   | No       | Yes     | Yes          | The amount of time (in minutes) for which cx-flow will wait for CxSAST scan to finish.If scan is not completed within 120(in minutes) then it will gives Timeout exceeded during scan as error messase.|
+| `scanPolling`             | 20000                 | No       | Yes     | Yes          | The amount of time (in milliseconds) in which cx-flow pings CxSAST server to get the status of the scan (i.e Queued, Finished or Failed). |
+| `reportTimeout`           | 300000                | No       | Yes     | Yes          | The amount of time (in milliseconds) for which cx-flow will wait for CxSAST to generate scan report.If report is not generated within  300000(in miliseconds)it will through Timeout exceeded during report generation as error message. |
+| `reportPolling`           | 5000                  | No       | Yes     | Yes          | The amount of time (in milliseconds) in which cx-flow pings CxSAST server to get the status of the report. |
 
 No* = Default is applied
+
+### <a name="scanTimeoutAndscanPolling"> Scan Timeout and Scan Polling</a>
+ The amount of time (in minutes) for which cx-flow will wait for CxSAST scan to finish.If scan is not completed within 120(in minutes) then it will gives Timeout exceeded during scan as error messase.The default value of scanTimeout **120** minutes.
+ The amount of time (in milliseconds) in which cx-flow pings CxSAST server to get the status of the scan (i.e Queued, Finished or Failed).The default value of scanPolling **20000** miliseconds.
+```yaml
+cx-flow:
+  ...
+  scanTimeout: 120 #Amount of time in minutes
+  scanPolling: 20000 #Amount of time in miliseconds
+```
+
+### <a name="reportTimeoutAndreportPolling"> Report Timeout and Report Polling</a>
+The amount of time (in milliseconds) for which cx-flow will wait for CxSAST to generate scan report.If report is not generated within  300000(in miliseconds)it will through Timeout exceeded during report generation as error message.The default value of reportTimeout **30000** miliseconds.
+The amount of time (in milliseconds) in which cx-flow pings CxSAST server to get the status of the report.The default value of reportPolling **5000** miliseconds.
+```yaml
+cx-flow:
+  ...
+  reportTimeout: 300000 #Amount of time in miliseconds
+  reportPolling: 5000 #Amount of time in miliseconds
+```
+
 
 #### <a name="filtering">E-Mail notifications</a>
 
