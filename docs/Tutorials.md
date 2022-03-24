@@ -841,6 +841,10 @@ workflows:
               only: master
   version: 2
 ```
+
+As shown in above sample file, additional parameters can be passed in cxflow using params attribute.
+Thresholds for High Issue is passed as '--cx-flow.thresholds.High=0' inside 'params' attribute in sample config.yml.
+
 ##### References
 * Checkmarx CxFlow Orb Readme
   <br>https://github.com/checkmarx-ts/checkmarx-cxflow-orb#readme
