@@ -54,7 +54,7 @@ public class JiraProperties {
     private String labelPrefix;
     private String sastIssueSummaryFormat = "[PREFIX][VULNERABILITY] @ [FILENAME][POSTFIX]";
     private String sastIssueSummaryBranchFormat = "[PREFIX][VULNERABILITY] @ [FILENAME] [[BRANCH]][POSTFIX]";
-
+    private List<String> suppressCodeSnippets;
 
     public String getUrl() {
         return this.url;
@@ -358,4 +358,9 @@ public class JiraProperties {
         this.sastIssueSummaryBranchFormat = sastIssueSummaryBranchFormat;
     }
 
+    public List<String> getSuppressCodeSnippets() { return this.suppressCodeSnippets; }
+
+    public void setSuppressCodeSnippets(List<String> suppressCodeSnippets) {
+        this.suppressCodeSnippets = suppressCodeSnippets;
+    }
 }

@@ -83,6 +83,10 @@ jira:
       - Done
    sast-issue-summary-format: "[VULNERABILITY] in [PROJECT] with severity [SEVERITY] @ [FILENAME]"
    sast-issue-summary-branch-format: "[VULNERABILITY] in [PROJECT] with severity [SEVERITY] @ [FILENAME][[BRANCH]]"
+   suppress-code-snippets:
+      - Hardcoded_Password_in_Connection_String
+      - Password_In_Comment
+      - Use_Of_Hardcoded_Password
    fields:
 #    - type: cx #[ cx | static | result ]
 #      name: Platform # cx custom field name | cwe, category, severity, application, *project*, repo-name, branch, repo-url, namespace, recommendations, loc, site, issueLink, filename, language
@@ -248,6 +252,17 @@ The sast-issue-summary-format and sast-issue-summary-branch-format properties ca
 **[VULNERABILTY]** → The vulnerability
 
 The default Jira issue summary format (for CxSAST issues) is `[PREFIX][VULNERABILITY] @ [FILENAME][POSTFIX]` (`[PREFIX][VULNERABILITY] @ [FILENAME] [[BRANCH]][POSTFIX]` if the `--branch` command line option has been used).
+
+### <a name="suppressCodeSnippets">Suppressing Code Snippets</a>
+
+When creating a Jira ticket, CxFlow will add a code snippet to the ticket. Sometimes, it is preferable to suppress the creation of code snippets as they may contain sensitive information (e.g., hard-coded passwords). The suppress-code-snippets property can be used to specify a list of vulnerabilities for which code snippets will not be created. For example:
+
+```
+   suppress-code-snippets:
+      - Hardcoded_Password_in_Connection_String
+      - Password_In_Comment
+      - Use_Of_Hardcoded_Password
+```
 
 ### <a name="issueSummaryFormat">Jira Issue Handling for Scan Mode</a>
 * Jira Issue will be created with Label as SAST scanner and SCA scanner after the scan.
