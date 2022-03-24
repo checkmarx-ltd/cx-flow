@@ -154,7 +154,7 @@ public class FlowController {
             @RequestBody String postBackData,
             @PathVariable(value = "scanID") String scanID
     ) {
-        log.debug("Handling post-back from SAST");
+        log.info("Handling post-back from SAST");
         int maxNumberOfTokens = 100;
         PostRequestData prd = new PostRequestData();
         String token = " ";
@@ -202,6 +202,7 @@ public class FlowController {
             // Now go ahead and process the scan as normal.
             ScanResults scanResults = cxService.getReportContentByScanId(Integer.parseInt(scanID), scanRequest.getFilter());
             scanRequest.putAdditionalMetadata("statuses_url", prd.pullRequestURL);
+            scanRequest.putAdditionalMetadata("github-installation-id", prd.installationId);
             scanRequest.setMergeNoteUri(prd.mergeNoteUri);
             BugTracker bt = ScanUtils.getBugTracker(null, prd.bugType, jiraProperties, bugTracker);
             scanRequest.setBugTracker(bt);
@@ -233,18 +234,28 @@ public class FlowController {
                     prd.branch = scanDetailToken;
                     break;
                 case 4:
-                    prd.mergeNoteUri = scanDetailToken;
+                    prd.project = scanDetailToken;
                     break;
                 case 5:
-                    prd.pullRequestURL = scanDetailToken;
+                    prd.team = scanDetailToken;
                     break;
                 case 6:
+                    prd.mergeNoteUri = scanDetailToken;
+                    break;
+                case 7:
+                    prd.pullRequestURL = scanDetailToken;
+                    break;
+                case 8:
+                    prd.installationId = scanDetailToken;
+                    break;
+                case 9:
                     if(scanDetailToken.equals("PULL")) {
                         prd.bugType = BugTracker.Type.GITHUBPULL;
                     } else {
                         prd.bugType = BugTracker.Type.CUSTOM;
                     }
                     break;
+
                 default:
                     // Nothing to do.
                     break;
@@ -649,5 +660,6 @@ class PostRequestData {
     String namespace = "";
     String team = "";
     String project = "";
+    String installationId = "";
     BugTracker.Type bugType;
 }
