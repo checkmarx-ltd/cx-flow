@@ -54,9 +54,7 @@ If **12 Medium level issues** were found in a file **src/authService.js** as des
 Issues **[1]**, and **[5]** are clubbed as the category of the issue and the filename is same. Similarly, issues **[3]** and **[6]**, **[9]** and **[10]**, and **[11]** and **[12]** are clubbed. 
 
 Since the issues are clubbed, the total count of **12 Medium issues** is now converted to **8 Medium issues**.
-
 [[/Images/CxSAST_Result_Summary.png|CxSAST Result Summary]]
-
 In the above image the vulnerability count in **Cx-SAST Summary** and **Violation Summary** is different because **Violation Summary** displays all the clubbed and then filtered vulnerabilities count, while **Cx-SAST Summary** (and **Cx-SCA Summary**) displays all the vulnerabilities present in a project.
 
 ## <a name="jira">Jira</a>
