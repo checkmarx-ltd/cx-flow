@@ -24,6 +24,7 @@
     * [Wget Script](#adopipelinewget)
 * [Bitbucket Cloud Webhook Tutorial](#bitbucket)
     * [Prep](#bitbucketprep)
+* [CircleCI](#CircleCI)
 * [CxFlow CLI & JIRA Tutorial](#clijira)
     * [Prep](#cliprep)
     * [Triggering CLI Scans with CxFlow](#clitriggering)
@@ -41,7 +42,6 @@
 * [CxFlow SonarQube Integration](#SonarQubeIntegrations)
 * [CxSAST Branching Project](#branchedProject)
     * [Steps to create branched project](#stepsForBranchProject)
-* [CxFlow CircleCI](#CxFlowCircleCI)
 
 <br/>
 
@@ -786,6 +786,74 @@ This tutorial is designed to teach the following topics:
 * Continue to [Triggering Webhook Scans with CxFlow](#webhooktriggering)
 
 ##### [Top of Tutorial](#bitbucket)
+
+## <a name="CircleCI">CircleCI</a>
+[Back to Table of Contents](#tableofcontents)
+<br/>
+CircleCI can be configured with CxFlow.
+<br/>Checkmarx CxFlow Orb can be used to simplify your configuration.
+<br/>Checkmarx CxFlow Orb for executing Checkmarx Scans and Publishing results to various feedback channels.
+<br/>Additional information regarding Checkmarx can be found here: https://checkmarx.atlassian.net/wiki/spaces/KC/overview
+<br/>Additional information regarding CxFlow can be found here: https://github.com/checkmarx-ltd/cx-flow/wiki
+
+### Configuration
+##### Environment Variables
+The following Environment Variables must be set within your CircleCI project for this orb to function:
+
+<br/> **CHECKMARX_URL**: High level dns entry for the Checkmarx Instance including protocol/port (i.e. https://cxsast.example.com)
+<br/> **CHECKMARX_USERNAME**: Service Account within Checkmarx that will be used for triggering scans and retrieving results
+<br/> **CHECKMARX_PASSWORD**: Password of the Service Account.
+<br/> **CHECKMARX_CLIENT_SECRET**: Client secret key associated with your Checkmarx SAST account
+<br/> **AST_CLIENT_ID**: Service account Client ID for Checkmarx AST
+<br/> **AST_CLIENT_SECRET**: Client secret key associated with your Checkmarx AST account
+<br/> **SCA_USERNAME**: Service Account within Checkmarx SCA that will be used for triggering scans and retrieving results
+<br/> **SCA_PASSWORD**: Password of the Checkmarx SCA Service Account
+<br/> **SCA_TENANT**: Tenant information of the Checkmarx SCA account
+<br/> **CXGO_CLIENT_SECRET**: Client secret key associated with your Checkmarx CxGo account
+
+##### Sample config.yml
+Below is sample config.yml for CircleCI using Checkmarx CxFlow Orb
+```
+jobs:
+  cx-scan:
+    executor: cxflow/default
+    steps:
+      - checkout
+      - cxflow/scan:
+          preset: Checkmarx Express
+          report-file: checkmarx.json
+          scanners: 'sast'
+          team: /CxServer
+          version: '9.4'
+          incremental: false
+          params: '--cx-flow.thresholds.High=0 --cx-flow.thresholds.Medium=0'
+      - store_artifacts:
+          path: checkmarx.json
+orbs:
+  cxflow: checkmarx-ts/cxflow@1.0.5
+version: 2.1
+workflows:
+  sast-scan:
+    jobs:
+      - cx-scan:
+          filters:
+            branches:
+              only: master
+  version: 2
+```
+
+As shown in above sample file, additional parameters can be passed in cxflow using params attribute.
+Thresholds for High Issue is passed as '--cx-flow.thresholds.High=0' inside 'params' attribute in sample config.yml.
+
+##### References
+* Checkmarx CxFlow Orb Readme
+  <br>https://github.com/checkmarx-ts/checkmarx-cxflow-orb#readme
+
+* Checkmarx CxFlow Orb Documentation
+  <br>https://circleci.com/developer/orbs/orb/checkmarx-ts/cxflow
+
+* Orb Introduction
+  <br>https://circleci.com/docs/2.0/orb-intro/?section=configuration
 
 ## <a name="clijira">CxFlow CLI & JIRA Tutorial</a>
 * [Prep](#cliprep)
@@ -1795,18 +1863,3 @@ CxFlow supports creating branched project in CxSAST server from a project create
 [[Images/fbranch.png|FeatureBranch]]
 [[Images/CxSAST_branch_project.png|ProjectInSAST]]
 [[Images/CxSAST_project_count.png|LicensedProjectCount]]
-
-## <a name="CxFlowCircleCI">CxFlow CircleCI</a>
-[Back to Table of Contents](#tableofcontents)
-<br/>
-CircleCI can be configured with CxFlow.
-Checkmarx CxFlow Orb can be used to simplify your configuration.
-
-* Checkmarx CxFlow Orb Readme
-<br>https://github.com/checkmarx-ts/checkmarx-cxflow-orb#readme
-
-* Checkmarx CxFlow Orb Documentation
-<br>https://circleci.com/developer/orbs/orb/checkmarx-ts/cxflow
-
-* Orb Introduction
-<br>https://circleci.com/docs/2.0/orb-intro/?section=configuration
