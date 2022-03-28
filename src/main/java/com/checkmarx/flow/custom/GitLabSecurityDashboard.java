@@ -200,7 +200,7 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
     public static class SecurityDashboard {
         @JsonProperty("version")
         @Builder.Default
-        public Double version = 2.0;
+        public String version = "2.0";
         @JsonProperty("vulnerabilities")
         public List<Vulnerability> vulnerabilities;
         @JsonProperty("remediations")
