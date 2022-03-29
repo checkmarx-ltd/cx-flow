@@ -33,23 +33,28 @@ public class EmailService {
     private final FlowProperties flowProperties;
     private final TemplateEngine templateEngine;
     private final JavaMailSender emailSender;
+    private final SendGridService sendGridService;
 
-    @ConstructorProperties({"flowProperties", "templateEngine", "emailSender"})
-    public EmailService(FlowProperties flowProperties, @Qualifier("cxFlowTemplateEngine") TemplateEngine templateEngine, JavaMailSender emailSender) {
+    @ConstructorProperties({"flowProperties", "templateEngine", "emailSender", "sendGridService"})
+    public EmailService(FlowProperties flowProperties,
+                        @Qualifier("cxFlowTemplateEngine") TemplateEngine templateEngine,
+                        JavaMailSender emailSender,
+                        SendGridService sendGridService) {
         this.flowProperties = flowProperties;
         this.templateEngine = templateEngine;
         this.emailSender = emailSender;
+        this.sendGridService = sendGridService;
     }
 
     /**
      * Send email
      *
-     * @param recipients
-     * @param subject
-     * @param ctx
-     * @param template
+     * @param recipients The list of recipients.
+     * @param subject    The subject.
+     * @param ctx        The context. It has information to generate the content.
+     * @param template   What template to use.
      */
-    public void sendmail(List<String> recipients, @NotNull String subject, @NotNull Map<String, Object> ctx, String template) {
+    public void sendSmtpMail(List<String> recipients, @NotNull String subject, @NotNull Map<String, Object> ctx, String template) {
 
         MimeMessagePreparator messagePreparator = mimeMessage -> {
             log.info("Sending email notification.");
@@ -96,9 +101,9 @@ public class EmailService {
     /**
      * Generate HTML content for email
      *
-     * @param ctx
-     * @param template
-     * @return
+     * @param ctx      The context. It has information to generate the content.
+     * @param template What template to use.
+     * @return The e-mail content, as HTML.
      */
     private String generateContent(Map<String, Object> ctx, String template) {
         Context context = new Context();
@@ -107,42 +112,55 @@ public class EmailService {
     }
 
     public void sendScanSubmittedEmail(ScanRequest request) {
-        if (isEmailNotificationAllowed()) {
-            String prefixMessage = "Checkmarx Scan submitted for %s/%s ";
-            String scanSubmittedSubject = String.format(prefixMessage, request.getNamespace(), request.getRepoName());
-            String scanSubmittedMessage = String.format(prefixMessage, request.getNamespace(), request.getRepoName());
-            Map<String, Object> emailCtx = prepareEmailContext("Scan Request Submitted", scanSubmittedMessage, request.getRepoUrl());
-            sendmail(request.getEmail(), scanSubmittedSubject, emailCtx, "message.html");
+        if (!isEmailNotificationAllowed()) {
+            log.info("cx-flow.mail.notification not set or set to false. Skipping Scan Submitted e-mail...");
+            return;
         }
+
+        FlowProperties.Mail mail = flowProperties.getMail();
+        String prefixMessage = "Checkmarx Scan submitted for %s/%s ";
+        String scanSubmittedSubject = String.format(prefixMessage, request.getNamespace(), request.getRepoName());
+        Map<String, Object> emailCtx = prepareEmailContext("Scan Request Submitted", scanSubmittedSubject, request.getRepoUrl());
+        sendMail(request.getEmail(), mail, scanSubmittedSubject, emailCtx, "message.html");
     }
 
     public void sendScanCompletedEmail(ScanRequest request, ScanResults results) {
-        if(request.getBugTracker()!=null) {
-            BugTracker.Type bugTrackerType = request.getBugTracker().getType();
-            if (isEmailNotificationAllowed() && !bugTrackerType.equals(BugTracker.Type.NONE) &&
-                    !bugTrackerType.equals(BugTracker.Type.EMAIL)) {
-                prepareAndSendEmail(request, results);
-            }
+        if (!isEmailNotificationAllowed()) {
+            log.info("cx-flow.mail.notification not set or set to false. Skipping Scan Completed e-mail...");
+            return;
         }
+
+        if (request.getBugTracker() == null) {
+            return;
+        }
+
+        BugTracker.Type bugTrackerType = request.getBugTracker().getType();
+        if (bugTrackerType.equals(BugTracker.Type.NONE) ||
+                !bugTrackerType.equals(BugTracker.Type.EMAIL)) {
+            return;
+        }
+
+        prepareAndSendScanCompletedEmail(request, results);
     }
 
     public void handleEmailBugTracker(ScanRequest request, ScanResults results) {
-        if (flowProperties.getMail() != null) {
-            if (ScanUtils.empty(results.getXIssues())) {
-                if (flowProperties.getMail().isEmptyMailAllowed()) {
-                    prepareAndSendEmail(request, results);
-                }
-            } else {
-                prepareAndSendEmail(request, results);
-            }
+        FlowProperties.Mail mail = flowProperties.getMail();
+        if (mail == null) {
+            return;
         }
+
+        if (ScanUtils.empty(results.getXIssues()) && !mail.isEmptyMailAllowed()) {
+            return;
+        }
+
+        prepareAndSendScanCompletedEmail(request, results);
     }
 
     private boolean isEmailNotificationAllowed() {
         return flowProperties.getMail() != null && flowProperties.getMail().isNotificationEnabled();
     }
 
-    public void prepareAndSendEmail(ScanRequest request, ScanResults results) {
+    public void prepareAndSendScanCompletedEmail(ScanRequest request, ScanResults results) {
         String namespace = request.getNamespace();
         String repoName = request.getRepoName();
         String scanCompletedMessage = COMPLETED_PROCESSING.concat(namespace).concat("/").concat(repoName);
@@ -154,18 +172,29 @@ public class EmailService {
             emailCtx.put("issues", results.getXIssues());
             emailCtx.put("link", results.getLink());
         }
+
         emailCtx.put("repo_fullname", namespace.concat("/").concat(repoName));
 
-        String template = flowProperties.getMail().getTemplate();
+        FlowProperties.Mail mail = flowProperties.getMail();
+        String template = mail.getTemplate();
 
-        if(ScanUtils.empty(template)) {
-            sendmail(request.getEmail(), scanCompletedSubject, emailCtx, "template-demo.html");
+        if (ScanUtils.empty(template)) {
+            template = "template-demo.html";
         }
-        else
-        {
-            sendmail(request.getEmail(), scanCompletedSubject, emailCtx, template);
-        }
+
+        sendMail(request.getEmail(), mail, scanCompletedSubject, emailCtx, template);
         log.info("Email notification sent.");
+    }
+
+    private void sendMail(List<String> emails, FlowProperties.Mail mail, String scanCompletedSubject, Map<String, Object> emailCtx, String template) {
+        FlowProperties.SendGrid sendGrid = mail.getSendgrid();
+        if (sendGrid != null && sendGrid.getApiToken() != null) {
+            log.info("Using Sendgrid to send the e-mail notification.");
+            String content = generateContent(emailCtx, template);
+            sendGridService.sendEmailThroughSendGrid(emails, sendGrid.getApiToken(), content);
+        } else {
+            sendSmtpMail(emails, scanCompletedSubject, emailCtx, template);
+        }
     }
 
     private Map<String, Object> prepareEmailContext(String heading, String message, String repoUrl) {
