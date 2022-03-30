@@ -16,6 +16,7 @@
 * [CxXML](#cxxml)
 * [Json](#json)
 * [CSV](#csv)
+* [Email](#email)
 * [NONE|WAIT](#none)
 
 ##  <a name="data">Understanding the Data</a>
@@ -264,6 +265,7 @@ Valid options for `bug-tracker-impl` are currently the following ones:
 * Azure
 * CxXML - Only available for SAST 8.x|9.x
 * Csv
+* Email
 * JIRA
 * Json
 * GitHub
@@ -577,6 +579,7 @@ CxFlow works with SMTP and SendGrid to notify users through e-mail.
 
 ```yaml
 cx-flow:
+  bug-tracker: Email
   mail:
     host: smtp.gmail.com
     port: 587
@@ -593,6 +596,7 @@ If using SMTP, the following fields are required:
 
 ```yaml
 cx-flow:
+  bug-tracker: Email
   mail:
     host: smtp.gmail.com
     port: 587
