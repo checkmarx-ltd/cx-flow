@@ -10,23 +10,27 @@ import com.sendgrid.helpers.mail.objects.Email;
 import com.sendgrid.helpers.mail.objects.Personalization;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
+import javax.validation.constraints.NotNull;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class SendGridService {
-    public void sendEmailThroughSendGrid(List<String> emails, String apiToken, String content) {
+    public void sendEmailThroughSendGrid(List<String> emails, @NotNull String from,
+                                         @NotNull String apiToken, @NotNull String subject, @NotNull String content) {
         Mail mail = new Mail();
-        mail.setFrom(new Email("leonel.sanches@checkmarx.com"));
-        mail.setSubject("This is a SendGrid test");
-        mail.addContent(new Content("text/plain", "Ironscales, that's a test, not junk."));
+        mail.setFrom(new Email(from));
+        mail.setSubject(subject);
+        mail.addContent(new Content("text/html", content));
 
         Personalization personalization = new Personalization();
-        for (String recipient: emails) {
+        for (String recipient: new HashSet<>(emails)) {
             personalization.addTo(new Email(recipient));
         }
 

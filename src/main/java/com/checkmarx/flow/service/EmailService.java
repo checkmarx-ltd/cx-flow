@@ -186,13 +186,31 @@ public class EmailService {
         log.info("Email notification sent.");
     }
 
-    private void sendMail(List<String> emails, FlowProperties.Mail mail, String scanCompletedSubject, Map<String, Object> emailCtx, String template) {
-        FlowProperties.SendGrid sendGrid = mail.getSendgrid();
+    /**
+     * Resolves how to send the Scan Submitted e-mail. If `cx-flow.mail.sendgrid` is set, sends through Sendgrid.
+     * Otherwise sends through SMTP.
+     *
+     * @param emails               List of e-mails with all the recipients.
+     * @param mailProperties       Configured properties for mail, through YAML, env variables or command-line arguments.
+     * @param scanCompletedSubject The e-mail subject
+     * @param emailCtx             The e-mail context. Used to generate the content.
+     * @param template             The template chosen.
+     */
+    private void sendMail(List<String> emails, FlowProperties.Mail mailProperties, String scanCompletedSubject,
+                          Map<String, Object> emailCtx, String template) {
+        FlowProperties.SendGrid sendGrid = mailProperties.getSendgrid();
         if (sendGrid != null && sendGrid.getApiToken() != null) {
-            log.info("Using Sendgrid to send the e-mail notification.");
+            log.info("Using Sendgrid to send the Scan Completed e-mail notification.");
             String content = generateContent(emailCtx, template);
-            sendGridService.sendEmailThroughSendGrid(emails, sendGrid.getApiToken(), content);
+
+            String from = flowProperties.getContact();
+            if (StringUtils.isEmpty(from)) {
+                from = "donotreply@checkmarx.com";
+            }
+
+            sendGridService.sendEmailThroughSendGrid(emails, from, sendGrid.getApiToken(), scanCompletedSubject, content);
         } else {
+            log.info("Using SMTP to send the Scan Completed e-mail notification.");
             sendSmtpMail(emails, scanCompletedSubject, emailCtx, template);
         }
     }
