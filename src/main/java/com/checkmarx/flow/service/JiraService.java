@@ -187,7 +187,7 @@ public class JiraService {
                 && !ScanUtils.empty(request.getNamespace())
                 && !ScanUtils.empty(request.getRepoName())
                 && !ScanUtils.empty(request.getBranch())) {
-            jql = String.format("project = %s and issueType = \"%s\" and (\"%s\" = \"%s\" and \"%s\" = \"%s:%s\" and \"%s\" = \"%s:%s\" and \"%s\" = \"%s:%s\")",
+            jql = String.format("project = \"%s\" and issueType = \"%s\" and (\"%s\" = \"%s\" and \"%s\" = \"%s:%s\" and \"%s\" = \"%s:%s\" and \"%s\" = \"%s:%s\")",
                     bugTracker.getProjectKey(),
                     bugTracker.getIssueType(),
                     jiraProperties.getLabelTracker(),
@@ -201,7 +201,7 @@ public class JiraService {
             );
         }/*Only application and repo provided */ else if (!ScanUtils.empty(request.getApplication()) && !ScanUtils.empty(request.getRepoName())) {
 
-            jql = String.format("project = %s and issueType = \"%s\" and (\"%s\" = \"%s\" and \"%s\" = \"%s:%s\" and \"%s\" = \"%s:%s\")",
+            jql = String.format("project = \"%s\" and issueType = \"%s\" and (\"%s\" = \"%s\" and \"%s\" = \"%s:%s\" and \"%s\" = \"%s:%s\")",
                     bugTracker.getProjectKey(),
                     bugTracker.getIssueType(),
                     jiraProperties.getLabelTracker(),
@@ -213,7 +213,7 @@ public class JiraService {
             );
 
         }/*Only application provided*/ else if (!ScanUtils.empty(request.getApplication())) {
-            jql = String.format("project = %s and issueType = \"%s\" and (\"%s\" = \"%s\" and \"%s\" = \"%s:%s\")",
+            jql = String.format("project = \"%s\" and issueType = \"%s\" and (\"%s\" = \"%s\" and \"%s\" = \"%s:%s\")",
                     bugTracker.getProjectKey(),
                     bugTracker.getIssueType(),
                     jiraProperties.getLabelTracker(),
