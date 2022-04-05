@@ -108,7 +108,7 @@ public class ScaPolicyManagementSteps extends ScaCommonSteps {
 
         ScanResults scanResults = scaScanner.scan(scanRequest);
         scaResults = Objects.requireNonNull(scanResults).getScaResults();
-        log.info("scaResults are : {}", scanResults);
+        log.info("scaResults are : {}", scaResults);
     }
 
     @Then("isPolicyViolated flag in SCA results should be positive")
