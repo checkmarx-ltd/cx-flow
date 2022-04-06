@@ -222,7 +222,10 @@ similarity-id - Cx Similarity ID
   * _multi-select_ (the CSV format is used and broken into multiple select values)
   * _single-select_
   * _security_ (used for issue security levels)
+  * _component_ (used for build in Jira Component/s field)
 * **jira-default-value** - Static value if no value can be determined for the respective field (Optional)
+* **skip-update**: The value is only provided during the initial creation of the ticket and not updated during subsequent iterations
+* **offset**: Used with system-date, the value of offset is added to the system date
 
 ### <a name="assigningTickets">Assigning tickets to a user</a>
 Jira tickets can be assigned to a user when they are created. This can be achieved in the following way.
