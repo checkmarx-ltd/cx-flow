@@ -223,6 +223,7 @@ public class GitLabController extends WebhookController {
             Project proj = body.getProject();
 
             String gitUrl = proj.getGitHttpUrl();
+            String defaultBranch = proj.getDefaultBranch();
             log.debug("Using url: {}", gitUrl);
             String configToken = scmConfigOverrider.determineConfigToken(properties, controllerRequest.getScmInstance());
             String gitAuthUrl = gitAuthUrlGenerator.addCredToUrl(ScanRequest.Repository.GITLAB, gitUrl, configToken);
@@ -239,6 +240,7 @@ public class GitLabController extends WebhookController {
                     .repoUrlWithAuth(gitAuthUrl)
                     .repoType(ScanRequest.Repository.GITLAB)
                     .branch(currentBranch)
+                    .defaultBranch(defaultBranch)
                     .refs(body.getRef())
                     .incremental(controllerRequest.getIncremental())
                     .scanPreset(controllerRequest.getPreset())

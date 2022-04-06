@@ -113,6 +113,7 @@ public class CxFlowRunner implements ApplicationRunner {
         String repoName;
         String repoUrl;
         String branch;
+        String defaultBranch;
         String mergeId;
         String mergeNoteUri = null;
         int mergeProjectId = 0;
@@ -175,6 +176,7 @@ public class CxFlowRunner implements ApplicationRunner {
         repoName = getOptionValues(args, "repo-name");
         repoUrl = getOptionValues(args, "repo-url");
         branch = getOptionValues(args, "branch");
+        defaultBranch = getOptionValues(args, "default-branch");
         namespace = getOptionValues(args, "namespace");
         projectId = getOptionValues(args, "project-id");
         team = getOptionValues(args, "cx-team");
@@ -345,6 +347,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 .repoUrlWithAuth(gitAuthUrl)
                 .repoType(repoType)
                 .branch(branch)
+                .defaultBranch(defaultBranch)
                 .refs(null)
                 .email(emails)
                 .incremental(cxProperties.getIncremental())

@@ -79,6 +79,7 @@ CxFlow can be integrated via command line using several ways. The table below li
 | `--alt-project` | Name of the project in ADO. This parameter is required in addition to cx-project parameter. |
 | `--project-custom-field` | Specify a project-level custom field to be set if a project is created or the `checkmarx.settings-override` property is set. The custom field is specified as *name:value* (i.e., the field name cannot include a colon). This option may be specified multiple times to set multiple fields. |
 | `--scan-custom-field` | Specify a scan-level custom field. The custom field is specified as *name:value* (i.e., the field name cannot include a colon). This option may be specified multiple times to set multiple fields. |
+| `--default-branch`         | Name of the default branch which will be used to created licensed project in CxSAST, so that scans from any branch provied by --branch creates a branched project in CxSAST and not a licensed project. |
 
 * By using the CLI, any parameter in the application.yml file can be given a value.
 * To provide value for parameter present in application yml file through CLI, follow below example
