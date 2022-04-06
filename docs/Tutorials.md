@@ -1842,7 +1842,7 @@ csv:
 | `Information`       | `INFO`             |
 
 ## <a name="branchedProject">CxSAST Branching Project</a>
-CxFlow supports creating branched project in CxSAST server from a project created from default branch of a repository, without incrementing the count of utilized licensed project in CxSAST. 
+CxFlow supports creating branched project in CxSAST from a project created from default branch of a repository when event type is **PUSH** on the feature branch, or from a project created from the target branch of a PR when event type is **PULL** on the feature branch, without incrementing the count of utilized licensed project. 
 
 ### <a name="stepsForBranchProject">Steps to create branched project</a>
 * Set cx-branch option under checkmarx section in the application yml file to true.
@@ -1852,14 +1852,19 @@ CxFlow supports creating branched project in CxSAST server from a project create
     cx-branch:true  
 ```
 
-* Create a PULL/PUSH event from a repository's default branch.
-[[Images/bp_db1.png|GitHubProject]]
+* When a PUSH event is created from any feature branch of a repository, and a licensed project for the repository's default branch is not already present in CxSAST, then a licensed project for the default branch is first created with no scans and then a branched project is created from it for the feature branch. 
+  * No project exists in CxSAST for the repository `JavaVulnerabilityLabE`
+[[Images/no_project_present.PNG|No Project in CxSAST for the repository]]
+  * The repository has two branches defined `master` which is default, and `feature-branch` which is a feature branch.
+[[Images/fbranch.png|Branches in the repository]]
+  * **PUSH** event is created from the `feature-branch` branch of the repository.
+  * Licensed project for default branch `master` with name `javaVulnerabilityLabE-master` is created.
+  * Branched project for `feature-branch` with name `JavaVulnerabilityLabE-feature-branch` is created.
+[[Images/branchedProjectScan.png|Projects created in CxSAST]]
 
-* This will create a licensed project in CxSAST with name `JavaVulnerabilityLabE-master` and the count of licensed project increases by 1.
-[[Images/CxSAST_default_project.png|ProjectInSAST]]
-[[Images/CxSAST_Licensed_Projects.png|LicensedProjectCount]]
-
-* Since cx-branch option is enabled and a project from default branch of a repository exists in CxSAST, When a PUSH event is generated from `feature-branch` a project with name `JavaVulnerabilityLabE-feature-branch` is created but the count of total licensed projects utilized in CxSAST server stays same.
-[[Images/fbranch.png|FeatureBranch]]
-[[Images/CxSAST_branch_project.png|ProjectInSAST]]
-[[Images/CxSAST_project_count.png|LicensedProjectCount]]
+* When a PULL event is created from any feature branch of a repository to a target branch and a project for the target branch does not exists in CxSAST then s licensed project for target branch is first created and then a branched project for the default branch is created.
+[[Images/no_project_present.PNG|No Project in CxSAST for the repository]]
+  * **PULL** event is created from `feature-branch` to a target branch `demo-master`
+  * Licensed project for target branch `demo-master` with name `JavaVulnerabilityLabE-demo-master` is created.
+  * Branched project for `feature-branch` with name `JavaVulnerabilityLabE-feature-branch` is created.
+[[Images/branchedProjectOnPull.png|Projects created in CxSAST]]
