@@ -7,7 +7,7 @@ buildscript {
         sonarqubeVersion = '2.8'
         atlassianVersion = "5.2.0"
         atlassianFugueVersion = "4.7.2"
-        jacksonVersion = "2.12.6"
+        jacksonVersion = "2.12.6.1"
         mainClassPath = 'com.checkmarx.flow.CxFlowApplication'
     }
     repositories {
