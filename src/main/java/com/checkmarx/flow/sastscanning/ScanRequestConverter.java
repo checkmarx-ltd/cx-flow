@@ -214,6 +214,7 @@ public class ScanRequestConverter {
                 .teamId(ownerId)
                 .withTeamName(request.getTeam())
                 .projectId(projectId)
+                .withPreserveProjectName(flowProperties.isPreserveProjectName())
                 .withProjectName(request.getProject())
                 .withScanPreset(request.getScanPreset())
                 .withGitUrl(request.getRepoUrlWithAuth())
@@ -229,24 +230,17 @@ public class ScanRequestConverter {
 
         if (StringUtils.isNotEmpty(request.getBranch())) {
             params.withBranch(Constants.CX_BRANCH_PREFIX.concat(request.getBranch()));
-        }
-
-        if (StringUtils.isEmpty(request.getBranch())) {
+        } else{
             params.withBranch(Constants.CX_BRANCH_PREFIX.concat(""));
         }
 
-        if(StringUtils.isNotEmpty(request.getDefaultBranch())) {
-            params.withDefaultBranch(Constants.CX_BRANCH_PREFIX.concat(request.getDefaultBranch()));
-        }
-
-        if(StringUtils.isEmpty(request.getDefaultBranch()) && StringUtils.isNotEmpty(request.getMergeTargetBranch())) {
+        if(StringUtils.isNotEmpty(request.getMergeTargetBranch())) {
             params.withDefaultBranch(Constants.CX_BRANCH_PREFIX.concat(request.getMergeTargetBranch()));
-        }
-
-        if(StringUtils.isEmpty(request.getDefaultBranch()) && StringUtils.isEmpty(request.getMergeTargetBranch())) {
+        } else if(StringUtils.isNotEmpty(request.getDefaultBranch())) {
+            params.withDefaultBranch(Constants.CX_BRANCH_PREFIX.concat(request.getDefaultBranch()));
+        } else {
             params.withDefaultBranch(Constants.CX_BRANCH_PREFIX.concat(""));
         }
-
 
         if (cxFile != null) {
             params.setSourceType(CxScanParams.Type.FILE);
