@@ -37,6 +37,9 @@ sca:
   manifests-include-pattern: "!**/*.xml, **/*.yml"
   fingerprints-include-pattern: "**/*.yml"
   preserve-xml: true
+  filter-severity:
+    - High
+  filter-policy-violation: true
 ```
 
 To use an European tenant:
@@ -57,6 +60,9 @@ sca:
   manifests-include-pattern: "!**/*.xml, **/*.yml"
   fingerprints-include-pattern: "**/*.yml"
   preserve-xml: true
+  filter-severity:
+    - High
+  filter-policy-violation: true
 ```
 
 ## <a name="bug">Bug-Trackers</a>
@@ -140,7 +146,7 @@ Jira ticket example:
 ```
 
 ## <a name="filters">Filters</a>
-SCA filtering has 2 sections: filter-severity & filter-score:
+SCA filtering has 2 sections: filter-severity, filter-score & filter-policy-violation:
 <br/>
 [[/Images/SCA5.png|Example of filter-severity and filter-score]]
 * Filter Severity: is a list type and can have multiple values [high, medium, low] regardless the order and not case sensitive. When applying this filter the SCA results vulnerabilities will be sanitized according to the severities defined filter.
@@ -153,6 +159,13 @@ SCA filtering has 2 sections: filter-severity & filter-score:
     * Filter not defined: in that case the score severity won’t be applied and the returned results will contain all scan scores.
 * Combined filters: In case both severity & score filter were defined, the returned results will contain only vulnerabilities which apply both conditions.
   * Backwards Compatibility: in case none of the filters were defined, the returned results won’t be sanitized and all scan’s results will be returned
+* Policy Violation filters: SCA vulnerabilities will be picked by Cxflow on violates any policy.Add a filter-policy-violation to the sca block that only validates vulnerabilities that breach Policy Violations.
+  * Backwards Compatibility: In case filters were not defined, the returned results won’t be sanitized and all scan’s results will be returned
+```
+  sca:
+    filter-policy-violation: true
+```
+
 
 ## <a name="thresholds">Thresholds</a>
 Cx-Flow supports 2 kind of thresholds: 
