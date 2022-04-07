@@ -3,7 +3,7 @@ buildscript {
         CxSBSDK = "0.5.15"
         ConfigProviderVersion = "1.0.10"
         //cxVersion = "8.90.5"
-        springBootVersion = '2.6.1'
+        springBootVersion = '2.6.6'
         sonarqubeVersion = '2.8'
         atlassianVersion = "5.2.0"
         atlassianFugueVersion = "4.7.2"
@@ -72,10 +72,10 @@ configurations {
     all*.exclude module: 'wss-agent-api'
 }
 
-ext['tomcat.version'] = '9.0.59'
+ext['tomcat.version'] = '9.0.62'
 ext['groovy.version'] = '3.0.9'
 ext['logback-classic.version'] = '1.2.10'
-ext['spring-core.version'] = '5.3.16'
+ext['spring-core.version'] = '5.3.18'
 
 dependencies {
     compile group: 'com.beust', name: 'jcommander', version: '1.78'
@@ -126,7 +126,7 @@ dependencies {
         exclude group: 'org.codehaus.jackson', module: 'jackson-core-asl'
     }
     compile("com.atlassian.jira:jira-rest-java-client-api:${atlassianVersion}")
-    compile("com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}")
+    compile("com.fasterxml.jackson.core:jackson-databind:2.12.6.1")
     compile("com.fasterxml.jackson.core:jackson-core:${jacksonVersion}")
     compile("com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}")
     compile("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersion}")
