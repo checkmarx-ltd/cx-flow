@@ -33,8 +33,9 @@ public class ScaFilterFactory {
 
         List<Filter> severityFilters = getSeverityFilters(scaProperties.getFilterSeverity());
         Filter scoreFilter = getScoreFilter(scaProperties.getFilterScore());
+        Filter policyViolationFilter = getPolicyViolationFilter(scaProperties.getFilterPolicyViolation());
 
-        List<Filter> allFilters = combine(severityFilters, scoreFilter);
+        List<Filter> allFilters = combine(severityFilters, scoreFilter,policyViolationFilter);
         writeToLog(allFilters);
 
         setScaFilters(allFilters, request);
@@ -49,6 +50,15 @@ public class ScaFilterFactory {
                 .orElse(null);
     }
 
+    public Filter getPolicyViolationFilter(String value) {
+        return Optional.ofNullable(value)
+                .map(booleanString -> Filter.builder()
+                        .type(Filter.Type.POLICYVIOLATION)
+                        .value(booleanString)
+                        .build())
+                .orElse(null);
+    }
+
     public List<Filter> getSeverityFilters(List<String> severities) {
         return Optional.ofNullable(severities)
                 .orElse(Collections.emptyList())
@@ -58,10 +68,14 @@ public class ScaFilterFactory {
                 .collect(Collectors.toList());
     }
 
-    private static List<Filter> combine(List<Filter> severityFilters, Filter scoreFilter) {
+    private static List<Filter> combine(List<Filter> severityFilters, Filter scoreFilter,
+            Filter policyViolationFilter) {
         List<Filter> allFilters = new ArrayList<>(severityFilters);
         if (scoreFilter != null) {
             allFilters.add(scoreFilter);
+        }
+        if (policyViolationFilter != null) {
+            allFilters.add(policyViolationFilter);
         }
         return allFilters;
     }
