@@ -85,9 +85,9 @@ CxFlows requires access to any of the desired feedback channels over HTTP/S:
 Access is required for any Checkmarx Instances
 
 ## <a name="software">Software Components</a>
-* Java Runtime 8 or 11
-* Gradle 5.4 (Build)
-* Spring Boot 2.1.9, Spring boot is regularly updated as part of ongoing 3rd party library maintenance
+* Java Runtime 8 or 11 or higher version
+* Gradle 6.8.1 (Build)
+* Spring Boot 2.6.6, Spring boot is regularly updated as part of ongoing 3rd party library maintenance
 
 ## <a name="execution">Execution</a>
 Refer to the [detailed execution instructions](https://github.com/checkmarx-ltd/cx-flow/wiki/Execution)
