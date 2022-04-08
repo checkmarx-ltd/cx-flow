@@ -115,6 +115,7 @@ public class CxFlowRunner implements ApplicationRunner {
         String branch;
         String defaultBranch;
         String mergeId;
+        String mergeTitle;
         String mergeNoteUri = null;
         int mergeProjectId = 0;
         String projectId;
@@ -186,6 +187,7 @@ public class CxFlowRunner implements ApplicationRunner {
         application = getOptionValues(args, "app");
         assignee = getOptionValues(args, "assignee");
         mergeId = getOptionValues(args, "merge-id");
+        mergeTitle = getOptionValues(args,"merge-title");
         preset = getOptionValues(args, "preset");
         scanTag = getOptionValues(args, "scan-tag");
         osa = args.getOptionValues("osa") != null;
@@ -300,7 +302,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 break;
             case GITLABMERGE:
             case gitlabmerge:
-                log.info("Handling GitLab merge request for project: {}, merge id: {}", projectId, mergeId);
+                log.info("Handling GitLab merge request for project: {}, merge id: {}, merge title: {}", projectId, mergeId, mergeTitle);
                 bugType = BugTracker.Type.GITLABMERGE;
                 bt = BugTracker.builder()
                         .type(bugType)
@@ -386,6 +388,7 @@ public class CxFlowRunner implements ApplicationRunner {
         } else if (bugType.equals(BugTracker.Type.GITLABMERGE)) {
             request.setRepoProjectId(mergeProjectId);
             request.putAdditionalMetadata(FlowConstants.MERGE_ID, mergeId);
+            request.putAdditionalMetadata(FlowConstants.MERGE_TITLE, mergeTitle);
         }
 
         try {

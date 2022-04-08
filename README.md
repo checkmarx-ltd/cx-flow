@@ -5,4 +5,5 @@
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/checkmarx-ltd/cx-flow)
 
 ## Documentation
+<<<<<<< HEAD
 https://github.com/checkmarx-ltd/cx-flow/wiki
