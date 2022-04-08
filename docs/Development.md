@@ -90,6 +90,7 @@ GitLabService | REST Based API Client GitLab
 ADOService | REST Based API Client Azure DevOps
 EmailService | Email (SMTP) client
 FlowService | Main Service driving integrations with other Service components
+BitbucketService|	TBD, this is not created yet.
 
 ### Controllers
 Controller | Description
