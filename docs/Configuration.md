@@ -77,7 +77,6 @@ cx-flow:
      - Urgent
   mitre-url: https://cwe.mitre.org/data/definitions/%s.html
   wiki-url: https://checkmarx.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
-  codebash-url: https://cxa.codebashing.com/courses/
   track-application-only: false
   web-hook-queue: 20
   scan-result-queue: 8
@@ -310,7 +309,6 @@ cx-flow:
      - Urgent
   mitre-url: https://cwe.mitre.org/data/definitions/%s.html
   wiki-url: https://checkmarx.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
-  codebash-url: https://cxa.codebashing.com/courses/
   track-application-only: false
   web-hook-queue: 20
   scan-result-queue: 8
