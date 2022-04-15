@@ -1,5 +1,6 @@
 * [9.0 Configuration changes](#nine)
 * [CxSAST v9.0 .yml Example File](#ninedotzero)
+* [Checkmarx Application Service Account](#cxserviceaccount)
 
 ### <a name="nine">9.0 Configuration Changes</a>
 
@@ -225,3 +226,15 @@ Once the inital setup is out of the way you can update your CxFlow application f
     post-action-postback-id: 1
 ```
 If you restart CxFlow post-back-action mode should be enabled.
+
+
+### <a name="cxserviceaccount">Checkmarx Application Service Account</a>
+CxFlow requires a SAST service account to log in to the SAST APIs to crawl scans. The service account has the following requirements:
+
+* It should be assigned at a team level that allows visibility to all projects that require crawling. Usually this is the /CxServer team but will depend on your team organization. Any projects assigned to teams above or at a sibling level of the service account's assigned team will not be visible to crawling requests.
+* A role named `CxFlow` should be created and assigned to the service account user. The role should have the following minimum permissions:
+    * SAST->Project & Scans->Save Sast Scan, Save project.
+    * Reports->Generate Scan Reports.
+    * Scan Results-> View Results.
+* If there are log messages indicating 403: Forbidden when attempting to access SAST REST API methods, this usually indicates the `CxFlow` role does not have appropriate privileges.
+* In order to use the feature of deleting projects in CxSAST for any branch which is deleted, a permission of **SAST->Projects & Scans->Delete Project, Delete Sast Scan** needs to be added to role `CxFlow`.
