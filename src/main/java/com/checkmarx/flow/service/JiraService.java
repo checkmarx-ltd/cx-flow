@@ -429,7 +429,7 @@ public class JiraService {
         BugTracker bugTracker = request.getBugTracker();
         String severity = issue.getSeverity();
         Issue jiraIssue = this.getIssue(bugId);
-        if (bugTracker.getClosedStatus().contains(jiraIssue.getStatus().getName())) {
+        if (bugTracker.getClosedStatus().stream().anyMatch(jiraIssue.getStatus().getName()::equalsIgnoreCase)) {
             this.transitionIssue(bugId, bugTracker.getOpenTransition());
         }
         IssueInputBuilder issueBuilder = new IssueInputBuilder();
@@ -1524,7 +1524,7 @@ public class JiraService {
     }
 
     private void closeIssueInCaseOfIssueIsInOpenState(ScanRequest request, List<String> closedIssues, Issue fpIssue) throws JiraClientException {
-        if (request.getBugTracker().getOpenStatus().contains(fpIssue.getStatus().getName())) { //If the status is of open state, close it
+        if (request.getBugTracker().getOpenStatus().stream().anyMatch(fpIssue.getStatus().getName()::equalsIgnoreCase)) { //If the status is of open state, close it
             /*Close the issue*/
             log.info("Closing issue with key {}", fpIssue.getKey());
             this.transitionCloseIssue(fpIssue.getKey(), request.getBugTracker().getCloseTransition(), request.getBugTracker(), true);
