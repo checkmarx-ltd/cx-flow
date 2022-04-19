@@ -969,7 +969,7 @@ public class JiraService {
      */
     private Transition getTransitionByName(Iterable<Transition> transitions, String transitionName) {
         for (Transition transition : transitions) {
-            if (transition.getName().equals(transitionName)) {
+            if (transition.getName().equalsIgnoreCase(transitionName)) {
                 return transition;
             }
         }
