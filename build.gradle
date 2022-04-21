@@ -171,7 +171,7 @@ dependencies {
     testImplementation("com.github.java-json-tools:json-patch:1.11")
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:${junitVersion}")
     testCompile("org.mockito:mockito-core:+")
-	compile("net.bytebuddy:byte-buddy:LATEST")
+	compile("net.bytebuddy:byte-buddy:1.12.9")
     compile("org.projectlombok:lombok:1.18.10")
     compile("ch.qos.logback:logback-classic:1.2.10"){
         exclude group: 'ch.qos.logback', module: 'logback-core'
