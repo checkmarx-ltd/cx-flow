@@ -170,7 +170,7 @@ dependencies {
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
     testImplementation("com.github.java-json-tools:json-patch:1.11")
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:${junitVersion}")
-    testCompile("org.mockito:mockito-core:+")
+    testCompile("org.mockito:mockito-core:4.5.0")
     compile("org.projectlombok:lombok:1.18.10")
     compile("ch.qos.logback:logback-classic:1.2.10"){
         exclude group: 'ch.qos.logback', module: 'logback-core'
@@ -184,7 +184,7 @@ dependencies {
     }
     compile("ch.qos.logback:logback-core:1.2.10")
     compile("net.logstash.logback:logstash-logback-encoder:5.2")
-    compile 'org.modelmapper:modelmapper:3.0.0'
+    compile 'org.modelmapper:modelmapper:2.4.0'
     compile("com.checkmarx:cx-config-provider:${ConfigProviderVersion}") {
         exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j-impl'
         exclude group: 'org.apache.logging.log4j', module: 'log4j-api'
