@@ -30,7 +30,7 @@ import java.util.Objects;
 @Slf4j
 public class ScaPolicyManagementSteps extends ScaCommonSteps {
 
-    private static final String PROJECT_NAME = "Policy-Management-Test-Project";
+    private static final String PROJECT_NAME = "Policy-Management-Test-Project-SCA";
     private static final String GIT_REPO_URL = "https://github.com/cxflowtestuser/public-rest-repo.git";
 
     private final ScaProperties scaProperties;
