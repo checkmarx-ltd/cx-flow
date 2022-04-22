@@ -93,7 +93,7 @@ public class ScaPolicyManagementSteps extends ScaCommonSteps {
                 .build();
 
         Policy policy = Policy.builder()
-                .name("No-High-Severity-Policy-Test")
+                .name("No-High-Severity-Policy-Test-SCA")
                 .rules(Collections.singletonList(policyRule))
                 .projectIds(Collections.singletonList(projectId))
                 .actions(policyAction)
