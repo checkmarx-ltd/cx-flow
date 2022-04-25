@@ -70,7 +70,12 @@ public class ProjectNameGenerator {
         if (rawProjectName != null) {
             if (!preserveProjectName) {
                 //only allow specific chars in project name in checkmarx
-                result = rawProjectName.replaceAll("[^a-zA-Z0-9-_.]+", "-");
+                if(!rawProjectName.contains("#")) {
+                    result = rawProjectName.replaceAll("[^a-zA-Z0-9-_.]+", "-");
+                }
+                else {
+                    result = rawProjectName;
+                }
                 if (!result.equals(rawProjectName)) {
                     log.debug("Project name ({}) has been normalized to allow only valid characters.", rawProjectName);
                 }
