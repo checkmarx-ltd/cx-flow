@@ -41,14 +41,58 @@
               "file": "AnotherFile.java",
               "line": "107",
               "column": "9",
-              "object": "username"
+              "object": "username",
+              "length" : "8",
+              "snippet" : "+ username + \"' and password = '\" + password + \"'\";"
             },
             "state": "0",
             "source": {
               "file": "DOS_Login.java",
               "line": "88",
               "column": "46",
-              "object": "getRawParameter"
+              "object": "getRawParameter",
+              "length" : "1",
+              "snippet" : "username = s.getParser().getRawParameter(USERNAME);"
+            },
+            "1" : {
+              "snippet" : "username = s.getParser().getRawParameter(USERNAME);",
+              "file" : "DOS_Login.java",
+              "line" : "88",
+              "column" : "46",
+              "length" : "1",
+              "object" : "getRawParameter"
+            },
+            "2" : {
+              "snippet" : "username = s.getParser().getRawParameter(USERNAME);",
+              "file" : "DOS_Login.java",
+              "line" : "88",
+              "column" : "6",
+              "length" : "8",
+              "object" : "username"
+            },
+            "3" : {
+              "snippet" : "if (username.equals(\"jeff\") || username.equals(\"dave\"))",
+              "file" : "DOS_Login.java",
+              "line" : "92",
+              "column" : "37",
+              "length" : "8",
+              "object" : "username"
+            },
+            "4" : {
+              "snippet" : "if (username.equals(\"jeff\") || username.equals(\"dave\"))",
+              "file" : "DOS_Login.java",
+              "line" : "92",
+              "column" : "10",
+              "length" : "8",
+              "object" : "username"
+            },
+            "5" : {
+              "snippet" : "+ username + \"' and password = '\" + password + \"'\";",
+              "file" : "AnotherFile.java",
+              "line" : "107",
+              "column" : "9",
+              "length" : "8",
+              "object" : "username"
             }
           }
         ],
