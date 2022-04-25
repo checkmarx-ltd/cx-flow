@@ -15,7 +15,7 @@ FROM alpine:3.15 AS java11
 WORKDIR app
 RUN apk update && \
     apk upgrade 
-RUN apk add openjdk11=11.0.14_p9-r0 --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community
+RUN apk add openjdk11=11.0.15_p10-r0 --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community
 COPY build/libs/java11/*.jar cx-flow.jar
 ENTRYPOINT ["java", "-Xms512m", "-Xmx2048m","-Djava.security.egd=file:/dev/./urandom", "-Dspring.profiles.active=web", "-jar", "cx-flow.jar"]
 EXPOSE 8080
