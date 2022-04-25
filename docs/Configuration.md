@@ -498,9 +498,10 @@ The configuration can be set or overridden at execution time using the command l
 | `custom-state-map`        |                       | No       | No      | Yes      | A map of custom result state identifiers to custom result state names |
 | `post-action-postback-id` |                       | No       | Yes     | Yes      | Sets the SAST project's post-scan action to use the post-scan action with the provided Id defined in SAST.If not provided, the project does not get configured to use a post-scan action. |
 | `settings-override`       |                       | No       | Yes     | Yes      | Defaults value false, if set to true the projects settings are re-written/overridden when each SAST scan is invoked from CxFlow |
-| `cx-branch` | false | No | Yes | Yes | A flag to enable branching of projects in CxSAST. |
-| `scan-queuing` | false | No | Yes | Yes | A flag to enable queuing of scan events. |
-| `scan-queuing-timeout` | 720 | No | Yes | Yes | The amount of time (in minutes) for which cx-flow will keep a scan event data in its queue before sending to CxSAST, when all the available concurrent scans in CxSAST are in use. | 
+| `cx-branch`               | false                 | No | Yes | Yes | A flag to enable branching of projects in CxSAST. |
+| `scan-queuing`            | false                 | No | Yes | Yes | A flag to enable queuing of scan events. |
+| `scan-queuing-timeout`    | 720                   | No | Yes | Yes | The amount of time (in minutes) for which cx-flow will keep a scan event data in its queue before sending to CxSAST, when all the available concurrent scans in CxSAST are in use. | 
+| `disable-clubbing`        | false                 | No | Yes | Yes              | If set to true, results are not grouped at all.By default, results are grouped only by vulnerability and filename.|
 
 No* = Default is applied
 
