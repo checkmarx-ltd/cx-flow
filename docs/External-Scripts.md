@@ -69,12 +69,12 @@ cx-flow:
 
 ```yaml
 cx-flow:
-  comment-script: ...\Checkcomment.groovy
+  comment-script: ...\ScanComment.groovy
 ```
 
-* Script input: [ScanRequest object](../src/main/java/com/checkmarx/flow/dto/ScanRequest.java)
+* Script input: [ScanRequest object](https://raw.githubusercontent.com/checkmarx-ltd/cx-flow/develop/src/main/java/com/checkmarx/flow/dto/ScanRequest.java)
 * Return value: String
-* Script example: [ScanComment.groovy](../src/main/resources/samples/ScanComment.groovy)
+* Script example: [ScanComment.groovy](https://raw.githubusercontent.com/checkmarx-ltd/cx-flow/develop/src/main/resources/samples/ScanComment.groovy)
 
 ### <a name="filterFindings">Use a Script to Filter Findings</a>
 

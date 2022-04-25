@@ -13,10 +13,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -96,7 +99,8 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                     .shortDescription(ShortDescription.builder().text(key).build())
                     .fullDescription(FullDescription.builder().text(key).build())
                     .help(Help.builder().markdown(String.valueOf(markDownValue).replace("\n", " ").replace("[", "").replace("]", "")).text(String.valueOf(markDownValue).replace("\n", " ")).build())
-                    .properties(Properties.builder().tags(tags).build())
+                    .properties(Properties.builder().tags(tags)
+                                .securitySeverity(properties.getSecuritySeverityMap().get(map.get(key).getSeverity()) != null ? properties.getSecuritySeverityMap().get(map.get(key).getSeverity()) : DEFAULT_SEVERITY).build())
                     .build();
 
             List<Location> locations = Lists.newArrayList();
@@ -188,28 +192,46 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
         filteredXIssues.forEach(
                 issue -> {
                     int i = count.getAndIncrement();
+                    AtomicBoolean isFalsePositive = new AtomicBoolean(false);
                     List<Location> locations = Lists.newArrayList();
                     issue.getDetails().forEach((k, v) -> {
-                        k = (k == 0) ? 1 : k; /* Sarif format does not support 0 as line number */
-                        if (!v.isFalsePositive()) {
-                            locations.add(Location.builder()
-                                    .physicalLocation(PhysicalLocation.builder()
-                                            .artifactLocation(ArtifactLocation.builder()
-                                                    .uri(issue.getFilename())
-                                                    .uriBaseId("%SRCROOT%")
-                                                    .index(i)
-                                                    .build())
-                                            .region(Region.builder()
-                                                    .startLine(k)
-                                                    .endLine(k)
-                                                    .build())
-                                            .build())
-                                    .message(Message.builder()
-                                            .text(StringUtils.isEmpty(v.getCodeSnippet()) ? "Code Snippet" : v.getCodeSnippet()).build())
-                                    .build());
-
-                        }
+                        isFalsePositive.set(v.isFalsePositive());
                     });
+                    /* Attack Vector */
+                    if(!isFalsePositive.get()) {
+                        List<Map<String, Object>> additionalDetails = (List<Map<String, Object>>)issue.getAdditionalDetails().get("results");
+                        additionalDetails.forEach((element) -> {
+                            Map<String, Object> result = element;
+                            Integer pathNodeId = new Integer(1); // First Node is added by Above Issue Detail
+                            while(result.containsKey(pathNodeId.toString())){ // Add all Nodes till Sink
+                                Map<String, String> node = (Map<String, String>)result.get(pathNodeId.toString());
+                                Integer line = (Integer.valueOf(Optional.ofNullable(node.get("line")).orElse("1")) == 0) ?
+                                        1 : Integer.valueOf(Optional.ofNullable(node.get("line")).orElse("1")); /* Sarif format does not support 0 as line number */
+                                Integer col = (Integer.valueOf(Optional.ofNullable(node.get("column")).orElse("1")) == 0) ?
+                                        1 : (Integer.valueOf(Optional.ofNullable(node.get("column")).orElse("1"))); /* Sarif format does not support 0 as column number */
+                                Integer len = (Integer.valueOf(Optional.ofNullable(node.get("length")).orElse("1")) == 0) ?
+                                        1 : (Integer.valueOf(Optional.ofNullable(node.get("length")).orElse("1"))); /* Sarif format does not support 0 as column number */
+                                locations.add(Location.builder()
+                                        .physicalLocation(PhysicalLocation.builder()
+                                                .artifactLocation(ArtifactLocation.builder()
+                                                        .uri(node.get("file"))
+                                                        .uriBaseId("%SRCROOT%")
+                                                        .index(pathNodeId-1)
+                                                        .build())
+                                                .region(Region.builder()
+                                                        .startLine(line)
+                                                        .endLine(line)
+                                                        .startColumn(col)
+                                                        .endColumn(col+len)
+                                                        .build())
+                                                .build())
+                                        .message(Message.builder()
+                                                .text(StringUtils.isEmpty(node.get("snippet")) ? "Code Snippet" : node.get("snippet")).build())
+                                        .build());
+                                pathNodeId++;
+                            }
+                        });
+                    }
                     List<ThreadFlowLocation> threadFlowLocations = Lists.newArrayList();
                     locations.forEach(
                             location -> {
