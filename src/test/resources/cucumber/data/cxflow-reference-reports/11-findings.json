@@ -47,14 +47,82 @@
               "file": "DOS_Login.java",
               "line": "108",
               "column": "20",
-              "object": "StringElement"
+              "object": "StringElement",
+              "length" : "3",
+              "snippet" : "\t    ec.addElement(new StringElement(query));"
             },
             "state": "0",
             "source": {
               "file": "DOS_Login.java",
               "line": "88",
               "column": "46",
-              "object": "getRawParameter"
+              "object": "getRawParameter",
+              "length" : "1",
+              "snippet" : "\t    username = s.getParser().getRawParameter(USERNAME);"
+            },
+            "1" : {
+              "snippet" : "\t    username = s.getParser().getRawParameter(USERNAME);",
+              "file" : "DOS_Login.java",
+              "line" : "88",
+              "column" : "46",
+              "length" : "1",
+              "object" : "getRawParameter"
+            },
+            "2" : {
+              "snippet" : "\t    username = s.getParser().getRawParameter(USERNAME);",
+              "file" : "DOS_Login.java",
+              "line" : "88",
+              "column" : "6",
+              "length" : "8",
+              "object" : "username"
+            },
+            "3" : {
+              "snippet" : "\t    if (username.equals(\"jeff\") || username.equals(\"dave\"))",
+              "file" : "DOS_Login.java",
+              "line" : "92",
+              "column" : "37",
+              "length" : "8",
+              "object" : "username"
+            },
+            "4" : {
+              "snippet" : "\t    if (username.equals(\"jeff\") || username.equals(\"dave\"))",
+              "file" : "DOS_Login.java",
+              "line" : "92",
+              "column" : "10",
+              "length" : "8",
+              "object" : "username"
+            },
+            "5" : {
+              "snippet" : "\t\t    + username + \"' and password = '\" + password + \"'\";",
+              "file" : "DOS_Login.java",
+              "line" : "107",
+              "column" : "9",
+              "length" : "8",
+              "object" : "username"
+            },
+            "6" : {
+              "snippet" : "\t    String query = \"SELECT * FROM user_system_data WHERE user_name = '\"",
+              "file" : "DOS_Login.java",
+              "line" : "106",
+              "column" : "13",
+              "length" : "5",
+              "object" : "query"
+            },
+            "7" : {
+              "snippet" : "\t    ec.addElement(new StringElement(query));",
+              "file" : "DOS_Login.java",
+              "line" : "108",
+              "column" : "38",
+              "length" : "5",
+              "object" : "query"
+            },
+            "8" : {
+              "snippet" : "\t    ec.addElement(new StringElement(query));",
+              "file" : "DOS_Login.java",
+              "line" : "108",
+              "column" : "20",
+              "length" : "3",
+              "object" : "StringElement"
             }
           },
           {
@@ -62,14 +130,66 @@
               "file": "DOS_Login.java",
               "line": "108",
               "column": "20",
-              "object": "StringElement"
+              "object": "StringElement",
+              "length" : "3",
+              "snippet" : "\t    ec.addElement(new StringElement(query));"
             },
             "state": "0",
             "source": {
               "file": "DOS_Login.java",
               "line": "89",
               "column": "46",
-              "object": "getRawParameter"
+              "object": "getRawParameter",
+              "length" : "1",
+              "snippet" : "\t    password = s.getParser().getRawParameter(PASSWORD);"
+            },
+            "1" : {
+              "snippet" : "\t    password = s.getParser().getRawParameter(PASSWORD);",
+              "file" : "DOS_Login.java",
+              "line" : "89",
+              "column" : "46",
+              "length" : "1",
+              "object" : "getRawParameter"
+            },
+            "2" : {
+              "snippet" : "\t    password = s.getParser().getRawParameter(PASSWORD);",
+              "file" : "DOS_Login.java",
+              "line" : "89",
+              "column" : "6",
+              "length" : "8",
+              "object" : "password"
+            },
+            "3" : {
+              "snippet" : "\t\t    + username + \"' and password = '\" + password + \"'\";",
+              "file" : "DOS_Login.java",
+              "line" : "107",
+              "column" : "43",
+              "length" : "8",
+              "object" : "password"
+            },
+            "4" : {
+              "snippet" : "\t    String query = \"SELECT * FROM user_system_data WHERE user_name = '\"",
+              "file" : "DOS_Login.java",
+              "line" : "106",
+              "column" : "13",
+              "length" : "5",
+              "object" : "query"
+            },
+            "5" : {
+              "snippet" : "\t    ec.addElement(new StringElement(query));",
+              "file" : "DOS_Login.java",
+              "line" : "108",
+              "column" : "38",
+              "length" : "5",
+              "object" : "query"
+            },
+            "6" : {
+              "snippet" : "\t    ec.addElement(new StringElement(query));",
+              "file" : "DOS_Login.java",
+              "line" : "108",
+              "column" : "20",
+              "length" : "3",
+              "object" : "StringElement"
             }
           }
         ]
@@ -108,14 +228,82 @@
               "file": "DOS_Login.java",
               "line": "114",
               "column": "45",
-              "object": "executeQuery"
+              "object": "executeQuery",
+              "length" : "1",
+              "snippet" : "\t\tResultSet results = statement.executeQuery(query);"
             },
             "state": "0",
             "source": {
               "file": "DOS_Login.java",
               "line": "88",
               "column": "46",
-              "object": "getRawParameter"
+              "object": "getRawParameter",
+              "length" : "1",
+              "snippet" : "\t    username = s.getParser().getRawParameter(USERNAME);"
+            },
+            "1" : {
+              "snippet" : "\t    username = s.getParser().getRawParameter(USERNAME);",
+              "file" : "DOS_Login.java",
+              "line" : "88",
+              "column" : "46",
+              "length" : "1",
+              "object" : "getRawParameter"
+            },
+            "2" : {
+              "snippet" : "\t    username = s.getParser().getRawParameter(USERNAME);",
+              "file" : "DOS_Login.java",
+              "line" : "88",
+              "column" : "6",
+              "length" : "8",
+              "object" : "username"
+            },
+            "3" : {
+              "snippet" : "\t    if (username.equals(\"jeff\") || username.equals(\"dave\"))",
+              "file" : "DOS_Login.java",
+              "line" : "92",
+              "column" : "37",
+              "length" : "8",
+              "object" : "username"
+            },
+            "4" : {
+              "snippet" : "\t    if (username.equals(\"jeff\") || username.equals(\"dave\"))",
+              "file" : "DOS_Login.java",
+              "line" : "92",
+              "column" : "10",
+              "length" : "8",
+              "object" : "username"
+            },
+            "5" : {
+              "snippet" : "\t\t    + username + \"' and password = '\" + password + \"'\";",
+              "file" : "DOS_Login.java",
+              "line" : "107",
+              "column" : "9",
+              "length" : "8",
+              "object" : "username"
+            },
+            "6" : {
+              "snippet" : "\t    String query = \"SELECT * FROM user_system_data WHERE user_name = '\"",
+              "file" : "DOS_Login.java",
+              "line" : "106",
+              "column" : "13",
+              "length" : "5",
+              "object" : "query"
+            },
+            "7" : {
+              "snippet" : "\t\tResultSet results = statement.executeQuery(query);",
+              "file" : "DOS_Login.java",
+              "line" : "114",
+              "column" : "46",
+              "length" : "5",
+              "object" : "query"
+            },
+            "8" : {
+              "snippet" : "\t\tResultSet results = statement.executeQuery(query);",
+              "file" : "DOS_Login.java",
+              "line" : "114",
+              "column" : "45",
+              "length" : "1",
+              "object" : "executeQuery"
             }
           },
           {
@@ -123,14 +311,66 @@
               "file": "DOS_Login.java",
               "line": "114",
               "column": "45",
-              "object": "executeQuery"
+              "object": "executeQuery",
+              "length" : "1",
+              "snippet" : "\t\tResultSet results = statement.executeQuery(query);"
             },
             "state": "0",
             "source": {
               "file": "DOS_Login.java",
               "line": "89",
               "column": "46",
-              "object": "getRawParameter"
+              "object": "getRawParameter",
+              "length" : "1",
+              "snippet" : "\t    password = s.getParser().getRawParameter(PASSWORD);"
+            },
+            "1" : {
+              "snippet" : "\t    password = s.getParser().getRawParameter(PASSWORD);",
+              "file" : "DOS_Login.java",
+              "line" : "89",
+              "column" : "46",
+              "length" : "1",
+              "object" : "getRawParameter"
+            },
+            "2" : {
+              "snippet" : "\t    password = s.getParser().getRawParameter(PASSWORD);",
+              "file" : "DOS_Login.java",
+              "line" : "89",
+              "column" : "6",
+              "length" : "8",
+              "object" : "password"
+            },
+            "3" : {
+              "snippet" : "\t\t    + username + \"' and password = '\" + password + \"'\";",
+              "file" : "DOS_Login.java",
+              "line" : "107",
+              "column" : "43",
+              "length" : "8",
+              "object" : "password"
+            },
+            "4" : {
+              "snippet" : "\t    String query = \"SELECT * FROM user_system_data WHERE user_name = '\"",
+              "file" : "DOS_Login.java",
+              "line" : "106",
+              "column" : "13",
+              "length" : "5",
+              "object" : "query"
+            },
+            "5" : {
+              "snippet" : "\t\tResultSet results = statement.executeQuery(query);",
+              "file" : "DOS_Login.java",
+              "line" : "114",
+              "column" : "46",
+              "length" : "5",
+              "object" : "query"
+            },
+            "6" : {
+              "snippet" : "\t\tResultSet results = statement.executeQuery(query);",
+              "file" : "DOS_Login.java",
+              "line" : "114",
+              "column" : "45",
+              "length" : "1",
+              "object" : "executeQuery"
             }
           }
         ],

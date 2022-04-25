@@ -4,6 +4,18 @@
 ## WebHook WebService
 Running CxFlow as a web service will enable registering WebHook Push and Pull/Merge events in GitHub, GitLab, Bitbucket (Cloud/Server) to drive scanning automation.
 
+**Branch**
+Branches are applicable to the scanning platform can be specified through global configuration, URL parameter overrides and a JSON override file (both repository based and Base64 encoded URL parameter).
+
+**Filters**
+Filters help filter out unwanted issues from making it through to the bug tracking systems. Filtering can be done by Severity (High, Medium) , by Category (XSS, SQL_Injection) and CWE (79, 89) numbers.  Any combination of these can be leveraged.
+
+**Preset**
+The preset used within Checkmarx, which defines scanning rules, is set globally but can be overridden by URL parameters or JSON override file.
+
+**Bug Tracking**
+Bug tracking systems is specified at a global level and can be one of JIRA, GitHub, GitLab or BitBucket.  In JIRA's, you can use a standard bug, or enable an advanced bug that includes additional fields to aid with metrics for application security.  The bug tracking system per project can be overridden by URL parameters or JSON override file.
+
 [[/Images/workflow3.png|Diagram of various SCM repositories flowing through CxFlow automation framework to bug tracking software]]
 [[/Images/workflow4.png|Diagram of SCM events that trigger automation framework]]
 
