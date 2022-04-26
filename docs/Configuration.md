@@ -366,6 +366,8 @@ cx-flow:
 | `scanPolling`             | 20000                 | No       | Yes     | Yes          | The amount of time (in milliseconds) in which cx-flow pings CxSAST server to get the status of the scan (i.e Queued, Finished or Failed). |
 | `reportTimeout`           | 300000                | No       | Yes     | Yes          | The amount of time (in milliseconds) for which cx-flow will wait for CxSAST to generate scan report.If report is not generated within  300000(in miliseconds)it will through Timeout exceeded during report generation as error message. |
 | `reportPolling`           | 5000                  | No       | Yes     | Yes          | The amount of time (in milliseconds) in which cx-flow pings CxSAST server to get the status of the report. |
+| `merge-id`                | Merge Id              | No       | No      | Yes          | Pass Merge Id from CLI mode for Specific Merge Request. Used in by GiLab CI/CD Pipeline.|
+| `merge-title`             | Merge Title           | No       | No      | Yes          | Pass Merge Title from CLI mode for Specific Merge Request. Used in by GiLab CI/CD Pipeline.|
 
 No* = Default is applied
 
@@ -498,9 +500,10 @@ The configuration can be set or overridden at execution time using the command l
 | `custom-state-map`        |                       | No       | No      | Yes      | A map of custom result state identifiers to custom result state names |
 | `post-action-postback-id` |                       | No       | Yes     | Yes      | Sets the SAST project's post-scan action to use the post-scan action with the provided Id defined in SAST.If not provided, the project does not get configured to use a post-scan action. |
 | `settings-override`       |                       | No       | Yes     | Yes      | Defaults value false, if set to true the projects settings are re-written/overridden when each SAST scan is invoked from CxFlow |
-| `cx-branch` | false | No | Yes | Yes | A flag to enable branching of projects in CxSAST. |
-| `scan-queuing` | false | No | Yes | Yes | A flag to enable queuing of scan events. |
-| `scan-queuing-timeout` | 720 | No | Yes | Yes | The amount of time (in minutes) for which cx-flow will keep a scan event data in its queue before sending to CxSAST, when all the available concurrent scans in CxSAST are in use. | 
+| `cx-branch`               | false                 | No | Yes | Yes | A flag to enable branching of projects in CxSAST. |
+| `scan-queuing`            | false                 | No | Yes | Yes | A flag to enable queuing of scan events. |
+| `scan-queuing-timeout`    | 720                   | No | Yes | Yes | The amount of time (in minutes) for which cx-flow will keep a scan event data in its queue before sending to CxSAST, when all the available concurrent scans in CxSAST are in use. | 
+| `disable-clubbing`        | false                 | No | Yes | Yes              | If set to true, results are not grouped at all.By default, results are grouped only by vulnerability and filename.|
 
 No* = Default is applied
 
