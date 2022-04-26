@@ -77,7 +77,7 @@ public class ProjectNameGenerator {
                     result = rawProjectName;
                 }
                 if (!result.equals(rawProjectName)) {
-                    log.debug("Project name ({}) has been normalized to allow only valid characters.", rawProjectName);
+                   log.debug("Project name ({}) has been normalized to allow only valid characters.", rawProjectName);
                 }
             } else {
                 result = rawProjectName;
