@@ -364,6 +364,8 @@ cx-flow:
 | `scanPolling`             | 20000                 | No       | Yes     | Yes          | The amount of time (in milliseconds) in which cx-flow pings CxSAST server to get the status of the scan (i.e Queued, Finished or Failed). |
 | `reportTimeout`           | 300000                | No       | Yes     | Yes          | The amount of time (in milliseconds) for which cx-flow will wait for CxSAST to generate scan report.If report is not generated within  300000(in miliseconds)it will through Timeout exceeded during report generation as error message. |
 | `reportPolling`           | 5000                  | No       | Yes     | Yes          | The amount of time (in milliseconds) in which cx-flow pings CxSAST server to get the status of the report. |
+| `merge-id`                | Merge Id              | No       | No      | Yes          | Pass Merge Id from CLI mode for Specific Merge Request. Used in by GiLab CI/CD Pipeline.|
+| `merge-title`             | Merge Title           | No       | No      | Yes          | Pass Merge Title from CLI mode for Specific Merge Request. Used in by GiLab CI/CD Pipeline.|
 
 No* = Default is applied
 
