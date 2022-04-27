@@ -1,0 +1,124 @@
+server:
+  port: ${PORT:8585}
+
+logging:
+  file:
+    name: cx-flow.log
+#  level:
+#    com:
+#      checkmarx:
+#        flow:
+#          service: TRACE
+#    org:
+#      apache:
+#        http:
+#          wire: TRACE
+#      springframework:
+#        web:
+#          client:
+#            RestTemplate: TRACE
+
+cx-flow:
+  # Agreed upon shared API token
+  token: xxxx
+  bug-tracker: JIRA
+  bug-tracker-impl:
+    - CxXml
+    - Json
+    - GitLab
+    - GitHub
+    - Csv
+    - Azure
+  branches:
+    - develop
+    - master
+    - security
+  filter-severity:
+    - High
+  mitre-url: https://cwe.mitre.org/data/definitions/%s.html
+  wiki-url: https://checkmarx.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
+  codebash-url: https://cxa.codebashing.com/courses/
+  #branch-script: D:\\tmp\Branch.groovy
+  #zip-exclude: .*.json$, bin\/.*
+
+checkmarx:
+  version: 9.0
+  username: xxxxx
+  password: xxxxx
+  client-id: resource_owner_client
+  client-secret: 014DF517-39D1-4453-B7B3-9930C563627C
+  scope: access_control_api sast_rest_api
+  base-url: http://cx.local
+  multi-tenant: true
+  configuration: Default Configuration
+  scan-preset: Checkmarx Default
+  team: /CxServer/Checkmarx/CxFlow
+  url: ${checkmarx.base-url}/cxrestapi
+  preserve-xml: true
+  incremental: true
+  #WSDL Config
+  portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
+  #project-script: D:\\tmp\CxProject.groovy
+  #team-script: D:\\tmp\CxTeam.groovy
+  #exclude-files:
+  #exclude-folders:
+
+jira:
+  url: https://xxxx.atlassian.net
+  username: xxxx
+  token: xxxx
+  project: APPSEC
+  issue-type: Application Security Bug
+  priorities:
+    High: High
+    Medium: Medium
+    Low: Low
+    Informational: Lowest
+  open-transition: In Progress
+  close-transition: Done
+  open-status:
+    - To Do
+    - In Progress
+  closed-status:
+    - Done
+  fields:
+    - type: result
+      name: system-date
+      skip-update: true
+      offset: 60
+      jira-field-name: Due Date #Due date (cloud)
+      jira-field-type: text
+    - type: result
+      name: application
+      jira-field-name: Application
+      jira-field-type: label
+    - type: result
+      name: category
+      jira-field-name: Category
+      jira-field-type: label
+    - type: result
+      name: cwe
+      jira-field-name: CWEs
+      jira-field-type: label
+    - type: result
+      name: severity
+      jira-field-name: Severity
+      jira-field-type: single-select
+    - type: result
+      name: loc
+      jira-field-name: Line Numbers
+      jira-field-type: label
+    - type: static
+      name: identified-by
+      jira-field-name: Identified By
+      jira-field-type: single-select
+      jira-default-value: Automation
+    - type: static
+      name: dependencies
+      jira-field-name: Dependencies
+      jira-field-type: multi-select
+      jira-default-value: Java, AngularJS
+  #issue-prefix: "<PREFIX>-"
+  #issue-postfix: "-<POSTFIX>"
+  #description-prefix: "<PRE>-"
+  #description-postfix: "<POST>-"

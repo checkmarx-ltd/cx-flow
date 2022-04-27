@@ -1,4 +1,14 @@
-## Deleting CxSAST Project upon Branch Deletion
+* [Deleting CxSAST Project upon Branch Deletion](#deleteProject)
+* [CxFlow Branch Configuration](#branchConfiguration)
+* [Using the deletion feature together with configuration-as-code](#deletionWithCxConfig)
+* [References](#references)
+* [SCMs](#scms)
+  * [GitHub](#github)
+  * [Azure Devops](#ado)
+  * [GitLab](#gitlab)
+  * [BitBucket](#bitbucket)
+
+## <a name="deleteProject">Deleting CxSAST Project upon Branch Deletion</a>
 
 CxFlow is able to create a new CxSAST project when initiating scan, if the project doesn't exist yet.
 
@@ -6,11 +16,11 @@ When working with CxFlow in web service mode and using webhook events to trigger
 
 In order to overcome this, CxFlow can automatically delete CxSAST project upon branch deletion.
 
-### CxFlow Branch Configuration
+### <a name="branchConfiguration">CxFlow Branch Configuration</a>
 
 If the branch is a scanned branch - named under ‘cx-flow.branches’ section - CxFlow will not delete the Checkmarx project when the branch is deleted.  Therefore, if you want to delete your Checkmarx Project, the branch name cannot be under this section.
 
-### Using the deletion feature together with configuration-as-code
+### <a name="deletionWithCxConfig">Using the deletion feature together with configuration-as-code</a>
 Suppose we use configuration-as-code to define CxSAST project name in a feature branch. When the feature branch is deleted, CxFlow won’t be able to determine a correct project name for deletion, since the config-as-code has already been deleted with the branch.
 
 If a project name mismatch occurs as described above, you can still use the project deletion feature together with config-as-code. To do this, define the following property in the github section of CxFlow yml file: 
@@ -21,18 +31,13 @@ use-config-as-code-from-default-branch: true
 
 This will make CxFlow to always read configuration-as-code from repository default branch
 
-### References
+### <a name="references">References</a>
 
 * CxFlow pull request #383
 
 * CxFlow GitHub issue: #345
 
-### SCMs
-
-* [GitHub](#github)
-* [Azure Devops](#ado)
-* [GitLab](#gitlab)
-* [BitBucket](#bitbucket)
+### <a name="scms">SCMs</a>
 
 #### <a name="github">GitHub</a>
 
