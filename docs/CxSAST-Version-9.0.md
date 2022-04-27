@@ -72,7 +72,6 @@ cxflow:
   # - To Verify
   #mitre-url: https://cwe.mitre.org/data/definitions/%s.html
   #wiki-url: https://custodela.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
-  codebash-url: https://checkmarx-demo.codebashing.com/courses/
 
 checkmarx:
   version: 9.0
