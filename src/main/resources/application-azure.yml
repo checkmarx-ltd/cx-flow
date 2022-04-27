@@ -1,0 +1,75 @@
+server:
+  port: ${PORT:8585}
+
+logging:
+  file:
+    name: cx-flow.log
+#  level:
+#    com:
+#      checkmarx:
+#        flow:
+#          service: TRACE
+#    org:
+#      apache:
+#        http:
+#          wire: TRACE
+#      springframework:
+#        web:
+#          client:
+#            RestTemplate: TRACE
+
+cx-flow:
+  # Agreed upon shared API token
+  token: xxxx
+  bug-tracker: Azure
+  bug-tracker-impl:
+    - CxXml
+    - Json
+    - GitLab
+    - GitHub
+    - Csv
+    - Azure
+  branches:
+    - develop
+    - master
+    - security
+  filter-severity:
+    - High
+  mitre-url: https://cwe.mitre.org/data/definitions/%s.html
+  wiki-url: https://checkmarx.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
+  codebash-url: https://cxa.codebashing.com/courses/
+  #branch-script: D:\\tmp\Branch.groovy
+  #zip-exclude: .*.json$, bin\/.*
+
+checkmarx:
+  version: 9.0
+  username: xxxxx
+  password: xxxxx
+  client-id: resource_owner_client
+  client-secret: 014DF517-39D1-4453-B7B3-9930C563627C
+  scope: access_control_api sast_rest_api
+  base-url: http://cx.local
+  multi-tenant: true
+  configuration: Default Configuration
+  scan-preset: Checkmarx Default
+  team: /CxServer/Checkmarx/CxFlow
+  url: ${checkmarx.base-url}/cxrestapi
+  preserve-xml: true
+  incremental: true
+  #WSDL Config
+  portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
+  #project-script: D:\\tmp\CxProject.groovy
+  #team-script: D:\\tmp\CxTeam.groovy
+  #exclude-files:
+  #exclude-folders:
+
+azure:
+  webhook-token: cxflow:1234
+  token: xxxx
+  url: https://dev.azure.com/XXXXXX
+  issue-type: issue
+  api-version: 5.0
+  false-positive-label: false-positive
+  block-merge: true
+  closed-status: Closed
+  open-status: Active

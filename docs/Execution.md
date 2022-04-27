@@ -96,6 +96,16 @@ github:
 * The value for `token` in `github` section can be provided in the following way:
 * `--github.token=<GH_TOKEN_VALUE`
 
+* **Examples of cx-flow CLI**
+```
+  # Scanning a local repository with cx-flow cli
+  java -jar cx-flow-<ver>.jar --scan --spring.config.location="location/of/application.yml" --f="location/of/project/on/local" --cx-team="/CxServer" --cx-project="project-name" --app="project-name" 
+```
+```
+  # Scanning a remote repositiory with cx-flow cli
+  java -jar cx-flow-<ver>.jar --spring.config.location="location/of/application.yml" --scan --github --repo-name="repo-name" --namespace="namespace" --repo-url="repo-url" --branch="master"
+```
+
 ## <a name="parse">Parse</a>
 
 ```

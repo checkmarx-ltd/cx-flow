@@ -13,6 +13,7 @@
 * [GitLab Security Dashbaord](#dashboard)
 * [GitHub Issues](#github)
 * [Rally Issues](#rally)
+* [Sarif](#sarif)
 * [Service Now](#service)
 * [CxXML](#cxxml)
 * [Json](#json)
@@ -406,6 +407,15 @@ From that dialog box, just name your key and provide it with **Full Access**:
 [[/Images/bug11.PNG|Screenshot of the popup dialog box. Here give the API key a name and Full Access]]
 
 The API key is created and the token appears on the API Keys screen. Now you have all the required information to configure the Rally bug tracker.
+
+## <a name="sarif">Sarif</a>
+Sarif as a bug tracker is used to generate a sarif report and uploading it to the associated GitHub repository. The default output format for GitHub Action is a SARIF output report stored in the working directory as ./cx.sarif. The file ./cx.sarif is created containing issue details based on the filtering policy of CxFlow.
+
+[[/Images/sarif-report-1.png]]
+
+[[/Images/sarif-report-2.png]]
+
+[[/Images/sarif-report-3.png]]
 
 ## <a name="service">Service Now</a>
 Integration with Incident records is available by adding the following configuration block:
