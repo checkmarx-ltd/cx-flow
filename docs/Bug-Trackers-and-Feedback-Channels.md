@@ -74,7 +74,7 @@ jira:
       Medium: Medium
       Low: Low
       Informational: Lowest
-   pen-transition: In Review
+   open-transition: In Review
    close-transition: Done
    open-status:
       - To Do

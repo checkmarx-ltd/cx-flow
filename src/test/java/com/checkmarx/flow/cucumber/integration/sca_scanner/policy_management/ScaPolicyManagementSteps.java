@@ -30,7 +30,7 @@ import java.util.Objects;
 @Slf4j
 public class ScaPolicyManagementSteps extends ScaCommonSteps {
 
-    private static final String PROJECT_NAME = "Policy-Management-Test-Project";
+    private static final String PROJECT_NAME = "Policy-Management-Test-Project-SCA";
     private static final String GIT_REPO_URL = "https://github.com/cxflowtestuser/public-rest-repo.git";
 
     private final ScaProperties scaProperties;
@@ -93,7 +93,7 @@ public class ScaPolicyManagementSteps extends ScaCommonSteps {
                 .build();
 
         Policy policy = Policy.builder()
-                .name("No-High-Severity-Policy-Test")
+                .name("No-High-Severity-Policy-Test-SCA")
                 .rules(Collections.singletonList(policyRule))
                 .projectIds(Collections.singletonList(projectId))
                 .actions(policyAction)
