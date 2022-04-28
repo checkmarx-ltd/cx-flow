@@ -190,6 +190,8 @@ closed-status:
 * open-status → this is a list of the available status an issue can be in that indicate the issue is still in **open** state according to Jira
 * closed-status → this is a list of the available status an issue can be in that indicate the issue is still in **closed** state according to Jira
 
+Note that CxFlow ignores case when comparing statuses.
+
 ### <a name="fields"> Fields</a>
 * **type**
   * **static**: Used for static values (specifically requires a jira-default-value to be provided)
