@@ -77,7 +77,6 @@ cx-flow:
      - Urgent
   mitre-url: https://cwe.mitre.org/data/definitions/%s.html
   wiki-url: https://checkmarx.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
-  codebash-url: https://cxa.codebashing.com/courses/
   track-application-only: false
   web-hook-queue: 20
   scan-result-queue: 8
@@ -95,6 +94,7 @@ cx-flow:
      notification: true # default is false
      cc: myemail@mycompany.com # comma-separated list of e-mails
   zip-exclude: \.git/.*, .*\.png
+  comment-script: location/to/commentScript.groovy
 
 checkmarx:
   version: 9.0 # Not required for CxSAST version 8.x
@@ -310,7 +310,6 @@ cx-flow:
      - Urgent
   mitre-url: https://cwe.mitre.org/data/definitions/%s.html
   wiki-url: https://checkmarx.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
-  codebash-url: https://cxa.codebashing.com/courses/
   track-application-only: false
   web-hook-queue: 20
   scan-result-queue: 8
@@ -332,8 +331,9 @@ cx-flow:
      notification: true # default is false
      cc: myemail@mycompany.com # comma-separated list of e-mails
   zip-exclude: \.git/.*, .*\.png
+  comment-script: location/to/commentScript.groovy
 ```
-
+               
 | Config                    | Default               | Required | WebHook | Command Line | Notes                                                                    |
 |---------------------------|-----------------------|----------|---------|--------------|--------------------------------------------------------------------------|
 | `contact`                 |                       | No       |         |              | Contact email for the CxFlow administrator                               |
@@ -351,7 +351,7 @@ cx-flow:
 | `track-application-only`  | false                 | No*      | Yes     | Yes          |                                                                          |
 | `web-hook-queue`          | 100                   | No*      | Yes     | No           | The maximum number of active scans initiated via WebHook at a given time. Requests remain queued until a slot is free. |
 | `scan-result-queue`       | 4                     | No*      | Yes     | Yes          | The maximum number of scan results being processed at the same time. Requests remain queued until a slot is free. <br />As XML files can become large, it is important to limit the number that can be processed at the same time. |
-| `break-build`             | false                 | No*      | No      | Yes          | A non-zero return code (10) is provide when any of the filtering criteria is met within scan results. |
+| `break-build`             | false                 | No*      | No      | Yes          | A non-zero return code (10) is provide when any of the filtering criteria is met within scan results. See detail [here](https://github.com/checkmarx-ltd/cx-flow/wiki/Thresholds-and-policies#breakBuild) |
 | `http-connection-timeout` | 30000                 | No*      | Yes     | Yes          | Http client connection timeout setting.  Not applied for the Jira client. |
 | `http-read-timeout`       | 120000                | No*      | Yes     | Yes          | Http client read timeout setting.  Not applied for the Jira client. |
 | `mail`                    | enabled:false         | No*      | Yes     | Yes          | SMTP configuration - host, port, username, password, enabled (false by default).  When enabled, email is a valid feedback channel, and an html template is used to provide result details. During WebHook execution, the email is sent to the list of committers in the push event.
@@ -366,6 +366,9 @@ cx-flow:
 | `scanPolling`             | 20000                 | No       | Yes     | Yes          | The amount of time (in milliseconds) in which cx-flow pings CxSAST server to get the status of the scan (i.e Queued, Finished or Failed). |
 | `reportTimeout`           | 300000                | No       | Yes     | Yes          | The amount of time (in milliseconds) for which cx-flow will wait for CxSAST to generate scan report.If report is not generated within  300000(in miliseconds)it will through Timeout exceeded during report generation as error message. |
 | `reportPolling`           | 5000                  | No       | Yes     | Yes          | The amount of time (in milliseconds) in which cx-flow pings CxSAST server to get the status of the report. |
+| `merge-id`                | Merge Id              | No       | No      | Yes          | Pass Merge Id from CLI mode for Specific Merge Request. Used in by GiLab CI/CD Pipeline.|
+| `merge-title`             | Merge Title           | No       | No      | Yes          | Pass Merge Title from CLI mode for Specific Merge Request. Used in by GiLab CI/CD Pipeline.|
+| `comment-script` | | No | Yes | Yes | A **groovy** script that can be used to determine the scan comment to be sent to the CxSAST server during a scan. see details [here](https://github.com/checkmarx-ltd/cx-flow/wiki/External-Scripts#scanComment) |
 
 No* = Default is applied
 

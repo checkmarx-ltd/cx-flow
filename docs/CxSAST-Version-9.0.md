@@ -1,5 +1,8 @@
 * [9.0 Configuration changes](#nine)
 * [CxSAST v9.0 .yml Example File](#ninedotzero)
+* [Checkmarx Application Service Account](#cxserviceaccount)
+  * [How to create account in CxSAST](#accountCreation)
+  * [Roles required for CxFlow](#rolesForCxFlow)
 
 ### <a name="nine">9.0 Configuration Changes</a>
 
@@ -69,7 +72,6 @@ cxflow:
   # - To Verify
   #mitre-url: https://cwe.mitre.org/data/definitions/%s.html
   #wiki-url: https://custodela.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
-  codebash-url: https://checkmarx-demo.codebashing.com/courses/
 
 checkmarx:
   version: 9.0
@@ -225,3 +227,22 @@ Once the inital setup is out of the way you can update your CxFlow application f
     post-action-postback-id: 1
 ```
 If you restart CxFlow post-back-action mode should be enabled.
+
+
+### <a name="cxserviceaccount">Checkmarx Application Service Account</a>
+
+#### <a name="accountCreation">How to create account in CxSAST</a>
+* Access control -> Users -> Add user
+* The basic details of the user needs to be filled, followed by the team and then roles for the user.
+
+#### <a name="rolesForCxFlow">Roles required for CxFlow</a>
+CxFlow requires a SAST service account to log in to the SAST APIs to crawl scans. The service account has the following requirements:
+
+* It should be assigned at a team level that allows visibility to all projects that require crawling. Usually this is the /CxServer team but will depend on your team organization. Any projects assigned to teams above or at a sibling level of the service account's assigned team will not be visible to crawling requests.
+* The service account users must be assigned the following roles:
+  * **SAST Scanner** -> This role grants permissions to create and manage projects, and run scans.
+  * **SAST Reviewer** -> This role grants "read only" permissions to view scan results and generate reports
+* In order to use the feature of deleting projects in CxSAST when its branch is deleted from the respective SCM, the user must have the role of **SAST Data Cleaner** -> This role grants permissions to delete projects and scans.
+* If there are log messages indicating 403: Forbidden when attempting to access CxSAST REST API methods, this usually indicates the user does not have appropriate roles assigned to them.
+* Cx-flow uses the basic mode for authentication i.e the username and password of the user must be provided in the application.yml under `checkmarx` section, in order to create projects, scans and generating reports.
+
