@@ -187,7 +187,7 @@ jobs:
       - run:
           name: Installing own kubernetes
           command: |
-            curl -LO /usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.23.6/bin/linux/amd64/kubectl
+            cd /usr/local/bin/kubectl && curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.23.6/bin/linux/amd64/kubectl
       - checkout
       - aws-eks/update-kubeconfig-with-authenticator:
           cluster-name: << parameters.cluster-name >>
