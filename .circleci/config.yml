@@ -185,7 +185,7 @@ jobs:
         type: boolean
     steps:
       - checkout
-      - kubernetes/install
+      - kubernetes/install:
           kubectl-version: v1.21.0
       - aws-eks/update-kubeconfig-with-authenticator:
           cluster-name: << parameters.cluster-name >>
@@ -261,7 +261,7 @@ jobs:
         type: string
     steps:
       - checkout      
-      - kubernetes/install
+      - kubernetes/install:
           kubectl-version: v1.21.0
       - aws-eks/update-kubeconfig-with-authenticator:
           cluster-name: << parameters.cluster-name >>
@@ -515,8 +515,8 @@ jobs:
       version:
         type: string
     steps:
-      - kubernetes/install
-          kubectl-version: v1.21.0    
+      - kubernetes/install:
+          kubectl-version: v1.21.0
       - aws-eks/update-kubeconfig-with-authenticator:
           cluster-name: << parameters.cluster-name >>
           install-kubectl: false
@@ -576,7 +576,7 @@ jobs:
   clean-eks:
     executor: aws-eks/python3
     steps:
-      - kubernetes/install
+      - kubernetes/install:
           kubectl-version: v1.21.0
       - aws-eks/update-kubeconfig-with-authenticator:
           cluster-name: eks-cxflow-ci
