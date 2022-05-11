@@ -184,14 +184,10 @@ jobs:
         description: Should we only consider jobs running on the same branch?
         type: boolean
     steps:
-      - run:
-          name: Installing own kubernetes
-          command: |
-            cd /usr/local/bin && curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.23.6/bin/linux/amd64/kubectl
       - checkout
       - aws-eks/update-kubeconfig-with-authenticator:
           cluster-name: << parameters.cluster-name >>
-          install-kubectl: false
+          install-kubectl: true
       - run:
           name: Change appVersion
           command: |
@@ -265,7 +261,7 @@ jobs:
       - checkout
       - aws-eks/update-kubeconfig-with-authenticator:
           cluster-name: << parameters.cluster-name >>
-          install-kubectl: false
+          install-kubectl: true
       - run:
           name: Run E2E Tests
           command: |
@@ -517,7 +513,7 @@ jobs:
     steps:
       - aws-eks/update-kubeconfig-with-authenticator:
           cluster-name: << parameters.cluster-name >>
-          install-kubectl: false
+          install-kubectl: true
       - helm/install-helm-client:
           version: << parameters.version >>
       - run:
@@ -576,7 +572,7 @@ jobs:
     steps:
       - aws-eks/update-kubeconfig-with-authenticator:
           cluster-name: eks-cxflow-ci
-          install-kubectl: false
+          install-kubectl: true
       - run:
           name: Delete namespace
           command: |
