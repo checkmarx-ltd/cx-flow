@@ -185,10 +185,11 @@ jobs:
         type: boolean
     steps:
       - checkout
+      - kubernetes/install
+          kubectl-version: v1.21.0
       - aws-eks/update-kubeconfig-with-authenticator:
           cluster-name: << parameters.cluster-name >>
-          install-kubectl: true
-          kubectl-version: v1.21.0
+          install-kubectl: false          
       - run:
           name: Change appVersion
           command: |
@@ -259,11 +260,12 @@ jobs:
       version:
         type: string
     steps:
-      - checkout
+      - checkout      
+      - kubernetes/install
+          kubectl-version: v1.21.0
       - aws-eks/update-kubeconfig-with-authenticator:
           cluster-name: << parameters.cluster-name >>
-          install-kubectl: true
-          kubectl-version: v1.21.0
+          install-kubectl: false          
       - run:
           name: Run E2E Tests
           command: |
@@ -513,10 +515,11 @@ jobs:
       version:
         type: string
     steps:
+      - kubernetes/install
+          kubectl-version: v1.21.0    
       - aws-eks/update-kubeconfig-with-authenticator:
           cluster-name: << parameters.cluster-name >>
-          install-kubectl: true
-          kubectl-version: v1.21.0
+          install-kubectl: false
       - helm/install-helm-client:
           version: << parameters.version >>
       - run:
@@ -573,10 +576,11 @@ jobs:
   clean-eks:
     executor: aws-eks/python3
     steps:
+      - kubernetes/install
+          kubectl-version: v1.21.0
       - aws-eks/update-kubeconfig-with-authenticator:
           cluster-name: eks-cxflow-ci
-          install-kubectl: true
-          kubectl-version: v1.21.0
+          install-kubectl: false      
       - run:
           name: Delete namespace
           command: |
@@ -591,7 +595,7 @@ jobs:
             fi
 
 orbs:
-  aws-eks: circleci/aws-eks@2.2.0
+  aws-eks: circleci/aws-eks@1.0.0
   kubernetes: circleci/kubernetes@0.4.0
   helm: circleci/helm@0.2.3
   checkmarx: checkmarx/circleci-kpi-shipper@0.10.0
