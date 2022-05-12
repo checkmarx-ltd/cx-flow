@@ -4,7 +4,6 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.config.CxProperties;
-import com.checkmarx.sdk.config.CxPropertiesBase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -27,7 +26,7 @@ public class FlowService {
     private final List<VulnerabilityScanner> scanners;
     private final ProjectNameGenerator projectNameGenerator;
     private final ResultsService resultsService;
-    private final CxProperties cxProperties = new CxProperties();
+    private final CxProperties cxProperties;
 
     /**
      * Main entry point for the automation process initiated by webhooks.
