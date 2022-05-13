@@ -635,6 +635,7 @@ workflows:
           requires:
             - build
       - aws-cli-setup:
+          requires:
             - component-test
       - deploy-cxflow:
           cluster-name: eks-cxflow-ci
