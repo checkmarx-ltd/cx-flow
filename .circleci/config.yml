@@ -154,6 +154,12 @@ jobs:
             - ./image.tar
             - ./latest.tar
 
+  aws-cli-setup:
+    executor: aws-cli/default
+    steps:
+      - checkout
+      - aws-cli/setup:
+          profile-name: example
   deploy-cxflow:
     executor: aws-eks/python3
     parameters:
@@ -599,6 +605,7 @@ jobs:
             fi
 
 orbs:
+  aws-cli: circleci/aws-cli@3.1.1
   aws-eks: circleci/aws-eks@1.0.0
   kubernetes: circleci/kubernetes@0.4.0
   helm: circleci/helm@0.2.3
@@ -627,6 +634,8 @@ workflows:
       - component-tests:
           requires:
             - build
+      - aws-cli-setup:
+            - component-test
       - deploy-cxflow:
           cluster-name: eks-cxflow-ci
           chart: ./helm/cxflow
@@ -643,6 +652,7 @@ workflows:
           requires:
             - docker-build
             - component-tests
+            - aws-cli-setup
       - e2e-tests:
           cluster-name: eks-cxflow-ci
           namespace: cxflow-${CIRCLE_SHA1::7}
