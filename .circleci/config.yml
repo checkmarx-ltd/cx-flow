@@ -160,6 +160,10 @@ jobs:
       - checkout
       - aws-cli/setup:
           profile-name: example
+      - run:
+         name: delete kube config
+         command: |
+            aws eks update-kubeconfig --name ${CLUSTER_NAME}
   deploy-cxflow:
     executor: aws-eks/python3
     parameters:
