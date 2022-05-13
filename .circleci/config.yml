@@ -195,10 +195,6 @@ jobs:
         type: boolean
     steps:
       - checkout
-      - run:
-          name: delete kube config
-          command: |
-            aws eks update-kubeconfig --name ${CLUSTER_NAME}
       - kubernetes/install:
           kubectl-version: v1.23.6
       - aws-eks/update-kubeconfig-with-authenticator:
