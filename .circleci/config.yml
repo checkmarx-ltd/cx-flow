@@ -163,7 +163,7 @@ jobs:
       - run:
          name: delete kube config
          command: |
-            aws eks update-kubeconfig --name ${CLUSTER_NAME}
+            aws eks update-kubeconfig --name eks-cxflow-ci
   deploy-cxflow:
     executor: aws-eks/python3
     parameters:
