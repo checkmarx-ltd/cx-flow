@@ -199,7 +199,7 @@ jobs:
           cluster-name: << parameters.cluster-name >>
           install-kubectl: false          
       - kubernetes/install:
-          kubectl-version: v1.23.6
+          kubectl-version: v1.23.0
       - run:
           name: Change appVersion
           command: |
