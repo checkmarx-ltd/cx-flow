@@ -262,6 +262,7 @@ public class ConfigurationOverrider {
         });
         override.map(CxConfig::getCustomFields).ifPresent(s -> request.setCxFields(s));
         override.map(CxConfig::getScanCustomFields).ifPresent(s -> request.setScanFields(s));
+        override.map(CxConfig::getEmailNotifications).ifPresent(s -> request.setEmailNotifications(s));
         overrideUsingConfigProvider(override, overrideReport, request);
     }
 

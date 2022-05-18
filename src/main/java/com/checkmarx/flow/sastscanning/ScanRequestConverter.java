@@ -226,7 +226,8 @@ public class ScanRequestConverter {
                 .withSshKeyIdentifier(request.getSshKeyIdentifier())
                 .withClientSecret(request.getScannerApiSec())
                 .withCustomFields(request.getCxFields())
-                .withScanCustomFields(request.getScanFields());
+                .withScanCustomFields(request.getScanFields())
+                .withEmailNotifications(request.getEmailNotifications());
 
         if (StringUtils.isNotEmpty(request.getBranch())) {
             params.withBranch(Constants.CX_BRANCH_PREFIX.concat(request.getBranch()));

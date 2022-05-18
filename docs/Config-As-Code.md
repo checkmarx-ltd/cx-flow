@@ -86,6 +86,20 @@ Example Config As Code:
   "scanCustomFields": {
     "field3": "value3",
     "field4": "value4"
+  },
+  "emailNotifications": {
+    "afterScan": [
+      "user1@example.com",
+      "user2@example.com"
+    ],
+    "beforeScan": [
+      "user3@example.com",
+      "user4@example.com"
+    ],
+    "failedScan": [
+      "user5@example.com",
+      "user6@example.com"
+    ]
   }
 }
 ```

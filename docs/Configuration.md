@@ -127,6 +127,13 @@ checkmarx:
   cx-branch: false
   scan-queuing: true
   scan-queuing-timeout: 720 # Webhook and --scan command line only, number of minutes
+  email-notifications:
+    after-scan:
+      - user1@example.com
+    before-scan:
+      - user2@example.com
+    failed-scan:
+      - user3@example.com
 
 github:
   webhook-token: XXXXX
@@ -505,6 +512,7 @@ The configuration can be set or overridden at execution time using the command l
 | `scan-queuing`            | false                 | No | Yes | Yes | A flag to enable queuing of scan events. |
 | `scan-queuing-timeout`    | 720                   | No | Yes | Yes | The amount of time (in minutes) for which cx-flow will keep a scan event data in its queue before sending to CxSAST, when all the available concurrent scans in CxSAST are in use. | 
 | `disable-clubbing`        | false                 | No | Yes | Yes              | If set to true, results are not grouped at all.By default, results are grouped only by vulnerability and filename.|
+| `email-notifications`     |                       | No |     | Yes (Scan only) | A map containing any or all of the following keys: `after-scan`, `before-scan`, `failed-scan`. The vaue of each key is a list of email addresses to which a notification should be sent in the case of the relevant event.|
 
 No* = Default is applied
 
@@ -572,6 +580,25 @@ checkmarx:
   scan-queuing: true
   scan-queuing-timeout: 720 #Amount of time in minutes
 ```
+
+### <a name="emailNotifications"> Email Notifications</a>
+If present, this property specifies the email notifications to be sent when a SAST scan is run. Notifications can be sent before a scan starts, after a scan finishes, and when a scan fails. The content of the `email-notifications` property is a map from the following keys to lists of email receipients: `after-scan`, `before-scan`, `failed-scan`.
+```yaml
+checkmarx:
+  ...
+  email-notifications:
+    after-scan:
+      - user1@example.com
+      - user2@example.com
+    before-scan:
+      - user3@example.com
+      - user4@example.com
+    failed-scan:
+      - user5@example.com
+      - user6@example.com
+```
+
+Email notifications can also be configured via conf-as-code.
 
 ## <a name="webhook">WebHook Configuration</a>
 Each repository type requires its own specific configuration block as defined below.  Each of these have available overrides that can be provided in the form of URL parameters or as a JSON configuration blob that is base64 encoded and provided as an url parameter (override=<XXXXXX>).
