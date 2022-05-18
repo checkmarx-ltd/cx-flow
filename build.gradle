@@ -11,7 +11,7 @@ buildscript {
         mainClassPath = 'com.checkmarx.flow.CxFlowApplication'
     }
     repositories {
-        jcenter()
+//        jcenter()
         mavenLocal()
         mavenCentral()
         maven {
@@ -56,7 +56,7 @@ def junitVersion = '5.7.0'
 
 repositories {
     mavenLocal()
-    jcenter()
+//    jcenter()
     mavenCentral()
     maven {
         url = 'https://packages.atlassian.com/mvn/maven-external'
