@@ -18,6 +18,7 @@
 * [CxXML](#cxxml)
 * [Json](#json)
 * [CSV](#csv)
+* [Email](#email)
 * [NONE|WAIT](#none)
 
 ##  <a name="data">Understanding the Data</a>
@@ -313,6 +314,7 @@ Valid options for `bug-tracker-impl` are currently the following ones:
 * Azure
 * CxXML - Only available for SAST 8.x|9.x
 * Csv
+* Email
 * JIRA
 * Json
 * GitHub
@@ -630,6 +632,46 @@ The file system path and the file naming format are required.
 
 **[TIMESTAMP]** → Current timestamp (yyyyMMdd.HHmmss format)
 
+## <a name="email">Email Notifications</a>
+CxFlow works with SMTP and SendGrid to notify users through e-mail. 
+
+```yaml
+cx-flow:
+  bug-tracker: Email
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: xxx
+    password: xxx
+    notification: true # Required if using SendGrid
+    sendgrid:
+      api-token: your-sendgrid-token-here
+```
+
+`cx-flow.mail.notification` send two e-mail events: Scan Submitted and Scan Completed. The default is `false` (no e-mail are sent, even if all parameters are configured).
+
+If using SMTP, the following fields are required:
+
+```yaml
+cx-flow:
+  bug-tracker: Email
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: xxx
+    password: xxx
+    notification: true
+```
+
+If using SendGrid, only the notification field and the API Token are required.
+
+```yaml
+cx-flow:
+  mail:
+    notification: true # Required if using SendGrid
+    sendgrid:
+      api-token: your-sendgrid-token-here
+```
 
 ## <a name="none">NONE | WAIT</a>
 If you want to trigger scans asynchronously, use **NONE**  

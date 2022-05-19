@@ -339,6 +339,7 @@ public class FlowProperties {
         private boolean notificationEnabled = false;
         private boolean allowEmptyMail = false;
         private String template;
+        private SendGrid sendgrid;
 
         public String getHost() {
             return this.host;
@@ -395,6 +396,26 @@ public class FlowProperties {
         public String getTemplate() { return template; }
 
         public void setTemplate(String template) { this.template = template; }
+
+        public SendGrid getSendgrid() {
+            return sendgrid;
+        }
+
+        public void setSendgrid(SendGrid sendgrid) {
+            this.sendgrid = sendgrid;
+        }
+    }
+
+    public static class SendGrid {
+        private String apiToken;
+
+        public String getApiToken() {
+            return apiToken;
+        }
+
+        public void setApiToken(String apiToken) {
+            this.apiToken = apiToken;
+        }
     }
 
     public boolean isCxGoEnabled() {
