@@ -4,7 +4,7 @@ WORKDIR app
 RUN apk update && \
     apk upgrade && \
     apk upgrade
-RUN apk add openjdk8=8.302.08-r2 --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community
+RUN apk add openjdk8=8.322.06-r0 --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community
 ENV JAVA_HOME=/usr/lib/jvm/java-1.8-openjdk
 COPY build/libs/*.jar cx-flow.jar
 ENTRYPOINT ["java", "-Xms512m", "-Xmx2048m", "-Djava.security.egd=file:/dev/./urandom", "-Dspring.profiles.active=web", "-jar", "cx-flow.jar"]
