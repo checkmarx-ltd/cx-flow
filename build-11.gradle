@@ -13,7 +13,7 @@ buildscript {
         mainClassPath = 'com.checkmarx.flow.CxFlowApplication'
     }
 	repositories {
-        jcenter()
+       // jcenter()
         mavenLocal()
         mavenCentral()
         maven {

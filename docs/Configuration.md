@@ -486,6 +486,7 @@ The configuration can be set or overridden at execution time using the command l
 | `username`                |                       | Yes      | Yes     | Yes      | Service account for Checkmarx                                             |
 | `password`                |                       | Yes      | Yes     | Yes      | Service account password Checkmarx                                        |
 | `client-secret`           |                       | Yes      | Yes     | Yes      | OIDC client secret for API login to Checkmarx                             |
+| `scope`                   |                       | Yes      | Yes     | Yes      | While using scope value in CLI, it must be provided in double quotes "" otherwise an exception will be thrown.                             |
 | `base-url`                |                       | Yes      | Yes     | Yes      | Base FQDN and port for Checkmarx                                          |
 | `multi-tenant`            | false                 | No*      | Yes     | Yes (Scan only) | If yes, the name space is created or reused, if it has been pre-registered or already created for previous scans)    |
 | `scan-preset`             | Checkmarx Default     | No*      | Yes     | Yes (Scan only) | The default preset used for the triggered scan                 |
