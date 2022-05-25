@@ -25,8 +25,7 @@ public class FlowService {
 
     private final List<VulnerabilityScanner> scanners;
     private final ProjectNameGenerator projectNameGenerator;
-    private final ResultsService resultsService;
-    private final CxProperties cxProperties;
+    private final ResultsService resultsService;    
 
     /**
      * Main entry point for the automation process initiated by webhooks.
@@ -68,9 +67,7 @@ public class FlowService {
                 log.warn("Scan failed. Continuing with other scanners.");
             }
         });
-        if(!cxProperties.getEnablePostActionMonitor()) {
-            resultsService.publishCombinedResults(scanRequest, combinedResults);
-        }
+        resultsService.publishCombinedResults(scanRequest, combinedResults);
     }
 
     private List<VulnerabilityScanner> getEnabledScanners(ScanRequest scanRequest) {
