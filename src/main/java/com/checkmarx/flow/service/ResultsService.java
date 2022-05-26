@@ -364,9 +364,11 @@ public class ResultsService {
             if(r != null){
                 if(scanResults != null){
                     scanResults.mergeWith(r);
+                    log.info("Scan Results in if" +r);
                 }
                 else{
                     scanResults = r;
+                    log.info("Scan Results in else "+r);
                 }
             }
         }

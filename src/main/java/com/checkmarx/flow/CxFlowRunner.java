@@ -176,6 +176,7 @@ public class CxFlowRunner implements ApplicationRunner {
         libFile = getOptionValues(args, "lib-file");
         repoName = getOptionValues(args, "repo-name");
         repoUrl = getOptionValues(args, "repo-url");
+        log.info(repoUrl);
         branch = getOptionValues(args, "branch");
         defaultBranch = getOptionValues(args, "default-branch");
         namespace = getOptionValues(args, "namespace");
@@ -449,9 +450,17 @@ public class CxFlowRunner implements ApplicationRunner {
                 } //GitLab Scan with Git Clone
                 else if (args.containsOption("gitlab") && !ScanUtils.anyEmpty(namespace, repoName)) {
                     repoUrl = getNonEmptyRepoUrl(namespace, repoName, repoUrl, gitLabProperties.getGitUri(namespace, repoName));
+                    log.info("GITLAB repourl "+repoUrl);
+
                     String token = gitLabProperties.getToken();
+                    log.info(token);
+
+                    log.info("GitAuthUrl with repoUrl  "+repoUrl.replace(Constants.HTTPS, Constants.HTTPS_OAUTH2.concat(token).concat("@")));
+                    log.info("GitAuthUrl with gitAuthUrl  "+gitAuthUrl.replace(Constants.HTTP, Constants.HTTP_OAUTH2.concat(token).concat("@")));
+
                     gitAuthUrl = repoUrl.replace(Constants.HTTPS, Constants.HTTPS_OAUTH2.concat(token).concat("@"));
                     gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP_OAUTH2.concat(token).concat("@"));
+
                     scanRemoteRepo(request, repoUrl, gitAuthUrl, branch, ScanRequest.Repository.GITLAB, args);
                 } else if (args.containsOption("bitbucket") && containsRepoArgs(namespace, repoName, branch)) {
                     log.warn("Bitbucket git clone scan not implemented");
@@ -461,6 +470,7 @@ public class CxFlowRunner implements ApplicationRunner {
                     }
                 } else if (file != null) {
                     scanLocalPath(request, file);
+
                 } else {
                     log.error("No valid option was provided for driving scan");
                 }
@@ -538,6 +548,7 @@ public class CxFlowRunner implements ApplicationRunner {
         if (Strings.isNullOrEmpty(repoUrl)) {
             if (!ScanUtils.anyEmpty(namespace, repoName)) {
                 repoUrl = gitUri;
+                log.info("getNoneEmptyRepo "+repoUrl);
             } else {
                 log.error("Unable to determine git url for scanning, exiting...");
                 exit(ExitCode.ARGUMENT_NOT_PROVIDED);
@@ -569,7 +580,9 @@ public class CxFlowRunner implements ApplicationRunner {
 
         request.setBranch(branch);
         request.setRepoUrl(gitUrl);
+        log.info("scanRemoteRepo "+gitUrl);
         request.setRepoUrlWithAuth(gitAuthUrl);
+        log.info("scanRemoteRepo "+gitAuthUrl);
         request.setRefs(Constants.CX_BRANCH_PREFIX.concat(branch));
 
         if (!args.containsOption(IAST_OPTION)) {
@@ -588,6 +601,7 @@ public class CxFlowRunner implements ApplicationRunner {
         // A lambda rquires a final or effectively final parameter
         ScanRequest finalRequest = request;
         ScanResults scanResults = runOnActiveScanners(scanner -> scanner.scanCli(finalRequest, "cxFullScan", new File(path)));
+        log.info("Path  "+path);
         processResults(request, scanResults);
     }
 

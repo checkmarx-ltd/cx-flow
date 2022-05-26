@@ -149,6 +149,7 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
 
     private ScanParams toSdkScanParams(ScanRequest scanRequest) {
         URL parsedUrl = getRepoUrl(scanRequest);
+        log.info("Parsed URL"+parsedUrl);
 
         ScanParams scanParams = ScanParams.builder()
                 .branch(scanRequest.getBranch())
@@ -166,6 +167,7 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
         URL parsedUrl;
         try {
             parsedUrl = new URL(scanRequest.getRepoUrlWithAuth());
+            log.info("Parsed URL"+parsedUrl);
         } catch (MalformedURLException e) {
             log.error("Failed to parse repository URL: '{}'", scanRequest.getRepoUrl());
             throw new MachinaRuntimeException("Invalid repository URL.");
@@ -188,4 +190,3 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
         report.log();
     }
 }
-
