@@ -100,8 +100,7 @@ public class ResultsService {
                     sendEmailNotification(scanRequest, scanResults);
                     processResults(scanRequest, scanResults, new ScanDetails(projectId, scanResults.getSastScanId(), null));
                     logScanDetails(scanRequest, projectId, scanResults);
-                }
-                else{
+                } else {
                     processResults(scanRequest, scanResults, new ScanDetails(null, scanResults.getSastScanId(), null));
                 }
             } else {
@@ -123,13 +122,13 @@ public class ResultsService {
     }
 
 
-
     public void processResults(ScanRequest request, ScanResults results, ScanDetails scanDetails) throws MachinaException {
 
         scanDetails = Optional.ofNullable(scanDetails).orElseGet(ScanDetails::new);
         if (Boolean.FALSE.equals(cxScannerService.getProperties().getOffline())) {
             getCxFields(request, results);
         }
+
         switch (request.getBugTracker().getType()) {
             case NONE:
             case wait:
@@ -210,7 +209,6 @@ public class ResultsService {
         }
         return results;
     }
-
 
 
     private void handleCustomIssueTracker(ScanRequest request, ScanResults results) throws MachinaException {
@@ -345,7 +343,7 @@ public class ResultsService {
     }
 
     public boolean filteredSastIssuesPresent(ScanResults results) {
-        if(results == null || results.getAdditionalDetails()==null) {
+        if (results == null || results.getAdditionalDetails() == null) {
             // assuming no bugTracker or SCA results only
             return false;
         }
@@ -356,16 +354,16 @@ public class ResultsService {
 
     /**
      * Join any number of results together
+     *
      * @param results combined results object
      */
-    public ScanResults joinResults(ScanResults... results){
+    public ScanResults joinResults(ScanResults... results) {
         ScanResults scanResults = null;
-        for(ScanResults r: results){
-            if(r != null){
-                if(scanResults != null){
+        for (ScanResults r : results) {
+            if (r != null) {
+                if (scanResults != null) {
                     scanResults.mergeWith(r);
-                }
-                else{
+                } else {
                     scanResults = r;
                 }
             }

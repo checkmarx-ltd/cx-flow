@@ -3,11 +3,13 @@ package com.checkmarx.flow.service;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.sdk.dto.ScanResults;
+import com.checkmarx.sdk.config.CxProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +25,7 @@ public class FlowService {
 
     private final List<VulnerabilityScanner> scanners;
     private final ProjectNameGenerator projectNameGenerator;
-    private final ResultsService resultsService;
+    private final ResultsService resultsService;    
 
     /**
      * Main entry point for the automation process initiated by webhooks.
