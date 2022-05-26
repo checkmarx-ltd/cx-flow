@@ -31,3 +31,4 @@ cx-flow.log*
 
 ### VSCode ###
 .vscode
+.DS_Store
