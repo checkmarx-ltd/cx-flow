@@ -6,6 +6,7 @@ import com.checkmarx.flow.config.external.ASTConfig;
 import com.checkmarx.flow.service.VulnerabilityScanner;
 import com.checkmarx.sdk.config.ScaConfig;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
+import com.checkmarx.sdk.dto.cx.CxEmailNotifications;
 import lombok.*;
 
 import java.util.*;
@@ -117,6 +118,9 @@ public class ScanRequest {
     @Getter @Setter
     private CliMode cliMode;
 
+    @Getter @Setter
+    private CxEmailNotifications emailNotifications;
+
     public ScanRequest(ScanRequest other) {
         this.namespace = other.namespace;
         this.application = other.application;
@@ -161,6 +165,7 @@ public class ScanRequest {
         this.disableCertificateValidation = other.disableCertificateValidation;
         this.sshKeyIdentifier = other.sshKeyIdentifier;
         this.cliMode = other.cliMode;
+        this.emailNotifications = other.emailNotifications;
     }
 
     public Map<String,String> getAltFields() {
