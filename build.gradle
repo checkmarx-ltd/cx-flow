@@ -90,6 +90,9 @@ dependencies {
         exclude group: 'org.apache.logging.log4j', module: 'log4j-core'
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
+
+    // compile 'org.springframework:spring-context-support:5.2.8.RELEASE'
+    // compile 'org.springframework.boot:spring-boot-starter-mail:2.5.6'
     
     compile('org.springframework.boot:spring-boot-starter-aop'){
         exclude group: 'ch.qos.logback', module: 'logback-core'
@@ -134,7 +137,7 @@ dependencies {
     compile("org.apache.httpcomponents:httpclient:4.5.13")
 
     compile("org.thymeleaf:thymeleaf-spring5:3.0.15.RELEASE")
-    implementation 'ognl:ognl:3.3.2'
+    implementation 'ognl:ognl:3.1.29'
 
     compile("org.codehaus.groovy:groovy-all:3.0.9") {
         exclude group: 'org.apache.ant', module: 'ant'
