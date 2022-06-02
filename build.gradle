@@ -90,9 +90,6 @@ dependencies {
         exclude group: 'org.apache.logging.log4j', module: 'log4j-core'
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
-
-    // compile 'org.springframework:spring-context-support:5.2.8.RELEASE'
-    // compile 'org.springframework.boot:spring-boot-starter-mail:2.5.6'
     
     compile('org.springframework.boot:spring-boot-starter-aop'){
         exclude group: 'ch.qos.logback', module: 'logback-core'
