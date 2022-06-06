@@ -129,7 +129,7 @@ public class ResultsService {
             getCxFields(request, results);
         }
 
-        if(results.getScaResults() != null || results.getXIssues() != null) {
+        if(results.getScaResults() != null || results.getXIssues() != null || results.getAstResults() != null) {
             switch (request.getBugTracker().getType()) {
                 case NONE:
                 case wait:
