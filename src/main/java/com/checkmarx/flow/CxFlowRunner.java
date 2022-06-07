@@ -328,7 +328,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 bugType = BugTracker.Type.EMAIL;
                 bt = BugTracker.builder()
                         .type(bugType)
-                        .build();
+                        .build(); 
                 break;
             case CUSTOM:
                 log.info("Using custom bean implementation  for bug tracking");
