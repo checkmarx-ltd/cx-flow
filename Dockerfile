@@ -1,4 +1,4 @@
-FROM alpine:3.15 AS java8
+FROM alpine:3.16 AS java8
 
 WORKDIR app
 RUN apk update && \
@@ -11,7 +11,7 @@ ENTRYPOINT ["java", "-Xms512m", "-Xmx2048m", "-Djava.security.egd=file:/dev/./ur
 EXPOSE 8080
 
 
-FROM alpine:3.15 AS java11
+FROM alpine:3.16 AS java11
 
 WORKDIR app
 RUN apk update && \
@@ -22,7 +22,7 @@ COPY build/libs/java11/*.jar cx-flow.jar
 ENTRYPOINT ["java", "-Xms512m", "-Xmx2048m","-Djava.security.egd=file:/dev/./urandom", "-Dspring.profiles.active=web", "-jar", "cx-flow.jar"]
 EXPOSE 8080
 
-FROM alpine:3.15 AS cxgo8
+FROM alpine:3.16 AS cxgo8
 
 WORKDIR app
 RUN apk update && \
