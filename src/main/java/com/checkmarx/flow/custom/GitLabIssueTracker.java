@@ -35,7 +35,11 @@ public class GitLabIssueTracker implements IssueTracker {
     private static final String TRANSITION_OPEN = "reopen";
     private static final String OPEN_STATE = "opened";
     private static final String ISSUES_PER_PAGE = "100";
-    private static final String PROJECT = "/projects?search={repo}";
+
+    //Added by Satyam :: To Fix GitLab Pagination Issue
+   // private static final String PROJECT = "/projects?search={repo}&pagination=keyset&per_page=20&order_by=id&sort=asc&id_after={id}";
+    private static final String PROJECT = "/projects?search={repo}&pagination=keyset&per_page=100&order_by=id&sort=asc&id_after={id}";
+
     private static final String ISSUES_PATH = "/projects/{id}/issues?per_page=".concat(ISSUES_PER_PAGE);
     private static final String NEW_ISSUE_PATH = "/projects/{id}/issues";
     private static final String ISSUE_PATH = "/projects/{id}/issues/{iid}";
@@ -81,18 +85,37 @@ public class GitLabIssueTracker implements IssueTracker {
         try {
             int projectId = 0;
             String targetRepoName = request.getRepoName();
-            JSONArray candidateProjects = getProjectSearchResults(request);
-            log.debug("Projects found: {}. Looking for exact match.", candidateProjects.length());
-            // The search is fuzzy, so we need to additionally filter search results here for strict match.
-            for (Object project : candidateProjects) {
-                JSONObject projectJson = (JSONObject) project;
-                if (isTargetProject(projectJson, request.getNamespace(), targetRepoName)) {
-                    projectId = projectJson.getInt("id");
-                    log.debug("Using GitLab project ID: {}", projectId);
-                    break;
+
+            String lastProjectId="0";
+            while(true){
+                JSONArray candidateProjects = getProjectSearchResults(request,lastProjectId);
+                int length=candidateProjects.length();
+                if(length>=100)
+                lastProjectId= String.valueOf((((JSONObject) candidateProjects.get(99)).getInt("id")));
+
+                //Satyam Changing Debug Log to info
+                log.info("Projects found: {}. Looking for exact match.", candidateProjects.length());
+
+                // The search is fuzzy, so we need to additionally filter search results here for strict match.
+                for (Object project : candidateProjects) {
+                    JSONObject projectJson = (JSONObject) project;
+                    if (isTargetProject(projectJson, request.getNamespace(), targetRepoName)) {
+                        projectId = projectJson.getInt("id");
+                        //Satyam Changing Debug Log to info
+                        log.info("Using GitLab project ID: {}", projectId);
+                        break;
+                    }
                 }
+                if(length<100) break;
+
             }
-            return projectId;
+
+
+
+
+                return projectId;
+
+
         } catch(HttpClientErrorException e) {
             log.error("Error calling gitlab project api {}", e.getResponseBodyAsString(), e);
         } catch(JSONException e) {
@@ -113,17 +136,21 @@ public class GitLabIssueTracker implements IssueTracker {
         String namespacePath = projectJson.getJSONObject("namespace")
                 .getString("full_path");
 
+
         boolean result = repoPath.equals(targetRepo) && namespacePath.equals(targetNamespace);
-        log.debug("Checking {}/{}... {}", namespacePath, repoPath, result ? "match!" : "no match.");
+        //Satyam debug changed to infol
+        log.info("Checking {}/{}... {}", namespacePath, repoPath, result ? "match!" : "no match.");
         return result;
     }
 
-    private JSONArray getProjectSearchResults(ScanRequest scanRequest) throws URISyntaxException {
+    private JSONArray getProjectSearchResults(ScanRequest scanRequest, String currentProjectID) throws URISyntaxException {
         String targetRepoName = scanRequest.getRepoName();
         log.debug("Searching repo by query: {}", targetRepoName);
+
+        //Change Added By Satyam :: Modifying URL
         String url = scmConfigOverrider.determineConfigApiUrl(properties, scanRequest)
                 .concat(PROJECT)
-                .replace("{repo}", targetRepoName);
+                .replace("{repo}", targetRepoName).replace("{id}" ,currentProjectID);
         URI uri = new URI(url);
         HttpEntity<Void> httpEntity = new HttpEntity<>(createAuthHeaders(scanRequest));
         ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, httpEntity, String.class);
