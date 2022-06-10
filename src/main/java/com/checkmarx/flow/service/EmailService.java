@@ -121,7 +121,7 @@ public class EmailService {
         String prefixMessage = "Checkmarx Scan submitted for %s/%s ";
         String scanSubmittedSubject = String.format(prefixMessage, request.getNamespace(), request.getRepoName());
         Map<String, Object> emailCtx = prepareEmailContext("Scan Request Submitted", scanSubmittedSubject, request.getRepoUrl());
-        sendMail(request.getEmail(), mail, scanSubmittedSubject, emailCtx, "message.html");
+        sendMail(request.getEmail(), mail, scanSubmittedSubject, emailCtx, "generic-event-message.html");
     }
 
     public void sendScanCompletedEmail(ScanRequest request, ScanResults results) {
@@ -179,7 +179,7 @@ public class EmailService {
         String template = mail.getTemplate();
 
         if (ScanUtils.empty(template)) {
-            template = "template-demo.html";
+            template = "scan-completed-successfully.html";
         }
 
         sendMail(request.getEmail(), mail, scanCompletedSubject, emailCtx, template);
