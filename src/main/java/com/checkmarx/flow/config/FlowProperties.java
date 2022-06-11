@@ -340,6 +340,7 @@ public class FlowProperties {
         private boolean allowEmptyMail = false;
         private String template;
         private SendGrid sendgrid;
+        private MailTemplates templates;
 
         public String getHost() {
             return this.host;
@@ -403,6 +404,31 @@ public class FlowProperties {
 
         public void setSendgrid(SendGrid sendgrid) {
             this.sendgrid = sendgrid;
+        }
+
+        public MailTemplates getTemplates() { return templates; }
+
+        public void setMailTemplates(MailTemplates templates) { this.templates = templates; }
+    }
+
+    public static class MailTemplates {
+        private String scanSubmitted;
+        private String scanCompletedSuccessfully;
+
+        public String getScanSubmitted() {
+            return scanSubmitted;
+        }
+
+        public void setScanSubmitted(String scanSubmitted) {
+            this.scanSubmitted = scanSubmitted;
+        }
+
+        public String getScanCompletedSuccessfully() {
+            return scanCompletedSuccessfully;
+        }
+
+        public void setScanCompletedSuccessfully(String scanCompletedSuccessfully) {
+            this.scanCompletedSuccessfully = scanCompletedSuccessfully;
         }
     }
 

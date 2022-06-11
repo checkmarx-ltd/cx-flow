@@ -22,6 +22,7 @@ import java.beans.ConstructorProperties;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -112,7 +113,7 @@ public class EmailService {
     }
 
     public void sendScanSubmittedEmail(ScanRequest request) {
-        if (!isEmailNotificationAllowed()) {
+        if (isEmailNotificationAllowed()) {
             log.info("cx-flow.mail.notification not set or set to false. Skipping Scan Submitted e-mail...");
             return;
         }
@@ -121,11 +122,15 @@ public class EmailService {
         String prefixMessage = "Checkmarx Scan submitted for %s/%s ";
         String scanSubmittedSubject = String.format(prefixMessage, request.getNamespace(), request.getRepoName());
         Map<String, Object> emailCtx = prepareEmailContext("Scan Request Submitted", scanSubmittedSubject, request.getRepoUrl());
-        sendMail(request.getEmail(), mail, scanSubmittedSubject, emailCtx, "generic-event-message.html");
+
+        String template = Optional.ofNullable(mail.getTemplates())
+                .map(FlowProperties.MailTemplates::getScanSubmitted)
+                .orElse("generic-event-message.html");
+        sendMail(request.getEmail(), mail, scanSubmittedSubject, emailCtx, template);
     }
 
     public void sendScanCompletedEmail(ScanRequest request, ScanResults results) {
-        if (!isEmailNotificationAllowed()) {
+        if (isEmailNotificationAllowed()) {
             log.info("cx-flow.mail.notification not set or set to false. Skipping Scan Completed e-mail...");
             return;
         }
@@ -157,7 +162,9 @@ public class EmailService {
     }
 
     private boolean isEmailNotificationAllowed() {
-        return flowProperties.getMail() != null && flowProperties.getMail().isNotificationEnabled();
+        return Optional.ofNullable(flowProperties.getMail())
+                .map(FlowProperties.Mail::isNotificationEnabled)
+                .orElse(false);
     }
 
     public void prepareAndSendScanCompletedEmail(ScanRequest request, ScanResults results) {
@@ -176,11 +183,10 @@ public class EmailService {
         emailCtx.put("repo_fullname", namespace.concat("/").concat(repoName));
 
         FlowProperties.Mail mail = flowProperties.getMail();
-        String template = mail.getTemplate();
-
-        if (ScanUtils.empty(template)) {
-            template = "scan-completed-successfully.html";
-        }
+        String template = Optional.ofNullable(mail.getTemplate())
+                .orElse(Optional.ofNullable(mail.getTemplates())
+                        .map(FlowProperties.MailTemplates::getScanCompletedSuccessfully)
+                        .orElse("scan-completed-successfully.html"));
 
         sendMail(request.getEmail(), mail, scanCompletedSubject, emailCtx, template);
         log.info("Email notification sent.");
