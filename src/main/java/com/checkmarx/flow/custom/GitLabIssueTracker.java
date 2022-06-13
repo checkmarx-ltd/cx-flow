@@ -36,8 +36,7 @@ public class GitLabIssueTracker implements IssueTracker {
     private static final String OPEN_STATE = "opened";
     private static final String ISSUES_PER_PAGE = "100";
 
-    //Added by Satyam :: To Fix GitLab Pagination Issue
-   // private static final String PROJECT = "/projects?search={repo}&pagination=keyset&per_page=20&order_by=id&sort=asc&id_after={id}";
+    //To Fix GitLab Pagination Issue
     private static final String PROJECT = "/projects?search={repo}&pagination=keyset&per_page=100&order_by=id&sort=asc&id_after={id}";
 
     private static final String ISSUES_PATH = "/projects/{id}/issues?per_page=".concat(ISSUES_PER_PAGE);
@@ -93,16 +92,14 @@ public class GitLabIssueTracker implements IssueTracker {
                 if(length>=100)
                 lastProjectId= String.valueOf((((JSONObject) candidateProjects.get(99)).getInt("id")));
 
-                //Satyam Changing Debug Log to info
-                log.info("Projects found: {}. Looking for exact match.", candidateProjects.length());
+                log.debug("Projects found: {}. Looking for exact match.", candidateProjects.length());
 
                 // The search is fuzzy, so we need to additionally filter search results here for strict match.
                 for (Object project : candidateProjects) {
                     JSONObject projectJson = (JSONObject) project;
                     if (isTargetProject(projectJson, request.getNamespace(), targetRepoName)) {
                         projectId = projectJson.getInt("id");
-                        //Satyam Changing Debug Log to info
-                        log.info("Using GitLab project ID: {}", projectId);
+                        log.debug("Using GitLab project ID: {}", projectId);
                         break;
                     }
                 }
@@ -138,8 +135,7 @@ public class GitLabIssueTracker implements IssueTracker {
 
 
         boolean result = repoPath.equals(targetRepo) && namespacePath.equals(targetNamespace);
-        //Satyam debug changed to infol
-        log.info("Checking {}/{}... {}", namespacePath, repoPath, result ? "match!" : "no match.");
+        log.debug("Checking {}/{}... {}", namespacePath, repoPath, result ? "match!" : "no match.");
         return result;
     }
 
@@ -147,7 +143,7 @@ public class GitLabIssueTracker implements IssueTracker {
         String targetRepoName = scanRequest.getRepoName();
         log.debug("Searching repo by query: {}", targetRepoName);
 
-        //Change Added By Satyam :: Modifying URL
+        //Change Added :: Modifying URL
         String url = scmConfigOverrider.determineConfigApiUrl(properties, scanRequest)
                 .concat(PROJECT)
                 .replace("{repo}", targetRepoName).replace("{id}" ,currentProjectID);
