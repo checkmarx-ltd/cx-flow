@@ -61,6 +61,7 @@ public class GitLabIssueTracker implements IssueTracker {
     @Override
     public void init(ScanRequest request, ScanResults results) throws MachinaException {
         log.info("Initializing GitLab processing");
+        
         if(ScanUtils.empty(request.getNamespace()) ||
                 ScanUtils.empty(request.getRepoName()) ||
                 ScanUtils.empty(request.getBranch())){
