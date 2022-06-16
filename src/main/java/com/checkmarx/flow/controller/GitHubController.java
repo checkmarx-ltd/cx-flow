@@ -12,6 +12,7 @@ import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.flow.utils.StringEscapeUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.dto.sast.CxConfig;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
@@ -105,6 +106,7 @@ public class GitHubController extends WebhookController {
         controllerRequest = ensureNotNull(controllerRequest);
 
         try {
+            body = StringEscapeUtils.escapeHtml4andJS(body);
             event = mapper.readValue(body, PullEvent.class);
         } catch (IOException e) {
             throw new MachinaRuntimeException(e);
@@ -249,6 +251,7 @@ public class GitHubController extends WebhookController {
         controllerRequest = ensureNotNull(controllerRequest);
 
         try {
+            body = StringEscapeUtils.escapeHtml4andJS(body);
             event = mapper.readValue(body, PushEvent.class);
         } catch (NullPointerException | IOException | IllegalArgumentException e) {
             throw new MachinaRuntimeException(e);
