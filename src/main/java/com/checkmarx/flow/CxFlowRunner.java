@@ -471,6 +471,13 @@ public class CxFlowRunner implements ApplicationRunner {
                         gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP_OAUTH2.concat(token).concat("@"));
                         request.setRepoUrlWithAuth(gitAuthUrl);
                     }
+                    if(bugTracker.equalsIgnoreCase("GitHub")) {
+                        repoUrl = getNonEmptyRepoUrl(namespace, repoName, repoUrl, gitHubProperties.getGitUri(namespace, repoName));
+                        String token = gitHubProperties.getToken();
+                        gitAuthUrl = repoUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(token).concat("@"));
+                        gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(token).concat("@"));
+                        request.setRepoUrlWithAuth(gitAuthUrl);
+                    }
                     scanLocalPath(request, file);
                 } else {
                     log.error("No valid option was provided for driving scan");
