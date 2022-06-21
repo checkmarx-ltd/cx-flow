@@ -82,7 +82,6 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
         return !isAllowed(results, request);
     }
 
-    //Satyam :: Adding Threshold for checking direct dependency
     @Override
     public boolean thresholdsExceededDirectDependency(ScanRequest request, ScanResults results){
 
@@ -203,7 +202,6 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
         log.info(policiesViolatedName);
     }
 
-    //Satyam :: Added for checking Direct Dependency
     private boolean isAllowedScaDirectDependency(ScanResults scanResults, ScanRequest request) {
         log.debug("Checking if Direct Dependency is allowed.");
         Map<Severity, Integer> scaThresholdsSeverity = getScaEffectiveThresholdsSeverityDirect(request);
@@ -219,7 +217,6 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
         return isAllowedSca;
     }
 
-    //Satyam :: Need to Wok on this
     private Map<Severity, Integer> getScaEffectiveThresholdsSeverityDirect(ScanRequest scanRequest) {
         Map<Severity, Integer> res;
 
@@ -235,7 +232,6 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
         return res;
     }
 
-    //Satyam :: Adding funcition for checking threshold for direct dependency
     private static boolean isAnyScaThresholdsExceededForDirectDP(ScanResults scanResults,  Map<Severity, Integer> scaThresholds) {
         boolean isExceeded = false;
 
@@ -260,7 +256,6 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
         return isExceeded;
     }
 
-    //Satyam :: Checking for SCA Results
     private static Map<Severity, Integer> getScaFindingsCountsPerDirectDependency(ScanResults scanResults) {
         log.debug("Calculating Direct Dependency Values.");
 
