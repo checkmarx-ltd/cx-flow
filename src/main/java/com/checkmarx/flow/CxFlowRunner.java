@@ -641,7 +641,11 @@ public class CxFlowRunner implements ApplicationRunner {
         } else {
             log.info("Build succeeded. all checks passed");
         }
-
+        if((flowProperties.getEnabledVulnerabilityScanners().contains("sca") ||
+                flowProperties.getEnabledVulnerabilityScanners().contains("SCA")) && thresholdValidator.thresholdsExceededDirectDependency(request, results)){
+            log.info("Build failed because some direct dependency issues were found.");
+            breakBuildResult = true;
+        }
         return breakBuildResult;
     }
 
