@@ -464,14 +464,14 @@ public class CxFlowRunner implements ApplicationRunner {
                         log.warn("Azure DevOps git clone scan not implemented");
                     }
                 } else if (file != null) {
-                    if(bugTracker.equalsIgnoreCase("GitLab")) {
+                    if(gitLabProperties == null) {
                         repoUrl = getNonEmptyRepoUrl(namespace, repoName, repoUrl, gitLabProperties.getGitUri(namespace, repoName));
                         String token = gitLabProperties.getToken();
                         gitAuthUrl = repoUrl.replace(Constants.HTTPS, Constants.HTTPS_OAUTH2.concat(token).concat("@"));
                         gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP_OAUTH2.concat(token).concat("@"));
                         request.setRepoUrlWithAuth(gitAuthUrl);
                     }
-                    if(bugTracker.equalsIgnoreCase("GitHub")) {
+                    if(gitHubProperties == null) {
                         repoUrl = getNonEmptyRepoUrl(namespace, repoName, repoUrl, gitHubProperties.getGitUri(namespace, repoName));
                         String token = gitHubProperties.getToken();
                         gitAuthUrl = repoUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(token).concat("@"));
