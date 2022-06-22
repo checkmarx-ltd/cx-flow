@@ -215,14 +215,26 @@ public class GitHubController extends WebhookController {
                 );
             }
             /*Check for Config as code (cx.config) and override*/
+            log.debug(repository.getId()+" :: Calling  getCxConfigOverride function : "+System.currentTimeMillis());
             CxConfig cxConfig =  gitHubService.getCxConfigOverride(request);
+            log.debug(repository.getId()+" :: Calling  overrideScanRequestProperties function : "+System.currentTimeMillis());
             request = configOverrider.overrideScanRequestProperties(cxConfig, request);
+            log.debug(repository.getId()+" :: Calling  putAdditionalMetadata function : "+System.currentTimeMillis());
+
             request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, body);
             request.putAdditionalMetadata("statuses_url", pullRequest.getStatusesUrl());
             request.setId(uid);
             //only initiate scan/automation if target branch is applicable
             if(helperService.isBranch2Scan(request, branches)){
+                log.debug(repository.getId()+" :: Calling  isBranch2Scan function End : "+System.currentTimeMillis());
+                log.debug(repository.getId()+" :: Free Memory : "+Runtime.getRuntime().freeMemory());
+                log.debug(repository.getId()+" :: Total Numbers of processors : "+Runtime.getRuntime().availableProcessors());
+                long startTime=System.currentTimeMillis();
+                log.debug(repository.getId()+" :: Start Time : "+startTime);
                 flowService.initiateAutomation(request);
+                long endTime=System.currentTimeMillis();
+                log.debug(repository.getId()+" :: End Time  : "+endTime);
+                log.debug(repository.getId()+" :: Total Time Taken  : "+(endTime-startTime));
             }
         } catch (IllegalArgumentException e) {
             return getBadRequestMessage(e, controllerRequest, product);
@@ -357,15 +369,26 @@ public class GitHubController extends WebhookController {
             }
 
             /*Check for Config as code (cx.config) and override*/
+            log.debug(repository.getId()+" :: Calling  getCxConfigOverride function : "+System.currentTimeMillis());
             CxConfig cxConfig =  gitHubService.getCxConfigOverride(request);
+            log.debug(repository.getId()+" :: Calling  overrideScanRequestProperties function : "+System.currentTimeMillis());
             request = configOverrider.overrideScanRequestProperties(cxConfig, request);
+            log.debug(repository.getId()+" :: Calling  putAdditionalMetadata function : "+System.currentTimeMillis());
 
             request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, body);
             request.setId(uid);
 
             //only initiate scan/automation if branch is applicable
             if(helperService.isBranch2Scan(request, branches)){
+                log.debug(repository.getId()+" :: Calling  isBranch2Scan function End : "+System.currentTimeMillis());
+                log.debug(repository.getId()+" :: Free Memory : "+Runtime.getRuntime().freeMemory());
+                log.debug(repository.getId()+" :: Total Numbers of processors : "+Runtime.getRuntime().availableProcessors());
+                long startTime=System.currentTimeMillis();
+                log.debug(repository.getId()+" :: Start Time : "+startTime);
                 flowService.initiateAutomation(request);
+                long endTime=System.currentTimeMillis();
+                log.debug(repository.getId()+" :: End Time  : "+endTime);
+                log.debug(repository.getId()+" :: Total Time Taken  : "+(endTime-startTime));
             }
 
         }

@@ -156,8 +156,11 @@ public class GitLabController extends WebhookController {
             }
 
             /*Check for Config as code (cx.config) and override*/
+            log.debug(proj.getId()+" :: Calling  getCxConfigOverride function : "+System.currentTimeMillis());
             CxConfig cxConfig =  gitLabService.getCxConfigOverride(request);
+            log.debug(proj.getId()+" :: Calling  overrideScanRequestProperties function : "+System.currentTimeMillis());
             request = configOverrider.overrideScanRequestProperties(cxConfig, request);
+            log.debug(proj.getId()+" :: Calling  putAdditionalMetadata function : "+System.currentTimeMillis());
 
             request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, body.toString());
             request.putAdditionalMetadata(FlowConstants.MERGE_ID, objectAttributes.getIid().toString());
@@ -165,7 +168,15 @@ public class GitLabController extends WebhookController {
 
             request.setId(uid);
             if(helperService.isBranch2Scan(request, branches)){
+                log.debug(proj.getId()+" :: Calling  isBranch2Scan function End : "+System.currentTimeMillis());
+                log.debug(proj.getId()+" :: Free Memory : "+Runtime.getRuntime().freeMemory());
+                log.debug(proj.getId()+" :: Total Numbers of processors : "+Runtime.getRuntime().availableProcessors());
+                long startTime=System.currentTimeMillis();
+                log.debug(proj.getId()+" :: Start Time : "+startTime);
                 flowService.initiateAutomation(request);
+                long endTime=System.currentTimeMillis();
+                log.debug(proj.getId()+" :: End Time  : "+endTime);
+                log.debug(proj.getId()+" :: Total Time Taken  : "+(endTime-startTime));
             }
 
         } catch (IllegalArgumentException e) {
@@ -273,14 +284,25 @@ public class GitLabController extends WebhookController {
             }
 
             /*Check for Config as code (cx.config) and override*/
+            log.debug(proj.getId()+" :: Calling  getCxConfigOverride function : "+System.currentTimeMillis());
             CxConfig cxConfig =  gitLabService.getCxConfigOverride(request);
+            log.debug(proj.getId()+" :: Calling  overrideScanRequestProperties function : "+System.currentTimeMillis());
             request = configOverrider.overrideScanRequestProperties(cxConfig, request);
+            log.debug(proj.getId()+" :: Calling  putAdditionalMetadata function : "+System.currentTimeMillis());
 
             request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, body.toString());
             request.setId(uid);
 
             if(helperService.isBranch2Scan(request, branches)){
+                log.debug(proj.getId()+" :: Calling  isBranch2Scan function End : "+System.currentTimeMillis());
+                log.debug(proj.getId()+" :: Free Memory : "+Runtime.getRuntime().freeMemory());
+                log.debug(proj.getId()+" :: Total Numbers of processors : "+Runtime.getRuntime().availableProcessors());
+                long startTime=System.currentTimeMillis();
+                log.debug(proj.getId()+" :: Start Time : "+startTime);
                 flowService.initiateAutomation(request);
+                long endTime=System.currentTimeMillis();
+                log.debug(proj.getId()+" :: End Time  : "+endTime);
+                log.debug(proj.getId()+" :: Total Time Taken  : "+(endTime-startTime));
             }
         } catch (IllegalArgumentException e) {
             return getBadRequestMessage(e, controllerRequest, product);
