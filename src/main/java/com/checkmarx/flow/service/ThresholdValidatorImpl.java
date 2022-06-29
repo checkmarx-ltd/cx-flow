@@ -85,6 +85,8 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
     @Override
     public boolean thresholdsExceededDirectDependency(ScanRequest request, ScanResults results){
 
+
+        if(scaProperties.getFilterdependencytype() == null) return false;
         if(scaProperties.getFilterdependencytype().toLowerCase(Locale.ROOT).equalsIgnoreCase("direct")){
             return !isAllowedScaDirectDependency(results, request);
 
