@@ -116,7 +116,11 @@ public class ConfigurationOverrider {
         if(!StringUtils.isEmpty(override.getSshKeyIdentifier() ) ) {
             request.setSshKeyIdentifier(override.getSshKeyIdentifier());
         }
-        
+
+        if(!StringUtils.isEmpty(override.getZipExclude() ) ) {
+            request.setZipExclude(override.getZipExclude());
+        }
+
         request.setBugTracker(bt);
         
         Optional.ofNullable(override.getApplication())
