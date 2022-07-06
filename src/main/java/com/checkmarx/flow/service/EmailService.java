@@ -194,7 +194,7 @@ public class EmailService {
 
     /**
      * Resolves how to send the Scan Submitted e-mail. If `cx-flow.mail.sendgrid` is set, sends through Sendgrid.
-     * Otherwise sends through SMTP.
+     * Otherwise, sends through SMTP.
      *
      * @param emails               List of e-mails with all the recipients.
      * @param mailProperties       Configured properties for mail, through YAML, env variables or command-line arguments.

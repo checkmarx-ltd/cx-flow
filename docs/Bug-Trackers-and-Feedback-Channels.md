@@ -633,10 +633,11 @@ The file system path and the file naming format are required.
 **[TIMESTAMP]** → Current timestamp (yyyyMMdd.HHmmss format)
 
 ## <a name="email">Email Notifications</a>
-CxFlow works with SMTP and SendGrid to notify users through e-mail. 
+CxFlow works with SMTP and Sendgrid to notify users through e-mail. 
 
 ```yaml
 cx-flow:
+  contact: admin@yourdomain.com
   bug-tracker: Email
   mail:
     host: smtp.gmail.com
@@ -663,7 +664,7 @@ cx-flow:
     notification: true
 ```
 
-If using SendGrid, only the notification field and the API Token are required.
+If using Sendgrid, only the notification field and the API Token are required.
 
 ```yaml
 cx-flow:
@@ -671,6 +672,13 @@ cx-flow:
     notification: true # Required if using SendGrid
     sendgrid:
       api-token: your-sendgrid-token-here
+```
+
+Sendgrid requires a trusted sender. This can be configured at `cx-flow.contact`. Otherwise, `donotreply@checkmarx.com` will be set as default.
+
+```yaml
+cx-flow:
+  contact: emailthatsendgridtrusts@yourdomain.com
 ```
 
 ## <a name="none">NONE | WAIT</a>
