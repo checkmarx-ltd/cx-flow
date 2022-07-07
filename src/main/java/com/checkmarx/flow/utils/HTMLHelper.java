@@ -399,7 +399,7 @@ public class HTMLHelper {
         body.append(String.format(ISSUE_BODY, issue.getVulnerability(), issue.getFilename(), branch)).append(CRLF)
                 .append(CRLF);
         if (!ScanUtils.empty(issue.getDescription())) {
-            body.append("*").append(issue.getDescription().trim()).append("*").append(CRLF).append(CRLF);
+            body.append("*").append(issue.getDescription()).append("*").append(CRLF).append(CRLF);
         }
         if (!ScanUtils.empty(issue.getSeverity())) {
             body.append(SEVERITY).append(": ").append(issue.getSeverity()).append(CRLF).append(CRLF);
