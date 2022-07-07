@@ -113,7 +113,7 @@ public class EmailService {
     }
 
     public void sendScanSubmittedEmail(ScanRequest request) {
-        if (isEmailNotificationAllowed()) {
+        if (!isEmailNotificationAllowed()) {
             log.info("cx-flow.mail.notification not set or set to false. Skipping Scan Submitted e-mail...");
             return;
         }
@@ -130,7 +130,7 @@ public class EmailService {
     }
 
     public void sendScanCompletedEmail(ScanRequest request, ScanResults results) {
-        if (isEmailNotificationAllowed()) {
+        if (!isEmailNotificationAllowed()) {
             log.info("cx-flow.mail.notification not set or set to false. Skipping Scan Completed e-mail...");
             return;
         }
