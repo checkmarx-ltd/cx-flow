@@ -693,6 +693,7 @@ CxFlow uses [Thymeleaf](https://www.thymeleaf.org/) for templating. Templates ca
 If you wish to use your own templates, you can override the following parameters:
 
 ```yaml
+cx-flow:
   mail:
     templates:
       scan-submitted: C:\your\folder\my-scan-submitted-notification.html
