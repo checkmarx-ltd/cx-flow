@@ -408,7 +408,7 @@ public class FlowProperties {
 
         public MailTemplates getTemplates() { return templates; }
 
-        public void setMailTemplates(MailTemplates templates) { this.templates = templates; }
+        public void setTemplates(MailTemplates templates) { this.templates = templates; }
     }
 
     public static class MailTemplates {

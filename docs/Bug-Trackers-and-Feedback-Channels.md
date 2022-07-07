@@ -681,6 +681,35 @@ cx-flow:
   contact: emailthatsendgridtrusts@yourdomain.com
 ```
 
+### E-mail Templates
+
+CxFlow comes with two different e-mail templates, one for each event below:
+
+- Scan submitted to Checkmarx
+- Successfully completed scan, showing results. 
+
+CxFlow uses [Thymeleaf](https://www.thymeleaf.org/) for templating. Templates can be found at `/src/main/resources/templates` folder.
+
+If you wish to use your own templates, you can override the following parameters:
+
+```yaml
+  mail:
+    templates:
+      scan-submitted: C:\your\folder\my-scan-submitted-notification.html
+      scan-completed-successfully: C:\your\folder\custom-scan-report.html
+```
+
+The Scan completed successfully report receives the following objects:
+
+- `repo_fullname`
+- `repo`
+- `link`
+- `issues`
+  - `issue.link`
+  - `issue.severity`
+  - `issue.vulnerability`
+  - `issue.filename`
+
 ## <a name="none">NONE | WAIT</a>
 If you want to trigger scans asynchronously, use **NONE**  
 If you want to trigger scans, but wait for feedback | summary console output, use **WAIT | wait**  
