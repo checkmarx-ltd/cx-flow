@@ -642,7 +642,7 @@ workflows:
           chart: ./helm/cxflow
           namespace: cxflow-${CIRCLE_SHA1::7}
           release-name: cxflow-${CIRCLE_SHA1::7}
-          version: v3.3.4
+          version: v3.2.1
           filters:
             branches:
               only:
@@ -737,7 +737,7 @@ workflows:
           cluster-name: eks-cxflow-ci
           namespace: cxflow-${CIRCLE_SHA1::7}
           release-name: cxflow-${CIRCLE_SHA1::7}
-          version: v3.3.4
+          version: v3.2.1
           filters:
             branches:
               only:
