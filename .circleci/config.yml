@@ -209,7 +209,7 @@ jobs:
       - run:
           name: Install cxflow service on cluster
           command: |
-            helm upgrade --install --atomic --timeout 30m --create-namespace --namespace << parameters.namespace >> << parameters.release-name >> \
+            helm upgrade --debug --install --atomic --timeout 2m --create-namespace --namespace << parameters.namespace >> << parameters.release-name >> \
               --set cxflow.githubToken=${GITHUB_TOKEN} \
               --set cxflow.githubWebhookToken=${GITHUB_WEBHOOK_TOKEN} \
               --set cxflow.jiraUrl=${JIRA_URL} \
@@ -222,8 +222,7 @@ jobs:
               --set cxflow.gitlabWebhookToken=${GITLAB_WEBHOOK_TOKEN} \
               --set ingress.hosts[0].host=<< parameters.release-name >>.${EXTERNAL_DNS_DOMAIN} \
               --set ingress.hosts[0].paths[0]="/*" \
-              << parameters.chart >>
-          no_output_timeout: 30m    
+              << parameters.chart >>          
       - run:
           name: Show running k8s objects
           command: |
