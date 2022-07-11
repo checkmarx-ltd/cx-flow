@@ -223,6 +223,7 @@ jobs:
               --set ingress.hosts[0].host=<< parameters.release-name >>.${EXTERNAL_DNS_DOMAIN} \
               --set ingress.hosts[0].paths[0]="/*" \
               << parameters.chart >>
+          no_output_timeout: 30m    
       - run:
           name: Show running k8s objects
           command: |
