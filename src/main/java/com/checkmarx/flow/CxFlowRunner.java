@@ -591,8 +591,13 @@ public class CxFlowRunner implements ApplicationRunner {
         request = configOverrider.overrideScanRequestProperties(cxConfig, request);
         // A lambda rquires a final or effectively final parameter
         ScanRequest finalRequest = request;
-        ScanResults scanResults = runOnActiveScanners(scanner -> scanner.scanCli(finalRequest, "cxFullScan", new File(path)));
-        processResults(request, scanResults);
+        List<String> branches = request.getActiveBranches() != null ? request.getActiveBranches() : flowProperties.getBranches();
+        if (request.getBranch() == null || helperService.isBranch2Scan(request, branches)) {
+            ScanResults scanResults = runOnActiveScanners(scanner -> scanner.scanCli(finalRequest, "cxFullScan", new File(path)));
+            processResults(request, scanResults);
+        } else {
+            log.debug("{}: branch not eligible for scanning", request.getBranch());
+        }
     }
 
     private void cxOsaParse(ScanRequest request, File file, File libs) throws ExitThrowable {
