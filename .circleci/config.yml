@@ -209,7 +209,7 @@ jobs:
       - run:
           name: Install cxflow service on cluster
           command: |
-            helm upgrade --debug --install --atomic --timeout 2m --create-namespace --namespace << parameters.namespace >> << parameters.release-name >> \
+            helm upgrade --install --timeout 2m --create-namespace --namespace << parameters.namespace >> << parameters.release-name >> \
               --set cxflow.githubToken=${GITHUB_TOKEN} \
               --set cxflow.githubWebhookToken=${GITHUB_WEBHOOK_TOKEN} \
               --set cxflow.jiraUrl=${JIRA_URL} \
