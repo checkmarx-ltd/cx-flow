@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static com.checkmarx.flow.exception.ExitThrowable.exit;
 
@@ -89,7 +90,12 @@ public class CxFlowRunner implements ApplicationRunner {
                 if (args.containsOption("web")) {
                     log.debug("Running web mode");
                 } else {
-                    log.debug("Running cmd mode. Parameters: {}", String.join(" ", args.getSourceArgs()));
+                    List<String> params = Arrays.asList(args.getSourceArgs())
+                            .stream()
+                            .map(s -> s.replaceAll("password=.*", "password={REDACTED}")
+                                    .replaceAll("token=.*", "token={REDACTED}"))
+                            .collect(Collectors.toList());
+                    log.debug("Running cmd mode. Parameters: {}", String.join(" ", params));
                     commandLineRunner(args);
                 }
             } catch (ExitThrowable ee) {
