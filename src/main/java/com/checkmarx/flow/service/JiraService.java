@@ -548,12 +548,12 @@ public class JiraService {
                                 value = location.substring(0,location.length()-1);
                                 break;
                             case "dev-dependency":
-                                log.debug("dev-dependency: {}", issue.getScaDetails().get(0).getVulnerabilityPackage().isDevelopment());
-                                value = String.valueOf(issue.getScaDetails().get(0).getVulnerabilityPackage().isDevelopment()).toUpperCase();
+                                log.debug("dev-dependency: {}", issue.getScaDetails().get(0).getVulnerabilityPackage().isIsDevelopment());
+                                value = String.valueOf(issue.getScaDetails().get(0).getVulnerabilityPackage().isIsDevelopment()).toUpperCase();
                                 break;
                             case "direct-dependency":
-                                log.debug("direct-dependency: {}", issue.getScaDetails().get(0).getVulnerabilityPackage().isDirectDependency());
-                                value = String.valueOf(issue.getScaDetails().get(0).getVulnerabilityPackage().isDirectDependency()).toUpperCase();
+                                log.debug("direct-dependency: {}", issue.getScaDetails().get(0).getVulnerabilityPackage().isIsDirectDependency());
+                                value = String.valueOf(issue.getScaDetails().get(0).getVulnerabilityPackage().isIsDirectDependency()).toUpperCase();
                                 break;
                             case "risk-score":
                                 log.debug("risk score: {}", issue.getScaDetails().get(0).getVulnerabilityPackage().getRiskScore());
@@ -1311,16 +1311,14 @@ public class JiraService {
         List<String> closedIssues = new ArrayList<>();
         String filterScanner = "";
 
-        if(CliMode.SCAN.equals(request.getCliMode())){
-            if (null != results.getScaResults()) {
-                filterScanner=JIRA_ISSUE_LABEL_SCA;
-            }
-            if(null != results.getXIssues()){
-                if(filterScanner.isEmpty()){
-                    filterScanner=JIRA_ISSUE_LABEL_SAST;
-                }else{
-                    filterScanner=filterScanner + "," + JIRA_ISSUE_LABEL_SAST;
-                }
+        if (null != results.getScaResults()) {
+            filterScanner=JIRA_ISSUE_LABEL_SCA;
+        }
+        if(null != results.getXIssues()){
+            if(filterScanner.isEmpty()){
+                filterScanner=JIRA_ISSUE_LABEL_SAST;
+            }else{
+                filterScanner=filterScanner + "," + JIRA_ISSUE_LABEL_SAST;
             }
         }
 
