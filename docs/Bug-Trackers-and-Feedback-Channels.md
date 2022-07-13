@@ -616,10 +616,11 @@ The file system path and the file naming format are required.
 **[TIMESTAMP]** → Current timestamp (yyyyMMdd.HHmmss format)
 
 ## <a name="email">Email Notifications</a>
-CxFlow works with SMTP and SendGrid to notify users through e-mail. 
+CxFlow works with SMTP and Sendgrid to notify users through e-mail. 
 
 ```yaml
 cx-flow:
+  contact: admin@yourdomain.com
   bug-tracker: Email
   mail:
     host: smtp.gmail.com
@@ -646,7 +647,7 @@ cx-flow:
     notification: true
 ```
 
-If using SendGrid, only the notification field and the API Token are required.
+If using Sendgrid, only the notification field and the API Token are required.
 
 ```yaml
 cx-flow:
@@ -655,6 +656,43 @@ cx-flow:
     sendgrid:
       api-token: your-sendgrid-token-here
 ```
+
+Sendgrid requires a trusted sender. This can be configured at `cx-flow.contact`. Otherwise, `donotreply@checkmarx.com` will be set as default.
+
+```yaml
+cx-flow:
+  contact: emailthatsendgridtrusts@yourdomain.com
+```
+
+### E-mail Templates
+
+CxFlow comes with two different e-mail templates, one for each event below:
+
+- Scan submitted to Checkmarx
+- Successfully completed scan, showing results. 
+
+CxFlow uses [Thymeleaf](https://www.thymeleaf.org/) for templating. Templates can be found at `/src/main/resources/templates` folder.
+
+If you wish to use your own templates, you can override the following parameters:
+
+```yaml
+cx-flow:
+  mail:
+    templates:
+      scan-submitted: C:\your\folder\my-scan-submitted-notification.html
+      scan-completed-successfully: C:\your\folder\custom-scan-report.html
+```
+
+The Scan completed successfully report receives the following objects:
+
+- `repo_fullname`
+- `repo`
+- `link`
+- `issues`
+  - `issue.link`
+  - `issue.severity`
+  - `issue.vulnerability`
+  - `issue.filename`
 
 ## <a name="none">NONE | WAIT</a>
 If you want to trigger scans asynchronously, use **NONE**  
