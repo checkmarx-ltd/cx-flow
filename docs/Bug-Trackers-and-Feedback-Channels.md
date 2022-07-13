@@ -7,6 +7,7 @@
   * [Fields](#fields)
   * [Assigning tickets to a user](#assigningTickets)
   * [Configuring the Jira Issue Summary](#issueSummaryFormat)
+  * [Jira Issue Handling](#issueHandling)
 * [Custom Bug trackers](#custom)
 * [Azure DevOps Work Items](#azure)
 * [GitLab Issues](#gitlab)
@@ -271,28 +272,10 @@ When creating a Jira ticket, CxFlow will add a code snippet to the ticket. Somet
       - Use_Of_Hardcoded_Password
 ```
 
-### <a name="issueSummaryFormat">Jira Issue Handling for Scan Mode</a>
-* Jira Issue will be created with Label as SAST scanner and SCA scanner after the scan.
-* Issue will be filtered on the bases of type of scan (SCA or SAST) and issue will be Update/Open/Close for which scan is initiated that project.
-* For scan initiated for both SCA and SAST then issues for both type of scan will be created or updated for that project.If User re-run scan for any one type 
- either SCA or SAST for same project id, then Issue will be updated for that scan type and Issues for other scan type(created before re-run) will 
- not be impacted. 
-
-**Description**
-
-1. Run the SAST and SCA scan the CLI mode.
-```
- $ java -jar .\cx-flow-1.6.29.jar --spring.config.location="application.yml" --scan --f=.\TestProj  --cx-flow.enabled-vulnerability-scanners="sca,sast" --cx-team=CxServer --cx-project=TestProj--app=TestProj --cx-flow.bug-tracker=JIRA --logging.level.com.checkmarx.flow.custom=debug --logging.level.com.checkmarx.flow.service=debug --logging.level.com.checkmarx.flow.utils=debug --logging.level.com.checkmarx.sdk.service=debug
-``` 
-2. Run the SCA or SAST scan from CLI mode.
-```
- $ java -jar .\cx-flow-1.6.29.jar --spring.config.location="application.yml" --scan --f=.\TestProj  --cx-flow.enabled-vulnerability-scanners="sca" --cx-team=CxServer --cx-project=TestProj--app=TestProj --cx-flow.bug-tracker=JIRA --logging.level.com.checkmarx.flow.custom=debug --logging.level.com.checkmarx.flow.service=debug --logging.level.com.checkmarx.flow.utils=debug --logging.level.com.checkmarx.sdk.service=debug
-``` 
-```
- $ java -jar .\cx-flow-1.6.29.jar --spring.config.location="application.yml" --scan --f=.\TestProj  --cx-flow.enabled-vulnerability-scanners="sast" --cx-team=CxServer --cx-project=TestProj--app=TestProj --cx-flow.bug-tracker=JIRA --logging.level.com.checkmarx.flow.custom=debug --logging.level.com.checkmarx.flow.service=debug --logging.level.com.checkmarx.flow.utils=debug --logging.level.com.checkmarx.sdk.service=debug
-``` 
-
-Issue created in Step 1 will not be closed in Sept 2, because issue identified in scan will be compared with issue already in Jira for that Project based on type of Scan (SAST, SCA or both).
+### <a name="issueHandling">Jira Issue Handling</a>
+* Issues in JIRA are tagged with a label of `Scanner` with its value being either `SCA` or `SAST` based on the scanner result for which issue is created.
+* There will be filtering of issues based on the type of scan (SCA or SAST) and issues will be updated/created/closed based on the type of scanner used to initiate the scan for that project. 
+* If a scan is initiated for both SCA and SAST, issues of both the scanner types will be created or updated. Re-running scans for either SCA or SAST for the same project id will update issues for that scanner only. Issues of the other type scanner(created before re-run) will not be affected. 
 
 ## <a name="custom">Custom Bug Trackers</a>
 Refer to the [development section](https://github.com/checkmarx-ltd/cx-flow/wiki/Development) for the implementation approach.
@@ -633,10 +616,11 @@ The file system path and the file naming format are required.
 **[TIMESTAMP]** → Current timestamp (yyyyMMdd.HHmmss format)
 
 ## <a name="email">Email Notifications</a>
-CxFlow works with SMTP and SendGrid to notify users through e-mail. 
+CxFlow works with SMTP and Sendgrid to notify users through e-mail. 
 
 ```yaml
 cx-flow:
+  contact: admin@yourdomain.com
   bug-tracker: Email
   mail:
     host: smtp.gmail.com
@@ -663,7 +647,7 @@ cx-flow:
     notification: true
 ```
 
-If using SendGrid, only the notification field and the API Token are required.
+If using Sendgrid, only the notification field and the API Token are required.
 
 ```yaml
 cx-flow:
@@ -672,6 +656,43 @@ cx-flow:
     sendgrid:
       api-token: your-sendgrid-token-here
 ```
+
+Sendgrid requires a trusted sender. This can be configured at `cx-flow.contact`. Otherwise, `donotreply@checkmarx.com` will be set as default.
+
+```yaml
+cx-flow:
+  contact: emailthatsendgridtrusts@yourdomain.com
+```
+
+### E-mail Templates
+
+CxFlow comes with two different e-mail templates, one for each event below:
+
+- Scan submitted to Checkmarx
+- Successfully completed scan, showing results. 
+
+CxFlow uses [Thymeleaf](https://www.thymeleaf.org/) for templating. Templates can be found at `/src/main/resources/templates` folder.
+
+If you wish to use your own templates, you can override the following parameters:
+
+```yaml
+cx-flow:
+  mail:
+    templates:
+      scan-submitted: C:\your\folder\my-scan-submitted-notification.html
+      scan-completed-successfully: C:\your\folder\custom-scan-report.html
+```
+
+The Scan completed successfully report receives the following objects:
+
+- `repo_fullname`
+- `repo`
+- `link`
+- `issues`
+  - `issue.link`
+  - `issue.severity`
+  - `issue.vulnerability`
+  - `issue.filename`
 
 ## <a name="none">NONE | WAIT</a>
 If you want to trigger scans asynchronously, use **NONE**  

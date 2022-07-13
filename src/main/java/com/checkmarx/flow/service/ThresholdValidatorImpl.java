@@ -12,6 +12,7 @@ import com.checkmarx.sdk.config.ScaConfig;
 import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.sca.SCAResults;
+import com.checkmarx.sdk.dto.sca.report.Package;
 import com.checkmarx.sdk.dto.scansummary.Severity;
 import com.checkmarx.sdk.dto.sca.report.Finding;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -79,6 +80,20 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
     @Override
     public boolean thresholdsExceeded(ScanRequest request, ScanResults results){
         return !isAllowed(results, request);
+    }
+
+    @Override
+    public boolean thresholdsExceededDirectDependency(ScanRequest request, ScanResults results){
+
+
+        if(scaProperties.getFilterdependencytype() == null) return false;
+        if(scaProperties.getFilterdependencytype().toLowerCase(Locale.ROOT).equalsIgnoreCase("direct")){
+            return !isAllowedScaDirectDependency(results, request);
+
+        }else{
+            return false;
+        }
+
     }
 
     @Override
@@ -187,6 +202,74 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
         String policiesViolatedName = violatedPoliciesNames.stream()
                 .collect(Collectors.joining("', '", "'", "'"));
         log.info(policiesViolatedName);
+    }
+
+    private boolean isAllowedScaDirectDependency(ScanResults scanResults, ScanRequest request) {
+        log.debug("Checking if Direct Dependency is allowed.");
+        Map<Severity, Integer> scaThresholdsSeverity = getScaEffectiveThresholdsSeverityDirect(request);
+
+        boolean isAllowedSca;
+        // isPolicyViolated flag gets the top priority whether to the break build or not
+
+        writeMapToLog(scaThresholdsSeverity, "Using CxSCA Direct Dependency thresholds severity");
+        isAllowedSca = !isAnyScaThresholdsExceededForDirectDP(scanResults, scaThresholdsSeverity);
+        logIsAllowed(isAllowedSca);
+
+
+        return isAllowedSca;
+    }
+
+    private Map<Severity, Integer> getScaEffectiveThresholdsSeverityDirect(ScanRequest scanRequest) {
+        Map<Severity, Integer> res;
+
+        if (areScaThresholdsSeverityFromRequestDefined(scanRequest)) {
+            res = scanRequest.getScaConfig().getThresholdsSeverity();
+        } else if(areScaThresholdsSeverityDefined(scanRequest)) {
+        res = scaProperties.getThresholdsSeverity();
+        } else {
+            res = isScaThresholdsScoreDefined(scanRequest)
+                    ? passScaPrForAnyFindings()
+                    : failScaPrIfResultHasAnyFindings();
+        }
+        return res;
+    }
+
+    private static boolean isAnyScaThresholdsExceededForDirectDP(ScanResults scanResults,  Map<Severity, Integer> scaThresholds) {
+        boolean isExceeded = false;
+
+        Map<Severity, Integer> scaFindingsCountsPerSeverity = getScaFindingsCountsPerDirectDependency(scanResults);
+
+        for (Map.Entry<Severity, Integer> entry : scaFindingsCountsPerSeverity.entrySet()) {
+            Severity severity = entry.getKey();
+            Integer thresholdCount = scaThresholds.get(severity);
+            if (thresholdCount == null) {
+                continue;
+            }
+            Integer findingsCount = entry.getValue();
+            if (findingsCount > thresholdCount) {
+                isExceeded = true;
+                logScaThresholdExceedsCounts(true, severity, thresholdCount, findingsCount);
+                // Don't break here, because we want to log validation for all the thresholds.
+            } else {
+                logScaThresholdExceedsCounts(false, severity, thresholdCount, findingsCount);
+            }
+        }
+
+        return isExceeded;
+    }
+
+    private static Map<Severity, Integer> getScaFindingsCountsPerDirectDependency(ScanResults scanResults) {
+        log.debug("Calculating Direct Dependency Values.");
+
+        EnumMap<Severity, Integer> countsSeverityMap = new EnumMap<>(Severity.class);
+
+        countsSeverityMap.put(Severity.HIGH,scanResults.getScaResults().getPackages().stream().filter(o->o.isIsDirectDependency() == true).collect(
+                Collectors.summingInt(Package::getHighVulnerabilityCount)));
+        countsSeverityMap.put(Severity.MEDIUM,scanResults.getScaResults().getPackages().stream().filter(o->o.isIsDirectDependency() == true).collect(
+                Collectors.summingInt(Package::getMediumVulnerabilityCount)));
+        countsSeverityMap.put(Severity.LOW,scanResults.getScaResults().getPackages().stream().filter(o->o.isIsDirectDependency() == true).collect(
+                Collectors.summingInt(Package::getLowVulnerabilityCount)));
+        return countsSeverityMap;
     }
 
     private boolean isAllowedSast(ScanResults scanResults, ScanRequest request) {

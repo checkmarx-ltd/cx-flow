@@ -121,6 +121,9 @@ public class ScanRequest {
     @Getter @Setter
     private CxEmailNotifications emailNotifications;
 
+    @Getter @Setter
+    private String zipExclude;
+
     public ScanRequest(ScanRequest other) {
         this.namespace = other.namespace;
         this.application = other.application;
@@ -166,6 +169,7 @@ public class ScanRequest {
         this.sshKeyIdentifier = other.sshKeyIdentifier;
         this.cliMode = other.cliMode;
         this.emailNotifications = other.emailNotifications;
+        this.zipExclude = other.zipExclude;
     }
 
     public Map<String,String> getAltFields() {
