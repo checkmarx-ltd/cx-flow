@@ -325,6 +325,10 @@ public class CxFlowRunner implements ApplicationRunner {
                 exit(1);
                 break;
             case EMAIL:
+                bugType = BugTracker.Type.EMAIL;
+                bt = BugTracker.builder()
+                        .type(bugType)
+                        .build();
                 break;
             case CUSTOM:
                 log.info("Using custom bean implementation  for bug tracking");
@@ -637,7 +641,11 @@ public class CxFlowRunner implements ApplicationRunner {
         } else {
             log.info("Build succeeded. all checks passed");
         }
-
+        if((flowProperties.getEnabledVulnerabilityScanners().contains("sca") ||
+                flowProperties.getEnabledVulnerabilityScanners().contains("SCA")) && thresholdValidator.thresholdsExceededDirectDependency(request, results)){
+            log.info("Build failed because some direct dependency issues were found.");
+            breakBuildResult = true;
+        }
         return breakBuildResult;
     }
 

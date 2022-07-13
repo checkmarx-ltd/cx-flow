@@ -175,10 +175,23 @@ public class IssueService implements ApplicationContextAware {
                 Issue issue = issueMap.getValue();
                 try {
                     if (!xMap.containsKey(key) && tracker.isIssueOpened(issue, request)) {
-                        /*Close the issue*/
-                        tracker.closeIssue(issue, request);
-                        closedIssues.add(issue.getId());
-                        log.info("Closing issue #{} with key {}", issue.getId(), key);
+                        // According to current issue title creation the SCA issues begins with CX:Title
+                        // and SAST issue title begins with CX Title hence this check works for closing only scanner
+                        // specific issues in bug tracker. If custom label prefix is introduced for any bug tracker then
+                        // this code will have to be updated.
+                        if(results.getScaResults()!= null && key.contains("CX:") ){
+                            /*Close the issue*/
+                            tracker.closeIssue(issue, request);
+                            closedIssues.add(issue.getId());
+                            log.info("Closing issue #{} with key {}", issue.getId(), key);
+                        }
+                        else if(results.getScaResults() == null && key.contains("CX ")) {
+                            /*Close the issue*/
+                            tracker.closeIssue(issue, request);
+                            closedIssues.add(issue.getId());
+                            log.info("Closing issue #{} with key {}", issue.getId(), key);
+                        }
+
                     }
                 } catch (HttpClientErrorException e) {
                     log.error("Error occurred while processing issue with key {}", key, e);

@@ -1,5 +1,6 @@
 * [9.0 Configuration changes](#nine)
 * [CxSAST v9.0 .yml Example File](#ninedotzero)
+* [Postback Mode](#postback)
 * [Checkmarx Application Service Account](#cxserviceaccount)
   * [How to create account in CxSAST](#accountCreation)
   * [Roles required for CxFlow](#rolesForCxFlow)
@@ -173,7 +174,7 @@ jira:
       jira-default-value: XXXXX
 ```
 
-## Post-back Mode
+## <a name="postback">Postback Mode</a>
 
 The default CxFlow mode polls for results until scans are complete, but post-back mode turns the process around and puts CxFlow into an event-drive mode of operation. When using post-back mode a Checkmarx post-back-action will be added to the Checkmarx project and that action will trigger the `/postbackAction` endpoint on CxFlow. The `/postbackAction` endpoint will use information contained in the scan results to resume the results handling process.
 
@@ -227,6 +228,8 @@ Once the inital setup is out of the way you can update your CxFlow application f
     post-action-postback-id: 1
 ```
 If you restart CxFlow post-back-action mode should be enabled.
+
+**Note:** JIRA as a bug-tracker cannot be used when using postback action mode for code scanning.
 
 
 ### <a name="cxserviceaccount">Checkmarx Application Service Account</a>

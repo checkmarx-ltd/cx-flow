@@ -129,49 +129,51 @@ public class ResultsService {
             getCxFields(request, results);
         }
 
-        switch (request.getBugTracker().getType()) {
-            case NONE:
-            case wait:
-            case WAIT:
-                log.info("Issue tracking is turned off");
-                break;
-            case JIRA:
-                handleJiraCase(request, results, scanDetails);
-                log.info("Results Service case JIRA : request =:  {}  results = {}  scanDetails= {}", request.toString(), results.toString(), scanDetails.toString());
-                break;
-            case GITHUBPULL:
-                gitService.processPull(request, results);
-                gitService.endBlockMerge(request, results, scanDetails);
-                break;
-            case GITLABCOMMIT:
-                gitLabService.processCommit(request, results);
-                break;
-            case GITLABMERGE:
-                gitLabService.processMerge(request, results);
-                gitLabService.endBlockMerge(request);
-                break;
-            case BITBUCKETCOMMIT:
-                bbService.processCommit(request, results);
-                break;
-            case BITBUCKETPULL:
-                bbService.processMerge(request, results);
-                break;
-            case BITBUCKETSERVERPULL:
-                bbService.processServerMerge(request, results, scanDetails);
-                bbService.setBuildEndStatus(request, results, scanDetails);
-                break;
-            case ADOPULL:
-                adoService.processPull(request, results);
-                adoService.endBlockMerge(request, results, scanDetails);
-                break;
-            case EMAIL:
-                emailService.handleEmailBugTracker(request, results);
-                break;
-            case CUSTOM:
-                handleCustomIssueTracker(request, results);
-                break;
-            default:
-                log.warn("No valid bug type was provided");
+        if(results.getScaResults() != null || results.getXIssues() != null || results.getAstResults() != null) {
+            switch (request.getBugTracker().getType()) {
+                case NONE:
+                case wait:
+                case WAIT:
+                    log.info("Issue tracking is turned off");
+                    break;
+                case JIRA:
+                    handleJiraCase(request, results, scanDetails);
+                    log.info("Results Service case JIRA : request =:  {}  results = {}  scanDetails= {}", request.toString(), results.toString(), scanDetails.toString());
+                    break;
+                case GITHUBPULL:
+                    gitService.processPull(request, results);
+                    gitService.endBlockMerge(request, results, scanDetails);
+                    break;
+                case GITLABCOMMIT:
+                    gitLabService.processCommit(request, results);
+                    break;
+                case GITLABMERGE:
+                    gitLabService.processMerge(request, results);
+                    gitLabService.endBlockMerge(request);
+                    break;
+                case BITBUCKETCOMMIT:
+                    bbService.processCommit(request, results);
+                    break;
+                case BITBUCKETPULL:
+                    bbService.processMerge(request, results);
+                    break;
+                case BITBUCKETSERVERPULL:
+                    bbService.processServerMerge(request, results, scanDetails);
+                    bbService.setBuildEndStatus(request, results, scanDetails);
+                    break;
+                case ADOPULL:
+                    adoService.processPull(request, results);
+                    adoService.endBlockMerge(request, results, scanDetails);
+                    break;
+                case EMAIL:
+                    emailService.handleEmailBugTracker(request, results);
+                    break;
+                case CUSTOM:
+                    handleCustomIssueTracker(request, results);
+                    break;
+                default:
+                    log.warn("No valid bug type was provided");
+            }
         }
         if (results != null && results.getScanSummary() != null) {
             log.info("####Checkmarx Scan Results Summary####");

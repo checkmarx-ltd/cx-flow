@@ -29,9 +29,10 @@ Example Config As Code:
       "application": "test app",
       "branches": ["develop", "main", "master"],
       "emails": ["xxxx@checkmarx.com"],
-      "bugTracker": "JIRA", // other possible values: "GitLab", "GitHub", "Azure"
-      "scanResubmit": "true", // values: "true" or "false"
-      "sshKeyIdentifier": "Key of the ssh-key-list parameter present in application.yml file."
+      "bugTracker": "JIRA", // other possible values: "GitLab", "GitHub", "Azure",
+      "scanResubmit": "true", // values: "true" or "false",
+      "sshKeyIdentifier": "Key of the ssh-key-list parameter present in application.yml file.",
+      "zipExclude": ".git/.*, src/test/.*, target/.*",
       "jira": {
         "project": "APPSEC",
         "issue_type": "Bug",

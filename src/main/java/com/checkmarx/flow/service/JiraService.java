@@ -1311,16 +1311,14 @@ public class JiraService {
         List<String> closedIssues = new ArrayList<>();
         String filterScanner = "";
 
-        if(CliMode.SCAN.equals(request.getCliMode())){
-            if (null != results.getScaResults()) {
-                filterScanner=JIRA_ISSUE_LABEL_SCA;
-            }
-            if(null != results.getXIssues()){
-                if(filterScanner.isEmpty()){
-                    filterScanner=JIRA_ISSUE_LABEL_SAST;
-                }else{
-                    filterScanner=filterScanner + "," + JIRA_ISSUE_LABEL_SAST;
-                }
+        if (null != results.getScaResults()) {
+            filterScanner=JIRA_ISSUE_LABEL_SCA;
+        }
+        if(null != results.getXIssues()){
+            if(filterScanner.isEmpty()){
+                filterScanner=JIRA_ISSUE_LABEL_SAST;
+            }else{
+                filterScanner=filterScanner + "," + JIRA_ISSUE_LABEL_SAST;
             }
         }
 

@@ -36,6 +36,8 @@ public class FlowOverride {
     public List<String> vulnerabilityScanners = null;
     @JsonProperty("sshKeyIdentifier")
     public String sshKeyIdentifier;
+    @JsonProperty("zipExclude")
+    public String zipExclude;
     
     public FlowOverride() {
     }
@@ -116,8 +118,20 @@ public class FlowOverride {
         return sshKeyIdentifier;
     }
 
+    public void setZipExclude(String zipExclude) { this.zipExclude = zipExclude; }
+
+    public String getZipExclude() { return zipExclude; }
+
     public String toString() {
-        return "FlowOverride(application=" + this.getApplication() + ", branches=" + this.getBranches() + " emails=" + this.getEmails() + ", jira=" + this.getJira() + ", filters=" + this.getFilters() + "thresholds=" + this.getThresholds() + ", sshKeyIdentifier=" + this.getSshKeyIdentifier() +")";
+        return "FlowOverride(application=" + this.getApplication() +
+                ", branches=" + this.getBranches() +
+                ", emails=" + this.getEmails() +
+                ", jira=" + this.getJira() +
+                ", filters=" + this.getFilters() +
+                ", thresholds=" + this.getThresholds() +
+                ", sshKeyIdentifier=" + this.getSshKeyIdentifier() +
+                ", zipExclude=" + this.getZipExclude() +
+                ")";
     }
 
 
