@@ -89,6 +89,9 @@ public class GitLabIssueTracker implements IssueTracker {
             String lastProjectId="0";
             while(true){
                 JSONArray candidateProjects = getProjectSearchResults(request,lastProjectId);
+
+                if(candidateProjects==null) return projectId;
+
                 int length=candidateProjects.length();
                 if(length>=100)
                 lastProjectId= String.valueOf((((JSONObject) candidateProjects.get(99)).getInt("id")));
