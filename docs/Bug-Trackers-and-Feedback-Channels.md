@@ -1,5 +1,8 @@
 * [Understanding the Data](#data)
 * [Understanding the result summary](#resultSummary)
+* [Understanding issue creation process](#issuecreation)
+  * [Issue creation for all bug trackers except JIRA](#forallbt)
+  * [Issue creation when bug tracker is JIRA](#forjirabt)
 * [Jira](#jira)
   * [Label Prefix](#labelPrefix)
   * [Priorities](#priorities)
@@ -59,6 +62,17 @@ Issues **[1]**, and **[5]** are clubbed as the category of the issue and the fil
 Since the issues are clubbed, the total count of **12 Medium issues** is now converted to **8 Medium issues**.
 [[/Images/CxSAST_Result_Summary.PNG|CxSAST Result Summary]]
 In the above image the vulnerability count in **Cx-SAST Summary** and **Violation Summary** is different because **Violation Summary** displays all the clubbed and then filtered vulnerabilities count, while **Cx-SAST Summary** (and **Cx-SCA Summary**) displays all the vulnerabilities present in a project.
+
+## <a name="issuecreation">Understanding issue creation process</a>
+### <a name="forallbt">Issue creation for all bug trackers except JIRA</a>
+* Initially if a project is scanned with both the scanners enabled(CxSAST and CxSCA), then based on their results issues will be generated in the configured bug-tracker. 
+* Issues are created with a prefix(`CX ` for CxSAST and `CX:` for CxSCA) to differentiate the issues of scanners. 
+* Now a subsequent scan is done on the same project with only one scanner enabled, then based on the results only those issues will be updated, closed or reopened which contains the prefix for the configured scanner. Issues which do not contain scanner specific prefix will not be touched(updated/closed/reopened).
+
+### <a name="forjirabt">Issue creation when bug tracker is JIRA</a>
+* In case of JIRA as a bug tracker, issues created for results of any scanner also contain the prefix like other scanners but this prefix is configurable in JIRA, hence to differentiate results of scanners, a label of scanner with the scanner name is added. example `Scanner:SCA`, `Scanner:SAST`. 
+* If both the scanners are enabled to scan a project then issues in JIRA will be created based on the results of the scanner and the issues will be labelled with the scanner name. 
+* Now any subsequent scan is done on the same project with only one scanner enabled, only those issues will be updated,closed or reopened for which the label `Scanner:` matches with the scanner configured in cxflow during scan.
 
 ## <a name="jira">Jira</a>
 Jira has the most complex configuration use case as it supports a variety of custom fields, custom workflows and custom transitions.
