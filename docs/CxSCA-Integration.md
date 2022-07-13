@@ -274,7 +274,8 @@ In order to open SCA security tickets, set the bug tracker in CxFlow app.yml fil
   * --scan --app=MyApp --cx-team="my-team" --cx-project="project" --f="/Users/myProjects/project"
 * get latest scan results:
   * --project --app=MyApp --cx-team="my-team" --cx-project="project"
-
+*EnabledZipScan:
+  * CxFlow will locally clone the repository and zip it and send the zip file for scanning.
 ```
 enabled-zip-scan: true
 ```
