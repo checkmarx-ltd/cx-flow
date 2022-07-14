@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
-    <include resource="org/springframework/boot/logging/logback/base.xml"/>
     <include resource="org/springframework/boot/logging/logback/defaults.xml" />
+    <!-- As we no longer include the Spring Boot base.xml, declare this property here. -->
+    <property name="LOG_FILE" value="${LOG_FILE:-${LOG_PATH:-${LOG_TEMP:-${java.io.tmpdir:-/tmp}}}/spring.log}"/>
     <appender name="json" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <File>${LOG_PATH:-${java.io.tmpdir:-c:/temp}}/CxFlowReport.json</File>
         <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
@@ -29,14 +30,82 @@
             </fieldNames>
         </encoder>
     </appender>
+
+    <appender name="maskConsole" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <charset>${CONSOLE_LOG_CHARSET}</charset>
+            <layout class="com.checkmarx.flow.utils.MaskingPatternLayout">
+                <!--
+                    Each mask pattern is a regular expression (see
+                    https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
+                    
+                    The regular expression should contain a group which contains the item
+                    to be masked. Surrounding parts of the regular expression provide the
+                    context of the item to be masked.
+
+                    For example. the following maskPattern
+
+                        token=(.+?)\s
+
+                    will mask any text between "token=" and the next whitespace character.
+                -->
+                <!-- For logging command line arguments -->
+                <maskPattern>[^&amp;]password=(.+?)\s</maskPattern>
+                <!-- For logging the token request (if logging HTTP requests) -->
+                <maskPattern>&amp;password=(.+?)&amp;</maskPattern>
+                <maskPattern>token=(.+?)\s</maskPattern>
+                <maskPattern>"access_token":"([^"]+)"</maskPattern>
+                <maskPattern>Authorization: Bearer (.+)</maskPattern>
+                <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            </layout>
+        </encoder>
+    </appender>
+
+    <appender name="maskFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <charset>${FILE_LOG_CHARSET}</charset>
+            <layout class="com.checkmarx.flow.utils.MaskingPatternLayout">
+                <!--
+                    Each mask pattern is a regular expression (see
+                    https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
+                    
+                    The regular expression should contain a group which contains the item
+                    to be masked. Surrounding parts of the regular expression provide the
+                    context of the item to be masked.
+
+                    For example. the following maskPattern
+
+                        token=(.+?)\s
+
+                    will mask any text between "token=" and the next whitespace character.
+                -->
+                <!-- For logging command line arguments -->
+                <maskPattern>[^&amp;]password=(.+?)\s</maskPattern>
+                <!-- For logging the token request (if logging HTTP requests) -->
+                <maskPattern>&amp;password=(.+?)&amp;</maskPattern>
+                <maskPattern>token=(.+?)\s</maskPattern>
+                <maskPattern>"access_token":"([^"]+)"</maskPattern>
+                <maskPattern>Authorization: Bearer (.+)</maskPattern>
+                <pattern>${FILE_LOG_PATTERN}</pattern>
+            </layout>
+        </encoder>
+        <file>${LOG_FILE}</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOGBACK_ROLLINGPOLICY_FILE_NAME_PATTERN:-${LOG_FILE}.%d{yyyy-MM-dd}.%i.gz}</fileNamePattern>
+            <cleanHistoryOnStart>${LOGBACK_ROLLINGPOLICY_CLEAN_HISTORY_ON_START:-false}</cleanHistoryOnStart>
+            <maxFileSize>${LOGBACK_ROLLINGPOLICY_MAX_FILE_SIZE:-10MB}</maxFileSize>
+            <totalSizeCap>${LOGBACK_ROLLINGPOLICY_TOTAL_SIZE_CAP:-0}</totalSizeCap>
+            <maxHistory>${LOGBACK_ROLLINGPOLICY_MAX_HISTORY:-7}</maxHistory>
+        </rollingPolicy>
+    </appender>
     
     <logger name="jsonLogger" level="INFO">
         <appender-ref ref="json" />
     </logger>
     
-    <logger name="defaultSpringBoot" level="WARN" additivity="false">
-    <appender-ref ref="CONSOLE"/>
-    <appender-ref ref="FILE"/>
-    </logger>
+    <root level="INFO">
+        <appender-ref ref="maskConsole"/>
+        <appender-ref ref="maskFile"/>
+    </root>
 
 </configuration>
