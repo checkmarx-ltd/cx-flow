@@ -148,7 +148,7 @@ ast:
 jira:
   url: https://cxflowuser.atlassian.net
   username: Hussain.saifuddin@checkmarx.com
-  token: JAYmPFQ5EOM88ngC6I7o7CFA
+  token: aXQ7uRbhL8vPasGmgLYt8F3F
   project: NT
   issue-type: Bug
   priorities:
