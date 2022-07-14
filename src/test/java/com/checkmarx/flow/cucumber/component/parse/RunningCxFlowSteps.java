@@ -46,6 +46,7 @@ public class RunningCxFlowSteps {
     @When("parsing each of these inputs")
     public void parsingEachOfTheseResults() throws IOException {
         for (String baseFilename : testContext.getBaseFilenames()) {
+
             String inputFilename = String.format("%s.%s", baseFilename, TestContext.SAST_RESULT_EXTENSION);
             String outputFilename = String.format("%s.%s", baseFilename, TestContext.CXFLOW_REPORT_EXTENSION);
             runCxFlow(inputFilename, outputFilename, null);

@@ -1,15 +1,32 @@
 server:
-  port: ${PORT:8585}
+  port: 8089
+
+#management:
+#  endpoint:
+#    shutdown:
+#      enabled: true
+#    beans:
+#      enabled: true
+#    env:
+#      enabled: true
+#  endpoints:
+#    web:
+#      exposure:
+#        include: "shutdown,beans,env,info,health"
 
 logging:
+  pattern:
+    console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{15}){cyan}  [%clr(%X{cx}){blue}] %clr(:){faint} %replace(%m){'([\\|])','\\$1'}%n%wEx"
+    file: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{15}){cyan}  [%clr(%X{cx}){blue}] %clr(:){faint} %replace(%m){'([\\|])','\\$1'}%n%wEx"
   file:
     name: cx-flow.log
-    path: c:/temp/
+
 #  level:
 #    com:
 #      checkmarx:
 #        flow:
-#          service: TRACE
+#          service: info
+#          utils: info
 #    org:
 #      apache:
 #        http:
@@ -24,6 +41,7 @@ cx-flow:
   token: xxxx
   bug-tracker: Json
   bug-tracker-impl:
+    - None
     - CxXml
     - Json
     - JIRA
@@ -31,75 +49,157 @@ cx-flow:
     - GitHub
     - Csv
     - Azure
+    - Rally
     - ServiceNow
+    - Sarif
   branches:
     - develop
     - master
     - security
+    - main
+    - test
+    - dev
   filter-severity:
     - High
+    - Medium
+  #  - Low
+  #  - Information
+  filter-category:
+  filter-cwe:
+  filter-status:
+  filter-state:
   enabled-vulnerability-scanners:
-    - sast
+  #  - sca
+      - sast
+  #  - ast
+  #  - cxgo
+  # track-application-only: false
   mitre-url: https://cwe.mitre.org/data/definitions/%s.html
-  wiki-url: https://checkmarx.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
   codebash-url: https://cxa.codebashing.com/courses/
-  auto-profile: false
   thresholds:
-    high: 1
-    medium: 2
-    low: 3
-  #branch-script: D:\\tmp\Branch.groovy
-  #zip-exclude: .*.json$, bin\/.*
-
+    high: 8
+    medium: 10
+    low: 60
+  #  break-build: true
+  #  wiki-url: https://custodela.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
+  #  codebash-url: https://cxa.codebashing.com/courses/
+  #  mail:
+  #    host: smtp.gmail.com
+  #    port: 587
+  #    username: xxx
+  #    password: xxx
+  #    enabled:
 
 checkmarx:
-  username: xxx
-  password: xxx
+  version: 9.2
+  username: admin@cx
+  password: Cx123456!
   client-secret: 014DF517-39D1-4453-B7B3-9930C563627C
-  base-url: http://localhost:8100
-  url: ${checkmarx.base-url}/cxrestapi
+  scope: access_control_api sast_rest_api
+  base-url: http://10.32.3.126
   multi-tenant: true
-  incremental: true
-  scan-preset: Checkmarx Default
   configuration: Default Configuration
-  team: \CxServer\SP\Checkmarx
-  scan-timeout: 120
+  scan-preset: Checkmarx Default
+  team: /CxServer
+  url: ${checkmarx.base-url}/cxrestapi
+  #preserve-xml: true
+  #incremental: true
   #WSDL Config
   portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
-  sdk-url: ${checkmarx.base-url}/cxwebinterface/SDK/CxSDKWebService.asmx
-  portal-wsdl: ${checkmarx.base-url}/Portal/CxWebService.asmx?wsdl
-  sdk-wsdl: ${checkmarx.base-url}/SDK/CxSDKWebService.asmx?wsdl
-  portal-package: checkmarx.wsdl.portal
-  preserve-xml: false
-  jira-project-field:
-  jira-custom-field:
-  jira-issuetype-field:
-  jira-assignee-field:
-  #project-script:
   #team-script:
-  #exclude-files:
-  #exclude-folders:
+  #project-script:
 
 sca:
-  appUrl: https://xxxxx
-  apiUrl: https://xxxxx
-  accessControlUrl: https://xxxxx
-  tenant: xxxxx
-  username: xxxxx
-  password: xxxxx
+  #  appUrl: https://eu.sca.checkmarx.net
+  #  apiUrl: https://eu.api-sca.checkmarx.net
+  #  accessControlUrl: https://eu.platform.checkmarx.net
+  #  tenant: Cxsca-Checkmarx
+  #  username: integrationsbuild@checkmarx.com
+  #  password: CxIntegrations@1244!
+  appUrl: https://sca.scacheckmarx.com
+  apiUrl: https://api-sca.checkmarx.net
+  accessControlUrl: https://platform.checkmarx.net
+  tenant: cxflow
+  username: admin
+  password: CxflowTeam12!
+  #  team: /CxServer/MyTeam/My-New-Team
+  filter-severity:
+    - High
+    - medium
+    - low
+  #    filter-score: 8.0
+  thresholds-severity:
+    high: 0
+    medium: 10
+    low: 10
+  #  thresholds-score: 9.8
+  #  includeSources: false
+#  enabledZipScan: true
 
 ast:
-  apiUrl: http://xxxxx
+  apiUrl: http://ast.cxflow-ci.com/
   webAppUrl: ${ast.apiUrl}
-  clientId: xxxxx
-  clientSecret: xxxxx
+  client-secret: 278d6d0b-f821-49f5-9b4c-20f1fb1eb558
+  #  token: eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJuZTh2TDRBWXNqd1hxRndGMkduWHJYRWFTaEVBVGUxOVZMRUFEUTJQNVpFIn0.eyJleHAiOjE1OTk1NTEyMzYsImlhdCI6MTU5OTU0OTQzNiwiYXV0aF90aW1lIjoxNTk5NTQ5NDMyLCJqdGkiOiI5YjBkNDk0ZS1kM2QxLTQ3MDMtOWRkYi1jYjQ1MGNjYjliMTIiLCJpc3MiOiJodHRwOi8vMTAuMzIuNC4zMy9hdXRoL3JlYWxtcy9vcmdhbml6YXRpb24iLCJhdWQiOlsicmVhbG0tbWFuYWdlbWVudCIsImFjY291bnQiXSwic3ViIjoiMTg4MzE1MWUtNzI5Yi00MTQ4LThjYmUtYzcxOTUwMWEzNDRkIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoiYXN0LWFwcCIsIm5vbmNlIjoiODBiMTRkYjctMzY2MS00OTFiLThkYmMtN2RmYTRiN2M1YzQ1Iiwic2Vzc2lvbl9zdGF0ZSI6IjVhNDNmMDQyLTJmOGEtNDlmMy05MDAwLTMwNWJkM2RjMTUyZiIsImFjciI6IjAiLCJhbGxvd2VkLW9yaWdpbnMiOlsiKiJdLCJzY29wZSI6Im9wZW5pZCBpYW0tYXBpIHByb2ZpbGUgZW1haWwgYXN0LWFwaSBncm91cHMgcm9sZXMiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsInJvbGVzIjpbIm9mZmxpbmVfYWNjZXNzIiwidW1hX2F1dGhvcml6YXRpb24iLCJ1c2VyIiwiaWFtLWFkbWluIl0sInJvbGVzX2FzdCI6WyJjcmVhdGUtcHJvamVjdCIsInZpZXctcHJvamVjdHMiLCJ1cGRhdGUtcmVzdWx0IiwiZGVsZXRlLWFwcGxpY2F0aW9uIiwidmlldy1hcHBsaWNhdGlvbnMiLCJ1cGRhdGUtYXBwbGljYXRpb24iLCJ2aWV3LXF1ZXJpZXMiLCJ1cGRhdGUtc2NhbiIsImNyZWF0ZS1hcHBsaWNhdGlvbiIsInZpZXctcmVzdWx0cyIsImRlbGV0ZS1xdWVyeSIsInVwZGF0ZS1xdWVyeSIsImRlbGV0ZS1wcm9qZWN0Iiwidmlldy1zY2FucyIsImFzdC1hZG1pbiIsImNyZWF0ZS1zY2FuIiwidXBkYXRlLXByb2plY3QiLCJkZWxldGUtc2NhbiIsImNyZWF0ZS1xdWVyeSIsInZpZXctZW5naW5l4oCLcyJdLCJncm91cHMiOltdLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJvcmdfYWRtaW4ifQ.WKsPz1Ou5bFwvZCqdHjkmLHcMwCFxVZIEHmGX9zlJdRbswA1saJOevCVaqBHNj92rKMpehPWfGQMo-HvZQ5fR6u5uXXhK2ki0CO6-ykjmkeiuo91sERIcg07loNz_vBoLnRhTidq15Ej9gutpEyZnMn5aV5djoXePba83OR6YgL9oYS-Qh9Z1zJKKHsLDV-XSlowsKb_Unv1iZmfbHrCwTcVUWaR2lZJr5TfX4HKuquoWQeNYr2vCAdi8w3faslHPOa5CuCMFT7p95ieKSS0RYR1tGhLiO4aQJbSp866mtJTmGq5WceFWh8v0qUZEQukWoTEQNlHMz2NcduRZkszvA
   preset: Checkmarx Default
   incremental: false
+  clientId: CxFlow
+
+jira:
+  url: https://cxflowuser.atlassian.net
+  username: Hussain.saifuddin@checkmarx.com
+  token: JAYmPFQ5EOM88ngC6I7o7CFA
+  project: NT
+  issue-type: Bug
+  priorities:
+    High: High
+    Medium: Medium
+    Low: Low
+  open-transition: Reopen Issue
+  close-transition: Done
+  open-status: # This will differ from project to project need to comfirm from project lead
+    - TO DO
+    - IN PROGRESS
+    - IN REVIEW
+  closed-status:
+    - DONE
+# project-key-script:
+#  open-status:
+#    - Open
+#    - In Progress
+#    - Reopened
+#  closed-status:
+#    - Closed
+#    - Resolved
+#  status-category-open-name:
+#    - To Do
+#    - In Progress
+#  statusCategoryClosedName:
+#    - Done
+#  fields:
+
+iast:
+  url: http://xxxxx.iast.net
+  # ssl-certificate-file-path: "/tmp/iast/certificate.cer"
+  manager-port: 8380
+  username: xxxx
+  password: xxxx
+  update-token-seconds: 250  # seconds. By default token live only 5 minutes
+  filter-severity:
+    - HIGH
+    - MEDIUM
+    - LOW
+  #    - INFO
+  thresholds-severity:
+    HIGH: -1
+    MEDIUM: -1
+    LOW: -1
+    INFO: -1
 
 cxgo:
-  client-secret: xxx
-  base-url: https://url
-  portal-url: https://url
+  client-secret: eyJjdHkiOiJKV1QiLCJlbmMiOiJBMjU2R0NNIiwiYWxnIjoiUlNBLU9BRVAifQ.KEpc71PrAtPL2tuul6mAeP3EsmMjgabi4-h2bYlBMVch2daaDn-Pd7PusjNhLK5-Abm-jRGIwUJloeCaJxz_ShEzKYyiLLaYXGvGpnfaL0pD6eZza5ZS8zEiwX_Qfw3SuraGrT03qfZgPPA-6jSymmgMKNrHEi5Sdlf1JeV_g1LF1NxKgv80eH5dsrfz2vfLSOzsPeKn99J2-FhagtP8R2RZw7sE9s3CJ75YzzGE7s37iQHDBmEcywEH3H_xM7AuWya750KbFnddAB8uGbgvYpSnBsGZ7EWmviHjqHndZhhovBmcbGKr0MB-_CudRjHScrlUfdlQigByZA9NvK-NQw.pbdc4o13a-iuXZxB.8RAoJ_rfrxJ75gcLqcaVgWkcm1Q-iWnQIYjfGltLFB4wSvtJEBohProPobls2zsf-Xjg8TFnIRGu8V4GvrV8rv3o8PpXVX0dlc_iJ0ddVde6NYIJgdoqT9j2IezFQyXWbWbSCXCv0OxitUd0HD9SKC3OP7ut5-X4Ds-grF5n9zByUu67ZImO-XxK2DQ9IgbjQJchfL4XuV6hdVr7ck8c0EvAChuLG5JJikQd4MavNgPhxDJcu1zo9dOuqkJjqU9SFTw4crfLZgchA3wycJLZkw097QKxkfaVriRofgL2G2twpy8xNvPrcJ3_yP2ev-nLjRr2F7h3ouHyHaDiQzh-EA99_jKPmw1JtZ-E5D4zNkfbxIO4Q2ivaOwnvYDNMiuiw7cuZ_n14mk-gW1Rg4Go1cUBnxSMpU-ub71SV_2oq_p7w3W_sIWje4dS13UQFWQzsIUFSnlIuu3wxdI6O-EztwqfOCluJ5ChEFbLe3t36EjhRHVqFOMev9EVd5NudIMpZv7r_eCRxzbsDE4TKyzsWGYZyTc14o7l7NBv254w71ZGi19DAc8HQ133b_1FkBypkrlNupw-5f8KcPg86irg5RTBKtEIGjySOpy8gh92_FSWAKLtT1Asz3v-Yu_aL6HuQN06-lxhgCNoc2d-RLbFsbA6SCv-Ltgrc6adcI351Yy2v0WJgu_BSWFqkLUD3VsQ9JA0LURzmp594pHnfDIlALQsj-82HmzhngwQgtmsIv-FtzcEMWoXrKGmZyAZpaaHuGpfqWyA_eJ7CyvWWG58ZNOJ1BQRdhJqOaDJgqh-XXy-eljDzYDD2cI8jQUpFWgKjNL_H6gPIZlf-tMxgig13rVNlkRkDVCUrzcFuSRV6PXRsrBt8X97i6KHb7QyydjTIfJF3XhpgycO96dhY2yNqf3ntpNtIcIvNszoe-7AY_9NtxBN7xzx_PVSWoxhhbPTknqW6IJtVqwng6j2qDdfEFSZqaXFr7DCfEZpZwlWY4GTZ-nsSoGR0NVBf8iXTcQLfbZRc9PGzCRGT1zGK2KpQxxNDAQqbTWN8qmeIstRFJv6Mqs3TOCVXN-9kdTa4SF8SxfysjQq_bPv5hBe471o339tAYYnwqAe1O9jXtb2Tu3yWa-xLTRrV-a80yqEhlgVZnJ_9IIhRdwnIZjUtp2vRbEFveD5EOaQTJIFJk9HKECfR_Xaa40l4XSZXtH-fcvXBX-JDS6zWUKihl3vsyq996s_rXU6W-vIG0vD0G0ucIFlM6YOIN9jeUqM6WQLymsOz8BUtlrTjlohMQ.yfSMVrkOE58m64MX2-hn1A:4tl0s1cv4mupv4731dgv4jn995
+  base-url: https://api.checkmarx.net
+  portal-url: https://cloud.checkmarx.net
   # CxOD Business unit that will contain the project/application/scan
   team: \Demo\CxFlow
   url: ${cxgo.base-url}
@@ -122,111 +222,19 @@ cxgo:
   #   - CXOD_OTHER = 12;
   scan-preset: 1,2,3,4,5,9
 
-jira:
-  url: http://localhost:8080
-  username: xxxx
+cx-integrations:
+  url: https://61188f8788a6.ngrok.io
+  read-multi-tenant-configuration: false
+
+rally:
   token: xxxx
-  project: APPSEC
-  issue-type: Bug
-  priorities:
-    High: High
-    Medium: Medium
-    Low: Low
-    Informational: Lowest
-  open-transition: In Progress
-  close-transition: Done
-  # project-key-script:
-  #  open-status:
-  #    - To Do
-  #    - In Progress
-  #  closed-status:
-  #    - DONE
-  #  status-category-open-name:
-  #    - To Do
-  #    - In Progress
-  # status-category-closed-name:
-  #  - Done
-
-  fields:
-    - type: result
-      name: system-date
-      skip-update: true
-      offset: 60
-      jira-field-name: Due Date #Due date (cloud)
-      jira-field-type: text
-    - type: result
-      name: application
-      jira-field-name: Application
-      jira-field-type: label
-    - type: result
-      name: category
-      jira-field-name: Category
-      jira-field-type: label
-    - type: result
-      name: cwe
-      jira-field-name: CWEs
-      jira-field-type: label
-    - type: result
-      name: severity
-      jira-field-name: Severity
-      jira-field-type: single-select
-    - type: result
-      name: loc
-      jira-field-name: Line Numbers
-      jira-field-type: label
-    - type: static
-      name: identified-by
-      jira-field-name: Identified By
-      jira-field-type: single-select
-      jira-default-value: Automation
-    - type: static
-      name: dependencies
-      jira-field-name: Dependencies
-      jira-field-type: multi-select
-      jira-default-value: Java, AngularJS
-  #issue-prefix: "<PREFIX>-"
-  #issue-postfix: "-<POSTFIX>"
-  #description-prefix: "<PRE>-"
-  #description-postfix: "<POST>-"
-
-iast:
-  url: http://xxxxx.iast.net
-  # ssl-certificate-file-path: "/tmp/iast/certificate.cer"
-  manager-port: 8380
-  username: xxxx
-  password: xxxx
-  update-token-seconds: 250  # seconds. By default token live only 5 minutes
-  filter-severity:
-    - HIGH
-    - MEDIUM
-    - LOW
-  #    - INFO
-  thresholds-severity:
-    HIGH: -1
-    MEDIUM: -1
-    LOW: -1
-    INFO: -1
-
-github:
-  webhook-token: 1234
-  token: xxxx
-  url: https://github.com
-  api-url: https://api.github.com/repos/
-  block-merge: true
-  error-merge: true
-  cx-summary: true
-  # null value prevents CxFlow from trying to download config override from GitHub.
-  # Added to get more stable results for "high load" scenario in webhook feature.
-  config-as-code: null
-
-gitlab:
-  webhook-token: 1234
-  url: https://gitlab.com
-  api-url: https://gitlab.com/api/v4/
-  block-merge: true
+  rally-project-id: xxxx
+  rally-workspace-id: xxxx
+  url: https://rallydev.com
+  api-url: https://rally1.rallydev.com/slm/webservice/v2.0
 
 servicenow:
-  token: xxxx
+  token: 123
   servicenow-project-id: xxxx
   servicenow-workspace-id: xxxx
   url: https://servicenow.com
@@ -234,65 +242,106 @@ servicenow:
   username: xxxx
   password: xxxx
 
+github:
+  webhook-token: 1234
+  token: 471c9f8f7a0416c65f66a950ece53d03f9e37117
+  url: https://github.com
+  api-url: https://api.github.com/repos/
+  false-positive-label: false-positive
+  block-merge: true
+  config-as-code:
+  error-merge: true
+  cx-summary: false
+  flow-summary: true
+
+  optional-instances:
+    instance1:
+      webhook-token: 1234
+      token: 471c9f8f7a0416c65f66a950ece53d03f9e37117
+      url: https://github.com
+      api-url: https://api.github.com/repos/
+
+    instance2:
+      webhook-token: 123456
+      token: fcdd4f71c1afe6a85e78c82e9c64355b435df28e
+      url: https://github.com
+      api-url: https://api.github.com/repos/
+
+gitlab:
+  webhook-token: 1234
+  token: zsqttn5Wbybzjc4AKTVx
+  url: https://gitlab.com
+  api-url: https://gitlab.com/api/v4/
+  false-positive-label: false-positive
+  block-merge: true
+
+#  optional-instances:
+#    instance1:
+#      webhook-token: 1234
+#      token: 471c9f8f7a0416c65f66a950ece53d03f9e37117
+#      url: https://github.com
+#      api-url: https://api.github.com/repos/
+
+azure:
+  webhook-token: cxflow:1234
+  token: 7anak3k2ukxda7obvvtqmdx47hjnivv5gqjlwb64jh472yqrbgnq
+  #  w4onlrd2ofgfoywtpxpnpcfmfn7ilrhp732i2j7pb4fbvf7ennla
+  url: https://dev.azure.com/
+  issue-type: issue
+  api-version: 5.0
+  false-positive-label: false-positive
+  open-status: To Do
+  closed-status: Done
+  project-name: Test-Project2
+  namespace: NimrodGolan
+  block-merge: false
+
 bitbucket:
   webhook-token: 1234
-  token: xxx
+  token: nimrodGolan:3NZMY7b7Ypwyvge5vQrK
   url: https://api.bitbucket.org
   api-path: /2.0
   false-positive-label: false-positive
 
-azure:
-  webhook-token: cxflow:1234
-  token: xxxx
-  url: https://dev.azure.com/
-  issue-type: issue
-  # This version corresponds to TFS 2018 Update 2 and higher (including cloud)
-  # For details, see https://docs.microsoft.com/en-us/rest/api/azure/devops/?view=azure-devops-rest-5.1#api-and-tfs-version-mapping
-  api-version: 4.1
-  false-positive-label: false-positive
-  block-merge: true
-  closed-status: Closed
-  open-status: Active
-
 json:
-  file-name-format: "[NAMESPACE]-[REPO]-[BRANCH]-[TIME].json"
-  data-folder: "C:\\tmp"
+  file-name-format: "[TEAM]-[PROJECT]-[TIME].json"
+  data-folder: "C:\\Users\\nimrodg\\Desktop\\temp-local-files"
 
 cx-xml:
-  file-name-format: "[NAMESPACE]-[REPO]-[BRANCH]-[TIME].xml"
-  data-folder: "C:\\tmp"
+  file-name-format: "[TEAM]-[PROJECT]-[TIME].xml"
+  data-folder: "C:\\Users\\nimrodg\\Desktop\\temp-local-files"
 
 csv:
   file-name-format: "[TEAM]-[PROJECT]-[TIME].csv"
-  data-folder: "C:\\tmp"
+  data-folder: "C:\\Users\\nimrodg\\Desktop\\temp-local-files"
   include-header: true
   fields:
-    - header: Customer field (Application)
+    - header: Application
       name: application
-      default-value: unknown
-    - header: Primary URL
-      name: static
-      default-value: ABC
-    - header: severity
-      name: severity
-    - header: Vulnerability ID
-      name: summary
-      prefix: "[APP]:"
-    - header: file
-      name: filename
-    - header: Vulnerability ID
-      name: summary
-    - header: Vulnerability Name
-      name: category
-    - header: Category ID
-      name: cwe
-    - header: Description
-      name: summary
-      prefix: "*"
-      postfix: "*"
+      #    default-value: unknown
+      #- header: Primary URL
+      #name: static
+      #default-value: ${tmp.url}
     - header: Severity
       name: severity
-    - header: recommendation
-      name: recommendation
-    - header: Similarity ID
-      name: similarity-id
+    - header: Package Name
+      name: package-name
+    #    prefix: "[APP]:"
+    - header: Vulnerability ID
+      name: vulnerability-id
+    - header: Version
+      name: version
+    - header: Newest Version
+      name: newest-version
+    - header: Publish Date
+      name: publish-date
+    - header: Information
+      name: information
+      #prefix: "*"
+      #postfix: "*"
+    - header: Remediation Recommendation
+      name: remediation-recommendation
+    - header: Package Path
+      name: package-path
+    - header: Cvss Score
+      name: cvss-score

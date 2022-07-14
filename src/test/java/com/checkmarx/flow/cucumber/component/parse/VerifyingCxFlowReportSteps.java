@@ -91,7 +91,7 @@ public class VerifyingCxFlowReportSteps {
         CxFlowReportComparer comparer = new CxFlowReportComparer(testContext);
         List<String> baseFilenames = testContext.getBaseFilenames();
         ComparisonResult comparisonResult = comparer.compareActualReportsToReferenceReports(baseFilenames);
-        if (comparisonResult.containsMismatches()) {
+        if (comparisonResult.containsMismatches())   {
             fail("Mismatches detected: " + comparisonResult.toString());
         }
     }
