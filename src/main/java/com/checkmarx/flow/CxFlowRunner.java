@@ -90,12 +90,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 if (args.containsOption("web")) {
                     log.debug("Running web mode");
                 } else {
-                    List<String> params = Arrays.asList(args.getSourceArgs())
-                            .stream()
-                            .map(s -> s.replaceAll("password=.*", "password={REDACTED}")
-                                    .replaceAll("token=.*", "token={REDACTED}"))
-                            .collect(Collectors.toList());
-                    log.debug("Running cmd mode. Parameters: {}", String.join(" ", params));
+                    log.debug("Running cmd mode. Parameters: {}", String.join(" ", args.getSourceArgs()));
                     commandLineRunner(args);
                 }
             } catch (ExitThrowable ee) {
