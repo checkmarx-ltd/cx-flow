@@ -1,5 +1,7 @@
 package com.checkmarx.flow.config;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
@@ -14,6 +16,10 @@ public class GitLabProperties extends RepoProperties {
     private String sastFilePath = "./gl-sast-report.json";
     
     private String scaFilePath = "./gl-dependency-scanning-report.json";
+
+    @Getter
+    @Setter
+    private String gitlabdashboardversion="9.2";
 
 
     public String getGitUri(String namespace, String repo){
