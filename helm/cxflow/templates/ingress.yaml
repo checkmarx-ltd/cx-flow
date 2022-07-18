@@ -32,12 +32,13 @@ spec:
       http:
         paths:
         {{- range .paths }}
-          - path: {{ . }}
-            backend:
-              service:
-                name: {{ $fullName }}
-                port:
-                  number: {{ $svcPort }}
+        - pathType: ImplementationSpecific
+          path: {{ . }}
+          backend:
+            service:
+              name: {{ $fullName }}
+              port:
+                number: {{ $svcPort }}
         {{- end }}
   {{- end }}
 {{- end }}
