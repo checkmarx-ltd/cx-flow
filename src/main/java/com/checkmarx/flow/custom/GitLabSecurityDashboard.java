@@ -52,7 +52,7 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
         if(results.getXIssues() != null) {
             log.info("Finalizing SAST Dashboard output");
             fileInit(request, results, properties.getSastFilePath(), filenameFormatter, log);
-            if(properties.getGitlabdashboardversion().equalsIgnoreCase("9.2")){
+            if(properties.getGitlabdashboardversion().equalsIgnoreCase("2.0")){
                 getSastResultsDashboard(request,results);
             }else{
                 getSastResultsDashboardNewVersion(request,results);
@@ -62,7 +62,7 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
         if(results.getScaResults() != null) {
             log.info("Finalizing SCA Dashboard output");
             fileInit(request, results, properties.getScaFilePath(), filenameFormatter, log);
-            if(properties.getGitlabdashboardversion().equalsIgnoreCase("9.2")) {
+            if(properties.getGitlabdashboardversion().equalsIgnoreCase("2.0")) {
                 getScaResultsDashboard(request, results);
             }else{
                 getScaResultsDashboardNewVer(request, results);
