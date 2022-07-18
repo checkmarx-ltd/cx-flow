@@ -163,7 +163,7 @@ jobs:
       - run:
          name: delete kube config
          command: |
-            aws eks update-kubeconfig --name eks-test-temp
+            aws eks update-kubeconfig --name eks-cxflow-ci
   deploy-cxflow:
     executor: aws-eks/python3
     parameters:
@@ -589,7 +589,7 @@ jobs:
       - kubernetes/install:
           kubectl-version: v1.23.6
       - aws-eks/update-kubeconfig-with-authenticator:
-          cluster-name: eks-test-temp
+          cluster-name: eks-cxflow-ci
           install-kubectl: false      
       - run:
           name: Delete namespace
@@ -638,7 +638,7 @@ workflows:
           requires:
             - docker-build
       - deploy-cxflow:
-          cluster-name: eks-test-temp
+          cluster-name: eks-cxflow-ci
           chart: ./helm/cxflow
           namespace: cxflow-${CIRCLE_SHA1::7}
           release-name: cxflow-${CIRCLE_SHA1::7}
@@ -655,7 +655,7 @@ workflows:
             - component-tests
             - aws-cli-setup
       - e2e-tests:
-          cluster-name: eks-test-temp
+          cluster-name: eks-cxflow-ci
           namespace: cxflow-${CIRCLE_SHA1::7}
           release-name: cxflow-${CIRCLE_SHA1::7}
           version: v3.2.1
@@ -734,7 +734,7 @@ workflows:
             - CxGo-integration-tests
             - CodeBashing-integration-tests
       - cleanup:
-          cluster-name: eks-test-temp
+          cluster-name: eks-cxflow-ci
           namespace: cxflow-${CIRCLE_SHA1::7}
           release-name: cxflow-${CIRCLE_SHA1::7}
           version: v3.9.0
