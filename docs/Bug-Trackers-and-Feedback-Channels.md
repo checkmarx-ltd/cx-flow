@@ -632,7 +632,29 @@ cx-flow:
       api-token: your-sendgrid-token-here
 ```
 
-`cx-flow.mail.notification` send two e-mail events: Scan Submitted and Scan Completed. The default is `false` (no e-mail are sent, even if all parameters are configured).
+`cx-flow.mail.notification` send two e-mail events: Scan Submitted and Scan Completed. The default is `false` (no e-mails are sent, even if all parameters are configured).
+
+If `cx-flow.mail.notification` is set to `true`, by default the scan submitted and the scan completed (summary) e-mails are sent by default. You can disable each one of these events using `cx-flow.mail.enabled-notifications` sub-properties:
+
+```yaml
+cx-flow:
+  contact: admin@yourdomain.com
+  bug-tracker: Email
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: xxx
+    password: xxx
+    notification: true # Required if using SendGrid
+    enabled-notifications: # if `notification` is true, you can customize the events. The defaults are below.
+      scan-submitted: false
+      scan-summary: true
+      scan-summary-with-empty-results: false
+    sendgrid:
+      api-token: your-sendgrid-token-here
+```
+
+When `cx-flow.mail.enabled-notifications.scan-summary-with-empty-results` is set to `false`, CxFlow checks for the total number of SAST results. If they are zero, the e-mail is not sent. 
 
 If using SMTP, the following fields are required:
 

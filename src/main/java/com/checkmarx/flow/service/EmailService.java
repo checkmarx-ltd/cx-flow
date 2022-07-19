@@ -118,6 +118,16 @@ public class EmailService {
             return;
         }
 
+        boolean scanSubmittedEventEnabled = Optional.ofNullable(flowProperties.getMail())
+                .map(FlowProperties.Mail::getEnabledNotifications)
+                .map(FlowProperties.EnabledNotifications::getScanSubmitted)
+                .orElse(true);
+
+        if (!scanSubmittedEventEnabled) {
+            log.info("cx-flow.mail.enabled-notifications.scan-submitted set to false. Skipping Scan Submitted e-mail...");
+            return;
+        }
+
         FlowProperties.Mail mail = flowProperties.getMail();
         String prefixMessage = "Checkmarx Scan submitted for %s/%s ";
         String scanSubmittedSubject = String.format(prefixMessage, request.getNamespace(), request.getRepoName());
@@ -132,6 +142,27 @@ public class EmailService {
     public void sendScanCompletedEmail(ScanRequest request, ScanResults results) {
         if (!isEmailNotificationAllowed()) {
             log.info("cx-flow.mail.notification not set or set to false. Skipping Scan Completed e-mail...");
+            return;
+        }
+
+        boolean scanSummaryEventEnabled = Optional.ofNullable(flowProperties.getMail())
+                .map(FlowProperties.Mail::getEnabledNotifications)
+                .map(FlowProperties.EnabledNotifications::getScanSummary)
+                .orElse(true);
+
+        if (!scanSummaryEventEnabled) {
+            log.info("cx-flow.mail.enabled-notifications.scan-summary set to false. Skipping Scan Completed e-mail...");
+            return;
+        }
+
+        boolean scanSummaryWithEmptyResultsEventEnabled = Optional.ofNullable(flowProperties.getMail())
+                .map(FlowProperties.Mail::getEnabledNotifications)
+                .map(FlowProperties.EnabledNotifications::getScanSummaryWithEmptyResults)
+                .orElse(true);
+
+        if (!scanSummaryWithEmptyResultsEventEnabled && results.getXIssues().size() == 0) {
+            log.info("cx-flow.mail.enabled-notifications.scan-summary-with-empty-results set to false, and no results were reported in scan. " +
+                    "Skipping Scan Completed e-mail...");
             return;
         }
 
