@@ -206,7 +206,7 @@ jobs:
       - run:
           name: Install cxflow service on cluster
           command: |
-            helm upgrade --install --atomic --create-namespace --namespace << parameters.namespace >> << parameters.release-name >> \
+            helm upgrade --install --create-namespace --namespace << parameters.namespace >> << parameters.release-name >> \
               --set cxflow.githubToken=${GITHUB_TOKEN} \
               --set cxflow.githubWebhookToken=${GITHUB_WEBHOOK_TOKEN} \
               --set cxflow.jiraUrl=${JIRA_URL} \
@@ -219,7 +219,7 @@ jobs:
               --set cxflow.gitlabWebhookToken=${GITLAB_WEBHOOK_TOKEN} \
               --set ingress.hosts[0].host=<< parameters.release-name >>.${EXTERNAL_DNS_DOMAIN} \
               --set ingress.hosts[0].paths[0]="/*" \
-              << parameters.chart >>
+              << parameters.chart >>          
       - run:
           name: Show running k8s objects
           command: |
@@ -637,7 +637,7 @@ workflows:
           chart: ./helm/cxflow
           namespace: cxflow-${CIRCLE_SHA1::7}
           release-name: cxflow-${CIRCLE_SHA1::7}
-          version: v3.3.4
+          version: v3.9.0
           filters:
             branches:
               only:
@@ -649,20 +649,6 @@ workflows:
             - docker-build
             - component-tests
             - aws-cli-setup
-      - e2e-tests:
-          cluster-name: eks-cxflow-ci
-          namespace: cxflow-${CIRCLE_SHA1::7}
-          release-name: cxflow-${CIRCLE_SHA1::7}
-          version: v3.2.1
-          filters:
-            branches:
-              only:
-                - master
-                - develop
-                - /pr-.*/
-                - /pr .*/
-          requires:
-            - deploy-cxflow
       - integration-tests:
           requires:
             - deploy-cxflow
@@ -692,7 +678,6 @@ workflows:
             branches:
               only: develop
           requires:
-            - e2e-tests
             - integration-tests
             - sca-integration-tests
             - jira-integration-tests
@@ -706,7 +691,6 @@ workflows:
             branches:
               only: master
           requires:
-            - e2e-tests
             - integration-tests
             - sca-integration-tests
             - jira-integration-tests
@@ -719,7 +703,6 @@ workflows:
             branches:
               only: master
           requires:
-            - e2e-tests
             - integration-tests
             - sca-integration-tests
             - jira-integration-tests
@@ -732,7 +715,7 @@ workflows:
           cluster-name: eks-cxflow-ci
           namespace: cxflow-${CIRCLE_SHA1::7}
           release-name: cxflow-${CIRCLE_SHA1::7}
-          version: v3.3.4
+          version: v3.9.0
           filters:
             branches:
               only:
@@ -741,7 +724,6 @@ workflows:
                 - /pr-.*/
                 - /pr .*/
           requires:
-            - e2e-tests
             - integration-tests
             - sca-integration-tests
             - jira-integration-tests
