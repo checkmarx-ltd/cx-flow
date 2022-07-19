@@ -649,7 +649,7 @@ cx-flow:
     enabled-notifications: # if `notification` is true, you can customize the events. The defaults are below.
       scan-submitted: false
       scan-summary: true
-      scan-summary-with-empty-results: false
+      scan-summary-with-empty-results: true
     sendgrid:
       api-token: your-sendgrid-token-here
 ```
