@@ -19,8 +19,6 @@ commands: # a reusable command with parameters
           rm ./build/libs/version.txt
           mv build/libs/java11/repo-${VERSION}.jar build/libs/cx-flow-${VERSION}-java11.jar
           ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -n ${VERSION} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} << parameters.ghr-option >> -delete ${VERSION} ./build/libs/
-
-
 jobs:
   build:
     docker:
@@ -115,7 +113,6 @@ jobs:
               echo "Quality gate is not OK - exiting with error"
               exit 1
             fi
-
   docker-build:
     executor: docker
     steps:
@@ -209,7 +206,7 @@ jobs:
       - run:
           name: Install cxflow service on cluster
           command: |
-            helm upgrade --install --atomic --timeout 60m --create-namespace --namespace << parameters.namespace >> << parameters.release-name >> \
+            helm upgrade --install --create-namespace --namespace << parameters.namespace >> << parameters.release-name >> \
               --set cxflow.githubToken=${GITHUB_TOKEN} \
               --set cxflow.githubWebhookToken=${GITHUB_WEBHOOK_TOKEN} \
               --set cxflow.jiraUrl=${JIRA_URL} \
@@ -222,8 +219,7 @@ jobs:
               --set cxflow.gitlabWebhookToken=${GITLAB_WEBHOOK_TOKEN} \
               --set ingress.hosts[0].host=<< parameters.release-name >>.${EXTERNAL_DNS_DOMAIN} \
               --set ingress.hosts[0].paths[0]="/*" \
-              << parameters.chart >>
-              no_output_timeout: 60m
+              << parameters.chart >>          
       - run:
           name: Show running k8s objects
           command: |
@@ -536,9 +532,7 @@ jobs:
       - run:
           name: Save application logs
           command: |
-            export POD_NAME=$(kubectl get pods -o custom-columns=:metadata.name -n << parameters.namespace >> | grep cxflow | tr -d '\n')
-            mkdir -p ~/application-logs/
-            kubectl logs ${POD_NAME} -n << parameters.namespace >> > ~/application-logs/${POD_NAME}.log
+            mkdir -p ~/application-logs/            
       - run:
           name: Delete cxflow deployment
           command: helm uninstall << parameters.release-name >> --namespace << parameters.namespace >>
@@ -566,7 +560,6 @@ jobs:
           command: |
             docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} docker.io
             docker push ${DOCKER_REPO}
-
   publish-github-release:
     docker:
       - image: circleci/golang:1.9
@@ -604,7 +597,6 @@ jobs:
             else
               kubectl delete namespace ${NS_TO_DELETE}
             fi
-
 orbs:
   aws-cli: circleci/aws-cli@3.1.1
   aws-eks: circleci/aws-eks@1.0.0
@@ -655,20 +647,6 @@ workflows:
             - docker-build
             - component-tests
             - aws-cli-setup
-      - e2e-tests:
-          cluster-name: eks-cxflow-ci
-          namespace: cxflow-${CIRCLE_SHA1::7}
-          release-name: cxflow-${CIRCLE_SHA1::7}
-          version: v3.2.1
-          filters:
-            branches:
-              only:
-                - master
-                - develop
-                - /pr-.*/
-                - /pr .*/
-          requires:
-            - deploy-cxflow
       - integration-tests:
           requires:
             - deploy-cxflow
@@ -698,7 +676,6 @@ workflows:
             branches:
               only: develop
           requires:
-            - e2e-tests
             - integration-tests
             - sca-integration-tests
             - jira-integration-tests
@@ -712,7 +689,6 @@ workflows:
             branches:
               only: master
           requires:
-            - e2e-tests
             - integration-tests
             - sca-integration-tests
             - jira-integration-tests
@@ -725,7 +701,6 @@ workflows:
             branches:
               only: master
           requires:
-            - e2e-tests
             - integration-tests
             - sca-integration-tests
             - jira-integration-tests
@@ -747,7 +722,6 @@ workflows:
                 - /pr-.*/
                 - /pr .*/
           requires:
-            - e2e-tests
             - integration-tests
             - sca-integration-tests
             - jira-integration-tests
