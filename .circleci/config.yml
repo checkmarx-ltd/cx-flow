@@ -19,8 +19,6 @@ commands: # a reusable command with parameters
           rm ./build/libs/version.txt
           mv build/libs/java11/repo-${VERSION}.jar build/libs/cx-flow-${VERSION}-java11.jar
           ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -n ${VERSION} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} << parameters.ghr-option >> -delete ${VERSION} ./build/libs/
-
-
 jobs:
   build:
     docker:
@@ -115,7 +113,6 @@ jobs:
               echo "Quality gate is not OK - exiting with error"
               exit 1
             fi
-
   docker-build:
     executor: docker
     steps:
@@ -161,8 +158,8 @@ jobs:
       - aws-cli/setup:
           profile-name: example
       - run:
-         name: delete kube config
-         command: |
+          name: delete kube config
+          command: |
             aws eks update-kubeconfig --name eks-cxflow-ci
   deploy-cxflow:
     executor: aws-eks/python3
@@ -197,7 +194,7 @@ jobs:
       - checkout
       - aws-eks/update-kubeconfig-with-authenticator:
           cluster-name: << parameters.cluster-name >>
-          install-kubectl: false          
+          install-kubectl: false
       - kubernetes/install:
           kubectl-version: v1.23.0
       - run:
@@ -209,7 +206,7 @@ jobs:
       - run:
           name: Install cxflow service on cluster
           command: |
-            helm upgrade --install --atomic --create-namespace --namespace << parameters.namespace >> << parameters.release-name >> \
+            helm upgrade --install --create-namespace --namespace << parameters.namespace >> << parameters.release-name >> \
               --set cxflow.githubToken=${GITHUB_TOKEN} \
               --set cxflow.githubWebhookToken=${GITHUB_WEBHOOK_TOKEN} \
               --set cxflow.jiraUrl=${JIRA_URL} \
@@ -270,12 +267,12 @@ jobs:
       version:
         type: string
     steps:
-      - checkout      
+      - checkout
       - kubernetes/install:
           kubectl-version: v1.23.6
       - aws-eks/update-kubeconfig-with-authenticator:
           cluster-name: << parameters.cluster-name >>
-          install-kubectl: false          
+          install-kubectl: false
       - run:
           name: Run E2E Tests
           command: |
@@ -347,24 +344,24 @@ jobs:
 
   ast-integration-tests:
     docker:
-    - image: "circleci/openjdk:8-jdk"
+      - image: "circleci/openjdk:8-jdk"
     steps:
-    - checkout
-    - run:
-        name: Run AST Integration Tests
-        command: |
-          export HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
-          ./gradlew clean ASTIntegrationTest --info -Dtarget=${HOOK_TARGET} -Drepo=${HOOK_REPO} -Dnamespace=${HOOK_NAMESPACE}
-    - run:
-        name: Save test results
-        command: |
-          mkdir -p ~/test-results/junit/
-          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ \;
-        when: always
-    - store_test_results:
-        path: ~/test-results
-    - store_artifacts:
-        path: ~/test-results/junit
+      - checkout
+      - run:
+          name: Run AST Integration Tests
+          command: |
+            export HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
+            ./gradlew clean ASTIntegrationTest --info -Dtarget=${HOOK_TARGET} -Drepo=${HOOK_REPO} -Dnamespace=${HOOK_NAMESPACE}
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/test-results/junit/
+            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/test-results
+      - store_artifacts:
+          path: ~/test-results/junit
 
   jira-integration-tests:
     docker:
@@ -410,7 +407,7 @@ jobs:
 
   SAST-CLI-integration-tests:
     docker:
-    - image: "circleci/openjdk:8-jdk"
+      - image: "circleci/openjdk:8-jdk"
     steps:
       - checkout
       - run:
@@ -472,25 +469,25 @@ jobs:
           path: ~/test-results/junit
 
   CxGo-integration-tests:
-                  docker:
-                    - image: "circleci/openjdk:8-jdk"
-                  steps:
-                    - checkout
-                    - run:
-                        name: Run CxGo Integration Tests
-                        command: |
-                          export HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
-                          ./gradlew clean CxGoIntegrationTest --info -Dtarget=${HOOK_TARGET} -Drepo=${HOOK_REPO} -Dnamespace=${HOOK_NAMESPACE}
-                    - run:
-                        name: Save test results
-                        command: |
-                          mkdir -p ~/test-results/junit/
-                          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ \;
-                        when: always
-                    - store_test_results:
-                        path: ~/test-results
-                    - store_artifacts:
-                        path: ~/test-results/junit
+    docker:
+      - image: "circleci/openjdk:8-jdk"
+    steps:
+      - checkout
+      - run:
+          name: Run CxGo Integration Tests
+          command: |
+            export HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
+            ./gradlew clean CxGoIntegrationTest --info -Dtarget=${HOOK_TARGET} -Drepo=${HOOK_REPO} -Dnamespace=${HOOK_NAMESPACE}
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/test-results/junit/
+            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/test-results
+      - store_artifacts:
+          path: ~/test-results/junit
 
   CodeBashing-integration-tests:
     docker:
@@ -535,9 +532,7 @@ jobs:
       - run:
           name: Save application logs
           command: |
-            export POD_NAME=$(kubectl get pods -o custom-columns=:metadata.name -n << parameters.namespace >> | grep cxflow | tr -d '\n')
             mkdir -p ~/application-logs/
-            kubectl logs ${POD_NAME} -n << parameters.namespace >> > ~/application-logs/${POD_NAME}.log
       - run:
           name: Delete cxflow deployment
           command: helm uninstall << parameters.release-name >> --namespace << parameters.namespace >>
@@ -565,7 +560,6 @@ jobs:
           command: |
             docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} docker.io
             docker push ${DOCKER_REPO}
-
   publish-github-release:
     docker:
       - image: circleci/golang:1.9
@@ -590,7 +584,7 @@ jobs:
           kubectl-version: v1.23.6
       - aws-eks/update-kubeconfig-with-authenticator:
           cluster-name: eks-cxflow-ci
-          install-kubectl: false      
+          install-kubectl: false
       - run:
           name: Delete namespace
           command: |
@@ -603,7 +597,6 @@ jobs:
             else
               kubectl delete namespace ${NS_TO_DELETE}
             fi
-
 orbs:
   aws-cli: circleci/aws-cli@3.1.1
   aws-eks: circleci/aws-eks@1.0.0
@@ -615,8 +608,8 @@ workflows:
   version: 2
 
   cx-kpi-shipper:
-      jobs:
-        - checkmarx/circleci-kpi-shipper
+    jobs:
+      - checkmarx/circleci-kpi-shipper
 
   build_deploy:
     jobs:
@@ -642,7 +635,7 @@ workflows:
           chart: ./helm/cxflow
           namespace: cxflow-${CIRCLE_SHA1::7}
           release-name: cxflow-${CIRCLE_SHA1::7}
-          version: v3.3.4
+          version: v3.9.0
           filters:
             branches:
               only:
@@ -654,20 +647,6 @@ workflows:
             - docker-build
             - component-tests
             - aws-cli-setup
-      - e2e-tests:
-          cluster-name: eks-cxflow-ci
-          namespace: cxflow-${CIRCLE_SHA1::7}
-          release-name: cxflow-${CIRCLE_SHA1::7}
-          version: v3.2.1
-          filters:
-            branches:
-              only:
-                - master
-                - develop
-                - /pr-.*/
-                - /pr .*/
-          requires:
-            - deploy-cxflow
       - integration-tests:
           requires:
             - deploy-cxflow
@@ -697,7 +676,6 @@ workflows:
             branches:
               only: develop
           requires:
-            - e2e-tests
             - integration-tests
             - sca-integration-tests
             - jira-integration-tests
@@ -711,7 +689,6 @@ workflows:
             branches:
               only: master
           requires:
-            - e2e-tests
             - integration-tests
             - sca-integration-tests
             - jira-integration-tests
@@ -724,7 +701,6 @@ workflows:
             branches:
               only: master
           requires:
-            - e2e-tests
             - integration-tests
             - sca-integration-tests
             - jira-integration-tests
@@ -737,7 +713,7 @@ workflows:
           cluster-name: eks-cxflow-ci
           namespace: cxflow-${CIRCLE_SHA1::7}
           release-name: cxflow-${CIRCLE_SHA1::7}
-          version: v3.3.4
+          version: v3.9.0
           filters:
             branches:
               only:
@@ -746,7 +722,6 @@ workflows:
                 - /pr-.*/
                 - /pr .*/
           requires:
-            - e2e-tests
             - integration-tests
             - sca-integration-tests
             - jira-integration-tests
