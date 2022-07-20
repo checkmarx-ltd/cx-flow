@@ -339,6 +339,9 @@ cx-flow:
      cc: myemail@mycompany.com # comma-separated list of e-mails
   zip-exclude: \.git/.*, .*\.png
   comment-script: location/to/commentScript.groovy
+  core-poolsize: 54
+  max-poolsize: 302
+  queue-capacityarg: 600
 ```
                
 | Config                    | Default               | Required | WebHook | Command Line | Notes                                                                    |
@@ -376,6 +379,10 @@ cx-flow:
 | `merge-id`                | Merge Id              | No       | No      | Yes          | Pass Merge Id from CLI mode for Specific Merge Request. Used in by GiLab CI/CD Pipeline.|
 | `merge-title`             | Merge Title           | No       | No      | Yes          | Pass Merge Title from CLI mode for Specific Merge Request. Used in by GiLab CI/CD Pipeline.|
 | `comment-script` | | No | Yes | Yes | A **groovy** script that can be used to determine the scan comment to be sent to the CxSAST server during a scan. see details [here](https://github.com/checkmarx-ltd/cx-flow/wiki/External-Scripts#scanComment) |
+| `core-poolsize` | 50 | No | No | Yes | The amount of worker which can work on a thread parallelly. |
+| `max-poolsize` | 200 | No | No | Yes | The amount of threads which can be created parallelly. |
+| `queue-capacity` | 10000 | No | No | Yes | When the amount of threads present are more than the max poolsize then the threads will wait in the queue. This parameter defines the size of that queue. |
+
 
 No* = Default is applied
 

@@ -94,7 +94,9 @@ github:
   block-merge: true
 ```
 * The value for `token` in `github` section can be provided in the following way:
-* `--github.token=<GH_TOKEN_VALUE`
+* `--github.token=<GH_TOKEN_VALUE>`
+* Thresholds and Filters via command line can be provided in the following way:
+* `--cx-flow.thresholds.high=<High threshold count> --cx-flow.filter-serverity=High --cx-flow.filter-serverity=Medium`
 
 * **Examples of cx-flow CLI**
 ```
