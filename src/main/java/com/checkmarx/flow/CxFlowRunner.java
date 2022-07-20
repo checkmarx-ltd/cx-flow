@@ -577,8 +577,7 @@ public class CxFlowRunner implements ApplicationRunner {
         request.setRefs(Constants.CX_BRANCH_PREFIX.concat(branch));
 
         if (!args.containsOption(IAST_OPTION)) {
-            ScanResults scanResults = runOnActiveScanners(scanner -> scanner.scanCli(request, "Scan-git-clone"));
-            processResults(request, scanResults);
+            scanCommon(request, "Scan-git-clone");
         }
     }
 
@@ -589,10 +588,26 @@ public class CxFlowRunner implements ApplicationRunner {
         }
         CxConfig cxConfig = getCxConfigOverride(path, "cx.config");
         request = configOverrider.overrideScanRequestProperties(cxConfig, request);
-        // A lambda rquires a final or effectively final parameter
-        ScanRequest finalRequest = request;
-        ScanResults scanResults = runOnActiveScanners(scanner -> scanner.scanCli(finalRequest, "cxFullScan", new File(path)));
-        processResults(request, scanResults);
+        scanCommon(request, "cxFullScan", path);
+    }
+
+    private void scanCommon(ScanRequest request, String type) throws ExitThrowable {
+        scanCommon(request, type, null);
+    }
+
+    private void scanCommon(ScanRequest request, String type, String path) throws ExitThrowable {
+        List<String> branches = request.getActiveBranches() != null ? request.getActiveBranches() : flowProperties.getBranches();
+        ScanResults scanResults;
+        if (request.getBranch() == null || helperService.isBranch2Scan(request, branches)) {
+            if (path != null) {
+                scanResults = runOnActiveScanners(scanner -> scanner.scanCli(request, type, new File(path)));
+            } else {
+                scanResults = runOnActiveScanners(scanner -> scanner.scanCli(request, type));
+            }
+            processResults(request, scanResults);
+        } else {
+            log.debug("{}: branch not eligible for scanning", request.getBranch());
+        }
     }
 
     private void cxOsaParse(ScanRequest request, File file, File libs) throws ExitThrowable {
