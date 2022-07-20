@@ -532,9 +532,7 @@ jobs:
       - run:
           name: Save application logs
           command: |
-            export POD_NAME=$(kubectl get pods -o custom-columns=:metadata.name -n << parameters.namespace >> | grep cxflow | tr -d '\n')
-            mkdir -p ~/application-logs/
-            kubectl logs ${POD_NAME} -n << parameters.namespace >> > ~/application-logs/${POD_NAME}.log
+            mkdir -p ~/application-logs/            
       - run:
           name: Delete cxflow deployment
           command: helm uninstall << parameters.release-name >> --namespace << parameters.namespace >>
