@@ -74,7 +74,7 @@ public class ZipUtils {
             tmpPath = tmpPath.replace("/./","/"); //Linux FS
             tmpPath = tmpPath.replace("\\.\\","\\"); //Windows FS
 
-            log.debug("@@@ {} | {} @@@", zipFile, tmpPath);
+            log.trace("@@@ {} | {} @@@", zipFile, tmpPath);
             if(tmpPath.equals(zipFile)){
                 log.debug("#########Skipping the new zip file {}#########", zipFile);
                 return;
