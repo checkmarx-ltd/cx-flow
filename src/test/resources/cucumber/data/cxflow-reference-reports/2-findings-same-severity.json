@@ -6,6 +6,7 @@
   "files": "1",
   "loc": "268",
   "scanType": "Full",
+  "version":"8.9.0.210",
   "additionalDetails": {
     "flow-summary": {
       "High": 2
@@ -19,7 +20,7 @@
       "vulnerabilityStatus": "TO VERIFY",
       "similarityId": "-1987639889",
       "cwe": "89",
-      "description": "",
+      "description": "\r\n\r\n",
       "language": "Java",
       "severity": "High",
       "link": "http://CX-FLOW-CLEAN/CxWebClient/ViewerMain.aspx?scanid=1000026&projectid=6&pathid=4",
@@ -197,5 +198,8 @@
       "allFalsePositive": false
     }
   ],
+  "reportCreationTime":"Sunday, January 19, 2020 2:41:53 AM",
+  "deepLink":"http://CX-FLOW-CLEAN/CxWebClient/ViewerMain.aspx?scanid=1000026&projectid=6",
+  "scanTime":"00h:01m:30s",
   "sastResults": false
 }
