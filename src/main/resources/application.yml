@@ -65,12 +65,16 @@ cx-flow:
 #  break-build: true
 #  wiki-url: https://custodela.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
 #  codebash-url: https://cxa.codebashing.com/courses/
-#  mail:
+  mail:
 #    host: smtp.gmail.com
 #    port: 587
 #    username: xxx
 #    password: xxx
 #    notification: true # Required if using SendGrid
+#    enabled-notifications: # if `notification` is true, you can customize the events. The defaults are below.
+#      scan-submitted: true
+#      scan-summary: true
+#      scan-summary-with-empty-results: false
 #    sendgrid:
 #      api-token: your-sendgrid-token-here
 

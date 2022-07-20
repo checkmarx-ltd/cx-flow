@@ -337,6 +337,7 @@ public class FlowProperties {
         private String password;
         private List<String> cc;
         private boolean notificationEnabled = false;
+        private EnabledNotifications enabledNotifications = new EnabledNotifications();
         private boolean allowEmptyMail = false;
         private String template;
         private SendGrid sendgrid;
@@ -384,6 +385,14 @@ public class FlowProperties {
             this.notificationEnabled = notification;
         }
 
+        public EnabledNotifications getEnabledNotifications() {
+            return this.enabledNotifications;
+        }
+
+        public void setEnabledNotifications(EnabledNotifications enabledNotifications) {
+            this.enabledNotifications = enabledNotifications;
+        }
+
         public List<String> getCc() { return this.cc; }
 
         public void setCc(List<String> cc) {
@@ -409,6 +418,36 @@ public class FlowProperties {
         public MailTemplates getTemplates() { return templates; }
 
         public void setTemplates(MailTemplates templates) { this.templates = templates; }
+    }
+
+    public static class EnabledNotifications {
+        private boolean scanSubmitted = true;
+        private boolean scanSummary = true;
+        private boolean scanSummaryWithEmptyResults = true;
+
+        public boolean getScanSubmitted() {
+            return scanSubmitted;
+        }
+
+        public void setScanSubmitted(boolean scanSubmitted) {
+            this.scanSubmitted = scanSubmitted;
+        }
+
+        public boolean getScanSummary() {
+            return scanSummary;
+        }
+
+        public void setScanSummary(boolean scanSummary) {
+            this.scanSummary = scanSummary;
+        }
+
+        public boolean getScanSummaryWithEmptyResults() {
+            return scanSummaryWithEmptyResults;
+        }
+
+        public void setScanSummaryWithEmptyResults(boolean scanSummaryWithEmptyResults) {
+            this.scanSummaryWithEmptyResults = scanSummaryWithEmptyResults;
+        }
     }
 
     public static class MailTemplates {
