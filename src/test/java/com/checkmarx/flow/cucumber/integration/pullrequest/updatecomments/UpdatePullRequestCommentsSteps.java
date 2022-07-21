@@ -291,7 +291,7 @@ public class UpdatePullRequestCommentsSteps {
     @Then("Wait for comments")
     public void waitForNewComments() {
         log.info("waiting for new comments. scanner type {}", scannerType);
-        int minutesToWait = scannerType == ScannerType.BOTH ? 3 : 2;
+        int minutesToWait = scannerType == ScannerType.BOTH ? 6 : 4;
         Awaitility.await()
                 .atMost(Duration.ofMinutes(minutesToWait))
                 .pollInterval(Duration.ofSeconds(COMMENTS_POLL_INTERVAL))
