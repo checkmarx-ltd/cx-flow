@@ -171,7 +171,15 @@ public class BitbucketCloudController extends WebhookController {
             request.setId(uid);
 
             if (helperService.isBranch2Scan(request, branches)) {
+                log.debug(request.getProject()+" :: Calling  isBranch2Scan function End : "+System.currentTimeMillis());
+                log.debug(request.getProject()+" :: Free Memory : "+Runtime.getRuntime().freeMemory());
+                log.debug(request.getProject()+" :: Total Numbers of processors : "+Runtime.getRuntime().availableProcessors());
+                long startTime=System.currentTimeMillis();
+                log.debug(request.getProject()+" :: Start Time : "+startTime);
                 flowService.initiateAutomation(request);
+                long endTime=System.currentTimeMillis();
+                log.debug(request.getProject()+" :: End Time  : "+endTime);
+                log.debug(request.getProject()+" :: Total Time Taken  : "+(endTime-startTime));
             }
 
         } catch (IllegalArgumentException e) {
@@ -279,7 +287,15 @@ public class BitbucketCloudController extends WebhookController {
             request.setId(uid);
 
             if (helperService.isBranch2Scan(request, branches)) {
+                log.debug(request.getProject()+" :: Calling  isBranch2Scan function End : "+System.currentTimeMillis());
+                log.debug(request.getProject()+" :: Free Memory : "+Runtime.getRuntime().freeMemory());
+                log.debug(request.getProject()+" :: Total Numbers of processors : "+Runtime.getRuntime().availableProcessors());
+                long startTime=System.currentTimeMillis();
+                log.debug(request.getProject()+" :: Start Time : "+startTime);
                 flowService.initiateAutomation(request);
+                long endTime=System.currentTimeMillis();
+                log.debug(request.getProject()+" :: End Time  : "+endTime);
+                log.debug(request.getProject()+" :: Total Time Taken  : "+(endTime-startTime));
             }
         } catch (IllegalArgumentException e) {
             return getBadRequestMessage(e, controllerRequest, product);

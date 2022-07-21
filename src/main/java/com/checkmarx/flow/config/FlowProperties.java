@@ -53,7 +53,20 @@ public class FlowProperties {
     @Getter @Setter
     private boolean preserveProjectName;
     private Map<FindingSeverity,Integer> thresholds;
+
     private boolean scanUnprotectedBranches= false;
+    @Getter
+    @Setter
+    private Integer maxPoolSize;
+
+    @Getter
+    @Setter
+    private Integer corePoolSize;
+
+
+    @Getter
+    @Setter
+    private Integer queuecapacityarg;
 
     public String getContact() {
         return this.contact;

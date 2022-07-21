@@ -15,6 +15,9 @@ public class FlowAsyncConfig implements AsyncConfigurer {
 
     private final FlowProperties properties;
     private static final int QUEUE_CAPACITY = 10000;
+
+    private static final int MAX_POOLSIZE = 200;
+    private static final int CORE_POOL_SIZE = 50;
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(FlowAsyncConfig.class);
 
     @ConstructorProperties({"properties"})
@@ -24,30 +27,59 @@ public class FlowAsyncConfig implements AsyncConfigurer {
 
     @Bean("scanRequest")
     public ThreadPoolTaskExecutor scanRequestTaskExecutor() {
-        int capacity = QUEUE_CAPACITY;
-        if(properties.getScanResultQueue() != null){
-            capacity = properties.getScanResultQueue();
+
+        int corePoolSize=CORE_POOL_SIZE;
+        int maxPoolSize = MAX_POOLSIZE;
+        int queueCapacity = QUEUE_CAPACITY;
+
+
+        if(properties.getCorePoolSize() != null){
+            corePoolSize = properties.getCorePoolSize();
         }
+
+        if(properties.getMaxPoolSize() != null){
+            maxPoolSize = properties.getMaxPoolSize();
+        }
+
+        if(properties.getQueuecapacityarg() != null){
+            queueCapacity = properties.getQueuecapacityarg();
+        }
+
+
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(4);
-        executor.setMaxPoolSize(capacity);
-        executor.setQueueCapacity(QUEUE_CAPACITY);
+        executor.setCorePoolSize(corePoolSize);
+        executor.setMaxPoolSize(maxPoolSize);
+        executor.setQueueCapacity(queueCapacity);
         executor.setThreadNamePrefix("scan-results");
         executor.setWaitForTasksToCompleteOnShutdown(true);
         executor.initialize();
+
         return executor;
     }
 
     @Bean("webHook")
     public ThreadPoolTaskExecutor webHookTaskExecutor() {
-        int capacity = QUEUE_CAPACITY;
-        if(properties.getWebHookQueue() != null){
-            capacity = properties.getWebHookQueue();
+        int corePoolSize=CORE_POOL_SIZE;
+        int maxPoolSize = MAX_POOLSIZE;
+        int queueCapacity = QUEUE_CAPACITY;
+
+        if(properties.getCorePoolSize() != null){
+            corePoolSize = properties.getCorePoolSize();
         }
+
+        if(properties.getMaxPoolSize() != null){
+            maxPoolSize = properties.getMaxPoolSize();
+        }
+
+        if(properties.getQueuecapacityarg() != null){
+            queueCapacity = properties.getQueuecapacityarg();
+        }
+
+
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(4);
-        executor.setMaxPoolSize(capacity);
-        executor.setQueueCapacity(QUEUE_CAPACITY);
+        executor.setCorePoolSize(corePoolSize);
+        executor.setMaxPoolSize(maxPoolSize);
+        executor.setQueueCapacity(queueCapacity);
         executor.setThreadNamePrefix("flow-web");
         executor.initialize();
         return executor;
