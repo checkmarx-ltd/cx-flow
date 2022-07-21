@@ -139,6 +139,7 @@ public class CxFlowRunner implements ApplicationRunner {
         ScanRequest.Repository repoType = ScanRequest.Repository.NA;
         boolean osa;
         boolean force;
+        boolean branchProtectionEnabled;
         FlowOverride flowOverride = null;
         ObjectMapper mapper = new ObjectMapper();
         String uid = helperService.getShortUid();
@@ -203,6 +204,7 @@ public class CxFlowRunner implements ApplicationRunner {
         boolean usingBitBucketCloud = args.containsOption("bb");
         boolean usingBitBucketServer = args.containsOption("bbs");
         boolean disableCertificateValidation = args.containsOption("trust-cert");
+        branchProtectionEnabled=args.containsOption("branch-Protection-Enabled");
         CxPropertiesBase cxProperties = cxScannerService.getProperties();
         Map<String, String> projectCustomFields = makeCustomFieldMap(args.getOptionValues("project-custom-field"));
         Map<String, String> scanCustomFields = makeCustomFieldMap(args.getOptionValues("scan-custom-field"));
@@ -368,6 +370,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 .disableCertificateValidation(disableCertificateValidation)
                 .cxFields(projectCustomFields)
                 .scanFields(scanCustomFields)
+                .branchProtectionEnabled(branchProtectionEnabled)
                 .build();
 
         if (projectId != null) {
@@ -598,16 +601,26 @@ public class CxFlowRunner implements ApplicationRunner {
     private void scanCommon(ScanRequest request, String type, String path) throws ExitThrowable {
         List<String> branches = request.getActiveBranches() != null ? request.getActiveBranches() : flowProperties.getBranches();
         ScanResults scanResults;
-        if (request.getBranch() == null || helperService.isBranch2Scan(request, branches)) {
-            if (path != null) {
-                scanResults = runOnActiveScanners(scanner -> scanner.scanCli(request, type, new File(path)));
+        if(flowProperties.isBranchProtectionEnabled() || request.isBranchProtectionEnabled() ){
+            if (request.getBranch() == null || (helperService.isBranch2Scan(request, branches)) ) {
+                if (path != null) {
+                    scanResults = runOnActiveScanners(scanner -> scanner.scanCli(request, type, new File(path)));
+                } else {
+                    scanResults = runOnActiveScanners(scanner -> scanner.scanCli(request, type));
+                }
+                processResults(request, scanResults);
             } else {
-                scanResults = runOnActiveScanners(scanner -> scanner.scanCli(request, type));
+                log.debug("{}: branch not eligible for scanning", request.getBranch());
+                return;
             }
-            processResults(request, scanResults);
-        } else {
-            log.debug("{}: branch not eligible for scanning", request.getBranch());
         }
+
+        if (path != null) {
+            scanResults = runOnActiveScanners(scanner -> scanner.scanCli(request, type, new File(path)));
+        } else {
+            scanResults = runOnActiveScanners(scanner -> scanner.scanCli(request, type));
+        }
+        processResults(request, scanResults);
     }
 
     private void cxOsaParse(ScanRequest request, File file, File libs) throws ExitThrowable {

@@ -55,6 +55,11 @@ public class FlowProperties {
     private Map<FindingSeverity,Integer> thresholds;
 
     private boolean scanUnprotectedBranches= false;
+
+    @Getter
+    @Setter
+    private boolean branchProtectionEnabled= false;
+
     @Getter
     @Setter
     private Integer maxPoolSize;
