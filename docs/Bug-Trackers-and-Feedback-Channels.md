@@ -354,6 +354,7 @@ cx-flow:
   
 gitlab:
    file-path: ./gl-sast-report.json
+   gitlab-dashboard-version="2.0" //We are supporting Gitlab Dashboard schema version 14.1.2 which is default version but if we user want to configure to old schema version we are also suporting 2.0.
 ```
 [[/Images/bug3.png|Screenshot of GitLab dashboard]]
 
