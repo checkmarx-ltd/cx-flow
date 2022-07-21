@@ -40,6 +40,13 @@ sca:
   filter-severity:
     - High
   filter-policy-violation: true
+  //If User want to check for Direct Dependency specifically below tag can be used and default value is All. 
+  filter-dependency-type: Direct
+  //Based on threshold severity it will break build even for Direct Dependency.
+  thresholds-Severity:
+    HIGH: 1
+    MEDIUM: 150
+    LOW: 1
 ```
 
 To use an European tenant:
