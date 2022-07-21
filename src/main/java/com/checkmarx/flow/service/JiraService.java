@@ -549,7 +549,6 @@ public class JiraService {
                                 break;
                             case "dev-dependency":
                                 log.debug("dev-dependency: {}", issue.getScaDetails().get(0).getVulnerabilityPackage().isIsDevelopment());
-
                                 value = String.valueOf(issue.getScaDetails().get(0).getVulnerabilityPackage().isIsDevelopment()).toUpperCase();
                                 break;
                             case "direct-dependency":
