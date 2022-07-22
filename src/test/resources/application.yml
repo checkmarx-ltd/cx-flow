@@ -79,6 +79,7 @@ checkmarx:
   #team-script:
   #exclude-files:
   #exclude-folders:
+  scan-timeout: 130
 
 sca:
   appUrl: https://xxxxx
