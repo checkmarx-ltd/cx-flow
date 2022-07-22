@@ -4,13 +4,12 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.ScaConfig;
 import com.checkmarx.sdk.config.ScaProperties;
-import com.checkmarx.sdk.dto.sast.Filter;
-import com.checkmarx.sdk.dto.sca.Sca;
 import com.checkmarx.sdk.dto.filtering.EngineFilterConfiguration;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
+import com.checkmarx.sdk.dto.sast.Filter;
+import com.checkmarx.sdk.dto.sca.Sca;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -22,7 +21,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Slf4j
 public class ScaConfigurationOverrider {
-    private static final ModelMapper modelMapper = new ModelMapper();
+   // private static final ModelMapper modelMapper = new ModelMapper();
 
     private static final String ACCESS_CONTROL_URL = "accessControlUrl";
     private static final String API_URL = "apiUrl";
@@ -44,8 +43,8 @@ public class ScaConfigurationOverrider {
         // where we can initialize SCA config without having to change each controller.
 
         log.debug("Initializing SCA configuration in scan request using default configuration properties.");
-        ScaConfig scaConfig = modelMapper.map(scaProperties, ScaConfig.class);
-        request.setScaConfig(scaConfig);
+       // ScaConfig scaConfig = modelMapper.map(scaProperties, ScaConfig.class);
+     //   request.setScaConfig(scaConfig);
         scaFilterFactory.initScaFilter(request);
     }
 
@@ -57,7 +56,7 @@ public class ScaConfigurationOverrider {
             request.setScaConfig(scaConfig);
         } else {
             log.debug("SCA config exists, merging.");
-            modelMapper.map(scaConfig, existingScaConfig);
+           // modelMapper.map(scaConfig, existingScaConfig);
         }
         addToReport(scaConfig, overrideReport);
     }
