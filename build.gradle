@@ -98,7 +98,8 @@ dependencies {
         exclude group: 'org.apache.logging.log4j', module: 'log4j-core'
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
-    
+    compile group: 'net.jodah', name: 'typetools', version: '0.4.5'
+
     compile('org.springframework.boot:spring-boot-starter-aop'){
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
