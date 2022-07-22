@@ -669,7 +669,7 @@ cx-flow:
       api-token: your-sendgrid-token-here
 ```
 
-When `cx-flow.mail.enabled-notifications.scan-summary-with-empty-results` is set to `false`, CxFlow checks for the total number of SAST results. If they are zero, the e-mail is not sent. 
+When `cx-flow.mail.enabled-notifications.scan-summary-with-empty-results` is set to `false`, CxFlow checks for the total number of SAST **high and medium** results. If they are zero, the e-mail is not sent. 
 
 If using SMTP, the following fields are required:
 
