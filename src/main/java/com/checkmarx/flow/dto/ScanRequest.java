@@ -35,6 +35,10 @@ public class ScanRequest {
     private Map<String, String> scanFields;
     private String site;
 
+    @Getter
+    @Setter
+    private boolean branchProtectionEnabled= false;
+
     /**
      * git commit ID, also known as 'SHA' or 'commit hash'.
      * <br>- For push event: ID of the last commit in the push event.

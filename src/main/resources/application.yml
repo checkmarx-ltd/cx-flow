@@ -65,7 +65,7 @@ cx-flow:
 #  break-build: true
 #  wiki-url: https://custodela.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
 #  codebash-url: https://cxa.codebashing.com/courses/
-  mail:
+#  mail:
 #    host: smtp.gmail.com
 #    port: 587
 #    username: xxx
