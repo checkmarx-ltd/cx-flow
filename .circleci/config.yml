@@ -682,7 +682,6 @@ workflows:
             - pullRequestComments-integration-tests
             - SCA-CLI-integration-tests
             - CxGo-integration-tests
-            - CodeBashing-integration-tests
       - docker-push-stable:
           filters:
             branches:
@@ -704,10 +703,8 @@ workflows:
             - sca-integration-tests
             - jira-integration-tests
             - pullRequestComments-integration-tests
-            - SAST-CLI-integration-tests
             - SCA-CLI-integration-tests
             - CxGo-integration-tests
-            - CodeBashing-integration-tests
       - cleanup:
           cluster-name: eks-cxflow-ci
           namespace: cxflow-${CIRCLE_SHA1::7}
