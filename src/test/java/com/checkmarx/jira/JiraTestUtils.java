@@ -51,6 +51,7 @@ public class JiraTestUtils implements IJiraTestUtils {
             } catch (URISyntaxException e) {
                 log.error("Error constructing URI for JIRA", e);
             }
+            log.info("JIRA Timeout : ", jiraProperties.getHttpTimeout());
             this.client = factory.createWithBasicHttpAuthenticationCustom(jiraURI, jiraProperties.getUsername(), jiraProperties.getToken(), jiraProperties.getHttpTimeout());
 
         }
