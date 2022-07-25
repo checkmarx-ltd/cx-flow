@@ -680,10 +680,9 @@ workflows:
             - sca-integration-tests
             - jira-integration-tests
             - pullRequestComments-integration-tests
-            - SAST-CLI-integration-tests
-            - SCA-CLI-integration-tests
+			- SCA-CLI-integration-tests
             - CxGo-integration-tests
-            - CodeBashing-integration-tests
+			- CodeBashing-integration-tests
       - docker-push-stable:
           filters:
             branches:
@@ -725,11 +724,9 @@ workflows:
             - integration-tests
             - sca-integration-tests
             - jira-integration-tests
-            - pullRequestComments-integration-tests
-            - SAST-CLI-integration-tests
+            - pullRequestComments-integration-tests            
             - SCA-CLI-integration-tests
-            - CxGo-integration-tests
-            - CodeBashing-integration-tests
+            - CxGo-integration-tests            
   nightly-cleanup:
     triggers:
       - schedule:
