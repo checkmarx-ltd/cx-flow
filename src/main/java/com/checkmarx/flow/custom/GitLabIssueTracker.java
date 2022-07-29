@@ -50,6 +50,8 @@ public class GitLabIssueTracker implements IssueTracker {
     private final FlowProperties flowProperties;
     private final ScmConfigOverrider scmConfigOverrider;
 
+    private final int max_desc_length=0;
+
     public GitLabIssueTracker(@Qualifier("flowRestTemplate") RestTemplate restTemplate, GitLabProperties properties, FlowProperties flowProperties,
                               ScmConfigOverrider scmConfigOverrider) {
         this.restTemplate = restTemplate;
@@ -327,7 +329,7 @@ public class GitLabIssueTracker implements IssueTracker {
     private JSONObject getJSONUpdateIssue(ScanResults.XIssue resultIssue, ScanRequest request) {
         JSONObject requestBody = new JSONObject();
         String fileUrl = getFileUrl(request, resultIssue.getFilename());
-        String body = HTMLHelper.getMDBody(resultIssue, request.getBranch(), fileUrl, flowProperties);
+        String body = HTMLHelper.getMDBody(resultIssue, request.getBranch(), fileUrl, flowProperties,max_desc_length);
         String title = getXIssueKey(resultIssue, request);
 
         try {
@@ -348,7 +350,7 @@ public class GitLabIssueTracker implements IssueTracker {
     private JSONObject getJSONCreateIssue(ScanResults.XIssue resultIssue, ScanRequest request) {
         JSONObject requestBody = new JSONObject();
         String fileUrl = getFileUrl(request, resultIssue.getFilename());
-        String body = HTMLHelper.getMDBody(resultIssue, request.getBranch(), fileUrl, flowProperties);
+        String body = HTMLHelper.getMDBody(resultIssue, request.getBranch(), fileUrl, flowProperties,max_desc_length);
         String title = HTMLHelper.getScanRequestIssueKeyWithDefaultProductValue(request, this, resultIssue);
 
         try {
