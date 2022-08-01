@@ -710,7 +710,7 @@ github:
 | `false-positive-label`   | false-positive | A label that can be defined within the GitHub Issue feedback that is used to ignore issues                                                                                                                        |
 | `block-merge`            | false          | When triggering scans based on PullRequest, this will create a new status of pending, which will block the merge ability until the scan is complete in Checkmarx.                                                 |
 | `scan-submitted-comment` | true           | Comment on PullRequest with "Scan submitted (or not submitted) to Checkmarx ...".                                                                                                                                 | 
-| `max-description-length` | 50000          | Manages number of lines to view in issue description.(value should be less than 50000)                                                                                                                            |
+| `max-description-length` | 50000          | Manages number of characters to view in issue description.(value should be less than 50000)                                                                                                                       |
 **Note**: A service account is required with access to the repositories that will be scanned, pull requests that will be commented on, and GitHub issues that will be created/updated.
 
 ### <a name="gitlab">GitLab</a>
