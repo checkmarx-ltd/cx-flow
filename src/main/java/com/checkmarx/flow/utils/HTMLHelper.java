@@ -51,6 +51,7 @@ public class HTMLHelper {
     public static final String NO_POLICY_VIOLATION_MESSAGE = "No policy violation found";
     private static final String NO_PACKAGE_VIOLATION_MESSAGE = "No package violation found";
 
+    private static int min_desc_length =50000;
     private HTMLHelper() {
     }
 
@@ -159,7 +160,7 @@ public class HTMLHelper {
     }
 
     public static String getMDBody(ScanResults.XIssue issue, String branch, String fileUrl,
-            FlowProperties flowProperties) {
+            FlowProperties flowProperties, int max_desc_length) {
         StringBuilder body = new StringBuilder();
 
         List<ScanResults.ScaDetails> scaDetails = issue.getScaDetails();
@@ -167,7 +168,7 @@ public class HTMLHelper {
             setSCAMDBody(branch, body, scaDetails);
 
         } else {
-            setSASTMDBody(issue, branch, fileUrl, flowProperties, body);
+            setSASTMDBody(issue, branch, fileUrl, flowProperties, body,max_desc_length);
         }
 
         return body.toString();
@@ -392,13 +393,33 @@ public class HTMLHelper {
     }
 
     private static void setSASTMDBody(ScanResults.XIssue issue, String branch, String fileUrl,
-            FlowProperties flowProperties, StringBuilder body) {
+            FlowProperties flowProperties, StringBuilder body, int max_desc_length) {
+
         log.debug("Building MD body for SAST scanner");
-
-
         body.append(String.format(ISSUE_BODY, issue.getVulnerability(), issue.getFilename(), branch)).append(CRLF)
                 .append(CRLF);
-        if (!ScanUtils.empty(issue.getDescription())) {
+        if(flowProperties.getBugTracker().equals("GitHub"))
+        {
+            if (!ScanUtils.empty(issue.getDescription())) {
+                if(max_desc_length>0)
+                {
+                    if(max_desc_length>min_desc_length)
+                    {
+                        body.append("*").append(StringUtils.abbreviate(issue.getDescription(),min_desc_length )).append("*").append(CRLF).append(CRLF);
+                    }
+                    else
+                    {
+                        body.append("*").append(StringUtils.abbreviate(issue.getDescription(),max_desc_length)).append("*").append(CRLF).append(CRLF);
+                    }
+                }
+               else {
+                    body.append("*").append(StringUtils.abbreviate(issue.getDescription(),min_desc_length )).append("*").append(CRLF).append(CRLF);
+                }
+
+            }
+        }
+        else
+        {
             body.append("*").append(issue.getDescription()).append("*").append(CRLF).append(CRLF);
         }
         if (!ScanUtils.empty(issue.getSeverity())) {
