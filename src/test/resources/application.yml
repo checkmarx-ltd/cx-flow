@@ -62,7 +62,7 @@ checkmarx:
   incremental: true
   scan-preset: Checkmarx Default
   configuration: Default Configuration
-  team: \CxServer\SP\Checkmarx
+  team: CxServer/SP/Checkmarx
   scan-timeout: 120
   #WSDL Config
   portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
