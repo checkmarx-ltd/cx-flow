@@ -1137,7 +1137,14 @@ public class JiraService {
         displayedParametersMap.put("*Repository Url:* ", request.getRepoUrl());
         displayedParametersMap.put("*Application:* ", request.getApplication());
         displayedParametersMap.put("*Cx-Project:* ", request.getProject());
-        displayedParametersMap.put("*Cx-Team:* ", request.getTeam());
+        if(issue.getScaDetails()!=null)
+        {
+            displayedParametersMap.put("*Cx-Team:* ", request.getScaConfig().getTeam());
+        }
+        else
+        {
+            displayedParametersMap.put("*Cx-Team:* ", request.getTeam());
+        }
         displayedParametersMap.put("*Severity:* ", issue.getSeverity());
         displayedParametersMap.put("*CWE:* ", issue.getCwe());
         displayedParametersMap.put("*Status:* ", issue.getVulnerabilityStatus());
