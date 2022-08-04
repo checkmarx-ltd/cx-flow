@@ -722,8 +722,10 @@ workflows:
             - sca-integration-tests
             - jira-integration-tests
             - pullRequestComments-integration-tests
+            - SAST-CLI-integration-tests
             - SCA-CLI-integration-tests
             - CxGo-integration-tests
+            - CodeBashing-integration-tests
   nightly-cleanup:
     triggers:
       - schedule:
