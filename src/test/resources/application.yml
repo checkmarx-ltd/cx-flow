@@ -53,6 +53,7 @@ cx-flow:
 
 
 checkmarx:
+  version: 9.4
   username: xxx
   password: xxx
   client-secret: 014DF517-39D1-4453-B7B3-9930C563627C
