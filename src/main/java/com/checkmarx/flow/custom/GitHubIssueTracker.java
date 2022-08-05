@@ -17,7 +17,6 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -40,12 +39,6 @@ public class GitHubIssueTracker implements IssueTracker {
     private final FlowProperties flowProperties;
     private final ScmConfigOverrider scmConfigOverrider;
     private final GitHubService gitHubService;
-    private static int max_desc_length;
-    @Value("${github.max-description-length:50000}")
-    public void setMax_desc_length(int max_desc_length) {
-        GitHubIssueTracker.max_desc_length = max_desc_length;
-    }
-
 
     public GitHubIssueTracker(@Qualifier("flowRestTemplate") RestTemplate restTemplate, GitHubProperties properties, FlowProperties flowProperties,
                               ScmConfigOverrider scmConfigOverrider, GitHubService gitHubService) {
@@ -235,9 +228,9 @@ public class GitHubIssueTracker implements IssueTracker {
      */
     private JSONObject getJSONUpdateIssue(ScanResults.XIssue resultIssue, ScanRequest request) {
         JSONObject requestBody = new JSONObject();
-        log.debug("max description length {}",max_desc_length);
+        log.debug("max description length {}",properties.getMaxDescriptionLength());
         String fileUrl = ScanUtils.getFileUrl(request, resultIssue.getFilename());
-        String body = HTMLHelper.getMDBody(resultIssue, request.getBranch(), fileUrl, flowProperties,max_desc_length);
+        String body = HTMLHelper.getMDBody(resultIssue, request.getBranch(), fileUrl, flowProperties,properties.getMaxDescriptionLength());
         String title = getXIssueKey(resultIssue, request);
 
         try {
@@ -257,9 +250,9 @@ public class GitHubIssueTracker implements IssueTracker {
      */
     private JSONObject getJSONCreateIssue(ScanResults.XIssue resultIssue, ScanRequest request) {
         JSONObject requestBody = new JSONObject();
-        log.debug("max description length {}",max_desc_length);
+        log.debug("max description length {}",properties.getMaxDescriptionLength());
         String fileUrl = ScanUtils.getFileUrl(request, resultIssue.getFilename());
-        String body = HTMLHelper.getMDBody(resultIssue, request.getBranch(), fileUrl, flowProperties,max_desc_length);
+        String body = HTMLHelper.getMDBody(resultIssue, request.getBranch(), fileUrl, flowProperties,properties.getMaxDescriptionLength());
         String title = HTMLHelper.getScanRequestIssueKeyWithDefaultProductValue(request, this, resultIssue);
 
         try {
