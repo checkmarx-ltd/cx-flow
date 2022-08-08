@@ -51,7 +51,6 @@ public class HTMLHelper {
     public static final String NO_POLICY_VIOLATION_MESSAGE = "No policy violation found";
     private static final String NO_PACKAGE_VIOLATION_MESSAGE = "No package violation found";
 
-    private static int min_desc_length =50000;
     private HTMLHelper() {
     }
 
@@ -398,30 +397,26 @@ public class HTMLHelper {
         log.debug("Building MD body for SAST scanner");
         body.append(String.format(ISSUE_BODY, issue.getVulnerability(), issue.getFilename(), branch)).append(CRLF)
                 .append(CRLF);
-        if(flowProperties.getBugTracker().equals("GitHub"))
+        if (!ScanUtils.empty(issue.getDescription()))
         {
-            if (!ScanUtils.empty(issue.getDescription())) {
-                if(max_desc_length>0)
+            if(flowProperties.getBugTracker().equalsIgnoreCase("GitHub"))
+            {
+                if(max_desc_length<4 || max_desc_length>50000)
                 {
-                    if(max_desc_length>min_desc_length)
-                    {
-                        body.append("*").append(StringUtils.abbreviate(issue.getDescription(),min_desc_length )).append("*").append(CRLF).append(CRLF);
-                    }
-                    else
-                    {
-                        body.append("*").append(StringUtils.abbreviate(issue.getDescription(),max_desc_length)).append("*").append(CRLF).append(CRLF);
-                    }
+                    log.info("max description length should be greater than 4 and less than 50000");
+                    body.append("*").append(StringUtils.abbreviate(issue.getDescription(),50000 )).append("*").append(CRLF).append(CRLF);
                 }
-               else {
-                    body.append("*").append(StringUtils.abbreviate(issue.getDescription(),min_desc_length )).append("*").append(CRLF).append(CRLF);
+                else
+                {
+                    body.append("*").append(StringUtils.abbreviate(issue.getDescription(),max_desc_length )).append("*").append(CRLF).append(CRLF);
                 }
-
+            }
+            else
+            {
+                body.append("*").append(issue.getDescription()).append("*").append(CRLF).append(CRLF);
             }
         }
-        else
-        {
-            body.append("*").append(issue.getDescription()).append("*").append(CRLF).append(CRLF);
-        }
+
         if (!ScanUtils.empty(issue.getSeverity())) {
             body.append(SEVERITY).append(": ").append(issue.getSeverity()).append(CRLF).append(CRLF);
         }

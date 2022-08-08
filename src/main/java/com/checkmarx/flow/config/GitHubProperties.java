@@ -26,6 +26,10 @@ public class GitHubProperties extends RepoProperties {
     @Setter
     private String appUrl = "https://api.github.com/app/";
 
+    @Getter
+    @Setter
+    private int maxDescriptionLength =50000;
+
     public String getMergeNoteUri(String namespace, String repo, String mergeId){
         String format = "%s/%s/%s/issues/%s/comments";
         return String.format(format, getApiUrl(), namespace, repo, mergeId);
