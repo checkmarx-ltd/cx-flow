@@ -712,7 +712,7 @@ github:
 | `block-merge`            | false     | When triggering scans based on PullRequest, this will create a new status of pending, which will block the merge ability until the scan is complete in Checkmarx.                                                 |
 | `scan-submitted-comment` | true      | Comment on PullRequest with "Scan submitted (or not submitted) to Checkmarx ...".                                                                                                                                 | 
 | `max-description-length` | 50000     | Manages number of characters to view in issue description.(value should be greater than 4 and less than 50000)                                                                                                    |
-| `max-delay`              |           | When Secondary rate limit is hit, it will delay each api call for issue creation(Mininum value should be 3)                                                                                                       |
+| `max-delay`              |           | When Secondary rate limit is hit, it will delay each API call for issue creation(Mininum value should be 3)                                                                                                       |
 **Note**: A service account is required with access to the repositories that will be scanned, pull requests that will be commented on, and GitHub issues that will be created/updated.
 
 ### <a name="gitlab">GitLab</a>
