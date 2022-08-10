@@ -12,6 +12,7 @@ import com.checkmarx.sdk.dto.ast.ASTResults;
 import com.checkmarx.sdk.dto.ast.ScanParams;
 import com.checkmarx.sdk.dto.sca.SCAResults;
 import com.checkmarx.sdk.service.scanner.AbstractScanner;
+import com.checkmarx.sdk.service.scanner.AstScanner;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,6 +38,8 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
     public ScanResults scan(ScanRequest scanRequest) {
         ScanResults result = null;
         log.info("--------------------- Initiating new {} scan ---------------------", scanType);
+        String effectiveProjectName = normalize(scanRequest.getProject(),flowProperties.isPreserveProjectName());
+        scanRequest.setProject(effectiveProjectName);
         ScanParams sdkScanParams = toSdkScanParams(scanRequest);
         AstScaResults internalResults = new AstScaResults(new SCAResults(), new ASTResults());
         try {
@@ -105,6 +108,8 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
     public ScanResults scan(ScanRequest scanRequest, String path) throws ExitThrowable {
         BugTracker.Type bugTrackerType = bugTrackerEventTrigger.triggerScanStartedEvent(scanRequest);
         ScanResults result = null;
+        String effectiveProjectName = normalize(scanRequest.getProject(),flowProperties.isPreserveProjectName());
+        scanRequest.setProject(effectiveProjectName);
         if (bugTrackerType.equals(BugTracker.Type.NONE)) {
             log.info("Not waiting for scan completion as Bug Tracker type is NONE");
             ScanParams sdkScanParams = toSdkScanParams(scanRequest, path);
@@ -186,6 +191,30 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
         String scanId = getScanId(internalResults);
         ScanReport report = new ScanReport(scanId, request, request.getRepoUrl(), scanCreationResult, AnalyticsReport.SCA);
         report.log();
+    }
+
+    private static String normalize(String rawProjectName, boolean preserveProjectName) {
+        String result = null;
+        if (rawProjectName != null) {
+            if (!preserveProjectName) {
+                if(!rawProjectName.contains("#")) {
+                    result = rawProjectName.replaceAll("[^a-zA-Z0-9-_.]+", "-");
+                }
+                else {
+                    result = rawProjectName;
+                }
+                if (!result.equals(rawProjectName)) {
+                    log.debug("Project name ({}) has been normalized to allow only valid characters.", rawProjectName);
+                }
+            } else {
+                result = rawProjectName;
+                log.info("Project name ({}) has not been normalized.", rawProjectName);
+            }
+            log.info("Project name being used: {}", result);
+        } else {
+            log.warn("Project name returned NULL");
+        }
+        return result;
     }
 }
 
