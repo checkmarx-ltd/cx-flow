@@ -20,6 +20,7 @@ import com.checkmarx.flow.exception.IastThresholdsSeverityException;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.jira.JiraTestUtils;
+import com.checkmarx.sdk.dto.ScanResults;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -267,7 +268,7 @@ public class IastCliSteps {
         IssueTracker issueTracker = null;
         switch (bugTracker) {
             case "jira":
-                verify(jiraService, times(createdIssues)).createIssue(any(), any());
+                verify(jiraService, times(createdIssues)).createIssue(any(), any(), any());
                 return;
             case "github":
                 issueTracker = gitHubIssueTracker;
@@ -286,7 +287,7 @@ public class IastCliSteps {
 
 
     private void mockServiceCreateIssue() throws MachinaException {
-        when(jiraService.createIssue(any(), any())).thenReturn("BCB-202");
+        when(jiraService.createIssue(any(), any(), any())).thenReturn("BCB-202");
 
         when(gitHubIssueTracker.createIssue(any(), any())).thenReturn(mock(Issue.class));
 

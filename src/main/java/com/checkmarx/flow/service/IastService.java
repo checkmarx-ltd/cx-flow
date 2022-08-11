@@ -181,7 +181,8 @@ public class IastService {
             boolean htmlDescription = false;
             switch (request.getBugTracker().getType()) {
                 case JIRA:
-                    String jiraIssue = postIssueToJira(scanVulnerabilities, request, scansResultQuery, vulnerability, scan);
+                    ScanResults results = null;
+                    String jiraIssue = postIssueToJira(results, scanVulnerabilities, request, scansResultQuery, vulnerability, scan);
                     if (jiraService.getJiraProperties() != null) {
                         log.info("Create jira issue: " + jiraService.getJiraProperties().getUrl() + "/browse/" + jiraIssue);
                     }
@@ -309,14 +310,14 @@ public class IastService {
         return result.toString();
     }
 
-    private String postIssueToJira(ScanVulnerabilities scanVulnerabilities,
+    private String postIssueToJira(ScanResults results, ScanVulnerabilities scanVulnerabilities,
                                    ScanRequest request,
                                    ResultInfo scansResultQuery,
                                    VulnerabilityInfo vulnerability,
                                    Scan scan) throws JiraClientException {
 
         ScanResults.XIssue xIssue = generateXIssue(scanVulnerabilities, scansResultQuery, scan, vulnerability, false);
-        return jiraService.createIssue(xIssue, request);
+        return jiraService.createIssue(results, xIssue, request);
     }
 
     private String generateIastLinkToVulnerability(ScanVulnerabilities scanVulnerabilities,

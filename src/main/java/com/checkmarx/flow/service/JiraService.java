@@ -281,7 +281,7 @@ public class JiraService {
         return String.join(", ", issueTypesList);
     }
 
-    public String createIssue(ScanResults.XIssue issue, ScanRequest request) throws JiraClientException {
+    public String createIssue(ScanResults results, ScanResults.XIssue issue, ScanRequest request) throws JiraClientException {
         log.debug("Retrieving issuetype object for project {}, type {}", request.getBugTracker().getProjectKey(), request.getBugTracker().getIssueType());
         try {
             BugTracker bugTracker = request.getBugTracker();
@@ -370,7 +370,7 @@ public class JiraService {
 
             log.debug("Creating JIRA issue");
 
-            mapCustomFields(request, issue, issueBuilder, false);
+            mapCustomFields(results, request, issue, issueBuilder, false);
 
             log.debug("Creating JIRA issue");
             BasicIssue basicIssue = this.issueClient.createIssue(issueBuilder.build()).claim();
@@ -425,7 +425,7 @@ public class JiraService {
                 request.getBranch());
     }
 
-    private Issue updateIssue(String bugId, ScanResults.XIssue issue, ScanRequest request) throws JiraClientException {
+    private Issue updateIssue(ScanResults results, String bugId, ScanResults.XIssue issue, ScanRequest request) throws JiraClientException {
         BugTracker bugTracker = request.getBugTracker();
         String severity = issue.getSeverity();
         Issue jiraIssue = this.getIssue(bugId);
@@ -449,7 +449,7 @@ public class JiraService {
 
         log.info("Updating JIRA issue #{}", bugId);
 
-        mapCustomFields(request, issue, issueBuilder, true);
+        mapCustomFields(results, request, issue, issueBuilder, true);
 
         log.debug("Updating JIRA issue");
         try {
@@ -466,7 +466,7 @@ public class JiraService {
      * Map custom JIRA fields to specific values (Custom Cx fields, Issue result
      * fields, static fields
      */
-    private void mapCustomFields(ScanRequest request, ScanResults.XIssue issue, IssueInputBuilder issueBuilder, boolean update) {
+    private void mapCustomFields(ScanResults results, ScanRequest request, ScanResults.XIssue issue, IssueInputBuilder issueBuilder, boolean update) {
         BugTracker bugTracker = request.getBugTracker();
 
         log.debug("Handling custom field mappings");
@@ -497,21 +497,48 @@ public class JiraService {
                     // use default = result
                     fieldType = "result";
                 }
+                Map<String, Object> addDetails = null;
+                Map<String, String> scanCustomFields = null;
+                String scanCustomFieldsValue = null;
+                if(Objects.nonNull(results.getAdditionalDetails()) && Objects.nonNull((Map<String, String>) results.getAdditionalDetails().get("scanCustomFields"))) {
+                    addDetails = results.getAdditionalDetails();
+                    scanCustomFields = (Map<String, String>) addDetails.get("scanCustomFields");
+                    scanCustomFieldsValue = scanCustomFields.get(f.getJiraFieldName());
+                }
 
                 switch (fieldType) {
                     case FlowConstants.MAIN_MDC_ENTRY:
-                        log.debug("Checkmarx custom field {}", f.getName());
-                        if (request.getCxFields() != null) {
-                            log.debug("Checkmarx custom field");
-                            value = request.getCxFields().get(f.getName());
-                            log.debug("Cx Field value: {}", value);
-                            if (ScanUtils.empty(value) && !ScanUtils.empty(f.getJiraDefaultValue())) {
-                                value = f.getJiraDefaultValue();
-                                log.debug("JIRA default Value is {}", value);
-                            }
-                        } else {
-                            log.debug("No value found for {}", f.getName());
-                            value = "";
+                        switch (f.getName()) {
+                            case "cx-scan":
+                                log.debug("Checkmarx scan custom field {}", f.getName());
+                                if (scanCustomFieldsValue != null) {
+                                    log.debug("Checkmarx scan custom field");
+                                    value = scanCustomFieldsValue;
+                                    log.debug("Cx Scan Field value: {}", value);
+                                    if (ScanUtils.empty(value) && !ScanUtils.empty(f.getJiraDefaultValue())) {
+                                        value = f.getJiraDefaultValue();
+                                        log.debug("JIRA default Value is {}", value);
+                                    }
+                                } else {
+                                    log.debug("No value found for {}", f.getName());
+                                    value = "";
+                                }
+                                break;
+                            default:
+                                log.debug("Checkmarx custom field {}", f.getName());
+                                if (request.getCxFields() != null) {
+                                    log.debug("Checkmarx custom field");
+                                    value = request.getCxFields().get(f.getName());
+                                    log.debug("Cx Field value: {}", value);
+                                    if (ScanUtils.empty(value) && !ScanUtils.empty(f.getJiraDefaultValue())) {
+                                        value = f.getJiraDefaultValue();
+                                        log.debug("JIRA default Value is {}", value);
+                                    }
+                                    } else {
+                                        log.debug("No value found for {}", f.getName());
+                                    }
+                                    value = "";
+                                break;
                         }
                         break;
                     case "sca-results":
@@ -1003,6 +1030,7 @@ public class JiraService {
                     )
             );
 
+
             log.info("finished Loading {} new custom fields", fields.size());
 
             return fields;
@@ -1372,10 +1400,10 @@ public class JiraService {
                         //All issues are false positive, so issue should be closed
                         log.debug("All issues are false positives");
                         Issue fpIssue;
-                        fpIssue = checkForFalsePositiveIssuesInList(request, xIssue, currentIssue, issue);
+                        fpIssue = checkForFalsePositiveIssuesInList(results, request, xIssue, currentIssue, issue);
                         closeIssueInCaseOfIssueIsInOpenState(request, closedIssues, fpIssue);
                     }/*Ignore any with label indicating false positive*/ else if (!issue.getLabels().contains(jiraProperties.getFalsePositiveLabel())) {
-                        updateIssueAndAddToNewIssuesList(request, updatedIssues, xIssue, currentIssue, issue);
+                        updateIssueAndAddToNewIssuesList(results, request, updatedIssues, xIssue, currentIssue, issue);
                     } else {
                         log.info("Skipping issue marked as false-positive or has False Positive state with key {}", issueCurrentKey);
                     }
@@ -1385,7 +1413,7 @@ public class JiraService {
                         if (jiraProperties.isChild()) {
                             log.info("Issue not found in parent creating issue for child");
                         }
-                        createIssueAndAddToNewIssuesList(request, newIssues, xIssue, currentIssue);
+                        createIssueAndAddToNewIssuesList(results, request, newIssues, xIssue, currentIssue);
                     }
                 }
             } catch (RestClientException e) {
@@ -1502,16 +1530,16 @@ public class JiraService {
         }
     }
 
-    private void createIssueAndAddToNewIssuesList(ScanRequest request, List<String> newIssues, Map.Entry<String, ScanResults.XIssue> xIssue, ScanResults.XIssue currentIssue) throws JiraClientException {
+    private void createIssueAndAddToNewIssuesList(ScanResults results, ScanRequest request, List<String> newIssues, Map.Entry<String, ScanResults.XIssue> xIssue, ScanResults.XIssue currentIssue) throws JiraClientException {
         log.debug("Creating new issue with key {}", xIssue.getKey());
-        String newIssue = this.createIssue(currentIssue, request);
+        String newIssue = this.createIssue(results, currentIssue, request);
         newIssues.add(newIssue);
         log.info("New issue created. #{}", newIssue);
     }
 
-    private void updateIssueAndAddToNewIssuesList(ScanRequest request, List<String> updatedIssues, Map.Entry<String, ScanResults.XIssue> xIssue, ScanResults.XIssue currentIssue, Issue issue) throws JiraClientException {
+    private void updateIssueAndAddToNewIssuesList(ScanResults results, ScanRequest request, List<String> updatedIssues, Map.Entry<String, ScanResults.XIssue> xIssue, ScanResults.XIssue currentIssue, Issue issue) throws JiraClientException {
         log.debug("Issue still exists.  Updating issue with key {}", xIssue.getKey());
-        Issue updatedIssue = this.updateIssue(issue.getKey(), currentIssue, request);
+        Issue updatedIssue = this.updateIssue(results, issue.getKey(), currentIssue, request);
         if (updatedIssue != null) {
             log.debug("Update completed for issue #{}", updatedIssue.getKey());
             updatedIssues.add(updatedIssue.getKey());
@@ -1530,11 +1558,11 @@ public class JiraService {
         }
     }
 
-    private Issue checkForFalsePositiveIssuesInList(ScanRequest request, Map.Entry<String, ScanResults.XIssue> xIssue, ScanResults.XIssue currentIssue, Issue issue) throws JiraClientException {
+    private Issue checkForFalsePositiveIssuesInList(ScanResults results, ScanRequest request, Map.Entry<String, ScanResults.XIssue> xIssue, ScanResults.XIssue currentIssue, Issue issue) throws JiraClientException {
         Issue fpIssue;
         if (flowProperties.isListFalsePositives()) { //Update the ticket if flag is set
             log.debug("Issue is being updated to reflect false positive references.  Updating issue with key {}", xIssue.getKey());
-            fpIssue = this.updateIssue(issue.getKey(), currentIssue, request);
+            fpIssue = this.updateIssue(results, issue.getKey(), currentIssue, request);
         } else { //otherwise simply get a reference to the issue
             fpIssue = this.getIssue(issue.getKey());
         }
