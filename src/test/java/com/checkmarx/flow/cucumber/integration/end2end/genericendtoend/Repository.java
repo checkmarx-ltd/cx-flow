@@ -172,8 +172,7 @@ enum Repository {
 
                 for(Character c :namespace.toCharArray()){System.out.println("Name-Space : "+ c);}
                 for(Character c :repo.toCharArray()){System.out.println("Repo : "+c);}
-                for(Character c :activeBranch.toCharArray()){System.out.println("Active-Branch : "+c);}
-                for(Character c :theFilePath.toCharArray()){System.out.println("The-File-Path : "+c);}
+                for(Character c :hookTargetURL.toCharArray()){System.out.println("Hook URL : "+c);}
 
 
 
