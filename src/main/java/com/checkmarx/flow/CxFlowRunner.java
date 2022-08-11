@@ -204,7 +204,7 @@ public class CxFlowRunner implements ApplicationRunner {
         boolean usingBitBucketCloud = args.containsOption("bb");
         boolean usingBitBucketServer = args.containsOption("bbs");
         boolean disableCertificateValidation = args.containsOption("trust-cert");
-        branchProtectionEnabled=args.containsOption("branch-Protection-Enabled");
+        branchProtectionEnabled = args.containsOption("branch-protection-enabled");
         CxPropertiesBase cxProperties = cxScannerService.getProperties();
         Map<String, String> projectCustomFields = makeCustomFieldMap(args.getOptionValues("project-custom-field"));
         Map<String, String> scanCustomFields = makeCustomFieldMap(args.getOptionValues("scan-custom-field"));
@@ -601,18 +601,13 @@ public class CxFlowRunner implements ApplicationRunner {
     private void scanCommon(ScanRequest request, String type, String path) throws ExitThrowable {
         List<String> branches = request.getActiveBranches() != null ? request.getActiveBranches() : flowProperties.getBranches();
         ScanResults scanResults;
-        if(flowProperties.isBranchProtectionEnabled() || request.isBranchProtectionEnabled() ){
-            if (request.getBranch() == null || (helperService.isBranch2Scan(request, branches)) ) {
-                if (path != null) {
-                    scanResults = runOnActiveScanners(scanner -> scanner.scanCli(request, type, new File(path)));
-                } else {
-                    scanResults = runOnActiveScanners(scanner -> scanner.scanCli(request, type));
-                }
-                processResults(request, scanResults);
-            } else {
-                log.debug("{}: branch not eligible for scanning", request.getBranch());
-                return;
-            }
+        boolean isBranchProtectionEnabled = flowProperties.isBranchProtectionEnabled() || request.isBranchProtectionEnabled();
+
+        log.debug("scanCommon: isBranchProtectionEnabled: {}, branch: {}, branches: {}",
+                isBranchProtectionEnabled, request.getBranch(), branches);
+        if (isBranchProtectionEnabled && request.getBranch() != null && !helperService.isBranch2Scan(request, branches)) {
+            log.debug("{}: branch not eligible for scanning", request.getBranch());
+            return;
         }
 
         if (path != null) {
