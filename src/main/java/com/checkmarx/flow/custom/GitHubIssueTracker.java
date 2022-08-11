@@ -12,17 +12,17 @@ import com.checkmarx.flow.service.GitHubService;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
+import org.apache.commons.lang3.ThreadUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
-
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -180,6 +180,14 @@ public class GitHubIssueTracker implements IssueTracker {
         try {
             HttpEntity<String> httpEntity = new HttpEntity<>(getJSONCreateIssue(resultIssue, request).toString(),
                     gitHubService.createAuthHeaders(request));
+            if(properties.getMaxDelay()>=3)
+            {
+                sleepToPreventRateLimitError();
+            }
+            else
+            {
+                log.debug("Please provide max delay of minimum 3 sec");
+            }
             response = restTemplate.exchange(apiUrl, HttpMethod.POST, httpEntity, com.checkmarx.flow.dto.github.Issue.class);
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while creating GitHub Issue", e);
@@ -205,6 +213,14 @@ public class GitHubIssueTracker implements IssueTracker {
                 gitHubService.createAuthHeaders(request));
         ResponseEntity<com.checkmarx.flow.dto.github.Issue> response;
         try {
+            if(properties.getMaxDelay()>=3)
+            {
+                sleepToPreventRateLimitError();
+            }
+            else
+            {
+                log.debug("Please provide max delay of minimum 3 sec");
+            }
             response = restTemplate.exchange(issue.getUrl(), HttpMethod.POST, httpEntity, com.checkmarx.flow.dto.github.Issue.class);
             this.addComment(Objects.requireNonNull(response.getBody()).getUrl(),"Issue still exists.", request);
             return mapToIssue(response.getBody());
@@ -223,6 +239,15 @@ public class GitHubIssueTracker implements IssueTracker {
         }
         if (e.getStatusCode().equals(HttpStatus.GONE) || isForbidden) {
             throw new MachinaRuntimeException(e);
+        }
+    }
+    private void sleepToPreventRateLimitError() {
+        try {
+            log.debug("delay for {} sec",properties.getMaxDelay());
+            ThreadUtils.sleep(Duration.ofSeconds(properties.getMaxDelay()));
+        } catch (InterruptedException e) {
+            log.error("Interrupted between issue creation requests");
+            Thread.currentThread().interrupt();
         }
     }
 
