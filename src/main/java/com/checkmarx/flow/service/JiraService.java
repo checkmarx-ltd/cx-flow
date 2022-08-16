@@ -1129,12 +1129,16 @@ public class JiraService {
         Optional.ofNullable(issue.getDescription())
                 .ifPresent(d -> body.append(d.trim()).append(HTMLHelper.CRLF).append(HTMLHelper.CRLF));
 
+        String repoUrl = request.getRepoUrl();
+        if (repoUrl.contains("gitlab-ci-token") && repoUrl.contains("@")) {
+            repoUrl = repoUrl.substring(0, 8) + repoUrl.substring(repoUrl.indexOf('@') + 1);
+        }
         Map<String, String> displayedParametersMap = new LinkedHashMap<>();
 
         displayedParametersMap.put("*Namespace:* ", request.getNamespace());
         displayedParametersMap.put("*Repository:* ", request.getRepoName());
         displayedParametersMap.put("*Branch:* ", request.getBranch());
-        displayedParametersMap.put("*Repository Url:* ", request.getRepoUrl());
+        displayedParametersMap.put("*Repository Url:* ", repoUrl);
         displayedParametersMap.put("*Application:* ", request.getApplication());
         displayedParametersMap.put("*Cx-Project:* ", request.getProject());
         if(issue.getScaDetails()!=null)
