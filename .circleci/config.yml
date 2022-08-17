@@ -603,7 +603,7 @@ orbs:
   aws-cli: circleci/aws-cli@3.1.1
   aws-eks: circleci/aws-eks@1.0.0
   kubernetes: circleci/kubernetes@0.4.0
-  helm: circleci/helm@2.0.1
+  helm: circleci/helm@0.2.3
   checkmarx: checkmarx/circleci-kpi-shipper@0.10.0
 
 workflows:
