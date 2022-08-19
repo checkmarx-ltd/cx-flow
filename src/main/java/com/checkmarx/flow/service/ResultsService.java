@@ -50,6 +50,7 @@ public class ResultsService {
     private final BitBucketService bbService;
     private final ADOService adoService;
     private final EmailService emailService;
+    private final SlackService slackService;
 
     @Async("scanRequest")
     public CompletableFuture<ScanResults> processScanResultsAsync(ScanRequest request, Integer projectId,
@@ -122,6 +123,14 @@ public class ResultsService {
     }
 
 
+    /**
+     * Process the results, according to notifiers and bug trackers configurations.
+     *
+     * @param request     The Scan Request
+     * @param results     The Scan Results
+     * @param scanDetails Details about the scan
+     * @throws MachinaException
+     */
     public void processResults(ScanRequest request, ScanResults results, ScanDetails scanDetails) throws MachinaException {
 
         scanDetails = Optional.ofNullable(scanDetails).orElseGet(ScanDetails::new);
@@ -129,7 +138,20 @@ public class ResultsService {
             getCxFields(request, results);
         }
 
-        if(results.getScaResults() != null || results.getXIssues() != null || results.getAstResults() != null) {
+        if (results == null) {
+            log.info("Invalid results object. Skipping results processing...");
+            return;
+        }
+
+        if (results.getScanSummary() != null) {
+            log.info("####Checkmarx Scan Results Summary####");
+            log.info("Team: {}, Project: {}, Scan-Id: {}", request.getTeam(), request.getProject(), results.getAdditionalDetails().get("scanId"));
+            log.info(String.format("The vulnerabilities found for the scan are: %s", results.getScanSummary()));
+            log.info("To view results use following link: {}", results.getLink());
+            log.info("######################################");
+        }
+
+        if (results.getScaResults() != null || results.getXIssues() != null || results.getAstResults() != null) {
             switch (request.getBugTracker().getType()) {
                 case NONE:
                 case wait:
@@ -138,7 +160,7 @@ public class ResultsService {
                     break;
                 case JIRA:
                     handleJiraCase(request, results, scanDetails);
-                    log.info("Results Service case JIRA : request =:  {}  results = {}  scanDetails= {}", request.toString(), results.toString(), scanDetails.toString());
+                    log.info("Results Service case JIRA : request =:  {}  results = {}  scanDetails= {}", request, results, scanDetails);
                     break;
                 case GITHUBPULL:
                     gitService.processPull(request, results);
@@ -175,13 +197,8 @@ public class ResultsService {
                     log.warn("No valid bug type was provided");
             }
         }
-        if (results != null && results.getScanSummary() != null) {
-            log.info("####Checkmarx Scan Results Summary####");
-            log.info("Team: {}, Project: {}, Scan-Id: {}", request.getTeam(), request.getProject(), results.getAdditionalDetails().get("scanId"));
-            log.info(String.format("The vulnerabilities found for the scan are: %s", results.getScanSummary()));
-            log.info("To view results use following link: {}", results.getLink());
-            log.info("######################################");
-        }
+
+        slackService.notifyChannel(request, results);
     }
 
     void logScanDetails(ScanRequest request, Integer projectId, ScanResults results) {

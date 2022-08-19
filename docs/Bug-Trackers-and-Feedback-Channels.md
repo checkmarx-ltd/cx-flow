@@ -23,6 +23,7 @@
 * [Json](#json)
 * [CSV](#csv)
 * [Email](#email)
+* [Slack](#slack)
 * [NONE|WAIT](#none)
 
 ##  <a name="data">Understanding the Data</a>
@@ -730,6 +731,46 @@ The Scan completed successfully report receives the following objects:
   - `issue.severity`
   - `issue.vulnerability`
   - `issue.filename`
+
+## <a name="slack">Slack</a>
+
+For now, the Slack support in CxFlow is only for post-scan notifications. More events can be implemented in the future.
+
+Slack notifications require a `slack` section to be defined in either `application.yml`, or through environment variables (starting by `SLACK_`), or through command-line arguments, following the usual conventions (see the start of this document in case of questions):
+
+```yaml
+# To use Slack, you'll need a Bot Token and some scopes defined.
+# The Bot token can be obtained creating an App and adding the following scopes to it:
+# - channels:join
+# - chat:write
+# - chat:write.customize
+# - chat:write.public
+slack:
+  bot-token: xoxb-12345-12345-12345 # This is required.
+  # channel-name: This is optional, default: random (doesn't require the # in front).
+  # channel-script: Use this to return what channel should receive the notification
+  #                  (since user handles in SCM can be different from user handles in Slack).
+  # highs-threshold: Optional. If set, will only report if number of high vulnerabilities in a scan is higher than this number
+  #                  default: 0
+  # mediums-threshold: Optional. If set, will only report if number of medium vulnerabilities in a scan is higher than this number
+  #                  default: 0
+```
+
+Slack is implemented as a notifier, not as a Bug Tracker. 
+
+### How to determine the channel name dynamically
+
+If you need to notify different users ot channels depending on the project, scan or their parameters, you can write a custom Groovy script to determine which channel CxFlow should notify through Slack. 
+
+One example is available at `/src/main/resources/samples/SlackChannelScript.groovy`. CxFlow expects a string as the channel name. 
+
+The Groovy script should be mentioned in the `application.yml`, environment variable or command-line argument: `slack.channel-script`.
+
+```yaml
+slack:
+  bot-token: xoxb-12345-12345-12345 # This is required.
+  channel-script: /my/folder/SlackChannelScript.groovy
+```
 
 ## <a name="none">NONE | WAIT</a>
 If you want to trigger scans asynchronously, use **NONE**  

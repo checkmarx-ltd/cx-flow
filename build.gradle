@@ -202,6 +202,7 @@ dependencies {
     compile group:'org.springframework', name:'spring-core', version:property('spring-core.version')
 
     implementation group: 'com.sendgrid', name: 'sendgrid-java', version: '4.9.0'
+    compile 'com.slack.api:slack-api-client:1.24.0'
 }
 
 springBoot {
