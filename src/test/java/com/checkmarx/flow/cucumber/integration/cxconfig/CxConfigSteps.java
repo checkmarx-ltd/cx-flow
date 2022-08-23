@@ -65,6 +65,7 @@ public class CxConfigSteps {
     private final FlowProperties flowProperties;
     private final CxProperties cxProperties;
     private final EmailService emailService;
+    private final SlackService slackService;
     private final GitHubProperties gitHubProperties;
     private final HelperService helperService;
     private final FilterFactory filterFactory;
@@ -88,7 +89,7 @@ public class CxConfigSteps {
     public CxConfigSteps(FlowProperties flowProperties, GitHubService gitHubService,
                          CxProperties cxProperties, GitHubProperties gitHubProperties, ConfigurationOverrider configOverrider, JiraProperties jiraProperties,
                          ThresholdValidator thresholdValidator, FilterFactory filterFactory, FlowService flowService, EmailService emailService,
-                         ScmConfigOverrider scmConfigOverrider, GitHubAppAuthService gitHubAppAuthService,
+                         SlackService slackService, ScmConfigOverrider scmConfigOverrider, GitHubAppAuthService gitHubAppAuthService,
                          GitAuthUrlGenerator gitAuthUrlGenerator, ShardSessionTracker sessionTracker, CxClient cxService) {
 
         this.cxClientMock = mock(CxService.class);
@@ -102,6 +103,7 @@ public class CxConfigSteps {
         this.flowService = flowService;
         this.gitHubService = gitHubService;
         this.emailService = emailService;
+        this.slackService = slackService;
 
         this.gitHubProperties = gitHubProperties;
         this.filterFactory = filterFactory;
@@ -583,7 +585,8 @@ public class CxConfigSteps {
                 null,
                 null,
                 null,
-                emailService);
+                emailService,
+                slackService);
     }
 
     private static ScanResults createFakeScanResults() {

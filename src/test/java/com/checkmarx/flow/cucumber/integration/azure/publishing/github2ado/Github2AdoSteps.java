@@ -73,6 +73,7 @@ public class Github2AdoSteps {
     private final GitHubProperties gitHubProperties;
     private HelperService helperService = mock(HelperService.class);
     private final EmailService emailService;
+    private final SlackService slackService;
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
     private final ScmConfigOverrider scmConfigOverrider;
@@ -102,7 +103,7 @@ public class Github2AdoSteps {
                            FilterFactory filterFactory, AzureDevopsClient azureDevopsClient,
                            EmailService emailService, ScmConfigOverrider scmConfigOverrider,
                            GitAuthUrlGenerator gitAuthUrlGenerator,
-                           CodeBashingService codeBashingService) {
+                           CodeBashingService codeBashingService, SlackService slackService) {
         this.filterFactory = filterFactory;
         this.cxClientMock = mock(CxService.class);
 
@@ -116,6 +117,7 @@ public class Github2AdoSteps {
         this.adoProperties = adoProperties;
         this.configOverrider = configOverrider;
         this.emailService = emailService;
+        this.slackService = slackService;
         this.scmConfigOverrider = scmConfigOverrider;
         this.gitAuthUrlGenerator = gitAuthUrlGenerator;
         this.codeBashingService = codeBashingService;
@@ -331,7 +333,8 @@ public class Github2AdoSteps {
                 null,
                 null,
                 null,
-                emailService));
+                emailService,
+                slackService));
     }
 
     @And("Scanner is AST")

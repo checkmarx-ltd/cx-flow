@@ -76,6 +76,7 @@ public class ThresholdsSteps {
     private final GitHubProperties gitHubProperties;
     private final ADOProperties adoProperties;
     private final EmailService emailService;
+    private final SlackService slackService;
     private final GitHubAppAuthService gitHubAppAuthService;
     private final ScmConfigOverrider scmConfigOverrider;
     private final ScaProperties scaProperties;
@@ -90,7 +91,8 @@ public class ThresholdsSteps {
 
     public ThresholdsSteps(IntegrationTestContext testContext, CxService cxClientMock, RestTemplate restTemplateMock, FlowProperties flowProperties, ADOProperties adoProperties,
                            CxProperties cxProperties, GitHubProperties gitHubProperties, ThresholdValidator thresholdValidator,
-                           EmailService emailService, GitHubAppAuthService gitHubAppAuthService, ScmConfigOverrider scmConfigOverrider, ScaProperties scaProperties, ShardSessionTracker sessionTracker, CxClient cxService) {
+                           EmailService emailService, SlackService slackService,
+                           GitHubAppAuthService gitHubAppAuthService, ScmConfigOverrider scmConfigOverrider, ScaProperties scaProperties, ShardSessionTracker sessionTracker, CxClient cxService) {
 
         this.cxClientMock = cxClientMock;
         this.restTemplateMock = restTemplateMock;
@@ -109,6 +111,7 @@ public class ThresholdsSteps {
 
         this.thresholdValidator = thresholdValidator;
         this.emailService = emailService;
+        this.slackService = slackService;
         this.scmConfigOverrider = scmConfigOverrider;
     }
 
@@ -370,7 +373,8 @@ public class ThresholdsSteps {
                 null,
                 null,
                 adoService,
-                emailService);
+                emailService,
+                slackService);
     }
 
     private static ScanResults createFakeScanResults() {

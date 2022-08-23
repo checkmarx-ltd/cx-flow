@@ -73,6 +73,7 @@ public class GitHubCommentsASTSteps {
     private final CxService cxClientMock;
     private final CxProperties cxProperties;
     private final EmailService emailService;
+    private final SlackService slackService;
     private final IssueService issueService;
     private final GitHubService gitHubService;
     private final GitHubProperties gitHubProperties;
@@ -84,13 +85,14 @@ public class GitHubCommentsASTSteps {
     private String comment;
 
     public GitHubCommentsASTSteps(CxService cxClientMock, FlowProperties flowProperties,
-                                  EmailService emailService,
+                                  EmailService emailService, SlackService slackService,
                                   GitHubService gitHubService, IssueService issueService,
                                   GitHubProperties gitHubProperties,
                                   CxProperties cxProperties) {
         this.cxClientMock = cxClientMock;
         flowProperties.setThresholds(new HashMap<>());
         this.emailService = emailService;
+        this.slackService = slackService;
         this.gitHubService = Mockito.spy(gitHubService);
         this.issueService = issueService;
         this.gitHubProperties = gitHubProperties;
@@ -140,7 +142,8 @@ public class GitHubCommentsASTSteps {
                     null,
                     null,
                     null,
-                    emailService);
+                    emailService,
+                    slackService);
         }
         
         throw new UnsupportedOperationException();
