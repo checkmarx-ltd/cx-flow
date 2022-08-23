@@ -242,7 +242,7 @@ public class ADOService {
                 return json.getInt("id");
             }
         }catch (NullPointerException e){
-            log.error("Error retrieving status id");
+            log.error("Error retrieving status id", e);
         }
         return -1;
     }
@@ -267,7 +267,7 @@ public class ADOService {
                 log.info("Successfully Updated thread status to {}",status);
             }
         }catch (NullPointerException e) {
-            log.error("Error updating the thread status");
+            log.error("Error updating the thread status", e);
         }
     }
 
@@ -488,7 +488,7 @@ public class ADOService {
             String error = "Got 404 'Not Found' error. Azure endpoint: " + urlTemplate + " is invalid.";
             log.warn(error);
         }catch (HttpClientErrorException e){
-            log.error(ExceptionUtils.getRootCauseMessage(e));
+            log.error("Error occurred in getRepoLanguagePercentages method", ExceptionUtils.getRootCauseMessage(e));
         }
         return sources;
     }

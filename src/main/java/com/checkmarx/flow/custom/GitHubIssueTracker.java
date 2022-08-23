@@ -246,7 +246,7 @@ public class GitHubIssueTracker implements IssueTracker {
             log.debug("delay for {} sec",properties.getMaxDelay());
             ThreadUtils.sleep(Duration.ofSeconds(properties.getMaxDelay()));
         } catch (InterruptedException e) {
-            log.error("Interrupted between issue creation requests");
+            log.error("Interrupted between issue creation requests", e);
             Thread.currentThread().interrupt();
         }
     }

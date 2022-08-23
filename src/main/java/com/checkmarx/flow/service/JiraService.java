@@ -455,7 +455,7 @@ public class JiraService {
         try {
             this.issueClient.updateIssue(bugId, issueBuilder.build()).claim();
         } catch (RestClientException e) {
-            log.error("Error occurred", e);
+            log.error("Error occurred in updating JIRA issue.", e);
             throw new JiraClientException();
         }
 
@@ -938,7 +938,7 @@ public class JiraService {
                 }
             }
         } catch (NullPointerException e) {
-            log.error("Error retrieving assignee");
+            log.error("Error retrieving assignee", e);
         }
         return null;
     }
@@ -959,7 +959,7 @@ public class JiraService {
             Issue issue = this.issueClient.getIssue(bugId).claim();
             this.issueClient.addComment(issue.getCommentsUri(), Comment.valueOf(comment)).claim();
         } catch (RestClientException e) {
-            log.error("Error occurred", e);
+            log.error("Error occurred in adding comment to bug.", e);
         }
     }
 

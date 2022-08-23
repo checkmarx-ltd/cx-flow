@@ -292,7 +292,7 @@ public class RallyIssueTracker implements IssueTracker {
             requestBody.put("Tags", this.tagsList);
             createBody.put("Defect", requestBody);
         } catch (JSONException e) {
-            log.error("Error creating JSON Issue Object - JSON Object will be empty");
+            log.error("Error creating JSON Issue Object - JSON Object will be empty", e);
         }
         return createBody.toString();
     }
@@ -363,7 +363,7 @@ public class RallyIssueTracker implements IssueTracker {
             requestBody.put("Name", name);
             createBody.put("Tag", requestBody);
         } catch (JSONException e) {
-            log.error("Error creating JSON Create Tag object - JSON object will be empty");
+            log.error("Error creating JSON Create Tag object - JSON object will be empty", e);
         }
         return createBody.toString();
     }
@@ -409,7 +409,7 @@ public class RallyIssueTracker implements IssueTracker {
                     com.checkmarx.flow.dto.rally.Issue.class);
             this.addComment(issue.getUrl(),"Issue still exists. ");
         } catch (HttpClientErrorException e) {
-            log.error("Error updating issue.  This is likely due to the fact that another user has closed this issue. Adding comment");
+            log.error("Error updating issue.  This is likely due to the fact that another user has closed this issue. Adding comment", e);
             if(e.getStatusCode().equals(HttpStatus.GONE)) {
                 throw new MachinaRuntimeException();
             }
@@ -480,7 +480,7 @@ public class RallyIssueTracker implements IssueTracker {
             requestBody.put("Text", comment);
             createBody.put("ConversationPost", requestBody);
         } catch (JSONException e) {
-            log.error("Error creating JSON Comment Object - JSON object will be empty");
+            log.error("Error creating JSON Comment Object - JSON object will be empty", e);
         }
         return createBody.toString();
     }
@@ -495,7 +495,7 @@ public class RallyIssueTracker implements IssueTracker {
             requestBody.put(REQUEST_STATE_FIELD, TRANSITION_CLOSE);
             createBody.put("Defect", requestBody);
         } catch (JSONException e) {
-            log.error("Error creating JSON Close Issue Object - JSON object will be empty");
+            log.error("Error creating JSON Close Issue Object - JSON object will be empty", e);
         }
         return createBody.toString();
     }

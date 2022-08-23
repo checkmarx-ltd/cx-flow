@@ -248,7 +248,7 @@ public class GitHubService extends RepoService {
                     }
                     url = shard.getUrl() + "/cxwebclient/portal#/projectState/" + projectID + "/Summary";
                 } catch(CheckmarxException e) {
-                    log.error(URL_INVALID);
+                    log.error(URL_INVALID, e);
                 }
             }
             HttpEntity<?> httpEntity = new HttpEntity<>(
@@ -463,7 +463,7 @@ public class GitHubService extends RepoService {
             String error = "Got 404 'Not Found' error. GitHub endpoint: " + getGitHubEndPoint(request) + " is invalid.";
             log.warn(error);
         }catch (HttpClientErrorException e){
-            log.error(ExceptionUtils.getRootCauseMessage(e));
+            log.error("Error occurred in getRepoLanguagePercentages method.", ExceptionUtils.getRootCauseMessage(e));
         }
         return sources;
     }
@@ -518,7 +518,7 @@ public class GitHubService extends RepoService {
             } catch (HttpClientErrorException.NotFound e) {
                 log.info("No Config As code was found [{}]", properties.getConfigAsCode());
             } catch (Exception e) {
-                log.error(ExceptionUtils.getRootCauseMessage(e));
+                log.error("Error occurred in getCxConfigOverride", ExceptionUtils.getRootCauseMessage(e));
             }
         }
         return result;

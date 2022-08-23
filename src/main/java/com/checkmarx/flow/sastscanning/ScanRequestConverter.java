@@ -131,7 +131,7 @@ public class ScanRequestConverter {
             try {
                 ownerId = scannerClient.createTeam(ownerId, namespace);
             }catch(Exception e){
-                log.error("Existing team with " + fullTeamName + " was not found.");
+                log.error("Existing team with " + fullTeamName + " was not found.", e);
                 ownerId = UNKNOWN;
             }
         } else {
