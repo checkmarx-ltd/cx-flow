@@ -692,7 +692,6 @@ workflows:
             branches:
               only: develop
           requires:
-            - e2e-tests
             - integration-tests
             - sca-integration-tests
             - jira-integration-tests
@@ -706,7 +705,6 @@ workflows:
             branches:
               only: master
           requires:
-            - e2e-tests
             - integration-tests
             - sca-integration-tests
             - jira-integration-tests
@@ -719,7 +717,6 @@ workflows:
             branches:
               only: master
           requires:
-            - e2e-tests
             - integration-tests
             - sca-integration-tests
             - jira-integration-tests
@@ -741,7 +738,6 @@ workflows:
                 - /pr-.*/
                 - /pr .*/
           requires:
-            - e2e-tests
             - integration-tests
             - sca-integration-tests
             - jira-integration-tests
