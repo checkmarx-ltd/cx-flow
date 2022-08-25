@@ -170,9 +170,9 @@ enum Repository {
                     createdFilesSha.put( response.getJSONObject("content").getString("sha") , theFilePath);
                 }
 
-                for(Character c :namespace.toCharArray()){System.out.println("Name-Space : "+ c);}
-                for(Character c :repo.toCharArray()){System.out.println("Repo : "+c);}
-                for(Character c :hookTargetURL.toCharArray()){System.out.println("Hook URL : "+c);}
+//                for(Character c :namespace.toCharArray()){System.out.println("Name-Space : "+ c);}
+//                for(Character c :repo.toCharArray()){System.out.println("Repo : "+c);}
+//                for(Character c :hookTargetURL.toCharArray()){System.out.println("Hook URL : "+c);}
 
 
 
