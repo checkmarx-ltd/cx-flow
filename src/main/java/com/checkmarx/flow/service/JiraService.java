@@ -498,20 +498,48 @@ public class JiraService {
                     fieldType = "result";
                 }
 
+                Map<String, Object> addDetails = null;
+                Map<String, String> scanCustomFields = null;
+                String scanCustomFieldsValue = null;
+                if(Objects.nonNull(issue.getAdditionalDetails()) && Objects.nonNull((Map<String, String>) issue.getAdditionalDetails().get("scanCustomFields"))) {
+                    addDetails = issue.getAdditionalDetails();
+                    scanCustomFields = (Map<String, String>) addDetails.get("scanCustomFields");
+                    scanCustomFieldsValue = scanCustomFields.get(f.getJiraFieldName());
+                }
+
                 switch (fieldType) {
                     case FlowConstants.MAIN_MDC_ENTRY:
-                        log.debug("Checkmarx custom field {}", f.getName());
-                        if (request.getCxFields() != null) {
-                            log.debug("Checkmarx custom field");
-                            value = request.getCxFields().get(f.getName());
-                            log.debug("Cx Field value: {}", value);
-                            if (ScanUtils.empty(value) && !ScanUtils.empty(f.getJiraDefaultValue())) {
-                                value = f.getJiraDefaultValue();
-                                log.debug("JIRA default Value is {}", value);
-                            }
-                        } else {
-                            log.debug("No value found for {}", f.getName());
-                            value = "";
+                        switch (f.getName()) {
+                            case "cx-scan":
+                                log.debug("Checkmarx scan custom field {}", f.getName());
+                                if (scanCustomFieldsValue != null) {
+                                    log.debug("Checkmarx scan custom field");
+                                    value = scanCustomFieldsValue;
+                                    log.debug("Cx Scan Field value: {}", value);
+                                    if (ScanUtils.empty(value) && !ScanUtils.empty(f.getJiraDefaultValue())) {
+                                        value = f.getJiraDefaultValue();
+                                        log.debug("JIRA default Value is {}", value);
+                                    }
+                                } else {
+                                    log.debug("No value found for {}", f.getName());
+                                    value = "";
+                                }
+                                break;
+                            default:
+                                log.debug("Checkmarx custom field {}", f.getName());
+                                if (request.getCxFields() != null) {
+                                    log.debug("Checkmarx custom field");
+                                    value = request.getCxFields().get(f.getName());
+                                    log.debug("Cx Field value: {}", value);
+                                    if (ScanUtils.empty(value) && !ScanUtils.empty(f.getJiraDefaultValue())) {
+                                        value = f.getJiraDefaultValue();
+                                        log.debug("JIRA default Value is {}", value);
+                                    }
+                                } else {
+                                    log.debug("No value found for {}", f.getName());
+                                }
+                                value = "";
+                                break;
                         }
                         break;
                     case "sca-results":
