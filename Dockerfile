@@ -6,6 +6,9 @@ RUN apk update && \
     apk upgrade
 RUN apk add openjdk8=8.322.06-r0 --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community
 ENV JAVA_HOME=/usr/lib/jvm/java-1.8-openjdk
+RUN apk --no-cache add curl
+RUN apk add sudo
+RUN curl -L "https://sca-downloads.s3.amazonaws.com/cli/latest/ScaResolver-linux64.tar.gz" -o "ScaResolver.tar.gz" && tar -vxzf ScaResolver.tar.gz && sudo mv ScaResolver / && rm Configuration.ini ScaResolver.tar.gz
 COPY build/libs/*.jar cx-flow.jar
 ENTRYPOINT ["java", "-Xms512m", "-Xmx2048m", "-Djava.security.egd=file:/dev/./urandom", "-Dspring.profiles.active=web", "-jar", "cx-flow.jar"]
 EXPOSE 8080
