@@ -175,6 +175,13 @@ jira:
       jira-field-type: single-select
 ```
 
+As Jira is on-premise, configuration should be as follows
+
+```
+  url: <Your url>
+  username: <Your username>
+  token: <Your Password in plain text>
+```
 ### <a name="labelPrefix">Label Prefix</a>
 ```
 label-prefix: < CUSTOM PREFIX NAME > 
