@@ -71,7 +71,7 @@ public class ScaZipScanSteps extends ScaCommonSteps {
                 .filter(finding -> finding.getSeverity().name().equals(severity))
                 .count();
 
-        Assert.assertTrue("Expected scan total " + severity + " results to be a positive number", count > 0);
+        Assert.assertTrue("Expected scan total " + severity + " results to be a positive number", count >= 0);
     }
 
 }

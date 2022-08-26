@@ -219,7 +219,7 @@ jobs:
               --set cxflow.gitlabWebhookToken=${GITLAB_WEBHOOK_TOKEN} \
               --set ingress.hosts[0].host=<< parameters.release-name >>.${EXTERNAL_DNS_DOMAIN} \
               --set ingress.hosts[0].paths[0]="/*" \
-              << parameters.chart >>          
+              << parameters.chart >>
       - run:
           name: Show running k8s objects
           command: |
@@ -253,52 +253,6 @@ jobs:
           path: ~/test-results
       - store_artifacts:
           path: ~/test-results/junit
-
-  e2e-tests:
-    docker:
-      - image: "circleci/openjdk:8-jdk"
-    parameters:
-      cluster-name:
-        type: string
-      namespace:
-        type: string
-      release-name:
-        type: string
-      version:
-        type: string
-    steps:
-      - checkout
-      - kubernetes/install:
-          kubectl-version: v1.23.6
-      - aws-eks/update-kubeconfig-with-authenticator:
-          cluster-name: << parameters.cluster-name >>
-          install-kubectl: false
-      - run:
-          name: Run E2E Tests
-          command: |
-            export GITHUB_HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
-            export ADO_HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
-            export GITLAB_HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
-            ./gradlew clean e2eTests --info -DGITHUB_target=${GITHUB_HOOK_TARGET} -DGITHUB_repo=${GITHUB_HOOK_REPO} -DGITHUB_repo_SCA=${GITHUB_HOOK_REPO_SCA} -DGITHUB_namespace=${GITHUB_HOOK_NAMESPACE} -DADO_target=${ADO_HOOK_TARGET} -DADO_repo=${ADO_HOOK_REPO} -DADO_namespace=${ADO_HOOK_NAMESPACE} -DGITLAB_target=${GITLAB_HOOK_TARGET} -DGITLAB_repo=${GITLAB_HOOK_REPO} -DGITLAB_namespace=${GITLAB_HOOK_NAMESPACE}
-      - run:
-          name: Save test results
-          command: |
-            mkdir -p ~/test-results/junit/
-            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ \;
-          when: always
-      - run:
-          name: Save application logs
-          command: |
-            export POD_NAME=$(kubectl get pods -o custom-columns=:metadata.name -n << parameters.namespace >> | grep cxflow | tr -d '\n')
-            mkdir -p ~/application-logs/
-            kubectl logs ${POD_NAME} -n << parameters.namespace >> > ~/application-logs/${POD_NAME}.log
-          when: always
-      - store_test_results:
-          path: ~/test-results
-      - store_artifacts:
-          path: ~/test-results/junit
-      - store_artifacts:
-          path: ~/application-logs
 
   integration-tests:
     docker:
@@ -532,7 +486,7 @@ jobs:
       - run:
           name: Save application logs
           command: |
-            mkdir -p ~/application-logs/            
+            mkdir -p ~/application-logs/
       - run:
           name: Delete cxflow deployment
           command: helm uninstall << parameters.release-name >> --namespace << parameters.namespace >>
@@ -600,8 +554,8 @@ jobs:
 orbs:
   aws-cli: circleci/aws-cli@3.1.1
   aws-eks: circleci/aws-eks@1.0.0
-  kubernetes: circleci/kubernetes@0.4.0
-  helm: circleci/helm@0.2.3
+  kubernetes: circleci/kubernetes@1.3.1
+  helm: circleci/helm@2.0.1
   checkmarx: checkmarx/circleci-kpi-shipper@0.10.0
 
 workflows:
@@ -680,8 +634,10 @@ workflows:
             - sca-integration-tests
             - jira-integration-tests
             - pullRequestComments-integration-tests
+            - SAST-CLI-integration-tests
             - SCA-CLI-integration-tests
             - CxGo-integration-tests
+            - CodeBashing-integration-tests
       - docker-push-stable:
           filters:
             branches:
@@ -703,13 +659,15 @@ workflows:
             - sca-integration-tests
             - jira-integration-tests
             - pullRequestComments-integration-tests
+            - SAST-CLI-integration-tests
             - SCA-CLI-integration-tests
             - CxGo-integration-tests
+            - CodeBashing-integration-tests
       - cleanup:
           cluster-name: eks-cxflow-ci
           namespace: cxflow-${CIRCLE_SHA1::7}
           release-name: cxflow-${CIRCLE_SHA1::7}
-          version: v3.9.0
+          version: v3.3.4
           filters:
             branches:
               only:
@@ -722,8 +680,10 @@ workflows:
             - sca-integration-tests
             - jira-integration-tests
             - pullRequestComments-integration-tests
+            - SAST-CLI-integration-tests
             - SCA-CLI-integration-tests
             - CxGo-integration-tests
+            - CodeBashing-integration-tests
   nightly-cleanup:
     triggers:
       - schedule:
