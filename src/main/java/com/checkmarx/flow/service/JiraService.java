@@ -1141,7 +1141,7 @@ public class JiraService {
         displayedParametersMap.put("*Repository Url:* ", repoUrl);
         displayedParametersMap.put("*Application:* ", request.getApplication());
         displayedParametersMap.put("*Cx-Project:* ", request.getProject());
-        if(issue.getScaDetails()!=null)
+        if(issue.getScaDetails()!=null && request.getScaConfig()!=null)
         {
             displayedParametersMap.put("*Cx-Team:* ", request.getScaConfig().getTeam());
         }
