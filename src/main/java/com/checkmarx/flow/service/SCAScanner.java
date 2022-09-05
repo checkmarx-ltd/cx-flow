@@ -101,6 +101,14 @@ public class SCAScanner extends AbstractASTScanner {
                 log.info("CxAST-SCA zip scan is enabled");
                 String scaClonedFolderPath = cxRepoFileHelper.getScaClonedRepoFolderPath(scanRequest.getRepoUrlWithAuth(), scanRequest.getExcludeFiles(), scanRequest.getBranch());
                 scanParams.setSourceDir(scaClonedFolderPath);
+            }else if(scaProperties.isEnableScaResolver())
+            {
+                log.info("CxAST-SCA sca resolver is enabled");
+                if(scanParams.getRemoteRepoUrl()!=null)
+                {
+                    String scaClonedFolderPath = cxRepoFileHelper.getScaClonedRepoFolderPath(scanRequest.getRepoUrlWithAuth(), scanRequest.getExcludeFiles(), scanRequest.getBranch());
+                    scanParams.setSourceDir(scaClonedFolderPath);
+                }
             }
             if(scanRequest.getExcludeFiles() != null) {
                 scanParams.getScaConfig().setExcludeFiles(scanRequest.getExcludeFiles());
