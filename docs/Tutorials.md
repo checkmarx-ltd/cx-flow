@@ -405,7 +405,15 @@ The gitlab configuration file is stored at a remote location within the cxflow r
 include: 'https://raw.githubusercontent.com/checkmarx-ltd/cx-flow/master/templates/gitlab/v1/Checkmarx.gitlab-ci.yml'
 
 ```
+Also, you can add/override CI/CD variables like this
 
+```
+variables:
+    CX_FLOW_ENABLED_VULNERABILITY_SCANNERS: "sast,sca"
+    SCA_appUrl: https://eu.sca.checkmarx.net
+    SCA_apiUrl: https://eu.api-sca.checkmarx.net
+    SCA_accessControlUrl: https://eu.platform.checkmarx.net
+```
 ##### [Top of Tutorial](#gitlabcicd)
 ### <a name="gitlabpipelineconfiguration">Pipeline Configuration</a>
 The GitLab CI/CD pipeline is controlled by a file named ‘.gitlab-ci.yml’ located in the root directory of the project.  Please refer to [GitLab: CI YAML](https://docs.gitlab.com/ee/ci/yaml/README.html) for more info.
