@@ -1130,7 +1130,7 @@ public class JiraService {
                 .ifPresent(d -> body.append(d.trim()).append(HTMLHelper.CRLF).append(HTMLHelper.CRLF));
 
         String repoUrl = request.getRepoUrl();
-        if (repoUrl.contains("gitlab-ci-token") && repoUrl.contains("@")) {
+        if ( !ScanUtils.empty(repoUrl) && repoUrl.contains("gitlab-ci-token") && repoUrl.contains("@")){
             repoUrl = repoUrl.substring(0, 8) + repoUrl.substring(repoUrl.indexOf('@') + 1);
         }
         Map<String, String> displayedParametersMap = new LinkedHashMap<>();
@@ -1141,7 +1141,7 @@ public class JiraService {
         displayedParametersMap.put("*Repository Url:* ", repoUrl);
         displayedParametersMap.put("*Application:* ", request.getApplication());
         displayedParametersMap.put("*Cx-Project:* ", request.getProject());
-        if(issue.getScaDetails()!=null)
+        if(issue.getScaDetails()!=null && request.getScaConfig()!=null)
         {
             displayedParametersMap.put("*Cx-Team:* ", request.getScaConfig().getTeam());
         }
