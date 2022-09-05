@@ -3,7 +3,7 @@ version: 2.1
 executors:
   docker:
     docker:
-      - image: circleci/golang:1.9
+      - image: cimg/go:1.16
 
 commands: # a reusable command with parameters
   create-github-release:
