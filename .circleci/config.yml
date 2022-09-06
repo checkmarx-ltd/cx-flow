@@ -14,7 +14,7 @@ commands: # a reusable command with parameters
         type: string
     steps:
       - run: |
-          go get github.com/tcnksm/ghr
+          GO111MODULE=on go get github.com/tcnksm/ghr
           VERSION=$(cat ./build/libs/version.txt)
           rm ./build/libs/version.txt
           mv build/libs/java11/repo-${VERSION}.jar build/libs/cx-flow-${VERSION}-java11.jar
