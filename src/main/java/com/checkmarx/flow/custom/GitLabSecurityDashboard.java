@@ -163,7 +163,7 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
                         .tracking(com.checkmarx.flow.gitdashboardnewver.SCA.Tracking.builder()
                                 .lstItems(getItemsSca(finding.getCveName()))
                                 .build())
-                                                .flags(getSCAFlagsNewVer(finding))
+                        .flags(getSCAFlagsNewVer(finding))
                         .location(com.checkmarx.flow.gitdashboardnewver.SCA.LocationSCA.builder().file(loc)
                                 .dependency(com.checkmarx.flow.gitdashboardnewver.SCA.Dependency.builder()
                                         .dependencyPath(findDependencyPath(indPackage.getDependencyPaths()))
@@ -256,32 +256,32 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
 
 
         identifiers.add(
-                    com.checkmarx.flow.gitdashboardnewver.SCA.Identifier.builder()
-                            .type("checkmarx_finding")
-                            .name(CHECKMARX.concat("-").concat(finding.getPackageId()))
-                            .value(CHECKMARX.concat("-").concat(finding.getPackageId()))
-                            .url(mainUrl)
-                            .build()
-            );
-            if (!finding.getReferences().isEmpty()) {
-                for(String reference:finding.getReferences()){
-                    URI subUrl;
-                    try {
-                        subUrl=URI.create(reference);
-                    } catch (Exception e) {
-                        subUrl=URI.create("http://esw.w3.org/topic/");
-                    }
-
-                    identifiers.add(
-                            com.checkmarx.flow.gitdashboardnewver.SCA.Identifier.builder()
-                                    .type("cve")
-                                    .name(finding.getCveName() != null ? finding.getCveName().concat("(").concat(reference).concat(")") : reference)
-                                    .value(finding.getCveName() != null ? finding.getCveName().concat("(").concat(reference).concat(")") : reference)
-                                    .url(subUrl)
-                                    .build()
-                    );
+                com.checkmarx.flow.gitdashboardnewver.SCA.Identifier.builder()
+                        .type("checkmarx_finding")
+                        .name(CHECKMARX.concat("-").concat(finding.getPackageId()))
+                        .value(CHECKMARX.concat("-").concat(finding.getPackageId()))
+                        .url(mainUrl)
+                        .build()
+        );
+        if (!finding.getReferences().isEmpty()) {
+            for(String reference:finding.getReferences()){
+                URI subUrl;
+                try {
+                    subUrl=URI.create(reference);
+                } catch (Exception e) {
+                    subUrl=URI.create("http://esw.w3.org/topic/");
                 }
+
+                identifiers.add(
+                        com.checkmarx.flow.gitdashboardnewver.SCA.Identifier.builder()
+                                .type("cve")
+                                .name(finding.getCveName() != null ? finding.getCveName().concat("(").concat(reference).concat(")") : reference)
+                                .value(finding.getCveName() != null ? finding.getCveName().concat("(").concat(reference).concat(")") : reference)
+                                .url(subUrl)
+                                .build()
+                );
             }
+        }
 
 
         return identifiers;
@@ -332,14 +332,14 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
     private void getSastResultsDashboardNewVersion(ScanRequest request, ScanResults results) throws MachinaException {
 
         List<com.checkmarx.flow.gitdashboardnewver.Vulnerability> vulns = new ArrayList<>();
-        Scanner__1 scanner = Scanner__1.builder().id("Checkmarx-SAST").name("Checkmarx-SAST").build();
+        Scanner__1 scanner = Scanner__1.builder().id("checkmarx-sast").name("checkmarx-sast").build();
         for(ScanResults.XIssue issue : results.getXIssues()) {
             if(issue.getDetails() != null) {
                 issue.getDetails().forEach((k, v) -> {
 
                     com.checkmarx.flow.gitdashboardnewver.Vulnerability vuln= com.checkmarx.flow.gitdashboardnewver.Vulnerability.builder()
                             .id(issue.getVulnerability().concat(":").concat(issue.getFilename()).concat(":").concat(k.toString()))
-                            .category("sast")
+                            .category("sast-Checkmarx")
                             .name(issue.getVulnerability())
                             .message(String.format(ISSUE_FORMAT, issue.getVulnerability(), issue.getFilename(), k))
                             .description(issue.getDescription())
@@ -348,7 +348,7 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
                             .confidence(com.checkmarx.flow.gitdashboardnewver.Vulnerability.Confidence.valueOf(issue.getSeverity()))//Need To add as per Enum
                             .solution(issue.getLink())
                             .scanner(scanner)//__1 wala scanner use karenge
-                            .identifiers(getIdentifiersNewVer(issue))//Identifiers seems correct but need to add Link and Description flags
+                            .identifiers(getIdentifiersNewVer(issue,k))//Identifiers seems correct but need to add Link and Description flags
                             .links(getLinksNewVer(issue))//New Added
                             //.details(issue.getDetails()) //Yet To Add
                             .tracking(com.checkmarx.flow.gitdashboardnewver.Tracking.builder()
@@ -376,7 +376,7 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
                         .analyzer(com.checkmarx.flow.gitdashboardnewver.Analyzer.builder()
                                 .vendor(com.checkmarx.flow.gitdashboardnewver.Vendor.builder().build())
                                 .version(results.getVersion()).
-                        build())
+                                build())
                         .scanner(com.checkmarx.flow.gitdashboardnewver.Scanner.builder()
                                 .vendor(com.checkmarx.flow.gitdashboardnewver.Vendor__1.builder().build())
                                 .version(results.getVersion()).build())
@@ -492,13 +492,14 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
     }
 
 
-    private List<com.checkmarx.flow.gitdashboardnewver.Identifier> getIdentifiersNewVer(ScanResults.XIssue issue){
+    private List<com.checkmarx.flow.gitdashboardnewver.Identifier> getIdentifiersNewVer(ScanResults.XIssue issue,Integer k){
         List<com.checkmarx.flow.gitdashboardnewver.Identifier> identifiers = new ArrayList<>();
+
         identifiers.add(
                 com.checkmarx.flow.gitdashboardnewver.Identifier.builder()
                         .type("checkmarx_finding")
                         .name("Checkmarx-".concat(issue.getVulnerability()))
-                        .value(issue.getVulnerability())
+                        .value(issue.getVulnerability().concat(":").concat(issue.getFilename()).concat(":").concat(k.toString()))
                         .url(URI.create(issue.getLink()))
                         .build()
         );
@@ -547,11 +548,11 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
             }
 
 
-                links.add(
-                        com.checkmarx.flow.gitdashboardnewver.SCA.Link.builder()
-                                .name(refrences.getCveName() != null ? refrences.getCveName().concat("(").concat(k).concat(")") : k)
-                                .url(mainUrl)
-                                .build());
+            links.add(
+                    com.checkmarx.flow.gitdashboardnewver.SCA.Link.builder()
+                            .name(refrences.getCveName() != null ? refrences.getCveName().concat("(").concat(k).concat(")") : k)
+                            .url(mainUrl)
+                            .build());
 
         });
         return links;
@@ -599,7 +600,7 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
         if(m.find()) {
             return  true;
         }
-            return false;
+        return false;
 
     }
 
