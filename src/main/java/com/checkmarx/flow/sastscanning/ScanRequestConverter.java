@@ -86,6 +86,8 @@ public class ScanRequestConverter {
 
             ownerId = determineOwnerId(request, team);
 
+            request.setTeam(team);
+
         } else {
             team = cxProperties.getTeam();
             if (!team.startsWith(cxProperties.getTeamPathSeparator()))
