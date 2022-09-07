@@ -106,9 +106,13 @@ jira:
       - Use_Of_Hardcoded_Password
    fields:
 #    - type: cx #[ cx | static | result ]
-#      name: Platform # cx custom field name | cwe, category, severity, application, *project*, repo-name, branch, repo-url, namespace, recommendations, loc, site, issueLink, filename, language
+#      name: Platform # cx custom field name | cx-scan | cwe, category, severity, application, *project*, repo-name, branch, repo-url, namespace, recommendations, loc, site, issueLink, filename, language
 #      jira-field-name: Application
 #      jira-field-type: label #[ security | text | label | single-select | multi-select ]
+     - type: cx
+       name: cx-scan
+       jira-field-name: Application
+       jira-field-type: label
      - type: result
        name: application
        jira-field-name: Application
@@ -171,6 +175,13 @@ jira:
       jira-field-type: single-select
 ```
 
+As Jira is on-premise, configuration should be as follows
+
+```
+  url: <Your url>
+  username: <Your username>
+  token: <Your Password in plain text>
+```
 ### <a name="labelPrefix">Label Prefix</a>
 ```
 label-prefix: < CUSTOM PREFIX NAME > 
@@ -213,7 +224,7 @@ Note that CxFlow ignores case when comparing statuses.
   * **static**: Used for static values (specifically requires a jira-default-value to be provided)
   * **cx**: Used to map specific Checkmarx Custom Field values
   * **result**: Used to map known values from Checkmarx results or repository/scan request details.  Refer to the Result values below.
-* **name**: If cx reflects the type, it is the name of the custom field within Checkmarx
+* **name**: If cx reflects the type, it is the name of the custom field within Checkmarx.Also, **cx-scan** is the scan custom fields in type cx.
   * If **result** is provided as type, the name must be one of the following:
 
 ```
