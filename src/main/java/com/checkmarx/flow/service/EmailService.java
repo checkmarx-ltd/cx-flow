@@ -19,10 +19,8 @@ import org.thymeleaf.context.Context;
 
 import javax.validation.constraints.NotNull;
 import java.beans.ConstructorProperties;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -160,8 +158,12 @@ public class EmailService {
                 .map(FlowProperties.EnabledNotifications::getScanSummaryWithEmptyResults)
                 .orElse(true);
 
-        if (!scanSummaryWithEmptyResultsEventEnabled && results.getXIssues().size() == 0) {
-            log.info("cx-flow.mail.enabled-notifications.scan-summary-with-empty-results set to false, and no results were reported in scan. " +
+        List<ScanResults.XIssue> highsAndMediums = results.getXIssues().stream()
+                .filter(i -> Arrays.asList("high", "medium").contains(i.getSeverity().toLowerCase()))
+                .collect(Collectors.toList());
+
+        if (!scanSummaryWithEmptyResultsEventEnabled && highsAndMediums.size() == 0) {
+            log.info("cx-flow.mail.enabled-notifications.scan-summary-with-empty-results set to false, and no high and medium results were reported in scan. " +
                     "Skipping Scan Completed e-mail...");
             return;
         }
