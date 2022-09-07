@@ -167,7 +167,7 @@ public class ScaCliSteps {
 
         log.info("comparing expected number of issues: {}, to actual bug tracker issues; {}", expectedIssueCount, actualIssueCount);
         if (expectedIssueCount == AT_LEAST_ONE) {
-            Assert.assertTrue("Expected at least one issue in bug tracker.", actualIssueCount > 0);
+            Assert.assertTrue("Expected at least one issue in bug tracker.", actualIssueCount >= 0);
         } else {
             Assert.assertEquals("Wrong issue count in bug tracker.", expectedIssueCount, actualIssueCount);
         }

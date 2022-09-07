@@ -169,6 +169,13 @@ enum Repository {
                             gitHubProperties.getApiUrl(), namespace, repo, theFilePath, activeBranch);
                     createdFilesSha.put( response.getJSONObject("content").getString("sha") , theFilePath);
                 }
+
+//                for(Character c :namespace.toCharArray()){System.out.println("Name-Space : "+ c);}
+//                for(Character c :repo.toCharArray()){System.out.println("Repo : "+c);}
+//                for(Character c :hookTargetURL.toCharArray()){System.out.println("Hook URL : "+c);}
+
+
+
                 log.info("New file pushed successfully. namespace: {}, repo: {}, branch:{}, file path: {}", namespace, repo, activeBranch, theFilePath);
             } catch (JsonProcessingException e) {
                 String msg = "failed to create file for push";
