@@ -90,21 +90,26 @@ public class RallyIssueTracker implements IssueTracker {
         try {
             int pageIndex = 0;
             QueryResult rallyQuery;
-            ResponseEntity<QueryResult> response;
+            ResponseEntity<QueryResult> response = null;
             //
             /// Read the first list of defects from Rally, it will contain the totalResultCount we can use
             /// to figure out how many more pages of data needs to be pulled.
             //
             String query = createRallyTagQuery(request);
-            response = restTemplate.exchange(
-                    properties.getApiUrl().concat(GET_ISSUES),
-                    HttpMethod.GET,
-                    httpEntity,
-                    QueryResult.class,
-                    query,
-                    pageIndex,
-                    ISSUES_PER_PAGE
-            );
+            try {
+                response = restTemplate.exchange(
+                        properties.getApiUrl().concat(GET_ISSUES),
+                        HttpMethod.GET,
+                        httpEntity,
+                        QueryResult.class,
+                        query,
+                        pageIndex,
+                        ISSUES_PER_PAGE
+                );
+            } catch (HttpClientErrorException e) {
+                log.error("Error occurred while getting issue. http error {} ", e.getStatusCode());
+                log.error(ExceptionUtils.getStackTrace(e));
+            }
             rallyQuery = response.getBody();
             //
             /// Now decode the CxFlow defects and continue reading lists of defects until we've found the
@@ -122,15 +127,20 @@ public class RallyIssueTracker implements IssueTracker {
                 // If there are more issues on the server, fetch them
                 if(resultsFound < rallyQuery.getQueryResult().getTotalResultCount()) {
                     pageIndex++;
-                    response = restTemplate.exchange(
-                            properties.getApiUrl().concat(GET_ISSUES),
-                            HttpMethod.GET,
-                            httpEntity,
-                            QueryResult.class,
-                            query,
-                            pageIndex,
-                            ISSUES_PER_PAGE
-                    );
+                    try {
+                        response = restTemplate.exchange(
+                                properties.getApiUrl().concat(GET_ISSUES),
+                                HttpMethod.GET,
+                                httpEntity,
+                                QueryResult.class,
+                                query,
+                                pageIndex,
+                                ISSUES_PER_PAGE
+                        );
+                    } catch (HttpClientErrorException e) {
+                        log.error("Error occurred while getting issue. http error {} ", e.getStatusCode());
+                        log.error(ExceptionUtils.getStackTrace(e));
+                    }
                     rallyQuery = response.getBody();
                 }
             }
@@ -232,11 +242,16 @@ public class RallyIssueTracker implements IssueTracker {
         String defID = issueUrl.substring(issueUrl.lastIndexOf("/") + 1);
         String json = getJSONComment(comment, defID);
         HttpEntity httpEntity = new HttpEntity(json, createAuthHeaders());
-        restTemplate.exchange(
-                properties.getApiUrl().concat(CREATE_DISCUSSION),
-                HttpMethod.POST,
-                httpEntity,
-                String.class);
+        try {
+            restTemplate.exchange(
+                    properties.getApiUrl().concat(CREATE_DISCUSSION),
+                    HttpMethod.POST,
+                    httpEntity,
+                    String.class);
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while getting issue. http error {} ", e.getStatusCode());
+            log.error(ExceptionUtils.getStackTrace(e));
+        }
     }
 
     /**
@@ -337,12 +352,17 @@ public class RallyIssueTracker implements IssueTracker {
         log.info("Creating Rally Tag: ".concat(name));
         HttpEntity httpEntity = new HttpEntity(getJSONCreateTag(name), createAuthHeaders());
         CreateResultAction cra;
-        ResponseEntity<CreateResultAction> response;
-        response = restTemplate.exchange(
-                properties.getApiUrl().concat(CREATE_TAG),
-                HttpMethod.POST,
-                httpEntity,
-                CreateResultAction.class);
+        ResponseEntity<CreateResultAction> response = null;
+        try {
+            response = restTemplate.exchange(
+                    properties.getApiUrl().concat(CREATE_TAG),
+                    HttpMethod.POST,
+                    httpEntity,
+                    CreateResultAction.class);
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while Creating Rally tag. http error {} ", e.getStatusCode());
+            log.error(ExceptionUtils.getStackTrace(e));
+        }
         cra = response.getBody();
         Map<String, Object> m = (Map<String, Object>)cra.getAdditionalProperties().get("CreateResult");
         m = (Map<String, Object>)m.get("Object");
@@ -380,11 +400,16 @@ public class RallyIssueTracker implements IssueTracker {
         log.info("Executing closeIssue Rally API call");
         String json = getJSONCloseIssue();
         HttpEntity httpEntity = new HttpEntity(json, createAuthHeaders());
-        restTemplate.exchange(
-                issue.getUrl(),
-                HttpMethod.POST,
-                httpEntity,
-                Issue.class);
+       try {
+           restTemplate.exchange(
+                   issue.getUrl(),
+                   HttpMethod.POST,
+                   httpEntity,
+                   Issue.class);
+       } catch (HttpClientErrorException e) {
+           log.error("Error occurred while closing issue. http error {} ", e.getStatusCode());
+           log.error(ExceptionUtils.getStackTrace(e));
+       }
     }
 
     /**

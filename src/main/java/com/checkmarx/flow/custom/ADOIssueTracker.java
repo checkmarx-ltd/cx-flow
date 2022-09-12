@@ -13,13 +13,17 @@ import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.dto.ScanResults;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 
@@ -157,35 +161,49 @@ public class ADOIssueTracker implements IssueTracker {
         JSONObject wiqJson = new JSONObject();
         wiqJson.put("query", wiq);
         HttpEntity<String> httpEntity = new HttpEntity<>(wiqJson.toString(), ADOUtils.createAuthHeaders(scmConfigOverrider.determineConfigToken(properties, request.getScmInstance())));
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(endpoint,
+                    HttpMethod.POST, httpEntity, String.class);
+            if (response.getBody() == null) return issues;
 
-        ResponseEntity<String> response = restTemplate.exchange(endpoint,
-                HttpMethod.POST, httpEntity, String.class);
-        if(response.getBody() == null) return issues;
+            JSONObject json = new JSONObject(response.getBody());
+            JSONArray workItems = json.getJSONArray("workItems");
 
-        JSONObject json = new JSONObject(response.getBody());
-        JSONArray workItems = json.getJSONArray("workItems");
+            if (workItems.length() < 1) return issues;
 
-        if(workItems.length() < 1) return issues;
-
-        for (int i = 0; i < workItems.length(); i++) {
-            JSONObject workItem = workItems.getJSONObject(i);
-            String workItemUri = workItem.getString("url");
-            Issue wi = getIssue(workItemUri, issueBody, request);
-            if(wi != null){
-                issues.add(wi);
+            for (int i = 0; i < workItems.length(); i++) {
+                JSONObject workItem = workItems.getJSONObject(i);
+                String workItemUri = workItem.getString("url");
+                Issue wi = getIssue(workItemUri, issueBody, request);
+                if (wi != null) {
+                    issues.add(wi);
+                }
             }
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while getting ADO issue. http error {} ", e.getStatusCode());
+            log.error(ExceptionUtils.getStackTrace(e));
+        } catch (JSONException e) {
+            log.error("Error processing JSON response");
+            log.error(ExceptionUtils.getStackTrace(e));
         }
+
         return issues;
     }
 
     private Issue getIssue(String uri, String issueBody, ScanRequest scanRequest){
         HttpEntity<Void> httpEntity = new HttpEntity<>(ADOUtils.createAuthHeaders(scmConfigOverrider.determineConfigToken(properties, scanRequest.getScmInstance())));
         log.debug("Getting issue at uri {}", uri);
-        ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, httpEntity, String.class);
-        String r = response.getBody();
-        if( r == null){
-            return null;
+        ResponseEntity<String> response = null;
+        try {
+            response = restTemplate.exchange(uri, HttpMethod.GET, httpEntity, String.class);
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while getting ADO issue. http error {} ", e.getStatusCode());
+            log.error(ExceptionUtils.getStackTrace(e));
         }
+            String r = response.getBody();
+            if (r == null) {
+                return null;
+            }
 
         JSONObject o = new JSONObject(r);
         JSONObject fields = o.getJSONObject("fields");
@@ -259,12 +277,11 @@ public class ADOIssueTracker implements IssueTracker {
 
         log.debug("Request body: {}", body);
         HttpEntity<List<CreateWorkItemAttr>> httpEntity = new HttpEntity<>(body, ADOUtils.createPatchAuthHeaders(scmConfigOverrider.determineConfigToken(properties, request.getScmInstance())));
-
-        ResponseEntity<String> response = restTemplate.exchange(endpoint, HttpMethod.POST, httpEntity, String.class);
         try {
+            ResponseEntity<String> response = restTemplate.exchange(endpoint, HttpMethod.POST, httpEntity, String.class);
             String url = new JSONObject(response.getBody()).getJSONObject("_links").getJSONObject("self").getString("href");
             return getIssue(url, issueBody, request);
-        }catch (NullPointerException e){
+        } catch (NullPointerException | HttpClientErrorException | JSONException e) {
             log.warn("Error occurred while retrieving new WorkItem url.  Returning null", e);
             return null;
         }
@@ -360,8 +377,12 @@ public class ADOIssueTracker implements IssueTracker {
         List<CreateWorkItemAttr> body = new ArrayList<>(Collections.singletonList(state));
 
         HttpEntity<List<CreateWorkItemAttr>> httpEntity = new HttpEntity<>(body, ADOUtils.createPatchAuthHeaders(scmConfigOverrider.determineConfigToken(properties, request.getScmInstance())));
-
-        restTemplate.exchange(endpoint, HttpMethod.PATCH, httpEntity, String.class);
+        try {
+            restTemplate.exchange(endpoint, HttpMethod.PATCH, httpEntity, String.class);
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while closing ADO issue. http error {} ", e.getStatusCode());
+            log.error(ExceptionUtils.getStackTrace(e));
+        }
     }
 
     @Override
@@ -384,8 +405,12 @@ public class ADOIssueTracker implements IssueTracker {
         List<CreateWorkItemAttr> body = new ArrayList<>(Arrays.asList(state, description));
 
         HttpEntity<List<CreateWorkItemAttr>> httpEntity = new HttpEntity<>(body, ADOUtils.createPatchAuthHeaders(scmConfigOverrider.determineConfigToken(properties, request.getScmInstance())));
-
-        restTemplate.exchange(endpoint, HttpMethod.PATCH, httpEntity, String.class);
+        try {
+            restTemplate.exchange(endpoint, HttpMethod.PATCH, httpEntity, String.class);
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while updating ADO issue. http error {} ", e.getStatusCode());
+            log.error(ExceptionUtils.getStackTrace(e));
+        }
         return getIssue(issue.getUrl(), issueBody, request);
     }
 

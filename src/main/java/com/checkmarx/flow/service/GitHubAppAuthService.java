@@ -15,6 +15,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.BufferedReader;
@@ -99,14 +100,17 @@ public class GitHubAppAuthService {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.set(HttpHeaders.AUTHORIZATION, BEARER_HEADER.concat(jwtToken));
         httpHeaders.set(HttpHeaders.ACCEPT, properties.getAppHeader());
-
-        ResponseEntity<JsonNode> response = restTemplate.exchange(
-                properties.getAppUrl().concat(INSTALLATION_TOKEN_PATH),
-                HttpMethod.POST,
-                new HttpEntity<>(httpHeaders),
-                JsonNode.class,
-                installationId);
-
+        ResponseEntity<JsonNode> response = null;
+        try {
+            response = restTemplate.exchange(
+                    properties.getAppUrl().concat(INSTALLATION_TOKEN_PATH),
+                    HttpMethod.POST,
+                    new HttpEntity<>(httpHeaders),
+                    JsonNode.class,
+                    installationId);
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while creating app token. http error {} ", e.getStatusCode(), e);
+        }
         if (response.hasBody()) {
             AppToken appToken = new AppToken();
             JsonNode it = response.getBody();

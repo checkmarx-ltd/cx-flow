@@ -27,6 +27,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpEntity;
@@ -140,9 +141,14 @@ public class ADOService {
 
     private void updateComment(RepoComment repoComment, String newComment, ScanRequest scanRequest) {
         log.debug("Updating exisiting comment. url: {}", repoComment.getCommentUrl());
-        log.debug("Updated comment: {}" , repoComment);
-        HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONComment(ADO_COMMENT_CONTENT_FIELD_NAME,newComment).toString(), ADOUtils.createAuthHeaders(scmConfigOverrider.determineConfigToken(properties, scanRequest.getScmInstance())));
-        restTemplate.exchange(getFullAdoApiUrl(repoComment.getCommentUrl()), HttpMethod.PATCH, httpEntity, String.class);
+        log.debug("Updated comment: {}", repoComment);
+        HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONComment(ADO_COMMENT_CONTENT_FIELD_NAME, newComment).toString(), ADOUtils.createAuthHeaders(scmConfigOverrider.determineConfigToken(properties, scanRequest.getScmInstance())));
+        try {
+            restTemplate.exchange(getFullAdoApiUrl(repoComment.getCommentUrl()), HttpMethod.PATCH, httpEntity, String.class);
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while updating comment. http error {} ", e.getStatusCode());
+            log.error(ExceptionUtils.getStackTrace(e));
+        }
     }
 
     public void startBlockMerge(ScanRequest request){
@@ -190,9 +196,13 @@ public class ADOService {
             }
             //TODO remove preview once applicable
             log.info("Removing pending status from pull {}", url);
-            restTemplate.exchange(getFullAdoApiUrl(url).concat("-preview"),
-                    HttpMethod.PATCH, httpEntity, Void.class);
-
+            try {
+                restTemplate.exchange(getFullAdoApiUrl(url).concat("-preview"),
+                        HttpMethod.PATCH, httpEntity, Void.class);
+            } catch (HttpClientErrorException e) {
+                log.error("Error occurred in endBlockMerge. http error {} ", e.getStatusCode());
+                log.error(ExceptionUtils.getStackTrace(e));
+            }
             /*
                 if the SAST server fails to scan a project it generates a result with ProjectId = -1
                 This if statement adds a status of failed to the ADO PR, and sets the status of thread to
@@ -233,16 +243,19 @@ public class ADOService {
         ));
         //TODO remove preview once applicable
         log.info("Adding {} status to pull {}",state, url);
+        try{
         ResponseEntity<String> response = restTemplate.exchange(getFullAdoApiUrl(url).concat("-preview"),
                 HttpMethod.POST, httpEntity, String.class);
         log.debug(String.valueOf(response.getStatusCode()));
-        try{
             if(response.getBody() != null) {
                 JSONObject json = new JSONObject(response.getBody());
                 return json.getInt("id");
             }
         }catch (NullPointerException e){
             log.error("Error retrieving status id", e);
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while creating status. http error {} ", e.getStatusCode());
+            log.error(ExceptionUtils.getStackTrace(e));
         }
         return -1;
     }
@@ -260,14 +273,17 @@ public class ADOService {
                 getJSONThreadUpdate(status).toString(),
                 ADOUtils.createAuthHeaders(scmConfigOverrider.determineConfigToken(properties, scanRequest.getScmInstance())
                 ));
-        ResponseEntity<String> response = restTemplate.exchange(getFullAdoApiUrl(url).concat(PREVIEW),
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(getFullAdoApiUrl(url).concat(PREVIEW),
                 HttpMethod.PATCH, httpEntity, String.class);
-        try{
             if(response.getBody() != null) {
                 log.info("Successfully Updated thread status to {}",status);
             }
-        }catch (NullPointerException e) {
+        } catch (NullPointerException e) {
             log.error("Error updating the thread status", e);
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while Creating Thread Status. http error {} ", e.getStatusCode());
+            log.error(ExceptionUtils.getStackTrace(e));
         }
     }
 
@@ -320,8 +336,9 @@ public class ADOService {
     public List<RepoComment> getComments(String url, ScanRequest scanRequest) throws IOException {
         int maxNumberOfCommentThreads = 10000;
         HttpEntity<?> httpEntity = new HttpEntity<>(ADOUtils.createAuthHeaders(scmConfigOverrider.determineConfigToken(properties, scanRequest.getScmInstance())));
-        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, httpEntity , String.class);
         List<RepoComment> result = new ArrayList<>();
+        try {
+            ResponseEntity<String>  response = restTemplate.exchange(url, HttpMethod.GET, httpEntity, String.class);
         ObjectMapper objMapper = new ObjectMapper();
         JsonNode root = objMapper.readTree(response.getBody());
         JsonNode value = root.path("value");
@@ -344,6 +361,13 @@ public class ADOService {
                 commentsCount++;
             }
             iteration++;
+        }
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while getting Comments. http error {} ", e.getStatusCode());
+            log.error(ExceptionUtils.getStackTrace(e));
+        } catch (JsonProcessingException e) {
+            log.error("Error processing JSON response");
+            log.error(ExceptionUtils.getStackTrace(e));
         }
         return result;
 
@@ -374,7 +398,12 @@ public class ADOService {
     public void deleteComment(String url, ScanRequest scanRequest) {
         url = getFullAdoApiUrl(url);
         HttpEntity<?> httpEntity = new HttpEntity<>(ADOUtils.createAuthHeaders(scmConfigOverrider.determineConfigToken(properties, scanRequest.getScmInstance())));
-        restTemplate.exchange(url, HttpMethod.DELETE, httpEntity, String.class);
+        try {
+            restTemplate.exchange(url, HttpMethod.DELETE, httpEntity, String.class);
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while deleting comment. http error {} ", e.getStatusCode());
+            log.error(ExceptionUtils.getStackTrace(e));
+        }
     }
 
     public CxConfig getCxConfigOverride(ScanRequest request, String branch) {
@@ -394,32 +423,40 @@ public class ADOService {
     }
 
     private CxConfig loadCxConfigFromADO(ScanRequest request, String branch) {
-        CxConfig cxConfig;
+        CxConfig cxConfig = null;
         HttpHeaders headers = ADOUtils.createAuthHeaders(scmConfigOverrider.determineConfigToken(properties, request.getScmInstance()));
         String repoSelfUrl = request.getAdditionalMetadata(REPO_SELF_URL);
         String url = repoSelfUrl.concat(GET_FILE_CONTENT);
 
         log.info("Trying to load config-as-code from '{}' branch", branch);
-        ResponseEntity<String> response = restTemplate.exchange(
-                url,
-                HttpMethod.GET,
-                new HttpEntity<>(headers),
-                String.class,
-                properties.getConfigAsCode(),
-                branch,
-                properties.getApiVersion()
-        );
-        if (response.getBody() == null) {
-            log.warn(HTTP_RESPONSE_BODY_IS_NULL);
-            cxConfig = null;
-        } else {
-            JSONObject jsonResponse = new JSONObject(response.getBody());
-            if (ScanUtils.empty(jsonResponse.toString())) {
-                log.warn(NO_CONTENT_FOUND_IN_RESPONSE);
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    new HttpEntity<>(headers),
+                    String.class,
+                    properties.getConfigAsCode(),
+                    branch,
+                    properties.getApiVersion()
+            );
+            if (response.getBody() == null) {
+                log.warn(HTTP_RESPONSE_BODY_IS_NULL);
                 cxConfig = null;
             } else {
-                cxConfig = com.checkmarx.sdk.utils.ScanUtils.getConfigAsCode(jsonResponse.toString());
+                JSONObject jsonResponse = new JSONObject(response.getBody());
+                if (ScanUtils.empty(jsonResponse.toString())) {
+                    log.warn(NO_CONTENT_FOUND_IN_RESPONSE);
+                    cxConfig = null;
+                } else {
+                    cxConfig = com.checkmarx.sdk.utils.ScanUtils.getConfigAsCode(jsonResponse.toString());
+                }
             }
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while loading cxconfig from ADO. http error {} ", e.getStatusCode());
+            log.error(ExceptionUtils.getStackTrace(e));
+        } catch (JSONException e) {
+            log.error("Error processing JSON response");
+            log.error(ExceptionUtils.getStackTrace(e));
         }
         return cxConfig;
     }
@@ -489,6 +526,8 @@ public class ADOService {
             log.warn(error);
         }catch (HttpClientErrorException e){
             log.error("Error occurred in getRepoLanguagePercentages method", ExceptionUtils.getRootCauseMessage(e));
+        } catch (JSONException e) {
+            log.error("Error processing JSON response", e);
         }
         return sources;
     }

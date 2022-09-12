@@ -30,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -921,9 +922,9 @@ public class JiraService {
 
         HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders());
         RestTemplate restTemplate = new RestTemplate();
+        try {
         ResponseEntity<String> response = restTemplate.exchange(endpoint, HttpMethod.GET, httpEntity, String.class);
 
-        try {
             if (response.getBody() != null) {
                 JSONArray usersArray = new JSONArray(response.getBody());
                 if (!usersArray.isEmpty()) {
@@ -939,6 +940,10 @@ public class JiraService {
             }
         } catch (NullPointerException e) {
             log.error("Error retrieving assignee", e);
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while getting Assignee. http error {} ", e.getStatusCode(), e);
+        } catch (JSONException e) {
+            log.error("Error processing JSON response" , e);
         }
         return null;
     }

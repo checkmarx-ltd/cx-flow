@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -84,10 +85,13 @@ public class GitHubIssueTracker implements IssueTracker {
         log.info("Executing getIssues GitHub API call: {}", apiUrl);
         List<Issue> issues = new ArrayList<>();
         HttpEntity<?> httpEntity = new HttpEntity<>(gitHubService.createAuthHeaders(request));
-
-        ResponseEntity<com.checkmarx.flow.dto.github.Issue[]> response = restTemplate.exchange(apiUrl,
-                HttpMethod.GET, httpEntity, com.checkmarx.flow.dto.github.Issue[].class);
-
+        ResponseEntity<com.checkmarx.flow.dto.github.Issue[]> response = null;
+        try {
+            response = restTemplate.exchange(apiUrl,
+                    HttpMethod.GET, httpEntity, com.checkmarx.flow.dto.github.Issue[].class);
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while getting Github issue. http error {} ", e.getStatusCode(), e);
+        }
         if (response.getBody() == null) {
             log.info("No issues found.");
             return new ArrayList<>();
@@ -103,10 +107,14 @@ public class GitHubIssueTracker implements IssueTracker {
         String next = getNextURIFromHeaders(response.getHeaders(), "link", "next");
         while (next != null) {
             log.debug("Getting issue from {}", next);
-            ResponseEntity<com.checkmarx.flow.dto.github.Issue[]> responsePage = restTemplate.exchange(next, HttpMethod.GET,
-                    httpEntity, com.checkmarx.flow.dto.github.Issue[].class);
-
-            mapIssues(request, issues, responsePage);
+            ResponseEntity<com.checkmarx.flow.dto.github.Issue[]> responsePage = null;
+            try {
+                responsePage = restTemplate.exchange(next, HttpMethod.GET,
+                        httpEntity, com.checkmarx.flow.dto.github.Issue[].class);
+            } catch (HttpClientErrorException e) {
+                log.error("Error occurred while getting Github issue. http error {} ", e.getStatusCode(), e);
+            }
+                    mapIssues(request, issues, responsePage);
             next = getNextURIFromHeaders(responsePage.getHeaders(), "link", "next");
         }
         return issues;
@@ -151,9 +159,12 @@ public class GitHubIssueTracker implements IssueTracker {
     private Issue getIssue(String issueUrl, ScanRequest scanRequest) {
         log.info("Executing getIssue GitHub API call");
         HttpEntity<Object> httpEntity = new HttpEntity<>(gitHubService.createAuthHeaders(scanRequest));
-        ResponseEntity<com.checkmarx.flow.dto.github.Issue> response =
-                restTemplate.exchange(issueUrl, HttpMethod.GET, httpEntity, com.checkmarx.flow.dto.github.Issue.class);
-
+        ResponseEntity<com.checkmarx.flow.dto.github.Issue> response = null;
+        try {
+            response = restTemplate.exchange(issueUrl, HttpMethod.GET, httpEntity, com.checkmarx.flow.dto.github.Issue.class);
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while getting Github issue. http error {} ", e.getStatusCode(), e);
+        }
         return mapToIssue(response.getBody());
     }
 
@@ -166,7 +177,11 @@ public class GitHubIssueTracker implements IssueTracker {
     private void addComment(String issueUrl, String comment, ScanRequest scanRequest) {
         log.debug("Executing add comment GitHub API call with following comment {}", comment);
         HttpEntity<String> httpEntity = new HttpEntity<>(getJSONComment(comment).toString(), gitHubService.createAuthHeaders(scanRequest));
-        restTemplate.exchange(issueUrl.concat("/comments"), HttpMethod.POST, httpEntity, String.class);
+        try {
+            restTemplate.exchange(issueUrl.concat("/comments"), HttpMethod.POST, httpEntity, String.class);
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while adding comment. http error {} ", e.getStatusCode(), e);
+        }
     }
 
     @Override
@@ -203,7 +218,11 @@ public class GitHubIssueTracker implements IssueTracker {
     public void closeIssue(Issue issue, ScanRequest request) throws MachinaException {
         log.info("Executing closeIssue GitHub API call");
         HttpEntity<String> httpEntity = new HttpEntity<>(getJSONCloseIssue().toString(), gitHubService.createAuthHeaders(request));
-        restTemplate.exchange(issue.getUrl(), HttpMethod.POST, httpEntity, Issue.class);
+        try {
+            restTemplate.exchange(issue.getUrl(), HttpMethod.POST, httpEntity, Issue.class);
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while closing Github issue. http error {} ", e.getStatusCode(), e);
+        }
     }
 
     @Override
