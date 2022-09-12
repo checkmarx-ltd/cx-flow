@@ -120,9 +120,13 @@ public class GitLabService extends RepoService {
     @Override
     public void updateComment(String commentUrl, String comment, ScanRequest scanRequest) {
         log.debug("Updating existing comment. url: {}", commentUrl);
-        log.debug("Updated comment: {}" , comment);
+        log.debug("Updated comment: {}", comment);
         HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONComment("body", comment).toString(), createAuthHeaders(scanRequest));
-        restTemplate.exchange(commentUrl, HttpMethod.PUT, httpEntity, String.class);
+        try {
+            restTemplate.exchange(commentUrl, HttpMethod.PUT, httpEntity, String.class);
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while updating comment. http error {} ", e.getStatusCode(), e);
+        }
     }
 
     @Override
@@ -131,7 +135,11 @@ public class GitLabService extends RepoService {
                 .body(comment)
                 .build();
         HttpEntity<Note> httpEntity = new HttpEntity<>(note, createAuthHeaders(request));
-        restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
+        try {
+            restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while adding comment. http error {} ", e.getStatusCode(), e);
+        }
     }
 
     void processCommit(ScanRequest request, ScanResults results) throws GitLabClientException {
@@ -145,17 +153,20 @@ public class GitLabService extends RepoService {
         }
     }
 
-    public void sendCommitComment(ScanRequest request, String comment){
+    public void sendCommitComment(ScanRequest request, String comment) {
         JSONObject note = new JSONObject();
         note.put("note", comment);
         HttpEntity<String> httpEntity = new HttpEntity<>(note.toString(), createAuthHeaders(request));
-        restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
+        try {
+            restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while sending Commit comment. http error {} ", e.getStatusCode(), e);
+        }
     }
-
-    public void startBlockMerge(ScanRequest request){
-        if(properties.isBlockMerge()) {
+    public void startBlockMerge(ScanRequest request) {
+        if (properties.isBlockMerge()) {
             String mergeId = request.getAdditionalMetadata(FlowConstants.MERGE_ID);
-            if(ScanUtils.empty(request.getAdditionalMetadata(FlowConstants.MERGE_ID)) || ScanUtils.empty(request.getAdditionalMetadata(FlowConstants.MERGE_TITLE))){
+            if (ScanUtils.empty(request.getAdditionalMetadata(FlowConstants.MERGE_ID)) || ScanUtils.empty(request.getAdditionalMetadata(FlowConstants.MERGE_TITLE))) {
                 log.error("merge_id and merge_title was not provided within the request object, which is required for blocking / unblocking merge requests");
                 return;
             }
@@ -167,11 +178,14 @@ public class GitLabService extends RepoService {
                     getJSONMergeTitle("WIP:CX|".concat(request.getAdditionalMetadata(FlowConstants.MERGE_TITLE))).toString(),
                     createAuthHeaders(request)
             );
-            restTemplate.exchange(endpoint,
-                                  HttpMethod.PUT, httpEntity, String.class);
+            try {
+                restTemplate.exchange(endpoint,
+                        HttpMethod.PUT, httpEntity, String.class);
+            } catch (HttpClientErrorException e) {
+                log.error("Error occurred while starting block merge. http error {} ", e.getStatusCode(), e);
+            }
         }
     }
-
     void endBlockMerge(ScanRequest request){
         if(properties.isBlockMerge()) {
             String mergeId = request.getAdditionalMetadata(FlowConstants.MERGE_ID);
@@ -188,8 +202,13 @@ public class GitLabService extends RepoService {
                                               .replace("WIP:CX|","")).toString(),
                     createAuthHeaders(request)
             );
-            restTemplate.exchange(endpoint,
-                                  HttpMethod.PUT, httpEntity, String.class);
+            try {
+
+                restTemplate.exchange(endpoint,
+                        HttpMethod.PUT, httpEntity, String.class);
+            } catch (HttpClientErrorException e) {
+                log.error("Error occurred while end Block merge. http error {} ", e.getStatusCode(), e);
+            }
         }
     }
 
@@ -239,6 +258,8 @@ public class GitLabService extends RepoService {
             log.warn(CONTENT_NOT_FOUND_ERROR_MESSAGE, e);
         }catch (HttpClientErrorException e){
             log.error(ERROR_OCCURRED, e);
+        } catch (JSONException e) {
+            log.error("Error processing JSON response", e);
         }
         return sources;
     }
@@ -268,6 +289,8 @@ public class GitLabService extends RepoService {
             log.warn(CONTENT_NOT_FOUND_ERROR_MESSAGE, e);
         }catch (HttpClientErrorException e){
             log.error(ERROR_OCCURRED, e);
+        } catch (JSONException e) {
+            log.error("Error processing JSON response", e);
         }
     }
 
@@ -309,15 +332,24 @@ public class GitLabService extends RepoService {
     @Override
     public void deleteComment(String url, ScanRequest scanRequest) {
         HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders(scanRequest));
-        restTemplate.exchange(url, HttpMethod.DELETE, httpEntity, String.class);
+        try {
+            restTemplate.exchange(url, HttpMethod.DELETE, httpEntity, String.class);
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while deleting comment. http error {} ", e.getStatusCode(), e);
+        }
     }
 
     @Override
     public List<RepoComment> getComments(ScanRequest scanRequest) {
         HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders(scanRequest));
-        ResponseEntity<Comment[]> response = restTemplate.exchange(scanRequest.getMergeNoteUri(),
-                                                                   HttpMethod.GET, httpEntity ,
-                                                                   Comment[].class);
+        ResponseEntity<Comment[]> response = null;
+        try {
+            response = restTemplate.exchange(scanRequest.getMergeNoteUri(),
+                    HttpMethod.GET, httpEntity,
+                    Comment[].class);
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while getting comments. http error {} ", e.getStatusCode(), e);
+        }
         List<Comment> comments = Arrays.asList(Objects.requireNonNull(response.getBody()));
         return convertToListCxRepoComments(comments, scanRequest);
     }

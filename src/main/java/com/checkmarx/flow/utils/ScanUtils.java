@@ -426,7 +426,7 @@ public class ScanUtils {
                 }
             }
         } catch (IOException e) {
-            log.error("Error occurred", e);
+            log.error("Error occurred in getMachinaOverride method.", e);
             throw new MachinaRuntimeException();
         }
         return o;

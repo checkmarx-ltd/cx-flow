@@ -175,7 +175,7 @@ public class FlowController {
                     String postRequest = URLDecoder.decode(scanDetails,"UTF-8");
                     decodePostBackReq(postRequest, prd);
                 } catch(Exception e) {
-                    log.error("Error decoding scan details");
+                    log.error("Error decoding scan details", e);
                 }
             }
             iteration++;

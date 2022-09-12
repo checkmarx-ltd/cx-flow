@@ -45,7 +45,7 @@ public class CxXMLIssueTracker extends ImmutableIssueTracker {
             marshalScaResults(request, results);
 
         } catch (IOException e) {
-            log.error("Issue occurred while writing file: {} with error message: {}", request.getFilename(), e.getMessage());
+            log.error("Issue occurred while writing file: {} with error message: {}. ", request.getFilename(), e.getMessage(), e);
         }
     }
 

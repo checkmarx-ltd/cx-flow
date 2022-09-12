@@ -295,7 +295,7 @@ public class ServiceNowTracker implements IssueTracker {
             log.debug("ServiceNow Close Issues URL: {}", query);
             restOperations.put(query, incident);
         } catch (HttpClientErrorException e) {
-            log.error("Error closing issue.Details are:" + e.getMessage());
+            log.error("Error closing issue.Details are:" + e.getMessage(), e);
             throw new MachinaRuntimeException(e);
         }
     }
@@ -311,7 +311,7 @@ public class ServiceNowTracker implements IssueTracker {
             return getIssues(request).stream().findFirst()
                     .orElseThrow(() -> new MachinaException("Incident record hasn't been found."));
         } catch (HttpClientErrorException e) {
-            log.error("Error updating issue.");
+            log.error("Error updating issue.", e);
             throw new MachinaRuntimeException();
         }
     }

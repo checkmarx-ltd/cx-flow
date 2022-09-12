@@ -32,12 +32,14 @@ import com.checkmarx.sdk.dto.sast.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.scanner.CxClient;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpEntity;
@@ -141,28 +143,41 @@ public class GitHubService extends RepoService {
 
     public void updateComment(String baseUrl, String comment, ScanRequest scanRequest) {
         log.debug("Updating exisiting comment. url: {}", baseUrl);
-        log.debug("Updated comment: {}" , comment);
-        HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONComment("body",comment).toString(), createAuthHeaders(scanRequest));
-        restTemplate.exchange(baseUrl, HttpMethod.PATCH, httpEntity, String.class);
+        log.debug("Updated comment: {}", comment);
+        HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONComment("body", comment).toString(), createAuthHeaders(scanRequest));
+        try {
+            restTemplate.exchange(baseUrl, HttpMethod.PATCH, httpEntity, String.class);
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while updating comment. http error {} ", e.getStatusCode());
+            log.error(ExceptionUtils.getStackTrace(e));
+        }
     }
 
     @Override
     public List<RepoComment> getComments(ScanRequest scanRequest) throws IOException {
         int maxNumberOfComments = 2000;
         HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders(scanRequest));
-        ResponseEntity<String> response = restTemplate.exchange(scanRequest.getMergeNoteUri(), HttpMethod.GET, httpEntity , String.class);
         List<RepoComment> result = new ArrayList<>();
-        ObjectMapper objMapper = new ObjectMapper();
-        JsonNode root = objMapper.readTree(response.getBody());
-        Iterator<JsonNode> it = root.elements();
-        int iteration = 0;
-        while (it.hasNext() && iteration < maxNumberOfComments) {
-            JsonNode commentNode = it.next();
-            RepoComment comment = createRepoComment(commentNode);
-            if (PullRequestCommentsHelper.isCheckMarxComment(comment)) {
-                result.add(comment);
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(scanRequest.getMergeNoteUri(), HttpMethod.GET, httpEntity, String.class);
+            ObjectMapper objMapper = new ObjectMapper();
+            JsonNode root = objMapper.readTree(response.getBody());
+            Iterator<JsonNode> it = root.elements();
+            int iteration = 0;
+            while (it.hasNext() && iteration < maxNumberOfComments) {
+                JsonNode commentNode = it.next();
+                RepoComment comment = createRepoComment(commentNode);
+                if (PullRequestCommentsHelper.isCheckMarxComment(comment)) {
+                    result.add(comment);
+                }
+                iteration++;
             }
-            iteration++;
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while getting comments. http error {} ", e.getStatusCode());
+            log.error(ExceptionUtils.getStackTrace(e));
+        } catch (JsonProcessingException e) {
+            log.error("Error processing JSON response");
+            log.error(ExceptionUtils.getStackTrace(e));
         }
         return result;
     }
@@ -203,9 +218,13 @@ public class GitHubService extends RepoService {
     @Override
     public void deleteComment(String url, ScanRequest scanRequest) {
         HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders(scanRequest));
-        restTemplate.exchange(url, HttpMethod.DELETE, httpEntity, String.class);
+        try {
+            restTemplate.exchange(url, HttpMethod.DELETE, httpEntity, String.class);
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while deleting comment. http error {} ", e.getStatusCode());
+            log.error(ExceptionUtils.getStackTrace(e));
+        }
     }
-
 
     private RepoComment createRepoComment(JsonNode commentNode)  {
         String commentBody = commentNode.path("body").textValue();
@@ -226,10 +245,14 @@ public class GitHubService extends RepoService {
     @Override
     public void addComment(ScanRequest request, String comment) {
         log.debug("Adding a new comment");
-        HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONComment("body",comment).toString(), createAuthHeaders(request));
-        restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
+        HttpEntity<?> httpEntity = new HttpEntity<>(RepoIssue.getJSONComment("body", comment).toString(), createAuthHeaders(request));
+        try {
+            restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while adding comment. http error {} ", e.getStatusCode());
+            log.error(ExceptionUtils.getStackTrace(e));
+        }
     }
-
     public void startBlockMerge(ScanRequest request, String url){
         if(properties.isBlockMerge()) {
             final String PULL_REQUEST_STATUS = "pending";
@@ -248,7 +271,7 @@ public class GitHubService extends RepoService {
                     }
                     url = shard.getUrl() + "/cxwebclient/portal#/projectState/" + projectID + "/Summary";
                 } catch(CheckmarxException e) {
-                    log.error(URL_INVALID);
+                    log.error(URL_INVALID, e);
                 }
             }
             HttpEntity<?> httpEntity = new HttpEntity<>(
@@ -463,7 +486,10 @@ public class GitHubService extends RepoService {
             String error = "Got 404 'Not Found' error. GitHub endpoint: " + getGitHubEndPoint(request) + " is invalid.";
             log.warn(error);
         }catch (HttpClientErrorException e){
-            log.error(ExceptionUtils.getRootCauseMessage(e));
+            log.error("Error occurred in getRepoLanguagePercentages method.", ExceptionUtils.getRootCauseMessage(e));
+        } catch (JSONException e) {
+            log.error("Error processing JSON response");
+            log.error(ExceptionUtils.getStackTrace(e));
         }
         return sources;
     }
@@ -518,7 +544,7 @@ public class GitHubService extends RepoService {
             } catch (HttpClientErrorException.NotFound e) {
                 log.info("No Config As code was found [{}]", properties.getConfigAsCode());
             } catch (Exception e) {
-                log.error(ExceptionUtils.getRootCauseMessage(e));
+                log.error("Error occurred in getCxConfigOverride", ExceptionUtils.getRootCauseMessage(e));
             }
         }
         return result;
@@ -551,7 +577,7 @@ public class GitHubService extends RepoService {
         if (StringUtils.isNotEmpty(branch)) {
             HttpHeaders headers = createAuthHeaders(request);
             String urlTemplate = scmConfigOverrider.determineConfigApiUrl(properties, request).concat(FILE_CONTENT);
-
+        try {
             response = restTemplate.exchange(
                     urlTemplate,
                     HttpMethod.GET,
@@ -561,6 +587,10 @@ public class GitHubService extends RepoService {
                     request.getRepoName(),
                     filename,
                     branch);
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while downloading file content. http error {} ", e.getStatusCode());
+            log.error(ExceptionUtils.getStackTrace(e));
+        }
         } else {
             log.warn("Unable to load config-as-code.");
         }

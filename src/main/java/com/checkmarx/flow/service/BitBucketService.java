@@ -22,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.*;
@@ -29,6 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
 import java.util.*;
 
 @Slf4j
@@ -178,17 +180,32 @@ public class BitBucketService extends RepoService {
     private void sendBuildStatus(ScanRequest request, String buildStatusRequestBody) {
         String buildStatusApiUrl = request.getAdditionalMetadata("buildStatusUrl");
         HttpEntity<String> httpEntity = new HttpEntity<>(buildStatusRequestBody, createAuthHeaders(request.getScmInstance()));
-        restTemplate.exchange(buildStatusApiUrl, HttpMethod.POST, httpEntity, String.class);
+        try {
+            restTemplate.exchange(buildStatusApiUrl, HttpMethod.POST, httpEntity, String.class);
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while sending build status. http error {} ", e.getStatusCode());
+            log.error(ExceptionUtils.getStackTrace(e));
+        }
     }
 
     public void sendMergeComment(ScanRequest request, String comment) {
         HttpEntity<String> httpEntity = new HttpEntity<>(getJSONComment(comment).toString(), createAuthHeaders(request.getScmInstance()));
-        restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
+        try {
+            restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
+        } catch (HttpClientErrorException e) {
+        log.error("Error occurred while sending Merge comment. http error {} ", e.getStatusCode());
+        log.error(ExceptionUtils.getStackTrace(e));
+    }
     }
 
     public void sendServerMergeComment(ScanRequest request, String comment) {
         HttpEntity<String> httpEntity = new HttpEntity<>(getServerJSONComment(comment).toString(), createAuthHeaders(request.getScmInstance()));
+        try {
         restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
+    } catch (HttpClientErrorException e) {
+        log.error("Error occurred while sending server Merge Comment. http error {} ", e.getStatusCode());
+        log.error(ExceptionUtils.getStackTrace(e));
+        }
     }
 
     private void sendServerMergeTask(ScanRequest request, String comment) {
@@ -207,34 +224,49 @@ public class BitBucketService extends RepoService {
             taskBody.put("text", comment);
 
             HttpEntity<String> httpEntity = new HttpEntity<>(taskBody.toString(), createAuthHeaders(request.getScmInstance()));
-            restTemplate.exchange(request.getMergeNoteUri().concat("/" + taskId), HttpMethod.PUT, httpEntity, String.class);
+            try {
+                restTemplate.exchange(request.getMergeNoteUri().concat("/" + taskId), HttpMethod.PUT, httpEntity, String.class);
+            } catch (HttpClientErrorException e) {
+                log.error("Error occurred while sending server merge task. http error {} ", e.getStatusCode());
+                log.error(ExceptionUtils.getStackTrace(e));
+            }
 
-        } else {
+    } else {
             JSONObject taskBody = new JSONObject();
             taskBody.put("severity", "BLOCKER");
             taskBody.put("text", comment);
             HttpEntity<String> httpEntity = new HttpEntity<>(taskBody.toString(), createAuthHeaders(request.getScmInstance()));
-            restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
+            try {
+                restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
+            } catch (HttpClientErrorException e) {
+                log.error("Error occurred while sending server merge task. http error {} ", e.getStatusCode());
+                log.error(ExceptionUtils.getStackTrace(e));
+            }
         }
     }
 
     private Object getCxFlowTask(ResponseEntity<String> retrievedResult) {
 
         if (retrievedResult.getBody() != null) {
-            JSONObject json = new JSONObject(retrievedResult.getBody());
-            JSONArray taskList = json.getJSONArray("values");
+            try {
+                JSONObject json = new JSONObject(retrievedResult.getBody());
+                JSONArray taskList = json.getJSONArray("values");
 
-            if (!taskList.isEmpty()) {
-                for (Object task : taskList) {
-                    Object author = ((JSONObject) task).get("author");
-                    String taskAuthor = (String) ((JSONObject) author).get("slug");
+                if (!taskList.isEmpty()) {
+                    for (Object task : taskList) {
+                        Object author = ((JSONObject) task).get("author");
+                        String taskAuthor = (String) ((JSONObject) author).get("slug");
 
-                    if (taskAuthor.equals(getCxFlowServiceAccountSlug())) {
-                        return task;
+                        if (taskAuthor.equals(getCxFlowServiceAccountSlug())) {
+                            return task;
+                        }
                     }
+                } else {
+                    return null;
                 }
-            } else {
-                return null;
+            } catch (JSONException e) {
+                log.error("Error processing JSON response");
+                log.error(ExceptionUtils.getStackTrace(e));
             }
         }
         return null;
@@ -254,7 +286,14 @@ public class BitBucketService extends RepoService {
         params.put("state", "OPEN");
 
         HttpEntity<Object> httpEntity = new HttpEntity<>(createAuthHeaders(request.getScmInstance()));
-        return restTemplate.exchange(blockerCommentUrl.concat("?state={state}"), HttpMethod.GET, httpEntity, String.class, params);
+        ResponseEntity<String> response = null;
+        try {
+            response = restTemplate.exchange(blockerCommentUrl.concat("?state={state}"), HttpMethod.GET, httpEntity, String.class, params);
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while retrieving Existing Open Tasks. http error {} ", e.getStatusCode());
+            log.error(ExceptionUtils.getStackTrace(e));
+        }
+        return response;
 
     }
 
@@ -273,7 +312,12 @@ public class BitBucketService extends RepoService {
         JSONObject note = new JSONObject();
         note.put("note", comment);
         HttpEntity<String> httpEntity = new HttpEntity<>(note.toString(), createAuthHeaders(request.getScmInstance()));
-        restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
+        try {
+            restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while sending commit comment. http error {} ", e.getStatusCode());
+            log.error(ExceptionUtils.getStackTrace(e));
+        }
     }
 
     @Override
@@ -444,7 +488,7 @@ public class BitBucketService extends RepoService {
     }
 
     private CxConfig loadCxConfigFromBitbucket(ScanRequest request) {
-        CxConfig cxConfig;
+        CxConfig cxConfig = null;
         HttpHeaders headers = createAuthHeaders(request.getScmInstance());
         String repoSelfUrl = request.getAdditionalMetadata(REPO_SELF_URL);
 
@@ -458,24 +502,31 @@ public class BitBucketService extends RepoService {
         Map<String, String> uriVariables = new HashMap<>();
         uriVariables.put("hash", request.getHash());
         uriVariables.put("config", properties.getConfigAsCode());
-
-        ResponseEntity<String> response = restTemplate.exchange(
-                urlTemplate,
-                HttpMethod.GET,
-                new HttpEntity<>(headers),
-                String.class, uriVariables
-        );
-        if (response.getBody() == null) {
-            log.warn(HTTP_BODY_IS_NULL);
-            cxConfig = null;
-        } else {
-            JSONObject json = new JSONObject(response.getBody());
-            if (ScanUtils.empty(json.toString())) {
-                log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(
+                    urlTemplate,
+                    HttpMethod.GET,
+                    new HttpEntity<>(headers),
+                    String.class, uriVariables
+            );
+            if (response.getBody() == null) {
+                log.warn(HTTP_BODY_IS_NULL);
                 cxConfig = null;
             } else {
-                cxConfig = com.checkmarx.sdk.utils.ScanUtils.getConfigAsCode(json.toString());
+                JSONObject json = new JSONObject(response.getBody());
+                if (ScanUtils.empty(json.toString())) {
+                    log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
+                    cxConfig = null;
+                } else {
+                    cxConfig = com.checkmarx.sdk.utils.ScanUtils.getConfigAsCode(json.toString());
+                }
             }
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while loading CxConfig From Bitbucket. http error {} ", e.getStatusCode());
+            log.error(ExceptionUtils.getStackTrace(e));
+        } catch (JSONException e) {
+            log.error("Error processing JSON response");
+            log.error(ExceptionUtils.getStackTrace(e));
         }
         return cxConfig;
     }

@@ -155,7 +155,12 @@ public class GitLabIssueTracker implements IssueTracker {
                 .replace("{repo}", targetRepoName).replace("{id}" ,currentProjectID);
         URI uri = new URI(url);
         HttpEntity<Void> httpEntity = new HttpEntity<>(createAuthHeaders(scanRequest));
-        ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, httpEntity, String.class);
+        ResponseEntity<String> response = null;
+        try {
+            response = restTemplate.exchange(uri, HttpMethod.GET, httpEntity, String.class);
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while getting Project Search Result. http error {} ", e.getStatusCode(), e);
+        }
         return new JSONArray(response.getBody());
     }
 
@@ -168,8 +173,13 @@ public class GitLabIssueTracker implements IssueTracker {
         List<Issue> issues = new ArrayList<>();
         HttpEntity<Void> httpEntity = new HttpEntity<>(createAuthHeaders(request));
         String endpoint = scmConfigOverrider.determineConfigApiUrl(properties, request).concat(ISSUES_PATH);
-        ResponseEntity<com.checkmarx.flow.dto.gitlab.Issue[]> response = restTemplate.exchange(endpoint,
-                HttpMethod.GET, httpEntity, com.checkmarx.flow.dto.gitlab.Issue[].class, request.getRepoProjectId());
+        ResponseEntity<com.checkmarx.flow.dto.gitlab.Issue[]> response = null;
+        try {
+            response = restTemplate.exchange(endpoint,
+                    HttpMethod.GET, httpEntity, com.checkmarx.flow.dto.gitlab.Issue[].class, request.getRepoProjectId());
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while getting Gitlab issue. http error {} ", e.getStatusCode(), e);
+        }
         if(response.getBody() == null) {
             return issues;
         }
@@ -181,7 +191,12 @@ public class GitLabIssueTracker implements IssueTracker {
         }
         String next = getNextURIFromHeaders(response.getHeaders(), "link", "next");
         while (next != null) {
-            ResponseEntity<com.checkmarx.flow.dto.gitlab.Issue[]> responsePage = restTemplate.exchange(next, HttpMethod.GET, httpEntity, com.checkmarx.flow.dto.gitlab.Issue[].class);
+            ResponseEntity<com.checkmarx.flow.dto.gitlab.Issue[]> responsePage = null;
+           try {
+               responsePage = restTemplate.exchange(next, HttpMethod.GET, httpEntity, com.checkmarx.flow.dto.gitlab.Issue[].class);
+           } catch (HttpClientErrorException e) {
+               log.error("Error occurred while getting issue. http error {} ", e.getStatusCode(), e);
+           }
             if(responsePage.getBody() != null) {
                 for(com.checkmarx.flow.dto.gitlab.Issue issue: responsePage.getBody()){
                     Issue i = mapToIssue(issue);
@@ -218,9 +233,12 @@ public class GitLabIssueTracker implements IssueTracker {
         log.debug("Executing getIssue GitLab API call");
         String endpoint = scmConfigOverrider.determineConfigApiUrl(properties, scanRequest).concat(ISSUE_PATH);
         HttpEntity<Void> httpEntity = new HttpEntity<>(createAuthHeaders(scanRequest));
-        ResponseEntity<com.checkmarx.flow.dto.gitlab.Issue> response =
-                restTemplate.exchange(endpoint, HttpMethod.GET, httpEntity, com.checkmarx.flow.dto.gitlab.Issue.class, projectId, iid);
-
+        ResponseEntity<com.checkmarx.flow.dto.gitlab.Issue> response = null;
+        try {
+            response = restTemplate.exchange(endpoint, HttpMethod.GET, httpEntity, com.checkmarx.flow.dto.gitlab.Issue.class, projectId, iid);
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while getting Gitlab issue. http error {} ", e.getStatusCode(), e);
+        }
         return mapToIssue(response.getBody());
     }
 
@@ -235,7 +253,11 @@ public class GitLabIssueTracker implements IssueTracker {
                 .body(comment)
                 .build();
         HttpEntity<Note> httpEntity = new HttpEntity<>(note, createAuthHeaders(scanRequest));
-        restTemplate.exchange(endpoint, HttpMethod.POST, httpEntity, String.class, projectId, iid);
+       try {
+           restTemplate.exchange(endpoint, HttpMethod.POST, httpEntity, String.class, projectId, iid);
+       } catch (HttpClientErrorException e) {
+           log.error("Error occurred while adding Gitlab comment. http error {} ", e.getStatusCode(), e);
+       }
     }
 
     @Override
@@ -270,8 +292,12 @@ public class GitLabIssueTracker implements IssueTracker {
         log.debug("Executing closeIssue GitLab API call");
         String endpoint = scmConfigOverrider.determineConfigApiUrl(properties, request).concat(ISSUE_PATH);
         HttpEntity<String> httpEntity = new HttpEntity<>(getJSONCloseIssue().toString(), createAuthHeaders(request));
-        restTemplate.exchange(endpoint, HttpMethod.PUT, httpEntity,
-                com.checkmarx.flow.dto.gitlab.Issue.class, request.getRepoProjectId(), iid);
+        try {
+            restTemplate.exchange(endpoint, HttpMethod.PUT, httpEntity,
+                    com.checkmarx.flow.dto.gitlab.Issue.class, request.getRepoProjectId(), iid);
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while closing Gitlab issue. http error {} ", e.getStatusCode(), e);
+        }
     }
 
     @Override

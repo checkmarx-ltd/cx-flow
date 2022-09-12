@@ -74,7 +74,7 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
                     break;
             }
         } catch (MachinaRuntimeException me) {
-            log.error(me.getMessage());
+            log.error("Exception in scanCli method. ", me.getMessage(), me);
             throw new MachinaRuntimeException(new ExitThrowable(10));
         } catch (ExitThrowable e) {
             throw new MachinaRuntimeException(e);
@@ -172,7 +172,7 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
         try {
             parsedUrl = new URL(scanRequest.getRepoUrlWithAuth());
         } catch (MalformedURLException e) {
-            log.error("Failed to parse repository URL: '{}'", scanRequest.getRepoUrl());
+            log.error("Failed to parse repository URL: '{}'", scanRequest.getRepoUrl(), e);
             throw new MachinaRuntimeException("Invalid repository URL.");
         }
         return parsedUrl;

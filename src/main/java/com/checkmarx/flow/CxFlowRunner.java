@@ -477,7 +477,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 }
             }
         } catch (Exception e) {
-            log.error("An error occurred while processing request", e);
+            log.error("An error occurred while processing request in commandLineRunner ", e);
             exit(ExitCode.BUILD_INTERRUPTED);
         }
         log.info("Completed Successfully");
@@ -645,7 +645,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 }
 
             } catch (MachinaException e) {
-                log.error("An error has occurred.", ExceptionUtils.getRootCause(e));
+                log.error("An error has occurred while processing result.", ExceptionUtils.getRootCause(e));
             }
         }
     }

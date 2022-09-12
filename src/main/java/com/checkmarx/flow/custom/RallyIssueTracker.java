@@ -90,21 +90,26 @@ public class RallyIssueTracker implements IssueTracker {
         try {
             int pageIndex = 0;
             QueryResult rallyQuery;
-            ResponseEntity<QueryResult> response;
+            ResponseEntity<QueryResult> response = null;
             //
             /// Read the first list of defects from Rally, it will contain the totalResultCount we can use
             /// to figure out how many more pages of data needs to be pulled.
             //
             String query = createRallyTagQuery(request);
-            response = restTemplate.exchange(
-                    properties.getApiUrl().concat(GET_ISSUES),
-                    HttpMethod.GET,
-                    httpEntity,
-                    QueryResult.class,
-                    query,
-                    pageIndex,
-                    ISSUES_PER_PAGE
-            );
+            try {
+                response = restTemplate.exchange(
+                        properties.getApiUrl().concat(GET_ISSUES),
+                        HttpMethod.GET,
+                        httpEntity,
+                        QueryResult.class,
+                        query,
+                        pageIndex,
+                        ISSUES_PER_PAGE
+                );
+            } catch (HttpClientErrorException e) {
+                log.error("Error occurred while getting issue. http error {} ", e.getStatusCode());
+                log.error(ExceptionUtils.getStackTrace(e));
+            }
             rallyQuery = response.getBody();
             //
             /// Now decode the CxFlow defects and continue reading lists of defects until we've found the
@@ -122,15 +127,20 @@ public class RallyIssueTracker implements IssueTracker {
                 // If there are more issues on the server, fetch them
                 if(resultsFound < rallyQuery.getQueryResult().getTotalResultCount()) {
                     pageIndex++;
-                    response = restTemplate.exchange(
-                            properties.getApiUrl().concat(GET_ISSUES),
-                            HttpMethod.GET,
-                            httpEntity,
-                            QueryResult.class,
-                            query,
-                            pageIndex,
-                            ISSUES_PER_PAGE
-                    );
+                    try {
+                        response = restTemplate.exchange(
+                                properties.getApiUrl().concat(GET_ISSUES),
+                                HttpMethod.GET,
+                                httpEntity,
+                                QueryResult.class,
+                                query,
+                                pageIndex,
+                                ISSUES_PER_PAGE
+                        );
+                    } catch (HttpClientErrorException e) {
+                        log.error("Error occurred while getting issue. http error {} ", e.getStatusCode());
+                        log.error(ExceptionUtils.getStackTrace(e));
+                    }
                     rallyQuery = response.getBody();
                 }
             }
@@ -232,11 +242,16 @@ public class RallyIssueTracker implements IssueTracker {
         String defID = issueUrl.substring(issueUrl.lastIndexOf("/") + 1);
         String json = getJSONComment(comment, defID);
         HttpEntity httpEntity = new HttpEntity(json, createAuthHeaders());
-        restTemplate.exchange(
-                properties.getApiUrl().concat(CREATE_DISCUSSION),
-                HttpMethod.POST,
-                httpEntity,
-                String.class);
+        try {
+            restTemplate.exchange(
+                    properties.getApiUrl().concat(CREATE_DISCUSSION),
+                    HttpMethod.POST,
+                    httpEntity,
+                    String.class);
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while getting issue. http error {} ", e.getStatusCode());
+            log.error(ExceptionUtils.getStackTrace(e));
+        }
     }
 
     /**
@@ -292,7 +307,7 @@ public class RallyIssueTracker implements IssueTracker {
             requestBody.put("Tags", this.tagsList);
             createBody.put("Defect", requestBody);
         } catch (JSONException e) {
-            log.error("Error creating JSON Issue Object - JSON Object will be empty");
+            log.error("Error creating JSON Issue Object - JSON Object will be empty", e);
         }
         return createBody.toString();
     }
@@ -337,12 +352,17 @@ public class RallyIssueTracker implements IssueTracker {
         log.info("Creating Rally Tag: ".concat(name));
         HttpEntity httpEntity = new HttpEntity(getJSONCreateTag(name), createAuthHeaders());
         CreateResultAction cra;
-        ResponseEntity<CreateResultAction> response;
-        response = restTemplate.exchange(
-                properties.getApiUrl().concat(CREATE_TAG),
-                HttpMethod.POST,
-                httpEntity,
-                CreateResultAction.class);
+        ResponseEntity<CreateResultAction> response = null;
+        try {
+            response = restTemplate.exchange(
+                    properties.getApiUrl().concat(CREATE_TAG),
+                    HttpMethod.POST,
+                    httpEntity,
+                    CreateResultAction.class);
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while Creating Rally tag. http error {} ", e.getStatusCode());
+            log.error(ExceptionUtils.getStackTrace(e));
+        }
         cra = response.getBody();
         Map<String, Object> m = (Map<String, Object>)cra.getAdditionalProperties().get("CreateResult");
         m = (Map<String, Object>)m.get("Object");
@@ -363,7 +383,7 @@ public class RallyIssueTracker implements IssueTracker {
             requestBody.put("Name", name);
             createBody.put("Tag", requestBody);
         } catch (JSONException e) {
-            log.error("Error creating JSON Create Tag object - JSON object will be empty");
+            log.error("Error creating JSON Create Tag object - JSON object will be empty", e);
         }
         return createBody.toString();
     }
@@ -380,11 +400,16 @@ public class RallyIssueTracker implements IssueTracker {
         log.info("Executing closeIssue Rally API call");
         String json = getJSONCloseIssue();
         HttpEntity httpEntity = new HttpEntity(json, createAuthHeaders());
-        restTemplate.exchange(
-                issue.getUrl(),
-                HttpMethod.POST,
-                httpEntity,
-                Issue.class);
+       try {
+           restTemplate.exchange(
+                   issue.getUrl(),
+                   HttpMethod.POST,
+                   httpEntity,
+                   Issue.class);
+       } catch (HttpClientErrorException e) {
+           log.error("Error occurred while closing issue. http error {} ", e.getStatusCode());
+           log.error(ExceptionUtils.getStackTrace(e));
+       }
     }
 
     /**
@@ -409,7 +434,7 @@ public class RallyIssueTracker implements IssueTracker {
                     com.checkmarx.flow.dto.rally.Issue.class);
             this.addComment(issue.getUrl(),"Issue still exists. ");
         } catch (HttpClientErrorException e) {
-            log.error("Error updating issue.  This is likely due to the fact that another user has closed this issue. Adding comment");
+            log.error("Error updating issue.  This is likely due to the fact that another user has closed this issue. Adding comment", e);
             if(e.getStatusCode().equals(HttpStatus.GONE)) {
                 throw new MachinaRuntimeException();
             }
@@ -480,7 +505,7 @@ public class RallyIssueTracker implements IssueTracker {
             requestBody.put("Text", comment);
             createBody.put("ConversationPost", requestBody);
         } catch (JSONException e) {
-            log.error("Error creating JSON Comment Object - JSON object will be empty");
+            log.error("Error creating JSON Comment Object - JSON object will be empty", e);
         }
         return createBody.toString();
     }
@@ -495,7 +520,7 @@ public class RallyIssueTracker implements IssueTracker {
             requestBody.put(REQUEST_STATE_FIELD, TRANSITION_CLOSE);
             createBody.put("Defect", requestBody);
         } catch (JSONException e) {
-            log.error("Error creating JSON Close Issue Object - JSON object will be empty");
+            log.error("Error creating JSON Close Issue Object - JSON object will be empty", e);
         }
         return createBody.toString();
     }
