@@ -274,7 +274,7 @@ CxFlow supports configuration as code for CxSAST and CxSCA scans.
 
 ### CxFlow can open security tickets upon SCA scan results 
 In order to open SCA security tickets, set the bug tracker in CxFlow app.yml file or in add the argument with your bug tracker type (for example: --bug-tracker=Jira) 
- 
+## <a name="zipFolderScan">SCA ZIP Folder Scan</a>
 ### CxFlow can init git scan or upload zip folder to scan by sca:
 * git scan:
   * --scan  --enabled-vulnerability-scanners=sca --app=MyApp --cx-project=test --repo-url=my-repo-url --repo-name=my-repo --branch=main --github  
@@ -282,7 +282,7 @@ In order to open SCA security tickets, set the bug tracker in CxFlow app.yml fil
   * --scan --app=MyApp --cx-team="my-team" --cx-project="project" --f="/Users/myProjects/project"
 * get latest scan results:
   * --project --app=MyApp --cx-team="my-team" --cx-project="project"
-*EnabledZipScan:
+* EnabledZipScan:
   * CxFlow will locally clone the repository and zip it and send the zip file for scanning.
 ```
 enabled-zip-scan: true
