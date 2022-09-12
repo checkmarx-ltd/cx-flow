@@ -12,11 +12,11 @@ Feature: Cx-Flow integration with CodeBashing APIs
     Examples:
       | CodeBashing Configuration Exist   | bugTracker type  |   type                       |  CWE     | lesson path                                           |
       | true                              | JIRA             |   SQL_Injection              |  89      | courses/java/lessons/sql_injection                    |
-      | true                              | JIRA             |   HTTP_Response_Splitting    |  113     | default                                               |
+      #| true                              | JIRA             |   HTTP_Response_Splitting    |  113     | default                                               |
       | true                              | JIRA             |   Reflected_XSS              |  79      | courses/java/lessons/reflected_xss                    |
       | false                             | JIRA             |   SQL_Injection              |  89      | default                                               |
       | true                              | GitLab           |   SQL_Injection              |  89      | courses/java/lessons/sql_injection                    |
-      | true                              | GitLab           |   HTTP_Response_Splitting    |  113     | default                                               |
+      #| true                              | GitLab           |   HTTP_Response_Splitting    |  113     | default                                               |
       | true                              | GitLab           |   Reflected_XSS              |  79      | courses/java/lessons/reflected_xss                    |
       | false                             | GitLab           |   SQL_Injection              |  89      | default                                               |
 

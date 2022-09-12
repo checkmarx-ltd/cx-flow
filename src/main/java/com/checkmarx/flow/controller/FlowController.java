@@ -182,6 +182,15 @@ public class FlowController {
         }
         validateToken(token);
         try {
+            List<String> filterSeverity = properties.getFilterSeverity();
+            List<Filter> filterList = new ArrayList<>();
+            if (!ScanUtils.empty(filterSeverity)) {
+                for (String s : filterSeverity) {
+                    Filter filter = new Filter(Filter.Type.SEVERITY, s);
+                    filterList.add(filter);
+                }
+            }
+            FilterConfiguration filter = FilterConfiguration.fromSimpleFilters(filterList);
             String product = "CX";
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
             ScanRequest scanRequest = ScanRequest.builder()
@@ -191,6 +200,7 @@ public class FlowController {
                     .team(prd.team)
                     .repoType(ScanRequest.Repository.GITHUB)
                     .product(p)
+                    .filter(filter)
                     .branch(prd.branch)
                     .build();
             // There won't be a scan ID on the post-back, so we need to fake it in the

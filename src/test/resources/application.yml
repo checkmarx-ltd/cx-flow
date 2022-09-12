@@ -53,6 +53,7 @@ cx-flow:
 
 
 checkmarx:
+  version: 9.4
   username: xxx
   password: xxx
   client-secret: 014DF517-39D1-4453-B7B3-9930C563627C
@@ -62,7 +63,7 @@ checkmarx:
   incremental: true
   scan-preset: Checkmarx Default
   configuration: Default Configuration
-  team: \CxServer\SP\Checkmarx
+  team: /CxServer/SP/Checkmarx
   scan-timeout: 120
   #WSDL Config
   portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx

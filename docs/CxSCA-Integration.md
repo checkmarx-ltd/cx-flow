@@ -8,6 +8,7 @@
 * [SCA ZIP Folder Scan](#zipFolderScan)
 * [SCA Project Team Assignment](#scaProjectTeamAssignment)
 * [SCA Scan Timeout](#scaScanTimeOut)
+* [SCA Resolver](#scaResolver)
 ## <a name="configuration">Configuration</a>
 CxSCA scans can be triggered based on WebHooks using CxFlow. 
 For instructions on registering CxFlow to WebHook, refer to [WebHook Registration](
@@ -273,7 +274,7 @@ CxFlow supports configuration as code for CxSAST and CxSCA scans.
 
 ### CxFlow can open security tickets upon SCA scan results 
 In order to open SCA security tickets, set the bug tracker in CxFlow app.yml file or in add the argument with your bug tracker type (for example: --bug-tracker=Jira) 
- 
+## <a name="zipFolderScan">SCA ZIP Folder Scan</a>
 ### CxFlow can init git scan or upload zip folder to scan by sca:
 * git scan:
   * --scan  --enabled-vulnerability-scanners=sca --app=MyApp --cx-project=test --repo-url=my-repo-url --repo-name=my-repo --branch=main --github  
@@ -281,7 +282,7 @@ In order to open SCA security tickets, set the bug tracker in CxFlow app.yml fil
   * --scan --app=MyApp --cx-team="my-team" --cx-project="project" --f="/Users/myProjects/project"
 * get latest scan results:
   * --project --app=MyApp --cx-team="my-team" --cx-project="project"
-*EnabledZipScan:
+* EnabledZipScan:
   * CxFlow will locally clone the repository and zip it and send the zip file for scanning.
 ```
 enabled-zip-scan: true
@@ -322,3 +323,34 @@ team: /MainTeam/SubTeam
 In order  to set Scan TimeOut for SCA, the configuration property should be added underneath the sca configuration section:
 ```
  scan-timeout: 120
+```
+
+## <a name="scaResolver">SCA Resolver</a>
+
+SCA Resolver is an on-prem utility that enables you to resolve and extract dependencies and fingerprints from your source code and send them to the Checkmarx SCA cloud platform for risk analysis.
+Refer to [Checkmarx SCA Resolver](https://checkmarx.com/resource/documents/en/34965-19196-checkmarx-sca-resolver.html) page for more information.
+
+In Cx-Flow, the SCA Resolver functions in offline mode. The mandatory SCA Resolver parameters (-s ,-r, -n) are not necessary because Cx-Flow will supply all necessary information.
+
+**The prerequisites for SCA Resolver**
+
+* Download and install SCA Resolver for appropriate OS. see [SCA Resolver Download](https://checkmarx.com/resource/documents/en/34965-19197-checkmarx-sca-resolver-download-and-installation.html).
+* SCA Resolver requires dependency resolution utilities to be installed, and the project to be in a buildable state. For a list of requirements, see [Package Managers Support in SCA Resolver](https://checkmarx.com/resource/documents/en/34965-19198-installing-supported-package-managers-for-resolver.html).
+
+**Note:** SCA Resolver does not need to downloaded if using Docker. The SCA Resolver will be in the /app directory of the Docker image.
+
+In order to enable Sca Resolver in Cx-Flow, the configuration property should be added underneath the sca configuration section:
+```
+sca:
+  enable-sca-resolver : true
+```
+When docker is not being used, the path for the SCA Resolver must be configured using the following configuration property.
+```
+  path-to-sca-resolver :"Path for Sca Resolver"
+```
+Cx-Flow also honors all the additional parameters of SCA Resolver which can be configured using below configuration property. This property is optional.
+```
+  // Sample Example
+  sca-resolver-add-parameters : " -e *.ext1,*filename.ext2 --log-level Debug --report-type Risk "
+```
+SCA Resolver logs are viewable when the log level is set to debug for Cx-Flow.
