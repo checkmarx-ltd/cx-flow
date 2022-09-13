@@ -3,7 +3,7 @@ version: 2.1
 executors:
   docker:
     docker:
-      - image: circleci/golang:1.9
+      - image: circleci/golang:1.16.12
 
 commands: # a reusable command with parameters
   create-github-release:
@@ -13,15 +13,12 @@ commands: # a reusable command with parameters
         default: ""
         type: string
     steps:
-      - run:
-          name: "Publish Release on GitHub"
-          command: |
-            go get github.com/satyamchaurasiapersistent/ghr 
-            go get github.com/google/go-github/v47@master
-            VERSION=$(cat ./build/libs/version.txt)
-            rm ./build/libs/version.txt
-            mv build/libs/java11/repo-${VERSION}.jar build/libs/cx-flow-${VERSION}-java11.jar
-            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -n ${VERSION} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} << parameters.ghr-option >> -delete ${VERSION} ./build/libs/
+      - run: |
+          go get github.com/cxflowtestuser/ghr
+          VERSION=$(cat ./build/libs/version.txt)
+          rm ./build/libs/version.txt
+          mv build/libs/java11/repo-${VERSION}.jar build/libs/cx-flow-${VERSION}-java11.jar
+          ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -n ${VERSION} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} << parameters.ghr-option >> -delete ${VERSION} ./build/libs/
 jobs:
   build:
     docker:
@@ -519,7 +516,7 @@ jobs:
             docker push ${DOCKER_REPO}
   publish-github-release:
     docker:
-      - image: circleci/golang:1.9
+      - image: circleci/golang:1.16.12
     steps:
       - attach_workspace:
           at: .
@@ -527,7 +524,7 @@ jobs:
 
   publish-github-pre-release:
     docker:
-      - image: circleci/golang:1.9
+      - image: circleci/golang:1.16.12
     steps:
       - attach_workspace:
           at: .
