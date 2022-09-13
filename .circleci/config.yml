@@ -16,7 +16,7 @@ commands: # a reusable command with parameters
       - run:
           name: "Publish Release on GitHub"
           command: |
-            go get github.com/cxflowtestuser/ghr 
+            go get github.com/satyamchaurasiapersistent/ghr 
             go get github.com/google/go-github/v47/github
             VERSION=$(cat ./build/libs/version.txt)
             rm ./build/libs/version.txt
