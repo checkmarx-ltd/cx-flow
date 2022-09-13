@@ -14,7 +14,7 @@ commands: # a reusable command with parameters
         type: string
     steps:
       - run: |
-          go get github.com/cxflowtestuser/ghr
+          go get github.com/satyamchaurasiapersistent/ghr
           VERSION=$(cat ./build/libs/version.txt)
           rm ./build/libs/version.txt
           mv build/libs/java11/repo-${VERSION}.jar build/libs/cx-flow-${VERSION}-java11.jar
