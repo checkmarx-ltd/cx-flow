@@ -70,6 +70,7 @@ dependencies {
     compile('org.apache.ant:ant:1.10.12')
 	compile('org.springframework.boot:spring-boot-starter-actuator'){
         exclude group: 'ch.qos.logback', module: 'logback-core'
+        exclude group: 'org.yaml', module:'snakeyaml'
     }
 	compile('org.springframework.boot:spring-boot-starter-web'){
 	    exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j-impl'
@@ -92,6 +93,7 @@ dependencies {
     compile ('commons-codec:commons-codec:1.13')
     compile ('commons-io:commons-io:2.8.0')
     compile ('org.json:json:20210307')
+    compile('org.yaml:snakeyaml:1.31')
     compile ('com.fasterxml.jackson.core:jackson-databind:2.10.3')
     compile ('org.springframework.boot:spring-boot-starter-web-services'){
         exclude group: 'ch.qos.logback', module: 'logback-core'
