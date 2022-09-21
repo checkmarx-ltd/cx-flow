@@ -282,7 +282,7 @@ jobs:
       - checkout
       - add_ssh_keys:
           fingerprints:
-            - "25:c0:8c:6d:f7:65:eb:65:ff:10:49:45:57:40:e4:c0"
+            - "56:f2:a5:5f:c5:3c:a9:4b:19:63:18:2d:d2:d4:70:11"
       - run:
           name: Run SCA Integration Tests
           command: |
