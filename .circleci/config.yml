@@ -280,10 +280,12 @@ jobs:
       - image: "circleci/openjdk:8-jdk"
     steps:
       - checkout
+      - add_ssh_keys:
+          fingerprints:
+            - "be:44:30:bf:bf:3c:a1:b5:8e:7e:4f:76:ac:89:09:ec"
       - run:
           name: Run SCA Integration Tests
           command: |
-            mkdir ~/.ssh/ && echo -e "Host github.com\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
             export HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
             ./gradlew clean ScaIntegrationTest --info -Dtarget=${HOOK_TARGET} -Drepo=${HOOK_REPO} -Dnamespace=${HOOK_NAMESPACE}
       - run:
