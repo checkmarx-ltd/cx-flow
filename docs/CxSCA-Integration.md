@@ -359,7 +359,7 @@ Cx-Flow also honors all the additional parameters of SCA Resolver which can be c
 
 The following configuration is needed to enable the exploitable path in SCA Resolver.
 ```
-sca-resolver-add-parameters : "--cxuser SASTUsername --cxpassword SASTPassword --cxprojectname ProjectNameInSAST --cxserver SASTServer --sast-result-path directory/fileName.json"
+sca-resolver-add-parameters : "--cxuser SASTUsername --cxpassword SASTPassword --cxprojectname ProjectNameInSAST --cxserver SASTServer --sast-result-path directoryPath"
 ```
 Value of --cxprojectname can be overridden by config as code property. Please refer to [SCA Config as Code](#configurationascode) and [Config as Code](https://github.com/checkmarx-ltd/cx-flow/wiki/Config-As-Code)  chapter.
 
