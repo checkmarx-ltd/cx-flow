@@ -283,7 +283,7 @@ jobs:
       - run:
           name: Run SHA Ignore
           command: |
-            mkdir ~/.ssh/ && echo -e "Host github.com\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
+            echo -e "Host github.com\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
       - run:
           name: Run SCA Integration Tests
           command: |
