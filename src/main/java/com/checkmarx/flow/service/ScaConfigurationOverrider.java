@@ -36,6 +36,8 @@ public class ScaConfigurationOverrider {
     private static final String FILTER_SCORE = "filterScore";
     private static final String FILTER_SEVERITY = "filterSeverity";
 
+    private static final String EXP_PATH_SAST_PROJECT_NAME = "expPathSastProjectName";
+
     private final ScaProperties scaProperties;
     private final ScaFilterFactory scaFilterFactory;
 
@@ -108,6 +110,11 @@ public class ScaConfigurationOverrider {
         sca.map(Sca::getTeam).ifPresent(team -> {
             scaConfig.setTeam(team);
             overrideReport.put(TEAM, team);
+        });
+
+        sca.map(Sca :: getExpPathSastProjectName).ifPresent(projectName->{
+            scaConfig.setExpPathSastProjectName(projectName);
+            overrideReport.put(EXP_PATH_SAST_PROJECT_NAME,projectName);
         });
 
         overrideSeverityFilters(request, sca, overrideReport);

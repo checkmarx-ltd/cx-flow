@@ -259,11 +259,14 @@ CxFlow supports configuration as code for CxSAST and CxSCA scans.
 		"thresholdsScore": 8.5,
 		"filterSeverity": ["high", "medium", "low"],
 		"filterScore": 7.5,
-		"team": "/CxServer/MyTeam/SubTeam"
+		"team": "/CxServer/MyTeam/SubTeam",
+		"expPathSastProjectName": "SampleProjectName"
 	}
 }
 ```
 <br/> When a configuration as code property is set, it will only override the corresponded global configuration property. In case of a list property (e.g. 'filterSeverity'), the whole global corresponded list will be overridden.
+
+Note : expPathSastProjectName property is used for overriding --cxprojectname in SCA Resolver.
 
 ## <a name="commandline">SCA Scans From Command Line</a>
 ### CxFlow can initiate SCA scans with command line mode
@@ -353,4 +356,12 @@ Cx-Flow also honors all the additional parameters of SCA Resolver which can be c
   // Sample Example
   sca-resolver-add-parameters : " -e *.ext1,*filename.ext2 --log-level Debug --report-type Risk "
 ```
+
+The following configuration is needed to enable the exploitable path in SCA Resolver.
+```
+sca-resolver-add-parameters : "--cxuser SASTUsername --cxpassword SASTPassword --cxprojectname ProjectNameInSAST --cxserver SASTServer --sast-result-path directoryPath"
+```
+Value of --cxprojectname can be overridden by config as code property. Please refer to [SCA Config as Code](#configurationascode) and [Config as Code](https://github.com/checkmarx-ltd/cx-flow/wiki/Config-As-Code)  chapter.
+
 SCA Resolver logs are viewable when the log level is set to debug for Cx-Flow.
+
