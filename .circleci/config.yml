@@ -281,10 +281,6 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Run SHA Ignore
-          command: |
-            echo -e "Host github.com\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
-      - run:
           name: Run SCA Integration Tests
           command: |
             export HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
