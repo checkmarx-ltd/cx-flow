@@ -85,6 +85,15 @@ public class GitLabController extends WebhookController {
                         .success(true)
                         .build());
             }
+            else if(body.getChanges().getTitle() != null && body.getChanges().getTitle().getCurrent() != null &&
+                    (body.getChanges().getTitle().getCurrent().startsWith("WIP:CX|")))  {
+                log.info("Merge requested not processed.  Title is WIP:CX|");
+
+                return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
+                        .message("No processing occurred for updates to Merge Request")
+                        .success(true)
+                        .build());
+            }
             String app = body.getRepository().getName();
             if(StringUtils.isNotEmpty(controllerRequest.getApplication())){
                 app = controllerRequest.getApplication();
@@ -144,6 +153,7 @@ public class GitLabController extends WebhookController {
                     .filter(filter)
                     .organizationId(getOrganizationId(proj))
                     .gitUrl(gitUrl)
+                    .scanResubmit(String.valueOf(flowProperties.getScanResubmit()))
                     .hash(objectAttributes.getLastCommit().getId())
                     .build();
 
