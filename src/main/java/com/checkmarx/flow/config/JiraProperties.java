@@ -55,6 +55,10 @@ public class JiraProperties {
     private String sastIssueSummaryFormat = "[PREFIX][VULNERABILITY] @ [FILENAME][POSTFIX]";
     private String sastIssueSummaryBranchFormat = "[PREFIX][VULNERABILITY] @ [FILENAME] [[BRANCH]][POSTFIX]";
     private List<String> suppressCodeSnippets;
+    @Getter @Setter
+    private String Version;
+    @Getter @Setter
+    private String DeployType;
 
     public String getUrl() {
         return this.url;

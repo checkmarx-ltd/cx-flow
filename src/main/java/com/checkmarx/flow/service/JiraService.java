@@ -7,7 +7,6 @@ import com.atlassian.jira.rest.client.api.domain.input.FieldInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
 import com.atlassian.jira.rest.client.api.domain.input.TransitionInput;
 import com.atlassian.jira.rest.client.internal.async.CustomAsynchronousJiraRestClientFactory;
-import com.checkmarx.flow.config.CliMode;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.JiraProperties;
 import com.checkmarx.flow.constants.FlowConstants;
@@ -23,7 +22,10 @@ import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
-import com.checkmarx.sdk.dto.sca.Sca;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import io.atlassian.util.concurrent.Promise;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +34,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -76,6 +79,8 @@ public class JiraService {
     private IssueRestClient issueClient;
     private ProjectRestClient projectClient;
     private MetadataRestClient metaClient;
+
+    private RestTemplate restTemplate;
     private URI jiraURI;
     private Map<String, ScanResults.XIssue> nonPublishedScanResultsMap = new HashMap<>();
     private List<String> currentNewIssuesList = new ArrayList<>();
@@ -88,13 +93,14 @@ public class JiraService {
 
     public JiraService(JiraProperties jiraProperties, FlowProperties flowProperties,
                        CodeBashingService codeBashingService,
-                       HelperService helperService) {
+                       HelperService helperService,@Qualifier("SSLRestTemplate") RestTemplate restTemplate) {
         this.jiraProperties = jiraProperties;
         this.flowProperties = flowProperties;
         parentUrl = jiraProperties.getParentUrl();
         grandParentUrl = jiraProperties.getGrandParentUrl();
         this.codeBashingService = codeBashingService;
         this.helperService = helperService;
+        this.restTemplate = restTemplate;
     }
 
     private static void validateFieldRequestParams(String jiraProject, String issueType) {
@@ -121,6 +127,9 @@ public class JiraService {
                 this.issueClient = this.client.getIssueClient();
                 this.projectClient = this.client.getProjectClient();
                 this.metaClient = this.client.getMetadataClient();
+                List<String> versionAndDeployName = getVersion();
+                jiraProperties.setVersion(versionAndDeployName.get(0));
+                jiraProperties.setDeployType(versionAndDeployName.get(1));
                 configJira();
             } catch (URISyntaxException | RestClientException e) {
                 log.error("Error constructing URI for JIRA: {}", e.getMessage());
@@ -864,7 +873,23 @@ public class JiraService {
     private SecurityLevel getSecurityLevel(String projectKey, String issueType, String name) {
         GetCreateIssueMetadataOptions options;
         options = new GetCreateIssueMetadataOptionsBuilder().withExpandedIssueTypesFields().withIssueTypeNames(issueType).withProjectKeys(projectKey).build();
-        Iterable<CimProject> metadata = this.issueClient.getCreateIssueMetadata(options).claim();
+        int parseVersion=0;
+        int indexValue = jiraProperties.getVersion().indexOf(".");
+        parseVersion = Integer.parseInt(jiraProperties.getVersion().substring(0,indexValue));
+
+        Iterable<CimProject> metadata =null;
+        if(jiraProperties.getDeployType().equals("Cloud"))
+        {
+            metadata = this.issueClient.getCreateIssueMetadata(options).claim();
+        }
+        else if(parseVersion>=9)
+        {
+            metadata = getMetaData(projectKey,issueType);
+        }
+        else
+        {
+            metadata = this.issueClient.getCreateIssueMetadata(options).claim();
+        }
 
         CimProject cim = metadata.iterator().next();
 
@@ -949,7 +974,6 @@ public class JiraService {
         URI endpoint = new DefaultUriBuilderFactory().expand(urlTemplate, projectKey, assignee);
 
         HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders());
-        RestTemplate restTemplate = new RestTemplate();
         try {
         ResponseEntity<String> response = restTemplate.exchange(endpoint, HttpMethod.GET, httpEntity, String.class);
 
@@ -1020,8 +1044,25 @@ public class JiraService {
                     .withProjectKeys(jiraProject)
                     .withIssueTypeNames(issueType)
                     .build();
+            log.debug("jira properties values for version:{} and deploymentName:{} ",jiraProperties.getVersion(),jiraProperties.getDeployType());
+            int parseVersion=0;
+            int indexValue = jiraProperties.getVersion().indexOf(".");
+            parseVersion = Integer.parseInt(jiraProperties.getVersion().substring(0,indexValue));
+            Iterable<CimProject> metadata =null;
+            if(jiraProperties.getDeployType().equals("Cloud"))
+            {
+                metadata = this.issueClient.getCreateIssueMetadata(options).claim();
+            }
+            else if(parseVersion>=9)
+            {
+                 metadata = getMetaData(jiraProject,issueType);
+            }
+            else
+            {
+                metadata = this.issueClient.getCreateIssueMetadata(options).claim();
+            }
 
-            Iterable<CimProject> metadata = this.issueClient.getCreateIssueMetadata(options).claim();
+
             Iterator<CimProject> iterator = metadata.iterator();
 
             if (!iterator.hasNext()) {
@@ -1041,6 +1082,148 @@ public class JiraService {
             return fields;
         });
 
+    }
+
+    private Iterable<CimProject> getMetaData(String jiraProject,String issueType){
+        ArrayList<CimProject> cimProjects = new ArrayList<>();
+        Iterable<CimIssueType> issueTypes = createIssueTypes(jiraProject,issueType);
+        List<com.checkmarx.flow.jira9X.Project> projects=getProject();
+        for (com.checkmarx.flow.jira9X.Project project: projects) {
+            CimProject c = new CimProject(project.getSelf(),project.getKey(),project.getId(),project.getName(),project.getAvatarUrls(),issueTypes);
+            cimProjects.add(c);
+        }
+        return cimProjects;
+    }
+    private Iterable<CimIssueType> createIssueTypes(String jiraProject,String issue)
+    {
+        ArrayList<CimIssueType> cimIssueTypes = new ArrayList<>();
+        List<com.checkmarx.flow.jira9X.IssueType> issueTypes= getIssueTypes(jiraProject);
+
+        for(com.checkmarx.flow.jira9X.IssueType issueType:issueTypes)
+        {
+            if(issueType.getName().equalsIgnoreCase(issue))
+            {
+                List<com.checkmarx.flow.jira9X.IssueFields> issueFields= getIssueFields(jiraProject,issueType.getId());
+                Map<String, CimFieldInfo> issueFieldInfo = createIssueFields(issueFields);
+                CimIssueType c = new CimIssueType(issueType.getSelf(),issueType.getId(),issueType.getName(),issueType.getSubtask(),issueType.getDescription(),issueType.getIconUrl(),issueFieldInfo);
+                cimIssueTypes.add(c);
+            }
+        }
+        return cimIssueTypes;
+    }
+
+    private Map<String, CimFieldInfo> createIssueFields(List<com.checkmarx.flow.jira9X.IssueFields> issueFields)
+    {
+        Map<String, CimFieldInfo> cimIssueFields = new HashMap<>();
+        for(com.checkmarx.flow.jira9X.IssueFields fields : issueFields)
+        {
+            Set<com.checkmarx.flow.jira9X.StandardOperation> customSet =fields.getOperations();
+            Set<StandardOperation> finalSet = new HashSet<>();
+            for(com.checkmarx.flow.jira9X.StandardOperation custom :customSet)
+            {
+                if(custom.toString().equals("set"))
+                {
+                    finalSet.add(StandardOperation.SET);
+                } else if (custom.toString().equals("add")) {
+                    finalSet.add(StandardOperation.ADD);
+                }else if(custom.toString().equals("remove"))
+                {
+                    finalSet.add(StandardOperation.REMOVE);
+                }else if(custom.toString().equals("edit"))
+                {
+                    finalSet.add(StandardOperation.EDIT);
+                }
+            }
+            com.checkmarx.flow.jira9X.FieldSchema customSchema = new com.checkmarx.flow.jira9X.FieldSchema();
+            FieldSchema finalSchema = new FieldSchema(customSchema.getType(), customSchema.getItems(),customSchema.getSystem(),customSchema.getCustom(),customSchema.getCustomId());
+            cimIssueFields.put(fields.getFieldId(),new CimFieldInfo(fields.getFieldId(),fields.getRequired(),fields.getName(),finalSchema,finalSet,fields.getAllowedValues(),fields.getAutoCompleteUrl()));
+        }
+        return cimIssueFields;
+    }
+    private List<String> getVersion()
+    {
+        HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders());
+        List<String> versionAndDeploy = new ArrayList<>();
+        URI Str = URI.create(jiraURI+"/rest/api/latest/serverInfo");
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(Str, HttpMethod.GET, httpEntity, String.class);
+            JSONObject obj = new JSONObject(response.getBody());
+            String versionName = obj.getString("version");
+            String deployType = obj.getString("deploymentType");
+            log.debug("jira version:{} deployment Type:{}",versionName,deployType);
+            versionAndDeploy.add(versionName);
+            versionAndDeploy.add(deployType);
+        }catch (HttpClientErrorException e) {
+            log.error("Error occurred http error {} ", e.getStatusCode());
+        }
+        return versionAndDeploy;
+    }
+
+    private List<com.checkmarx.flow.jira9X.Project> getProject()
+    {
+        HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders());
+        URI Str = URI.create(jiraURI+"/rest/api/latest/project");
+        List<com.checkmarx.flow.jira9X.Project> project=null;
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(Str, HttpMethod.GET, httpEntity, String.class);
+            ObjectMapper mapper = new ObjectMapper();
+            project = mapper.readValue(response.getBody(), new TypeReference<List<com.checkmarx.flow.jira9X.Project>>() {});
+            log.debug("response for project:{}",response.getBody());
+            log.debug("project:{}", project);
+        }catch (HttpClientErrorException e) {
+            log.error("Error occurred http error {} ", e.getStatusCode());
+        } catch (JsonMappingException e) {
+            throw new RuntimeException(e);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        return project;
+    }
+
+    private List<com.checkmarx.flow.jira9X.IssueType> getIssueTypes(String jiraProject)
+    {
+        HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders());
+        URI Str = URI.create(jiraURI+"/rest/api/latest/issue/createmeta/"+jiraProject+"/issuetypes");
+        List<com.checkmarx.flow.jira9X.IssueType> issueType=null;
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(Str, HttpMethod.GET, httpEntity, String.class);
+            log.debug("response for IssueType:{}",response.getBody());
+            JSONObject obj = new JSONObject(response.getBody());
+            String issueValues = String.valueOf(obj.getJSONArray("values"));
+            ObjectMapper mapper = new ObjectMapper();
+            issueType = mapper.readValue(issueValues, new TypeReference<List<com.checkmarx.flow.jira9X.IssueType>>() {});
+            log.debug("issueTypes:{}", issueType);
+        }catch (HttpClientErrorException e) {
+            log.error("Error occurred http error {} ", e.getStatusCode());
+        } catch (JsonMappingException e) {
+            throw new RuntimeException(e);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        return issueType;
+    }
+
+    private List<com.checkmarx.flow.jira9X.IssueFields>getIssueFields(String jiraProject, Long id)
+    {
+        HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders());
+        URI Str = URI.create(jiraURI+"/rest/api/latest/issue/createmeta/"+jiraProject+"/issuetypes/"+id);
+        List<com.checkmarx.flow.jira9X.IssueFields> issueFields=null;
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(Str, HttpMethod.GET, httpEntity, String.class);
+            log.debug("response for IssueFields:{}",response.getBody());
+            JSONObject obj = new JSONObject(response.getBody());
+            String issueValues = String.valueOf(obj.getJSONArray("values"));
+            ObjectMapper mapper = new ObjectMapper();
+             issueFields = mapper.readValue(issueValues, new TypeReference<List<com.checkmarx.flow.jira9X.IssueFields>>() {});
+            log.debug("issueTypes:{}", issueFields);
+        }catch (HttpClientErrorException e) {
+            log.error("Error occurred http error {} ", e.getStatusCode());
+        } catch (JsonMappingException e) {
+            throw new RuntimeException(e);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        return issueFields;
     }
 
     private String getCustomFieldByName(String jiraProject, String issueType, String fieldName) {
