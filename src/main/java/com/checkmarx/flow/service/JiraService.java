@@ -1049,7 +1049,6 @@ public class JiraService {
                     .build();
             log.debug("jira properties values for version:{} and deploymentName:{} ",jiraProperties.getVersion(),jiraProperties.getDeployType());
             int parseVersion=0;
-            String ver = jiraProperties.getVersion();
             int versionLength = jiraProperties.getVersion().length();
             int secondValue;
             Iterable<CimProject> metadata =null;
@@ -1166,7 +1165,6 @@ public class JiraService {
             JSONObject obj = new JSONObject(response.getBody());
             String versionName = obj.getString("version");
             String deployType = obj.getString("deploymentType");
-            log.debug("jira version:{} deployment Type:{}",versionName,deployType);
             versionAndDeploy.add(versionName);
             versionAndDeploy.add(deployType);
         }catch (HttpClientErrorException e) {
@@ -1184,8 +1182,6 @@ public class JiraService {
             ResponseEntity<String> response = restTemplate.exchange(Str, HttpMethod.GET, httpEntity, String.class);
             ObjectMapper mapper = new ObjectMapper();
             project = mapper.readValue(response.getBody(), new TypeReference<List<com.checkmarx.flow.jira9X.Project>>() {});
-            log.debug("response for project:{}",response.getBody());
-            log.debug("project:{}", project);
         }catch (HttpClientErrorException e) {
             log.error("Error occurred http error {} ", e.getStatusCode());
         } catch (JsonMappingException e) {
@@ -1203,12 +1199,10 @@ public class JiraService {
         List<com.checkmarx.flow.jira9X.IssueType> issueType=null;
         try {
             ResponseEntity<String> response = restTemplate.exchange(Str, HttpMethod.GET, httpEntity, String.class);
-            log.debug("response for IssueType:{}",response.getBody());
             JSONObject obj = new JSONObject(response.getBody());
             String issueValues = String.valueOf(obj.getJSONArray("values"));
             ObjectMapper mapper = new ObjectMapper();
             issueType = mapper.readValue(issueValues, new TypeReference<List<com.checkmarx.flow.jira9X.IssueType>>() {});
-            log.debug("issueTypes:{}", issueType);
         }catch (HttpClientErrorException e) {
             log.error("Error occurred http error {} ", e.getStatusCode());
         } catch (JsonMappingException e) {
@@ -1226,12 +1220,10 @@ public class JiraService {
         List<com.checkmarx.flow.jira9X.IssueFields> issueFields=null;
         try {
             ResponseEntity<String> response = restTemplate.exchange(Str, HttpMethod.GET, httpEntity, String.class);
-            log.debug("response for IssueFields:{}",response.getBody());
             JSONObject obj = new JSONObject(response.getBody());
             String issueValues = String.valueOf(obj.getJSONArray("values"));
             ObjectMapper mapper = new ObjectMapper();
              issueFields = mapper.readValue(issueValues, new TypeReference<List<com.checkmarx.flow.jira9X.IssueFields>>() {});
-            log.debug("issueTypes:{}", issueFields);
         }catch (HttpClientErrorException e) {
             log.error("Error occurred http error {} ", e.getStatusCode());
         } catch (JsonMappingException e) {
