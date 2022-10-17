@@ -94,7 +94,7 @@ dependencies {
     compile ('commons-io:commons-io:2.8.0')
     compile ('org.json:json:20210307')
     compile('org.yaml:snakeyaml:1.33')
-    compile ('com.fasterxml.jackson.core:jackson-databind:2.10.3')
+    compile ('com.fasterxml.jackson.core:jackson-databind:2.13.4.2')
     compile ('org.springframework.boot:spring-boot-starter-web-services'){
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
@@ -108,6 +108,7 @@ dependencies {
     compile ("com.atlassian.jira:jira-rest-java-client-core:${atlassianVersion}") {
         exclude group: 'org.codehaus.jackson', module: 'jackson-mapper-asl'
         exclude group: 'org.codehaus.jackson', module: 'jackson-core-asl'
+        exclude group: 'org.codehaus.jettison', module:'jettison'
     }
     compile ("com.atlassian.jira:jira-rest-java-client-api:${atlassianVersion}")
     compile("com.fasterxml.jackson.core:jackson-databind:2.13.4.2")
@@ -115,6 +116,7 @@ dependencies {
     compile("com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}")
     compile("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersion}")
     compile("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${jacksonVersion}")
+    compile('org.codehaus.jettison:jettison:1.5.1')
 
     compile("org.thymeleaf:thymeleaf-spring5:3.0.15.RELEASE")
     implementation 'ognl:ognl:3.1.29'
