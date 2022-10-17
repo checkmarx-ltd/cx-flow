@@ -74,6 +74,7 @@ public class BitbucketServerPushHandler extends BitbucketServerScanEventHandler 
             fillRequestWithCommonAdditionalData(request, toProjectKey, toSlug, webhookPayload);
             checkForConfigAsCode(request);
             request.setId(uid);
+            request.setDefaultBranch(checkForDefaultBranchName(request));
             // only initiate scan/automation if target branch is applicable
             if (configProvider.getHelperService().isBranch2Scan(request, branches)) {
                 configProvider.getFlowService().initiateAutomation(request);
@@ -82,5 +83,8 @@ public class BitbucketServerPushHandler extends BitbucketServerScanEventHandler 
             return webhookUtils.getBadRequestMessage(e, controllerRequest, product);
         }
         return webhookUtils.getSuccessMessage();
+    }
+    private String checkForDefaultBranchName(ScanRequest request) {
+        return configProvider.getBitbucketService().getDefaultBranchName(request);
     }
 }
