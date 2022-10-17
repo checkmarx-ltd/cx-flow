@@ -109,7 +109,7 @@ dependencies {
     compile('org.apache.commons:commons-lang3:3.12.0')
     compile('org.apache.commons:commons-collections4:4.4')
     compile('org.json:json:20210307')
-    compile('org.yaml:snakeyaml:1.31')
+    compile('org.yaml:snakeyaml:1.33')
     compile('com.fasterxml.jackson.core:jackson-databind:2.10.3')
     compile('org.springframework.boot:spring-boot-starter-web-services'){
         exclude group: 'ch.qos.logback', module: 'logback-core'
@@ -128,7 +128,7 @@ dependencies {
         exclude group: 'org.codehaus.jackson', module: 'jackson-core-asl'
     }
     compile("com.atlassian.jira:jira-rest-java-client-api:${atlassianVersion}")
-    compile("com.fasterxml.jackson.core:jackson-databind:2.12.6.1")
+    compile("com.fasterxml.jackson.core:jackson-databind:2.13.4.2")
     compile("com.fasterxml.jackson.core:jackson-core:${jacksonVersion}")
     compile("com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}")
     compile("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersion}")
