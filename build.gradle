@@ -103,7 +103,7 @@ dependencies {
         exclude group: 'ch.qos.logback', module: 'logback-core'
         exclude group: 'org.bouncycastle', module:'bcprov-jdk15on'
     }
-    compile("org.apache.commons:commons-text:1.8")
+    compile("org.apache.commons:commons-text:1.10.0")
     compile('commons-codec:commons-codec:1.13')
     compile('commons-io:commons-io:2.8.0')
     compile('org.apache.commons:commons-lang3:3.12.0')
