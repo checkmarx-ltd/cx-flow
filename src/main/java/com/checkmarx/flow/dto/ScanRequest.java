@@ -127,6 +127,8 @@ public class ScanRequest {
 
     @Getter @Setter
     private String zipExclude;
+    @Getter @Setter
+    private Integer scanId;
 
     public ScanRequest(ScanRequest other) {
         this.namespace = other.namespace;
