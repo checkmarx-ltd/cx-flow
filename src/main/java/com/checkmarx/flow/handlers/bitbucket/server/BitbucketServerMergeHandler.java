@@ -98,6 +98,7 @@ public class BitbucketServerMergeHandler extends BitbucketServerScanEventHandler
             request.putAdditionalMetadata("cxBaseUrl", configProvider.getCxScannerService().getProperties().getBaseUrl());
             request.putAdditionalMetadata("blocker-comment-url", blockerCommentUrl);
             request.setId(uid);
+            request.setDefaultBranch(checkForDefaultBranchName(request));
 
             // only initiate scan/automation if target branch is applicable
             if (configProvider.getHelperService().isBranch2Scan(request, branches)) {
@@ -108,6 +109,9 @@ public class BitbucketServerMergeHandler extends BitbucketServerScanEventHandler
             return webhookUtils.getBadRequestMessage(e, controllerRequest, product);
         }
         return webhookUtils.getSuccessMessage();
+    }
+    private String checkForDefaultBranchName(ScanRequest request) {
+        return configProvider.getBitbucketService().getDefaultBranchName(request);
     }
 
 }

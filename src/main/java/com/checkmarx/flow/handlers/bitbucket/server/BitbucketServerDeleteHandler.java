@@ -43,12 +43,13 @@ public class BitbucketServerDeleteHandler extends BitbucketServerEventHandler {
 
         webhookUtils.setScmInstance(controllerRequest, request);
         checkForConfigAsCode(request);
-        request.setId(uid);    
-
+        request.setId(uid);
+        request.setDefaultBranch(checkForDefaultBranchName(request));
         configProvider.getFlowService().deleteProject(request);
 
         return getSuccessMessage();
     }
+
 
     public static ResponseEntity<EventResponse> getSuccessMessage()
     {
@@ -57,6 +58,9 @@ public class BitbucketServerDeleteHandler extends BitbucketServerEventHandler {
                 .message("Deletion handled successfully.")
                 .success(true)
                 .build());
+    }
+    private String checkForDefaultBranchName(ScanRequest request) {
+        return configProvider.getBitbucketService().getDefaultBranchName(request);
     }
     
 }

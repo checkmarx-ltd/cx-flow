@@ -7,6 +7,7 @@ import com.checkmarx.flow.dto.RepoComment;
 import com.checkmarx.flow.dto.ScanDetails;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.Sources;
+import com.checkmarx.flow.dto.bitbucket.mainBranch.BranchName;
 import com.checkmarx.flow.dto.bitbucketserver.Content;
 import com.checkmarx.flow.dto.bitbucketserver.Value;
 import com.checkmarx.flow.dto.report.PullRequestReport;
@@ -30,7 +31,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.IOException;
 import java.util.*;
 
 @Slf4j
@@ -48,7 +48,10 @@ public class BitBucketService extends RepoService {
     private static final String BITBUCKET_FILE = "FILE";
     private static final String BITBUCKET_CLOUD_FILE = "commit_file";
     private static final String FILE_CONTENT_FOR_BB_CLOUD = "/src/{hash}/{config}";
+
     private static final String FILE_CONTENT_FOR_BB_SERVER = "/raw/{config}?at={hash}";
+
+    private static final String FILE_CONTENT_FOR_DEFAULT_BRANCH_BB_SERVER = "/branches/default";
     private static final String BROWSE_CONTENT_FOR_BB_SERVER = "/browse/{path}?at={branch}";
     private static final String BROWSE_CONTENT_FOR_BB_CLOUD_WITH_DEPTH_PARAM = "/src/{hash}/?pagelen=100&max_depth={depth}";
     private static final String BUILD_STATUS_KEY_FOR_CXFLOW = "cxflow";
@@ -214,6 +217,7 @@ public class BitBucketService extends RepoService {
         Object cxFlowTask = getCxFlowTask(retrievedResult);
 
         if (cxFlowTask != null) {
+
             Integer taskId = ((JSONObject) cxFlowTask).getInt("id");
             Integer taskVersion = ((JSONObject) cxFlowTask).getInt("version");
 
@@ -467,6 +471,22 @@ public class BitBucketService extends RepoService {
         return result;
     }
 
+
+
+    public String getDefaultBranchName(ScanRequest request) {
+        String result = null;
+            try {
+                result = loadDefaultBranchName(request);
+            } catch (NullPointerException e) {
+                log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
+            } catch (Exception e) {
+                log.error(String.format("Error in getting default branch name from the repo. Error details : %s", ExceptionUtils.getRootCauseMessage(e)));
+            }
+
+        return result;
+    }
+
+
     @Override
     public void deleteComment(String url, ScanRequest scanRequest) {
         // not implemented
@@ -530,6 +550,62 @@ public class BitBucketService extends RepoService {
         }
         return cxConfig;
     }
+
+
+    private String loadDefaultBranchName(ScanRequest request) {
+        String branchName = null;
+        HttpHeaders headers = createAuthHeaders(request.getScmInstance());
+
+        String repoSelfUrl =request.getAdditionalMetadata(REPO_SELF_URL);
+        String urlTemplate;
+        if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)) {
+
+            urlTemplate = repoSelfUrl.concat(FILE_CONTENT_FOR_DEFAULT_BRANCH_BB_SERVER);
+        } else {
+            urlTemplate = repoSelfUrl;
+        }
+
+
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(
+                    urlTemplate,
+                    HttpMethod.GET,
+                    new HttpEntity<>(headers),
+                    String.class
+            );
+            if (response.getBody() == null) {
+                log.warn(HTTP_BODY_IS_NULL);
+                branchName = null;
+            } else {
+                JSONObject json = new JSONObject(response.getBody());
+                if (ScanUtils.empty(json.toString())) {
+                    log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
+                    branchName = null;
+                } else {
+
+                    if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)) {
+                        branchName = json.getString("displayId").toString();
+
+                    }else{
+                        ObjectMapper mapper = new ObjectMapper();
+                        BranchName product = mapper.readValue(response.getBody().toString(), BranchName.class);
+                        //Need to Catch Branch Name Here
+                        branchName = product.getMainbranch().getName();
+                    }
+
+
+                }
+            }
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while loading CxConfig From Bitbucket. http error {} ", e.getStatusCode());
+            log.error(ExceptionUtils.getStackTrace(e));
+        } catch (JSONException | JsonProcessingException e) {
+            log.error("Error processing JSON response");
+            log.error(ExceptionUtils.getStackTrace(e));
+        }
+        return branchName;
+    }
+
 
 	@Override
 	public boolean isScanSubmittedComment() {

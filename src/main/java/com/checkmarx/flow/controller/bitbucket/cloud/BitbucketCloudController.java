@@ -95,6 +95,11 @@ public class BitbucketCloudController extends WebhookController {
         return handleMergeEvent(body,product,controllerRequest,token);
     }
 
+    @Override
+    protected List<String> getBranches(ControllerRequest request, FlowProperties flowProperties) {
+        return super.getBranches(request, flowProperties);
+    }
+
     public ResponseEntity<EventResponse> handleMergeEvent(MergeEvent body, String product, ControllerRequest controllerRequest, String token){
         log.debug("Merge Request body contents are {}",body.toString());
         String uid = helperService.getShortUid();
@@ -165,11 +170,20 @@ public class BitbucketCloudController extends WebhookController {
                     .gitUrl(gitUrl)
                     .build();
 
+
+
             setScmInstance(controllerRequest, request);
             fillRequestWithAdditionalData(request, repository, body.toString());
             checkForConfigAsCode(request);
+
+
+
+
             request.setId(uid);
 
+            //Finding Default Branch Name
+            request.setDefaultBranch(checkForDefaultBranchName(request));
+            //End
             if (helperService.isBranch2Scan(request, branches)) {
                 log.debug(request.getProject()+" :: Calling  isBranch2Scan function End : "+System.currentTimeMillis());
                 log.debug(request.getProject()+" :: Free Memory : "+Runtime.getRuntime().freeMemory());
@@ -281,10 +295,14 @@ public class BitbucketCloudController extends WebhookController {
                     .gitUrl(gitUrl)
                     .build();
 
+
             setScmInstance(controllerRequest, request);
             fillRequestWithAdditionalData(request, repository, body.toString());
             checkForConfigAsCode(request);
             request.setId(uid);
+            //Finding Default Branch Name
+            request.setDefaultBranch(checkForDefaultBranchName(request));
+            //End
 
             if (helperService.isBranch2Scan(request, branches)) {
                 log.debug(request.getProject()+" :: Calling  isBranch2Scan function End : "+System.currentTimeMillis());
@@ -322,6 +340,11 @@ public class BitbucketCloudController extends WebhookController {
     private void checkForConfigAsCode(ScanRequest request) {
         CxConfig cxConfig = bitbucketService.getCxConfigOverride(request);
         configOverrider.overrideScanRequestProperties(cxConfig, request);
+    }
+
+    //Finding Default Branch
+    private String checkForDefaultBranchName(ScanRequest request) {
+        return bitbucketService.getDefaultBranchName(request);
     }
 
     private void fillRequestWithAdditionalData(ScanRequest request, Repository repository, String hookPayload) {
