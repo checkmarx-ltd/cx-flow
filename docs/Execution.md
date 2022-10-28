@@ -3,6 +3,7 @@
 * [Command Line](#command)
 * [Parse](#parse)
 * [Batch](#batch)
+* [Project](#project)
 
 ## <a name="webhook">WebHook</a>
 Refer to [Webhook Registration](https://github.com/checkmarx-ltd/cx-flow/wiki/WebHook-Registration) for instructions on registering for WebHooks.
@@ -54,34 +55,34 @@ JIRA_PROJECT=SS
 ## <a name="command">Command Line</a>
 CxFlow can be integrated via command line using several ways. The table below lists command line arguments and flags to help drive the different execution flows and overrides.
 
-| Option | Description |
-|--------|-------------|
-| `--spring.config.location` | Override the main application.yml/properties file for the application.  Defaults to the application.yml packaged within the jar |
-| `--parse` | Indicates that a result XML file from Checkmarx is provided (`–f` is also mandatory).  No value provided (flag) |
-| `--project` | Indicates that we would like to retrieve the latest scan results for a given team/project and provide feedback (defect / issue tracking). No value provided (flag) |
-| `--batch` | Indicates that the entire instance or a given team is iterated through and the latest results are retrieved for each project and feedback is provided (defect/issue tracking) |
-| `--cx-team` | Used to override the team that is used as a base team (optionally defined globally in the yaml configuration).  This team is used when creating a project in Source/Scan (zip) mode as well as the team to use when retrieving latest project results in project/batch modes (--project/--batch) | `--cx-project` | Used to create the project in Source/Scan (zip) mode and to indicate, for which project to retrieve the latest results in Project mode (`--project`) |
-| `--namespace` | Repository group (GitLab)/organization (GitHub)/namespace (BitBucket). Used as higher level grouping of repositories.  Used along with repo-name and branch for tracking purposes (Jira only).  If these three components are not present, an application attribute must be passed (**--app**).  These values are stored in a tracking label within Jira.  This value is also stored in the body of the issue. |
-| `--repo-name` | Name of the repository.  Used along with repo-name and branch for tracking purposes (Jira Only).  If these three components are not present, application attribute must be passed (**--app**).  These values are stored in a tracking label within Jira.  This value is also stored in the body of the issue. |
-| `--branch` | Branch used along with repo-name and branch for tracking purposes (Jira only).  If these three components are not present, then an application attribute must be passed  (**--app**).  These values are stored in a Tracking label within Jira. This value is also stored in the body of the issue. |
-| `--app` | Alternatively used for Tracking purposes.  This value is also stored in the body of the issue. |
-| `--repo-url` | Required for issues tracking with GitHub Issues or GitLab Issues.  This value is also stored in the body of the issue. |
-| `--f` | File to be processed.  This the output from Checkmarx CLI, Jenkins/Bamboo Plugin, etc. |
-| `--exclude-files` | Files to be excluded when running --scan CLI execution |
-| `--exclude-folders` | Folders to be excluded when running --scan CLI execution |
-| `--config` | Optional: Configuration override file (JSON) |
-| `--bbs` | Optional: Indicates that the repository is of the BitBucket Server type as BB Server follows a different URL file format |
-| `--bb` | Optional: Indicates that the repository is of the BitBucket Cloud type as BB Cloud follows a different URL file format (also different from BB Server) |
-| `--bug-tracker` | Optional: Used to override the globally configured bug tracker as defined by the base YAML configuration.  The name is case-sensitive and must match the exact bean name as specified in the --bug-tracker-impl list of available implementations. JIRA is the only option that is not on this list, but can be used as well |
-| `--spring.config.location` | Path to application.yml. This file contains the global configuration for CxFlow.  It is only required, if the jar file and the application.yml file are not in the current working directory.  Refer to the [Spring Boot Documentation](https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html) (section 24.3) |
-| `--offline` | If this flag is raised, the Checkmarx instance is not contacted.  This means that no issue description is provided and Checkmarx custom fields cannot be used |
-| `--blocksysexit` | Optional: Mainly for build/test purposes. Avoid `System.exit()` in the code and exit with java exception |
-| `--alt-project` | Name of the project in ADO. This parameter is required in addition to cx-project parameter. |
-| `--project-custom-field` | Specify a project-level custom field to be set if a project is created or the `checkmarx.settings-override` property is set. The custom field is specified as *name:value* (i.e., the field name cannot include a colon). This option may be specified multiple times to set multiple fields. |
-| `--scan-custom-field` | Specify a scan-level custom field. The custom field is specified as *name:value* (i.e., the field name cannot include a colon). This option may be specified multiple times to set multiple fields. |
-| `--default-branch`         | Name of the default branch which will be used to created licensed project in CxSAST, so that scans from any branch provied by --branch creates a branched project in CxSAST and not a licensed project. |
-| `--branch-protection-enabled` | Enable branch protection when running in command line mode. |
-
+| Option                       | Description                                                                                                                                                                                                                                                                                                                                                                                                    |
+|------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `--spring.config.location`   | Override the main application.yml/properties file for the application.  Defaults to the application.yml packaged within the jar                                                                                                                                                                                                                                                                                |
+| `--parse`                    | Indicates that a result XML file from Checkmarx is provided (`–f` is also mandatory).  No value provided (flag)                                                                                                                                                                                                                                                                                                |
+| `--project`                  | Indicates that we would like to retrieve the latest scan results for a given team/project and provide feedback (defect / issue tracking).                                                                                                                                                                                                                                                                      |
+| `--batch`                    | Indicates that the entire instance or a given team is iterated through and the latest results are retrieved for each project and feedback is provided (defect/issue tracking)                                                                                                                                                                                                                                  |
+| `--cx-team`                  | Used to override the team that is used as a base team (optionally defined globally in the yaml configuration).  This team is used when creating a project in Source/Scan (zip) mode as well as the team to use when retrieving latest project results in project/batch modes (--project/--batch)                                                                                                               | `--cx-project` | Used to create the project in Source/Scan (zip) mode and to indicate, for which project to retrieve the latest results in Project mode (`--project`) |
+| `--namespace`                | Repository group (GitLab)/organization (GitHub)/namespace (BitBucket). Used as higher level grouping of repositories.  Used along with repo-name and branch for tracking purposes (Jira only).  If these three components are not present, an application attribute must be passed (**--app**).  These values are stored in a tracking label within Jira.  This value is also stored in the body of the issue. |
+| `--repo-name`                | Name of the repository.  Used along with repo-name and branch for tracking purposes (Jira Only).  If these three components are not present, application attribute must be passed (**--app**).  These values are stored in a tracking label within Jira.  This value is also stored in the body of the issue.                                                                                                  |
+| `--branch`                   | Branch used along with repo-name and branch for tracking purposes (Jira only).  If these three components are not present, then an application attribute must be passed  (**--app**).  These values are stored in a Tracking label within Jira. This value is also stored in the body of the issue.                                                                                                            |
+| `--app`                      | Alternatively used for Tracking purposes.  This value is also stored in the body of the issue.                                                                                                                                                                                                                                                                                                                 |
+| `--repo-url`                 | Required for issues tracking with GitHub Issues or GitLab Issues.  This value is also stored in the body of the issue.                                                                                                                                                                                                                                                                                         |
+| `--f`                        | File to be processed.  This the output from Checkmarx CLI, Jenkins/Bamboo Plugin, etc.                                                                                                                                                                                                                                                                                                                         |
+| `--exclude-files`            | Files to be excluded when running --scan CLI execution                                                                                                                                                                                                                                                                                                                                                         |
+| `--exclude-folders`          | Folders to be excluded when running --scan CLI execution                                                                                                                                                                                                                                                                                                                                                       |
+| `--config`                   | Optional: Configuration override file (JSON)                                                                                                                                                                                                                                                                                                                                                                   |
+| `--bbs`                      | Optional: Indicates that the repository is of the BitBucket Server type as BB Server follows a different URL file format                                                                                                                                                                                                                                                                                       |
+| `--bb`                       | Optional: Indicates that the repository is of the BitBucket Cloud type as BB Cloud follows a different URL file format (also different from BB Server)                                                                                                                                                                                                                                                         |
+| `--bug-tracker`              | Optional: Used to override the globally configured bug tracker as defined by the base YAML configuration.  The name is case-sensitive and must match the exact bean name as specified in the --bug-tracker-impl list of available implementations. JIRA is the only option that is not on this list, but can be used as well                                                                                   |
+| `--spring.config.location`   | Path to application.yml. This file contains the global configuration for CxFlow.  It is only required, if the jar file and the application.yml file are not in the current working directory.  Refer to the [Spring Boot Documentation](https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html) (section 24.3)                                                      |
+| `--offline`                  | If this flag is raised, the Checkmarx instance is not contacted.  This means that no issue description is provided and Checkmarx custom fields cannot be used                                                                                                                                                                                                                                                  |
+| `--blocksysexit`             | Optional: Mainly for build/test purposes. Avoid `System.exit()` in the code and exit with java exception                                                                                                                                                                                                                                                                                                       |
+| `--alt-project`              | Name of the project in ADO. This parameter is required in addition to cx-project parameter.                                                                                                                                                                                                                                                                                                                    |
+| `--project-custom-field`     | Specify a project-level custom field to be set if a project is created or the `checkmarx.settings-override` property is set. The custom field is specified as *name:value* (i.e., the field name cannot include a colon). This option may be specified multiple times to set multiple fields.                                                                                                                  |
+| `--scan-custom-field`        | Specify a scan-level custom field. The custom field is specified as *name:value* (i.e., the field name cannot include a colon). This option may be specified multiple times to set multiple fields.                                                                                                                                                                                                            |
+| `--default-branch`           | Name of the default branch which will be used to created licensed project in CxSAST, so that scans from any branch provied by --branch creates a branched project in CxSAST and not a licensed project.                                                                                                                                                                                                        |
+| `--branch-protection-enabled` | Enable branch protection when running in command line mode.                                                                                                                                                                                                                                                                                                                                                    |
+| `--scanId`                    | Can be used with project mode to retrive unique scanId for a given team/project and provide feedback (defect / issue tracking)..                                                                                                                                                                                                                                                                               |
 * By using the CLI, any parameter in the application.yml file can be given a value.
 * To provide value for parameter present in application yml file through CLI, follow below example
 * **Section in YML**
@@ -135,7 +136,9 @@ Example for Checkmarx v8.x:
 
 `java -jar cx-flow-<ver>.jar --batch --cx-team="CxServer\SP\Checkmarx/development"`
 
-### Single Project
+## <a name="project">Project</a>
+
+Following Command can be used to retrieve the latest scan results for a given team/project and provide feedback (defect / issue tracking).
 
 Example for Checkmarx v9.x:
 
@@ -153,6 +156,16 @@ Example for Checkmarx v8.x:
 java -jar cx-flow-<ver>.jar \
 --project \
 --cx-team="CxServer\SP\Checkmarx\Test" \
+--cx-project="riches-main" \
+--app=AppName
+```
+Following Command can be used to retrieve the results for unique scanId for a given team/project and provide feedback (defect / issue tracking).
+
+```
+java -jar cx-flow-<ver>.jar \
+--project \
+--scanId=<unique scanId>
+--cx-team="CxServer/SP/Checkmarx/Test" \
 --cx-project="riches-main" \
 --app=AppName
 ```
