@@ -441,6 +441,11 @@ public class CxFlowRunner implements ApplicationRunner {
                     exit(ExitCode.ARGUMENT_NOT_PROVIDED);
                 }
                 request.setCliMode(CliMode.PROJECT);
+                if(args.containsOption("scanId"))
+                {
+                    Integer scanId = Integer.valueOf(getOptionValues(args,"scanId"));
+                    request.setScanId(scanId);
+                }
                 publishLatestScanResults(request);
             } else if (args.containsOption("scan") || args.containsOption(IAST_OPTION)) {
                 log.info("Executing scan process");
