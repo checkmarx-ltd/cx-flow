@@ -7,7 +7,7 @@ buildscript {
         sonarqubeVersion = '2.8'
         atlassianVersion = "5.2.0"
         atlassianFugueVersion = "4.7.2"
-        jacksonVersion = "2.12.6"
+        jacksonVersion = "2.13.4"
         mainClassPath = 'com.checkmarx.flow.CxFlowApplication'
     }
     repositories {
@@ -103,14 +103,14 @@ dependencies {
         exclude group: 'ch.qos.logback', module: 'logback-core'
         exclude group: 'org.bouncycastle', module:'bcprov-jdk15on'
     }
-    compile("org.apache.commons:commons-text:1.8")
+    compile("org.apache.commons:commons-text:1.10.0")
     compile('commons-codec:commons-codec:1.13')
     compile('commons-io:commons-io:2.8.0')
     compile('org.apache.commons:commons-lang3:3.12.0')
     compile('org.apache.commons:commons-collections4:4.4')
     compile('org.json:json:20210307')
-    compile('org.yaml:snakeyaml:1.31')
-    compile('com.fasterxml.jackson.core:jackson-databind:2.10.3')
+    compile('org.yaml:snakeyaml:1.33')
+    compile('com.fasterxml.jackson.core:jackson-databind:2.14.0-rc1')
     compile('org.springframework.boot:spring-boot-starter-web-services'){
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
@@ -126,15 +126,16 @@ dependencies {
     compile("com.atlassian.jira:jira-rest-java-client-core:${atlassianVersion}") {
         exclude group: 'org.codehaus.jackson', module: 'jackson-mapper-asl'
         exclude group: 'org.codehaus.jackson', module: 'jackson-core-asl'
+        exclude group: 'org.codehaus.jettison', module:'jettison'
     }
     compile("com.atlassian.jira:jira-rest-java-client-api:${atlassianVersion}")
-    compile("com.fasterxml.jackson.core:jackson-databind:2.12.6.1")
+    compile("com.fasterxml.jackson.core:jackson-databind:2.14.0-rc1")
     compile("com.fasterxml.jackson.core:jackson-core:${jacksonVersion}")
     compile("com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}")
     compile("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersion}")
     compile("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${jacksonVersion}")
     compile("org.apache.httpcomponents:httpclient:4.5.13")
-
+    compile('org.codehaus.jettison:jettison:1.5.1')
     compile("org.thymeleaf:thymeleaf-spring5:3.0.15.RELEASE")
     implementation 'ognl:ognl:3.1.29'
 
