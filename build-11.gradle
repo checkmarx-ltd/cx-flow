@@ -1,7 +1,7 @@
 import org.gradle.api.tasks.testing.Test
 
 buildscript {
-	ext {
+    ext {
         CxSBSDK = "0.5.29"
         ConfigProviderVersion = "1.0.9"
         //cxVersion = "8.90.5"
@@ -9,19 +9,19 @@ buildscript {
         sonarqubeVersion = '2.8'
         atlassianVersion = "5.2.0"
         atlassianFugueVersion = "4.7.2"
-        jacksonVersion = "2.13.4"
+        jacksonVersion = "2.12.6"
         mainClassPath = 'com.checkmarx.flow.CxFlowApplication'
     }
-	repositories {
-       // jcenter()
+    repositories {
+        // jcenter()
         mavenLocal()
         mavenCentral()
         maven {
             url = 'https://packages.atlassian.com/mvn/maven-external'
         }
         gradlePluginPortal()
-	}
-	dependencies {
+    }
+    dependencies {
         classpath ("gradle.plugin.com.gorylenko.gradle-git-properties:gradle-git-properties:2.0.0")
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
         classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:${sonarqubeVersion}"
@@ -47,7 +47,7 @@ def junitVersion = '5.7.0'
 
 repositories {
     mavenLocal()
-	mavenCentral()
+    mavenCentral()
     maven {
         url = 'https://packages.atlassian.com/mvn/maven-external'
     }
@@ -68,16 +68,16 @@ ext['spring-core.version'] = '5.3.20'
 dependencies {
     compile group: 'com.beust', name: 'jcommander', version: '1.78'
     compile('org.apache.ant:ant:1.10.12')
-	compile('org.springframework.boot:spring-boot-starter-actuator'){
+    compile('org.springframework.boot:spring-boot-starter-actuator'){
         exclude group: 'ch.qos.logback', module: 'logback-core'
         exclude group: 'org.yaml', module:'snakeyaml'
     }
-	compile('org.springframework.boot:spring-boot-starter-web'){
-	    exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j-impl'
+    compile('org.springframework.boot:spring-boot-starter-web'){
+        exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j-impl'
         exclude group: 'org.apache.logging.log4j', module: 'log4j-api'
         exclude group: 'org.apache.logging.log4j', module: 'log4j-core'
         exclude group: 'ch.qos.logback', module: 'logback-core'
-	}
+    }
     compile('org.springframework.boot:spring-boot-starter-aop'){
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
@@ -89,12 +89,12 @@ dependencies {
         exclude group: 'ch.qos.logback', module: 'logback-core'
         exclude group: 'org.bouncycastle', module:'bcprov-jdk15on'
     }
-    compile ("org.apache.commons:commons-text:1.10.0")
+    compile ("org.apache.commons:commons-text:1.8")
     compile ('commons-codec:commons-codec:1.13')
     compile ('commons-io:commons-io:2.8.0')
     compile ('org.json:json:20210307')
-    compile('org.yaml:snakeyaml:1.33')
-    compile ('com.fasterxml.jackson.core:jackson-databind:2.14.0-rc1')
+    compile('org.yaml:snakeyaml:1.31')
+    compile ('com.fasterxml.jackson.core:jackson-databind:2.10.3')
     compile ('org.springframework.boot:spring-boot-starter-web-services'){
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
@@ -108,15 +108,13 @@ dependencies {
     compile ("com.atlassian.jira:jira-rest-java-client-core:${atlassianVersion}") {
         exclude group: 'org.codehaus.jackson', module: 'jackson-mapper-asl'
         exclude group: 'org.codehaus.jackson', module: 'jackson-core-asl'
-        exclude group: 'org.codehaus.jettison', module:'jettison'
     }
     compile ("com.atlassian.jira:jira-rest-java-client-api:${atlassianVersion}")
-    compile("com.fasterxml.jackson.core:jackson-databind:2.14.0-rc1")
+    compile("com.fasterxml.jackson.core:jackson-databind:2.12.6.1")
     compile("com.fasterxml.jackson.core:jackson-core:${jacksonVersion}")
     compile("com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}")
     compile("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersion}")
     compile("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${jacksonVersion}")
-    compile('org.codehaus.jettison:jettison:1.5.1')
 
     compile("org.thymeleaf:thymeleaf-spring5:3.0.15.RELEASE")
     implementation 'ognl:ognl:3.1.29'
