@@ -133,7 +133,7 @@ public class JiraService {
 //                    jiraProperties.setVersion(versionAndDeployName.get(0));
 //                    jiraProperties.setDeployType(versionAndDeployName.get(1));
 //                }
-//               configJira();
+              configJira();
             } catch (URISyntaxException | RestClientException e) {
                 log.error("Error constructing URI for JIRA: {}", e.getMessage());
             }
