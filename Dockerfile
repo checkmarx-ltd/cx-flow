@@ -14,7 +14,7 @@ RUN apk add krb5 pcre
 RUN apk add bash
 RUN curl -L "https://sca-downloads.s3.amazonaws.com/cli/latest/ScaResolver-musl64.tar.gz" -o "ScaResolver.tar.gz" && tar -vxzf ScaResolver.tar.gz && sudo mv ScaResolver Configuration.ini /app && rm ScaResolver.tar.gz
 COPY build/libs/*.jar cx-flow.jar
-ENTRYPOINT ["java", "-Xms512m", "-Xmx2048m", "-Djava.security.egd=file:/dev/./urandom", "-Dspring.profiles.active=web", "-jar", "cx-flow.jar"]
+ENTRYPOINT ["java", "-Xms512m", "-Xmx2048m", "-Djava.security.egd=file:/dev/./urandom", "-Dspring.profiles.active=default", "-jar", "cx-flow.jar"]
 EXPOSE 8080
 
 
@@ -33,7 +33,7 @@ RUN apk add krb5 pcre
 RUN apk add bash
 RUN curl -L "https://sca-downloads.s3.amazonaws.com/cli/latest/ScaResolver-musl64.tar.gz" -o "ScaResolver.tar.gz" && tar -vxzf ScaResolver.tar.gz && sudo mv ScaResolver Configuration.ini /app && rm ScaResolver.tar.gz
 COPY build/libs/java11/*.jar cx-flow.jar
-ENTRYPOINT ["java", "-Xms512m", "-Xmx2048m","-Djava.security.egd=file:/dev/./urandom", "-Dspring.profiles.active=web", "-jar", "cx-flow.jar"]
+ENTRYPOINT ["java", "-Xms512m", "-Xmx2048m","-Djava.security.egd=file:/dev/./urandom", "-Dspring.profiles.active=default", "-jar", "cx-flow.jar"]
 EXPOSE 8080
 
 FROM alpine:3.16 AS cxgo8
