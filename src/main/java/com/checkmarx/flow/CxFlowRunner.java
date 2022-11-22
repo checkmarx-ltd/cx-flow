@@ -461,6 +461,10 @@ public class CxFlowRunner implements ApplicationRunner {
                 } //GitLab Scan with Git Clone
                 else if (args.containsOption("gitlab") && !ScanUtils.anyEmpty(namespace, repoName)) {
                     repoUrl = getNonEmptyRepoUrl(namespace, repoName, repoUrl, gitLabProperties.getGitUri(namespace, repoName));
+                    if(!ScanUtils.empty(repoUrl) && repoUrl.contains("gitlab-ci-token"))
+                    {
+                        repoUrl = repoUrl.substring(0, 8) + repoUrl.substring(repoUrl.indexOf('@') + 1);
+                    }
                     String token = gitLabProperties.getToken();
                     gitAuthUrl = repoUrl.replace(Constants.HTTPS, Constants.HTTPS_OAUTH2.concat(token).concat("@"));
                     gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP_OAUTH2.concat(token).concat("@"));
