@@ -123,7 +123,13 @@ public class JiraService {
             CustomAsynchronousJiraRestClientFactory factory = new CustomAsynchronousJiraRestClientFactory();
             try {
                 this.jiraURI = new URI(jiraProperties.getUrl());
+
+                char[] cr =this.jiraURI.toString().toCharArray();
+                for(char c : cr){
+                System.out.print(c);
+                }
                 log.info("Satyam :: "+jiraURI);
+
                 this.client = factory.createWithBasicHttpAuthenticationCustom(jiraURI, jiraProperties.getUsername(), jiraProperties.getToken(), jiraProperties.getHttpTimeout());
 
                 this.issueClient = this.client.getIssueClient();
