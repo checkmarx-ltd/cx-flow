@@ -123,7 +123,9 @@ public class JiraService {
             CustomAsynchronousJiraRestClientFactory factory = new CustomAsynchronousJiraRestClientFactory();
             try {
                 this.jiraURI = new URI(jiraProperties.getUrl());
+                log.info("Satyam :: "+jiraURI);
                 this.client = factory.createWithBasicHttpAuthenticationCustom(jiraURI, jiraProperties.getUsername(), jiraProperties.getToken(), jiraProperties.getHttpTimeout());
+
                 this.issueClient = this.client.getIssueClient();
                 this.projectClient = this.client.getProjectClient();
                 this.metaClient = this.client.getMetadataClient();
@@ -141,6 +143,8 @@ public class JiraService {
     }
 
     private void prepareJiraOpenClosedStatuses() {
+        log.info("Satyam :: "+jiraProperties.getClosedStatus());
+
         if (jiraProperties.getClosedStatus() == null) {
             jiraProperties.setClosedStatus(new ArrayList<>());
         }
