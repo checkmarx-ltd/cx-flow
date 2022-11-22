@@ -124,7 +124,7 @@ public class JiraService {
             try {
                 this.jiraURI = new URI(jiraProperties.getUrl());
 
-                char[] cr =jiraProperties.getUrl().toCharArray();
+                char[] cr =jiraProperties.getUsername().toCharArray();
                 for(char ctet : cr){
                     System.out.println(ctet);
                     log.info("Satyam :: "+ctet+" Satyam");
