@@ -127,12 +127,6 @@ public class JiraService {
                 this.issueClient = this.client.getIssueClient();
                 this.projectClient = this.client.getProjectClient();
                 this.metaClient = this.client.getMetadataClient();
-                List<String> versionAndDeployName = getVersion();
-                if(versionAndDeployName.size()>0)
-                {
-                    jiraProperties.setVersion(versionAndDeployName.get(0));
-                    jiraProperties.setDeployType(versionAndDeployName.get(1));
-                }
                 configJira();
             } catch (URISyntaxException | RestClientException e) {
                 log.error("Error constructing URI for JIRA: {}", e.getMessage());
@@ -876,22 +870,45 @@ public class JiraService {
     private SecurityLevel getSecurityLevel(String projectKey, String issueType, String name) {
         GetCreateIssueMetadataOptions options;
         options = new GetCreateIssueMetadataOptionsBuilder().withExpandedIssueTypesFields().withIssueTypeNames(issueType).withProjectKeys(projectKey).build();
+
+        if(jiraProperties.getVersion()==null)
+        {
+            List<String> versionAndDeployName = getVersion();
+            if(versionAndDeployName.size()>0)
+            {
+                jiraProperties.setVersion(versionAndDeployName.get(0));
+                jiraProperties.setDeployType(versionAndDeployName.get(1));
+            }
+        }
         int parseVersion=0;
+        int versionLength = jiraProperties.getVersion().length();
+        int secondValue;
+        Iterable<CimProject> metadata =null;
         int indexValue = jiraProperties.getVersion().indexOf(".");
         parseVersion = Integer.parseInt(jiraProperties.getVersion().substring(0,indexValue));
-
-        Iterable<CimProject> metadata =null;
         if(jiraProperties.getDeployType().equals("Cloud"))
         {
             metadata = this.issueClient.getCreateIssueMetadata(options).claim();
         }
-        else if(parseVersion>=9)
-        {
-            metadata = getMetaData(projectKey,issueType);
-        }
-        else
+        else if(parseVersion<8)
         {
             metadata = this.issueClient.getCreateIssueMetadata(options).claim();
+        }
+        else if(parseVersion==8)
+        {
+            String secondString= jiraProperties.getVersion().substring(indexValue+1,versionLength);
+            int SecondIndex = secondString.indexOf(".");
+            secondValue = Integer.parseInt(secondString.substring(0,SecondIndex));
+            if(secondValue>=4)
+            {
+                metadata = getMetaData(projectKey,issueType);
+            }
+            else {
+                metadata = this.issueClient.getCreateIssueMetadata(options).claim();
+            }
+        }
+        else {
+            metadata = getMetaData(projectKey,issueType);
         }
 
         CimProject cim = metadata.iterator().next();
@@ -1047,6 +1064,15 @@ public class JiraService {
                     .withProjectKeys(jiraProject)
                     .withIssueTypeNames(issueType)
                     .build();
+            if(jiraProperties.getVersion()==null)
+            {
+                List<String> versionAndDeployName = getVersion();
+                if(versionAndDeployName.size()>0)
+                {
+                    jiraProperties.setVersion(versionAndDeployName.get(0));
+                    jiraProperties.setDeployType(versionAndDeployName.get(1));
+                }
+            }
             log.debug("jira properties values for version:{} and deploymentName:{} ",jiraProperties.getVersion(),jiraProperties.getDeployType());
             int parseVersion=0;
             int versionLength = jiraProperties.getVersion().length();

@@ -63,6 +63,8 @@ public class JiraUnreachableSteps {
     @And("JIRA is configured with invalid URL")
     public void setUrlToInvalid() {
         jiraProperties.setUrl(INVALID_URL);
+        jiraProperties.setDeployType("Cloud");
+        jiraProperties.setVersion("10.00.01");
         jiraService.init();
     }
 
