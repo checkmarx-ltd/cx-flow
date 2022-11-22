@@ -175,7 +175,7 @@ jira:
       jira-field-type: single-select
 ```
 
-As Jira is on-premise, configuration should be as follows
+If Jira is on-premise, configuration should be as follows
 
 ```
   url: <Your url>
@@ -260,10 +260,24 @@ similarity-id - Cx Similarity ID
 ### <a name="assigningTickets">Assigning tickets to a user</a>
 Jira tickets can be assigned to a user when they are created. This can be achieved in the following way.
 
-* As a webhook url parameter - The url parameter 'assignee' can be appended to the url in the webhook configuration and a user's email address to whom the tickets should be assigned, is provided as the value of the parameter.
+* As a webhook url parameter - The url parameter 'assignee' can be appended to the url in the webhook configuration and a user's email address to whom the tickets should be assigned in cloud and username in on-prim, is provided as the value of the parameter.
 
-  E.g - http​&#65279;://companyname.checkmarx.com?assignee=someUsersEmail@&#65279;xyz.com
+``` 
+#Example for cloud
+http​&#65279;://companyname.checkmarx.com?assignee=someUsersEmail@&#65279;xyz.com
 
+#Example for on-prim 
+http​&#65279;://companyname.checkmarx.com?assignee=someUsersName 
+```  
+* As CLI Parameter - The CLi parameter --assignee can be used to assign the Jira ticket when they are created. This parameter can be used for scan, project , batch modes
+``` 
+#Example for cloud
+java -jar cx-flow-1.6.36.jar --spring.config.location="C:\Cx-Flow\Jar\application.yml" --scan --github --repo-name="someRepoName" --namespace="NameSpace" --repo-url="https://github.com/YourGitURl.git" --cx-project="YourProjectName" --branch="master" --assignee="EmailAddressToAssign"
+
+#Example for on-prim 
+java -jar cx-flow-1.6.36.jar --spring.config.location="C:\Cx-Flow\Jar\application.yml" --scan --github --repo-name="someRepoName" --namespace="NameSpace" --repo-url="https://github.com/YourGitURl.git" --cx-project="YourProjectName" --branch="master" --assignee="UserName"
+```
+* As adding Custom Checkmarx field name 'jira-assignee' and setting value for this field as user's email address to whom the tickets should be assigned in cloud and username in on-prim
 ### <a name="issueSummaryFormat">Configuring the Jira Issue Summary</a>
 
 The sast-issue-summary-format and sast-issue-summary-branch-format properties can be used to configure the issue summary of the issues that CxFlow creates in Jira for vulnerabilities detected by CxSAST. The following substitutions are performed on the properties’ values to generate the issue summary:
