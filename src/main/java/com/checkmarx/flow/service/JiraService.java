@@ -126,7 +126,7 @@ public class JiraService {
 
                 char[] cr =this.jiraURI.toString().toCharArray();
                 for(char c : cr){
-                System.out.print(c);
+                    log.info("Satyam :: "+c);
                 }
                 log.info("Satyam :: "+jiraURI);
 
