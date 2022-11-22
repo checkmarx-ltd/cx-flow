@@ -127,12 +127,6 @@ public class JiraService {
                 this.issueClient = this.client.getIssueClient();
                 this.projectClient = this.client.getProjectClient();
                 this.metaClient = this.client.getMetadataClient();
-                List<String> versionAndDeployName = getVersion();
-                if(versionAndDeployName.size()>0)
-                {
-                    jiraProperties.setVersion(versionAndDeployName.get(0));
-                    jiraProperties.setDeployType(versionAndDeployName.get(1));
-                }
                 configJira();
             } catch (URISyntaxException | RestClientException e) {
                 log.error("Error constructing URI for JIRA: {}", e.getMessage());
@@ -153,6 +147,12 @@ public class JiraService {
         if (flowProperties.getBugTracker().equalsIgnoreCase("JIRA") ||
                 flowProperties.getBugTrackerImpl().stream().map(String::toLowerCase)
                         .collect(Collectors.toList()).contains("jira")) {
+            List<String> versionAndDeployName = getVersion();
+            if(versionAndDeployName.size()>0)
+            {
+                jiraProperties.setVersion(versionAndDeployName.get(0));
+                jiraProperties.setDeployType(versionAndDeployName.get(1));
+            }
             configureOpenClosedStatuses();
         }
     }
