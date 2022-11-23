@@ -229,7 +229,9 @@ public class ScanRequestConverter {
                 .withClientSecret(request.getScannerApiSec())
                 .withCustomFields(request.getCxFields())
                 .withScanCustomFields(request.getScanFields())
-                .withEmailNotifications(request.getEmailNotifications());
+                .withEmailNotifications(request.getEmailNotifications())
+                .withModifiedProjectName(request.getModifiedProjectName());
+
 
         if (StringUtils.isNotEmpty(request.getBranch())) {
             params.withBranch(Constants.CX_BRANCH_PREFIX.concat(request.getBranch()));

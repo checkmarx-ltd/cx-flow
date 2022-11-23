@@ -371,6 +371,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 .cxFields(projectCustomFields)
                 .scanFields(scanCustomFields)
                 .branchProtectionEnabled(branchProtectionEnabled)
+                .modifiedProjectName(branch)
                 .build();
 
         if (projectId != null) {
