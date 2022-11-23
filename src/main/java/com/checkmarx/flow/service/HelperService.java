@@ -121,6 +121,10 @@ public class HelperService {
     public String getCxProject(ScanRequest request) {
         String scriptFile = cxProperties.getProjectScript();
         String project = request.getProject();
+        String branch = request.getBranch();
+        request.setProject(branch);
+        request.setModifiedProjectName(getEffectiveEntityName(request, scriptFile, branch, "project"));
+        request.setProject(project);
         return getEffectiveEntityName(request, scriptFile, project, "project");
     }
 

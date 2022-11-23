@@ -130,6 +130,9 @@ public class ScanRequest {
     @Getter @Setter
     private Integer scanId;
 
+    @Getter @Setter
+    private String modifiedProjectName;
+
     public ScanRequest(ScanRequest other) {
         this.namespace = other.namespace;
         this.application = other.application;
@@ -176,6 +179,8 @@ public class ScanRequest {
         this.cliMode = other.cliMode;
         this.emailNotifications = other.emailNotifications;
         this.zipExclude = other.zipExclude;
+        this.modifiedProjectName = other.modifiedProjectName;
+
     }
 
     public Map<String,String> getAltFields() {
