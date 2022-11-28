@@ -69,9 +69,9 @@ Feature: CxFlow should fail builds and pull requests if scan exeeds threshold
     Examples:
       | exist  | exceeded   | break    | exit code |
       | true   | true       | true     | 10        |
-      #| false  | false      | true     | 0         |
+      | false  | false      | true     | 0         |
       | false  | false      | false    | 0         |
-      #| false  | false      | true     | 0         |
+      | false  | false      | true     | 0         |
       | true   | false      | true     | 0         |
       | true   | false      | true     | 0         |
       | true   | true       | false    | 10        |
