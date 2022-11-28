@@ -673,15 +673,18 @@ public class CxFlowRunner implements ApplicationRunner {
                 log.info("Fail build because some of the checks weren't passed");
                 breakBuildResult = true;
             }
-        } else if (flowProperties.isBreakBuild() && resultsService.filteredSastIssuesPresent(results)) {
+        } 
+        else if (flowProperties.isBreakBuild() && resultsService.filteredSastIssuesPresent(results)) {
             log.info("Build failed because some issues were found");
             breakBuildResult = true;
+
         }
 
 //        else if (isCheck && flowProperties.isBreakBuild() && thresholdValidator.thresholdsExceeded(request, results) ) {
 //            log.info("Build failed because some issues were found In SCA.");
 //            breakBuildResult = true;
 //        }
+
 
         if(!breakBuildResult){
             log.info("Build succeeded. all checks passed");
