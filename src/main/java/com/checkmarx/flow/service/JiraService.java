@@ -42,6 +42,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 
 import javax.annotation.PostConstruct;
+import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
@@ -1185,9 +1186,9 @@ public class JiraService {
     {
         HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders());
         List<String> versionAndDeploy = new ArrayList<>();
-        URI Str = URI.create(jiraURI+"/rest/api/latest/serverInfo");
+        final UriBuilder Str = UriBuilder.fromUri(jiraURI).path("rest/api/latest/serverInfo");
         try {
-            ResponseEntity<String> response = restTemplate.exchange(Str, HttpMethod.GET, httpEntity, String.class);
+            ResponseEntity<String> response = restTemplate.exchange(Str.build(), HttpMethod.GET, httpEntity, String.class);
             JSONObject obj = new JSONObject(response.getBody());
             String versionName = obj.getString("version");
             String deployType = obj.getString("deploymentType");
@@ -1202,10 +1203,10 @@ public class JiraService {
     private List<com.checkmarx.flow.jira9X.Project> getProject()
     {
         HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders());
-        URI Str = URI.create(jiraURI+"/rest/api/latest/project");
+        final UriBuilder Str = UriBuilder.fromUri(jiraURI).path("rest/api/latest/project");
         List<com.checkmarx.flow.jira9X.Project> project=null;
         try {
-            ResponseEntity<String> response = restTemplate.exchange(Str, HttpMethod.GET, httpEntity, String.class);
+            ResponseEntity<String> response = restTemplate.exchange(Str.build(), HttpMethod.GET, httpEntity, String.class);
             ObjectMapper mapper = new ObjectMapper();
             project = mapper.readValue(response.getBody(), new TypeReference<List<com.checkmarx.flow.jira9X.Project>>() {});
         }catch (HttpClientErrorException e) {
@@ -1221,10 +1222,10 @@ public class JiraService {
     private List<com.checkmarx.flow.jira9X.IssueType> getIssueTypes(String jiraProject)
     {
         HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders());
-        URI Str = URI.create(jiraURI+"/rest/api/latest/issue/createmeta/"+jiraProject+"/issuetypes");
+        final UriBuilder Str = UriBuilder.fromUri(jiraURI).path("rest/api/latest/issue/createmeta/"+jiraProject+"/issuetypes");
         List<com.checkmarx.flow.jira9X.IssueType> issueType=null;
         try {
-            ResponseEntity<String> response = restTemplate.exchange(Str, HttpMethod.GET, httpEntity, String.class);
+            ResponseEntity<String> response = restTemplate.exchange(Str.build(), HttpMethod.GET, httpEntity, String.class);
             JSONObject obj = new JSONObject(response.getBody());
             String issueValues = String.valueOf(obj.getJSONArray("values"));
             ObjectMapper mapper = new ObjectMapper();
@@ -1242,10 +1243,10 @@ public class JiraService {
     private List<com.checkmarx.flow.jira9X.IssueFields>getIssueFields(String jiraProject, Long id)
     {
         HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders());
-        URI Str = URI.create(jiraURI+"/rest/api/latest/issue/createmeta/"+jiraProject+"/issuetypes/"+id);
+        final UriBuilder Str = UriBuilder.fromUri(jiraURI).path("rest/api/latest/issue/createmeta/"+jiraProject+"/issuetypes/"+id);
         List<com.checkmarx.flow.jira9X.IssueFields> issueFields=null;
         try {
-            ResponseEntity<String> response = restTemplate.exchange(Str, HttpMethod.GET, httpEntity, String.class);
+            ResponseEntity<String> response = restTemplate.exchange(Str.build(), HttpMethod.GET, httpEntity, String.class);
             JSONObject obj = new JSONObject(response.getBody());
             String issueValues = String.valueOf(obj.getJSONArray("values"));
             ObjectMapper mapper = new ObjectMapper();

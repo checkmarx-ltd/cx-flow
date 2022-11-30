@@ -14,37 +14,20 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
         "self",
         "id",
-        "description",
-        "iconUrl",
         "name",
-        "subtask",
-        "avatarId",
-        "expand",
-        "fields"
+        "description"
 })
-
-
 @Generated("jsonschema2pojo")
-public class IssueType {
+public class ProjectCategory {
 
     @JsonProperty("self")
     private URI self;
     @JsonProperty("id")
-    private Long id;
-    @JsonProperty("description")
-    private String description;
-    @JsonProperty("iconUrl")
-    private URI iconUrl;
+    private String id;
     @JsonProperty("name")
     private String name;
-    @JsonProperty("subtask")
-    private Boolean subtask;
-    @JsonProperty("avatarId")
-    private Integer avatarId;
-    @JsonProperty("expand")
-    private String expand;
-    @JsonProperty("fields")
-    private Fields fields;
+    @JsonProperty("description")
+    private String description;
 
     @JsonProperty("self")
     public URI getSelf() {
@@ -57,33 +40,13 @@ public class IssueType {
     }
 
     @JsonProperty("id")
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
     @JsonProperty("id")
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
-    }
-
-    @JsonProperty("description")
-    public String getDescription() {
-        return description;
-    }
-
-    @JsonProperty("description")
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    @JsonProperty("iconUrl")
-    public URI getIconUrl() {
-        return iconUrl;
-    }
-
-    @JsonProperty("iconUrl")
-    public void setIconUrl(URI iconUrl) {
-        this.iconUrl = iconUrl;
     }
 
     @JsonProperty("name")
@@ -96,20 +59,20 @@ public class IssueType {
         this.name = name;
     }
 
-    @JsonProperty("subtask")
-    public Boolean getSubtask() {
-        return subtask;
+    @JsonProperty("description")
+    public String getDescription() {
+        return description;
     }
 
-    @JsonProperty("subtask")
-    public void setSubtask(Boolean subtask) {
-        this.subtask = subtask;
+    @JsonProperty("description")
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(IssueType.class.getName()).append('@').append(Integer.toHexString(System.identityHashCode(this))).append('[');
+        sb.append(ProjectCategory.class.getName()).append('@').append(Integer.toHexString(System.identityHashCode(this))).append('[');
         sb.append("self");
         sb.append('=');
         sb.append(((this.self == null)?"<null>":this.self));
@@ -118,21 +81,13 @@ public class IssueType {
         sb.append('=');
         sb.append(((this.id == null)?"<null>":this.id));
         sb.append(',');
-        sb.append("description");
-        sb.append('=');
-        sb.append(((this.description == null)?"<null>":this.description));
-        sb.append(',');
-        sb.append("iconUrl");
-        sb.append('=');
-        sb.append(((this.iconUrl == null)?"<null>":this.iconUrl));
-        sb.append(',');
         sb.append("name");
         sb.append('=');
         sb.append(((this.name == null)?"<null>":this.name));
         sb.append(',');
-        sb.append("subtask");
+        sb.append("description");
         sb.append('=');
-        sb.append(((this.subtask == null)?"<null>":this.subtask));
+        sb.append(((this.description == null)?"<null>":this.description));
         sb.append(',');
         if (sb.charAt((sb.length()- 1)) == ',') {
             sb.setCharAt((sb.length()- 1), ']');
@@ -140,6 +95,28 @@ public class IssueType {
             sb.append(']');
         }
         return sb.toString();
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 1;
+        result = ((result* 31)+((this.name == null)? 0 :this.name.hashCode()));
+        result = ((result* 31)+((this.self == null)? 0 :this.self.hashCode()));
+        result = ((result* 31)+((this.description == null)? 0 :this.description.hashCode()));
+        result = ((result* 31)+((this.id == null)? 0 :this.id.hashCode()));
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other == this) {
+            return true;
+        }
+        if ((other instanceof ProjectCategory) == false) {
+            return false;
+        }
+        ProjectCategory rhs = ((ProjectCategory) other);
+        return (((((this.name == rhs.name)||((this.name!= null)&&this.name.equals(rhs.name)))&&((this.self == rhs.self)||((this.self!= null)&&this.self.equals(rhs.self))))&&((this.description == rhs.description)||((this.description!= null)&&this.description.equals(rhs.description))))&&((this.id == rhs.id)||((this.id!= null)&&this.id.equals(rhs.id))));
     }
 
 }

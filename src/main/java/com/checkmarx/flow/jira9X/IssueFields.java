@@ -5,6 +5,7 @@ import java.net.URI;
 import java.util.Map;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -12,6 +13,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties
 @JsonPropertyOrder({
         "required",
         "schema",
@@ -28,7 +30,7 @@ public class IssueFields {
     @JsonProperty("required")
     private Boolean required;
     @JsonProperty("schema")
-    private com.checkmarx.flow.jira9X.FieldSchema schema;
+    private FieldSchema schema;
     @JsonProperty("name")
     private String name;
     @JsonProperty("fieldId")
@@ -38,7 +40,7 @@ public class IssueFields {
     @JsonProperty("hasDefaultValue")
     private Boolean hasDefaultValue;
     @JsonProperty("operations")
-    private Set<com.checkmarx.flow.jira9X.StandardOperation> operations = null;
+    private Set<StandardOperation> operations = null;
     @JsonProperty("allowedValues")
     private Iterable<Object> allowedValues = null;
 
@@ -56,7 +58,7 @@ public class IssueFields {
     }
 
     @JsonProperty("schema")
-    public com.checkmarx.flow.jira9X.FieldSchema getSchema() {
+    public FieldSchema getSchema() {
         return schema;
     }
 
@@ -106,12 +108,12 @@ public class IssueFields {
     }
 
     @JsonProperty("operations")
-    public Set<com.checkmarx.flow.jira9X.StandardOperation> getOperations() {
+    public Set<StandardOperation> getOperations() {
         return operations;
     }
 
     @JsonProperty("operations")
-    public void setOperations(Set<com.checkmarx.flow.jira9X.StandardOperation> operations) {
+    public void setOperations(Set<StandardOperation> operations) {
         this.operations = operations;
     }
 
