@@ -28,13 +28,13 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class IssueType {
 
     @JsonProperty("self")
-    private URI self;
+    private String self;
     @JsonProperty("id")
-    private Long id;
+    private String id;
     @JsonProperty("description")
     private String description;
     @JsonProperty("iconUrl")
-    private URI iconUrl;
+    private String iconUrl;
     @JsonProperty("name")
     private String name;
     @JsonProperty("subtask")
@@ -47,22 +47,22 @@ public class IssueType {
     private Fields fields;
 
     @JsonProperty("self")
-    public URI getSelf() {
+    public String getSelf() {
         return self;
     }
 
     @JsonProperty("self")
-    public void setSelf(URI self) {
+    public void setSelf(String self) {
         this.self = self;
     }
 
     @JsonProperty("id")
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
     @JsonProperty("id")
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -77,12 +77,12 @@ public class IssueType {
     }
 
     @JsonProperty("iconUrl")
-    public URI getIconUrl() {
+    public String getIconUrl() {
         return iconUrl;
     }
 
     @JsonProperty("iconUrl")
-    public void setIconUrl(URI iconUrl) {
+    public void setIconUrl(String iconUrl) {
         this.iconUrl = iconUrl;
     }
 

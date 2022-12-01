@@ -19,6 +19,7 @@ import com.checkmarx.flow.dto.report.JiraTicketsReport;
 import com.checkmarx.flow.exception.JiraClientException;
 import com.checkmarx.flow.exception.JiraClientRunTimeException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
+import com.checkmarx.flow.jira9X.IssueFields;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
@@ -43,6 +44,8 @@ import org.springframework.web.util.DefaultUriBuilderFactory;
 
 import javax.annotation.PostConstruct;
 import javax.ws.rs.core.UriBuilder;
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
@@ -1126,18 +1129,19 @@ public class JiraService {
 
     }
 
-    private Iterable<CimProject> getMetaData(String jiraProject,String issueType){
+    private Iterable<CimProject> getMetaData(String jiraProject,String issueType) {
         ArrayList<CimProject> cimProjects = new ArrayList<>();
         Iterable<CimIssueType> issueTypes = createIssueTypes(jiraProject,issueType);
         List<com.checkmarx.flow.jira9X.Project> projects=getProject();
         for (com.checkmarx.flow.jira9X.Project project: projects) {
-            CimProject c = new CimProject(project.getSelf(),project.getKey(),project.getId(),project.getName(),project.getAvatarUrls(),issueTypes);
+            String projectid = project.getId();
+            Long id = new Long(projectid);
+            CimProject c = new CimProject(project.getSelf(),project.getKey(),id,project.getName(),project.getAvatarUrls(),issueTypes);
             cimProjects.add(c);
         }
         return cimProjects;
     }
-    private Iterable<CimIssueType> createIssueTypes(String jiraProject,String issue)
-    {
+    private Iterable<CimIssueType> createIssueTypes(String jiraProject,String issue) {
         ArrayList<CimIssueType> cimIssueTypes = new ArrayList<>();
         List<com.checkmarx.flow.jira9X.IssueType> issueTypes= getIssueTypes(jiraProject);
 
@@ -1145,9 +1149,21 @@ public class JiraService {
         {
             if(issueType.getName().equalsIgnoreCase(issue))
             {
-                List<com.checkmarx.flow.jira9X.IssueFields> issueFields= getIssueFields(jiraProject,issueType.getId());
+                String id=issueType.getId();
+                Long longId = new Long(id);
+                List<IssueFields> issueFields= getIssueFields(jiraProject,longId);
                 Map<String, CimFieldInfo> issueFieldInfo = createIssueFields(issueFields);
-                CimIssueType c = new CimIssueType(issueType.getSelf(),issueType.getId(),issueType.getName(),issueType.getSubtask(),issueType.getDescription(),issueType.getIconUrl(),issueFieldInfo);
+                String Self=issueType.getSelf();
+                String iconUrl=issueType.getIconUrl();
+                URI myUri = null;
+                URI icon = null;
+                try {
+                    myUri = new URI(Self);
+                    icon = new URI(iconUrl);
+                } catch (URISyntaxException e) {
+                    throw new RuntimeException(e);
+                }
+                CimIssueType c = new CimIssueType(myUri,longId,issueType.getName(),issueType.getSubtask(),issueType.getDescription(),icon,issueFieldInfo);
                 cimIssueTypes.add(c);
             }
         }

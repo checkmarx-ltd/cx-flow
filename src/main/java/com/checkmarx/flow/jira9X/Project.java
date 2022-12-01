@@ -39,7 +39,7 @@ public class Project {
     @JsonProperty("self")
     private URI self;
     @JsonProperty("id")
-    private Long id;
+    private String id;
     @JsonProperty("key")
     private String key;
     @JsonProperty("description")
@@ -95,12 +95,12 @@ public class Project {
     }
 
     @JsonProperty("id")
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
     @JsonProperty("id")
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
