@@ -2,6 +2,7 @@
 package com.checkmarx.flow.jira9X;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import javax.annotation.Generated;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -47,8 +48,14 @@ public class IssueType {
     private Fields fields;
 
     @JsonProperty("self")
-    public String getSelf() {
-        return self;
+    public URI getSelf() {
+        URI myUri = null;
+        try {
+            myUri = new URI(this.self);
+        } catch (URISyntaxException e) {
+            return null;
+        }
+        return myUri;
     }
 
     @JsonProperty("self")
@@ -57,8 +64,15 @@ public class IssueType {
     }
 
     @JsonProperty("id")
-    public String getId() {
-        return id;
+    public Long getId() {
+        try{
+            Long longId = new Long(this.id);
+            return longId;
+        }catch (NumberFormatException e)
+        {
+            return null;
+        }
+
     }
 
     @JsonProperty("id")
@@ -77,8 +91,14 @@ public class IssueType {
     }
 
     @JsonProperty("iconUrl")
-    public String getIconUrl() {
-        return iconUrl;
+    public URI getIconUrl() {
+        URI icon = null;
+        try {
+            icon = new URI(iconUrl);
+        } catch (URISyntaxException e) {
+            return null;
+        }
+        return icon;
     }
 
     @JsonProperty("iconUrl")
