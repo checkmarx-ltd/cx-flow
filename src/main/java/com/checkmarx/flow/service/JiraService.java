@@ -19,6 +19,7 @@ import com.checkmarx.flow.dto.report.JiraTicketsReport;
 import com.checkmarx.flow.exception.JiraClientException;
 import com.checkmarx.flow.exception.JiraClientRunTimeException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
+import com.checkmarx.flow.jira9X.IssueFields;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
@@ -43,6 +44,8 @@ import org.springframework.web.util.DefaultUriBuilderFactory;
 
 import javax.annotation.PostConstruct;
 import javax.ws.rs.core.UriBuilder;
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
@@ -1126,7 +1129,7 @@ public class JiraService {
 
     }
 
-    private Iterable<CimProject> getMetaData(String jiraProject,String issueType){
+    private Iterable<CimProject> getMetaData(String jiraProject,String issueType) {
         ArrayList<CimProject> cimProjects = new ArrayList<>();
         Iterable<CimIssueType> issueTypes = createIssueTypes(jiraProject,issueType);
         List<com.checkmarx.flow.jira9X.Project> projects=getProject();
@@ -1136,8 +1139,7 @@ public class JiraService {
         }
         return cimProjects;
     }
-    private Iterable<CimIssueType> createIssueTypes(String jiraProject,String issue)
-    {
+    private Iterable<CimIssueType> createIssueTypes(String jiraProject,String issue) {
         ArrayList<CimIssueType> cimIssueTypes = new ArrayList<>();
         List<com.checkmarx.flow.jira9X.IssueType> issueTypes= getIssueTypes(jiraProject);
 
@@ -1145,7 +1147,7 @@ public class JiraService {
         {
             if(issueType.getName().equalsIgnoreCase(issue))
             {
-                List<com.checkmarx.flow.jira9X.IssueFields> issueFields= getIssueFields(jiraProject,issueType.getId());
+                List<IssueFields> issueFields= getIssueFields(jiraProject,issueType.getId());
                 Map<String, CimFieldInfo> issueFieldInfo = createIssueFields(issueFields);
                 CimIssueType c = new CimIssueType(issueType.getSelf(),issueType.getId(),issueType.getName(),issueType.getSubtask(),issueType.getDescription(),issueType.getIconUrl(),issueFieldInfo);
                 cimIssueTypes.add(c);
@@ -1163,17 +1165,19 @@ public class JiraService {
             Set<StandardOperation> finalSet = new HashSet<>();
             for(com.checkmarx.flow.jira9X.StandardOperation custom :customSet)
             {
-                if(custom.toString().equals("set"))
-                {
-                    finalSet.add(StandardOperation.SET);
-                } else if (custom.toString().equals("add")) {
-                    finalSet.add(StandardOperation.ADD);
-                }else if(custom.toString().equals("remove"))
-                {
-                    finalSet.add(StandardOperation.REMOVE);
-                }else if(custom.toString().equals("edit"))
-                {
-                    finalSet.add(StandardOperation.EDIT);
+                switch (custom.toString()) {
+                    case "set":
+                        finalSet.add(StandardOperation.SET);
+                        break;
+                    case "add":
+                        finalSet.add(StandardOperation.ADD);
+                        break;
+                    case "remove":
+                        finalSet.add(StandardOperation.REMOVE);
+                        break;
+                    case "edit":
+                        finalSet.add(StandardOperation.EDIT);
+                        break;
                 }
             }
             com.checkmarx.flow.jira9X.FieldSchema customSchema = new com.checkmarx.flow.jira9X.FieldSchema();
@@ -1211,8 +1215,6 @@ public class JiraService {
             project = mapper.readValue(response.getBody(), new TypeReference<List<com.checkmarx.flow.jira9X.Project>>() {});
         }catch (HttpClientErrorException e) {
             log.error("Error occurred http error {} ", e.getStatusCode());
-        } catch (JsonMappingException e) {
-            throw new RuntimeException(e);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
@@ -1232,8 +1234,6 @@ public class JiraService {
             issueType = mapper.readValue(issueValues, new TypeReference<List<com.checkmarx.flow.jira9X.IssueType>>() {});
         }catch (HttpClientErrorException e) {
             log.error("Error occurred http error {} ", e.getStatusCode());
-        } catch (JsonMappingException e) {
-            throw new RuntimeException(e);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
@@ -1253,8 +1253,6 @@ public class JiraService {
              issueFields = mapper.readValue(issueValues, new TypeReference<List<com.checkmarx.flow.jira9X.IssueFields>>() {});
         }catch (HttpClientErrorException e) {
             log.error("Error occurred http error {} ", e.getStatusCode());
-        } catch (JsonMappingException e) {
-            throw new RuntimeException(e);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }

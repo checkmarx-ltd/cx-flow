@@ -2,6 +2,7 @@
 package com.checkmarx.flow.jira9X;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import javax.annotation.Generated;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -28,13 +29,13 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class IssueType {
 
     @JsonProperty("self")
-    private URI self;
+    private String self;
     @JsonProperty("id")
-    private Long id;
+    private String id;
     @JsonProperty("description")
     private String description;
     @JsonProperty("iconUrl")
-    private URI iconUrl;
+    private String iconUrl;
     @JsonProperty("name")
     private String name;
     @JsonProperty("subtask")
@@ -48,21 +49,34 @@ public class IssueType {
 
     @JsonProperty("self")
     public URI getSelf() {
-        return self;
+        URI myUri = null;
+        try {
+            myUri = new URI(this.self);
+        } catch (URISyntaxException e) {
+            return null;
+        }
+        return myUri;
     }
 
     @JsonProperty("self")
-    public void setSelf(URI self) {
+    public void setSelf(String self) {
         this.self = self;
     }
 
     @JsonProperty("id")
     public Long getId() {
-        return id;
+        try{
+            Long longId = new Long(this.id);
+            return longId;
+        }catch (NumberFormatException e)
+        {
+            return null;
+        }
+
     }
 
     @JsonProperty("id")
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -78,11 +92,17 @@ public class IssueType {
 
     @JsonProperty("iconUrl")
     public URI getIconUrl() {
-        return iconUrl;
+        URI icon = null;
+        try {
+            icon = new URI(iconUrl);
+        } catch (URISyntaxException e) {
+            return null;
+        }
+        return icon;
     }
 
     @JsonProperty("iconUrl")
-    public void setIconUrl(URI iconUrl) {
+    public void setIconUrl(String iconUrl) {
         this.iconUrl = iconUrl;
     }
 

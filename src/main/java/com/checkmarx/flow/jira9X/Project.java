@@ -1,7 +1,9 @@
 package com.checkmarx.flow.jira9X;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Generated;
@@ -39,7 +41,7 @@ public class Project {
     @JsonProperty("self")
     private URI self;
     @JsonProperty("id")
-    private Long id;
+    private String id;
     @JsonProperty("key")
     private String key;
     @JsonProperty("description")
@@ -64,7 +66,7 @@ public class Project {
     @JsonProperty("roles")
     private Map<String, String>  roles;
     @JsonProperty("avatarUrls")
-    private Map<String, URI> avatarUrls;
+    private Map<String, String> avatarUrls;
     @JsonProperty("projectKeys")
     private List<String> projectKeys = null;
     @JsonProperty("projectCategory")
@@ -96,11 +98,18 @@ public class Project {
 
     @JsonProperty("id")
     public Long getId() {
-        return id;
+        try {
+            Long longId = new Long(this.id);
+            return longId;
+        }
+        catch (NumberFormatException e)
+        {
+            return null;
+        }
     }
 
     @JsonProperty("id")
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -217,11 +226,29 @@ public class Project {
 
     @JsonProperty("avatarUrls")
     public Map<String, URI> getAvatarUrls() {
-        return avatarUrls;
+        Map<String,URI> stringURIMap = new HashMap<>();
+        URI tempUri = null;
+        if(avatarUrls!=null)
+        {
+            Iterator iterator = avatarUrls.keySet().iterator();
+            while(iterator.hasNext())
+            {
+                String key = (String) iterator.next();
+                String tempStr = avatarUrls.get(key);
+                try {
+                    tempUri = new URI(tempStr);
+                } catch (URISyntaxException e) {
+                    return new HashMap<>();
+                }
+                stringURIMap.put(key,tempUri);
+            }
+        }
+
+        return stringURIMap;
     }
 
     @JsonProperty("avatarUrls")
-    public void setAvatarUrls(Map<String, URI> avatarUrls) {
+    public void setAvatarUrls(Map<String, String> avatarUrls) {
         this.avatarUrls = avatarUrls;
     }
 
