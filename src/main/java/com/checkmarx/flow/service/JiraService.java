@@ -745,6 +745,10 @@ public class JiraService {
                                 log.debug("language: {}", issue.getLanguage());
                                 value = issue.getLanguage();
                                 break;
+                            case "similarity-id":
+                                log.debug("similarity-id: {}", issue.getSimilarityId());
+                                value = issue.getSimilarityId();
+                                break;
                             case "comment":
                                 value = "";
                                 StringBuilder comments = new StringBuilder();
