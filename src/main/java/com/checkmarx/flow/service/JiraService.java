@@ -548,8 +548,8 @@ public class JiraService {
                                     }
                                 } else {
                                     log.debug("No value found for {}", f.getName());
+                                    value = "";
                                 }
-                                value = "";
                                 break;
                         }
                         break;
