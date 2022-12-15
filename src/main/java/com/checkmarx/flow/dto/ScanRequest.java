@@ -133,6 +133,12 @@ public class ScanRequest {
     @Getter @Setter
     private String modifiedProjectName;
 
+
+    @Getter @Setter
+    private String commentSAST;
+
+
+
     public ScanRequest(ScanRequest other) {
         this.namespace = other.namespace;
         this.application = other.application;

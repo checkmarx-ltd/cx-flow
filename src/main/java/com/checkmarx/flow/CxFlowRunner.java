@@ -137,6 +137,7 @@ public class CxFlowRunner implements ApplicationRunner {
         List<String> excludeFiles;
         List<String> excludeFolders;
         ScanRequest.Repository repoType = ScanRequest.Repository.NA;
+        String commentSAST;
         boolean osa;
         boolean force;
         boolean branchProtectionEnabled;
@@ -188,6 +189,7 @@ public class CxFlowRunner implements ApplicationRunner {
         application = getOptionValues(args, "app");
         assignee = getOptionValues(args, "assignee");
         mergeId = getOptionValues(args, "merge-id");
+        commentSAST = getOptionValues(args, "comment");
         mergeTitle = getOptionValues(args,"merge-title");
         preset = getOptionValues(args, "preset");
         scanTag = getOptionValues(args, "scan-tag");
@@ -371,6 +373,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 .cxFields(projectCustomFields)
                 .scanFields(scanCustomFields)
                 .branchProtectionEnabled(branchProtectionEnabled)
+                .commentSAST(commentSAST)
                 .build();
 
         if (projectId != null) {
