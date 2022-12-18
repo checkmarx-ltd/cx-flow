@@ -134,6 +134,8 @@ checkmarx:
       - user2@example.com
     failed-scan:
       - user3@example.com
+  project-branching-check-count: 5
+  project-branching-check-interval: 10
 
 github:
   webhook-token: XXXXX
@@ -493,6 +495,8 @@ The configuration can be set or overridden at execution time using the command l
 | `scan-queuing-timeout`    | 720                   | No                           | Yes     | Yes              | The amount of time (in minutes) for which cx-flow will keep a scan event data in its queue before sending to CxSAST, when all the available concurrent scans in CxSAST are in use.                                                                                                                                                                                                                                                                              | 
 | `disable-clubbing`        | false                 | No                           | Yes     | Yes              | If set to true, results are not grouped at all.By default, results are grouped only by vulnerability and filename.                                                                                                                                                                                                                                                                                                                                              |
 | `email-notifications`     |                       | No                           |         | Yes (Scan only)  | A map containing any or all of the following keys: `after-scan`, `before-scan`, `failed-scan`. The vaue of each key is a list of email addresses to which a notification should be sent in the case of the relevant event.                                                                                                                                                                                                                                      |
+| `project-branching-check-count` |               3 | No                           | Yes     | Yes (Scan only)  | The number of times to check the project branching status after a project has been branched. Only relevant for versions of CxSAST that support the querying of the branching status (API version 4 and higher).                                                                                                                                                                                                                                                 |
+| `project-branching-check-interval` |            5 | No                           | Yes     | Yes (Scan only)  | The interval between checks of the project branching status. For versions of CxSAST that do not support querying the project branching status, execution will pause once for the specified duration.                                                                                                                                                                                                                                                            |
 No* = Default is applied
 
 ### Custom Checkmarx Fields
