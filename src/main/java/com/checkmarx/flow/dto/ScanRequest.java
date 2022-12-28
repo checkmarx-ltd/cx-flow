@@ -126,6 +126,9 @@ public class ScanRequest {
     private CxEmailNotifications emailNotifications;
 
     @Getter @Setter
+    private Integer postBackActionId;
+
+    @Getter @Setter
     private String zipExclude;
     @Getter @Setter
     private Integer scanId;
