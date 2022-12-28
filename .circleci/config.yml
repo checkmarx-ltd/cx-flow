@@ -365,6 +365,10 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Importing Certificate
+          command: |
+            keytool -import -alias sastcer -keystore  "/docker-java-home/lib/security/cacerts" -file /home/circleci/project/satyam.crt
+      - run:
           name: Run SAST CLI Integration Tests
           command: |
             export HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
