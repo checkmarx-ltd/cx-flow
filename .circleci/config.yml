@@ -367,7 +367,7 @@ jobs:
       - run:
           name: Importing Certificate
           command: |
-            keytool -import -alias sastcer -storepass changeit -keystore  "/docker-java-home/lib/security/cacerts" -file /home/circleci/project/satyam.crt --noprompt
+            keytool -importcert -alias sastcer -storepass changeit -keystore keystore.jks -file /home/circleci/project/satyam.crt --noprompt
       - run:
           name: Run SAST CLI Integration Tests
           command: |
