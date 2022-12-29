@@ -1090,7 +1090,8 @@ public class JiraService {
             parseVersion = Integer.parseInt(jiraProperties.getVersion().substring(0,indexValue));
             if(jiraProperties.getDeployType().equals("Cloud"))
             {
-                metadata = this.issueClient.getCreateIssueMetadata(options).claim();
+                getCloudMetaData();
+                //metadata = this.issueClient.getCreateIssueMetadata(options).claim();
             }
             else if(parseVersion<8)
             {
@@ -1131,6 +1132,50 @@ public class JiraService {
             return fields;
         });
 
+    }
+
+    private void getCloudMetaData(){
+        HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders());
+        final UriBuilder Str = UriBuilder.fromUri(jiraURI).path("rest/api/latest/issue/createmeta");
+        List<com.checkmarx.flow.jira9X.Project> project=null;
+        List<com.checkmarx.flow.jira9X.IssueType> issueTypes=null;
+        List<com.checkmarx.flow.jira9X.IssueFields> issueFields=null;
+        String str= null;
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(Str.build(), HttpMethod.GET, httpEntity, String.class);
+            ObjectMapper mapper = new ObjectMapper();
+            str= response.getBody();
+            log.debug("str:{}",str);
+            JSONObject obj = new JSONObject(response.getBody());
+            String temp = String.valueOf(obj.getJSONArray("projects"));
+            log.debug("temp_project :{}",temp);
+            project = mapper.readValue(temp, new TypeReference<List<com.checkmarx.flow.jira9X.Project>>() {});
+            //issueTypes = mapper.readValue(response.getBody(), new TypeReference<List<com.checkmarx.flow.jira9X.IssueType>>() {});
+            //issueFields = mapper.readValue(response.getBody(), new TypeReference<List<com.checkmarx.flow.jira9X.IssueFields>>() {});
+
+            log.debug("project :{}",project.toString());
+            //log.debug("issueTypes :{}",issueTypes.toString());
+            //log.debug("issueFields :{}",issueFields.toString());
+        }catch(com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException e){
+            ObjectMapper mapper = new ObjectMapper();
+            if(e.getMessage().substring(20,30).equals("issuetypes"))
+            {
+                JSONObject obj = new JSONObject(str);
+                String temp = obj.getString("issuetypes");
+                log.debug("temp_issuetypes:{}",temp);
+                try {
+                    issueTypes = mapper.readValue(temp, new TypeReference<List<com.checkmarx.flow.jira9X.IssueType>>() {});
+                    log.debug("issuetypes :{}",issueTypes);
+                } catch (JsonProcessingException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        }
+        catch (HttpClientErrorException e) {
+            log.error("Error occurred http error {} ", e.getStatusCode());
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private Iterable<CimProject> getMetaData(String jiraProject,String issueType) {
