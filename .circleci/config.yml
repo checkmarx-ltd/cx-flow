@@ -371,7 +371,7 @@ jobs:
       - run:
           name: Importing Certificate 3
           command: |
-            ls -lrt .. /docker-java-home/lib/security
+            ls -lrt .. /
       - run:
           name: Importing Certificate 4
           command: |
