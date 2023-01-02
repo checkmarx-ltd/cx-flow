@@ -372,7 +372,7 @@ jobs:
           name: Importing Certificate 2
           command: |
             echo $PATH
-            keytool -import -alias sastcer -storepass changeit -keystore  "/usr/local/openjdk-8/jre/lib/security/cacerts" -file /home/circleci/project/satyam.crt --noprompt
+            /usr/bin/sudo keytool -import -alias sastcer -storepass changeit -keystore  "/usr/local/openjdk-8/jre/lib/security/cacerts" -file /home/circleci/project/satyam.crt --noprompt
       - run:
           name: Importing Certificate 4
           command: |
