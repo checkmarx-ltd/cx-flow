@@ -367,9 +367,8 @@ jobs:
       - run:
           name: Importing Certificate 2
           command: |
-            cd ..
-            cd usr
-            ls -lrt
+            ls -lrt .. /usr
+
       - run:
           name: Importing Certificate 3
           command: |
