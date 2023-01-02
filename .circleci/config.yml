@@ -373,7 +373,6 @@ jobs:
              cd ..
              ls -la
              cd ..
-
      - run:
           name: Run SAST CLI Integration Tests
           command: |
