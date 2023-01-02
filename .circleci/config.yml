@@ -372,11 +372,11 @@ jobs:
       - run:
           name: Importing Certificate 3
           command: |
-            ls -lrt .. /usr
+            ls -lrt .. /usr/local
       - run:
           name: Importing Certificate 4
           command: |
-            ls -lrt .. /usr/openjdk-8
+            ls -lrt .. /usr/local/openjdk-8
       - run:
           name: Run SAST CLI Integration Tests
           command: |
