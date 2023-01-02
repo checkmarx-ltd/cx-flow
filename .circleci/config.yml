@@ -371,15 +371,19 @@ jobs:
       - run:
           name: Importing Certificate 2
           command: |
-            ls -lrt /docker-java-home/lib
+            cd ..
       - run:
           name: Importing Certificate 3
           command: |
-            ls -lrt /docker-java-home/lib/security
+            ls -la
       - run:
           name: Importing Certificate 4
           command: |
-            ls -lrt /docker-java-home/lib/security/cacerts
+            cd ..
+      - run:
+          name: Importing Certificate 4
+          command: |
+            ls -la     
 
       - run:
           name: Run SAST CLI Integration Tests
