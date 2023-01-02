@@ -365,24 +365,17 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Importing Certificate
-          command: |
-             $JAVA_HOME
-             $JAVA_HOME/lib
-             $JAVA_HOME/lib/security
-             $JAVA_HOME/lib/security/cacerts
-      - run:
           name: Importing Certificate 2
           command: |
-            ls -lrt /docker-java-home/lib
+            ls -lrt
       - run:
           name: Importing Certificate 3
           command: |
-            ls -lrt /docker-java-home/lib/security
+            ls -lrt .. /docker-java-home/lib/security
       - run:
           name: Importing Certificate 4
           command: |
-            ls -lrt /docker-java-home/lib/security/cacerts
+            ls -lrt .. / .. /docker-java-home/lib/security/cacerts
 
       - run:
           name: Run SAST CLI Integration Tests
