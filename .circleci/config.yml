@@ -375,10 +375,9 @@ jobs:
       - run:
           name: Importing Certificate 4
           command: |
-            cd ..
-            ls -lrt
-            cd ..
-            ls -lrt
+            ls -lrt .. /.. /
+            ls -lrt .. /.. / ../ 
+            ls -lrt .. /.. / ../ ../ 
 
       - run:
           name: Run SAST CLI Integration Tests
