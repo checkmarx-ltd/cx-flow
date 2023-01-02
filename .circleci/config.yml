@@ -365,9 +365,22 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Importing Certificate
+          name: Importing Certificate 1
           command: |
-            exec keytool -import -alias sastcer -storepass changeit -keystore  /docker-java-home/lib/security/cacerts -file /home/circleci/project/satyam.crt --noprompt
+             ls -lrt /docker-java-home
+      - run:
+          name: Importing Certificate 2
+          command: |
+            ls -lrt /docker-java-home/lib
+      - run:
+          name: Importing Certificate 3
+          command: |
+            ls -lrt /docker-java-home/lib/security
+      - run:
+          name: Importing Certificate 4
+          command: |
+            ls -lrt /docker-java-home/lib/security/cacerts
+
       - run:
           name: Run SAST CLI Integration Tests
           command: |
