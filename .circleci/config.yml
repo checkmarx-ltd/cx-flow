@@ -367,7 +367,8 @@ jobs:
       - run:
           name: Importing Certificate
           command: |
-             ls -lrt /docker-java-home
+             echo ls -la
+             echo cd .. ls -la
       - run:
           name: Importing Certificate
           command: |
