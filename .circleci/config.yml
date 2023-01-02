@@ -375,7 +375,7 @@ jobs:
       - run:
           name: Importing Certificate 4
           command: |
-            ls -lrt .. /usr/local/openjdk-8/jre/lib
+            ls -lrt .. /usr/local/openjdk-8/jre/lib/security
       - run:
           name: Run SAST CLI Integration Tests
           command: |
