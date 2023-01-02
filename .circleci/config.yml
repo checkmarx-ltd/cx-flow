@@ -367,8 +367,7 @@ jobs:
       - run:
           name: Importing Certificate
           command: |
-             echo $JAVA_HOME
-             echo $Java_Home
+             $JAVA_HOME
       - run:
           name: Importing Certificate
           command: |
