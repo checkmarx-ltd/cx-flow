@@ -368,24 +368,13 @@ jobs:
           name: Importing Certificate 1
           command: |
              ls -la
-      - run:
-          name: Importing Certificate 2
-          command: |
-            cd ..
-      - run:
-          name: Importing Certificate 3
-          command: |
-            ls -la
-      - run:
-          name: Importing Certificate 4
-          command: |
-            cd ..
-      - run:
-          name: Importing Certificate 4
-          command: |
-            ls -la     
+             cd ..
+             ls -la
+             cd ..
+             ls -la
+             cd ..
 
-      - run:
+     - run:
           name: Run SAST CLI Integration Tests
           command: |
             export HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
