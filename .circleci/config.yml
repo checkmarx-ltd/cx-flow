@@ -372,7 +372,7 @@ jobs:
       - run:
           name: Importing Certificate 3
           command: |
-            ls -lrt .. /
+            ls -lrt .. /usr/local
       - run:
           name: Importing Certificate 4
           command: |
