@@ -365,15 +365,23 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Importing Certificate 1
+          name: Importing Certificate
           command: |
-             ls -la
-             cd ..
-             ls -la
-             cd ..
-             ls -la
-             cd ..
-     - run:
+             ls -lrt /docker-java-home
+      - run:
+          name: Importing Certificate
+          command: |
+            ls -lrt /docker-java-home/lib
+      - run:
+          name: Importing Certificate
+          command: |
+            ls -lrt /docker-java-home/lib/security
+      - run:
+          name: Importing Certificate
+          command: |
+            ls -lrt /docker-java-home/lib/security/cacerts
+
+      - run:
           name: Run SAST CLI Integration Tests
           command: |
             export HOOK_TARGET=https://cxflow-${CIRCLE_SHA1::7}.${EXTERNAL_DNS_DOMAIN}
