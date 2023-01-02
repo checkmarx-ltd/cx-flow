@@ -372,15 +372,15 @@ jobs:
              $JAVA_HOME/lib/security
              $JAVA_HOME/lib/security/cacerts
       - run:
-          name: Importing Certificate
+          name: Importing Certificate 2
           command: |
             ls -lrt /docker-java-home/lib
       - run:
-          name: Importing Certificate
+          name: Importing Certificate 3
           command: |
             ls -lrt /docker-java-home/lib/security
       - run:
-          name: Importing Certificate
+          name: Importing Certificate 4
           command: |
             ls -lrt /docker-java-home/lib/security/cacerts
 
