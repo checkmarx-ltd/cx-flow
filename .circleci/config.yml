@@ -365,18 +365,9 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Importing Certificate 3
+          name: Importing Certificate
           command: |
-            ls -lrt /usr/bin
-      - run:
-          name: Importing Certificate 2
-          command: |
-            echo $PATH
             sudo $JAVA_HOME/bin/keytool -import -alias sastcer -storepass changeit -keystore  "/usr/local/openjdk-8/jre/lib/security/cacerts" -file /home/circleci/project/satyam.crt --noprompt
-      - run:
-          name: Importing Certificate 4
-          command: |
-            ls -lrt
       - run:
           name: Run SAST CLI Integration Tests
           command: |
