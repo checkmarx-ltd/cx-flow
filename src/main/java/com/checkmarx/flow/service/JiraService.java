@@ -1621,6 +1621,7 @@ public class JiraService {
 
     Map<String, List<String>> process(ScanResults results, ScanRequest request, ScanDetails scanDetails) throws JiraClientException {
         Map<String, ScanResults.XIssue> map;
+        Map<String, ScanResults.XIssue> unFilteredMap;
         Map<String, Issue> jiraMap;
         List<Issue> issuesParent;
         List<Issue> issuesGrandParent;
@@ -1674,6 +1675,7 @@ public class JiraService {
 
         map = this.getIssueMap(results, request);
         setMapWithScanResults(map, nonPublishedScanResultsMap);
+        unFilteredMap = this.createUnfilteredMap(results,request);
         jiraMap = this.getJiraIssueMap(this.getIssues(request,filterScanner));
 
 
@@ -1715,7 +1717,7 @@ public class JiraService {
         }
 
         /*Check if an issue exists in Jira but not within results and close if not*/
-        closeIssueInCaseNotWithinResults(request, map, jiraMap, closedIssues);
+        closeIssueInCaseNotWithinResults(request, unFilteredMap, jiraMap, closedIssues);
 
         ImmutableMap<String, List<String>> ticketsMap = ImmutableMap.of(
                 JiraConstants.NEW_TICKET, newIssues,
@@ -1729,6 +1731,35 @@ public class JiraService {
         setCurrentClosedIssuesList(closedIssues);
 
         return ticketsMap;
+    }
+
+    private Map<String, ScanResults.XIssue> createUnfilteredMap(ScanResults results, ScanRequest request) {
+        List<ScanResults.XIssue> issues = new ArrayList<>();
+
+        Optional.ofNullable(results.getUnFilteredIssues()).ifPresent(i ->
+                issues.addAll(results.getUnFilteredIssues())
+        );
+
+        String issuePrefix = Optional.ofNullable(jiraProperties.getIssuePrefix()).orElse("");
+        String issuePostfix = Optional.ofNullable(jiraProperties.getIssuePostfix()).orElse("");
+
+        Map<String, ScanResults.XIssue> map = new HashMap<>();
+
+        boolean useBranch = isUseBranch(request);
+        for (ScanResults.XIssue issue : issues) {
+            String key;
+            if (useBranch) {
+                key = ScanUtils.isSAST(issue)
+                        ? formatSastIssueSummary(jiraProperties.getSastIssueSummaryBranchFormat(), issue, request)
+                        : getScaDetailsIssueTitleFormat(request, issuePrefix, issuePostfix, issue);
+            } else {
+                key = ScanUtils.isSAST(issue)
+                        ? formatSastIssueSummary(jiraProperties.getSastIssueSummaryFormat(), issue, request)
+                        : getScaDetailsIssueTitleWithoutBranchFormat(request, issuePrefix, issuePostfix, issue);
+            }
+            map.put(HTMLHelper.getScanRequestIssueKeyWithDefaultProductValue(request, key,jiraProperties.getLabelPrefix()), issue);
+        }
+        return map;
     }
 
     /**
