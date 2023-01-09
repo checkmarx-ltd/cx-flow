@@ -116,7 +116,7 @@ dependencies {
     compile("com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}")
     compile("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersion}")
     compile("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${jacksonVersion}")
-    compile('org.codehaus.jettison:jettison:1.5.1')
+    compile('org.codehaus.jettison:jettison:1.5.3')
 
     compile("org.thymeleaf:thymeleaf-spring5:3.0.15.RELEASE")
     implementation 'ognl:ognl:3.1.29'
