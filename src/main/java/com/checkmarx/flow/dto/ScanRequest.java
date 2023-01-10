@@ -126,18 +126,15 @@ public class ScanRequest {
     private CxEmailNotifications emailNotifications;
 
     @Getter @Setter
+    private Integer postBackActionId;
+
+    @Getter @Setter
     private String zipExclude;
     @Getter @Setter
     private Integer scanId;
 
     @Getter @Setter
     private String modifiedProjectName;
-
-
-    @Getter @Setter
-    private String commentSAST;
-
-
 
     public ScanRequest(ScanRequest other) {
         this.namespace = other.namespace;

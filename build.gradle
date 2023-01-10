@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        CxSBSDK = "0.5.32"
+        CxSBSDK = "0.5.33"
         ConfigProviderVersion = "1.0.10"
         //cxVersion = "8.90.5"
         springBootVersion = '2.7.0'
@@ -108,7 +108,7 @@ dependencies {
     compile('commons-io:commons-io:2.8.0')
     compile('org.apache.commons:commons-lang3:3.12.0')
     compile('org.apache.commons:commons-collections4:4.4')
-    compile('org.json:json:20220320')
+    compile('org.json:json:20210307')
     compile('org.yaml:snakeyaml:1.33')
     compile('com.fasterxml.jackson.core:jackson-databind:2.14.0')
     compile('org.springframework.boot:spring-boot-starter-web-services'){
@@ -135,7 +135,7 @@ dependencies {
     compile("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersion}")
     compile("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${jacksonVersion}")
     compile("org.apache.httpcomponents:httpclient:4.5.13")
-    compile('org.codehaus.jettison:jettison:1.5.3')
+    compile('org.codehaus.jettison:jettison:1.5.1')
     compile("org.thymeleaf:thymeleaf-spring5:3.0.15.RELEASE")
     implementation 'ognl:ognl:3.1.29'
 
