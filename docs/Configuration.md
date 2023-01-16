@@ -136,6 +136,7 @@ checkmarx:
       - user3@example.com
   project-branching-check-count: 5
   project-branching-check-interval: 10
+  restrict-results-to-branch: true
 
 github:
   webhook-token: XXXXX
@@ -497,6 +498,7 @@ The configuration can be set or overridden at execution time using the command l
 | `email-notifications`     |                       | No                           |         | Yes (Scan only)  | A map containing any or all of the following keys: `after-scan`, `before-scan`, `failed-scan`. The vaue of each key is a list of email addresses to which a notification should be sent in the case of the relevant event.                                                                                                                                                                                                                                      |
 | `project-branching-check-count` |               3 | No                           | Yes     | Yes (Scan only)  | The number of times to check the project branching status after a project has been branched. Only relevant for versions of CxSAST that support the querying of the branching status (API version 4 and higher).                                                                                                                                                                                                                                                 |
 | `project-branching-check-interval` |            5 | No                           | Yes     | Yes (Scan only)  | The interval between checks of the project branching status. For versions of CxSAST that do not support querying the project branching status, execution will pause once for the specified duration.                                                                                                                                                                                                                                                            |
+| `restrict-results-to-branch` |              false | No                           | Yes     | Yes (Scan only)  | If set to `true`, when scanning a branched project, only results detected on the branch are reported. As the OData API is needed for this functionality, the CxSAST user used must be a assigned a role with the “API” permission. Also, the `client-id` property should be set to “resource_owner_sast_client” and the `scope` property should be set to “sast_api”.                                                                                           |
 No* = Default is applied
 
 ### Custom Checkmarx Fields
