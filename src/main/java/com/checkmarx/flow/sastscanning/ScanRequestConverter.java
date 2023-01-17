@@ -230,6 +230,7 @@ public class ScanRequestConverter {
                 .withCustomFields(request.getCxFields())
                 .withScanCustomFields(request.getScanFields())
                 .withEmailNotifications(request.getEmailNotifications())
+                .withPostbackActionId(request.getPostBackActionId())
                 .withModifiedProjectName(request.getModifiedProjectName());
 
 
