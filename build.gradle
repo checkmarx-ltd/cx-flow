@@ -174,8 +174,9 @@ dependencies {
     testImplementation('net.minidev:json-smart:2.4.7')
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
     testImplementation("com.github.java-json-tools:json-patch:1.11")
+    testImplementation 'org.mockito:mockito-core:4.11.0'
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:${junitVersion}")
-    testCompile("org.mockito:mockito-core:+")
+    //testCompile("org.mockito:mockito-core:+")
 	testCompile("net.bytebuddy:byte-buddy:1.12.9")  //Added due to Mockito Exception.Normally, Gradle should take care class path completion.
     compile("org.projectlombok:lombok:1.18.10")
     compile("ch.qos.logback:logback-classic:1.2.10"){
