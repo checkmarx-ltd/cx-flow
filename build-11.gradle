@@ -156,7 +156,7 @@ dependencies {
     testImplementation( "org.junit.jupiter:junit-jupiter-api:${junitVersion}")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:${junitVersion}")
-    testCompile("org.mockito:mockito-core:+")
+    testCompile("org.mockito:mockito-core:4.11.0")
     compile("org.projectlombok:lombok:1.18.10")
     compile("ch.qos.logback:logback-classic:1.2.10"){
         exclude group: 'ch.qos.logback', module: 'logback-core'
