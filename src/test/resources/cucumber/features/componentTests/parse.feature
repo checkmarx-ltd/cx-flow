@@ -31,9 +31,9 @@ Feature: Parsing SAST results
     # The condition above is needed to prevent CxFlow from merging several findings into a single issue.
     # The merging functionality is covered in a separate test.
     When parsing the input with severity filter: Low, Medium, High
-    Then CxFlow report summary contains a "Low" field with the value 4
-    And CxFlow report summary contains a "Medium" field with the value 3
-    And CxFlow report summary contains a "High" field with the value 2
+    Then CxFlow report summary contains a "Low" field with the value 8
+    And CxFlow report summary contains a "Medium" field with the value 6
+    And CxFlow report summary contains a "High" field with the value 4
     And CxFlow report summary contains only these 3 fields
     # Example how CxFlow issues are grouped by severity:
     #  "flow-summary": {

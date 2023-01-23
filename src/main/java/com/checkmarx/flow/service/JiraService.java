@@ -1944,8 +1944,8 @@ public class JiraService {
         summary = fillPlaceholder(summary, "[FILENAME]", issue.getFilename());
         summary = fillPlaceholder(summary, "[POSTFIX]", jiraProperties.getIssuePostfix());
         summary = fillPlaceholder(summary, "[PREFIX]", jiraProperties.getIssuePrefix());
-        summary = fillPlaceholder(summary, "[PROJECT]", request.getProject());
-        summary = fillPlaceholder(summary, "[SEVERITY]", issue.getSeverity());
+        //summary = fillPlaceholder(summary, "[PROJECT]", request.getProject());
+        //summary = fillPlaceholder(summary, "[SEVERITY]", issue.getSeverity());
         summary = fillPlaceholder(summary, "[VULNERABILITY]", issue.getVulnerability());
 
         return summary;
