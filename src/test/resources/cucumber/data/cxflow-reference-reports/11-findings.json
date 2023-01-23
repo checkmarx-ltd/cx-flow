@@ -9,7 +9,9 @@
   "version":"8.9.0.210",
   "additionalDetails": {
     "flow-summary": {
-      "High": 4
+      "Low": 3,
+      "Medium": 3,
+      "High": 8
     },
     "scanId": "1000026",
     "scanStartDate": "Sunday, January 19, 2020 2:40:11 AM"
