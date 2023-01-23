@@ -5,6 +5,7 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.cucumber.integration.sca_scanner.ScaCommonSteps;
 import com.checkmarx.flow.service.SCAScanner;
 import com.checkmarx.flow.service.ScaConfigurationOverrider;
+import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.RestClientConfig;
 import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.RemoteRepositoryInfo;
@@ -40,11 +41,13 @@ public class SCATeamsSteps extends ScaCommonSteps {
     private String projectId;
     private int errorStatusCode;
 
+    private CxProperties cxProperties;
+
     public SCATeamsSteps(FlowProperties flowProperties, SCAScanner scaScanner,
                          ScaConfigurationOverrider scaConfigOverrider, ScaProperties scaProperties) {
         super(flowProperties, scaScanner, scaConfigOverrider);
         this.scaProperties = scaProperties;
-        this.scaClientHelper = new ScaClientHelper(createRestClientConfig(scaProperties, PROJECT_NAME), log, scaProperties);
+        this.scaClientHelper = new ScaClientHelper(createRestClientConfig(scaProperties, PROJECT_NAME), log, scaProperties,cxProperties);
     }
 
     @After()
