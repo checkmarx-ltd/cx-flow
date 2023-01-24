@@ -6,6 +6,7 @@ import com.checkmarx.flow.cucumber.integration.sca_scanner.ScaCommonSteps;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.service.SCAScanner;
 import com.checkmarx.flow.service.ScaConfigurationOverrider;
+import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.sca.*;
@@ -34,6 +35,7 @@ public class ScaPolicyManagementSteps extends ScaCommonSteps {
     private static final String GIT_REPO_URL = "https://github.com/cxflowtestuser/public-rest-repo.git";
 
     private final ScaProperties scaProperties;
+    private final CxProperties cxProperties;
 
     private ScaClientHelper scaClientHelper;
     private String projectId;
@@ -41,10 +43,11 @@ public class ScaPolicyManagementSteps extends ScaCommonSteps {
     private SCAResults scaResults;
 
     public ScaPolicyManagementSteps(FlowProperties flowProperties, SCAScanner scaScanner,
-                                    ScaConfigurationOverrider scaConfigOverrider, ScaProperties scaProperties) {
+                                    ScaConfigurationOverrider scaConfigOverrider, ScaProperties scaProperties, CxProperties cxProperties) {
         super(flowProperties, scaScanner, scaConfigOverrider);
         this.scaProperties = scaProperties;
-        this.scaClientHelper = new ScaClientHelper(createRestClientConfig(scaProperties, PROJECT_NAME), log, scaProperties);
+        this.cxProperties = cxProperties;
+        this.scaClientHelper = new ScaClientHelper(createRestClientConfig(scaProperties, PROJECT_NAME), log, scaProperties,cxProperties);
     }
 
     @Before("@SCA_Policy_Management")
