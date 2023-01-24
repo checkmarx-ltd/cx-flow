@@ -8,6 +8,7 @@ import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.RestClientConfig;
 import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.ScanResults;
@@ -39,13 +40,15 @@ public class SCAScanner extends AbstractASTScanner {
 
     private final ScaProperties scaProperties;
     private final CxRepoFileHelper cxRepoFileHelper;
+    private final CxProperties cxProperties;
     @Autowired
     ScaScanner scaScannerClient;
 
     public SCAScanner(ScaScanner scaClient, FlowProperties flowProperties, BugTrackerEventTrigger bugTrackerEventTrigger,
-                      ScaProperties scaProperties,ResultsService resultsService) {
+                      ScaProperties scaProperties, ResultsService resultsService, CxProperties cxProperties) {
         super(scaClient, flowProperties, ScaProperties.CONFIG_PREFIX, bugTrackerEventTrigger,resultsService);
         this.scaProperties = scaProperties;
+        this.cxProperties = cxProperties;
         this.cxRepoFileHelper = new CxRepoFileHelper();
     }
 
@@ -75,7 +78,7 @@ public class SCAScanner extends AbstractASTScanner {
 
             restClientConfig=scaScannerClient.getScanConfig(sdkScanParams);
 
-            iScanClientHelper=new ScaClientHelper(restClientConfig,log,scaProperties);
+            iScanClientHelper=new ScaClientHelper(restClientConfig,log,scaProperties,cxProperties);
             ScanResults results =iScanClientHelper.getReportContent(file, scanRequest.getFilter());
             resultsService.processResults(scanRequest, results, scanDetails);
             if (flowProperties.isBreakBuild() && results != null && results.getXIssues() != null && !results.getXIssues().isEmpty()) {
