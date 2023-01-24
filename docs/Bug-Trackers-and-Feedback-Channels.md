@@ -264,10 +264,10 @@ Jira tickets can be assigned to a user when they are created. This can be achiev
 
 ``` 
 #Example for cloud
-http​&#65279;://companyname.checkmarx.com?assignee=someUsersEmail@&#65279;xyz.com
+http://companyname.checkmarx.com?assignee=someUsersEmail@xyz.com
 
 #Example for on-prim 
-http​&#65279;://companyname.checkmarx.com?assignee=someUsersName 
+http://companyname.checkmarx.com?assignee=someUsersName 
 ```  
 * As CLI Parameter - The CLi parameter --assignee can be used to assign the Jira ticket when they are created. This parameter can be used for scan, project , batch modes
 ``` 
