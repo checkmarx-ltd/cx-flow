@@ -330,38 +330,70 @@ In order  to set Scan TimeOut for SCA, the configuration property should be adde
 
 ## <a name="scaResolver">SCA Resolver</a>
 
-SCA Resolver is an on-prem utility that enables you to resolve and extract dependencies and fingerprints from your source code and send them to the Checkmarx SCA cloud platform for risk analysis.
-Refer to [Checkmarx SCA Resolver](https://checkmarx.com/resource/documents/en/34965-19196-checkmarx-sca-resolver.html) page for more information.
+The Checkmarx SCA Resolver is an on-premises utility that allows you to extract dependencies and fingerprints from your source code and send them to the Checkmarx SCA cloud platform for risk analysis.Refer to [Checkmarx SCA Resolver](https://checkmarx.com/resource/documents/en/34965-19196-checkmarx-sca-resolver.html) page for more information.
 
-In Cx-Flow, the SCA Resolver functions in offline mode. The mandatory SCA Resolver parameters (-s ,-r, -n) are not necessary because Cx-Flow will supply all necessary information.
+The SCA Resolver functions in offline mode when used in conjunction with Cx-Flow and the mandatory parameters (-s ,-r, -n) are not required as Cx-Flow supplies all necessary information.
 
-**The prerequisites for SCA Resolver**
+**Prerequisites**
 
-* Download and install SCA Resolver for appropriate OS. see [SCA Resolver Download](https://checkmarx.com/resource/documents/en/34965-19197-checkmarx-sca-resolver-download-and-installation.html).
-* SCA Resolver requires dependency resolution utilities to be installed, and the project to be in a buildable state. For a list of requirements, see [Package Managers Support in SCA Resolver](https://checkmarx.com/resource/documents/en/34965-19198-installing-supported-package-managers-for-resolver.html).
+* Download and install the SCA Resolver for the appropriate operating system. [SCA Resolver Download](https://checkmarx.com/resource/documents/en/34965-19197-checkmarx-sca-resolver-download-and-installation.html).
 
-**Note:** SCA Resolver does not need to downloaded if using Docker. The SCA Resolver will be in the /app directory of the Docker image.
+* The SCA Resolver requires dependency resolution utilities to be installed and the project to be in a buildable state. For a list of requirements, see [Package Managers Support in SCA Resolver](https://checkmarx.com/resource/documents/en/34965-19198-installing-supported-package-managers-for-resolver.html).
 
-In order to enable Sca Resolver in Cx-Flow, the configuration property should be added underneath the sca configuration section:
+* **Note:** The SCA Resolver does not need to be downloaded if using Docker. The SCA Resolver will be located in the /app directory of the Docker image.
+  
+
+
+### Enabling the SCA Resolver in Cx-Flow:
+
+Please add the following configuration property underneath the "sca" configuration section:
 ```
 sca:
   enable-sca-resolver : true
 ```
-When docker is not being used, the path for the SCA Resolver must be configured using the following configuration property.
+If not using Docker, the path to the SCA Resolver must be configured using the following configuration property:
 ```
-  path-to-sca-resolver :"Path for Sca Resolver"
+path-to-sca-resolver : "Path for Sca Resolver"
 ```
-Cx-Flow also honors all the additional parameters of SCA Resolver which can be configured using below configuration property. This property is optional.
+### SCA Resolver Additional Parameters Configuration
+
+Cx-Flow also supports additional parameters of SCA Resolver which can be configured using the following optional configuration property:
 ```
-  // Sample Example
-  sca-resolver-add-parameters : " -e *.ext1,*filename.ext2 --log-level Debug --report-type Risk "
+sca-resolver-add-parameters :
+  log-level : Debug
+  e : "*.ext1"
+  custom-parameter : "--gradle-parameters='USERNAME=abc PASSWORD=cba'"
+```
+The name of the additional parameter argument is reflected in the value on the left side. The value for argument is shown in the value to the right. Refer to [List of SCA Resolver Additional Parameters](https://checkmarx.com/resource/documents/en/34965-132888-checkmarx-sca-resolver-configuration-arguments.html).
+**Note:** (-- or - is not to be added in argument name)
+
+Add the custom parameter to the left and the entire argument string to the right to add custom parameters to the SCA Resolver. As mentioned below
+```
+sca-resolver-add-parameters :
+  custom-parameter : "--gradle-parameters='USERNAME=abc PASSWORD=cba'"
 ```
 
-The following configuration is needed to enable the exploitable path in SCA Resolver.
-```
-sca-resolver-add-parameters : "--cxuser SASTUsername --cxpassword SASTPassword --cxprojectname ProjectNameInSAST --cxserver SASTServer --sast-result-path directoryPath"
-```
-Value of --cxprojectname can be overridden by config as code property. Please refer to [SCA Config as Code](#configurationascode) and [Config as Code](https://github.com/checkmarx-ltd/cx-flow/wiki/Config-As-Code)  chapter.
+### Enable exploitable path Configuration
 
-SCA Resolver logs are viewable when the log level is set to debug for Cx-Flow.
+To enable the exploitable path in the SCA Resolver, the following configuration is needed:
+
+```
+enable-exploitable-path : true
+```
+**Prerequisites for exploitable path**
+* Provide Checkmarx details in Application.yml file Refer to [Configuration](https://github.com/checkmarx-ltd/cx-flow/wiki/Configuration#main) chapter.
+* Atleast one SAST Scan need to performed for project.
+
+### Project name override Configuration
+To override the project name in the SCA Resolver, the following configuration property can be used:
+```
+sca-resolver-override-project-name : <ProjectNameToOverride>
+
+```
+Value of --cxprojectname can also be overridden by config as code property. Please refer to [SCA Config as Code](#configurationascode) and [Config as Code](https://github.com/checkmarx-ltd/cx-flow/wiki/Config-As-Code) chapter.
+
+The SCA Resolver logs can be viewed when the log level is set to Debug for Cx-Flow.
+
+
+
 
