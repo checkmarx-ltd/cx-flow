@@ -69,14 +69,19 @@ public class FieldSchema  {
 
     @JsonProperty("customId")
     public Long getCustomId() {
-        try {
-            Long longId = new Long(this.customId);
-            return longId;
-        }
-        catch (NumberFormatException e)
+        if(this.customId!=null)
         {
-            return 0l;
+            try {
+                Long longId = new Long(this.customId);
+                return longId;
+            }
+            catch (NumberFormatException e)
+            {
+                //default value
+                return 0l;
+            }
         }
+        return null;
     }
 
     @JsonProperty("customId")

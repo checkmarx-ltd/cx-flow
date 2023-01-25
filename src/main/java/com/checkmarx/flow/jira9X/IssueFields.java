@@ -91,17 +91,21 @@ public class IssueFields {
 
     @JsonProperty("autoCompleteUrl")
     public URI getAutoCompleteUrl() {
-        try {
-            URI tempUri = new URI(autoCompleteUrl);
-            return tempUri;
-        } catch (URISyntaxException e) {
+        if(autoCompleteUrl!=null)
+        {
             try {
-                return new URI("xyz@xyz.com");
-            } catch (URISyntaxException ex) {
-                throw new RuntimeException(ex);
+                URI tempUri = new URI(autoCompleteUrl);
+                return tempUri;
+            } catch (URISyntaxException e) {
+                try {
+                    //default value
+                    return new URI("xyz@xyz.com");
+                } catch (URISyntaxException ex) {
+                    throw new RuntimeException(ex);
+                }
             }
         }
-
+        return  null;
     }
 
     @JsonProperty("autoCompleteUrl")

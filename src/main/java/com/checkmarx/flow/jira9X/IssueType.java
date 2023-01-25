@@ -49,17 +49,22 @@ public class IssueType {
 
     @JsonProperty("self")
     public URI getSelf() {
-        URI myUri = null;
-        try {
-            myUri = new URI(this.self);
-        } catch (URISyntaxException e) {
+        if(this.self!=null)
+        {
             try {
-                return new URI("xyz@xyz.com");
-            } catch (URISyntaxException ex) {
-                throw new RuntimeException(ex);
+                URI myUri = new URI(this.self);
+                return myUri;
+            } catch (URISyntaxException e) {
+                try {
+                    //default value
+                    return new URI("xyz@xyz.com");
+                } catch (URISyntaxException ex) {
+                    throw new RuntimeException(ex);
+                }
             }
         }
-        return myUri;
+
+        return null;
     }
 
     @JsonProperty("self")
@@ -69,14 +74,19 @@ public class IssueType {
 
     @JsonProperty("id")
     public Long getId() {
-        try{
-            Long longId = new Long(this.id);
-            return longId;
-        }catch (NumberFormatException e)
+        if(this.id != null)
         {
-            return 0l;
-        }
+            try{
+                Long longId = new Long(this.id);
+                return longId;
+            }catch (NumberFormatException e)
+            {
+                //default value
+                return 0l;
+            }
 
+        }
+        return null;
     }
 
     @JsonProperty("id")
@@ -96,17 +106,22 @@ public class IssueType {
 
     @JsonProperty("iconUrl")
     public URI getIconUrl() {
-        URI icon = null;
-        try {
-            icon = new URI(iconUrl);
-        } catch (URISyntaxException e) {
+        if(this.iconUrl!=null)
+        {
             try {
-                return new URI("xyz@xyz.com");
-            } catch (URISyntaxException ex) {
-                throw new RuntimeException(ex);
+                URI  icon = new URI(iconUrl);
+                return icon;
+            } catch (URISyntaxException e) {
+                try {
+                    //default value
+                    return new URI("xyz@xyz.com");
+                } catch (URISyntaxException ex) {
+                    throw new RuntimeException(ex);
+                }
             }
         }
-        return icon;
+
+        return null;
     }
 
     @JsonProperty("iconUrl")

@@ -104,6 +104,7 @@ public class Project {
         }
         catch (NumberFormatException e)
         {
+            //default value
             return 0l;
         }
     }
@@ -238,6 +239,7 @@ public class Project {
                 try {
                     tempUri = new URI(tempStr);
                 } catch (URISyntaxException e) {
+                    //default value
                     return new HashMap<>();
                 }
                 stringURIMap.put(key,tempUri);
