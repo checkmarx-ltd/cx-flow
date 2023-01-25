@@ -98,15 +98,19 @@ public class Project {
 
     @JsonProperty("id")
     public Long getId() {
-        try {
-            Long longId = new Long(this.id);
-            return longId;
-        }
-        catch (NumberFormatException e)
+        if(this.id!=null)
         {
-            //default value
-            return 0l;
+            try {
+                Long longId = new Long(this.id);
+                return longId;
+            }
+            catch (NumberFormatException e)
+            {
+                //default value
+                return 0l;
+            }
         }
+        return null;
     }
 
     @JsonProperty("id")

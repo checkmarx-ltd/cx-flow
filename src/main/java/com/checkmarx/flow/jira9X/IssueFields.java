@@ -94,8 +94,8 @@ public class IssueFields {
         if(autoCompleteUrl!=null)
         {
             try {
-                URI tempUri = new URI(autoCompleteUrl);
-                return tempUri;
+                URI tempAutoCompleteUrl = new URI(autoCompleteUrl);
+                return tempAutoCompleteUrl;
             } catch (URISyntaxException e) {
                 try {
                     //default value

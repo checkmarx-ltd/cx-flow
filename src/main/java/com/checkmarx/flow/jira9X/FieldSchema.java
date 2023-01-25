@@ -72,8 +72,8 @@ public class FieldSchema  {
         if(this.customId!=null)
         {
             try {
-                Long longId = new Long(this.customId);
-                return longId;
+                Long custId = new Long(this.customId);
+                return custId;
             }
             catch (NumberFormatException e)
             {

@@ -52,8 +52,8 @@ public class IssueType {
         if(this.self!=null)
         {
             try {
-                URI myUri = new URI(this.self);
-                return myUri;
+                URI selfUri = new URI(this.self);
+                return selfUri;
             } catch (URISyntaxException e) {
                 try {
                     //default value
