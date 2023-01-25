@@ -45,7 +45,7 @@ public class IssueType {
     @JsonProperty("expand")
     private String expand;
     @JsonProperty("fields")
-    private Fields fields;
+    private Object fields;
 
     @JsonProperty("self")
     public URI getSelf() {
@@ -53,7 +53,11 @@ public class IssueType {
         try {
             myUri = new URI(this.self);
         } catch (URISyntaxException e) {
-            return null;
+            try {
+                return new URI("xyz@xyz.com");
+            } catch (URISyntaxException ex) {
+                throw new RuntimeException(ex);
+            }
         }
         return myUri;
     }
@@ -70,7 +74,7 @@ public class IssueType {
             return longId;
         }catch (NumberFormatException e)
         {
-            return null;
+            return 0l;
         }
 
     }
@@ -96,7 +100,11 @@ public class IssueType {
         try {
             icon = new URI(iconUrl);
         } catch (URISyntaxException e) {
-            return null;
+            try {
+                return new URI("xyz@xyz.com");
+            } catch (URISyntaxException ex) {
+                throw new RuntimeException(ex);
+            }
         }
         return icon;
     }

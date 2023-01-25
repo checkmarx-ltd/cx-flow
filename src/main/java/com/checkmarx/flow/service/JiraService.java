@@ -1220,23 +1220,29 @@ public class JiraService {
         {
             Set<com.checkmarx.flow.jira9X.StandardOperation> customSet =fields.getOperations();
             Set<StandardOperation> finalSet = new HashSet<>();
-            for(com.checkmarx.flow.jira9X.StandardOperation custom :customSet)
+            if(customSet!= null)
             {
-                switch (custom.toString()) {
-                    case "set":
-                        finalSet.add(StandardOperation.SET);
-                        break;
-                    case "add":
-                        finalSet.add(StandardOperation.ADD);
-                        break;
-                    case "remove":
-                        finalSet.add(StandardOperation.REMOVE);
-                        break;
-                    case "edit":
-                        finalSet.add(StandardOperation.EDIT);
-                        break;
+                for(com.checkmarx.flow.jira9X.StandardOperation custom :customSet)
+                {
+                    switch (custom.toString()) {
+                        case "set":
+                            finalSet.add(StandardOperation.SET);
+                            break;
+                        case "add":
+                            finalSet.add(StandardOperation.ADD);
+                            break;
+                        case "remove":
+                            finalSet.add(StandardOperation.REMOVE);
+                            break;
+                        case "edit":
+                            finalSet.add(StandardOperation.EDIT);
+                            break;
+                        default:
+                            break;
+                    }
                 }
             }
+
             com.checkmarx.flow.jira9X.FieldSchema customSchema = new com.checkmarx.flow.jira9X.FieldSchema();
             FieldSchema finalSchema = new FieldSchema(customSchema.getType(), customSchema.getItems(),customSchema.getSystem(),customSchema.getCustom(),customSchema.getCustomId());
             cimIssueFields.put(fields.getFieldId(),new CimFieldInfo(fields.getFieldId(),fields.getRequired(),fields.getName(),finalSchema,finalSet,fields.getAllowedValues(),fields.getAutoCompleteUrl()));

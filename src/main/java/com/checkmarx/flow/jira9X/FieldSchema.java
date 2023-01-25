@@ -25,7 +25,7 @@ public class FieldSchema  {
     @JsonProperty("custom")
     private String custom;
     @JsonProperty("customId")
-    private Long customId;
+    private Integer customId;
 
     @JsonProperty("type")
     public String getType() {
@@ -69,11 +69,18 @@ public class FieldSchema  {
 
     @JsonProperty("customId")
     public Long getCustomId() {
-        return customId;
+        try {
+            Long longId = new Long(this.customId);
+            return longId;
+        }
+        catch (NumberFormatException e)
+        {
+            return 0l;
+        }
     }
 
     @JsonProperty("customId")
-    public void setCustomId(Long customId) {
+    public void setCustomId(Integer customId) {
         this.customId = customId;
     }
 

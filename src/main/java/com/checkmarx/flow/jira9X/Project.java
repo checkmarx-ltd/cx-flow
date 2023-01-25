@@ -104,7 +104,7 @@ public class Project {
         }
         catch (NumberFormatException e)
         {
-            return null;
+            return 0l;
         }
     }
 
