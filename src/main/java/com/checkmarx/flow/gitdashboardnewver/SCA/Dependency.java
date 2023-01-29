@@ -52,6 +52,7 @@ public class Dependency {
     @Setter
     @JsonProperty("iid")
     @JsonPropertyDescription("ID that identifies the dependency in the scope of a dependency file.")
+    @Builder.Default
     private int iid=123;
     /**
      * Tells whether this is a direct, top-level dependency of the scanned project.
@@ -66,9 +67,8 @@ public class Dependency {
      */
     @JsonProperty("dependency_path")
     @JsonPropertyDescription("Ancestors of the dependency, starting from a direct project dependency, and ending with an immediate parent of the dependency. The dependency itself is excluded from the path. Direct dependencies have no path.")
+    @Builder.Default
     private List<com.checkmarx.flow.gitdashboardnewver.SCA.DependencyPath> dependencyPath = null;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * Provides information on the package where the vulnerability is located.
@@ -148,14 +148,5 @@ public class Dependency {
         this.dependencyPath = dependencyPath;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
 
 }

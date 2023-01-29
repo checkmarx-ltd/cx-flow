@@ -58,8 +58,6 @@ public class Identifier {
     @JsonProperty("value")
     @JsonPropertyDescription("Value of the identifier, for matching purpose.")
     private String value;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * for example, cve, cwe, osvdb, usn, or an analyzer-dependent type such as gemnasium).
@@ -139,14 +137,5 @@ public class Identifier {
         this.value = value;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
+   
 }

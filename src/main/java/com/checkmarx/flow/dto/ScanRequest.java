@@ -37,6 +37,7 @@ public class ScanRequest {
 
     @Getter
     @Setter
+    @Builder.Default
     private boolean branchProtectionEnabled= false;
 
     /**

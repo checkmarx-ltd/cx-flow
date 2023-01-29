@@ -27,7 +27,6 @@ public class Items {
     @JsonPropertyDescription("Each tracking type must declare its own type.")
     @Getter
     @Setter
-    @Builder.Default
     private List<Signature> signatures;
 
     @JsonProperty("file")
@@ -51,19 +50,8 @@ public class Items {
     private int start_line=0;
 
 
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
 
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
 
 }

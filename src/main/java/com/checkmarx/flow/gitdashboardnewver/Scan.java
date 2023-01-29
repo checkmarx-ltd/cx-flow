@@ -41,6 +41,7 @@ public class Scan {
     @JsonPropertyDescription("ISO8601 UTC value with format yyyy-mm-ddThh:mm:ss, representing when the scan finished.")
     private String endTime;
     @JsonProperty("messages")
+    @Builder.Default
     private List<Message> messages = null;
     /**
      * Object defining the analyzer used to perform the scan. Analyzers typically delegate to an underlying scanner to run the scan.
@@ -49,7 +50,6 @@ public class Scan {
     @JsonProperty("analyzer")
     @JsonPropertyDescription("Object defining the analyzer used to perform the scan. " +
             "Analyzers typically delegate to an underlying scanner to run the scan.")
-    @Builder.Default
     private Analyzer analyzer;
     /**
      * Object defining the scanner used to perform the scan.
@@ -58,7 +58,6 @@ public class Scan {
      */
     @JsonProperty("scanner")
     @JsonPropertyDescription("Object defining the scanner used to perform the scan.")
-    @Builder.Default
     private Scanner     scanner;
     /**
      * ISO8601 UTC value with format yyyy-mm-ddThh:mm:ss, representing when the scan started.
@@ -84,8 +83,6 @@ public class Scan {
     @JsonProperty("type")
     @JsonPropertyDescription("Type of the scan.")
     private Type type;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * ISO8601 UTC value with format yyyy-mm-ddThh:mm:ss, representing when the scan finished.
@@ -215,16 +212,7 @@ public class Scan {
         this.type = type;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
+  
 
     /**
      * Result of the scan.

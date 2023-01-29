@@ -66,6 +66,7 @@ public class SecurityDashboardNewVerSCA {
      */
     @JsonProperty("vulnerabilities")
     @JsonPropertyDescription("Array of vulnerability objects.")
+    @Builder.Default
     private List<com.checkmarx.flow.gitdashboardnewver.SCA.Vulnerability> vulnerabilities = null;
     /**
      * An array of objects containing information on available remediations, along with patch diffs to apply.
@@ -73,6 +74,7 @@ public class SecurityDashboardNewVerSCA {
      */
     @JsonProperty("remediations")
     @JsonPropertyDescription("An array of objects containing information on available remediations, along with patch diffs to apply.")
+    @Builder.Default
     private List<Remediation> remediations = null;
     /**
      * List of dependency files identified in the project.
@@ -81,9 +83,8 @@ public class SecurityDashboardNewVerSCA {
      */
     @JsonProperty("dependency_files")
     @JsonPropertyDescription("List of dependency files identified in the project.")
+    @Builder.Default
     private List<com.checkmarx.flow.gitdashboardnewver.SCA.DependencyFile> dependencyFiles = null;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     @JsonProperty("scan")
     public com.checkmarx.flow.gitdashboardnewver.SCA.Scan getScan() {
@@ -191,14 +192,5 @@ public class SecurityDashboardNewVerSCA {
         this.dependencyFiles = dependencyFiles;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
 
 }
