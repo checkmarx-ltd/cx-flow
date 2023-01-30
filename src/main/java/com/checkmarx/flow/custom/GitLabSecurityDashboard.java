@@ -4,8 +4,15 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitLabProperties;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaException;
-import com.checkmarx.flow.gitdashboardnewver.*;
+import com.checkmarx.flow.gitdashboardnewver.Flag;
 import com.checkmarx.flow.gitdashboardnewver.SCA.SecurityDashboardNewVerSCA;
+import com.checkmarx.flow.gitdashboardnewver.Scan;
+import com.checkmarx.flow.gitdashboardnewver.Scanner__1;
+import com.checkmarx.flow.gitdashboardnewver.SecurityDashboardNewVer;
+import com.checkmarx.flow.gitlabdashboardfifteen.sast.GitllabScgemaFifteen;
+import com.checkmarx.flow.gitlabdashboardfifteen.sast.Items;
+import com.checkmarx.flow.gitlabdashboardfifteen.sca.DependencyFile;
+import com.checkmarx.flow.gitlabdashboardfifteen.sca.SCADashboard;
 import com.checkmarx.flow.service.FilenameFormatter;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
@@ -20,9 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
-import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.ParseException;
@@ -54,8 +59,10 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
             fileInit(request, results, properties.getSastFilePath(), filenameFormatter, log);
             if(properties.getGitlabdashboardversion().equalsIgnoreCase("2.0")){
                 getSastResultsDashboard(request,results);
-            }else{
+            }else if (properties.getGitlabdashboardversion().equalsIgnoreCase("14.1.2")){
                 getSastResultsDashboardNewVersion(request,results);
+            }else{
+                getSastResultsDashboardNewVersionFifteen(request,results);
             }
 
         }
@@ -64,9 +71,10 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
             fileInit(request, results, properties.getScaFilePath(), filenameFormatter, log);
             if(properties.getGitlabdashboardversion().equalsIgnoreCase("2.0")) {
                 getScaResultsDashboard(request, results);
-            }else{
+            }else if (properties.getGitlabdashboardversion().equalsIgnoreCase("14.1.2")){
                 getScaResultsDashboardNewVer(request, results);
-
+            }else{
+                getScaResultsDashboardNewVerFifteen(request, results);
             }
 
         }
@@ -197,22 +205,128 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
         writeJsonOutput(request, report, log);
     }
 
+    private void getScaResultsDashboardNewVerFifteen(ScanRequest request, ScanResults results) throws MachinaException {
+
+        List<com.checkmarx.flow.gitlabdashboardfifteen.sca.DependencyFile> dependencyFilesLst= new ArrayList<>();
+        List<com.checkmarx.flow.gitlabdashboardfifteen.sca.Vulnerability> vulns = new ArrayList<>();
+        com.checkmarx.flow.gitlabdashboardfifteen.sca.Scanner scanner =
+        com.checkmarx.flow.gitlabdashboardfifteen.sca.Scanner.builder().id("Checkmarx-SCA").name("Checkmarx-SCA").build();
+        List<Finding> findings = results.getScaResults().getFindings();
+        List<Package> packages = new ArrayList<>(results.getScaResults()
+                .getPackages());
+        Map<String, Package> map = new HashMap<>();
+        for (Package p : packages) map.put(p.getId(), p);
+        for (Finding finding:findings){
+            // for each finding, get the associated package list.
+            // for each object of the associated list, check the occurences of locations
+            // if multiple locations exist, construct multiple objects.
+            // if only single location exist, construct single object
+            Package indPackage = map.get(finding.getPackageId());
+
+
+            for(String loc : indPackage.getLocations()) {
+                vulns.add(com.checkmarx.flow.gitlabdashboardfifteen.sca.Vulnerability.builder()
+                        .id(UUID.nameUUIDFromBytes(finding.getPackageId().concat("@").concat(loc).concat(":").concat(finding.getCveName()).getBytes()).toString())
+                       // .category("dependency_scanning")
+                        .name(finding.getPackageId().concat("@").concat(loc).concat(":").concat(finding.getCveName()))
+                       // .message(finding.getPackageId().concat("@").concat(loc).concat(":").concat(finding.getCveName()))
+                        .description(finding.getDescription())
+                       // .cve(finding.getCveName())
+                        .severity(com.checkmarx.flow.gitlabdashboardfifteen.sca.Vulnerability.Severity.valueOf(String.valueOf(finding.getSeverity())))
+                     //   .confidence(com.checkmarx.flow.gitdashboardnewver.SCA.Vulnerability.Confidence.valueOf(String.valueOf(finding.getSeverity())))
+                        .solution(finding.getFixResolutionText())
+
+                     //   .scanner(scanner)
+                        .identifiers(getScaIdentifiersNewVerFifteen(results.getScaResults(),finding))
+                        .links(getLinksSCANewVerFifteen(finding))
+                        .tracking(com.checkmarx.flow.gitlabdashboardfifteen.sca.Tracking.builder()
+                        .lstItems(getItemsScaFifteen(finding.getCveName()))
+                                .build())
+
+                        .flags(getSCAFlagsNewVerFifteen(finding))
+                        .location(com.checkmarx.flow.gitlabdashboardfifteen.sca.Location.builder().file(loc)
+                                .dependency(com.checkmarx.flow.gitlabdashboardfifteen.sca.Dependency.builder()
+                                        .dependencyPath(findDependencyPathFifteen(indPackage.getDependencyPaths()))
+                                        .iid(123.0)
+                                        .direct(indPackage.isIsDirectDependency())
+                                        ._package(com.checkmarx.flow.gitlabdashboardfifteen.sca.Package.builder().name(finding.getPackageId()).build())
+                                        .version(finding.getPackageId().split("-")[finding.getPackageId().
+                                                split("-").length-1]).build()).build())
+                        .build());
+            }
+            dependencyFilesLst.add(DependencyFile.builder().dependencies(findObjectDependencyFifteen(packages)).path(indPackage.getPackageRepository()).packageManager(indPackage.getName()).build());
+        }
+        SCADashboard report  = SCADashboard.builder()
+                .dependencyFiles(dependencyFilesLst)
+                .version("15.0.4")
+                .vulnerabilities(vulns)
+                .scan(com.checkmarx.flow.gitlabdashboardfifteen.sca.Scan.builder()
+                        .type(com.checkmarx.flow.gitlabdashboardfifteen.sca.Scan.Type.valueOf("DEPENDENCY_SCANNING"))
+                        .status(com.checkmarx.flow.gitlabdashboardfifteen.sca.Scan.Status.valueOf("SUCCESS"))
+                        .analyzer(com.checkmarx.flow.gitlabdashboardfifteen.sca.Analyzer.builder()
+                                .name("SCA-Checkmarx")
+                                .vendor(
+                                com.checkmarx.flow.gitlabdashboardfifteen.sca.Vendor.builder().build()
+                        ).build())
+
+                        .scanner((com.checkmarx.flow.gitlabdashboardfifteen.sca.Scanner.builder()
+                                .id("1")
+                                .name("SCA-Checkmarx")
+                                .version("15.0.4")
+                                .vendor(com.checkmarx.flow.gitlabdashboardfifteen.sca.Vendor__1.builder().build())
+                                .build()))
+                        .build())
+                .schema("https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/parsers/security/validators/schemas/15.0.4/dependency-scanning-report-format.json")
+                .build();
+
+        writeJsonOutput(request, report, log);
+    }
+
 
     public static List<com.checkmarx.flow.gitdashboardnewver.SCA.DependencyPath> findDependencyPath(
             List<com.checkmarx.sdk.dto.sca.report.DependencyPath> dependencyPath ){
         List<com.checkmarx.flow.gitdashboardnewver.SCA.DependencyPath> dependencyPathList = new ArrayList<>();
-        dependencyPath.forEach((k)->{
-            k.forEach((v)->{
-                dependencyPathList.add(
-                        com.checkmarx.flow.gitdashboardnewver.SCA.DependencyPath.builder()
+        dependencyPath.forEach((k)-> k.forEach((v)-> dependencyPathList.add(
+                com.checkmarx.flow.gitdashboardnewver.SCA.DependencyPath.builder()
 
-                                .name(v.getName())
-                                .version(v.getVersion())
-                                .isDevelopment(String.valueOf(v.isDevelopment()))
-                                .isResolved(String.valueOf(v.isResolved())).build());
+                        .name(v.getName())
+                        .version(v.getVersion())
+                        .isDevelopment(String.valueOf(v.isDevelopment()))
+                        .isResolved(String.valueOf(v.isResolved())).build())));
+        return dependencyPathList;
+    }
 
-            });
-        });
+    public static List<com.checkmarx.flow.gitlabdashboardfifteen.sca.Dependency__1> findObjectDependencyFifteen(
+            List<com.checkmarx.sdk.dto.sca.report.Package> dependencyPath ){
+        List<com.checkmarx.flow.gitlabdashboardfifteen.sca.Dependency__1> dependencyPathList = new ArrayList<>();
+        dependencyPath.forEach((k)-> dependencyPathList.add(
+                com.checkmarx.flow.gitlabdashboardfifteen.sca.Dependency__1.builder()
+                        ._package(com.checkmarx.flow.gitlabdashboardfifteen.sca.Package__1.builder().name(k.getName()).build())
+                        .version(k.getVersion())
+                        .iid(123.0)
+                        .direct(k.isIsDirectDependency())
+                        .dependencyPath(findeachDependencyPath(k.getDependencyPaths()))
+                        .build()));
+        return dependencyPathList;
+    }
+
+    public static List<com.checkmarx.flow.gitlabdashboardfifteen.sca.DependencyPath__1> findeachDependencyPath(
+            List<com.checkmarx.sdk.dto.sca.report.DependencyPath> dependencyPath ){
+        List<com.checkmarx.flow.gitlabdashboardfifteen.sca.DependencyPath__1> dependencyPathList = new ArrayList<>();
+        dependencyPath.forEach((k)-> k.forEach((v)-> dependencyPathList.add(
+                com.checkmarx.flow.gitlabdashboardfifteen.sca.DependencyPath__1.builder()
+                        .build())));
+        return dependencyPathList;
+    }
+
+    public static List<com.checkmarx.flow.gitlabdashboardfifteen.sca.DependencyPath> findDependencyPathFifteen(
+            List<com.checkmarx.sdk.dto.sca.report.DependencyPath> dependencyPath ){
+        List<com.checkmarx.flow.gitlabdashboardfifteen.sca.DependencyPath> dependencyPathList = new ArrayList<>();
+        dependencyPath.forEach((k)-> k.forEach((v)->{
+            dependencyPathList.add(
+                    com.checkmarx.flow.gitlabdashboardfifteen.sca.DependencyPath.builder().build());
+
+        }));
         return dependencyPathList;
     }
 
@@ -278,6 +392,35 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
                                 .name(finding.getCveName() != null ? finding.getCveName().concat("(").concat(reference).concat(")") : reference)
                                 .value(finding.getCveName() != null ? finding.getCveName().concat("(").concat(reference).concat(")") : reference)
                                 .url(subUrl)
+                                .build()
+                );
+            }
+        }
+
+
+        return identifiers;
+    }
+
+
+    private List<com.checkmarx.flow.gitlabdashboardfifteen.sca.Identifier> getScaIdentifiersNewVerFifteen(SCAResults results, Finding finding)  {
+        List<com.checkmarx.flow.gitlabdashboardfifteen.sca.Identifier> identifiers = new ArrayList<>();
+
+        identifiers.add(
+                com.checkmarx.flow.gitlabdashboardfifteen.sca.Identifier.builder()
+                        .type("checkmarx_finding")
+                        .name(CHECKMARX.concat("-").concat(finding.getPackageId()))
+                        .value(CHECKMARX.concat("-").concat(finding.getPackageId()))
+                        .url(results.getWebReportLink())
+                        .build()
+        );
+        if (!finding.getReferences().isEmpty()) {
+            for(String reference:finding.getReferences()){
+                identifiers.add(
+                        com.checkmarx.flow.gitlabdashboardfifteen.sca.Identifier.builder()
+                                .type("cve")
+                                .name(finding.getCveName() != null ? finding.getCveName().concat("(").concat(reference).concat(")") : reference)
+                                .value(finding.getCveName() != null ? finding.getCveName().concat("(").concat(reference).concat(")") : reference)
+                                .url(reference)
                                 .build()
                 );
             }
@@ -389,6 +532,75 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
 
     }
 
+
+    //Adding code for version 15.0.4
+    private void getSastResultsDashboardNewVersionFifteen(ScanRequest request, ScanResults results) throws MachinaException {
+
+        List<com.checkmarx.flow.gitlabdashboardfifteen.sast.Vulnerability> vulns = new ArrayList<>();
+        Scanner__1 scanner = Scanner__1.builder().id("checkmarx-sast").name("checkmarx-sast").build();
+        for(ScanResults.XIssue issue : results.getXIssues()) {
+            if(issue.getDetails() != null) {
+                issue.getDetails().forEach((k, v) -> {
+
+                    com.checkmarx.flow.gitlabdashboardfifteen.sast.Vulnerability vuln= com.checkmarx.flow.gitlabdashboardfifteen.sast.Vulnerability.builder()
+                            .id(issue.getVulnerability().concat(":").concat(issue.getFilename()).concat(":").concat(k.toString()))
+                           //.category("sast-Checkmarx")
+                            .name(issue.getVulnerability())
+                           // .message(String.format(ISSUE_FORMAT, issue.getVulnerability(), issue.getFilename(), k))
+                            .description(issue.getDescription())
+                           //.cve(issue.getVulnerability().concat(":").concat(issue.getFilename()).concat(":").concat(k.toString()))
+                            .severity(com.checkmarx.flow.gitlabdashboardfifteen.sast.Vulnerability.Severity.valueOf(issue.getSeverity()))
+                           // .confidence(com.checkmarx.flow.gitdashboardnewver.Vulnerability.Confidence.valueOf(issue.getSeverity()))//Need To add as per Enum
+                            .solution(issue.getLink())
+                           //.scanner(scanner)//__1 wala scanner use karenge
+                            .identifiers(getIdentifiersNewVerFifteen(issue,k))//Identifiers seems correct but need to add Link and Description flags
+                            .links(getLinksNewVerFifteen(issue))//New Added
+                            //.details(issue.getDetails()) //Yet To Add
+                            .tracking(com.checkmarx.flow.gitlabdashboardfifteen.sast.Tracking.builder()
+                                    .lstItems(getItemsFifteen(issue))
+                                    .build())
+                            .flags(getFlagsNewVerFifteen(issue))
+                            .location(
+                                    com.checkmarx.flow.gitlabdashboardfifteen.sast.Location.builder()
+                                            .file(issue.getFilename())
+                                            .startLine(k)
+                                            .endLine(k)
+                                            ._class(issue.getFilename())
+                                            .build()
+                            )
+                            .build();
+                    vulns.add(vuln);
+                });
+            }
+        }
+        GitllabScgemaFifteen report  = GitllabScgemaFifteen.builder()
+                .vulnerabilities(vulns)
+                .version("15.0.4")
+                .scan(com.checkmarx.flow.gitlabdashboardfifteen.sast.Scan.builder()
+                        .startTime(calculateEndTime(String.valueOf(results.getAdditionalDetails().get("scanStartDate")),"0"))
+                        .endTime(calculateEndTime(results.getReportCreationTime(),results.getScanTime()))
+                        .analyzer(com.checkmarx.flow.gitlabdashboardfifteen.sast.Analyzer.builder()
+                                .id(results.getProjectId())
+                                .name("sast-Checkmarx")
+                                .vendor(com.checkmarx.flow.gitlabdashboardfifteen.sast.Vendor.builder().build())
+                                .version(results.getVersion()).
+                                build())
+                        .scanner(com.checkmarx.flow.gitlabdashboardfifteen.sast.Scanner.builder()
+                                .id(results.getProjectId())
+                                .name("sast-Checkmarx")
+                                .vendor(com.checkmarx.flow.gitlabdashboardfifteen.sast.Vendor__1.builder().build())
+                                .version(results.getVersion()).build())
+                        .status(com.checkmarx.flow.gitlabdashboardfifteen.sast.Scan.Status.valueOf("SUCCESS"))
+                        .type(com.checkmarx.flow.gitlabdashboardfifteen.sast.Scan.Type.SAST)
+                        .build())
+                .build();
+
+        writeJsonOutput(request, report, log);
+
+    }
+    //End
+
+
     public String calculateEndTime(String ReportCreationTime,String ScanTime){
         SimpleDateFormat sdf = new SimpleDateFormat("EEEE, MMM dd, yyyy HH:mm:ss a");
         Date date = null;
@@ -441,11 +653,28 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
         return Items;
     }
 
+    private List<com.checkmarx.flow.gitlabdashboardfifteen.sast.Items> getItemsFifteen(ScanResults.XIssue issue){
+        List<com.checkmarx.flow.gitlabdashboardfifteen.sast.Items> Items = new ArrayList<>();
+        Items.add(com.checkmarx.flow.gitlabdashboardfifteen.sast.Items.builder()
+                .signatures(getSignatureFifteen())
+                .file(issue.getFilename()).build());
+
+        return Items;
+    }
+
 
     private List<com.checkmarx.flow.gitdashboardnewver.SCA.Items> getItemsSca(String name){
         List<com.checkmarx.flow.gitdashboardnewver.SCA.Items> Items = new ArrayList<>();
         Items.add(com.checkmarx.flow.gitdashboardnewver.SCA.Items.builder()
                 .signatures(getSignatureSca())
+                .file(name).build());
+
+        return Items;
+    }
+    private List<com.checkmarx.flow.gitlabdashboardfifteen.sca.Items> getItemsScaFifteen(String name){
+        List<com.checkmarx.flow.gitlabdashboardfifteen.sca.Items> Items = new ArrayList<>();
+        Items.add(com.checkmarx.flow.gitlabdashboardfifteen.sca.Items.builder()
+                .signatures(getSignatureScaFifteen())
                 .file(name).build());
 
         return Items;
@@ -458,10 +687,22 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
         return Signature;
     }
 
+    private List<com.checkmarx.flow.gitlabdashboardfifteen.sca.Signature> getSignatureScaFifteen(){
+        List<com.checkmarx.flow.gitlabdashboardfifteen.sca.Signature> Signature = new ArrayList<>();
+        Signature.add(com.checkmarx.flow.gitlabdashboardfifteen.sca.Signature.builder().build());
+        return Signature;
+    }
+
 
     private List<com.checkmarx.flow.gitdashboardnewver.Signature> getSignature(){
         List<com.checkmarx.flow.gitdashboardnewver.Signature> Signature = new ArrayList<>();
         Signature.add(com.checkmarx.flow.gitdashboardnewver.Signature.builder().build());
+        return Signature;
+    }
+
+    private List<com.checkmarx.flow.gitlabdashboardfifteen.sast.Signature> getSignatureFifteen(){
+        List<com.checkmarx.flow.gitlabdashboardfifteen.sast.Signature> Signature = new ArrayList<>();
+        Signature.add(com.checkmarx.flow.gitlabdashboardfifteen.sast.Signature.builder().build());
         return Signature;
     }
 
@@ -519,6 +760,33 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
         return identifiers;
     }
 
+    private List<com.checkmarx.flow.gitlabdashboardfifteen.sast.Identifier> getIdentifiersNewVerFifteen(ScanResults.XIssue issue,Integer k){
+        List<com.checkmarx.flow.gitlabdashboardfifteen.sast.Identifier> identifiers = new ArrayList<>();
+
+        identifiers.add(
+                com.checkmarx.flow.gitlabdashboardfifteen.sast.Identifier.builder()
+                        .type("checkmarx_finding")
+                        .name("Checkmarx-".concat(issue.getVulnerability()))
+                        .value(issue.getVulnerability().concat(":").concat(issue.getFilename()).concat(":").concat(k.toString()))
+                        .url(issue.getLink())
+                        .build()
+        );
+        if (!ScanUtils.empty(flowProperties.getMitreUrl())) {
+            identifiers.add(
+                    com.checkmarx.flow.gitlabdashboardfifteen.sast.Identifier.builder()
+                            .type("cwe")
+                            .name("CWE-".concat(issue.getCwe()))
+                            .value(issue.getCwe())
+                            .url(URI.create(String.format(flowProperties.getMitreUrl(), issue.getCwe())).toString())
+                            .build()
+            );
+        }else {
+            log.info("mitre-url property is empty");
+        }
+
+        return identifiers;
+    }
+
     private List<com.checkmarx.flow.gitdashboardnewver.Link> getLinksNewVer(ScanResults.XIssue issue){
         List<com.checkmarx.flow.gitdashboardnewver.Link> links = new ArrayList<>();
         issue.getAdditionalDetails().forEach((k, v) -> {
@@ -528,10 +796,22 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
                                 .name("Checkmarx-".concat(k))
                                 .url(URI.create(String.valueOf(v)))
                                 .build());
-            }else{
-
             }
 
+        });
+        return links;
+    }
+
+    private List<com.checkmarx.flow.gitlabdashboardfifteen.sast.Link> getLinksNewVerFifteen(ScanResults.XIssue issue){
+        List<com.checkmarx.flow.gitlabdashboardfifteen.sast.Link> links = new ArrayList<>();
+        issue.getAdditionalDetails().forEach((k, v) -> {
+            if(chckkingURI(String.valueOf(v))){
+                links.add(
+                        com.checkmarx.flow.gitlabdashboardfifteen.sast.Link.builder()
+                                .name("Checkmarx-".concat(k))
+                                .url(String.valueOf(v))
+                                .build());
+            }
         });
         return links;
     }
@@ -558,6 +838,19 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
         return links;
     }
 
+    private List<com.checkmarx.flow.gitlabdashboardfifteen.sca.Link> getLinksSCANewVerFifteen(Finding refrences){
+        List<com.checkmarx.flow.gitlabdashboardfifteen.sca.Link> links = new ArrayList<>();
+        refrences.getReferences().forEach((k) -> {
+            links.add(
+                    com.checkmarx.flow.gitlabdashboardfifteen.sca.Link.builder()
+                            .name(refrences.getCveName() != null ? refrences.getCveName().concat("(").concat(k).concat(")") : k)
+                            .url(k)
+                            .build());
+
+        });
+        return links;
+    }
+
 
 
     private List<com.checkmarx.flow.gitdashboardnewver.Flag> getFlagsNewVer(ScanResults.XIssue issue){
@@ -574,6 +867,21 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
         return flags;
     }
 
+
+    private List<com.checkmarx.flow.gitlabdashboardfifteen.sast.Flag> getFlagsNewVerFifteen(ScanResults.XIssue issue){
+        List<com.checkmarx.flow.gitlabdashboardfifteen.sast.Flag> flags = new ArrayList<>();
+
+
+        flags.add(
+                com.checkmarx.flow.gitlabdashboardfifteen.sast.Flag.builder()
+                        .type(com.checkmarx.flow.gitlabdashboardfifteen.sast.Flag.Type.valueOf("FLAGGED_AS_LIKELY_FALSE_POSITIVE"))
+                        .origin("Cx-flow sast")
+                        .description(issue.getDescription()).build());
+
+
+        return flags;
+    }
+
     private List<com.checkmarx.flow.gitdashboardnewver.SCA.Flag> getSCAFlagsNewVer(Finding finding){
         List<com.checkmarx.flow.gitdashboardnewver.SCA.Flag> flags = new ArrayList<>();
 
@@ -582,6 +890,18 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
         flags.add(
                 com.checkmarx.flow.gitdashboardnewver.SCA.Flag.builder()
                         .type(com.checkmarx.flow.gitdashboardnewver.SCA.Flag.Type.valueOf("FLAGGED_AS_LIKELY_FALSE_POSITIVE"))
+                        .origin("SCA")
+                        .description(finding.getDescription()).build());
+
+
+        return flags;
+    }
+
+    private List<com.checkmarx.flow.gitlabdashboardfifteen.sca.Flag> getSCAFlagsNewVerFifteen(Finding finding){
+        List<com.checkmarx.flow.gitlabdashboardfifteen.sca.Flag> flags = new ArrayList<>();
+        flags.add(
+                com.checkmarx.flow.gitlabdashboardfifteen.sca.Flag.builder()
+                        .type(com.checkmarx.flow.gitlabdashboardfifteen.sca.Flag.Type.valueOf("FLAGGED_AS_LIKELY_FALSE_POSITIVE"))
                         .origin("SCA")
                         .description(finding.getDescription()).build());
 

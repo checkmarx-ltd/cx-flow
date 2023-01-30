@@ -26,7 +26,6 @@ public class Items {
     @JsonProperty("signatures")
     @Getter
     @Setter
-    @Builder.Default
     private List<com.checkmarx.flow.gitdashboardnewver.SCA.Signature> signatures;
 
     @JsonProperty("file")
@@ -50,17 +49,5 @@ public class Items {
     private int start_line=0;
 
 
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
-
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
 
 }

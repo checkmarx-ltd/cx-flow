@@ -76,10 +76,7 @@ public class Scanner {
      */
     @JsonProperty("vendor")
     @JsonPropertyDescription("The vendor/maintainer of the scanner.")
-    @Builder.Default
     private com.checkmarx.flow.gitdashboardnewver.SCA.Vendor__1 vendor;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * Unique id that identifies the scanner.
@@ -179,14 +176,5 @@ public class Scanner {
         this.vendor = vendor;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
 
 }

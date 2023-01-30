@@ -47,8 +47,6 @@ public class LocationSCA {
     @JsonProperty("dependency")
     @JsonPropertyDescription("Describes the dependency of a project where the vulnerability is located.")
     private com.checkmarx.flow.gitdashboardnewver.SCA.Dependency dependency;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * Path to the manifest or lock file where the dependency is declared (such as yarn.lock).
@@ -90,14 +88,5 @@ public class LocationSCA {
         this.dependency = dependency;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
 
 }

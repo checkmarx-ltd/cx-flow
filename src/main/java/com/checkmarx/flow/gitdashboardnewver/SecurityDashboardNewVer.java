@@ -37,7 +37,6 @@ import lombok.Data;
 public class SecurityDashboardNewVer {
 
     @JsonProperty("scan")
-    @Builder.Default
     private Scan scan;
     /**
      * URI pointing to the validating security report schema.
@@ -64,6 +63,7 @@ public class SecurityDashboardNewVer {
      */
     @JsonProperty("vulnerabilities")
     @JsonPropertyDescription("Array of vulnerability objects.")
+    @Builder.Default
     private List<Vulnerability> vulnerabilities = null;
     /**
      * An array of objects containing information on available remediations, along with patch diffs to apply.
@@ -71,9 +71,8 @@ public class SecurityDashboardNewVer {
      */
     @JsonProperty("remediations")
     @JsonPropertyDescription("An array of objects containing information on available remediations, along with patch diffs to apply.")
+    @Builder.Default
     private List<Remediation> remediations = null;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     @JsonProperty("scan")
     public Scan getScan() {
@@ -161,14 +160,5 @@ public class SecurityDashboardNewVer {
         this.remediations = remediations;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
+  
 }

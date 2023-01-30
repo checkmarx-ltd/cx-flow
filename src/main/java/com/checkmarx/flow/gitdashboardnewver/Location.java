@@ -67,8 +67,6 @@ public class Location {
     @JsonProperty("method")
     @JsonPropertyDescription("Provides the name of the method where the vulnerability is located.")
     private String method;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * Path to the file where the vulnerability is located.
@@ -160,14 +158,5 @@ public class Location {
         this.method = method;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
 
 }
