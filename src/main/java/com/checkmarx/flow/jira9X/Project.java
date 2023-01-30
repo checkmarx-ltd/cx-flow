@@ -98,14 +98,19 @@ public class Project {
 
     @JsonProperty("id")
     public Long getId() {
-        try {
-            Long longId = new Long(this.id);
-            return longId;
-        }
-        catch (NumberFormatException e)
+        if(this.id!=null)
         {
-            return null;
+            try {
+                Long longId = new Long(this.id);
+                return longId;
+            }
+            catch (NumberFormatException e)
+            {
+                //default value
+                return 0l;
+            }
         }
+        return null;
     }
 
     @JsonProperty("id")
@@ -238,6 +243,7 @@ public class Project {
                 try {
                     tempUri = new URI(tempStr);
                 } catch (URISyntaxException e) {
+                    //default value
                     return new HashMap<>();
                 }
                 stringURIMap.put(key,tempUri);

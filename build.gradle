@@ -1,6 +1,8 @@
 buildscript {
     ext {
-        CxSBSDK = "0.5.32"
+
+        CxSBSDK = "0.5.37"
+
         ConfigProviderVersion = "1.0.10"
         //cxVersion = "8.90.5"
         springBootVersion = '2.7.0'
@@ -108,7 +110,7 @@ dependencies {
     compile('commons-io:commons-io:2.8.0')
     compile('org.apache.commons:commons-lang3:3.12.0')
     compile('org.apache.commons:commons-collections4:4.4')
-    compile('org.json:json:20210307')
+    compile('org.json:json:20220320')
     compile('org.yaml:snakeyaml:1.33')
     compile('com.fasterxml.jackson.core:jackson-databind:2.14.0')
     compile('org.springframework.boot:spring-boot-starter-web-services'){
@@ -135,7 +137,7 @@ dependencies {
     compile("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersion}")
     compile("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${jacksonVersion}")
     compile("org.apache.httpcomponents:httpclient:4.5.13")
-    compile('org.codehaus.jettison:jettison:1.5.1')
+    compile('org.codehaus.jettison:jettison:1.5.3')
     compile("org.thymeleaf:thymeleaf-spring5:3.0.15.RELEASE")
     implementation 'ognl:ognl:3.1.29'
 
@@ -176,6 +178,7 @@ dependencies {
     testImplementation("com.github.java-json-tools:json-patch:1.11")
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:${junitVersion}")
     testImplementation 'org.mockito:mockito-core:4.11.0'
+
 	testCompile("net.bytebuddy:byte-buddy:1.12.9")  //Added due to Mockito Exception.Normally, Gradle should take care class path completion.
     compile("org.projectlombok:lombok:1.18.10")
     compile("ch.qos.logback:logback-classic:1.2.10"){

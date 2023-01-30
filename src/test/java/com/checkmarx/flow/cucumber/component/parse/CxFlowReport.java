@@ -54,7 +54,7 @@ public class CxFlowReport {
     }
 
     public String[] getSeverities() {
-        return report.findValues("severity")
+        return report.get("xissues").findValues("severity")
                 .stream()
                 .map(JsonNode::textValue)
                 .toArray(String[]::new);

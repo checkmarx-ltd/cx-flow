@@ -5,27 +5,22 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.cucumber.integration.sca_scanner.ScaCommonSteps;
 import com.checkmarx.flow.service.SCAScanner;
 import com.checkmarx.flow.service.ScaConfigurationOverrider;
-import com.checkmarx.sdk.config.RestClientConfig;
+import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.ScaProperties;
-import com.checkmarx.sdk.dto.RemoteRepositoryInfo;
-import com.checkmarx.sdk.dto.sca.ScaConfig;
 import com.checkmarx.sdk.dto.sca.Project;
 import com.checkmarx.sdk.exception.CxHTTPClientException;
 import com.checkmarx.sdk.utils.scanner.client.ScaClientHelper;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
-import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.HttpStatus;
 import org.junit.Assert;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.IOException;
-import java.rmi.Remote;
 import java.util.Collections;
 import java.util.List;
 
@@ -35,16 +30,18 @@ public class SCATeamsSteps extends ScaCommonSteps {
 
     private static final String PROJECT_NAME = "Team-Test-Project";
     private final ScaProperties scaProperties;
+    private final CxProperties cxProperties;
 
     private ScaClientHelper scaClientHelper;
     private String projectId;
     private int errorStatusCode;
 
     public SCATeamsSteps(FlowProperties flowProperties, SCAScanner scaScanner,
-                         ScaConfigurationOverrider scaConfigOverrider, ScaProperties scaProperties) {
+                         ScaConfigurationOverrider scaConfigOverrider, ScaProperties scaProperties, CxProperties cxProperties) {
         super(flowProperties, scaScanner, scaConfigOverrider);
         this.scaProperties = scaProperties;
-        this.scaClientHelper = new ScaClientHelper(createRestClientConfig(scaProperties, PROJECT_NAME), log, scaProperties);
+        this.cxProperties = cxProperties;
+        this.scaClientHelper = new ScaClientHelper(createRestClientConfig(scaProperties, PROJECT_NAME), log, scaProperties,cxProperties);
     }
 
     @After()

@@ -267,6 +267,9 @@ public class ConfigurationOverrider {
         override.map(CxConfig::getCustomFields).ifPresent(s -> request.setCxFields(s));
         override.map(CxConfig::getScanCustomFields).ifPresent(s -> request.setScanFields(s));
         override.map(CxConfig::getEmailNotifications).ifPresent(s -> request.setEmailNotifications(s));
+
+        override.map(CxConfig::getPostActionPostbackId).ifPresent(t -> request.setPostBackActionId(t));
+
         overrideUsingConfigProvider(override, overrideReport, request);
     }
 

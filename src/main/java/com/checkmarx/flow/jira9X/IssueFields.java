@@ -2,6 +2,8 @@
 package com.checkmarx.flow.jira9X;
 
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -36,7 +38,7 @@ public class IssueFields {
     @JsonProperty("fieldId")
     private String fieldId;
     @JsonProperty("autoCompleteUrl")
-    private URI autoCompleteUrl;
+    private String autoCompleteUrl;
     @JsonProperty("hasDefaultValue")
     private Boolean hasDefaultValue;
     @JsonProperty("operations")
@@ -45,7 +47,7 @@ public class IssueFields {
     private Iterable<Object> allowedValues = null;
 
     @JsonProperty("defaultValue")
-    private Map<String, URI> defaultValue;
+    private Object defaultValue;
 
     @JsonProperty("required")
     public Boolean getRequired() {
@@ -89,11 +91,25 @@ public class IssueFields {
 
     @JsonProperty("autoCompleteUrl")
     public URI getAutoCompleteUrl() {
-        return autoCompleteUrl;
+        if(autoCompleteUrl!=null)
+        {
+            try {
+                URI tempAutoCompleteUrl = new URI(autoCompleteUrl);
+                return tempAutoCompleteUrl;
+            } catch (URISyntaxException e) {
+                try {
+                    //default value
+                    return new URI("xyz@xyz.com");
+                } catch (URISyntaxException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        }
+        return  null;
     }
 
     @JsonProperty("autoCompleteUrl")
-    public void setAutoCompleteUrl(URI autoCompleteUrl) {
+    public void setAutoCompleteUrl(String autoCompleteUrl) {
         this.autoCompleteUrl = autoCompleteUrl;
     }
 
@@ -128,12 +144,12 @@ public class IssueFields {
     }
 
     @JsonProperty("defaultValue")
-    public Map<String, URI> getDefaultValue() {
+    public Object  getDefaultValue() {
         return defaultValue;
     }
 
     @JsonProperty("defaultValue")
-    public void setDefaultValue(Map<String, URI> defaultValue) {
+    public void setDefaultValue(Object  defaultValue) {
         this.defaultValue = defaultValue;
     }
 

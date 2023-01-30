@@ -101,6 +101,9 @@ public class ScanRequest {
     @Getter @Setter
     private String scannerApiSec;
 
+    @Getter @Setter
+    private String commentSAST;
+
     /**
      * 'Organization' here means the top-most level of project hierarchy.
      * E.g. if SCM supports several levels of hierarchy, path to the project may look like org1/suborg/my-project.
@@ -127,18 +130,15 @@ public class ScanRequest {
     private CxEmailNotifications emailNotifications;
 
     @Getter @Setter
+    private Integer postBackActionId;
+
+    @Getter @Setter
     private String zipExclude;
     @Getter @Setter
     private Integer scanId;
 
     @Getter @Setter
     private String modifiedProjectName;
-
-
-    @Getter @Setter
-    private String commentSAST;
-
-
 
     public ScanRequest(ScanRequest other) {
         this.namespace = other.namespace;
