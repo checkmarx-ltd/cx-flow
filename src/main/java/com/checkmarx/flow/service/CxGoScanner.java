@@ -9,6 +9,7 @@ import com.checkmarx.sdk.config.CxPropertiesBase;
 import com.checkmarx.sdk.service.scanner.GoScanner;
 import com.checkmarx.sdk.service.scanner.ILegacyClient;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -16,6 +17,7 @@ import java.util.List;
 
 @Service
 @Slf4j
+@Order(4)
 public class CxGoScanner extends AbstractVulnerabilityScanner {
 
     private final GoScanner cxGoClient;
