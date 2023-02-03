@@ -2,8 +2,8 @@
 * [CxSAST v9.0 .yml Example File](#ninedotzero)
 * [Postback Mode](#postback)
 * [Checkmarx Application Service Account](#cxserviceaccount)
-  * [How to create account in CxSAST](#accountCreation)
-  * [Roles required for CxFlow](#rolesForCxFlow)
+  * [How to create account in CxSAST](#accountcreation)
+  * [Roles required for CxFlow](#rolesforcxflow)
 
 ### <a name="nine">9.0 Configuration Changes</a>
 
@@ -234,11 +234,11 @@ If you restart CxFlow post-back-action mode should be enabled.
 
 ### <a name="cxserviceaccount">Checkmarx Application Service Account</a>
 
-#### <a name="accountCreation">How to create account in CxSAST</a>
+#### <a name="accountcreation">How to create account in CxSAST</a>
 * Access control -> Users -> Add user
 * The basic details of the user needs to be filled, followed by the team and then roles for the user.
 
-#### <a name="rolesForCxFlow">Roles required for CxFlow</a>
+#### <a name="rolesforcxflow">Roles required for CxFlow</a>
 CxFlow requires a SAST service account to log in to the SAST APIs to crawl scans. The service account has the following requirements:
 
 * It should be assigned at a team level that allows visibility to all projects that require crawling. Usually this is the /CxServer team but will depend on your team organization. Any projects assigned to teams above or at a sibling level of the service account's assigned team will not be visible to crawling requests.
