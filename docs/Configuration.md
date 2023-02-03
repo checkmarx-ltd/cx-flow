@@ -8,10 +8,10 @@
   * [Excluding Files from Zip Archive](#excludezip)
   * [Break build](#break)
   * [Override SAST project setting](#override)
-  * [Create Branched Project](#branchProject)
-  * [Scan Queuing and Scan Queuing Timeout](#scanQueuing)
-  * [Scan Timeout and Scan polling](#scanTimeoutAndscanPolling)
-  * [Report Timeout and Report polling](#reportTimeoutAndreportPolling)
+  * [Create Branched Project](#branchproject)
+  * [Scan Queuing and Scan Queuing Timeout](#scanqueuing)
+  * [Scan Timeout and Scan polling](#scantimeoutandscanpolling)
+  * [Report Timeout and Report polling](#reporttimeoutandreportpolling)
 * [WebHook Configuration](#webhook)
   * [WebHook URL Parameters - Code](#code)
   * [WebHook URL Override Parameters - Details](#details)
@@ -562,7 +562,7 @@ checkmarx
   settings-override: true #default false if not provide
 ```
 
-### <a name="branchProject">Branched Project</a>
+### <a name="branchproject">Branched Project</a>
 A branched project is a child of a base project in CxSAST. Upon initiating a scan from the default branch of a repository, CxSAST creates a base project in the server with name `RepoName-defaultBranchName` and any subsequent scans from the branches of that repository will create child projects off of it with name `RepoName-currentBranchName`. The project count in CxSAST does not increase when a branched project is added. Branching of projects can be enabled by setting the `cx-branch` property to `true`.
 ```yaml
 checkmarx:
@@ -570,7 +570,7 @@ checkmarx:
   cx-branch: true #default false if not provided
 ```
 
-### <a name="scanQueuing"> Scan Queuing and Scan Queuing Timeout</a>
+### <a name="scanqueuing"> Scan Queuing and Scan Queuing Timeout</a>
 If the number of concurrent scans which can run on CxSAST server is all utilized, then enabling `scan-queuing` will allow CxFlow to keep the event of the scan within itself and let the existing scans finish before sending the new scan event to CxSAST. Cx-flow keeps events with itself for a number of minutes, specified by the `scan-queuing-timeout` parameter, with a default value of **120** minutes.
 ```yaml
 checkmarx:
@@ -578,7 +578,7 @@ checkmarx:
   scan-queuing: true
   scan-queuing-timeout: 720 #Amount of time in minutes
 ```
-### <a name="scanTimeoutAndscanPolling"> Scan Timeout and Scan Polling</a>
+### <a name="scantimeoutandscanpolling"> Scan Timeout and Scan Polling</a>
 The amount of time (in minutes) for which cx-flow will wait for CxSAST scan to finish.If scan is not completed within 120(in minutes) then it will gives Timeout exceeded during scan as error messase.The default value of scanTimeout **120** minutes.
 The amount of time (in milliseconds) in which cx-flow pings CxSAST server to get the status of the scan (i.e Queued, Finished or Failed).The default value of scanPolling **20000** miliseconds.
 ```yaml
@@ -588,7 +588,7 @@ checkmarx:
   scan-polling: 20000 #Amount of time in miliseconds
 ```
 
-### <a name="reportTimeoutAndreportPolling"> Report Timeout and Report Polling</a>
+### <a name="reporttimeoutandreportpolling"> Report Timeout and Report Polling</a>
 The amount of time (in milliseconds) for which cx-flow will wait for CxSAST to generate scan report.If report is not generated within  300000(in miliseconds)it will through Timeout exceeded during report generation as error message.The default value of reportTimeout **30000** miliseconds.
 The amount of time (in milliseconds) in which cx-flow pings CxSAST server to get the status of the report.The default value of reportPolling **5000** miliseconds.
 ```yaml
