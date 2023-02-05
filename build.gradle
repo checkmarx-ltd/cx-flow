@@ -1,7 +1,7 @@
 buildscript {
     ext {
 
-        CxSBSDK = "0.5.37"
+        CxSBSDK = "0.5.40"
 
         ConfigProviderVersion = "1.0.10"
         //cxVersion = "8.90.5"

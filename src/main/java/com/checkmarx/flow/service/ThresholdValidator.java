@@ -9,6 +9,6 @@ public interface ThresholdValidator {
     boolean isMergeAllowed(ScanResults results, RepoProperties repoProperties, PullRequestReport pullRequestReport);
     boolean thresholdsExceeded(ScanRequest request, ScanResults results);
 
-    boolean thresholdsExceededDirectDependency(ScanRequest request, ScanResults results);
+    boolean thresholdsExceededDirectNDEVDependency(ScanRequest request, ScanResults results);
     boolean isThresholdsConfigurationExist(ScanRequest scanRequest);
 }
