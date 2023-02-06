@@ -660,7 +660,6 @@ public class CxFlowRunner implements ApplicationRunner {
 
     private boolean checkIfBreakBuild(ScanRequest request, ScanResults results) {
         boolean breakBuildResult = false;
-        boolean isCheck=true;
 
         if(flowProperties.getEnabledVulnerabilityScanners()!=null){
             if((flowProperties.getEnabledVulnerabilityScanners().contains("sca") ||
@@ -671,24 +670,15 @@ public class CxFlowRunner implements ApplicationRunner {
         }
 
         if (thresholdValidator.isThresholdsConfigurationExist(request)) {
-            isCheck=false;
             if (thresholdValidator.thresholdsExceeded(request, results)) {
                 log.info("Fail build because some of the checks weren't passed");
                 breakBuildResult = true;
             }
-        } 
-        else if (flowProperties.isBreakBuild() && resultsService.filteredSastIssuesPresent(results)) {
+        }else if (flowProperties.isBreakBuild() && (resultsService.filteredSastIssuesPresent(results) || thresholdValidator.thresholdsExceeded(request, results))) {
             log.info("Build failed because some issues were found");
             breakBuildResult = true;
 
         }
-
-//        else if (isCheck && flowProperties.isBreakBuild() && thresholdValidator.thresholdsExceeded(request, results) ) {
-//            log.info("Build failed because some issues were found In SCA.");
-//            breakBuildResult = true;
-//        }
-
-
         if(!breakBuildResult){
             log.info("Build succeeded. all checks passed");
         }
