@@ -37,8 +37,6 @@ public class Vendor__1 {
     @JsonPropertyDescription("The name of the vendor.")
     @Builder.Default
     private String name="Checkmarx";
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * The name of the vendor.
@@ -60,14 +58,5 @@ public class Vendor__1 {
         this.name = name;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
 
 }

@@ -45,10 +45,7 @@ public class Tracking {
     @JsonPropertyDescription("Each tracking type must declare its own type.")
     @Getter
     @Setter
-    @Builder.Default
     private List<Items> lstItems;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * Each tracking type must declare its own type.
@@ -68,14 +65,5 @@ public class Tracking {
 //        this.type = type;
 //    }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
 
 }

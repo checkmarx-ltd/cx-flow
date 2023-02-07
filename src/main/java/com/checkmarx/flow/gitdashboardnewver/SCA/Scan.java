@@ -46,6 +46,7 @@ public class Scan {
     @JsonPropertyDescription("ISO8601 UTC value with format yyyy-mm-ddThh:mm:ss, representing when the scan finished.")
     private String endTime="2022-06-20T06:28:21";
     @JsonProperty("messages")
+    @Builder.Default
     private List<com.checkmarx.flow.gitdashboardnewver.Message> messages = null;
     /**
      * Object defining the analyzer used to perform the scan. Analyzers typically delegate to an underlying scanner to run the scan.
@@ -87,8 +88,6 @@ public class Scan {
     @JsonProperty("type")
     @JsonPropertyDescription("Type of the scan.")
     private Type type;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * ISO8601 UTC value with format yyyy-mm-ddThh:mm:ss, representing when the scan finished.
@@ -219,15 +218,6 @@ public class Scan {
         this.type = type;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
 
 
     /**

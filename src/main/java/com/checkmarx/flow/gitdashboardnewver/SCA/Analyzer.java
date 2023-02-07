@@ -68,7 +68,6 @@ public class Analyzer {
      */
     @JsonProperty("vendor")
     @JsonPropertyDescription("The vendor/maintainer of the analyzer.")
-    @Builder.Default
     private com.checkmarx.flow.gitdashboardnewver.SCA.Vendor vendor;
     /**
      * The version of the analyzer.
@@ -79,8 +78,6 @@ public class Analyzer {
     @JsonPropertyDescription("The version of the analyzer.")
     @Builder.Default
     private String version="9.X";
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * Unique id that identifies the analyzer.
@@ -180,14 +177,5 @@ public class Analyzer {
         this.version = version;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
 
 }

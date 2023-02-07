@@ -83,12 +83,15 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
     }
 
     @Override
-    public boolean thresholdsExceededDirectDependency(ScanRequest request, ScanResults results){
+    public boolean thresholdsExceededDirectNDEVDependency(ScanRequest request, ScanResults results){
 
 
-        if(scaProperties.getFilterdependencytype() == null) return false;
-        if(scaProperties.getFilterdependencytype().toLowerCase(Locale.ROOT).equalsIgnoreCase("direct")){
-            return !isAllowedScaDirectDependency(results, request);
+        if(scaProperties.getFilterdependencytype() == null && !scaProperties.isFilterOutDevdependency()) return false;
+
+        boolean isDirectDependency= scaProperties.getFilterdependencytype() !=null && scaProperties.getFilterdependencytype().toLowerCase(Locale.ROOT).equalsIgnoreCase("direct");
+
+        if(isDirectDependency || scaProperties.isFilterOutDevdependency() ){
+            return !isAllowedScaDirectNDEVDependency(results, request ,isDirectDependency ,scaProperties.isFilterOutDevdependency());
 
         }else{
             return false;
@@ -204,7 +207,7 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
         log.info(policiesViolatedName);
     }
 
-    private boolean isAllowedScaDirectDependency(ScanResults scanResults, ScanRequest request) {
+    private boolean isAllowedScaDirectNDEVDependency(ScanResults scanResults, ScanRequest request, boolean isDirectDependency,boolean isDevDependency) {
         log.debug("Checking if Direct Dependency is allowed.");
         Map<Severity, Integer> scaThresholdsSeverity = getScaEffectiveThresholdsSeverityDirect(request);
 
@@ -212,7 +215,7 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
         // isPolicyViolated flag gets the top priority whether to the break build or not
 
         writeMapToLog(scaThresholdsSeverity, "Using CxSCA Direct Dependency thresholds severity");
-        isAllowedSca = !isAnyScaThresholdsExceededForDirectDP(scanResults, scaThresholdsSeverity);
+        isAllowedSca = !isAnyScaThresholdsExceededForDirectDPNDevDP(scanResults, scaThresholdsSeverity,isDirectDependency,isDevDependency);
         logIsAllowed(isAllowedSca);
 
 
@@ -234,10 +237,10 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
         return res;
     }
 
-    private static boolean isAnyScaThresholdsExceededForDirectDP(ScanResults scanResults,  Map<Severity, Integer> scaThresholds) {
+    private static boolean isAnyScaThresholdsExceededForDirectDPNDevDP(ScanResults scanResults,  Map<Severity, Integer> scaThresholds,boolean isDirectDependency,boolean isDevDependency) {
         boolean isExceeded = false;
 
-        Map<Severity, Integer> scaFindingsCountsPerSeverity = getScaFindingsCountsPerDirectDependency(scanResults);
+        Map<Severity, Integer> scaFindingsCountsPerSeverity = getScaFindingsCountsPerDirectDependencynDevDP(scanResults,isDirectDependency,isDevDependency);
 
         for (Map.Entry<Severity, Integer> entry : scaFindingsCountsPerSeverity.entrySet()) {
             Severity severity = entry.getKey();
@@ -258,17 +261,27 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
         return isExceeded;
     }
 
-    private static Map<Severity, Integer> getScaFindingsCountsPerDirectDependency(ScanResults scanResults) {
-        log.debug("Calculating Direct Dependency Values.");
+    private static Map<Severity, Integer> getScaFindingsCountsPerDirectDependencynDevDP(ScanResults scanResults,boolean isDirectDependency,boolean isDevDependency) {
 
         EnumMap<Severity, Integer> countsSeverityMap = new EnumMap<>(Severity.class);
 
-        countsSeverityMap.put(Severity.HIGH,scanResults.getScaResults().getPackages().stream().filter(o->o.isIsDirectDependency() == true).collect(
-                Collectors.summingInt(Package::getHighVulnerabilityCount)));
-        countsSeverityMap.put(Severity.MEDIUM,scanResults.getScaResults().getPackages().stream().filter(o->o.isIsDirectDependency() == true).collect(
-                Collectors.summingInt(Package::getMediumVulnerabilityCount)));
-        countsSeverityMap.put(Severity.LOW,scanResults.getScaResults().getPackages().stream().filter(o->o.isIsDirectDependency() == true).collect(
-                Collectors.summingInt(Package::getLowVulnerabilityCount)));
+        if(isDirectDependency && !isDevDependency){
+            log.debug("Calculating Direct Dependency Values.");
+            countsSeverityMap.put(Severity.HIGH, scanResults.getScaResults().getPackages().stream().filter(Package::isIsDirectDependency).mapToInt(Package::getHighVulnerabilityCount).sum());
+            countsSeverityMap.put(Severity.MEDIUM, scanResults.getScaResults().getPackages().stream().filter(Package::isIsDirectDependency).mapToInt(Package::getMediumVulnerabilityCount).sum());
+            countsSeverityMap.put(Severity.LOW, scanResults.getScaResults().getPackages().stream().filter(Package::isIsDirectDependency).mapToInt(Package::getLowVulnerabilityCount).sum());
+
+        }else if(!isDirectDependency && isDevDependency){
+            log.debug("Calculating Non Development Dependency Values.");
+            countsSeverityMap.put(Severity.HIGH, scanResults.getScaResults().getPackages().stream().filter(o -> !o.isIsDevelopmentDependency()).mapToInt(Package::getHighVulnerabilityCount).sum());
+            countsSeverityMap.put(Severity.MEDIUM, scanResults.getScaResults().getPackages().stream().filter(o -> !o.isIsDevelopmentDependency()).mapToInt(Package::getMediumVulnerabilityCount).sum());
+            countsSeverityMap.put(Severity.LOW, scanResults.getScaResults().getPackages().stream().filter(o -> !o.isIsDevelopmentDependency()).mapToInt(Package::getLowVulnerabilityCount).sum());
+        }else {
+            log.debug("Calculating Direct and development Dependency Values.");
+            countsSeverityMap.put(Severity.HIGH, scanResults.getScaResults().getPackages().stream().filter(o -> o.isIsDirectDependency() && !o.isIsDevelopmentDependency()).mapToInt(Package::getHighVulnerabilityCount).sum());
+            countsSeverityMap.put(Severity.MEDIUM, scanResults.getScaResults().getPackages().stream().filter(o -> o.isIsDirectDependency() && !o.isIsDevelopmentDependency()).mapToInt(Package::getMediumVulnerabilityCount).sum());
+            countsSeverityMap.put(Severity.LOW, scanResults.getScaResults().getPackages().stream().filter(o -> o.isIsDirectDependency() && !o.isIsDevelopmentDependency()).mapToInt(Package::getLowVulnerabilityCount).sum());
+        }
         return countsSeverityMap;
     }
 

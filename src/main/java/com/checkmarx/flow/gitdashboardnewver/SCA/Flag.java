@@ -60,9 +60,6 @@ public class Flag {
     @JsonProperty("description")
     @JsonPropertyDescription("What the flag is about.")
     private String description;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
-
 
 
     /**
@@ -105,15 +102,6 @@ public class Flag {
         this.description = description;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
 
 
     /**

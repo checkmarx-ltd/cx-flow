@@ -1,5 +1,5 @@
 * [Understanding the Data](#data)
-* [Understanding the result summary](#resultSummary)
+* [Understanding the result summary](#resultsummary)
 * [Understanding issue creation process](#issuecreation)
   * [Issue creation for all bug trackers except JIRA](#forallbt)
   * [Issue creation when bug tracker is JIRA](#forjirabt)
@@ -8,9 +8,9 @@
   * [Priorities](#priorities)
   * [Transitions](#transitions)
   * [Fields](#fields)
-  * [Assigning tickets to a user](#assigningTickets)
-  * [Configuring the Jira Issue Summary](#issueSummaryFormat)
-  * [Jira Issue Handling](#issueHandling)
+  * [Assigning tickets to a user](#assigningtickets)
+  * [Configuring the Jira Issue Summary](#issuesummaryformat)
+  * [Jira Issue Handling](#issuehandling)
 * [Custom Bug trackers](#custom)
 * [Azure DevOps Work Items](#azure)
 * [GitLab Issues](#gitlab)
@@ -36,7 +36,7 @@ Issues are filtered based on the criteria found in the main configuration of CxF
 
 The best fix location would be a more appropriate value to track, which is currently unavailable.
 
-## <a name="resultSummary">Understanding the Result Summary</a>
+## <a name="resultsummary">Understanding the Result Summary</a>
 Once scan is finished and the results are retrieved then, cx-flow combines all issues in a single file that have the same category into a single issue, then the provided overrides for filters(severity,cwe,status,category,etc) are applied on those issues and a final list of Xissues is generated. Issues in the provided bug tracker are opened for the generated Xissues.
 
 **Example**</br>
@@ -257,17 +257,17 @@ similarity-id - Cx Similarity ID
 * **skip-update**: The value is only provided during the initial creation of the ticket and not updated during subsequent iterations
 * **offset**: Used with system-date, the value of offset is added to the system date
 
-### <a name="assigningTickets">Assigning tickets to a user</a>
+### <a name="assigningtickets">Assigning tickets to a user</a>
 Jira tickets can be assigned to a user when they are created. This can be achieved in the following way.
 
 * As a webhook url parameter - The url parameter 'assignee' can be appended to the url in the webhook configuration and a user's email address to whom the tickets should be assigned in cloud and username in on-prim, is provided as the value of the parameter.
 
 ``` 
 #Example for cloud
-http​&#65279;://companyname.checkmarx.com?assignee=someUsersEmail@&#65279;xyz.com
+http://companyname.checkmarx.com?assignee=someUsersEmail@xyz.com
 
 #Example for on-prim 
-http​&#65279;://companyname.checkmarx.com?assignee=someUsersName 
+http://companyname.checkmarx.com?assignee=someUsersName 
 ```  
 * As CLI Parameter - The CLi parameter --assignee can be used to assign the Jira ticket when they are created. This parameter can be used for scan, project , batch modes
 ``` 
@@ -278,7 +278,7 @@ java -jar cx-flow-1.6.36.jar --spring.config.location="C:\Cx-Flow\Jar\applicatio
 java -jar cx-flow-1.6.36.jar --spring.config.location="C:\Cx-Flow\Jar\application.yml" --scan --github --repo-name="someRepoName" --namespace="NameSpace" --repo-url="https://github.com/YourGitURl.git" --cx-project="YourProjectName" --branch="master" --assignee="UserName"
 ```
 * As adding Custom Checkmarx field name 'jira-assignee' and setting value for this field as user's email address to whom the tickets should be assigned in cloud and username in on-prim
-### <a name="issueSummaryFormat">Configuring the Jira Issue Summary</a>
+### <a name="issuesummaryformat">Configuring the Jira Issue Summary</a>
 
 The sast-issue-summary-format and sast-issue-summary-branch-format properties can be used to configure the issue summary of the issues that CxFlow creates in Jira for vulnerabilities detected by CxSAST. The following substitutions are performed on the properties’ values to generate the issue summary:
 
@@ -311,7 +311,7 @@ When creating a Jira ticket, CxFlow will add a code snippet to the ticket. Somet
       - Use_Of_Hardcoded_Password
 ```
 
-### <a name="issueHandling">Jira Issue Handling</a>
+### <a name="issuehandling">Jira Issue Handling</a>
 * Issues in JIRA are tagged with a label of `Scanner` with its value being either `SCA` or `SAST` based on the scanner result for which issue is created.
 * There will be filtering of issues based on the type of scan (SCA or SAST) and issues will be updated/created/closed based on the type of scanner used to initiate the scan for that project. 
 * If a scan is initiated for both SCA and SAST, issues of both the scanner types will be created or updated. Re-running scans for either SCA or SAST for the same project id will update issues for that scanner only. Issues of the other type scanner(created before re-run) will not be affected. 

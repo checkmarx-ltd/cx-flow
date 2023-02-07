@@ -585,8 +585,8 @@ public class JiraService {
                                 value = location.substring(0,location.length()-1);
                                 break;
                             case "dev-dependency":
-                                log.debug("dev-dependency: {}", issue.getScaDetails().get(0).getVulnerabilityPackage().isIsDevelopment());
-                                value = String.valueOf(issue.getScaDetails().get(0).getVulnerabilityPackage().isIsDevelopment()).toUpperCase();
+                                log.debug("dev-dependency: {}", issue.getScaDetails().get(0).getVulnerabilityPackage().isIsDevelopmentDependency());
+                                value = String.valueOf(issue.getScaDetails().get(0).getVulnerabilityPackage().isIsDevelopmentDependency()).toUpperCase();
                                 break;
                             case "direct-dependency":
                                 log.debug("direct-dependency: {}", issue.getScaDetails().get(0).getVulnerabilityPackage().isIsDirectDependency());
@@ -1220,23 +1220,29 @@ public class JiraService {
         {
             Set<com.checkmarx.flow.jira9X.StandardOperation> customSet =fields.getOperations();
             Set<StandardOperation> finalSet = new HashSet<>();
-            for(com.checkmarx.flow.jira9X.StandardOperation custom :customSet)
+            if(customSet!= null)
             {
-                switch (custom.toString()) {
-                    case "set":
-                        finalSet.add(StandardOperation.SET);
-                        break;
-                    case "add":
-                        finalSet.add(StandardOperation.ADD);
-                        break;
-                    case "remove":
-                        finalSet.add(StandardOperation.REMOVE);
-                        break;
-                    case "edit":
-                        finalSet.add(StandardOperation.EDIT);
-                        break;
+                for(com.checkmarx.flow.jira9X.StandardOperation custom :customSet)
+                {
+                    switch (custom.toString()) {
+                        case "set":
+                            finalSet.add(StandardOperation.SET);
+                            break;
+                        case "add":
+                            finalSet.add(StandardOperation.ADD);
+                            break;
+                        case "remove":
+                            finalSet.add(StandardOperation.REMOVE);
+                            break;
+                        case "edit":
+                            finalSet.add(StandardOperation.EDIT);
+                            break;
+                        default:
+                            break;
+                    }
                 }
             }
+
             com.checkmarx.flow.jira9X.FieldSchema customSchema = new com.checkmarx.flow.jira9X.FieldSchema();
             FieldSchema finalSchema = new FieldSchema(customSchema.getType(), customSchema.getItems(),customSchema.getSystem(),customSchema.getCustom(),customSchema.getCustomId());
             cimIssueFields.put(fields.getFieldId(),new CimFieldInfo(fields.getFieldId(),fields.getRequired(),fields.getName(),finalSchema,finalSet,fields.getAllowedValues(),fields.getAutoCompleteUrl()));
@@ -1621,6 +1627,7 @@ public class JiraService {
 
     Map<String, List<String>> process(ScanResults results, ScanRequest request, ScanDetails scanDetails) throws JiraClientException {
         Map<String, ScanResults.XIssue> map;
+        Map<String, ScanResults.XIssue> unFilteredMap;
         Map<String, Issue> jiraMap;
         List<Issue> issuesParent;
         List<Issue> issuesGrandParent;
@@ -1674,6 +1681,7 @@ public class JiraService {
 
         map = this.getIssueMap(results, request);
         setMapWithScanResults(map, nonPublishedScanResultsMap);
+        unFilteredMap = this.createUnfilteredMap(results,request);
         jiraMap = this.getJiraIssueMap(this.getIssues(request,filterScanner));
 
 
@@ -1715,7 +1723,7 @@ public class JiraService {
         }
 
         /*Check if an issue exists in Jira but not within results and close if not*/
-        closeIssueInCaseNotWithinResults(request, map, jiraMap, closedIssues);
+        closeIssueInCaseNotWithinResults(request, unFilteredMap, jiraMap, closedIssues);
 
         ImmutableMap<String, List<String>> ticketsMap = ImmutableMap.of(
                 JiraConstants.NEW_TICKET, newIssues,
@@ -1729,6 +1737,35 @@ public class JiraService {
         setCurrentClosedIssuesList(closedIssues);
 
         return ticketsMap;
+    }
+
+    private Map<String, ScanResults.XIssue> createUnfilteredMap(ScanResults results, ScanRequest request) {
+        List<ScanResults.XIssue> issues = new ArrayList<>();
+
+        Optional.ofNullable(results.getUnFilteredIssues()).ifPresent(i ->
+                issues.addAll(results.getUnFilteredIssues())
+        );
+
+        String issuePrefix = Optional.ofNullable(jiraProperties.getIssuePrefix()).orElse("");
+        String issuePostfix = Optional.ofNullable(jiraProperties.getIssuePostfix()).orElse("");
+
+        Map<String, ScanResults.XIssue> map = new HashMap<>();
+
+        boolean useBranch = isUseBranch(request);
+        for (ScanResults.XIssue issue : issues) {
+            String key;
+            if (useBranch) {
+                key = ScanUtils.isSAST(issue)
+                        ? formatSastIssueSummary(jiraProperties.getSastIssueSummaryBranchFormat(), issue, request)
+                        : getScaDetailsIssueTitleFormat(request, issuePrefix, issuePostfix, issue);
+            } else {
+                key = ScanUtils.isSAST(issue)
+                        ? formatSastIssueSummary(jiraProperties.getSastIssueSummaryFormat(), issue, request)
+                        : getScaDetailsIssueTitleWithoutBranchFormat(request, issuePrefix, issuePostfix, issue);
+            }
+            map.put(HTMLHelper.getScanRequestIssueKeyWithDefaultProductValue(request, key,jiraProperties.getLabelPrefix()), issue);
+        }
+        return map;
     }
 
     /**

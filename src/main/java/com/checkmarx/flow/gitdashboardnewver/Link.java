@@ -40,8 +40,6 @@ public class Link {
     @JsonProperty("url")
     @JsonPropertyDescription("URL of the vulnerability details document.")
     private URI url;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * Name of the vulnerability details link.
@@ -81,14 +79,5 @@ public class Link {
         this.url = url;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
+  
 }
