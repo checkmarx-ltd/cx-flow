@@ -8,10 +8,10 @@
   * [Excluding Files from Zip Archive](#excludezip)
   * [Break build](#break)
   * [Override SAST project setting](#override)
-  * [Create Branched Project](#branchProject)
-  * [Scan Queuing and Scan Queuing Timeout](#scanQueuing)
-  * [Scan Timeout and Scan polling](#scanTimeoutAndscanPolling)
-  * [Report Timeout and Report polling](#reportTimeoutAndreportPolling)
+  * [Create Branched Project](#branchproject)
+  * [Scan Queuing and Scan Queuing Timeout](#scanqueuing)
+  * [Scan Timeout and Scan polling](#scantimeoutandscanpolling)
+  * [Report Timeout and Report polling](#reporttimeoutandreportpolling)
 * [WebHook Configuration](#webhook)
   * [WebHook URL Parameters - Code](#code)
   * [WebHook URL Override Parameters - Details](#details)
@@ -136,6 +136,7 @@ checkmarx:
       - user3@example.com
   project-branching-check-count: 5
   project-branching-check-interval: 10
+  restrict-results-to-branch: true
 
 github:
   webhook-token: XXXXX
@@ -497,6 +498,7 @@ The configuration can be set or overridden at execution time using the command l
 | `email-notifications`     |                       | No                           |         | Yes (Scan only)  | A map containing any or all of the following keys: `after-scan`, `before-scan`, `failed-scan`. The vaue of each key is a list of email addresses to which a notification should be sent in the case of the relevant event.                                                                                                                                                                                                                                      |
 | `project-branching-check-count` |               3 | No                           | Yes     | Yes (Scan only)  | The number of times to check the project branching status after a project has been branched. Only relevant for versions of CxSAST that support the querying of the branching status (API version 4 and higher).                                                                                                                                                                                                                                                 |
 | `project-branching-check-interval` |            5 | No                           | Yes     | Yes (Scan only)  | The interval between checks of the project branching status. For versions of CxSAST that do not support querying the project branching status, execution will pause once for the specified duration.                                                                                                                                                                                                                                                            |
+| `restrict-results-to-branch` |              false | No                           | Yes     | Yes (Scan only)  | If set to `true`, when scanning a branched project, only results detected on the branch are reported. As the OData API is needed for this functionality, the CxSAST user used must be a assigned a role with the “API” permission. Also, the `client-id` property should be set to “resource_owner_sast_client” and the `scope` property should be set to “sast_api”.                                                                                           |
 No* = Default is applied
 
 ### Custom Checkmarx Fields
@@ -562,7 +564,7 @@ checkmarx
   settings-override: true #default false if not provide
 ```
 
-### <a name="branchProject">Branched Project</a>
+### <a name="branchproject">Branched Project</a>
 A branched project is a child of a base project in CxSAST. Upon initiating a scan from the default branch of a repository, CxSAST creates a base project in the server with name `RepoName-defaultBranchName` and any subsequent scans from the branches of that repository will create child projects off of it with name `RepoName-currentBranchName`. The project count in CxSAST does not increase when a branched project is added. Branching of projects can be enabled by setting the `cx-branch` property to `true`.
 ```yaml
 checkmarx:
@@ -570,7 +572,7 @@ checkmarx:
   cx-branch: true #default false if not provided
 ```
 
-### <a name="scanQueuing"> Scan Queuing and Scan Queuing Timeout</a>
+### <a name="scanqueuing"> Scan Queuing and Scan Queuing Timeout</a>
 If the number of concurrent scans which can run on CxSAST server is all utilized, then enabling `scan-queuing` will allow CxFlow to keep the event of the scan within itself and let the existing scans finish before sending the new scan event to CxSAST. Cx-flow keeps events with itself for a number of minutes, specified by the `scan-queuing-timeout` parameter, with a default value of **120** minutes.
 ```yaml
 checkmarx:
@@ -578,7 +580,7 @@ checkmarx:
   scan-queuing: true
   scan-queuing-timeout: 720 #Amount of time in minutes
 ```
-### <a name="scanTimeoutAndscanPolling"> Scan Timeout and Scan Polling</a>
+### <a name="scantimeoutandscanpolling"> Scan Timeout and Scan Polling</a>
 The amount of time (in minutes) for which cx-flow will wait for CxSAST scan to finish.If scan is not completed within 120(in minutes) then it will gives Timeout exceeded during scan as error messase.The default value of scanTimeout **120** minutes.
 The amount of time (in milliseconds) in which cx-flow pings CxSAST server to get the status of the scan (i.e Queued, Finished or Failed).The default value of scanPolling **20000** miliseconds.
 ```yaml
@@ -588,7 +590,7 @@ checkmarx:
   scan-polling: 20000 #Amount of time in miliseconds
 ```
 
-### <a name="reportTimeoutAndreportPolling"> Report Timeout and Report Polling</a>
+### <a name="reporttimeoutandreportpolling"> Report Timeout and Report Polling</a>
 The amount of time (in milliseconds) for which cx-flow will wait for CxSAST to generate scan report.If report is not generated within  300000(in miliseconds)it will through Timeout exceeded during report generation as error message.The default value of reportTimeout **30000** miliseconds.
 The amount of time (in milliseconds) in which cx-flow pings CxSAST server to get the status of the report.The default value of reportPolling **5000** miliseconds.
 ```yaml

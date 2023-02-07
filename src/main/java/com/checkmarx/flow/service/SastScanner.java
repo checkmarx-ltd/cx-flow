@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
 import java.io.File;
 import java.util.ArrayList;
@@ -33,6 +34,7 @@ import static com.checkmarx.sdk.config.Constants.UNKNOWN_INT;
 
 @Service
 @Slf4j
+@Order(1)
 public class SastScanner extends AbstractVulnerabilityScanner {
 
     private final CxClient cxService;

@@ -23,6 +23,7 @@ import com.checkmarx.sdk.utils.scanner.client.IScanClientHelper;
 import com.checkmarx.sdk.utils.scanner.client.ScaClientHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -36,6 +37,7 @@ import static com.checkmarx.flow.exception.ExitThrowable.exit;
 
 @Service
 @Slf4j
+@Order(2)
 public class SCAScanner extends AbstractASTScanner {
 
     private final ScaProperties scaProperties;

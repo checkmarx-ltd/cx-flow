@@ -2,10 +2,10 @@
 * [Configuration](#configuration)
 * [Filters](#filters)
 * [Thresholds](#thresholds)
-* [Configure Bug Trackers](#configureBugTrackers)
-* [Bug Trackers](#bugTrackers)
-* [CLI Example](#cliExample)
-* [Web Mode](#webMode)
+* [Configure Bug Trackers](#configurebugtrackers)
+* [Bug Trackers](#bugtrackers)
+* [CLI Example](#cliexample)
+* [Web Mode](#webmode)
 
 ## <a name="Overview">Overview</a>
 CxIAST can be integrated within a CI/CD pipeline using CxFlow.
@@ -17,7 +17,7 @@ CxIAST scans can be stopped in two ways:
 2. By terminating the running application.
 
 Once tests are completed, CxFlow is used to stop the running CxIAST scan.
-CxFlow will then collect the results from CxIAST, analyze them, and open tasks/tickets in the configured [Bug Tracker](#bugTrackers).
+CxFlow will then collect the results from CxIAST, analyze them, and open tasks/tickets in the configured [Bug Tracker](#bugtrackers).
 To make sure the correct scan is stopped by CxFlow, CxIAST scan tags are used:  
 [[/Images/IAST1.png|IAST flow example]]
 
@@ -70,11 +70,11 @@ When triggered in CLI mode, CxFlow returns status code `10`, if a threshold has 
 When triggered in web mode, the `/iast/stop-scan-and-create-jira-issue/{scanTag}`
 or `/iast/stop-scan-and-create-github-issue/{scanTag}` returns HTTP status 412.
 
-## <a name="configureBugTrackers">Configure Bug Trackers</a>
+## <a name="configurebugtrackers">Configure Bug Trackers</a>
 
 For automatic create issue in Bug tracker need to configure CX-Flow for work with your bug tracker.
 
-## <a name="bugTrackers">Bug Trackers</a>
+## <a name="bugtrackers">Bug Trackers</a>
 
 At present, CxFlow only supports Jira, Github and Gitlab issue as a bug tracker when used with CxIAST.
 
@@ -192,7 +192,7 @@ The ticket is structured as follows:
 An example for Azure DevOps ticket is available here:  
 [[/Images/IAST4.png|Azure DevOps issue example]]
 
-## <a name="cliExample">CLI Example</a>
+## <a name="cliexample">CLI Example</a>
 
 ### Example opening Tickets in Jira
 
@@ -284,7 +284,7 @@ java -jar cx-flow.jar
 
 [[/Images/iast_gitlab_issue.png|Gitlab issue example]]
 
-## <a name="webMode">Web Mode</a>
+## <a name="webmode">Web Mode</a>
 
 As well as the Cx-Flow can be executed as CLI mode, it is possible to run it as web mode, allowing to the user perform 
 create issues process via API calls.
