@@ -746,6 +746,7 @@ public class HTMLHelper {
 
             if (xMap.size() > 0) {
                 setScannerDetailsHeader(results, body);
+                appendAll(body, "<details><summary>Click to see details</summary>", CRLF, CRLF);
                 MarkDownHelper.appendMDtableHeaders(body,"Lines",SEVERITY,"Category","File","Link");
                 log.info("Creating Merge/Pull Request Markdown comment");
 
@@ -756,6 +757,7 @@ public class HTMLHelper {
                 addSastAstDetailsBody(request, body, xMap, issueComparator);
 
                 addOsaDetailesBody(results, body, xMap, issueComparator);
+                appendAll(body, "</details>", CRLF, CRLF);
             }
         }
     }
