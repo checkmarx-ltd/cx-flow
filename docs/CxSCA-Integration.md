@@ -2,13 +2,13 @@
 * [Bug-Trackers](#bug)
 * [Filters](#filters)
 * [Thresholds](#thresholds)
-* [Policy Management](#policyManagement)
+* [Policy Management](#policymanagement)
 * [Configuration As Code](#configurationascode)
 * [SCA Scans From Command Line](#commandline)
-* [SCA ZIP Folder Scan](#zipFolderScan)
-* [SCA Project Team Assignment](#scaProjectTeamAssignment)
-* [SCA Scan Timeout](#scaScanTimeOut)
-* [SCA Resolver](#scaResolver)
+* [SCA ZIP Folder Scan](#zipfolderscan)
+* [SCA Project Team Assignment](#scaprojectteamassignment)
+* [SCA Scan Timeout](#scascantimeout)
+* [SCA Resolver](#scaresolver)
 ## <a name="configuration">Configuration</a>
 CxSCA scans can be triggered based on WebHooks using CxFlow. 
 For instructions on registering CxFlow to WebHook, refer to [WebHook Registration](
@@ -209,7 +209,7 @@ Cx-Flow uses the thresholds to ease its (no) tolerance of findings.
 <br/>
 [[/Images/SCA7.png|Example of Pull Request Failure]]
 
-## <a name="policyManagement">Policy Management</a>
+## <a name="policymanagement">Policy Management</a>
 SCA supports with policy management control.
 Each policy can be customized by defining number of custom rules and conditions in which, if getting violated, can break a build.
 On the creation process or after it, a policy can be defined with 'Break build' flag or not.
@@ -277,7 +277,7 @@ Note : expPathSastProjectName property is used for overriding --cxprojectname in
 
 ### CxFlow can open security tickets upon SCA scan results 
 In order to open SCA security tickets, set the bug tracker in CxFlow app.yml file or in add the argument with your bug tracker type (for example: --bug-tracker=Jira) 
-## <a name="zipFolderScan">SCA ZIP Folder Scan</a>
+## <a name="zipfolderscan">SCA ZIP Folder Scan</a>
 ### CxFlow can init git scan or upload zip folder to scan by sca:
 * git scan:
   * --scan  --enabled-vulnerability-scanners=sca --app=MyApp --cx-project=test --repo-url=my-repo-url --repo-name=my-repo --branch=main --github  
@@ -310,7 +310,7 @@ include-sources: true
  
 **Note** The files to be excluded must begin with !. (Only applicable for manifests-include-pattern and fingerprints-include-pattern properties).
 
-## <a name="scaProjectTeamAssignment">SCA project team assignment</a>
+## <a name="scaprojectteamassignment">SCA project team assignment</a>
 SCA project team assignment with CxFlow is performing on the SCA project creation stage. In order to set a project team, the next configuration property should be added underneath the sca configuration section:
 ```
 team: /team
@@ -322,17 +322,17 @@ team: /MainTeam/SubTeam
 * In order to declare a team within a tree hierarchy, make sure to use the forward slash ('/').
 * Declaring not existing team or team path will be resulted with 400 BAD REQUEST error.
 
-## <a name="scaScanTimeOut">SCA Scan Timeout</a>
+## <a name="scascantimeout">SCA Scan Timeout</a>
 In order  to set Scan TimeOut for SCA, the configuration property should be added underneath the sca configuration section:
 ```
  scan-timeout: 120
 ```
 
-## <a name="scaResolver">SCA Resolver</a>
+## <a name="scaresolver">SCA Resolver</a>
 
-The Checkmarx SCA Resolver is an on-premises utility that allows you to extract dependencies and fingerprints from your source code and send them to the Checkmarx SCA cloud platform for risk analysis.Refer to [Checkmarx SCA Resolver](https://checkmarx.com/resource/documents/en/34965-19196-checkmarx-sca-resolver.html)r page for more information.
+The Checkmarx SCA Resolver is an on-premises utility that allows you to extract dependencies and fingerprints from your source code and send them to the Checkmarx SCA cloud platform for risk analysis.
 
-The SCA Resolver functions in offline mode when used in conjunction with Cx-Flow and the mandatory parameters (-s ,-r, -n) are not required as Cx-Flow supplies all necessary information.
+SCA Resolver also provide Exploitable Path feature which leverages SAST’s ability to scan the actual project code itself in parallel with scanning the manifest file, in order to validate whether the vulnerable open source packages are called from your proprietary code and whether the vulnerable methods are actually used by your code. Refer to [Checkmarx SCA Resolver](https://checkmarx.com/resource/documents/en/34965-19196-checkmarx-sca-resolver.html) page for more information.
 
 **Prerequisites**
 
@@ -342,48 +342,73 @@ The SCA Resolver functions in offline mode when used in conjunction with Cx-Flow
 
 * **Note:** The SCA Resolver does not need to be downloaded if using Docker. The SCA Resolver will be located in the /app directory of the Docker image.
 
-### Enabling the SCA Resolver in Cx-Flow:
+### Enabling the SCA Resolver in Cx-Flow
+The SCA Resolver functions in offline mode when used in conjunction with Cx-Flow and the mandatory parameters like(-s ,-r, -n) are not required as Cx-Flow supplies all necessary information.
+
 Please add the following configuration property underneath the "sca" configuration section:
 ```
 sca:
-enable-sca-resolver : true
+  enable-sca-resolver : true
 ```
 If not using Docker, the path to the SCA Resolver must be configured using the following configuration property:
 
 ```
-path-to-sca-resolver : "Path for Sca Resolver"
+sca:
+  path-to-sca-resolver : "Path for Sca Resolver"
 ```
+**Note:** To use SCA Resolver, include-sources must be set to false.
+
+### Exploitable path Configuration
+
+**Prerequisites for exploitable path**
+
+* Checkmarx SAST details as Cx-FLow configuration through CLI or Yaml. Please refer to [Configuration](https://github.com/checkmarx-ltd/cx-flow/wiki/Configuration#checkmarx-section) Page.
+* Atleast one SAST Scan need to performed for project.
+
+To enable the exploitable path in the SCA Resolver, the following configuration is needed:
+```
+sca:
+  enable-exploitable-path : true
+```
+
 ### SCA Resolver Additional Parameters Configuration
 Cx-Flow also supports additional parameters of SCA Resolver which can be configured using the following optional configuration property:
 ```
-sca-resolver-add-parameters :
-log-level : Debug
-e : "*.ext1"
-custom-parameter : "--gradle-parameters='USERNAME=abc PASSWORD=cba'"
+#Example for YAML
+sca:
+  sca-resolver-add-parameters :
+    log-level : Debug
+    e : "*.ext1"
 ```
-The name of the additional parameter argument is reflected in the value on the left side. The value for argument is shown in the value to the right. Refer to [List of SCA Resolver Additional Parameters.](https://checkmarx.com/resource/documents/en/34965-132888-checkmarx-sca-resolver-configuration-arguments.html) **Note:** (-- or - is not to be added in argument name)
+```
+#Example for CLI
+--sca.sca-resolver-add-parameters.log-level=Debug
+--sca.sca-resolver-add-parameters.e="*.ext1"
+```
+The value on the left side reflects the name of the SCA Resolver argument. The value on the right side reflects the SCA Resolver argument value. Refer to [List of SCA Resolver Additional Parameters.](https://checkmarx.com/resource/documents/en/34965-132888-checkmarx-sca-resolver-configuration-arguments.html) 
 
-Add the custom parameter to the left and the entire argument string to the right to add custom parameters to the SCA Resolver. As mentioned below
-```
-sca-resolver-add-parameters :
-custom-parameter : "--gradle-parameters='USERNAME=abc PASSWORD=cba'"
-```
-### Enable exploitable path Configuration
-To enable the exploitable path in the SCA Resolver, the following configuration is needed:
-```
-enable-exploitable-path : true
-```
-**Prerequisites for exploitable path**
+**Note:** (-- or - is not to be added in argument name)
 
-* Provide Checkmarx details in Application.yml file Refer to Configuration chapter.
-* Atleast one SAST Scan need to performed for project.
+#### SCA Resolver Custom Parameters
+All SCA Resolver custom parameters are special case for Cx-Flow.
 
+To use custom parameters, the following configuration is needed:
+```
+sca:
+  sca-resolver-add-parameters :
+    custom-parameter : "--gradle-parameters='USERNAME=abc PASSWORD=cba' --npm-parameters='USERNAME=abc PASSWORD=cba'"
+```
+Add the word "custom-parameter" to the left and the entire argument string to the right to add custom parameters to the SCA Resolver.
 ### Project name override Configuration
 To override the project name in the SCA Resolver, the following configuration property can be used:
 ```
-sca-resolver-override-project-name : <ProjectNameToOverride>
+sca:
+  sca-resolver-override-project-name : <ProjectNameToOverride>
 ```
-Value of --cxprojectname can also be overridden by config as code property. Please refer to [SCA Config as Code](#configurationascode) and [Config as Code](https://github.com/checkmarx-ltd/cx-flow/wiki/Config-As-Code) chapter.
+Project Name can also be overridden by config as code property. Please refer to [SCA Config as Code](#configurationascode) and [Config as Code](https://github.com/checkmarx-ltd/cx-flow/wiki/Config-As-Code) chapter.
 
-The SCA Resolver logs can be viewed when the log level is set to Debug for Cx-Flow.
+### SCA Resolver Diagnostics
+* The SCA Resolver logs can be viewed when the log level is set to Debug for Cx-Flow.
+* Cx-Flow Removes all SCA Resolver logs.
+* **Note :** if LogsDirectory is configured in Configuration.ini, The sca resolver's logs won't be deleted.
 

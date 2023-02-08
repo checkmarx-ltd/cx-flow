@@ -10,6 +10,7 @@ import com.checkmarx.sdk.dto.ast.ASTResults;
 import com.checkmarx.sdk.dto.ast.ScanParams;
 import com.checkmarx.sdk.service.scanner.AstScanner;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -17,7 +18,7 @@ import java.util.Optional;
 
 
 @Service
-
+@Order(3)
 @Slf4j
 public class ASTScanner extends AbstractASTScanner {
 

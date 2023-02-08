@@ -34,14 +34,14 @@
     * [Triggering Scans with CxFlow](#batchtriggering)
     * [EmailPNEVulns.ps1](#emailpne)
 * [GitHub Actions with JIRA Integration](#actions)
-* [CxFlow IAST Integration Tutorial](#IASTintegrations)
-    * [Prerequisites](#IASTprerequisites)
-    * [General Procedure](#IASTgeneralprocedures)
-    * [Sample Jenkins Pipeline](#IASTJenkinsPipeline)
-    * [Yaml - application.yml file](#IASTYaml)
-* [CxFlow SonarQube Integration](#SonarQubeIntegrations)
+* [CxFlow IAST Integration Tutorial](#iastintegrations)
+    * [Prerequisites](#iastprerequisites)
+    * [General Procedure](#iastgeneralprocedures)
+    * [Sample Jenkins Pipeline](#iastjenkinspipeline)
+    * [Yaml - application.yml file](#iastyaml)
+* [CxFlow SonarQube Integration](#sonarqubeintegrations)
 * [CxSAST Branching Project](#branchedProject)
-    * [Steps to create branched project](#stepsForBranchProject)
+    * [Steps to create branched project](#stepsforbranchproject)
 
 <br/>
 
@@ -794,7 +794,7 @@ This tutorial is designed to teach the following topics:
 
 ##### [Top of Tutorial](#bitbucket)
 
-## <a name="CircleCI">CircleCI</a>
+## <a name="circleci">CircleCI</a>
 [Back to Table of Contents](#tableofcontents)
 <br/>
 CircleCI can be configured with CxFlow.
@@ -1455,9 +1455,9 @@ jobs:
           params: --namespace=${{ github.repository_owner }} --repo-name=${{ github.event.repository.name }} --branch=${{ github.ref }} --cx-flow.filterSeverity --cx-flow.filterCategory --jira.priorities.High=High --jira.priorities.Medium=Medium --jira.priorities.Low=Low --jira.priorities.Informational=Lowest
 ```
 
-## <a name="IASTintegrations">CxFlow IAST Integration Tutorial</a>
+## <a name="iastintegrations">CxFlow IAST Integration Tutorial</a>
 [Back to Table of Contents](#tableofcontents)
-### <a name="IASTprerequisites">Prerequisites</a>
+### <a name="iastprerequisites">Prerequisites</a>
 <br>The following must be set up:<br>
 
 * CxIAST Management Server (refer to CxIAST Setup Guide and Installing the CxIAST Management Server)
@@ -1465,7 +1465,7 @@ jobs:
 * Jenkins server (refer to Installing Jenkins) 
 * Bug Tracker (refer to Bug Tracker)
 
-### <a name="IASTgeneralprocedures">General Procedure</a>
+### <a name="iastgeneralprocedures">General Procedure</a>
 
 <br> Create a pipeline in Jenkins that will perform the following:<br>
 1. Start CxFlow.
@@ -1474,7 +1474,7 @@ jobs:
 4. Start an E2E test suite on the AUT.
 5. Stop the CxIAST scan and open tickets
 
-### <a name="IASTJenkinsPipeline">Sample Jenkins Pipeline</a>
+### <a name="iastjenkinspipeline">Sample Jenkins Pipeline</a>
 Following is a description of a sample Jenkins declarative pipeline written in Groovy.
 #### Stage 1. Start CxFlow
 ```
@@ -1622,7 +1622,7 @@ Following is a description of a sample Jenkins declarative pipeline written in G
     }
 }
 ```
-### <a name="IASTYaml">Yaml - application.yml file</a>
+### <a name="iastyaml">Yaml - application.yml file</a>
 ```
 server:
   port: CXFLOW-PORT # used when CxFlow is in server mode
@@ -1800,7 +1800,7 @@ csv:
       name: similarity-id
 ```
 
-## <a name="SonarQubeIntegrations">CxFlow SonarQube Integration</a>
+## <a name="sonarqubeintegrations">CxFlow SonarQube Integration</a>
 [Back to Table of Contents](#tableofcontents)
 ### <a name="SonarQubePrerequisites">Prerequisites</a>
 <br>The following must be set up:<br>
@@ -1851,7 +1851,7 @@ csv:
 ## <a name="branchedProject">CxSAST Branching Project</a>
 CxFlow supports creating branched project in CxSAST from a project created from default branch of a repository when event type is **PUSH** on the feature branch, or from a project created from the target branch of a PR when event type is **PULL** on the feature branch, without incrementing the count of utilized licensed project. 
 
-### <a name="stepsForBranchProject">Steps to create branched project</a>
+### <a name="stepsforbranchproject">Steps to create branched project</a>
 * Set cx-branch option under checkmarx section in the application yml file to true.
 ```
   checkmarx:

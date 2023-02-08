@@ -1,12 +1,12 @@
 When using CxFlow to initiate checkmarx scans (CxSAST or CxSCA), you can use CxFlow parse logic to control pull requests or build status.
 
-* [Break build](#breakBuild)
-* [Block pull request](#blockPullRequest)
-* [SCM configurations](#scmConfigurations)
+* [Break build](#breakbuild)
+* [Block pull request](#blockpullrequest)
+* [SCM configurations](#scmconfigurations)
 * [Thresholds vs Basic filters](#thresholds)
-* [Filter vulnerabilities by groovy script](#filterByGroovyScript)
+* [Filter vulnerabilities by groovy script](#filterbygroovyscript)
 
-## <a name="breakBuild">Break build</a>
+## <a name="breakbuild">Break build</a>
 This option is enabled when CxFlow runs as part of build process by command line. By default, CxFlow exits the operation with exit code: 0
 
 In case of breaking the build according to policy, CxFlow will exit with exit code 10.
@@ -17,7 +17,7 @@ cx-flow:
   break-build: true
 ```
 
-## <a name="blockPullRequest">Block pull request</a>
+## <a name="blockpullrequest">Block pull request</a>
 To enable pull request status checks, add the following properties, under the repository configuration:
 ```yaml
 block-merge: true
@@ -31,7 +31,7 @@ github:
   error-merge: true
 ```
 
-#### <a name="scmConfigurations">SCM configurations</a>
+#### <a name="scmconfigurations">SCM configurations</a>
 
 In order to use CxFlow status checks to control vulnerable code and block developers actions, you need to configure it in the SCM branches settings:
 
@@ -97,7 +97,7 @@ In terms of prioritization - Thresholds are checked after the execution of filte
 2. If thresholds section exists, CxFlow expects thresholds configuration for each scanner (SAST and SCA)
 3. For SCA thresholds, see this page: [SCA Thresholds](https://github.com/checkmarx-ltd/cx-flow/wiki/CxSCA-Integration#thresholds)
 
-## <a name="filterByGroovyScript">Filter vulnerabilities by groovy script</a>
+## <a name="filterbygroovyscript">Filter vulnerabilities by groovy script</a>
 
 See [here](https://github.com/checkmarx-ltd/cx-flow/wiki/Work-with-external-scripts#use-a-script-to-filter-findings).
 
