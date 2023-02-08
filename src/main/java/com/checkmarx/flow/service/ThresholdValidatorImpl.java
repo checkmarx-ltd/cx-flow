@@ -448,7 +448,7 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
         log.debug("Calculating CxSCA finding counts per severity, after the filters were applied.");
 
         EnumMap<Severity, Integer> countsSeverityMap = new EnumMap<>(Severity.class);
-        scanResults.getScaResults().getFindings().stream()
+        scanResults.getScaResults().getFindings().stream().filter(o->!o.isIgnored())
                 .collect(Collectors.groupingBy(Finding::getSeverity))
                 .forEach((k, v) ->
                         countsSeverityMap.put(k, v.size()));
