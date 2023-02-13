@@ -101,15 +101,22 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
 
     @Override
     public boolean isThresholdsConfigurationExist(ScanRequest scanRequest){
-        boolean sastThresholds;
+        boolean sastThresholds=false;
         boolean scaThresholds = false;
 
-        sastThresholds = scanRequest.getThresholds() != null || flowProperties.getThresholds() != null;
-        if(scaProperties != null){
+        if(flowProperties.getEnabledVulnerabilityScanners().stream().map(String::toLowerCase)
+                .collect(Collectors.toList()).contains("sast")){
+            sastThresholds = scanRequest.getThresholds() != null || flowProperties.getThresholds() != null;
+        }
+
+
+        if(scaProperties != null && (flowProperties.getEnabledVulnerabilityScanners().stream().map(String::toLowerCase)
+                .collect(Collectors.toList()).contains("sca"))){
             scaThresholds = scaProperties.getThresholdsSeverity() != null || scaProperties.getThresholdsScore() != null;
         }
 
-        if (!scaThresholds && scanRequest.getScaConfig() != null) {
+        if (!scaThresholds && scanRequest.getScaConfig() != null && (flowProperties.getEnabledVulnerabilityScanners().stream().map(String::toLowerCase)
+                .collect(Collectors.toList()).contains("sca"))) {
             Map<Severity, Integer> scaThresholdsSeverity = scanRequest.getScaConfig().getThresholdsSeverity();
             scaThresholds = (scaThresholdsSeverity != null && scaThresholdsSeverity.size() > 0) || scanRequest.getScaConfig().getThresholdsScore() != null;
         }
