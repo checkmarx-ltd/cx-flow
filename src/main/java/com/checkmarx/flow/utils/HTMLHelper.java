@@ -186,6 +186,7 @@ public class HTMLHelper {
     }
 
     private static void scaVulnerabilitiesTableBuilder(StringBuilder body, SCAResults r) {
+        appendAll(body, "<details><summary>Click to see details</summary>", CRLF, CRLF);
         MarkDownHelper.appendMDtableHeaders(body, "Vulnerability ID", "Package", SEVERITY,
                 // "CWE / Category",
                 "CVSS score", "Publish date", "Current version", "Recommended version", "Link in CxSCA",
@@ -205,6 +206,8 @@ public class HTMLHelper {
                                 : appendAll(new StringBuilder(), '[', f.getCveName(),
                                 "](https://nvd.nist.gov/vuln/detail/", f.getCveName(), ")")
                                 .toString()));
+        appendAll(body, "</details>", CRLF);
+
     }
 
     private static String extractPackageNameFromFindings(SCAResults r, Finding f) {
@@ -743,6 +746,7 @@ public class HTMLHelper {
 
             if (xMap.size() > 0) {
                 setScannerDetailsHeader(results, body);
+                appendAll(body, "<details><summary>Click to see details</summary>", CRLF, CRLF);
                 MarkDownHelper.appendMDtableHeaders(body,"Lines",SEVERITY,"Category","File","Link");
                 log.info("Creating Merge/Pull Request Markdown comment");
 
@@ -753,6 +757,7 @@ public class HTMLHelper {
                 addSastAstDetailsBody(request, body, xMap, issueComparator);
 
                 addOsaDetailesBody(results, body, xMap, issueComparator);
+                appendAll(body, "</details>", CRLF, CRLF);
             }
         }
     }
