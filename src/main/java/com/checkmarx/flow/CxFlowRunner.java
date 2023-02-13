@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static com.checkmarx.flow.exception.ExitThrowable.exit;
 
@@ -662,8 +663,8 @@ public class CxFlowRunner implements ApplicationRunner {
         boolean breakBuildResult = false;
 
         if(flowProperties.getEnabledVulnerabilityScanners()!=null){
-            if((flowProperties.getEnabledVulnerabilityScanners().contains("sca") ||
-                    flowProperties.getEnabledVulnerabilityScanners().contains("SCA")) && thresholdValidator.thresholdsExceededDirectNDEVDependency(request, results)){
+            if((flowProperties.getEnabledVulnerabilityScanners().stream().map(String::toLowerCase)
+                    .collect(Collectors.toList()).contains("sca")) && thresholdValidator.thresholdsExceededDirectNDEVDependency(request, results)){
                 log.info("Build failed because some direct dependency issues were found.");
                 breakBuildResult = true;
             }
