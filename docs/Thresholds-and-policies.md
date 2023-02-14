@@ -94,10 +94,28 @@ In terms of prioritization - Thresholds are checked after the execution of filte
 #### *Notes:*
 
 1. If thresholds section exists, break-build is always true
-2. If thresholds section exists, CxFlow expects thresholds configuration for each scanner (SAST and SCA)
-3. For SCA thresholds, see this page: [SCA Thresholds](https://github.com/checkmarx-ltd/cx-flow/wiki/CxSCA-Integration#thresholds)
+2. For SCA thresholds, see this page: [SCA Thresholds](https://github.com/checkmarx-ltd/cx-flow/wiki/CxSCA-Integration#thresholds)
+
+## <a name="directdependency">SCA : Direct dependency </a>
+User can break build based on direct dependency vulnerabilities present in project. User need to add below code in YML file or pass it as command line parameter under SCA section.
+
+```yaml
+sca:
+  filter-dependency-type: Direct
+```
+Default value of filter-dependency-type is **All**.
+
+## <a name="directdependency">SCA : Dev dependency</a>
+User can filter out dev dependency vulnerabilities present in project. User need to add below code in YML file or pass it as command line parameter under SCA section.
+
+```yaml
+sca:
+  filter-Out-Devdependency: true
+```
+Default value of filter-Out-Devdependency: **false** is All.
+
+
 
 ## <a name="filterbygroovyscript">Filter vulnerabilities by groovy script</a>
-
 See [here](https://github.com/checkmarx-ltd/cx-flow/wiki/Work-with-external-scripts#use-a-script-to-filter-findings).
 
