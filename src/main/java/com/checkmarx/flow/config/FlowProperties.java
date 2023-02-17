@@ -11,6 +11,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
 
 @Component
 @ConfigurationProperties(prefix = "cx-flow")
@@ -29,7 +30,7 @@ public class FlowProperties {
     private List<String> filterState;
     private String filterScript;
     private String commentScript;
-    private List<String> enabledVulnerabilityScanners;
+    private List<String> enabledVulnerabilityScanners=new ArrayList<>();
     private boolean autoProfile = false;
     private boolean alwaysProfile = false;
     private Integer profilingDepth = 1;
