@@ -122,6 +122,13 @@ public class ConfigurationOverrider {
         }
 
         request.setBugTracker(bt);
+
+        Optional.ofNullable(override.getScanResubmit())
+                .filter(StringUtils::isNotBlank)
+                .ifPresent(a -> {
+                    request.setScanResubmit(a);
+                    overrideReport.put("scanResubmit", a);
+                });
         
         Optional.ofNullable(override.getApplication())
                 .filter(StringUtils::isNotBlank)
