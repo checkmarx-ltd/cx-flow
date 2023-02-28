@@ -53,7 +53,7 @@
                 <maskPattern>[^&amp;]password=(.+?)\s</maskPattern>
                 <!-- For logging the token request (if logging HTTP requests) -->
                 <maskPattern>&amp;password=(.+?)&amp;</maskPattern>
-                <maskPattern>token=(.+?)\s</maskPattern>
+                <maskPattern>token=(.+?)[&amp;\s]</maskPattern>
                 <maskPattern>"access_token":"([^"]+)"</maskPattern>
                 <maskPattern>Authorization: Bearer (.+)</maskPattern>
                 <pattern>${CONSOLE_LOG_PATTERN}</pattern>
