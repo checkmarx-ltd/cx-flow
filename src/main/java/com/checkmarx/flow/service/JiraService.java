@@ -1596,8 +1596,7 @@ public class JiraService {
             scaDetailsMap.forEach((key, value) ->
                     body.append(key).append(": ").append(value).append(HTMLHelper.CRLF)
             );
-            String findingLink = ScanUtils.constructVulnerabilityUrl(scaDetails.getVulnerabilityLink(), scaDetails.getFinding());
-            body.append("[Link To SCA|").append(findingLink).append("]").append(HTMLHelper.CRLF);
+            body.append("[Link To SCA|").append(scaDetails.getVulnerabilityLink()).append("]").append(HTMLHelper.CRLF);
 
             String cveName = scaDetails.getFinding().getCveName();
             if (!ScanUtils.empty(cveName)) {
