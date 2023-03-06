@@ -1082,7 +1082,7 @@ public class JiraService {
             log.debug("jira properties values for version:{} and deploymentName:{} ",jiraProperties.getVersion(),jiraProperties.getDeployType());
             int parseVersion=0;
             int versionLength = jiraProperties.getVersion().length();
-            int secondValue;
+            int secondValue = 0;
             Iterable<CimProject> metadata =null;
             int indexValue = jiraProperties.getVersion().indexOf(".");
             parseVersion = Integer.parseInt(jiraProperties.getVersion().substring(0,indexValue));
@@ -1112,7 +1112,7 @@ public class JiraService {
                 metadata = getMetaData(jiraProject,issueType);
             }
 
-            if(!jiraProperties.getDeployType().equals("Cloud"))
+            if(!jiraProperties.getDeployType().equals("Cloud") && secondValue>=4 )
             {
                 Iterator<CimProject> iterator = metadata.iterator();
 
