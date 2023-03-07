@@ -248,8 +248,7 @@ public class HTMLHelper {
 
             scaDetailsMap.forEach((key, value) -> appendAll(body, key, ":** ", value, CRLF, CRLF));
 
-            String findingLink = ScanUtils.constructVulnerabilityUrl(any.getVulnerabilityLink(), any.getFinding());
-            appendAll(body, "[Link To SCA](", findingLink, ")", CRLF, CRLF);
+            appendAll(body, "[Link To SCA](", any.getVulnerabilityLink(), ")", CRLF, CRLF);
 
             String cveName = any.getFinding().getCveName();
             if (!ScanUtils.empty(cveName)) {
@@ -383,8 +382,7 @@ public class HTMLHelper {
 
             scaDetailsMap.forEach((key, value) -> body.append(key).append(":</b> ").append(value).append(MarkDownHelper.getLineBreak(request)));
 
-            String findingLink = ScanUtils.constructVulnerabilityUrl(any.getVulnerabilityLink(), any.getFinding());
-            body.append(DIV_A_HREF).append(findingLink).append("'>Link To SCA</a></div>");
+            body.append(DIV_A_HREF).append(any.getVulnerabilityLink()).append("'>Link To SCA</a></div>");
 
             String cveName = any.getFinding().getCveName();
             if (!ScanUtils.empty(cveName)) {
