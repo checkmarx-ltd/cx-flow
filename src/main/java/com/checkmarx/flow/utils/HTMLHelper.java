@@ -634,7 +634,15 @@ public class HTMLHelper {
                 .sorted(Map.Entry.comparingByValue(issueComparator.reversed()))
                 .forEach(xIssue -> {
                     ScanResults.XIssue currentIssue = xIssue.getValue();
-                    String fileUrl = ScanUtils.getFileUrl(request, currentIssue.getFilename());
+                    String newFileName;
+                    String fileUrl;
+                    if(currentIssue.getFilename().contains(" ")) {
+                        newFileName = currentIssue.getFilename().replace(" ", "%20");
+                        fileUrl = ScanUtils.getFileUrl(request, newFileName);
+                    }
+                    else {
+                        fileUrl = ScanUtils.getFileUrl(request,currentIssue.getFilename() );
+                    }
                     currentIssue.getDetails().entrySet().stream()
                             .filter(x -> x.getKey() != null && x.getValue() != null && !x.getValue().isFalsePositive())
                             .sorted(Map.Entry.comparingByKey())
