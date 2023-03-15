@@ -142,6 +142,7 @@ public class CxFlowRunner implements ApplicationRunner {
         boolean osa;
         boolean force;
         boolean branchProtectionEnabled;
+        boolean disableBreakbuild;
         FlowOverride flowOverride = null;
         ObjectMapper mapper = new ObjectMapper();
         String uid = helperService.getShortUid();
@@ -207,6 +208,7 @@ public class CxFlowRunner implements ApplicationRunner {
         boolean usingBitBucketCloud = args.containsOption("bb");
         boolean usingBitBucketServer = args.containsOption("bbs");
         boolean disableCertificateValidation = args.containsOption("trust-cert");
+        disableBreakbuild=args.containsOption("disable-break-build");
         branchProtectionEnabled = args.containsOption("branch-protection-enabled");
         CxPropertiesBase cxProperties = cxScannerService.getProperties();
         Map<String, String> projectCustomFields = makeCustomFieldMap(args.getOptionValues("project-custom-field"));
@@ -375,6 +377,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 .scanFields(scanCustomFields)
                 .branchProtectionEnabled(branchProtectionEnabled)
                 .commentSAST(commentSAST)
+                .disableBreakbuild(disableBreakbuild)
                 .build();
 
         if (projectId != null) {
@@ -660,6 +663,13 @@ public class CxFlowRunner implements ApplicationRunner {
     }
 
     private boolean checkIfBreakBuild(ScanRequest request, ScanResults results) {
+
+
+        if(request.getDisableBreakbuild() || flowProperties.getDisableBreakbuild()){
+            log.info("Break Build check disabled.");
+            return false;
+        }
+
         boolean breakBuildResult = false;
 
         if(flowProperties.getEnabledVulnerabilityScanners()!=null){
@@ -683,6 +693,7 @@ public class CxFlowRunner implements ApplicationRunner {
         if(!breakBuildResult){
             log.info("Build succeeded. all checks passed");
         }
+
 
         return breakBuildResult;
     }

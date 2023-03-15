@@ -63,6 +63,10 @@ public class FlowProperties {
 
     @Getter
     @Setter
+    private Boolean disableBreakbuild=false;
+
+    @Getter
+    @Setter
     private Integer maxPoolSize;
 
     @Getter

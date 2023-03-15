@@ -25,7 +25,7 @@ public class ScanRequest {
     private String org;
     private String team;
     private String project;
-	private String altProject;
+    private String altProject;
 
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
@@ -80,7 +80,7 @@ public class ScanRequest {
     private boolean scanPresetOverride = false;
 
     /**
-    Also known as scan engine configuration.
+     Also known as scan engine configuration.
      */
     private String scanConfiguration;
 
@@ -104,6 +104,9 @@ public class ScanRequest {
     @Getter @Setter
     private String commentSAST;
 
+    @Getter @Setter
+    private Boolean disableBreakbuild;
+
     /**
      * 'Organization' here means the top-most level of project hierarchy.
      * E.g. if SCM supports several levels of hierarchy, path to the project may look like org1/suborg/my-project.
@@ -117,7 +120,7 @@ public class ScanRequest {
 
     @Getter @Setter
     private boolean disableCertificateValidation;
-    
+
     //SSH Key per repo
     @Getter @Setter
     private String sshKeyIdentifier;
@@ -148,7 +151,7 @@ public class ScanRequest {
         this.project = other.project;
         this.cxFields = other.cxFields;
         this.scanFields = other.scanFields;
-		this.altProject = other.altProject;
+        this.altProject = other.altProject;
         this.altFields = other.altFields;
         this.site = other.site;
         this.hash = other.hash;
@@ -234,7 +237,7 @@ public class ScanRequest {
     public Boolean getIncrementalField() {
         return incremental;
     }
-    
+
     public enum Product {
         CX("CX"),
         CXOSA("CXOSA");
