@@ -19,6 +19,7 @@
 * [Rally Issues](#rally)
 * [Sarif](#sarif)
 * [Service Now](#service)
+* [Mantis](#mantis)
 * [CxXML](#cxxml)
 * [Json](#json)
 * [CSV](#csv)
@@ -466,6 +467,30 @@ cx-flow:
   bug-tracker: ServiceNow
   bug-tracker-impl:
     - ServiceNow
+    - Json
+    - GitLab
+      ...
+```
+
+## <a name="mantis">Mantis</a>
+Integration with Incident records for Mantis is available using the following configuration:
+```
+mantis:
+  apiUrl: https://mantis-url.com
+  apiToken: xxxx
+  projectID: xxxx
+```
+
+projectID is id of the project where the issues were created.
+
+The bug tracker must be specified as *Mantis*
+```
+cx-flow:
+  # Agreed upon shared API token
+  token: xxxx
+  bug-tracker: Mantis
+  bug-tracker-impl:
+    - Mantis
     - Json
     - GitLab
       ...
