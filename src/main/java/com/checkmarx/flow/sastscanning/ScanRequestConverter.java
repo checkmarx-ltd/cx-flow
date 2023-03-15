@@ -73,21 +73,44 @@ public class ScanRequestConverter {
         return id != null && id != UNKNOWN_INT;
     }
 
-    public String determineTeamAndOwnerID(ScanRequest request) throws CheckmarxException {
+   public String determineTeamAndOwnerID(ScanRequest request) throws CheckmarxException {
         String ownerId;
         String namespace = Optional.ofNullable(request.getNamespace()).orElse(EMPTY_STRING);
-
         String team = helperService.getCxTeam(request);
         if (!ScanUtils.empty(team)) {
             if (!team.startsWith(cxProperties.getTeamPathSeparator()))
                 team = cxProperties.getTeamPathSeparator().concat(team);
             log.info("Overriding team with {}", team);
             setShardPropertiesIfExists(request, team);
-
             ownerId = determineOwnerId(request, team);
-
+            if (ownerId.equals(UNKNOWN)) {
+                log.info("Existing team with " + team + " was not found. Creating one ...");
+                String[] teamArray = team.split(cxProperties.getTeamPathSeparator());
+                if (namespace.isEmpty()){
+                    namespace = teamArray[teamArray.length-1];
+                }
+                //Remove new team name from the team path and format
+                String parentTeam = team.replace(cxProperties.getTeamPathSeparator().concat(namespace),  "");
+                log.info("Parent Team: " + parentTeam);
+                String parentId = "";
+                String teamPath = "";
+                for (String t : teamArray){
+                    if(!t.isEmpty()){
+                        teamPath = teamPath.concat(cxProperties.getTeamPathSeparator()).concat(t);
+                        String teamId = scannerClient.getTeamId(teamPath);
+                        if (teamId.equals(UNKNOWN)) {
+                            teamId = scannerClient.createTeam(parentId, t);
+                            parentId = teamId;
+                            log.info("Team created: " + team + "with TeamId:" + teamId);
+                        } else {
+                            parentId = teamId;
+                        }
+                        log.info("Parent TeamId: " + parentId);
+                    }
+                }
+                ownerId = parentId;
+            }
             request.setTeam(team);
-
         } else {
             team = cxProperties.getTeam();
             if (!team.startsWith(cxProperties.getTeamPathSeparator()))
@@ -104,7 +127,7 @@ public class ScanRequestConverter {
             }
         }
 
-        //Kick out if the team is unknown
+        //Reject if team is unknown
         if (ownerId.equals(UNKNOWN)) {
             throw new CheckmarxException(getTeamErrorMessage());
         }

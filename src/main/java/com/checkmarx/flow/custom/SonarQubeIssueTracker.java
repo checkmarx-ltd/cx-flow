@@ -145,7 +145,9 @@ public class SonarQubeIssueTracker extends ImmutableIssueTracker {
                         HashMap<String, String> IlicationDetails = (HashMap<String, String>) v;
 
                         ILocationSecondary locationObj = new ILocationSecondary(IlicationDetails.get("snippet"), IlicationDetails.get("file"), new TextRangeSecondary(
-                                Integer.valueOf(IlicationDetails.get("line")), Integer.valueOf(IlicationDetails.get("line"))));
+
+                        Integer.valueOf(IlicationDetails.get("line")), Integer.valueOf(IlicationDetails.get("line"))));
+
                         secondaryLocationList.add(locationObj);
                     }
 
@@ -232,6 +234,7 @@ public class SonarQubeIssueTracker extends ImmutableIssueTracker {
         public TextRangeSecondary(Integer startLine, Integer endLine) {
             this.startLine = startLine;
             this.endLine = endLine;
+
         }
     }
 
