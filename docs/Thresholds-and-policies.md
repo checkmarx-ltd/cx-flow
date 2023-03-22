@@ -50,7 +50,7 @@ Under Branch policies configuration, enable Checkmarx scan as ‘required’ (ht
 
 ## <a name="thresholds">Thresholds vs Basic filters</a>
 
-By default, CxFlow uses the basic filter configuration to make a ‘break decision’. 
+By default, CxFlow uses the basic filter configuration to make a ‘break decision’.
 
 For example, if you configure filter:  ```Filter-severity: HIGH``` - CxFlow results will contain only High severity findings. if ```number-of-results > 0```,  CxFlow will fail the build/PR. If  ```number-of-results = 0``` build/PR is approved.
 
@@ -95,6 +95,12 @@ In terms of prioritization - Thresholds are checked after the execution of filte
 
 1. If thresholds section exists, break-build is always true
 2. For SCA thresholds, see this page: [SCA Thresholds](https://github.com/checkmarx-ltd/cx-flow/wiki/CxSCA-Integration#thresholds)
+3. If thresholds section exists and user want to disable break-build functionality. Then add below tag in file
+
+```yaml
+cxflow:
+  disable-break-build: true
+```
 
 ## <a name="directdependency">SCA : Direct dependency </a>
 User can break build based on direct dependency vulnerabilities present in project. User need to add below code in YML file or pass it as command line parameter under SCA section.

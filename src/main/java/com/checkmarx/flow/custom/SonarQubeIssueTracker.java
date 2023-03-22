@@ -9,10 +9,9 @@ import com.checkmarx.sdk.dto.sca.report.Finding;
 import com.checkmarx.sdk.dto.sca.report.Package;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
-import lombok.Builder;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.context.properties.ConstructorBinding;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -39,16 +38,16 @@ public class SonarQubeIssueTracker extends ImmutableIssueTracker {
     @Override
     public void complete(ScanRequest request, ScanResults results) throws MachinaException {
         log.info("Finalizing Sonar Qube output");
-        List<Issue> issues=Lists.newArrayList();
-        if(results.getXIssues() != null) {
+        List<Issue> issues = Lists.newArrayList();
+        if (results.getXIssues() != null) {
             log.info("Generating SAST Sonar Qube Report");
-            generateSastResults(results,issues);
+            generateSastResults(results, issues);
             // Filter issues without false-positives
             // Build the run object
         }
-        if(results.getScaResults() != null ){
+        if (results.getScaResults() != null) {
             log.info("Generating SCA Sonar Qube Report");
-            generateScaResults(results,issues);
+            generateScaResults(results, issues);
         }
 
         // Build the report
@@ -84,14 +83,15 @@ public class SonarQubeIssueTracker extends ImmutableIssueTracker {
                             .append("Score:").append(v.getScore());
                     sonarIssues.add(Issue.builder().engineId(properties.getScaScannerName())
                             .ruleId(v.getId())
-                            .severity(properties.getSeverityMap().get(v.getSeverity()) != null ? properties.getSeverityMap().get(v.getSeverity()):DEFAULT_LEVEL)
+                            .severity(properties.getSeverityMap().get(v.getSeverity()) != null ? properties.getSeverityMap().get(v.getSeverity()) : DEFAULT_LEVEL)
                             .type("VULNERABILITY")
                             .primaryLocation(ILocation.builder()
                                     .filePath(k)
                                     .message(messageBuilder.toString())
                                     .textRange(TextRange.builder().
                                             startLine(1)
-                                            .endLine(1).build()).build()).build());
+                                            .endLine(1).build()).build())
+                            .build());
                 });
             });
         }
@@ -101,7 +101,7 @@ public class SonarQubeIssueTracker extends ImmutableIssueTracker {
         List<ScanResults.XIssue> filteredXIssues =
                 results.getXIssues()
                         .stream()
-                        .filter(x -> x.getVulnerability()!=null)
+                        .filter(x -> x.getVulnerability() != null)
                         .filter(x -> !x.isAllFalsePositive())
                         .collect(Collectors.toList());
         //All issues to create the results/locations that are not all false positive
@@ -111,19 +111,52 @@ public class SonarQubeIssueTracker extends ImmutableIssueTracker {
                         if (!v.isFalsePositive()) {
                             sonarIssues.add(Issue.builder().engineId(properties.getSastScannerName())
                                     .ruleId(issue.getVulnerability())
-                                    .severity(properties.getSeverityMap().get(issue.getSeverity()) != null ? properties.getSeverityMap().get(issue.getSeverity()):DEFAULT_LEVEL)
+                                    .severity(properties.getSeverityMap().get(issue.getSeverity()) != null ? properties.getSeverityMap().get(issue.getSeverity()) : DEFAULT_LEVEL)
                                     .type("VULNERABILITY")
                                     .primaryLocation(ILocation.builder()
                                             .filePath(issue.getFilename())
                                             .message(StringUtils.isEmpty(issue.getDescription()) ? issue.getVulnerability() : issue.getDescription())
                                             .textRange(TextRange.builder()
-                                                    .startLine(k<1?1:k)
-                                                    .endLine(k<1?1:k).build()).build()).build());
+                                                    .startLine(k < 1 ? 1 : k)
+                                                    .endLine(k < 1 ? 1 : k).build()).build())
+                                    //
+                                    .secondaryLocations(findSecondaryLocation(issue, v.getCodeSnippet()))
+                                    .build());
 
                         }
                     });
                 }
         );
+    }
+
+    private List<ILocationSecondary> findSecondaryLocation(ScanResults.XIssue issue, String codeSnippet) {
+        List<ILocationSecondary> secondaryLocationList = new ArrayList<>();
+
+        try {
+            List<Object> secondarypathListAllOccurence = (List<Object>) issue.getAdditionalDetails().get("results");
+
+            for (int i = 0; i < secondarypathListAllOccurence.size(); i++) {
+                HashMap<String, Object> mapPerIssue = (HashMap<String, Object>) secondarypathListAllOccurence.get(i);
+                HashMap<String, String> mapFirstIssue = (HashMap<String, String>) mapPerIssue.get("1");
+
+                mapPerIssue.forEach((k, v) -> {
+                    if (mapFirstIssue.get("snippet").equalsIgnoreCase(codeSnippet) && !k.equalsIgnoreCase("state")
+                            && !k.equalsIgnoreCase("sink") && !k.equalsIgnoreCase("source")) {
+                        HashMap<String, String> IlicationDetails = (HashMap<String, String>) v;
+
+                        ILocationSecondary locationObj = new ILocationSecondary(IlicationDetails.get("snippet"), IlicationDetails.get("file"), new TextRangeSecondary(
+
+                        Integer.valueOf(IlicationDetails.get("line")), Integer.valueOf(IlicationDetails.get("line"))));
+
+                        secondaryLocationList.add(locationObj);
+                    }
+
+                });
+            }
+        } catch (Exception e) {
+            log.debug("Error Parsing Secondary Path in Sonarqube : " + e.getStackTrace());
+        }
+        return secondaryLocationList;
     }
 
     @Data
@@ -147,11 +180,13 @@ public class SonarQubeIssueTracker extends ImmutableIssueTracker {
         @JsonProperty("primaryLocation")
         ILocation primaryLocation;
         @JsonProperty("secondaryLocations")
-        List<ILocation> secondaryLocations;
+        List<ILocationSecondary> secondaryLocations;
     }
 
     @Data
     @Builder
+    @Getter
+    @Setter
     public static class ILocation {
         @JsonProperty("message")
         private String message;
@@ -159,6 +194,21 @@ public class SonarQubeIssueTracker extends ImmutableIssueTracker {
         String filePath;
         @JsonProperty("textRange")
         TextRange textRange;
+    }
+
+
+    @Getter
+    @Setter
+    public static class ILocationSecondary {
+        private String message;
+        String filePath;
+        TextRangeSecondary textRange;
+
+        public ILocationSecondary(String message, String filePath, TextRangeSecondary textRange) {
+            this.message = message;
+            this.filePath = filePath;
+            this.textRange = textRange;
+        }
     }
 
     @Data
@@ -173,4 +223,20 @@ public class SonarQubeIssueTracker extends ImmutableIssueTracker {
         @JsonProperty("endColumn")
         Integer endColumn;
     }
+
+    @Getter
+    @Setter
+
+    public static class TextRangeSecondary {
+        Integer startLine;
+        Integer endLine;
+
+        public TextRangeSecondary(Integer startLine, Integer endLine) {
+            this.startLine = startLine;
+            this.endLine = endLine;
+
+        }
+    }
+
+
 }
