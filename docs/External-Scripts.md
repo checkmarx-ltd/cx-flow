@@ -11,12 +11,12 @@ return cxProject
 The resulting project name will look like this: `script-prefix-master-fa907029c049b781f961e452a375d606402102a6`.
 For more information about the `getHash()` property, see the `hash` field documentation in [ScanRequest object](../src/main/java/com/checkmarx/flow/dto/ScanRequest.java).
 
-* [Project script](#projectScript)
-* [Team script](#teamScript)
-* [Branch Script](#branchScript)
-* [SAST scan comment script](#scanComment)
-* [Use a Script to Filter Findings](#filterFindings)
-* [JIRA project key script](#jiraProjectKeyScript)
+* [Project script](#projectscript)
+* [Team script](#teamscript)
+* [Branch Script](#branchscript)
+* [SAST scan comment script](#scancomment)
+* [Use a Script to Filter Findings](#filterfindings)
+* [JIRA project key script](#jiraprojectkeyscript)
 
 ### <a name="projectScript">Project script</a>
 * CxFlow will use the string returned from the script execution to determine the Checkmarx project name
@@ -64,8 +64,9 @@ cx-flow:
 
 ### <a name="scanComment">SAST scan comment script</a>
 
-* CxFlow will use the string returned from the script execution to determine the scan comment that is added to the scan initiated by CxFlow
-* To enable this flow add the following property to cxflow configuration (you can use any file name): 
+* CxFlow will use the string returned from the script execution to determine the scan comment that is added to the scan initiated by CxFlow.
+* CxFlow searches comment-script for local files only.
+* To enable this flow add the following property to CxFlow configuration (you can use any file name): 
 
 ```yaml
 cx-flow:
