@@ -110,7 +110,7 @@ dependencies {
     compile('org.apache.commons:commons-lang3:3.12.0')
     compile('org.apache.commons:commons-collections4:4.4')
     compile('org.json:json:20230227')
-    compile('org.yaml:snakeyaml:1.33')
+    compile('org.yaml:snakeyaml:2.0')
     compile('com.fasterxml.jackson.core:jackson-databind:2.14.0')
     compile('org.springframework.boot:spring-boot-starter-web-services'){
         exclude group: 'ch.qos.logback', module: 'logback-core'
