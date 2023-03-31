@@ -1,6 +1,3 @@
-* [Monitoring](#monitoring)
-* [Encryption](#encryption)
-* [External Scripting](#external)
 * [Main (Global) Properties](#main)
 * [Configuration Definitions](#configuration)
   * [9.0 Configuration Changes](#nine)
@@ -22,6 +19,8 @@
   * [Bitbucket (Cloud and Server)](#bitbucket)
 * [JSON Config Override](#json)
 * [BugTrackers](#bugtrackers)
+* [Encryption](#encryption)
+* [External Scripting](#external)
 
 CxFlow uses **Spring Boot** and, for Server Mode, it requires an `application.yml` file to drive the execution. The sections below outlines available properties and when/how they can be used in different execution modes. In addition, all the Spring Boot configuration rules apply. For additional information on Spring Boot, refer to
 https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html
@@ -939,7 +938,8 @@ jira:
 ```
 ## <a name="external">External Scripting</a>
 There are places where a custom **groovy** script can be used while executing CxFlow.  These include:
-* Deciding which branch is applicable for scanning (Sample script attached to this page)
-* The project name to be used
-* The team to be used
-  For additional information, refer to the configuration options above.
+* Deciding which branch is applicable for scanning.
+* The project name to be used.
+* The team to be used.
+  
+For additional information, refer to the [External Scripting](https://github.com/checkmarx-ltd/cx-flow/wiki/External-Scripts) chapter.
