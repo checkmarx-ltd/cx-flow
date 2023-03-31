@@ -172,7 +172,7 @@ dependencies {
     testImplementation('com.microsoft.azure:azure-client-authentication:1.7.14'){
         exclude group:'net.minidev', module:'json-smart'
     }
-    testImplementation('net.minidev:json-smart:2.4.8.redhat-00001')
+    testImplementation('net.minidev:json-smart:2.4.9')
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
     testImplementation("com.github.java-json-tools:json-patch:1.11")
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:${junitVersion}")
