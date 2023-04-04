@@ -18,7 +18,7 @@ For more information about the `getHash()` property, see the `hash` field docume
 * [Use a Script to Filter Findings](#filterfindings)
 * [JIRA project key script](#jiraprojectkeyscript)
 
-### <a name="projectScript">Project script</a>
+### <a name="projectscript">Project script</a>
 * CxFlow will use the string returned from the script execution to determine the Checkmarx project name
 * To enable this flow add the following property to CxFlow configuration (you can use any file name): 
 
@@ -32,7 +32,7 @@ checkmarx:
 
 
 
-### <a name="teamScript">Team script</a>
+### <a name="teamscript">Team script</a>
 * CxFlow will use the string returned from the script execution to determine the cx-team name
 * To enable this flow add the following property to cxflow configuration (you can use any file name): 
 
@@ -46,7 +46,7 @@ checkmarx:
 
 
 
-### <a name="branchScript">Branch Script</a>
+### <a name="branchscript">Branch Script</a>
 * CxFlow will use the boolean value returned from the script execution to determine if scan should be 
 * To enable this flow add the following property to cxflow configuration (you can use any file name): 
 
@@ -62,7 +62,7 @@ cx-flow:
 * Return value: String
 
 
-### <a name="scanComment">SAST scan comment script</a>
+### <a name="scancomment">SAST scan comment script</a>
 
 * CxFlow will use the string returned from the script execution to determine the scan comment that is added to the scan initiated by CxFlow.
 * CxFlow searches comment-script for local files only.
@@ -77,7 +77,7 @@ cx-flow:
 * Return value: String
 * Script example: [ScanComment.groovy](https://raw.githubusercontent.com/checkmarx-ltd/cx-flow/develop/src/main/resources/samples/ScanComment.groovy)
 
-### <a name="filterFindings">Use a Script to Filter Findings</a>
+### <a name="filterfindings">Use a Script to Filter Findings</a>
 
 To filter findings, CxFlow uses configuration that looks like the following:
 
@@ -117,7 +117,7 @@ An exception is thrown in the following cases:
 3. Filtering script has invalid syntax.
 4. A runtime error happens during script execution (comparing to a non-existent property etc.)
 
-### <a name="jiraProjectKeyScript">JIRA project key script</a>
+### <a name="jiraprojectkeyscript">JIRA project key script</a>
 
 * CxFlow will use the string returned from the script execution to determine the JIRA project key which is added to the bug tracker and used by CxFlow to issue tickets in it
 * To enable this flow add the following property to CxFlow configuration (you can use any file name): 
