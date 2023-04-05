@@ -118,7 +118,7 @@ User can filter out dev dependency vulnerabilities present in project. User need
 sca:
   filter-Out-Devdependency: true
 ```
-Default value of filter-Out-Devdependency: **false** is All.
+Default value of filter-Out-Devdependency: **false** .
 
 
 
