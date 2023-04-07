@@ -4,13 +4,15 @@
   * [Issue creation for all bug trackers except JIRA](#forallbt)
   * [Issue creation when bug tracker is JIRA](#forjirabt)
 * [Jira](#jira)
-  * [Label Prefix](#labelPrefix)
+  * [Credentials](#cred) 
+  * [Label Prefix](#labelprefix)
   * [Priorities](#priorities)
   * [Transitions](#transitions)
   * [Fields](#fields)
   * [Assigning tickets to a user](#assigningtickets)
   * [Configuring the Jira Issue Summary](#issuesummaryformat)
   * [Jira Issue Handling](#issuehandling)
+  * [Adding Certifications](#certs)
 * [Custom Bug trackers](#custom)
 * [Azure DevOps Work Items](#azure)
 * [GitLab Issues](#gitlab)
@@ -175,14 +177,25 @@ jira:
       jira-field-type: single-select
 ```
 
-If Jira is on-premise, configuration should be as follows
+### <a name="cred">Credentials</a>
+Jira's credentials configuration differs for on-premises and cloud environments.
 
+#### Cloud Configuration
+```yaml
+jira:
+   url: <Jira Cloud url>
+   username: <Configured email address>
+   token: <Jira api token>
 ```
-  url: <Your url>
-  username: <Your username>
-  token: <Your Password in plain text>
+To generate api token for Jira, Please refer [Tutorials](https://github.com/checkmarx-ltd/cx-flow/wiki/Tutorials#cliprep) chapter.
+#### On-premise Configuration
+```yaml
+jira:
+   url: <Jira on-premise url>
+   username: <Jira on-premise username>
+   token: <Jira on-premise password>
 ```
-### <a name="labelPrefix">Label Prefix</a>
+### <a name="labelprefix">Label Prefix</a>
 ```
 label-prefix: < CUSTOM PREFIX NAME > 
 ```
@@ -315,6 +328,24 @@ When creating a Jira ticket, CxFlow will add a code snippet to the ticket. Somet
 * Issues in JIRA are tagged with a label of `Scanner` with its value being either `SCA` or `SAST` based on the scanner result for which issue is created.
 * There will be filtering of issues based on the type of scan (SCA or SAST) and issues will be updated/created/closed based on the type of scanner used to initiate the scan for that project. 
 * If a scan is initiated for both SCA and SAST, issues of both the scanner types will be created or updated. Re-running scans for either SCA or SAST for the same project id will update issues for that scanner only. Issues of the other type scanner(created before re-run) will not be affected. 
+
+### <a name="certs">Adding Certifications</a>
+If you are using Jira on-premise over HTTPS, an SSL certificate is required to be imported into a keystore or you will see an error.
+
+```
+ERROR 11 --- [ main] com.checkmarx.flow.CxFlowRunner : An error occurred while processing request
+
+148 org.springframework.web.client.ResourceAccessException: I/O error on POST request for "https://checkmarx.company.net/cxrestapi/auth/identity/connect/token":
+ sun.security.validator.ValidatorException:
+  PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException:
+   unable to find valid certification path to requested target; nested exception is javax.net.ssl.SSLHandshakeException:sun.security.validator.ValidatorException: 
+   PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target
+```
+
+<br>See documentation on importing certificates here:
+<br>[https://docs.oracle.com/cd/E54932_01/doc.705/e54936/cssg_create_ssl_cert.htm#CSVSG180](https://docs.oracle.com/cd/E54932_01/doc.705/e54936/cssg_create_ssl_cert.htm#CSVSG180)
+<br>[https://www.baeldung.com/spring-boot-https-self-signed-certificate](https://www.baeldung.com/spring-boot-https-self-signed-certificate)
+
 
 ## <a name="custom">Custom Bug Trackers</a>
 Refer to the [development section](https://github.com/checkmarx-ltd/cx-flow/wiki/Development) for the implementation approach.
