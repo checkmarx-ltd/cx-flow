@@ -502,6 +502,8 @@ cx-flow:
 
 ##### Details
 The meaning and syntax of the `cx-flow.zip-exclude` option are different as opposed to the `checkmarx.exclude-folders` and `checkmarx.exclude-files` options.
+* If User want to exclude folders or exclude files, **settings-override** should be true. If user is using CLI they can pass parameter as `--checkmarx.settings-override=true`
+* If user is using Github Action value of exclude files or folders should not be in double or single quotes. Example : If user want to exclude folder name abc he should pass parameter as `--checkmarx.exclude-folders=abc` or `--checkmarx.exclude-folders=*abc` or ``--checkmarx.exclude-folders=\*abc*
 
 | `cx-flow.zip-exclude`                               | `checkmarx.exclude-folders`, `checkmarx.exclude-files` |
 |-----------------------------------------------------|--------------------------------------------------------|
