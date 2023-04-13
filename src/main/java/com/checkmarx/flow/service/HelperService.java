@@ -123,7 +123,7 @@ public class HelperService {
         String project = request.getProject();
         String branch = request.getBranch();
         request.setProject(branch);
-        request.setModifiedProjectName(getEffectiveEntityName(request, scriptFile, branch, "project"));
+        request.setModifiedProjectName(getEffectiveEntityNameProjectName(request, scriptFile, branch, "project"));
         request.setProject(project);
         return getEffectiveEntityName(request, scriptFile, project, "project");
     }
@@ -149,7 +149,14 @@ public class HelperService {
         }
         return result;  //null will indicate no override will take place
     }
-
+    private String getEffectiveEntityNameProjectName(ScanRequest request, String scriptFile, String defaultName, String entity) {
+        String result = null;
+        //note:  if script is provided, it is highest priority
+        if (!ScanUtils.empty(scriptFile)) {
+            result = Optional.ofNullable(scriptService.getScriptExecutionResult(request, scriptFile, entity)).orElse(defaultName) ;
+        }
+        return result;  //null will indicate no override will take place
+    }
     public String getShortUid(ScanRequest request){
         String uid = RandomStringUtils.random(Constants.SHORT_ID_LENGTH, true, true) ;
         request.setId(uid);
