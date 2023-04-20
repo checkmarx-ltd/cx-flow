@@ -385,6 +385,11 @@ sca:
 --sca.sca-resolver-add-parameters.log-level=Debug
 --sca.sca-resolver-add-parameters.e=*.ext1
 ```
+```
+#Example for Environment variables
+SCA_SCARESOLVERADDPARAMETERS_LOG-LEVEL=Debug
+SCA_SCARESOLVERADDPARAMETERS_e=*.ext1
+```
 The value on the left side reflects the name of the SCA Resolver argument. The value on the right side reflects the SCA Resolver argument value. Refer to [List of SCA Resolver Additional Parameters.](https://checkmarx.com/resource/documents/en/34965-132888-checkmarx-sca-resolver-configuration-arguments.html) 
 
 **Note:** (-- or - is not to be added in argument name)

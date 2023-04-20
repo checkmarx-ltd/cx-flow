@@ -1,14 +1,15 @@
 buildscript {
     ext {
 
+
         CxSBSDK = "0.5.46"
         ConfigProviderVersion = "1.0.10"
         //cxVersion = "8.90.5"
-        springBootVersion = '2.7.0'
+        springBootVersion = '2.7.10'
         sonarqubeVersion = '2.8'
         atlassianVersion = "5.2.0"
         atlassianFugueVersion = "4.7.2"
-        jacksonVersion = "2.14.0"
+        jacksonVersion = "2.14.2"
         mainClassPath = 'com.checkmarx.flow.CxFlowApplication'
     }
     repositories {
@@ -73,10 +74,10 @@ configurations {
     all*.exclude module: 'wss-agent-api'
 }
 
-ext['tomcat.version'] = '9.0.69'
-ext['groovy.version'] = '3.0.9'
+ext['tomcat.version'] = '9.0.73'
+ext['groovy.version'] = '3.0.16'
 ext['logback-classic.version'] = '1.2.10'
-ext['spring-core.version'] = '5.3.20'
+ext['spring-core.version'] = '5.3.26'
 
 dependencies {
     compile group: 'com.beust', name: 'jcommander', version: '1.78'
@@ -109,8 +110,8 @@ dependencies {
     compile('commons-io:commons-io:2.8.0')
     compile('org.apache.commons:commons-lang3:3.12.0')
     compile('org.apache.commons:commons-collections4:4.4')
-    compile('org.json:json:20220320')
-    compile('org.yaml:snakeyaml:1.33')
+    compile('org.json:json:20230227')
+    compile('org.yaml:snakeyaml:2.0')
     compile('com.fasterxml.jackson.core:jackson-databind:2.14.0')
     compile('org.springframework.boot:spring-boot-starter-web-services'){
         exclude group: 'ch.qos.logback', module: 'logback-core'
@@ -136,7 +137,7 @@ dependencies {
     compile("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersion}")
     compile("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${jacksonVersion}")
     compile("org.apache.httpcomponents:httpclient:4.5.13")
-    compile('org.codehaus.jettison:jettison:1.5.3')
+    compile('org.codehaus.jettison:jettison:1.5.4')
     compile("org.thymeleaf:thymeleaf-spring5:3.0.15.RELEASE")
     implementation 'ognl:ognl:3.1.29'
 
@@ -172,7 +173,7 @@ dependencies {
     testImplementation('com.microsoft.azure:azure-client-authentication:1.7.14'){
         exclude group:'net.minidev', module:'json-smart'
     }
-    testImplementation('net.minidev:json-smart:2.4.7')
+    testImplementation('net.minidev:json-smart:2.4.9')
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
     testImplementation("com.github.java-json-tools:json-patch:1.11")
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:${junitVersion}")

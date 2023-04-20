@@ -1,17 +1,23 @@
-* [Monitoring](#monitoring)
-* [Encryption](#encryption)
-* [External Scripting](#external)
 * [Main (Global) Properties](#main)
+  * [Yaml Sample](#yaml)
+  * [CLI Examples](#cli)
+  * [Environment Variable Examples](#env)
 * [Configuration Definitions](#configuration)
-  * [9.0 Configuration Changes](#nine)
-  * [Filtering](#filtering)
-  * [Excluding Files from Zip Archive](#excludezip)
-  * [Break build](#break)
-  * [Override SAST project setting](#override)
-  * [Create Branched Project](#branchproject)
-  * [Scan Queuing and Scan Queuing Timeout](#scanqueuing)
-  * [Scan Timeout and Scan polling](#scantimeoutandscanpolling)
-  * [Report Timeout and Report polling](#reporttimeoutandreportpolling)
+  * [Server Section](#server)
+  * [Cx-Flow Section](#cxflow)
+    * [E-Mail notifications](#email) 
+    * [Filtering](#filtering)
+    * [Excluding Files from Zip Archive](#excludezip)
+    * [Break build](#break)
+  * [Checkmarx Section](#checkmarx)
+    * [9.0 Configuration Changes](#nine)
+    * [Postback action](#postback)
+    * [Override SAST project setting](#override)
+    * [Create Branched Project](#branchproject)
+    * [Scan Queuing and Scan Queuing Timeout](#scanqueuing)
+    * [Scan Timeout and Scan polling](#scantimeoutandscanpolling)
+    * [Report Timeout and Report polling](#reporttimeoutandreportpolling)
+    * [Checkmarx E-mail Notifications](#emailnotifications)
 * [WebHook Configuration](#webhook)
   * [WebHook URL Parameters - Code](#code)
   * [WebHook URL Override Parameters - Details](#details)
@@ -22,8 +28,10 @@
   * [Bitbucket (Cloud and Server)](#bitbucket)
 * [JSON Config Override](#json)
 * [BugTrackers](#bugtrackers)
+* [Encryption](#encryption)
+* [External Scripting](#external)
 
-CxFlow uses **Spring Boot** and, for Server Mode, it requires an `application.yml` file to drive the execution. The sections below outlines available properties and when/how they can be used in different execution modes. In addition, all the Spring Boot configuration rules apply. For additional information on Spring Boot, refer to
+CxFlow uses **Spring Boot** and for Server Mode, it requires an `application.yml` file to drive the execution. The sections below outlines available properties and when/how they can be used in different execution modes. In addition, all the Spring Boot configuration rules apply. For additional information on Spring Boot, refer to
 https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html
 
 Command-line arguments and environment variables prevail over values specified in `application.yml` file. To allow for bootstrapping the launch process with various configurations, especially with containers, CxFlow uses overrides on the command line using the `--property.name=Value` format as well as `PROPERTY_NAME` environment variable overrides.
@@ -37,8 +45,8 @@ $ java -jar cx-flow-<version>.jar \
 
 ## <a name="main">Main (Global) Properties</a>
 
-### Application Properties Sample
-
+### <a name="yaml">Yaml Sample</a>
+Please refer to the sample configuration for the entire YAML structure.
 ```yaml
 server:
   port: ${PORT:8080}
@@ -271,11 +279,75 @@ csv:
     - header: recommendation
       name: recommendation
 ```
-
+### <a name="cli">CLI Examples</a>
+Examples to convert YAML property to CLI property
+```
+#YAML
+cx-flow:
+  bug-tracker:Json
+  
+#CLI
+--cx-flow.bug-tracker=json  
+```
+```
+#YAML
+cx-flow:
+  filter-category:
+    - Stored_XSS
+    - SQL_Injection
+  
+#CLI
+--cx-flow.filter-category="Stored_XSS,SQL_Injection"  
+```
+```
+#YAML
+cx-flow:
+  thresholds:
+    high: 10
+    medium: 10
+    low: 10
+  
+#CLI
+--cx-flow.thresholds.high=10  
+--cx-flow.thresholds.medium=10  
+--cx-flow.thresholds.low=10  
+```
+### <a name="env">Environment Variable Examples</a>
+Examples to convert YAML property to Environment variables
+```
+#YAML
+cx-flow:
+  bug-tracker:Json
+  
+#Environment variables
+CXFLOW_BUGTRACKER=Json
+```
+```
+#YAML
+cx-flow:
+  filter-category:
+    - Stored_XSS
+    - SQL_Injection
+  
+#Environment variables
+CXFLOW_FILTERCATEGORY="Stored_XSS,SQL_Injection"  
+```
+```
+#YAML
+cx-flow:
+  thresholds:
+    high: 10
+    medium: 10
+    low: 10
+  
+#Environment variables
+CXFLOW_THRESHOLDS_HIGH=10 
+CXFLOW_THRESHOLDS_MEDIUM=10  
+CXFLOW_THRESHOLDS_LOW=10  
+```
 ## <a name="configuration">Configuration Definitions</a>
-Refer to the sample configuration above for the entire YAML structure.
 
-### `server` section
+### <a name="server">Server Section</a>
 
 ```yaml
 server:
@@ -286,7 +358,7 @@ server:
 |---------------------------|-----------------------|----------|---------|--------------|--------------------------------------------------------------------------|
 | `port`                    | 8080                  | No       | Yes     | No           | The default value is 8080 unless an environment variable port is defined |
 
-### `cx-flow` section
+### <a name="cxflow">Cx-Flow Section</a>
 
 ```yaml
 cx-flow:
@@ -379,12 +451,12 @@ cx-flow:
 | `core-poolsize`             | 50             | No                                                                   | No      | Yes          | The amount of worker which can work on a thread parallelly.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `max-poolsize`              | 200            | No                                                                   | No      | Yes          | The amount of threads which can be created parallelly.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `queue-capacity`            | 10000          | No                                                                   | No      | Yes          | When the amount of threads present are more than the max poolsize then the threads will wait in the queue. This parameter defines the size of that queue.                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| `comment`            |           | No                                                                   | No      | Yes          | User can store comments field in metadata about the scan.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `comment`                   |                | No                                                                   | No      | Yes          | User can store comments field in metadata about the scan.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 
 
 No* = Default is applied
 
-#### <a name="filtering">E-Mail notifications</a>
+#### <a name="email">E-Mail notifications</a>
 
 ```yaml
 cx-flow:
@@ -430,6 +502,8 @@ cx-flow:
 
 ##### Details
 The meaning and syntax of the `cx-flow.zip-exclude` option are different as opposed to the `checkmarx.exclude-folders` and `checkmarx.exclude-files` options.
+* If User want to exclude folders or exclude files, **settings-override** should be true. If user is using CLI they can pass parameter as `--checkmarx.settings-override=true`
+* If user is using Github Action value of exclude files or folders should not be in double or single quotes. Example : If user want to exclude folder name abc he should pass parameter as `--checkmarx.exclude-folders=abc` or `--checkmarx.exclude-folders=*abc` or ``--checkmarx.exclude-folders=\*abc*
 
 | `cx-flow.zip-exclude`                               | `checkmarx.exclude-folders`, `checkmarx.exclude-files` |
 |-----------------------------------------------------|--------------------------------------------------------|
@@ -458,48 +532,50 @@ CxFlow normalizes slashes in the relative path into a forward slash (`/`).
 For a file to be excluded, a regex must match the **whole** relative file path. Thus, the `.*` regex expression should be used where necessary.
 
 #### <a name="break">Break Build</a>
-The configuration can be set or overridden at execution time using the command line (`--cx-flow.break-build=true`) to exit the command line execution flow for a single project result or scan for results that meet the filter criteria.
+The configuration can be set or overridden at execution time using the command line (`--cx-flow.break-build=true`) to exit the command line execution flow for a single project result or scan for results that meet the filter criteria. 
+
+For more details on break build, please refer to [Thresholds and policies](https://github.com/checkmarx-ltd/cx-flow/wiki/Thresholds-and-policies#breakbuild) chapter. 
 
 **Note**:  This does not apply to WebHooks or for batch cli execution (instance and team).  It only works, if one project result is processed.
 
 
-### `checkmarx` section
+### <a name="checkmarx">Checkmarx Section</a>
 
-| Config                    | Default               | Required                     | WebHook | Command Line     | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-|---------------------------|-----------------------|------------------------------|---------|------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `username`                |                       | Yes                          | Yes     | Yes              | Service account for Checkmarx                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| `password`                |                       | Yes                          | Yes     | Yes              | Service account password Checkmarx                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `client-secret`           |                       | Yes                          | Yes     | Yes              | OIDC client secret for API login to Checkmarx                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| `scope`                   |                       | Yes                          | Yes     | Yes              | While using scope value in CLI, it must be provided in double quotes "" otherwise an exception will be thrown.                                                                                                                                                                                                                                                                                                                                                  |
-| `base-url`                |                       | Yes                          | Yes     | Yes              | Base FQDN and port for Checkmarx                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| `multi-tenant`            | false                 | No*                          | Yes     | Yes (Scan only)  | If yes, the name space is created or reused, if it has been pre-registered or already created for previous scans)                                                                                                                                                                                                                                                                                                                                               |
-| `scan-preset`             | Checkmarx Default     | No*                          | Yes     | Yes (Scan only)  | The default preset used for the triggered scan                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `configuration`           | Default Configuration | No*                          | Yes     | Yes (Scan only)  | Checkmarx scan configuration setting                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| `team`                    |                       | Yes (not for XML parse mode) | Yes     | Yes (Scan only)  | Base team in Checkmarx to drive scanning and retrieving of results                                                                                                                                                                                                                                                                                                                                                                                              |
-| `scan-timeout`            | 120                   | No*                          | Yes     | Yes (scan only)  | The amount of time (in minutes) that cx-flow will wait for a scan to complete to process the results.  The Checkmarx scan remains as is, but no feedback is provided                                                                                                                                                                                                                                                                                            |
-| `scan-polling`            | 20000                 | No                           | Yes     | Yes              | The amount of time (in milliseconds) in which cx-flow pings CxSAST server to get the status of the scan (i.e Queued, Finished or Failed).                                                                                                                                                                                                                                                                                                                       |
-| `report-timeout`          | 300000                | No                           | Yes     | Yes              | The amount of time (in milliseconds) for which cx-flow will wait for CxSAST to generate scan report.If report is not generated within  300000(in miliseconds)it will through Timeout exceeded during report generation as error message.                                                                                                                                                                                                                        |
-| `report-polling`          | 5000                  | No                           | Yes     | Yes              | The amount of time (in milliseconds) in which cx-flow pings CxSAST server to get the status of the report.                                                                                                                                                                                                                                                                                                                                                      |
-| `preserve-xml`            | false                 | No*                          | Yes     | Yes              | This flag is used to preserve the original XML results retrieved by the Checkmarx scan inside the ScanResults object to be later used by a Custom bug tracker implementation, if required.  Currently, **CxXMLIssueTracker** uses this flag                                                                                                                                                                                                                     |
-| `incremental`             | false                 | No*                          | Yes     | Yes              | Enables support for incremental scan support when CxFlow is triggering scans.  The incremental-num-scans and incremental-threshold values must not be exceeded for the last available full scan criteria.                                                                                                                                                                                                                                                       |
-| `incremental-num-scans`   | 5                     | No*                          | Yes     | Yes (scan only)  | The maximum number of scans before a full scan is required                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `project-script`          |                       | No                           | Yes     | Yes              | A **groovy** script that can be used for deciding the name of the project to create/use in Checkmarx. This is to allow for any client custom lookups and other integrations.  The script is passed a "**request**" object, which is of type **com.checkmarx.flow.dto.ScanRequest**, and must return **String** representing the **team name** to be used. If this script is provided, it is used for all decisions associated with the determining project name |
-| `team-script`             |                       | No                           | Yes     | Yes              | A **groovy** script that can be used for deciding the team to use in Checkmarx.  This is to allow for any client custom lookups and other integrations.  The script is passed a "request" object, which is of type **com.checkmarx.flow.dto.ScanRequest**, and must return **String** representing the team path to be used. If this script is provided, it is used for all decisions associated with determining project name.                                 |
-| `incremental-threshold`   | 7                     | No*                          | Yes     | Yes (scan only)  | The maximum number of days before a full scan is required                                                                                                                                                                                                                                                                                                                                                                                                       |
-| `offline`                 | false                 | No*                          | No      | Yes (parse only) | Use Table this only when parsing Checkmarx XML, this flag removes the dependency from Checkmarx APIs when parsing results.  This skips retrieving the issue description from Checkmarx.                                                                                                                                                                                                                                                                         |
-| `exclude-files`           |                       | No                           | Yes     | Yes              | Files to be excluded from Scan                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `exclude-folders`         |                       | No                           | Yes     | Yes              | Folders to be excluded from Scan                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| `custom-state-map`        |                       | No                           | No      | Yes              | A map of custom result state identifiers to custom result state names                                                                                                                                                                                                                                                                                                                                                                                           |
-| `post-action-postback-id` |                       | No                           | Yes     | Yes              | Sets the SAST project's post-scan action to use the post-scan action with the provided Id defined in SAST.If not provided, the project does not get configured to use a post-scan action.                                                                                                                                                                                                                                                                       |
-| `settings-override`       |                       | No                           | Yes     | Yes              | Defaults value false, if set to true the projects settings are re-written/overridden when each SAST scan is invoked from CxFlow                                                                                                                                                                                                                                                                                                                                 |
-| `cx-branch`               | false                 | No                           | Yes     | Yes              | A flag to enable branching of projects in CxSAST.                                                                                                                                                                                                                                                                                                                                                                                                               |
-| `scan-queuing`            | false                 | No                           | Yes     | Yes              | A flag to enable queuing of scan events.                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| `scan-queuing-timeout`    | 720                   | No                           | Yes     | Yes              | The amount of time (in minutes) for which cx-flow will keep a scan event data in its queue before sending to CxSAST, when all the available concurrent scans in CxSAST are in use.                                                                                                                                                                                                                                                                              | 
-| `disable-clubbing`        | false                 | No                           | Yes     | Yes              | If set to true, results are not grouped at all.By default, results are grouped only by vulnerability and filename.                                                                                                                                                                                                                                                                                                                                              |
-| `email-notifications`     |                       | No                           |         | Yes (Scan only)  | A map containing any or all of the following keys: `after-scan`, `before-scan`, `failed-scan`. The vaue of each key is a list of email addresses to which a notification should be sent in the case of the relevant event.                                                                                                                                                                                                                                      |
-| `project-branching-check-count` |               3 | No                           | Yes     | Yes (Scan only)  | The number of times to check the project branching status after a project has been branched. Only relevant for versions of CxSAST that support the querying of the branching status (API version 4 and higher).                                                                                                                                                                                                                                                 |
-| `project-branching-check-interval` |            5 | No                           | Yes     | Yes (Scan only)  | The interval between checks of the project branching status. For versions of CxSAST that do not support querying the project branching status, execution will pause once for the specified duration.                                                                                                                                                                                                                                                            |
-| `restrict-results-to-branch` |              false | No                           | Yes     | Yes (Scan only)  | If set to `true`, when scanning a branched project, only results detected on the branch are reported. As the OData API is needed for this functionality, the CxSAST user used must be a assigned a role with the “API” permission. Also, the `client-id` property should be set to “resource_owner_sast_client” and the `scope` property should be set to “sast_api”.                                                                                           |
+| Config                             | Default               | Required                     | WebHook | Command Line     | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+|------------------------------------|-----------------------|------------------------------|---------|------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `username`                         |                       | Yes                          | Yes     | Yes              | Service account for Checkmarx                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `password`                         |                       | Yes                          | Yes     | Yes              | Service account password Checkmarx                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `client-secret`                    |                       | Yes                          | Yes     | Yes              | OIDC client secret for API login to Checkmarx                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `scope`                            |                       | Yes                          | Yes     | Yes              | While using scope value in CLI, it must be provided in double quotes "" otherwise an exception will be thrown.                                                                                                                                                                                                                                                                                                                                                  |
+| `base-url`                         |                       | Yes                          | Yes     | Yes              | Base FQDN and port for Checkmarx                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `multi-tenant`                     | false                 | No*                          | Yes     | Yes (Scan only)  | If yes, the name space is created or reused, if it has been pre-registered or already created for previous scans)                                                                                                                                                                                                                                                                                                                                               |
+| `scan-preset`                      | Checkmarx Default     | No*                          | Yes     | Yes (Scan only)  | The default preset used for the triggered scan                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `configuration`                    | Default Configuration | No*                          | Yes     | Yes (Scan only)  | Checkmarx scan configuration setting                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `team`                             |                       | Yes (not for XML parse mode) | Yes     | Yes (Scan only)  | Base team in Checkmarx to drive scanning and retrieving of results                                                                                                                                                                                                                                                                                                                                                                                              |
+| `scan-timeout`                     | 120                   | No*                          | Yes     | Yes (scan only)  | The amount of time (in minutes) that cx-flow will wait for a scan to complete to process the results.  The Checkmarx scan remains as is, but no feedback is provided                                                                                                                                                                                                                                                                                            |
+| `scan-polling`                     | 20000                 | No                           | Yes     | Yes              | The amount of time (in milliseconds) in which cx-flow pings CxSAST server to get the status of the scan (i.e Queued, Finished or Failed).                                                                                                                                                                                                                                                                                                                       |
+| `report-timeout`                   | 300000                | No                           | Yes     | Yes              | The amount of time (in milliseconds) for which cx-flow will wait for CxSAST to generate scan report.If report is not generated within  300000(in miliseconds)it will through Timeout exceeded during report generation as error message.                                                                                                                                                                                                                        |
+| `report-polling`                   | 5000                  | No                           | Yes     | Yes              | The amount of time (in milliseconds) in which cx-flow pings CxSAST server to get the status of the report.                                                                                                                                                                                                                                                                                                                                                      |
+| `preserve-xml`                     | false                 | No*                          | Yes     | Yes              | This flag is used to preserve the original XML results retrieved by the Checkmarx scan inside the ScanResults object to be later used by a Custom bug tracker implementation, if required.  Currently, **CxXMLIssueTracker** uses this flag                                                                                                                                                                                                                     |
+| `incremental`                      | false                 | No*                          | Yes     | Yes              | Enables support for incremental scan support when CxFlow is triggering scans.  The incremental-num-scans and incremental-threshold values must not be exceeded for the last available full scan criteria.                                                                                                                                                                                                                                                       |
+| `incremental-num-scans`            | 5                     | No*                          | Yes     | Yes (scan only)  | The maximum number of scans before a full scan is required                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `project-script`                   |                       | No                           | Yes     | Yes              | A **groovy** script that can be used for deciding the name of the project to create/use in Checkmarx. This is to allow for any client custom lookups and other integrations.  The script is passed a "**request**" object, which is of type **com.checkmarx.flow.dto.ScanRequest**, and must return **String** representing the **team name** to be used. If this script is provided, it is used for all decisions associated with the determining project name |
+| `team-script`                      |                       | No                           | Yes     | Yes              | A **groovy** script that can be used for deciding the team to use in Checkmarx.  This is to allow for any client custom lookups and other integrations.  The script is passed a "request" object, which is of type **com.checkmarx.flow.dto.ScanRequest**, and must return **String** representing the team path to be used. If this script is provided, it is used for all decisions associated with determining project name.                                 |
+| `incremental-threshold`            | 7                     | No*                          | Yes     | Yes (scan only)  | The maximum number of days before a full scan is required                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `offline`                          | false                 | No*                          | No      | Yes (parse only) | Use Table this only when parsing Checkmarx XML, this flag removes the dependency from Checkmarx APIs when parsing results.  This skips retrieving the issue description from Checkmarx.                                                                                                                                                                                                                                                                         |
+| `exclude-files`                    |                       | No                           | Yes     | Yes              | Files to be excluded from Scan                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `exclude-folders`                  |                       | No                           | Yes     | Yes              | Folders to be excluded from Scan                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `custom-state-map`                 |                       | No                           | No      | Yes              | A map of custom result state identifiers to custom result state names                                                                                                                                                                                                                                                                                                                                                                                           |
+| `post-action-postback-id`          |                       | No                           | Yes     | Yes              | Sets the SAST project's post-scan action to use the post-scan action with the provided Id defined in SAST.If not provided, the project does not get configured to use a post-scan action.                                                                                                                                                                                                                                                                       |
+| `settings-override`                |                       | No                           | Yes     | Yes              | Defaults value false, if set to true the projects settings are re-written/overridden when each SAST scan is invoked from CxFlow                                                                                                                                                                                                                                                                                                                                 |
+| `cx-branch`                        | false                 | No                           | Yes     | Yes              | A flag to enable branching of projects in CxSAST.                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `scan-queuing`                     | false                 | No                           | Yes     | Yes              | A flag to enable queuing of scan events.                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `scan-queuing-timeout`             | 720                   | No                           | Yes     | Yes              | The amount of time (in minutes) for which cx-flow will keep a scan event data in its queue before sending to CxSAST, when all the available concurrent scans in CxSAST are in use.                                                                                                                                                                                                                                                                              | 
+| `disable-clubbing`                 | false                 | No                           | Yes     | Yes              | If set to true, results are not grouped at all.By default, results are grouped only by vulnerability and filename.                                                                                                                                                                                                                                                                                                                                              |
+| `email-notifications`              |                       | No                           |         | Yes (Scan only)  | A map containing any or all of the following keys: `after-scan`, `before-scan`, `failed-scan`. The vaue of each key is a list of email addresses to which a notification should be sent in the case of the relevant event.                                                                                                                                                                                                                                      |
+| `project-branching-check-count`    | 3                     | No                           | Yes     | Yes (Scan only)  | The number of times to check the project branching status after a project has been branched. Only relevant for versions of CxSAST that support the querying of the branching status (API version 4 and higher).                                                                                                                                                                                                                                                 |
+| `project-branching-check-interval` | 5                     | No                           | Yes     | Yes (Scan only)  | The interval between checks of the project branching status. For versions of CxSAST that do not support querying the project branching status, execution will pause once for the specified duration.                                                                                                                                                                                                                                                            |
+| `restrict-results-to-branch`       | false                 | No                           | Yes     | Yes (Scan only)  | If set to `true`, when scanning a branched project, only results detected on the branch are reported. As the OData API is needed for this functionality, the CxSAST user used must be a assigned a role with the “API” permission. Also, the `client-id` property should be set to “resource_owner_sast_client” and the `scope` property should be set to “sast_api”.                                                                                           |
 No* = Default is applied
 
 ### Custom Checkmarx Fields
@@ -545,7 +621,7 @@ checkmarx:
 * Make sure to include `version: 9.0` (or higher) and `scope: access_control_api sast_rest_api`
 * The Team path must include the unix path separator **/**, the path is for example defined as follows: `/CxServer/Checkmarx/CxFlow`
 
-### <a name="override">Post back action </a>
+### <a name="postback">Postback action </a>
 On using post back mode, Checkmarx post back action will be added to the Checkmarx project and that action will trigger the /postbackAction endpoint on CxFlow.
 
 ```yaml
@@ -553,6 +629,7 @@ checkmarx
   ...
   post-action-postback-id: 123456
 ```
+For more details on postback mode, Please refer to [CxSAST Version 9.0](https://github.com/checkmarx-ltd/cx-flow/wiki/CxSAST-Version-9.0#postback) chapter
 
 ### <a name="override">Override project settings</a>
 The configuration can be set to override project settings with Cxflow configuration when triggering new scan for SAST project, or to avoid project setting update if property set to 'false'.
@@ -601,7 +678,7 @@ checkmarx:
   report-polling: 5000 #Amount of time in miliseconds
 ```
 
-### <a name="emailNotifications"> Email Notifications</a>
+### <a name="emailnotifications"> Checkmarx Email Notifications</a>
 If present, this property specifies the email notifications to be sent when a SAST scan is run. Notifications can be sent before a scan starts, after a scan finishes, and when a scan fails. The content of the `email-notifications` property is a map from the following keys to lists of email receipients: `after-scan`, `before-scan`, `failed-scan`.
 ```yaml
 checkmarx:
@@ -651,7 +728,11 @@ For additional information, refer to the workflow for [WebHooks](https://github.
 @RequestParam(value = "override", required = false) String override,
 @RequestParam(value = "bug", required = false) String bug,
 @RequestParam(value = "app-only", required = false) Boolean appOnlyTracking,
-@RequestParam(value = "state", required = false) List<String> state
+@RequestParam(value = "state", required = false) List<String> state,
+@RequestParam(value = "threshold-high", required =false) Integer thresholdHigh,
+@RequestParam(value = "threshold-medium", required =false) Integer thresholdMedium,
+@RequestParam(value = "threshold-low", required = false) Integer thresholdLow,
+@RequestParam(value = "threshold-info", required = false) Integer thresholdInfo
 ```
 
 ### <a name="details">WebHook URL Override Parameters - Details</a>
@@ -676,7 +757,10 @@ These parameters are related to the WebHook URL parameters above.
 | `override`        | Override a complete **JSON** blob as defined below                                                                                                                                                                                                                   |
 | `bug`             | Override the default configured bug                                                                                                                                                                                                                                  |
 | `app-only`        | This forces Jira issues to be tracked according to the defined application / repo name, as opposed to defining uniqueness per namespace/repo/branch                                                                                                                  |
-
+| `threshold-high` | Override High severity count threshold | 
+| `threshold-medium` | Override Medium severity count threshold | 
+| `threshold-low` | Override Low severity count threshold | 
+| `threshold-info` | Override Info severity count threshold | 
 **Note**:  Overrides are not required. You only need it if you want to override the global configuration specified from the main `application.yml`
 
 ## <a name="repository">Repository Configuration Blocks</a>
@@ -939,7 +1023,8 @@ jira:
 ```
 ## <a name="external">External Scripting</a>
 There are places where a custom **groovy** script can be used while executing CxFlow.  These include:
-* Deciding which branch is applicable for scanning (Sample script attached to this page)
-* The project name to be used
-* The team to be used
-  For additional information, refer to the configuration options above.
+* Deciding which branch is applicable for scanning.
+* The project name to be used.
+* The team to be used.
+  
+For additional information, refer to the [External Scripting](https://github.com/checkmarx-ltd/cx-flow/wiki/External-Scripts) chapter.

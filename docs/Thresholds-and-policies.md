@@ -48,6 +48,13 @@ Under Branch policies configuration, enable Checkmarx scan as ‘required’ (ht
 
 [[/Images/azure_enable_checkmarx_scan.png|enable checkmarx scan]]
 
+
+#### <a name="note">Note</a>
+
+<u>**GitLab**</u>:
+
+CxFlow does not support blocking pull request in GitLab. If **block-merge: true and error-merge: true** then CxFlow will post status of vulnerability as comment but it will not block PR.
+
 ## <a name="thresholds">Thresholds vs Basic filters</a>
 
 By default, CxFlow uses the basic filter configuration to make a ‘break decision’.
@@ -118,7 +125,7 @@ User can filter out dev dependency vulnerabilities present in project. User need
 sca:
   filter-Out-Devdependency: true
 ```
-Default value of filter-Out-Devdependency: **false** is All.
+Default value of filter-Out-Devdependency: **false** .
 
 
 

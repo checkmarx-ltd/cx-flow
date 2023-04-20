@@ -47,10 +47,9 @@ To use CxFlow over HTTPS, an SSL certificate is required to be imported into a k
 <br>See documentation on importing certificates here: 
 <br>[https://docs.oracle.com/cd/E54932_01/doc.705/e54936/cssg_create_ssl_cert.htm#CSVSG180](https://docs.oracle.com/cd/E54932_01/doc.705/e54936/cssg_create_ssl_cert.htm#CSVSG180)
 <br>[https://www.baeldung.com/spring-boot-https-self-signed-certificate](https://www.baeldung.com/spring-boot-https-self-signed-certificate)
-<br>[https://support.code42.com/Administrator/6/Configuring/Install_a_CA-signed_SSL_certificate_for_HTTPS_console_access](https://support.code42.com/Administrator/6/Configuring/Install_a_CA-signed_SSL_certificate_for_HTTPS_console_access)
 
 
-#Self-Signed Certificates
+# Self-Signed Certificates
 
 To allow CxFlow to trust self-signed certificates, the parameter '--trust-cert' needs to be provided via command line when starting the cxflow.
 
