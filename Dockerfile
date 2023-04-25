@@ -23,7 +23,7 @@ FROM alpine:3.17 AS java11
 WORKDIR app
 RUN apk update && \
     apk upgrade 
-RUN apk add openjdk11=11.0.18_p10-r0 --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community
+RUN apk add openjdk11=11.0.19_p7-r0 --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community
 ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk
 RUN apk --no-cache add curl
 RUN apk add sudo
