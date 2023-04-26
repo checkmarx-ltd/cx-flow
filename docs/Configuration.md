@@ -30,6 +30,7 @@
 * [BugTrackers](#bugtrackers)
 * [Encryption](#encryption)
 * [External Scripting](#external)
+* [SAST Scan ID in Github Action Output variable](#outputscanid)
 
 CxFlow uses **Spring Boot** and for Server Mode, it requires an `application.yml` file to drive the execution. The sections below outlines available properties and when/how they can be used in different execution modes. In addition, all the Spring Boot configuration rules apply. For additional information on Spring Boot, refer to
 https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html
@@ -1028,3 +1029,33 @@ There are places where a custom **groovy** script can be used while executing Cx
 * The team to be used.
   
 For additional information, refer to the [External Scripting](https://github.com/checkmarx-ltd/cx-flow/wiki/External-Scripts) chapter.
+
+## <a name="outputscanid">SAST Scan ID in Github Action Output variable</a>
+If user want to use SAST Scan ID for further usage cx-flow stores SCAN ID in githuab output variable name : **cxflowscanid**
+
+```
+- name: Checkmarx CxFlow Action
+      id: step1
+      uses: cx-flow/checkmarx-cxflow-github-action@v1.6
+        project: ${{ github.event.repository.name }}
+        team: ${{ secrets.CHECKMARX_TEAMS }}
+        checkmarx_url: ${{ secrets.CHECKMARX_URL }}
+        checkmarx_username: ${{ secrets.CHECKMARX_USERNAME }}
+        checkmarx_password: ${{ secrets.CHECKMARX_PASSWORD }}
+        checkmarx_client_secret: ${{ secrets.CHECKMARX_CLIENT_SECRET }}
+        scanners: sast
+        params: --github --checkmarx.incremental=false --checkmarx.settings-override=true --namespace=${{ github.repository_owner }} --repo-name=${{ github.event.repository.name }} --branch=${{ github.ref_name }} --cx-flow.filter-severity --cx-flow.filter-category --checkmarx.disable-clubbing=true --repo-url=${{ github.event.repository.url }}
+   
+```
+Steps to retrieve SCAN ID**** in output variable -
+
+* Since Scan ID we are getting only after run of cx-flow, So we will use ID of Checkmarx CxFlow Action steps in output variable to fetch SCAN ID 
+```
+outputs:
+      output1: ${{ steps.step1.outputs.cxflowscanid }}
+```
+* Now SCAN ID is stored in output1 variable which can be used in any jobs as per user convince.
+
+ 
+**NOTE**: If SAST scan is taking time to scan files and other jobs are stuck due to this so user can run cx-flow in Async mode and with the help of SCAN ID from output variable, User can fetch results.
+In This way there is no jobs will be blocked due to processing of cx-flow.
