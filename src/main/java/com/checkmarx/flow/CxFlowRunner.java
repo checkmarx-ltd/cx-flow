@@ -407,6 +407,10 @@ public class CxFlowRunner implements ApplicationRunner {
 
         try {
             if (args.containsOption(PARSE_OPTION)) {
+                if(file==null)
+                {
+                    log.error("The --f option must be provided when the --parse option is provided");
+                }
                 File f = new File(file);
                 if (!f.exists()) {
                     log.error("Result File not found {}", file);
