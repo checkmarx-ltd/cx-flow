@@ -31,6 +31,7 @@
 * [Encryption](#encryption)
 * [External Scripting](#external)
 * [SAST Scan ID in Github Action Output variable](#outputscanid)
+* [Streaming CxFlow logs to AWS OpenSearch or ElasticSearch](#awslogs)
 
 CxFlow uses **Spring Boot** and for Server Mode, it requires an `application.yml` file to drive the execution. The sections below outlines available properties and when/how they can be used in different execution modes. In addition, all the Spring Boot configuration rules apply. For additional information on Spring Boot, refer to
 https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html
@@ -1059,3 +1060,83 @@ outputs:
  
 **NOTE**: If SAST scan is taking time to scan files and other jobs are stuck due to this so user can run cx-flow in Async mode and with the help of SCAN ID from output variable, User can fetch results.
 In This way there is no jobs will be blocked due to processing of cx-flow.
+
+## <a name="awslogs">Streaming CxFlow logs to AWS OpenSearch or ElasticSearch</a>
+
+### Step 1: Create a Logback logging configuration file
+Create an XML file named `logback-spring.xml` with a [Logback](https://logback.qos.ch/documentation.html) configuration similar to the XML below:
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+	<appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+		<layout class="ch.qos.logback.classic.PatternLayout">
+			<pattern>%d{dd-MM-yyyy HH:mm:ss.SSS} %magenta([%thread]) %highlight(%-5level) %logger{36}.%M - %msg%n</pattern>
+		</layout>
+	</appender>
+
+	<appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<encoder>
+			<pattern>%d{dd-MM-yyyy HH:mm:ss.SSS} [%thread] %-5level %logger{36}.%M - %msg%n</pattern>
+		</encoder>
+
+		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+			<fileNamePattern>/logs/cxflow.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+			<maxFileSize>10MB</maxFileSize>
+			<totalSizeCap>20GB</totalSizeCap>
+			<maxHistory>7</maxHistory>
+		</rollingPolicy>
+	</appender>
+
+	<logger name="com.checkmarx" level="INFO" />
+	<logger name="org.apache.http.wire" level="ERROR" />
+	<logger name="org.springframework.ws" level="ERROR" />
+
+	<root level="INFO">
+		<appender-ref ref="FILE" />
+		<appender-ref ref="CONSOLE" />
+	</root>
+</configuration>
+```
+Place this file in a location where CxFlow can access it during execution.
+
+### Step 2: CxFlow logging configuration
+Remove all logging configuration from the CxFlow configuration YAML file and replace it with this line:
+
+`logging.config: logback-spring.xml`
+
+Provide the full path of the `logback-spring.xml` file.
+
+### Step 3: Configure a Logstash pipeline to tail the CxFlow logs
+This example is showing the pipeline configured for the AWS OpenSearch version of Logstash. The ElasticSearch version of Logstash
+is configured similarly. Please consult the appropriate Logstash documentation for a configuration that best fits your needs.
+
+The pipeline configuration should look similar to the following example:
+```
+input {
+
+    file {
+        check_archive_validity => true
+        path => "/cxflow-logs/*.log"
+    }
+}
+
+
+output {
+
+    opensearch {
+        hosts => ["https://<your host url here>:443/"] 
+        index => "cxflow-logs"
+        user => "<username>"
+        password => "<password>"
+        ecs_compatibility => "disabled"
+        ssl_certificate_verification => false
+    }
+}
+```
+
+
+Adjust the `path` configuration element as appropriate to tail logs where you set the CxFlow logs to be stored in the XML file created in Step 1. The OpenSearch configuration elements will need to be adjusted to fit your appropriate storage requirements for OpenSearch/ElasticSearch.
+
+### Step 4: Start CxFlow and Logstash
+If Logstash has been configured correctly, the CxFlow logs will now be tailed and sent to OpenSearch/ElasticSearch.
