@@ -21,6 +21,7 @@
 * [Rally Issues](#rally)
 * [Sarif](#sarif)
 * [Service Now](#service)
+* [itop](#itop)
 * [CxXML](#cxxml)
 * [Json](#json)
 * [CSV](#csv)
@@ -501,6 +502,35 @@ cx-flow:
     - GitLab
       ...
 ```
+
+## <a name="itop">iTop</a>
+Integration with Incident records for iTop is available using the following configuration:
+```
+itop:
+  restEndpointUrl: http://itop-url/webservices/rest.php
+  apiUser: xxxx
+  apiPassword: xxxx
+  orgName: Demo
+  serviceName: Software
+```
+
+restEndpointUrl is the full API endpoint url.
+orgName is the name of the organization under iTop.
+serviceName is the name of the service where the tickets should be created under iTop.
+
+The bug tracker must be specified as *ITop*
+```
+cx-flow:
+  # Agreed upon shared API token
+  token: xxxx
+  bug-tracker: ITop
+  bug-tracker-impl:
+    - ITop
+    - Json
+    - GitLab
+      ...
+```
+
 
 ## <a name="cxxml">CxXML</a>
 The XML bug-tracker (defined as CxXml) is useful, if you want to retrieve the latest scan results per project (batch mode) from Checkmarx per project, Team, or the entire instance. This is the original XML report provided by Checkmarx. When using CxXML with both CxSAST and CxSCA scanners enabled, two seprate reports will be generated, one for CxSAST report and one for CxSCA report.
