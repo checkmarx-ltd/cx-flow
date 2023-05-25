@@ -586,4 +586,8 @@ public class ADOService {
         }
         return contents;
     }
+
+    public boolean isScanSubmittedComment() {
+        return this.properties.isScanSubmittedComment();
+    }
 }
