@@ -323,7 +323,7 @@ public class JiraService {
 
             List<ScanResults.ScaDetails> scaDetails = issue.getScaDetails();
             if (scaDetails != null) {
-                summary = ScanUtils.getScaSummaryIssueKey(request, issue, issuePrefix, issuePostfix);
+                summary = ScanUtils.getScaSummaryIssueKey(request, issue, issuePrefix, issuePostfix,jiraProperties.getScaIssueSummaryFormat(),jiraProperties.getScaIssueSummaryBranchFormat());
             } else {
                 if (useBranch) {
                     summary = formatSastIssueSummary(jiraProperties.getSastIssueSummaryBranchFormat(), issue, request);
