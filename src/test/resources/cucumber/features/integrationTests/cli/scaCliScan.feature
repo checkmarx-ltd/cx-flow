@@ -16,7 +16,7 @@ Feature: SCA support in CxFlow command-line
         Examples:
             | expected-scenario           | exit-code-number |
             | success                     | 0                |
-            | break-build                 | 10               |
+            | break-build                 | 11               |
             | missing-mandatory-parameter | 1                |
             | missing-project             | 2                |
             | error-processing-request    | 10               |
