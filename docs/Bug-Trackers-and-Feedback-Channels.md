@@ -13,6 +13,7 @@
   * [Configuring the Jira Issue Summary](#issuesummaryformat)
   * [Jira Issue Handling](#issuehandling)
   * [Adding Certifications](#certs)
+  * [Jira Timeout](#timeout)
 * [Custom Bug trackers](#custom)
 * [Azure DevOps Work Items](#azure)
 * [GitLab Issues](#gitlab)
@@ -100,6 +101,7 @@ jira:
       - In Review
    closed-status:
       - Done
+   http-timeout : 20000    
    sast-issue-summary-format: "[VULNERABILITY] in [PROJECT] with severity [SEVERITY] @ [FILENAME]"
    sast-issue-summary-branch-format: "[VULNERABILITY] in [PROJECT] with severity [SEVERITY] @ [FILENAME][[BRANCH]]"
    suppress-code-snippets:
@@ -346,6 +348,13 @@ ERROR 11 --- [ main] com.checkmarx.flow.CxFlowRunner : An error occurred while p
 <br>[https://docs.oracle.com/cd/E54932_01/doc.705/e54936/cssg_create_ssl_cert.htm#CSVSG180](https://docs.oracle.com/cd/E54932_01/doc.705/e54936/cssg_create_ssl_cert.htm#CSVSG180)
 <br>[https://www.baeldung.com/spring-boot-https-self-signed-certificate](https://www.baeldung.com/spring-boot-https-self-signed-certificate)
 
+### <a name="timeout">Jira Timeout</a>
+Please add the following parameter to increase the Jira socket timeout.
+
+```yaml
+jira:
+  http-timeout : <Time in ms>
+```
 
 ## <a name="custom">Custom Bug Trackers</a>
 Refer to the [development section](https://github.com/checkmarx-ltd/cx-flow/wiki/Development) for the implementation approach.
