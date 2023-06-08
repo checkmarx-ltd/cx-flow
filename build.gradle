@@ -1,7 +1,7 @@
 buildscript {
     ext {
 
-        CxSBSDK = "0.5.49"
+        CxSBSDK = "0.5.51"
         ConfigProviderVersion = "1.0.10"
         //cxVersion = "8.90.5"
         springBootVersion = '2.7.11'
