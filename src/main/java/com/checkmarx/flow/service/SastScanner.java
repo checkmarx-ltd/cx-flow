@@ -89,7 +89,7 @@ public class SastScanner extends AbstractVulnerabilityScanner {
             }
         } catch (MachinaException | CheckmarxException e) {
             log.error("Error occurred while processing results file", e);
-            exit(3);
+            exit(ExitCode.CHECKMARX_EXCEPTION);
         }
     }
 
@@ -145,7 +145,7 @@ public class SastScanner extends AbstractVulnerabilityScanner {
 
         } catch (CheckmarxException e) {
             log.error("Error occurred while processing projects in batch mode", e);
-            exit(3);
+            exit(ExitCode.CHECKMARX_EXCEPTION);
         }
     }
 

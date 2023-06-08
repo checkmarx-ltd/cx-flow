@@ -51,7 +51,7 @@ public class OsaScannerService {
             }
         } catch (MachinaException | CheckmarxException e) {
             log.error("Error occurred while processing results file(s)", e);
-            exit(3);
+            exit(ExitCode.CHECKMARX_EXCEPTION);
         }
     }
 }
