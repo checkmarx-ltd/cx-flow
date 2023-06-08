@@ -89,7 +89,7 @@ public class SCAScanner extends AbstractASTScanner {
             }
         } catch (MachinaException | CheckmarxException e) {
             log.error("Error occurred while processing results file", e);
-            exit(3);
+            exit(ExitCode.CHECKMARX_EXCEPTION);
         }
     }
 
