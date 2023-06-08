@@ -2,6 +2,7 @@
 <br>[SSL/TLS](#ssltls)
 <br>[XML Encoding](#xmlencoding)
 <br>[JDK Version](#jdk)
+<br>[Exit Codes](#extcode)
 
 
 ## <a name="gotchas">Gotchas!</a>
@@ -274,4 +275,12 @@ at org.springframework.boot.loader.LaunchedURLClassLoader.loadClass(LaunchedURLC
 at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:521) ~[na:na]
 ... 103 common frames omitted
 ```
+
+## <a name="extcode">Exit Codes</a>
+* 0 : Cx-Flow Returns 0 on successful completion of scan.
+* 1 : Cx-Flow Returns 1 on business logic exception.
+* 2 : Cx-Flow Returns 2 when arguments not provided properly.
+* 3 : Cx-Flow Returns 3 on exception.
+* 10 : Cx-Flow Returns 10 when there is some issue during request processing.
+* 11 : Cx-Flow Returns 11 when there is vulnerability crossed thresholds.
 
