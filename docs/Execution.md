@@ -83,12 +83,14 @@ CxFlow can be integrated via command line using several ways. The table below li
 | `--default-branch`           | Name of the default branch which will be used to created licensed project in CxSAST, so that scans from any branch provied by --branch creates a branched project in CxSAST and not a licensed project.                                                                                                                                                                                                        |
 | `--branch-protection-enabled` | Enable branch protection when running in command line mode.                                                                                                                                                                                                                                                                                                                                                    |
 | `--scanId`                    | Can be used with project mode to retrive unique scanId for a given team/project and provide feedback (defect / issue tracking)..                                                                                                                                                                                                                                                                               |
+| `--sca.team`                    | This parameter can be use to give team name to SCA projects.                                                                                                                                                                                                                                                                                                                                                   |
+| `--merge-id`                    | This parameter can be use to provide merge id by command line parameter. Cxflow will update comments in respected merge id provided.                                                                                                                                                                                                                                                                           |
 * By using the CLI, any parameter in the application.yml file can be given a value.
 * To provide value for parameter present in application yml file through CLI, follow below example
 * **Section in YML**
 ```yaml
 github:
-  webhook-token: XXXXX
+  webhook-token: XXXXXsssss
   token: XXXXX
   url: https://github.com
   api-url: https://api.github.com/repos/
