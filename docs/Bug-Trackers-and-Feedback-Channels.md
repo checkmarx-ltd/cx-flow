@@ -104,6 +104,8 @@ jira:
    http-timeout : 20000    
    sast-issue-summary-format: "[VULNERABILITY] in [PROJECT] with severity [SEVERITY] @ [FILENAME]"
    sast-issue-summary-branch-format: "[VULNERABILITY] in [PROJECT] with severity [SEVERITY] @ [FILENAME][[BRANCH]]"
+   sca-issue-summary-branch-format: "[PREFIX] : [VULNERABILITY] in [PACKAGE] and [VERSION] @ [REPO].[BRANCH][POSTFIX]"
+   sca-issue-summary-format: "[PREFIX] : [VULNERABILITY] in [PACKAGE] and [VERSION] @ [REPO][POSTFIX]"
    suppress-code-snippets:
       - Hardcoded_Password_in_Connection_String
       - Password_In_Comment
@@ -295,6 +297,7 @@ java -jar cx-flow-1.6.36.jar --spring.config.location="C:\Cx-Flow\Jar\applicatio
 * As adding Custom Checkmarx field name 'jira-assignee' and setting value for this field as user's email address to whom the tickets should be assigned in cloud and username in on-prim
 ### <a name="issuesummaryformat">Configuring the Jira Issue Summary</a>
 
+#### CX-SAST
 The sast-issue-summary-format and sast-issue-summary-branch-format properties can be used to configure the issue summary of the issues that CxFlow creates in Jira for vulnerabilities detected by CxSAST. The following substitutions are performed on the properties’ values to generate the issue summary:
 
 **[BASENAME]** → The basename of the file in which the vulnerabilities were found
@@ -311,9 +314,32 @@ The sast-issue-summary-format and sast-issue-summary-branch-format properties ca
 
 **[SEVERITY]** → The severity of the vulnerability
 
-**[VULNERABILTY]** → The vulnerability
+**[VULNERABILITY]** → The vulnerability
 
 The default Jira issue summary format (for CxSAST issues) is `[PREFIX][VULNERABILITY] @ [FILENAME][POSTFIX]` (`[PREFIX][VULNERABILITY] @ [FILENAME] [[BRANCH]][POSTFIX]` if the `--branch` command line option has been used).
+
+#### SCA
+The sca-issue-summary-format and sca-issue-summary-branch-format properties can be used to configure the issue summary of the issues that CxFlow creates in Jira for vulnerabilities detected by SCA. The following substitutions are performed on the properties’ values to generate the issue summary:
+
+**[PACKAGE]** → The package name which is vulnerable
+
+**[BRANCH]** → The value of the `--branch` command line option
+
+**[VERSION]** → The version of vulnerable package
+
+**[POSTFIX]** → The issue summary’s suffix (as specified by the Jira issue-postfix property)
+
+**[PREFIX]** → The issue summary’s prefix (as specified by the Jira issue-prefix property)
+
+**[PROJECT]** → The Checkmarx project
+
+**[REPO]** → The name of Repository 
+
+**[SEVERITY]** → The severity of the vulnerability
+
+**[VULNERABILITY]** → The vulnerability
+
+The default Jira issue summary format (for SCA issues) is `"[PREFIX] : [VULNERABILITY] in [PACKAGE] and [VERSION] @ [REPO][POSTFIX]"` and  (`[PREFIX] : [VULNERABILITY] in [PACKAGE] and [VERSION] @ [REPO].[BRANCH][POSTFIX]` if the `--branch` command line option has been used).
 
 ### <a name="suppressCodeSnippets">Suppressing Code Snippets</a>
 

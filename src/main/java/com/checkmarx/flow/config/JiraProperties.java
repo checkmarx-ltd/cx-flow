@@ -54,6 +54,10 @@ public class JiraProperties {
     private String labelPrefix;
     private String sastIssueSummaryFormat = "[PREFIX][VULNERABILITY] @ [FILENAME][POSTFIX]";
     private String sastIssueSummaryBranchFormat = "[PREFIX][VULNERABILITY] @ [FILENAME] [[BRANCH]][POSTFIX]";
+    @Getter @Setter
+    private String scaIssueSummaryFormat = "[PREFIX] : [VULNERABILITY] in [PACKAGE] and [VERSION] @ [REPO][POSTFIX]";
+    @Getter @Setter
+    private String scaIssueSummaryBranchFormat = "[PREFIX] : [VULNERABILITY] in [PACKAGE] and [VERSION] @ [REPO].[BRANCH][POSTFIX]";
     private List<String> suppressCodeSnippets;
     //dynamically set
     @Getter @Setter
