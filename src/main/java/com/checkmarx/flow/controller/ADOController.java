@@ -61,6 +61,8 @@ public class ADOController extends AdoControllerBase {
             ControllerRequest controllerRequest,
             AdoDetailsRequest adoDetailsRequest
     ) {
+
+
         String uid = helperService.getShortUid();
         MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
         log.info("Processing Azure PULL request");
@@ -101,6 +103,12 @@ public class ADOController extends AdoControllerBase {
 
             if (controllerRequest.getAppOnly() != null) {
                 flowProperties.setTrackApplicationOnly(controllerRequest.getAppOnly());
+            }
+
+            if(controllerRequest.getCommentmsgid()!=null){
+                properties.setCommentStatusWhook(controllerRequest.getCommentmsgid());
+            }else{
+                properties.setCommentStatusWhook(-1);
             }
 
             initAdoSpecificParams(adoDetailsRequest);
@@ -230,6 +238,13 @@ public class ADOController extends AdoControllerBase {
             if (StringUtils.isEmpty(product)) {
                 product = ScanRequest.Product.CX.getProduct();
             }
+
+            if(controllerRequest.getCommentmsgid()!=null){
+                properties.setCommentStatusWhook(controllerRequest.getCommentmsgid());
+            }else{
+                properties.setCommentStatusWhook(-1);
+            }
+
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
 
             //determine branch (without refs)

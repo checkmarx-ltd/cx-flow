@@ -308,7 +308,11 @@ public class ADOService {
         comment.put("commentType", 1);
         comments.put(comment);
         requestBody.put("comments", comments);
-        requestBody.put("status", 1);
+        if(properties.getCommentStatusWhook()!= -1){
+            requestBody.put("status", properties.getCommentStatusWhook());
+        }else{
+            requestBody.put("status", properties.getCommentStatus());
+        }
 
         return requestBody;
     }
@@ -581,5 +585,9 @@ public class ADOService {
             log.error(String.format("Error in processing the JSON response from the repo. Error details : %s", ExceptionUtils.getRootCauseMessage(e)));
         }
         return contents;
+    }
+
+    public boolean isScanSubmittedComment() {
+        return this.properties.isScanSubmittedComment();
     }
 }
