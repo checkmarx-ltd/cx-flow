@@ -357,11 +357,13 @@ public class GitLabIssueTracker implements IssueTracker {
         String fileUrl = getFileUrl(request, resultIssue.getFilename());
         String body = HTMLHelper.getMDBody(resultIssue, request.getBranch(), fileUrl, flowProperties,max_desc_length);
         String title = getXIssueKey(resultIssue, request);
+        String label = "Checkmarx_"+ resultIssue.getSeverity();
 
         try {
             requestBody.put("title", title);
             requestBody.put("description", body);
             requestBody.put("state_event", TRANSITION_OPEN);
+            requestBody.put("labels", label);
         } catch (JSONException e) {
             log.error("Error creating JSON Update Object - JSON object will be empty", e);
         }
@@ -378,10 +380,12 @@ public class GitLabIssueTracker implements IssueTracker {
         String fileUrl = getFileUrl(request, resultIssue.getFilename());
         String body = HTMLHelper.getMDBody(resultIssue, request.getBranch(), fileUrl, flowProperties,max_desc_length);
         String title = HTMLHelper.getScanRequestIssueKeyWithDefaultProductValue(request, this, resultIssue);
+        String label = "Checkmarx_"+ resultIssue.getSeverity();
 
         try {
             requestBody.put("title", title);
             requestBody.put("description", body);
+            requestBody.put("labels", label);
         } catch (JSONException e) {
             log.error("Error creating JSON Create Issue Object - JSON Object will be empty", e);
         }
