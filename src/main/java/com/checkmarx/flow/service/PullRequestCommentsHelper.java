@@ -3,6 +3,7 @@ package com.checkmarx.flow.service;
 import com.checkmarx.flow.dto.RepoComment;
 import com.checkmarx.flow.exception.PullRequestCommentUnknownException;
 import com.checkmarx.flow.utils.MarkDownHelper;
+import com.sun.jna.platform.unix.solaris.LibKstat;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -19,6 +20,8 @@ public class PullRequestCommentsHelper {
     private static final String COMMENT_TYPE_SAST_SCAN_STARTED = "Scan submitted to Checkmarx";
     private static final String COMMENT_TYPE_SAST_FINDINGS_1 = MarkDownHelper.SCAN_SUMMARY_DETAILS;
     private static final String COMMENT_TYPE_SAST_SCAN_NOT_SUBMITTED = "Scan not submitted to Checkmarx due to existing Active scan for the same project.";
+
+    private static final String COMMENT_TYPE_SCAN_FAILED_MESSAGE = "Scan failed due to some error.";
 
     public static boolean isCheckMarxComment(RepoComment comment) {
         String currentComment = comment.getComment();
@@ -46,6 +49,11 @@ public class PullRequestCommentsHelper {
         if (isScanStartedComment(comment)) {
             return CommentType.SCAN_STARTED;
         }
+
+        if (isScanErrorComment(comment)) {
+            return CommentType.SCAN_FAILED_MESSAGE;
+        }
+
         if (isSastFindingsComment(comment)) {
             return CommentType.SAST_FINDINGS;
         }
@@ -80,6 +88,10 @@ public class PullRequestCommentsHelper {
         return isCommentType(comment, CommentType.SCAN_STARTED);
     }
 
+    public static boolean isScanErrorComment(String comment) {
+        return isCommentType(comment, CommentType.SCAN_FAILED_MESSAGE);
+    }
+
     public static boolean isScanNotSubmittedComment(String comment) {
         return isCommentType(comment, CommentType.SCAN_NOT_SUBMITTED);
     }
@@ -110,6 +122,7 @@ public class PullRequestCommentsHelper {
         SAST_FINDINGS(Arrays.asList(COMMENT_TYPE_SAST_FINDINGS_1, COMMENT_TYPE_SAST_FINDINGS_2)),
         SCA(Arrays.asList(COMMENT_TYPE_SCA_FINDINGS)),
         SCA_AND_SAST(Arrays.asList(COMMENT_TYPE_SAST_FINDINGS_1, COMMENT_TYPE_SAST_FINDINGS_2, COMMENT_TYPE_SCA_FINDINGS)),
+        SCAN_FAILED_MESSAGE(Arrays.asList(COMMENT_TYPE_SCAN_FAILED_MESSAGE)),
         SCAN_NOT_SUBMITTED(Arrays.asList(COMMENT_TYPE_SAST_SCAN_NOT_SUBMITTED));
 
         CommentType(List<String> texts) {
