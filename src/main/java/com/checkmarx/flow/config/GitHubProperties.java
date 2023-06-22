@@ -6,6 +6,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
+import java.util.Map;
+
 @Component
 @ConfigurationProperties(prefix = "github")
 @Validated
@@ -33,6 +35,10 @@ public class GitHubProperties extends RepoProperties {
     @Getter
     @Setter
     private int maxDelay;
+
+    @Getter
+    @Setter
+    private Map<FindingSeverity,String> issueslabel;
 
     public String getMergeNoteUri(String namespace, String repo, String mergeId){
         String format = "%s/%s/%s/issues/%s/comments";

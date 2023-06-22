@@ -6,6 +6,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
+import java.util.Map;
+
 @Component
 @ConfigurationProperties(prefix = "gitlab")
 @Validated
@@ -20,6 +22,11 @@ public class GitLabProperties extends RepoProperties {
     @Getter
     @Setter
     private String gitlabdashboardversion="9.2";
+
+    @Getter
+    @Setter
+    private Map<FindingSeverity,String> issueslabel;
+
 
 
     public String getGitUri(String namespace, String repo){

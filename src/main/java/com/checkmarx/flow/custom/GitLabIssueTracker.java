@@ -1,5 +1,6 @@
 package com.checkmarx.flow.custom;
 
+import com.checkmarx.flow.config.FindingSeverity;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitLabProperties;
 import com.checkmarx.flow.config.ScmConfigOverrider;
@@ -23,10 +24,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Service("GitLab")
 public class GitLabIssueTracker implements IssueTracker {
@@ -358,6 +356,7 @@ public class GitLabIssueTracker implements IssueTracker {
         String body = HTMLHelper.getMDBody(resultIssue, request.getBranch(), fileUrl, flowProperties,max_desc_length);
         String title = getXIssueKey(resultIssue, request);
         String label = "Checkmarx_"+ resultIssue.getSeverity();
+        label = getString(resultIssue, label);
 
         try {
             requestBody.put("title", title);
@@ -381,6 +380,7 @@ public class GitLabIssueTracker implements IssueTracker {
         String body = HTMLHelper.getMDBody(resultIssue, request.getBranch(), fileUrl, flowProperties,max_desc_length);
         String title = HTMLHelper.getScanRequestIssueKeyWithDefaultProductValue(request, this, resultIssue);
         String label = "Checkmarx_"+ resultIssue.getSeverity();
+        label = getString(resultIssue, label);
 
         try {
             requestBody.put("title", title);
@@ -390,6 +390,21 @@ public class GitLabIssueTracker implements IssueTracker {
             log.error("Error creating JSON Create Issue Object - JSON Object will be empty", e);
         }
         return requestBody;
+    }
+
+    private String getString(ScanResults.XIssue resultIssue, String label) {
+        try {
+            Map<FindingSeverity, String> findingsPerSeverity = properties.getIssueslabel();
+            for (Map.Entry<FindingSeverity, String> entry : findingsPerSeverity.entrySet()) {
+                if(resultIssue.getSeverity().equalsIgnoreCase(entry.getKey().toString())){
+                    label=entry.getValue();
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            return label;
+        }
+        return label;
     }
 
     @Override
