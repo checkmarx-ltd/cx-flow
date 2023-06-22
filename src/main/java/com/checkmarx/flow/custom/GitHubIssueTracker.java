@@ -282,15 +282,16 @@ public class GitHubIssueTracker implements IssueTracker {
         String fileUrl = ScanUtils.getFileUrl(request, resultIssue.getFilename());
         String body = HTMLHelper.getMDBody(resultIssue, request.getBranch(), fileUrl, flowProperties,properties.getMaxDescriptionLength());
         String title = getXIssueKey(resultIssue, request);
-        String[] label = new String[] {"Checkmarx_"+ resultIssue.getSeverity()};
-        label = getString(resultIssue, label);
+        String[] label  = getString(resultIssue);
 
 
         try {
             requestBody.put("title", title);
             requestBody.put("body", body);
             requestBody.put("state", TRANSITION_OPEN);
-            requestBody.put("labels", label);
+            if(label.length>0) {
+                requestBody.put("labels", label);
+            }
         } catch (JSONException e) {
             log.error("Error creating JSON Update Object - JSON object will be empty", e);
         }
@@ -308,34 +309,36 @@ public class GitHubIssueTracker implements IssueTracker {
         String fileUrl = ScanUtils.getFileUrl(request, resultIssue.getFilename());
         String body = HTMLHelper.getMDBody(resultIssue, request.getBranch(), fileUrl, flowProperties,properties.getMaxDescriptionLength());
         String title = HTMLHelper.getScanRequestIssueKeyWithDefaultProductValue(request, this, resultIssue);
-        String[] label = new String[] {"Checkmarx_"+ resultIssue.getSeverity()};
-        label = getString(resultIssue, label);
+        String[] label = getString(resultIssue);
 
         try {
             requestBody.put("title", title);
             requestBody.put("body", body);
-            requestBody.put("labels", label);
+            if(label.length>0) {
+                requestBody.put("labels", label);
+            }
+
         } catch (JSONException e) {
             log.error("Error creating JSON Create Issue Object - JSON Object will be empty", e);
         }
         return requestBody;
     }
 
-    private String[] getString(ScanResults.XIssue resultIssue, String[] label) {
+    private String[] getString(ScanResults.XIssue resultIssue) {
+        String[] strArray = new String[]{};
         try {
             Map<FindingSeverity, String> findingsPerSeverity = properties.getIssueslabel();
             for (Map.Entry<FindingSeverity, String> entry : findingsPerSeverity.entrySet()) {
                 if(resultIssue.getSeverity().equalsIgnoreCase(entry.getKey().toString())){
-                    String[] strArray = null;
 //converting using String.split() method with whitespace as a delimiter
-                    label = entry.getValue().split(",");
+                    strArray = entry.getValue().split(",");
                     break;
                 }
             }
         } catch (Exception e) {
-            return label;
+            return strArray;
         }
-        return label;
+        return strArray;
     }
 
     @Override
