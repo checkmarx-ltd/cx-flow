@@ -159,10 +159,10 @@ Feature: CxFlow should fail builds and pull requests if the number of findings w
 
     Examples:
       | exist  | exceeded   | findings present  | break    | exit code |
-      | true   | true       | true              | true     | 10        |
-      | false  | false      | true              | true     | 10        |
+      | true   | true       | true              | true     | 11        |
+      | false  | false      | true              | true     | 11        |
       | false  | false      | true              | false    | 0         |
       | false  | false      | false             | true     | 0         |
       | true   | false      | false             | true     | 0         |
       | true   | false      | true              | true     | 0         |
-      | true   | true       | true              | false    | 10        |
+      | true   | true       | true              | false    | 11        |

@@ -12,12 +12,12 @@ Feature: Cx-Flow CLI SAST Integration tests
     
     Examples:
       | filter                 | number of issue | return code | 
-      | no-filter              | x+y+z           | 10          | 
-      | no-filter              | x+y+z           | 10          | 
-      | filter-High-and-Medium | x+y             | 10          |
-      | filter-High-and-Medium | x+y             | 10          |
-      | filter-only-Medium     | y               | 10          |
-      | filter-invalid-cwe     | 0               | 0           |
+      | no-filter              | x+y+z           | 11          |
+      | no-filter              | x+y+z           | 11          |
+      | filter-High-and-Medium | x+y             | 11          |
+      | filter-High-and-Medium | x+y             | 11          |
+      | filter-only-Medium     | y               | 11          |
+      | filter-invalid-cwe     | 0               | 0           | 
 
   Scenario Outline: Testing break-build functionality
     When running with break-build on <issue-type>
@@ -45,6 +45,6 @@ Feature: Cx-Flow CLI SAST Integration tests
 
     Examples:
       | filter    | number of issue | return code | enabledZipScan |
-      | no-filter | x+y+z           | 10          | not set        |
-      | no-filter | x+y+z           | 10          | false          |
-      | no-filter | x+y+z           | 10          | true           |
+      | no-filter | x+y+z           | 11          | not set        |
+      | no-filter | x+y+z           | 11          | false          |
+      | no-filter | x+y+z           | 11          | true           |

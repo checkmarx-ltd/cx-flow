@@ -151,15 +151,16 @@ public class ScanRequestConverter {
     private String aquireTeamMultiTenant(ScanRequest request, String ownerId, String namespace, String fullTeamName) throws CheckmarxException {
         request.setTeam(fullTeamName);
         String tmpId = scannerClient.getTeamId(fullTeamName);
-        log.info("Existing team with " + fullTeamName + " was not found. Creating one ...");
         if (tmpId.equals(UNKNOWN)) {
             try {
+                log.info("Existing team with " + fullTeamName + " was not found. Creating one ...");
                 ownerId = scannerClient.createTeam(ownerId, namespace);
             }catch(Exception e){
-                log.error("Existing team with " + fullTeamName + " was not found.", e);
+                log.error("Error Creating team name :  " + fullTeamName + " .", e);
                 ownerId = UNKNOWN;
             }
         } else {
+            log.info("Team " + fullTeamName + " already exists.");
             ownerId = tmpId;
         }
         return ownerId;

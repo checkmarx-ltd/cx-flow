@@ -67,6 +67,21 @@ WebHook Events
   * When registering Push Events, use http://<cxflow>/ado/push 
 **Note** Only Push/Pull Create events are currently supported. Token should be sent as Basic Authentication Header.
 
+## <a name="azureWeb">Changing Checkmarx scan submit comment status in ADO  </a>
+* When registering Pull Create Events, use http://<cxflow>/ado/pull?commentmsgid=2
+* commentmsgid=1 is for comment status as Active
+* commentmsgid=2 is for comment status as Resolved
+* commentmsgid=3 is for comment status as Won't Fix
+* User can pass comment status id as command line parameter as --azure.comment-status=2
+* Inside YML configuration user can put information as below
+```
+azure:
+  webhook-token: cxflow:12345
+  open-status: "To Do"
+  comment-status: 2
+```
+
+
 ## <a name="bitbucketcloud">Bitbucket Cloud</a>
 Bitbucket cloud does not support a shared key/secret for digitally signing and verifying the request, so we require the token parameter to be passed:
 <br> example: http://cxflow?token=XXXXX
