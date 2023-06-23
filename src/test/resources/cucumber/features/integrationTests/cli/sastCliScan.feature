@@ -14,10 +14,10 @@ Feature: Cx-Flow CLI SAST Integration tests
       | filter                 | number of issue | return code | 
       | no-filter              | x+y+z           | 10          | 
       | no-filter              | x+y+z           | 10          | 
-      | filter-High-and-Medium | x+y             | 10          | 
-      | filter-High-and-Medium | x+y             | 10          | 
-      | filter-only-Medium     | y               | 10          | 
-      | filter-invalid-cwe     | 0               | 0           | 
+      | filter-High-and-Medium | x+y             | 10          |
+      | filter-High-and-Medium | x+y             | 10          |
+      | filter-only-Medium     | y               | 10          |
+      | filter-invalid-cwe     | 0               | 0           |
 
   Scenario Outline: Testing break-build functionality
     When running with break-build on <issue-type>
