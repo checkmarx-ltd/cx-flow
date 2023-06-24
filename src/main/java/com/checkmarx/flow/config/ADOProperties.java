@@ -1,5 +1,7 @@
 package com.checkmarx.flow.config;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
@@ -22,7 +24,16 @@ public class ADOProperties extends RepoProperties{
     private String closedStatus = "Done";
     private String projectName;
     private String namespace;
-    
+
+    @Getter
+    @Setter
+    private int commentStatus=1;
+
+    @Getter
+    @Setter
+    private int commentStatusWhook=-1;
+
+
     public String getNamespace() {
         return namespace;
     }
@@ -126,6 +137,8 @@ public class ADOProperties extends RepoProperties{
     public void setDeleteCxProject(boolean deleteProject){
         this.deleteCxProject = deleteProject;
     }
+
+
 
     public String getMergeNoteUri(String namespace, String repo, String mergeId){
         String format = "%s/%s/_apis/git/repositories/%s/pullRequests/%s/threads";

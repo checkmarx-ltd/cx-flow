@@ -69,7 +69,9 @@ public class BugTrackerEventTrigger {
                 break;
 
             case ADOPULL:
-                adoService.sendMergeComment(request, SCAN_MESSAGE);
+                if (adoService.isScanSubmittedComment()) {
+                    adoService.sendMergeComment(request, SCAN_MESSAGE);
+                }
                 adoService.startBlockMerge(request);
                 break;
 

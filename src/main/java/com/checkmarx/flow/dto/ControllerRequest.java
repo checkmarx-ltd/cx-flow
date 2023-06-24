@@ -39,6 +39,7 @@ public class ControllerRequest {
     private Integer thresholdMedium;
     private Integer thresholdLow;
     private Integer thresholdInfo;
+    private Integer commentmsgid;
 
     // Bug tracker.
     private String bug;
