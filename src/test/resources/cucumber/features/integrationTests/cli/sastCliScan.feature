@@ -9,15 +9,15 @@ Feature: Cx-Flow CLI SAST Integration tests
     When running sast scan <filter>
     Then bugTracker contains <number of issue> issues
     And cxflow should exit with exit code: <return code>
-    
+
     Examples:
-      | filter                 | number of issue | return code | 
+      | filter                 | number of issue | return code |
       | no-filter              | x+y+z           | 11          |
       | no-filter              | x+y+z           | 11          |
       | filter-High-and-Medium | x+y             | 11          |
       | filter-High-and-Medium | x+y             | 11          |
       | filter-only-Medium     | y               | 11          |
-      | filter-invalid-cwe     | 0               | 0           | 
+      | filter-invalid-cwe     | 0               | 0           |
 
   Scenario Outline: Testing break-build functionality
     When running with break-build on <issue-type>
@@ -28,8 +28,8 @@ Feature: Cx-Flow CLI SAST Integration tests
       | success                     | 0                |
       | missing-mandatory-parameter | 1                |
       | error-processing-request    | 10               |
-    
-    
+
+
   Scenario: Testing SAST scans with bugTracker None
     Given bug tracker is set to 'None'
     When running cxflow to execute SAST scan

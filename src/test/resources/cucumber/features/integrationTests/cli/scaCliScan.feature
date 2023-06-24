@@ -1,7 +1,7 @@
 @SCA_CLI_SCAN  @IntegrationTest
 Feature: SCA support in CxFlow command-line
     Background: Only SCA vulnerability scanner is enabled in CxFlow
-        Bug tracker doesn't contain any issues at the beginning of each test run.
+    Bug tracker doesn't contain any issues at the beginning of each test run.
 
     Scenario: SCA CLI scan of a local directory
         Given source directory contains vulnerable files

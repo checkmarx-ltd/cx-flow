@@ -4,7 +4,7 @@
 Feature: CxFlow should fail builds and pull requests if scan exeeds threshold
 
   Scenario Outline: CxFlow should fail pull request if threshold-severity is exceeded
-    testing only the severity filter
+  testing only the severity filter
     Given the following thresholds-severities:
       | threshold-name | threshold-for-high | threshold-for-medium | threshold-for-low |
       | N/A            | <omitted>          | <omitted>            | <omitted>         |
@@ -36,7 +36,7 @@ Feature: CxFlow should fail builds and pull requests if scan exeeds threshold
       | partial          | high-over     | pass         |
 
   Scenario Outline: CxFlow should fail pull request if exceeded threshold-score
-    testing only score
+  testing only score
     When max findings score is <over-or-under> threshold-score
     Then pull request should <pass-or-fail>
 
@@ -47,7 +47,7 @@ Feature: CxFlow should fail builds and pull requests if scan exeeds threshold
       | exact        | pass         |
 
   Scenario Outline: CxFlow should fail if a threshold is exceeded
-    testing score and count (both are defined)
+  testing score and count (both are defined)
     When the following thresholds fails on <type>
     Then pull request should <pass-or-fail>
 
