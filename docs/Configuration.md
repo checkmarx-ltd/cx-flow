@@ -32,6 +32,7 @@
 * [External Scripting](#external)
 * [SAST Scan ID in Github Action Output variable](#outputscanid)
 * [Streaming CxFlow logs to AWS OpenSearch or ElasticSearch](#awslogs)
+* [Issue Labels](#issuelbls)
 
 CxFlow uses **Spring Boot** and for Server Mode, it requires an `application.yml` file to drive the execution. The sections below outlines available properties and when/how they can be used in different execution modes. In addition, all the Spring Boot configuration rules apply. For additional information on Spring Boot, refer to
 https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html
@@ -1139,5 +1140,42 @@ output {
 
 Adjust the `path` configuration element as appropriate to tail logs where you set the CxFlow logs to be stored in the XML file created in Step 1. The OpenSearch configuration elements will need to be adjusted to fit your appropriate storage requirements for OpenSearch/ElasticSearch.
 
+
 ### Step 4: Start CxFlow and Logstash
 If Logstash has been configured correctly, the CxFlow logs will now be tailed and sent to OpenSearch/ElasticSearch.
+
+## <a name="issuelbls">Issue Labels</a>
+* We can label SAST issue in GITHUB and GITLAB.If user want to create issue he can pass labels in following way-
+```
+github:
+  webhook-token: 12345
+  url: https://github.com
+  api-url: https://api.github.com/repos/
+  false-positive-label: false-positive
+  block-merge: true
+  error-merge: true
+  max-description-length : 400
+  cx-summary: true
+  issueslabel:
+    high: high,must fix
+    medium: Medium,Not critical
+    low: ignore
+  #max-delay : 3
+
+gitlab:
+  webhook-token: 12345
+  url: https://gitlab.com
+  api-url: https://gitlab.com/api/v4/
+  false-positive-label: false-positive
+  block-merge: true
+  issueslabel:
+    high: high,must fix
+    medium: Medium,Not critical
+    low: ignore
+```
+* User can also pass this as command line parameter.
+```
+--gitlab.issueslabel.medium="Medium,Not critical" --gitlab.issueslabel.low="ignore" --gitlab.issueslabel.high="high,must fix" #assigns 2 labels, high and must fix" --gitlab.issueslabel.info="very low"
+--github.issueslabel.medium="Medium,Not critical" --github.issueslabel.low="ignore" --github.issueslabel.high="high,must fix" #assigns 2 labels, high and must fix" --github.issueslabel.info="very low"
+```
+
