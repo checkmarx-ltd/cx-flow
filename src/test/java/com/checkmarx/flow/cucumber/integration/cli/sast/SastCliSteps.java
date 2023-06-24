@@ -231,10 +231,10 @@ public class SastCliSteps {
 
     @And("and enabledZipScan is set to {string}")
     public void andEnabledZipScanIsSetTo(String enabledZipScan) {
-         if(enabledZipScan.equals("true")){
-             cxProperties.setEnabledZipScan(true);
-         }else if(enabledZipScan.equals("false")){
-             cxProperties.setEnabledZipScan(false);
-         }
+        if(enabledZipScan.equals("true")){
+            cxProperties.setEnabledZipScan(true);
+        }else if(enabledZipScan.equals("false")){
+            cxProperties.setEnabledZipScan(false);
+        }
     }
 }
