@@ -1,6 +1,6 @@
 @ThresholdsFeature
 Feature: CxFlow should fail builds and pull requests if the number of findings with certain severity is above threshold
-  
+
   Scenario Outline: CxFlow should approve or fail GitHub pull request, depending on whether threshold is exceeded
   GitHub notifies CxFlow that a pull request was created. CxFlow then executes a SAST scan.
     Given threshold for findings of "High" severity is "<high threshold>"
@@ -159,10 +159,10 @@ Feature: CxFlow should fail builds and pull requests if the number of findings w
 
     Examples:
       | exist  | exceeded   | findings present  | break    | exit code |
-      | true   | true       | true              | true     | 10        |
-      | false  | false      | true              | true     | 10        |
+      | true   | true       | true              | true     | 11        |
+      | false  | false      | true              | true     | 11        |
       | false  | false      | true              | false    | 0         |
       | false  | false      | false             | true     | 0         |
       | true   | false      | false             | true     | 0         |
       | true   | false      | true              | true     | 0         |
-      | true   | true       | true              | false    | 10        |
+      | true   | true       | true              | false    | 11        |

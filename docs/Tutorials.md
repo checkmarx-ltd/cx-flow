@@ -905,7 +905,7 @@ This tutorial is designed to teach the following topics:
     * Description = CxSAST Vulnerability Type
     * Select the checkboxes next to APPSEC: Kanban Bug Screen & APPSEC: Kanban Default Issue Screen
     * Click Update
-
+*Note :* Jira's credentials configuration differs for on-premises and cloud environments, Please refer to [Bug Trackers and Feedback Channels](https://github.com/checkmarx-ltd/cx-flow/wiki/Bug-Trackers-and-Feedback-Channels#cred) chapter for mmore details
 ### <a name="clitriggering">Triggering Scans with CxFlow</a>
 ##### [Top of Tutorial](#clijira)
 

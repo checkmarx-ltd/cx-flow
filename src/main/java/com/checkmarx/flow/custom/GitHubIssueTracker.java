@@ -1,5 +1,6 @@
 package com.checkmarx.flow.custom;
 
+import com.checkmarx.flow.config.FindingSeverity;
 import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitHubProperties;
 import com.checkmarx.flow.config.ScmConfigOverrider;
@@ -26,6 +27,7 @@ import org.springframework.web.client.RestTemplate;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @Service("GitHub")
@@ -280,11 +282,16 @@ public class GitHubIssueTracker implements IssueTracker {
         String fileUrl = ScanUtils.getFileUrl(request, resultIssue.getFilename());
         String body = HTMLHelper.getMDBody(resultIssue, request.getBranch(), fileUrl, flowProperties,properties.getMaxDescriptionLength());
         String title = getXIssueKey(resultIssue, request);
+        String[] label  = getString(resultIssue);
+
 
         try {
             requestBody.put("title", title);
             requestBody.put("body", body);
             requestBody.put("state", TRANSITION_OPEN);
+            if(label.length>0) {
+                requestBody.put("labels", label);
+            }
         } catch (JSONException e) {
             log.error("Error creating JSON Update Object - JSON object will be empty", e);
         }
@@ -302,14 +309,36 @@ public class GitHubIssueTracker implements IssueTracker {
         String fileUrl = ScanUtils.getFileUrl(request, resultIssue.getFilename());
         String body = HTMLHelper.getMDBody(resultIssue, request.getBranch(), fileUrl, flowProperties,properties.getMaxDescriptionLength());
         String title = HTMLHelper.getScanRequestIssueKeyWithDefaultProductValue(request, this, resultIssue);
+        String[] label = getString(resultIssue);
 
         try {
             requestBody.put("title", title);
             requestBody.put("body", body);
+            if(label.length>0) {
+                requestBody.put("labels", label);
+            }
+
         } catch (JSONException e) {
             log.error("Error creating JSON Create Issue Object - JSON Object will be empty", e);
         }
         return requestBody;
+    }
+
+    private String[] getString(ScanResults.XIssue resultIssue) {
+        String[] strArray = new String[]{};
+        try {
+            Map<FindingSeverity, String> findingsPerSeverity = properties.getIssueslabel();
+            for (Map.Entry<FindingSeverity, String> entry : findingsPerSeverity.entrySet()) {
+                if(resultIssue.getSeverity().equalsIgnoreCase(entry.getKey().toString())){
+//converting using String.split() method with whitespace as a delimiter
+                    strArray = entry.getValue().split(",");
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            return strArray;
+        }
+        return strArray;
     }
 
     @Override

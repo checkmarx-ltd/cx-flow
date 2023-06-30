@@ -142,6 +142,7 @@ public class CxFlowRunner implements ApplicationRunner {
         boolean osa;
         boolean force;
         boolean branchProtectionEnabled;
+        boolean disableBreakbuild;
         FlowOverride flowOverride = null;
         ObjectMapper mapper = new ObjectMapper();
         String uid = helperService.getShortUid();
@@ -160,7 +161,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 && !args.containsOption("project")
                 && !args.containsOption(IAST_OPTION)) {
             log.error("--scan | --parse | --batch | --iast | --project option must be specified");
-            exit(1);
+            exit(ExitCode.BUILD_INTERRUPTED_INTENTIONALLY);
         }
 
         //override with config
@@ -207,6 +208,7 @@ public class CxFlowRunner implements ApplicationRunner {
         boolean usingBitBucketCloud = args.containsOption("bb");
         boolean usingBitBucketServer = args.containsOption("bbs");
         boolean disableCertificateValidation = args.containsOption("trust-cert");
+        disableBreakbuild=args.containsOption("disable-break-build");
         branchProtectionEnabled = args.containsOption("branch-protection-enabled");
         CxPropertiesBase cxProperties = cxScannerService.getProperties();
         Map<String, String> projectCustomFields = makeCustomFieldMap(args.getOptionValues("project-custom-field"));
@@ -215,12 +217,12 @@ public class CxFlowRunner implements ApplicationRunner {
         if (((ScanUtils.empty(namespace) && ScanUtils.empty(repoName) && ScanUtils.empty(branch)) &&
                 ScanUtils.empty(application)) && !args.containsOption(BATCH_OPTION) && !args.containsOption(IAST_OPTION)) {
             log.error("Namespace/Repo/Branch or Application (app) must be provided");
-            exit(1);
+            exit(ExitCode.BUILD_INTERRUPTED_INTENTIONALLY);
         }
 
         if (args.containsOption(IAST_OPTION) && StringUtils.isEmpty(scanTag)) {
             log.error("--scan-tag must be provided for IAST tracking");
-            exit(1);
+            exit(ExitCode.BUILD_INTERRUPTED_INTENTIONALLY);
         }
 
         ControllerRequest controllerRequest = new ControllerRequest(severity, cwe, category, status, null);
@@ -241,7 +243,7 @@ public class CxFlowRunner implements ApplicationRunner {
         if (osa) {
             if (libFile == null) {
                 log.error("Both vulnerabilities file (f) and libraries file (lib-file) must be provided for OSA");
-                exit(1);
+                exit(ExitCode.BUILD_INTERRUPTED_INTENTIONALLY);
             }
             product = ScanRequest.Product.CXOSA;
         } else {
@@ -286,7 +288,7 @@ public class CxFlowRunner implements ApplicationRunner {
 
                 if (ScanUtils.empty(namespace) || ScanUtils.empty(repoName) || ScanUtils.empty(mergeId)) {
                     log.error("Namespace/Repo/MergeId must be provided for ADOPULL bug tracking");
-                    exit(1);
+                    exit(ExitCode.BUILD_INTERRUPTED_INTENTIONALLY);
                 }
                 mergeNoteUri = adoProperties.getMergeNoteUri(namespace, repoName, mergeId);
                 break;
@@ -300,7 +302,7 @@ public class CxFlowRunner implements ApplicationRunner {
 
                 if (ScanUtils.empty(namespace) || ScanUtils.empty(repoName) || ScanUtils.empty(mergeId)) {
                     log.error("--namespace, --repo and --merge-id must be provided for GITHUBPULL bug tracking");
-                    exit(1);
+                    exit(ExitCode.BUILD_INTERRUPTED_INTENTIONALLY);
                 }
                 mergeNoteUri = gitHubProperties.getMergeNoteUri(namespace, repoName, mergeId);
                 repoUrl = getNonEmptyRepoUrl(namespace, repoName, repoUrl, gitHubProperties.getGitUri(namespace, repoName));
@@ -316,7 +318,7 @@ public class CxFlowRunner implements ApplicationRunner {
 
                 if (ScanUtils.empty(projectId) || ScanUtils.empty(mergeId)) {
                     log.error("--project-id and --merge-id must be provided for GITLABMERGE bug tracking");
-                    exit(1);
+                    exit(ExitCode.BUILD_INTERRUPTED_INTENTIONALLY);
                 }
                 mergeNoteUri = gitLabProperties.getMergeNoteUri(projectId, mergeId);
                 mergeProjectId = Integer.parseInt(projectId);
@@ -327,7 +329,7 @@ public class CxFlowRunner implements ApplicationRunner {
             case BITBUCKETPULL:
             case bitbucketserverpull:
                 log.info("BitBucket Pull not currently supported from command line");
-                exit(1);
+                exit(ExitCode.BUILD_INTERRUPTED_INTENTIONALLY);
                 break;
             case EMAIL:
                 bugType = BugTracker.Type.EMAIL;
@@ -375,6 +377,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 .scanFields(scanCustomFields)
                 .branchProtectionEnabled(branchProtectionEnabled)
                 .commentSAST(commentSAST)
+                .disableBreakbuild(disableBreakbuild)
                 .build();
 
         if (projectId != null) {
@@ -404,6 +407,10 @@ public class CxFlowRunner implements ApplicationRunner {
 
         try {
             if (args.containsOption(PARSE_OPTION)) {
+                if(file==null)
+                {
+                    log.error("The --f option must be provided when the --parse option is provided");
+                }
                 File f = new File(file);
                 if (!f.exists()) {
                     log.error("Result File not found {}", file);
@@ -515,7 +522,7 @@ public class CxFlowRunner implements ApplicationRunner {
         } else if (args.containsOption("ado")) {
             if (ScanUtils.empty(getOptionValues(args, "namespace"))) {
                 log.error("--namespace must be provided for azure bug tracking");
-                exit(1);
+                exit(ExitCode.BUILD_INTERRUPTED_INTENTIONALLY);
             }
             request.setRepoType(ScanRequest.Repository.ADO);
             request.getBugTracker().setType(BugTracker.Type.ADOPULL);
@@ -545,7 +552,7 @@ public class CxFlowRunner implements ApplicationRunner {
         } catch (IllegalArgumentException e) {
             log.error("No valid bug tracker was provided", e);
             bugTypeEnum = BugTracker.Type.NONE;
-            exit(1);
+            exit(ExitCode.BUILD_INTERRUPTED_INTENTIONALLY);
         }
         return bugTypeEnum;
     }
@@ -650,7 +657,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 resultsService.processResults(request, results, null);
                 if (checkIfBreakBuild(request, results)) {
                     log.error(ERROR_BREAK_MSG);
-                    exit(ExitCode.BUILD_INTERRUPTED);
+                    exit(ExitCode.BUILD_INTERRUPTED_DUE_TO_THRESHOLDS);
                 }
 
             } catch (MachinaException e) {
@@ -660,6 +667,13 @@ public class CxFlowRunner implements ApplicationRunner {
     }
 
     private boolean checkIfBreakBuild(ScanRequest request, ScanResults results) {
+
+
+        if(request.getDisableBreakbuild() || flowProperties.getDisableBreakbuild()){
+            log.info("Break Build check disabled.");
+            return false;
+        }
+
         boolean breakBuildResult = false;
 
         if(flowProperties.getEnabledVulnerabilityScanners()!=null){
@@ -683,6 +697,7 @@ public class CxFlowRunner implements ApplicationRunner {
         if(!breakBuildResult){
             log.info("Build succeeded. all checks passed");
         }
+
 
         return breakBuildResult;
     }

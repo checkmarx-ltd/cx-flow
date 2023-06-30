@@ -383,7 +383,12 @@ sca:
 ```
 #Example for CLI
 --sca.sca-resolver-add-parameters.log-level=Debug
---sca.sca-resolver-add-parameters.e="*.ext1"
+--sca.sca-resolver-add-parameters.e=*.ext1
+```
+```
+#Example for Environment variables
+SCA_SCARESOLVERADDPARAMETERS_LOG-LEVEL=Debug
+SCA_SCARESOLVERADDPARAMETERS_e=*.ext1
 ```
 The value on the left side reflects the name of the SCA Resolver argument. The value on the right side reflects the SCA Resolver argument value. Refer to [List of SCA Resolver Additional Parameters.](https://checkmarx.com/resource/documents/en/34965-132888-checkmarx-sca-resolver-configuration-arguments.html) 
 
@@ -396,7 +401,7 @@ To use custom parameters, the following configuration is needed:
 ```
 sca:
   sca-resolver-add-parameters :
-    custom-parameter : "--gradle-parameters='USERNAME=abc PASSWORD=cba' --npm-parameters='USERNAME=abc PASSWORD=cba'"
+    custom-parameter : "--gradle-parameters=USERNAME=abc PASSWORD=cba"
 ```
 Add the word "custom-parameter" to the left and the entire argument string to the right to add custom parameters to the SCA Resolver.
 ### Project name override Configuration

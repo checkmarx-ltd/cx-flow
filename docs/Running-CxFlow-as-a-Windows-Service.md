@@ -38,7 +38,7 @@ Create an XML configuration file for the Windows Service Wrapper
     <name>CxFlow</name>
     <description>CxFlow Windows Service</description>
     <executable>java</executable>
-    <arguments>-jar "cx-flow-1.X.jar" --spring.config.location=/path/to/application.yml</arguments>
+    <arguments>-jar "cx-flow-1.X.jar" --spring.config.location=/path/to/application.yml --web</arguments>
     <logmode>rotate</logmode>
 </service>
 ```

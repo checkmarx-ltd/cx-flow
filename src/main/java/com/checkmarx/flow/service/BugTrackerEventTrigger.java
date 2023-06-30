@@ -14,6 +14,7 @@ public class BugTrackerEventTrigger {
 
     private static final String SCAN_MESSAGE = "Scan submitted to Checkmarx";
     private static final String SCAN_NOT_SUBMITTED_MESSAGE = "Scan not submitted to Checkmarx due to existing Active scan for the same project.";
+    private static final String SCAN_FAILED_MESSAGE = "Scan failed due to some error.";
 
     private final GitLabService gitLabService;
     private final GitHubService gitService;
@@ -68,7 +69,9 @@ public class BugTrackerEventTrigger {
                 break;
 
             case ADOPULL:
-                adoService.sendMergeComment(request, SCAN_MESSAGE);
+                if (adoService.isScanSubmittedComment()) {
+                    adoService.sendMergeComment(request, SCAN_MESSAGE);
+                }
                 adoService.startBlockMerge(request);
                 break;
 
@@ -94,6 +97,84 @@ public class BugTrackerEventTrigger {
 
         return bugTrackerType;
     }
+
+
+    public void triggerOffScanStartedEvent(ScanRequest scanRequest) {
+
+        boolean eventsWereTriggered = true;
+
+        BugTracker.Type bugTrackerType = scanRequest.getBugTracker().getType();
+
+        switch (bugTrackerType) {
+            case GITLABMERGE:
+                if (gitLabService.isScanSubmittedComment()) {
+                    gitLabService.sendMergeComment(scanRequest, SCAN_FAILED_MESSAGE);
+                }
+                gitLabService.endBlockMerge(scanRequest);
+                break;
+
+            case GITLABCOMMIT:
+                if (gitLabService.isScanSubmittedComment()) {
+                    gitLabService.sendCommitComment(scanRequest, SCAN_FAILED_MESSAGE);
+                }
+                break;
+
+            case GITHUBPULL:
+                if (gitService.isScanSubmittedComment()) {
+                    gitService.sendMergeComment(scanRequest, SCAN_FAILED_MESSAGE);
+                }
+                String targetURL = cxProperties.getBaseUrl().concat(GitHubService.CX_USER_SCAN_QUEUE);
+                gitService.errorBlockMerge(scanRequest, targetURL, SCAN_FAILED_MESSAGE);
+                break;
+
+            case BITBUCKETPULL:
+                if (bbService.isScanSubmittedComment()) {
+                    bbService.sendMergeComment(scanRequest, SCAN_FAILED_MESSAGE);
+                }
+                break;
+
+            case BITBUCKETSERVERPULL:
+                if (bbService.isScanSubmittedComment()) {
+                    bbService.sendServerMergeComment(scanRequest, SCAN_FAILED_MESSAGE);
+                }
+                String buildName = "Existing Checkmarx Scan in progress.";
+                String buildUrl = cxProperties.getBaseUrl().concat(BitBucketService.CX_USER_SCAN_QUEUE);
+                bbService.setBuildFailedStatus(scanRequest, buildName, buildUrl, SCAN_FAILED_MESSAGE);
+                break;
+
+            case ADOPULL:
+                adoService.sendMergeComment(scanRequest, SCAN_FAILED_MESSAGE);
+                adoService.startBlockMerge(scanRequest);
+
+                //Satyam
+                //adoService.endBlockMerge(scanRequest, scanResults, new ScanDetails());
+                break;
+
+            case JIRA:
+            case CUSTOM:
+                eventsWereTriggered = false;
+                break; // No action is needed
+
+            case NONE:
+                log.warn("Bug tracker events were not triggered, because bug tracker type is '{}'.", bugTrackerType);
+                break;
+
+            default:
+                eventsWereTriggered = false;
+                log.warn("Bug-Tracker type: {} is not supported", bugTrackerType);
+        }
+
+        if (eventsWereTriggered) {
+            log.debug("Completed triggering events for the '{}' bug tracker.", bugTrackerType);
+        }
+        else {
+            log.debug("Bug tracker events were not triggered, because bug tracker type is '{}'.", bugTrackerType);
+        }
+
+    }
+
+
+
 
     public void triggerScanNotSubmittedBugTrackerEvent(ScanRequest scanRequest, ScanResults scanResults) {
 

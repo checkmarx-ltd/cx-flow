@@ -69,6 +69,7 @@ public class JiraService {
     private static final String CASCADE_PARENT_CHILD_DELIMITER = ";";
     private static final int MAX_RESULTS_ALLOWED = 1000000;
     private static final String SEARCH_ASSIGNABLE_USER = "%s/rest/api/latest/user/assignable/search?project={projectKey}&query={assignee}";
+    private  static final String ON_PRIM_SEARCH_ASSIGNABLE_USER ="%s/rest/api/latest/user/assignable/search?project={projectKey}&username={assignee}";
     private final JiraProperties jiraProperties;
     private final FlowProperties flowProperties;
     private final String parentUrl;
@@ -322,7 +323,7 @@ public class JiraService {
 
             List<ScanResults.ScaDetails> scaDetails = issue.getScaDetails();
             if (scaDetails != null) {
-                summary = ScanUtils.getScaSummaryIssueKey(request, issue, issuePrefix, issuePostfix);
+                summary = ScanUtils.getScaSummaryIssueKey(request, issue, issuePrefix, issuePostfix,jiraProperties.getScaIssueSummaryFormat(),jiraProperties.getScaIssueSummaryBranchFormat());
             } else {
                 if (useBranch) {
                     summary = formatSastIssueSummary(jiraProperties.getSastIssueSummaryBranchFormat(), issue, request);
@@ -995,10 +996,14 @@ public class JiraService {
     }
 
     private ComplexIssueInputFieldValue getAssignee(String assignee, String projectKey) {
-
-        String urlTemplate = String.format(SEARCH_ASSIGNABLE_USER, jiraProperties.getUrl());
-        URI endpoint = new DefaultUriBuilderFactory().expand(urlTemplate, projectKey, assignee);
-
+        String urlTemplate;
+        if(jiraProperties.getDeployType().equalsIgnoreCase("Cloud"))
+        {
+            urlTemplate = String.format(SEARCH_ASSIGNABLE_USER, jiraProperties.getUrl());
+        }else{
+            urlTemplate = String.format(ON_PRIM_SEARCH_ASSIGNABLE_USER, jiraProperties.getUrl());
+        }
+        URI endpoint= new DefaultUriBuilderFactory().expand(urlTemplate, projectKey, assignee);
         HttpEntity<?> httpEntity = new HttpEntity<>(createAuthHeaders());
         try {
         ResponseEntity<String> response = restTemplate.exchange(endpoint, HttpMethod.GET, httpEntity, String.class);

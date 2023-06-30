@@ -4,13 +4,16 @@
   * [Issue creation for all bug trackers except JIRA](#forallbt)
   * [Issue creation when bug tracker is JIRA](#forjirabt)
 * [Jira](#jira)
-  * [Label Prefix](#labelPrefix)
+  * [Credentials](#cred) 
+  * [Label Prefix](#labelprefix)
   * [Priorities](#priorities)
   * [Transitions](#transitions)
   * [Fields](#fields)
   * [Assigning tickets to a user](#assigningtickets)
   * [Configuring the Jira Issue Summary](#issuesummaryformat)
   * [Jira Issue Handling](#issuehandling)
+  * [Adding Certifications](#certs)
+  * [Jira Timeout](#timeout)
 * [Custom Bug trackers](#custom)
 * [Azure DevOps Work Items](#azure)
 * [GitLab Issues](#gitlab)
@@ -99,8 +102,11 @@ jira:
       - In Review
    closed-status:
       - Done
+   http-timeout : 20000    
    sast-issue-summary-format: "[VULNERABILITY] in [PROJECT] with severity [SEVERITY] @ [FILENAME]"
    sast-issue-summary-branch-format: "[VULNERABILITY] in [PROJECT] with severity [SEVERITY] @ [FILENAME][[BRANCH]]"
+   sca-issue-summary-branch-format: "[PREFIX] : [VULNERABILITY] in [PACKAGE] and [VERSION] @ [REPO].[BRANCH][POSTFIX]"
+   sca-issue-summary-format: "[PREFIX] : [VULNERABILITY] in [PACKAGE] and [VERSION] @ [REPO][POSTFIX]"
    suppress-code-snippets:
       - Hardcoded_Password_in_Connection_String
       - Password_In_Comment
@@ -176,14 +182,25 @@ jira:
       jira-field-type: single-select
 ```
 
-If Jira is on-premise, configuration should be as follows
+### <a name="cred">Credentials</a>
+Jira's credentials configuration differs for on-premises and cloud environments.
 
+#### Cloud Configuration
+```yaml
+jira:
+   url: <Jira Cloud url>
+   username: <Configured email address>
+   token: <Jira api token>
 ```
-  url: <Your url>
-  username: <Your username>
-  token: <Your Password in plain text>
+To generate api token for Jira, Please refer [Tutorials](https://github.com/checkmarx-ltd/cx-flow/wiki/Tutorials#cliprep) chapter.
+#### On-premise Configuration
+```yaml
+jira:
+   url: <Jira on-premise url>
+   username: <Jira on-premise username>
+   token: <Jira on-premise password>
 ```
-### <a name="labelPrefix">Label Prefix</a>
+### <a name="labelprefix">Label Prefix</a>
 ```
 label-prefix: < CUSTOM PREFIX NAME > 
 ```
@@ -281,6 +298,7 @@ java -jar cx-flow-1.6.36.jar --spring.config.location="C:\Cx-Flow\Jar\applicatio
 * As adding Custom Checkmarx field name 'jira-assignee' and setting value for this field as user's email address to whom the tickets should be assigned in cloud and username in on-prim
 ### <a name="issuesummaryformat">Configuring the Jira Issue Summary</a>
 
+#### CX-SAST
 The sast-issue-summary-format and sast-issue-summary-branch-format properties can be used to configure the issue summary of the issues that CxFlow creates in Jira for vulnerabilities detected by CxSAST. The following substitutions are performed on the properties’ values to generate the issue summary:
 
 **[BASENAME]** → The basename of the file in which the vulnerabilities were found
@@ -297,9 +315,32 @@ The sast-issue-summary-format and sast-issue-summary-branch-format properties ca
 
 **[SEVERITY]** → The severity of the vulnerability
 
-**[VULNERABILTY]** → The vulnerability
+**[VULNERABILITY]** → The vulnerability
 
 The default Jira issue summary format (for CxSAST issues) is `[PREFIX][VULNERABILITY] @ [FILENAME][POSTFIX]` (`[PREFIX][VULNERABILITY] @ [FILENAME] [[BRANCH]][POSTFIX]` if the `--branch` command line option has been used).
+
+#### SCA
+The sca-issue-summary-format and sca-issue-summary-branch-format properties can be used to configure the issue summary of the issues that CxFlow creates in Jira for vulnerabilities detected by SCA. The following substitutions are performed on the properties’ values to generate the issue summary:
+
+**[PACKAGE]** → The package name which is vulnerable
+
+**[BRANCH]** → The value of the `--branch` command line option
+
+**[VERSION]** → The version of vulnerable package
+
+**[POSTFIX]** → The issue summary’s suffix (as specified by the Jira issue-postfix property)
+
+**[PREFIX]** → The issue summary’s prefix (as specified by the Jira issue-prefix property)
+
+**[PROJECT]** → The Checkmarx project
+
+**[REPO]** → The name of Repository 
+
+**[SEVERITY]** → The severity of the vulnerability
+
+**[VULNERABILITY]** → The vulnerability
+
+The default Jira issue summary format (for SCA issues) is `"[PREFIX] : [VULNERABILITY] in [PACKAGE] and [VERSION] @ [REPO][POSTFIX]"` and  (`[PREFIX] : [VULNERABILITY] in [PACKAGE] and [VERSION] @ [REPO].[BRANCH][POSTFIX]` if the `--branch` command line option has been used).
 
 ### <a name="suppressCodeSnippets">Suppressing Code Snippets</a>
 
@@ -316,6 +357,31 @@ When creating a Jira ticket, CxFlow will add a code snippet to the ticket. Somet
 * Issues in JIRA are tagged with a label of `Scanner` with its value being either `SCA` or `SAST` based on the scanner result for which issue is created.
 * There will be filtering of issues based on the type of scan (SCA or SAST) and issues will be updated/created/closed based on the type of scanner used to initiate the scan for that project. 
 * If a scan is initiated for both SCA and SAST, issues of both the scanner types will be created or updated. Re-running scans for either SCA or SAST for the same project id will update issues for that scanner only. Issues of the other type scanner(created before re-run) will not be affected. 
+
+### <a name="certs">Adding Certifications</a>
+If you are using Jira on-premise over HTTPS, an SSL certificate is required to be imported into a keystore or you will see an error.
+
+```
+ERROR 11 --- [ main] com.checkmarx.flow.CxFlowRunner : An error occurred while processing request
+
+148 org.springframework.web.client.ResourceAccessException: I/O error on POST request for "https://checkmarx.company.net/cxrestapi/auth/identity/connect/token":
+ sun.security.validator.ValidatorException:
+  PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException:
+   unable to find valid certification path to requested target; nested exception is javax.net.ssl.SSLHandshakeException:sun.security.validator.ValidatorException: 
+   PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target
+```
+
+<br>See documentation on importing certificates here:
+<br>[https://docs.oracle.com/cd/E54932_01/doc.705/e54936/cssg_create_ssl_cert.htm#CSVSG180](https://docs.oracle.com/cd/E54932_01/doc.705/e54936/cssg_create_ssl_cert.htm#CSVSG180)
+<br>[https://www.baeldung.com/spring-boot-https-self-signed-certificate](https://www.baeldung.com/spring-boot-https-self-signed-certificate)
+
+### <a name="timeout">Jira Timeout</a>
+Please add the following parameter to increase the Jira socket timeout.
+
+```yaml
+jira:
+  http-timeout : <Time in ms>
+```
 
 ## <a name="custom">Custom Bug Trackers</a>
 Refer to the [development section](https://github.com/checkmarx-ltd/cx-flow/wiki/Development) for the implementation approach.

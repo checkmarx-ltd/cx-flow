@@ -2,14 +2,15 @@ import org.gradle.api.tasks.testing.Test
 
 buildscript {
 	ext {
-         CxSBSDK = "0.5.43"
+
+         CxSBSDK = "0.5.53"
          ConfigProviderVersion = "1.0.9"
         //cxVersion = "8.90.5"
-        springBootVersion = '2.7.0'
+        springBootVersion = '2.7.11'
         sonarqubeVersion = '2.8'
         atlassianVersion = "5.2.0"
         atlassianFugueVersion = "4.7.2"
-        jacksonVersion = "2.14.0"
+        jacksonVersion = "2.14.2"
         mainClassPath = 'com.checkmarx.flow.CxFlowApplication'
     }
 	repositories {
@@ -60,10 +61,10 @@ configurations {
     all*.exclude module: 'wss-agent-api'
 }
 
-ext['tomcat.version'] = '9.0.69'
-ext['groovy.version'] = '3.0.9'
+ext['tomcat.version'] = '9.0.73'
+ext['groovy.version'] = '3.0.16'
 ext['logback-classic.version'] = '1.2.10'
-ext['spring-core.version'] = '5.3.20'
+ext['spring-core.version'] = '5.3.27'
 
 dependencies {
     compile group: 'com.beust', name: 'jcommander', version: '1.78'
@@ -92,9 +93,9 @@ dependencies {
     compile ("org.apache.commons:commons-text:1.10.0")
     compile ('commons-codec:commons-codec:1.13')
     compile ('commons-io:commons-io:2.8.0')
-    compile ('org.json:json:20220320')
-    compile('org.yaml:snakeyaml:1.33')
-    compile ('com.fasterxml.jackson.core:jackson-databind:2.14.0')
+    compile ('org.json:json:20230227')
+    compile('org.yaml:snakeyaml:2.0')
+    compile ('com.fasterxml.jackson.core:jackson-databind:2.14.2')
     compile ('org.springframework.boot:spring-boot-starter-web-services'){
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
@@ -111,12 +112,12 @@ dependencies {
         exclude group: 'org.codehaus.jettison', module:'jettison'
     }
     compile ("com.atlassian.jira:jira-rest-java-client-api:${atlassianVersion}")
-    compile("com.fasterxml.jackson.core:jackson-databind:2.14.0")
+    compile("com.fasterxml.jackson.core:jackson-databind:2.14.2")
     compile("com.fasterxml.jackson.core:jackson-core:${jacksonVersion}")
     compile("com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}")
     compile("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersion}")
     compile("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${jacksonVersion}")
-    compile('org.codehaus.jettison:jettison:1.5.3')
+    compile('org.codehaus.jettison:jettison:1.5.4')
 
     compile("org.thymeleaf:thymeleaf-spring5:3.0.15.RELEASE")
     implementation 'ognl:ognl:3.1.29'

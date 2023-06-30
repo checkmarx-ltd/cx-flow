@@ -35,6 +35,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -348,13 +349,14 @@ public class ScanUtils {
             case "JIRA":
                 String issuePrefix = extraTags[0];
                 String issuePostfix = extraTags[1];
-
+                String summaryWithoutBranch = extraTags[2];
+                String summaryWithBranch = extraTags[3];
                 Finding detailsFindings = scaDetails.getFinding();
                 Package vulnerabilityPackage = scaDetails.getVulnerabilityPackage();
 
                 return anyEmpty(request.getNamespace(), request.getRepoName(), request.getBranch())
-                ? getJiraScaSummaryIssueKeyWithoutBranch(request, issuePrefix, issuePostfix, detailsFindings, vulnerabilityPackage)
-                : getJiraScaSummaryIssueKey(request, issuePrefix, issuePostfix, detailsFindings, vulnerabilityPackage);
+                ? getJiraScaSummaryIssueKeyWithoutBranch(summaryWithoutBranch,request, issuePrefix, issuePostfix, detailsFindings, vulnerabilityPackage)
+                : getJiraScaSummaryIssueKey(summaryWithBranch,request, issuePrefix, issuePostfix, detailsFindings, vulnerabilityPackage);
             case "CUSTOM":
                 return anyEmpty(request.getBranch(), request.getNamespace(), request.getRepoName())
                         ? getCustomScaSummaryIssueKeyWithoutBranch(request, scaDetails)
@@ -383,22 +385,32 @@ public class ScanUtils {
                 currentPackageVersion, request.getRepoName());
     }
 
-    private static String getJiraScaSummaryIssueKey(ScanRequest request, String issuePrefix, String issuePostfix, Finding detailsFindings, Package vulnerabilityPackage) {
+    private static String getJiraScaSummaryIssueKey(String summaryWithBranch,ScanRequest request, String issuePrefix, String issuePostfix, Finding detailsFindings, Package vulnerabilityPackage) {
         String currentPackageVersion = getCurrentPackageVersion(vulnerabilityPackage.getId());
-
-        return String.format(SCATicketingConstants.SCA_JIRA_ISSUE_KEY, issuePrefix,
-                detailsFindings.getId(),
-                removePackageCurrentVersionFromPath(vulnerabilityPackage.getId(), currentPackageVersion),
-                currentPackageVersion, request.getRepoName(), request.getBranch(), issuePostfix);
+        summaryWithBranch = fillPlaceholder(summaryWithBranch, "[PACKAGE]", removePackageCurrentVersionFromPath(vulnerabilityPackage.getId(),currentPackageVersion));
+        summaryWithBranch = fillPlaceholder(summaryWithBranch, "[BRANCH]", request.getBranch());
+        summaryWithBranch = fillPlaceholder(summaryWithBranch, "[VERSION]", currentPackageVersion);
+        summaryWithBranch = fillPlaceholder(summaryWithBranch, "[POSTFIX]", issuePostfix);
+        summaryWithBranch = fillPlaceholder(summaryWithBranch, "[PREFIX]", issuePrefix);
+        summaryWithBranch = fillPlaceholder(summaryWithBranch, "[REPO]", request.getRepoName());
+        summaryWithBranch = fillPlaceholder(summaryWithBranch, "[PROJECT]", request.getProject());
+        summaryWithBranch = fillPlaceholder(summaryWithBranch, "[SEVERITY]", String.valueOf(detailsFindings.getSeverity()));
+        summaryWithBranch = fillPlaceholder(summaryWithBranch, "[VULNERABILITY]", detailsFindings.getId());
+        return summaryWithBranch;
     }
 
-    private static String getJiraScaSummaryIssueKeyWithoutBranch(ScanRequest request, String issuePrefix, String issuePostfix, Finding detailsFindings, Package vulnerabilityPackage) {
+    private static String getJiraScaSummaryIssueKeyWithoutBranch(String summaryWithoutBranch,ScanRequest request, String issuePrefix, String issuePostfix, Finding detailsFindings, Package vulnerabilityPackage) {
         String currentPackageVersion = getCurrentPackageVersion(vulnerabilityPackage.getId());
-
-        return String.format(SCATicketingConstants.SCA_JIRA_ISSUE_KEY_WITHOUT_BRANCH, issuePrefix,
-                detailsFindings.getId(),
-                removePackageCurrentVersionFromPath(vulnerabilityPackage.getId(), currentPackageVersion),
-                currentPackageVersion, request.getRepoName(), issuePostfix);
+        summaryWithoutBranch = fillPlaceholder(summaryWithoutBranch, "[PACKAGE]", removePackageCurrentVersionFromPath(vulnerabilityPackage.getId(),currentPackageVersion));
+        summaryWithoutBranch = fillPlaceholder(summaryWithoutBranch, "[BRANCH]", request.getBranch());
+        summaryWithoutBranch = fillPlaceholder(summaryWithoutBranch, "[VERSION]", currentPackageVersion);
+        summaryWithoutBranch = fillPlaceholder(summaryWithoutBranch, "[POSTFIX]", issuePostfix);
+        summaryWithoutBranch = fillPlaceholder(summaryWithoutBranch, "[PREFIX]", issuePrefix);
+        summaryWithoutBranch = fillPlaceholder(summaryWithoutBranch, "[REPO]", request.getRepoName());
+        summaryWithoutBranch = fillPlaceholder(summaryWithoutBranch, "[PROJECT]", request.getProject());
+        summaryWithoutBranch = fillPlaceholder(summaryWithoutBranch, "[SEVERITY]", String.valueOf(detailsFindings.getSeverity()));
+        summaryWithoutBranch = fillPlaceholder(summaryWithoutBranch, "[VULNERABILITY]", detailsFindings.getId());
+        return summaryWithoutBranch;
     }
 
 
@@ -612,7 +624,11 @@ public class ScanUtils {
                 .map(key -> key + "=" + map.get(key))
                 .collect(Collectors.joining(", ", "{", "}"));
     }
-
+    private static String fillPlaceholder(String summary, String placeholder, String actualValue){
+        actualValue = StringUtils.defaultIfEmpty(actualValue, "");
+        summary = summary.replace(placeholder, actualValue);
+        return summary;
+    }
     public static String removePackageCurrentVersionFromPath(String packageName, String currentPackageVersion) {
         return packageName.replace("-" + currentPackageVersion, "");
     }

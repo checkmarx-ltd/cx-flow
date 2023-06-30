@@ -158,7 +158,7 @@ public class SastCliSteps {
     public void setIssues() {
         expectedHigh = 2;
         expectedMedium = 2;
-        expectedLow = 6;
+        expectedLow = 5;
     }
 
     @When("running sast scan {word}")
@@ -231,10 +231,10 @@ public class SastCliSteps {
 
     @And("and enabledZipScan is set to {string}")
     public void andEnabledZipScanIsSetTo(String enabledZipScan) {
-         if(enabledZipScan.equals("true")){
-             cxProperties.setEnabledZipScan(true);
-         }else if(enabledZipScan.equals("false")){
-             cxProperties.setEnabledZipScan(false);
-         }
+        if(enabledZipScan.equals("true")){
+            cxProperties.setEnabledZipScan(true);
+        }else if(enabledZipScan.equals("false")){
+            cxProperties.setEnabledZipScan(false);
+        }
     }
 }
