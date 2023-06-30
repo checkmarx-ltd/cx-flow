@@ -59,7 +59,7 @@ public class MantisTracker implements IssueTracker {
 
     @Override
     public void init(ScanRequest request, ScanResults results) throws MachinaException {
-        log.info("Initializing MantisTracker...");
+        log.info("Initializing Mantis Tracker...");
         // Necessary property checks
         if (ScanUtils.empty(properties.getApiUrl())) {
             throw new MachinaException("Mantis API Url must be provided in property config");
@@ -300,12 +300,30 @@ public class MantisTracker implements IssueTracker {
     @Override
     public String getXIssueKey(ScanResults.XIssue issue, ScanRequest request) {
         if(flowProperties.isTrackApplicationOnly() || ScanUtils.empty(request.getBranch())){
-            return String.format(ScanUtils.ISSUE_TITLE_KEY, request.getProduct().getProduct(), issue.getVulnerability(), issue.getFilename());
+            //if String.format(ScanUtils.ISSUE_TITLE_KEY, request.getProduct().getProduct(), issue.getVulnerability(), issue.getFilename()) is more than 128 characters, it will be truncated for Mantis
+            String key = String.format(ScanUtils.ISSUE_TITLE_KEY, request.getProduct().getProduct(), issue.getVulnerability(), issue.getFilename());
+            if(key.length() > 128){
+                key = key.substring(0, 128);
+                log.warn("Title of the incident is too long, it has been truncated to 128 characters");
+            }
+            return key;
         }
         else {
-            return ScanUtils.isSAST(issue)
-                    ? String.format(ScanUtils.ISSUE_TITLE_KEY_WITH_BRANCH, request.getProduct().getProduct(), issue.getVulnerability(), issue.getFilename(), request.getBranch())
-                    : ScanUtils.getScaSummaryIssueKey(request, issue);
+            if (ScanUtils.isSAST(issue)) {
+                String key = String.format(ScanUtils.ISSUE_TITLE_KEY_WITH_BRANCH, request.getProduct().getProduct(), issue.getVulnerability(), issue.getFilename(), request.getBranch());
+                if(key.length() > 128){
+                    key = key.substring(0, 128);
+                    log.warn("Title of the incident is too long, it has been truncated to 128 characters");
+                }
+                return key;
+            } else {
+                String key = ScanUtils.getScaSummaryIssueKey(request, issue);
+                if(key.length() > 128){
+                    key = key.substring(0, 128);
+                    log.warn("Title of the incident is too long, it has been truncated to 128 characters");
+                }
+                return key;
+            }
         }
     }
 
