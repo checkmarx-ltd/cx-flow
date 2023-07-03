@@ -1117,21 +1117,24 @@ public class JiraService {
                 metadata = getMetaData(jiraProject,issueType);
             }
 
-            if(!jiraProperties.getDeployType().equals("Cloud") && secondValue>=4 )
+            if(!jiraProperties.getDeployType().equals("Cloud") )
             {
-                Iterator<CimProject> iterator = metadata.iterator();
+                if((parseVersion==8 && secondValue>=4) || parseVersion>8)
+                {
+                    Iterator<CimProject> iterator = metadata.iterator();
 
-                if (!iterator.hasNext()) {
-                    log.error("Failed to load custom fields, The Jira project ({}) is not accessible", jiraProject);
-                    throw new IllegalArgumentException("The Jira project " + jiraProject + " is not accessible");
+                    if (!iterator.hasNext()) {
+                        log.error("Failed to load custom fields, The Jira project ({}) is not accessible", jiraProject);
+                        throw new IllegalArgumentException("The Jira project " + jiraProject + " is not accessible");
+                    }
+                    CimProject cim = iterator.next();
+                    Map<String, String> finalFields = fields;
+                    cim.getIssueTypes().forEach(issueTypes ->
+                            issueTypes.getFields().forEach((id, value) ->
+                                    finalFields.put(value.getName(), id)
+                            )
+                    );
                 }
-                CimProject cim = iterator.next();
-                Map<String, String> finalFields = fields;
-                cim.getIssueTypes().forEach(issueTypes ->
-                        issueTypes.getFields().forEach((id, value) ->
-                                finalFields.put(value.getName(), id)
-                        )
-                );
             }
             log.info("finished Loading {} new custom fields", fields.size());
 
