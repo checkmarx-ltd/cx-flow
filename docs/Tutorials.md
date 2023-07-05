@@ -62,9 +62,10 @@ cd C:\CxFlow
 java -jar cx-flow-1.6.19.jar --spring.config.location="<path\to>\CxFlow\application.yml" --web
 ```
 
+
 <br/>**Note** The client-secret value included here is the correct value for CxSAST and is not actually a secret value. It is the OIDC client secret used for API login to Checkmarx.
 
-* If following this guide for demo purposes, you can use ngrok to generate a resolvable address for your CxSAST manager. This guide includes ngrok in its examples
+* If following this guide for demo purposes, you can use ngrok to generate a resolvable address for your CxFlow. This guide includes ngrok in its examples
     * Download ngrok from https://ngrok.com/download and unzip to the CxFlow folder
     * Start ngrok on port 8982 by opening CMD and entering the following command:
 ```
@@ -129,7 +130,7 @@ github:
   false-positive-label: false-positive
   block-merge: true
 ```
-* If following this guide for demo purposes, you can use ngrok to generate a resolvable address for your CxSAST manager. This guide includes ngrok in its examples
+* If following this guide for demo purposes, you can use ngrok to generate a resolvable address for your CxFlow. This guide includes ngrok in its examples
     * Download ngrok from https://ngrok.com/download and unzip to the CxFlow folder
     * Start ngrok on port 8982 by opening CMD and entering the following command:
 ```
