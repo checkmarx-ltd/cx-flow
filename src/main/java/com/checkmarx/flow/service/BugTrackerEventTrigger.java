@@ -36,35 +36,35 @@ public class BugTrackerEventTrigger {
 
         switch (bugTrackerType) {
             case GITLABMERGE:
-            	if (gitLabService.isScanSubmittedComment()) {
-            		gitLabService.sendMergeComment(request, SCAN_MESSAGE);
-            	}
+                if (gitLabService.isScanSubmittedComment()) {
+                    gitLabService.sendMergeComment(request, SCAN_MESSAGE);
+                }
                 gitLabService.startBlockMerge(request);
                 break;
 
             case GITLABCOMMIT:
-            	if (gitLabService.isScanSubmittedComment()) {
-            		gitLabService.sendCommitComment(request, SCAN_MESSAGE);
-            	}
+                if (gitLabService.isScanSubmittedComment()) {
+                    gitLabService.sendCommitComment(request, SCAN_MESSAGE);
+                }
                 break;
 
             case GITHUBPULL:
-            	if (gitService.isScanSubmittedComment()) {
-            		gitService.sendMergeComment(request, SCAN_MESSAGE);
-            	}
+                if (gitService.isScanSubmittedComment()) {
+                    gitService.sendMergeComment(request, SCAN_MESSAGE);
+                }
                 gitService.startBlockMerge(request, cxProperties.getUrl());
                 break;
 
             case BITBUCKETPULL:
-            	if (bbService.isScanSubmittedComment()) {
-            		bbService.sendMergeComment(request, SCAN_MESSAGE);
-            	}
-            	break;
+                if (bbService.isScanSubmittedComment()) {
+                    bbService.sendMergeComment(request, SCAN_MESSAGE);
+                }
+                break;
 
             case BITBUCKETSERVERPULL:
-            	if (bbService.isScanSubmittedComment()) {
-            		bbService.sendServerMergeComment(request, SCAN_MESSAGE);
-            	}
+                if (bbService.isScanSubmittedComment()) {
+                    bbService.sendServerMergeComment(request, SCAN_MESSAGE);
+                }
                 bbService.setBuildStartStatus(request);
                 break;
 
@@ -143,11 +143,11 @@ public class BugTrackerEventTrigger {
                 break;
 
             case ADOPULL:
-                adoService.sendMergeComment(scanRequest, SCAN_FAILED_MESSAGE);
+                if (adoService.isScanSubmittedComment()) {
+                    adoService.sendMergeComment(scanRequest, SCAN_FAILED_MESSAGE);
+                }
                 adoService.startBlockMerge(scanRequest);
-
-                //Satyam
-                //adoService.endBlockMerge(scanRequest, scanResults, new ScanDetails());
+                adoService.endBlockMergeFailed(scanRequest);
                 break;
 
             case JIRA:
@@ -185,36 +185,36 @@ public class BugTrackerEventTrigger {
 
         switch (bugTrackerType) {
             case GITLABMERGE:
-            	if (gitLabService.isScanSubmittedComment()) {
-            		gitLabService.sendMergeComment(scanRequest, SCAN_NOT_SUBMITTED_MESSAGE);
-            	}
+                if (gitLabService.isScanSubmittedComment()) {
+                    gitLabService.sendMergeComment(scanRequest, SCAN_NOT_SUBMITTED_MESSAGE);
+                }
                 gitLabService.endBlockMerge(scanRequest);
                 break;
 
             case GITLABCOMMIT:
-            	if (gitLabService.isScanSubmittedComment()) {
-            		gitLabService.sendCommitComment(scanRequest, SCAN_NOT_SUBMITTED_MESSAGE);
-            	}
-            	break;
+                if (gitLabService.isScanSubmittedComment()) {
+                    gitLabService.sendCommitComment(scanRequest, SCAN_NOT_SUBMITTED_MESSAGE);
+                }
+                break;
 
             case GITHUBPULL:
-            	if (gitService.isScanSubmittedComment()) {
-            		gitService.sendMergeComment(scanRequest, SCAN_NOT_SUBMITTED_MESSAGE);
-            	}
+                if (gitService.isScanSubmittedComment()) {
+                    gitService.sendMergeComment(scanRequest, SCAN_NOT_SUBMITTED_MESSAGE);
+                }
                 String targetURL = cxProperties.getBaseUrl().concat(GitHubService.CX_USER_SCAN_QUEUE);
                 gitService.errorBlockMerge(scanRequest, targetURL, description);
                 break;
 
             case BITBUCKETPULL:
-            	if (bbService.isScanSubmittedComment()) {
-            		bbService.sendMergeComment(scanRequest, SCAN_NOT_SUBMITTED_MESSAGE);
-            	}
+                if (bbService.isScanSubmittedComment()) {
+                    bbService.sendMergeComment(scanRequest, SCAN_NOT_SUBMITTED_MESSAGE);
+                }
                 break;
 
             case BITBUCKETSERVERPULL:
-            	if (bbService.isScanSubmittedComment()) {
-            		bbService.sendServerMergeComment(scanRequest, SCAN_NOT_SUBMITTED_MESSAGE);
-            	}
+                if (bbService.isScanSubmittedComment()) {
+                    bbService.sendServerMergeComment(scanRequest, SCAN_NOT_SUBMITTED_MESSAGE);
+                }
                 String buildName = "Existing Checkmarx Scan in progress.";
                 String buildUrl = cxProperties.getBaseUrl().concat(BitBucketService.CX_USER_SCAN_QUEUE);
                 bbService.setBuildFailedStatus(scanRequest, buildName, buildUrl, description);
