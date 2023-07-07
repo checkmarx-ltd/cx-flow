@@ -165,7 +165,7 @@ public class ADOService {
             }
         }
     }
-    
+
 
     void endBlockMerge(ScanRequest request, ScanResults results, ScanDetails scanDetails){
         if(properties.isBlockMerge()) {
@@ -236,17 +236,71 @@ public class ADOService {
         }
     }
 
+
+    void endBlockMergeFailed(ScanRequest request){
+        if(properties.isBlockMerge()) {
+            String url = request.getAdditionalMetadata("statuses_url");
+            String statusId = request.getAdditionalMetadata("status_id");
+            String threadUrl = null;
+            if(request.getAdditionalMetadata("ado_thread_id") != null){
+                threadUrl = request.getMergeNoteUri().concat("/").concat(request.getAdditionalMetadata("ado_thread_id"));
+            }
+            if(statusId == null){
+                log.warn("No status Id found, skipping status update");
+                return;
+            }
+            CreateWorkItemAttr item = new CreateWorkItemAttr();
+            item.setOp("remove");
+            item.setPath("/".concat(statusId));
+            List<CreateWorkItemAttr> list = new ArrayList<>();
+            list.add(item);
+
+            HttpEntity<List<CreateWorkItemAttr>> httpEntity = new HttpEntity<>(
+                    list,
+                    ADOUtils.createPatchAuthHeaders(scmConfigOverrider.determineConfigToken(properties, request.getScmInstance())
+                    ));
+            if(ScanUtils.empty(url)){
+                log.error("statuses_url was not provided within the request object, which is required for blocking / unblocking pull requests");
+                return;
+            }
+            //TODO remove preview once applicable
+            log.info("Removing pending status from pull {}", url);
+            try {
+                restTemplate.exchange(getFullAdoApiUrl(url).concat("-preview"),
+                        HttpMethod.PATCH, httpEntity, Void.class);
+            } catch (HttpClientErrorException e) {
+                log.error("Error occurred in endBlockMerge. http error {} ", e.getStatusCode());
+                log.error(ExceptionUtils.getStackTrace(e));
+            }
+            /*
+                if the SAST server fails to scan a project it generates a result with ProjectId = -1
+                This if statement adds a status of failed to the ADO PR, and sets the status of thread to
+                CLOSED.
+             */
+
+
+
+
+            log.debug("Creating status of failed to {}", url);
+            createStatus("failed", "Scan failed due to some error", url, "NA", request);
+            if(threadUrl != null) {
+                createThreadStatus(CLOSED, threadUrl, request);
+            }
+
+        }
+    }
+
     int createStatus(String state, String description, String url, String sastUrl, ScanRequest scanRequest){
         HttpEntity<String> httpEntity = new HttpEntity<>(
                 getJSONStatus(state, sastUrl, description).toString(),
                 ADOUtils.createAuthHeaders(scmConfigOverrider.determineConfigToken(properties, scanRequest.getScmInstance())
-        ));
+                ));
         //TODO remove preview once applicable
         log.info("Adding {} status to pull {}",state, url);
         try{
-        ResponseEntity<String> response = restTemplate.exchange(getFullAdoApiUrl(url).concat("-preview"),
-                HttpMethod.POST, httpEntity, String.class);
-        log.debug(String.valueOf(response.getStatusCode()));
+            ResponseEntity<String> response = restTemplate.exchange(getFullAdoApiUrl(url).concat("-preview"),
+                    HttpMethod.POST, httpEntity, String.class);
+            log.debug(String.valueOf(response.getStatusCode()));
             if(response.getBody() != null) {
                 JSONObject json = new JSONObject(response.getBody());
                 return json.getInt("id");
@@ -275,7 +329,7 @@ public class ADOService {
                 ));
         try {
             ResponseEntity<String> response = restTemplate.exchange(getFullAdoApiUrl(url).concat(PREVIEW),
-                HttpMethod.PATCH, httpEntity, String.class);
+                    HttpMethod.PATCH, httpEntity, String.class);
             if(response.getBody() != null) {
                 log.info("Successfully Updated thread status to {}",status);
             }
@@ -343,29 +397,29 @@ public class ADOService {
         List<RepoComment> result = new ArrayList<>();
         try {
             ResponseEntity<String>  response = restTemplate.exchange(url, HttpMethod.GET, httpEntity, String.class);
-        ObjectMapper objMapper = new ObjectMapper();
-        JsonNode root = objMapper.readTree(response.getBody());
-        JsonNode value = root.path("value");
-        Iterator<JsonNode> threadsIter = value.elements();
-        int iteration = 0;
-        while (threadsIter.hasNext() && iteration < maxNumberOfCommentThreads) {
-            JsonNode thread = threadsIter.next();
-            JsonNode comments = thread.get("comments");
-            Iterator<JsonNode> commentsIter = comments.elements();
-            int commentsCount = 0;
-            while (commentsIter.hasNext() && commentsCount < maxNumberOfCommentThreads) {
-                JsonNode commentNode = commentsIter.next();
-                // Remove empty or deleted comments
-                if (commentNode.has(ADO_COMMENT_CONTENT_FIELD_NAME) && !isCommentDeleted(commentNode)) {
-                    RepoComment rc = createRepoComment(commentNode);
-                    if (PullRequestCommentsHelper.isCheckMarxComment(rc)) {
-                        result.add(rc);
+            ObjectMapper objMapper = new ObjectMapper();
+            JsonNode root = objMapper.readTree(response.getBody());
+            JsonNode value = root.path("value");
+            Iterator<JsonNode> threadsIter = value.elements();
+            int iteration = 0;
+            while (threadsIter.hasNext() && iteration < maxNumberOfCommentThreads) {
+                JsonNode thread = threadsIter.next();
+                JsonNode comments = thread.get("comments");
+                Iterator<JsonNode> commentsIter = comments.elements();
+                int commentsCount = 0;
+                while (commentsIter.hasNext() && commentsCount < maxNumberOfCommentThreads) {
+                    JsonNode commentNode = commentsIter.next();
+                    // Remove empty or deleted comments
+                    if (commentNode.has(ADO_COMMENT_CONTENT_FIELD_NAME) && !isCommentDeleted(commentNode)) {
+                        RepoComment rc = createRepoComment(commentNode);
+                        if (PullRequestCommentsHelper.isCheckMarxComment(rc)) {
+                            result.add(rc);
+                        }
                     }
+                    commentsCount++;
                 }
-                commentsCount++;
+                iteration++;
             }
-            iteration++;
-        }
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while getting Comments. http error {} ", e.getStatusCode());
             log.error(ExceptionUtils.getStackTrace(e));
