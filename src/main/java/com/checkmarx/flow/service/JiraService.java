@@ -1383,11 +1383,11 @@ public class JiraService {
             if (useBranch) {
                 key = ScanUtils.isSAST(issue)
                         ? formatSastIssueSummary(jiraProperties.getSastIssueSummaryBranchFormat(), issue, request)
-                        : getScaDetailsIssueTitleFormat(request, issuePrefix, issuePostfix, issue);
+                        : ScanUtils.getScaSummaryIssueKey(request, issue, issuePrefix, issuePostfix,jiraProperties.getScaIssueSummaryFormat(),jiraProperties.getScaIssueSummaryBranchFormat());
             } else {
                 key = ScanUtils.isSAST(issue)
                         ? formatSastIssueSummary(jiraProperties.getSastIssueSummaryFormat(), issue, request)
-                        : getScaDetailsIssueTitleWithoutBranchFormat(request, issuePrefix, issuePostfix, issue);
+                        : ScanUtils.getScaSummaryIssueKey(request, issue, issuePrefix, issuePostfix,jiraProperties.getScaIssueSummaryFormat(),jiraProperties.getScaIssueSummaryBranchFormat());
             }
             map.put(HTMLHelper.getScanRequestIssueKeyWithDefaultProductValue(request, key,jiraProperties.getLabelPrefix()), issue);
         }
@@ -1688,6 +1688,7 @@ public class JiraService {
 
         map = this.getIssueMap(results, request);
         setMapWithScanResults(map, nonPublishedScanResultsMap);
+        //createUnfilteredMap is used for creating unfiltered map for SAST issues only. as filter-status is only applied to SAST.
         unFilteredMap = this.createUnfilteredMap(results,request);
         jiraMap = this.getJiraIssueMap(this.getIssues(request,filterScanner));
 
@@ -1748,6 +1749,15 @@ public class JiraService {
 
     private Map<String, ScanResults.XIssue> createUnfilteredMap(ScanResults results, ScanRequest request) {
         List<ScanResults.XIssue> issues = new ArrayList<>();
+        Optional.ofNullable(results.getAstResults()).ifPresent(s -> {
+            List<ScanResults.XIssue> scaIssues = ScanUtils.setASTXIssuesInScanResults(results);
+            issues.addAll(scaIssues);
+        });
+
+        Optional.ofNullable(results.getScaResults()).ifPresent(s -> {
+            List<ScanResults.XIssue> scaIssues = ScanUtils.scaToXIssues(s);
+            issues.addAll(scaIssues);
+        });
 
         Optional.ofNullable(results.getUnFilteredIssues()).ifPresent(i ->
                 issues.addAll(results.getUnFilteredIssues())
@@ -1764,11 +1774,11 @@ public class JiraService {
             if (useBranch) {
                 key = ScanUtils.isSAST(issue)
                         ? formatSastIssueSummary(jiraProperties.getSastIssueSummaryBranchFormat(), issue, request)
-                        : getScaDetailsIssueTitleFormat(request, issuePrefix, issuePostfix, issue);
+                        : ScanUtils.getScaSummaryIssueKey(request, issue, issuePrefix, issuePostfix,jiraProperties.getScaIssueSummaryFormat(),jiraProperties.getScaIssueSummaryBranchFormat());
             } else {
                 key = ScanUtils.isSAST(issue)
                         ? formatSastIssueSummary(jiraProperties.getSastIssueSummaryFormat(), issue, request)
-                        : getScaDetailsIssueTitleWithoutBranchFormat(request, issuePrefix, issuePostfix, issue);
+                        : ScanUtils.getScaSummaryIssueKey(request, issue, issuePrefix, issuePostfix,jiraProperties.getScaIssueSummaryFormat(),jiraProperties.getScaIssueSummaryBranchFormat());
             }
             map.put(HTMLHelper.getScanRequestIssueKeyWithDefaultProductValue(request, key,jiraProperties.getLabelPrefix()), issue);
         }
