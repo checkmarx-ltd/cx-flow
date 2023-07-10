@@ -64,7 +64,7 @@ public class UpdatePullRequestCommentsSteps {
     private static final String GITHUB_PROJECT_NAME = "vb_test_pr_comments";
     private static final String GITHUB_PR_BASE_URL = "https://api.github.com/repos/cxflowtestuser/" + GITHUB_PROJECT_NAME;
     private static final String GITHUB_PR_ID = "6";
-    private static final String ADO_PR_ID = "90";
+    private static final String ADO_PR_ID = "98";
     public static final String PULL_REQUEST_COMMENTS_URL = GITHUB_PR_BASE_URL + "/issues/"+ GITHUB_PR_ID + "/comments";
     private static final String GITHUB_URL = "https://github.com/cxflowtestuser/" + GITHUB_PROJECT_NAME;
 
