@@ -234,7 +234,9 @@ closed-status:
 * open-status → this is a list of the available status an issue can be in that indicate the issue is still in **open** state according to Jira
 * closed-status → this is a list of the available status an issue can be in that indicate the issue is still in **closed** state according to Jira
 
-Note that CxFlow ignores case when comparing statuses.
+**Note:** 
+* Issues that have been marked as not exploitable will not be closed if their Jira status does not match any of the list of available open-status issues.
+* CxFlow ignores case when comparing statuses
 
 ### <a name="fields"> Fields</a>
 * **type**
