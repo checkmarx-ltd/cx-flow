@@ -55,6 +55,15 @@ Under Branch policies configuration, enable Checkmarx scan as ‘required’ (ht
 
 CxFlow does not support blocking pull request in GitLab. If **block-merge: true and error-merge: true** then CxFlow will post status of vulnerability as comment but it will not block PR.
 
+<u>**AWS Code build (Buildspec)**</u>:
+
+If the build is not breaking because the pipeline is not able to get the exit code, the user can add the following script to catch the exit code from the Cx-Flow logs.
+```****
+export EXIT_CODE=$(grep 'Finished with exit code:' cx-flow.log | tail -1 |sed 's/.*: //')
+
+echo $EXIT_CODE
+```
+
 ## <a name="thresholds">Thresholds vs Basic filters</a>
 
 By default, CxFlow uses the basic filter configuration to make a ‘break decision’.
