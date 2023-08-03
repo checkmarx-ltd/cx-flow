@@ -143,6 +143,7 @@ public class CxFlowRunner implements ApplicationRunner {
         boolean force;
         boolean branchProtectionEnabled;
         boolean disableBreakbuild;
+        boolean sbom;
         FlowOverride flowOverride = null;
         ObjectMapper mapper = new ObjectMapper();
         String uid = helperService.getShortUid();
@@ -210,6 +211,7 @@ public class CxFlowRunner implements ApplicationRunner {
         boolean disableCertificateValidation = args.containsOption("trust-cert");
         disableBreakbuild=args.containsOption("disable-break-build");
         branchProtectionEnabled = args.containsOption("branch-protection-enabled");
+        sbom = args.containsOption("sbom");
         CxPropertiesBase cxProperties = cxScannerService.getProperties();
         Map<String, String> projectCustomFields = makeCustomFieldMap(args.getOptionValues("project-custom-field"));
         Map<String, String> scanCustomFields = makeCustomFieldMap(args.getOptionValues("scan-custom-field"));
@@ -378,6 +380,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 .branchProtectionEnabled(branchProtectionEnabled)
                 .commentSAST(commentSAST)
                 .disableBreakbuild(disableBreakbuild)
+                .sbom(sbom)
                 .build();
 
         if (projectId != null) {

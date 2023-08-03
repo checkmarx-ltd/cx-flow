@@ -3,7 +3,7 @@ import org.gradle.api.tasks.testing.Test
 buildscript {
 	ext {
 
-         CxSBSDK = "0.5.54"
+         CxSBSDK = "0.5.55"
          ConfigProviderVersion = "1.0.9"
         //cxVersion = "8.90.5"
         springBootVersion = '2.7.11'
@@ -64,7 +64,7 @@ configurations {
 ext['tomcat.version'] = '9.0.76'
 ext['groovy.version'] = '3.0.16'
 ext['logback-classic.version'] = '1.2.10'
-ext['spring-core.version'] = '5.3.27'
+ext['spring-core.version'] = '6.0.11'
 
 dependencies {
     compile group: 'com.beust', name: 'jcommander', version: '1.78'

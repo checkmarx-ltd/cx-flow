@@ -9,6 +9,7 @@
 * [SCA Project Team Assignment](#scaprojectteamassignment)
 * [SCA Scan Timeout](#scascantimeout)
 * [SCA Resolver](#scaresolver)
+* [SBOM](#sbom)
 ## <a name="configuration">Configuration</a>
 CxSCA scans can be triggered based on WebHooks using CxFlow. 
 For instructions on registering CxFlow to WebHook, refer to [WebHook Registration](
@@ -417,3 +418,4 @@ Project Name can also be overridden by config as code property. Please refer to 
 * Cx-Flow Removes all SCA Resolver logs.
 * **Note :** if LogsDirectory is configured in Configuration.ini, The sca resolver's logs won't be deleted.
 
+## <a name="sbom">SBOM</a>
