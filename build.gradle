@@ -1,14 +1,14 @@
 buildscript {
     ext {
 
-        CxSBSDK = "0.5.54"
+        CxSBSDK = "0.5.55"
         ConfigProviderVersion = "1.0.10"
         //cxVersion = "8.90.5"
-        springBootVersion = '2.7.11'
+        springBootVersion = '2.7.14'
         sonarqubeVersion = '2.8'
         atlassianVersion = "5.2.0"
         atlassianFugueVersion = "4.7.2"
-        jacksonVersion = "2.14.2"
+        jacksonVersion = "2.15.2"
         mainClassPath = 'com.checkmarx.flow.CxFlowApplication'
     }
     repositories {
@@ -76,7 +76,7 @@ configurations {
 ext['tomcat.version'] = '9.0.76'
 ext['groovy.version'] = '3.0.16'
 ext['logback-classic.version'] = '1.2.10'
-ext['spring-core.version'] = '5.3.27'
+ext['spring-core.version'] = '5.3.29'
 
 dependencies {
     compile group: 'com.beust', name: 'jcommander', version: '1.78'
@@ -111,7 +111,7 @@ dependencies {
     compile('org.apache.commons:commons-collections4:4.4')
     compile('org.json:json:20230227')
     compile('org.yaml:snakeyaml:2.0')
-    compile('com.fasterxml.jackson.core:jackson-databind:2.14.2')
+    compile('com.fasterxml.jackson.core:jackson-databind:2.15.2')
     compile('org.springframework.boot:spring-boot-starter-web-services'){
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
@@ -130,7 +130,7 @@ dependencies {
         exclude group: 'org.codehaus.jettison', module:'jettison'
     }
     compile("com.atlassian.jira:jira-rest-java-client-api:${atlassianVersion}")
-    compile("com.fasterxml.jackson.core:jackson-databind:2.14.2")
+    compile("com.fasterxml.jackson.core:jackson-databind:2.15.2")
     compile("com.fasterxml.jackson.core:jackson-core:${jacksonVersion}")
     compile("com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}")
     compile("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersion}")
