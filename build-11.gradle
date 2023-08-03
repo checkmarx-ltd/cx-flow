@@ -103,6 +103,7 @@ dependencies {
     compile ('org.springframework.boot:spring-boot-starter-thymeleaf'){
         exclude group: 'ch.qos.logback', module: 'logback-core'
         exclude group: 'org.thymeleaf', module: 'thymeleaf-spring5'
+        exclude group: 'org.thymeleaf', module: 'thymeleaf'
     }
     compile ('com.github.ulisesbocchio:jasypt-spring-boot-starter:2.1.2')
     compile ("io.atlassian.fugue:fugue:${atlassianFugueVersion}")
@@ -120,6 +121,7 @@ dependencies {
     compile('org.codehaus.jettison:jettison:1.5.4')
 
     compile("org.thymeleaf:thymeleaf-spring5:3.1.2.RELEASE")
+    compile("org.thymeleaf:thymeleaf:3.1.2.RELEASE")
     implementation 'ognl:ognl:3.1.29'
 
     compile ("org.apache.httpcomponents:httpclient:4.5.13")
