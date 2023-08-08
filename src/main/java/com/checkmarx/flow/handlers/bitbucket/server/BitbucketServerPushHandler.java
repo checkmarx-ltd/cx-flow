@@ -1,5 +1,6 @@
 package com.checkmarx.flow.handlers.bitbucket.server;
 
+import com.checkmarx.flow.controller.bitbucket.server.BitbucketServerController;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.EventResponse;
 import com.checkmarx.flow.dto.ScanRequest;
@@ -7,6 +8,7 @@ import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
+import org.slf4j.Logger;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
@@ -15,6 +17,7 @@ import java.util.Optional;
 
 @SuperBuilder
 public class BitbucketServerPushHandler extends BitbucketServerScanEventHandler {
+    private static final Logger log = org.slf4j.LoggerFactory.getLogger(BitbucketServerPushHandler.class);
 
     @NonNull
     protected String branchFromRef;
@@ -29,6 +32,7 @@ public class BitbucketServerPushHandler extends BitbucketServerScanEventHandler 
         try {
 
             // set the default bug tracker as per yml
+
             webhookUtils.setBugTracker(configProvider.getFlowProperties(), controllerRequest);
             BugTracker.Type bugType = ScanUtils.getBugTypeEnum(controllerRequest.getBug(),
                     configProvider.getFlowProperties().getBugTrackerImpl());
@@ -48,6 +52,7 @@ public class BitbucketServerPushHandler extends BitbucketServerScanEventHandler 
 
             String gitUrl = getGitUrl();
             String gitAuthUrl = getGitAuthUrl(gitUrl);
+            log.debug("Git Auth URL ... {}}",gitAuthUrl);
 
             ScanRequest request = ScanRequest.builder().application(application).product(p)
                     .project(controllerRequest.getProject())
@@ -76,7 +81,9 @@ public class BitbucketServerPushHandler extends BitbucketServerScanEventHandler 
             request.setId(uid);
             request.setDefaultBranch(checkForDefaultBranchName(request));
             // only initiate scan/automation if target branch is applicable
+
             if (configProvider.getHelperService().isBranch2Scan(request, branches)) {
+
                 configProvider.getFlowService().initiateAutomation(request);
             }
         } catch (IllegalArgumentException e) {

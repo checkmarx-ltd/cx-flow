@@ -1,16 +1,14 @@
 
-package com.checkmarx.flow.gitdashboardnewver;
+package com.checkmarx.flow.gitdashboardnewverfifteen.SCA;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import javax.annotation.Generated;
+
+import com.fasterxml.jackson.annotation.*;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.annotation.Generated;
 import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -18,13 +16,11 @@ import java.util.List;
 
 })
 @Generated("jsonschema2pojo")
-@Data
 @Builder
+@Data
 public class Items {
 
-
     @JsonProperty("signatures")
-    @JsonPropertyDescription("Each tracking type must declare its own type.")
     @Getter
     @Setter
     private List<Signature> signatures;
@@ -48,10 +44,5 @@ public class Items {
     @Setter
     @Builder.Default
     private int start_line=0;
-
-
-
-
-
 
 }

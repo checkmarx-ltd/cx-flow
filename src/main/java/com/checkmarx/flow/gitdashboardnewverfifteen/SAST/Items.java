@@ -1,5 +1,5 @@
 
-package com.checkmarx.flow.gitdashboardnewver;
+package com.checkmarx.flow.gitdashboardnewverfifteen.SAST;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -48,10 +48,4 @@ public class Items {
     @Setter
     @Builder.Default
     private int start_line=0;
-
-
-
-
-
-
 }
