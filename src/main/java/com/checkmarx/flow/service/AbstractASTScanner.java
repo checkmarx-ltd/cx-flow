@@ -6,6 +6,7 @@ import com.checkmarx.flow.dto.report.AnalyticsReport;
 import com.checkmarx.flow.dto.report.ScanReport;
 import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
+import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.AstScaResults;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.ast.ASTResults;
@@ -26,6 +27,7 @@ import java.util.List;
 public abstract class AbstractASTScanner implements VulnerabilityScanner {
     private final AbstractScanner client;
     protected final FlowProperties flowProperties;
+    private final ScaProperties scaProperties;
     private final String scanType;
     private final BugTrackerEventTrigger bugTrackerEventTrigger;
 
@@ -38,7 +40,14 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
     public ScanResults scan(ScanRequest scanRequest) {
         ScanResults result = null;
         log.info("--------------------- Initiating new {} scan ---------------------", scanType);
-        String effectiveProjectName = normalize(scanRequest.getProject(),flowProperties.isPreserveProjectName());
+        String effectiveProjectName;
+        if(scaProperties.getProjectName()!=null)
+        {
+            effectiveProjectName = normalize(scaProperties.getProjectName(),flowProperties.isPreserveProjectName());
+        }
+        else {
+            effectiveProjectName = normalize(scanRequest.getProject(),flowProperties.isPreserveProjectName());
+        }
         scanRequest.setProject(effectiveProjectName);
         ScanParams sdkScanParams = toSdkScanParams(scanRequest);
         AstScaResults internalResults = new AstScaResults(new SCAResults(), new ASTResults());
@@ -85,11 +94,22 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
 
     @Override
     public ScanResults getLatestScanResults(ScanRequest request) {
-        ScanParams sdkScanParams = ScanParams.builder()
-                .projectName(request.getProject())
-                .scaConfig(request.getScaConfig())
-                .filterConfiguration(request.getFilter())
-                .build();
+        ScanParams sdkScanParams;
+        if(scaProperties.getProjectName()!=null)
+        {
+            sdkScanParams = ScanParams.builder()
+                    .projectName(scaProperties.getProjectName())
+                    .scaConfig(request.getScaConfig())
+                    .filterConfiguration(request.getFilter())
+                    .build();
+        }
+        else {
+            sdkScanParams = ScanParams.builder()
+                    .projectName(request.getProject())
+                    .scaConfig(request.getScaConfig())
+                    .filterConfiguration(request.getFilter())
+                    .build();
+        }
         setScannerSpecificProperties(request,sdkScanParams);
         AstScaResults internalResults = client.getLatestScanResults(sdkScanParams);
         return toScanResults(internalResults);
