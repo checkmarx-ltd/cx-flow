@@ -128,7 +128,14 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
     public ScanResults scan(ScanRequest scanRequest, String path) throws ExitThrowable {
         BugTracker.Type bugTrackerType = bugTrackerEventTrigger.triggerScanStartedEvent(scanRequest);
         ScanResults result = null;
-        String effectiveProjectName = normalize(scanRequest.getProject(),flowProperties.isPreserveProjectName());
+        String effectiveProjectName;
+        if(scaProperties.getProjectName()!=null)
+        {
+            effectiveProjectName = normalize(scaProperties.getProjectName(),flowProperties.isPreserveProjectName());
+        }
+        else {
+            effectiveProjectName = normalize(scanRequest.getProject(),flowProperties.isPreserveProjectName());
+        }
         scanRequest.setProject(effectiveProjectName);
         if (bugTrackerType.equals(BugTracker.Type.NONE)) {
             log.info("Not waiting for scan completion as Bug Tracker type is NONE");
