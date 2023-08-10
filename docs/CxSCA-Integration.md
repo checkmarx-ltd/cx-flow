@@ -33,6 +33,7 @@ sca:
   username: username
   password: xxxxx
   team: "/CxServer/MyTeam/SubTeam"
+  projectName: "sampleProjectName"
   include-sources: true
   exclude-files: "**/*.xml"
   manifests-include-pattern: "!**/*.xml, **/*.yml"
@@ -260,6 +261,7 @@ CxFlow supports configuration as code for CxSAST and CxSCA scans.
 		"filterSeverity": ["high", "medium", "low"],
 		"filterScore": 7.5,
 		"team": "/CxServer/MyTeam/SubTeam",
+		projectName : "SampleProjectName"
 		"expPathSastProjectName": "SampleProjectName"
 	}
 }

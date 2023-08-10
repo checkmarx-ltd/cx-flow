@@ -4,6 +4,7 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.sdk.config.AstProperties;
+import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.dto.AstScaResults;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.ast.ASTResults;
@@ -23,7 +24,7 @@ import java.util.Optional;
 public class ASTScanner extends AbstractASTScanner {
 
     public ASTScanner(AstScanner astClient, FlowProperties flowProperties, BugTrackerEventTrigger bugTrackerEventTrigger,ResultsService resultsService) {
-        super(astClient, flowProperties, AstProperties.CONFIG_PREFIX, bugTrackerEventTrigger,resultsService);
+        super(astClient, flowProperties,null, AstProperties.CONFIG_PREFIX, bugTrackerEventTrigger,resultsService);
     }
 
     @Override
