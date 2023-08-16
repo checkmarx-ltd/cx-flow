@@ -1,6 +1,7 @@
 package com.checkmarx.flow.service;
 
 import com.atlassian.jira.rest.client.api.RestClientException;
+import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.constants.FlowConstants;
 import com.checkmarx.flow.dto.Field;
 import com.checkmarx.flow.dto.ScanDetails;
@@ -14,6 +15,7 @@ import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
+import com.checkmarx.sdk.dto.ast.ScanParams;
 import com.checkmarx.sdk.dto.sast.Filter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.cx.CxProject;
@@ -33,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 import static com.checkmarx.sdk.config.Constants.UNKNOWN_INT;
 
@@ -50,6 +53,9 @@ public class ResultsService {
     private final BitBucketService bbService;
     private final ADOService adoService;
     private final EmailService emailService;
+    private final SbomService sbomService;
+
+    private final FlowProperties flowProperties;
 
     @Async("scanRequest")
     public CompletableFuture<ScanResults> processScanResultsAsync(ScanRequest request, Integer projectId,
@@ -181,6 +187,20 @@ public class ResultsService {
             log.info(String.format("The vulnerabilities found for the scan are: %s", results.getScanSummary()));
             log.info("To view results use following link: {}", results.getLink());
             log.info("######################################");
+        }
+        if(request.isSbom())
+        {
+            if(flowProperties.getEnabledVulnerabilityScanners().stream().map(String::toLowerCase)
+                    .collect(Collectors.toList()).contains("sca"))
+            {
+                ScanParams scanParams = ScanParams.builder()
+                        .branch(request.getBranch())
+                        .projectName(request.getProject())
+                        .scaConfig(request.getScaConfig())
+                        .filterConfiguration(request.getFilter())
+                        .build();
+                sbomService.SbomProcess(results.getScaResults().getScanId(),scanParams,request);
+            }
         }
     }
 
