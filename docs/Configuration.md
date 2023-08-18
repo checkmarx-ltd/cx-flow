@@ -82,7 +82,7 @@ cx-flow:
     - 79
   filter-status:
     - New
-    - Reoccured
+    - Recurrent
   filter-state:
     - Confirmed
     - Urgent
@@ -389,7 +389,7 @@ cx-flow:
     - 79
   filter-status:
      - New
-     - Reoccured
+     - Recurrent
   filter-state:
      - Confirmed
      - Urgent
@@ -752,7 +752,7 @@ These parameters are related to the WebHook URL parameters above.
 | `project`         | Override the project name that will be created/used in Checkmarx. This allows for greater flexibility for incremental scan relating to pull requests,  i.e. use a standardized pull project name that is always used regardless of the branch - `?project=repo-pull` |
 | `team`            | Override the team within Checkmarx to use/create project under.                                                                                                                                                                                                      |
 | `state`           | Override the state filters (Confirmed/Urgent). For multiple state, simply list the state multiple times, i.e. `status=Confirmed&status=Urgent`                                                                                                                       |
-| `status`          | Override the status filter. For multiple status, simply list the status multiple times, i.e. `status=New&status=Reoccured`                                                                                                                                           |
+| `status`          | Override the status filter. For multiple status, simply list the status multiple times, i.e. `status=New&status=Recurrent`                                                                                                                                           |
 | `assignee`        | Override the assignee                                                                                                                                                                                                                                                |
 | `preset`          | Override the Checkmarx preset rules for scanning                                                                                                                                                                                                                     |
 | `incremental`     | Override incremental property to enable/disable incremental scan support                                                                                                                                                                                             |
