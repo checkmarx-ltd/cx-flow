@@ -2,6 +2,7 @@ package com.checkmarx.flow;
 
 import com.checkmarx.flow.config.*;
 import com.checkmarx.flow.constants.FlowConstants;
+import com.checkmarx.flow.custom.PDFProperties;
 import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.flow.exception.JiraClientException;
@@ -64,6 +65,8 @@ public class CxFlowRunner implements ApplicationRunner {
     private final GitLabProperties gitLabProperties;
     private final IastService iastService;
     private final ADOProperties adoProperties;
+    private final PDFProperties pdfProperties;
+
     private final HelperService helperService;
     private final List<ThreadPoolTaskExecutor> executors;
     private final ResultsService resultsService;
@@ -616,7 +619,7 @@ public class CxFlowRunner implements ApplicationRunner {
 
     private void scanCommon(ScanRequest request, String type, String path) throws ExitThrowable {
         List<String> branches = request.getActiveBranches() != null ? request.getActiveBranches() : flowProperties.getBranches();
-        ScanResults scanResults;
+        ScanResults scanResults=null;
         boolean isBranchProtectionEnabled = flowProperties.isBranchProtectionEnabled() || request.isBranchProtectionEnabled();
 
         log.debug("scanCommon: isBranchProtectionEnabled: {}, branch: {}, branches: {}",
@@ -625,13 +628,30 @@ public class CxFlowRunner implements ApplicationRunner {
             log.debug("{}: branch not eligible for scanning", request.getBranch());
             return;
         }
-
+        BugTracker bugTracker = request.getBugTracker();
+        String customBean = bugTracker.getCustomBean();
         if (path != null) {
-            scanResults = runOnActiveScanners(scanner -> scanner.scanCli(request, type, new File(path)));
+            if(customBean.equalsIgnoreCase("pdf")){
+                scanResults = runOnActiveScanners(scanner -> scanner.scanCliToGeneratePDF(request, type, new File(path)));
+            }else{
+                scanResults = runOnActiveScanners(scanner -> scanner.scanCli(request, type, new File(path)));
+            }
         } else {
-            scanResults = runOnActiveScanners(scanner -> scanner.scanCli(request, type));
+            if(customBean.equalsIgnoreCase("pdf")){
+                scanResults = runOnActiveScanners(scanner -> scanner.scanCliToGeneratePDF(request, type));
+
+            }else{
+                scanResults = runOnActiveScanners(scanner -> scanner.scanCli(request, type));
+            }
         }
-        processResults(request, scanResults);
+
+        if(customBean.equalsIgnoreCase("pdf")){
+            ScanResults finalScanResults = scanResults;
+            runOnActiveScanners(scanner -> scanner.DownloadPDF(finalScanResults,pdfProperties));
+        }else{
+            processResults(request, scanResults);
+        }
+
     }
 
     private void cxOsaParse(ScanRequest request, File file, File libs) throws ExitThrowable {
@@ -665,6 +685,18 @@ public class CxFlowRunner implements ApplicationRunner {
             }
         }
     }
+
+    private void downloadPDFResults(ScanRequest request, ScanResults reportId) throws ExitThrowable {
+        if (Optional.ofNullable(reportId).isPresent()) {
+            try {
+                resultsService.downLoadPDFResults(request, reportId, null);
+            } catch (MachinaException e) {
+                log.error("An error has occurred while processing result.", ExceptionUtils.getRootCause(e));
+            }
+        }
+    }
+
+
 
     private boolean checkIfBreakBuild(ScanRequest request, ScanResults results) {
 
@@ -713,6 +745,8 @@ public class CxFlowRunner implements ApplicationRunner {
             throw (ExitThrowable) (e.getCause());
         }
     }
+
+
 
     /**
      * Converts a List of Strings representing one or more custom fields to

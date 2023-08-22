@@ -135,6 +135,8 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
         return result;
     }
 
+
+
     protected abstract String getScanId(AstScaResults internalResults);
 
     private ScanParams toSdkScanParams(ScanRequest scanRequest, String pathToScan) {
@@ -216,5 +218,11 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
         }
         return result;
     }
+
+    @Override
+    public ScanResults scanCliToGeneratePDF(ScanRequest scanRequest, String scanType, File... files) {
+        return null;
+    }
+
 }
 
