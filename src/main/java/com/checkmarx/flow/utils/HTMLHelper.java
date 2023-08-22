@@ -199,7 +199,7 @@ public class HTMLHelper {
                         // "N\\A",
                         String.valueOf(f.getScore()), f.getPublishDate(),
                         extractPackageVersionFromFindings(r, f),
-                        Optional.ofNullable(f.getFixResolutionText()).orElse(""),
+                        Optional.ofNullable(f.getFixResolutionText()).orElse("No Recommendations"),
                         " [Vulnerability Link]("
                                 + ScanUtils.constructVulnerabilityUrl(r.getWebReportLink(), f) + ")",
                         (StringUtils.isEmpty(f.getCveName())) ? "N\\A"
