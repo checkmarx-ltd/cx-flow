@@ -873,7 +873,7 @@ azure:
 bitbucket:
    webhook-token
    token: <user>:xxx
-   url: [http://api.bitbucket.org](http://api.bitbucket.org)
+   url: http://api.bitbucket.org
    api-path: /2.0
 ```
 
