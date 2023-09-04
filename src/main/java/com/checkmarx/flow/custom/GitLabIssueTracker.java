@@ -11,6 +11,7 @@ import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -156,6 +157,7 @@ public class GitLabIssueTracker implements IssueTracker {
             response = restTemplate.exchange(uri, HttpMethod.GET, httpEntity, String.class);
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while getting Project Search Result. http error {} ", e.getStatusCode(), e);
+            log.debug(ExceptionUtils.getStackTrace(e));
         }
         return new JSONArray(response.getBody());
     }
@@ -175,6 +177,7 @@ public class GitLabIssueTracker implements IssueTracker {
                     HttpMethod.GET, httpEntity, com.checkmarx.flow.dto.gitlab.Issue[].class, request.getRepoProjectId());
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while getting Gitlab issue. http error {} ", e.getStatusCode(), e);
+            log.debug(ExceptionUtils.getStackTrace(e));
         }
         if (response.getBody() == null) {
             return issues;
@@ -192,6 +195,7 @@ public class GitLabIssueTracker implements IssueTracker {
                 responsePage = restTemplate.exchange(next, HttpMethod.GET, httpEntity, com.checkmarx.flow.dto.gitlab.Issue[].class);
             } catch (HttpClientErrorException e) {
                 log.error("Error occurred while getting issue. http error {} ", e.getStatusCode(), e);
+                log.debug(ExceptionUtils.getStackTrace(e));
             }
             if (responsePage.getBody() != null) {
                 for (com.checkmarx.flow.dto.gitlab.Issue issue : responsePage.getBody()) {
@@ -234,6 +238,7 @@ public class GitLabIssueTracker implements IssueTracker {
             response = restTemplate.exchange(endpoint, HttpMethod.GET, httpEntity, com.checkmarx.flow.dto.gitlab.Issue.class, projectId, iid);
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while getting Gitlab issue. http error {} ", e.getStatusCode(), e);
+            log.debug(ExceptionUtils.getStackTrace(e));
         }
         return mapToIssue(response.getBody());
     }
@@ -253,6 +258,7 @@ public class GitLabIssueTracker implements IssueTracker {
             restTemplate.exchange(endpoint, HttpMethod.POST, httpEntity, String.class, projectId, iid);
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while adding Gitlab comment. http error {} ", e.getStatusCode(), e);
+            log.debug(ExceptionUtils.getStackTrace(e));
         }
     }
 
@@ -268,11 +274,13 @@ public class GitLabIssueTracker implements IssueTracker {
             response = restTemplate.exchange(endpoint, HttpMethod.POST, httpEntity, com.checkmarx.flow.dto.gitlab.Issue.class, request.getRepoProjectId());
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while creating GitLab Issue", e);
+            log.debug(ExceptionUtils.getStackTrace(e));
             if (e.getStatusCode().equals(HttpStatus.GONE)) {
                 throw new MachinaException("Issues are not enabled for this repository");
             } else {
                 throw new MachinaException("Error occurred while creating GitLab Issue");
             }
+
         }
         return mapToIssue(response.getBody());
     }
@@ -291,6 +299,7 @@ public class GitLabIssueTracker implements IssueTracker {
                     com.checkmarx.flow.dto.gitlab.Issue.class, request.getRepoProjectId(), iid);
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while closing Gitlab issue. http error {} ", e.getStatusCode(), e);
+            log.debug(ExceptionUtils.getStackTrace(e));
         }
     }
 
@@ -314,6 +323,7 @@ public class GitLabIssueTracker implements IssueTracker {
             return mapToIssue(response.getBody());
         } catch (HttpClientErrorException e) {
             this.addComment(scanRequest, projectId, iid, "This issue still exists.  Please add label 'false-positive' to remove from scope of SAST results");
+            log.debug(ExceptionUtils.getStackTrace(e));
         }
         return this.getIssue(scanRequest, projectId, iid);
     }

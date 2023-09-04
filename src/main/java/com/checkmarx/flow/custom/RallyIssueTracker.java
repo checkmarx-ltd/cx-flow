@@ -146,6 +146,7 @@ public class RallyIssueTracker implements IssueTracker {
             }
             return issues;
         } catch(RestClientException e) {
+            log.debug(ExceptionUtils.getStackTrace(e));
             return new ArrayList<>();
         }
     }
@@ -439,6 +440,7 @@ public class RallyIssueTracker implements IssueTracker {
                 throw new MachinaRuntimeException();
             }
             this.addComment(issue.getUrl(), "This issue still exists.  Please add label 'false-positive' to remove from scope of SAST results");
+            log.debug(ExceptionUtils.getStackTrace(e));
         }
         return issue;
     }

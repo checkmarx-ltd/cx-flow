@@ -187,7 +187,7 @@ public class BitBucketService extends RepoService {
             restTemplate.exchange(buildStatusApiUrl, HttpMethod.POST, httpEntity, String.class);
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while sending build status. http error {} ", e.getStatusCode());
-            log.error(ExceptionUtils.getStackTrace(e));
+            log.debug(ExceptionUtils.getStackTrace(e));
         }
     }
 
@@ -390,10 +390,13 @@ public class BitBucketService extends RepoService {
             return content;
         } catch (NullPointerException e) {
             log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
+            log.debug(ExceptionUtils.getStackTrace(e));
         } catch (HttpClientErrorException e) {
             log.warn("Repo content is unavailable. The reason can be that branch has been deleted.");
+            log.debug(ExceptionUtils.getStackTrace(e));
         } catch (JsonProcessingException e) {
             log.error(String.format("Error in processing the JSON response from the repo. Error details : %s", ExceptionUtils.getRootCauseMessage(e)));
+            log.debug(ExceptionUtils.getStackTrace(e));
         }
         return content;
     }
@@ -417,10 +420,13 @@ public class BitBucketService extends RepoService {
             return content;
         } catch (NullPointerException e) {
             log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
+            log.debug(ExceptionUtils.getStackTrace(e));
         } catch (HttpClientErrorException e) {
             log.warn("Repo content is unavailable. The reason can be that branch has been deleted.");
+            log.debug(ExceptionUtils.getStackTrace(e));
         } catch (JsonProcessingException e) {
             log.error(String.format("Error in processing the JSON response from the repo. Error details : %s", ExceptionUtils.getRootCauseMessage(e)));
+            log.debug(ExceptionUtils.getStackTrace(e));
         }
         return content;
     }
