@@ -32,6 +32,7 @@ import io.atlassian.util.concurrent.Promise;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -1025,8 +1026,12 @@ public class JiraService {
             log.error("Error retrieving assignee", e);
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while getting Assignee. http error {} ", e.getStatusCode(), e);
+            log.debug(ExceptionUtils.getStackTrace(e));
+
         } catch (JSONException e) {
             log.error("Error processing JSON response" , e);
+            log.debug(ExceptionUtils.getStackTrace(e));
+
         }
         return null;
     }
@@ -1190,6 +1195,8 @@ public class JiraService {
         }
         catch (HttpClientErrorException e) {
             log.error("Error occurred http error {} ", e.getStatusCode());
+            log.debug(ExceptionUtils.getStackTrace(e));
+
         }
         return fieldIdMap;
     }
@@ -1271,6 +1278,8 @@ public class JiraService {
             versionAndDeploy.add(deployType);
         }catch (HttpClientErrorException e) {
             log.error("Error occurred http error {} ", e.getStatusCode());
+            log.debug(ExceptionUtils.getStackTrace(e));
+
         }
         return versionAndDeploy;
     }
@@ -1286,7 +1295,11 @@ public class JiraService {
             project = mapper.readValue(response.getBody(), new TypeReference<List<com.checkmarx.flow.jira9X.Project>>() {});
         }catch (HttpClientErrorException e) {
             log.error("Error occurred http error {} ", e.getStatusCode());
+            log.debug(ExceptionUtils.getStackTrace(e));
+
         } catch (JsonProcessingException e) {
+            log.debug(ExceptionUtils.getStackTrace(e));
+
             throw new RuntimeException(e);
         }
         return project;
@@ -1305,7 +1318,11 @@ public class JiraService {
             issueType = mapper.readValue(issueValues, new TypeReference<List<com.checkmarx.flow.jira9X.IssueType>>() {});
         }catch (HttpClientErrorException e) {
             log.error("Error occurred http error {} ", e.getStatusCode());
+            log.debug(ExceptionUtils.getStackTrace(e));
+
         } catch (JsonProcessingException e) {
+            log.debug(ExceptionUtils.getStackTrace(e));
+
             throw new RuntimeException(e);
         }
         return issueType;
@@ -1324,7 +1341,11 @@ public class JiraService {
              issueFields = mapper.readValue(issueValues, new TypeReference<List<com.checkmarx.flow.jira9X.IssueFields>>() {});
         }catch (HttpClientErrorException e) {
             log.error("Error occurred http error {} ", e.getStatusCode());
+            log.debug(ExceptionUtils.getStackTrace(e));
+
         } catch (JsonProcessingException e) {
+            log.debug(ExceptionUtils.getStackTrace(e));
+
             throw new RuntimeException(e);
         }
         return issueFields;
