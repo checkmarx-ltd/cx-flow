@@ -36,6 +36,7 @@ import com.checkmarx.flow.service.HelperService;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.springframework.http.ResponseEntity;
@@ -200,6 +201,7 @@ public class BitbucketServerController implements BitBucketConfigContextProvider
             event = mapper.readValue(body, PushEvent.class);
             
         } catch (IOException e) {
+            log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaRuntimeException(e);
         }
 

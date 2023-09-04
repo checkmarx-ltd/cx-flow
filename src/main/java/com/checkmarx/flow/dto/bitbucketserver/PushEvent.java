@@ -1,6 +1,7 @@
 
 package com.checkmarx.flow.dto.bitbucketserver;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -9,11 +10,13 @@ import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "eventKey",
-    "date",
-    "actor",
-    "repository",
-    "changes"
+        "eventKey",
+        "date",
+        "actor",
+        "repository",
+        "changes",
+        "commits",
+        "toCommit"
 })
 public class PushEvent {
 
@@ -27,6 +30,14 @@ public class PushEvent {
     private Repository repository;
     @JsonProperty("changes")
     private List<Change> changes = null;
+
+    @JsonIgnore
+    @JsonProperty("commits")
+    private List<Commit> commits;
+    @JsonIgnore
+    @JsonProperty("toCommit")
+    private ToCommit toCommit;
+
 
     @JsonProperty("eventKey")
     public String getEventKey() {
@@ -76,6 +87,26 @@ public class PushEvent {
     @JsonProperty("changes")
     public void setChanges(List<Change> changes) {
         this.changes = changes;
+    }
+
+    @JsonProperty("commits")
+    public List<Commit> getCommits() {
+        return commits;
+    }
+
+    @JsonProperty("commits")
+    public void setCommits(List<Commit> commits) {
+        this.commits = commits;
+    }
+
+    @JsonProperty("toCommit")
+    public ToCommit getToCommit() {
+        return toCommit;
+    }
+
+    @JsonProperty("toCommit")
+    public void setToCommit(ToCommit toCommit) {
+        this.toCommit = toCommit;
     }
 
 }
