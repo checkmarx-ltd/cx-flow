@@ -131,6 +131,7 @@ public class CxFlowRunner implements ApplicationRunner {
         String altFields;
         String config;
         String scanTag;
+        String branchpattern;
         List<String> severity;
         List<String> cwe;
         List<String> category;
@@ -180,6 +181,7 @@ public class CxFlowRunner implements ApplicationRunner {
         libFile = getOptionValues(args, "lib-file");
         repoName = getOptionValues(args, "repo-name");
         repoUrl = getOptionValues(args, "repo-url");
+        branchpattern = getOptionValues(args, "branch-pattern");
         branch = getOptionValues(args, "branch");
         defaultBranch = getOptionValues(args, "default-branch");
         namespace = getOptionValues(args, "namespace");
@@ -377,6 +379,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 .scanFields(scanCustomFields)
                 .branchProtectionEnabled(branchProtectionEnabled)
                 .commentSAST(commentSAST)
+                .branchPattern(branchpattern)
                 .disableBreakbuild(disableBreakbuild)
                 .build();
 

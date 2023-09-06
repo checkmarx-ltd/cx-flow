@@ -107,6 +107,9 @@ public class ScanRequest {
     @Getter @Setter
     private Boolean disableBreakbuild;
 
+    @Getter @Setter
+    private String branchPattern;
+
     /**
      * 'Organization' here means the top-most level of project hierarchy.
      * E.g. if SCM supports several levels of hierarchy, path to the project may look like org1/suborg/my-project.
