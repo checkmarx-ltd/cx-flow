@@ -110,7 +110,7 @@ public class ScaCliSteps {
                 scaProperties.setThresholdsScore(10.0);
                 break;
             case "break-build":
-                commandBuilder.append("--scan --sca.filter-policy-violation=false --severity=High --app=MyApp --cx-project=test").append(GITHUB_REPO_ARGS);
+                commandBuilder.append("--scan --sca.filter-policy-violation=true --severity=High --app=MyApp --cx-project=test").append(GITHUB_REPO_ARGS);
                 scaProperties.setThresholdsScore(1.0);
                 break;
             case "missing-mandatory-parameter":
