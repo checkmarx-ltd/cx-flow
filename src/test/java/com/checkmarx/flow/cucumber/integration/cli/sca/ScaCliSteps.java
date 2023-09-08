@@ -106,11 +106,11 @@ public class ScaCliSteps {
         setFilters("High");
         switch (input) {
             case "success":
-                commandBuilder.append("--scan  --severity=High --app=MyApp --cx-project=test").append(GITHUB_REPO_ARGS);
+                commandBuilder.append("--scan --sca-policy-disable=true  --severity=High --app=MyApp --cx-project=test").append(GITHUB_REPO_ARGS);
                 scaProperties.setThresholdsScore(10.0);
                 break;
             case "break-build":
-                commandBuilder.append("--scan --sca.filter-policy-violation=true --severity=High --app=MyApp --cx-project=test").append(GITHUB_REPO_ARGS);
+                commandBuilder.append("--scan  --severity=High --app=MyApp --cx-project=test").append(GITHUB_REPO_ARGS);
                 scaProperties.setThresholdsScore(1.0);
                 break;
             case "missing-mandatory-parameter":
