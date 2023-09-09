@@ -67,6 +67,8 @@ public class JiraService {
     private static final String ACCOUNT_ID = "accountId";
     private static final String JIRA_ISSUE_LABEL_SCA = "scanner:SCA";
     private static final String JIRA_ISSUE_LABEL_SAST = "scanner:SAST";
+    private static final String JIRA_DEV_LABEL ="DEV";
+    private static final String JIRA_PROD_LABEL ="PROD";
     private static final String CASCADE_PARENT_CHILD_DELIMITER = ";";
     private static final int MAX_RESULTS_ALLOWED = 1000000;
     private static final String SEARCH_ASSIGNABLE_USER = "%s/rest/api/latest/user/assignable/search?project={projectKey}&query={assignee}";
@@ -368,6 +370,13 @@ public class JiraService {
             }
             if (null != scaDetails) { 
                 labels.add(JIRA_ISSUE_LABEL_SCA);
+                if(issue.getScaDetails().get(0).getVulnerabilityPackage().isIsDevelopmentDependency() || issue.getScaDetails().get(0).getVulnerabilityPackage().isIsTestDependency())
+                {
+                    labels.add(JIRA_DEV_LABEL);
+                }
+                else{
+                    labels.add(JIRA_PROD_LABEL);
+                }
             }else{
                 labels.add(JIRA_ISSUE_LABEL_SAST);
             }

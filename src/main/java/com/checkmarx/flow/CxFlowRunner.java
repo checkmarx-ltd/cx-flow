@@ -209,6 +209,7 @@ public class CxFlowRunner implements ApplicationRunner {
         boolean usingBitBucketCloud = args.containsOption("bb");
         boolean usingBitBucketServer = args.containsOption("bbs");
         boolean disableCertificateValidation = args.containsOption("trust-cert");
+        boolean disablePolicyViolation = args.containsOption("sca-policy-disable");
         disableBreakbuild=args.containsOption("disable-break-build");
         branchProtectionEnabled = args.containsOption("branch-protection-enabled");
         sbom = args.containsOption("sbom");
@@ -381,6 +382,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 .commentSAST(commentSAST)
                 .disableBreakbuild(disableBreakbuild)
                 .sbom(sbom)
+                .disablePolicyViolation(disablePolicyViolation)
                 .build();
 
         if (projectId != null) {

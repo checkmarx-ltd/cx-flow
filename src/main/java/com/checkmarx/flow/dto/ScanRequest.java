@@ -63,6 +63,8 @@ public class ScanRequest {
     @Getter @Setter
     private String scanResubmit;
     private Boolean incremental;
+    @Getter @Setter
+    private Boolean disablePolicyViolation=true;
     private String scanPreset;
 
     /**
