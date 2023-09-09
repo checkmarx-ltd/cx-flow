@@ -283,6 +283,7 @@ public class ADOIssueTracker implements IssueTracker {
             return getIssue(url, issueBody, request);
         } catch (NullPointerException | HttpClientErrorException | JSONException e) {
             log.warn("Error occurred while retrieving new WorkItem url.  Returning null", e);
+            log.debug(ExceptionUtils.getStackTrace(e));
             return null;
         }
     }
