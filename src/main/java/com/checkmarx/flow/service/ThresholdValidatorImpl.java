@@ -194,7 +194,7 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
         boolean isAllowedSca;
         // isPolicyViolated flag gets the top priority whether to the break build or not
         SCAResults scaResults = scanResults.getScaResults();
-        if(request.getDisablePolicyViolation() !=null && request.getDisablePolicyViolation()){
+        if(request!=null && request.getDisablePolicyViolation()){
             scaProperties.setEnablePolicyViolation(false);
         }
         if (scaResults.isPolicyViolated() && scaProperties.isEnablePolicyViolation()) {
