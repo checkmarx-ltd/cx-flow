@@ -3,6 +3,7 @@
 <br>[XML Encoding](#xmlencoding)
 <br>[JDK Version](#jdk)
 <br>[Exit Codes](#extcode)
+<br>[JSON Logs](#jsnlgs)
 
 
 ## <a name="gotchas">Gotchas!</a>
@@ -283,4 +284,64 @@ at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:521) ~[na:na]
 * 3 : Cx-Flow Returns 3 on exception.
 * 10 : Cx-Flow Returns 10 when there is some issue during request processing.
 * 11 : Cx-Flow Returns 11 when there is vulnerability crossed thresholds.
+  <br>[JSON Logs](#jsnlgs)
 
+## <a name="jsnlgs">JSON Logs</a>
+* If users want Cx-Flow logs as JSON logs, they need to define a new ```logback.xml``` file and provide a reference to the Spring application by passing this parameter. ```--logging.config=logback.xml ```
+* Please find reference of logback.xml below
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+ <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+ <layout class="ch.qos.logback.contrib.json.classic.JsonLayout">
+ <jsonFormatter class="ch.qos.logback.contrib.jackson.JacksonJsonFormatter">
+ <prettyPrint>true</prettyPrint>
+ </jsonFormatter>
+ <timestampFormat>dd.MM.yyyy' 'HH.mm.ss:SSS</timestampFormat>
+ <appendLineSeparator>false</appendLineSeparator>
+ </layout>
+ </appender>
+ <appender name="maskFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <charset>${FILE_LOG_CHARSET}</charset>
+            <layout class="com.checkmarx.flow.utils.MaskingPatternLayout">
+                <!--
+                    Each mask pattern is a regular expression (see
+                    https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
+                    
+                    The regular expression should contain a group which contains the item
+                    to be masked. Surrounding parts of the regular expression provide the
+                    context of the item to be masked.
+
+                    For example. the following maskPattern
+
+                        token=(.+?)\s
+
+                    will mask any text between "token=" and the next whitespace character.
+                -->
+                <!-- For logging command line arguments -->
+                <maskPattern>[^&amp;]password=(.+?)\s</maskPattern>
+                <!-- For logging the token request (if logging HTTP requests) -->
+                <maskPattern>&amp;password=(.+?)&amp;</maskPattern>
+                <maskPattern>token=(.+?)\s</maskPattern>
+                <maskPattern>"access_token":"([^"]+)"</maskPattern>
+                <maskPattern>Authorization: Bearer (.+)</maskPattern>
+                <pattern>${FILE_LOG_PATTERN}</pattern>
+            </layout>
+        </encoder>
+        <file>${LOG_FILE}</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOGBACK_ROLLINGPOLICY_FILE_NAME_PATTERN:-${LOG_FILE}.%d{yyyy-MM-dd}.%i.gz}</fileNamePattern>
+            <cleanHistoryOnStart>${LOGBACK_ROLLINGPOLICY_CLEAN_HISTORY_ON_START:-false}</cleanHistoryOnStart>
+            <maxFileSize>${LOGBACK_ROLLINGPOLICY_MAX_FILE_SIZE:-10MB}</maxFileSize>
+            <totalSizeCap>${LOGBACK_ROLLINGPOLICY_TOTAL_SIZE_CAP:-0}</totalSizeCap>
+            <maxHistory>${LOGBACK_ROLLINGPOLICY_MAX_HISTORY:-7}</maxHistory>
+        </rollingPolicy>
+    </appender>
+ <root level="info">
+        <appender-ref ref="Console"/>
+		        <appender-ref ref="maskFile"/>
+
+    </root>
+</configuration>
+```
