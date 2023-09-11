@@ -81,8 +81,7 @@ public class SCASecurityDashboard {
     @JsonProperty("dependency_files")
     @JsonPropertyDescription("List of dependency files identified in the project.")
     private List<DependencyFile> dependencyFiles;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new LinkedHashMap<String, Object>();
+
 
     /**
      * 
@@ -200,14 +199,5 @@ public class SCASecurityDashboard {
         this.dependencyFiles = dependencyFiles;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
 
 }

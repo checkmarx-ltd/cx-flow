@@ -48,7 +48,6 @@ public class Gitlabdashboard {
      */
     @JsonProperty("schema")
     @JsonPropertyDescription("URI pointing to the validating security report schema.")
-    @Builder.Default
     private String schema;
     /**
      * The version of the schema to which the JSON report conforms.

@@ -95,8 +95,7 @@ public class Scan {
     @JsonProperty("primary_identifiers")
     @JsonPropertyDescription("An unordered array containing an exhaustive list of primary identifiers for which the analyzer may return results")
     private List<PrimaryIdentifier> primaryIdentifiers;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new LinkedHashMap<String, Object>();
+
 
     /**
      * ISO8601 UTC value with format yyyy-mm-ddThh:mm:ss, representing when the scan finished.
@@ -256,15 +255,6 @@ public class Scan {
         this.primaryIdentifiers = primaryIdentifiers;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
 
 
     /**

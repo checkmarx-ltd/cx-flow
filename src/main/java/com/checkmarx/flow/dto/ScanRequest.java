@@ -64,6 +64,7 @@ public class ScanRequest {
     private String scanResubmit;
     private Boolean incremental;
     @Getter @Setter
+    @Builder.Default
     private Boolean disablePolicyViolation=true;
     private String scanPreset;
 

@@ -52,7 +52,6 @@ public class Analyzer {
      */
     @JsonProperty("url")
     @JsonPropertyDescription("A link to more information about the analyzer.")
-    @Builder.Default
     private String url;
     /**
      * The vendor/maintainer of the analyzer.
