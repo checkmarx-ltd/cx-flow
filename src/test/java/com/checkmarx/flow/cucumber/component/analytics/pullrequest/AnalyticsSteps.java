@@ -259,7 +259,7 @@ public class AnalyticsSteps {
                 null,
                 null,
                 null,
-                null);
+                null,null,null);
     }
 
     private static ScanResults createFakeSASTScanResults(Map<FindingSeverity, Integer> findingsPerSeverity) {

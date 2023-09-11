@@ -3,14 +3,15 @@ import org.gradle.api.tasks.testing.Test
 buildscript {
 	ext {
 
-         CxSBSDK = "0.5.56"
+
+         CxSBSDK = "0.5.59"
          ConfigProviderVersion = "1.0.9"
         //cxVersion = "8.90.5"
-        springBootVersion = '2.7.11'
+        springBootVersion = '2.7.14'
         sonarqubeVersion = '2.8'
         atlassianVersion = "5.2.0"
         atlassianFugueVersion = "4.7.2"
-        jacksonVersion = "2.14.2"
+        jacksonVersion = "2.15.2"
         mainClassPath = 'com.checkmarx.flow.CxFlowApplication'
     }
 	repositories {
@@ -61,10 +62,10 @@ configurations {
     all*.exclude module: 'wss-agent-api'
 }
 
-ext['tomcat.version'] = '9.0.76'
+ext['tomcat.version'] = '9.0.78'
 ext['groovy.version'] = '3.0.16'
 ext['logback-classic.version'] = '1.2.10'
-ext['spring-core.version'] = '5.3.27'
+ext['spring-core.version'] = '5.3.29'
 
 dependencies {
     compile group: 'com.beust', name: 'jcommander', version: '1.78'
@@ -94,8 +95,8 @@ dependencies {
     compile ('commons-codec:commons-codec:1.13')
     compile ('commons-io:commons-io:2.8.0')
     compile ('org.json:json:20230227')
-    compile('org.yaml:snakeyaml:2.0')
-    compile ('com.fasterxml.jackson.core:jackson-databind:2.14.2')
+    compile('org.yaml:snakeyaml:2.1')
+    compile ('com.fasterxml.jackson.core:jackson-databind:2.15.2')
     compile ('org.springframework.boot:spring-boot-starter-web-services'){
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
@@ -103,6 +104,7 @@ dependencies {
     compile ('org.springframework.boot:spring-boot-starter-thymeleaf'){
         exclude group: 'ch.qos.logback', module: 'logback-core'
         exclude group: 'org.thymeleaf', module: 'thymeleaf-spring5'
+        exclude group: 'org.thymeleaf', module: 'thymeleaf'
     }
     compile ('com.github.ulisesbocchio:jasypt-spring-boot-starter:2.1.2')
     compile ("io.atlassian.fugue:fugue:${atlassianFugueVersion}")
@@ -112,20 +114,22 @@ dependencies {
         exclude group: 'org.codehaus.jettison', module:'jettison'
     }
     compile ("com.atlassian.jira:jira-rest-java-client-api:${atlassianVersion}")
-    compile("com.fasterxml.jackson.core:jackson-databind:2.14.2")
+    compile("com.fasterxml.jackson.core:jackson-databind:2.15.2")
     compile("com.fasterxml.jackson.core:jackson-core:${jacksonVersion}")
     compile("com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}")
     compile("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersion}")
     compile("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${jacksonVersion}")
     compile('org.codehaus.jettison:jettison:1.5.4')
 
-    compile("org.thymeleaf:thymeleaf-spring5:3.0.15.RELEASE")
-    implementation 'ognl:ognl:3.1.29'
+    //implementation 'ognl:ognl:3.1.29'
+    compile("org.thymeleaf:thymeleaf-spring5:3.1.2.RELEASE")
+    compile("org.thymeleaf:thymeleaf:3.1.2.RELEASE")
 
     compile ("org.apache.httpcomponents:httpclient:4.5.13")
-    compile ("org.codehaus.groovy:groovy-all:3.0.9") {
+    compile ("org.codehaus.groovy:groovy-all:3.0.16") {
         exclude group: 'org.apache.ant', module: 'ant'
         exclude group: 'org.webjars', module: 'jquery'
+        exclude group: 'org.testng', module:  'testng'
 
     }
     compile ("org.apache.ivy:ivy:2.5.1")

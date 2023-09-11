@@ -63,6 +63,8 @@ public class ScanRequest {
     @Getter @Setter
     private String scanResubmit;
     private Boolean incremental;
+    @Getter @Setter
+    private Boolean disablePolicyViolation=true;
     private String scanPreset;
 
     /**
@@ -107,6 +109,9 @@ public class ScanRequest {
     @Getter @Setter
     private Boolean disableBreakbuild;
 
+    @Getter @Setter
+    private String branchPattern;
+
     /**
      * 'Organization' here means the top-most level of project hierarchy.
      * E.g. if SCM supports several levels of hierarchy, path to the project may look like org1/suborg/my-project.
@@ -142,6 +147,9 @@ public class ScanRequest {
 
     @Getter @Setter
     private String modifiedProjectName;
+
+    @Getter @Setter
+    private boolean sbom;
 
     public ScanRequest(ScanRequest other) {
         this.namespace = other.namespace;
@@ -190,7 +198,7 @@ public class ScanRequest {
         this.emailNotifications = other.emailNotifications;
         this.zipExclude = other.zipExclude;
         this.modifiedProjectName = other.modifiedProjectName;
-
+        this.sbom= other.sbom;
     }
 
     public Map<String,String> getAltFields() {

@@ -302,6 +302,8 @@ public class GitHubService extends RepoService {
                 msg += String.format(REQUEST_DETAILS, request.toString());
             }
             log.warn(msg, e);
+            log.debug(ExceptionUtils.getStackTrace(e));
+
         }
     }
 
@@ -485,8 +487,11 @@ public class GitHubService extends RepoService {
         }catch (HttpClientErrorException.NotFound e){
             String error = "Got 404 'Not Found' error. GitHub endpoint: " + getGitHubEndPoint(request) + " is invalid.";
             log.warn(error);
+            log.debug(ExceptionUtils.getStackTrace(e));
+
         }catch (HttpClientErrorException e){
             log.error("Error occurred in getRepoLanguagePercentages method.", ExceptionUtils.getRootCauseMessage(e));
+            log.debug(ExceptionUtils.getStackTrace(e));
         } catch (JSONException e) {
             log.error("Error processing JSON response");
             log.error(ExceptionUtils.getStackTrace(e));
@@ -513,6 +518,8 @@ public class GitHubService extends RepoService {
             log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
         } catch (HttpClientErrorException e) {
             log.warn("Repo content is unavailable. The reason can be that branch has been deleted.");
+            log.debug(ExceptionUtils.getStackTrace(e));
+
         }
         return Collections.emptyList();
     }

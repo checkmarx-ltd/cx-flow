@@ -255,6 +255,7 @@ public class ScanRequestConverter {
                 .withScanCustomFields(request.getScanFields())
                 .withEmailNotifications(request.getEmailNotifications())
                 .withPostbackActionId(request.getPostBackActionId())
+                .withBranchPattern(request.getBranchPattern())
                 .withModifiedProjectName(request.getModifiedProjectName());
 
 

@@ -778,13 +778,13 @@ This tutorial is designed to teach the following topics:
 * Create a new private repository named CxFlowBodgeit by clicking the + button on the sidebar
 * Click Import repository to import code from your favorite small demo codebase on GitHub
     * This tutorial will use https://github.com/psiinon/bodgeit 
-* Create a token by clicking your profile in lower-left corner & Personal settings
+* Create an app password by clicking your profile in lower-left corner & Personal settings
     * Click App Passwords & Create app password
     * Create a Label (i.e. CxFlow)
-    * Give the token all Read/Write access to Pull requests & Webhooks
-    * Copy this token and keep safe - it should be pasted into the token: <> of the application.yml
-    * **Note** The token in the YML file should follow the format <UserName>:<Token>
-* Once the .YML file is completely filled out and saved, start CxFlow in webhook mode 
+    * Give the app password all Read/Write access to Pull requests & Webhooks
+    * Copy this app password and keep safe - it should be pasted into the token: <> of the application.yml
+    * The app password in the YML file should follow the format `<userid>:<app password>`
+* Once the YAML file is completely filled out and saved, start CxFlow in webhook mode 
 * In Bitbucket, create a webhook by selecting Repositories & select the new repo you just created 
 * Click Repository settings>Webhooks>Add Webhook and fill in details
     * Title = CxFlow

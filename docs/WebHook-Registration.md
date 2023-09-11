@@ -85,14 +85,15 @@ azure:
 ## <a name="bitbucketcloud">Bitbucket Cloud</a>
 Bitbucket cloud does not support a shared key/secret for digitally signing and verifying the request, so we require the token parameter to be passed:
 <br> example: http://cxflow?token=XXXXX
-<br>XXXX is the pre-shared token value set for `bitbucket.webhook-token` that the CxFlow webservice is using to validate and authenticate requests.
+<br>token=XXXX is the pre-shared token value set for `bitbucket.webhook-token` that the CxFlow webservice is using to validate and authenticate requests.
 
-When configuring the API token in CxFlow YML config using the `bitbucket.token` configuration value, the expected format is `<userid>:<access token>`. 
+When configuring the API token in CxFlow YAML config using the `bitbucket.token` configuration value, the expected format is `<userid>:<app password>`. 
 
 
 ## <a name="bitbucketserver">Bitbucket Server</a>
 
 ### Native Webhooks
+
 Similar to cloud, but requires a shared secret field, which is used to sign/authenticate the request.  The `token` webhook URL parameter used in Bitbucket Cloud is therefore not necessary.
 
 ### Post Webhooks

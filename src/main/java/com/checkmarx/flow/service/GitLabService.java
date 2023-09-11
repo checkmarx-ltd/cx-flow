@@ -15,6 +15,7 @@ import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.sast.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -33,6 +34,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
+
 
 
 @Service
@@ -80,11 +82,22 @@ public class GitLabService extends RepoService {
             return obj.getInt("id");
         }catch (HttpClientErrorException e){
             log.error("Error calling gitlab project api {}", e.getResponseBodyAsString(), e);
+            log.debug("Detailed Message {}",e.getMessage(),e);
+            log.debug(ExceptionUtils.getStackTrace(e));
+
         }catch (JSONException e){
             log.error("Error parsing gitlab project response.", e);
+            log.debug("Detailed Message {}",e.getMessage(),e);
+            log.debug(ExceptionUtils.getStackTrace(e));
+
+
         }
         catch (URISyntaxException e){
             log.error("Incorrect URI", e);
+            log.debug("Detailed Message {}",e.getMessage(),e);
+            log.debug(ExceptionUtils.getStackTrace(e));
+
+
         }
 
         return UNKNOWN_INT;
@@ -126,6 +139,10 @@ public class GitLabService extends RepoService {
             restTemplate.exchange(commentUrl, HttpMethod.PUT, httpEntity, String.class);
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while updating comment. http error {} ", e.getStatusCode(), e);
+            log.debug("Detailed Message {}",e.getMessage(),e);
+            log.debug(ExceptionUtils.getStackTrace(e));
+
+
         }
     }
 
@@ -139,6 +156,10 @@ public class GitLabService extends RepoService {
             restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while adding comment. http error {} ", e.getStatusCode(), e);
+            log.debug("Detailed Message {}",e.getMessage(),e);
+            log.debug(ExceptionUtils.getStackTrace(e));
+
+
         }
     }
 
@@ -161,6 +182,10 @@ public class GitLabService extends RepoService {
             restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while sending Commit comment. http error {} ", e.getStatusCode(), e);
+            log.debug("Detailed Message {}",e.getMessage(),e);
+            log.debug(ExceptionUtils.getStackTrace(e));
+
+
         }
     }
     public void startBlockMerge(ScanRequest request) {
@@ -183,6 +208,10 @@ public class GitLabService extends RepoService {
                         HttpMethod.PUT, httpEntity, String.class);
             } catch (HttpClientErrorException e) {
                 log.error("Error occurred while starting block merge. http error {} ", e.getStatusCode(), e);
+                log.debug("Detailed Message {}",e.getMessage(),e);
+                log.debug(ExceptionUtils.getStackTrace(e));
+
+
             }
         }
     }
@@ -208,6 +237,10 @@ public class GitLabService extends RepoService {
                         HttpMethod.PUT, httpEntity, String.class);
             } catch (HttpClientErrorException e) {
                 log.error("Error occurred while end Block merge. http error {} ", e.getStatusCode(), e);
+                log.debug("Detailed Message {}",e.getMessage(),e);
+                log.debug(ExceptionUtils.getStackTrace(e));
+
+
             }
         }
     }
@@ -256,10 +289,20 @@ public class GitLabService extends RepoService {
             }
         }catch (NullPointerException e){
             log.warn(CONTENT_NOT_FOUND_ERROR_MESSAGE, e);
+            log.debug("Detailed Message {}",e.getMessage(),e);
+
         }catch (HttpClientErrorException e){
             log.error(ERROR_OCCURRED, e);
+            log.debug("Detailed Message {}",e.getMessage(),e);
+            log.debug(ExceptionUtils.getStackTrace(e));
+
+
         } catch (JSONException e) {
             log.error("Error processing JSON response", e);
+            log.debug("Detailed Message {}",e.getMessage(),e);
+            log.debug(ExceptionUtils.getStackTrace(e));
+
+
         }
         return sources;
     }
@@ -287,10 +330,22 @@ public class GitLabService extends RepoService {
             }
         }catch (NullPointerException e){
             log.warn(CONTENT_NOT_FOUND_ERROR_MESSAGE, e);
+            log.debug("Detailed Message {}",e.getMessage(),e);
+            log.debug(ExceptionUtils.getStackTrace(e));
+
+
         }catch (HttpClientErrorException e){
             log.error(ERROR_OCCURRED, e);
+            log.debug("Detailed Message {}",e.getMessage(),e);
+            log.debug(ExceptionUtils.getStackTrace(e));
+
+
         } catch (JSONException e) {
             log.error("Error processing JSON response", e);
+            log.debug("Detailed Message {}",e.getMessage(),e);
+            log.debug(ExceptionUtils.getStackTrace(e));
+
+
         }
     }
 
@@ -321,10 +376,22 @@ public class GitLabService extends RepoService {
             }
         } catch (NullPointerException e) {
             log.warn(CONTENT_NOT_FOUND_ERROR_MESSAGE, e);
+            log.debug("Detailed Message {}",e.getMessage(),e);
+            log.debug(ExceptionUtils.getStackTrace(e));
+
+
         } catch (HttpClientErrorException.NotFound e) {
             log.info("No Config As code was found [{}]", properties.getConfigAsCode());
+            log.debug("Detailed Message {}",e.getMessage(),e);
+            log.debug(ExceptionUtils.getStackTrace(e));
+
+
         } catch (Exception e) {
             log.error(ERROR_OCCURRED, e);
+            log.debug("Detailed Message {}",e.getMessage(),e);
+            log.debug(ExceptionUtils.getStackTrace(e));
+
+
         }
         return null;
     }
@@ -336,6 +403,8 @@ public class GitLabService extends RepoService {
             restTemplate.exchange(url, HttpMethod.DELETE, httpEntity, String.class);
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while deleting comment. http error {} ", e.getStatusCode(), e);
+            log.debug(ExceptionUtils.getStackTrace(e));
+
         }
     }
 
@@ -349,6 +418,8 @@ public class GitLabService extends RepoService {
                     Comment[].class);
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while getting comments. http error {} ", e.getStatusCode(), e);
+            log.debug(ExceptionUtils.getStackTrace(e));
+
         }
         List<Comment> comments = Arrays.asList(Objects.requireNonNull(response.getBody()));
         return convertToListCxRepoComments(comments, scanRequest);

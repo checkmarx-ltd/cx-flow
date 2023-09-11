@@ -14,6 +14,7 @@ import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
 import org.apache.commons.lang3.ThreadUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -93,6 +94,7 @@ public class GitHubIssueTracker implements IssueTracker {
                     HttpMethod.GET, httpEntity, com.checkmarx.flow.dto.github.Issue[].class);
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while getting Github issue. http error {} ", e.getStatusCode(), e);
+            log.debug(ExceptionUtils.getStackTrace(e));
         }
         if (response.getBody() == null) {
             log.info("No issues found.");
@@ -115,6 +117,7 @@ public class GitHubIssueTracker implements IssueTracker {
                         httpEntity, com.checkmarx.flow.dto.github.Issue[].class);
             } catch (HttpClientErrorException e) {
                 log.error("Error occurred while getting Github issue. http error {} ", e.getStatusCode(), e);
+                log.debug(ExceptionUtils.getStackTrace(e));
             }
                     mapIssues(request, issues, responsePage);
             next = getNextURIFromHeaders(responsePage.getHeaders(), "link", "next");
@@ -166,6 +169,7 @@ public class GitHubIssueTracker implements IssueTracker {
             response = restTemplate.exchange(issueUrl, HttpMethod.GET, httpEntity, com.checkmarx.flow.dto.github.Issue.class);
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while getting Github issue. http error {} ", e.getStatusCode(), e);
+            log.debug(ExceptionUtils.getStackTrace(e));
         }
         return mapToIssue(response.getBody());
     }
@@ -183,6 +187,7 @@ public class GitHubIssueTracker implements IssueTracker {
             restTemplate.exchange(issueUrl.concat("/comments"), HttpMethod.POST, httpEntity, String.class);
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while adding comment. http error {} ", e.getStatusCode(), e);
+            log.debug(ExceptionUtils.getStackTrace(e));
         }
     }
 
@@ -208,6 +213,7 @@ public class GitHubIssueTracker implements IssueTracker {
             response = restTemplate.exchange(apiUrl, HttpMethod.POST, httpEntity, com.checkmarx.flow.dto.github.Issue.class);
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while creating GitHub Issue", e);
+            log.debug(ExceptionUtils.getStackTrace(e));
             if (e.getStatusCode().equals(HttpStatus.GONE)) {
                 log.error("Issues are not enabled for this repository");
             }
@@ -224,6 +230,7 @@ public class GitHubIssueTracker implements IssueTracker {
             restTemplate.exchange(issue.getUrl(), HttpMethod.POST, httpEntity, Issue.class);
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while closing Github issue. http error {} ", e.getStatusCode(), e);
+            log.debug(ExceptionUtils.getStackTrace(e));
         }
     }
 
@@ -248,6 +255,7 @@ public class GitHubIssueTracker implements IssueTracker {
         } catch (HttpClientErrorException e) {
             handleIssueUpdateError(e);
             this.addComment(issue.getUrl(), "This issue still exists.  Please add label 'false-positive' to remove from scope of SAST results", request);
+            log.debug(ExceptionUtils.getStackTrace(e));
         }
         return this.getIssue(issue.getUrl(), request);
     }

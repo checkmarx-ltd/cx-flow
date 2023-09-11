@@ -331,7 +331,7 @@ public class Github2AdoSteps {
                 null,
                 null,
                 null,
-                emailService));
+                emailService,null,null));
     }
 
     @And("Scanner is AST")

@@ -32,6 +32,7 @@ import io.atlassian.util.concurrent.Promise;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -66,6 +67,8 @@ public class JiraService {
     private static final String ACCOUNT_ID = "accountId";
     private static final String JIRA_ISSUE_LABEL_SCA = "scanner:SCA";
     private static final String JIRA_ISSUE_LABEL_SAST = "scanner:SAST";
+    private static final String JIRA_DEV_LABEL ="DEV";
+    private static final String JIRA_PROD_LABEL ="PROD";
     private static final String CASCADE_PARENT_CHILD_DELIMITER = ";";
     private static final int MAX_RESULTS_ALLOWED = 1000000;
     private static final String SEARCH_ASSIGNABLE_USER = "%s/rest/api/latest/user/assignable/search?project={projectKey}&query={assignee}";
@@ -367,6 +370,13 @@ public class JiraService {
             }
             if (null != scaDetails) { 
                 labels.add(JIRA_ISSUE_LABEL_SCA);
+                if(issue.getScaDetails().get(0).getVulnerabilityPackage().isIsDevelopmentDependency() || issue.getScaDetails().get(0).getVulnerabilityPackage().isIsTestDependency())
+                {
+                    labels.add(JIRA_DEV_LABEL);
+                }
+                else{
+                    labels.add(JIRA_PROD_LABEL);
+                }
             }else{
                 labels.add(JIRA_ISSUE_LABEL_SAST);
             }
@@ -1025,8 +1035,12 @@ public class JiraService {
             log.error("Error retrieving assignee", e);
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while getting Assignee. http error {} ", e.getStatusCode(), e);
+            log.debug(ExceptionUtils.getStackTrace(e));
+
         } catch (JSONException e) {
             log.error("Error processing JSON response" , e);
+            log.debug(ExceptionUtils.getStackTrace(e));
+
         }
         return null;
     }
@@ -1190,6 +1204,8 @@ public class JiraService {
         }
         catch (HttpClientErrorException e) {
             log.error("Error occurred http error {} ", e.getStatusCode());
+            log.debug(ExceptionUtils.getStackTrace(e));
+
         }
         return fieldIdMap;
     }
@@ -1271,6 +1287,8 @@ public class JiraService {
             versionAndDeploy.add(deployType);
         }catch (HttpClientErrorException e) {
             log.error("Error occurred http error {} ", e.getStatusCode());
+            log.debug(ExceptionUtils.getStackTrace(e));
+
         }
         return versionAndDeploy;
     }
@@ -1286,7 +1304,11 @@ public class JiraService {
             project = mapper.readValue(response.getBody(), new TypeReference<List<com.checkmarx.flow.jira9X.Project>>() {});
         }catch (HttpClientErrorException e) {
             log.error("Error occurred http error {} ", e.getStatusCode());
+            log.debug(ExceptionUtils.getStackTrace(e));
+
         } catch (JsonProcessingException e) {
+            log.debug(ExceptionUtils.getStackTrace(e));
+
             throw new RuntimeException(e);
         }
         return project;
@@ -1305,7 +1327,11 @@ public class JiraService {
             issueType = mapper.readValue(issueValues, new TypeReference<List<com.checkmarx.flow.jira9X.IssueType>>() {});
         }catch (HttpClientErrorException e) {
             log.error("Error occurred http error {} ", e.getStatusCode());
+            log.debug(ExceptionUtils.getStackTrace(e));
+
         } catch (JsonProcessingException e) {
+            log.debug(ExceptionUtils.getStackTrace(e));
+
             throw new RuntimeException(e);
         }
         return issueType;
@@ -1324,7 +1350,11 @@ public class JiraService {
              issueFields = mapper.readValue(issueValues, new TypeReference<List<com.checkmarx.flow.jira9X.IssueFields>>() {});
         }catch (HttpClientErrorException e) {
             log.error("Error occurred http error {} ", e.getStatusCode());
+            log.debug(ExceptionUtils.getStackTrace(e));
+
         } catch (JsonProcessingException e) {
+            log.debug(ExceptionUtils.getStackTrace(e));
+
             throw new RuntimeException(e);
         }
         return issueFields;
