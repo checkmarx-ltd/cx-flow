@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -110,6 +111,8 @@ public class GitHubAppAuthService {
                     installationId);
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while creating app token. http error {} ", e.getStatusCode(), e);
+            log.debug(ExceptionUtils.getStackTrace(e));
+
         }
         if (response.hasBody()) {
             AppToken appToken = new AppToken();

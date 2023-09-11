@@ -63,6 +63,8 @@ public class ScanRequest {
     @Getter @Setter
     private String scanResubmit;
     private Boolean incremental;
+    @Getter @Setter
+    private Boolean disablePolicyViolation=true;
     private String scanPreset;
 
     /**
@@ -143,6 +145,9 @@ public class ScanRequest {
     @Getter @Setter
     private String modifiedProjectName;
 
+    @Getter @Setter
+    private boolean sbom;
+
     public ScanRequest(ScanRequest other) {
         this.namespace = other.namespace;
         this.application = other.application;
@@ -190,7 +195,7 @@ public class ScanRequest {
         this.emailNotifications = other.emailNotifications;
         this.zipExclude = other.zipExclude;
         this.modifiedProjectName = other.modifiedProjectName;
-
+        this.sbom= other.sbom;
     }
 
     public Map<String,String> getAltFields() {

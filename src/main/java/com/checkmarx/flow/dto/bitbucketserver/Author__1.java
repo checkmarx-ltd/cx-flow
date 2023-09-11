@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "slug",
     "type",
     "links"
+
 })
 @Generated("jsonschema2pojo")
 public class Author__1 {

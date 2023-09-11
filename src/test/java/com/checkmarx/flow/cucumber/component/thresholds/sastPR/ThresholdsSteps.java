@@ -370,7 +370,7 @@ public class ThresholdsSteps {
                 null,
                 null,
                 adoService,
-                emailService);
+                emailService,null,null);
     }
 
     private static ScanResults createFakeScanResults() {

@@ -7,6 +7,7 @@ import com.checkmarx.sdk.dto.ScanResults;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.http.*;
@@ -46,12 +47,21 @@ public class CodeBashingService {
         }
         catch (ValidationException validationException){
             log.info("not using CodeBashing lessons integration - {}", validationException.getMessage());
+            log.debug(ExceptionUtils.getStackTrace(validationException));
+
+
         }
         catch (InvalidObjectException invalidValueException){
             log.warn("can't create codebashing lessons map - {}", invalidValueException.getMessage());
+            log.debug(ExceptionUtils.getStackTrace(invalidValueException));
+
+
         }
         catch (Exception ex){
             log.error("can't get codbashing lessons map - {}", ex.getMessage());
+            log.debug(ExceptionUtils.getStackTrace(ex));
+
+
         }
     }
 

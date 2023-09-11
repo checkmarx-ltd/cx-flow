@@ -14,6 +14,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+
     "id",
     "displayId",
     "author",
@@ -22,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "committerTimestamp",
     "message",
     "parents"
+
 })
 @Generated("jsonschema2pojo")
 public class ToCommit {

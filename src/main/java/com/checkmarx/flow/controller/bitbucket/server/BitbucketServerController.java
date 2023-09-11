@@ -204,6 +204,7 @@ public class BitbucketServerController implements BitBucketConfigContextProvider
             event = mapper.readValue(body, PushEvent.class);
             
         } catch (Exception e) {
+
             log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaRuntimeException(e);
         }

@@ -606,7 +606,7 @@ public class ScanUtils {
         String urlCompatiblePackageId = finding.getPackageId().replace(":", urlColonEncode);
 
         vulnerabilityUrl.append(finding.getId())
-                .append(urlColonEncode).append(urlCompatiblePackageId).append("/vulnerabilityDetails");
+                .append(urlColonEncode).append(urlCompatiblePackageId).append("/vulnerabilityDetailsGql");
 
         return vulnerabilityUrl.toString();
     }

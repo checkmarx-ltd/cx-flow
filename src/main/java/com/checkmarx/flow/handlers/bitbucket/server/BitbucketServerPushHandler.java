@@ -19,6 +19,7 @@ import java.util.Optional;
 public class BitbucketServerPushHandler extends BitbucketServerScanEventHandler {
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(BitbucketServerPushHandler.class);
 
+
     @NonNull
     protected String branchFromRef;
 

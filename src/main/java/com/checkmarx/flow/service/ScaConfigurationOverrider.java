@@ -38,6 +38,8 @@ public class ScaConfigurationOverrider {
 
     private static final String EXP_PATH_SAST_PROJECT_NAME = "expPathSastProjectName";
 
+    private static final String PROJECT_NAME = "projectName";
+
     private final ScaProperties scaProperties;
     private final ScaFilterFactory scaFilterFactory;
 
@@ -115,6 +117,11 @@ public class ScaConfigurationOverrider {
         sca.map(Sca :: getExpPathSastProjectName).ifPresent(projectName->{
             scaConfig.setExpPathSastProjectName(projectName);
             overrideReport.put(EXP_PATH_SAST_PROJECT_NAME,projectName);
+        });
+
+        sca.map(Sca :: getProjectName).ifPresent(projectName->{
+            scaConfig.setProjectName(projectName);
+            overrideReport.put(PROJECT_NAME,projectName);
         });
 
         overrideSeverityFilters(request, sca, overrideReport);
