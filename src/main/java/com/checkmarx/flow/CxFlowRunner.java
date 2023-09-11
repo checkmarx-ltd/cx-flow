@@ -645,7 +645,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 scanResults = runOnActiveScanners(scanner -> scanner.scanCli(request, type, new File(path)));
             }
         } else {
-            if(customBean.equalsIgnoreCase("pdf")){
+            if(customBean!=null && customBean.equalsIgnoreCase("pdf")){
                 scanResults = runOnActiveScanners(scanner -> scanner.scanCliToGeneratePDF(request, type));
 
             }else{
@@ -653,7 +653,7 @@ public class CxFlowRunner implements ApplicationRunner {
             }
         }
 
-        if(customBean.equalsIgnoreCase("pdf")){
+        if(customBean!=null && customBean.equalsIgnoreCase("pdf")){
             ScanResults finalScanResults = scanResults;
             runOnActiveScanners(scanner -> scanner.DownloadPDF(finalScanResults,pdfProperties));
         }else{
