@@ -13,8 +13,10 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-        "id",
-        "displayId"
+
+    "id",
+    "displayId"
+
 })
 @Generated("jsonschema2pojo")
 public class Parent {

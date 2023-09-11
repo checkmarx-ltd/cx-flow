@@ -1,7 +1,6 @@
 buildscript {
     ext {
 
-
         CxSBSDK = "0.5.59"
         ConfigProviderVersion = "1.0.10"
         //cxVersion = "8.90.5"
@@ -139,9 +138,10 @@ dependencies {
     compile("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${jacksonVersion}")
     compile("org.apache.httpcomponents:httpclient:4.5.13")
     compile('org.codehaus.jettison:jettison:1.5.4')
+
     compile("org.thymeleaf:thymeleaf-spring5:3.1.2.RELEASE")
     compile("org.thymeleaf:thymeleaf:3.1.2.RELEASE")
-    implementation 'ognl:ognl:3.1.29'
+//    implementation 'ognl:ognl:3.1.29'
 
     compile("org.codehaus.groovy:groovy-all:3.0.16") {
         exclude group: 'org.apache.ant', module: 'ant'

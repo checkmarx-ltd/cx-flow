@@ -68,6 +68,7 @@ public class BitbucketServerController implements BitBucketConfigContextProvider
 
     private final FlowProperties flowProperties;
     private final BitBucketProperties bitBucketProperties;
+
     private final CxScannerService cxScannerService;
     private final JiraProperties jiraProperties;
     private final FlowService flowService;
@@ -196,11 +197,14 @@ public class BitbucketServerController implements BitBucketConfigContextProvider
 
         ObjectMapper mapper = new ObjectMapper();
         PushEvent event;
+        log.debug(body);
+
 
         try {
             event = mapper.readValue(body, PushEvent.class);
             
-        } catch (IOException e) {
+        } catch (Exception e) {
+
             log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaRuntimeException(e);
         }
@@ -209,8 +213,10 @@ public class BitbucketServerController implements BitBucketConfigContextProvider
             log.info("Push event is associated with a Delete branch event...ignoring request");
             return handleDeleteEvent(body,uid,event,signature,product,controllerRequest);
         }
-        
+
         String application = event.getRepository().getName();
+
+        log.info("Application {} ",application);
 
         if (!ScanUtils.empty(controllerRequest.getApplication())) {
             application = controllerRequest.getApplication();

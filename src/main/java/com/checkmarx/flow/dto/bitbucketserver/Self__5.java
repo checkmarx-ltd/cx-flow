@@ -13,7 +13,9 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-        "href"
+
+    "href"
+
 })
 @Generated("jsonschema2pojo")
 public class Self__5 {

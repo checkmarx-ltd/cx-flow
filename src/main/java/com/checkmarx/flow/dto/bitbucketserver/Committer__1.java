@@ -13,14 +13,15 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-        "name",
-        "emailAddress",
-        "active",
-        "displayName",
-        "id",
-        "slug",
-        "type",
-        "links"
+    "name",
+    "emailAddress",
+    "active",
+    "displayName",
+    "id",
+    "slug",
+    "type",
+    "links"
+
 })
 @Generated("jsonschema2pojo")
 public class Committer__1 {

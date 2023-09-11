@@ -14,14 +14,16 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-        "id",
-        "displayId",
-        "author",
-        "authorTimestamp",
-        "committer",
-        "committerTimestamp",
-        "message",
-        "parents"
+
+    "id",
+    "displayId",
+    "author",
+    "authorTimestamp",
+    "committer",
+    "committerTimestamp",
+    "message",
+    "parents"
+
 })
 @Generated("jsonschema2pojo")
 public class Parent__1 {
