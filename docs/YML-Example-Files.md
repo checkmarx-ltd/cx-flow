@@ -54,7 +54,7 @@ cxflow:
   filter-cwe:
   filter-status:
   # - New
-  # - Reoccured
+  # - Recurrent
   filter-state:
   # - Urgent
   # - Confirmed
@@ -226,7 +226,7 @@ cxflow:
   filter-cwe:
   filter-status:
   # - New
-  # - Reoccured
+  # - Recurrent
   filter-state:
   # - Urgent
   # - Confirmed

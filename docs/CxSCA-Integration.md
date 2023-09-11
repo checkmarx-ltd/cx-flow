@@ -9,6 +9,7 @@
 * [SCA Project Team Assignment](#scaprojectteamassignment)
 * [SCA Scan Timeout](#scascantimeout)
 * [SCA Resolver](#scaresolver)
+* [SBOM](#sbom)
 ## <a name="configuration">Configuration</a>
 CxSCA scans can be triggered based on WebHooks using CxFlow. 
 For instructions on registering CxFlow to WebHook, refer to [WebHook Registration](
@@ -33,6 +34,7 @@ sca:
   username: username
   password: xxxxx
   team: "/CxServer/MyTeam/SubTeam"
+  projectName: "sampleProjectName"
   include-sources: true
   exclude-files: "**/*.xml"
   manifests-include-pattern: "!**/*.xml, **/*.yml"
@@ -260,6 +262,7 @@ CxFlow supports configuration as code for CxSAST and CxSCA scans.
 		"filterSeverity": ["high", "medium", "low"],
 		"filterScore": 7.5,
 		"team": "/CxServer/MyTeam/SubTeam",
+		projectName : "SampleProjectName"
 		"expPathSastProjectName": "SampleProjectName"
 	}
 }
@@ -417,3 +420,44 @@ Project Name can also be overridden by config as code property. Please refer to 
 * Cx-Flow Removes all SCA Resolver logs.
 * **Note :** if LogsDirectory is configured in Configuration.ini, The sca resolver's logs won't be deleted.
 
+## <a name="sbom">Software Bill of Materials (SBOM)</a>
+Software Bill of Materials (SBOM) - shows detailed info about each of the open source packages used by your program and the associated risks. SBOM Reports can be generated in JSON or XML format.
+
+Cx-FLow can only generate SBOM reports in CLI mode.The `--sbom` argument is required to produce an SBOM report.
+
+Below are the `application.yaml` properties that can be used to configure the SBOM:
+
+```yaml
+sbom:
+report-file-format: CycloneDxJson
+json-file-name-format: "[NAMESPACE]-[REPO]-[BRANCH]-[TIME].json"
+data-folder: "C:\\tmp"
+hide-dev-and-test-dependencies: true
+show-only-effective-licenses : true
+```
+| Configuration                  | Default                    | Required | Command Line | Notes                                                                                                       |
+|--------------------------------|----------------------------|----------|--------------|-------------------------------------------------------------------------------------------------------------|
+| report-file-format             | CycloneDxJson              | No       | Yes          | Report File format in which SBOM File need to be generated(CycloneDxJson,CycloneDxXml,SpdxJson)             |
+| json-file-name-format          | [APP]-[BRANCH]-[TIME].json | No       | Yes          | Only use this parameter with Report File format(CycloneDxJson,SpdxJson)                                     |
+| xml-file-name-format           | [APP]-[BRANCH]-[TIME].xml  | No       | Yes          | Only use this parameter with Report File format(CycloneDxXML)                                               |
+| data-folder                    | \tmp                       | No       | Yes          | Directory in which file need to be downloaded                                                               |
+| hide-dev-and-test-dependencies | false                      | No       | Yes          | Set this flag to true, if you want to exclude all development and test dependencies from the SBOM.          |
+| show-only-effective-licenses   | false                      | No       | Yes          | Set this flag to true, if you want to exclude all licenses that aren't marked as "Effective" from the SBOM. |
+
+**NOTE:** `json-file-name-format` and `xml-file-name-format` allows for dynamic naming substitution. 
+
+File name follows a substitution pattern with the following elements:
+
+[APP] → Application
+
+[TEAM] → Checkmarx Team ( \ is replaced with _ in the filename)
+
+[PROJECT] → Checkmarx Project [PROJECT] → Checkmarx Project
+
+[NAMESPACE] → Checkmarx Project [PROJECT] → Org/Group/Namespace for the repo (if available)
+
+[REPO] → Checkmarx Project [PROJECT] → Repository name (if available)
+
+[BRANCH] → Checkmarx Project [PROJECT] → Branch name (if available)
+
+[TIMESTAMP] → Current timestamp (yyyyMMdd.HHmmss format)

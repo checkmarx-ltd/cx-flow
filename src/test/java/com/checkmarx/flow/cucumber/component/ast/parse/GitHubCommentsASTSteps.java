@@ -140,7 +140,7 @@ public class GitHubCommentsASTSteps {
                     null,
                     null,
                     null,
-                    emailService);
+                    emailService,null,null);
         }
         
         throw new UnsupportedOperationException();

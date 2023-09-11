@@ -132,6 +132,7 @@ public class ADOService {
         catch (Exception e) {
             // We "swallow" the exception so that the flow will not be terminated because of errors in GIT comments
             log.error("Error while adding or updating repo pull request comment", e);
+            log.debug(ExceptionUtils.getStackTrace(e));
         }
     }
 
@@ -582,10 +583,13 @@ public class ADOService {
         }catch (HttpClientErrorException.NotFound e){
             String error = "Got 404 'Not Found' error. Azure endpoint: " + urlTemplate + " is invalid.";
             log.warn(error);
+            log.debug(ExceptionUtils.getStackTrace(e));
         }catch (HttpClientErrorException e){
             log.error("Error occurred in getRepoLanguagePercentages method", ExceptionUtils.getRootCauseMessage(e));
+            log.debug(ExceptionUtils.getStackTrace(e));
         } catch (JSONException e) {
             log.error("Error processing JSON response", e);
+            log.debug(ExceptionUtils.getStackTrace(e));
         }
         return sources;
     }
@@ -635,8 +639,10 @@ public class ADOService {
             log.warn(NO_CONTENT_FOUND_IN_RESPONSE);
         } catch (HttpClientErrorException e) {
             log.warn("Repo content is unavailable. The reason can be that branch has been deleted.");
+            log.debug(ExceptionUtils.getStackTrace(e));
         } catch (JsonProcessingException e) {
             log.error(String.format("Error in processing the JSON response from the repo. Error details : %s", ExceptionUtils.getRootCauseMessage(e)));
+            log.debug(ExceptionUtils.getStackTrace(e));
         }
         return contents;
     }

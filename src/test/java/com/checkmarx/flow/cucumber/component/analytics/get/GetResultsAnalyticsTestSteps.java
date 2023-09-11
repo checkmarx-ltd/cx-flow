@@ -87,7 +87,7 @@ public class GetResultsAnalyticsTestSteps {
                 null,
                 null,
                 null,
-                emailService);
+                emailService,null,null);
     }
 
 

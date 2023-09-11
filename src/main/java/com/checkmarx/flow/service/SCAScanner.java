@@ -48,7 +48,7 @@ public class SCAScanner extends AbstractASTScanner {
 
     public SCAScanner(ScaScanner scaClient, FlowProperties flowProperties, BugTrackerEventTrigger bugTrackerEventTrigger,
                       ScaProperties scaProperties, ResultsService resultsService, CxProperties cxProperties) {
-        super(scaClient, flowProperties, ScaProperties.CONFIG_PREFIX, bugTrackerEventTrigger,resultsService);
+        super(scaClient, flowProperties,scaProperties, ScaProperties.CONFIG_PREFIX, bugTrackerEventTrigger,resultsService);
         this.scaProperties = scaProperties;
         this.cxProperties = cxProperties;
         this.cxRepoFileHelper = new CxRepoFileHelper();
@@ -72,12 +72,22 @@ public class SCAScanner extends AbstractASTScanner {
         IScanClientHelper iScanClientHelper;
 
         try {
-            ScanParams sdkScanParams = ScanParams.builder()
-                    .projectName(scanRequest.getProject())
+            ScanParams sdkScanParams;
+            if(scaProperties.getProjectName()!=null)
+            {
+                sdkScanParams = ScanParams.builder()
+                    .projectName(scaProperties.getProjectName())
                     .scaConfig(scanRequest.getScaConfig())
                     .filterConfiguration(scanRequest.getFilter())
                     .build();
-
+            }
+            else {
+                sdkScanParams = ScanParams.builder()
+                        .projectName(scanRequest.getProject())
+                        .scaConfig(scanRequest.getScaConfig())
+                        .filterConfiguration(scanRequest.getFilter())
+                        .build();
+            }
             restClientConfig=scaScannerClient.getScanConfig(sdkScanParams);
 
             iScanClientHelper=new ScaClientHelper(restClientConfig,log,scaProperties,cxProperties);

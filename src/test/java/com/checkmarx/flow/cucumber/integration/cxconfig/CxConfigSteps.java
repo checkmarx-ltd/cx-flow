@@ -583,7 +583,7 @@ public class CxConfigSteps {
                 null,
                 null,
                 null,
-                emailService);
+                emailService,null,null);
     }
 
     private static ScanResults createFakeScanResults() {

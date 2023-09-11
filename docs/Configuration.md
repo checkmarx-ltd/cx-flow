@@ -82,7 +82,7 @@ cx-flow:
     - 79
   filter-status:
     - New
-    - Reoccured
+    - Recurrent
   filter-state:
     - Confirmed
     - Urgent
@@ -389,7 +389,7 @@ cx-flow:
     - 79
   filter-status:
      - New
-     - Reoccured
+     - Recurrent
   filter-state:
      - Confirmed
      - Urgent
@@ -742,29 +742,29 @@ For additional information, refer to the workflow for [WebHooks](https://github.
 ### <a name="details">WebHook URL Override Parameters - Details</a>
 These parameters are related to the WebHook URL parameters above.
 
-| Configuration     | Description                                                                                                                                                                                                                                                          |
-|-------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `application`     | Override the application name, which is directly linked to Jira and other defect management implementations for tracking purposes.                                                                                                                                   |
-| `branch`          | Override the protected branches that drive the scan. For multiple branches, simply list the branch multiple times. i.e. `branch=XXX&branch=YYYY`                                                                                                                     |
-| `severity`        | Override the severity filters. For multiple severity simply list multiple times, i.e. `severity=High&severity=Medium`                                                                                                                                                |
-| `cwe`             | Override the cwe filters. For multiple cwe, simply list the cwe multiple times, i.e. `cwe=89&cwe=79`                                                                                                                                                                 |
-| `category`        | Override the category filters. For multiple category, simply list category multiple times, i.e. `category=Stored_XSS&category=SQL_Injection`                                                                                                                         |
-| `project`         | Override the project name that will be created/used in Checkmarx. This allows for greater flexibility for incremental scan relating to pull requests,  i.e. use a standardized pull project name that is always used regardless of the branch - `?project=repo-pull` |
-| `team`            | Override the team within Checkmarx to use/create project under.                                                                                                                                                                                                      |
-| `state`           | Override the state filters (Confirmed/Urgent). For multiple state, simply list the state multiple times, i.e. `status=Confirmed&status=Urgent`                                                                                                                       |
-| `status`          | Override the status filter. For multiple status, simply list the status multiple times, i.e. `status=New&status=Reoccured`                                                                                                                                           |
-| `assignee`        | Override the assignee                                                                                                                                                                                                                                                |
-| `preset`          | Override the Checkmarx preset rules for scanning                                                                                                                                                                                                                     |
-| `incremental`     | Override incremental property to enable/disable incremental scan support                                                                                                                                                                                             |
-| `exclude-files`   | Override file exclusions                                                                                                                                                                                                                                             |
-| `exclude-folders` | Override folder exclusions                                                                                                                                                                                                                                           |
-| `override`        | Override a complete **JSON** blob as defined below                                                                                                                                                                                                                   |
-| `bug`             | Override the default configured bug                                                                                                                                                                                                                                  |
-| `app-only`        | This forces Jira issues to be tracked according to the defined application / repo name, as opposed to defining uniqueness per namespace/repo/branch                                                                                                                  |
-| `threshold-high` | Override High severity count threshold | 
-| `threshold-medium` | Override Medium severity count threshold | 
-| `threshold-low` | Override Low severity count threshold | 
-| `threshold-info` | Override Info severity count threshold | 
+| Configuration      | Description                                                                                                                                                                                                                                                          |
+|--------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `application`      | Override the application name, which is directly linked to Jira and other defect management implementations for tracking purposes.                                                                                                                                   |
+| `branch`           | Override the protected branches that drive the scan. For multiple branches, simply list the branch multiple times. i.e. `branch=XXX&branch=YYYY`                                                                                                                     |
+| `severity`         | Override the severity filters. For multiple severity simply list multiple times, i.e. `severity=High&severity=Medium`                                                                                                                                                |
+| `cwe`              | Override the cwe filters. For multiple cwe, simply list the cwe multiple times, i.e. `cwe=89&cwe=79`                                                                                                                                                                 |
+| `category`         | Override the category filters. For multiple category, simply list category multiple times, i.e. `category=Stored_XSS&category=SQL_Injection`                                                                                                                         |
+| `project`          | Override the project name that will be created/used in Checkmarx. This allows for greater flexibility for incremental scan relating to pull requests,  i.e. use a standardized pull project name that is always used regardless of the branch - `?project=repo-pull` |
+| `team`             | Override the team within Checkmarx to use/create project under.                                                                                                                                                                                                      |
+| `state`            | Override the state filters (Confirmed/Urgent). For multiple state, simply list the state multiple times, i.e. `status=Confirmed&status=Urgent`                                                                                                                       |
+| `status`           | Override the status filter. For multiple status, simply list the status multiple times, i.e. `status=New&status=Recurrent`                                                                                                                                           |
+| `assignee`         | Override the assignee                                                                                                                                                                                                                                                |
+| `preset`           | Override the Checkmarx preset rules for scanning                                                                                                                                                                                                                     |
+| `incremental`      | Override incremental property to enable/disable incremental scan support                                                                                                                                                                                             |
+| `exclude-files`    | Override file exclusions                                                                                                                                                                                                                                             |
+| `exclude-folders`  | Override folder exclusions                                                                                                                                                                                                                                           |
+| `override`         | Override a complete **JSON** blob as defined below                                                                                                                                                                                                                   |
+| `bug`              | Override the default configured bug                                                                                                                                                                                                                                  |
+| `app-only`         | This forces Jira issues to be tracked according to the defined application / repo name, as opposed to defining uniqueness per namespace/repo/branch                                                                                                                  |
+| `threshold-high`   | Override High severity count threshold                                                                                                                                                                                                                               | 
+| `threshold-medium` | Override Medium severity count threshold                                                                                                                                                                                                                             | 
+| `threshold-low`    | Override Low severity count threshold                                                                                                                                                                                                                                | 
+| `threshold-info`   | Override Info severity count threshold                                                                                                                                                                                                                               | 
 **Note**:  Overrides are not required. You only need it if you want to override the global configuration specified from the main `application.yml`
 
 ## <a name="repository">Repository Configuration Blocks</a>
@@ -873,17 +873,17 @@ azure:
 bitbucket:
    webhook-token
    token: <user>:xxx
-   url: [http://api.bitbucket.org](http://api.bitbucket.org)
+   url: http://api.bitbucket.org
    api-path: /2.0
 ```
 
-| Configuration            | Default | Description                                                                                                                                                                                                                                        |
-|--------------------------|---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `webhook-token`          |         | Token used as a shared secret when calling the CxFlow WebHook WebService.  It authenticates users for the request.  The Bitbucket cloud does not allow for a shared secret, therefore a URL parameter called token, must be provided in this case. |
-| `token`                  |         | This is the API token with access to the repository with at least Read only access to code and the ability to add comments to pull requests.  BitBucket requires the **<user>:<token>** format in the configuration.                               |
-| `url`                    |         | - [https://api.bitbucket.org](https://api.bitbucket.org) (URL for the Cloud BitBucket)<br />- [https://api.companyxyzbitbucket](https://api.companyxyzbitbucket) (URL for the BitBucket server is just the server hostname with `api.` prefixed)   |
-| `api-path`               |         | The API URL path (appended to the URL) for BitBucket                                                                                                                                                                                               |
-| 'scan-submitted-comment` | true    | Comment on Merge Request with "Scan submitted (or not submitted) to Checkmarx ...".                                                                                                                                                                | 
+| Configuration            | Default | Description                                                                                                                                                                                                                                                                                                                                       |
+|--------------------------|---------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `webhook-token`          |         | Token used as a shared secret when calling the CxFlow WebHook WebService.  It authenticates users for the request.  The Bitbucket cloud does not allow for a shared secret, therefore a URL parameter called token, must be provided in this case.                                                                                                |
+| `token`                  |         | This is the API token with access to the repository with at least Read only access to code and the ability to add comments to pull requests.  BitBucket requires the **<user>:<token>** format in the configuration. <br />`userid:app password`(Format while using BitBucket Cloud) <br />`userid:password`(Format while using BitBucket Server) |
+| `url`                    |         | - [https://api.bitbucket.org](https://api.bitbucket.org) (URL for the Cloud BitBucket)<br />- [https://api.companyxyzbitbucket](https://api.companyxyzbitbucket) (URL for the BitBucket server is just the server hostname with `api.` prefixed)                                                                                                  |
+| `api-path`               |         | The API URL path (appended to the URL) for BitBucket                                                                                                                                                                                                                                                                                              |
+| 'scan-submitted-comment` | true    | Comment on Merge Request with "Scan submitted (or not submitted) to Checkmarx ...".                                                                                                                                                                                                                                                               | 
 
 **Note**: As mentioned in the prerequisites, a service account is required that has appropriate access to the repositories that will be scanned, pull requests that will be commented on, GitHub issues that will be created/updated.
 
