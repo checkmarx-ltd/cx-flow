@@ -1,6 +1,7 @@
 package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.custom.PDFProperties;
 import com.checkmarx.flow.dto.BugTrackersDto;
 import com.checkmarx.flow.dto.ExitCode;
 import com.checkmarx.flow.dto.ScanRequest;

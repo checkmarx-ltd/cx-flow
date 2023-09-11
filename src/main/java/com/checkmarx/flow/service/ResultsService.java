@@ -204,6 +204,39 @@ public class ResultsService {
         }
     }
 
+
+    public void downLoadPDFResults(ScanRequest request, ScanResults reportID, ScanDetails scanDetails) throws MachinaException {
+
+            switch (request.getBugTracker().getType()) {
+                case NONE:
+                case wait:
+                case WAIT:
+                case JIRA:
+                    break;
+                case GITHUBPULL:
+                    break;
+                case GITLABCOMMIT:
+                    break;
+                case GITLABMERGE:
+                    break;
+                case BITBUCKETCOMMIT:
+                    break;
+                case BITBUCKETPULL:
+                    break;
+                case BITBUCKETSERVERPULL:
+                    break;
+                case ADOPULL:
+                    break;
+                case EMAIL:
+                    break;
+                case CUSTOM:
+                    downloadPDFContents(request, reportID);
+                    break;
+                default:
+                    log.warn("No valid bug type was provided");
+            }
+    }
+
     void logScanDetails(ScanRequest request, Integer projectId, ScanResults results) {
         if (log.isInfoEnabled()) {
             log.info(String.format("request : %s", request));
@@ -237,6 +270,18 @@ public class ResultsService {
         try {
             log.info("Issue tracking is custom bean implementation");
             issueService.process(results, request);
+        } catch (HttpClientErrorException e) {
+            if (e.getRawStatusCode() == HttpStatus.UNAUTHORIZED.value()) {
+                throw new MachinaRuntimeException("Token is invalid. Please make sure your custom tokens are correct.\n" + e.getMessage());
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    private void downloadPDFContents(ScanRequest request, ScanResults reportId) throws MachinaException {
+        try {
+            log.info("Issue tracking is custom bean implementation");
         } catch (HttpClientErrorException e) {
             if (e.getRawStatusCode() == HttpStatus.UNAUTHORIZED.value()) {
                 throw new MachinaRuntimeException("Token is invalid. Please make sure your custom tokens are correct.\n" + e.getMessage());

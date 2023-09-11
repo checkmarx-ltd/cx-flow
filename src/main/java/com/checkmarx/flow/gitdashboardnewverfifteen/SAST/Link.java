@@ -39,8 +39,7 @@ public class Link {
     @JsonProperty("url")
     @JsonPropertyDescription("URL of the vulnerability details document.")
     private String url;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new LinkedHashMap<String, Object>();
+
 
     /**
      * Name of the vulnerability details link.

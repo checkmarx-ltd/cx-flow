@@ -1,6 +1,7 @@
 package com.checkmarx.flow.service;
 
 import com.checkmarx.flow.config.FlowProperties;
+import com.checkmarx.flow.custom.PDFProperties;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.sdk.config.AstProperties;
@@ -54,4 +55,13 @@ public class ASTScanner extends AbstractASTScanner {
     }
 
 
+    @Override
+    public ScanResults scanCliToGeneratePDF(ScanRequest request, String scanType, File... files) {
+        return null;
+    }
+
+    @Override
+    public ScanResults DownloadPDF(ScanResults scanResults, PDFProperties pdfProperties) {
+        return null;
+    }
 }

@@ -5,6 +5,7 @@ import com.checkmarx.flow.CxFlowRunner;
 import com.checkmarx.flow.config.*;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 import com.checkmarx.flow.cucumber.component.scan.ScanFixture;
+import com.checkmarx.flow.custom.PDFProperties;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.sdk.config.CxGoProperties;
 import com.checkmarx.sdk.config.CxProperties;
@@ -49,6 +50,7 @@ public class BatchComponentSteps {
     private final ConfigurationOverrider configOverrider;
     private final ThresholdValidator thresholdValidator;
     private final BuildProperties buildProperties;
+    private final PDFProperties pdfProperties;
 
     private CxFlowRunner cxFlowRunner;
     private String projectName;
@@ -67,12 +69,13 @@ public class BatchComponentSteps {
         CxScannerService cxScannerService = new CxScannerService(cxProperties,null, null, null, null );
         
         cxFlowRunner = new CxFlowRunner(flowProperties,
-                cxScannerService,
-                jiraProperties,
-                gitHubProperties,
-                gitLabProperties,
-                iastService,
-                adoProperties,
+                        cxScannerService,
+                        jiraProperties,
+                        gitHubProperties,
+                        gitLabProperties,
+                        iastService,
+                        adoProperties,
+                pdfProperties,
                 helperService,
                 executors,
                 resultsService,
@@ -80,8 +83,7 @@ public class BatchComponentSteps {
                 filterFactory,
                 configOverrider,
                 buildProperties,
-                scanners,
-                thresholdValidator);
+                scanners, thresholdValidator);
     }
 
     @Given("project is provided: {string} and team: {string}")

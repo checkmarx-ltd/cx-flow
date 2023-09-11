@@ -4,10 +4,7 @@ import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.CxFlowRunner;
 import com.checkmarx.flow.config.*;
 import com.checkmarx.flow.controller.IastController;
-import com.checkmarx.flow.custom.GitHubIssueTracker;
-import com.checkmarx.flow.custom.GitLabIssueTracker;
-import com.checkmarx.flow.custom.IssueTracker;
-import com.checkmarx.flow.custom.ADOIssueTracker;
+import com.checkmarx.flow.custom.*;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.Issue;
 import com.checkmarx.flow.dto.ScanRequest;
@@ -31,6 +28,7 @@ import org.junit.Assert;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.DefaultApplicationArguments;
 import org.springframework.boot.info.BuildProperties;
@@ -86,6 +84,7 @@ public class IastCliSteps {
     private GitHubIssueTracker gitHubIssueTracker;
     @Autowired
     private GitLabIssueTracker gitLabIssueTracker;
+    @Qualifier("ADOIssueTracker")
     @Autowired
     private ADOIssueTracker adoIssueTracker;
 
@@ -105,6 +104,7 @@ public class IastCliSteps {
     private final BuildProperties buildProperties;
     private final List<VulnerabilityScanner> scanners;
     private final ThresholdValidator thresholdValidator;
+    private final PDFProperties pdfProperties;
 
     private String urlRequest;
     private HttpHeaders headers;
@@ -117,13 +117,14 @@ public class IastCliSteps {
         bugTracker = removeQuotes(bugTracker);
         params = removeQuotes(params);
         cxFlowRunner = new CxFlowRunner(
-                flowProperties,
-                cxScannerService,
-                jiraProperties,
-                gitHubProperties,
-                gitLabProperties,
-                iastService,
-                adoProperties,
+                        flowProperties,
+                        cxScannerService,
+                        jiraProperties,
+                        gitHubProperties,
+                        gitLabProperties,
+                        iastService,
+                        adoProperties,
+                pdfProperties,
                 helperService,
                 executors,
                 resultsService,
@@ -131,8 +132,8 @@ public class IastCliSteps {
                 filterFactory,
                 configOverrider,
                 buildProperties,
-                scanners,
-                thresholdValidator);
+                scanners
+                , thresholdValidator);
         String arguments = ARGS + " --scan-tag=" + scanTag + " --bug-tracker=" + bugTracker + " " + params;
         String[] argsParam = arguments.split(" ");
         this.args = new DefaultApplicationArguments(argsParam);
@@ -216,7 +217,7 @@ public class IastCliSteps {
         }
         iastProperties.setThresholdsSeverity(thresholdsSeverityMap);
 
-        Mockito.reset(jiraService, gitHubIssueTracker, gitLabIssueTracker);
+        reset(jiraService, gitHubIssueTracker, gitLabIssueTracker);
 
         Scan scan = mockIastServiceRequestsApiScansScanTagFinish(scanTag);
         ScanVulnerabilities scanVulnerabilities = mockIastServiceRequestsApiScanVulnerabilities(scan);
