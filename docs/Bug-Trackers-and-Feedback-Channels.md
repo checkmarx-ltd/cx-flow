@@ -27,6 +27,7 @@
 * [CSV](#csv)
 * [Email](#email)
 * [NONE|WAIT](#none)
+* [PDF](#pdf)
 
 ##  <a name="data">Understanding the Data</a>
 Checkmarx results are processed according to the following [scheme](https://raw.githubusercontent.com/checkmarx-ltd/cx-flow/develop/src/main/resources/samples/cx.xsd).
@@ -413,6 +414,7 @@ Valid options for `bug-tracker-impl` are currently the following ones:
 * Rally
 * ServiceNow
 * Sarif
+* PDF
 
 ## <a name="azure">Azure DevOps WorkItems</a>
 Azure DevOps work items only supports an issue body/description.  Custom/template field values are not available at present.  The available issue-type values are built/tested around issue and impediment (Scrum)
@@ -828,6 +830,42 @@ The Scan completed successfully report receives the following objects:
   - `issue.severity`
   - `issue.vulnerability`
   - `issue.filename`
+
+## <a name="pdf">PDF</a>
+The PDF bug-tracker (defined as PDF) is useful, if you want to retrieve the latest scan results from Checkmarx per project, Team, or the entire instance. This is the original PDF report provided by Checkmarx. When using PDF with both CxSAST and CxSCA scanners enabled, two seprate reports will be generated, one for CxSAST report and one for CxSCA report.
+
+CxSCA currently does not support `--batch` mode, but retrieving latest scan for a particular project (project mode) is still possible.
+
+
+```
+cxflow:
+  #zip-exclude: .*\.PNG
+  bug-tracker: PDF
+  bug-tracker-impl:
+    # - Azure
+    # - Csv
+    # - CxXml
+    # - CxXml
+    # - GitHub
+    # - GitLab
+    #  - GitLabDashboard
+    # - GitLab
+    # - Rally
+    # - Json
+     - PDF
+    # -JIRA
+    # - SonarQube
+    # -GITHUBPULL
+    # -BITBUCKETCOMMIT
+
+pdf:
+  file-name-format: checkmarx.PDF
+  data-folder: C:\\tmp
+
+```
+
+The file system path as well as the file naming format is required.
+From above example if SAST and SCA both enabled then file will get created by name ```SAST_checkmarx.pdf``` and  ```SCA_checkmarx.pdf```.
 
 ## <a name="none">NONE | WAIT</a>
 If you want to trigger scans asynchronously, use **NONE**  
