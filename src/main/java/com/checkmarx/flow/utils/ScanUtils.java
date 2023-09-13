@@ -630,10 +630,22 @@ public class ScanUtils {
         return summary;
     }
     public static String removePackageCurrentVersionFromPath(String packageName, String currentPackageVersion) {
-        return packageName.replace("-" + currentPackageVersion, "");
+        if(packageName!=null)
+        {
+            return packageName.replace("-" + currentPackageVersion, "");
+        }
+        else {
+            return "";
+        }
     }
 
     public static String getCurrentPackageVersion(String packageName) {
-        return StringUtils.substringAfterLast(packageName, "-");
+        if(packageName!=null)
+        {
+            return StringUtils.substringAfterLast(packageName, "-");
+        }
+        else {
+            return "";
+        }
     }
 }
