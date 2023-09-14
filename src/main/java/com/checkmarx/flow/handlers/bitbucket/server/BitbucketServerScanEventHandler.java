@@ -54,11 +54,11 @@ public abstract class BitbucketServerScanEventHandler extends BitbucketServerEve
                 .orElse(configProvider.getBitBucketProperties().getToken());
 
         String[] basicAuthCredentials = token.split(CREDENTIAL_SEPARATOR);
-        String accessToken = basicAuthCredentials[1];
+        String username = basicAuthCredentials[0];
 
-        String encodedTokenString = ScanUtils.getStringWithEncodedCharacter(accessToken);
+        String encodedTokenString = ScanUtils.getStringWithEncodedCharacter(username);
 
-        return basicAuthCredentials[0].concat(CREDENTIAL_SEPARATOR).concat(encodedTokenString);
+        return encodedTokenString.concat(CREDENTIAL_SEPARATOR).concat(basicAuthCredentials[1]);
     }
 
     protected void setBrowseUrl(ScanRequest targetRequest) {
