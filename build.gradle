@@ -73,7 +73,7 @@ configurations {
     all*.exclude module: 'wss-agent-api'
 }
 
-ext['tomcat.version'] = '9.0.78'
+ext['tomcat.version'] = '9.0.80'
 ext['groovy.version'] = '3.0.16'
 ext['logback-classic.version'] = '1.2.10'
 ext['spring-core.version'] = '5.3.29'
@@ -148,7 +148,7 @@ dependencies {
         exclude group: 'org.webjars', module: 'jquery'
         exclude group: 'org.testng', module:  'testng'
     }
-    compile("org.apache.ivy:ivy:2.5.1")
+    compile("org.apache.ivy:ivy:2.5.2")
     compile("org.jasypt:jasypt:1.9.3")
     compile("org.eclipse.jgit:org.eclipse.jgit:5.5.1.201910021850-r"){
         exclude group: 'org.bouncycastle', module:'bcprov-jdk15on'
@@ -168,7 +168,7 @@ dependencies {
     testImplementation("io.cucumber:cucumber-spring:${cucumberVersion}")
     testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
     testImplementation('org.awaitility:awaitility:4.0.2')
-    testImplementation('com.microsoft.azure:azure:1.41.1'){
+    testImplementation('com.microsoft.azure:azure:1.41.4'){
         exclude group:'net.minidev', module:'json-smart'
     }
     testImplementation('com.microsoft.rest:client-runtime:1.7.14')
