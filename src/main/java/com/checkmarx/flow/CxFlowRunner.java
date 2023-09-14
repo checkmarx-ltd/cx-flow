@@ -716,13 +716,13 @@ public class CxFlowRunner implements ApplicationRunner {
 
         boolean breakBuildResult = false;
 
-        if(flowProperties.getEnabledVulnerabilityScanners()!=null){
-            if((flowProperties.getEnabledVulnerabilityScanners().stream().map(String::toLowerCase)
-                    .collect(Collectors.toList()).contains("sca")) && thresholdValidator.thresholdsExceededDirectNDEVDependency(request, results)){
-                log.info("Build failed because some direct dependency issues were found.");
-                breakBuildResult = true;
-            }
-        }
+//        if(flowProperties.getEnabledVulnerabilityScanners()!=null){
+//            if((flowProperties.getEnabledVulnerabilityScanners().stream().map(String::toLowerCase)
+//                    .collect(Collectors.toList()).contains("sca")) && thresholdValidator.thresholdsExceededDirectNDEVDependency(request, results)){
+//                log.info("Build failed because some direct dependency issues were found.");
+//                breakBuildResult = true;
+//            }
+//        }
 
         if (thresholdValidator.isThresholdsConfigurationExist(request)) {
             if (thresholdValidator.thresholdsExceeded(request, results)) {

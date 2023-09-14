@@ -5,7 +5,7 @@
   * [How to create account in CxSAST](#accountcreation)
   * [Roles required for CxFlow](#rolesforcxflow)
 
-### <a name="nine">9.0 Configuration Changes</a>
+### <a name="nine">9.x Configuration Changes</a>
 
 **The Two Changes needed from 8.9:**
 * Make sure to include **version: 9.0** (or higher) and **scope:  access_control_api sast_rest_api**
