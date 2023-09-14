@@ -119,16 +119,16 @@ cxflow:
 ```
 
 ## <a name="directdependency">SCA : Direct dependency </a>
-User can break build based on direct dependency vulnerabilities present in project. User need to add below code in YML file or pass it as command line parameter under SCA section.
+User can filter direct dependency vulnerabilities present in project. User need to add below code in YML file or pass it as command line parameter under SCA section.
 
 ```yaml
 sca:
-  filter-dependency-type: Direct
+  filter-out-InDirectdependency: true
 ```
 Default value of filter-dependency-type is **All**.
 
-## <a name="directdependency">SCA : Dev dependency</a>
-User can filter out dev dependency vulnerabilities present in project. User need to add below code in YML file or pass it as command line parameter under SCA section.
+## <a name="directdependency">SCA : Dev & Test dependency</a>
+User can filter out dev dependency & Test vulnerabilities present in project. User need to add below code in YML file or pass it as command line parameter under SCA section.
 
 ```yaml
 sca:
