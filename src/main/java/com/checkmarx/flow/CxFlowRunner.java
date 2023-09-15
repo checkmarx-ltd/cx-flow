@@ -639,7 +639,7 @@ public class CxFlowRunner implements ApplicationRunner {
         BugTracker bugTracker = request.getBugTracker();
         String customBean = bugTracker.getCustomBean();
         if (path != null) {
-            if(customBean.equalsIgnoreCase("pdf")){
+            if(customBean!=null && customBean.equalsIgnoreCase("pdf")){
                 scanResults = runOnActiveScanners(scanner -> scanner.scanCliToGeneratePDF(request, type, new File(path)));
             }else{
                 scanResults = runOnActiveScanners(scanner -> scanner.scanCli(request, type, new File(path)));
