@@ -140,7 +140,9 @@ dependencies {
     compile('org.codehaus.jettison:jettison:1.5.4')
 
     compile("org.thymeleaf:thymeleaf-spring5:3.1.2.RELEASE")
-    compile("org.thymeleaf:thymeleaf:3.1.2.RELEASE")
+    compile("org.thymeleaf:thymeleaf:3.1.2.RELEASE"){
+        exclude group: 'ognl',module: 'ognl'
+    }
 //    implementation 'ognl:ognl:3.1.29'
 
     compile("org.codehaus.groovy:groovy-all:3.0.16") {
