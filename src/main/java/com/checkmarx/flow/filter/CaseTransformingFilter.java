@@ -3,11 +3,11 @@ package com.checkmarx.flow.filter;
 import com.google.common.base.CaseFormat;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,4 +29,6 @@ public class CaseTransformingFilter extends OncePerRequestFilter {
         ServletRequest requestWrapper = new ParameterOverridingWrapper(camelCaseParams, request);
         filterChain.doFilter(requestWrapper, response);
     }
+
+
 }
