@@ -6,6 +6,7 @@ import java.net.URI;
 
 
 public class CustomAsynchronousJiraRestClientFactory extends AsynchronousJiraRestClientFactory {
+    private static final String AUTHORIZATION_HEADER = "Authorization";
 
     public JiraRestClient createCustom(final URI serverUri, final AuthenticationHandler authenticationHandler, int socketTimeoutInMs) {
         final DisposableHttpClient httpClient = new CustomAsynchronousHttpClientFactory()
@@ -15,6 +16,10 @@ public class CustomAsynchronousJiraRestClientFactory extends AsynchronousJiraRes
 
     public JiraRestClient createWithBasicHttpAuthenticationCustom(final URI serverUri, final String username, final String password, final int socketTimeoutInMs) {
         return createCustom(serverUri, new BasicHttpAuthenticationHandler(username, password),socketTimeoutInMs);
+    }
+
+    public JiraRestClient createWithPATHttpAuthenticationCustom(final URI serverUri, final String token, final int socketTimeoutInMs ){
+        return createCustom(serverUri,builder -> builder.setHeader(AUTHORIZATION_HEADER, "Bearer " + token),socketTimeoutInMs);
     }
 
 }
