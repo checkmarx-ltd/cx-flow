@@ -19,8 +19,8 @@ public class RestErrorResponseHandler implements ResponseErrorHandler {
     public boolean hasError(ClientHttpResponse httpResponse) throws IOException {
         log.info("Calling CxFlow hasError");
         return (
-                httpResponse.getStatusCode().series() == CLIENT_ERROR
-                        || httpResponse.getStatusCode().series() == SERVER_ERROR);
+                httpResponse.getStatusCode().value() == 4
+                        || httpResponse.getStatusCode().value() == 5);
     }
 
     @Override
@@ -28,10 +28,10 @@ public class RestErrorResponseHandler implements ResponseErrorHandler {
             throws IOException {
         log.info("Calling CxFlow handleError");
         if (httpResponse.getStatusCode()
-                .series() == HttpStatus.Series.SERVER_ERROR) {
+                .value() == 5) {
             // handle SERVER_ERROR
         } else if (httpResponse.getStatusCode()
-                .series() == HttpStatus.Series.CLIENT_ERROR) {
+                .value() == 4) {
             // handle CLIENT_ERROR
             if (httpResponse.getStatusCode() == HttpStatus.NOT_FOUND) {
                 throw new IOException();
