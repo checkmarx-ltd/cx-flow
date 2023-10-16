@@ -27,6 +27,16 @@ public class ADOProperties extends RepoProperties{
 
     @Getter
     @Setter
+    private boolean systemTitle = false;
+    @Getter
+    @Setter
+    private boolean systemDescription = false;
+    @Getter
+    @Setter
+    private boolean systemTagBlocks = false;
+
+    @Getter
+    @Setter
     private int commentStatus=1;
 
     @Getter
