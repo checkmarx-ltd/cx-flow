@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8089
 
 #management:
 #  endpoint:
@@ -39,8 +39,9 @@ logging:
 cx-flow:
   # Agreed upon shared API token
   token: xxxx
-  bug-tracker: None
+  bug-tracker: Json
   bug-tracker-impl:
+    - None
     - CxXml
     - Json
     - JIRA
@@ -55,55 +56,113 @@ cx-flow:
     - develop
     - master
     - security
+    - main
+    - test
+    - dev
   filter-severity:
     - High
+    - Medium
+  #  - Low
+  #  - Information
   filter-category:
   filter-cwe:
   filter-status:
-# track-application-only: false
+  filter-state:
+  enabled-vulnerability-scanners:
+    #  - sca
+    - sast
+  #  - ast
+  #  - cxgo
+  # track-application-only: false
   mitre-url: https://cwe.mitre.org/data/definitions/%s.html
-#  break-build: true
-#  wiki-url: https://custodela.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
-#  codebash-url: https://cxa.codebashing.com/courses/
-#  mail:
-#    host: smtp.gmail.com
-#    port: 587
-#    username: xxx
-#    password: xxx
-#    notification: true # Required if using SendGrid
-#    enabled-notifications: # if `notification` is true, you can customize the events. The defaults are below.
-#      scan-submitted: true
-#      scan-summary: true
-#      scan-summary-with-empty-results: false
-#    sendgrid:
-#      api-token: your-sendgrid-token-here
+  codebash-url: https://cxa.codebashing.com/courses/
+  thresholds:
+    high: 8
+    medium: 10
+    low: 60
+  #  break-build: true
+  #  wiki-url: https://custodela.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
+  #  codebash-url: https://cxa.codebashing.com/courses/
+  #  mail:
+  #    host: smtp.gmail.com
+  #    port: 587
+  #    username: xxx
+  #    password: xxx
+  #    enabled:
 
 checkmarx:
-  username: xxxxx
-  password: xxxxx
+  version: 9.2
+  username: admin@cx
+  password: Cx123456!
   client-secret: 014DF517-39D1-4453-B7B3-9930C563627C
-  base-url: http://cx.local
+  scope: access_control_api sast_rest_api
+  base-url: http://10.32.3.126
   multi-tenant: true
   configuration: Default Configuration
   scan-preset: Checkmarx Default
-  team: \CxServer\SP\Checkmarx
+  team: /CxServer
   url: ${checkmarx.base-url}/cxrestapi
-  # preserve-xml: true
-  # incremental: true
-  # WSDL Config
+  #preserve-xml: true
+  #incremental: true
+  #WSDL Config
   portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
-  # team-script:
-  # project-script:
+  #team-script:
+  #project-script:
+
+sca:
+  #  appUrl: https://eu.sca.checkmarx.net
+  #  apiUrl: https://eu.api-sca.checkmarx.net
+  #  accessControlUrl: https://eu.platform.checkmarx.net
+  #  tenant: Cxsca-Checkmarx
+  #  username: integrationsbuild@checkmarx.com
+  #  password: CxIntegrations@1244!
+  appUrl: https://sca.scacheckmarx.com
+  apiUrl: https://api-sca.checkmarx.net
+  accessControlUrl: https://platform.checkmarx.net
+  tenant: cxflow
+  username: admin
+  password: CxflowTeam12!
+  #  team: /CxServer/MyTeam/My-New-Team
+  filter-severity:
+    - High
+    - medium
+    - low
+  #    filter-score: 8.0
+  thresholds-severity:
+    high: 0
+    medium: 10
+    low: 10
+  #  thresholds-score: 9.8
+  #  includeSources: false
+#  enabledZipScan: true
+
+ast:
+  apiUrl: http://ast.cxflow-ci.com/
+  webAppUrl: ${ast.apiUrl}
+  client-secret: 278d6d0b-f821-49f5-9b4c-20f1fb1eb558
+  #  token: eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJuZTh2TDRBWXNqd1hxRndGMkduWHJYRWFTaEVBVGUxOVZMRUFEUTJQNVpFIn0.eyJleHAiOjE1OTk1NTEyMzYsImlhdCI6MTU5OTU0OTQzNiwiYXV0aF90aW1lIjoxNTk5NTQ5NDMyLCJqdGkiOiI5YjBkNDk0ZS1kM2QxLTQ3MDMtOWRkYi1jYjQ1MGNjYjliMTIiLCJpc3MiOiJodHRwOi8vMTAuMzIuNC4zMy9hdXRoL3JlYWxtcy9vcmdhbml6YXRpb24iLCJhdWQiOlsicmVhbG0tbWFuYWdlbWVudCIsImFjY291bnQiXSwic3ViIjoiMTg4MzE1MWUtNzI5Yi00MTQ4LThjYmUtYzcxOTUwMWEzNDRkIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoiYXN0LWFwcCIsIm5vbmNlIjoiODBiMTRkYjctMzY2MS00OTFiLThkYmMtN2RmYTRiN2M1YzQ1Iiwic2Vzc2lvbl9zdGF0ZSI6IjVhNDNmMDQyLTJmOGEtNDlmMy05MDAwLTMwNWJkM2RjMTUyZiIsImFjciI6IjAiLCJhbGxvd2VkLW9yaWdpbnMiOlsiKiJdLCJzY29wZSI6Im9wZW5pZCBpYW0tYXBpIHByb2ZpbGUgZW1haWwgYXN0LWFwaSBncm91cHMgcm9sZXMiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsInJvbGVzIjpbIm9mZmxpbmVfYWNjZXNzIiwidW1hX2F1dGhvcml6YXRpb24iLCJ1c2VyIiwiaWFtLWFkbWluIl0sInJvbGVzX2FzdCI6WyJjcmVhdGUtcHJvamVjdCIsInZpZXctcHJvamVjdHMiLCJ1cGRhdGUtcmVzdWx0IiwiZGVsZXRlLWFwcGxpY2F0aW9uIiwidmlldy1hcHBsaWNhdGlvbnMiLCJ1cGRhdGUtYXBwbGljYXRpb24iLCJ2aWV3LXF1ZXJpZXMiLCJ1cGRhdGUtc2NhbiIsImNyZWF0ZS1hcHBsaWNhdGlvbiIsInZpZXctcmVzdWx0cyIsImRlbGV0ZS1xdWVyeSIsInVwZGF0ZS1xdWVyeSIsImRlbGV0ZS1wcm9qZWN0Iiwidmlldy1zY2FucyIsImFzdC1hZG1pbiIsImNyZWF0ZS1zY2FuIiwidXBkYXRlLXByb2plY3QiLCJkZWxldGUtc2NhbiIsImNyZWF0ZS1xdWVyeSIsInZpZXctZW5naW5l4oCLcyJdLCJncm91cHMiOltdLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJvcmdfYWRtaW4ifQ.WKsPz1Ou5bFwvZCqdHjkmLHcMwCFxVZIEHmGX9zlJdRbswA1saJOevCVaqBHNj92rKMpehPWfGQMo-HvZQ5fR6u5uXXhK2ki0CO6-ykjmkeiuo91sERIcg07loNz_vBoLnRhTidq15Ej9gutpEyZnMn5aV5djoXePba83OR6YgL9oYS-Qh9Z1zJKKHsLDV-XSlowsKb_Unv1iZmfbHrCwTcVUWaR2lZJr5TfX4HKuquoWQeNYr2vCAdi8w3faslHPOa5CuCMFT7p95ieKSS0RYR1tGhLiO4aQJbSp866mtJTmGq5WceFWh8v0qUZEQukWoTEQNlHMz2NcduRZkszvA
+  preset: Checkmarx Default
+  incremental: false
+  clientId: CxFlow
 
 jira:
-  username: xxxx
-  token: xxxx
-  project: APPSEC
+  url: https://cxflowuser.atlassian.net
+  username: Hussain.saifuddin@checkmarx.com
+  token: aXQ7uRbhL8vPasGmgLYt8F3F
+  project: NT
   issue-type: Bug
   priorities:
-    X: Y # Map Checkmarx severity : to JIRA Priority
+    High: High
+    Medium: Medium
+    Low: Low
   open-transition: Reopen Issue
-  close-transition: Close Issue
+  close-transition: Done
+  open-status: # This will differ from project to project need to comfirm from project lead
+    - TO DO
+    - IN PROGRESS
+    - IN REVIEW
+  closed-status:
+    - DONE
 # project-key-script:
 #  open-status:
 #    - Open
@@ -138,9 +197,9 @@ iast:
     INFO: -1
 
 cxgo:
-  client-secret: xxx
-  base-url: https://url
-  portal-url: https://url
+  client-secret: eyJjdHkiOiJKV1QiLCJlbmMiOiJBMjU2R0NNIiwiYWxnIjoiUlNBLU9BRVAifQ.KEpc71PrAtPL2tuul6mAeP3EsmMjgabi4-h2bYlBMVch2daaDn-Pd7PusjNhLK5-Abm-jRGIwUJloeCaJxz_ShEzKYyiLLaYXGvGpnfaL0pD6eZza5ZS8zEiwX_Qfw3SuraGrT03qfZgPPA-6jSymmgMKNrHEi5Sdlf1JeV_g1LF1NxKgv80eH5dsrfz2vfLSOzsPeKn99J2-FhagtP8R2RZw7sE9s3CJ75YzzGE7s37iQHDBmEcywEH3H_xM7AuWya750KbFnddAB8uGbgvYpSnBsGZ7EWmviHjqHndZhhovBmcbGKr0MB-_CudRjHScrlUfdlQigByZA9NvK-NQw.pbdc4o13a-iuXZxB.8RAoJ_rfrxJ75gcLqcaVgWkcm1Q-iWnQIYjfGltLFB4wSvtJEBohProPobls2zsf-Xjg8TFnIRGu8V4GvrV8rv3o8PpXVX0dlc_iJ0ddVde6NYIJgdoqT9j2IezFQyXWbWbSCXCv0OxitUd0HD9SKC3OP7ut5-X4Ds-grF5n9zByUu67ZImO-XxK2DQ9IgbjQJchfL4XuV6hdVr7ck8c0EvAChuLG5JJikQd4MavNgPhxDJcu1zo9dOuqkJjqU9SFTw4crfLZgchA3wycJLZkw097QKxkfaVriRofgL2G2twpy8xNvPrcJ3_yP2ev-nLjRr2F7h3ouHyHaDiQzh-EA99_jKPmw1JtZ-E5D4zNkfbxIO4Q2ivaOwnvYDNMiuiw7cuZ_n14mk-gW1Rg4Go1cUBnxSMpU-ub71SV_2oq_p7w3W_sIWje4dS13UQFWQzsIUFSnlIuu3wxdI6O-EztwqfOCluJ5ChEFbLe3t36EjhRHVqFOMev9EVd5NudIMpZv7r_eCRxzbsDE4TKyzsWGYZyTc14o7l7NBv254w71ZGi19DAc8HQ133b_1FkBypkrlNupw-5f8KcPg86irg5RTBKtEIGjySOpy8gh92_FSWAKLtT1Asz3v-Yu_aL6HuQN06-lxhgCNoc2d-RLbFsbA6SCv-Ltgrc6adcI351Yy2v0WJgu_BSWFqkLUD3VsQ9JA0LURzmp594pHnfDIlALQsj-82HmzhngwQgtmsIv-FtzcEMWoXrKGmZyAZpaaHuGpfqWyA_eJ7CyvWWG58ZNOJ1BQRdhJqOaDJgqh-XXy-eljDzYDD2cI8jQUpFWgKjNL_H6gPIZlf-tMxgig13rVNlkRkDVCUrzcFuSRV6PXRsrBt8X97i6KHb7QyydjTIfJF3XhpgycO96dhY2yNqf3ntpNtIcIvNszoe-7AY_9NtxBN7xzx_PVSWoxhhbPTknqW6IJtVqwng6j2qDdfEFSZqaXFr7DCfEZpZwlWY4GTZ-nsSoGR0NVBf8iXTcQLfbZRc9PGzCRGT1zGK2KpQxxNDAQqbTWN8qmeIstRFJv6Mqs3TOCVXN-9kdTa4SF8SxfysjQq_bPv5hBe471o339tAYYnwqAe1O9jXtb2Tu3yWa-xLTRrV-a80yqEhlgVZnJ_9IIhRdwnIZjUtp2vRbEFveD5EOaQTJIFJk9HKECfR_Xaa40l4XSZXtH-fcvXBX-JDS6zWUKihl3vsyq996s_rXU6W-vIG0vD0G0ucIFlM6YOIN9jeUqM6WQLymsOz8BUtlrTjlohMQ.yfSMVrkOE58m64MX2-hn1A:4tl0s1cv4mupv4731dgv4jn995
+  base-url: https://api.checkmarx.net
+  portal-url: https://cloud.checkmarx.net
   # CxOD Business unit that will contain the project/application/scan
   team: \Demo\CxFlow
   url: ${cxgo.base-url}
@@ -164,7 +223,7 @@ cxgo:
   scan-preset: 1,2,3,4,5,9
 
 cx-integrations:
-  url: https://cx.local
+  url: https://61188f8788a6.ngrok.io
   read-multi-tenant-configuration: false
 
 rally:
@@ -184,69 +243,105 @@ servicenow:
   password: xxxx
 
 github:
-  webhook-token: xxxx
-  token: xxxx
+  webhook-token: 1234
+  token: 471c9f8f7a0416c65f66a950ece53d03f9e37117
   url: https://github.com
   api-url: https://api.github.com/repos/
   false-positive-label: false-positive
   block-merge: true
+  config-as-code:
+  error-merge: true
+  cx-summary: false
+  flow-summary: true
+
+  optional-instances:
+    instance1:
+      webhook-token: 1234
+      token: 471c9f8f7a0416c65f66a950ece53d03f9e37117
+      url: https://github.com
+      api-url: https://api.github.com/repos/
+
+    instance2:
+      webhook-token: 123456
+      token: fcdd4f71c1afe6a85e78c82e9c64355b435df28e
+      url: https://github.com
+      api-url: https://api.github.com/repos/
 
 gitlab:
-  webhook-token: xxxx
-  token: xxxx
+  webhook-token: 1234
+  token: zsqttn5Wbybzjc4AKTVx
   url: https://gitlab.com
   api-url: https://gitlab.com/api/v4/
   false-positive-label: false-positive
   block-merge: true
 
+#  optional-instances:
+#    instance1:
+#      webhook-token: 1234
+#      token: 471c9f8f7a0416c65f66a950ece53d03f9e37117
+#      url: https://github.com
+#      api-url: https://api.github.com/repos/
+
 azure:
-  webhook-token: xxxx
-  token: xxxx
-  url: https://dev.azure.com
+  webhook-token: cxflow:1234
+  token: 7anak3k2ukxda7obvvtqmdx47hjnivv5gqjlwb64jh472yqrbgnq
+  #  w4onlrd2ofgfoywtpxpnpcfmfn7ilrhp732i2j7pb4fbvf7ennla
+  url: https://dev.azure.com/
   issue-type: issue
   api-version: 5.0
   false-positive-label: false-positive
-  #block-merge: true
+  open-status: To Do
+  closed-status: Done
+  project-name: Test-Project2
+  namespace: NimrodGolan
+  block-merge: false
+
+bitbucket:
+  webhook-token: 1234
+  token: nimrodGolan:3NZMY7b7Ypwyvge5vQrK
+  url: https://api.bitbucket.org
+  api-path: /2.0
+  false-positive-label: false-positive
 
 json:
   file-name-format: "[TEAM]-[PROJECT]-[TIME].json"
-  data-folder: "/tmp/cxflow"
+  data-folder: "C:\\Users\\nimrodg\\Desktop\\temp-local-files"
 
 cx-xml:
   file-name-format: "[TEAM]-[PROJECT]-[TIME].xml"
-  data-folder: "/tmp/cxflow"
+  data-folder: "C:\\Users\\nimrodg\\Desktop\\temp-local-files"
 
 csv:
   file-name-format: "[TEAM]-[PROJECT]-[TIME].csv"
-  data-folder: "/tmp/cxflow"
+  data-folder: "C:\\Users\\nimrodg\\Desktop\\temp-local-files"
   include-header: true
   fields:
     - header: Application
       name: application
-      default-value: unknown
+      #    default-value: unknown
       #- header: Primary URL
       #name: static
       #default-value: ${tmp.url}
-    - header: severity
-      name: severity
-    - header: Vulnerability ID
-      name: summary
-      prefix: "[APP]:"
-    - header: file
-      name: filename
-    - header: Vulnerability ID
-      name: summary
-    - header: Vulnerability Name
-      name: category
-    - header: Category ID
-      name: cwe
-    - header: Description
-      name: description
-      #prefix: "*"
-      #postfix: "*"
     - header: Severity
       name: severity
-    - header: recommendation
-      name: recommendation
-    - header: Similarity ID
-      name: similarity-id
+    - header: Package Name
+      name: package-name
+    #    prefix: "[APP]:"
+    - header: Vulnerability ID
+      name: vulnerability-id
+    - header: Version
+      name: version
+    - header: Newest Version
+      name: newest-version
+    - header: Publish Date
+      name: publish-date
+    - header: Information
+      name: information
+      #prefix: "*"
+      #postfix: "*"
+    - header: Remediation Recommendation
+      name: remediation-recommendation
+    - header: Package Path
+      name: package-path
+    - header: Cvss Score
+      name: cvss-score

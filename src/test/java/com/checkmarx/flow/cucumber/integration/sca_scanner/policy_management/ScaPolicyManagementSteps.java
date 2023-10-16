@@ -31,7 +31,7 @@ import java.util.Objects;
 @Slf4j
 public class ScaPolicyManagementSteps extends ScaCommonSteps {
 
-    private static final String PROJECT_NAME = "Policy-Management-Test-Project-SCA";
+    private static final String PROJECT_NAME = "Policy-Management-Test-Project-SCA1";
     private static final String GIT_REPO_URL = "https://github.com/cxflowtestuser/public-rest-repo.git";
 
     private final ScaProperties scaProperties;
@@ -80,19 +80,15 @@ public class ScaPolicyManagementSteps extends ScaCommonSteps {
                 .breakBuild(true)
                 .build();
 
-        RuleCondition ruleCondition = RuleCondition.builder()
+        Conditions ruleCondition = Conditions.builder()
                 .operator("Equal")
                 .parameterValue(Collections.singletonList("High"))
                 .parameter("VulnerabilitySeverity")
                 .build();
 
-        ConditionGroups conditionGroups = ConditionGroups.builder()
-                .conditions(Collections.singletonList(ruleCondition))
-                .build();
-
         PolicyRule policyRule = PolicyRule.builder()
                 .name("No High Severity Rule")
-                .conditionGroups(Collections.singletonList(conditionGroups))
+                .conditions(Collections.singletonList(ruleCondition))
                 .build();
 
         Policy policy = Policy.builder()
