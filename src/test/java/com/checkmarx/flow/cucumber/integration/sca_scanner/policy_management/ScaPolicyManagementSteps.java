@@ -80,19 +80,15 @@ public class ScaPolicyManagementSteps extends ScaCommonSteps {
                 .breakBuild(true)
                 .build();
 
-        RuleCondition ruleCondition = RuleCondition.builder()
+        Conditions ruleCondition = Conditions.builder()
                 .operator("Equal")
                 .parameterValue(Collections.singletonList("High"))
                 .parameter("VulnerabilitySeverity")
                 .build();
 
-        ConditionGroups conditionGroups = ConditionGroups.builder()
-                .conditions(Collections.singletonList(ruleCondition))
-                .build();
-
         PolicyRule policyRule = PolicyRule.builder()
                 .name("No High Severity Rule")
-                .conditionGroups(Collections.singletonList(conditionGroups))
+                .conditions(Collections.singletonList(ruleCondition))
                 .build();
 
         Policy policy = Policy.builder()
