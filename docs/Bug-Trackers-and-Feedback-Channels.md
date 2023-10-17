@@ -86,6 +86,7 @@ jira:
    url: https://xxxx.atlassian.net
    username: xxxx
    token: xxxx
+   token-type: <API,PASSWORD,PAT>
    project: SS
    issue-type: Application Security Bug
    label-prefix: < CUSTOM PREFIX NAME >
@@ -186,20 +187,37 @@ jira:
 Jira's credentials configuration differs for on-premises and cloud environments.
 
 #### Cloud Configuration
+Jira cloud supports token-type as api-token. To generate api-token for Jira, Please refer [Tutorials](https://github.com/checkmarx-ltd/cx-flow/wiki/Tutorials#cliprep) chapter.
+In case of Jira Cloud token-type parameter is optional.
 ```yaml
 jira:
    url: <Jira Cloud url>
    username: <Configured email address>
    token: <Jira api token>
+   token-type: API
 ```
-To generate api token for Jira, Please refer [Tutorials](https://github.com/checkmarx-ltd/cx-flow/wiki/Tutorials#cliprep) chapter.
+
 #### On-premise Configuration
+Jira on-premises supports token-type, Personal Access Tokens and  Passwords. Provide the token value as the password if token-type is set to PASSWORD. Provide the token value as a personal access token if the token-type is PAT. 
+
+To generate personal access token for Jira on-premise.
+* Select your profile picture at the top right of the screen, then choose Profile. 
+* Once you access your profile, select Personal Access Tokens in the left-hand menu.
+* Select Create token.
+* Give your new token a name.
+* Optionally, for security reasons, you can set your token to automatically expire after a set number of days.
+* Click Create
+
+Your personal access token is created. Copy the token and store it in a safe space.
 ```yaml
 jira:
    url: <Jira on-premise url>
    username: <Jira on-premise username>
-   token: <Jira on-premise password>
+   token: <password/personal access token>
+   token-type: <PASSWORD/PAT>
 ```
+
+**Note:** When using Jira on-premises, a password is expected as the value in the token if the token-type is not specified.
 ### <a name="labelprefix">Label Prefix</a>
 ```
 label-prefix: < CUSTOM PREFIX NAME > 

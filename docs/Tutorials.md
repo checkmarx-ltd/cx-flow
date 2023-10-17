@@ -870,7 +870,7 @@ Thresholds for High Issue is passed as '--cx-flow.thresholds.High=0' inside 'par
 <br/>
 
 This tutorial is designed to teach the following topics:
-* How to configure a Jira project for CxFlow
+* How to configure a Jira Cloud project for CxFlow
 * Automated ticket creation using CxFlow CLI
 * Scanning via CxFlow CLI
 
@@ -897,7 +897,7 @@ This tutorial is designed to teach the following topics:
     * Click Copy to clipboard, then paste the token to your script, or elsewhere to save: it should be pasted into the token: <\> of the application.yml
 * Create a custom field for this project and issue type screen by clicking the settings wheel in the top right  corner
     * Click Issues \> Custom Fields \> Create Custom Field
-    * Click Tutorialels and give it a name “Application”
+    * Click Tutorials and give it a name “Application”
     * Description = CxSAST Project
     * Select the checkboxes next to APPSEC: Kanban Bug Screen & APPSEC: Kanban Default Issue Screen
     * Click Update
@@ -906,7 +906,7 @@ This tutorial is designed to teach the following topics:
     * Description = CxSAST Vulnerability Type
     * Select the checkboxes next to APPSEC: Kanban Bug Screen & APPSEC: Kanban Default Issue Screen
     * Click Update
-*Note :* Jira's credentials configuration differs for on-premises and cloud environments, Please refer to [Bug Trackers and Feedback Channels](https://github.com/checkmarx-ltd/cx-flow/wiki/Bug-Trackers-and-Feedback-Channels#cred) chapter for mmore details
+*Note :* Jira's credentials configuration differs for on-premises and cloud environments, Please refer to [Bug Trackers and Feedback Channels](https://github.com/checkmarx-ltd/cx-flow/wiki/Bug-Trackers-and-Feedback-Channels#cred) chapter for more details
 ### <a name="clitriggering">Triggering Scans with CxFlow</a>
 ##### [Top of Tutorial](#clijira)
 
@@ -916,7 +916,7 @@ bug-tracker: JIRA
   #bug-tracker-impl:
 ```
 * After the .YML file is completely filled out and saved
-* The following command clones a github repo, creates a CxSAST scan for the cloned repo, and creates tickets according to the .yml file
+* The following command clones a GitHub repo, creates a CxSAST scan for the cloned repo, and creates tickets according to the .yml file
 ```
 cd C:\CxFlow
 git clone https://github.com/ethicalhack3r/DVWA.git 
