@@ -710,11 +710,12 @@ public class HTMLHelper {
 
     private static void addScanSummarySection(ScanRequest request, ScanResults results, RepoProperties properties, StringBuilder body) {
         setScannerLogoHeader(request, results, body);
-        setScannerSummaryHeader(results, body);
-
         CxScanSummary summary = results.getScanSummary();
-        setScannerTotalVulnerabilities(body, summary, request);
-
+        if(properties.isCxSummary())
+        {
+            setScannerSummaryHeader(results, body);
+            setScannerTotalVulnerabilities(body, summary, request);
+        }
         if (properties.isCxSummary() && !request.getProduct().equals(ScanRequest.Product.CXOSA)) {
             if (!ScanUtils.empty(properties.getCxSummaryHeader())) {
                 appendAll(body, MarkDownHelper.getMdHeaderType(4, properties.getCxSummaryHeader()), CRLF);

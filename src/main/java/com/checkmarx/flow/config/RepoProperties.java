@@ -24,7 +24,7 @@ public class RepoProperties {
     private boolean detailed = true;
     private boolean flowSummary = true;
     private String flowSummaryHeader = PullRequestCommentsHelper.COMMENT_TYPE_SAST_FINDINGS_2;
-    private boolean cxSummary = false;
+    private boolean cxSummary = true;
     private String cxSummaryHeader = "Checkmarx Scan Summary";
     private Map<String, OptionalScmInstanceProperties> optionalInstances;
     private boolean scanSubmittedComment = true;
