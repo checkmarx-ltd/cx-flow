@@ -716,7 +716,7 @@ public class HTMLHelper {
             setScannerSummaryHeader(results, body);
             setScannerTotalVulnerabilities(body, summary, request);
         }
-        if (properties.isCxSummary() && !request.getProduct().equals(ScanRequest.Product.CXOSA)) {
+        if (properties.isCxTableSummary() && !request.getProduct().equals(ScanRequest.Product.CXOSA)) {
             if (!ScanUtils.empty(properties.getCxSummaryHeader())) {
                 appendAll(body, MarkDownHelper.getMdHeaderType(4, properties.getCxSummaryHeader()), CRLF);
             }
