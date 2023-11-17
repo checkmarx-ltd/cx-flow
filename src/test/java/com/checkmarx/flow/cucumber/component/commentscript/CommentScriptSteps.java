@@ -11,7 +11,6 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.sastscanning.ScanRequestConverter;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.ScanUtils;
-import com.checkmarx.sdk.ShardManager.ShardSessionTracker;
 import com.checkmarx.sdk.config.CxProperties;
 
 import com.checkmarx.sdk.dto.ScanResults;

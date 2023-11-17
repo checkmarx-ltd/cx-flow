@@ -22,7 +22,8 @@ Example Config As Code:
     "incremental": "false", // values: "true" or "false"
     "forceScan": "true", // values: "true" or "false"
     "fileExcludes": "*.pyc, *.test, *.class",
-    "folderExcludes": "*test, out/, *bin"
+    "folderExcludes": "*test, out/, *bin",
+    "publicScan" : "false"
   },
   "additionalProperties": {
     "cxFlow": {

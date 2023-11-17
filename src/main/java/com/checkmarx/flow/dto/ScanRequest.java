@@ -152,6 +152,9 @@ public class ScanRequest {
     @Getter @Setter
     private boolean sbom;
 
+    @Getter @Setter
+    private boolean publicScan=true;
+
     public ScanRequest(ScanRequest other) {
         this.namespace = other.namespace;
         this.application = other.application;

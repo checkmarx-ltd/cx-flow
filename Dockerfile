@@ -4,7 +4,7 @@ WORKDIR app
 RUN apk update && \
     apk upgrade && \
     apk upgrade
-RUN apk add openjdk8=8.372.07-r0 --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community
+RUN apk add openjdk8=8.392.08-r0 --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community
 ENV JAVA_HOME=/usr/lib/jvm/java-1.8-openjdk
 RUN apk add libstdc++
 RUN apk add glib
@@ -21,7 +21,7 @@ FROM alpine:3.18.4 AS java11
 WORKDIR app
 RUN apk update && \
     apk upgrade 
-RUN apk add openjdk11=11.0.20_p8-r2 --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community
+RUN apk add openjdk11=11.0.21_p9-r0 --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community
 ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk
 RUN apk add libstdc++
 RUN apk add glib
