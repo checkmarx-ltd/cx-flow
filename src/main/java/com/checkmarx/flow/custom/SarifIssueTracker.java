@@ -1,27 +1,47 @@
 package com.checkmarx.flow.custom;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
 import com.checkmarx.flow.config.SarifProperties;
+import com.checkmarx.flow.custom.SarifIssueTracker.ArtifactLocation;
+import com.checkmarx.flow.custom.SarifIssueTracker.CodeFlow;
+import com.checkmarx.flow.custom.SarifIssueTracker.FullDescription;
+import com.checkmarx.flow.custom.SarifIssueTracker.Help;
+import com.checkmarx.flow.custom.SarifIssueTracker.Location;
+import com.checkmarx.flow.custom.SarifIssueTracker.Message;
+import com.checkmarx.flow.custom.SarifIssueTracker.PhysicalLocation;
+import com.checkmarx.flow.custom.SarifIssueTracker.Region;
+import com.checkmarx.flow.custom.SarifIssueTracker.Result;
+import com.checkmarx.flow.custom.SarifIssueTracker.Rule;
+import com.checkmarx.flow.custom.SarifIssueTracker.ShortDescription;
+import com.checkmarx.flow.custom.SarifIssueTracker.ThreadFlow;
+import com.checkmarx.flow.custom.SarifIssueTracker.ThreadFlowLocation;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.service.FilenameFormatter;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.sca.report.Finding;
-import com.checkmarx.sdk.dto.sca.report.Package;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
+
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.math.NumberUtils;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
-
-import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 /**
  * Output according to the following Spec (SARIF)
@@ -207,7 +227,7 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                                 Map<String, String> node = (Map<String, String>)result.get(pathNodeId.toString());
                                 Integer line = (Integer.valueOf(Optional.ofNullable(node.get("line")).orElse("1")) == 0) ?
                                         1 : Integer.valueOf(Optional.ofNullable(node.get("line")).orElse("1")); /* Sarif format does not support 0 as line number */
-                                Integer col = (Integer.valueOf(Optional.ofNullable(node.get("column")).orElse("1")) == 0) ?
+                                Integer col = (Integer.valueOf(Optional.ofNullable(node.get("column")).orElse("1")) <= 0) ?
                                         1 : (Integer.valueOf(Optional.ofNullable(node.get("column")).orElse("1"))); /* Sarif format does not support 0 as column number */
                                 Integer len = (Integer.valueOf(Optional.ofNullable(node.get("length")).orElse("1")) == 0) ?
                                         1 : (Integer.valueOf(Optional.ofNullable(node.get("length")).orElse("1"))); /* Sarif format does not support 0 as column number */
