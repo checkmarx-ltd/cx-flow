@@ -259,12 +259,17 @@ public class ADOIssueTracker implements IssueTracker {
         description.setOp("add");
         description.setPath(Constants.ADO_FIELD.concat(FIELD_PREFIX.concat(issueBody)));
         description.setValue(HTMLHelper.getHTMLBody(resultIssue, request, flowProperties));
+
         CreateWorkItemAttr tagsBlock = new CreateWorkItemAttr();
         tagsBlock.setOp("add");
         tagsBlock.setPath(Constants.ADO_FIELD.concat(TAGS_FIELD));
         tagsBlock.setValue(tags.toString());
 
-        List<CreateWorkItemAttr> body = new ArrayList<>(Arrays.asList(title, description, tagsBlock));
+        List<CreateWorkItemAttr> body = new ArrayList<>();
+
+        if(!properties.isSystemTitle()) body.add(title);
+        if(!properties.isSystemDescription()) body.add(description);
+        if(!properties.isSystemTagBlocks()) body.add(tagsBlock);
 
         for (Map.Entry<String, String> map : request.getAltFields().entrySet()) {
             log.debug("Custom field: {},  value: {}", map.getKey(), map.getValue());

@@ -420,6 +420,27 @@ Valid options for `bug-tracker-impl` are currently the following ones:
 Azure DevOps work items only supports an issue body/description.  Custom/template field values are not available at present.  The available issue-type values are built/tested around issue and impediment (Scrum)
 [[/Images/bug1.png|Screenshot of Azure Devops work item]]
 
+* If user wants to change System.Title,System.Description and System.Tags they need to enable boolean variable and provide details in command or in application.yml file
+```
+java -jar cx-flow-1.6.44.jar --project --cx-team="CxServer" --app="abc"  --cx-project="bcd" --alt-fields="System.Title:abc" --namespace="abc" --branch="abc" --repo-name="abc"  --alt-project="abc" --azure.system-title=true
+```
+```
+java -jar cx-flow-1.6.44.jar --project --cx-team="CxServer" --app="abc"  --cx-project="bcd" --alt-fields="System.Description:bcd" --namespace="abc" --branch="abc" --repo-name="abc"  --alt-project="abc" --azure.system-description=true
+```
+```
+java -jar cx-flow-1.6.44.jar --project --cx-team="CxServer" --app="abc"  --cx-project="bcd" --alt-fields="System.Tags:SCA" --namespace="abc" --branch="abc" --repo-name="abc"  --alt-project="abc" --azure.system-tag-blocks=true
+```
+```
+java -jar cx-flow-1.6.44.jar --alt-fields="System.Tags:SCA,System.Title:SC2,System.Description:SCA1"  --namespace="satyamchaurasia0219" --branch="shivam" --repo-name="satyamproject"  --alt-project="satyamproject"
+```
+
+* In YML File pass variables like this
+```
+azure:
+  system-title: true
+  system-description: true
+  system-tag-blocks: true~~~~~~~~~~~~~~~~~~~~~~~~
+```
 ## <a name="gitlab">GitLab Issues</a>
 GitLab Issues leverages the same configuration as specified for WebHook listeners → API token (**token**) and valid urls are required
 
