@@ -129,7 +129,14 @@ public class JiraService {
             CustomAsynchronousJiraRestClientFactory factory = new CustomAsynchronousJiraRestClientFactory();
             try {
                 this.jiraURI = new URI(jiraProperties.getUrl());
-                this.client = factory.createWithBasicHttpAuthenticationCustom(jiraURI, jiraProperties.getUsername(), jiraProperties.getToken(), jiraProperties.getHttpTimeout());
+                if(jiraProperties.getTokenType()==null || jiraProperties.getTokenType().name().equalsIgnoreCase("API") || jiraProperties.getTokenType().name().equalsIgnoreCase("PASSWORD")){
+                    log.info("Using Api-Token/Password");
+                    this.client = factory.createWithBasicHttpAuthenticationCustom(jiraURI, jiraProperties.getUsername(), jiraProperties.getToken(), jiraProperties.getHttpTimeout());
+                }
+                else{
+                    log.info("Using Personal Access Token");
+                    this.client = factory.createWithPATHttpAuthenticationCustom(jiraURI,jiraProperties.getToken(), jiraProperties.getHttpTimeout());
+                }
                 this.issueClient = this.client.getIssueClient();
                 this.projectClient = this.client.getProjectClient();
                 this.metaClient = this.client.getMetadataClient();
@@ -1050,9 +1057,16 @@ public class JiraService {
         httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
         httpHeaders.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
 
-        String credentials = String.format("%s:%s", jiraProperties.getUsername(), jiraProperties.getToken());
-        String encodedCredentials = Base64.getEncoder().encodeToString(credentials.getBytes());
-        httpHeaders.set(HttpHeaders.AUTHORIZATION, "Basic " + encodedCredentials);
+        if(jiraProperties.getTokenType()==null || jiraProperties.getTokenType().name().equalsIgnoreCase("API") || jiraProperties.getTokenType().name().equalsIgnoreCase("PASSWORD")){
+            log.info("Using Api-Token/Password");
+            String credentials = String.format("%s:%s", jiraProperties.getUsername(), jiraProperties.getToken());
+            String encodedCredentials = Base64.getEncoder().encodeToString(credentials.getBytes());
+            httpHeaders.set(HttpHeaders.AUTHORIZATION, "Basic " + encodedCredentials);
+        }
+        else {
+            log.info("Using Personal Access Token");
+            httpHeaders.set(HttpHeaders.AUTHORIZATION, "Bearer " + jiraProperties.getToken());
+        }
         return httpHeaders;
     }
 
