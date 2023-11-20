@@ -253,6 +253,11 @@ public class ConfigurationOverrider {
                 overrideReport.put("force scan", sf.toString());
             });
 
+            Optional.ofNullable(s.isPublicScan()).ifPresent(sf -> {
+                request.setPublicScan(sf);
+                overrideReport.put("public scan", sf.toString());
+            });
+
             Optional.ofNullable(s.getPreset()).ifPresent(sp -> {
                 request.setScanPreset(sp);
                 request.setScanPresetOverride(true);

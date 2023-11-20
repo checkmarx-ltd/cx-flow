@@ -242,6 +242,7 @@ public class ScanRequestConverter {
                 .projectId(projectId)
                 .withPreserveProjectName(flowProperties.isPreserveProjectName())
                 .withProjectName(request.getProject())
+                .withIsPublic(request.isPublicScan())
                 .withScanPreset(request.getScanPreset())
                 .withGitUrl(request.getRepoUrlWithAuth())
                 .withIncremental(request.isIncremental())
