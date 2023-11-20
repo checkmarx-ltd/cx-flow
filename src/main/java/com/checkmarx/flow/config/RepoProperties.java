@@ -24,7 +24,8 @@ public class RepoProperties {
     private boolean detailed = true;
     private boolean flowSummary = true;
     private String flowSummaryHeader = PullRequestCommentsHelper.COMMENT_TYPE_SAST_FINDINGS_2;
-    private boolean cxSummary = false;
+    private boolean cxSummary = true;
+    private boolean cxTableSummary = false;
     private String cxSummaryHeader = "Checkmarx Scan Summary";
     private Map<String, OptionalScmInstanceProperties> optionalInstances;
     private boolean scanSubmittedComment = true;
@@ -107,6 +108,13 @@ public class RepoProperties {
 
     public void setCloseTransition(String closeTransition) {
         this.closeTransition = closeTransition;
+    }
+    public boolean isCxTableSummary() {
+        return cxTableSummary;
+    }
+
+    public void setCxTableSummary(boolean cxTableSummary) {
+        this.cxTableSummary = cxTableSummary;
     }
 
     public String getFilePath() {
