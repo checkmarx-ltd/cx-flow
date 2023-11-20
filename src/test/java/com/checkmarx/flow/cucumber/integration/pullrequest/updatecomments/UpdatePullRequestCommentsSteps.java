@@ -444,7 +444,7 @@ public class UpdatePullRequestCommentsSteps {
     }
 
     private void initGitHubProperties() {
-        this.gitHubProperties.setCxSummary(false);
+        this.gitHubProperties.setCxSummary(true);
         this.gitHubProperties.setFlowSummary(false);
         this.gitHubProperties.setUrl(GITHUB_URL);
         this.gitHubProperties.setWebhookToken("1234");

@@ -40,6 +40,7 @@ public class ScaConfigurationOverrider {
 
     private static final String PROJECT_NAME = "projectName";
 
+
     private final ScaProperties scaProperties;
     private final ScaFilterFactory scaFilterFactory;
 
@@ -122,6 +123,19 @@ public class ScaConfigurationOverrider {
         sca.map(Sca :: getProjectName).ifPresent(projectName->{
             scaConfig.setProjectName(projectName);
             overrideReport.put(PROJECT_NAME,projectName);
+        });
+
+        sca.map(Sca :: getExcludeFiles).ifPresent(excludeFiles->{
+            scaConfig.setExcludeFiles(Collections.singletonList(excludeFiles));
+            overrideReport.put("excludeFiles",excludeFiles);
+        });
+        sca.map(Sca :: getFingerprintsIncludePattern).ifPresent(fingerprintsIncludePattern->{
+            scaConfig.setFingerprintsIncludePattern(fingerprintsIncludePattern);
+            overrideReport.put("fingerprintsIncludePattern",fingerprintsIncludePattern);
+        });
+        sca.map(Sca :: getManifestsIncludePattern).ifPresent(manifestsIncludePattern->{
+            scaConfig.setManifestsIncludePattern(manifestsIncludePattern);
+            overrideReport.put("ManifestsIncludePattern",manifestsIncludePattern);
         });
 
         overrideSeverityFilters(request, sca, overrideReport);

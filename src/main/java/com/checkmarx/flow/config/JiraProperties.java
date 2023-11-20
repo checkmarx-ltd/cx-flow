@@ -64,6 +64,8 @@ public class JiraProperties {
     private String Version;
     @Getter @Setter
     private String DeployType;
+    @Getter @Setter
+    private TokenType TokenType;
 
     public String getUrl() {
         return this.url;
@@ -371,5 +373,11 @@ public class JiraProperties {
 
     public void setSuppressCodeSnippets(List<String> suppressCodeSnippets) {
         this.suppressCodeSnippets = suppressCodeSnippets;
+    }
+
+    public enum TokenType {
+        PAT,
+        PASSWORD,
+        API;
     }
 }

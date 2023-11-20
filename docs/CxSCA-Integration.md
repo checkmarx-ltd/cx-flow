@@ -239,6 +239,9 @@ CxFlow supports configuration as code for CxSAST and CxSCA scans.
   * filterSeverity
   * filterScore
   * team (needs to be set with none empty value)
+  * excludeFiles
+  * ManifestsIncludePattern
+  * fingerprintsIncludePattern
   
 <br/>Example for SCA config file content:
 ```
@@ -261,8 +264,11 @@ CxFlow supports configuration as code for CxSAST and CxSCA scans.
 		"thresholdsScore": 8.5,
 		"filterSeverity": ["high", "medium", "low"],
 		"filterScore": 7.5,
+		"excludeFiles": "**/*.xml",
+                "manifestsIncludePattern": "!**/*.xml, **/*.yml",
+                "fingerprintsIncludePattern": "**/*.yml",
 		"team": "/CxServer/MyTeam/SubTeam",
-		projectName : "SampleProjectName"
+		"projectName" : "SampleProjectName",
 		"expPathSastProjectName": "SampleProjectName"
 	}
 }

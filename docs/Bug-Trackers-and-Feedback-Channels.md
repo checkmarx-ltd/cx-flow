@@ -86,6 +86,7 @@ jira:
    url: https://xxxx.atlassian.net
    username: xxxx
    token: xxxx
+   token-type: <API,PASSWORD,PAT>
    project: SS
    issue-type: Application Security Bug
    label-prefix: < CUSTOM PREFIX NAME >
@@ -186,20 +187,37 @@ jira:
 Jira's credentials configuration differs for on-premises and cloud environments.
 
 #### Cloud Configuration
+Jira cloud supports token-type as api-token. To generate api-token for Jira, Please refer [Tutorials](https://github.com/checkmarx-ltd/cx-flow/wiki/Tutorials#cliprep) chapter.
+In case of Jira Cloud token-type parameter is optional.
 ```yaml
 jira:
    url: <Jira Cloud url>
    username: <Configured email address>
    token: <Jira api token>
+   token-type: API
 ```
-To generate api token for Jira, Please refer [Tutorials](https://github.com/checkmarx-ltd/cx-flow/wiki/Tutorials#cliprep) chapter.
+
 #### On-premise Configuration
+Jira on-premises supports token-type, Personal Access Tokens and  Passwords. Provide the token value as the password if token-type is set to PASSWORD. Provide the token value as a personal access token if the token-type is PAT. 
+
+To generate personal access token for Jira on-premise.
+* Select your profile picture at the top right of the screen, then choose Profile. 
+* Once you access your profile, select Personal Access Tokens in the left-hand menu.
+* Select Create token.
+* Give your new token a name.
+* Optionally, for security reasons, you can set your token to automatically expire after a set number of days.
+* Click Create
+
+Your personal access token is created. Copy the token and store it in a safe space.
 ```yaml
 jira:
    url: <Jira on-premise url>
    username: <Jira on-premise username>
-   token: <Jira on-premise password>
+   token: <password/personal access token>
+   token-type: <PASSWORD/PAT>
 ```
+
+**Note:** When using Jira on-premises, a password is expected as the value in the token if the token-type is not specified.
 ### <a name="labelprefix">Label Prefix</a>
 ```
 label-prefix: < CUSTOM PREFIX NAME > 
@@ -420,8 +438,29 @@ Valid options for `bug-tracker-impl` are currently the following ones:
 Azure DevOps work items only supports an issue body/description.  Custom/template field values are not available at present.  The available issue-type values are built/tested around issue and impediment (Scrum)
 [[/Images/bug1.png|Screenshot of Azure Devops work item]]
 
+* If user wants to change System.Title,System.Description and System.Tags they need to enable boolean variable and provide details in command or in application.yml file
+```
+java -jar cx-flow-1.6.44.jar --project --cx-team="CxServer" --app="abc"  --cx-project="bcd" --alt-fields="System.Title:abc" --namespace="abc" --branch="abc" --repo-name="abc"  --alt-project="abc" --azure.system-title=true
+```
+```
+java -jar cx-flow-1.6.44.jar --project --cx-team="CxServer" --app="abc"  --cx-project="bcd" --alt-fields="System.Description:bcd" --namespace="abc" --branch="abc" --repo-name="abc"  --alt-project="abc" --azure.system-description=true
+```
+```
+java -jar cx-flow-1.6.44.jar --project --cx-team="CxServer" --app="abc"  --cx-project="bcd" --alt-fields="System.Tags:SCA" --namespace="abc" --branch="abc" --repo-name="abc"  --alt-project="abc" --azure.system-tag-blocks=true
+```
+```
+java -jar cx-flow-1.6.44.jar --alt-fields="System.Tags:SCA,System.Title:SC2,System.Description:SCA1"  --namespace="satyamchaurasia0219" --branch="shivam" --repo-name="satyamproject"  --alt-project="satyamproject"
+```
+
+* In YML File pass variables like this
+```
+azure:
+  system-title: true
+  system-description: true
+  system-tag-blocks: true~~~~~~~~~~~~~~~~~~~~~~~~
+```
 ## <a name="gitlab">GitLab Issues</a>
-GitLab Issues leverages the same configuration as specified for WebHook listeners → API token (**token**) and valid urls are required
+* GitLab Issues leverages the same configuration as specified for WebHook listeners → API token (**token**) and valid urls are required
 
 ```
 gitlab:
@@ -433,6 +472,55 @@ gitlab:
    block-merge: true
 ```
 [[/Images/bug2.png|Screenshot of GitLab issue]]
+
+* Gitlab Project not found issue can be resolved either by passing reponame and namespace (This should be Gitlab namespace) in CLI command or by passing Project ID directly to CLI command.
+
+```
+java -jar cx-flow-1.6.44.jar --scan  --f="." --repo-name="abc"  --cx-team="CxServer" --app="GitLabSASTANDSCA"  --cx-project="GitLabSASTANDSCA" --namespace="c123a"
+
+```
+
+In configuration file
+``` 
+variables:
+    CHECKMARX_DOCKER_IMAGE: "checkmarx/cx-flow"
+    CHECKMARX_VERSION: "9.0"
+    CHECKMARX_SETTINGS_OVERRIDE: "false"
+    CHECKMARX_EXCLUDE_FILES: ""
+    CHECKMARX_EXCLUDE_FOLDERS: ""
+    CHECKMARX_CONFIGURATION: "Default Configuration"
+    CHECKMARX_SCAN_PRESET: "Checkmarx Default"
+    CHECKMARX_BASE_URL: "https://checkmarx.company.com"
+    CX_FLOW_EXE: "java -jar /app/cx-flow.jar"
+    CX_PROJECT: "$CI_PROJECT_NAME"
+    CX_FLOW_ENABLED_VULNERABILITY_SCANNERS: sast
+    CX_FLOW_BREAK_BUILD: "false"
+    CX_FLOW_ZIP_EXCLUDE: "" 
+    CX_PARAMS: "" 
+    GITLAB_BLOCK_MERGE: "false"
+    GITLAB_URL: "https://gitlab-master.company.com"
+    GITLAB_API_URL: "${GITLAB_URL}/api/v4"
+    GITLAB_TOKEN: "${CHECKMARX_GITLAB_TOKEN}"
+
+checkmarx-scan:
+  script:
+  - ${CX_FLOW_EXE}
+      --scan
+      --bug-tracker="GitLab"
+      --bug-tracker-impl="GitLab"
+      --logging.level.org.springframework.web.client=TRACE
+      --logging.level.com.checkmarx.flow.custom=TRACE
+      --app="${CI_PROJECT_NAME}" 
+      --namespace="${CI_PROJECT_NAMESPACE}" 
+      --repo-name="${CI_PROJECT_NAME}" 
+      --repo-url="${CI_REPOSITORY_URL}" 
+      --cx-team="${CX_TEAM}" 
+      --cx-project="${CX_PROJECT}" 
+      --branch="${CI_COMMIT_BRANCH}"
+      --spring.profiles.active="${CX_FLOW_ENABLED_VULNERABILITY_SCANNERS}" 
+      --f=. 
+  allow_failure: true
+```
 
 ## <a name="dashboard">GitLab Security Dashboard</a>
 
