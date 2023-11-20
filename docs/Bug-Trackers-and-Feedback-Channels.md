@@ -442,7 +442,7 @@ azure:
   system-tag-blocks: true~~~~~~~~~~~~~~~~~~~~~~~~
 ```
 ## <a name="gitlab">GitLab Issues</a>
-GitLab Issues leverages the same configuration as specified for WebHook listeners → API token (**token**) and valid urls are required
+* GitLab Issues leverages the same configuration as specified for WebHook listeners → API token (**token**) and valid urls are required
 
 ```
 gitlab:
@@ -454,6 +454,55 @@ gitlab:
    block-merge: true
 ```
 [[/Images/bug2.png|Screenshot of GitLab issue]]
+
+* Gitlab Project not found issue can be resolved either by passing reponame and namespace (This should be Gitlab namespace) in CLI command or by passing Project ID directly to CLI command.
+
+```
+java -jar cx-flow-1.6.44.jar --scan  --f="." --repo-name="abc"  --cx-team="CxServer" --app="GitLabSASTANDSCA"  --cx-project="GitLabSASTANDSCA" --namespace="c123a"
+
+```
+
+In configuration file
+``` 
+variables:
+    CHECKMARX_DOCKER_IMAGE: "checkmarx/cx-flow"
+    CHECKMARX_VERSION: "9.0"
+    CHECKMARX_SETTINGS_OVERRIDE: "false"
+    CHECKMARX_EXCLUDE_FILES: ""
+    CHECKMARX_EXCLUDE_FOLDERS: ""
+    CHECKMARX_CONFIGURATION: "Default Configuration"
+    CHECKMARX_SCAN_PRESET: "Checkmarx Default"
+    CHECKMARX_BASE_URL: "https://checkmarx.company.com"
+    CX_FLOW_EXE: "java -jar /app/cx-flow.jar"
+    CX_PROJECT: "$CI_PROJECT_NAME"
+    CX_FLOW_ENABLED_VULNERABILITY_SCANNERS: sast
+    CX_FLOW_BREAK_BUILD: "false"
+    CX_FLOW_ZIP_EXCLUDE: "" 
+    CX_PARAMS: "" 
+    GITLAB_BLOCK_MERGE: "false"
+    GITLAB_URL: "https://gitlab-master.company.com"
+    GITLAB_API_URL: "${GITLAB_URL}/api/v4"
+    GITLAB_TOKEN: "${CHECKMARX_GITLAB_TOKEN}"
+
+checkmarx-scan:
+  script:
+  - ${CX_FLOW_EXE}
+      --scan
+      --bug-tracker="GitLab"
+      --bug-tracker-impl="GitLab"
+      --logging.level.org.springframework.web.client=TRACE
+      --logging.level.com.checkmarx.flow.custom=TRACE
+      --app="${CI_PROJECT_NAME}" 
+      --namespace="${CI_PROJECT_NAMESPACE}" 
+      --repo-name="${CI_PROJECT_NAME}" 
+      --repo-url="${CI_REPOSITORY_URL}" 
+      --cx-team="${CX_TEAM}" 
+      --cx-project="${CX_PROJECT}" 
+      --branch="${CI_COMMIT_BRANCH}"
+      --spring.profiles.active="${CX_FLOW_ENABLED_VULNERABILITY_SCANNERS}" 
+      --f=. 
+  allow_failure: true
+```
 
 ## <a name="dashboard">GitLab Security Dashboard</a>
 
