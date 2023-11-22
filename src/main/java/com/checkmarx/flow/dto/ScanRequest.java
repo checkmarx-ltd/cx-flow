@@ -152,7 +152,7 @@ public class ScanRequest {
     @Getter @Setter
     private boolean sbom;
 
-    @Getter @Setter
+    @Getter @Setter @Builder.Default
     private boolean publicScan=true;
 
     public ScanRequest(ScanRequest other) {
