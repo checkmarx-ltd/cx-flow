@@ -14,6 +14,8 @@ import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.sast.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONArray;
@@ -34,7 +36,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
-
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 @Service
@@ -47,12 +50,14 @@ public class GitLabService extends RepoService {
     public static final String COMMIT_PATH = "/projects/{id}/repository/commits/{sha}/comments";
     private static final String FILE_CONTENT = "/projects/{id}/repository/files/{config}?ref={branch}";
     private static final String LANGUAGE_TYPES = "/projects/{id}/languages";
+    private static final String VERSION = "/version";
     private static final String REPO_CONTENT = "/projects/{id}/repository/tree?ref={branch}";
     private static final int UNKNOWN_INT = -1;
     private static final Logger log = LoggerFactory.getLogger(GitLabService.class);
     private static final String HTTP_BODY_WARN_MESSAGE = "HTTP Body is null for content api ";
     private static final String CONTENT_NOT_FOUND_ERROR_MESSAGE = "Content not found in JSON response";
     private static final String ERROR_OCCURRED = "Error occurred";
+    private static  String MERGE_TITLE = "Draft:CX|";
     private final RestTemplate restTemplate;
     private final GitLabProperties properties;
     private final ScmConfigOverrider scmConfigOverrider;
@@ -199,8 +204,12 @@ public class GitLabService extends RepoService {
             endpoint = endpoint.replace("{id}", request.getRepoProjectId().toString());
             endpoint = endpoint.replace("{iid}", mergeId);
 
+            if(isGitlabOlderVersion(request,scmConfigOverrider.determineConfigApiUrl(properties, request))){
+                MERGE_TITLE="WIP:CX|";
+            }
+            
             HttpEntity httpEntity = new HttpEntity<>(
-                    getJSONMergeTitle("WIP:CX|".concat(request.getAdditionalMetadata(FlowConstants.MERGE_TITLE))).toString(),
+                    getJSONMergeTitle(MERGE_TITLE.concat(request.getAdditionalMetadata(FlowConstants.MERGE_TITLE))).toString(),
                     createAuthHeaders(request)
             );
             try {
@@ -215,6 +224,51 @@ public class GitLabService extends RepoService {
             }
         }
     }
+
+    private boolean isGitlabOlderVersion(ScanRequest request,String endpointUrl) {
+        HttpEntity httpEntity = new HttpEntity<>(
+                getJSONMergeTitle(MERGE_TITLE.concat(request.getAdditionalMetadata(FlowConstants.MERGE_TITLE))).toString(),
+                createAuthHeaders(request)
+        );
+
+        ResponseEntity<String> str=  restTemplate.exchange(endpointUrl.concat(VERSION),
+                HttpMethod.GET, httpEntity, String.class);
+
+        Gson gson = new Gson();
+        JsonObject obj = gson.fromJson(str.getBody(),JsonObject.class);
+        String version = String.valueOf(obj.get("version"));
+
+        Pattern pattern = Pattern.compile("[0-9.]+");
+        Matcher matcher = pattern.matcher(version);
+
+        while (matcher.find()) {
+            log.info("GitLab Version {}",matcher.group());
+           return compareVersionNumbers(matcher.group(), "14.8") < 0;
+            //System.out.println(" " + matcher.group());
+        }
+        return false;
+    }
+
+    public static int compareVersionNumbers(String version1, String version2) {
+        String[] parts1 = version1.split("\\.");
+        String[] parts2 = version2.split("\\.");
+
+        int length = Math.max(parts1.length, parts2.length);
+
+        for (int i = 0; i < length; i++) {
+            int v1 = (i < parts1.length) ? Integer.parseInt(parts1[i]) : 0;
+            int v2 = (i < parts2.length) ? Integer.parseInt(parts2[i]) : 0;
+
+            if (v1 < v2) {
+                return -1;
+            } else if (v1 > v2) {
+                return 1;
+            }
+        }
+
+        return 0;
+    }
+
     void endBlockMerge(ScanRequest request){
         if(properties.isBlockMerge()) {
             String mergeId = request.getAdditionalMetadata(FlowConstants.MERGE_ID);
@@ -226,9 +280,13 @@ public class GitLabService extends RepoService {
             endpoint = endpoint.replace("{id}", request.getRepoProjectId().toString());
             endpoint = endpoint.replace("{iid}", mergeId);
 
+            if(isGitlabOlderVersion(request,scmConfigOverrider.determineConfigApiUrl(properties, request))){
+                MERGE_TITLE="WIP:CX|";
+            }
+
             HttpEntity httpEntity = new HttpEntity<>(
                     getJSONMergeTitle(request.getAdditionalMetadata(FlowConstants.MERGE_TITLE)
-                                              .replace("WIP:CX|","")).toString(),
+                                              .replace(MERGE_TITLE,"")).toString(),
                     createAuthHeaders(request)
             );
             try {

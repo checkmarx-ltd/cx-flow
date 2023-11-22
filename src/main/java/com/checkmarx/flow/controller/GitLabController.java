@@ -77,8 +77,8 @@ public class GitLabController extends WebhookController {
         try {
             ObjectAttributes objectAttributes = body.getObjectAttributes();
             if(!objectAttributes.getState().equalsIgnoreCase("opened") ||
-                    isWIP(body)){
-                log.info("Merge requested not processed.  Status was not opened , or was WIP ({})", objectAttributes.getState());
+                    isWIP(body) || isDRAFT(body)){
+                log.info("Merge requested not processed.  Status was not opened , or was WIP/Draft ({})", objectAttributes.getState());
 
                 return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
                         .message("No processing occurred for updates to Merge Request")
@@ -88,6 +88,14 @@ public class GitLabController extends WebhookController {
             else if(body.getChanges().getTitle() != null && body.getChanges().getTitle().getCurrent() != null &&
                     (body.getChanges().getTitle().getCurrent().startsWith("WIP:CX|")))  {
                 log.info("Merge requested not processed.  Title is WIP:CX|");
+
+                return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
+                        .message("No processing occurred for updates to Merge Request")
+                        .success(true)
+                        .build());
+            }else if(body.getChanges().getTitle() != null && body.getChanges().getTitle().getCurrent() != null &&
+                    (body.getChanges().getTitle().getCurrent().startsWith("Draft:CX|")))  {
+                log.info("Merge requested not processed.  Title is Draft:CX|");
 
                 return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
                         .message("No processing occurred for updates to Merge Request")
@@ -380,6 +388,22 @@ public class GitLabController extends WebhookController {
         else return changes != null && changes.getTitle() != null && changes.getTitle().getPrevious() != null &&
                 changes.getTitle().getPrevious().startsWith("WIP:CX|") &&
                 !changes.getTitle().getCurrent().startsWith("WIP:");
+    }
+
+    private boolean isDRAFT(MergeEvent event){
+        /*Merge has been marked WIP, ignoring*/
+        Boolean inProgress = event.getObjectAttributes().getWorkInProgress();
+        if (Boolean.TRUE.equals(inProgress)) {
+            return true;
+        }
+        Changes changes = event.getChanges();
+        if(!properties.isBlockMerge()){ //skip looking for WIP changes
+            return false;
+        }
+        /*Merge has been changed from WIP to not-WIP, ignoring*/
+        else return changes != null && changes.getTitle() != null && changes.getTitle().getPrevious() != null &&
+                changes.getTitle().getPrevious().startsWith("Draft:CX|") &&
+                !changes.getTitle().getCurrent().startsWith("Draft:");
     }
 }
 
