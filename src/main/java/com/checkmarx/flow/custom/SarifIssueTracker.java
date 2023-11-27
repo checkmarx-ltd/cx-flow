@@ -207,7 +207,7 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                                 Map<String, String> node = (Map<String, String>)result.get(pathNodeId.toString());
                                 Integer line = (Integer.valueOf(Optional.ofNullable(node.get("line")).orElse("1")) == 0) ?
                                         1 : Integer.valueOf(Optional.ofNullable(node.get("line")).orElse("1")); /* Sarif format does not support 0 as line number */
-                                Integer col = (Integer.valueOf(Optional.ofNullable(node.get("column")).orElse("1")) == 0) ?
+                                Integer col = (Integer.valueOf(Optional.ofNullable(node.get("column")).orElse("1")) <= 0) ?
                                         1 : (Integer.valueOf(Optional.ofNullable(node.get("column")).orElse("1"))); /* Sarif format does not support 0 as column number */
                                 Integer len = (Integer.valueOf(Optional.ofNullable(node.get("length")).orElse("1")) == 0) ?
                                         1 : (Integer.valueOf(Optional.ofNullable(node.get("length")).orElse("1"))); /* Sarif format does not support 0 as column number */
