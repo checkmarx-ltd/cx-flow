@@ -16,6 +16,7 @@ import com.checkmarx.sdk.dto.sast.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONArray;
@@ -27,6 +28,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.beans.ConstructorProperties;
@@ -226,27 +228,31 @@ public class GitLabService extends RepoService {
     }
 
     private boolean isGitlabOlderVersion(ScanRequest request,String endpointUrl) {
-        HttpEntity httpEntity = new HttpEntity<>(
-                getJSONMergeTitle(MERGE_TITLE.concat(request.getAdditionalMetadata(FlowConstants.MERGE_TITLE))).toString(),
-                createAuthHeaders(request)
-        );
+        try {
+            HttpEntity httpEntity = new HttpEntity<>(
+                    getJSONMergeTitle(MERGE_TITLE.concat(request.getAdditionalMetadata(FlowConstants.MERGE_TITLE))).toString(),
+                    createAuthHeaders(request)
+            );
 
-        ResponseEntity<String> str=  restTemplate.exchange(endpointUrl.concat(VERSION),
-                HttpMethod.GET, httpEntity, String.class);
+            ResponseEntity<String> str=  restTemplate.exchange(endpointUrl.concat(VERSION),
+                    HttpMethod.GET, httpEntity, String.class);
 
-        Gson gson = new Gson();
-        JsonObject obj = gson.fromJson(str.getBody(),JsonObject.class);
-        String version = String.valueOf(obj.get("version"));
+            Gson gson = new Gson();
+            JsonObject obj = gson.fromJson(str.getBody(),JsonObject.class);
+            String version = String.valueOf(obj.get("version"));
 
-        Pattern pattern = Pattern.compile("[0-9.]+");
-        Matcher matcher = pattern.matcher(version);
+            Pattern pattern = Pattern.compile("[0-9.]+");
+            Matcher matcher = pattern.matcher(version);
 
-        while (matcher.find()) {
-            log.info("GitLab Version {}",matcher.group());
-           return compareVersionNumbers(matcher.group(), "14.8") < 0;
-            //System.out.println(" " + matcher.group());
+            while (matcher.find()) {
+                log.info("GitLab Version {}",matcher.group());
+                return compareVersionNumbers(matcher.group(), "14.8") < 0;
+                //System.out.println(" " + matcher.group());
+            }
+            return false;
+        } catch (RestClientException | JsonSyntaxException e) {
+            return true;
         }
-        return false;
     }
 
     public static int compareVersionNumbers(String version1, String version2) {

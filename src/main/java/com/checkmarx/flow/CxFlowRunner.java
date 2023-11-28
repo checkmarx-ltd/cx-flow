@@ -639,15 +639,20 @@ public class CxFlowRunner implements ApplicationRunner {
             return;
         }
         BugTracker bugTracker = request.getBugTracker();
-        String customBean = bugTracker.getCustomBean();
+        String customBean = bugTracker!=null ? bugTracker.getCustomBean() : flowProperties.getBugTracker();
+
+        if(customBean==null){
+            customBean="cli";
+        }
+
         if (path != null) {
-            if(customBean!=null && customBean.equalsIgnoreCase("pdf")){
+            if(customBean.equalsIgnoreCase("pdf")){
                 scanResults = runOnActiveScanners(scanner -> scanner.scanCliToGeneratePDF(request, type, new File(path)));
             }else{
                 scanResults = runOnActiveScanners(scanner -> scanner.scanCli(request, type, new File(path)));
             }
         } else {
-            if(customBean!=null && customBean.equalsIgnoreCase("pdf")){
+            if(customBean.equalsIgnoreCase("pdf")){
                 scanResults = runOnActiveScanners(scanner -> scanner.scanCliToGeneratePDF(request, type));
 
             }else{
@@ -655,7 +660,7 @@ public class CxFlowRunner implements ApplicationRunner {
             }
         }
 
-        if(customBean!=null && customBean.equalsIgnoreCase("pdf")){
+        if(customBean.equalsIgnoreCase("pdf")){
             ScanResults finalScanResults = scanResults;
             runOnActiveScanners(scanner -> scanner.DownloadPDF(finalScanResults,pdfProperties));
         }else{
