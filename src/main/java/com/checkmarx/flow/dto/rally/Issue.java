@@ -3,7 +3,7 @@ package com.checkmarx.flow.dto.rally;
 import com.checkmarx.flow.dto.RepoIssue;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)

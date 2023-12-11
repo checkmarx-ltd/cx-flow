@@ -13,7 +13,7 @@ import org.json.JSONObject;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import javax.validation.ValidationException;
+import jakarta.validation.ValidationException;
 import java.io.InvalidObjectException;
 import java.util.HashMap;
 import java.util.Map;

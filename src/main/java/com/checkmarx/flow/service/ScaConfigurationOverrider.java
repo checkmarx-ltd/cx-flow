@@ -125,18 +125,18 @@ public class ScaConfigurationOverrider {
             overrideReport.put(PROJECT_NAME,projectName);
         });
 
-        sca.map(Sca :: getExcludeFiles).ifPresent(excludeFiles->{
-            scaConfig.setExcludeFiles(Collections.singletonList(excludeFiles));
-            overrideReport.put("excludeFiles",excludeFiles);
-        });
-        sca.map(Sca :: getFingerprintsIncludePattern).ifPresent(fingerprintsIncludePattern->{
-            scaConfig.setFingerprintsIncludePattern(fingerprintsIncludePattern);
-            overrideReport.put("fingerprintsIncludePattern",fingerprintsIncludePattern);
-        });
-        sca.map(Sca :: getManifestsIncludePattern).ifPresent(manifestsIncludePattern->{
-            scaConfig.setManifestsIncludePattern(manifestsIncludePattern);
-            overrideReport.put("ManifestsIncludePattern",manifestsIncludePattern);
-        });
+//        sca.map(Sca :: getExcludeFiles).ifPresent(excludeFiles->{
+//            scaConfig.setExcludeFiles(Collections.singletonList(excludeFiles));
+//            overrideReport.put("excludeFiles",excludeFiles);
+//        });
+//        sca.map(Sca :: getFingerprintsIncludePattern).ifPresent(fingerprintsIncludePattern->{
+//            scaConfig.setFingerprintsIncludePattern(fingerprintsIncludePattern);
+//            overrideReport.put("fingerprintsIncludePattern",fingerprintsIncludePattern);
+//        });
+//        sca.map(Sca :: getManifestsIncludePattern).ifPresent(manifestsIncludePattern->{
+//            scaConfig.setManifestsIncludePattern(manifestsIncludePattern);
+//            overrideReport.put("ManifestsIncludePattern",manifestsIncludePattern);
+//        });
 
         overrideSeverityFilters(request, sca, overrideReport);
 

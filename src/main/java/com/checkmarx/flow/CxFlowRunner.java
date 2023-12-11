@@ -390,7 +390,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 .disableBreakbuild(disableBreakbuild)
                 .sbom(sbom)
                 .disablePolicyViolation(disablePolicyViolation)
-                .publicScan(cxProperties.getPublicScan())
+                //.publicScan(cxProperties.getPublicScan())
                 .build();
 
         if (projectId != null) {
