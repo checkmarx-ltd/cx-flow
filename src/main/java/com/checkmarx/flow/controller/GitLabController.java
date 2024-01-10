@@ -284,7 +284,10 @@ public class GitLabController extends WebhookController {
             /*Determine emails*/
             List<String> emails = new ArrayList<>();
             String commitEndpoint = null;
-            request.setLatestCommitterEmail(body.getCommits().get(0).getAuthor().getEmail());
+            if(body.getCommits().get(0).getAuthor().getEmail()!=null)
+            {
+                request.setLatestCommitterEmail(body.getCommits().get(0).getAuthor().getEmail());
+            }
             commitEndpoint = setUserEmail(body, bugType, proj, request, emails, commitEndpoint);
 
             request.setMergeNoteUri(commitEndpoint);

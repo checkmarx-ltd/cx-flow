@@ -293,7 +293,10 @@ public class ADOController extends AdoControllerBase {
                     .organizationId(determineNamespace(resourceContainers))
                     .gitUrl(gitUrl)
                     .build();
-            request.setLatestCommitterEmail(body.getResource().getCommits().get(0).getAuthor().getEmail());
+            if(body.getResource().getCommits().get(0).getAuthor().getEmail()!=null)
+            {
+                request.setLatestCommitterEmail(body.getResource().getCommits().get(0).getAuthor().getEmail());
+            }
             setScmInstance(controllerRequest, request);
             request.putAdditionalMetadata(ADOService.PROJECT_SELF_URL, getTheProjectURL(body.getResourceContainers()));
             addMetadataToScanRequest(adoDetailsRequest, request);
