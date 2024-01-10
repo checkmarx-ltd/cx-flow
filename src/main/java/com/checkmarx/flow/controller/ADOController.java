@@ -293,7 +293,7 @@ public class ADOController extends AdoControllerBase {
                     .organizationId(determineNamespace(resourceContainers))
                     .gitUrl(gitUrl)
                     .build();
-            if(body.getResource().getCommits().get(0).getAuthor().getEmail()!=null)
+            if(body.getResource().getCommits()!=null)
             {
                 request.setLatestCommitterEmail(body.getResource().getCommits().get(0).getAuthor().getEmail());
             }
