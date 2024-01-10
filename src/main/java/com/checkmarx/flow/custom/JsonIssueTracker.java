@@ -54,7 +54,6 @@ public class JsonIssueTracker implements IssueTracker {
         try {
             ObjectMapper mapper = new ObjectMapper();
             mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-            results.setUnFilteredIssues(null);
             if(properties.isLatestCommitterEmail()) {
                 results.setLatestCommitterEmail(request.getLatestCommitterEmail());
             }
