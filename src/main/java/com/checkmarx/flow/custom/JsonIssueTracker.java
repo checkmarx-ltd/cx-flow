@@ -54,6 +54,10 @@ public class JsonIssueTracker implements IssueTracker {
         try {
             ObjectMapper mapper = new ObjectMapper();
             mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+            results.setUnFilteredIssues(null);
+            if(properties.isLatestCommitterEmail()) {
+                results.setLatestCommitterEmail(request.getLatestCommitterEmail());
+            }
             if(request != null && results != null) {
                 mapper.writeValue(new File(request.getFilename()).getCanonicalFile(), results);
             } else {

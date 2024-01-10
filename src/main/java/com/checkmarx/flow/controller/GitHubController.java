@@ -377,7 +377,7 @@ public class GitHubController extends WebhookController {
 
             request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, body);
             request.setId(uid);
-
+            request.setLatestCommitterEmail(event.getCommits().get(0).getAuthor().getEmail());
             //only initiate scan/automation if branch is applicable
             if(helperService.isBranch2Scan(request, branches)){
                 log.debug(repository.getId()+" :: Calling  isBranch2Scan function End : "+System.currentTimeMillis());

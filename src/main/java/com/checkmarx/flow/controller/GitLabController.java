@@ -248,7 +248,6 @@ public class GitLabController extends WebhookController {
 
             BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
             FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
-
             Project proj = body.getProject();
 
             String gitUrl = proj.getGitHttpUrl();
@@ -285,6 +284,7 @@ public class GitLabController extends WebhookController {
             /*Determine emails*/
             List<String> emails = new ArrayList<>();
             String commitEndpoint = null;
+            request.setLatestCommitterEmail(body.getCommits().get(0).getAuthor().getEmail());
             commitEndpoint = setUserEmail(body, bugType, proj, request, emails, commitEndpoint);
 
             request.setMergeNoteUri(commitEndpoint);

@@ -154,6 +154,8 @@ public class ScanRequest {
 
     @Getter @Setter @Builder.Default
     private boolean publicScan=true;
+    @Getter @Setter
+    private String latestCommitterEmail;
 
     public ScanRequest(ScanRequest other) {
         this.namespace = other.namespace;
