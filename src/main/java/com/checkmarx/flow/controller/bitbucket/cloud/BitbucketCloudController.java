@@ -78,7 +78,7 @@ public class BitbucketCloudController extends WebhookController {
             @RequestParam(value = "token") String token
 
     ) {
-       return handleMergeEvent(body, product, controllerRequest, token);
+        return handleMergeEvent(body, product, controllerRequest, token);
     }
 
     /**
@@ -142,6 +142,7 @@ public class BitbucketCloudController extends WebhookController {
             String configToken = scmConfigOverrider.determineConfigToken(properties, controllerRequest.getScmInstance());
             String gitAuthUrl = gitAuthUrlGenerator.addCredToUrl(ScanRequest.Repository.BITBUCKET, gitUrl, configToken);
             String mergeEndpoint = pullRequest.getLinks().getComments().getHref();
+            String pullRequestEndPoint = pullRequest.getLinks().getSelf().getHref();
 
 
             ScanRequest request = ScanRequest.builder()
@@ -166,6 +167,7 @@ public class BitbucketCloudController extends WebhookController {
                     .bugTracker(bt)
                     .filter(filter)
                     .hash(hash)
+                    .pullRequestRefs(pullRequestEndPoint)
                     .organizationId(getOrganizationid(repository))
                     .gitUrl(gitUrl)
                     .build();
@@ -270,7 +272,7 @@ public class BitbucketCloudController extends WebhookController {
             String gitUrl = repository.getLinks().getHtml().getHref().concat(".git");
             String configToken = scmConfigOverrider.determineConfigToken(properties, controllerRequest.getScmInstance());
             String gitAuthUrl = gitAuthUrlGenerator.addCredToUrl(ScanRequest.Repository.BITBUCKET, gitUrl, configToken);
-            
+
             ScanRequest request = ScanRequest.builder()
                     .application(app)
                     .product(p)

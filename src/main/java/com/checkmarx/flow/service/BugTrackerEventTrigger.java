@@ -59,6 +59,7 @@ public class BugTrackerEventTrigger {
                 if (bbService.isScanSubmittedComment()) {
                     bbService.sendMergeComment(request, SCAN_MESSAGE);
                 }
+                bbService.startBlockMerge(request);
                 break;
 
             case BITBUCKETSERVERPULL:

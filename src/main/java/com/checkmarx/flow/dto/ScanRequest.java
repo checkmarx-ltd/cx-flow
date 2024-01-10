@@ -58,6 +58,9 @@ public class ScanRequest {
     //project repoProjectId used by GitLab
     private Integer repoProjectId;
     private String refs;
+
+    @Getter @Setter
+    private String pullRequestRefs;
     private List<String> email;
     private boolean forceScan;
     @Getter @Setter
@@ -151,9 +154,6 @@ public class ScanRequest {
 
     @Getter @Setter
     private boolean sbom;
-
-    @Getter @Setter @Builder.Default
-    private boolean publicScan=true;
 
     public ScanRequest(ScanRequest other) {
         this.namespace = other.namespace;

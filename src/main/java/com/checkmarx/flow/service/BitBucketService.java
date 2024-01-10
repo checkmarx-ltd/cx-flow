@@ -14,8 +14,11 @@ import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.exception.BitBucketClientException;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
+import com.checkmarx.sdk.ShardManager.ShardSession;
 import com.checkmarx.sdk.dto.ScanResults;
+import com.checkmarx.sdk.dto.cx.CxProject;
 import com.checkmarx.sdk.dto.sast.CxConfig;
+import com.checkmarx.sdk.exception.CheckmarxException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -192,22 +195,23 @@ public class BitBucketService extends RepoService {
     }
 
     public void sendMergeComment(ScanRequest request, String comment) {
+
         HttpEntity<String> httpEntity = new HttpEntity<>(getJSONComment(comment).toString(), createAuthHeaders(request.getScmInstance()));
         try {
             restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
         } catch (HttpClientErrorException e) {
-        log.error("Error occurred while sending Merge comment. http error {} ", e.getStatusCode());
-        log.error(ExceptionUtils.getStackTrace(e));
-    }
+            log.error("Error occurred while sending Merge comment. http error {} ", e.getStatusCode());
+            log.error(ExceptionUtils.getStackTrace(e));
+        }
     }
 
     public void sendServerMergeComment(ScanRequest request, String comment) {
         HttpEntity<String> httpEntity = new HttpEntity<>(getServerJSONComment(comment).toString(), createAuthHeaders(request.getScmInstance()));
         try {
-        restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
-    } catch (HttpClientErrorException e) {
-        log.error("Error occurred while sending server Merge Comment. http error {} ", e.getStatusCode());
-        log.error(ExceptionUtils.getStackTrace(e));
+            restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
+        } catch (HttpClientErrorException e) {
+            log.error("Error occurred while sending server Merge Comment. http error {} ", e.getStatusCode());
+            log.error(ExceptionUtils.getStackTrace(e));
         }
     }
 
@@ -235,7 +239,7 @@ public class BitBucketService extends RepoService {
                 log.error(ExceptionUtils.getStackTrace(e));
             }
 
-    } else {
+        } else {
             JSONObject taskBody = new JSONObject();
             taskBody.put("severity", "BLOCKER");
             taskBody.put("text", comment);
@@ -478,16 +482,15 @@ public class BitBucketService extends RepoService {
     }
 
 
-
     public String getDefaultBranchName(ScanRequest request) {
         String result = null;
-            try {
-                result = loadDefaultBranchName(request);
-            } catch (NullPointerException e) {
-                log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
-            } catch (Exception e) {
-                log.error(String.format("Error in getting default branch name from the repo. Error details : %s", ExceptionUtils.getRootCauseMessage(e)));
-            }
+        try {
+            result = loadDefaultBranchName(request);
+        } catch (NullPointerException e) {
+            log.warn(CONTENT_NOT_FOUND_IN_RESPONSE);
+        } catch (Exception e) {
+            log.error(String.format("Error in getting default branch name from the repo. Error details : %s", ExceptionUtils.getRootCauseMessage(e)));
+        }
 
         return result;
     }
@@ -562,7 +565,7 @@ public class BitBucketService extends RepoService {
         String branchName = null;
         HttpHeaders headers = createAuthHeaders(request.getScmInstance());
 
-        String repoSelfUrl =request.getAdditionalMetadata(REPO_SELF_URL);
+        String repoSelfUrl = request.getAdditionalMetadata(REPO_SELF_URL);
         String urlTemplate;
         if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)) {
 
@@ -592,7 +595,7 @@ public class BitBucketService extends RepoService {
                     if (request.getRepoType().equals(ScanRequest.Repository.BITBUCKETSERVER)) {
                         branchName = json.getString("displayId").toString();
 
-                    }else{
+                    } else {
                         ObjectMapper mapper = new ObjectMapper();
                         BranchName product = mapper.readValue(response.getBody().toString(), BranchName.class);
                         //Need to Catch Branch Name Here
@@ -613,9 +616,51 @@ public class BitBucketService extends RepoService {
     }
 
 
-	@Override
-	public boolean isScanSubmittedComment() {
-		return this.properties.isScanSubmittedComment();
-	}
+    @Override
+    public boolean isScanSubmittedComment() {
+        return this.properties.isScanSubmittedComment();
+    }
+
+
+    public void startBlockMerge(ScanRequest request) {
+        log.info("I am Inside startBlockMerge.");
+        if (properties.isBlockMerge()) {
+            HttpEntity<String> httpEntity = new HttpEntity<>(createAuthHeaders(request.getScmInstance()));
+            try {
+                restTemplate.exchange(request.getPullRequestRefs().concat("/approve"), HttpMethod.DELETE, httpEntity, String.class);
+            } catch (HttpClientErrorException e) {
+                log.warn("Already unapproved.");
+                log.debug(ExceptionUtils.getStackTrace(e));
+            }
+        }
+    }
+
+    public void endBlockMerge(ScanRequest request, ScanResults results, ScanDetails scanDetails) {
+        if (properties.isBlockMerge()) {
+            JSONObject requestBody = new JSONObject();
+            JSONObject content = new JSONObject();
+            content.put("raw", "Approving PR from checkmarx User");
+            requestBody.put("content", content);
+            HttpEntity<String> httpEntity = new HttpEntity<>(requestBody.toString(),createAuthHeaders(request.getScmInstance()));
+            PullRequestReport report = new PullRequestReport(scanDetails, request);
+            boolean isApprovePR=false;
+            if (thresholdValidator.isMergeAllowed(results, properties, report)) {
+                isApprovePR = true;
+            }
+
+            try {
+                if(isApprovePR){
+                    restTemplate.exchange(request.getPullRequestRefs().concat("/approve"), HttpMethod.POST, httpEntity, String.class);
+                }else{
+                    restTemplate.exchange(request.getPullRequestRefs().concat("/approve"), HttpMethod.DELETE, httpEntity, String.class);
+                }
+            } catch (HttpClientErrorException e) {
+                log.warn("Already unapproved {} ", e.getStatusCode());
+                log.debug(ExceptionUtils.getStackTrace(e));
+            }
+        }
+    }
+
+
 
 }

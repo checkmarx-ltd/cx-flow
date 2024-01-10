@@ -162,6 +162,7 @@ public class ResultsService {
                     break;
                 case BITBUCKETPULL:
                     bbService.processMerge(request, results);
+                    bbService.endBlockMerge(request, results, scanDetails);
                     break;
                 case BITBUCKETSERVERPULL:
                     bbService.processServerMerge(request, results, scanDetails);
@@ -207,34 +208,34 @@ public class ResultsService {
 
     public void downLoadPDFResults(ScanRequest request, ScanResults reportID, ScanDetails scanDetails) throws MachinaException {
 
-            switch (request.getBugTracker().getType()) {
-                case NONE:
-                case wait:
-                case WAIT:
-                case JIRA:
-                    break;
-                case GITHUBPULL:
-                    break;
-                case GITLABCOMMIT:
-                    break;
-                case GITLABMERGE:
-                    break;
-                case BITBUCKETCOMMIT:
-                    break;
-                case BITBUCKETPULL:
-                    break;
-                case BITBUCKETSERVERPULL:
-                    break;
-                case ADOPULL:
-                    break;
-                case EMAIL:
-                    break;
-                case CUSTOM:
-                    downloadPDFContents(request, reportID);
-                    break;
-                default:
-                    log.warn("No valid bug type was provided");
-            }
+        switch (request.getBugTracker().getType()) {
+            case NONE:
+            case wait:
+            case WAIT:
+            case JIRA:
+                break;
+            case GITHUBPULL:
+                break;
+            case GITLABCOMMIT:
+                break;
+            case GITLABMERGE:
+                break;
+            case BITBUCKETCOMMIT:
+                break;
+            case BITBUCKETPULL:
+                break;
+            case BITBUCKETSERVERPULL:
+                break;
+            case ADOPULL:
+                break;
+            case EMAIL:
+                break;
+            case CUSTOM:
+                downloadPDFContents(request, reportID);
+                break;
+            default:
+                log.warn("No valid bug type was provided");
+        }
     }
 
     void logScanDetails(ScanRequest request, Integer projectId, ScanResults results) {
