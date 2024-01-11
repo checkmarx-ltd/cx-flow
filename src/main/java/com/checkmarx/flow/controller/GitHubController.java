@@ -377,7 +377,7 @@ public class GitHubController extends WebhookController {
 
             request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, body);
             request.setId(uid);
-            if(event.getCommits()!=null || !event.getCommits().isEmpty())
+            if(event.getCommits()!=null || event.getCommits().size()!=0)
             {
                 request.setLatestCommitterEmail(event.getCommits().get(0).getAuthor().getEmail());
             }
