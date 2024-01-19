@@ -188,7 +188,7 @@ dependencies {
 
 	testCompile("net.bytebuddy:byte-buddy:1.12.9")  //Added due to Mockito Exception.Normally, Gradle should take care class path completion.
     compile("org.projectlombok:lombok:1.18.10")
-    compile("ch.qos.logback:logback-classic:1.2.10"){
+    compile("ch.qos.logback:logback-classic:1.2.13"){
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
     compile("ch.qos.logback.contrib:logback-json-classic:0.1.5"){
@@ -198,7 +198,7 @@ dependencies {
     compile("ch.qos.logback.contrib:logback-jackson:0.1.5"){
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
-    compile("ch.qos.logback:logback-core:1.2.10")
+    compile("ch.qos.logback:logback-core:1.2.13")
     compile("net.logstash.logback:logstash-logback-encoder:5.2")
     compile 'org.modelmapper:modelmapper:2.4.0'
     compile("com.checkmarx:cx-config-provider:${ConfigProviderVersion}") {
