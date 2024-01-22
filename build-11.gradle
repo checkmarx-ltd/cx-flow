@@ -9,7 +9,7 @@ buildscript {
 
          ConfigProviderVersion = "1.0.9"
         //cxVersion = "8.90.5"
-        springBootVersion = '2.7.14'
+        springBootVersion = '2.7.18'
         sonarqubeVersion = '2.8'
         atlassianVersion = "5.2.0"
         atlassianFugueVersion = "4.7.2"
@@ -64,9 +64,9 @@ configurations {
     all*.exclude module: 'wss-agent-api'
 }
 
-ext['tomcat.version'] = '9.0.81'
+ext['tomcat.version'] = '9.0.85'
 ext['groovy.version'] = '3.0.16'
-ext['logback-classic.version'] = '1.2.10'
+ext['logback-classic.version'] = '1.2.13'
 ext['spring-core.version'] = '5.3.29'
 
 dependencies {
@@ -139,7 +139,7 @@ dependencies {
     compile ("org.apache.ivy:ivy:2.5.2")
     compile ("org.apache.commons:commons-lang3:3.12.0")
     compile('org.apache.commons:commons-collections4:4.4')
-    compile ("org.eclipse.jgit:org.eclipse.jgit:5.5.1.201910021850-r"){
+    compile ("org.eclipse.jgit:org.eclipse.jgit:5.13.3.202401111512-r"){
         exclude group: 'org.bouncycastle', module:'bcprov-jdk15onj'
     }
     compile group: 'com.google.guava', name: 'guava', version: '32.0.1-jre'
@@ -165,7 +165,7 @@ dependencies {
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:${junitVersion}")
     testCompile("org.mockito:mockito-core:4.11.0")
     compile("org.projectlombok:lombok:1.18.10")
-    compile("ch.qos.logback:logback-classic:1.2.10"){
+    compile("ch.qos.logback:logback-classic:1.2.13"){
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
     compile("ch.qos.logback.contrib:logback-json-classic:0.1.5"){
