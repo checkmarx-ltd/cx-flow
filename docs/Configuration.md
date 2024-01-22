@@ -595,7 +595,7 @@ No* = Default is applied
 | `jira-fields`               | No       | Yes     | Yes          | Custom Checkmarx field name to override Jira custom field mappings for a given Checkmarx scan result / project |
 | `jira-assignee`             | No       | Yes     | Yes          | Custom Checkmarx field name to override Jira assignees for a given Checkmarx scan result / project             |
 
-~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 #### <a name="nine">9.0 Configuration Changes</a>
 ```yaml
