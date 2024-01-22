@@ -3,9 +3,10 @@ buildscript {
 
 CxSBSDK = "0.5.69"
 
+
         ConfigProviderVersion = "1.0.10"
         //cxVersion = "8.90.5"
-        springBootVersion = '2.7.14'
+        springBootVersion = '2.7.18'
         sonarqubeVersion = '2.8'
         atlassianVersion = "5.2.0"
         atlassianFugueVersion = "4.7.2"
@@ -74,9 +75,9 @@ configurations {
     all*.exclude module: 'wss-agent-api'
 }
 
-ext['tomcat.version'] = '9.0.81'
+ext['tomcat.version'] = '9.0.85'
 ext['groovy.version'] = '3.0.16'
-ext['logback-classic.version'] = '1.2.10'
+ext['logback-classic.version'] = '1.2.13'
 ext['spring-core.version'] = '5.3.29'
 
 dependencies {
@@ -154,7 +155,7 @@ dependencies {
     }
     compile("org.apache.ivy:ivy:2.5.2")
     compile("org.jasypt:jasypt:1.9.3")
-    compile("org.eclipse.jgit:org.eclipse.jgit:5.5.1.201910021850-r"){
+    compile("org.eclipse.jgit:org.eclipse.jgit:5.13.3.202401111512-r"){
         exclude group: 'org.bouncycastle', module:'bcprov-jdk15on'
     }
     compile group: 'com.google.guava', name: 'guava', version: '32.0.1-jre'
@@ -188,7 +189,7 @@ dependencies {
 
 	testCompile("net.bytebuddy:byte-buddy:1.12.9")  //Added due to Mockito Exception.Normally, Gradle should take care class path completion.
     compile("org.projectlombok:lombok:1.18.10")
-    compile("ch.qos.logback:logback-classic:1.2.10"){
+    compile("ch.qos.logback:logback-classic:1.2.13"){
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
     compile("ch.qos.logback.contrib:logback-json-classic:0.1.5"){
@@ -198,7 +199,7 @@ dependencies {
     compile("ch.qos.logback.contrib:logback-jackson:0.1.5"){
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
-    compile("ch.qos.logback:logback-core:1.2.10")
+    compile("ch.qos.logback:logback-core:1.2.13")
     compile("net.logstash.logback:logstash-logback-encoder:5.2")
     compile 'org.modelmapper:modelmapper:2.4.0'
     compile("com.checkmarx:cx-config-provider:${ConfigProviderVersion}") {
