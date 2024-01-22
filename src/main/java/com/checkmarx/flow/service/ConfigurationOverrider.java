@@ -52,7 +52,7 @@ public class ConfigurationOverrider {
     private final ScaConfigurationOverrider scaConfigOverrider;
     private final ReposManagerService reposManagerService;
     private final GitAuthUrlGenerator gitAuthUrlGenerator;
-    
+
     public ScanRequest overrideScanRequestProperties(CxConfig override, ScanRequest request) {
         if (request == null) {
             log.warn("Unable to override scan request properties. Scan request is null.");
@@ -81,19 +81,19 @@ public class ConfigurationOverrider {
         } catch (IllegalArgumentException e) {
             log.warn("Error parsing cxFlow object from CxConfig.", e);
         }
-        
+
         return request;
     }
 
     private void overrideAdditionalProperties(CxConfig override, ScanRequest request, Map<String, String> overrideReport) {
         Optional.ofNullable(override)
-            .map(CxConfig::getAdditionalProperties).ifPresent(ap -> {
-            Object flow = ap.get("cxFlow");
-            ObjectMapper mapper = new ObjectMapper();
-            Optional.ofNullable(mapper.convertValue(flow, FlowOverride.class)).ifPresent(flowOverride ->
-                applyFlowOverride(flowOverride, request, overrideReport)
-            );
-        });
+                .map(CxConfig::getAdditionalProperties).ifPresent(ap -> {
+                    Object flow = ap.get("cxFlow");
+                    ObjectMapper mapper = new ObjectMapper();
+                    Optional.ofNullable(mapper.convertValue(flow, FlowOverride.class)).ifPresent(flowOverride ->
+                            applyFlowOverride(flowOverride, request, overrideReport)
+                    );
+                });
     }
 
     private boolean configProviderResultsAreAvailable(ConfigProvider configProvider) {
@@ -129,7 +129,7 @@ public class ConfigurationOverrider {
                     request.setScanResubmit(a);
                     overrideReport.put("scanResubmit", a);
                 });
-        
+
         Optional.ofNullable(override.getApplication())
                 .filter(StringUtils::isNotBlank)
                 .ifPresent(a -> {
