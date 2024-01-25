@@ -17,6 +17,7 @@
 * [Can a single yaml file be used to connect to multiple defect tracking systems?](#singleyaml)
 * [How do you manage the project creation within CxSAST when running CxFlow in WebHook mode?](#manageprojectcreation)
 * [If using global WebHooks, can specific projects be excluded from scanning?](#globalwebhooks)
+* [Why cxflow spring boot fails to start application if application.xml is present in source code in GitLab pipeline](#applicationxml)
 
 ## <a name="whatiscxflow">Q: What is CxFlow?</a>
 CxFlow is a solution that enables creating projects automatically, scans orchestration and facilitates feedback channels in a closed loop mode.
@@ -104,3 +105,6 @@ Overrides can be used to assign the same name to multiple projects.  Alternative
 
 ## <a name="globalwebhooks">Q: If using global WebHooks, can specific projects be excluded from scanning?</a>
 Yes, this can be performed with overrides & [Config As Code](https://github.com/checkmarx-ltd/cx-flow/wiki/Config-As-Code)
+
+## <a name="applicationxml">Q: Why cxflow spring boot fails to start application if application.xml is present in source code in GitLab pipeline ?</a>
+Plesae pass command line parameter --spring.config.name=myproject in .gitlab-ci.yml file

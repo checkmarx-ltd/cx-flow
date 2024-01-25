@@ -1,7 +1,7 @@
 buildscript {
     ext {
 
-CxSBSDK = "0.5.69"
+        CxSBSDK = "0.5.70"
 
 
         ConfigProviderVersion = "1.0.10"
@@ -94,7 +94,7 @@ dependencies {
         exclude group: 'org.apache.logging.log4j', module: 'log4j-core'
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
-    
+
     compile('org.springframework.boot:spring-boot-starter-aop'){
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
@@ -187,7 +187,7 @@ dependencies {
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:${junitVersion}")
     testImplementation 'org.mockito:mockito-core:4.11.0'
 
-	testCompile("net.bytebuddy:byte-buddy:1.12.9")  //Added due to Mockito Exception.Normally, Gradle should take care class path completion.
+    testCompile("net.bytebuddy:byte-buddy:1.12.9")  //Added due to Mockito Exception.Normally, Gradle should take care class path completion.
     compile("org.projectlombok:lombok:1.18.10")
     compile("ch.qos.logback:logback-classic:1.2.13"){
         exclude group: 'ch.qos.logback', module: 'logback-core'
@@ -206,7 +206,7 @@ dependencies {
         exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j-impl'
         exclude group: 'org.apache.logging.log4j', module: 'log4j-api'
         exclude group: 'org.apache.logging.log4j', module: 'log4j-core'
-        		    
+
     }
     compile("org.apache.logging.log4j:log4j-core:2.17.1")
     compile("org.apache.logging.log4j:log4j-slf4j-impl:2.17.1")
