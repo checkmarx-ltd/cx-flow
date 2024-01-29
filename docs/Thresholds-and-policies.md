@@ -48,6 +48,10 @@ Under Branch policies configuration, enable Checkmarx scan as ‘required’ (ht
 
 [[/Images/azure_enable_checkmarx_scan.png|enable checkmarx scan]]
 
+<u>**Bitbucket Cloud**</u>:
+
+User needs to define a pilicy in which approval of checkmarx user is mandatory then it will block merge.
+
 
 #### <a name="note">Note</a>
 
