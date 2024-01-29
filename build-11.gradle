@@ -6,7 +6,9 @@ buildscript {
 
 
 
+
          CxSBSDK = "0.5.73"
+
 
 
          ConfigProviderVersion = "1.0.9"
