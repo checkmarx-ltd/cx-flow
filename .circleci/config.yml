@@ -124,9 +124,9 @@ jobs:
             VERSION=$(cat ./build/libs/version.txt)
             SHA1_SHORT=${CIRCLE_SHA1::7}
             docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} docker.io
-            docker build --target java8 \
+            docker build --target java17 \
               -t ${DOCKER_REPO}:${SHA1_SHORT} \
-              -t ${DOCKER_REPO}:${VERSION}-8 \
+              -t ${DOCKER_REPO}:${VERSION}-17 \
               -t ${DOCKER_REPO}:${VERSION} \
               -t ${DOCKER_REPO} \
               .
@@ -135,14 +135,14 @@ jobs:
           name: Archive Docker images
           command: |
             VERSION=$(cat ./build/libs/version.txt)
-            docker save -o image-8.tar ${DOCKER_REPO}:${VERSION}-8
+            docker save -o image-17.tar ${DOCKER_REPO}:${VERSION}-17
             docker save -o image.tar ${DOCKER_REPO}:${VERSION}
             docker save -o latest.tar ${DOCKER_REPO}:latest
       - persist_to_workspace:
           root: .
           paths:
            # - ./image-11.tar
-            - ./image-8.tar
+            - ./image-17.tar
             - ./image.tar
             - ./latest.tar
 
@@ -508,7 +508,7 @@ jobs:
       - run:
           name: Load archived Docker images
           command: |
-            docker load -i /tmp/workspace/image-8.tar
+            docker load -i /tmp/workspace/image-17.tar
             docker load -i /tmp/workspace/image.tar
             docker load -i /tmp/workspace/latest.tar
       - run:
