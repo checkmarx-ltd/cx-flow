@@ -362,7 +362,7 @@ jobs:
       - run:
           name: Importing Certificate
           command: |
-            sudo $JAVA_HOME/bin/keytool -import -alias sastcer -storepass changeit -keystore  "/usr/local/openjdk-8/jre/lib/security/cacerts" -file /home/circleci/project/src/test/resources/checkmarx.crt --noprompt
+            sudo $JAVA_HOME/bin/keytool -import -alias sastcer -storepass changeit -keystore  "/usr/local/jdk-17.0.9/lib/security/cacerts" -file /home/circleci/project/src/test/resources/checkmarx.crt --noprompt
       - run:
           name: Run SAST CLI Integration Tests
           command: |
@@ -450,7 +450,7 @@ jobs:
       - run:
           name: Importing Certificate
           command: |
-            sudo $JAVA_HOME/bin/keytool -import -alias sastcer -storepass changeit -keystore  "/usr/local/openjdk-8/jre/lib/security/cacerts" -file /home/circleci/project/src/test/resources/checkmarx.crt --noprompt
+            sudo $JAVA_HOME/bin/keytool -import -alias sastcer -storepass changeit -keystore  "/usr/local/jdk-17.0.9/lib/security/cacerts" -file /home/circleci/project/src/test/resources/checkmarx.crt --noprompt
       - run:
           name: Run CodeBashing Integration Tests
           command: |
