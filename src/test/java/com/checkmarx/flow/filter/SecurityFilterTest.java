@@ -6,7 +6,7 @@ import org.springframework.mock.web.MockFilterConfig;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
-import javax.servlet.*;
+import jakarta.servlet.*;
 import java.io.IOException;
 
 public class SecurityFilterTest {

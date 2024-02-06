@@ -3,7 +3,7 @@ package com.checkmarx.flow.dto.gitlab;
 import com.checkmarx.flow.dto.RepoIssue;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import java.util.List;
 
 public class Issue extends RepoIssue {

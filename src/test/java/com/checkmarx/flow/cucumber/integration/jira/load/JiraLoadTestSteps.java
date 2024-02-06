@@ -21,7 +21,6 @@ import org.junit.Assert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import javax.validation.constraints.AssertTrue;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
