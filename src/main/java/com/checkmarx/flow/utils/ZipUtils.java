@@ -15,7 +15,7 @@ import java.util.zip.ZipOutputStream;
 public class ZipUtils {
     private static final int DEFAULT_BUFFER_SIZE = 1024 * 4;
 
-    private ZipUtils() {
+    public ZipUtils() {
     }
 
     public static File zipToTempFile(String fileToZip, String excludePatterns) throws IOException {

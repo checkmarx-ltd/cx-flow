@@ -7,7 +7,7 @@ After the upgrade, the customers need to use the CxFlow Java11.jar file
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=checkmarx-ltd_cx-flow&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=checkmarx-ltd_cx-flow)
 [![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=checkmarx-ltd_cx-flow&metric=reliability_rating)](https://sonarcloud.io/dashboard?id=checkmarx-ltd_cx-flow)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/checkmarx-ltd/cx-flow)
-
+![Docker Pulls](https://img.shields.io/docker/pulls/checkmarx/cx-flow)
 ## Documentation
 https://github.com/checkmarx-ltd/cx-flow/wiki
 

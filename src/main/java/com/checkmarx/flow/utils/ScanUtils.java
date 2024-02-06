@@ -563,6 +563,7 @@ public class ScanUtils {
                     .finding(f)
                     .vulnerabilityPackage(getScaPackageByFinding(scaResults.getPackages(), f))
                     .vulnerabilityLink(constructVulnerabilityUrl(scaResults.getWebReportLink(), f))
+                    .scanTags(scaResults.getScanTags())
                     .build();
 
             scaDetailsList.add(scaDetails);

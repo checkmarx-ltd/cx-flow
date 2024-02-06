@@ -16,6 +16,7 @@ ENTRYPOINT ["java", "-Xms512m", "-Xmx2048m", "-Djava.security.egd=file:/dev/./ur
 EXPOSE 8080
 
 
+
 FROM alpine:3.18.4 AS cxgo8
 
 WORKDIR app

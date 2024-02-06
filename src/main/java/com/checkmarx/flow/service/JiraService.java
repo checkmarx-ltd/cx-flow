@@ -527,11 +527,16 @@ public class JiraService {
 
                 Map<String, Object> addDetails = null;
                 Map<String, String> scanCustomFields = null;
+                String scanScaTags = null;
                 String scanCustomFieldsValue = null;
                 if(Objects.nonNull(issue.getAdditionalDetails()) && Objects.nonNull((Map<String, String>) issue.getAdditionalDetails().get("scanCustomFields"))) {
                     addDetails = issue.getAdditionalDetails();
                     scanCustomFields = (Map<String, String>) addDetails.get("scanCustomFields");
                     scanCustomFieldsValue = scanCustomFields.get(f.getJiraFieldName());
+                }
+
+                if(Objects.nonNull(issue.getScaDetails()) && Objects.nonNull(issue.getScaDetails().get(0).getScanTags())) {
+                    scanScaTags = (String) issue.getScaDetails().get(0).getScanTags().get(f.getJiraFieldName());
                 }
 
                 switch (fieldType) {
@@ -548,6 +553,21 @@ public class JiraService {
                                         log.debug("JIRA default Value is {}", value);
                                     }
                                 } else {
+                                    log.debug("No value found for {}", f.getName());
+                                    value = "";
+                                }
+                                break;
+                            case "cx-sca" :
+                                log.debug("SCA Tags Key name {}",f.getName());
+                                if(scanScaTags!=null)
+                                {
+                                    value = scanScaTags;
+                                    log.debug("SCA Field value: {}", value);
+                                    if (ScanUtils.empty(value) && !ScanUtils.empty(f.getJiraDefaultValue())) {
+                                        value = f.getJiraDefaultValue();
+                                        log.debug("JIRA default Value is {}", value);
+                                    }
+                                }else {
                                     log.debug("No value found for {}", f.getName());
                                     value = "";
                                 }
