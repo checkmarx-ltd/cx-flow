@@ -17,6 +17,7 @@ commands: # a reusable command with parameters
           go get github.com/cxflowtestuser/ghr
           VERSION=$(cat ./build/libs/version.txt)
           rm ./build/libs/version.txt
+          mv build/libs/repo-${VERSION}.jar build/libs/cx-flow-${VERSION}.jar
           ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -n ${VERSION} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} << parameters.ghr-option >> -delete ${VERSION} ./build/libs/
 jobs:
   build:
@@ -32,7 +33,7 @@ jobs:
       - restore_cache:
           key: v1-gradle-cache-{{ checksum "build.gradle" }}
       - run: ./gradlew clean build
-      #- run: ./gradlew -b build-11.gradle --build-cache assemble
+      - run: ./gradlew -b build.gradle --build-cache assemble
       - run: ./gradlew -q getVersion > build/libs/version.txt
       - save_cache:
           paths:
