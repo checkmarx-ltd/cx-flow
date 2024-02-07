@@ -203,7 +203,7 @@ springBoot {
 }
 
 configurations {
-    libsDirName = 'libs/java17'
+    libsDirName = 'libs'
 }
 
 task componentTest(type: Test) {
