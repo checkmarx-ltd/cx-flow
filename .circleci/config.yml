@@ -16,6 +16,9 @@ commands: # a reusable command with parameters
       - run: |
           go get github.com/cxflowtestuser/ghr
           VERSION=$(cat ./build/libs/version.txt)
+          ls -a build/libs/
+          ls -l build/libs/
+          ls -R build/libs/
           rm ./build/libs/version.txt
           mv build/libs/repo-${VERSION}.jar build/libs/cx-flow-${VERSION}.jar
           ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -n ${VERSION} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} << parameters.ghr-option >> -delete ${VERSION} ./build/libs/
