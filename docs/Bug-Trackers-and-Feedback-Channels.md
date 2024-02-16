@@ -14,6 +14,7 @@
   * [Jira Issue Handling](#issuehandling)
   * [Adding Certifications](#certs)
   * [Jira Timeout](#timeout)
+  * [Skip Update](#skipupdate)
 * [Custom Bug trackers](#custom)
 * [Azure DevOps Work Items](#azure)
 * [GitLab Issues](#gitlab)
@@ -81,7 +82,7 @@ In the above image the vulnerability count in **Cx-SAST Summary** and **Violatio
 ## <a name="jira">Jira</a>
 Jira has the most complex configuration use case as it supports a variety of custom fields, custom workflows and custom transitions.
 
-```
+```yaml
 jira:
    url: https://xxxx.atlassian.net
    username: xxxx
@@ -114,12 +115,16 @@ jira:
       - Use_Of_Hardcoded_Password
    fields:
 #    - type: cx #[ cx | static | result ]
-#      name: Platform # cx custom field name | cx-scan | cwe, category, severity, application, *project*, repo-name, branch, repo-url, namespace, recommendations, loc, site, issueLink, filename, language
+#      name: Platform # cx custom field name | cx-scan | cx-sca | cwe, category, severity, application, *project*, repo-name, branch, repo-url, namespace, recommendations, loc, site, issueLink, filename, language
 #      jira-field-name: Application
 #      jira-field-type: label #[ security | text | label | single-select | multi-select ]
      - type: cx
        name: cx-scan
        jira-field-name: Application
+       jira-field-type: label
+     - type: cx #sca
+       name: cx-sca 
+       jira-field-name: origin #key for tag
        jira-field-type: label
      - type: result
        name: application
@@ -225,7 +230,7 @@ label-prefix: < CUSTOM PREFIX NAME >
 The label-prefix property is used to set a custom prefix for Jira issues. If this value is not provided then CxFlow will use the default issue prefix "CX".
 
 ### <a name="priorities">Priorities</a>
-```
+```yaml
 priorities:
   High: High
   Medium: Medium
@@ -235,9 +240,11 @@ priorities:
 
 The value on the left side reflects the Checkmarx severity. The value to the right reflects the priority assigned to the respective issue in Jira.
 
+**Note :** If priority configurations are missing, cx-flow will not update the values entered by the customer in Jira's priority field.
+
 ### <a name="transitions">Transitions</a>
 It is very important that issues driven by CxFlow have the ability to transition to and from the open or close transition states regardless of what state the issue is in.  In the event that an issue cannot use the appropriate transition defined, it will fail.
-```
+```yaml
 open-transition: In Review
 close-transition: Done*
 open-status:
@@ -262,7 +269,23 @@ closed-status:
   * **static**: Used for static values (specifically requires a jira-default-value to be provided)
   * **cx**: Used to map specific Checkmarx Custom Field values
   * **result**: Used to map known values from Checkmarx results or repository/scan request details.  Refer to the Result values below.
-* **name**: If cx reflects the type, it is the name of the custom field within Checkmarx.Also, **cx-scan** is the scan custom fields in type cx.
+* **name**: If cx reflects the type, it is the name of the custom field within Checkmarx.Also, **cx-scan** is the scan custom fields in type cx and **cx-sca** is the scan level tags in type cx.
+
+```yaml
+#example configuration for checkmarx custom field for both SCA and SAST
+
+jira:
+  fields:
+  - type: cx #sca
+    name: cx-sca 
+    jira-field-name: origin #key for tag
+    jira-field-type: label
+  - type: cx #SAST
+    name: cx-scan
+    jira-field-name: Test-custom
+    jira-field-type: label
+```
+
   * If **result** is provided as type, the name must be one of the following:
 
 ```
@@ -292,8 +315,8 @@ similarity-id - Cx Similarity ID
   * _security_ (used for issue security levels)
   * _component_ (used for build in Jira Component/s field)
 * **jira-default-value** - Static value if no value can be determined for the respective field (Optional)
-* **skip-update**: The value is only provided during the initial creation of the ticket and not updated during subsequent iterations
-* **offset**: Used with system-date, the value of offset is added to the system date
+* **skip-update**: used to skip update for any field mentioned.(Optional)
+* **offset**: Used with system-date, the value of offset is added to the system date (Optional)
 
 ### <a name="assigningtickets">Assigning tickets to a user</a>
 Jira tickets can be assigned to a user when they are created. This can be achieved in the following way.
@@ -401,6 +424,17 @@ Please add the following parameter to increase the Jira socket timeout.
 ```yaml
 jira:
   http-timeout : <Time in ms>
+```
+### <a name="skipupdate">Skip Update</a>
+cx-flow can skip update for any configured Jira fields by configuring it as follows.
+```yaml
+jira:
+  fields:
+    - type: result
+      name: similarity-id
+      jira-field-name: Similarity Id 
+      jira-field-type: label
+      skip-update: true
 ```
 
 ## <a name="custom">Custom Bug Trackers</a>
