@@ -144,7 +144,7 @@ jobs:
       - persist_to_workspace:
           root: .
           paths:
-           # - ./image-11.tar
+            # - ./image-11.tar
             - ./image-17.tar
             - ./image.tar
             - ./latest.tar
