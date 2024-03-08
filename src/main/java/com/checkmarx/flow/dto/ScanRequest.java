@@ -143,6 +143,10 @@ public class ScanRequest {
 
     @Getter @Setter
     private String zipExclude;
+
+    @Getter @Setter
+    private String zipInclude;
+
     @Getter @Setter
     private Integer scanId;
 

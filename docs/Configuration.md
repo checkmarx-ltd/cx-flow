@@ -106,6 +106,7 @@ cx-flow:
     notification: true # default is false
     cc: myemail@mycompany.com # comma-separated list of e-mails
   zip-exclude: \.git/.*, .*\.png
+  zip-include: \.git/.*, .*\.png
   comment-script: location/to/commentScript.groovy
 
 checkmarx:
@@ -415,6 +416,7 @@ cx-flow:
      notification: true # default is false
      cc: myemail@mycompany.com # comma-separated list of e-mails
   zip-exclude: \.git/.*, .*\.png
+  zip-include: \.git/.*, .*\.png
   comment-script: location/to/commentScript.groovy
   core-poolsize: 54
   max-poolsize: 302
@@ -444,6 +446,7 @@ cx-flow:
 | `http-read-timeout`         | 120000         | No*                                                                  | Yes     | Yes          | Http client read timeout setting.  Not applied for the Jira client.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `mail`                      | enabled:false  | No*                                                                  | Yes     | Yes          | SMTP configuration - host, port, username, password, enabled (false by default).  When enabled, email is a valid feedback channel, and an html template is used to provide result details. During WebHook execution, the email is sent to the list of committers in the push event.                                                                                                                                                                                                                                                                                                          |
 | `zip-exclude`               |                | No                                                                   | No      | Yes          | Comma-separated list of regexes. Instructs CxFlow to exclude specific files when it creates a zip archive. See the details [here](Excluding-Files-from-Zip-Archive.md).                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `zip-include`               |                | No                                                                   | No      | Yes          | Comma-separated list of regexes. Instructs CxFlow to include specific files when it creates a zip archive. See the details [here](Excluding-Files-from-Zip-Archive.md).                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `auto-profile`              | false          | No                                                                   | Yes     | No           | During WebHook execution, language stats and files are gathered to help determine an appropriate preset to use.  By default, the profiling initially occurs only when a project is new/created for the first time.  Refer to [CxFlow Automated Code](https://checkmarx.atlassian.net/wiki/spaces/PTS/pages/1345586126/CxFlow+Automated+Code+Profiling) Profiling for details.                                                                                                                                                                                                                |
 | `always-profile`            | false          | No                                                                   | Yes     | No           | This enforces the auto-profile execution for each scan request regardless of whether the project is new or not.                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `profiling-depth`           | 1              | No                                                                   | Yes     | No           | The folder depth that is inspected for file names during the profiling process, which means looking for specific file references, i.e. web.xml/Web.config                                                                                                                                                                                                                                                                                                                                                                                                                                    |
@@ -493,7 +496,7 @@ cx-flow:
 
 All values are case-sensitive as per the output from Checkmarx (i.e. High severity, Stored_XSS, Confirmed).
 
-#### <a name="excludezip">Excluding Files from Zip Archive</a>
+#### <a name="excludezip">Excluding and Including Files from Zip Archive</a>
 
 The `cx-flow.zip-exclude` configuration option instructs CxFlow to exclude specific files when it creates a zip archive.
 
@@ -535,6 +538,15 @@ bin/internal-dir/exclude-me.txt
 CxFlow normalizes slashes in the relative path into a forward slash (`/`).
 
 For a file to be excluded, a regex must match the **whole** relative file path. Thus, the `.*` regex expression should be used where necessary.
+
+##### Zip Include
+The `cx-flow.zip-include` configuration option instructs CxFlow to include specific files when it creates a zip archive.
+```yaml
+cx-flow:
+  zip-include: \.git/.*, .*\.png
+```
+
+*Note:* Process of zip-exclude and zip-include are same, the only difference is zip-exclude excludes the files from zip and zip-include includes only mentioned files to zip. 
 
 #### <a name="break">Break Build</a>
 The configuration can be set or overridden at execution time using the command line (`--cx-flow.break-build=true`) to exit the command line execution flow for a single project result or scan for results that meet the filter criteria. 

@@ -19,7 +19,7 @@ public class zipUtilsSteps {
    public void testZipFileSuccess() throws IOException {
         // Creating Zip File
         ZipUtils zipService = new ZipUtils();
-        File zippedFile = zipService.zipToTempFile(".","");
+        File zippedFile = zipService.zipToTempFile(".","","");
 
         // Checking presence of zip file
         assertTrue(zippedFile.exists());
