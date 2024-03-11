@@ -13,9 +13,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.util.*;
@@ -88,11 +86,19 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
             markDownValue.append(String.format(MARKDOWN_TABLE_FORMAT, "---", "---", "---", "---")).append("\r");
             List<Finding> val = entry.getValue();
             List<String> tags = new ArrayList<>();
+            List<Double> securitySeverities = new ArrayList<>();
             val.forEach(v -> {
                 markDownValue.append(String.format(MARKDOWN_TABLE_FORMAT, v.getCveName(), v.getDescription(), v.getScore(), v.getReferences())).append("\r");
                 if (!tags.contains(String.valueOf(v.getScore())))
                     tags.add(String.valueOf(v.getScore()));
+                    securitySeverities.add(v.getScore());
             });
+
+            double maxSecuritySeverity = 0.0;
+            if (securitySeverities.size() > 0) {
+                maxSecuritySeverity = Collections.max(securitySeverities);
+            }
+
             tags.replaceAll(s -> "CVSS-" + s);
             tags.add("security");
             Rule rule = Rule.builder().id(key)
@@ -100,7 +106,7 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                     .fullDescription(FullDescription.builder().text(key).build())
                     .help(Help.builder().markdown(String.valueOf(markDownValue).replace("\n", " ").replace("[", "").replace("]", "")).text(String.valueOf(markDownValue).replace("\n", " ")).build())
                     .properties(Properties.builder().tags(tags)
-                                .securitySeverity(properties.getSecuritySeverityMap().get(map.get(key).getSeverity()) != null ? properties.getSecuritySeverityMap().get(map.get(key).getSeverity()) : DEFAULT_SEVERITY).build())
+                                .securitySeverity(maxSecuritySeverity != 0.0 ? String.valueOf(maxSecuritySeverity) : DEFAULT_SEVERITY).build())
                     .build();
 
             List<Location> locations = Lists.newArrayList();
